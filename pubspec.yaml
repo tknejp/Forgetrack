@@ -1,0 +1,43 @@
+name: forgetrack
+description: "Fitness tracker – Health Connect, kalorické tabulky a Google Sheets sync."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # --- Fitness data (Health Connect na Androidu) ---
+  health: ^13.3.1
+
+  # --- Google autentizace + Sheets API v4 ---
+  google_sign_in: ^7.2.0      # authenticatedClient() zabudován přímo (v7.x)
+  googleapis: ^16.0.0
+  googleapis_auth: ^2.0.0
+
+  # --- HTTP klient pro kalorické REST API ---
+  http: ^1.2.1
+
+  # --- State management ---
+  provider: ^6.1.2
+
+  # --- Grafy ---
+  fl_chart: ^1.2.0
+
+  # --- Utility ---
+  intl: ^0.20.2
+  shared_preferences: ^2.3.2
+  extension_google_sign_in_as_googleapis_auth: ^3.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

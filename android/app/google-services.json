@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "798278342104",
+    "project_id": "forgetracker-493415",
+    "storage_bucket": "forgetracker-493415.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:798278342104:android:a44ecd497db4f28161cead",
+        "android_client_info": {
+          "package_name": "com.knejp.forgetrack"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCm7iq6TdhiH7VBvH2F4KoEFVsNa-Z5vr4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
