@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.forgetrack"
+    namespace = "com.knejp.forgetrack"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 

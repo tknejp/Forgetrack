@@ -1,40 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
 import '../../../l10n/l10n.dart';
+import '../../../models/sleep_record.dart';
 
-class CalorieSummaryCard extends StatefulWidget {
-  final double consumed;
-  final double? burned;
-  final double goal;
+// ─── Public card ──────────────────────────────────────────────────────────────
 
-  final double protein;
-  final double fat;
-  final double carbs;
-  final double fiber;
+class SleepCard extends StatefulWidget {
+  final SleepRecord sleep;
 
-  const CalorieSummaryCard({
-    super.key,
-    required this.consumed,
-    this.burned,
-    this.goal = 2000,
-    required this.protein,
-    required this.fat,
-    required this.carbs,
-    required this.fiber,
-  });
+  const SleepCard({super.key, required this.sleep});
 
   @override
-  State<CalorieSummaryCard> createState() => _CalorieSummaryCardState();
+  State<SleepCard> createState() => _SleepCardState();
 }
 
-class _CalorieSummaryCardState extends State<CalorieSummaryCard> {
+class _SleepCardState extends State<SleepCard> {
   bool _expanded = false;
+
+  /// Formats a [Duration] as "Xh Ym" (e.g. "7h 42m").
+  String _fmtDuration(Duration d) {
+    final h = d.inHours;
+    final m = d.inMinutes.remainder(60);
+    if (h == 0) return '${m}m';
+    if (m == 0) return '${h}h';
+    return '${h}h ${m}m';
+  }
+
+  /// Formats a [DateTime] as "HH:mm" using the current locale.
+  String _fmtTime(DateTime dt, String locale) =>
+      DateFormat('HH:mm', locale).format(dt);
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l10n = context.l10n;
-    final remaining = widget.goal - widget.consumed + (widget.burned ?? 0);
+    final locale = Localizations.localeOf(context).toString();
+
+    final duration = widget.sleep.totalDuration;
+    // Progress toward an 8-hour sleep goal (clamped 0–1).
+    const goalDuration = Duration(hours: 8);
+    final progress =
+        (duration.inSeconds / goalDuration.inSeconds).clamp(0.0, 1.0);
+    final goalReached = duration >= goalDuration;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -45,11 +54,12 @@ class _CalorieSummaryCardState extends State<CalorieSummaryCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ── Header ──────────────────────────────────────────────────
               Row(
                 children: [
-                  Icon(Icons.local_fire_department, color: cs.primary),
+                  Icon(Icons.bedtime_outlined, color: cs.primary),
                   const SizedBox(width: 8),
-                  Text(l10n.caloriesTodayTitle, style: tt.titleMedium),
+                  Text(l10n.sleepTitle, style: tt.titleMedium),
                   const Spacer(),
                   AnimatedRotation(
                     turns: _expanded ? 0.5 : 0.0,
@@ -62,34 +72,40 @@ class _CalorieSummaryCardState extends State<CalorieSummaryCard> {
                 ],
               ),
               const SizedBox(height: 12),
+
+              // ── Collapsed stats ──────────────────────────────────────────
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   _StatColumn(
-                    label: l10n.caloriesConsumed,
-                    value: '${widget.consumed.round()} kcal',
+                    label: l10n.sleepDuration,
+                    value: _fmtDuration(duration),
                     color: cs.primary,
                   ),
-                  if (widget.burned != null)
-                    _StatColumn(
-                      label: l10n.caloriesBurned,
-                      value: '${widget.burned!.round()} kcal',
-                      color: cs.primary,
-                    ),
                   _StatColumn(
-                    label: l10n.caloriesRemaining,
-                    value: '${remaining.round()} kcal',
-                    color: remaining >= 0 ? cs.primary : cs.error,
+                    label: l10n.sleepFellAsleep,
+                    value: _fmtTime(widget.sleep.sleepStart, locale),
+                    color: cs.onSurface,
+                  ),
+                  _StatColumn(
+                    label: l10n.sleepWokeUp,
+                    value: _fmtTime(widget.sleep.wakeTime, locale),
+                    color: cs.onSurface,
                   ),
                 ],
               ),
               const SizedBox(height: 12),
+
+              // ── Progress bar ─────────────────────────────────────────────
               LinearProgressIndicator(
-                value: (widget.consumed / widget.goal).clamp(0.0, 1.0),
+                value: progress,
                 minHeight: 6,
-                color: widget.consumed > widget.goal ? cs.error : cs.primary,
                 borderRadius: BorderRadius.circular(3),
+                color: goalReached ? cs.tertiary : cs.primary,
+                backgroundColor: cs.surfaceContainerHighest,
               ),
+
+              // ── Expanded detail ──────────────────────────────────────────
               AnimatedCrossFade(
                 duration: const Duration(milliseconds: 220),
                 crossFadeState: _expanded
@@ -99,40 +115,29 @@ class _CalorieSummaryCardState extends State<CalorieSummaryCard> {
                 secondChild: Padding(
                   padding: const EdgeInsets.only(top: 16),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Divider(color: cs.outlineVariant),
                       const SizedBox(height: 12),
                       Row(
                         children: [
                           Expanded(
-                            child: _MacroTile(
-                              label: l10n.macroProtein,
-                              value: '${widget.protein.round()} g',
+                            child: _DetailTile(
+                              label: l10n.sleepFellAsleep,
+                              value: _fmtTime(
+                                widget.sleep.sleepStart,
+                                locale,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: _MacroTile(
-                              label: l10n.macroFat,
-                              value: '${widget.fat.round()} g',
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _MacroTile(
-                              label: l10n.macroCarbs,
-                              value: '${widget.carbs.round()} g',
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _MacroTile(
-                              label: l10n.macroFiber,
-                              value: '${widget.fiber.round()} g',
+                            child: _DetailTile(
+                              label: l10n.sleepWokeUp,
+                              value: _fmtTime(
+                                widget.sleep.wakeTime,
+                                locale,
+                              ),
                             ),
                           ),
                         ],
@@ -148,6 +153,8 @@ class _CalorieSummaryCardState extends State<CalorieSummaryCard> {
     );
   }
 }
+
+// ─── Shared sub-widgets (mirrors steps_card.dart pattern) ─────────────────────
 
 class _StatColumn extends StatelessWidget {
   final String label;
@@ -179,14 +186,11 @@ class _StatColumn extends StatelessWidget {
   }
 }
 
-class _MacroTile extends StatelessWidget {
+class _DetailTile extends StatelessWidget {
   final String label;
   final String value;
 
-  const _MacroTile({
-    required this.label,
-    required this.value,
-  });
+  const _DetailTile({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {

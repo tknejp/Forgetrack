@@ -1,217 +1,424 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../../models/calorie_entry.dart';
-import '../../providers/calorie_provider.dart';
 
-class CaloriesScreen extends StatefulWidget {
-  const CaloriesScreen({super.key});
+import '../../l10n/l10n.dart';
+import '../../providers/kaloricke_tabulky_provider.dart';
+import '../profile/profile_screen.dart';
 
-  @override
-  State<CaloriesScreen> createState() => _CaloriesScreenState();
-}
-
-class _CaloriesScreenState extends State<CaloriesScreen> {
-  final _searchController = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
+class NutritionScreen extends StatelessWidget {
+  const NutritionScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<CalorieProvider>();
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Kalorický deník'),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(64),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-            child: SearchBar(
-              controller: _searchController,
-              hintText: 'Hledat potravinu…',
-              leading: const Icon(Icons.search),
-              trailing: [
-                if (_searchController.text.isNotEmpty)
-                  IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: () {
-                      _searchController.clear();
-                      context.read<CalorieProvider>().clearSearch();
-                    },
-                  ),
-              ],
-              onSubmitted: (q) =>
-                  context.read<CalorieProvider>().searchFood(q),
-              onChanged: (_) => setState(() {}),
-            ),
-          ),
-        ),
-      ),
-      body: provider.searchResults.isNotEmpty || provider.isSearching
-          ? _SearchResultsList(provider: provider)
-          : _DailyLog(provider: provider),
-    );
-  }
-}
-
-class _SearchResultsList extends StatelessWidget {
-  final CalorieProvider provider;
-
-  const _SearchResultsList({required this.provider});
-
-  @override
-  Widget build(BuildContext context) {
-    if (provider.isSearching) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (provider.searchResults.isEmpty) {
-      return const Center(child: Text('Žádné výsledky.'));
-    }
-
-    return ListView.builder(
-      itemCount: provider.searchResults.length,
-      itemBuilder: (_, i) =>
-          _FoodResultTile(food: provider.searchResults[i]),
-    );
-  }
-}
-
-class _FoodResultTile extends StatelessWidget {
-  final FoodItem food;
-
-  const _FoodResultTile({required this.food});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(food.name),
-      subtitle: Text('${food.kcalPer100g.round()} kcal / 100 g'),
-      trailing: IconButton(
-        icon: const Icon(Icons.add_circle_outline),
-        onPressed: () => _showAddDialog(context, food),
-      ),
-    );
-  }
-
-  void _showAddDialog(BuildContext context, FoodItem food) {
-    double grams = 100;
-    MealType meal = MealType.obed;
-
-    showDialog(
-      context: context,
-      builder: (_) => StatefulBuilder(
-        builder: (ctx, setS) => AlertDialog(
-          title: Text(food.name),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButtonFormField<MealType>(
-                value: meal,
-                decoration: const InputDecoration(labelText: 'Jídlo'),
-                items: MealType.values
-                    .map((m) =>
-                        DropdownMenuItem(value: m, child: Text(m.label)))
-                    .toList(),
-                onChanged: (v) => setS(() => meal = v!),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                initialValue: '100',
-                decoration: const InputDecoration(
-                    labelText: 'Gramy', suffixText: 'g'),
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                onChanged: (v) => grams = double.tryParse(v) ?? grams,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '≈ ${(food.kcalPer100g * grams / 100).round()} kcal',
-                style: Theme.of(ctx).textTheme.bodyLarge,
+    final l10n = context.l10n;
+    return Consumer<KalorickeTabulkyProvider>(
+      builder: (context, kt, _) {
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(l10n.screenNutrition),
+            actions: [
+              if (kt.isLoggedIn)
+                kt.isRefreshing
+                    ? const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : IconButton(
+                        icon: const Icon(Icons.sync),
+                        tooltip: 'Sync',
+                        onPressed: () => kt.refresh(),
+                      ),
+              IconButton(
+                icon: const Icon(Icons.account_circle_outlined),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                ),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Zrušit')),
-            FilledButton(
-              onPressed: () {
-                context.read<CalorieProvider>().addEntry(
-                      CalorieEntry(
-                        id: DateTime.now().millisecondsSinceEpoch.toString(),
-                        date: DateTime.now(),
-                        meal: meal,
-                        food: food,
-                        grams: grams,
-                      ),
-                    );
-                Navigator.pop(ctx);
-              },
-              child: const Text('Přidat'),
-            ),
-          ],
-        ),
-      ),
+          body: _buildBody(context, kt),
+        );
+      },
     );
   }
-}
 
-class _DailyLog extends StatelessWidget {
-  final CalorieProvider provider;
-
-  const _DailyLog({required this.provider});
-
-  @override
-  Widget build(BuildContext context) {
-    final log = provider.todayLog;
-
-    if (log.isEmpty) {
-      final muted = Theme.of(context).colorScheme.onSurfaceVariant;
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.restaurant, size: 64, color: muted),
-            const SizedBox(height: 12),
-            Text(
-              'Dnes ještě žádné záznamy.\nVyhledej potravinu výše.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: muted),
-            ),
-          ],
+  Widget _buildBody(BuildContext context, KalorickeTabulkyProvider kt) {
+    if (kt.isInitializing) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (!kt.isLoggedIn) {
+      return _NotConnectedState(
+        onGoToSettings: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const ProfileScreen()),
         ),
       );
     }
+    if (kt.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    return _NutritionDataView(kt: kt);
+  }
+}
 
-    return ListView.separated(
-      padding: const EdgeInsets.all(12),
-      itemCount: log.length,
-      separatorBuilder: (_, __) => const Divider(height: 1),
-      itemBuilder: (_, i) {
-        final entry = log[i];
-        return ListTile(
-          title: Text(entry.food.name),
-          subtitle: Text('${entry.meal.label} · ${entry.grams.round()} g'),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('${entry.kcal.round()} kcal',
-                  style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w600)),
-              IconButton(
-                icon: const Icon(Icons.delete_outline, size: 20),
-                onPressed: () =>
-                    context.read<CalorieProvider>().removeEntry(entry.id),
+// ─── Not connected ────────────────────────────────────────────────────────────
+
+class _NotConnectedState extends StatelessWidget {
+  final VoidCallback onGoToSettings;
+
+  const _NotConnectedState({required this.onGoToSettings});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l10n = context.l10n;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.restaurant_outlined, size: 72, color: cs.onSurfaceVariant),
+            const SizedBox(height: 20),
+            Text(
+              l10n.screenNutrition,
+              style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l10n.ktLoginPrompt,
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 28),
+            FilledButton.icon(
+              icon: const Icon(Icons.settings_outlined),
+              label: Text(l10n.ktGoToSettings),
+              onPressed: onGoToSettings,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Nutrition data view ──────────────────────────────────────────────────────
+
+class _NutritionDataView extends StatelessWidget {
+  final KalorickeTabulkyProvider kt;
+
+  const _NutritionDataView({required this.kt});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final locale = Localizations.localeOf(context).toString();
+
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      children: [
+        const SizedBox(height: 16),
+
+        // ── Header + sync time ──────────────────────────────────────────────
+        Row(
+          children: [
+            Text(
+              l10n.ktNutritionTitle,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const Spacer(),
+            if (kt.lastSyncedAt != null)
+              Text(
+                l10n.ktSyncedAt(
+                  DateFormat('HH:mm', locale).format(kt.lastSyncedAt!),
+                ),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
               ),
-            ],
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        // ── Sync error banner ───────────────────────────────────────────────
+        if (kt.syncError != null) ...[
+          _ErrorBanner(
+            message: l10n.ktSyncError,
+            onRetry: () => kt.refresh(),
+            retryLabel: l10n.ktRetry,
           ),
-        );
-      },
+          const SizedBox(height: 12),
+        ],
+
+        // ── Auth error banner (session expired) ─────────────────────────────
+        if (kt.authError != null) ...[
+          _ErrorBanner(
+            message: kt.authError!,
+            onRetry: null,
+            retryLabel: null,
+          ),
+          const SizedBox(height: 12),
+        ],
+
+        // ── No diary data yet ───────────────────────────────────────────────
+        if (!kt.hasTodayData && kt.syncError == null && kt.authError == null)
+          _NoDiaryDataCard()
+        else ...[
+          // ── Calories card ─────────────────────────────────────────────────
+          _CalorieCard(calories: kt.todayCalories),
+          const SizedBox(height: 12),
+
+          // ── Macro grid ────────────────────────────────────────────────────
+          _MacroGrid(
+            protein: kt.todayProtein,
+            fat: kt.todayFat,
+            carbs: kt.todayCarbs,
+            fiber: kt.todayFiber,
+          ),
+        ],
+
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+}
+
+// ─── Calorie summary card ─────────────────────────────────────────────────────
+
+class _CalorieCard extends StatelessWidget {
+  final double calories;
+
+  const _CalorieCard({required this.calories});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l10n = context.l10n;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        child: Row(
+          children: [
+            Icon(Icons.local_fire_department, color: cs.primary, size: 32),
+            const SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${calories.round()} kcal',
+                  style: tt.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: cs.primary,
+                  ),
+                ),
+                Text(
+                  l10n.caloriesConsumed,
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Macro 2×2 grid ───────────────────────────────────────────────────────────
+
+class _MacroGrid extends StatelessWidget {
+  final double protein;
+  final double fat;
+  final double carbs;
+  final double fiber;
+
+  const _MacroGrid({
+    required this.protein,
+    required this.fat,
+    required this.carbs,
+    required this.fiber,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _MacroCard(
+                label: l10n.macroProtein,
+                value: protein,
+                icon: Icons.fitness_center,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _MacroCard(
+                label: l10n.macroFat,
+                value: fat,
+                icon: Icons.water_drop_outlined,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _MacroCard(
+                label: l10n.macroCarbs,
+                value: carbs,
+                icon: Icons.grain,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _MacroCard(
+                label: l10n.macroFiber,
+                value: fiber,
+                icon: Icons.eco_outlined,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _MacroCard extends StatelessWidget {
+  final String label;
+  final double value;
+  final IconData icon;
+
+  const _MacroCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        child: Row(
+          children: [
+            Icon(icon, color: cs.secondary, size: 24),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${value.round()} g',
+                  style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                Text(
+                  label,
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── No diary data placeholder ────────────────────────────────────────────────
+
+class _NoDiaryDataCard extends StatelessWidget {
+  const _NoDiaryDataCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l10n = context.l10n;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            Icon(Icons.no_meals, size: 48, color: cs.onSurfaceVariant),
+            const SizedBox(height: 12),
+            Text(
+              l10n.ktNoDiaryData,
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Error banner ─────────────────────────────────────────────────────────────
+
+class _ErrorBanner extends StatelessWidget {
+  final String message;
+  final VoidCallback? onRetry;
+  final String? retryLabel;
+
+  const _ErrorBanner({
+    required this.message,
+    required this.onRetry,
+    required this.retryLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: cs.errorContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline, color: cs.onErrorContainer, size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(color: cs.onErrorContainer, fontSize: 13),
+            ),
+          ),
+          if (onRetry != null)
+            TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: cs.onErrorContainer,
+              ),
+              onPressed: onRetry,
+              child: Text(retryLabel ?? ''),
+            ),
+        ],
+      ),
     );
   }
 }

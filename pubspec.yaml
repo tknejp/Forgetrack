@@ -10,6 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   cupertino_icons: ^1.0.8
 
   # --- Fitness data (Health Connect na Androidu) ---
@@ -22,6 +24,10 @@ dependencies:
 
   # --- HTTP klient pro kalorické REST API ---
   http: ^1.2.1
+
+  # --- Kalorické Tabulky: hashing + bezpečné uložení přihlašovacích údajů ---
+  crypto: ^3.0.3
+  flutter_secure_storage: ^9.2.2
 
   # --- State management ---
   provider: ^6.1.2
@@ -41,3 +47,4 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true

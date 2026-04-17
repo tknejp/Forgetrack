@@ -18,5 +18,12 @@ class AppConstants {
   static const int foodSearchPageSize = 20;
 
   // --- Health Connect ---
-  static const int defaultHistoryDays = 7;
+  static const int defaultHistoryDays = 30;
+
+  // --- Default goals (until user-configurable settings are added) ---
+  static const int dailyStepGoal = 10000;
+  static const int weeklyStepGoal = 70000;
+  static const int monthlyStepGoal = 300000;
+  static const double defaultCalorieGoal = 2000;
+  static const double defaultWeightGoal = 75.0;
 }

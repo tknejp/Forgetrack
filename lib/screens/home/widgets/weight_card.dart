@@ -2,29 +2,35 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../l10n/l10n.dart';
-import '../../../models/activity_record.dart';
+import '../../../models/weight_record.dart';
 
-class StepsCard extends StatefulWidget {
-  final int todaySteps;
-  final List<StepsRecord> history;
-  final int goal;
+class WeightCard extends StatefulWidget {
+  final double currentWeight;
+  final double goalWeight;
+  final double? bodyFatPercent;
+  final List<WeightRecord> history;
 
-  const StepsCard({
+  const WeightCard({
     super.key,
-    required this.todaySteps,
+    required this.currentWeight,
+    required this.goalWeight,
+    this.bodyFatPercent,
     required this.history,
-    this.goal = 10000,
   });
 
   @override
-  State<StepsCard> createState() => _StepsCardState();
+  State<WeightCard> createState() => _WeightCardState();
 }
 
-class _StepsCardState extends State<StepsCard> {
+class _WeightCardState extends State<WeightCard> {
   bool _expanded = false;
 
-  String _fmt(int n, String locale) =>
-      NumberFormat.decimalPattern(locale).format(n);
+  String _fmtWeight(double value) => value.toStringAsFixed(1);
+
+  String _fmtSigned(double value) {
+    if (value > 0) return '+${value.toStringAsFixed(1)}';
+    return value.toStringAsFixed(1);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,18 +39,39 @@ class _StepsCardState extends State<StepsCard> {
     final l10n = context.l10n;
     final locale = Localizations.localeOf(context).toString();
 
-    final progress = (widget.todaySteps / widget.goal).clamp(0.0, 1.0);
-    final remaining = (widget.goal - widget.todaySteps).clamp(0, widget.goal);
+    final difference = widget.currentWeight - widget.goalWeight;
+    final progress =
+        (widget.goalWeight / widget.currentWeight).clamp(0.0, 1.0);
 
-    final avgSteps = widget.history.isEmpty
-        ? 0
-        : (widget.history.map((e) => e.steps).reduce((a, b) => a + b) /
-                widget.history.length)
-            .round();
+    final last7 = widget.history.length >= 2
+        ? widget.history.skip(widget.history.length > 7 ? widget.history.length - 7 : 0).toList()
+        : widget.history;
 
-    final bestDay = widget.history.isEmpty
-        ? null
-        : widget.history.reduce((a, b) => a.steps >= b.steps ? a : b);
+    final weeklyChange = last7.length >= 2
+        ? last7.last.weight - last7.first.weight
+        : 0.0;
+
+    final avgWeight = widget.history.isEmpty
+        ? widget.currentWeight
+        : widget.history.map((e) => e.weight).reduce((a, b) => a + b) /
+            widget.history.length;
+
+    final minWeight = widget.history.isEmpty
+        ? widget.currentWeight
+        : widget.history
+            .map((e) => e.weight)
+            .reduce((a, b) => a < b ? a : b);
+
+    final maxWeight = widget.history.isEmpty
+        ? widget.currentWeight
+        : widget.history
+            .map((e) => e.weight)
+            .reduce((a, b) => a > b ? a : b);
+
+    final bf = widget.bodyFatPercent;
+    final leanMass =
+        bf != null ? widget.currentWeight * (1 - (bf / 100)) : null;
+    final fatMass = bf != null ? widget.currentWeight * (bf / 100) : null;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -57,9 +84,9 @@ class _StepsCardState extends State<StepsCard> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.directions_walk, color: cs.primary),
+                  Icon(Icons.monitor_weight, color: cs.primary),
                   const SizedBox(width: 8),
-                  Text(l10n.stepsTitle, style: tt.titleMedium),
+                  Text(l10n.weightTitle, style: tt.titleMedium),
                   const Spacer(),
                   AnimatedRotation(
                     turns: _expanded ? 0.5 : 0.0,
@@ -76,19 +103,19 @@ class _StepsCardState extends State<StepsCard> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   _StatColumn(
-                    label: l10n.stepsToday,
-                    value: _fmt(widget.todaySteps, locale),
+                    label: l10n.weightCurrent,
+                    value: '${_fmtWeight(widget.currentWeight)} kg',
                     color: cs.primary,
                   ),
                   _StatColumn(
-                    label: l10n.stepsGoal,
-                    value: _fmt(widget.goal, locale),
+                    label: l10n.weightGoal,
+                    value: '${_fmtWeight(widget.goalWeight)} kg',
                     color: cs.onSurface,
                   ),
                   _StatColumn(
-                    label: l10n.stepsRemaining,
-                    value: _fmt(remaining, locale),
-                    color: remaining == 0 ? cs.primary : cs.onSurface,
+                    label: l10n.weightDifference,
+                    value: '${_fmtSigned(difference)} kg',
+                    color: difference <= 0 ? cs.primary : cs.error,
                   ),
                 ],
               ),
@@ -97,7 +124,7 @@ class _StepsCardState extends State<StepsCard> {
                 value: progress,
                 minHeight: 6,
                 borderRadius: BorderRadius.circular(3),
-                color: widget.todaySteps >= widget.goal ? cs.tertiary : cs.primary,
+                color: difference <= 0 ? cs.tertiary : cs.primary,
                 backgroundColor: cs.surfaceContainerHighest,
               ),
               AnimatedCrossFade(
@@ -113,50 +140,91 @@ class _StepsCardState extends State<StepsCard> {
                     children: [
                       Divider(color: cs.outlineVariant),
                       const SizedBox(height: 12),
+
                       Row(
                         children: [
                           Expanded(
                             child: _DetailTile(
-                              label: l10n.stepsAverage,
-                              value: l10n.stepsAvgPerDay(_fmt(avgSteps, locale)),
+                              label: l10n.weight7Days,
+                              value: '${_fmtSigned(weeklyChange)} kg',
                             ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: _DetailTile(
-                              label: l10n.stepsCompleted,
-                              value: widget.todaySteps >= widget.goal
-                                  ? l10n.stepsYes
-                                  : l10n.stepsNo,
+                              label: l10n.weightAverage,
+                              value: '${_fmtWeight(avgWeight)} kg',
                             ),
                           ),
                         ],
                       ),
+
                       const SizedBox(height: 8),
-                      if (bestDay != null)
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _DetailTile(
+                              label: l10n.weightMin,
+                              value: '${_fmtWeight(minWeight)} kg',
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _DetailTile(
+                              label: l10n.weightMax,
+                              value: '${_fmtWeight(maxWeight)} kg',
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      if (bf != null) ...[
+                        const SizedBox(height: 8),
                         Row(
                           children: [
                             Expanded(
                               child: _DetailTile(
-                                label: l10n.stepsBestDay,
-                                value: DateFormat('E', locale)
-                                    .format(bestDay.date),
+                                label: l10n.weightBodyFat,
+                                value: '${bf.toStringAsFixed(1)} %',
                               ),
                             ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: _DetailTile(
-                                label: l10n.stepsMaxSteps,
-                                value: _fmt(bestDay.steps, locale),
+                                label: l10n.weightLeanMass,
+                                value: '${_fmtWeight(leanMass!)} kg',
                               ),
                             ),
                           ],
                         ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _DetailTile(
+                                label: l10n.weightFatMass,
+                                value: '${_fmtWeight(fatMass!)} kg',
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _DetailTile(
+                                label: l10n.weightStatus,
+                                value: difference <= 0
+                                    ? l10n.weightGoalAchieved
+                                    : l10n.weightInProgress,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+
                       if (widget.history.length > 1) ...[
                         const SizedBox(height: 16),
                         SizedBox(
                           height: 96,
-                          child: _StepsBarChart(
+                          child: _WeightLineChart(
                             history: widget.history,
                             locale: locale,
                           ),
@@ -240,36 +308,46 @@ class _DetailTile extends StatelessWidget {
   }
 }
 
-class _StepsBarChart extends StatelessWidget {
-  final List<StepsRecord> history;
+class _WeightLineChart extends StatelessWidget {
+  final List<WeightRecord> history;
   final String locale;
 
-  const _StepsBarChart({required this.history, required this.locale});
+  const _WeightLineChart({required this.history, required this.locale});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final maxSteps =
-        history.map((e) => e.steps).reduce((a, b) => a > b ? a : b).toDouble();
 
-    return BarChart(
-      BarChartData(
-        maxY: maxSteps == 0 ? 1 : maxSteps * 1.2,
+    final weights = history.map((e) => e.weight).toList();
+    final minY = weights.reduce((a, b) => a < b ? a : b);
+    final maxY = weights.reduce((a, b) => a > b ? a : b);
+    final padding = ((maxY - minY) * 0.25).clamp(0.3, 2.0);
+
+    return LineChart(
+      LineChartData(
+        minY: minY - padding,
+        maxY: maxY + padding,
         gridData: const FlGridData(show: false),
         borderData: FlBorderData(show: false),
-        barTouchData: BarTouchData(enabled: false),
         titlesData: FlTitlesData(
-          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          leftTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 22,
               getTitlesWidget: (value, _) {
                 final idx = value.toInt();
-                if (idx < 0 || idx >= history.length) return const SizedBox();
+                if (idx < 0 || idx >= history.length) {
+                  return const SizedBox();
+                }
 
                 return Padding(
                   padding: const EdgeInsets.only(top: 6),
@@ -282,21 +360,24 @@ class _StepsBarChart extends StatelessWidget {
             ),
           ),
         ),
-        barGroups: [
-          for (int i = 0; i < history.length; i++)
-            BarChartGroupData(
-              x: i,
-              barRods: [
-                BarChartRodData(
-                  toY: history[i].steps.toDouble(),
-                  color: i == history.length - 1
-                      ? cs.primary
-                      : cs.primary.withValues(alpha: 0.35),
-                  width: 12,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ],
+        lineTouchData: LineTouchData(enabled: false),
+        lineBarsData: [
+          LineChartBarData(
+            isCurved: true,
+            color: cs.primary,
+            barWidth: 3,
+            dotData: FlDotData(
+              show: history.length <= 10,
             ),
+            belowBarData: BarAreaData(
+              show: true,
+              color: cs.primary.withValues(alpha: 0.12),
+            ),
+            spots: [
+              for (int i = 0; i < history.length; i++)
+                FlSpot(i.toDouble(), history[i].weight),
+            ],
+          ),
         ],
       ),
     );

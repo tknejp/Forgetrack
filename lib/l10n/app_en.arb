@@ -1,0 +1,333 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Forgetrack",
+  "@appTitle": { "description": "Application name in the title bar" },
+
+  "navOverview": "Overview",
+  "@navOverview": { "description": "Bottom navigation label for the Overview tab" },
+
+  "navActivities": "Activities",
+  "@navActivities": { "description": "Bottom navigation label for the Activities tab" },
+
+  "navNutrition": "Nutrition",
+  "@navNutrition": { "description": "Bottom navigation label for the Nutrition tab" },
+
+  "navBody": "Body",
+  "@navBody": { "description": "Bottom navigation label for the Body/Weight tab" },
+
+  "screenProfile": "Profile",
+  "@screenProfile": { "description": "AppBar title for the Profile screen" },
+
+  "screenActivities": "Activities",
+  "@screenActivities": { "description": "AppBar title for the Activities screen" },
+
+  "screenNutrition": "Nutrition",
+  "@screenNutrition": { "description": "AppBar title for the Nutrition screen" },
+
+  "screenBody": "Body",
+  "@screenBody": { "description": "AppBar title for the Body screen" },
+
+  "periodToday": "Today",
+  "@periodToday": { "description": "Segmented button label for 'today' period" },
+
+  "periodWeek": "Week",
+  "@periodWeek": { "description": "Segmented button label for 'week' period" },
+
+  "periodMonth": "Month",
+  "@periodMonth": { "description": "Segmented button label for 'month' period" },
+
+  "stepsTitle": "Steps",
+  "@stepsTitle": { "description": "Steps card title" },
+
+  "stepsToday": "Today",
+  "@stepsToday": { "description": "Label for today's step count" },
+
+  "stepsGoal": "Goal",
+  "@stepsGoal": { "description": "Label for step goal" },
+
+  "stepsRemaining": "Remaining",
+  "@stepsRemaining": { "description": "Label for remaining steps" },
+
+  "stepsAverage": "Average",
+  "@stepsAverage": { "description": "Label for average steps" },
+
+  "stepsAvgPerDay": "{value} / day",
+  "@stepsAvgPerDay": {
+    "description": "Average steps per day display",
+    "placeholders": {
+      "value": { "type": "String", "description": "Formatted step count" }
+    }
+  },
+
+  "stepsCompleted": "Completed",
+  "@stepsCompleted": { "description": "Label for whether daily step goal was completed" },
+
+  "stepsYes": "Yes",
+  "@stepsYes": { "description": "Goal completed: yes" },
+
+  "stepsNo": "No",
+  "@stepsNo": { "description": "Goal completed: no" },
+
+  "stepsBestDay": "Best day",
+  "@stepsBestDay": { "description": "Label for the day with most steps" },
+
+  "stepsMaxSteps": "Max steps",
+  "@stepsMaxSteps": { "description": "Label for the maximum step count in history" },
+
+  "caloriesTodayTitle": "Calories today",
+  "@caloriesTodayTitle": { "description": "Calorie summary card title" },
+
+  "caloriesConsumed": "Consumed",
+  "@caloriesConsumed": { "description": "Label for calories consumed" },
+
+  "caloriesBurned": "Burned",
+  "@caloriesBurned": { "description": "Label for calories burned through exercise" },
+
+  "caloriesRemaining": "Remaining",
+  "@caloriesRemaining": { "description": "Label for remaining calorie budget" },
+
+  "macroProtein": "Protein",
+  "@macroProtein": { "description": "Macro nutrient: protein" },
+
+  "macroFat": "Fat",
+  "@macroFat": { "description": "Macro nutrient: fat" },
+
+  "macroCarbs": "Carbs",
+  "@macroCarbs": { "description": "Macro nutrient: carbohydrates" },
+
+  "macroFiber": "Fiber",
+  "@macroFiber": { "description": "Macro nutrient: dietary fiber" },
+
+  "weightTitle": "Weight",
+  "@weightTitle": { "description": "Weight card title" },
+
+  "weightCurrent": "Current",
+  "@weightCurrent": { "description": "Label for current weight" },
+
+  "weightGoal": "Goal",
+  "@weightGoal": { "description": "Label for goal weight" },
+
+  "weightDifference": "Difference",
+  "@weightDifference": { "description": "Label for difference between current and goal weight" },
+
+  "weight7Days": "7 days",
+  "@weight7Days": { "description": "Label for 7-day weight change" },
+
+  "weightAverage": "Average",
+  "@weightAverage": { "description": "Label for average weight" },
+
+  "weightMin": "Min",
+  "@weightMin": { "description": "Label for minimum weight in period" },
+
+  "weightMax": "Max",
+  "@weightMax": { "description": "Label for maximum weight in period" },
+
+  "weightBodyFat": "Body fat",
+  "@weightBodyFat": { "description": "Label for body fat percentage" },
+
+  "weightLeanMass": "Lean mass",
+  "@weightLeanMass": { "description": "Label for lean body mass" },
+
+  "weightFatMass": "Fat mass",
+  "@weightFatMass": { "description": "Label for fat mass" },
+
+  "weightStatus": "Status",
+  "@weightStatus": { "description": "Label for goal status" },
+
+  "weightGoalAchieved": "Goal achieved",
+  "@weightGoalAchieved": { "description": "Status text when weight goal is reached" },
+
+  "weightInProgress": "In progress",
+  "@weightInProgress": { "description": "Status text when still working toward weight goal" },
+
+  "profileExportToSheets": "Export to Sheets",
+  "@profileExportToSheets": { "description": "Button to export data to Google Sheets" },
+
+  "profileSignOut": "Sign out",
+  "@profileSignOut": { "description": "Button to sign out of the account" },
+
+  "emptyNoData": "No data yet",
+  "@emptyNoData": { "description": "Empty state placeholder when no data is available" },
+
+  "settingsSection": "Settings",
+  "@settingsSection": { "description": "Header label for the Settings section in Profile" },
+
+  "settingsLanguage": "Language",
+  "@settingsLanguage": { "description": "Label for the language selector setting" },
+
+  "languageSystemDefault": "System default",
+  "@languageSystemDefault": { "description": "Option to follow the device system locale" },
+
+  "languageEnglish": "English",
+  "@languageEnglish": { "description": "Language option: English" },
+
+  "languageCzech": "Čeština",
+  "@languageCzech": { "description": "Language option: Czech" },
+
+  "profileNotSignedIn": "Not signed in",
+  "@profileNotSignedIn": { "description": "Header text when no user is authenticated" },
+
+  "profileSignInBenefit": "Sync workouts, calories and progress across devices",
+  "@profileSignInBenefit": { "description": "Short benefit subtitle shown below sign-in CTA" },
+
+  "profileContinueWithGoogle": "Continue with Google",
+  "@profileContinueWithGoogle": { "description": "Label for the Google sign-in CTA button" },
+
+  "profileConnectedGoogle": "Connected with Google",
+  "@profileConnectedGoogle": { "description": "Badge shown when user is signed in via Google" },
+
+  "profileSignOutConfirmTitle": "Sign out?",
+  "@profileSignOutConfirmTitle": { "description": "Title of the sign-out confirmation dialog" },
+
+  "profileSignOutConfirmMessage": "You'll need to sign in again to sync your data.",
+  "@profileSignOutConfirmMessage": { "description": "Body text of the sign-out confirmation dialog" },
+
+  "dialogCancel": "Cancel",
+  "@dialogCancel": { "description": "Generic cancel button label for dialogs" },
+
+  "sectionPreferences": "Preferences",
+  "@sectionPreferences": { "description": "Settings section header: preferences" },
+
+  "sectionData": "Data",
+  "@sectionData": { "description": "Settings section header: data" },
+
+  "sectionAbout": "About",
+  "@sectionAbout": { "description": "Settings section header: about the app" },
+
+  "sectionAccount": "Account",
+  "@sectionAccount": { "description": "Settings section header: account / danger zone" },
+
+  "settingsTheme": "Theme",
+  "@settingsTheme": { "description": "Label for the theme mode setting" },
+
+  "themeSystem": "System",
+  "@themeSystem": { "description": "Theme mode option: follow system setting" },
+
+  "themeLight": "Light",
+  "@themeLight": { "description": "Theme mode option: always light" },
+
+  "themeDark": "Dark",
+  "@themeDark": { "description": "Theme mode option: always dark" },
+
+  "settingsAppVersion": "App version",
+  "@settingsAppVersion": { "description": "Label for the app version row" },
+
+  "settingsPrivacy": "Privacy Policy",
+  "@settingsPrivacy": { "description": "Label for the privacy policy row" },
+
+  "settingsTerms": "Terms of Service",
+  "@settingsTerms": { "description": "Label for the terms of service row" },
+
+  "settingsFeedback": "Send feedback",
+  "@settingsFeedback": { "description": "Label for the send feedback row" },
+
+  "settingsClearCache": "Clear local data",
+  "@settingsClearCache": { "description": "Label for the clear local cache row" },
+
+  "healthNotAvailable": "Health Connect unavailable",
+  "@healthNotAvailable": { "description": "Title shown when Health Connect is not installed" },
+
+  "healthNotAvailableBody": "Install the Health Connect app to track your steps, weight and activity data.",
+  "@healthNotAvailableBody": { "description": "Body text when Health Connect is not installed" },
+
+  "healthInstall": "Install",
+  "@healthInstall": { "description": "Button to install Health Connect from the Play Store" },
+
+  "healthPermissionRequired": "Permission required",
+  "@healthPermissionRequired": { "description": "Title shown when Health Connect permissions are missing" },
+
+  "healthPermissionBody": "Grant Forgetrack access to Health Connect to display your real fitness data.",
+  "@healthPermissionBody": { "description": "Body text when Health Connect permissions are missing" },
+
+  "healthGrantAccess": "Grant access",
+  "@healthGrantAccess": { "description": "Button to request Health Connect permissions" },
+
+  "healthSyncFailed": "Could not load health data",
+  "@healthSyncFailed": { "description": "Error banner text when a health data sync fails" },
+
+  "healthRetry": "Retry",
+  "@healthRetry": { "description": "Button to retry a failed health data load" },
+
+  "healthLastSynced": "Synced: {time}",
+  "@healthLastSynced": {
+    "description": "Timestamp label shown after a successful health data sync",
+    "placeholders": {
+      "time": { "type": "String", "description": "Formatted time string, e.g. 14:32" }
+    }
+  },
+
+  "ktSectionTitle": "Nutrition Sync",
+  "@ktSectionTitle": { "description": "Profile section header for Kalorické Tabulky integration" },
+
+  "ktConnectBody": "Connect to kaloricketabulky.cz to automatically sync your daily nutrition data.",
+  "@ktConnectBody": { "description": "Subtitle shown in the KT login card when not connected" },
+
+  "ktEmailHint": "Email",
+  "@ktEmailHint": { "description": "Email text field hint for KT login" },
+
+  "ktPasswordHint": "Password",
+  "@ktPasswordHint": { "description": "Password text field hint for KT login" },
+
+  "ktLoginButton": "Connect",
+  "@ktLoginButton": { "description": "Primary button to submit KT login credentials" },
+
+  "ktLoggingIn": "Connecting…",
+  "@ktLoggingIn": { "description": "Loading label shown while KT login request is in flight" },
+
+  "ktConnectedBadge": "Connected to kaloricketabulky.cz",
+  "@ktConnectedBadge": { "description": "Badge label shown when user is connected to KT" },
+
+  "ktDisconnectButton": "Disconnect",
+  "@ktDisconnectButton": { "description": "Button to remove KT credentials and disconnect" },
+
+  "ktDisconnectConfirmTitle": "Disconnect Kalorické Tabulky?",
+  "@ktDisconnectConfirmTitle": { "description": "Title of the KT disconnect confirmation dialog" },
+
+  "ktDisconnectConfirmMessage": "Your nutrition data will no longer sync from Kalorické Tabulky.",
+  "@ktDisconnectConfirmMessage": { "description": "Body text of the KT disconnect confirmation dialog" },
+
+  "ktAuthError": "Invalid email or password",
+  "@ktAuthError": { "description": "Error message shown when KT login credentials are rejected" },
+
+  "ktSyncError": "Could not sync nutrition data",
+  "@ktSyncError": { "description": "Error message when a KT data fetch fails" },
+
+  "ktRetry": "Retry",
+  "@ktRetry": { "description": "Button to retry a failed KT data sync" },
+
+  "ktSyncedAt": "Synced: {time}",
+  "@ktSyncedAt": {
+    "description": "Timestamp label shown after a successful KT nutrition sync",
+    "placeholders": {
+      "time": { "type": "String", "description": "Formatted time string, e.g. 14:32" }
+    }
+  },
+
+  "ktLoginPrompt": "Connect Kalorické Tabulky in Settings to view your nutrition data.",
+  "@ktLoginPrompt": { "description": "Empty-state text in Nutrition screen when not connected to KT" },
+
+  "ktGoToSettings": "Go to Settings",
+  "@ktGoToSettings": { "description": "CTA button in the Nutrition empty state that opens Profile/Settings" },
+
+  "ktNoDiaryData": "No diary entries for today",
+  "@ktNoDiaryData": { "description": "Empty-state text when the user is connected but has no diary entries today" },
+
+  "ktNutritionTitle": "Today's Nutrition",
+  "@ktNutritionTitle": { "description": "Section title in the Nutrition screen for today's macro overview" },
+
+  "sleepTitle": "Sleep",
+  "@sleepTitle": { "description": "Sleep card title" },
+
+  "sleepDuration": "Duration",
+  "@sleepDuration": { "description": "Label for total sleep duration" },
+
+  "sleepFellAsleep": "Fell asleep",
+  "@sleepFellAsleep": { "description": "Label for the time the user fell asleep" },
+
+  "sleepWokeUp": "Woke up",
+  "@sleepWokeUp": { "description": "Label for the time the user woke up" },
+
+  "sleepNoData": "No sleep data recorded",
+  "@sleepNoData": { "description": "Empty state text when no sleep data is available" }
+}
