@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../widgets/app_logo.dart';
 import '../../../widgets/google_logo_icon.dart';
 import '../../../widgets/google_sign_in_button.dart';
 
@@ -66,7 +67,8 @@ class _SignedInHeaderContent extends StatelessWidget {
     final badgeBg = isDark ? const Color(0xFF1B3A1B) : const Color(0xFFE8F5E9);
     final badgeBorder =
         isDark ? const Color(0xFF388E3C) : const Color(0xFFA5D6A7);
-    final badgeText = isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32);
+    final badgeText =
+        isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32);
 
     return Column(
       children: [
@@ -140,22 +142,16 @@ class _SignedOutHeaderContent extends StatelessWidget {
 
     return Column(
       children: [
-        CircleAvatar(
-          radius: 44,
-          backgroundColor: cs.surfaceContainerHigh,
-          child: Icon(
-            Icons.person_outline,
-            size: 44,
-            color: cs.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 16),
+        const AppLogoIcon(size: 88),
+        const SizedBox(height: 18),
+        const AppWordmark(height: 30),
+        const SizedBox(height: 18),
         Text(
           l10n.profileNotSignedIn,
           style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w600),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 16),
         Text(
           l10n.profileSignInBenefit,
           style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
@@ -170,7 +166,7 @@ class _SignedOutHeaderContent extends StatelessWidget {
               const SizedBox(width: 5),
               Flexible(
                 child: Text(
-                  'Sign-in failed. Please try again.',
+                  auth.error!,
                   style: tt.bodySmall?.copyWith(color: cs.error),
                   textAlign: TextAlign.center,
                 ),
@@ -178,7 +174,7 @@ class _SignedOutHeaderContent extends StatelessWidget {
             ],
           ),
         ],
-        const SizedBox(height: 20),
+        const SizedBox(height: 22),
         GoogleSignInButton(
           isLoading: auth.isBusy,
           onPressed:

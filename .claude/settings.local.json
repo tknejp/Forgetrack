@@ -6,7 +6,9 @@
       "Bash(flutter analyze *)",
       "Bash(xargs grep *)",
       "Bash(dart run *)",
-      "Bash(dart analyze *)"
+      "Bash(dart analyze *)",
+      "PowerShell(flutter doctor -v 2>&1)",
+      "PowerShell($env:JAVA_HOME = \"C:\\\\Users\\\\TomPC\\\\AppData\\\\Local\\\\Programs\\\\Android Studio\\\\jbr\"; Set-Location \"C:\\\\Users\\\\TomPC\\\\Desktop\\\\Forgetrack\\\\android\"; .\\\\gradlew signingReport 2>&1 | Select-String -Pattern \"SHA|Variant|Config|Store|Alias|debug|release\" | Select-Object -First 40)"
     ]
   }
 }

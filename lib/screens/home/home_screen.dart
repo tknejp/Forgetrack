@@ -15,6 +15,7 @@ import '../../providers/fitness_provider.dart';
 import '../../providers/goals_provider.dart';
 import '../../providers/kaloricke_tabulky_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/app_logo.dart';
 import '../../widgets/profile_avatar_action.dart';
 import '../activities/activities_screen.dart';
 import '../body/body_screen.dart';
@@ -166,13 +167,15 @@ class _OverviewTabState extends State<_OverviewTab>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
     return Consumer2<FitnessProvider, KalorickeTabulkyProvider>(
       builder: (context, fitness, kt, _) {
         return Scaffold(
           appBar: AppBar(
-            title: Text(l10n.appTitle),
+            title: const AppBrandLockup(
+              iconSize: 30,
+              wordmarkHeight: 19,
+              gap: 10,
+            ),
             actions: [
               const ProfileAvatarAction(),
             ],
@@ -266,8 +269,7 @@ class _OverviewContent extends StatelessWidget {
               final v = details.primaryVelocity ?? 0;
               if (v.abs() < 300) return;
               // swipe right = previous, swipe left = next
-              final updated =
-                  v > 0 ? period.backward() : period.forward();
+              final updated = v > 0 ? period.backward() : period.forward();
               if (updated != period) onPeriodChanged(updated);
             },
             child: RefreshIndicator(
@@ -291,12 +293,11 @@ class _OverviewContent extends StatelessWidget {
                           DateFormat('HH:mm', locale)
                               .format(fitness.lastSyncedAt!),
                         ),
-                        style:
-                            Theme.of(context).textTheme.labelSmall?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
-                                ),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
                       ),
                     ),
                   ],
@@ -321,10 +322,9 @@ class _OverviewContent extends StatelessWidget {
                     todaySteps: metrics.stepsValue,
                     goal: metrics.stepsGoal,
                     history: metrics.stepsChartHistory,
-                    mainLabel:
-                        period.type == PeriodType.day
-                            ? l10n.stepsCurrent
-                            : l10n.stepsAverage,
+                    mainLabel: period.type == PeriodType.day
+                        ? l10n.stepsCurrent
+                        : l10n.stepsAverage,
                   ),
                   const SizedBox(height: 12),
                   CalorieSummaryCard(
@@ -496,8 +496,7 @@ class _ResolvedOverviewMetrics {
     final mainValue = measurement?.weight;
     final bodyFat = measurement?.bodyFat ?? fitness.latestBodyFat;
     final prev = fitness.previousWeightBefore(date);
-    final trend =
-        mainValue != null && prev != null ? mainValue - prev : null;
+    final trend = mainValue != null && prev != null ? mainValue - prev : null;
     return WeightCardData(
       periodType: PeriodType.day,
       mainValue: mainValue,
@@ -515,8 +514,7 @@ class _ResolvedOverviewMetrics {
     final avg = fitness.weekAvgWeight(weekStart);
     final prevWeekStart = weekStart.subtract(const Duration(days: 7));
     final prevAvg = fitness.weekAvgWeight(prevWeekStart);
-    final trend =
-        avg != null && prevAvg != null ? avg - prevAvg : null;
+    final trend = avg != null && prevAvg != null ? avg - prevAvg : null;
     final records = fitness.weightHistoryForRange(weekStart, weekEnd);
     final min = records.isEmpty
         ? null
@@ -543,8 +541,7 @@ class _ResolvedOverviewMetrics {
     final avg = fitness.monthAvgWeight(monthRef);
     final prevMonthRef = DateTime(monthRef.year, monthRef.month - 1, 1);
     final prevAvg = fitness.monthAvgWeight(prevMonthRef);
-    final trend =
-        avg != null && prevAvg != null ? avg - prevAvg : null;
+    final trend = avg != null && prevAvg != null ? avg - prevAvg : null;
     final records = fitness.weightHistoryForRange(monthStart, monthEnd);
     final min = records.isEmpty
         ? null
@@ -677,8 +674,7 @@ class _PeriodHeader extends StatelessWidget {
                         _label(context),
                         style: tt.labelLarge?.copyWith(
                           color: isDay && isToday ? cs.primary : cs.onSurface,
-                          fontWeight:
-                              isDay && isToday ? FontWeight.w600 : null,
+                          fontWeight: isDay && isToday ? FontWeight.w600 : null,
                         ),
                       ),
                       if (isDay) ...[

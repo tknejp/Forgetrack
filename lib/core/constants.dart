@@ -2,6 +2,7 @@ class AppConstants {
   AppConstants._();
 
   static const String appName = 'Forgetrack';
+  static const String appVersion = '1.0.0';
 
   // --- Google Sheets ---
   static const String sheetsTitle = 'Forgetrack Data';

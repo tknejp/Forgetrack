@@ -54,7 +54,7 @@ class AuthProvider extends ChangeNotifier {
       _error = null;
       _user = await _auth.signInSilently();
     } catch (e) {
-      _error = e.toString();
+      _error = _describeAuthError(e);
     } finally {
       _sessionState = _deriveSessionState(_user);
       notifyListeners();
@@ -71,7 +71,7 @@ class AuthProvider extends ChangeNotifier {
       _user = await _auth.signIn();
       _sessionState = _deriveSessionState(_user);
     } catch (e) {
-      _error = e.toString();
+      _error = _describeAuthError(e);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -90,5 +90,26 @@ class AuthProvider extends ChangeNotifier {
   void dispose() {
     _authSubscription?.cancel();
     super.dispose();
+  }
+
+  String _describeAuthError(Object error) {
+    if (error is GoogleSignInException) {
+      final description = error.description?.toLowerCase() ?? '';
+
+      if (error.code == GoogleSignInExceptionCode.canceled &&
+          description.contains('account reauth failed')) {
+        return 'Google sign-in is not fully configured for this Android build. '
+            'Check Firebase Google sign-in, SHA fingerprints, and the latest '
+            'google-services.json file.';
+      }
+
+      if (error.code == GoogleSignInExceptionCode.clientConfigurationError ||
+          description.contains('serverclientid')) {
+        return 'Google sign-in client configuration is incomplete. '
+            'Check the Android package name, OAuth client IDs, and server client ID.';
+      }
+    }
+
+    return error.toString();
   }
 }

@@ -27,7 +27,7 @@ dependencies:
 
   # --- Kalorické Tabulky: hashing + bezpečné uložení přihlašovacích údajů ---
   crypto: ^3.0.3
-  flutter_secure_storage: ^9.2.2
+  flutter_secure_storage: ^10.0.0
 
   # --- State management ---
   provider: ^6.1.2
@@ -59,4 +59,5 @@ flutter:
   uses-material-design: true
   generate: true
   assets:
+    - assets/branding/
     - assets/icons/google/

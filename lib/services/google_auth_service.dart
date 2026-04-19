@@ -9,6 +9,9 @@ import 'package:http/http.dart' as http;
 import 'google_auth_platform_adapter.dart';
 
 class GoogleAuthService {
+  static const String _serverClientId =
+      '798278342104-2fbpll2cvco1d4c79mdk9t6t344fkjbp.apps.googleusercontent.com';
+
   GoogleAuthService._() {
     installGoogleAuthPlatformAdapter();
     _authChangedController = StreamController<GoogleSignInAccount?>.broadcast(
@@ -43,7 +46,8 @@ class GoogleAuthService {
   bool get isSignedIn => _currentUser != null;
   bool get hasResolvedSession => _sessionResolved;
 
-  Stream<GoogleSignInAccount?> get onAuthChanged => _authChangedController.stream;
+  Stream<GoogleSignInAccount?> get onAuthChanged =>
+      _authChangedController.stream;
 
   Future<void> _ensureInitialized() {
     return _initializeFuture ??= _initialize();
@@ -53,17 +57,19 @@ class GoogleAuthService {
     if (_initialized) return;
 
     debugPrint('[GoogleAuthService] initializing');
-    await _signIn.initialize(
-      serverClientId:
-          '798278342104-2fbpll2cvco1d4c79mdk9t6t344fkjbp.apps.googleusercontent.com',
+    debugPrint(
+      '[GoogleAuthService] initialize: serverClientId=$_serverClientId '
+      'platform=$defaultTargetPlatform',
     );
+    await _signIn.initialize(serverClientId: _serverClientId);
     debugPrint('[GoogleAuthService] initialize done');
 
     _authSub ??= _signIn.authenticationEvents.listen(
       (GoogleSignInAuthenticationEvent event) {
         switch (event) {
           case GoogleSignInAuthenticationEventSignIn():
-            debugPrint('[GoogleAuthService] event: sign-in user=${event.user.email}');
+            debugPrint(
+                '[GoogleAuthService] event: sign-in user=${event.user.email}');
             _currentUser = event.user;
             break;
           case GoogleSignInAuthenticationEventSignOut():
@@ -75,7 +81,8 @@ class GoogleAuthService {
         _authChangedController.add(_currentUser);
       },
       onError: (Object error, StackTrace stackTrace) {
-        debugPrint('[GoogleAuthService] authenticationEvents error=$error\n$stackTrace');
+        debugPrint(
+            '[GoogleAuthService] authenticationEvents error=$error\n$stackTrace');
         _currentUser = null;
         _sessionResolved = true;
         _authChangedController.add(null);
@@ -160,14 +167,16 @@ class GoogleAuthService {
 
     final user = _currentUser;
     if (user == null) {
-      debugPrint('[GoogleAuthService] getAuthClient: no current user, returning null');
+      debugPrint(
+          '[GoogleAuthService] getAuthClient: no current user, returning null');
       return null;
     }
 
-    debugPrint('[GoogleAuthService] getAuthClient: authorizing scopes for ${user.email}');
+    debugPrint(
+        '[GoogleAuthService] getAuthClient: authorizing scopes for ${user.email}');
     final GoogleSignInClientAuthorization authorization =
         await user.authorizationClient.authorizationForScopes(_scopes) ??
-        await user.authorizationClient.authorizeScopes(_scopes);
+            await user.authorizationClient.authorizeScopes(_scopes);
 
     final client = authorization.authClient(scopes: _scopes);
     debugPrint('[GoogleAuthService] getAuthClient: client obtained');

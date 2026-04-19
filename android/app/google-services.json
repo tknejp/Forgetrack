@@ -12,7 +12,20 @@
           "package_name": "com.knejp.forgetrack"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "798278342104-jvtmm2jqhnrgpg4f4c12jm2osdi3vurc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.knejp.forgetrack",
+            "certificate_hash": "4385b2269c73d091ee3f93cdc3095995ecc14f8b"
+          }
+        },
+        {
+          "client_id": "798278342104-2fbpll2cvco1d4c79mdk9t6t344fkjbp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCm7iq6TdhiH7VBvH2F4KoEFVsNa-Z5vr4"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "798278342104-2fbpll2cvco1d4c79mdk9t6t344fkjbp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

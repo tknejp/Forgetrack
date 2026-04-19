@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
+import 'core/constants.dart';
 import 'l10n/app_localizations.dart';
 import 'providers/locale_provider.dart';
 import 'providers/theme_provider.dart';
@@ -17,7 +18,7 @@ class ForgetrackApp extends StatelessWidget {
     final themeMode = context.watch<ThemeProvider>().mode;
 
     return MaterialApp(
-      title: 'Forgetrack',
+      title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
