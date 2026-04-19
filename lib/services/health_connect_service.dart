@@ -17,31 +17,51 @@ class HealthConnectService {
 
   static const _logName = 'HealthConnectService';
 
-  static const List<HealthDataType> _readTypes = [
+  // Core permissions required for the app to leave the permission gate.
+  // Optional scopes (workouts, sleep, body fat) are fetched opportunistically
+  // and already degrade gracefully to empty/no-data states.
+  static const List<HealthDataType> _requiredReadTypes = [
     HealthDataType.STEPS,
-    HealthDataType.WORKOUT,
-    HealthDataType.HEART_RATE,
     HealthDataType.ACTIVE_ENERGY_BURNED,
     HealthDataType.WEIGHT,
+  ];
+
+  // Additional scopes requested for richer screens, but not used to block
+  // the entire app when they are missing.
+  //
+  // On Android, the `health` plugin enriches WORKOUT reads by querying
+  // distance and total-calorie records for each exercise session. If those
+  // extra permissions are not granted, the workout fetch can fail and come
+  // back empty even though WORKOUT itself is allowed.
+  static const List<HealthDataType> _workoutReadTypes = [
+    HealthDataType.WORKOUT,
+    HealthDataType.DISTANCE_DELTA,
+    HealthDataType.TOTAL_CALORIES_BURNED,
+  ];
+
+  static const List<HealthDataType> _optionalReadTypes = [
+    ..._workoutReadTypes,
     HealthDataType.BODY_FAT_PERCENTAGE,
     HealthDataType.SLEEP_SESSION,
   ];
 
-  static const List<HealthDataType> _workoutType = [
-    HealthDataType.WORKOUT,
-  ];
-
-  static const List<HealthDataAccess> _readPermissions = [
-    HealthDataAccess.READ,
-    HealthDataAccess.READ,
-    HealthDataAccess.READ,
-    HealthDataAccess.READ,
+  static const List<HealthDataAccess> _requiredReadPermissions = [
     HealthDataAccess.READ,
     HealthDataAccess.READ,
     HealthDataAccess.READ,
   ];
 
-  static const List<HealthDataAccess> _singleReadPermission = [
+  static const List<HealthDataAccess> _optionalReadPermissions = [
+    HealthDataAccess.READ,
+    HealthDataAccess.READ,
+    HealthDataAccess.READ,
+    HealthDataAccess.READ,
+    HealthDataAccess.READ,
+  ];
+
+  static const List<HealthDataAccess> _workoutReadPermissions = [
+    HealthDataAccess.READ,
+    HealthDataAccess.READ,
     HealthDataAccess.READ,
   ];
 
@@ -132,14 +152,14 @@ class HealthConnectService {
 
     try {
       final result = await _health.hasPermissions(
-        _readTypes,
-        permissions: _readPermissions,
+        _requiredReadTypes,
+        permissions: _requiredReadPermissions,
       );
 
-      _logInfo('hasPermissions(all read types) => $result');
+      _logInfo('hasPermissions(required read types) => $result');
       return result;
     } catch (e, st) {
-      _logError('hasPermissions(all read types) failed', e, st);
+      _logError('hasPermissions(required read types) failed', e, st);
       rethrow;
     }
   }
@@ -149,25 +169,34 @@ class HealthConnectService {
     await _assertAvailable();
 
     try {
-      _logInfo('Requesting permissions for all read types: $_readTypes');
+      final requestedTypes = <HealthDataType>[
+        ..._requiredReadTypes,
+        ..._optionalReadTypes,
+      ];
+      final requestedPermissions = <HealthDataAccess>[
+        ..._requiredReadPermissions,
+        ..._optionalReadPermissions,
+      ];
+
+      _logInfo('Requesting permissions for read types: $requestedTypes');
 
       final granted = await _health.requestAuthorization(
-        _readTypes,
-        permissions: _readPermissions,
+        requestedTypes,
+        permissions: requestedPermissions,
       );
 
-      _logInfo('requestPermissions(all read types) => $granted');
+      _logInfo('requestPermissions(read types) => $granted');
 
       final after = await _health.hasPermissions(
-        _readTypes,
-        permissions: _readPermissions,
+        _requiredReadTypes,
+        permissions: _requiredReadPermissions,
       );
 
-      _logInfo('hasPermissions(all read types) after request => $after');
+      _logInfo('hasPermissions(required read types) after request => $after');
 
-      return granted;
+      return after == true;
     } catch (e, st) {
-      _logError('requestPermissions(all read types) failed', e, st);
+      _logError('requestPermissions(read types) failed', e, st);
       rethrow;
     }
   }
@@ -178,8 +207,8 @@ class HealthConnectService {
 
     try {
       final result = await _health.hasPermissions(
-        _workoutType,
-        permissions: _singleReadPermission,
+        _workoutReadTypes,
+        permissions: _workoutReadPermissions,
       );
 
       _logInfo('hasWorkoutPermission() => $result');
@@ -196,24 +225,24 @@ class HealthConnectService {
 
     try {
       final before = await _health.hasPermissions(
-        _workoutType,
-        permissions: _singleReadPermission,
+        _workoutReadTypes,
+        permissions: _workoutReadPermissions,
       );
       _logInfo('WORKOUT permission before request => $before');
 
       final granted = await _health.requestAuthorization(
-        _workoutType,
-        permissions: _singleReadPermission,
+        _workoutReadTypes,
+        permissions: _workoutReadPermissions,
       );
       _logInfo('WORKOUT requestAuthorization => $granted');
 
       final after = await _health.hasPermissions(
-        _workoutType,
-        permissions: _singleReadPermission,
+        _workoutReadTypes,
+        permissions: _workoutReadPermissions,
       );
       _logInfo('WORKOUT permission after request => $after');
 
-      return granted;
+      return after == true;
     } catch (e, st) {
       _logError('requestWorkoutPermission() failed', e, st);
       rethrow;
@@ -266,13 +295,11 @@ class HealthConnectService {
     required DateTime start,
     required DateTime end,
   }) async {
-    await ensureWorkoutPermission();
-
     return _fetchData(
       label: 'WORKOUT',
       start: start,
       end: end,
-      types: _workoutType,
+      types: const [HealthDataType.WORKOUT],
     );
   }
 
@@ -539,20 +566,20 @@ class HealthConnectService {
       _logInfo('debugWorkoutPermissionFlow() started');
 
       final before = await _health.hasPermissions(
-        _workoutType,
-        permissions: _singleReadPermission,
+        _workoutReadTypes,
+        permissions: _workoutReadPermissions,
       );
       _logInfo('WORKOUT hasPermissions BEFORE => $before');
 
       final requested = await _health.requestAuthorization(
-        _workoutType,
-        permissions: _singleReadPermission,
+        _workoutReadTypes,
+        permissions: _workoutReadPermissions,
       );
       _logInfo('WORKOUT requestAuthorization => $requested');
 
       final after = await _health.hasPermissions(
-        _workoutType,
-        permissions: _singleReadPermission,
+        _workoutReadTypes,
+        permissions: _workoutReadPermissions,
       );
       _logInfo('WORKOUT hasPermissions AFTER => $after');
     } catch (e, st) {

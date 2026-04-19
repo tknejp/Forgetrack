@@ -152,11 +152,11 @@ abstract class AppLocalizations {
   /// **'Body'**
   String get screenBody;
 
-  /// Segmented button label for 'today' period
+  /// Segmented button label for 'day' period
   ///
   /// In en, this message translates to:
-  /// **'Today'**
-  String get periodToday;
+  /// **'Day'**
+  String get periodDay;
 
   /// Segmented button label for 'week' period
   ///
@@ -170,6 +170,24 @@ abstract class AppLocalizations {
   /// **'Month'**
   String get periodMonth;
 
+  /// Snackbar shown when user taps the custom range placeholder button
+  ///
+  /// In en, this message translates to:
+  /// **'Custom range coming soon'**
+  String get periodCustomRangeSoon;
+
+  /// Calorie card subtitle shown in week/month mode indicating values are daily averages
+  ///
+  /// In en, this message translates to:
+  /// **'Avg / day'**
+  String get caloriesAvgPerDay;
+
+  /// Label for average sleep duration in week/month mode
+  ///
+  /// In en, this message translates to:
+  /// **'Average'**
+  String get sleepAverage;
+
   /// Steps card title
   ///
   /// In en, this message translates to:
@@ -181,6 +199,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Today'**
   String get stepsToday;
+
+  /// General label for the main step value in day mode
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get stepsCurrent;
 
   /// Label for step goal
   ///
@@ -290,31 +314,13 @@ abstract class AppLocalizations {
   /// **'Weight'**
   String get weightTitle;
 
-  /// Label for current weight
-  ///
-  /// In en, this message translates to:
-  /// **'Current'**
-  String get weightCurrent;
-
   /// Label for goal weight
   ///
   /// In en, this message translates to:
   /// **'Goal'**
   String get weightGoal;
 
-  /// Label for difference between current and goal weight
-  ///
-  /// In en, this message translates to:
-  /// **'Difference'**
-  String get weightDifference;
-
-  /// Label for 7-day weight change
-  ///
-  /// In en, this message translates to:
-  /// **'7 days'**
-  String get weight7Days;
-
-  /// Label for average weight
+  /// Label for average weight (week/month mode)
   ///
   /// In en, this message translates to:
   /// **'Average'**
@@ -350,23 +356,35 @@ abstract class AppLocalizations {
   /// **'Fat mass'**
   String get weightFatMass;
 
-  /// Label for goal status
+  /// Column label for the main weight value in day mode
   ///
   /// In en, this message translates to:
-  /// **'Status'**
-  String get weightStatus;
+  /// **'Weight'**
+  String get weightMainLabelDay;
 
-  /// Status text when weight goal is reached
+  /// Trend label in day mode: vs previous measurement
   ///
   /// In en, this message translates to:
-  /// **'Goal achieved'**
-  String get weightGoalAchieved;
+  /// **'vs prev.'**
+  String get weightVsPrevMeasure;
 
-  /// Status text when still working toward weight goal
+  /// Trend label in week mode
   ///
   /// In en, this message translates to:
-  /// **'In progress'**
-  String get weightInProgress;
+  /// **'vs prev. week'**
+  String get weightVsPrevWeek;
+
+  /// Trend label in month mode
+  ///
+  /// In en, this message translates to:
+  /// **'vs prev. month'**
+  String get weightVsPrevMonth;
+
+  /// Shown when no weight was recorded for the selected day
+  ///
+  /// In en, this message translates to:
+  /// **'No record'**
+  String get weightNoMeasurement;
 
   /// Button to export data to Google Sheets
   ///
@@ -727,6 +745,282 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No sleep data recorded'**
   String get sleepNoData;
+
+  /// Label for this week's step total in Activities screen
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get activitiesWeekTotal;
+
+  /// Label for this month's step total in Activities screen
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get activitiesMonthTotal;
+
+  /// Section title for active calories in Activities screen
+  ///
+  /// In en, this message translates to:
+  /// **'Active calories'**
+  String get activitiesActiveCalories;
+
+  /// Label for active minutes in Activities screen
+  ///
+  /// In en, this message translates to:
+  /// **'Active min.'**
+  String get activitiesActiveMins;
+
+  /// Section title for workout list in Activities screen
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts'**
+  String get activitiesWorkouts;
+
+  /// Empty state when no workouts are available
+  ///
+  /// In en, this message translates to:
+  /// **'No workouts in the last 30 days'**
+  String get activitiesNoWorkouts;
+
+  /// Section header for recent workout list
+  ///
+  /// In en, this message translates to:
+  /// **'Recent workouts'**
+  String get activitiesRecentActivity;
+
+  /// Label for daily average value
+  ///
+  /// In en, this message translates to:
+  /// **'Daily avg'**
+  String get activitiesDailyAvg;
+
+  /// Label for weekly average value
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly avg'**
+  String get activitiesWeeklyAvg;
+
+  /// Label for 7-day steps bar chart section
+  ///
+  /// In en, this message translates to:
+  /// **'7-day trend'**
+  String get activitiesWeeklyTrend;
+
+  /// Label for average workout duration in workout stats card
+  ///
+  /// In en, this message translates to:
+  /// **'Avg. duration'**
+  String get activitiesAvgDuration;
+
+  /// Title in the workout permission card when WORKOUT permission is not granted
+  ///
+  /// In en, this message translates to:
+  /// **'Workout access needed'**
+  String get activitiesWorkoutPermissionTitle;
+
+  /// Body text in the workout permission card
+  ///
+  /// In en, this message translates to:
+  /// **'Grant Forgetrack access to your workout data in Health Connect to see activity history and stats.'**
+  String get activitiesWorkoutPermissionBody;
+
+  /// Label for 7-day average sleep duration in Body screen sleep section
+  ///
+  /// In en, this message translates to:
+  /// **'7-day avg'**
+  String get sleepAvg7Day;
+
+  /// Label for current weight value in Body screen
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get bodyCurrentWeight;
+
+  /// Label for 30-day weight change in Body screen
+  ///
+  /// In en, this message translates to:
+  /// **'30-day change'**
+  String get body30DayChange;
+
+  /// Section title for weight trend chart
+  ///
+  /// In en, this message translates to:
+  /// **'Weight trend'**
+  String get bodyWeightTrend;
+
+  /// Section title for body composition (fat%, lean mass)
+  ///
+  /// In en, this message translates to:
+  /// **'Body composition'**
+  String get bodyComposition;
+
+  /// Empty state when no weight data is available in Body screen
+  ///
+  /// In en, this message translates to:
+  /// **'No weight data recorded'**
+  String get bodyNoData;
+
+  /// Label for progress bar toward target weight
+  ///
+  /// In en, this message translates to:
+  /// **'Progress to goal'**
+  String get bodyProgressToGoal;
+
+  /// Remaining distance to target weight
+  ///
+  /// In en, this message translates to:
+  /// **'{value} kg to go'**
+  String bodyToGo(String value);
+
+  /// Message shown when current weight equals or is better than goal weight
+  ///
+  /// In en, this message translates to:
+  /// **'Goal reached!'**
+  String get bodyAtGoal;
+
+  /// Settings section header for user goals
+  ///
+  /// In en, this message translates to:
+  /// **'Goals'**
+  String get sectionGoals;
+
+  /// Goal label: daily step count
+  ///
+  /// In en, this message translates to:
+  /// **'Daily steps'**
+  String get goalDailySteps;
+
+  /// Goal label: target body weight
+  ///
+  /// In en, this message translates to:
+  /// **'Target weight'**
+  String get goalTargetWeight;
+
+  /// Goal label: daily calorie intake target
+  ///
+  /// In en, this message translates to:
+  /// **'Daily calories'**
+  String get goalDailyCalories;
+
+  /// Goal label: daily protein intake target
+  ///
+  /// In en, this message translates to:
+  /// **'Daily protein'**
+  String get goalDailyProtein;
+
+  /// Goal label: sleep duration goal
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep'**
+  String get goalSleepHours;
+
+  /// Goal label: weekly activity minutes goal
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly activity'**
+  String get goalWeeklyActivity;
+
+  /// Unit suffix for step count goals
+  ///
+  /// In en, this message translates to:
+  /// **'steps'**
+  String get goalUnitSteps;
+
+  /// Unit suffix for calorie goals
+  ///
+  /// In en, this message translates to:
+  /// **'kcal'**
+  String get goalUnitKcal;
+
+  /// Unit suffix for gram-based goals (protein)
+  ///
+  /// In en, this message translates to:
+  /// **'g'**
+  String get goalUnitG;
+
+  /// Unit suffix for sleep hours goal
+  ///
+  /// In en, this message translates to:
+  /// **'hours'**
+  String get goalUnitHours;
+
+  /// Unit suffix for activity minutes goal
+  ///
+  /// In en, this message translates to:
+  /// **'min'**
+  String get goalUnitMins;
+
+  /// Dialog title when editing a goal value
+  ///
+  /// In en, this message translates to:
+  /// **'Set goal'**
+  String get goalEditTitle;
+
+  /// Confirm button in goal edit dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get goalSave;
+
+  /// Button in the day-mode date header that jumps back to today's date
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get headerToday;
+
+  /// Nutrient label: sugar
+  ///
+  /// In en, this message translates to:
+  /// **'Sugar'**
+  String get macroSugar;
+
+  /// Nutrient label: salt / sodium
+  ///
+  /// In en, this message translates to:
+  /// **'Salt'**
+  String get macroSalt;
+
+  /// Nutrient label: saturated fat (compact)
+  ///
+  /// In en, this message translates to:
+  /// **'Sat. fat'**
+  String get macroSaturatedFat;
+
+  /// Goal label: daily fat intake target
+  ///
+  /// In en, this message translates to:
+  /// **'Daily fat'**
+  String get goalDailyFat;
+
+  /// Goal label: daily carbohydrate intake target
+  ///
+  /// In en, this message translates to:
+  /// **'Daily carbs'**
+  String get goalDailyCarbs;
+
+  /// Nutrition screen period selector: last 7 days
+  ///
+  /// In en, this message translates to:
+  /// **'7 days'**
+  String get nutritionPeriod7d;
+
+  /// Nutrition screen period selector: last 30 days
+  ///
+  /// In en, this message translates to:
+  /// **'30 days'**
+  String get nutritionPeriod30d;
+
+  /// Button in nutrition screen that opens goal editing in Profile
+  ///
+  /// In en, this message translates to:
+  /// **'Edit goals'**
+  String get nutritionGoalsTitle;
+
+  /// Empty state shown in nutrition screen when historical averages cannot be computed
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough data for this period'**
+  String get nutritionNoHistoryData;
 }
 
 class _AppLocalizationsDelegate

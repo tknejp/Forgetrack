@@ -6,8 +6,11 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/sheets/v4.dart';
 import 'package:http/http.dart' as http;
 
+import 'google_auth_platform_adapter.dart';
+
 class GoogleAuthService {
   GoogleAuthService._() {
+    installGoogleAuthPlatformAdapter();
     _authChangedController = StreamController<GoogleSignInAccount?>.broadcast(
       onListen: () {
         if (_initialized) {
@@ -32,10 +35,13 @@ class GoogleAuthService {
 
   GoogleSignInAccount? _currentUser;
   bool _initialized = false;
+  bool _sessionResolved = false;
   Future<void>? _initializeFuture;
+  Future<GoogleSignInAccount?>? _restoreFuture;
 
   GoogleSignInAccount? get currentUser => _currentUser;
   bool get isSignedIn => _currentUser != null;
+  bool get hasResolvedSession => _sessionResolved;
 
   Stream<GoogleSignInAccount?> get onAuthChanged => _authChangedController.stream;
 
@@ -65,16 +71,19 @@ class GoogleAuthService {
             _currentUser = null;
             break;
         }
+        _sessionResolved = true;
         _authChangedController.add(_currentUser);
       },
       onError: (Object error, StackTrace stackTrace) {
         debugPrint('[GoogleAuthService] authenticationEvents error=$error\n$stackTrace');
         _currentUser = null;
+        _sessionResolved = true;
         _authChangedController.add(null);
       },
     );
 
     _initialized = true;
+    await _restoreSession();
   }
 
   Future<void> init() => _ensureInitialized();
@@ -85,6 +94,7 @@ class GoogleAuthService {
     try {
       final user = await _signIn.authenticate();
       _currentUser = user;
+      _sessionResolved = true;
       debugPrint('[GoogleAuthService] signIn: success user=${user.email}');
       return user;
     } catch (e, st) {
@@ -94,21 +104,54 @@ class GoogleAuthService {
   }
 
   Future<GoogleSignInAccount?> signInSilently() async {
-    debugPrint('[GoogleAuthService] signInSilently: start');
     await _ensureInitialized();
-    final user = await _signIn.attemptLightweightAuthentication();
-    _currentUser = user;
-    debugPrint('[GoogleAuthService] signInSilently: result=${user?.email ?? 'null'}');
-    return user;
+    if (_sessionResolved) return _currentUser;
+    return _restoreSession();
   }
 
   Future<void> signOut() async {
     debugPrint('[GoogleAuthService] signOut: start');
     await _ensureInitialized();
     _currentUser = null;
+    _sessionResolved = true;
+    _restoreFuture = null;
     _authChangedController.add(null);
     await _signIn.signOut();
     debugPrint('[GoogleAuthService] signOut: done');
+  }
+
+  Future<GoogleSignInAccount?> _restoreSession() {
+    return _restoreFuture ??= _performRestoreSession();
+  }
+
+  Future<GoogleSignInAccount?> _performRestoreSession() async {
+    debugPrint('[GoogleAuthService] restoreSession: start');
+    try {
+      final user = await _signIn.attemptLightweightAuthentication();
+      final previousUser = _currentUser;
+      final wasResolved = _sessionResolved;
+
+      _currentUser = user;
+      _sessionResolved = true;
+
+      if (!wasResolved || previousUser != user || user == null) {
+        _authChangedController.add(_currentUser);
+      }
+
+      debugPrint(
+        '[GoogleAuthService] restoreSession: result=${user?.email ?? 'null'}',
+      );
+      return user;
+    } catch (e, st) {
+      debugPrint('[GoogleAuthService] restoreSession: error=$e\n$st');
+      final shouldNotify = _currentUser != null || !_sessionResolved;
+      _currentUser = null;
+      _sessionResolved = true;
+      if (shouldNotify) {
+        _authChangedController.add(null);
+      }
+      return null;
+    }
   }
 
   Future<http.Client?> getAuthClient() async {

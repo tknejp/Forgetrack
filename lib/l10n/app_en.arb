@@ -28,8 +28,8 @@
   "screenBody": "Body",
   "@screenBody": { "description": "AppBar title for the Body screen" },
 
-  "periodToday": "Today",
-  "@periodToday": { "description": "Segmented button label for 'today' period" },
+  "periodDay": "Day",
+  "@periodDay": { "description": "Segmented button label for 'day' period" },
 
   "periodWeek": "Week",
   "@periodWeek": { "description": "Segmented button label for 'week' period" },
@@ -37,11 +37,23 @@
   "periodMonth": "Month",
   "@periodMonth": { "description": "Segmented button label for 'month' period" },
 
+  "periodCustomRangeSoon": "Custom range coming soon",
+  "@periodCustomRangeSoon": { "description": "Snackbar shown when user taps the custom range placeholder button" },
+
+  "caloriesAvgPerDay": "Avg / day",
+  "@caloriesAvgPerDay": { "description": "Calorie card subtitle shown in week/month mode indicating values are daily averages" },
+
+  "sleepAverage": "Average",
+  "@sleepAverage": { "description": "Label for average sleep duration in week/month mode" },
+
   "stepsTitle": "Steps",
   "@stepsTitle": { "description": "Steps card title" },
 
   "stepsToday": "Today",
   "@stepsToday": { "description": "Label for today's step count" },
+
+  "stepsCurrent": "Current",
+  "@stepsCurrent": { "description": "General label for the main step value in day mode" },
 
   "stepsGoal": "Goal",
   "@stepsGoal": { "description": "Label for step goal" },
@@ -102,20 +114,11 @@
   "weightTitle": "Weight",
   "@weightTitle": { "description": "Weight card title" },
 
-  "weightCurrent": "Current",
-  "@weightCurrent": { "description": "Label for current weight" },
-
   "weightGoal": "Goal",
   "@weightGoal": { "description": "Label for goal weight" },
 
-  "weightDifference": "Difference",
-  "@weightDifference": { "description": "Label for difference between current and goal weight" },
-
-  "weight7Days": "7 days",
-  "@weight7Days": { "description": "Label for 7-day weight change" },
-
   "weightAverage": "Average",
-  "@weightAverage": { "description": "Label for average weight" },
+  "@weightAverage": { "description": "Label for average weight (week/month mode)" },
 
   "weightMin": "Min",
   "@weightMin": { "description": "Label for minimum weight in period" },
@@ -132,14 +135,20 @@
   "weightFatMass": "Fat mass",
   "@weightFatMass": { "description": "Label for fat mass" },
 
-  "weightStatus": "Status",
-  "@weightStatus": { "description": "Label for goal status" },
+  "weightMainLabelDay": "Weight",
+  "@weightMainLabelDay": { "description": "Column label for the main weight value in day mode" },
 
-  "weightGoalAchieved": "Goal achieved",
-  "@weightGoalAchieved": { "description": "Status text when weight goal is reached" },
+  "weightVsPrevMeasure": "vs prev.",
+  "@weightVsPrevMeasure": { "description": "Trend label in day mode: vs previous measurement" },
 
-  "weightInProgress": "In progress",
-  "@weightInProgress": { "description": "Status text when still working toward weight goal" },
+  "weightVsPrevWeek": "vs prev. week",
+  "@weightVsPrevWeek": { "description": "Trend label in week mode" },
+
+  "weightVsPrevMonth": "vs prev. month",
+  "@weightVsPrevMonth": { "description": "Trend label in month mode" },
+
+  "weightNoMeasurement": "No record",
+  "@weightNoMeasurement": { "description": "Shown when no weight was recorded for the selected day" },
 
   "profileExportToSheets": "Export to Sheets",
   "@profileExportToSheets": { "description": "Button to export data to Google Sheets" },
@@ -329,5 +338,148 @@
   "@sleepWokeUp": { "description": "Label for the time the user woke up" },
 
   "sleepNoData": "No sleep data recorded",
-  "@sleepNoData": { "description": "Empty state text when no sleep data is available" }
+  "@sleepNoData": { "description": "Empty state text when no sleep data is available" },
+
+  "activitiesWeekTotal": "This week",
+  "@activitiesWeekTotal": { "description": "Label for this week's step total in Activities screen" },
+
+  "activitiesMonthTotal": "This month",
+  "@activitiesMonthTotal": { "description": "Label for this month's step total in Activities screen" },
+
+  "activitiesActiveCalories": "Active calories",
+  "@activitiesActiveCalories": { "description": "Section title for active calories in Activities screen" },
+
+  "activitiesActiveMins": "Active min.",
+  "@activitiesActiveMins": { "description": "Label for active minutes in Activities screen" },
+
+  "activitiesWorkouts": "Workouts",
+  "@activitiesWorkouts": { "description": "Section title for workout list in Activities screen" },
+
+  "activitiesNoWorkouts": "No workouts in the last 30 days",
+  "@activitiesNoWorkouts": { "description": "Empty state when no workouts are available" },
+
+  "activitiesRecentActivity": "Recent workouts",
+  "@activitiesRecentActivity": { "description": "Section header for recent workout list" },
+
+  "activitiesDailyAvg": "Daily avg",
+  "@activitiesDailyAvg": { "description": "Label for daily average value" },
+
+  "activitiesWeeklyAvg": "Weekly avg",
+  "@activitiesWeeklyAvg": { "description": "Label for weekly average value" },
+
+  "activitiesWeeklyTrend": "7-day trend",
+  "@activitiesWeeklyTrend": { "description": "Label for 7-day steps bar chart section" },
+
+  "activitiesAvgDuration": "Avg. duration",
+  "@activitiesAvgDuration": { "description": "Label for average workout duration in workout stats card" },
+
+  "activitiesWorkoutPermissionTitle": "Workout access needed",
+  "@activitiesWorkoutPermissionTitle": { "description": "Title in the workout permission card when WORKOUT permission is not granted" },
+
+  "activitiesWorkoutPermissionBody": "Grant Forgetrack access to your workout data in Health Connect to see activity history and stats.",
+  "@activitiesWorkoutPermissionBody": { "description": "Body text in the workout permission card" },
+
+  "sleepAvg7Day": "7-day avg",
+  "@sleepAvg7Day": { "description": "Label for 7-day average sleep duration in Body screen sleep section" },
+
+  "bodyCurrentWeight": "Current",
+  "@bodyCurrentWeight": { "description": "Label for current weight value in Body screen" },
+
+  "body30DayChange": "30-day change",
+  "@body30DayChange": { "description": "Label for 30-day weight change in Body screen" },
+
+  "bodyWeightTrend": "Weight trend",
+  "@bodyWeightTrend": { "description": "Section title for weight trend chart" },
+
+  "bodyComposition": "Body composition",
+  "@bodyComposition": { "description": "Section title for body composition (fat%, lean mass)" },
+
+  "bodyNoData": "No weight data recorded",
+  "@bodyNoData": { "description": "Empty state when no weight data is available in Body screen" },
+
+  "bodyProgressToGoal": "Progress to goal",
+  "@bodyProgressToGoal": { "description": "Label for progress bar toward target weight" },
+
+  "bodyToGo": "{value} kg to go",
+  "@bodyToGo": {
+    "description": "Remaining distance to target weight",
+    "placeholders": {
+      "value": { "type": "String", "description": "Formatted kg value" }
+    }
+  },
+
+  "bodyAtGoal": "Goal reached!",
+  "@bodyAtGoal": { "description": "Message shown when current weight equals or is better than goal weight" },
+
+  "sectionGoals": "Goals",
+  "@sectionGoals": { "description": "Settings section header for user goals" },
+
+  "goalDailySteps": "Daily steps",
+  "@goalDailySteps": { "description": "Goal label: daily step count" },
+
+  "goalTargetWeight": "Target weight",
+  "@goalTargetWeight": { "description": "Goal label: target body weight" },
+
+  "goalDailyCalories": "Daily calories",
+  "@goalDailyCalories": { "description": "Goal label: daily calorie intake target" },
+
+  "goalDailyProtein": "Daily protein",
+  "@goalDailyProtein": { "description": "Goal label: daily protein intake target" },
+
+  "goalSleepHours": "Sleep",
+  "@goalSleepHours": { "description": "Goal label: sleep duration goal" },
+
+  "goalWeeklyActivity": "Weekly activity",
+  "@goalWeeklyActivity": { "description": "Goal label: weekly activity minutes goal" },
+
+  "goalUnitSteps": "steps",
+  "@goalUnitSteps": { "description": "Unit suffix for step count goals" },
+
+  "goalUnitKcal": "kcal",
+  "@goalUnitKcal": { "description": "Unit suffix for calorie goals" },
+
+  "goalUnitG": "g",
+  "@goalUnitG": { "description": "Unit suffix for gram-based goals (protein)" },
+
+  "goalUnitHours": "hours",
+  "@goalUnitHours": { "description": "Unit suffix for sleep hours goal" },
+
+  "goalUnitMins": "min",
+  "@goalUnitMins": { "description": "Unit suffix for activity minutes goal" },
+
+  "goalEditTitle": "Set goal",
+  "@goalEditTitle": { "description": "Dialog title when editing a goal value" },
+
+  "goalSave": "Save",
+  "@goalSave": { "description": "Confirm button in goal edit dialog" },
+
+  "headerToday": "Today",
+  "@headerToday": { "description": "Button in the day-mode date header that jumps back to today's date" },
+
+  "macroSugar": "Sugar",
+  "@macroSugar": { "description": "Nutrient label: sugar" },
+
+  "macroSalt": "Salt",
+  "@macroSalt": { "description": "Nutrient label: salt / sodium" },
+
+  "macroSaturatedFat": "Sat. fat",
+  "@macroSaturatedFat": { "description": "Nutrient label: saturated fat (compact)" },
+
+  "goalDailyFat": "Daily fat",
+  "@goalDailyFat": { "description": "Goal label: daily fat intake target" },
+
+  "goalDailyCarbs": "Daily carbs",
+  "@goalDailyCarbs": { "description": "Goal label: daily carbohydrate intake target" },
+
+  "nutritionPeriod7d": "7 days",
+  "@nutritionPeriod7d": { "description": "Nutrition screen period selector: last 7 days" },
+
+  "nutritionPeriod30d": "30 days",
+  "@nutritionPeriod30d": { "description": "Nutrition screen period selector: last 30 days" },
+
+  "nutritionGoalsTitle": "Edit goals",
+  "@nutritionGoalsTitle": { "description": "Button in nutrition screen that opens goal editing in Profile" },
+
+  "nutritionNoHistoryData": "Not enough data for this period",
+  "@nutritionNoHistoryData": { "description": "Empty state shown in nutrition screen when historical averages cannot be computed" }
 }

@@ -36,7 +36,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get screenBody => 'Body';
 
   @override
-  String get periodToday => 'Today';
+  String get periodDay => 'Day';
 
   @override
   String get periodWeek => 'Week';
@@ -45,10 +45,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get periodMonth => 'Month';
 
   @override
+  String get periodCustomRangeSoon => 'Custom range coming soon';
+
+  @override
+  String get caloriesAvgPerDay => 'Avg / day';
+
+  @override
+  String get sleepAverage => 'Average';
+
+  @override
   String get stepsTitle => 'Steps';
 
   @override
   String get stepsToday => 'Today';
+
+  @override
+  String get stepsCurrent => 'Current';
 
   @override
   String get stepsGoal => 'Goal';
@@ -107,16 +119,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get weightTitle => 'Weight';
 
   @override
-  String get weightCurrent => 'Current';
-
-  @override
   String get weightGoal => 'Goal';
-
-  @override
-  String get weightDifference => 'Difference';
-
-  @override
-  String get weight7Days => '7 days';
 
   @override
   String get weightAverage => 'Average';
@@ -137,13 +140,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get weightFatMass => 'Fat mass';
 
   @override
-  String get weightStatus => 'Status';
+  String get weightMainLabelDay => 'Weight';
 
   @override
-  String get weightGoalAchieved => 'Goal achieved';
+  String get weightVsPrevMeasure => 'vs prev.';
 
   @override
-  String get weightInProgress => 'In progress';
+  String get weightVsPrevWeek => 'vs prev. week';
+
+  @override
+  String get weightVsPrevMonth => 'vs prev. month';
+
+  @override
+  String get weightNoMeasurement => 'No record';
 
   @override
   String get profileExportToSheets => 'Export to Sheets';
@@ -335,4 +344,145 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sleepNoData => 'No sleep data recorded';
+
+  @override
+  String get activitiesWeekTotal => 'This week';
+
+  @override
+  String get activitiesMonthTotal => 'This month';
+
+  @override
+  String get activitiesActiveCalories => 'Active calories';
+
+  @override
+  String get activitiesActiveMins => 'Active min.';
+
+  @override
+  String get activitiesWorkouts => 'Workouts';
+
+  @override
+  String get activitiesNoWorkouts => 'No workouts in the last 30 days';
+
+  @override
+  String get activitiesRecentActivity => 'Recent workouts';
+
+  @override
+  String get activitiesDailyAvg => 'Daily avg';
+
+  @override
+  String get activitiesWeeklyAvg => 'Weekly avg';
+
+  @override
+  String get activitiesWeeklyTrend => '7-day trend';
+
+  @override
+  String get activitiesAvgDuration => 'Avg. duration';
+
+  @override
+  String get activitiesWorkoutPermissionTitle => 'Workout access needed';
+
+  @override
+  String get activitiesWorkoutPermissionBody =>
+      'Grant Forgetrack access to your workout data in Health Connect to see activity history and stats.';
+
+  @override
+  String get sleepAvg7Day => '7-day avg';
+
+  @override
+  String get bodyCurrentWeight => 'Current';
+
+  @override
+  String get body30DayChange => '30-day change';
+
+  @override
+  String get bodyWeightTrend => 'Weight trend';
+
+  @override
+  String get bodyComposition => 'Body composition';
+
+  @override
+  String get bodyNoData => 'No weight data recorded';
+
+  @override
+  String get bodyProgressToGoal => 'Progress to goal';
+
+  @override
+  String bodyToGo(String value) {
+    return '$value kg to go';
+  }
+
+  @override
+  String get bodyAtGoal => 'Goal reached!';
+
+  @override
+  String get sectionGoals => 'Goals';
+
+  @override
+  String get goalDailySteps => 'Daily steps';
+
+  @override
+  String get goalTargetWeight => 'Target weight';
+
+  @override
+  String get goalDailyCalories => 'Daily calories';
+
+  @override
+  String get goalDailyProtein => 'Daily protein';
+
+  @override
+  String get goalSleepHours => 'Sleep';
+
+  @override
+  String get goalWeeklyActivity => 'Weekly activity';
+
+  @override
+  String get goalUnitSteps => 'steps';
+
+  @override
+  String get goalUnitKcal => 'kcal';
+
+  @override
+  String get goalUnitG => 'g';
+
+  @override
+  String get goalUnitHours => 'hours';
+
+  @override
+  String get goalUnitMins => 'min';
+
+  @override
+  String get goalEditTitle => 'Set goal';
+
+  @override
+  String get goalSave => 'Save';
+
+  @override
+  String get headerToday => 'Today';
+
+  @override
+  String get macroSugar => 'Sugar';
+
+  @override
+  String get macroSalt => 'Salt';
+
+  @override
+  String get macroSaturatedFat => 'Sat. fat';
+
+  @override
+  String get goalDailyFat => 'Daily fat';
+
+  @override
+  String get goalDailyCarbs => 'Daily carbs';
+
+  @override
+  String get nutritionPeriod7d => '7 days';
+
+  @override
+  String get nutritionPeriod30d => '30 days';
+
+  @override
+  String get nutritionGoalsTitle => 'Edit goals';
+
+  @override
+  String get nutritionNoHistoryData => 'Not enough data for this period';
 }

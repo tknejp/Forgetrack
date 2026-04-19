@@ -1,77 +1,63 @@
 import 'package:flutter/material.dart';
 
-/// Sada předdefinovaných palet pro Forgetrack.
-///
-/// Každá paleta definuje:
-///   • [accent]             — primární brand barva (buttons, FABs, aktivní stav)
-///   • [navIndicatorLight]  — NavBar indikátor v light modu
-///   • [navIndicatorDark]   — NavBar indikátor v dark modu
-///   • [name]               — Lidsky čitelný název (pro debug / výběr palety v UI)
-///
-/// Aktivní paleta se nastavuje jedním řádkem v [AppTheme]:
-///   ```dart
-///   static const AppPalette _palette = AppPalette.tealHealth; // ← change here
-///   ```
-class AppPalette {
+@immutable
+class AppSectionPalette {
   final Color accent;
+  final Color accentMuted;
+
+  const AppSectionPalette({
+    required this.accent,
+    required this.accentMuted,
+  });
+}
+
+class AppPalette {
+  final String name;
+  final Color accent;
+  final Color secondary;
+  final Color tertiary;
   final Color navIndicatorLight;
   final Color navIndicatorDark;
-  final String name;
+  final AppSectionPalette steps;
+  final AppSectionPalette nutrition;
+  final AppSectionPalette sleep;
+  final AppSectionPalette body;
 
   const AppPalette({
+    required this.name,
     required this.accent,
+    required this.secondary,
+    required this.tertiary,
     required this.navIndicatorLight,
     required this.navIndicatorDark,
-    required this.name,
+    required this.steps,
+    required this.nutrition,
+    required this.sleep,
+    required this.body,
   });
 
-  // ── Dostupné palety ─────────────────────────────────────────
-
-  /// Medicínská teal — klid, zdraví, příroda.
-  static const tealHealth = AppPalette(
-    name: 'Teal Health',
-    accent: Color(0xFF00796B),
-    navIndicatorLight: Color(0x2800796B), // 16% accent — jemný pill
-    navIndicatorDark: Color(0x4000796B),  // 25% accent — tmavý mod potřebuje více
-  );
-
-  /// Datová modrá — analýza, přesnost, technika.
-  static const dataBlue = AppPalette(
-    name: 'Data Blue',
-    accent: Color(0xFF1565C0),
-    navIndicatorLight: Color(0x281565C0),
-    navIndicatorDark: Color(0x401565C0),
-  );
-
-  /// Energetická oranžová — pohyb, kalorie, spalování.
-  static const orangeEnergy = AppPalette(
-    name: 'Orange Energy',
-    accent: Color(0xFFFF6D00),
-    navIndicatorLight: Color(0x28FF6D00),
-    navIndicatorDark: Color(0x40FF6D00),
-  );
-
-  /// Vitální zelená — příroda, rovnováha, regenerace.
-  static const vitalGreen = AppPalette(
-    name: 'Vital Green',
-    accent: Color(0xFF2E7D32),
-    navIndicatorLight: Color(0x282E7D32),
-    navIndicatorDark: Color(0x402E7D32),
-  );
-
-  /// Indigo focus — soustředění, meditace, mentální výkon.
-  static const indigoFocus = AppPalette(
-    name: 'Indigo Focus',
-    accent: Color(0xFF283593),
-    navIndicatorLight: Color(0x28283593),
-    navIndicatorDark: Color(0x40283593),
-  );
-
-  /// Slate Pro — neutrální, profesionální, minimalistické.
-  static const slatePro = AppPalette(
-    name: 'Slate Pro',
-    accent: Color(0xFF37474F),
-    navIndicatorLight: Color(0x2837474F),
-    navIndicatorDark: Color(0x4037474F),
+  static const calmFit = AppPalette(
+    name: 'Calm Fit',
+    accent: Color(0xFF2E8B7F),
+    secondary: Color(0xFF5C8FD6),
+    tertiary: Color(0xFFF29A4A),
+    navIndicatorLight: Color(0x1A2E8B7F),
+    navIndicatorDark: Color(0x332E8B7F),
+    steps: AppSectionPalette(
+      accent: Color(0xFF3E9B61),
+      accentMuted: Color(0xFFB8E0C3),
+    ),
+    nutrition: AppSectionPalette(
+      accent: Color(0xFFE78A3C),
+      accentMuted: Color(0xFFF3D2B3),
+    ),
+    sleep: AppSectionPalette(
+      accent: Color(0xFF7C72D8),
+      accentMuted: Color(0xFFD7D2F5),
+    ),
+    body: AppSectionPalette(
+      accent: Color(0xFF5A8AD8),
+      accentMuted: Color(0xFFCFE0FA),
+    ),
   );
 }

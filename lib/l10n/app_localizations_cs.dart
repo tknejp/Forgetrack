@@ -36,7 +36,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get screenBody => 'Tělo';
 
   @override
-  String get periodToday => 'Dnes';
+  String get periodDay => 'Den';
 
   @override
   String get periodWeek => 'Týden';
@@ -45,10 +45,22 @@ class AppLocalizationsCs extends AppLocalizations {
   String get periodMonth => 'Měsíc';
 
   @override
+  String get periodCustomRangeSoon => 'Vlastní rozsah bude brzy k dispozici';
+
+  @override
+  String get caloriesAvgPerDay => 'Průměr / den';
+
+  @override
+  String get sleepAverage => 'Průměr';
+
+  @override
   String get stepsTitle => 'Kroky';
 
   @override
   String get stepsToday => 'Dnes';
+
+  @override
+  String get stepsCurrent => 'Aktuálně';
 
   @override
   String get stepsGoal => 'Cíl';
@@ -107,16 +119,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get weightTitle => 'Váha';
 
   @override
-  String get weightCurrent => 'Aktuální';
-
-  @override
   String get weightGoal => 'Cíl';
-
-  @override
-  String get weightDifference => 'Rozdíl';
-
-  @override
-  String get weight7Days => '7 dní';
 
   @override
   String get weightAverage => 'Průměr';
@@ -137,13 +140,19 @@ class AppLocalizationsCs extends AppLocalizations {
   String get weightFatMass => 'Tuková hmota';
 
   @override
-  String get weightStatus => 'Status';
+  String get weightMainLabelDay => 'Váha';
 
   @override
-  String get weightGoalAchieved => 'Cíl splněn';
+  String get weightVsPrevMeasure => 'Oproti minule';
 
   @override
-  String get weightInProgress => 'V procesu';
+  String get weightVsPrevWeek => 'Vs min. týden';
+
+  @override
+  String get weightVsPrevMonth => 'Vs min. měsíc';
+
+  @override
+  String get weightNoMeasurement => 'Bez záznamu';
 
   @override
   String get profileExportToSheets => 'Exportovat do Sheets';
@@ -335,4 +344,145 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get sleepNoData => 'Žádná data o spánku';
+
+  @override
+  String get activitiesWeekTotal => 'Tento týden';
+
+  @override
+  String get activitiesMonthTotal => 'Tento měsíc';
+
+  @override
+  String get activitiesActiveCalories => 'Aktivní kalorie';
+
+  @override
+  String get activitiesActiveMins => 'Aktivní min.';
+
+  @override
+  String get activitiesWorkouts => 'Tréninky';
+
+  @override
+  String get activitiesNoWorkouts => 'Žádné tréninky za posledních 30 dní';
+
+  @override
+  String get activitiesRecentActivity => 'Poslední tréninky';
+
+  @override
+  String get activitiesDailyAvg => 'Denní průměr';
+
+  @override
+  String get activitiesWeeklyAvg => 'Týdenní průměr';
+
+  @override
+  String get activitiesWeeklyTrend => '7denní trend';
+
+  @override
+  String get activitiesAvgDuration => 'Prům. délka';
+
+  @override
+  String get activitiesWorkoutPermissionTitle => 'Potřebný přístup k tréninkům';
+
+  @override
+  String get activitiesWorkoutPermissionBody =>
+      'Udělte aplikaci Forgetrack přístup k tréninkům v Health Connect pro zobrazení aktivit a statistik.';
+
+  @override
+  String get sleepAvg7Day => 'Prům. 7 dní';
+
+  @override
+  String get bodyCurrentWeight => 'Aktuální';
+
+  @override
+  String get body30DayChange => 'Změna za 30 dní';
+
+  @override
+  String get bodyWeightTrend => 'Vývoj váhy';
+
+  @override
+  String get bodyComposition => 'Složení těla';
+
+  @override
+  String get bodyNoData => 'Žádné záznamy váhy';
+
+  @override
+  String get bodyProgressToGoal => 'Postup k cíli';
+
+  @override
+  String bodyToGo(String value) {
+    return 'Zbývá $value kg';
+  }
+
+  @override
+  String get bodyAtGoal => 'Cíl splněn!';
+
+  @override
+  String get sectionGoals => 'Cíle';
+
+  @override
+  String get goalDailySteps => 'Denní kroky';
+
+  @override
+  String get goalTargetWeight => 'Cílová váha';
+
+  @override
+  String get goalDailyCalories => 'Denní kalorie';
+
+  @override
+  String get goalDailyProtein => 'Denní bílkoviny';
+
+  @override
+  String get goalSleepHours => 'Spánek';
+
+  @override
+  String get goalWeeklyActivity => 'Týdenní aktivita';
+
+  @override
+  String get goalUnitSteps => 'kroků';
+
+  @override
+  String get goalUnitKcal => 'kcal';
+
+  @override
+  String get goalUnitG => 'g';
+
+  @override
+  String get goalUnitHours => 'hodin';
+
+  @override
+  String get goalUnitMins => 'min';
+
+  @override
+  String get goalEditTitle => 'Nastavit cíl';
+
+  @override
+  String get goalSave => 'Uložit';
+
+  @override
+  String get headerToday => 'Dnes';
+
+  @override
+  String get macroSugar => 'Cukry';
+
+  @override
+  String get macroSalt => 'Sůl';
+
+  @override
+  String get macroSaturatedFat => 'Nas. tuky';
+
+  @override
+  String get goalDailyFat => 'Denní tuky';
+
+  @override
+  String get goalDailyCarbs => 'Denní sacharidy';
+
+  @override
+  String get nutritionPeriod7d => '7 dní';
+
+  @override
+  String get nutritionPeriod30d => '30 dní';
+
+  @override
+  String get nutritionGoalsTitle => 'Upravit cíle';
+
+  @override
+  String get nutritionNoHistoryData => 'Pro toto období nejsou dostupná data';
 }

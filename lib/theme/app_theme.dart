@@ -1,156 +1,259 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+
 import 'palettes.dart';
 
-/// Forgetrack — barevný systém
-///
-/// ════════════════════════════════════════════════════════
-/// PALETA
-/// ════════════════════════════════════════════════════════
-///
-/// _palette.accent  — jediný brand akcent (viz AppPalette)
-///   • VŠECHNY interaktivní/aktivní prvky: tlačítka, FABs,
-///     progress bary, aktivní nav ikona + label, indikátor
-///   • Data s energetickým významem: kalorie, spalování,
-///     kroky (aktivní den v grafu)
-///   • Highlight texty hodnot
-///
-/// cs.tertiary  — komplementární barva (generovaná ze seed)
-///   • Vzdálenost (km), sekundární metriky
-///   • Doplněk k akcentu bez kolize
-///
-/// cs.onSurfaceVariant  — tlumená/neaktivní barva
-///   • Neaktivní nav ikony + labely
-///   • Placeholder texty, empty-state texty
-///
-/// cs.error  — výhradně pro CHYBOVÉ STAVY
-///   • Selhání syncu, chyba oprávnění
-///   • Přesažení kalorického cíle (varování)
-///   • Ikona chyby v _SyncResultBanner
-///
-/// Povrchy: fromSeed(accent) generuje tónované povrchy
-///   • scaffoldBackgroundColor = surfaceContainerLowest (nejsvětlejší)
-///   • Card default        = surfaceContainerLow (o stupeň teplejší)
-///   → přirozený kontrast karta vs. pozadí bez ruční hardcoded barvy
-///
-/// AppBar: surfaceTintColor transparent → plochý, čistý AppBar
-/// ════════════════════════════════════════════════════════
+@immutable
+class SectionColors {
+  final Color accent;
+  final Color muted;
+
+  const SectionColors({
+    required this.accent,
+    required this.muted,
+  });
+}
+
+@immutable
+class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
+  final SectionColors steps;
+  final SectionColors nutrition;
+  final SectionColors sleep;
+  final SectionColors body;
+  final double cardRadius;
+  final double tileRadius;
+  final Color cardBorder;
+  final Color subtleShadow;
+
+  const AppThemeTokens({
+    required this.steps,
+    required this.nutrition,
+    required this.sleep,
+    required this.body,
+    required this.cardRadius,
+    required this.tileRadius,
+    required this.cardBorder,
+    required this.subtleShadow,
+  });
+
+  @override
+  AppThemeTokens copyWith({
+    SectionColors? steps,
+    SectionColors? nutrition,
+    SectionColors? sleep,
+    SectionColors? body,
+    double? cardRadius,
+    double? tileRadius,
+    Color? cardBorder,
+    Color? subtleShadow,
+  }) {
+    return AppThemeTokens(
+      steps: steps ?? this.steps,
+      nutrition: nutrition ?? this.nutrition,
+      sleep: sleep ?? this.sleep,
+      body: body ?? this.body,
+      cardRadius: cardRadius ?? this.cardRadius,
+      tileRadius: tileRadius ?? this.tileRadius,
+      cardBorder: cardBorder ?? this.cardBorder,
+      subtleShadow: subtleShadow ?? this.subtleShadow,
+    );
+  }
+
+  @override
+  AppThemeTokens lerp(ThemeExtension<AppThemeTokens>? other, double t) {
+    if (other is! AppThemeTokens) return this;
+    return AppThemeTokens(
+      steps: SectionColors(
+        accent: Color.lerp(steps.accent, other.steps.accent, t)!,
+        muted: Color.lerp(steps.muted, other.steps.muted, t)!,
+      ),
+      nutrition: SectionColors(
+        accent: Color.lerp(nutrition.accent, other.nutrition.accent, t)!,
+        muted: Color.lerp(nutrition.muted, other.nutrition.muted, t)!,
+      ),
+      sleep: SectionColors(
+        accent: Color.lerp(sleep.accent, other.sleep.accent, t)!,
+        muted: Color.lerp(sleep.muted, other.sleep.muted, t)!,
+      ),
+      body: SectionColors(
+        accent: Color.lerp(body.accent, other.body.accent, t)!,
+        muted: Color.lerp(body.muted, other.body.muted, t)!,
+      ),
+      cardRadius: lerpDouble(cardRadius, other.cardRadius, t)!,
+      tileRadius: lerpDouble(tileRadius, other.tileRadius, t)!,
+      cardBorder: Color.lerp(cardBorder, other.cardBorder, t)!,
+      subtleShadow: Color.lerp(subtleShadow, other.subtleShadow, t)!,
+    );
+  }
+}
+
+extension AppThemeContextX on BuildContext {
+  AppThemeTokens get tokens => Theme.of(this).extension<AppThemeTokens>()!;
+}
 
 class AppTheme {
   AppTheme._();
 
-  // ── Aktivní paleta ───────────────────────────────────────
-  // Změň zde pro přepnutí celého barevného schématu aplikace.
-  static const AppPalette _palette = AppPalette.orangeEnergy; // ← change here
+  static const AppPalette _palette = AppPalette.calmFit;
 
-  // ── NavigationBar theme factory ─────────────────────────
-  /// Explicitní state-aware ikony a labely pro NavigationBar.
-  /// Aktivní  → [_palette.accent].
-  /// Neaktivní → null (M3 aplikuje onSurfaceVariant z colorScheme).
-  static NavigationBarThemeData _navBarTheme(Color indicator) =>
-      NavigationBarThemeData(
-        indicatorColor: indicator,
-        iconTheme: WidgetStateProperty.resolveWith<IconThemeData?>((states) {
-          if (states.contains(WidgetState.selected)) {
-            // const není možné: Dart neumožňuje property access na instance
-            // v const výrazu (const_eval_property_access).
-            return IconThemeData(color: _palette.accent, size: 24);
-          }
-          return null; // → M3 default = onSurfaceVariant
-        }),
-        labelTextStyle: WidgetStateProperty.resolveWith<TextStyle?>((states) {
-          if (states.contains(WidgetState.selected)) {
-            return TextStyle(
-              color: _palette.accent,
-              fontWeight: FontWeight.w600,
-              fontSize: 12,
-            );
-          }
-          return null; // → M3 default = onSurfaceVariant
-        }),
-      );
-
-  // ── Light theme ──────────────────────────────────────────
-  static ThemeData get light {
-    final cs = ColorScheme.fromSeed(
-      seedColor: _palette.accent, // celé tónové schéma odvozeno z akcentu
-      brightness: Brightness.light,
-    ).copyWith(
-      primary: _palette.accent,   // buttons, FABs, progress, aktivní elementy
-      onPrimary: Colors.white,    // bílý text/ikona na akcentovém povrchu
-
-      secondary: _palette.accent, // konzistence: secondary = primary
-      onSecondary: Colors.white,
-
-      // NavigationBar: indicator pill, selected icon color
-      secondaryContainer: _palette.navIndicatorLight,
-      onSecondaryContainer: _palette.accent,
-    );
-
-    return ThemeData(
-      useMaterial3: true,
-      colorScheme: cs,
-
-      // Bez globálního iconTheme: ikony bez explicitní barvy použijí
-      // onSurface (tmavá) — to je správné výchozí chování.
-      // Akcent se nastaví explicitně přes color: cs.primary v widgetech.
-
-      navigationBarTheme: _navBarTheme(_palette.navIndicatorLight),
-
-      // Povrchová hierarchie pro kontrast karta vs. pozadí:
-      //   surfaceContainerLowest ≈ světlá bílá  → scaffold
-      //   surfaceContainerLow    ≈ o stupeň teplejší → card (M3 default)
-      scaffoldBackgroundColor: cs.surfaceContainerLowest,
-
-      cardTheme: const CardThemeData(
-        elevation: 2, // stín vizuálně oddělí karty od pozadí
-        margin: EdgeInsets.zero,
-        // color: null → M3 Card použije surfaceContainerLow automaticky
-      ),
-
-      appBarTheme: AppBarTheme(
-        centerTitle: false,
-        elevation: 0,
-        backgroundColor: cs.surfaceContainerLowest,
-        foregroundColor: cs.onSurface,
-        surfaceTintColor: Colors.transparent, // plochý AppBar, bez barevného tintu
-      ),
+  static NavigationBarThemeData _navBarTheme(Color indicator) {
+    return NavigationBarThemeData(
+      indicatorColor: indicator,
+      labelTextStyle: WidgetStateProperty.resolveWith<TextStyle?>((states) {
+        if (states.contains(WidgetState.selected)) {
+          return const TextStyle(fontWeight: FontWeight.w700, fontSize: 12);
+        }
+        return const TextStyle(fontWeight: FontWeight.w500, fontSize: 12);
+      }),
+      iconTheme: WidgetStateProperty.resolveWith<IconThemeData?>((states) {
+        if (states.contains(WidgetState.selected)) {
+          return IconThemeData(color: _palette.accent, size: 24);
+        }
+        return const IconThemeData(size: 24);
+      }),
     );
   }
 
-  // ── Dark theme ───────────────────────────────────────────
-  static ThemeData get dark {
+  static ThemeData get light => _buildTheme(Brightness.light);
+
+  static ThemeData get dark => _buildTheme(Brightness.dark);
+
+  static ThemeData _buildTheme(Brightness brightness) {
+    final isDark = brightness == Brightness.dark;
     final cs = ColorScheme.fromSeed(
       seedColor: _palette.accent,
-      brightness: Brightness.dark,
+      secondary: _palette.secondary,
+      tertiary: _palette.tertiary,
+      brightness: brightness,
     ).copyWith(
       primary: _palette.accent,
-      onPrimary: Colors.white,
-
-      secondary: _palette.accent,
-      onSecondary: Colors.white,
-
-      secondaryContainer: _palette.navIndicatorDark,
+      secondary: _palette.secondary,
+      tertiary: _palette.tertiary,
+      surface: isDark ? const Color(0xFF151A21) : const Color(0xFFF7F9FB),
+      surfaceContainerLowest:
+          isDark ? const Color(0xFF10151C) : const Color(0xFFFFFFFF),
+      surfaceContainerLow:
+          isDark ? const Color(0xFF171E27) : const Color(0xFFF3F6F8),
+      surfaceContainer:
+          isDark ? const Color(0xFF1C2430) : const Color(0xFFEEF3F6),
+      surfaceContainerHigh:
+          isDark ? const Color(0xFF222C39) : const Color(0xFFE6EDF2),
+      surfaceContainerHighest:
+          isDark ? const Color(0xFF2A3645) : const Color(0xFFDCE6ED),
+      outline: isDark ? const Color(0xFF334252) : const Color(0xFFD6E0E7),
+      outlineVariant:
+          isDark ? const Color(0xFF283341) : const Color(0xFFE5EDF2),
+      secondaryContainer:
+          isDark ? _palette.navIndicatorDark : _palette.navIndicatorLight,
       onSecondaryContainer: _palette.accent,
+    );
+
+    final textTheme = (isDark
+            ? Typography.material2021().white
+            : Typography.material2021().black)
+        .copyWith(
+          titleLarge: (isDark
+                  ? Typography.material2021().white.titleLarge
+                  : Typography.material2021().black.titleLarge)
+              ?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.2),
+          titleMedium: (isDark
+                  ? Typography.material2021().white.titleMedium
+                  : Typography.material2021().black.titleMedium)
+              ?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.1),
+          bodyMedium: (isDark
+                  ? Typography.material2021().white.bodyMedium
+                  : Typography.material2021().black.bodyMedium)
+              ?.copyWith(height: 1.25),
+          bodySmall: (isDark
+                  ? Typography.material2021().white.bodySmall
+                  : Typography.material2021().black.bodySmall)
+              ?.copyWith(height: 1.2),
+          labelLarge: (isDark
+                  ? Typography.material2021().white.labelLarge
+                  : Typography.material2021().black.labelLarge)
+              ?.copyWith(fontWeight: FontWeight.w700),
+        )
+        .apply(
+          bodyColor: cs.onSurface,
+          displayColor: cs.onSurface,
+        );
+
+    final tokens = AppThemeTokens(
+      steps: SectionColors(
+        accent: _palette.steps.accent,
+        muted: _palette.steps.accentMuted,
+      ),
+      nutrition: SectionColors(
+        accent: _palette.nutrition.accent,
+        muted: _palette.nutrition.accentMuted,
+      ),
+      sleep: SectionColors(
+        accent: _palette.sleep.accent,
+        muted: _palette.sleep.accentMuted,
+      ),
+      body: SectionColors(
+        accent: _palette.body.accent,
+        muted: _palette.body.accentMuted,
+      ),
+      cardRadius: 20,
+      tileRadius: 14,
+      cardBorder: cs.outlineVariant,
+      subtleShadow: isDark ? Colors.black : const Color(0xFF506070),
     );
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: cs,
-
-      navigationBarTheme: _navBarTheme(_palette.navIndicatorDark),
+      textTheme: textTheme,
       scaffoldBackgroundColor: cs.surfaceContainerLowest,
-
-      cardTheme: const CardThemeData(
-        elevation: 2,
-        margin: EdgeInsets.zero,
+      extensions: [tokens],
+      navigationBarTheme: _navBarTheme(
+        isDark ? _palette.navIndicatorDark : _palette.navIndicatorLight,
       ),
-
+      cardTheme: CardThemeData(
+        elevation: 0,
+        margin: EdgeInsets.zero,
+        color: cs.surfaceContainerLow,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(tokens.cardRadius),
+          side: BorderSide(color: tokens.cardBorder),
+        ),
+      ),
       appBarTheme: AppBarTheme(
         centerTitle: false,
         elevation: 0,
         backgroundColor: cs.surfaceContainerLowest,
         foregroundColor: cs.onSurface,
         surfaceTintColor: Colors.transparent,
+        titleTextStyle: textTheme.titleLarge?.copyWith(color: cs.onSurface),
+      ),
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          padding: WidgetStateProperty.all(
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+          side: WidgetStateProperty.all(BorderSide(color: cs.outlineVariant)),
+          textStyle: WidgetStateProperty.all(textTheme.labelLarge),
+        ),
+      ),
+      dividerTheme: DividerThemeData(
+        color: cs.outlineVariant,
+        thickness: 1,
+        space: 1,
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
       ),
     );
   }
