@@ -6,8 +6,8 @@ import '../../providers/fitness_provider.dart';
 import '../../providers/goals_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/hc_state_widgets.dart';
-import '../../widgets/profile_avatar_action.dart';
 import '../../widgets/stat_display.dart';
+import '../../widgets/top_level_app_bar.dart';
 import 'widgets/body_cards.dart';
 import 'widgets/sleep_section.dart';
 
@@ -20,9 +20,13 @@ class BodyScreen extends StatelessWidget {
       builder: (context, fitness, _) {
         return Scaffold(
           backgroundColor: Colors.transparent,
-          appBar: AppBar(
-            title: Text(context.l10n.screenBody),
-            actions: const [ProfileAvatarAction()],
+          appBar: TopLevelAppBar(
+            title: context.l10n.screenBody,
+            subtitle: buildTopLevelHeaderSubtitle(
+              context,
+              syncCopy: AppHeaderSyncCopy.health,
+              syncedAt: fitness.lastSyncedAt,
+            ),
           ),
           body: _buildBody(context, fitness),
         );
@@ -72,7 +76,8 @@ class _NoDataState extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.monitor_weight_outlined, size: 64, color: cs.onSurfaceVariant),
+                Icon(Icons.monitor_weight_outlined,
+                    size: 64, color: cs.onSurfaceVariant),
                 const SizedBox(height: 16),
                 Text(l10n.bodyNoData,
                     style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
@@ -105,17 +110,20 @@ class _BodyContent extends StatelessWidget {
 
         double? change30d;
         if (fitness.weightHistory.length >= 2) {
-          change30d = fitness.weightHistory.last.weight - fitness.weightHistory.first.weight;
+          change30d = fitness.weightHistory.last.weight -
+              fitness.weightHistory.first.weight;
         }
 
         final chartPoints = fitness.dailyWeightChart(30);
 
         return ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 112),
           children: [
             // ── Weight summary ─────────────────────────────────────────────
             if (currentWeight != null) ...[
-              SectionHeader(l10n.weightTitle, icon: Icons.monitor_weight_outlined, color: tokens.body.accent),
+              SectionHeader(l10n.weightTitle,
+                  icon: Icons.monitor_weight_outlined,
+                  color: tokens.body.accent),
               const SizedBox(height: 8),
               WeightSummaryCard(
                 currentWeight: currentWeight,
@@ -127,7 +135,8 @@ class _BodyContent extends StatelessWidget {
             // ── Body composition ───────────────────────────────────────────
             if (bodyFat != null && currentWeight != null) ...[
               const SizedBox(height: 16),
-              SectionHeader(l10n.bodyComposition, icon: Icons.pie_chart_outline, color: tokens.body.accent),
+              SectionHeader(l10n.bodyComposition,
+                  icon: Icons.pie_chart_outline, color: tokens.body.accent),
               const SizedBox(height: 8),
               BodyCompositionCard(weight: currentWeight, bodyFat: bodyFat),
             ],
@@ -135,7 +144,8 @@ class _BodyContent extends StatelessWidget {
             // ── Weight trend chart ─────────────────────────────────────────
             if (chartPoints.length >= 2) ...[
               const SizedBox(height: 16),
-              SectionHeader(l10n.bodyWeightTrend, icon: Icons.show_chart, color: tokens.body.accent),
+              SectionHeader(l10n.bodyWeightTrend,
+                  icon: Icons.show_chart, color: tokens.body.accent),
               const SizedBox(height: 8),
               WeightTrendCard(points: chartPoints, locale: locale),
             ],
@@ -143,7 +153,8 @@ class _BodyContent extends StatelessWidget {
             // ── Sleep summary ──────────────────────────────────────────────
             if (fitness.sleepHistory.isNotEmpty) ...[
               const SizedBox(height: 16),
-              SectionHeader(l10n.sleepTitle, icon: Icons.bedtime_outlined, color: tokens.sleep.accent),
+              SectionHeader(l10n.sleepTitle,
+                  icon: Icons.bedtime_outlined, color: tokens.sleep.accent),
               const SizedBox(height: 8),
               SleepSummaryCard(
                 todaySleep: fitness.todaySleep,

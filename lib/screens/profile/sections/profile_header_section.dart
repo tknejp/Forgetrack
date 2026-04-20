@@ -17,7 +17,7 @@ class ProfileHeaderCard extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
         child: _buildContent(context),
       ),
     );
@@ -42,7 +42,7 @@ class _HeaderLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const SizedBox(
-      height: 140,
+      height: 104,
       child: Center(child: CircularProgressIndicator()),
     );
   }
@@ -55,70 +55,81 @@ class _SignedInHeaderContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-    final tt = theme.textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     final l10n = context.l10n;
     final user = auth.user!;
     final photoUrl = user.photoUrl?.trim();
     final hasPhoto = photoUrl != null && photoUrl.isNotEmpty;
-    final isDark = theme.brightness == Brightness.dark;
-
-    final badgeBg = isDark ? const Color(0xFF1B3A1B) : const Color(0xFFE8F5E9);
-    final badgeBorder =
-        isDark ? const Color(0xFF388E3C) : const Color(0xFFA5D6A7);
-    final badgeText =
-        isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32);
+    final primaryLine = user.displayName?.trim().isNotEmpty == true
+        ? user.displayName!.trim()
+        : user.email;
+    final showEmail = user.email.isNotEmpty && primaryLine != user.email;
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CircleAvatar(
-          radius: 44,
-          backgroundImage: hasPhoto ? NetworkImage(photoUrl) : null,
-          backgroundColor: cs.primaryContainer,
-          child: hasPhoto
-              ? null
-              : Icon(Icons.person, size: 44, color: cs.onPrimaryContainer),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            CircleAvatar(
+              radius: 32,
+              backgroundImage: hasPhoto ? NetworkImage(photoUrl) : null,
+              backgroundColor: cs.primaryContainer,
+              child: hasPhoto
+                  ? null
+                  : Icon(
+                      Icons.person,
+                      size: 28,
+                      color: cs.onPrimaryContainer,
+                    ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    primaryLine,
+                    style: tt.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  if (showEmail) ...[
+                    const SizedBox(height: 3),
+                    Text(
+                      user.email,
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 16),
-        Text(
-          user.displayName ?? user.email,
-          style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-          textAlign: TextAlign.center,
-        ),
-        if (user.displayName != null &&
-            user.displayName != user.email &&
-            user.email.isNotEmpty) ...[
-          const SizedBox(height: 4),
-          Text(
-            user.email,
-            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-            textAlign: TextAlign.center,
-          ),
-        ],
         const SizedBox(height: 14),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: badgeBg,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: badgeBorder),
-          ),
+        _HeaderBadge(
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               GoogleLogoIcon(
-                size: 16,
+                size: 14,
                 fallback: Icon(
                   Icons.link_rounded,
-                  size: 16,
-                  color: badgeText,
+                  size: 14,
+                  color: cs.primary,
                 ),
               ),
               const SizedBox(width: 6),
               Text(
                 l10n.profileConnectedGoogle,
-                style: tt.labelMedium?.copyWith(color: badgeText),
+                style: tt.labelSmall?.copyWith(
+                  color: cs.primary,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ],
           ),
@@ -135,52 +146,88 @@ class _SignedOutHeaderContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-    final tt = theme.textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     final l10n = context.l10n;
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const AppLogoIcon(size: 88),
-        const SizedBox(height: 18),
-        const AppWordmark(height: 30),
-        const SizedBox(height: 18),
-        Text(
-          l10n.profileNotSignedIn,
-          style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-          textAlign: TextAlign.center,
+        Row(
+          children: [
+            const AppLogoIcon(size: 54),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const AppWordmark(height: 22),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.profileNotSignedIn,
+                    style: tt.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         Text(
           l10n.profileSignInBenefit,
-          style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-          textAlign: TextAlign.center,
+          style: tt.bodySmall?.copyWith(
+            color: cs.onSurfaceVariant,
+            height: 1.35,
+          ),
         ),
         if (auth.error != null) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.error_outline, size: 15, color: cs.error),
-              const SizedBox(width: 5),
-              Flexible(
+              Icon(Icons.error_outline, size: 16, color: cs.error),
+              const SizedBox(width: 6),
+              Expanded(
                 child: Text(
                   auth.error!,
                   style: tt.bodySmall?.copyWith(color: cs.error),
-                  textAlign: TextAlign.center,
                 ),
               ),
             ],
           ),
         ],
-        const SizedBox(height: 22),
+        const SizedBox(height: 18),
         GoogleSignInButton(
           isLoading: auth.isBusy,
           onPressed:
               auth.isBusy ? null : () => context.read<AuthProvider>().signIn(),
         ),
       ],
+    );
+  }
+}
+
+class _HeaderBadge extends StatelessWidget {
+  final Widget child;
+
+  const _HeaderBadge({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: cs.primaryContainer.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: cs.primary.withValues(alpha: 0.14),
+        ),
+      ),
+      child: child,
     );
   }
 }

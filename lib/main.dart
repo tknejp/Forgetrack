@@ -17,6 +17,7 @@ import 'providers/time_theme_provider.dart';
 import 'services/calorie_api_service.dart';
 import 'services/google_auth_service.dart';
 import 'services/health_connect_service.dart';
+import 'services/health_database.dart';
 import 'services/kaloricke_tabulky_service.dart';
 import 'services/kt_nutrition_database.dart';
 
@@ -42,11 +43,16 @@ Future<void> main() async {
   final timeThemeProvider = TimeThemeProvider();
   await timeThemeProvider.init();
 
-  await GoogleAuthService.instance.init();
-  AppLog.app.debug('Google auth initialized');
+  // Don't block app startup on lightweight Google auth restore.
+  // On Android this can surface UI (Credential Manager / One Tap), which would
+  // otherwise delay runApp() and prevent Health Connect from loading on a cold start.
+  unawaited(GoogleAuthService.instance.init());
+  AppLog.app.debug('Google auth initialization started');
 
   final healthService = HealthConnectService();
-  final fitnessProvider = FitnessProvider(healthService);
+  final healthDb = HealthDatabase();
+  await healthDb.open();
+  final fitnessProvider = FitnessProvider(healthService, healthDb);
   final calorieApi = CalorieApiService();
   final ktService = KalorickeTabulkyService();
   final ktDb = KtNutritionDatabase();

@@ -9,7 +9,7 @@ class ProfileSection extends StatelessWidget {
     super.key,
     required this.title,
     required this.child,
-    this.bottomSpacing = 20,
+    this.bottomSpacing = 16,
   });
 
   @override
@@ -18,7 +18,7 @@ class ProfileSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ProfileSectionHeader(title: title),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         child,
         if (bottomSpacing > 0) SizedBox(height: bottomSpacing),
       ],
@@ -40,9 +40,9 @@ class ProfileSectionHeader extends StatelessWidget {
       child: Text(
         title.toUpperCase(),
         style: theme.textTheme.labelSmall?.copyWith(
-          color: theme.colorScheme.primary,
+          color: theme.colorScheme.onSurfaceVariant,
           fontWeight: FontWeight.w700,
-          letterSpacing: 0.8,
+          letterSpacing: 0.9,
         ),
       ),
     );

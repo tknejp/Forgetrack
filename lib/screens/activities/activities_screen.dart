@@ -6,8 +6,8 @@ import '../../providers/fitness_provider.dart';
 import '../../providers/goals_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/hc_state_widgets.dart';
-import '../../widgets/profile_avatar_action.dart';
 import '../../widgets/stat_display.dart';
+import '../../widgets/top_level_app_bar.dart';
 import 'widgets/activity_cards.dart';
 import 'widgets/workout_section.dart';
 
@@ -20,9 +20,13 @@ class ActivitiesScreen extends StatelessWidget {
       builder: (context, fitness, _) {
         return Scaffold(
           backgroundColor: Colors.transparent,
-          appBar: AppBar(
-            title: Text(context.l10n.screenActivities),
-            actions: const [ProfileAvatarAction()],
+          appBar: TopLevelAppBar(
+            title: context.l10n.screenActivities,
+            subtitle: buildTopLevelHeaderSubtitle(
+              context,
+              syncCopy: AppHeaderSyncCopy.health,
+              syncedAt: fitness.lastSyncedAt,
+            ),
           ),
           body: _buildBody(context, fitness),
         );
@@ -68,7 +72,8 @@ class _ErrorState extends StatelessWidget {
         children: [
           Icon(Icons.error_outline, size: 48, color: cs.error),
           const SizedBox(height: 12),
-          Text(l10n.healthSyncFailed, style: TextStyle(color: cs.onSurfaceVariant)),
+          Text(l10n.healthSyncFailed,
+              style: TextStyle(color: cs.onSurfaceVariant)),
           const SizedBox(height: 16),
           OutlinedButton(
             onPressed: () => fitness.refresh(),
@@ -107,7 +112,8 @@ class _ActivitiesContent extends StatelessWidget {
         int monthWorkoutTotalMins = 0;
         int monthWorkoutCalories = 0;
         for (final a in fitness.activities) {
-          final aDay = DateTime(a.startTime.year, a.startTime.month, a.startTime.day);
+          final aDay =
+              DateTime(a.startTime.year, a.startTime.month, a.startTime.day);
           final mins = a.duration.inMinutes;
           final cal = a.caloriesBurned ?? 0;
           monthWorkoutTotalMins += mins;
@@ -131,15 +137,18 @@ class _ActivitiesContent extends StatelessWidget {
 
         final avgSteps = fitness.stepsHistory.isEmpty
             ? 0
-            : (fitness.stepsHistory.map((e) => e.steps).reduce((a, b) => a + b) /
+            : (fitness.stepsHistory
+                        .map((e) => e.steps)
+                        .reduce((a, b) => a + b) /
                     fitness.stepsHistory.length)
                 .round();
 
         return ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 112),
           children: [
             // ── Steps summary ──────────────────────────────────────────────
-            SectionHeader(l10n.stepsTitle, icon: Icons.directions_walk, color: tokens.steps.accent),
+            SectionHeader(l10n.stepsTitle,
+                icon: Icons.directions_walk, color: tokens.steps.accent),
             const SizedBox(height: 8),
             StepsSummaryCard(
               todaySteps: fitness.todaySteps,
@@ -152,14 +161,17 @@ class _ActivitiesContent extends StatelessWidget {
             // ── 7-day trend chart ──────────────────────────────────────────
             if (chartHistory.length > 1) ...[
               const SizedBox(height: 16),
-              SectionHeader(l10n.activitiesWeeklyTrend, icon: Icons.show_chart, color: tokens.steps.accent),
+              SectionHeader(l10n.activitiesWeeklyTrend,
+                  icon: Icons.show_chart, color: tokens.steps.accent),
               const SizedBox(height: 8),
               StepsTrendCard(history: chartHistory, locale: locale),
             ],
 
             // ── Active calories ────────────────────────────────────────────
             const SizedBox(height: 16),
-            SectionHeader(l10n.activitiesActiveCalories, icon: Icons.local_fire_department_outlined, color: tokens.nutrition.accent),
+            SectionHeader(l10n.activitiesActiveCalories,
+                icon: Icons.local_fire_department_outlined,
+                color: tokens.nutrition.accent),
             const SizedBox(height: 8),
             ActiveCaloriesCard(
               today: fitness.activeCaloriesBurnedToday,
@@ -169,7 +181,8 @@ class _ActivitiesContent extends StatelessWidget {
 
             // ── Active minutes ─────────────────────────────────────────────
             const SizedBox(height: 16),
-            SectionHeader(l10n.activitiesActiveMins, icon: Icons.timer_outlined, color: tokens.steps.accent),
+            SectionHeader(l10n.activitiesActiveMins,
+                icon: Icons.timer_outlined, color: tokens.steps.accent),
             const SizedBox(height: 8),
             ActiveMinsCard(
               todayMins: todayActiveMins,
@@ -179,7 +192,8 @@ class _ActivitiesContent extends StatelessWidget {
 
             // ── Workout stats ──────────────────────────────────────────────
             const SizedBox(height: 16),
-            SectionHeader(l10n.activitiesWorkouts, icon: Icons.fitness_center_outlined, color: cs.secondary),
+            SectionHeader(l10n.activitiesWorkouts,
+                icon: Icons.fitness_center_outlined, color: cs.secondary),
             const SizedBox(height: 8),
             WorkoutStatsCard(
               weekCount: weekWorkoutCount,
@@ -193,10 +207,12 @@ class _ActivitiesContent extends StatelessWidget {
 
             // ── Recent activity list ───────────────────────────────────────
             const SizedBox(height: 16),
-            SectionHeader(l10n.activitiesRecentActivity, icon: Icons.history, color: cs.secondary),
+            SectionHeader(l10n.activitiesRecentActivity,
+                icon: Icons.history, color: cs.secondary),
             const SizedBox(height: 8),
             if (!fitness.workoutPermissionGranted)
-              WorkoutPermissionCard(onGrant: () => fitness.requestWorkoutPermission())
+              WorkoutPermissionCard(
+                  onGrant: () => fitness.requestWorkoutPermission())
             else
               WorkoutList(activities: fitness.activities, locale: locale),
           ],

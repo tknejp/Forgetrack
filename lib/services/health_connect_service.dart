@@ -307,8 +307,62 @@ class HealthConnectService {
     if (points.isEmpty) return 0.0;
 
     return points
-        .map((p) => (p.value as NumericHealthValue).numericValue.toDouble())
+        .map(_numericValue)
         .fold<double>(0.0, (a, b) => a + b);
+  }
+
+  DateTime _dayOnly(DateTime date) => DateTime(date.year, date.month, date.day);
+
+  double _numericValue(HealthDataPoint point) {
+    final value = point.value;
+    if (value is NumericHealthValue) {
+      return value.numericValue.toDouble();
+    }
+
+    throw StateError('Expected numeric value for ${point.type}');
+  }
+
+  bool _overlapsWindow(
+    HealthDataPoint point,
+    DateTime windowStart,
+    DateTime windowEnd,
+  ) {
+    return point.dateTo.isAfter(windowStart) &&
+        point.dateFrom.isBefore(windowEnd);
+  }
+
+  SleepRecord? _buildSleepRecord(
+    List<HealthDataPoint> points, {
+    required DateTime windowStart,
+    required DateTime windowEnd,
+  }) {
+    if (points.isEmpty || !windowEnd.isAfter(windowStart)) return null;
+
+    Duration total = Duration.zero;
+    DateTime? earliest;
+    DateTime? latest;
+
+    for (final point in points) {
+      final start =
+          point.dateFrom.isAfter(windowStart) ? point.dateFrom : windowStart;
+      final end = point.dateTo.isBefore(windowEnd) ? point.dateTo : windowEnd;
+
+      if (!end.isAfter(start)) continue;
+
+      total += end.difference(start);
+      earliest = earliest == null || start.isBefore(earliest) ? start : earliest;
+      latest = latest == null || end.isAfter(latest) ? end : latest;
+    }
+
+    if (total == Duration.zero || earliest == null || latest == null) {
+      return null;
+    }
+
+    return SleepRecord(
+      sleepStart: earliest,
+      wakeTime: latest,
+      totalDuration: total,
+    );
   }
 
   // ─── Steps ─────────────────────────────────────────────────────────────────
@@ -346,13 +400,30 @@ class HealthConnectService {
     _logDebug('getStepsHistory(days=$days)');
 
     final now = DateTime.now();
-    final records = <StepsRecord>[];
+    final start = _dayOnly(now).subtract(Duration(days: days - 1));
 
-    for (int i = days - 1; i >= 0; i--) {
-      final date = now.subtract(Duration(days: i));
-      final steps = await getStepsForDate(date);
-      records.add(StepsRecord(date: date, steps: steps));
+    // Single range fetch instead of one HC API call per day.
+    final points = await _fetchData(
+      label: 'STEPS_HISTORY',
+      start: start,
+      end: now,
+      types: const [HealthDataType.STEPS],
+    );
+
+    final stepsByDay = <DateTime, int>{};
+    for (final point in points) {
+      final day = _dayOnly(point.dateFrom);
+      final steps = _numericValue(point).round();
+      stepsByDay.update(day, (value) => value + steps, ifAbsent: () => steps);
     }
+
+    final records = <StepsRecord>[
+      for (int i = 0; i < days; i++)
+        StepsRecord(
+          date: start.add(Duration(days: i)),
+          steps: stepsByDay[start.add(Duration(days: i))] ?? 0,
+        ),
+    ];
 
     _logInfo('getStepsHistory(): produced ${records.length} daily records');
     return records;
@@ -381,14 +452,31 @@ class HealthConnectService {
     _logDebug('getActiveCaloriesHistory(days=$days)');
 
     final now = DateTime.now();
-    final result = <double>[];
+    final start = _dayOnly(now).subtract(Duration(days: days - 1));
 
-    for (int i = days - 1; i >= 0; i--) {
-      final day = now.subtract(Duration(days: i));
-      final start = DateTime(day.year, day.month, day.day);
-      final end = start.add(const Duration(days: 1));
-      result.add(await getActiveCaloriesBurned(start, end));
+    // Single range fetch instead of one HC API call per day.
+    final points = await _fetchData(
+      label: 'ACTIVE_ENERGY_BURNED_HISTORY',
+      start: start,
+      end: now,
+      types: const [HealthDataType.ACTIVE_ENERGY_BURNED],
+    );
+
+    final caloriesByDay = <DateTime, double>{};
+    for (final point in points) {
+      final day = _dayOnly(point.dateFrom);
+      final calories = _numericValue(point);
+      caloriesByDay.update(
+        day,
+        (value) => value + calories,
+        ifAbsent: () => calories,
+      );
     }
+
+    final result = <double>[
+      for (int i = 0; i < days; i++)
+        caloriesByDay[start.add(Duration(days: i))] ?? 0.0,
+    ];
 
     _logInfo('getActiveCaloriesHistory(): produced ${result.length} values');
     return result;
@@ -419,7 +507,7 @@ class HealthConnectService {
         .map(
           (p) => WeightRecord(
             date: p.dateFrom,
-            weight: (p.value as NumericHealthValue).numericValue.toDouble(),
+            weight: _numericValue(p),
           ),
         )
         .toList();
@@ -447,8 +535,7 @@ class HealthConnectService {
     }
 
     points.sort((a, b) => a.dateFrom.compareTo(b.dateFrom));
-    final latest =
-        (points.last.value as NumericHealthValue).numericValue.toDouble();
+    final latest = _numericValue(points.last);
 
     _logInfo('getLatestBodyFat(): latest=$latest');
     return latest;
@@ -494,7 +581,7 @@ class HealthConnectService {
     }
 
     final values = points
-        .map((p) => (p.value as NumericHealthValue).numericValue.toDouble())
+        .map(_numericValue)
         .toList();
 
     final avg = values.reduce((a, b) => a + b) / values.length;
@@ -515,7 +602,7 @@ class HealthConnectService {
   /// within the window — not the wall-clock span from first sleep to last
   /// wake, which would inflate the number by awake time between sessions.
   Future<SleepRecord?> getSleepForNight(DateTime date) async {
-    final dayStart = DateTime(date.year, date.month, date.day);
+    final dayStart = _dayOnly(date);
     final windowStart = dayStart.subtract(const Duration(hours: 6)); // 18:00 prev day
     final windowEnd = dayStart.add(const Duration(hours: 14)); // 14:00 today
     final now = DateTime.now();
@@ -528,32 +615,68 @@ class HealthConnectService {
       types: const [HealthDataType.SLEEP_SESSION],
     );
 
-    if (points.isEmpty) {
+    final record = _buildSleepRecord(
+      points,
+      windowStart: windowStart,
+      windowEnd: end,
+    );
+
+    if (record == null) {
       _logInfo('getSleepForNight(): no sleep data for ${_fmt(dayStart)}');
       return null;
     }
 
-    Duration total = Duration.zero;
-    DateTime earliest = points.first.dateFrom;
-    DateTime latest = points.first.dateTo;
+    _logInfo(
+      'getSleepForNight(): total=${record.totalDuration.inMinutes}min'
+      ' start=${_fmt(record.sleepStart)} wake=${_fmt(record.wakeTime)}',
+    );
 
-    for (final p in points) {
-      final sessionDuration = p.dateTo.difference(p.dateFrom);
-      total += sessionDuration;
-      if (p.dateFrom.isBefore(earliest)) earliest = p.dateFrom;
-      if (p.dateTo.isAfter(latest)) latest = p.dateTo;
+    return record;
+  }
+
+  Future<List<SleepRecord>> getSleepHistory(int nights) async {
+    _logDebug('getSleepHistory(nights=$nights)');
+
+    final now = DateTime.now();
+    final latestDay = _dayOnly(now);
+    final oldestDay = latestDay.subtract(Duration(days: nights - 1));
+    final start = oldestDay.subtract(const Duration(hours: 6));
+    final rawEnd = latestDay.add(const Duration(hours: 14));
+    final end = rawEnd.isBefore(now) ? rawEnd : now;
+
+    if (!end.isAfter(start)) return const [];
+
+    final points = await _fetchData(
+      label: 'SLEEP_SESSION_HISTORY',
+      start: start,
+      end: end,
+      types: const [HealthDataType.SLEEP_SESSION],
+    );
+
+    final records = <SleepRecord>[];
+    for (int i = 0; i < nights; i++) {
+      final dayStart = latestDay.subtract(Duration(days: i));
+      final windowStart = dayStart.subtract(const Duration(hours: 6));
+      final rawWindowEnd = dayStart.add(const Duration(hours: 14));
+      final windowEnd = rawWindowEnd.isBefore(now) ? rawWindowEnd : now;
+
+      final nightlyPoints = points
+          .where((point) => _overlapsWindow(point, windowStart, windowEnd))
+          .toList();
+
+      final record = _buildSleepRecord(
+        nightlyPoints,
+        windowStart: windowStart,
+        windowEnd: windowEnd,
+      );
+
+      if (record != null) {
+        records.add(record);
+      }
     }
 
-    _logInfo(
-      'getSleepForNight(): total=${total.inMinutes}min'
-      ' start=${_fmt(earliest)} wake=${_fmt(latest)}',
-    );
-
-    return SleepRecord(
-      sleepStart: earliest,
-      wakeTime: latest,
-      totalDuration: total,
-    );
+    _logInfo('getSleepHistory(): produced ${records.length} nightly records');
+    return records;
   }
 
   // ─── Debug helpers ─────────────────────────────────────────────────────────

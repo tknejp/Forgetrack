@@ -41,35 +41,36 @@ class ProfileAboutSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-    final tt = theme.textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
 
     return ProfileSettingsCard(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
-          child: Column(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+          child: Row(
             children: [
-              const AppBrandLockup(
-                iconSize: 72,
-                wordmarkHeight: 28,
-                gap: 14,
-              ),
-              const SizedBox(height: 14),
-              Text(
-                '${l10n.settingsAppVersion} ${AppConstants.appVersion}',
-                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                textAlign: TextAlign.center,
+              const AppLogoIcon(size: 42),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const AppWordmark(height: 18),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${l10n.settingsAppVersion} ${AppConstants.appVersion}',
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
         ),
-        Divider(
-          height: 1,
-          thickness: 1,
-          color: cs.outlineVariant.withValues(alpha: 0.5),
-        ),
+        const ProfileTileDivider(indent: 0),
         ProfileSettingsTile(
           icon: Icons.privacy_tip_outlined,
           label: l10n.settingsPrivacy,
@@ -106,12 +107,13 @@ class ProfileAccountSection extends StatelessWidget {
     return ProfileSettingsCard(
       children: [
         ProfileSettingsTile(
-          icon: Icons.logout,
+          icon: Icons.logout_rounded,
           iconColor: cs.error,
+          iconBackgroundColor: cs.errorContainer.withValues(alpha: 0.75),
           label: l10n.profileSignOut,
           labelStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: cs.error,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
               ),
           onTap: () => _confirmSignOut(context),
         ),

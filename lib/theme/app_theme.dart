@@ -100,7 +100,7 @@ class AppTheme {
 
   // Static neutral surface bases — used to derive the per-segment tint delta.
   static const _kLightSurface = Color(0xFFF7F9FB); // R247 G249 B251
-  static const _kDarkSurface  = Color(0xFF151A21); // R21  G26  B33
+  static const _kDarkSurface = Color(0xFF151A21); // R21  G26  B33
 
   /// Returns the light [ThemeData].
   ///
@@ -113,25 +113,40 @@ class AppTheme {
   static ThemeData dark([TimePalette? timePalette]) =>
       _buildTheme(Brightness.dark, timePalette);
 
-  static NavigationBarThemeData _navBarTheme(Color indicator, Color accent) {
+  static NavigationBarThemeData _navBarTheme(
+    ColorScheme colorScheme,
+    Color accent,
+    bool isDark,
+  ) {
+    final unselectedColor = colorScheme.onSurfaceVariant.withValues(
+      alpha: isDark ? 0.88 : 0.78,
+    );
+
     return NavigationBarThemeData(
-      indicatorColor: indicator,
+      backgroundColor: Colors.transparent,
+      height: 68,
+      indicatorColor: accent.withValues(alpha: isDark ? 0.22 : 0.12),
       labelTextStyle: WidgetStateProperty.resolveWith<TextStyle?>((states) {
-        if (states.contains(WidgetState.selected)) {
-          return const TextStyle(fontWeight: FontWeight.w700, fontSize: 12);
-        }
-        return const TextStyle(fontWeight: FontWeight.w500, fontSize: 12);
+        final isSelected = states.contains(WidgetState.selected);
+        return TextStyle(
+          color: isSelected ? accent : unselectedColor,
+          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+          fontSize: 11.5,
+          letterSpacing: isSelected ? 0.15 : 0,
+        );
       }),
       iconTheme: WidgetStateProperty.resolveWith<IconThemeData?>((states) {
-        if (states.contains(WidgetState.selected)) {
-          return IconThemeData(color: accent, size: 24);
-        }
-        return const IconThemeData(size: 24);
+        final isSelected = states.contains(WidgetState.selected);
+        return IconThemeData(
+          color: isSelected ? accent : unselectedColor,
+          size: isSelected ? 23 : 22,
+        );
       }),
     );
   }
 
-  static ThemeData _buildTheme(Brightness brightness, [TimePalette? timePalette]) {
+  static ThemeData _buildTheme(Brightness brightness,
+      [TimePalette? timePalette]) {
     final isDark = brightness == Brightness.dark;
 
     // ── Effective accent ────────────────────────────────────────────────────
@@ -142,22 +157,25 @@ class AppTheme {
     // base, then apply that same delta to every hardcoded surface-family colour
     // so all container tiers shift together while preserving their hierarchy.
     final Color timeSurface = isDark
-        ? (timePalette?.darkSurface  ?? _kDarkSurface)
+        ? (timePalette?.darkSurface ?? _kDarkSurface)
         : (timePalette?.lightSurface ?? _kLightSurface);
     final Color staticBase = isDark ? _kDarkSurface : _kLightSurface;
 
     int toByte(Color c, double channel) => (channel * 255.0).round();
-    final int dr = toByte(timeSurface, timeSurface.r) - toByte(staticBase, staticBase.r);
-    final int dg = toByte(timeSurface, timeSurface.g) - toByte(staticBase, staticBase.g);
-    final int db = toByte(timeSurface, timeSurface.b) - toByte(staticBase, staticBase.b);
+    final int dr =
+        toByte(timeSurface, timeSurface.r) - toByte(staticBase, staticBase.r);
+    final int dg =
+        toByte(timeSurface, timeSurface.g) - toByte(staticBase, staticBase.g);
+    final int db =
+        toByte(timeSurface, timeSurface.b) - toByte(staticBase, staticBase.b);
 
     // Apply the tint delta, clamping to valid byte range.
     Color tint(Color c) => Color.fromARGB(
-      255,
-      (toByte(c, c.r) + dr).clamp(0, 255),
-      (toByte(c, c.g) + dg).clamp(0, 255),
-      (toByte(c, c.b) + db).clamp(0, 255),
-    );
+          255,
+          (toByte(c, c.r) + dr).clamp(0, 255),
+          (toByte(c, c.g) + dg).clamp(0, 255),
+          (toByte(c, c.b) + db).clamp(0, 255),
+        );
 
     // ── ColorScheme ─────────────────────────────────────────────────────────
     // Keep seedColor stable so secondary/tertiary hues don't drift; only
@@ -172,7 +190,7 @@ class AppTheme {
       secondary: _palette.secondary,
       tertiary: _palette.tertiary,
       // Surface family — tinted from the segment's surface base.
-      surface: tint(isDark ? _kDarkSurface  : _kLightSurface),
+      surface: tint(isDark ? _kDarkSurface : _kLightSurface),
       surfaceContainerLowest: tint(
         isDark ? const Color(0xFF10151C) : const Color(0xFFFFFFFF),
       ),
@@ -261,8 +279,9 @@ class AppTheme {
       scaffoldBackgroundColor: cs.surfaceContainerLowest,
       extensions: [tokens],
       navigationBarTheme: _navBarTheme(
-        cs.secondaryContainer,
+        cs,
         accent,
+        isDark,
       ),
       cardTheme: CardThemeData(
         elevation: 0,
@@ -290,12 +309,14 @@ class AppTheme {
           minimumSize: WidgetStateProperty.all(const Size(0, 44)),
           backgroundColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.disabled)) {
-              return cs.surfaceContainerHigh.withValues(alpha: isDark ? 0.38 : 0.55);
+              return cs.surfaceContainerHigh
+                  .withValues(alpha: isDark ? 0.38 : 0.55);
             }
             if (states.contains(WidgetState.selected)) {
               return accent.withValues(alpha: isDark ? 0.24 : 0.14);
             }
-            return cs.surfaceContainerHigh.withValues(alpha: isDark ? 0.9 : 0.96);
+            return cs.surfaceContainerHigh
+                .withValues(alpha: isDark ? 0.9 : 0.96);
           }),
           foregroundColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.disabled)) {

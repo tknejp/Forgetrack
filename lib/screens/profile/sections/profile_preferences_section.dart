@@ -3,7 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../../providers/locale_provider.dart';
-import '../../../providers/theme_provider.dart' show AppThemeMode, ThemeProvider;
+import '../../../providers/theme_provider.dart'
+    show AppThemeMode, ThemeProvider;
 import '../../../providers/time_theme_provider.dart';
 import '../widgets/profile_settings_widgets.dart';
 

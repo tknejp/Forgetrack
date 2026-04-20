@@ -21,10 +21,10 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.screenProfile)),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [
           ProfileHeaderCard(auth: auth),
-          const SizedBox(height: 24),
+          const SizedBox(height: 18),
           ProfileSection(
             title: l10n.sectionGoals,
             child: const ProfileGoalsSection(),
@@ -34,12 +34,12 @@ class ProfileScreen extends StatelessWidget {
             child: const ProfilePreferencesSection(),
           ),
           ProfileSection(
-            title: l10n.sectionData,
-            child: const ProfileDataSection(),
-          ),
-          ProfileSection(
             title: l10n.ktSectionTitle,
             child: const ProfileKtSection(),
+          ),
+          ProfileSection(
+            title: l10n.sectionData,
+            child: const ProfileDataSection(),
           ),
           ProfileSection(
             title: l10n.sectionAbout,

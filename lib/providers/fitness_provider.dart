@@ -4,6 +4,7 @@ import '../models/sleep_record.dart';
 import '../models/weight_card_data.dart';
 import '../models/weight_record.dart';
 import '../services/health_connect_service.dart';
+import '../services/health_database.dart';
 
 enum FitnessAccessState {
   checking,
@@ -14,8 +15,9 @@ enum FitnessAccessState {
 
 class FitnessProvider extends ChangeNotifier {
   final HealthConnectService _service;
+  final HealthDatabase _db;
 
-  FitnessProvider(this._service);
+  FitnessProvider(this._service, this._db);
 
   // ─── Concurrency guard ────────────────────────────────────────────────────
   bool _inFlight = false;
@@ -29,29 +31,13 @@ class FitnessProvider extends ChangeNotifier {
   String? _errorMessage;
   DateTime? _lastSyncedAt;
 
-  /// 30-day step records, oldest first.
   List<StepsRecord> _stepsHistory = [];
-
-  /// 30 daily active-calorie totals (kcal), oldest first.
   List<double> _activeCaloriesHistory = [];
-
-  /// Weight readings in the last 30 days, oldest first.
   List<WeightRecord> _weightHistory = [];
-
-  /// Most recent body fat percentage, or null if unavailable.
   double? _latestBodyFat;
-
-  /// Workout/activity records for the last 30 days, newest first.
   List<ActivityRecord> _activities = [];
-
-  /// True when the WORKOUT Health Connect permission has been verified as
-  /// granted. False means either denied or not yet checked.
   bool _workoutPermissionGranted = false;
-
-  /// Aggregated sleep record for last night, or null if unavailable.
   SleepRecord? _todaySleep;
-
-  /// Sleep records for the last 7 nights, newest first.
   List<SleepRecord> _sleepHistory = [];
 
   // ─── Public getters ───────────────────────────────────────────────────────
@@ -61,17 +47,15 @@ class FitnessProvider extends ChangeNotifier {
   bool get isHealthConnectAvailable => _isHealthConnectAvailable;
   bool get hasPermissions => _hasPermissions;
 
-  // UI should render from this state so "permission required" is never shown
-  // before the startup availability/permission check has actually finished.
   FitnessAccessState get accessState {
     if (!_hasInitialized || _isLoading) return FitnessAccessState.checking;
     if (!_isHealthConnectAvailable) return FitnessAccessState.unavailable;
     if (!_hasPermissions) return FitnessAccessState.permissionRequired;
     return FitnessAccessState.ready;
   }
+
   String? get errorMessage => _errorMessage;
   DateTime? get lastSyncedAt => _lastSyncedAt;
-
   List<StepsRecord> get stepsHistory => _stepsHistory;
   List<ActivityRecord> get activities => _activities;
   bool get workoutPermissionGranted => _workoutPermissionGranted;
@@ -82,11 +66,9 @@ class FitnessProvider extends ChangeNotifier {
 
   // ─── Computed step totals ─────────────────────────────────────────────────
 
-  /// Today's step count (last record in 30-day history).
   int get todaySteps =>
       _stepsHistory.isNotEmpty ? _stepsHistory.last.steps : 0;
 
-  /// Sum of steps in the most recent 7 records.
   int get stepsWeekTotal {
     if (_stepsHistory.isEmpty) return 0;
     final slice = _stepsHistory.length >= 7
@@ -95,7 +77,6 @@ class FitnessProvider extends ChangeNotifier {
     return slice.fold(0, (sum, r) => sum + r.steps);
   }
 
-  /// Sum of all steps in the 30-day history.
   int get stepsMonthTotal =>
       _stepsHistory.fold(0, (sum, r) => sum + r.steps);
 
@@ -130,38 +111,26 @@ class FitnessProvider extends ChangeNotifier {
     return !date.isBefore(start) && !date.isAfter(end);
   }
 
-  /// Steps for a specific date. Returns 0 if no record for that day.
-  int stepsForDate(DateTime date) {
-    final r = _stepsHistory
-        .where((r) => _sameDay(r.date, date))
-        .firstOrNull;
-    return r?.steps ?? 0;
-  }
+  int stepsForDate(DateTime date) =>
+      _stepsHistory.where((r) => _sameDay(r.date, date)).firstOrNull?.steps ??
+      0;
 
-  /// Average steps per day for records within [start, end] (inclusive).
-  /// Uses only days that have a record — days with no data are excluded.
   int stepsAvgForRange(DateTime start, DateTime end) {
     final records =
         _stepsHistory.where((r) => _inRange(r.date, start, end)).toList();
     if (records.isEmpty) return 0;
-    final total = records.fold(0, (s, r) => s + r.steps);
-    return (total / records.length).round();
+    return (records.fold(0, (s, r) => s + r.steps) / records.length).round();
   }
 
-  /// Steps records within [start, end], for passing to chart widgets.
   List<StepsRecord> stepsHistoryForRange(DateTime start, DateTime end) =>
       _stepsHistory.where((r) => _inRange(r.date, start, end)).toList();
 
-  /// Active calories burned on a specific date.
-  /// Aligns with _stepsHistory by index (both are 30-day same-order arrays).
   double activeCaloriesBurnedForDate(DateTime date) {
-    final idx =
-        _stepsHistory.indexWhere((r) => _sameDay(r.date, date));
+    final idx = _stepsHistory.indexWhere((r) => _sameDay(r.date, date));
     if (idx < 0 || idx >= _activeCaloriesHistory.length) return 0;
     return _activeCaloriesHistory[idx];
   }
 
-  /// Average active calories burned per day for records within [start, end].
   double activeCaloriesBurnedAvgForRange(DateTime start, DateTime end) {
     final indices = <int>[];
     for (var i = 0; i < _stepsHistory.length; i++) {
@@ -170,19 +139,14 @@ class FitnessProvider extends ChangeNotifier {
     if (indices.isEmpty) return 0;
     var total = 0.0;
     for (final idx in indices) {
-      if (idx < _activeCaloriesHistory.length) {
-        total += _activeCaloriesHistory[idx];
-      }
+      if (idx < _activeCaloriesHistory.length) total += _activeCaloriesHistory[idx];
     }
     return total / indices.length;
   }
 
-  /// Weight records within [start, end], for passing to chart widgets.
   List<WeightRecord> weightHistoryForRange(DateTime start, DateTime end) =>
       _weightHistory.where((r) => _inRange(r.date, start, end)).toList();
 
-  /// Last known weight within [start, end], plus trend (end minus start).
-  /// Falls back to the global latest weight when the period has no records.
   ({double? lastKnown, double? trend}) weightMetricsForRange(
       DateTime start, DateTime end) {
     final records = weightHistoryForRange(start, end);
@@ -193,23 +157,20 @@ class FitnessProvider extends ChangeNotifier {
     return (lastKnown: lastKnown, trend: trend);
   }
 
-  /// Sleep record for the night that ends on [date] (wake-time date).
   SleepRecord? sleepForDate(DateTime date) =>
       _sleepHistory.where((r) => _sameDay(r.wakeTime, date)).firstOrNull;
 
   // ─── Weight aggregation ───────────────────────────────────────────────────
 
-  /// Last recorded weight strictly before [date].
   double? previousWeightBefore(DateTime date) {
     final day = DateTime(date.year, date.month, date.day);
     final before = _weightHistory
-        .where((r) => DateTime(r.date.year, r.date.month, r.date.day)
-            .isBefore(day))
+        .where((r) =>
+            DateTime(r.date.year, r.date.month, r.date.day).isBefore(day))
         .toList();
     return before.isNotEmpty ? before.last.weight : null;
   }
 
-  /// Average weight for the 7-day week starting on [weekStart] (Monday).
   double? weekAvgWeight(DateTime weekStart) {
     final end = weekStart.add(const Duration(days: 6));
     final records = weightHistoryForRange(weekStart, end);
@@ -218,7 +179,6 @@ class FitnessProvider extends ChangeNotifier {
         records.length;
   }
 
-  /// Average weight for the calendar month containing [monthRef].
   double? monthAvgWeight(DateTime monthRef) {
     final start = DateTime(monthRef.year, monthRef.month, 1);
     final end = DateTime(monthRef.year, monthRef.month + 1, 0);
@@ -228,7 +188,6 @@ class FitnessProvider extends ChangeNotifier {
         records.length;
   }
 
-  /// Last [maxPoints] weight records as chart points, oldest first.
   List<WeightChartPoint> dailyWeightChart(int maxPoints) {
     final src = _weightHistory.length > maxPoints
         ? _weightHistory.sublist(_weightHistory.length - maxPoints)
@@ -238,32 +197,21 @@ class FitnessProvider extends ChangeNotifier {
         .toList();
   }
 
-  /// Weight chart points within [start, end], oldest first.
-  ///
-  /// If multiple measurements exist for the same day, only the last one
-  /// for that day is used so week/month charts stay readable and stable.
   List<WeightChartPoint> weightChartForRange(DateTime start, DateTime end) {
     final records = weightHistoryForRange(start, end);
     if (records.isEmpty) return const [];
-
     final latestPerDay = <DateTime, WeightRecord>{};
-    for (final record in records) {
-      final day = DateTime(record.date.year, record.date.month, record.date.day);
-      latestPerDay[day] = record;
+    for (final r in records) {
+      final day = DateTime(r.date.year, r.date.month, r.date.day);
+      latestPerDay[day] = r;
     }
-
     final days = latestPerDay.keys.toList()..sort();
     return [
       for (final day in days)
-        WeightChartPoint(
-          date: day,
-          weight: latestPerDay[day]!.weight,
-        ),
+        WeightChartPoint(date: day, weight: latestPerDay[day]!.weight),
     ];
   }
 
-  /// Weekly average weights for chart, last [weeks] weeks, oldest first.
-  /// Weeks with no data are omitted.
   List<WeightChartPoint> weeklyWeightChart(int weeks) {
     final today = DateTime.now();
     final todayOnly = DateTime(today.year, today.month, today.day);
@@ -278,8 +226,6 @@ class FitnessProvider extends ChangeNotifier {
     return result;
   }
 
-  /// Monthly average weights for chart, last [months] months, oldest first.
-  /// Months with no data are omitted.
   List<WeightChartPoint> monthlyWeightChart(int months) {
     final today = DateTime.now();
     final result = <WeightChartPoint>[];
@@ -293,20 +239,18 @@ class FitnessProvider extends ChangeNotifier {
 
   // ─── Sleep history ────────────────────────────────────────────────────────
 
-  /// Average sleep duration for nights whose wake-time falls in [start, end].
   Duration? avgSleepForRange(DateTime start, DateTime end) {
     final records =
         _sleepHistory.where((r) => _inRange(r.wakeTime, start, end)).toList();
     if (records.isEmpty) return null;
-    final totalSec =
-        records.fold(0, (s, r) => s + r.totalDuration.inSeconds);
+    final totalSec = records.fold(0, (s, r) => s + r.totalDuration.inSeconds);
     return Duration(seconds: (totalSec / records.length).round());
   }
 
   // ─── Public methods ───────────────────────────────────────────────────────
 
-  /// Checks HC availability and the core permissions needed to enter the app.
-  /// Safe to call multiple times — ignores concurrent calls.
+  /// Checks HC availability and permissions, then loads data from the local
+  /// DB cache. No Health Connect data reads — safe on every app start/resume.
   Future<void> initialize() async {
     if (_inFlight) return;
     _inFlight = true;
@@ -320,10 +264,9 @@ class FitnessProvider extends ChangeNotifier {
       );
       if (!_isHealthConnectAvailable) return;
 
-      // Check without prompting — only fetch if permissions already exist.
       final perms = await _service.hasPermissions();
       _hasPermissions = perms == true;
-      if (_hasPermissions) await _fetchData();
+      if (_hasPermissions) _loadFromDb();
     } catch (e) {
       _errorMessage = e.toString();
     } finally {
@@ -334,7 +277,7 @@ class FitnessProvider extends ChangeNotifier {
     }
   }
 
-  /// Shows the Health Connect permission dialog. On grant, fetches data.
+  /// Shows the HC permission dialog. On grant, fetches from HC and caches.
   Future<void> requestPermissions() async {
     if (_inFlight) return;
     _inFlight = true;
@@ -347,7 +290,7 @@ class FitnessProvider extends ChangeNotifier {
       if (!_isHealthConnectAvailable) return;
 
       _hasPermissions = await _service.requestPermissions();
-      if (_hasPermissions) await _fetchData();
+      if (_hasPermissions) await _fetchFromHC();
     } catch (e) {
       _errorMessage = e.toString();
     } finally {
@@ -358,8 +301,10 @@ class FitnessProvider extends ChangeNotifier {
     }
   }
 
-  /// Refreshes health data. If HC is unavailable or permissions are missing,
-  /// re-runs initialize() so the UI state is brought up to date.
+  /// Fetches fresh data from HC and updates the DB.
+  ///
+  /// Quota error → silent failure: DB data preserved, [lastSyncedAt] unchanged.
+  /// Other errors → [errorMessage] set as usual.
   Future<void> refresh() async {
     if (_inFlight) return;
     if (!_isHealthConnectAvailable || !_hasPermissions) {
@@ -372,7 +317,9 @@ class FitnessProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _fetchData();
+      await _fetchFromHC();
+    } on _QuotaExceededException {
+      // Quota exhausted — serve existing DB data, do not touch _lastSyncedAt.
     } catch (e) {
       _errorMessage = e.toString();
     } finally {
@@ -382,10 +329,10 @@ class FitnessProvider extends ChangeNotifier {
     }
   }
 
-  /// Opens the Play Store page for Health Connect.
   Future<void> installHealthConnect() => _service.installHealthConnect();
 
-  /// Requests the WORKOUT permission and, if granted, fetches activity data.
+  /// Requests the WORKOUT permission and, if granted, fetches activities and
+  /// persists them to the DB.
   Future<void> requestWorkoutPermission() async {
     if (_inFlight) return;
     _inFlight = true;
@@ -399,6 +346,10 @@ class FitnessProvider extends ChangeNotifier {
           now.subtract(const Duration(days: 30)),
           now,
         );
+        await _db.saveActivitiesAndPermission(
+          activities: _activities,
+          workoutPermission: true,
+        );
       }
     } catch (_) {
       _workoutPermissionGranted = false;
@@ -410,32 +361,52 @@ class FitnessProvider extends ChangeNotifier {
 
   // ─── Private ──────────────────────────────────────────────────────────────
 
-  Future<void> _fetchData() async {
+  /// Synchronous — HealthDatabase pre-loads everything from Isar in open().
+  void _loadFromDb() {
+    _stepsHistory = _db.stepsHistory;
+    _activeCaloriesHistory = _db.caloriesHistory;
+    _weightHistory = _db.weightHistory;
+    _latestBodyFat = _db.latestBodyFat;
+    _workoutPermissionGranted = _db.workoutPermission;
+    _activities = _db.activities;
+    _sleepHistory = _db.sleepHistory;
+    _todaySleep = _sleepHistory.isNotEmpty ? _sleepHistory.first : null;
+    _lastSyncedAt = _db.lastSyncedAt;
+  }
+
+  /// Fetches all data from HC. On success, persists to DB and stamps sync time.
+  /// Throws [_QuotaExceededException] so [refresh] can handle it silently.
+  Future<void> _fetchFromHC() async {
     const days = 30;
+
     try {
       _stepsHistory = await _service.getStepsHistory(days);
-    } catch (_) {
+    } catch (e) {
+      if (_isQuotaError(e)) throw const _QuotaExceededException();
       _stepsHistory = [];
     }
     try {
       _activeCaloriesHistory = await _service.getActiveCaloriesHistory(days);
-    } catch (_) {
+    } catch (e) {
+      if (_isQuotaError(e)) throw const _QuotaExceededException();
       _activeCaloriesHistory = [];
     }
     try {
       _weightHistory = await _service.getWeightHistory(days);
-    } catch (_) {
+    } catch (e) {
+      if (_isQuotaError(e)) throw const _QuotaExceededException();
       _weightHistory = [];
     }
     try {
       _latestBodyFat = await _service.getLatestBodyFat();
-    } catch (_) {
+    } catch (e) {
+      if (_isQuotaError(e)) throw const _QuotaExceededException();
       _latestBodyFat = null;
     }
     try {
-      final hasPerm = await _service.hasWorkoutPermission();
-      _workoutPermissionGranted = hasPerm == true;
-    } catch (_) {
+      _workoutPermissionGranted = await _service.hasWorkoutPermission() == true;
+    } catch (e) {
+      if (_isQuotaError(e)) throw const _QuotaExceededException();
       _workoutPermissionGranted = false;
     }
     if (_workoutPermissionGranted) {
@@ -445,29 +416,40 @@ class FitnessProvider extends ChangeNotifier {
           now.subtract(const Duration(days: 30)),
           now,
         );
-      } catch (_) {
+      } catch (e) {
+        if (_isQuotaError(e)) throw const _QuotaExceededException();
         _activities = [];
       }
     } else {
       _activities = [];
     }
     try {
-      final now = DateTime.now();
-      final futures = List.generate(7, (i) async {
-        try {
-          return await _service.getSleepForNight(
-              now.subtract(Duration(days: i)));
-        } catch (_) {
-          return null;
-        }
-      });
-      final results = await Future.wait(futures);
-      _sleepHistory = results.whereType<SleepRecord>().toList();
+      _sleepHistory = await _service.getSleepHistory(7);
       _todaySleep = _sleepHistory.isNotEmpty ? _sleepHistory.first : null;
-    } catch (_) {
+    } catch (e) {
+      if (_isQuotaError(e)) throw const _QuotaExceededException();
       _sleepHistory = [];
       _todaySleep = null;
     }
+
+    // All HC calls succeeded — persist and stamp the sync time.
     _lastSyncedAt = DateTime.now();
+    await _db.saveAll(
+      steps: _stepsHistory,
+      calories: _activeCaloriesHistory,
+      weight: _weightHistory,
+      sleep: _sleepHistory,
+      activities: _activities,
+      workoutPermission: _workoutPermissionGranted,
+      latestBodyFat: _latestBodyFat,
+      lastSyncedAt: _lastSyncedAt!,
+    );
   }
+
+  static bool _isQuotaError(Object e) =>
+      e.toString().toLowerCase().contains('quota exceeded');
+}
+
+class _QuotaExceededException implements Exception {
+  const _QuotaExceededException();
 }
