@@ -3,16 +3,16 @@ import 'package:http/http.dart' as http;
 import '../core/constants.dart';
 import '../models/calorie_entry.dart';
 
-/// REST klient pro kalorické tabulky.
+/// REST client for the kalorické tabulky food database.
 ///
-/// Výchozí implementace používá bezplatné Open Food Facts API.
-/// Pro jiný zdroj stačí přepsat [searchFood] / [getProductByBarcode].
+/// Default implementation uses the free Open Food Facts API.
+/// Override [searchFood] / [getProductByBarcode] to swap in a different source.
 class CalorieApiService {
   final http.Client _client;
 
   CalorieApiService({http.Client? client}) : _client = client ?? http.Client();
 
-  /// Vyhledá potraviny podle názvu.
+  /// Searches foods by name.
   Future<List<FoodItem>> searchFood(String query) async {
     if (query.trim().isEmpty) return [];
 
@@ -24,13 +24,13 @@ class CalorieApiService {
         'json': '1',
         'page_size': AppConstants.foodSearchPageSize.toString(),
         'fields': 'product_name,nutriments',
-        'lc': 'cs', // preferovat česky popsané produkty
+        'lc': 'cs',
       },
     );
 
     final response = await _client.get(uri);
     if (response.statusCode != 200) {
-      throw Exception('Chyba API: ${response.statusCode}');
+      throw Exception('HTTP ${response.statusCode}');
     }
 
     final body = jsonDecode(response.body) as Map<String, dynamic>;
@@ -39,11 +39,11 @@ class CalorieApiService {
     return products
         .cast<Map<String, dynamic>>()
         .map(FoodItem.fromOpenFoodFacts)
-        .where((f) => f.kcalPer100g > 0) // filtruj záznamy bez nutričních dat
+        .where((f) => f.kcalPer100g > 0)
         .toList();
   }
 
-  /// Načte produkt podle čárového kódu (EAN).
+  /// Fetches a product by barcode (EAN).
   Future<FoodItem?> getProductByBarcode(String barcode) async {
     final uri = Uri.parse(
         '${AppConstants.foodApiBase}/api/v2/product/$barcode.json?fields=product_name,nutriments');

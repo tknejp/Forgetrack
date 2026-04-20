@@ -102,7 +102,6 @@ class _WeightCardState extends State<WeightCard> {
                   data: d,
                   locale: locale,
                   fmtW: _fmtW,
-                  fmtSigned: _fmtSigned,
                 ),
               ],
             ),

@@ -8,7 +8,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/top_level_app_bar.dart';
 import '../profile/profile_screen.dart';
 
-part 'calories_screen/nutrition_body.dart';
+part 'calories_screen/nutrition_states.dart';
 part 'calories_screen/nutrition_sections.dart';
 part 'calories_screen/nutrition_cards.dart';
 
@@ -43,7 +43,7 @@ class NutritionScreen extends StatelessWidget {
               syncedAt: kt.lastSyncedAt,
             ),
           ),
-          body: _NutritionBody(kt: kt),
+          body: _NutritionStateBody(kt: kt),
         );
       },
     );
@@ -136,10 +136,14 @@ class _NutritionDataViewState extends State<_NutritionDataView> {
       dailyCarbsGoal: goals.dailyCarbs,
       onRefresh: _onRefresh,
       onPeriodChanged: (period) => setState(() => _period = period),
-      onOpenGoals: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const ProfileScreen()),
-      ),
+      onOpenGoals: () => _openProfileSettings(context),
     );
   }
+}
+
+Future<void> _openProfileSettings(BuildContext context) {
+  return Navigator.push(
+    context,
+    MaterialPageRoute(builder: (_) => const ProfileScreen()),
+  );
 }

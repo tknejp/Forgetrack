@@ -1,9 +1,9 @@
 part of '../calories_screen.dart';
 
-class _NutritionBody extends StatelessWidget {
+class _NutritionStateBody extends StatelessWidget {
   final KalorickeTabulkyProvider kt;
 
-  const _NutritionBody({required this.kt});
+  const _NutritionStateBody({required this.kt});
 
   @override
   Widget build(BuildContext context) {
@@ -12,10 +12,7 @@ class _NutritionBody extends StatelessWidget {
     }
     if (!kt.isLoggedIn) {
       return _NotConnectedState(
-        onGoToSettings: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const ProfileScreen()),
-        ),
+        onGoToSettings: () => _openProfileSettings(context),
       );
     }
     if (kt.isLoading) {

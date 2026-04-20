@@ -2,8 +2,8 @@ import 'package:googleapis/sheets/v4.dart' as sheets;
 import 'package:http/http.dart' as http;
 import '../core/constants.dart';
 
-/// Obal nad Google Sheets API v4.
-/// Inicializuj voláním [initialize] s autentizovaným HTTP klientem.
+/// Wrapper around Google Sheets API v4.
+/// Call [initialize] with an authenticated HTTP client before use.
 class SheetsService {
   sheets.SheetsApi? _api;
 
@@ -13,9 +13,9 @@ class SheetsService {
 
   bool get isReady => _api != null;
 
-  // --- Spreadsheet ---
+  // ─── Spreadsheet ──────────────────────────────────────────────────────────
 
-  /// Vytvoří nový spreadsheet s výchozími listy a vrátí jeho ID.
+  /// Creates a new spreadsheet with default sheets and returns its ID.
   Future<String> createSpreadsheet() async {
     _assertReady();
     final spreadsheet = sheets.Spreadsheet(
@@ -34,7 +34,7 @@ class SheetsService {
     return result.spreadsheetId!;
   }
 
-  /// Připojí řádky na konec listu. [range] např. "Kroky!A1".
+  /// Appends rows to the end of the sheet.
   Future<void> appendRows({
     required String spreadsheetId,
     required String sheetName,
@@ -53,7 +53,7 @@ class SheetsService {
     );
   }
 
-  /// Přečte všechny hodnoty z daného rozsahu.
+  /// Reads all values from the given range.
   Future<List<List<Object?>>> readRange({
     required String spreadsheetId,
     required String range,
@@ -63,7 +63,7 @@ class SheetsService {
     return result.values ?? [];
   }
 
-  // --- Helpers ---
+  // ─── Helpers ──────────────────────────────────────────────────────────────
 
   sheets.Sheet _makeSheet(String title, List<String> headers) {
     return sheets.Sheet(
@@ -92,8 +92,7 @@ class SheetsService {
 
   void _assertReady() {
     if (_api == null) {
-      throw StateError(
-          'SheetsService není inicializována. Zavolej nejdříve initialize().');
+      throw StateError('SheetsService is not initialized. Call initialize() first.');
     }
   }
 }

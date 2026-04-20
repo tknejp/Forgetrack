@@ -6,7 +6,8 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/sheets/v4.dart';
 import 'package:http/http.dart' as http;
 
-import 'google_auth_platform_adapter.dart';
+import '../core/app_log.dart';
+import 'google_auth_service/google_auth_platform_adapter.dart';
 
 class GoogleAuthService {
   static const String _serverClientId =
@@ -56,24 +57,19 @@ class GoogleAuthService {
   Future<void> _initialize() async {
     if (_initialized) return;
 
-    debugPrint('[GoogleAuthService] initializing');
-    debugPrint(
-      '[GoogleAuthService] initialize: serverClientId=$_serverClientId '
-      'platform=$defaultTargetPlatform',
-    );
+    AppLog.auth.info('initializing', payload: 'serverClientId=$_serverClientId platform=$defaultTargetPlatform');
     await _signIn.initialize(serverClientId: _serverClientId);
-    debugPrint('[GoogleAuthService] initialize done');
+    AppLog.auth.info('initialize done');
 
     _authSub ??= _signIn.authenticationEvents.listen(
       (GoogleSignInAuthenticationEvent event) {
         switch (event) {
           case GoogleSignInAuthenticationEventSignIn():
-            debugPrint(
-                '[GoogleAuthService] event: sign-in user=${event.user.email}');
+            AppLog.auth.info('event: sign-in', payload: 'user=${event.user.email}');
             _currentUser = event.user;
             break;
           case GoogleSignInAuthenticationEventSignOut():
-            debugPrint('[GoogleAuthService] event: sign-out');
+            AppLog.auth.info('event: sign-out');
             _currentUser = null;
             break;
         }
@@ -81,8 +77,7 @@ class GoogleAuthService {
         _authChangedController.add(_currentUser);
       },
       onError: (Object error, StackTrace stackTrace) {
-        debugPrint(
-            '[GoogleAuthService] authenticationEvents error=$error\n$stackTrace');
+        AppLog.auth.error('authenticationEvents error', err: error, stackTrace: stackTrace);
         _currentUser = null;
         _sessionResolved = true;
         _authChangedController.add(null);
@@ -93,19 +88,19 @@ class GoogleAuthService {
     await _restoreSession();
   }
 
-  Future<void> init() => _ensureInitialized();
+  Future<void> initialize() => _ensureInitialized();
 
   Future<GoogleSignInAccount?> signIn() async {
-    debugPrint('[GoogleAuthService] signIn: start');
+    AppLog.auth.info('signIn: start');
     await _ensureInitialized();
     try {
       final user = await _signIn.authenticate();
       _currentUser = user;
       _sessionResolved = true;
-      debugPrint('[GoogleAuthService] signIn: success user=${user.email}');
+      AppLog.auth.success('signIn', payload: 'user=${user.email}');
       return user;
     } catch (e, st) {
-      debugPrint('[GoogleAuthService] signIn: error=$e\n$st');
+      AppLog.auth.error('signIn', err: e, stackTrace: st);
       rethrow;
     }
   }
@@ -117,14 +112,14 @@ class GoogleAuthService {
   }
 
   Future<void> signOut() async {
-    debugPrint('[GoogleAuthService] signOut: start');
+    AppLog.auth.info('signOut: start');
     await _ensureInitialized();
     _currentUser = null;
     _sessionResolved = true;
     _restoreFuture = null;
     _authChangedController.add(null);
     await _signIn.signOut();
-    debugPrint('[GoogleAuthService] signOut: done');
+    AppLog.auth.success('signOut: done');
   }
 
   Future<GoogleSignInAccount?> _restoreSession() {
@@ -132,7 +127,7 @@ class GoogleAuthService {
   }
 
   Future<GoogleSignInAccount?> _performRestoreSession() async {
-    debugPrint('[GoogleAuthService] restoreSession: start');
+    AppLog.auth.info('restoreSession: start');
     try {
       final user = await _signIn.attemptLightweightAuthentication();
       final previousUser = _currentUser;
@@ -145,12 +140,10 @@ class GoogleAuthService {
         _authChangedController.add(_currentUser);
       }
 
-      debugPrint(
-        '[GoogleAuthService] restoreSession: result=${user?.email ?? 'null'}',
-      );
+      AppLog.auth.info('restoreSession', payload: 'result=${user?.email ?? 'null'}');
       return user;
     } catch (e, st) {
-      debugPrint('[GoogleAuthService] restoreSession: error=$e\n$st');
+      AppLog.auth.error('restoreSession', err: e, stackTrace: st);
       final shouldNotify = _currentUser != null || !_sessionResolved;
       _currentUser = null;
       _sessionResolved = true;
@@ -162,24 +155,22 @@ class GoogleAuthService {
   }
 
   Future<http.Client?> getAuthClient() async {
-    debugPrint('[GoogleAuthService] getAuthClient: start');
+    AppLog.auth.info('getAuthClient: start');
     await _ensureInitialized();
 
     final user = _currentUser;
     if (user == null) {
-      debugPrint(
-          '[GoogleAuthService] getAuthClient: no current user, returning null');
+      AppLog.auth.debug('getAuthClient: no current user, returning null');
       return null;
     }
 
-    debugPrint(
-        '[GoogleAuthService] getAuthClient: authorizing scopes for ${user.email}');
+    AppLog.auth.debug('getAuthClient: authorizing scopes', payload: user.email);
     final GoogleSignInClientAuthorization authorization =
         await user.authorizationClient.authorizationForScopes(_scopes) ??
             await user.authorizationClient.authorizeScopes(_scopes);
 
     final client = authorization.authClient(scopes: _scopes);
-    debugPrint('[GoogleAuthService] getAuthClient: client obtained');
+    AppLog.auth.success('getAuthClient: client obtained');
     return client;
   }
 

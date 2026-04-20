@@ -1,9 +1,9 @@
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../core/app_log.dart';
-import '../models/nutrition_day_record.dart';
-import 'kaloricke_tabulky_service.dart';
+import '../../core/app_log.dart';
+import '../../models/nutrition_day_record.dart';
+import '../kaloricke_tabulky_service.dart';
 
 /// Isar-backed local store for daily KT nutrition records.
 /// Keeps an in-memory cache so all reads are synchronous, while writes

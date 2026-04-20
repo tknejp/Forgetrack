@@ -1,11 +1,11 @@
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../core/app_log.dart';
-import '../models/activity_record.dart';
-import '../models/hc_records.dart';
-import '../models/sleep_record.dart';
-import '../models/weight_record.dart';
+import '../../core/app_log.dart';
+import '../../models/activity_record.dart';
+import '../../models/hc_records.dart';
+import '../../models/sleep_record.dart';
+import '../../models/weight_record.dart';
 
 /// Isar-backed local store for Health Connect data.
 ///

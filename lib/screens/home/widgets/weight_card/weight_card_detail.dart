@@ -5,14 +5,12 @@ class _WeightCardExpandedSection extends StatelessWidget {
   final WeightCardData data;
   final String locale;
   final String Function(double) fmtW;
-  final String Function(double) fmtSigned;
 
   const _WeightCardExpandedSection({
     required this.expanded,
     required this.data,
     required this.locale,
     required this.fmtW,
-    required this.fmtSigned,
   });
 
   @override
@@ -31,11 +29,10 @@ class _WeightCardExpandedSection extends StatelessWidget {
           children: [
             Divider(color: cs.outlineVariant),
             const SizedBox(height: 12),
-            _ExpandedDetail(
+            _WeightCardDetailContent(
               data: data,
               locale: locale,
               fmtW: fmtW,
-              fmtSigned: fmtSigned,
             ),
           ],
         ),
@@ -44,17 +41,15 @@ class _WeightCardExpandedSection extends StatelessWidget {
   }
 }
 
-class _ExpandedDetail extends StatelessWidget {
+class _WeightCardDetailContent extends StatelessWidget {
   final WeightCardData data;
   final String locale;
   final String Function(double) fmtW;
-  final String Function(double) fmtSigned;
 
-  const _ExpandedDetail({
+  const _WeightCardDetailContent({
     required this.data,
     required this.locale,
     required this.fmtW,
-    required this.fmtSigned,
   });
 
   @override

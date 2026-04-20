@@ -4,7 +4,8 @@ import '../models/sleep_record.dart';
 import '../models/weight_card_data.dart';
 import '../models/weight_record.dart';
 import '../services/health_connect_service.dart';
-import '../services/health_database.dart';
+import '../services/db/health_database.dart';
+import 'fitness_provider/fitness_queries.dart';
 
 enum FitnessAccessState {
   checking,
@@ -101,151 +102,63 @@ class FitnessProvider extends ChangeNotifier {
   double? get latestWeight =>
       _weightHistory.isNotEmpty ? _weightHistory.last.weight : null;
 
-  // ─── Date-range queries ───────────────────────────────────────────────────
-
-  static bool _sameDay(DateTime a, DateTime b) =>
-      a.year == b.year && a.month == b.month && a.day == b.day;
-
-  static bool _inRange(DateTime d, DateTime start, DateTime end) {
-    final date = DateTime(d.year, d.month, d.day);
-    return !date.isBefore(start) && !date.isAfter(end);
-  }
+  // ─── Date-range queries (delegated to FitnessQueries) ─────────────────────
 
   int stepsForDate(DateTime date) =>
-      _stepsHistory.where((r) => _sameDay(r.date, date)).firstOrNull?.steps ??
-      0;
+      FitnessQueries.stepsForDate(_stepsHistory, date);
 
-  int stepsAvgForRange(DateTime start, DateTime end) {
-    final records =
-        _stepsHistory.where((r) => _inRange(r.date, start, end)).toList();
-    if (records.isEmpty) return 0;
-    return (records.fold(0, (s, r) => s + r.steps) / records.length).round();
-  }
+  int stepsAvgForRange(DateTime start, DateTime end) =>
+      FitnessQueries.stepsAvgForRange(_stepsHistory, start, end);
 
   List<StepsRecord> stepsHistoryForRange(DateTime start, DateTime end) =>
-      _stepsHistory.where((r) => _inRange(r.date, start, end)).toList();
+      FitnessQueries.stepsHistoryForRange(_stepsHistory, start, end);
 
-  double activeCaloriesBurnedForDate(DateTime date) {
-    final idx = _stepsHistory.indexWhere((r) => _sameDay(r.date, date));
-    if (idx < 0 || idx >= _activeCaloriesHistory.length) return 0;
-    return _activeCaloriesHistory[idx];
-  }
+  double activeCaloriesBurnedForDate(DateTime date) =>
+      FitnessQueries.activeCaloriesBurnedForDate(
+          _stepsHistory, _activeCaloriesHistory, date);
 
-  double activeCaloriesBurnedAvgForRange(DateTime start, DateTime end) {
-    final indices = <int>[];
-    for (var i = 0; i < _stepsHistory.length; i++) {
-      if (_inRange(_stepsHistory[i].date, start, end)) indices.add(i);
-    }
-    if (indices.isEmpty) return 0;
-    var total = 0.0;
-    for (final idx in indices) {
-      if (idx < _activeCaloriesHistory.length) total += _activeCaloriesHistory[idx];
-    }
-    return total / indices.length;
-  }
+  double activeCaloriesBurnedAvgForRange(DateTime start, DateTime end) =>
+      FitnessQueries.activeCaloriesBurnedAvgForRange(
+          _stepsHistory, _activeCaloriesHistory, start, end);
 
   List<WeightRecord> weightHistoryForRange(DateTime start, DateTime end) =>
-      _weightHistory.where((r) => _inRange(r.date, start, end)).toList();
+      FitnessQueries.weightHistoryForRange(_weightHistory, start, end);
 
   ({double? lastKnown, double? trend}) weightMetricsForRange(
-      DateTime start, DateTime end) {
-    final records = weightHistoryForRange(start, end);
-    if (records.isEmpty) return (lastKnown: latestWeight, trend: null);
-    final lastKnown = records.last.weight;
-    final trend =
-        records.length >= 2 ? records.last.weight - records.first.weight : null;
-    return (lastKnown: lastKnown, trend: trend);
-  }
+          DateTime start, DateTime end) =>
+      FitnessQueries.weightMetricsForRange(
+          _weightHistory, latestWeight, start, end);
 
   SleepRecord? sleepForDate(DateTime date) =>
-      _sleepHistory.where((r) => _sameDay(r.wakeTime, date)).firstOrNull;
+      FitnessQueries.sleepForDate(_sleepHistory, date);
 
-  // ─── Weight aggregation ───────────────────────────────────────────────────
+  // ─── Weight aggregation (delegated to FitnessQueries) ─────────────────────
 
-  double? previousWeightBefore(DateTime date) {
-    final day = DateTime(date.year, date.month, date.day);
-    final before = _weightHistory
-        .where((r) =>
-            DateTime(r.date.year, r.date.month, r.date.day).isBefore(day))
-        .toList();
-    return before.isNotEmpty ? before.last.weight : null;
-  }
+  double? previousWeightBefore(DateTime date) =>
+      FitnessQueries.previousWeightBefore(_weightHistory, date);
 
-  double? weekAvgWeight(DateTime weekStart) {
-    final end = weekStart.add(const Duration(days: 6));
-    final records = weightHistoryForRange(weekStart, end);
-    if (records.isEmpty) return null;
-    return records.map((r) => r.weight).reduce((a, b) => a + b) /
-        records.length;
-  }
+  double? weekAvgWeight(DateTime weekStart) =>
+      FitnessQueries.weekAvgWeight(_weightHistory, weekStart);
 
-  double? monthAvgWeight(DateTime monthRef) {
-    final start = DateTime(monthRef.year, monthRef.month, 1);
-    final end = DateTime(monthRef.year, monthRef.month + 1, 0);
-    final records = weightHistoryForRange(start, end);
-    if (records.isEmpty) return null;
-    return records.map((r) => r.weight).reduce((a, b) => a + b) /
-        records.length;
-  }
+  double? monthAvgWeight(DateTime monthRef) =>
+      FitnessQueries.monthAvgWeight(_weightHistory, monthRef);
 
-  List<WeightChartPoint> dailyWeightChart(int maxPoints) {
-    final src = _weightHistory.length > maxPoints
-        ? _weightHistory.sublist(_weightHistory.length - maxPoints)
-        : _weightHistory;
-    return src
-        .map((r) => WeightChartPoint(date: r.date, weight: r.weight))
-        .toList();
-  }
+  List<WeightChartPoint> dailyWeightChart(int maxPoints) =>
+      FitnessQueries.dailyWeightChart(_weightHistory, maxPoints);
 
-  List<WeightChartPoint> weightChartForRange(DateTime start, DateTime end) {
-    final records = weightHistoryForRange(start, end);
-    if (records.isEmpty) return const [];
-    final latestPerDay = <DateTime, WeightRecord>{};
-    for (final r in records) {
-      final day = DateTime(r.date.year, r.date.month, r.date.day);
-      latestPerDay[day] = r;
-    }
-    final days = latestPerDay.keys.toList()..sort();
-    return [
-      for (final day in days)
-        WeightChartPoint(date: day, weight: latestPerDay[day]!.weight),
-    ];
-  }
+  List<WeightChartPoint> weightChartForRange(DateTime start, DateTime end) =>
+      FitnessQueries.weightChartForRange(_weightHistory, start, end);
 
-  List<WeightChartPoint> weeklyWeightChart(int weeks) {
-    final today = DateTime.now();
-    final todayOnly = DateTime(today.year, today.month, today.day);
-    final currentWeekStart =
-        todayOnly.subtract(Duration(days: todayOnly.weekday - 1));
-    final result = <WeightChartPoint>[];
-    for (var i = weeks - 1; i >= 0; i--) {
-      final ws = currentWeekStart.subtract(Duration(days: 7 * i));
-      final avg = weekAvgWeight(ws);
-      if (avg != null) result.add(WeightChartPoint(date: ws, weight: avg));
-    }
-    return result;
-  }
+  List<WeightChartPoint> weeklyWeightChart(int weeks) =>
+      FitnessQueries.weeklyWeightChart(_weightHistory, weeks);
 
-  List<WeightChartPoint> monthlyWeightChart(int months) {
-    final today = DateTime.now();
-    final result = <WeightChartPoint>[];
-    for (var i = months - 1; i >= 0; i--) {
-      final ref = DateTime(today.year, today.month - i, 1);
-      final avg = monthAvgWeight(ref);
-      if (avg != null) result.add(WeightChartPoint(date: ref, weight: avg));
-    }
-    return result;
-  }
+  List<WeightChartPoint> monthlyWeightChart(int months) =>
+      FitnessQueries.monthlyWeightChart(_weightHistory, months);
 
   // ─── Sleep history ────────────────────────────────────────────────────────
 
-  Duration? avgSleepForRange(DateTime start, DateTime end) {
-    final records =
-        _sleepHistory.where((r) => _inRange(r.wakeTime, start, end)).toList();
-    if (records.isEmpty) return null;
-    final totalSec = records.fold(0, (s, r) => s + r.totalDuration.inSeconds);
-    return Duration(seconds: (totalSec / records.length).round());
-  }
+  Duration? avgSleepForRange(DateTime start, DateTime end) =>
+      FitnessQueries.avgSleepForRange(_sleepHistory, start, end);
 
   // ─── Public methods ───────────────────────────────────────────────────────
 
