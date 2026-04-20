@@ -16,6 +16,7 @@ import '../../providers/goals_provider.dart';
 import '../../providers/kaloricke_tabulky_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/app_logo.dart';
+import '../../widgets/parallax_background.dart';
 import '../../widgets/profile_avatar_action.dart';
 import '../activities/activities_screen.dart';
 import '../body/body_screen.dart';
@@ -37,6 +38,11 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
+  // Per-tab scroll position so the background snaps to the right depth
+  // when switching back to a previously-scrolled tab.
+  final _tabScrollOffsets = [0.0, 0.0, 0.0, 0.0];
+  final _scrollNotifier = ValueNotifier<double>(0.0);
+
   static const _screens = [
     _OverviewTab(),
     ActivitiesScreen(),
@@ -44,15 +50,46 @@ class _HomeScreenState extends State<HomeScreen> {
     BodyScreen(),
   ];
 
+  void _onTabSelected(int index) {
+    setState(() => _selectedIndex = index);
+    // Immediately restore the stored scroll depth for the incoming tab.
+    _scrollNotifier.value = _tabScrollOffsets[index];
+  }
+
+  @override
+  void dispose() {
+    _scrollNotifier.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _screens,
+      backgroundColor: Colors.transparent,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          ParallaxBackground(
+            tabIndex: _selectedIndex,
+            tabCount: _screens.length,
+            scrollNotifier: _scrollNotifier,
+          ),
+          NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              final pixels = notification.metrics.pixels;
+              _tabScrollOffsets[_selectedIndex] = pixels;
+              _scrollNotifier.value = pixels;
+              return false; // let the scroll event propagate normally
+            },
+            child: IndexedStack(
+              index: _selectedIndex,
+              children: _screens,
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: DecoratedBox(
         decoration: BoxDecoration(
@@ -71,8 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         child: NavigationBar(
           selectedIndex: _selectedIndex,
-          onDestinationSelected: (index) =>
-              setState(() => _selectedIndex = index),
+          onDestinationSelected: _onTabSelected,
           destinations: [
             NavigationDestination(
               icon: const Icon(Icons.home_outlined),
@@ -170,6 +206,7 @@ class _OverviewTabState extends State<_OverviewTab>
     return Consumer2<FitnessProvider, KalorickeTabulkyProvider>(
       builder: (context, fitness, kt, _) {
         return Scaffold(
+          backgroundColor: Colors.transparent,
           appBar: AppBar(
             title: const AppBrandLockup(
               iconSize: 30,

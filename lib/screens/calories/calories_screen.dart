@@ -23,6 +23,7 @@ class NutritionScreen extends StatelessWidget {
     return Consumer<KalorickeTabulkyProvider>(
       builder: (context, kt, _) {
         return Scaffold(
+          backgroundColor: Colors.transparent,
           appBar: AppBar(
             title: Text(l10n.screenNutrition),
             actions: [

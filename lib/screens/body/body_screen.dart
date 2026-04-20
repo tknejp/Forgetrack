@@ -19,6 +19,7 @@ class BodyScreen extends StatelessWidget {
     return Consumer<FitnessProvider>(
       builder: (context, fitness, _) {
         return Scaffold(
+          backgroundColor: Colors.transparent,
           appBar: AppBar(
             title: Text(context.l10n.screenBody),
             actions: const [ProfileAvatarAction()],
