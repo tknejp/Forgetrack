@@ -506,6 +506,18 @@ abstract class AppLocalizations {
   /// **'Theme'**
   String get settingsTheme;
 
+  /// Label for the Dynamic Time Theme toggle setting
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic Time Theme'**
+  String get settingsTimeTheme;
+
+  /// Short description for the Dynamic Time Theme toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Adjusts visuals based on the current time of day.'**
+  String get settingsTimeThemeDesc;
+
   /// Theme mode option: follow system setting
   ///
   /// In en, this message translates to:
@@ -523,6 +535,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Dark'**
   String get themeDark;
+
+  /// Theme mode option: auto light/dark + palette driven by time of day
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic'**
+  String get themeDynamic;
 
   /// Label for the app version row
   ///

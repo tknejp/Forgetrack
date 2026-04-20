@@ -97,6 +97,43 @@ class ProfileSettingsTile extends StatelessWidget {
   }
 }
 
+class ProfileSwitchTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String? subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const ProfileSwitchTile({
+    super.key,
+    required this.icon,
+    required this.label,
+    this.subtitle,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return SwitchListTile(
+      secondary: Icon(icon, size: 22, color: cs.onSurfaceVariant),
+      title: Text(label, style: tt.bodyLarge),
+      subtitle: subtitle != null
+          ? Text(
+              subtitle!,
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            )
+          : null,
+      value: value,
+      onChanged: onChanged,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+    );
+  }
+}
+
 class ProfileDropdownTile<T> extends StatelessWidget {
   final IconData icon;
   final String label;

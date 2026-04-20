@@ -18,6 +18,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/app_logo.dart';
 import '../../widgets/parallax_background.dart';
 import '../../widgets/profile_avatar_action.dart';
+import '../../widgets/screen_meta_footer.dart';
 import '../activities/activities_screen.dart';
 import '../body/body_screen.dart';
 import '../calories/calories_screen.dart';
@@ -322,22 +323,6 @@ class _OverviewContent extends StatelessWidget {
                     locale: locale,
                     onPeriodChanged: onPeriodChanged,
                   ),
-                  if (fitness.lastSyncedAt != null) ...[
-                    const SizedBox(height: 6),
-                    Center(
-                      child: Text(
-                        l10n.healthLastSynced(
-                          DateFormat('HH:mm', locale)
-                              .format(fitness.lastSyncedAt!),
-                        ),
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
-                      ),
-                    ),
-                  ],
                   if (fitness.errorMessage != null) ...[
                     const SizedBox(height: 10),
                     _InlineErrorBanner(
@@ -386,6 +371,15 @@ class _OverviewContent extends StatelessWidget {
                     SleepCard(avgDuration: metrics.avgSleep)
                   else
                     const _NoSleepDataCard(),
+                  if (fitness.lastSyncedAt != null) ...[
+                    const SizedBox(height: 14),
+                    ScreenMetaFooter(
+                      text: l10n.healthLastSynced(
+                        DateFormat('HH:mm', locale)
+                            .format(fitness.lastSyncedAt!),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 16),
                 ],
               ),

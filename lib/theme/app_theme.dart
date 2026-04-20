@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import 'palettes.dart';
+import 'time_theme.dart';
 
 @immutable
 class SectionColors {
@@ -97,7 +98,22 @@ class AppTheme {
 
   static const AppPalette _palette = AppPalette.calmFit;
 
-  static NavigationBarThemeData _navBarTheme(Color indicator) {
+  // Static neutral surface bases — used to derive the per-segment tint delta.
+  static const _kLightSurface = Color(0xFFF7F9FB); // R247 G249 B251
+  static const _kDarkSurface  = Color(0xFF151A21); // R21  G26  B33
+
+  /// Returns the light [ThemeData].
+  ///
+  /// Pass a [TimePalette] from [TimeThemeProvider] to apply subtle time-of-day
+  /// accent and surface tints.  Omit (or pass null) for the static default.
+  static ThemeData light([TimePalette? timePalette]) =>
+      _buildTheme(Brightness.light, timePalette);
+
+  /// Returns the dark [ThemeData].  Same [timePalette] semantics as [light].
+  static ThemeData dark([TimePalette? timePalette]) =>
+      _buildTheme(Brightness.dark, timePalette);
+
+  static NavigationBarThemeData _navBarTheme(Color indicator, Color accent) {
     return NavigationBarThemeData(
       indicatorColor: indicator,
       labelTextStyle: WidgetStateProperty.resolveWith<TextStyle?>((states) {
@@ -108,45 +124,79 @@ class AppTheme {
       }),
       iconTheme: WidgetStateProperty.resolveWith<IconThemeData?>((states) {
         if (states.contains(WidgetState.selected)) {
-          return IconThemeData(color: _palette.accent, size: 24);
+          return IconThemeData(color: accent, size: 24);
         }
         return const IconThemeData(size: 24);
       }),
     );
   }
 
-  static ThemeData get light => _buildTheme(Brightness.light);
-
-  static ThemeData get dark => _buildTheme(Brightness.dark);
-
-  static ThemeData _buildTheme(Brightness brightness) {
+  static ThemeData _buildTheme(Brightness brightness, [TimePalette? timePalette]) {
     final isDark = brightness == Brightness.dark;
+
+    // ── Effective accent ────────────────────────────────────────────────────
+    final accent = timePalette?.accent ?? _palette.accent;
+
+    // ── Surface tinting ─────────────────────────────────────────────────────
+    // Compute the ΔR/ΔG/ΔB offset of the time palette surface from the neutral
+    // base, then apply that same delta to every hardcoded surface-family colour
+    // so all container tiers shift together while preserving their hierarchy.
+    final Color timeSurface = isDark
+        ? (timePalette?.darkSurface  ?? _kDarkSurface)
+        : (timePalette?.lightSurface ?? _kLightSurface);
+    final Color staticBase = isDark ? _kDarkSurface : _kLightSurface;
+
+    int toByte(Color c, double channel) => (channel * 255.0).round();
+    final int dr = toByte(timeSurface, timeSurface.r) - toByte(staticBase, staticBase.r);
+    final int dg = toByte(timeSurface, timeSurface.g) - toByte(staticBase, staticBase.g);
+    final int db = toByte(timeSurface, timeSurface.b) - toByte(staticBase, staticBase.b);
+
+    // Apply the tint delta, clamping to valid byte range.
+    Color tint(Color c) => Color.fromARGB(
+      255,
+      (toByte(c, c.r) + dr).clamp(0, 255),
+      (toByte(c, c.g) + dg).clamp(0, 255),
+      (toByte(c, c.b) + db).clamp(0, 255),
+    );
+
+    // ── ColorScheme ─────────────────────────────────────────────────────────
+    // Keep seedColor stable so secondary/tertiary hues don't drift; only
+    // override primary and surface-family colours with the time palette values.
     final cs = ColorScheme.fromSeed(
       seedColor: _palette.accent,
       secondary: _palette.secondary,
       tertiary: _palette.tertiary,
       brightness: brightness,
     ).copyWith(
-      primary: _palette.accent,
+      primary: accent,
       secondary: _palette.secondary,
       tertiary: _palette.tertiary,
-      surface: isDark ? const Color(0xFF151A21) : const Color(0xFFF7F9FB),
-      surfaceContainerLowest:
-          isDark ? const Color(0xFF10151C) : const Color(0xFFFFFFFF),
-      surfaceContainerLow:
-          isDark ? const Color(0xFF171E27) : const Color(0xFFF3F6F8),
-      surfaceContainer:
-          isDark ? const Color(0xFF1C2430) : const Color(0xFFEEF3F6),
-      surfaceContainerHigh:
-          isDark ? const Color(0xFF222C39) : const Color(0xFFE6EDF2),
-      surfaceContainerHighest:
-          isDark ? const Color(0xFF2A3645) : const Color(0xFFDCE6ED),
-      outline: isDark ? const Color(0xFF334252) : const Color(0xFFD6E0E7),
-      outlineVariant:
-          isDark ? const Color(0xFF283341) : const Color(0xFFE5EDF2),
-      secondaryContainer:
-          isDark ? _palette.navIndicatorDark : _palette.navIndicatorLight,
-      onSecondaryContainer: _palette.accent,
+      // Surface family — tinted from the segment's surface base.
+      surface: tint(isDark ? _kDarkSurface  : _kLightSurface),
+      surfaceContainerLowest: tint(
+        isDark ? const Color(0xFF10151C) : const Color(0xFFFFFFFF),
+      ),
+      surfaceContainerLow: tint(
+        isDark ? const Color(0xFF171E27) : const Color(0xFFF3F6F8),
+      ),
+      surfaceContainer: tint(
+        isDark ? const Color(0xFF1C2430) : const Color(0xFFEEF3F6),
+      ),
+      surfaceContainerHigh: tint(
+        isDark ? const Color(0xFF222C39) : const Color(0xFFE6EDF2),
+      ),
+      surfaceContainerHighest: tint(
+        isDark ? const Color(0xFF2A3645) : const Color(0xFFDCE6ED),
+      ),
+      outline: tint(
+        isDark ? const Color(0xFF334252) : const Color(0xFFD6E0E7),
+      ),
+      outlineVariant: tint(
+        isDark ? const Color(0xFF283341) : const Color(0xFFE5EDF2),
+      ),
+      // Nav indicator inherits the active accent.
+      secondaryContainer: accent.withValues(alpha: isDark ? 0.20 : 0.10),
+      onSecondaryContainer: accent,
     );
 
     final textTheme = (isDark
@@ -179,6 +229,8 @@ class AppTheme {
           displayColor: cs.onSurface,
         );
 
+    // Section colours (steps/nutrition/sleep/body) are intentionally NOT
+    // time-shifted — they carry semantic meaning and must stay recognisable.
     final tokens = AppThemeTokens(
       steps: SectionColors(
         accent: _palette.steps.accent,
@@ -209,7 +261,8 @@ class AppTheme {
       scaffoldBackgroundColor: cs.surfaceContainerLowest,
       extensions: [tokens],
       navigationBarTheme: _navBarTheme(
-        isDark ? _palette.navIndicatorDark : _palette.navIndicatorLight,
+        cs.secondaryContainer,
+        accent,
       ),
       cardTheme: CardThemeData(
         elevation: 0,
@@ -234,13 +287,54 @@ class AppTheme {
           padding: WidgetStateProperty.all(
             const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
+          minimumSize: WidgetStateProperty.all(const Size(0, 44)),
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.disabled)) {
+              return cs.surfaceContainerHigh.withValues(alpha: isDark ? 0.38 : 0.55);
+            }
+            if (states.contains(WidgetState.selected)) {
+              return accent.withValues(alpha: isDark ? 0.24 : 0.14);
+            }
+            return cs.surfaceContainerHigh.withValues(alpha: isDark ? 0.9 : 0.96);
+          }),
+          foregroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.disabled)) {
+              return cs.onSurface.withValues(alpha: 0.38);
+            }
+            if (states.contains(WidgetState.selected)) {
+              return accent;
+            }
+            return cs.onSurface;
+          }),
+          overlayColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.pressed)) {
+              return accent.withValues(alpha: isDark ? 0.18 : 0.12);
+            }
+            if (states.contains(WidgetState.hovered)) {
+              return accent.withValues(alpha: isDark ? 0.12 : 0.08);
+            }
+            return null;
+          }),
           shape: WidgetStateProperty.all(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
             ),
           ),
-          side: WidgetStateProperty.all(BorderSide(color: cs.outlineVariant)),
-          textStyle: WidgetStateProperty.all(textTheme.labelLarge),
+          side: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return BorderSide(
+                color: accent.withValues(alpha: isDark ? 0.5 : 0.3),
+              );
+            }
+            return BorderSide(color: cs.outlineVariant);
+          }),
+          textStyle: WidgetStateProperty.resolveWith((states) {
+            final base = textTheme.labelLarge;
+            if (states.contains(WidgetState.selected)) {
+              return base?.copyWith(fontWeight: FontWeight.w800);
+            }
+            return base;
+          }),
         ),
       ),
       dividerTheme: DividerThemeData(

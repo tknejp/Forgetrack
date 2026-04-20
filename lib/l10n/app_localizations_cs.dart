@@ -217,6 +217,13 @@ class AppLocalizationsCs extends AppLocalizations {
   String get settingsTheme => 'Motiv';
 
   @override
+  String get settingsTimeTheme => 'Dynamický motiv dle času';
+
+  @override
+  String get settingsTimeThemeDesc =>
+      'Přizpůsobuje vzhled aplikace podle aktuální denní doby.';
+
+  @override
   String get themeSystem => 'Systémový';
 
   @override
@@ -224,6 +231,9 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get themeDark => 'Tmavý';
+
+  @override
+  String get themeDynamic => 'Dynamický';
 
   @override
   String get settingsAppVersion => 'Verze aplikace';

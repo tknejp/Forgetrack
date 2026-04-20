@@ -6,6 +6,8 @@ import '../../l10n/l10n.dart';
 import '../../providers/goals_provider.dart';
 import '../../providers/kaloricke_tabulky_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/profile_avatar_action.dart';
+import '../../widgets/screen_meta_footer.dart';
 import '../profile/profile_screen.dart';
 
 // ─── Period enum ──────────────────────────────────────────────────────────────
@@ -26,15 +28,7 @@ class NutritionScreen extends StatelessWidget {
           backgroundColor: Colors.transparent,
           appBar: AppBar(
             title: Text(l10n.screenNutrition),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.account_circle_outlined),
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
-                ),
-              ),
-            ],
+            actions: const [ProfileAvatarAction()],
           ),
           body: _buildBody(context, kt),
         );
@@ -80,7 +74,8 @@ class _NotConnectedState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.restaurant_outlined, size: 72, color: cs.onSurfaceVariant),
+            Icon(Icons.restaurant_outlined,
+                size: 72, color: cs.onSurfaceVariant),
             const SizedBox(height: 20),
             Text(
               l10n.screenNutrition,
@@ -202,106 +197,90 @@ class _NutritionDataViewState extends State<_NutritionDataView> {
     return RefreshIndicator(
       onRefresh: _onRefresh,
       child: ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      children: [
-        const SizedBox(height: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: [
+          const SizedBox(height: 16),
 
-        // ── Header + sync time ──────────────────────────────────────────────
-        Row(
-          children: [
-            Text(
-              l10n.ktNutritionTitle,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+          // ── Header + sync time ──────────────────────────────────────────────
+
+          // ── Error banners ───────────────────────────────────────────────────
+          if (kt.syncError != null) ...[
+            _ErrorBanner(
+              message: l10n.ktSyncError,
+              onRetry: () => kt.refresh(),
+              retryLabel: l10n.ktRetry,
             ),
-            const Spacer(),
-            if (kt.lastSyncedAt != null)
-              Text(
-                l10n.ktSyncedAt(
-                  DateFormat('HH:mm', locale).format(kt.lastSyncedAt!),
-                ),
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
+            const SizedBox(height: 12),
           ],
-        ),
-        const SizedBox(height: 12),
+          if (kt.authError != null) ...[
+            _ErrorBanner(
+              message: kt.authError!,
+              onRetry: null,
+              retryLabel: null,
+            ),
+            const SizedBox(height: 12),
+          ],
 
-        // ── Error banners ───────────────────────────────────────────────────
-        if (kt.syncError != null) ...[
-          _ErrorBanner(
-            message: l10n.ktSyncError,
-            onRetry: () => kt.refresh(),
-            retryLabel: l10n.ktRetry,
+          // ── Period selector ─────────────────────────────────────────────────
+          _PeriodSelector(
+            selected: _period,
+            onChanged: (p) => setState(() => _period = p),
           ),
-          const SizedBox(height: 12),
-        ],
-        if (kt.authError != null) ...[
-          _ErrorBanner(
-            message: kt.authError!,
-            onRetry: null,
-            retryLabel: null,
-          ),
-          const SizedBox(height: 12),
-        ],
+          const SizedBox(height: 16),
 
-        // ── Period selector ─────────────────────────────────────────────────
-        _PeriodSelector(
-          selected: _period,
-          onChanged: (p) => setState(() => _period = p),
-        ),
-        const SizedBox(height: 16),
-
-        // ── Data or empty state ─────────────────────────────────────────────
-        if (!hasData) ...[
-          _period == _Period.today
-              ? const _NoDiaryDataCard()
-              : _NoHistoryDataCard(message: l10n.nutritionNoHistoryData),
-        ] else ...[
-          _CalorieCard(
-            calories: v.calories,
-            goal: goals.dailyCalories,
-            isAverage: isAvg,
-          ),
-          const SizedBox(height: 12),
-
-          _MacrosCard(
-            protein: v.protein,
-            proteinGoal: goals.dailyProtein,
-            fat: v.fat,
-            fatGoal: goals.dailyFat,
-            carbs: v.carbs,
-            carbsGoal: goals.dailyCarbs,
-            isAverage: isAvg,
-          ),
-          const SizedBox(height: 12),
-
-          _SecondaryNutrientsCard(
-            fiber: v.fiber,
-            sugar: v.sugar,
-            salt: v.salt,
-            saturatedFat: v.saturatedFat,
-          ),
-          const SizedBox(height: 4),
-
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              icon: const Icon(Icons.tune, size: 16),
-              label: Text(l10n.nutritionGoalsTitle),
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ProfileScreen()),
+          // ── Data or empty state ─────────────────────────────────────────────
+          if (!hasData) ...[
+            _period == _Period.today
+                ? const _NoDiaryDataCard()
+                : _NoHistoryDataCard(message: l10n.nutritionNoHistoryData),
+          ] else ...[
+            _CalorieCard(
+              calories: v.calories,
+              goal: goals.dailyCalories,
+              isAverage: isAvg,
+            ),
+            const SizedBox(height: 12),
+            _MacrosCard(
+              protein: v.protein,
+              proteinGoal: goals.dailyProtein,
+              fat: v.fat,
+              fatGoal: goals.dailyFat,
+              carbs: v.carbs,
+              carbsGoal: goals.dailyCarbs,
+              isAverage: isAvg,
+            ),
+            const SizedBox(height: 12),
+            _SecondaryNutrientsCard(
+              fiber: v.fiber,
+              sugar: v.sugar,
+              salt: v.salt,
+              saturatedFat: v.saturatedFat,
+            ),
+            const SizedBox(height: 4),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                icon: const Icon(Icons.tune, size: 16),
+                label: Text(l10n.nutritionGoalsTitle),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
 
-        const SizedBox(height: 24),
-      ],
-    ),
+          if (kt.lastSyncedAt != null) ...[
+            const SizedBox(height: 14),
+            ScreenMetaFooter(
+              text: l10n.ktSyncedAt(
+                DateFormat('HH:mm', locale).format(kt.lastSyncedAt!),
+              ),
+            ),
+          ],
+          const SizedBox(height: 24),
+        ],
+      ),
     );
   }
 }
@@ -395,7 +374,8 @@ class _CalorieCard extends StatelessWidget {
                   children: [
                     Text(
                       '${goal.round()} kcal',
-                      style: tt.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                      style:
+                          tt.bodySmall?.copyWith(fontWeight: FontWeight.w600),
                     ),
                     Text(
                       l10n.stepsGoal,
@@ -578,16 +558,26 @@ class _SecondaryNutrientsCard extends StatelessWidget {
     final rows = <({IconData icon, String label, double value})>[];
 
     if (fiber != null) {
-      rows.add((icon: Icons.eco_outlined, label: l10n.macroFiber, value: fiber!));
+      rows.add(
+          (icon: Icons.eco_outlined, label: l10n.macroFiber, value: fiber!));
     }
     if (sugar != null) {
-      rows.add((icon: Icons.water_drop_outlined, label: l10n.macroSugar, value: sugar!));
+      rows.add((
+        icon: Icons.water_drop_outlined,
+        label: l10n.macroSugar,
+        value: sugar!
+      ));
     }
     if (salt != null) {
-      rows.add((icon: Icons.science_outlined, label: l10n.macroSalt, value: salt!));
+      rows.add(
+          (icon: Icons.science_outlined, label: l10n.macroSalt, value: salt!));
     }
     if (saturatedFat != null) {
-      rows.add((icon: Icons.layers_outlined, label: l10n.macroSaturatedFat, value: saturatedFat!));
+      rows.add((
+        icon: Icons.layers_outlined,
+        label: l10n.macroSaturatedFat,
+        value: saturatedFat!
+      ));
     }
 
     if (rows.isEmpty) return const SizedBox.shrink();
@@ -637,9 +627,7 @@ class _NutrientRow extends StatelessWidget {
           Text(label, style: tt.bodyMedium),
           const Spacer(),
           Text(
-            value < 10
-                ? '${value.toStringAsFixed(1)} g'
-                : '${value.round()} g',
+            value < 10 ? '${value.toStringAsFixed(1)} g' : '${value.round()} g',
             style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
         ],
@@ -660,7 +648,8 @@ class _RowDivider extends StatelessWidget {
       thickness: 1,
       indent: 44,
       endIndent: 0,
-      color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5),
+      color:
+          Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5),
     );
   }
 }
@@ -712,7 +701,8 @@ class _NoHistoryDataCard extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            Icon(Icons.bar_chart_outlined, size: 48, color: cs.onSurfaceVariant),
+            Icon(Icons.bar_chart_outlined,
+                size: 48, color: cs.onSurfaceVariant),
             const SizedBox(height: 12),
             Text(
               message,

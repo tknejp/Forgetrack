@@ -217,6 +217,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTheme => 'Theme';
 
   @override
+  String get settingsTimeTheme => 'Dynamic Time Theme';
+
+  @override
+  String get settingsTimeThemeDesc =>
+      'Adjusts visuals based on the current time of day.';
+
+  @override
   String get themeSystem => 'System';
 
   @override
@@ -224,6 +231,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themeDark => 'Dark';
+
+  @override
+  String get themeDynamic => 'Dynamic';
 
   @override
   String get settingsAppVersion => 'App version';

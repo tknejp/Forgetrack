@@ -13,6 +13,7 @@ import 'providers/goals_provider.dart';
 import 'providers/kaloricke_tabulky_provider.dart';
 import 'providers/locale_provider.dart';
 import 'providers/theme_provider.dart';
+import 'providers/time_theme_provider.dart';
 import 'services/calorie_api_service.dart';
 import 'services/google_auth_service.dart';
 import 'services/health_connect_service.dart';
@@ -38,6 +39,9 @@ Future<void> main() async {
   final themeProvider = ThemeProvider();
   await themeProvider.init();
 
+  final timeThemeProvider = TimeThemeProvider();
+  await timeThemeProvider.init();
+
   await GoogleAuthService.instance.init();
   AppLog.app.debug('Google auth initialized');
 
@@ -60,6 +64,7 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider.value(value: localeProvider),
         ChangeNotifierProvider.value(value: themeProvider),
+        ChangeNotifierProvider.value(value: timeThemeProvider),
         ChangeNotifierProvider.value(value: goalsProvider),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider.value(value: fitnessProvider),

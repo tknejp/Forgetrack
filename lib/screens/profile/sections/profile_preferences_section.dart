@@ -3,7 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../../providers/locale_provider.dart';
-import '../../../providers/theme_provider.dart';
+import '../../../providers/theme_provider.dart' show AppThemeMode, ThemeProvider;
+import '../../../providers/time_theme_provider.dart';
 import '../widgets/profile_settings_widgets.dart';
 
 class ProfilePreferencesSection extends StatelessWidget {
@@ -13,6 +14,7 @@ class ProfilePreferencesSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final localeProvider = context.watch<LocaleProvider>();
     final themeProvider = context.watch<ThemeProvider>();
+    final timeThemeProvider = context.watch<TimeThemeProvider>();
     final l10n = context.l10n;
 
     return ProfileSettingsCard(
@@ -41,29 +43,41 @@ class ProfilePreferencesSection extends StatelessWidget {
           },
         ),
         const ProfileTileDivider(),
-        ProfileDropdownTile<ThemeMode>(
+        ProfileDropdownTile<AppThemeMode>(
           icon: Icons.brightness_6_outlined,
           label: l10n.settingsTheme,
-          value: themeProvider.mode,
+          value: themeProvider.choice,
           items: [
-            DropdownMenuItem<ThemeMode>(
-              value: ThemeMode.system,
+            DropdownMenuItem<AppThemeMode>(
+              value: AppThemeMode.system,
               child: Text(l10n.themeSystem),
             ),
-            DropdownMenuItem<ThemeMode>(
-              value: ThemeMode.light,
+            DropdownMenuItem<AppThemeMode>(
+              value: AppThemeMode.light,
               child: Text(l10n.themeLight),
             ),
-            DropdownMenuItem<ThemeMode>(
-              value: ThemeMode.dark,
+            DropdownMenuItem<AppThemeMode>(
+              value: AppThemeMode.dark,
               child: Text(l10n.themeDark),
             ),
+            DropdownMenuItem<AppThemeMode>(
+              value: AppThemeMode.dynamic,
+              child: Text(l10n.themeDynamic),
+            ),
           ],
-          onChanged: (mode) {
-            if (mode != null) {
-              context.read<ThemeProvider>().setMode(mode);
+          onChanged: (choice) {
+            if (choice != null) {
+              context.read<ThemeProvider>().setChoice(choice);
             }
           },
+        ),
+        const ProfileTileDivider(),
+        ProfileSwitchTile(
+          icon: Icons.wb_twilight_outlined,
+          label: l10n.settingsTimeTheme,
+          subtitle: l10n.settingsTimeThemeDesc,
+          value: timeThemeProvider.enabled,
+          onChanged: (v) => context.read<TimeThemeProvider>().setEnabled(v),
         ),
       ],
     );

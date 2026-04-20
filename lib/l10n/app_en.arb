@@ -210,6 +210,12 @@
   "settingsTheme": "Theme",
   "@settingsTheme": { "description": "Label for the theme mode setting" },
 
+  "settingsTimeTheme": "Dynamic Time Theme",
+  "@settingsTimeTheme": { "description": "Label for the Dynamic Time Theme toggle setting" },
+
+  "settingsTimeThemeDesc": "Adjusts visuals based on the current time of day.",
+  "@settingsTimeThemeDesc": { "description": "Short description for the Dynamic Time Theme toggle" },
+
   "themeSystem": "System",
   "@themeSystem": { "description": "Theme mode option: follow system setting" },
 
@@ -218,6 +224,9 @@
 
   "themeDark": "Dark",
   "@themeDark": { "description": "Theme mode option: always dark" },
+
+  "themeDynamic": "Dynamic",
+  "@themeDynamic": { "description": "Theme mode option: auto light/dark + palette driven by time of day" },
 
   "settingsAppVersion": "App version",
   "@settingsAppVersion": { "description": "Label for the app version row" },

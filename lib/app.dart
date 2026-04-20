@@ -6,27 +6,57 @@ import 'core/constants.dart';
 import 'l10n/app_localizations.dart';
 import 'providers/locale_provider.dart';
 import 'providers/theme_provider.dart';
+import 'providers/time_theme_provider.dart';
 import 'screens/home/home_screen.dart';
 import 'theme/app_theme.dart';
+import 'theme/time_theme.dart';
 
 class ForgetrackApp extends StatelessWidget {
   const ForgetrackApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final selectedLocale = context.watch<LocaleProvider>().locale;
-    final themeMode = context.watch<ThemeProvider>().mode;
+    final selectedLocale  = context.watch<LocaleProvider>().locale;
+    final themeProvider   = context.watch<ThemeProvider>();
+    final timeProvider    = context.watch<TimeThemeProvider>();
+
+    final isDynamic = themeProvider.choice == AppThemeMode.dynamic;
+
+    // ── Effective ThemeMode ─────────────────────────────────────────────────
+    // Dynamic mode auto-switches light/dark based on the time segment.
+    // Dawn → afternoon are light; sunset → night are dark.
+    final ThemeMode effectiveMode;
+    if (isDynamic) {
+      const lightSegments = {
+        TimeSegment.dawn,
+        TimeSegment.morning,
+        TimeSegment.noon,
+        TimeSegment.afternoon,
+      };
+      effectiveMode = lightSegments.contains(timeProvider.segment)
+          ? ThemeMode.light
+          : ThemeMode.dark;
+    } else {
+      effectiveMode = themeProvider.mode;
+    }
+
+    // ── Time palette ────────────────────────────────────────────────────────
+    // Active when Dynamic theme mode is on, or when the background toggle
+    // is on (so backgrounds and palette always stay in sync).
+    final timePalette = (isDynamic || timeProvider.enabled)
+        ? timeProvider.visuals.palette
+        : null;
 
     return MaterialApp(
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      themeMode: themeMode,
+      theme: AppTheme.light(timePalette),
+      darkTheme: AppTheme.dark(timePalette),
+      themeMode: effectiveMode,
       home: const HomeScreen(),
 
       // ── Localization setup ────────────────────────────────────────────────
-      locale: selectedLocale, // null = follow device locale
+      locale: selectedLocale,
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -35,7 +65,6 @@ class ForgetrackApp extends StatelessWidget {
       ],
       supportedLocales: AppLocalizations.supportedLocales,
 
-      // Fall back to English when the device locale is not supported.
       localeResolutionCallback: (deviceLocale, supportedLocales) {
         if (deviceLocale == null) return const Locale('en');
         for (final supported in supportedLocales) {
