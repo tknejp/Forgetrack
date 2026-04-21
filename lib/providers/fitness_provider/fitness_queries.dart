@@ -8,14 +8,19 @@ import '../../models/weight_record.dart';
 /// All methods are static and operate on the caller-supplied data slices.
 /// No state is held here — the provider owns all data and passes it in.
 class FitnessQueries {
+  static DateTime _dateOnly(DateTime value) =>
+      DateTime(value.year, value.month, value.day);
+
   // ─── Predicates ───────────────────────────────────────────────────────────
 
   static bool sameDay(DateTime a, DateTime b) =>
-      a.year == b.year && a.month == b.month && a.day == b.day;
+      _dateOnly(a) == _dateOnly(b);
 
   static bool inRange(DateTime d, DateTime start, DateTime end) {
-    final date = DateTime(d.year, d.month, d.day);
-    return !date.isBefore(start) && !date.isAfter(end);
+    final date = _dateOnly(d);
+    final startDate = _dateOnly(start);
+    final endDate = _dateOnly(end);
+    return !date.isBefore(startDate) && !date.isAfter(endDate);
   }
 
   // ─── Steps ────────────────────────────────────────────────────────────────
@@ -80,6 +85,9 @@ class FitnessQueries {
   ) =>
       history.where((r) => inRange(r.date, start, end)).toList();
 
+  static WeightRecord? weightForDate(List<WeightRecord> history, DateTime date) =>
+      history.where((r) => sameDay(r.date, date)).lastOrNull;
+
   static ({double? lastKnown, double? trend}) weightMetricsForRange(
     List<WeightRecord> history,
     double? latestWeight,
@@ -96,10 +104,9 @@ class FitnessQueries {
 
   static double? previousWeightBefore(
       List<WeightRecord> history, DateTime date) {
-    final day = DateTime(date.year, date.month, date.day);
+    final day = _dateOnly(date);
     final before = history
-        .where((r) =>
-            DateTime(r.date.year, r.date.month, r.date.day).isBefore(day))
+        .where((r) => _dateOnly(r.date).isBefore(day))
         .toList();
     return before.isNotEmpty ? before.last.weight : null;
   }

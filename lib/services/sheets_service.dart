@@ -34,6 +34,56 @@ class SheetsService {
     return result.spreadsheetId!;
   }
 
+  /// Creates an empty spreadsheet with a single tab named [AppConstants.exportSheetName],
+  /// suitable for the unified date-merge export pipeline.
+  Future<String> createExportSpreadsheet() async {
+    _assertReady();
+    final spreadsheet = sheets.Spreadsheet(
+      properties: sheets.SpreadsheetProperties(title: AppConstants.sheetsTitle),
+      sheets: [
+        sheets.Sheet(
+          properties: sheets.SheetProperties(title: AppConstants.exportSheetName),
+        ),
+      ],
+    );
+    final result = await _api!.spreadsheets.create(spreadsheet);
+    return result.spreadsheetId!;
+  }
+
+  /// Loads spreadsheet metadata. Returns `null` if the spreadsheet is missing
+  /// or inaccessible.
+  Future<sheets.Spreadsheet?> getSpreadsheet(String spreadsheetId) async {
+    _assertReady();
+    try {
+      return await _api!.spreadsheets.get(spreadsheetId);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Adds a new tab named [sheetName] to [spreadsheetId] if missing.
+  Future<void> ensureSheetExists({
+    required String spreadsheetId,
+    required String sheetName,
+  }) async {
+    _assertReady();
+    final meta = await _api!.spreadsheets.get(spreadsheetId);
+    final exists = (meta.sheets ?? []).any(
+      (s) => s.properties?.title == sheetName,
+    );
+    if (exists) return;
+    await _api!.spreadsheets.batchUpdate(
+      sheets.BatchUpdateSpreadsheetRequest(requests: [
+        sheets.Request(
+          addSheet: sheets.AddSheetRequest(
+            properties: sheets.SheetProperties(title: sheetName),
+          ),
+        ),
+      ]),
+      spreadsheetId,
+    );
+  }
+
   /// Appends rows to the end of the sheet.
   Future<void> appendRows({
     required String spreadsheetId,
@@ -61,6 +111,34 @@ class SheetsService {
     _assertReady();
     final result = await _api!.spreadsheets.values.get(spreadsheetId, range);
     return result.values ?? [];
+  }
+
+  /// Overwrites values starting at [range] (USER_ENTERED parsing).
+  Future<void> writeRange({
+    required String spreadsheetId,
+    required String range,
+    required List<List<Object?>> values,
+  }) async {
+    _assertReady();
+    await _api!.spreadsheets.values.update(
+      sheets.ValueRange(values: values),
+      spreadsheetId,
+      range,
+      valueInputOption: 'USER_ENTERED',
+    );
+  }
+
+  /// Clears all values in [range].
+  Future<void> clearRange({
+    required String spreadsheetId,
+    required String range,
+  }) async {
+    _assertReady();
+    await _api!.spreadsheets.values.clear(
+      sheets.ClearValuesRequest(),
+      spreadsheetId,
+      range,
+    );
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────

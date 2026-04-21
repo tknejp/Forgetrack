@@ -490,5 +490,262 @@
   "@nutritionGoalsTitle": { "description": "Button in nutrition screen that opens goal editing in Profile" },
 
   "nutritionNoHistoryData": "Not enough data for this period",
-  "@nutritionNoHistoryData": { "description": "Empty state shown in nutrition screen when historical averages cannot be computed" }
+  "@nutritionNoHistoryData": { "description": "Empty state shown in nutrition screen when historical averages cannot be computed" },
+
+  "exportScreenTitle": "Export to Google Sheets",
+  "@exportScreenTitle": { "description": "AppBar title of the Sheets export screen" },
+
+  "exportSignInTitle": "Sign in with Google",
+  "@exportSignInTitle": { "description": "Card title shown when the user must authenticate before exporting" },
+
+  "exportSignInBody": "Sheets export needs your Google account to write to your spreadsheet. Sign in to continue.",
+  "@exportSignInBody": { "description": "Body text inside the sign-in required card" },
+
+  "exportSignInButton": "Sign in",
+  "@exportSignInButton": { "description": "CTA button to start Google sign-in from the export screen" },
+
+  "exportSignInLoading": "Signing in…",
+  "@exportSignInLoading": { "description": "Loading label on the sign-in button while auth is in progress" },
+
+  "exportTargetLabel": "Target spreadsheet",
+  "@exportTargetLabel": { "description": "Section label for the target spreadsheet card" },
+
+  "exportTargetMissingBody": "No spreadsheet linked yet. A new \"Forgetrack Data\" spreadsheet will be created in your Google Drive on the first export.",
+  "@exportTargetMissingBody": { "description": "Body text shown when no spreadsheet is linked yet" },
+
+  "exportTargetCopyLink": "Copy link",
+  "@exportTargetCopyLink": { "description": "Tooltip on the copy spreadsheet link icon button" },
+
+  "exportTargetLinkCopied": "Spreadsheet link copied",
+  "@exportTargetLinkCopied": { "description": "Snackbar shown after the spreadsheet link is copied to the clipboard" },
+
+  "exportTargetForgetButton": "Forget link",
+  "@exportTargetForgetButton": { "description": "Button that unlinks the spreadsheet from the app" },
+
+  "exportTargetForgetConfirmTitle": "Forget linked spreadsheet?",
+  "@exportTargetForgetConfirmTitle": { "description": "Title of the confirmation dialog shown before unlinking the spreadsheet" },
+
+  "exportTargetForgetConfirmMessage": "This only removes the link inside Forgetrack. The spreadsheet itself will remain in your Google Drive.",
+  "@exportTargetForgetConfirmMessage": { "description": "Body of the confirmation dialog shown before unlinking the spreadsheet" },
+
+  "exportTargetForgetConfirmAction": "Forget",
+  "@exportTargetForgetConfirmAction": { "description": "Destructive action label in the forget-spreadsheet confirmation dialog" },
+
+  "exportRangeLabel": "Date range",
+  "@exportRangeLabel": { "description": "Section label for the date range picker" },
+
+  "exportRangeDayCount": "{count} day(s)",
+  "@exportRangeDayCount": {
+    "description": "Day count pill shown next to the range label",
+    "placeholders": {
+      "count": { "type": "int", "description": "Number of days in the selected range" }
+    }
+  },
+
+  "exportRangePickButton": "Choose range",
+  "@exportRangePickButton": { "description": "Button that opens the date range picker" },
+
+  "exportRangeInvalid": "End date must be on or after the start date.",
+  "@exportRangeInvalid": { "description": "Validation message shown when the selected range is invalid" },
+
+  "exportRangePresetLast7": "Last 7d",
+  "@exportRangePresetLast7": { "description": "Preset chip that selects the last 7 days" },
+
+  "exportRangePresetLast30": "Last 30d",
+  "@exportRangePresetLast30": { "description": "Preset chip that selects the last 30 days" },
+
+  "exportRangePresetThisMonth": "This month",
+  "@exportRangePresetThisMonth": { "description": "Preset chip that selects the current month up to today" },
+
+  "exportRangePresetLastMonth": "Last month",
+  "@exportRangePresetLastMonth": { "description": "Preset chip that selects the entirety of the previous month" },
+
+  "exportFieldsLabel": "Fields to export",
+  "@exportFieldsLabel": { "description": "Section label for the list of exportable fields" },
+
+  "exportFieldsSelectAll": "All",
+  "@exportFieldsSelectAll": { "description": "Link that selects all exportable fields" },
+
+  "exportFieldsSelectNone": "None",
+  "@exportFieldsSelectNone": { "description": "Link that clears all selected export fields" },
+
+  "exportCategoryActivity": "Activity",
+  "@exportCategoryActivity": { "description": "Export field category heading: activity-related metrics" },
+
+  "exportCategoryBody": "Body",
+  "@exportCategoryBody": { "description": "Export field category heading: body measurements" },
+
+  "exportCategorySleep": "Sleep",
+  "@exportCategorySleep": { "description": "Export field category heading: sleep metrics" },
+
+  "exportCategoryNutrition": "Nutrition",
+  "@exportCategoryNutrition": { "description": "Export field category heading: nutrition metrics" },
+
+  "exportButton": "Export to Sheets",
+  "@exportButton": { "description": "Primary button that triggers the Sheets export" },
+
+  "exportButtonRunning": "Exporting…",
+  "@exportButtonRunning": { "description": "Primary button label while an export is running" },
+
+  "exportSummary": "{days} day(s) · {fields} field(s) · {range}",
+  "@exportSummary": {
+    "description": "Compact summary shown above the export button",
+    "placeholders": {
+      "days": { "type": "int", "description": "Number of days in the selected range" },
+      "fields": { "type": "int", "description": "Number of selected fields" },
+      "range": { "type": "String", "description": "Short-format range, e.g. '1 Apr – 21 Apr'" }
+    }
+  },
+
+  "exportExplainer": "Rows are merged by date — existing dates are updated, new ones are appended. Today is {today}.",
+  "@exportExplainer": {
+    "description": "Footer note explaining merge-by-date semantics",
+    "placeholders": {
+      "today": { "type": "String", "description": "Today's date in dd.MM.yyyy format" }
+    }
+  },
+
+  "exportSuccessTitle": "Export complete",
+  "@exportSuccessTitle": { "description": "Title of the success banner shown after a successful export" },
+
+  "exportSuccessDetail": "Wrote {rows} row(s) — +{added} added, {updated} updated.",
+  "@exportSuccessDetail": {
+    "description": "Detail line in the success banner and snackbar",
+    "placeholders": {
+      "rows": { "type": "int", "description": "Total rows written to the sheet" },
+      "added": { "type": "int", "description": "Number of new rows appended" },
+      "updated": { "type": "int", "description": "Number of existing rows updated" }
+    }
+  },
+
+  "exportErrorTitle": "Export failed",
+  "@exportErrorTitle": { "description": "Title of the error banner shown when export fails" },
+
+  "exportErrorGeneric": "Unknown error.",
+  "@exportErrorGeneric": { "description": "Fallback message for an unknown export error" },
+
+  "exportErrorNotSignedIn": "Not signed in to Google. Sign in to enable Sheets export.",
+  "@exportErrorNotSignedIn": { "description": "Error message when the user is not authenticated" },
+
+  "exportErrorNoFields": "Select at least one field to export.",
+  "@exportErrorNoFields": { "description": "Validation message when no fields are selected" },
+
+  "exportErrorInvalidRange": "Invalid range: the end date is before the start date.",
+  "@exportErrorInvalidRange": { "description": "Validation message when the end date precedes the start date" },
+
+  "exportErrorPrefix": "Export failed: {message}",
+  "@exportErrorPrefix": {
+    "description": "Generic wrapper used when an unexpected error must be surfaced",
+    "placeholders": {
+      "message": { "type": "String", "description": "Underlying error message" }
+    }
+  },
+
+  "exportFieldSteps": "Steps",
+  "@exportFieldSteps": { "description": "Field label: step count for the day" },
+
+  "exportFieldActiveCalories": "Active calories",
+  "@exportFieldActiveCalories": { "description": "Field label: calories burned through activity" },
+
+  "exportFieldActiveCaloriesDesc": "Calories burned through activity (kcal).",
+  "@exportFieldActiveCaloriesDesc": { "description": "Description for the active calories export field" },
+
+  "exportFieldWeight": "Weight",
+  "@exportFieldWeight": { "description": "Field label: body weight" },
+
+  "exportFieldWeightDesc": "Latest weight recorded on the day (kg).",
+  "@exportFieldWeightDesc": { "description": "Description for the weight export field" },
+
+  "exportFieldBodyFat": "Body fat",
+  "@exportFieldBodyFat": { "description": "Field label: body fat percentage" },
+
+  "exportFieldBodyFatDesc": "Body-fat percentage recorded on the day.",
+  "@exportFieldBodyFatDesc": { "description": "Description for the body fat export field" },
+
+  "exportFieldSleepDuration": "Sleep duration",
+  "@exportFieldSleepDuration": { "description": "Field label: total sleep duration" },
+
+  "exportFieldSleepDurationDesc": "Total sleep on the night ending on this date (minutes).",
+  "@exportFieldSleepDurationDesc": { "description": "Description for the sleep duration export field" },
+
+  "exportFieldSleepBedtime": "Bedtime",
+  "@exportFieldSleepBedtime": { "description": "Field label: bedtime (time user fell asleep)" },
+
+  "exportFieldSleepWake": "Wake time",
+  "@exportFieldSleepWake": { "description": "Field label: wake time" },
+
+  "exportFieldKcalIn": "Calories in",
+  "@exportFieldKcalIn": { "description": "Field label: calories consumed" },
+
+  "exportFieldKcalInDesc": "Calories logged via Kalorické tabulky (kcal).",
+  "@exportFieldKcalInDesc": { "description": "Description for the calories-in export field" },
+
+  "exportFieldProtein": "Protein",
+  "@exportFieldProtein": { "description": "Field label: protein intake" },
+
+  "exportFieldFat": "Fat",
+  "@exportFieldFat": { "description": "Field label: fat intake" },
+
+  "exportFieldCarbs": "Carbs",
+  "@exportFieldCarbs": { "description": "Field label: carbohydrate intake" },
+
+  "exportFieldFiber": "Fiber",
+  "@exportFieldFiber": { "description": "Field label: dietary fiber intake" },
+
+  "exportFieldSugar": "Sugar",
+  "@exportFieldSugar": { "description": "Field label: sugar intake" },
+
+  "exportFieldSalt": "Salt",
+  "@exportFieldSalt": { "description": "Field label: salt intake" },
+
+  "exportFieldSaturatedFat": "Saturated fat",
+  "@exportFieldSaturatedFat": { "description": "Field label: saturated fat intake" },
+
+  "exportHeaderDate": "Date",
+  "@exportHeaderDate": { "description": "Sheet column A header — the merge-key date column" },
+
+  "exportHeaderSteps": "Steps",
+  "@exportHeaderSteps": { "description": "Sheet column header for steps" },
+
+  "exportHeaderActiveCalories": "Active calories (kcal)",
+  "@exportHeaderActiveCalories": { "description": "Sheet column header for active calories" },
+
+  "exportHeaderWeight": "Weight (kg)",
+  "@exportHeaderWeight": { "description": "Sheet column header for body weight" },
+
+  "exportHeaderBodyFat": "Body fat (%)",
+  "@exportHeaderBodyFat": { "description": "Sheet column header for body fat percentage" },
+
+  "exportHeaderSleepDuration": "Sleep (min)",
+  "@exportHeaderSleepDuration": { "description": "Sheet column header for sleep duration in minutes" },
+
+  "exportHeaderSleepBedtime": "Bedtime",
+  "@exportHeaderSleepBedtime": { "description": "Sheet column header for bedtime" },
+
+  "exportHeaderSleepWake": "Wake time",
+  "@exportHeaderSleepWake": { "description": "Sheet column header for wake time" },
+
+  "exportHeaderKcalIn": "Calories in (kcal)",
+  "@exportHeaderKcalIn": { "description": "Sheet column header for calories consumed" },
+
+  "exportHeaderProtein": "Protein (g)",
+  "@exportHeaderProtein": { "description": "Sheet column header for protein intake" },
+
+  "exportHeaderFat": "Fat (g)",
+  "@exportHeaderFat": { "description": "Sheet column header for fat intake" },
+
+  "exportHeaderCarbs": "Carbs (g)",
+  "@exportHeaderCarbs": { "description": "Sheet column header for carbohydrate intake" },
+
+  "exportHeaderFiber": "Fiber (g)",
+  "@exportHeaderFiber": { "description": "Sheet column header for fiber intake" },
+
+  "exportHeaderSugar": "Sugar (g)",
+  "@exportHeaderSugar": { "description": "Sheet column header for sugar intake" },
+
+  "exportHeaderSalt": "Salt (g)",
+  "@exportHeaderSalt": { "description": "Sheet column header for salt intake" },
+
+  "exportHeaderSaturatedFat": "Saturated fat (g)",
+  "@exportHeaderSaturatedFat": { "description": "Sheet column header for saturated fat intake" }
 }

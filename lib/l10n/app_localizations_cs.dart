@@ -495,4 +495,253 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get nutritionNoHistoryData => 'Pro toto období nejsou dostupná data';
+
+  @override
+  String get exportScreenTitle => 'Export do Google Sheets';
+
+  @override
+  String get exportSignInTitle => 'Přihlásit se přes Google';
+
+  @override
+  String get exportSignInBody =>
+      'Export do Sheets potřebuje váš účet Google pro zápis do tabulky. Pro pokračování se přihlaste.';
+
+  @override
+  String get exportSignInButton => 'Přihlásit se';
+
+  @override
+  String get exportSignInLoading => 'Přihlašování…';
+
+  @override
+  String get exportTargetLabel => 'Cílová tabulka';
+
+  @override
+  String get exportTargetMissingBody =>
+      'Žádná tabulka zatím není propojená. Při prvním exportu se vytvoří nová tabulka „Forgetrack Data\" ve vašem Google Drive.';
+
+  @override
+  String get exportTargetCopyLink => 'Kopírovat odkaz';
+
+  @override
+  String get exportTargetLinkCopied => 'Odkaz na tabulku zkopírován';
+
+  @override
+  String get exportTargetForgetButton => 'Zapomenout odkaz';
+
+  @override
+  String get exportTargetForgetConfirmTitle => 'Zapomenout propojenou tabulku?';
+
+  @override
+  String get exportTargetForgetConfirmMessage =>
+      'Tímto se pouze odstraní propojení v aplikaci Forgetrack. Samotná tabulka ve vašem Google Drive zůstane.';
+
+  @override
+  String get exportTargetForgetConfirmAction => 'Zapomenout';
+
+  @override
+  String get exportRangeLabel => 'Rozsah dat';
+
+  @override
+  String exportRangeDayCount(int count) {
+    return '$count dní';
+  }
+
+  @override
+  String get exportRangePickButton => 'Vybrat rozsah';
+
+  @override
+  String get exportRangeInvalid =>
+      'Koncové datum musí být stejné nebo pozdější než počáteční.';
+
+  @override
+  String get exportRangePresetLast7 => 'Posl. 7 d';
+
+  @override
+  String get exportRangePresetLast30 => 'Posl. 30 d';
+
+  @override
+  String get exportRangePresetThisMonth => 'Tento měsíc';
+
+  @override
+  String get exportRangePresetLastMonth => 'Minulý měsíc';
+
+  @override
+  String get exportFieldsLabel => 'Pole k exportu';
+
+  @override
+  String get exportFieldsSelectAll => 'Vše';
+
+  @override
+  String get exportFieldsSelectNone => 'Žádné';
+
+  @override
+  String get exportCategoryActivity => 'Aktivita';
+
+  @override
+  String get exportCategoryBody => 'Tělo';
+
+  @override
+  String get exportCategorySleep => 'Spánek';
+
+  @override
+  String get exportCategoryNutrition => 'Výživa';
+
+  @override
+  String get exportButton => 'Exportovat do Sheets';
+
+  @override
+  String get exportButtonRunning => 'Exportuje se…';
+
+  @override
+  String exportSummary(int days, int fields, String range) {
+    return '$days dní · $fields polí · $range';
+  }
+
+  @override
+  String exportExplainer(String today) {
+    return 'Řádky se slučují podle data – existující data se aktualizují, nová se doplní. Dnes je $today.';
+  }
+
+  @override
+  String get exportSuccessTitle => 'Export dokončen';
+
+  @override
+  String exportSuccessDetail(int rows, int added, int updated) {
+    return 'Zapsáno $rows řádků – +$added přidáno, $updated aktualizováno.';
+  }
+
+  @override
+  String get exportErrorTitle => 'Export selhal';
+
+  @override
+  String get exportErrorGeneric => 'Neznámá chyba.';
+
+  @override
+  String get exportErrorNotSignedIn =>
+      'Nejste přihlášen/a ke Googlu. Přihlaste se pro povolení exportu do Sheets.';
+
+  @override
+  String get exportErrorNoFields => 'Vyberte alespoň jedno pole k exportu.';
+
+  @override
+  String get exportErrorInvalidRange =>
+      'Neplatný rozsah: koncové datum je před počátečním.';
+
+  @override
+  String exportErrorPrefix(String message) {
+    return 'Export selhal: $message';
+  }
+
+  @override
+  String get exportFieldSteps => 'Kroky';
+
+  @override
+  String get exportFieldActiveCalories => 'Aktivní kalorie';
+
+  @override
+  String get exportFieldActiveCaloriesDesc =>
+      'Kalorie spálené aktivitou (kcal).';
+
+  @override
+  String get exportFieldWeight => 'Váha';
+
+  @override
+  String get exportFieldWeightDesc =>
+      'Poslední váha zaznamenaná v daný den (kg).';
+
+  @override
+  String get exportFieldBodyFat => 'Tělesný tuk';
+
+  @override
+  String get exportFieldBodyFatDesc =>
+      'Procento tělesného tuku zaznamenané v daný den.';
+
+  @override
+  String get exportFieldSleepDuration => 'Délka spánku';
+
+  @override
+  String get exportFieldSleepDurationDesc =>
+      'Celkový spánek v noci končící tímto datem (minuty).';
+
+  @override
+  String get exportFieldSleepBedtime => 'Usnutí';
+
+  @override
+  String get exportFieldSleepWake => 'Probuzení';
+
+  @override
+  String get exportFieldKcalIn => 'Příjem kalorií';
+
+  @override
+  String get exportFieldKcalInDesc =>
+      'Kalorie zaznamenané v Kalorických tabulkách (kcal).';
+
+  @override
+  String get exportFieldProtein => 'Bílkoviny';
+
+  @override
+  String get exportFieldFat => 'Tuky';
+
+  @override
+  String get exportFieldCarbs => 'Sacharidy';
+
+  @override
+  String get exportFieldFiber => 'Vláknina';
+
+  @override
+  String get exportFieldSugar => 'Cukry';
+
+  @override
+  String get exportFieldSalt => 'Sůl';
+
+  @override
+  String get exportFieldSaturatedFat => 'Nasycené tuky';
+
+  @override
+  String get exportHeaderDate => 'Datum';
+
+  @override
+  String get exportHeaderSteps => 'Kroky';
+
+  @override
+  String get exportHeaderActiveCalories => 'Aktivní kalorie (kcal)';
+
+  @override
+  String get exportHeaderWeight => 'Váha (kg)';
+
+  @override
+  String get exportHeaderBodyFat => 'Tělesný tuk (%)';
+
+  @override
+  String get exportHeaderSleepDuration => 'Spánek (min)';
+
+  @override
+  String get exportHeaderSleepBedtime => 'Usnutí';
+
+  @override
+  String get exportHeaderSleepWake => 'Probuzení';
+
+  @override
+  String get exportHeaderKcalIn => 'Příjem kalorií (kcal)';
+
+  @override
+  String get exportHeaderProtein => 'Bílkoviny (g)';
+
+  @override
+  String get exportHeaderFat => 'Tuky (g)';
+
+  @override
+  String get exportHeaderCarbs => 'Sacharidy (g)';
+
+  @override
+  String get exportHeaderFiber => 'Vláknina (g)';
+
+  @override
+  String get exportHeaderSugar => 'Cukry (g)';
+
+  @override
+  String get exportHeaderSalt => 'Sůl (g)';
+
+  @override
+  String get exportHeaderSaturatedFat => 'Nasycené tuky (g)';
 }

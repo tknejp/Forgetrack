@@ -7,7 +7,7 @@ import 'l10n/app_localizations.dart';
 import 'providers/locale_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/time_theme_provider.dart';
-import 'screens/home/home_screen.dart';
+import 'screens/ft_main_shell.dart';
 import 'theme/app_theme.dart';
 import 'theme/time_theme.dart';
 
@@ -53,7 +53,7 @@ class ForgetrackApp extends StatelessWidget {
       theme: AppTheme.light(timePalette),
       darkTheme: AppTheme.dark(timePalette),
       themeMode: effectiveMode,
-      home: const HomeScreen(),
+      home: const FtMainShell(),
 
       // ── Localization setup ────────────────────────────────────────────────
       locale: selectedLocale,

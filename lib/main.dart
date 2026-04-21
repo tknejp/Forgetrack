@@ -12,6 +12,7 @@ import 'providers/fitness_provider.dart';
 import 'providers/goals_provider.dart';
 import 'providers/kaloricke_tabulky_provider.dart';
 import 'providers/locale_provider.dart';
+import 'providers/sheets_export_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/time_theme_provider.dart';
 import 'services/calorie_api_service.dart';
@@ -76,6 +77,7 @@ Future<void> main() async {
         ChangeNotifierProvider.value(value: fitnessProvider),
         ChangeNotifierProvider(create: (_) => CalorieProvider(calorieApi)),
         ChangeNotifierProvider.value(value: ktProvider),
+        ChangeNotifierProvider(create: (_) => SheetsExportProvider()),
       ],
       child: const ForgetrackApp(),
     ),

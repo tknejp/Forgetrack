@@ -394,8 +394,7 @@ class _ResolvedOverviewMetrics {
     DateTime date,
     double targetWeight,
   ) {
-    final records = fitness.weightHistoryForRange(date, date);
-    final measurement = records.isNotEmpty ? records.last : null;
+    final measurement = fitness.weightForDate(date);
     final mainValue = measurement?.weight;
     final bodyFat = measurement?.bodyFat ?? fitness.latestBodyFat;
     final prev = fitness.previousWeightBefore(date);

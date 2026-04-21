@@ -10,6 +10,12 @@ class AppConstants {
   static const String activitiesSheet = 'Aktivity';
   static const String caloriesSheet = 'Kalorie';
 
+  /// Single canonical sheet/tab used by the unified export-by-date pipeline.
+  static const String exportSheetName = 'Forgetrack';
+
+  /// Header for the merge-key column. Always column A.
+  static const String exportDateColumn = 'date';
+
   // SharedPreferences key pro uložené spreadsheetId
   static const String prefSpreadsheetId = 'spreadsheet_id';
 

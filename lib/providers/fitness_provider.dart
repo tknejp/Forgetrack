@@ -124,6 +124,9 @@ class FitnessProvider extends ChangeNotifier {
   List<WeightRecord> weightHistoryForRange(DateTime start, DateTime end) =>
       FitnessQueries.weightHistoryForRange(_weightHistory, start, end);
 
+  WeightRecord? weightForDate(DateTime date) =>
+      FitnessQueries.weightForDate(_weightHistory, date);
+
   ({double? lastKnown, double? trend}) weightMetricsForRange(
           DateTime start, DateTime end) =>
       FitnessQueries.weightMetricsForRange(

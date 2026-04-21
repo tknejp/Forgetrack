@@ -1039,6 +1039,462 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not enough data for this period'**
   String get nutritionNoHistoryData;
+
+  /// AppBar title of the Sheets export screen
+  ///
+  /// In en, this message translates to:
+  /// **'Export to Google Sheets'**
+  String get exportScreenTitle;
+
+  /// Card title shown when the user must authenticate before exporting
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Google'**
+  String get exportSignInTitle;
+
+  /// Body text inside the sign-in required card
+  ///
+  /// In en, this message translates to:
+  /// **'Sheets export needs your Google account to write to your spreadsheet. Sign in to continue.'**
+  String get exportSignInBody;
+
+  /// CTA button to start Google sign-in from the export screen
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get exportSignInButton;
+
+  /// Loading label on the sign-in button while auth is in progress
+  ///
+  /// In en, this message translates to:
+  /// **'Signing in…'**
+  String get exportSignInLoading;
+
+  /// Section label for the target spreadsheet card
+  ///
+  /// In en, this message translates to:
+  /// **'Target spreadsheet'**
+  String get exportTargetLabel;
+
+  /// Body text shown when no spreadsheet is linked yet
+  ///
+  /// In en, this message translates to:
+  /// **'No spreadsheet linked yet. A new \"Forgetrack Data\" spreadsheet will be created in your Google Drive on the first export.'**
+  String get exportTargetMissingBody;
+
+  /// Tooltip on the copy spreadsheet link icon button
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get exportTargetCopyLink;
+
+  /// Snackbar shown after the spreadsheet link is copied to the clipboard
+  ///
+  /// In en, this message translates to:
+  /// **'Spreadsheet link copied'**
+  String get exportTargetLinkCopied;
+
+  /// Button that unlinks the spreadsheet from the app
+  ///
+  /// In en, this message translates to:
+  /// **'Forget link'**
+  String get exportTargetForgetButton;
+
+  /// Title of the confirmation dialog shown before unlinking the spreadsheet
+  ///
+  /// In en, this message translates to:
+  /// **'Forget linked spreadsheet?'**
+  String get exportTargetForgetConfirmTitle;
+
+  /// Body of the confirmation dialog shown before unlinking the spreadsheet
+  ///
+  /// In en, this message translates to:
+  /// **'This only removes the link inside Forgetrack. The spreadsheet itself will remain in your Google Drive.'**
+  String get exportTargetForgetConfirmMessage;
+
+  /// Destructive action label in the forget-spreadsheet confirmation dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Forget'**
+  String get exportTargetForgetConfirmAction;
+
+  /// Section label for the date range picker
+  ///
+  /// In en, this message translates to:
+  /// **'Date range'**
+  String get exportRangeLabel;
+
+  /// Day count pill shown next to the range label
+  ///
+  /// In en, this message translates to:
+  /// **'{count} day(s)'**
+  String exportRangeDayCount(int count);
+
+  /// Button that opens the date range picker
+  ///
+  /// In en, this message translates to:
+  /// **'Choose range'**
+  String get exportRangePickButton;
+
+  /// Validation message shown when the selected range is invalid
+  ///
+  /// In en, this message translates to:
+  /// **'End date must be on or after the start date.'**
+  String get exportRangeInvalid;
+
+  /// Preset chip that selects the last 7 days
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7d'**
+  String get exportRangePresetLast7;
+
+  /// Preset chip that selects the last 30 days
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30d'**
+  String get exportRangePresetLast30;
+
+  /// Preset chip that selects the current month up to today
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get exportRangePresetThisMonth;
+
+  /// Preset chip that selects the entirety of the previous month
+  ///
+  /// In en, this message translates to:
+  /// **'Last month'**
+  String get exportRangePresetLastMonth;
+
+  /// Section label for the list of exportable fields
+  ///
+  /// In en, this message translates to:
+  /// **'Fields to export'**
+  String get exportFieldsLabel;
+
+  /// Link that selects all exportable fields
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get exportFieldsSelectAll;
+
+  /// Link that clears all selected export fields
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get exportFieldsSelectNone;
+
+  /// Export field category heading: activity-related metrics
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get exportCategoryActivity;
+
+  /// Export field category heading: body measurements
+  ///
+  /// In en, this message translates to:
+  /// **'Body'**
+  String get exportCategoryBody;
+
+  /// Export field category heading: sleep metrics
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep'**
+  String get exportCategorySleep;
+
+  /// Export field category heading: nutrition metrics
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition'**
+  String get exportCategoryNutrition;
+
+  /// Primary button that triggers the Sheets export
+  ///
+  /// In en, this message translates to:
+  /// **'Export to Sheets'**
+  String get exportButton;
+
+  /// Primary button label while an export is running
+  ///
+  /// In en, this message translates to:
+  /// **'Exporting…'**
+  String get exportButtonRunning;
+
+  /// Compact summary shown above the export button
+  ///
+  /// In en, this message translates to:
+  /// **'{days} day(s) · {fields} field(s) · {range}'**
+  String exportSummary(int days, int fields, String range);
+
+  /// Footer note explaining merge-by-date semantics
+  ///
+  /// In en, this message translates to:
+  /// **'Rows are merged by date — existing dates are updated, new ones are appended. Today is {today}.'**
+  String exportExplainer(String today);
+
+  /// Title of the success banner shown after a successful export
+  ///
+  /// In en, this message translates to:
+  /// **'Export complete'**
+  String get exportSuccessTitle;
+
+  /// Detail line in the success banner and snackbar
+  ///
+  /// In en, this message translates to:
+  /// **'Wrote {rows} row(s) — +{added} added, {updated} updated.'**
+  String exportSuccessDetail(int rows, int added, int updated);
+
+  /// Title of the error banner shown when export fails
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed'**
+  String get exportErrorTitle;
+
+  /// Fallback message for an unknown export error
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown error.'**
+  String get exportErrorGeneric;
+
+  /// Error message when the user is not authenticated
+  ///
+  /// In en, this message translates to:
+  /// **'Not signed in to Google. Sign in to enable Sheets export.'**
+  String get exportErrorNotSignedIn;
+
+  /// Validation message when no fields are selected
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one field to export.'**
+  String get exportErrorNoFields;
+
+  /// Validation message when the end date precedes the start date
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid range: the end date is before the start date.'**
+  String get exportErrorInvalidRange;
+
+  /// Generic wrapper used when an unexpected error must be surfaced
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed: {message}'**
+  String exportErrorPrefix(String message);
+
+  /// Field label: step count for the day
+  ///
+  /// In en, this message translates to:
+  /// **'Steps'**
+  String get exportFieldSteps;
+
+  /// Field label: calories burned through activity
+  ///
+  /// In en, this message translates to:
+  /// **'Active calories'**
+  String get exportFieldActiveCalories;
+
+  /// Description for the active calories export field
+  ///
+  /// In en, this message translates to:
+  /// **'Calories burned through activity (kcal).'**
+  String get exportFieldActiveCaloriesDesc;
+
+  /// Field label: body weight
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get exportFieldWeight;
+
+  /// Description for the weight export field
+  ///
+  /// In en, this message translates to:
+  /// **'Latest weight recorded on the day (kg).'**
+  String get exportFieldWeightDesc;
+
+  /// Field label: body fat percentage
+  ///
+  /// In en, this message translates to:
+  /// **'Body fat'**
+  String get exportFieldBodyFat;
+
+  /// Description for the body fat export field
+  ///
+  /// In en, this message translates to:
+  /// **'Body-fat percentage recorded on the day.'**
+  String get exportFieldBodyFatDesc;
+
+  /// Field label: total sleep duration
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep duration'**
+  String get exportFieldSleepDuration;
+
+  /// Description for the sleep duration export field
+  ///
+  /// In en, this message translates to:
+  /// **'Total sleep on the night ending on this date (minutes).'**
+  String get exportFieldSleepDurationDesc;
+
+  /// Field label: bedtime (time user fell asleep)
+  ///
+  /// In en, this message translates to:
+  /// **'Bedtime'**
+  String get exportFieldSleepBedtime;
+
+  /// Field label: wake time
+  ///
+  /// In en, this message translates to:
+  /// **'Wake time'**
+  String get exportFieldSleepWake;
+
+  /// Field label: calories consumed
+  ///
+  /// In en, this message translates to:
+  /// **'Calories in'**
+  String get exportFieldKcalIn;
+
+  /// Description for the calories-in export field
+  ///
+  /// In en, this message translates to:
+  /// **'Calories logged via Kalorické tabulky (kcal).'**
+  String get exportFieldKcalInDesc;
+
+  /// Field label: protein intake
+  ///
+  /// In en, this message translates to:
+  /// **'Protein'**
+  String get exportFieldProtein;
+
+  /// Field label: fat intake
+  ///
+  /// In en, this message translates to:
+  /// **'Fat'**
+  String get exportFieldFat;
+
+  /// Field label: carbohydrate intake
+  ///
+  /// In en, this message translates to:
+  /// **'Carbs'**
+  String get exportFieldCarbs;
+
+  /// Field label: dietary fiber intake
+  ///
+  /// In en, this message translates to:
+  /// **'Fiber'**
+  String get exportFieldFiber;
+
+  /// Field label: sugar intake
+  ///
+  /// In en, this message translates to:
+  /// **'Sugar'**
+  String get exportFieldSugar;
+
+  /// Field label: salt intake
+  ///
+  /// In en, this message translates to:
+  /// **'Salt'**
+  String get exportFieldSalt;
+
+  /// Field label: saturated fat intake
+  ///
+  /// In en, this message translates to:
+  /// **'Saturated fat'**
+  String get exportFieldSaturatedFat;
+
+  /// Sheet column A header — the merge-key date column
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get exportHeaderDate;
+
+  /// Sheet column header for steps
+  ///
+  /// In en, this message translates to:
+  /// **'Steps'**
+  String get exportHeaderSteps;
+
+  /// Sheet column header for active calories
+  ///
+  /// In en, this message translates to:
+  /// **'Active calories (kcal)'**
+  String get exportHeaderActiveCalories;
+
+  /// Sheet column header for body weight
+  ///
+  /// In en, this message translates to:
+  /// **'Weight (kg)'**
+  String get exportHeaderWeight;
+
+  /// Sheet column header for body fat percentage
+  ///
+  /// In en, this message translates to:
+  /// **'Body fat (%)'**
+  String get exportHeaderBodyFat;
+
+  /// Sheet column header for sleep duration in minutes
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep (min)'**
+  String get exportHeaderSleepDuration;
+
+  /// Sheet column header for bedtime
+  ///
+  /// In en, this message translates to:
+  /// **'Bedtime'**
+  String get exportHeaderSleepBedtime;
+
+  /// Sheet column header for wake time
+  ///
+  /// In en, this message translates to:
+  /// **'Wake time'**
+  String get exportHeaderSleepWake;
+
+  /// Sheet column header for calories consumed
+  ///
+  /// In en, this message translates to:
+  /// **'Calories in (kcal)'**
+  String get exportHeaderKcalIn;
+
+  /// Sheet column header for protein intake
+  ///
+  /// In en, this message translates to:
+  /// **'Protein (g)'**
+  String get exportHeaderProtein;
+
+  /// Sheet column header for fat intake
+  ///
+  /// In en, this message translates to:
+  /// **'Fat (g)'**
+  String get exportHeaderFat;
+
+  /// Sheet column header for carbohydrate intake
+  ///
+  /// In en, this message translates to:
+  /// **'Carbs (g)'**
+  String get exportHeaderCarbs;
+
+  /// Sheet column header for fiber intake
+  ///
+  /// In en, this message translates to:
+  /// **'Fiber (g)'**
+  String get exportHeaderFiber;
+
+  /// Sheet column header for sugar intake
+  ///
+  /// In en, this message translates to:
+  /// **'Sugar (g)'**
+  String get exportHeaderSugar;
+
+  /// Sheet column header for salt intake
+  ///
+  /// In en, this message translates to:
+  /// **'Salt (g)'**
+  String get exportHeaderSalt;
+
+  /// Sheet column header for saturated fat intake
+  ///
+  /// In en, this message translates to:
+  /// **'Saturated fat (g)'**
+  String get exportHeaderSaturatedFat;
 }
 
 class _AppLocalizationsDelegate

@@ -5,6 +5,7 @@ import '../../../core/constants.dart';
 import '../../../l10n/l10n.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../widgets/app_logo.dart';
+import '../../sheets_export/sheets_export_screen.dart';
 import '../dialogs/profile_dialogs.dart';
 import '../widgets/profile_settings_widgets.dart';
 
@@ -21,7 +22,10 @@ class ProfileDataSection extends StatelessWidget {
           icon: Icons.table_chart_outlined,
           label: l10n.profileExportToSheets,
           showChevron: true,
-          onTap: () {},
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const SheetsExportScreen()),
+          ),
         ),
         const ProfileTileDivider(),
         ProfileSettingsTile(
