@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 
-import '../l10n/app_localizations.dart';
-import '../providers/fitness_provider.dart';
-import '../providers/kaloricke_tabulky_provider.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../providers/fitness_provider.dart';
+import '../../../providers/kaloricke_tabulky_provider.dart';
 
 /// Snapshot of providers needed to resolve a field value for a given date.
 /// Bundled so [SheetExportField.resolve] keeps a stable, testable signature.

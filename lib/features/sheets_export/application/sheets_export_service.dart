@@ -1,13 +1,13 @@
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../core/app_log.dart';
-import '../core/constants.dart';
-import '../l10n/app_localizations.dart';
-import '../models/sheet_export_field.dart';
-import '../features/auth/data/google_auth_service.dart';
-import 'sheets_export/sheet_merge_engine.dart';
-import 'sheets_service.dart';
+import '../../../core/app_log.dart';
+import '../../../core/constants.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../auth/data/google_auth_service.dart';
+import '../data/sheets_service.dart';
+import '../domain/sheet_export_field.dart';
+import '../domain/sheet_merge_engine.dart';
 
 class SheetsExportException implements Exception {
   final String message;

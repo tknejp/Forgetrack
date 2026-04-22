@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../../../l10n/app_localizations.dart';
-import '../../../l10n/l10n.dart';
-import '../../../models/sheet_export_field.dart';
-import '../../../providers/sheets_export_provider.dart';
-import '../../../theme/ft_design_tokens.dart';
-import '../../../widgets/ft/ft_plain_card.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../l10n/l10n.dart';
+import '../../../../theme/ft_design_tokens.dart';
+import '../../../../widgets/ft/ft_plain_card.dart';
+import '../../application/sheets_export_provider.dart';
+import '../../domain/sheet_export_field.dart';
 
 class SheetsExportFieldList extends StatelessWidget {
   final SheetsExportProvider provider;

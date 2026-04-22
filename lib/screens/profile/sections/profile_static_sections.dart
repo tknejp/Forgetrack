@@ -5,7 +5,7 @@ import '../../../core/constants.dart';
 import '../../../l10n/l10n.dart';
 import '../../../features/auth/application/auth_provider.dart';
 import '../../../widgets/app_logo.dart';
-import '../../sheets_export/sheets_export_screen.dart';
+import '../../../features/sheets_export/presentation/sheets_export_screen.dart';
 import '../dialogs/profile_dialogs.dart';
 import '../widgets/profile_settings_widgets.dart';
 

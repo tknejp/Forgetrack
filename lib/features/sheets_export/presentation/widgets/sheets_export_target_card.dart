@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../l10n/app_localizations.dart';
-import '../../../l10n/l10n.dart';
-import '../../../providers/sheets_export_provider.dart';
-import '../../../theme/ft_design_tokens.dart';
-import '../../../widgets/ft/ft_plain_card.dart';
-import '../../profile/dialogs/profile_dialogs.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../l10n/l10n.dart';
+import '../../../../screens/profile/dialogs/profile_dialogs.dart';
+import '../../../../theme/ft_design_tokens.dart';
+import '../../../../widgets/ft/ft_plain_card.dart';
+import '../../application/sheets_export_provider.dart';
 
 class SheetsExportTargetCard extends StatelessWidget {
   final SheetsExportProvider provider;
