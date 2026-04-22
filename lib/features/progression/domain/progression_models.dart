@@ -42,11 +42,19 @@ enum ProgressionAchievementType {
   mastery,
 }
 
+enum ProgressionAchievementDifficulty {
+  easy,
+  medium,
+  hard,
+  extraHard,
+}
+
 enum ProgressionAchievementCriterionType {
   totalXpAtLeast,
   rewardCountAtLeast,
   bestStreakAtLeast,
   totalRuleValueAtLeast,
+  bestRollingWindowRuleValueAtLeast,
 }
 
 enum ProgressionQuestType {
@@ -381,23 +389,27 @@ class ProgressionAchievementDefinition {
   const ProgressionAchievementDefinition({
     required this.id,
     required this.type,
+    required this.difficulty,
     required this.criterionType,
     required this.title,
     required this.description,
     required this.targetValue,
     this.ruleId,
     this.domain,
+    this.windowSizeDays,
     this.relatedRuleIds = const [],
   });
 
   final String id;
   final ProgressionAchievementType type;
+  final ProgressionAchievementDifficulty difficulty;
   final ProgressionAchievementCriterionType criterionType;
   final String title;
   final String description;
   final int targetValue;
   final String? ruleId;
   final ProgressionDomain? domain;
+  final int? windowSizeDays;
   final List<String> relatedRuleIds;
 }
 
@@ -405,6 +417,7 @@ class ProgressionAchievement {
   const ProgressionAchievement({
     required this.id,
     required this.type,
+    required this.difficulty,
     required this.criterionType,
     required this.title,
     required this.description,
@@ -420,6 +433,7 @@ class ProgressionAchievement {
 
   final String id;
   final ProgressionAchievementType type;
+  final ProgressionAchievementDifficulty difficulty;
   final ProgressionAchievementCriterionType criterionType;
   final String title;
   final String description;

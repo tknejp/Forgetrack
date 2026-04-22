@@ -346,6 +346,89 @@ void main() {
           isNot(ProgressionQuestStatus.locked));
     });
 
+    test('unlocks rolling 30-day step and sleep achievements', () async {
+      final engine = ProgressionEngine(
+        repository: _InMemoryProgressionRepository(),
+        clock: () => DateTime(2026, 4, 30, 9),
+      );
+      final source = _FakeProgressionSource(
+        goals: const ProgressionGoalSet(
+          dailySteps: 10000,
+          dailyCalories: 2000,
+          dailyProteinGrams: 150,
+          sleepMinutes: 480,
+          weeklyActivityMinutes: 150,
+        ),
+        dailySnapshots: [
+          for (var day = 1; day <= 30; day++)
+            ProgressionSnapshot(
+              period: ProgressionPeriod.day(DateTime(2026, 4, day)),
+              steps: 20000,
+              sleepMinutes: 480,
+            ),
+        ],
+        weeklySnapshots: const [],
+      );
+
+      final state = await engine.sync(source);
+      final achievementsById = {
+        for (final achievement in state.achievements)
+          achievement.id: achievement,
+      };
+
+      expect(achievementsById['steps_month_600k']!.unlocked, isTrue);
+      expect(achievementsById['steps_month_600k']!.unlockedAt,
+          DateTime(2026, 4, 30));
+      expect(achievementsById['sleep_month_240h']!.unlocked, isTrue);
+      expect(achievementsById['sleep_month_225h']!.unlockedAt,
+          DateTime(2026, 4, 29));
+      expect(
+        achievementsById['steps_month_600k']!.difficulty,
+        ProgressionAchievementDifficulty.hard,
+      );
+      expect(
+        achievementsById['sleep_month_240h']!.difficulty,
+        ProgressionAchievementDifficulty.extraHard,
+      );
+    });
+
+    test('unlocks level milestones at actual policy thresholds', () async {
+      const levelPolicy = ProgressionLevelPolicy();
+      final engine = ProgressionEngine(
+        repository: _StaticProgressionRepository(
+          rewardGrants: [
+            _claimedReward(
+              rewardKey: 'xp-100',
+              xpGranted: levelPolicy.xpRequiredForLevel(100),
+              progressionAt: DateTime(2026, 4, 30, 9),
+            ),
+          ],
+        ),
+        clock: () => DateTime(2026, 4, 30, 9),
+      );
+
+      final state = await engine.load();
+      final achievementsById = {
+        for (final achievement in state.achievements)
+          achievement.id: achievement,
+      };
+
+      expect(state.profile.level, 100);
+      expect(achievementsById['pathfinder_level_5']!.unlocked, isTrue);
+      expect(achievementsById['trail_vanguard_level_10']!.unlocked, isTrue);
+      expect(achievementsById['iron_warden_level_20']!.unlocked, isTrue);
+      expect(achievementsById['mythic_ranger_level_50']!.unlocked, isTrue);
+      expect(achievementsById['living_legend_level_100']!.unlocked, isTrue);
+      expect(
+        achievementsById['living_legend_level_100']!.difficulty,
+        ProgressionAchievementDifficulty.extraHard,
+      );
+      expect(
+        achievementsById['living_legend_level_100']!.unlockedAt,
+        DateTime(2026, 4, 30, 9),
+      );
+    });
+
     test('derives static quests from ledger, achievements and streaks',
         () async {
       final repository = _InMemoryProgressionRepository();
@@ -847,23 +930,25 @@ void main() {
   });
 
   group('ProgressionLevelPolicy', () {
-    test('resolves growing thresholds consistently', () {
-      const policy = ProgressionLevelPolicy(xpPerLevel: 250);
+    test('resolves inflated late-game thresholds consistently', () {
+      const policy = ProgressionLevelPolicy();
 
       expect(policy.levelForXp(0), 1);
-      expect(policy.levelForXp(249), 1);
-      expect(policy.levelForXp(250), 2);
+      expect(policy.levelForXp(274), 1);
+      expect(policy.levelForXp(275), 2);
       expect(policy.xpRequiredForLevel(1), 0);
-      expect(policy.xpRequiredForLevel(2), 250);
-      expect(policy.xpRequiredForLevel(3), 555);
-      expect(policy.xpRequiredForLevel(10), 5070);
+      expect(policy.xpRequiredForLevel(2), 275);
+      expect(policy.xpRequiredForLevel(3), 725);
+      expect(policy.xpRequiredForLevel(10), 10775);
+      expect(policy.xpRequiredForLevel(50), 1899850);
+      expect(policy.xpRequiredForLevel(100), 23963725);
 
-      final profile = policy.resolve(250);
+      final profile = policy.resolve(275);
       expect(profile.level, 2);
-      expect(profile.levelFloorXp, 250);
-      expect(profile.nextLevelXp, 555);
+      expect(profile.levelFloorXp, 275);
+      expect(profile.nextLevelXp, 725);
       expect(profile.xpIntoLevel, 0);
-      expect(profile.xpToNextLevel, 305);
+      expect(profile.xpToNextLevel, 450);
       expect(profile.levelProgress, 0);
     });
 
@@ -885,6 +970,30 @@ void main() {
         policy.resolve(policy.xpRequiredForLevel(100)).levelTitle,
         'Living Legend',
       );
+    });
+
+    test('scales reward XP aggressively while keeping late levels slower', () {
+      const policy = ProgressionLevelPolicy();
+
+      expect(
+        policy.scaledRewardXp(baseXp: 80, level: 1),
+        80,
+      );
+      expect(
+        policy.scaledRewardXp(baseXp: 80, level: 30),
+        1000,
+      );
+      expect(
+        policy.scaledRewardXp(baseXp: 80, level: 50),
+        5000,
+      );
+      expect(
+        policy.scaledRewardXp(baseXp: 80, level: 100),
+        12000,
+      );
+      expect(policy.targetDaysForLevel(30), greaterThan(policy.targetDaysForLevel(10)));
+      expect(policy.targetDaysForLevel(50), greaterThan(policy.targetDaysForLevel(30)));
+      expect(policy.targetDaysForLevel(100), greaterThan(policy.targetDaysForLevel(50)));
     });
   });
 
@@ -1184,4 +1293,70 @@ class _InMemoryProgressionRepository implements ProgressionRepository {
     _activeQuestIds = {...activeQuestIds};
     return loadLedger();
   }
+}
+
+class _StaticProgressionRepository implements ProgressionRepository {
+  const _StaticProgressionRepository({
+    this.evaluations = const [],
+    this.rewardGrants = const [],
+    this.activeQuestIds = const <String>{},
+    this.lastEvaluatedAt,
+  });
+
+  final List<ProgressionEvaluation> evaluations;
+  final List<ProgressionRewardGrant> rewardGrants;
+  final Set<String> activeQuestIds;
+  final DateTime? lastEvaluatedAt;
+
+  @override
+  Future<ProgressionLedgerSnapshot> loadLedger() async {
+    return ProgressionLedgerSnapshot(
+      evaluations: evaluations,
+      rewardGrants: rewardGrants,
+      activeQuestIds: activeQuestIds,
+      lastEvaluatedAt: lastEvaluatedAt,
+    );
+  }
+
+  @override
+  Future<ProgressionLedgerSnapshot> persistEvaluations({
+    required List<ProgressionEvaluation> evaluations,
+    required DateTime evaluatedAt,
+  }) async => loadLedger();
+
+  @override
+  Future<ProgressionLedgerSnapshot> claimReward({
+    required String rewardKey,
+    required DateTime claimedAt,
+  }) async => loadLedger();
+
+  @override
+  Future<ProgressionLedgerSnapshot> claimAllRewards({
+    required DateTime claimedAt,
+  }) async => loadLedger();
+
+  @override
+  Future<ProgressionLedgerSnapshot> persistActiveQuestSet({
+    required Set<String> activeQuestIds,
+  }) async => loadLedger();
+}
+
+ProgressionRewardGrant _claimedReward({
+  required String rewardKey,
+  required int xpGranted,
+  required DateTime progressionAt,
+}) {
+  return ProgressionRewardGrant(
+    rewardKey: rewardKey,
+    ruleId: 'daily_steps',
+    ruleVersion: 'test',
+    domain: ProgressionDomain.steps,
+    period: ProgressionPeriod.day(progressionAt),
+    xpGranted: xpGranted,
+    targetValue: 10000,
+    actualValue: 10000,
+    rewardStatus: ProgressionRewardStatus.claimed,
+    unlockedAt: progressionAt,
+    claimedAt: progressionAt,
+  );
 }

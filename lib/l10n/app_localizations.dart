@@ -2318,6 +2318,78 @@ abstract class AppLocalizations {
   /// **'Reach level 5 through earned XP.'**
   String get progAchievementPathfinderDesc;
 
+  /// No description provided for @progAchievementTrailVanguardLevel10Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Trail Vanguard'**
+  String get progAchievementTrailVanguardLevel10Title;
+
+  /// No description provided for @progAchievementTrailVanguardLevel10Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 10 through earned XP.'**
+  String get progAchievementTrailVanguardLevel10Desc;
+
+  /// No description provided for @progAchievementForgeKnightLevel15Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Forge Knight'**
+  String get progAchievementForgeKnightLevel15Title;
+
+  /// No description provided for @progAchievementForgeKnightLevel15Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 15 through earned XP.'**
+  String get progAchievementForgeKnightLevel15Desc;
+
+  /// No description provided for @progAchievementIronWardenLevel20Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Iron Warden'**
+  String get progAchievementIronWardenLevel20Title;
+
+  /// No description provided for @progAchievementIronWardenLevel20Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 20 through earned XP.'**
+  String get progAchievementIronWardenLevel20Desc;
+
+  /// No description provided for @progAchievementStormHeraldLevel25Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Storm Herald'**
+  String get progAchievementStormHeraldLevel25Title;
+
+  /// No description provided for @progAchievementStormHeraldLevel25Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 25 through earned XP.'**
+  String get progAchievementStormHeraldLevel25Desc;
+
+  /// No description provided for @progAchievementDawnSentinelLevel30Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Dawn Sentinel'**
+  String get progAchievementDawnSentinelLevel30Title;
+
+  /// No description provided for @progAchievementDawnSentinelLevel30Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 30 through earned XP.'**
+  String get progAchievementDawnSentinelLevel30Desc;
+
+  /// No description provided for @progAchievementRiftWalkerLevel40Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Rift Walker'**
+  String get progAchievementRiftWalkerLevel40Title;
+
+  /// No description provided for @progAchievementRiftWalkerLevel40Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 40 through earned XP.'**
+  String get progAchievementRiftWalkerLevel40Desc;
+
   /// No description provided for @progAchievementForgeKnight5000Title.
   ///
   /// In en, this message translates to:
@@ -2341,6 +2413,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Accumulate 15,000 XP.'**
   String get progAchievementLivingLegend15000Desc;
+
+  /// No description provided for @progAchievementXp100000Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Ascendant'**
+  String get progAchievementXp100000Title;
+
+  /// No description provided for @progAchievementXp100000Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 100,000 XP.'**
+  String get progAchievementXp100000Desc;
+
+  /// No description provided for @progAchievementXp1000000Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Mythic Rank'**
+  String get progAchievementXp1000000Title;
+
+  /// No description provided for @progAchievementXp1000000Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 1,000,000 XP.'**
+  String get progAchievementXp1000000Desc;
+
+  /// No description provided for @progAchievementMythicRangerLevel50Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Mythic Ranger'**
+  String get progAchievementMythicRangerLevel50Title;
+
+  /// No description provided for @progAchievementMythicRangerLevel50Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 50 through earned XP.'**
+  String get progAchievementMythicRangerLevel50Desc;
+
+  /// No description provided for @progAchievementTitanForgerLevel60Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Titan Forger'**
+  String get progAchievementTitanForgerLevel60Title;
+
+  /// No description provided for @progAchievementTitanForgerLevel60Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 60 through earned XP.'**
+  String get progAchievementTitanForgerLevel60Desc;
+
+  /// No description provided for @progAchievementAstralChampionLevel70Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Astral Champion'**
+  String get progAchievementAstralChampionLevel70Title;
+
+  /// No description provided for @progAchievementAstralChampionLevel70Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 70 through earned XP.'**
+  String get progAchievementAstralChampionLevel70Desc;
+
+  /// No description provided for @progAchievementEternalParagonLevel80Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Eternal Paragon'**
+  String get progAchievementEternalParagonLevel80Title;
+
+  /// No description provided for @progAchievementEternalParagonLevel80Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 80 through earned XP.'**
+  String get progAchievementEternalParagonLevel80Desc;
+
+  /// No description provided for @progAchievementRealmSovereignLevel90Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Realm Sovereign'**
+  String get progAchievementRealmSovereignLevel90Title;
+
+  /// No description provided for @progAchievementRealmSovereignLevel90Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 90 through earned XP.'**
+  String get progAchievementRealmSovereignLevel90Desc;
+
+  /// No description provided for @progAchievementLivingLegendLevel100Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Living Legend'**
+  String get progAchievementLivingLegendLevel100Title;
+
+  /// No description provided for @progAchievementLivingLegendLevel100Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 100 through earned XP.'**
+  String get progAchievementLivingLegendLevel100Desc;
 
   /// No description provided for @progAchievementSteps100kTitle.
   ///
@@ -2378,6 +2546,54 @@ abstract class AppLocalizations {
   /// **'Accumulate 1,000,000 total steps.'**
   String get progAchievementSteps1000000Desc;
 
+  /// No description provided for @progAchievementSteps5000000Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Endless Road'**
+  String get progAchievementSteps5000000Title;
+
+  /// No description provided for @progAchievementSteps5000000Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 5,000,000 total steps.'**
+  String get progAchievementSteps5000000Desc;
+
+  /// No description provided for @progAchievementSteps10000000Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Ten-Million Trek'**
+  String get progAchievementSteps10000000Title;
+
+  /// No description provided for @progAchievementSteps10000000Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 10,000,000 total steps.'**
+  String get progAchievementSteps10000000Desc;
+
+  /// No description provided for @progAchievementStepsMonth300kTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Trail Builder'**
+  String get progAchievementStepsMonth300kTitle;
+
+  /// No description provided for @progAchievementStepsMonth300kDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 300,000 steps across any 30-day window.'**
+  String get progAchievementStepsMonth300kDesc;
+
+  /// No description provided for @progAchievementStepsMonth600kTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Iron Pilgrim'**
+  String get progAchievementStepsMonth600kTitle;
+
+  /// No description provided for @progAchievementStepsMonth600kDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 600,000 steps across any 30-day window.'**
+  String get progAchievementStepsMonth600kDesc;
+
   /// No description provided for @progAchievementStepChainTitle.
   ///
   /// In en, this message translates to:
@@ -2414,6 +2630,18 @@ abstract class AppLocalizations {
   /// **'Hit the daily steps rule for 30 periods in a row.'**
   String get progAchievementStepSovereignDesc;
 
+  /// No description provided for @progAchievementStepCenturionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Centurion Chain'**
+  String get progAchievementStepCenturionTitle;
+
+  /// No description provided for @progAchievementStepCenturionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Hit the daily steps rule for 100 periods in a row.'**
+  String get progAchievementStepCenturionDesc;
+
   /// No description provided for @progAchievementBalancedRhythmTitle.
   ///
   /// In en, this message translates to:
@@ -2425,6 +2653,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Earn at least one nutrition reward for 3 periods in a row.'**
   String get progAchievementBalancedRhythmDesc;
+
+  /// No description provided for @progAchievementNutritionStreak30Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Macro Momentum'**
+  String get progAchievementNutritionStreak30Title;
+
+  /// No description provided for @progAchievementNutritionStreak30Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn at least one nutrition reward for 30 periods in a row.'**
+  String get progAchievementNutritionStreak30Desc;
+
+  /// No description provided for @progAchievementNutritionStreak100Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Kitchen Discipline'**
+  String get progAchievementNutritionStreak100Title;
+
+  /// No description provided for @progAchievementNutritionStreak100Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn at least one nutrition reward for 100 periods in a row.'**
+  String get progAchievementNutritionStreak100Desc;
 
   /// No description provided for @progAchievementNutritionRewards25Title.
   ///
@@ -2473,6 +2725,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Complete the weekly activity rule 12 times.'**
   String get progAchievementWeeklyActivity12Desc;
+
+  /// No description provided for @progAchievementWeeklyActivity24Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Unbroken Momentum'**
+  String get progAchievementWeeklyActivity24Title;
+
+  /// No description provided for @progAchievementWeeklyActivity24Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the weekly activity rule 24 times.'**
+  String get progAchievementWeeklyActivity24Desc;
+
+  /// No description provided for @progAchievementWeeklyActivity52Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearlong Engine'**
+  String get progAchievementWeeklyActivity52Title;
+
+  /// No description provided for @progAchievementWeeklyActivity52Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the weekly activity rule 52 times.'**
+  String get progAchievementWeeklyActivity52Desc;
+
+  /// No description provided for @progAchievementSleep250hTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rested Soul'**
+  String get progAchievementSleep250hTitle;
+
+  /// No description provided for @progAchievementSleep250hDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 250 hours of tracked sleep.'**
+  String get progAchievementSleep250hDesc;
+
+  /// No description provided for @progAchievementSleep1000hTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dream Archivist'**
+  String get progAchievementSleep1000hTitle;
+
+  /// No description provided for @progAchievementSleep1000hDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 1,000 hours of tracked sleep.'**
+  String get progAchievementSleep1000hDesc;
+
+  /// No description provided for @progAchievementSleepMonth225hTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep Reset'**
+  String get progAchievementSleepMonth225hTitle;
+
+  /// No description provided for @progAchievementSleepMonth225hDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 225 hours of sleep across any 30-day window.'**
+  String get progAchievementSleepMonth225hDesc;
+
+  /// No description provided for @progAchievementSleepMonth240hTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Perfect Recovery'**
+  String get progAchievementSleepMonth240hTitle;
+
+  /// No description provided for @progAchievementSleepMonth240hDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 240 hours of sleep across any 30-day window.'**
+  String get progAchievementSleepMonth240hDesc;
+
+  /// No description provided for @progAchievementDifficultyEasy.
+  ///
+  /// In en, this message translates to:
+  /// **'Easy'**
+  String get progAchievementDifficultyEasy;
+
+  /// No description provided for @progAchievementDifficultyMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get progAchievementDifficultyMedium;
+
+  /// No description provided for @progAchievementDifficultyHard.
+  ///
+  /// In en, this message translates to:
+  /// **'Hard'**
+  String get progAchievementDifficultyHard;
+
+  /// No description provided for @progAchievementDifficultyExtraHard.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra Hard'**
+  String get progAchievementDifficultyExtraHard;
 
   /// No description provided for @progQuestCriterionTotalXp.
   ///

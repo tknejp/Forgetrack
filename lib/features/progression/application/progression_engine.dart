@@ -76,7 +76,11 @@ class ProgressionEngine {
 
   Future<ProgressionEngineState> sync(ProgressionSource source) async {
     final now = _clock();
-    final evaluations = _evaluateAll(source);
+    final existingLedger = await _repository.loadLedger();
+    final evaluations = _evaluateAll(
+      source,
+      existingLedger: existingLedger,
+    );
 
     var ledger = await _repository.persistEvaluations(
       evaluations: evaluations,
@@ -163,23 +167,25 @@ class ProgressionEngine {
   }
 
   List<ProgressionEvaluation> _evaluateAll(
-    ProgressionSource source,
-  ) {
-    final dailySnapshots = [...source.buildDailySnapshots()]
-      ..sort((a, b) => a.period.start.compareTo(b.period.start));
-    final weeklySnapshots = [...source.buildWeeklySnapshots()]
-      ..sort((a, b) => a.period.start.compareTo(b.period.start));
+    ProgressionSource source, {
+    required ProgressionLedgerSnapshot existingLedger,
+  }) {
+    final snapshots = [
+      ...source.buildDailySnapshots(),
+      ...source.buildWeeklySnapshots(),
+    ]..sort((a, b) {
+        final byEnd = a.period.end.compareTo(b.period.end);
+        if (byEnd != 0) return byEnd;
+        final byKind = a.period.kind.index.compareTo(b.period.kind.index);
+        if (byKind != 0) return byKind;
+        return a.period.start.compareTo(b.period.start);
+      });
 
-    final evaluations = <ProgressionEvaluation>[
-      ..._evaluateSnapshots(
-        source: source,
-        snapshots: dailySnapshots,
-      ),
-      ..._evaluateSnapshots(
-        source: source,
-        snapshots: weeklySnapshots,
-      ),
-    ];
+    final evaluations = _evaluateSnapshots(
+      source: source,
+      snapshots: snapshots,
+      existingLedger: existingLedger,
+    ).toList(growable: false);
 
     evaluations.sort((a, b) => a.evaluationKey.compareTo(b.evaluationKey));
     return evaluations;
@@ -188,14 +194,41 @@ class ProgressionEngine {
   Iterable<ProgressionEvaluation> _evaluateSnapshots({
     required ProgressionSource source,
     required List<ProgressionSnapshot> snapshots,
+    required ProgressionLedgerSnapshot existingLedger,
   }) sync* {
+    final existingRewardByKey = {
+      for (final grant in existingLedger.rewardGrants) grant.rewardKey: grant,
+    };
+    var runningXp = existingLedger.rewardGrants.fold<int>(
+      0,
+      (sum, grant) => sum + grant.xpGranted,
+    );
+
     for (final snapshot in snapshots) {
       final rules = _sortedRulesForPeriod(
         _ruleCatalog.build(source.goalsForPeriod(snapshot.period)),
       ).where((rule) => rule.periodKind == snapshot.period.kind);
+      final levelAtSnapshot = _levelPolicy.levelForXp(runningXp);
+      var earnedThisSnapshot = 0;
       for (final rule in rules) {
-        yield _evaluator.evaluate(rule: rule, snapshot: snapshot);
+        final rewardKey = rule.rewardKeyFor(snapshot.period);
+        final existingReward = existingRewardByKey[rewardKey];
+        final rewardXp = existingReward?.xpGranted ??
+            _levelPolicy.scaledRewardXp(
+              baseXp: rule.rewardXp,
+              level: levelAtSnapshot,
+            );
+        final evaluation = _evaluator.evaluate(
+          rule: rule,
+          snapshot: snapshot,
+          rewardXp: rewardXp,
+        );
+        if (evaluation.achieved && existingReward == null) {
+          earnedThisSnapshot += rewardXp;
+        }
+        yield evaluation;
       }
+      runningXp += earnedThisSnapshot;
     }
   }
 

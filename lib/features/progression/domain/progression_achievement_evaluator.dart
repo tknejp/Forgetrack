@@ -63,6 +63,7 @@ class ProgressionAchievementEvaluator {
     return ProgressionAchievement(
       id: definition.id,
       type: definition.type,
+      difficulty: definition.difficulty,
       criterionType: definition.criterionType,
       title: definition.title,
       description: definition.description,
@@ -116,6 +117,11 @@ class ProgressionAchievementEvaluator {
               (sum, evaluation) => sum + evaluation.actualValue,
             )
             .round();
+      case ProgressionAchievementCriterionType.bestRollingWindowRuleValueAtLeast:
+        return _bestRollingWindowValue(
+          definition: definition,
+          evaluations: evaluations,
+        ).round();
     }
   }
 
@@ -191,6 +197,11 @@ class ProgressionAchievementEvaluator {
           }
         }
         return null;
+      case ProgressionAchievementCriterionType.bestRollingWindowRuleValueAtLeast:
+        return _resolveRollingWindowUnlockedAt(
+          definition: definition,
+          evaluations: evaluations,
+        );
     }
   }
 
@@ -250,6 +261,92 @@ class ProgressionAchievementEvaluator {
     return null;
   }
 
+  double _bestRollingWindowValue({
+    required ProgressionAchievementDefinition definition,
+    required List<ProgressionEvaluation> evaluations,
+  }) {
+    final entries = _rollingWindowEntries(
+      definition: definition,
+      evaluations: evaluations,
+    );
+    if (entries.isEmpty) return 0;
+
+    final windowDays = definition.windowSizeDays;
+    if (windowDays == null || windowDays <= 0) return 0;
+
+    var best = 0.0;
+    var running = 0.0;
+    var start = 0;
+    for (var end = 0; end < entries.length; end++) {
+      running += entries[end].value;
+      while (entries[end].start
+              .difference(entries[start].start)
+              .inDays >=
+          windowDays) {
+        running -= entries[start].value;
+        start++;
+      }
+      if (running > best) {
+        best = running;
+      }
+    }
+    return best;
+  }
+
+  DateTime? _resolveRollingWindowUnlockedAt({
+    required ProgressionAchievementDefinition definition,
+    required List<ProgressionEvaluation> evaluations,
+  }) {
+    final entries = _rollingWindowEntries(
+      definition: definition,
+      evaluations: evaluations,
+    );
+    if (entries.isEmpty) return null;
+
+    final windowDays = definition.windowSizeDays;
+    if (windowDays == null || windowDays <= 0) return null;
+
+    var running = 0.0;
+    var start = 0;
+    for (var end = 0; end < entries.length; end++) {
+      running += entries[end].value;
+      while (entries[end].start
+              .difference(entries[start].start)
+              .inDays >=
+          windowDays) {
+        running -= entries[start].value;
+        start++;
+      }
+      if (running >= definition.targetValue) {
+        return entries[end].start;
+      }
+    }
+    return null;
+  }
+
+  List<_AchievementRollingEntry> _rollingWindowEntries({
+    required ProgressionAchievementDefinition definition,
+    required List<ProgressionEvaluation> evaluations,
+  }) {
+    final ordered = _matchingEvaluations(
+      definition: definition,
+      evaluations: evaluations,
+    )..sort((a, b) {
+        final byPeriod = a.period.start.compareTo(b.period.start);
+        if (byPeriod != 0) return byPeriod;
+        return a.evaluationKey.compareTo(b.evaluationKey);
+      });
+
+    return [
+      for (final evaluation in ordered)
+        if (evaluation.period.kind == ProgressionPeriodKind.day)
+          _AchievementRollingEntry(
+            start: progressionDate(evaluation.period.start),
+            value: evaluation.actualValue,
+          ),
+    ];
+  }
+
   List<_AchievementStreakEntry> _aggregateByPeriod(
     List<ProgressionEvaluation> evaluations,
   ) {
@@ -302,4 +399,14 @@ class _AchievementStreakEntry {
   final ProgressionPeriodKind kind;
   final DateTime start;
   final bool achieved;
+}
+
+class _AchievementRollingEntry {
+  const _AchievementRollingEntry({
+    required this.start,
+    required this.value,
+  });
+
+  final DateTime start;
+  final double value;
 }

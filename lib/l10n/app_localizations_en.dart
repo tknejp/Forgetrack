@@ -1219,6 +1219,48 @@ class AppLocalizationsEn extends AppLocalizations {
       'Reach level 5 through earned XP.';
 
   @override
+  String get progAchievementTrailVanguardLevel10Title => 'Trail Vanguard';
+
+  @override
+  String get progAchievementTrailVanguardLevel10Desc =>
+      'Reach level 10 through earned XP.';
+
+  @override
+  String get progAchievementForgeKnightLevel15Title => 'Forge Knight';
+
+  @override
+  String get progAchievementForgeKnightLevel15Desc =>
+      'Reach level 15 through earned XP.';
+
+  @override
+  String get progAchievementIronWardenLevel20Title => 'Iron Warden';
+
+  @override
+  String get progAchievementIronWardenLevel20Desc =>
+      'Reach level 20 through earned XP.';
+
+  @override
+  String get progAchievementStormHeraldLevel25Title => 'Storm Herald';
+
+  @override
+  String get progAchievementStormHeraldLevel25Desc =>
+      'Reach level 25 through earned XP.';
+
+  @override
+  String get progAchievementDawnSentinelLevel30Title => 'Dawn Sentinel';
+
+  @override
+  String get progAchievementDawnSentinelLevel30Desc =>
+      'Reach level 30 through earned XP.';
+
+  @override
+  String get progAchievementRiftWalkerLevel40Title => 'Rift Walker';
+
+  @override
+  String get progAchievementRiftWalkerLevel40Desc =>
+      'Reach level 40 through earned XP.';
+
+  @override
   String get progAchievementForgeKnight5000Title => 'Forge Knight';
 
   @override
@@ -1229,6 +1271,60 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get progAchievementLivingLegend15000Desc => 'Accumulate 15,000 XP.';
+
+  @override
+  String get progAchievementXp100000Title => 'Ascendant';
+
+  @override
+  String get progAchievementXp100000Desc => 'Accumulate 100,000 XP.';
+
+  @override
+  String get progAchievementXp1000000Title => 'Mythic Rank';
+
+  @override
+  String get progAchievementXp1000000Desc => 'Accumulate 1,000,000 XP.';
+
+  @override
+  String get progAchievementMythicRangerLevel50Title => 'Mythic Ranger';
+
+  @override
+  String get progAchievementMythicRangerLevel50Desc =>
+      'Reach level 50 through earned XP.';
+
+  @override
+  String get progAchievementTitanForgerLevel60Title => 'Titan Forger';
+
+  @override
+  String get progAchievementTitanForgerLevel60Desc =>
+      'Reach level 60 through earned XP.';
+
+  @override
+  String get progAchievementAstralChampionLevel70Title => 'Astral Champion';
+
+  @override
+  String get progAchievementAstralChampionLevel70Desc =>
+      'Reach level 70 through earned XP.';
+
+  @override
+  String get progAchievementEternalParagonLevel80Title => 'Eternal Paragon';
+
+  @override
+  String get progAchievementEternalParagonLevel80Desc =>
+      'Reach level 80 through earned XP.';
+
+  @override
+  String get progAchievementRealmSovereignLevel90Title => 'Realm Sovereign';
+
+  @override
+  String get progAchievementRealmSovereignLevel90Desc =>
+      'Reach level 90 through earned XP.';
+
+  @override
+  String get progAchievementLivingLegendLevel100Title => 'Living Legend';
+
+  @override
+  String get progAchievementLivingLegendLevel100Desc =>
+      'Reach level 100 through earned XP.';
 
   @override
   String get progAchievementSteps100kTitle => 'Centurion Walker';
@@ -1248,6 +1344,34 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get progAchievementSteps1000000Desc =>
       'Accumulate 1,000,000 total steps.';
+
+  @override
+  String get progAchievementSteps5000000Title => 'Endless Road';
+
+  @override
+  String get progAchievementSteps5000000Desc =>
+      'Accumulate 5,000,000 total steps.';
+
+  @override
+  String get progAchievementSteps10000000Title => 'Ten-Million Trek';
+
+  @override
+  String get progAchievementSteps10000000Desc =>
+      'Accumulate 10,000,000 total steps.';
+
+  @override
+  String get progAchievementStepsMonth300kTitle => 'Trail Builder';
+
+  @override
+  String get progAchievementStepsMonth300kDesc =>
+      'Accumulate 300,000 steps across any 30-day window.';
+
+  @override
+  String get progAchievementStepsMonth600kTitle => 'Iron Pilgrim';
+
+  @override
+  String get progAchievementStepsMonth600kDesc =>
+      'Accumulate 600,000 steps across any 30-day window.';
 
   @override
   String get progAchievementStepChainTitle => 'Step Chain';
@@ -1271,11 +1395,32 @@ class AppLocalizationsEn extends AppLocalizations {
       'Hit the daily steps rule for 30 periods in a row.';
 
   @override
+  String get progAchievementStepCenturionTitle => 'Centurion Chain';
+
+  @override
+  String get progAchievementStepCenturionDesc =>
+      'Hit the daily steps rule for 100 periods in a row.';
+
+  @override
   String get progAchievementBalancedRhythmTitle => 'Balanced Rhythm';
 
   @override
   String get progAchievementBalancedRhythmDesc =>
       'Earn at least one nutrition reward for 3 periods in a row.';
+
+  @override
+  String get progAchievementNutritionStreak30Title => 'Macro Momentum';
+
+  @override
+  String get progAchievementNutritionStreak30Desc =>
+      'Earn at least one nutrition reward for 30 periods in a row.';
+
+  @override
+  String get progAchievementNutritionStreak100Title => 'Kitchen Discipline';
+
+  @override
+  String get progAchievementNutritionStreak100Desc =>
+      'Earn at least one nutrition reward for 100 periods in a row.';
 
   @override
   String get progAchievementNutritionRewards25Title => 'Macro Maestro';
@@ -1304,6 +1449,60 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get progAchievementWeeklyActivity12Desc =>
       'Complete the weekly activity rule 12 times.';
+
+  @override
+  String get progAchievementWeeklyActivity24Title => 'Unbroken Momentum';
+
+  @override
+  String get progAchievementWeeklyActivity24Desc =>
+      'Complete the weekly activity rule 24 times.';
+
+  @override
+  String get progAchievementWeeklyActivity52Title => 'Yearlong Engine';
+
+  @override
+  String get progAchievementWeeklyActivity52Desc =>
+      'Complete the weekly activity rule 52 times.';
+
+  @override
+  String get progAchievementSleep250hTitle => 'Rested Soul';
+
+  @override
+  String get progAchievementSleep250hDesc =>
+      'Accumulate 250 hours of tracked sleep.';
+
+  @override
+  String get progAchievementSleep1000hTitle => 'Dream Archivist';
+
+  @override
+  String get progAchievementSleep1000hDesc =>
+      'Accumulate 1,000 hours of tracked sleep.';
+
+  @override
+  String get progAchievementSleepMonth225hTitle => 'Deep Reset';
+
+  @override
+  String get progAchievementSleepMonth225hDesc =>
+      'Accumulate 225 hours of sleep across any 30-day window.';
+
+  @override
+  String get progAchievementSleepMonth240hTitle => 'Perfect Recovery';
+
+  @override
+  String get progAchievementSleepMonth240hDesc =>
+      'Accumulate 240 hours of sleep across any 30-day window.';
+
+  @override
+  String get progAchievementDifficultyEasy => 'Easy';
+
+  @override
+  String get progAchievementDifficultyMedium => 'Medium';
+
+  @override
+  String get progAchievementDifficultyHard => 'Hard';
+
+  @override
+  String get progAchievementDifficultyExtraHard => 'Extra Hard';
 
   @override
   String get progQuestCriterionTotalXp => 'Based on total XP';

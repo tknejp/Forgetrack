@@ -6,6 +6,7 @@ class ProgressionEvaluator {
   ProgressionEvaluation evaluate({
     required ProgressionRuleDefinition rule,
     required ProgressionSnapshot snapshot,
+    int? rewardXp,
   }) {
     if (!rule.supportsPeriod(snapshot.period)) {
       throw ArgumentError(
@@ -53,7 +54,7 @@ class ProgressionEvaluator {
       achieved: achieved,
       status: status,
       missReason: missReason,
-      rewardXp: rule.rewardXp,
+      rewardXp: rewardXp ?? rule.rewardXp,
       title: rule.title,
       description: rule.description,
       explanation: _buildExplanation(

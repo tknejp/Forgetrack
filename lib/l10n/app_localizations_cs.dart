@@ -1215,6 +1215,48 @@ class AppLocalizationsCs extends AppLocalizations {
   String get progAchievementPathfinderDesc => 'Dosáhni levelu 5 získaným XP.';
 
   @override
+  String get progAchievementTrailVanguardLevel10Title => 'Předvoj stezky';
+
+  @override
+  String get progAchievementTrailVanguardLevel10Desc =>
+      'Dosáhni levelu 10 pomocí získaného XP.';
+
+  @override
+  String get progAchievementForgeKnightLevel15Title => 'Rytíř kovárny';
+
+  @override
+  String get progAchievementForgeKnightLevel15Desc =>
+      'Dosáhni levelu 15 pomocí získaného XP.';
+
+  @override
+  String get progAchievementIronWardenLevel20Title => 'Železný strážce';
+
+  @override
+  String get progAchievementIronWardenLevel20Desc =>
+      'Dosáhni levelu 20 pomocí získaného XP.';
+
+  @override
+  String get progAchievementStormHeraldLevel25Title => 'Posel bouře';
+
+  @override
+  String get progAchievementStormHeraldLevel25Desc =>
+      'Dosáhni levelu 25 pomocí získaného XP.';
+
+  @override
+  String get progAchievementDawnSentinelLevel30Title => 'Strážce úsvitu';
+
+  @override
+  String get progAchievementDawnSentinelLevel30Desc =>
+      'Dosáhni levelu 30 pomocí získaného XP.';
+
+  @override
+  String get progAchievementRiftWalkerLevel40Title => 'Poutník trhlinou';
+
+  @override
+  String get progAchievementRiftWalkerLevel40Desc =>
+      'Dosáhni levelu 40 pomocí získaného XP.';
+
+  @override
   String get progAchievementForgeKnight5000Title => 'Rytíř kovárny';
 
   @override
@@ -1225,6 +1267,60 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get progAchievementLivingLegend15000Desc => 'Nasbírej 15 000 XP.';
+
+  @override
+  String get progAchievementXp100000Title => 'Vzestupný';
+
+  @override
+  String get progAchievementXp100000Desc => 'Nasbírej 100 000 XP.';
+
+  @override
+  String get progAchievementXp1000000Title => 'Mytická hodnost';
+
+  @override
+  String get progAchievementXp1000000Desc => 'Nasbírej 1 000 000 XP.';
+
+  @override
+  String get progAchievementMythicRangerLevel50Title => 'Mytický ranger';
+
+  @override
+  String get progAchievementMythicRangerLevel50Desc =>
+      'Dosáhni levelu 50 pomocí získaného XP.';
+
+  @override
+  String get progAchievementTitanForgerLevel60Title => 'Tvůrce titánů';
+
+  @override
+  String get progAchievementTitanForgerLevel60Desc =>
+      'Dosáhni levelu 60 pomocí získaného XP.';
+
+  @override
+  String get progAchievementAstralChampionLevel70Title => 'Astrální šampion';
+
+  @override
+  String get progAchievementAstralChampionLevel70Desc =>
+      'Dosáhni levelu 70 pomocí získaného XP.';
+
+  @override
+  String get progAchievementEternalParagonLevel80Title => 'Věčný paragón';
+
+  @override
+  String get progAchievementEternalParagonLevel80Desc =>
+      'Dosáhni levelu 80 pomocí získaného XP.';
+
+  @override
+  String get progAchievementRealmSovereignLevel90Title => 'Vládce říše';
+
+  @override
+  String get progAchievementRealmSovereignLevel90Desc =>
+      'Dosáhni levelu 90 pomocí získaného XP.';
+
+  @override
+  String get progAchievementLivingLegendLevel100Title => 'Živá legenda';
+
+  @override
+  String get progAchievementLivingLegendLevel100Desc =>
+      'Dosáhni levelu 100 pomocí získaného XP.';
 
   @override
   String get progAchievementSteps100kTitle => 'Stotisícový chodec';
@@ -1244,6 +1340,34 @@ class AppLocalizationsCs extends AppLocalizations {
   @override
   String get progAchievementSteps1000000Desc =>
       'Nasbírej celkem 1 000 000 kroků.';
+
+  @override
+  String get progAchievementSteps5000000Title => 'Nekonečná cesta';
+
+  @override
+  String get progAchievementSteps5000000Desc =>
+      'Nasbírej celkem 5 000 000 kroků.';
+
+  @override
+  String get progAchievementSteps10000000Title => 'Desetimilionový trek';
+
+  @override
+  String get progAchievementSteps10000000Desc =>
+      'Nasbírej celkem 10 000 000 kroků.';
+
+  @override
+  String get progAchievementStepsMonth300kTitle => 'Stavitel trasy';
+
+  @override
+  String get progAchievementStepsMonth300kDesc =>
+      'Nasbírej 300 000 kroků v libovolném 30denním okně.';
+
+  @override
+  String get progAchievementStepsMonth600kTitle => 'Železný poutník';
+
+  @override
+  String get progAchievementStepsMonth600kDesc =>
+      'Nasbírej 600 000 kroků v libovolném 30denním okně.';
 
   @override
   String get progAchievementStepChainTitle => 'Řetěz kroků';
@@ -1267,11 +1391,32 @@ class AppLocalizationsCs extends AppLocalizations {
       'Splň denní cíl kroků 30 dní v řadě.';
 
   @override
+  String get progAchievementStepCenturionTitle => 'Sto denní řetěz';
+
+  @override
+  String get progAchievementStepCenturionDesc =>
+      'Splň denní cíl kroků 100 dní v řadě.';
+
+  @override
   String get progAchievementBalancedRhythmTitle => 'Vyvážený rytmus';
 
   @override
   String get progAchievementBalancedRhythmDesc =>
       'Získej alespoň jednu odměnu za výživu 3 dny v řadě.';
+
+  @override
+  String get progAchievementNutritionStreak30Title => 'Makro momentum';
+
+  @override
+  String get progAchievementNutritionStreak30Desc =>
+      'Získej alespoň jednu odměnu za výživu 30 dní v řadě.';
+
+  @override
+  String get progAchievementNutritionStreak100Title => 'Disciplína kuchyně';
+
+  @override
+  String get progAchievementNutritionStreak100Desc =>
+      'Získej alespoň jednu odměnu za výživu 100 dní v řadě.';
 
   @override
   String get progAchievementNutritionRewards25Title => 'Mistr maker';
@@ -1300,6 +1445,60 @@ class AppLocalizationsCs extends AppLocalizations {
   @override
   String get progAchievementWeeklyActivity12Desc =>
       'Splň týdenní cíl aktivity dvanáctkrát.';
+
+  @override
+  String get progAchievementWeeklyActivity24Title => 'Nepřerušené tempo';
+
+  @override
+  String get progAchievementWeeklyActivity24Desc =>
+      'Splň týdenní cíl aktivity čtyřiadvacetkrát.';
+
+  @override
+  String get progAchievementWeeklyActivity52Title => 'Celoroční motor';
+
+  @override
+  String get progAchievementWeeklyActivity52Desc =>
+      'Splň týdenní cíl aktivity dvaapadesátkrát.';
+
+  @override
+  String get progAchievementSleep250hTitle => 'Odpočatá duše';
+
+  @override
+  String get progAchievementSleep250hDesc =>
+      'Nasbírej 250 hodin zaznamenaného spánku.';
+
+  @override
+  String get progAchievementSleep1000hTitle => 'Archiv snů';
+
+  @override
+  String get progAchievementSleep1000hDesc =>
+      'Nasbírej 1 000 hodin zaznamenaného spánku.';
+
+  @override
+  String get progAchievementSleepMonth225hTitle => 'Hluboký reset';
+
+  @override
+  String get progAchievementSleepMonth225hDesc =>
+      'Nasbírej 225 hodin spánku v libovolném 30denním okně.';
+
+  @override
+  String get progAchievementSleepMonth240hTitle => 'Dokonalá regenerace';
+
+  @override
+  String get progAchievementSleepMonth240hDesc =>
+      'Nasbírej 240 hodin spánku v libovolném 30denním okně.';
+
+  @override
+  String get progAchievementDifficultyEasy => 'Lehké';
+
+  @override
+  String get progAchievementDifficultyMedium => 'Střední';
+
+  @override
+  String get progAchievementDifficultyHard => 'Těžké';
+
+  @override
+  String get progAchievementDifficultyExtraHard => 'Extra těžké';
 
   @override
   String get progQuestCriterionTotalXp => 'Podle celkového XP';

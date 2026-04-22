@@ -170,24 +170,62 @@ class ProgressionL10n {
         return _l10n.progAchievementRewardHunter100Title;
       case 'pathfinder_level_5':
         return _l10n.progAchievementPathfinderTitle;
-      case 'forge_knight_xp_5000':
-        return _l10n.progAchievementForgeKnight5000Title;
-      case 'living_legend_xp_15000':
-        return _l10n.progAchievementLivingLegend15000Title;
+      case 'trail_vanguard_level_10':
+        return _l10n.progAchievementTrailVanguardLevel10Title;
+      case 'forge_knight_level_15':
+        return _l10n.progAchievementForgeKnightLevel15Title;
+      case 'iron_warden_level_20':
+        return _l10n.progAchievementIronWardenLevel20Title;
+      case 'storm_herald_level_25':
+        return _l10n.progAchievementStormHeraldLevel25Title;
+      case 'dawn_sentinel_level_30':
+        return _l10n.progAchievementDawnSentinelLevel30Title;
+      case 'rift_walker_level_40':
+        return _l10n.progAchievementRiftWalkerLevel40Title;
+      case 'xp_100000':
+        return _l10n.progAchievementXp100000Title;
+      case 'xp_1000000':
+        return _l10n.progAchievementXp1000000Title;
+      case 'mythic_ranger_level_50':
+        return _l10n.progAchievementMythicRangerLevel50Title;
+      case 'titan_forger_level_60':
+        return _l10n.progAchievementTitanForgerLevel60Title;
+      case 'astral_champion_level_70':
+        return _l10n.progAchievementAstralChampionLevel70Title;
+      case 'eternal_paragon_level_80':
+        return _l10n.progAchievementEternalParagonLevel80Title;
+      case 'realm_sovereign_level_90':
+        return _l10n.progAchievementRealmSovereignLevel90Title;
+      case 'living_legend_level_100':
+        return _l10n.progAchievementLivingLegendLevel100Title;
       case 'steps_total_100k':
         return _l10n.progAchievementSteps100kTitle;
       case 'steps_total_500k':
         return _l10n.progAchievementSteps500kTitle;
       case 'steps_total_1000000':
         return _l10n.progAchievementSteps1000000Title;
+      case 'steps_total_5000000':
+        return _l10n.progAchievementSteps5000000Title;
+      case 'steps_total_10000000':
+        return _l10n.progAchievementSteps10000000Title;
+      case 'steps_month_300k':
+        return _l10n.progAchievementStepsMonth300kTitle;
+      case 'steps_month_600k':
+        return _l10n.progAchievementStepsMonth600kTitle;
       case 'steps_streak_3':
         return _l10n.progAchievementStepChainTitle;
       case 'steps_streak_7':
         return _l10n.progAchievementStepDisciplineTitle;
       case 'steps_streak_30':
         return _l10n.progAchievementStepSovereignTitle;
+      case 'steps_streak_100':
+        return _l10n.progAchievementStepCenturionTitle;
       case 'nutrition_streak_3':
         return _l10n.progAchievementBalancedRhythmTitle;
+      case 'nutrition_streak_30':
+        return _l10n.progAchievementNutritionStreak30Title;
+      case 'nutrition_streak_100':
+        return _l10n.progAchievementNutritionStreak100Title;
       case 'nutrition_rewards_25':
         return _l10n.progAchievementNutritionRewards25Title;
       case 'weekly_activity_mastery':
@@ -196,6 +234,18 @@ class ProgressionL10n {
         return _l10n.progAchievementWeeklyActivity4Title;
       case 'weekly_activity_12':
         return _l10n.progAchievementWeeklyActivity12Title;
+      case 'weekly_activity_24':
+        return _l10n.progAchievementWeeklyActivity24Title;
+      case 'weekly_activity_52':
+        return _l10n.progAchievementWeeklyActivity52Title;
+      case 'sleep_total_250h':
+        return _l10n.progAchievementSleep250hTitle;
+      case 'sleep_total_1000h':
+        return _l10n.progAchievementSleep1000hTitle;
+      case 'sleep_month_225h':
+        return _l10n.progAchievementSleepMonth225hTitle;
+      case 'sleep_month_240h':
+        return _l10n.progAchievementSleepMonth240hTitle;
       default:
         return achievement.title;
     }
@@ -211,24 +261,62 @@ class ProgressionL10n {
         return _l10n.progAchievementRewardHunter100Desc;
       case 'pathfinder_level_5':
         return _l10n.progAchievementPathfinderDesc;
-      case 'forge_knight_xp_5000':
-        return _l10n.progAchievementForgeKnight5000Desc;
-      case 'living_legend_xp_15000':
-        return _l10n.progAchievementLivingLegend15000Desc;
+      case 'trail_vanguard_level_10':
+        return _l10n.progAchievementTrailVanguardLevel10Desc;
+      case 'forge_knight_level_15':
+        return _l10n.progAchievementForgeKnightLevel15Desc;
+      case 'iron_warden_level_20':
+        return _l10n.progAchievementIronWardenLevel20Desc;
+      case 'storm_herald_level_25':
+        return _l10n.progAchievementStormHeraldLevel25Desc;
+      case 'dawn_sentinel_level_30':
+        return _l10n.progAchievementDawnSentinelLevel30Desc;
+      case 'rift_walker_level_40':
+        return _l10n.progAchievementRiftWalkerLevel40Desc;
+      case 'xp_100000':
+        return _l10n.progAchievementXp100000Desc;
+      case 'xp_1000000':
+        return _l10n.progAchievementXp1000000Desc;
+      case 'mythic_ranger_level_50':
+        return _l10n.progAchievementMythicRangerLevel50Desc;
+      case 'titan_forger_level_60':
+        return _l10n.progAchievementTitanForgerLevel60Desc;
+      case 'astral_champion_level_70':
+        return _l10n.progAchievementAstralChampionLevel70Desc;
+      case 'eternal_paragon_level_80':
+        return _l10n.progAchievementEternalParagonLevel80Desc;
+      case 'realm_sovereign_level_90':
+        return _l10n.progAchievementRealmSovereignLevel90Desc;
+      case 'living_legend_level_100':
+        return _l10n.progAchievementLivingLegendLevel100Desc;
       case 'steps_total_100k':
         return _l10n.progAchievementSteps100kDesc;
       case 'steps_total_500k':
         return _l10n.progAchievementSteps500kDesc;
       case 'steps_total_1000000':
         return _l10n.progAchievementSteps1000000Desc;
+      case 'steps_total_5000000':
+        return _l10n.progAchievementSteps5000000Desc;
+      case 'steps_total_10000000':
+        return _l10n.progAchievementSteps10000000Desc;
+      case 'steps_month_300k':
+        return _l10n.progAchievementStepsMonth300kDesc;
+      case 'steps_month_600k':
+        return _l10n.progAchievementStepsMonth600kDesc;
       case 'steps_streak_3':
         return _l10n.progAchievementStepChainDesc;
       case 'steps_streak_7':
         return _l10n.progAchievementStepDisciplineDesc;
       case 'steps_streak_30':
         return _l10n.progAchievementStepSovereignDesc;
+      case 'steps_streak_100':
+        return _l10n.progAchievementStepCenturionDesc;
       case 'nutrition_streak_3':
         return _l10n.progAchievementBalancedRhythmDesc;
+      case 'nutrition_streak_30':
+        return _l10n.progAchievementNutritionStreak30Desc;
+      case 'nutrition_streak_100':
+        return _l10n.progAchievementNutritionStreak100Desc;
       case 'nutrition_rewards_25':
         return _l10n.progAchievementNutritionRewards25Desc;
       case 'weekly_activity_mastery':
@@ -237,6 +325,18 @@ class ProgressionL10n {
         return _l10n.progAchievementWeeklyActivity4Desc;
       case 'weekly_activity_12':
         return _l10n.progAchievementWeeklyActivity12Desc;
+      case 'weekly_activity_24':
+        return _l10n.progAchievementWeeklyActivity24Desc;
+      case 'weekly_activity_52':
+        return _l10n.progAchievementWeeklyActivity52Desc;
+      case 'sleep_total_250h':
+        return _l10n.progAchievementSleep250hDesc;
+      case 'sleep_total_1000h':
+        return _l10n.progAchievementSleep1000hDesc;
+      case 'sleep_month_225h':
+        return _l10n.progAchievementSleepMonth225hDesc;
+      case 'sleep_month_240h':
+        return _l10n.progAchievementSleepMonth240hDesc;
       default:
         return achievement.description;
     }

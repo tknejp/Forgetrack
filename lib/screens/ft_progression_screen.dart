@@ -34,6 +34,9 @@ class FtProgressionScreen extends StatelessWidget {
         .where((a) => a.unlocked)
         .toList(growable: false)
       ..sort((a, b) {
+        final difficulty = _achievementDifficultyRank(b.difficulty)
+            .compareTo(_achievementDifficultyRank(a.difficulty));
+        if (difficulty != 0) return difficulty;
         final at = a.unlockedAt?.millisecondsSinceEpoch ?? 0;
         final bt = b.unlockedAt?.millisecondsSinceEpoch ?? 0;
         return bt.compareTo(at);
@@ -41,7 +44,12 @@ class FtProgressionScreen extends StatelessWidget {
     final inProgress = progression.achievements
         .where((a) => !a.unlocked)
         .toList(growable: false)
-      ..sort((a, b) => b.progress.compareTo(a.progress));
+      ..sort((a, b) {
+        final difficulty = _achievementDifficultyRank(b.difficulty)
+            .compareTo(_achievementDifficultyRank(a.difficulty));
+        if (difficulty != 0) return difficulty;
+        return b.progress.compareTo(a.progress);
+      });
 
     final activeQuests = [...progression.activeQuests]
       ..sort((a, b) => b.progress.compareTo(a.progress));
@@ -93,12 +101,6 @@ class FtProgressionScreen extends StatelessWidget {
                   displayName: displayName ?? firstName,
                   profile: profile,
                   xpSpan: xpSpan,
-                  currentStreakCount: current?.currentStreak ?? 0,
-                  currentStreakDomain: current == null
-                      ? null
-                      : progL10n.domainLabel(current.domain),
-                  unlockedCount: unlocked.length,
-                  lastEvaluatedAt: progression.lastEvaluatedAt,
                   l10n: l10n,
                 ),
                 if (progression.error != null) ...[
@@ -355,6 +357,7 @@ class _PendingRewardCard extends StatelessWidget {
     final locale = Localizations.localeOf(context).toString();
     final l10n = context.l10n;
     final progL10n = ProgressionL10n(l10n);
+    final xpLabel = _formatFullInt(reward.xpGranted, locale);
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -398,7 +401,7 @@ class _PendingRewardCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                '+${reward.xpGranted} XP',
+                '+$xpLabel XP',
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w900,
@@ -538,20 +541,12 @@ class _HeroCard extends StatelessWidget {
     required this.displayName,
     required this.profile,
     required this.xpSpan,
-    required this.currentStreakCount,
-    required this.currentStreakDomain,
-    required this.unlockedCount,
-    required this.lastEvaluatedAt,
     required this.l10n,
   });
 
   final String displayName;
   final ProgressionProfile profile;
   final int xpSpan;
-  final int currentStreakCount;
-  final String? currentStreakDomain;
-  final int unlockedCount;
-  final DateTime? lastEvaluatedAt;
   final AppLocalizations l10n;
 
   @override
@@ -562,7 +557,7 @@ class _HeroCard extends StatelessWidget {
     final xpProgress = (profile.xpIntoLevel / xpSpan).clamp(0.0, 1.0);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment(-0.8, -1),
@@ -580,11 +575,11 @@ class _HeroCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
-                width: 52,
-                height: 52,
+                width: 42,
+                height: 42,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -594,19 +589,19 @@ class _HeroCard extends StatelessWidget {
                       FtTokens.accent.withValues(alpha: 0.53),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(13),
                   border: Border.all(
                       color: FtTokens.accent.withValues(alpha: 0.5),
-                      width: 1.5),
+                      width: 1.3),
                   boxShadow: const [
-                    BoxShadow(color: FtTokens.accentGlow, blurRadius: 20),
+                    BoxShadow(color: FtTokens.accentGlow, blurRadius: 18),
                   ],
                 ),
                 child: Center(
                   child: Text(
                     '${profile.level}',
                     style: const TextStyle(
-                      fontSize: 22,
+                      fontSize: 20,
                       fontWeight: FontWeight.w900,
                       color: Colors.white,
                     ),
@@ -623,20 +618,20 @@ class _HeroCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: FontWeight.w900,
                         color: Colors.white,
-                        letterSpacing: -0.6,
+                        letterSpacing: -0.4,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 1),
                     Text(
                       profile.levelTitle,
                       style: const TextStyle(
-                        fontSize: 11,
+                        fontSize: 10,
                         fontWeight: FontWeight.w700,
                         color: FtTokens.onSurfaceMuted,
-                        letterSpacing: 0.7,
+                        letterSpacing: 0.55,
                       ),
                     ),
                   ],
@@ -649,9 +644,9 @@ class _HeroCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 10),
           Container(
-            padding: const EdgeInsets.fromLTRB(11, 8, 11, 8),
+            padding: const EdgeInsets.fromLTRB(11, 8, 11, 9),
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.22),
               borderRadius: BorderRadius.circular(12),
@@ -659,19 +654,26 @@ class _HeroCard extends StatelessWidget {
             child: Column(
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'LEVEL ${profile.level} · ${profile.levelTitle.toUpperCase()}',
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: FtTokens.accent,
-                        letterSpacing: 0.9,
+                    Expanded(
+                      child: Text(
+                        l10n.progBadgeLevel(
+                          profile.level,
+                          profile.levelTitle.toUpperCase(),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: FtTokens.accent,
+                          letterSpacing: 0.75,
+                        ),
                       ),
                     ),
+                    const SizedBox(width: 10),
                     Text(
-                      '${profile.xpIntoLevel} / $xpSpan XP',
+                      l10n.progBadgeXpRange(profile.xpIntoLevel, xpSpan),
                       style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
@@ -680,108 +682,12 @@ class _HeroCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 7),
                 FtProgressBar(
                   value: xpProgress,
                   color: FtTokens.accent,
                   glow: FtTokens.accentGlow,
-                  height: 5,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _HeroPill(
-                  icon: Icons.local_fire_department_rounded,
-                  value: '$currentStreakCount',
-                  caption: currentStreakDomain ?? l10n.progBadgeStreakHint,
-                  color: FtTokens.active.color,
-                  dim: FtTokens.active.dim,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _HeroPill(
-                  icon: Icons.shield_moon_rounded,
-                  value: '$unlockedCount',
-                  caption: l10n.progBadgeAchievements,
-                  color: FtTokens.accent,
-                  dim: FtTokens.accent.withValues(alpha: 0.18),
-                ),
-              ),
-            ],
-          ),
-          if (lastEvaluatedAt != null) ...[
-            const SizedBox(height: 10),
-            Center(
-              child: Text(
-                l10n.progLastSynced(_formatDateTime(lastEvaluatedAt!, locale)),
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500,
-                  color: FtTokens.onSurfaceFaint,
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _HeroPill extends StatelessWidget {
-  const _HeroPill({
-    required this.icon,
-    required this.value,
-    required this.caption,
-    required this.color,
-    required this.dim,
-  });
-
-  final IconData icon;
-  final String value;
-  final String caption;
-  final Color color;
-  final Color dim;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: dim,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.24)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                    color: color,
-                  ),
-                ),
-                Text(
-                  caption,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: color.withValues(alpha: 0.62),
-                  ),
+                  height: 4,
                 ),
               ],
             ),
@@ -802,10 +708,10 @@ class _InfoBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.16),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(11),
         border: Border.all(color: color.withValues(alpha: 0.26)),
       ),
       child: Column(
@@ -814,17 +720,17 @@ class _InfoBadge extends StatelessWidget {
           Text(
             label,
             style: const TextStyle(
-              fontSize: 9,
+              fontSize: 8.5,
               fontWeight: FontWeight.w800,
               color: FtTokens.onSurfaceMuted,
-              letterSpacing: 0.9,
+              letterSpacing: 0.75,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 1),
           Text(
             value,
             style: const TextStyle(
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: FontWeight.w900,
               color: Colors.white,
             ),
@@ -1532,6 +1438,10 @@ class _AchievementDetailsSheet extends StatelessWidget {
               runSpacing: 8,
               children: [
                 FtProgTinyPill(
+                  label: _achievementDifficultyLabel(achievement, l10n),
+                  color: color,
+                ),
+                FtProgTinyPill(
                   label: progressLabel,
                   color: color,
                 ),
@@ -1627,73 +1537,99 @@ class _AchievementBadgeSpec {
 }
 
 _AchievementBadgeSpec _achievementBadgeSpec(ProgressionAchievement achievement) {
+  final color = FtProgressionDomainTheme.colorForAchievementDifficulty(
+    achievement.difficulty,
+  );
+  final levelTarget = _achievementLevelTarget(achievement);
+  if (levelTarget != null) {
+    switch (levelTarget) {
+      case 5:
+      case 10:
+        return _AchievementBadgeSpec(emoji: '🧭', color: color);
+      case 15:
+        return _AchievementBadgeSpec(emoji: '⚒️', color: color);
+      case 20:
+        return _AchievementBadgeSpec(emoji: '🛡️', color: color);
+      case 25:
+        return _AchievementBadgeSpec(emoji: '🌩️', color: color);
+      case 30:
+        return _AchievementBadgeSpec(emoji: '🌅', color: color);
+      case 40:
+        return _AchievementBadgeSpec(emoji: '🌀', color: color);
+      default:
+        return _AchievementBadgeSpec(emoji: '👑', color: color);
+    }
+  }
   switch (achievement.id) {
     case 'first_reward':
-      return const _AchievementBadgeSpec(
+      return _AchievementBadgeSpec(
         emoji: '🏆',
-        color: Color(0xFFFBBF24),
+        color: color,
       );
     case 'reward_hunter_25':
     case 'reward_hunter_100':
-      return const _AchievementBadgeSpec(
+      return _AchievementBadgeSpec(
         emoji: '⚔️',
-        color: Color(0xFF7C6FFF),
+        color: color,
       );
-    case 'forge_knight_xp_5000':
-      return const _AchievementBadgeSpec(
+    case 'xp_100000':
+    case 'xp_1000000':
+      return _AchievementBadgeSpec(
         emoji: '🔥',
-        color: Color(0xFFF472B6),
+        color: color,
       );
-    case 'pathfinder_level_5':
     case 'steps_total_100k':
-      return const _AchievementBadgeSpec(
-        emoji: '🛡️',
-        color: Color(0xFF34D399),
-      );
     case 'steps_total_500k':
-    case 'nutrition_rewards_25':
-      return const _AchievementBadgeSpec(
-        emoji: '💎',
-        color: Color(0xFF60A5FA),
+    case 'steps_total_1000000':
+    case 'steps_total_5000000':
+    case 'steps_total_10000000':
+    case 'steps_month_300k':
+    case 'steps_month_600k':
+      return _AchievementBadgeSpec(
+        emoji: '🛡️',
+        color: color,
       );
-    case 'living_legend_xp_15000':
+    case 'nutrition_rewards_25':
+    case 'sleep_total_250h':
+    case 'sleep_total_1000h':
+    case 'sleep_month_225h':
+    case 'sleep_month_240h':
+      return _AchievementBadgeSpec(
+        emoji: '💎',
+        color: color,
+      );
     case 'steps_streak_30':
-      return const _AchievementBadgeSpec(
+    case 'steps_streak_100':
+      return _AchievementBadgeSpec(
         emoji: '👑',
-        color: Color(0xFFA89BFF),
+        color: color,
       );
     case 'steps_streak_3':
     case 'steps_streak_7':
-      return const _AchievementBadgeSpec(
+      return _AchievementBadgeSpec(
         emoji: '🔥',
-        color: Color(0xFFF472B6),
-      );
-    case 'steps_total_1000000':
-      return const _AchievementBadgeSpec(
-        emoji: '🌟',
-        color: Color(0xFFFBBF24),
-      );
-    case 'nutrition_streak_3':
-      return const _AchievementBadgeSpec(
-        emoji: '🥗',
-        color: Color(0xFF34D399),
+        color: color,
       );
     case 'weekly_activity_mastery':
     case 'weekly_activity_4':
-      return const _AchievementBadgeSpec(
-        emoji: '⚡',
-        color: Color(0xFF2DD4BF),
-      );
     case 'weekly_activity_12':
-      return const _AchievementBadgeSpec(
-        emoji: '🚀',
-        color: Color(0xFFA89BFF),
+    case 'weekly_activity_24':
+    case 'weekly_activity_52':
+      return _AchievementBadgeSpec(
+        emoji: '⚡',
+        color: color,
+      );
+    case 'nutrition_streak_3':
+    case 'nutrition_streak_30':
+    case 'nutrition_streak_100':
+      return _AchievementBadgeSpec(
+        emoji: '🥗',
+        color: color,
       );
     default:
-      final domain = FtProgressionDomainTheme.resolveForAchievement(achievement);
       return _AchievementBadgeSpec(
         emoji: '🏅',
-        color: FtProgressionDomainTheme.colorFor(domain),
+        color: color,
       );
   }
 }
@@ -1703,6 +1639,10 @@ String _achievementDisplayLabel(
   BuildContext context,
 ) {
   final isCzech = Localizations.localeOf(context).languageCode == 'cs';
+  final levelTarget = _achievementLevelTarget(achievement);
+  if (levelTarget != null) {
+    return 'LEVEL $levelTarget';
+  }
   switch (achievement.id) {
     case 'first_reward':
       return isCzech ? 'PRVNÍ ODMĚNA' : 'FIRST REWARD';
@@ -1710,26 +1650,38 @@ String _achievementDisplayLabel(
       return isCzech ? '25 ODMĚN' : '25 REWARDS';
     case 'reward_hunter_100':
       return isCzech ? '100 ODMĚN' : '100 REWARDS';
-    case 'pathfinder_level_5':
-      return 'LEVEL 5';
-    case 'forge_knight_xp_5000':
-      return '5K XP';
-    case 'living_legend_xp_15000':
-      return '15K XP';
+    case 'xp_100000':
+      return '100K XP';
+    case 'xp_1000000':
+      return '1M XP';
     case 'steps_total_100k':
       return isCzech ? '100K KROKŮ' : '100K STEPS';
     case 'steps_total_500k':
       return isCzech ? '500K KROKŮ' : '500K STEPS';
     case 'steps_total_1000000':
       return isCzech ? '1M KROKŮ' : '1M STEPS';
+    case 'steps_total_5000000':
+      return isCzech ? '5M KROKŮ' : '5M STEPS';
+    case 'steps_total_10000000':
+      return isCzech ? '10M KROKŮ' : '10M STEPS';
+    case 'steps_month_300k':
+      return isCzech ? '300K / 30 DNÍ' : '300K / 30 DAYS';
+    case 'steps_month_600k':
+      return isCzech ? '600K / 30 DNÍ' : '600K / 30 DAYS';
     case 'steps_streak_3':
       return isCzech ? '3 DNY' : '3-DAY STREAK';
     case 'steps_streak_7':
       return isCzech ? '7 DNÍ' : '7-DAY STREAK';
     case 'steps_streak_30':
       return isCzech ? '30 DNÍ' : '30-DAY STREAK';
+    case 'steps_streak_100':
+      return isCzech ? '100 DNÍ' : '100-DAY STREAK';
     case 'nutrition_streak_3':
       return isCzech ? '3 DNY VÝŽIVY' : '3-DAY FUEL';
+    case 'nutrition_streak_30':
+      return isCzech ? '30 DNÍ VÝŽIVY' : '30-DAY NUTRITION';
+    case 'nutrition_streak_100':
+      return isCzech ? '100 DNÍ VÝŽIVY' : '100-DAY NUTRITION';
     case 'nutrition_rewards_25':
       return isCzech ? '25 ODMĚN VÝŽIVY' : '25 FOOD WINS';
     case 'weekly_activity_mastery':
@@ -1738,11 +1690,57 @@ String _achievementDisplayLabel(
       return isCzech ? '4 TÝDNY' : '4 WEEK WINS';
     case 'weekly_activity_12':
       return isCzech ? '12 TÝDNŮ' : '12 WEEK WINS';
+    case 'weekly_activity_24':
+      return isCzech ? '24 TÝDNŮ' : '24 WEEK WINS';
+    case 'weekly_activity_52':
+      return isCzech ? '52 TÝDNŮ' : '52 WEEK WINS';
+    case 'sleep_total_250h':
+      return isCzech ? '250 H SPÁNKU' : '250H SLEEP';
+    case 'sleep_total_1000h':
+      return isCzech ? '1000 H SPÁNKU' : '1000H SLEEP';
+    case 'sleep_month_225h':
+      return isCzech ? '225 H / 30 DNÍ' : '225H / 30 DAYS';
+    case 'sleep_month_240h':
+      return isCzech ? '240 H / 30 DNÍ' : '240H / 30 DAYS';
     default:
       return ProgressionL10n(context.l10n)
           .achievementTitle(achievement)
           .toUpperCase();
   }
+}
+
+int _achievementDifficultyRank(ProgressionAchievementDifficulty difficulty) {
+  switch (difficulty) {
+    case ProgressionAchievementDifficulty.easy:
+      return 0;
+    case ProgressionAchievementDifficulty.medium:
+      return 1;
+    case ProgressionAchievementDifficulty.hard:
+      return 2;
+    case ProgressionAchievementDifficulty.extraHard:
+      return 3;
+  }
+}
+
+String _achievementDifficultyLabel(
+  ProgressionAchievement achievement,
+  AppLocalizations l10n,
+) {
+  switch (achievement.difficulty) {
+    case ProgressionAchievementDifficulty.easy:
+      return l10n.progAchievementDifficultyEasy;
+    case ProgressionAchievementDifficulty.medium:
+      return l10n.progAchievementDifficultyMedium;
+    case ProgressionAchievementDifficulty.hard:
+      return l10n.progAchievementDifficultyHard;
+    case ProgressionAchievementDifficulty.extraHard:
+      return l10n.progAchievementDifficultyExtraHard;
+  }
+}
+
+int? _achievementLevelTarget(ProgressionAchievement achievement) {
+  final match = RegExp(r'_level_(\d+)$').firstMatch(achievement.id);
+  return match == null ? null : int.tryParse(match.group(1)!);
 }
 
 String _achievementCompactSummary(
@@ -1753,6 +1751,10 @@ String _achievementCompactSummary(
 ) {
   switch (achievement.criterionType) {
     case ProgressionAchievementCriterionType.totalXpAtLeast:
+      final levelTarget = _achievementLevelTarget(achievement);
+      if (levelTarget != null) {
+        return 'LEVEL $levelTarget';
+      }
       return '${_formatCompactInt(achievement.targetValue, locale)} XP';
     case ProgressionAchievementCriterionType.rewardCountAtLeast:
       if (achievement.ruleId != null) {
@@ -1765,9 +1767,22 @@ String _achievementCompactSummary(
     case ProgressionAchievementCriterionType.bestStreakAtLeast:
       return '${achievement.targetValue} ${l10n.progStreakDaysSuffix}';
     case ProgressionAchievementCriterionType.totalRuleValueAtLeast:
-      final unit = _achievementUnitForRule(achievement.ruleId, l10n);
-      return '${_formatCompactInt(achievement.targetValue, locale)} $unit';
+    case ProgressionAchievementCriterionType.bestRollingWindowRuleValueAtLeast:
+      return _achievementTargetSummary(achievement, l10n, locale);
   }
+}
+
+String _achievementTargetSummary(
+  ProgressionAchievement achievement,
+  AppLocalizations l10n,
+  String locale,
+) {
+  if (achievement.ruleId == 'daily_sleep') {
+    final hours = (achievement.targetValue / 60).round();
+    return '$hours ${l10n.goalUnitHours}';
+  }
+  final unit = _achievementUnitForRule(achievement.ruleId, l10n);
+  return '${_formatCompactInt(achievement.targetValue, locale)} $unit';
 }
 
 String _achievementUnitForRule(String? ruleId, AppLocalizations l10n) {
@@ -1779,6 +1794,7 @@ String _achievementUnitForRule(String? ruleId, AppLocalizations l10n) {
     case 'daily_protein':
       return l10n.goalUnitG;
     case 'daily_sleep':
+      return l10n.goalUnitHours;
     case 'weekly_activity':
       return l10n.goalUnitMins;
     default:
@@ -1788,6 +1804,10 @@ String _achievementUnitForRule(String? ruleId, AppLocalizations l10n) {
 
 String _formatCompactInt(int value, String locale) {
   return NumberFormat.compact(locale: locale).format(value);
+}
+
+String _formatFullInt(int value, String locale) {
+  return NumberFormat.decimalPattern(locale).format(value);
 }
 
 class _HistoryFeed extends StatelessWidget {
@@ -1849,6 +1869,7 @@ class _HistoryRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final domain = grant.domain;
     final color = FtProgressionDomainTheme.colorFor(domain);
+    final xpLabel = _formatFullInt(grant.xpGranted, locale);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Column(
@@ -1891,7 +1912,7 @@ class _HistoryRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '+${grant.xpGranted} XP',
+                    '+$xpLabel XP',
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
