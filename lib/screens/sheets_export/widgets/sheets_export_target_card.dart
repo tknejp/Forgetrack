@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../l10n/app_localizations.dart';
+import '../../../l10n/l10n.dart';
 import '../../../providers/sheets_export_provider.dart';
 import '../../../theme/ft_design_tokens.dart';
 import '../../../widgets/ft/ft_plain_card.dart';
+import '../../profile/dialogs/profile_dialogs.dart';
 
 class SheetsExportTargetCard extends StatelessWidget {
   final SheetsExportProvider provider;
@@ -11,6 +14,7 @@ class SheetsExportTargetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final id = provider.spreadsheetId;
     final url = provider.spreadsheetUrl;
 
@@ -18,13 +22,12 @@ class SheetsExportTargetCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _SectionLabel('Target spreadsheet'),
+          _SectionLabel(l10n.exportTargetLabel),
           const SizedBox(height: 8),
           if (id == null) ...[
-            const Text(
-              'No spreadsheet linked yet. A new "Forgetrack Data" spreadsheet '
-              'will be created in your Google Drive on the first export.',
-              style: TextStyle(
+            Text(
+              l10n.exportTargetMissingBody,
+              style: const TextStyle(
                 fontSize: 13,
                 color: FtTokens.onSurfaceMuted,
                 height: 1.4,
@@ -74,7 +77,7 @@ class SheetsExportTargetCard extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Copy link',
+                  tooltip: l10n.exportTargetCopyLink,
                   icon: const Icon(
                     Icons.copy_rounded,
                     size: 18,
@@ -82,17 +85,7 @@ class SheetsExportTargetCard extends StatelessWidget {
                   ),
                   onPressed: url == null
                       ? null
-                      : () async {
-                          await Clipboard.setData(ClipboardData(text: url));
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Spreadsheet link copied'),
-                                backgroundColor: FtTokens.surface,
-                              ),
-                            );
-                          }
-                        },
+                      : () => _copyLink(context, url, l10n),
                 ),
               ],
             ),
@@ -100,16 +93,16 @@ class SheetsExportTargetCard extends StatelessWidget {
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
-                onPressed: () => provider.forgetSpreadsheet(),
+                onPressed: () => _confirmForget(context, l10n),
                 style: TextButton.styleFrom(
                   foregroundColor: FtTokens.onSurfaceMuted,
                   padding: const EdgeInsets.symmetric(horizontal: 6),
                   minimumSize: const Size(0, 32),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                child: const Text(
-                  'Forget — create a new one next export',
-                  style: TextStyle(fontSize: 11),
+                child: Text(
+                  l10n.exportTargetForgetButton,
+                  style: const TextStyle(fontSize: 11),
                 ),
               ),
             ),
@@ -117,6 +110,36 @@ class SheetsExportTargetCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _copyLink(
+    BuildContext context,
+    String url,
+    AppLocalizations l10n,
+  ) async {
+    await Clipboard.setData(ClipboardData(text: url));
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n.exportTargetLinkCopied),
+        backgroundColor: FtTokens.surface,
+      ),
+    );
+  }
+
+  Future<void> _confirmForget(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) async {
+    final confirmed = await showProfileConfirmationDialog(
+      context,
+      title: l10n.exportTargetForgetConfirmTitle,
+      message: l10n.exportTargetForgetConfirmMessage,
+      confirmLabel: l10n.exportTargetForgetConfirmAction,
+      isDestructive: true,
+    );
+    if (!confirmed) return;
+    await provider.forgetSpreadsheet();
   }
 }
 

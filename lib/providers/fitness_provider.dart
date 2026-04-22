@@ -15,6 +15,9 @@ enum FitnessAccessState {
 }
 
 class FitnessProvider extends ChangeNotifier {
+  static const int _defaultHistoryDays = 30;
+  static const int _extendedHistoryDays = 365;
+
   final HealthConnectService _service;
   final HealthDatabase _db;
 
@@ -29,6 +32,8 @@ class FitnessProvider extends ChangeNotifier {
   bool _isRefreshing = false;
   bool _isHealthConnectAvailable = false;
   bool _hasPermissions = false;
+  bool _hasHistoricalDataAccess = false;
+  bool _historyPermissionDeniedThisSession = false;
   String? _errorMessage;
   DateTime? _lastSyncedAt;
 
@@ -47,6 +52,7 @@ class FitnessProvider extends ChangeNotifier {
   bool get isRefreshing => _isRefreshing;
   bool get isHealthConnectAvailable => _isHealthConnectAvailable;
   bool get hasPermissions => _hasPermissions;
+  bool get hasHistoricalDataAccess => _hasHistoricalDataAccess;
 
   FitnessAccessState get accessState {
     if (!_hasInitialized || _isLoading) return FitnessAccessState.checking;
@@ -67,8 +73,7 @@ class FitnessProvider extends ChangeNotifier {
 
   // ─── Computed step totals ─────────────────────────────────────────────────
 
-  int get todaySteps =>
-      _stepsHistory.isNotEmpty ? _stepsHistory.last.steps : 0;
+  int get todaySteps => _stepsHistory.isNotEmpty ? _stepsHistory.last.steps : 0;
 
   int get stepsWeekTotal {
     if (_stepsHistory.isEmpty) return 0;
@@ -78,8 +83,8 @@ class FitnessProvider extends ChangeNotifier {
     return slice.fold(0, (sum, r) => sum + r.steps);
   }
 
-  int get stepsMonthTotal =>
-      _stepsHistory.fold(0, (sum, r) => sum + r.steps);
+  int get stepsMonthTotal => _recentStepsHistory(_defaultHistoryDays)
+      .fold(0, (sum, r) => sum + r.steps);
 
   // ─── Computed calorie totals ──────────────────────────────────────────────
 
@@ -95,7 +100,8 @@ class FitnessProvider extends ChangeNotifier {
   }
 
   double get activeCaloriesBurnedMonth =>
-      _activeCaloriesHistory.fold<double>(0.0, (sum, v) => sum + v);
+      _recentCaloriesHistory(_defaultHistoryDays)
+          .fold<double>(0.0, (sum, v) => sum + v);
 
   // ─── Latest weight ────────────────────────────────────────────────────────
 
@@ -182,7 +188,12 @@ class FitnessProvider extends ChangeNotifier {
 
       final perms = await _service.hasPermissions();
       _hasPermissions = perms == true;
-      if (_hasPermissions) _loadFromDb();
+      if (_hasPermissions) {
+        await _refreshHistoryAccess(interactive: false);
+        _loadFromDb();
+      } else {
+        _hasHistoricalDataAccess = false;
+      }
     } catch (e) {
       _errorMessage = e.toString();
     } finally {
@@ -202,11 +213,17 @@ class FitnessProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _isHealthConnectAvailable = await _service.isAvailable(forceRefresh: true);
+      _isHealthConnectAvailable =
+          await _service.isAvailable(forceRefresh: true);
       if (!_isHealthConnectAvailable) return;
 
       _hasPermissions = await _service.requestPermissions();
-      if (_hasPermissions) await _fetchFromHC();
+      if (_hasPermissions) {
+        await _refreshHistoryAccess(interactive: true);
+        await _fetchFromHC();
+      } else {
+        _hasHistoricalDataAccess = false;
+      }
     } catch (e) {
       _errorMessage = e.toString();
     } finally {
@@ -233,6 +250,7 @@ class FitnessProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      await _refreshHistoryAccess(interactive: true);
       await _fetchFromHC();
     } on _QuotaExceededException {
       // Quota exhausted — serve existing DB data, do not touch _lastSyncedAt.
@@ -257,9 +275,10 @@ class FitnessProvider extends ChangeNotifier {
       final granted = await _service.requestWorkoutPermission();
       _workoutPermissionGranted = granted;
       if (granted) {
+        await _refreshHistoryAccess(interactive: true);
         final now = DateTime.now();
         _activities = await _service.getActivities(
-          now.subtract(const Duration(days: 30)),
+          now.subtract(Duration(days: _historyLookbackDays - 1)),
           now,
         );
         await _db.saveActivitiesAndPermission(
@@ -290,10 +309,36 @@ class FitnessProvider extends ChangeNotifier {
     _lastSyncedAt = _db.lastSyncedAt;
   }
 
+  Future<void> _refreshHistoryAccess({required bool interactive}) async {
+    if (!_hasPermissions) {
+      _hasHistoricalDataAccess = false;
+      return;
+    }
+
+    final available = await _service.isHistoryPermissionAvailable();
+    if (!available) {
+      _hasHistoricalDataAccess = false;
+      _historyPermissionDeniedThisSession = false;
+      return;
+    }
+
+    var authorized = await _service.hasHistoryPermission();
+    if (!authorized && interactive && !_historyPermissionDeniedThisSession) {
+      authorized = await _service.requestHistoryPermissionIfAvailable();
+      _historyPermissionDeniedThisSession = !authorized;
+    }
+
+    if (authorized) {
+      _historyPermissionDeniedThisSession = false;
+    }
+
+    _hasHistoricalDataAccess = authorized;
+  }
+
   /// Fetches all data from HC. On success, persists to DB and stamps sync time.
   /// Throws [_QuotaExceededException] so [refresh] can handle it silently.
   Future<void> _fetchFromHC() async {
-    const days = 30;
+    final days = _historyLookbackDays;
 
     try {
       _stepsHistory = await _service.getStepsHistory(days);
@@ -329,7 +374,7 @@ class FitnessProvider extends ChangeNotifier {
       try {
         final now = DateTime.now();
         _activities = await _service.getActivities(
-          now.subtract(const Duration(days: 30)),
+          now.subtract(Duration(days: days - 1)),
           now,
         );
       } catch (e) {
@@ -340,7 +385,7 @@ class FitnessProvider extends ChangeNotifier {
       _activities = [];
     }
     try {
-      _sleepHistory = await _service.getSleepHistory(7);
+      _sleepHistory = await _service.getSleepHistory(days);
       _todaySleep = _sleepHistory.isNotEmpty ? _sleepHistory.first : null;
     } catch (e) {
       if (_isQuotaError(e)) throw const _QuotaExceededException();
@@ -360,6 +405,19 @@ class FitnessProvider extends ChangeNotifier {
       latestBodyFat: _latestBodyFat,
       lastSyncedAt: _lastSyncedAt!,
     );
+  }
+
+  int get _historyLookbackDays =>
+      _hasHistoricalDataAccess ? _extendedHistoryDays : _defaultHistoryDays;
+
+  List<StepsRecord> _recentStepsHistory(int days) {
+    if (_stepsHistory.length <= days) return _stepsHistory;
+    return _stepsHistory.sublist(_stepsHistory.length - days);
+  }
+
+  List<double> _recentCaloriesHistory(int days) {
+    if (_activeCaloriesHistory.length <= days) return _activeCaloriesHistory;
+    return _activeCaloriesHistory.sublist(_activeCaloriesHistory.length - days);
   }
 
   static bool _isQuotaError(Object e) =>

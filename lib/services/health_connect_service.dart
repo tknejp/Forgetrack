@@ -47,6 +47,14 @@ class HealthConnectService {
 
   Future<bool> requestPermissions() => _permissions.requestPermissions();
 
+  Future<bool> isHistoryPermissionAvailable() =>
+      _permissions.isHistoryPermissionAvailable();
+
+  Future<bool> hasHistoryPermission() => _permissions.hasHistoryPermission();
+
+  Future<bool> requestHistoryPermissionIfAvailable() =>
+      _permissions.requestHistoryPermissionIfAvailable();
+
   Future<bool?> hasWorkoutPermission() => _permissions.hasWorkoutPermission();
 
   Future<bool> requestWorkoutPermission() =>
@@ -57,8 +65,7 @@ class HealthConnectService {
 
   // ─── Steps ─────────────────────────────────────────────────────────────────
 
-  Future<int> getStepsForDate(DateTime date) =>
-      _steps.getStepsForDate(date);
+  Future<int> getStepsForDate(DateTime date) => _steps.getStepsForDate(date);
 
   Future<List<StepsRecord>> getStepsHistory(int days) =>
       _steps.getStepsHistory(days);

@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+
+import '../features/progression/domain/progression_models.dart';
+import '../features/progression/presentation/progression_provider.dart';
+import '../features/progression/presentation/widgets/ft_progression_home_card.dart';
 import '../models/selected_period.dart';
 import '../providers/auth_provider.dart';
 import '../providers/fitness_provider.dart';
 import '../providers/goals_provider.dart';
 import '../providers/kaloricke_tabulky_provider.dart';
+import '../screens/ft_progression_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../theme/ft_design_tokens.dart';
 import '../widgets/ft/ft_date_nav.dart';
@@ -13,7 +18,6 @@ import '../widgets/ft/ft_macro_row.dart';
 import '../widgets/ft/ft_screen_header.dart';
 import '../widgets/ft/ft_stat_card.dart';
 import '../widgets/ft/ft_tab_pill.dart';
-import '../widgets/ft/ft_xp_bar.dart';
 
 class FtOverviewScreen extends StatefulWidget {
   const FtOverviewScreen({super.key});
@@ -56,6 +60,9 @@ class _FtOverviewScreenState extends State<FtOverviewScreen>
       futures.add(kt.refreshRange(_period.start, _period.end));
     }
     await Future.wait(futures);
+    if (mounted) {
+      await context.read<ProgressionProvider>().refresh();
+    }
   }
 
   Future<void> _openDatePicker() async {
@@ -83,13 +90,27 @@ class _FtOverviewScreenState extends State<FtOverviewScreen>
 
   String _greeting(String? firstName) {
     final h = DateTime.now().hour;
-    final base = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+    final base = h < 12
+        ? 'Good morning'
+        : h < 18
+            ? 'Good afternoon'
+            : 'Good evening';
     return '$base${firstName != null ? ', $firstName' : ''} ✦';
   }
 
   String _monthShort(int m) => const [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
       ][m - 1];
 
   String? _dateNavOverride() {
@@ -134,6 +155,11 @@ class _FtOverviewScreenState extends State<FtOverviewScreen>
     return '${h}h ${m.toString().padLeft(2, '0')}m';
   }
 
+  String? _xpLabel(int earnedXp) {
+    if (earnedXp <= 0) return null;
+    return '+$earnedXp XP';
+  }
+
   double? _weightForSelectedPeriod(FitnessProvider fitness) {
     switch (_period.type) {
       case PeriodType.day:
@@ -169,6 +195,7 @@ class _FtOverviewScreenState extends State<FtOverviewScreen>
     final kt = context.watch<KalorickeTabulkyProvider>();
     final goals = context.watch<GoalsProvider>();
     final auth = context.watch<AuthProvider>();
+    final progression = context.watch<ProgressionProvider>();
 
     final firstName = auth.user?.displayName?.split(' ').firstOrNull;
     final tab = _period.type == PeriodType.week
@@ -176,6 +203,21 @@ class _FtOverviewScreenState extends State<FtOverviewScreen>
         : _period.type == PeriodType.month
             ? 'Month'
             : 'Day';
+    final stepsXp = progression.summaryForDomainRange(
+      domain: ProgressionDomain.steps,
+      start: _period.start,
+      end: _period.end,
+    );
+    final nutritionXp = progression.summaryForDomainRange(
+      domain: ProgressionDomain.nutrition,
+      start: _period.start,
+      end: _period.end,
+    );
+    final sleepXp = progression.summaryForDomainRange(
+      domain: ProgressionDomain.sleep,
+      start: _period.start,
+      end: _period.end,
+    );
 
     // ── Steps ─────────────────────────────────────────────────────────────────
     final steps = _period.type == PeriodType.day
@@ -188,13 +230,13 @@ class _FtOverviewScreenState extends State<FtOverviewScreen>
 
     // ── Calories ──────────────────────────────────────────────────────────────
     final dayNutrition = kt.nutritionForDate(_period.start);
-    final isCurrentDay = _period.type == PeriodType.day && _period.isCurrentPeriod;
+    final isCurrentDay =
+        _period.type == PeriodType.day && _period.isCurrentPeriod;
     final double kcal = _period.type == PeriodType.day
         ? (dayNutrition?.calories ?? (isCurrentDay ? kt.todayCalories : 0.0))
         : (kt.avgCaloriesForRange(_period.start, _period.end) ?? 0.0);
     final kcalGoal = goals.dailyCalories;
-    final kcalProgress =
-        kcalGoal > 0 ? (kcal / kcalGoal).clamp(0.0, 1.0) : 0.0;
+    final kcalProgress = kcalGoal > 0 ? (kcal / kcalGoal).clamp(0.0, 1.0) : 0.0;
     final kcalDiff = kcal - kcalGoal;
     final kcalPct = kcalGoal > 0 ? ((kcal / kcalGoal) * 100).round() : 0;
     final protein = _period.type == PeriodType.day
@@ -224,9 +266,10 @@ class _FtOverviewScreenState extends State<FtOverviewScreen>
     final wMax = wHistory.isNotEmpty
         ? wHistory.map((w) => w.weight).reduce((a, b) => a > b ? a : b)
         : null;
-    final wProgress = (currentWeight != null && wMax != null && wMax > targetWeight)
-        ? ((wMax - currentWeight) / (wMax - targetWeight)).clamp(0.0, 1.0)
-        : 0.0;
+    final wProgress =
+        (currentWeight != null && wMax != null && wMax > targetWeight)
+            ? ((wMax - currentWeight) / (wMax - targetWeight)).clamp(0.0, 1.0)
+            : 0.0;
     final weightPrimaryLabel =
         _period.type == PeriodType.day ? 'Current' : 'Average';
     final weightTrendLabel = _period.type == PeriodType.day
@@ -287,21 +330,25 @@ class _FtOverviewScreenState extends State<FtOverviewScreen>
                   : null,
               syncedAt: syncedAt,
               labelOverride: _dateNavOverride(),
-              onDateTap: _period.type == PeriodType.day ? _openDatePicker : null,
+              onDateTap:
+                  _period.type == PeriodType.day ? _openDatePicker : null,
               showTodayButton: !_period.isCurrentPeriod,
-              onTodayTap: () => setState(() => _period = _period.withType(_period.type)),
+              onTodayTap: () =>
+                  setState(() => _period = _period.withType(_period.type)),
             ),
-            if (fitness.accessState == FitnessAccessState.permissionRequired) ...[
+            if (fitness.accessState ==
+                FitnessAccessState.permissionRequired) ...[
               const SizedBox(height: 10),
               _PermissionBanner(onTap: () => fitness.requestPermissions()),
             ],
             const SizedBox(height: 10),
-            // TODO: replace mock XP values with real progression engine
-            const FtXpBar(
-              level: 14,
-              title: 'Forge Knight',
-              xp: 2340,
-              xpMax: 3000,
+            FtProgressionCard(
+              onOpen: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const FtProgressionScreen(),
+                ),
+              ),
             ),
             const SizedBox(height: 10),
             FtStatCard(
@@ -318,7 +365,7 @@ class _FtOverviewScreenState extends State<FtOverviewScreen>
               ],
               progress: stepsProgress,
               badge: '${(stepsProgress * 100).round()}%',
-              xp: '+${(stepsProgress * 200).round()} XP', // TODO: real XP
+              xp: _xpLabel(stepsXp.earnedXp),
             ),
             const SizedBox(height: 10),
             FtStatCard(
@@ -345,7 +392,7 @@ class _FtOverviewScreenState extends State<FtOverviewScreen>
               ],
               progress: kcalProgress,
               badge: '$kcalPct%',
-              xp: '+200 XP', // TODO: real XP
+              xp: _xpLabel(nutritionXp.earnedXp),
               children: [
                 const SizedBox(height: 12),
                 if (nutritionHasDetails) ...[
@@ -384,8 +431,9 @@ class _FtOverviewScreenState extends State<FtOverviewScreen>
                       const SizedBox(width: 8),
                       Expanded(
                         child: _NutritionDetailTile(
-                          label:
-                              remainingToTarget >= 0 ? 'Remaining' : 'Over target',
+                          label: remainingToTarget >= 0
+                              ? 'Remaining'
+                              : 'Over target',
                           value: '${remainingToTarget.abs().round()} kcal',
                           color: remainingToTarget >= 0
                               ? FtTokens.calories.color
@@ -458,7 +506,7 @@ class _FtOverviewScreenState extends State<FtOverviewScreen>
               badge: sleepDuration != null
                   ? '${(sleepProgress * 100).round()}%'
                   : null,
-              // TODO: no sleep score in SleepRecord
+              xp: _xpLabel(sleepXp.earnedXp),
             ),
           ],
         ),

@@ -33,11 +33,18 @@ class SleepSummaryCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final section = context.tokens.sleep;
     final l10n = context.l10n;
+    final recentHistory =
+        sleepHistory.length > 7 ? sleepHistory.sublist(0, 7) : sleepHistory;
 
-    final totalSec = sleepHistory.fold(0, (s, r) => s + r.totalDuration.inSeconds);
-    final avg7d = Duration(seconds: (totalSec / sleepHistory.length).round());
-    final minDur = sleepHistory.map((r) => r.totalDuration).reduce((a, b) => a < b ? a : b);
-    final maxDur = sleepHistory.map((r) => r.totalDuration).reduce((a, b) => a > b ? a : b);
+    final totalSec =
+        recentHistory.fold(0, (s, r) => s + r.totalDuration.inSeconds);
+    final avg7d = Duration(seconds: (totalSec / recentHistory.length).round());
+    final minDur = recentHistory
+        .map((r) => r.totalDuration)
+        .reduce((a, b) => a < b ? a : b);
+    final maxDur = recentHistory
+        .map((r) => r.totalDuration)
+        .reduce((a, b) => a > b ? a : b);
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -78,11 +85,17 @@ class SleepSummaryCard extends StatelessWidget {
             const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(child: StatDetailTile(label: l10n.sleepAvg7Day, value: _fmtDuration(avg7d))),
+                Expanded(
+                    child: StatDetailTile(
+                        label: l10n.sleepAvg7Day, value: _fmtDuration(avg7d))),
                 const SizedBox(width: 8),
-                Expanded(child: StatDetailTile(label: l10n.weightMin, value: _fmtDuration(minDur))),
+                Expanded(
+                    child: StatDetailTile(
+                        label: l10n.weightMin, value: _fmtDuration(minDur))),
                 const SizedBox(width: 8),
-                Expanded(child: StatDetailTile(label: l10n.weightMax, value: _fmtDuration(maxDur))),
+                Expanded(
+                    child: StatDetailTile(
+                        label: l10n.weightMax, value: _fmtDuration(maxDur))),
               ],
             ),
           ],

@@ -169,6 +169,78 @@ class HcPermissionService {
     throw StateError('WORKOUT permission not granted');
   }
 
+  Future<bool> isHistoryPermissionAvailable() async {
+    await _client.ensureConfigured();
+    await _client.assertAvailable();
+
+    try {
+      final result = await _client.pluginIsHealthDataHistoryAvailable();
+      _client.logInfo('isHistoryPermissionAvailable() => $result');
+      return result;
+    } catch (e, st) {
+      _client.logError('isHistoryPermissionAvailable() failed', e, st);
+      return false;
+    }
+  }
+
+  Future<bool> hasHistoryPermission() async {
+    await _client.ensureConfigured();
+    await _client.assertAvailable();
+
+    try {
+      final available = await _client.pluginIsHealthDataHistoryAvailable();
+      if (!available) {
+        _client.logInfo(
+          'hasHistoryPermission() => false (feature unavailable)',
+        );
+        return false;
+      }
+
+      final result = await _client.pluginIsHealthDataHistoryAuthorized();
+      _client.logInfo('hasHistoryPermission() => $result');
+      return result;
+    } catch (e, st) {
+      _client.logError('hasHistoryPermission() failed', e, st);
+      return false;
+    }
+  }
+
+  Future<bool> requestHistoryPermissionIfAvailable() async {
+    await _client.ensureConfigured();
+    await _client.assertAvailable();
+
+    try {
+      final available = await _client.pluginIsHealthDataHistoryAvailable();
+      if (!available) {
+        _client.logInfo(
+          'requestHistoryPermissionIfAvailable() skipped: feature unavailable',
+        );
+        return false;
+      }
+
+      final before = await _client.pluginIsHealthDataHistoryAuthorized();
+      _client.logInfo('History permission before request => $before');
+      if (before) return true;
+
+      final granted =
+          await _client.pluginRequestHealthDataHistoryAuthorization();
+      _client.logInfo(
+        'requestHealthDataHistoryAuthorization() => $granted',
+      );
+
+      final after = await _client.pluginIsHealthDataHistoryAuthorized();
+      _client.logInfo('History permission after request => $after');
+      return after;
+    } catch (e, st) {
+      _client.logError(
+        'requestHistoryPermissionIfAvailable() failed',
+        e,
+        st,
+      );
+      return false;
+    }
+  }
+
   Future<void> debugWorkoutPermissionFlow() async {
     await _client.ensureConfigured();
     await _client.assertAvailable();

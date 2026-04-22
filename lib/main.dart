@@ -6,6 +6,10 @@ import 'package:provider/provider.dart';
 
 import 'app.dart';
 import 'core/app_log.dart';
+import 'features/progression/application/progression_engine.dart';
+import 'features/progression/data/local/progression_database.dart';
+import 'features/progression/data/progression_repository_impl.dart';
+import 'features/progression/presentation/progression_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/calorie_provider.dart';
 import 'providers/fitness_provider.dart';
@@ -58,8 +62,13 @@ Future<void> main() async {
   final ktService = KalorickeTabulkyService();
   final ktDb = KtNutritionDatabase();
   await ktDb.open();
+  final progressionDb = ProgressionDatabase();
+  await progressionDb.open();
 
   final ktProvider = KalorickeTabulkyProvider(ktService, ktDb);
+  final progressionEngine = ProgressionEngine(
+    repository: ProgressionRepositoryImpl(progressionDb),
+  );
   AppLog.app.info('Providers ready — launching KT initialize()');
   unawaited(ktProvider.initialize());
 
@@ -78,6 +87,18 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => CalorieProvider(calorieApi)),
         ChangeNotifierProvider.value(value: ktProvider),
         ChangeNotifierProvider(create: (_) => SheetsExportProvider()),
+        ChangeNotifierProxyProvider3<GoalsProvider, FitnessProvider,
+            KalorickeTabulkyProvider, ProgressionProvider>(
+          create: (_) => ProgressionProvider(engine: progressionEngine),
+          update: (_, goals, fitness, kt, provider) {
+            provider!.bind(
+              goalsProvider: goals,
+              fitnessProvider: fitness,
+              nutritionProvider: kt,
+            );
+            return provider;
+          },
+        ),
       ],
       child: const ForgetrackApp(),
     ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../providers/sheets_export_provider.dart';
 import '../../../theme/ft_design_tokens.dart';
 
@@ -9,6 +10,7 @@ class SheetsExportStatusBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     switch (provider.status) {
       case SheetsExportStatus.idle:
       case SheetsExportStatus.exporting:
@@ -18,18 +20,21 @@ class SheetsExportStatusBanner extends StatelessWidget {
         return _Banner(
           color: const Color(0xFF34D399),
           icon: Icons.check_circle_rounded,
-          title: 'Export complete',
+          title: l10n.exportSuccessTitle,
           message: r == null
-              ? 'Sheet updated.'
-              : 'Wrote ${r.rowsWritten} row(s) — '
-                  '+${r.rowsAdded} added, ${r.rowsUpdated} updated.',
+              ? l10n.exportSuccessTitle
+              : l10n.exportSuccessDetail(
+                  r.rowsWritten,
+                  r.rowsAdded,
+                  r.rowsUpdated,
+                ),
         );
       case SheetsExportStatus.error:
         return _Banner(
           color: const Color(0xFFF87171),
           icon: Icons.error_outline_rounded,
-          title: 'Export failed',
-          message: provider.errorMessage ?? 'Unknown error.',
+          title: l10n.exportErrorTitle,
+          message: provider.errorMessage ?? l10n.exportErrorGeneric,
           onDismiss: provider.resetMessage,
         );
     }

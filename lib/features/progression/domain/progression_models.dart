@@ -1,0 +1,523 @@
+enum ProgressionDomain {
+  steps,
+  nutrition,
+  sleep,
+  activity,
+}
+
+enum ProgressionMetric {
+  steps,
+  calories,
+  proteinGrams,
+  sleepMinutes,
+  activityMinutes,
+}
+
+enum ProgressionPeriodKind {
+  day,
+  week,
+}
+
+enum ProgressionComparator {
+  atLeast,
+  atMost,
+  betweenInclusive,
+  withinRelativeTolerance,
+}
+
+enum ProgressionEvaluationStatus {
+  achieved,
+  missed,
+}
+
+enum ProgressionMissReason {
+  belowMinimum,
+  aboveMaximum,
+  outsideAcceptedRange,
+}
+
+enum ProgressionAchievementType {
+  milestone,
+  streak,
+  mastery,
+}
+
+enum ProgressionAchievementCriterionType {
+  totalXpAtLeast,
+  rewardCountAtLeast,
+  bestStreakAtLeast,
+  totalRuleValueAtLeast,
+}
+
+enum ProgressionQuestType {
+  milestone,
+  streak,
+  mastery,
+}
+
+enum ProgressionQuestCategory {
+  journey,
+  daily,
+  weekly,
+  chain,
+}
+
+enum ProgressionQuestCriterionType {
+  totalXpAtLeast,
+  rewardCountAtLeast,
+  bestStreakAtLeast,
+  totalRuleValueAtLeast,
+  currentPeriodRuleCompletion,
+  currentPeriodRuleSetAtLeast,
+  achievementUnlocked,
+  ruleCompletionsAtLeast,
+  domainRewardCountAtLeast,
+}
+
+enum ProgressionQuestStatus {
+  locked,
+  available,
+  active,
+  completed,
+}
+
+class ProgressionGoalSet {
+  const ProgressionGoalSet({
+    required this.dailySteps,
+    required this.dailyCalories,
+    required this.dailyProteinGrams,
+    required this.sleepMinutes,
+    required this.weeklyActivityMinutes,
+  });
+
+  final int dailySteps;
+  final double dailyCalories;
+  final double dailyProteinGrams;
+  final int sleepMinutes;
+  final int weeklyActivityMinutes;
+}
+
+class ProgressionPeriod {
+  const ProgressionPeriod({
+    required this.kind,
+    required this.start,
+    required this.end,
+  });
+
+  factory ProgressionPeriod.day(DateTime date) {
+    final normalized = progressionDate(date);
+    return ProgressionPeriod(
+      kind: ProgressionPeriodKind.day,
+      start: normalized,
+      end: normalized,
+    );
+  }
+
+  factory ProgressionPeriod.week(DateTime weekStart) {
+    final normalized = startOfProgressionWeek(weekStart);
+    return ProgressionPeriod(
+      kind: ProgressionPeriodKind.week,
+      start: normalized,
+      end: normalized.add(const Duration(days: 6)),
+    );
+  }
+
+  final ProgressionPeriodKind kind;
+  final DateTime start;
+  final DateTime end;
+
+  String get anchorKey => progressionDateKey(start);
+}
+
+class ProgressionSnapshot {
+  const ProgressionSnapshot({
+    required this.period,
+    this.steps = 0,
+    this.calories = 0,
+    this.proteinGrams = 0,
+    this.sleepMinutes = 0,
+    this.activityMinutes = 0,
+  });
+
+  final ProgressionPeriod period;
+  final int steps;
+  final double calories;
+  final double proteinGrams;
+  final int sleepMinutes;
+  final int activityMinutes;
+
+  double metricValue(ProgressionMetric metric) {
+    switch (metric) {
+      case ProgressionMetric.steps:
+        return steps.toDouble();
+      case ProgressionMetric.calories:
+        return calories;
+      case ProgressionMetric.proteinGrams:
+        return proteinGrams;
+      case ProgressionMetric.sleepMinutes:
+        return sleepMinutes.toDouble();
+      case ProgressionMetric.activityMinutes:
+        return activityMinutes.toDouble();
+    }
+  }
+}
+
+class ProgressionRuleDefinition {
+  const ProgressionRuleDefinition({
+    required this.id,
+    required this.version,
+    required this.domain,
+    required this.metric,
+    required this.periodKind,
+    required this.comparator,
+    required this.targetValue,
+    required this.rewardXp,
+    required this.title,
+    required this.description,
+    this.upperTargetValue,
+    this.toleranceRatio = 0,
+  });
+
+  final String id;
+  final String version;
+  final ProgressionDomain domain;
+  final ProgressionMetric metric;
+  final ProgressionPeriodKind periodKind;
+  final ProgressionComparator comparator;
+  final double targetValue;
+  final double? upperTargetValue;
+  final double toleranceRatio;
+  final int rewardXp;
+  final String title;
+  final String description;
+
+  bool supportsPeriod(ProgressionPeriod period) => period.kind == periodKind;
+
+  double get minimumAcceptedValue {
+    switch (comparator) {
+      case ProgressionComparator.atLeast:
+        return targetValue;
+      case ProgressionComparator.atMost:
+        return double.negativeInfinity;
+      case ProgressionComparator.betweenInclusive:
+        return targetValue;
+      case ProgressionComparator.withinRelativeTolerance:
+        return targetValue - (targetValue * toleranceRatio);
+    }
+  }
+
+  double get maximumAcceptedValue {
+    switch (comparator) {
+      case ProgressionComparator.atLeast:
+        return double.infinity;
+      case ProgressionComparator.atMost:
+        return targetValue;
+      case ProgressionComparator.betweenInclusive:
+        return upperTargetValue ?? targetValue;
+      case ProgressionComparator.withinRelativeTolerance:
+        return targetValue + (targetValue * toleranceRatio);
+    }
+  }
+
+  bool isSatisfiedBy(double actualValue) {
+    switch (comparator) {
+      case ProgressionComparator.atLeast:
+        return actualValue >= targetValue;
+      case ProgressionComparator.atMost:
+        return actualValue <= targetValue;
+      case ProgressionComparator.betweenInclusive:
+        return actualValue >= minimumAcceptedValue &&
+            actualValue <= maximumAcceptedValue;
+      case ProgressionComparator.withinRelativeTolerance:
+        return actualValue >= minimumAcceptedValue &&
+            actualValue <= maximumAcceptedValue;
+    }
+  }
+
+  String evaluationKeyFor(ProgressionPeriod period) =>
+      '$id|$version|${period.kind.name}|${period.anchorKey}';
+
+  String rewardKeyFor(ProgressionPeriod period) =>
+      '${evaluationKeyFor(period)}|reward';
+}
+
+class ProgressionEvaluation {
+  const ProgressionEvaluation({
+    required this.evaluationKey,
+    required this.rewardKey,
+    required this.ruleId,
+    required this.ruleVersion,
+    required this.domain,
+    required this.period,
+    required this.comparator,
+    required this.actualValue,
+    required this.targetValue,
+    required this.upperTargetValue,
+    required this.toleranceRatio,
+    required this.progress,
+    required this.achieved,
+    required this.status,
+    required this.missReason,
+    required this.rewardXp,
+    required this.title,
+    required this.description,
+    required this.explanation,
+  });
+
+  final String evaluationKey;
+  final String rewardKey;
+  final String ruleId;
+  final String ruleVersion;
+  final ProgressionDomain domain;
+  final ProgressionPeriod period;
+  final ProgressionComparator comparator;
+  final double actualValue;
+  final double targetValue;
+  final double? upperTargetValue;
+  final double toleranceRatio;
+  final double progress;
+  final bool achieved;
+  final ProgressionEvaluationStatus status;
+  final ProgressionMissReason? missReason;
+  final int rewardXp;
+  final String title;
+  final String description;
+  final String explanation;
+
+  double get deltaFromTarget => actualValue - targetValue;
+
+  int get effectiveRewardXp => achieved ? rewardXp : 0;
+
+  double get shortfallValue =>
+      achieved ? 0 : (targetValue - actualValue).clamp(0, double.infinity);
+
+  double get surplusValue =>
+      achieved ? (actualValue - targetValue).clamp(0, double.infinity) : 0;
+}
+
+class ProgressionRewardGrant {
+  const ProgressionRewardGrant({
+    required this.rewardKey,
+    required this.ruleId,
+    required this.ruleVersion,
+    required this.domain,
+    required this.period,
+    required this.xpGranted,
+    required this.grantedAt,
+  });
+
+  final String rewardKey;
+  final String ruleId;
+  final String ruleVersion;
+  final ProgressionDomain domain;
+  final ProgressionPeriod period;
+  final int xpGranted;
+  final DateTime grantedAt;
+}
+
+class ProgressionProfile {
+  const ProgressionProfile({
+    required this.totalXp,
+    required this.level,
+    required this.levelTitle,
+    required this.levelFloorXp,
+    required this.nextLevelXp,
+    required this.xpIntoLevel,
+  });
+
+  final int totalXp;
+  final int level;
+  final String levelTitle;
+  final int levelFloorXp;
+  final int nextLevelXp;
+  final int xpIntoLevel;
+
+  int get xpToNextLevel => nextLevelXp - totalXp;
+
+  double get levelProgress {
+    final span = nextLevelXp - levelFloorXp;
+    if (span <= 0) return 1;
+    return (xpIntoLevel / span).clamp(0, 1).toDouble();
+  }
+}
+
+class ProgressionLedgerSnapshot {
+  const ProgressionLedgerSnapshot({
+    required this.evaluations,
+    required this.rewardGrants,
+    this.activeQuestIds = const <String>{},
+    this.lastEvaluatedAt,
+  });
+
+  final List<ProgressionEvaluation> evaluations;
+  final List<ProgressionRewardGrant> rewardGrants;
+  final Set<String> activeQuestIds;
+  final DateTime? lastEvaluatedAt;
+}
+
+class ProgressionAchievementDefinition {
+  const ProgressionAchievementDefinition({
+    required this.id,
+    required this.type,
+    required this.criterionType,
+    required this.title,
+    required this.description,
+    required this.targetValue,
+    this.ruleId,
+    this.domain,
+    this.relatedRuleIds = const [],
+  });
+
+  final String id;
+  final ProgressionAchievementType type;
+  final ProgressionAchievementCriterionType criterionType;
+  final String title;
+  final String description;
+  final int targetValue;
+  final String? ruleId;
+  final ProgressionDomain? domain;
+  final List<String> relatedRuleIds;
+}
+
+class ProgressionAchievement {
+  const ProgressionAchievement({
+    required this.id,
+    required this.type,
+    required this.criterionType,
+    required this.title,
+    required this.description,
+    required this.targetValue,
+    required this.currentValue,
+    required this.progress,
+    required this.unlocked,
+    this.unlockedAt,
+    this.ruleId,
+    this.domain,
+    this.relatedRuleIds = const [],
+  });
+
+  final String id;
+  final ProgressionAchievementType type;
+  final ProgressionAchievementCriterionType criterionType;
+  final String title;
+  final String description;
+  final int targetValue;
+  final int currentValue;
+  final double progress;
+  final bool unlocked;
+  final DateTime? unlockedAt;
+  final String? ruleId;
+  final ProgressionDomain? domain;
+  final List<String> relatedRuleIds;
+}
+
+class ProgressionQuestDefinition {
+  const ProgressionQuestDefinition({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.type,
+    required this.category,
+    required this.criterionType,
+    required this.targetValue,
+    this.ruleId,
+    this.domain,
+    this.periodKind,
+    this.achievementId,
+    this.relatedRuleIds = const [],
+    this.minimumLevel,
+    this.minimumTrackedDays,
+    this.prerequisiteQuestIds = const [],
+    this.sortOrder = 0,
+    this.priority = 0,
+  });
+
+  final String id;
+  final String title;
+  final String description;
+  final ProgressionQuestType type;
+  final ProgressionQuestCategory category;
+  final ProgressionQuestCriterionType criterionType;
+  final int targetValue;
+  final String? ruleId;
+  final ProgressionDomain? domain;
+  final ProgressionPeriodKind? periodKind;
+  final String? achievementId;
+  final List<String> relatedRuleIds;
+  final int? minimumLevel;
+  final int? minimumTrackedDays;
+  final List<String> prerequisiteQuestIds;
+  final int sortOrder;
+  final int priority;
+}
+
+class ProgressionQuest {
+  const ProgressionQuest({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.type,
+    required this.category,
+    required this.criterionType,
+    required this.status,
+    required this.targetValue,
+    required this.currentValue,
+    required this.progress,
+    required this.prerequisiteQuestIds,
+    required this.sortOrder,
+    required this.priority,
+    required this.isHighlighted,
+    this.completedAt,
+    this.ruleId,
+    this.domain,
+    this.periodKind,
+    this.achievementId,
+    this.relatedRuleIds = const [],
+    this.minimumLevel,
+    this.minimumTrackedDays,
+  });
+
+  final String id;
+  final String title;
+  final String description;
+  final ProgressionQuestType type;
+  final ProgressionQuestCategory category;
+  final ProgressionQuestCriterionType criterionType;
+  final ProgressionQuestStatus status;
+  final int targetValue;
+  final int currentValue;
+  final double progress;
+  final List<String> prerequisiteQuestIds;
+  final int sortOrder;
+  final int priority;
+  final bool isHighlighted;
+  final DateTime? completedAt;
+  final String? ruleId;
+  final ProgressionDomain? domain;
+  final ProgressionPeriodKind? periodKind;
+  final String? achievementId;
+  final List<String> relatedRuleIds;
+  final int? minimumLevel;
+  final int? minimumTrackedDays;
+
+  bool get isCompleted => status == ProgressionQuestStatus.completed;
+  bool get isLocked => status == ProgressionQuestStatus.locked;
+  bool get isActive => status == ProgressionQuestStatus.active;
+}
+
+DateTime progressionDate(DateTime value) =>
+    DateTime(value.year, value.month, value.day);
+
+DateTime startOfProgressionWeek(DateTime value) {
+  final normalized = progressionDate(value);
+  return normalized
+      .subtract(Duration(days: normalized.weekday - DateTime.monday));
+}
+
+String progressionDateKey(DateTime value) {
+  final normalized = progressionDate(value);
+  final year = normalized.year.toString().padLeft(4, '0');
+  final month = normalized.month.toString().padLeft(2, '0');
+  final day = normalized.day.toString().padLeft(2, '0');
+  return '$year-$month-$day';
+}

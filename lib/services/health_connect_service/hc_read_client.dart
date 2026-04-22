@@ -105,6 +105,15 @@ class HcReadClient {
   }) =>
       _health.requestAuthorization(types, permissions: permissions);
 
+  Future<bool> pluginIsHealthDataHistoryAvailable() =>
+      _health.isHealthDataHistoryAvailable();
+
+  Future<bool> pluginIsHealthDataHistoryAuthorized() =>
+      _health.isHealthDataHistoryAuthorized();
+
+  Future<bool> pluginRequestHealthDataHistoryAuthorization() =>
+      _health.requestHealthDataHistoryAuthorization();
+
   // ─── Query helpers ─────────────────────────────────────────────────────────
 
   Future<List<HealthDataPoint>> fetchData({
@@ -147,8 +156,7 @@ class HcReadClient {
     return points.map(numericValue).fold<double>(0.0, (a, b) => a + b);
   }
 
-  DateTime dayOnly(DateTime date) =>
-      DateTime(date.year, date.month, date.day);
+  DateTime dayOnly(DateTime date) => DateTime(date.year, date.month, date.day);
 
   double numericValue(HealthDataPoint point) {
     final value = point.value;

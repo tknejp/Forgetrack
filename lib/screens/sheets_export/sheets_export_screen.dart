@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/l10n.dart';
 import '../../models/sheet_export_field.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/fitness_provider.dart';
@@ -20,6 +21,7 @@ class SheetsExportScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final auth = context.watch<AuthProvider>();
     final exportProvider = context.watch<SheetsExportProvider>();
 
@@ -28,9 +30,9 @@ class SheetsExportScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: FtTokens.bg,
         elevation: 0,
-        title: const Text(
-          'Export to Google Sheets',
-          style: TextStyle(
+        title: Text(
+          l10n.exportScreenTitle,
+          style: const TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w800,
             color: Colors.white,
@@ -72,10 +74,11 @@ class SheetsExportScreen extends StatelessWidget {
     BuildContext context,
     SheetsExportProvider provider,
   ) async {
+    final l10n = context.l10n;
     final fitness = context.read<FitnessProvider>();
     final nutrition = context.read<KalorickeTabulkyProvider>();
     final src = SheetExportDataSources(fitness: fitness, nutrition: nutrition);
-    await provider.runExport(src);
+    await provider.runExport(src, l10n: l10n);
 
     if (!context.mounted) return;
     final result = provider.lastResult;
@@ -84,8 +87,11 @@ class SheetsExportScreen extends StatelessWidget {
         SnackBar(
           backgroundColor: FtTokens.surface,
           content: Text(
-            'Exported ${result.rowsWritten} row(s) — '
-            '+${result.rowsAdded} added, ${result.rowsUpdated} updated.',
+            l10n.exportSuccessDetail(
+              result.rowsWritten,
+              result.rowsAdded,
+              result.rowsUpdated,
+            ),
             style: const TextStyle(color: FtTokens.onSurface),
           ),
         ),
@@ -101,24 +107,24 @@ class _SignInRequiredCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final auth = context.watch<AuthProvider>();
     return FtPlainCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Sign in with Google',
-            style: TextStyle(
+          Text(
+            l10n.exportSignInTitle,
+            style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w800,
               color: FtTokens.onSurface,
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
-            'Sheets export needs your Google account to write to your '
-            'spreadsheet. Sign in to continue.',
-            style: TextStyle(
+          Text(
+            l10n.exportSignInBody,
+            style: const TextStyle(
               fontSize: 13,
               color: FtTokens.onSurfaceMuted,
               height: 1.4,
@@ -137,7 +143,9 @@ class _SignInRequiredCard extends StatelessWidget {
                 ),
               ),
               onPressed: auth.isLoading ? null : () => auth.signIn(),
-              child: Text(auth.isLoading ? 'Signing in…' : 'Sign in'),
+              child: Text(
+                auth.isLoading ? l10n.exportSignInLoading : l10n.exportSignInButton,
+              ),
             ),
           ),
           if (auth.error != null) ...[
@@ -160,12 +168,12 @@ class _ExplainerText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final l10n = context.l10n;
+    final today = DateFormat('dd.MM.yyyy').format(DateTime.now());
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Text(
-        'Rows are merged by date — existing dates are updated, new ones are '
-        'appended. Today is $today.',
+        l10n.exportExplainer(today),
         style: const TextStyle(
           fontSize: 12,
           color: FtTokens.onSurfaceMuted,

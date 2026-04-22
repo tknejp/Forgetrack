@@ -1,7 +1,9 @@
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/app_log.dart';
 import '../core/constants.dart';
+import '../l10n/app_localizations.dart';
 import '../models/sheet_export_field.dart';
 import 'google_auth_service.dart';
 import 'sheets_export/sheet_merge_engine.dart';
@@ -67,15 +69,13 @@ class SheetsExportService {
 
   // ─── Bootstrap ─────────────────────────────────────────────────────────────
 
-  /// Ensures Sheets API is ready. Returns the spreadsheet id (creating one if
-  /// necessary) and the canonical sheet/tab name.
-  Future<({String spreadsheetId, String sheetName})> _prepare() async {
+  Future<({String spreadsheetId, String sheetName})> _prepare(
+    AppLocalizations l10n,
+  ) async {
     AppLog.sync.info('prepare: requesting auth client');
     final client = await _auth.getAuthClient();
     if (client == null) {
-      throw const SheetsExportException(
-        'Not signed in to Google. Sign in to enable Sheets export.',
-      );
+      throw SheetsExportException(l10n.exportErrorNotSignedIn);
     }
     _sheets.initialize(client);
 
@@ -96,7 +96,8 @@ class SheetsExportService {
       AppLog.sync.info('prepare: creating new export spreadsheet');
       spreadsheetId = await _sheets.createExportSpreadsheet();
       await _saveSpreadsheetId(spreadsheetId);
-      AppLog.sync.success('prepare: spreadsheet created', payload: spreadsheetId);
+      AppLog.sync.success('prepare: spreadsheet created',
+          payload: spreadsheetId);
     }
 
     await _sheets.ensureSheetExists(
@@ -120,45 +121,51 @@ class SheetsExportService {
 
   // ─── Export ────────────────────────────────────────────────────────────────
 
-  /// Builds export rows for [from..to] using [selected] fields and [src],
-  /// merges by date with the existing sheet, and writes the result back.
   Future<SheetsExportResult> export({
     required DateTime from,
     required DateTime to,
     required List<SheetExportField> selected,
     required SheetExportDataSources src,
+    required AppLocalizations l10n,
   }) async {
     if (selected.isEmpty) {
-      throw const SheetsExportException('Select at least one field to export.');
+      throw SheetsExportException(l10n.exportErrorNoFields);
     }
     final start = _dateOnly(from);
     final end = _dateOnly(to);
     if (end.isBefore(start)) {
-      throw const SheetsExportException('Invalid range: "to" is before "from".');
+      throw SheetsExportException(l10n.exportErrorInvalidRange);
     }
 
-    final prep = await _prepare();
+    final prep = await _prepare(l10n);
     final spreadsheetId = prep.spreadsheetId;
     final sheetName = prep.sheetName;
 
+    // Sort selected fields by their declared catalog order to enforce a
+    // stable, predictable column layout regardless of the UI selection order.
+    final orderedSelected = [...selected]
+      ..sort((a, b) => a.order.compareTo(b.order));
+    final dateHeader = l10n.exportHeaderDate;
+    final orderedSelectedHeaders =
+        orderedSelected.map((f) => f.header(l10n)).toList();
+
     AppLog.sync.info(
-      'export: range ${_key(start)} → ${_key(end)} '
-      '(${selected.length} field(s))',
-      payload: selected.map((f) => f.key).join(','),
+      'export: range ${_isoKey(start)} → ${_isoKey(end)} '
+      '(${orderedSelected.length} field(s))',
+      payload: orderedSelected.map((f) => f.key).join(','),
     );
 
-    // Build new rows by date.
+    // Build new rows by ISO date — header keys are localized current headers.
     final newRows = <String, Map<String, Object?>>{};
     for (var d = start; !d.isAfter(end); d = d.add(const Duration(days: 1))) {
-      final key = _key(d);
+      final key = _isoKey(d);
       final row = <String, Object?>{};
-      for (final f in selected) {
-        row[f.header] = f.resolve(d, src);
+      for (final f in orderedSelected) {
+        row[f.header(l10n)] = f.resolve(d, src);
       }
       newRows[key] = row;
     }
 
-    // Read existing sheet content (full reasonable range; A1:ZZ covers 702 cols).
     AppLog.sync.info('export: reading existing sheet "$sheetName"');
     final existing = await _sheets.readRange(
       spreadsheetId: spreadsheetId,
@@ -166,20 +173,37 @@ class SheetsExportService {
     );
     AppLog.sync.debug('export: existing rows=${existing.length}');
 
-    // Merge.
-    final selectedHeaders = selected.map((f) => f.header).toList();
+    // Build legacy → current header rename map across the whole catalog so
+    // the merge engine can migrate sheets created with prior versions.
+    final legacyMap = <String, String>{};
+    for (final f in SheetExportFields.all) {
+      final current = f.header(l10n);
+      for (final legacy in f.legacyHeaders) {
+        if (legacy == current) continue;
+        legacyMap[legacy] = current;
+      }
+    }
+
+    final displayFmt = DateFormat('dd.MM.yyyy');
     final merge = SheetMergeEngine.merge(
       existing: existing,
-      selectedHeaders: selectedHeaders,
-      newRowsByDate: newRows,
+      dateHeader: dateHeader,
+      orderedSelectedHeaders: orderedSelectedHeaders,
+      legacyHeaderMap: legacyMap,
+      newRowsByIsoDate: newRows,
+      formatDateCell: (iso) {
+        final dt = DateTime.tryParse(iso);
+        return dt == null ? iso : displayFmt.format(dt);
+      },
+      parseIsoDate: _parseIsoOrDottedDate,
     );
     AppLog.sync.info(
       'export: merged — totalRows=${merge.rows.length} '
       'added=${merge.addedDates} updated=${merge.updatedDates}',
     );
 
-    // Write back. Clear A1:ZZ first so any rows beyond the new last row are
-    // removed (the row count may shrink if the user changed the range).
+    // Clear A1:ZZ first so any rows beyond the new last row are removed
+    // (the row count may shrink if the user changed the range).
     AppLog.sync.info('export: clearing prior range');
     await _sheets.clearRange(
       spreadsheetId: spreadsheetId,
@@ -210,8 +234,31 @@ class SheetsExportService {
 
   static DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
-  static String _key(DateTime d) =>
+  static String _isoKey(DateTime d) =>
       '${d.year.toString().padLeft(4, '0')}-'
       '${d.month.toString().padLeft(2, '0')}-'
       '${d.day.toString().padLeft(2, '0')}';
+
+  /// Parses both the canonical ISO format (`yyyy-MM-dd`) and the legacy
+  /// dotted display format (`dd.MM.yyyy`). Returns the ISO key, or null when
+  /// the input cannot be interpreted as a date.
+  static String? _parseIsoOrDottedDate(String raw) {
+    final s = raw.trim();
+    if (s.isEmpty) return null;
+    final iso = DateTime.tryParse(s);
+    if (iso != null) return _isoKey(iso);
+    final m = RegExp(r'^(\d{1,2})\.(\d{1,2})\.(\d{4})$').firstMatch(s);
+    if (m != null) {
+      final day = int.parse(m.group(1)!);
+      final month = int.parse(m.group(2)!);
+      final year = int.parse(m.group(3)!);
+      try {
+        final dt = DateTime(year, month, day);
+        if (dt.year == year && dt.month == month && dt.day == day) {
+          return _isoKey(dt);
+        }
+      } catch (_) {}
+    }
+    return null;
+  }
 }

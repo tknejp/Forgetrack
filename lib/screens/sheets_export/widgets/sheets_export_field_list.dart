@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
+import '../../../l10n/l10n.dart';
 import '../../../models/sheet_export_field.dart';
 import '../../../providers/sheets_export_provider.dart';
 import '../../../theme/ft_design_tokens.dart';
@@ -11,6 +13,7 @@ class SheetsExportFieldList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return FtPlainCard(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
       child: Column(
@@ -19,9 +22,9 @@ class SheetsExportFieldList extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'FIELDS TO EXPORT',
-                style: TextStyle(
+              Text(
+                l10n.exportFieldsLabel.toUpperCase(),
+                style: const TextStyle(
                   fontSize: FtTokens.fontSizeMicro,
                   fontWeight: FontWeight.w700,
                   color: FtTokens.onSurfaceMuted,
@@ -31,12 +34,12 @@ class SheetsExportFieldList extends StatelessWidget {
               Row(
                 children: [
                   _LinkButton(
-                    label: 'All',
+                    label: l10n.exportFieldsSelectAll,
                     onTap: provider.selectAllFields,
                   ),
                   const SizedBox(width: 8),
                   _LinkButton(
-                    label: 'None',
+                    label: l10n.exportFieldsSelectNone,
                     onTap: provider.clearAllFields,
                   ),
                 ],
@@ -48,6 +51,7 @@ class SheetsExportFieldList extends StatelessWidget {
             _CategoryGroup(
               category: cat,
               provider: provider,
+              l10n: l10n,
             ),
         ],
       ),
@@ -58,8 +62,13 @@ class SheetsExportFieldList extends StatelessWidget {
 class _CategoryGroup extends StatelessWidget {
   final SheetExportCategory category;
   final SheetsExportProvider provider;
+  final AppLocalizations l10n;
 
-  const _CategoryGroup({required this.category, required this.provider});
+  const _CategoryGroup({
+    required this.category,
+    required this.provider,
+    required this.l10n,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +81,7 @@ class _CategoryGroup extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(0, 12, 0, 4),
           child: Text(
-            SheetExportFields.categoryLabel(category),
+            SheetExportFields.categoryLabel(category, l10n),
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w800,
@@ -84,6 +93,7 @@ class _CategoryGroup extends StatelessWidget {
         for (final f in fields)
           _FieldRow(
             field: f,
+            l10n: l10n,
             checked: provider.selectedKeys.contains(f.key),
             onChanged: (v) => provider.toggleField(f.key, v),
           ),
@@ -94,17 +104,20 @@ class _CategoryGroup extends StatelessWidget {
 
 class _FieldRow extends StatelessWidget {
   final SheetExportField field;
+  final AppLocalizations l10n;
   final bool checked;
   final ValueChanged<bool> onChanged;
 
   const _FieldRow({
     required this.field,
+    required this.l10n,
     required this.checked,
     required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
+    final desc = field.description?.call(l10n);
     return InkWell(
       borderRadius: BorderRadius.circular(8),
       onTap: () => onChanged(!checked),
@@ -131,32 +144,18 @@ class _FieldRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          field.label,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: FtTokens.onSurface,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        field.header,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontFamily: 'monospace',
-                          color: FtTokens.onSurfaceFaint,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    field.label(l10n),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: FtTokens.onSurface,
+                    ),
                   ),
-                  if (field.description != null) ...[
+                  if (desc != null) ...[
                     const SizedBox(height: 2),
                     Text(
-                      field.description!,
+                      desc,
                       style: const TextStyle(
                         fontSize: 11,
                         color: FtTokens.onSurfaceMuted,

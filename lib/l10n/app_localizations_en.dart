@@ -743,4 +743,603 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get exportHeaderSaturatedFat => 'Saturated fat (g)';
+
+  @override
+  String get progScreenEyebrow => 'PROGRESSION PROFILE';
+
+  @override
+  String get progScreenTitle => 'Your long-term journey';
+
+  @override
+  String get progScreenLoadingHint => 'Preparing your legend';
+
+  @override
+  String get progScreenEntryTitle => 'Progression profile';
+
+  @override
+  String progScreenEntrySubtitle(String levelTitle, int totalXp, int unlocked) {
+    return '$levelTitle · $totalXp XP · $unlocked achievements';
+  }
+
+  @override
+  String get progOpenCta => 'Open progression profile';
+
+  @override
+  String get progBadgeTotalXp => 'TOTAL XP';
+
+  @override
+  String progBadgeLevel(int level, String title) {
+    return 'LEVEL $level · $title';
+  }
+
+  @override
+  String progBadgeStreak(int count) {
+    return '$count streak';
+  }
+
+  @override
+  String get progBadgeStreakEmpty => 'No current streak';
+
+  @override
+  String get progBadgeStreakHint => 'Build your first chain';
+
+  @override
+  String progBadgeUnlocked(int count) {
+    return '$count unlocked';
+  }
+
+  @override
+  String get progBadgeAchievements => 'Achievements';
+
+  @override
+  String progBadgeXpRange(int current, int max) {
+    return '$current / $max XP';
+  }
+
+  @override
+  String progLastSynced(String time) {
+    return 'Last synced $time';
+  }
+
+  @override
+  String get progStreakSectionLabel => 'Streaks';
+
+  @override
+  String get progStreakSectionCaption =>
+      'Current and best streaks across your domains.';
+
+  @override
+  String get progStreakCurrentLabel => 'CURRENT STREAK';
+
+  @override
+  String get progStreakBestLabel => 'BEST STREAK';
+
+  @override
+  String get progStreakDaysSuffix => 'days';
+
+  @override
+  String get progActiveQuestsLabel => 'Active quests';
+
+  @override
+  String progShowAllCount(int count) {
+    return 'Show all ($count) →';
+  }
+
+  @override
+  String get progMiniStatTotalXp => 'Total XP';
+
+  @override
+  String get progMiniStatToNext => 'To next';
+
+  @override
+  String get progMiniStatAchievements => 'Achievements';
+
+  @override
+  String get progMiniStatQuests => 'Quests';
+
+  @override
+  String get progSummarySectionLabel => 'Progression Summary';
+
+  @override
+  String get progSummaryCurrentStreak => 'Current Streak';
+
+  @override
+  String get progSummaryBestStreak => 'Best Streak';
+
+  @override
+  String get progSummaryCompletedQuests => 'Completed Quests';
+
+  @override
+  String get progSummaryAchievements => 'Achievements';
+
+  @override
+  String get progSummaryNoActiveChain => 'No active chain yet';
+
+  @override
+  String get progSummaryBuildConsistency => 'Build consistency';
+
+  @override
+  String get progQuestsSectionLabel => 'Quests';
+
+  @override
+  String get progQuestsSectionCaption =>
+      'Active quests first, completed ones below.';
+
+  @override
+  String get progQuestsActiveHeader => 'ACTIVE QUESTS';
+
+  @override
+  String get progQuestsCompletedHeader => 'COMPLETED QUESTS';
+
+  @override
+  String get progQuestsEmptyActiveTitle => 'No active quests right now.';
+
+  @override
+  String get progQuestsEmptyActiveCaption =>
+      'You have cleared the current static quest catalog.';
+
+  @override
+  String get progQuestsEmptyCompletedTitle => 'No completed quests yet.';
+
+  @override
+  String get progQuestsEmptyCompletedCaption =>
+      'Your finished milestones will appear here.';
+
+  @override
+  String get progQuestStatusActive => 'Active';
+
+  @override
+  String get progQuestStatusCompleted => 'Completed';
+
+  @override
+  String progQuestCompletedOn(String time) {
+    return 'Completed $time';
+  }
+
+  @override
+  String progProgressRatio(int current, int target) {
+    return '$current / $target';
+  }
+
+  @override
+  String progPercent(int value) {
+    return '$value%';
+  }
+
+  @override
+  String get progAchievementsSectionLabel => 'Achievements';
+
+  @override
+  String get progAchievementsSectionCaption =>
+      'Unlocked badges and current progress.';
+
+  @override
+  String get progAchievementsUnlockedHeader => 'UNLOCKED';
+
+  @override
+  String get progAchievementsInProgressHeader => 'IN PROGRESS';
+
+  @override
+  String get progAchievementsEmptyUnlockedTitle =>
+      'No achievements unlocked yet.';
+
+  @override
+  String get progAchievementsEmptyUnlockedCaption =>
+      'Your earned badges will light up here.';
+
+  @override
+  String get progAchievementsEmptyInProgressTitle =>
+      'Everything in the current catalog is unlocked.';
+
+  @override
+  String get progAchievementsEmptyInProgressCaption =>
+      'Add more achievements to expand the journey.';
+
+  @override
+  String get progAchievementStatusUnlocked => 'Unlocked';
+
+  @override
+  String get progAchievementStatusInProgress => 'In progress';
+
+  @override
+  String get progRewardsSectionLabel => 'Recent Rewards';
+
+  @override
+  String get progRewardsSectionCaption =>
+      'Latest XP grants earned across your domains.';
+
+  @override
+  String get progRewardsEmptyTitle => 'No rewards granted yet.';
+
+  @override
+  String get progRewardsEmptyCaption =>
+      'Completed goals will start filling your journal.';
+
+  @override
+  String progRewardSubtitle(String domain, int xp) {
+    return '$domain · +$xp XP';
+  }
+
+  @override
+  String get progDomainSteps => 'Steps';
+
+  @override
+  String get progDomainNutrition => 'Nutrition';
+
+  @override
+  String get progDomainSleep => 'Sleep';
+
+  @override
+  String get progDomainActivity => 'Activity';
+
+  @override
+  String get progRuleDailySteps => 'Daily Steps';
+
+  @override
+  String get progRuleDailyCalories => 'Calorie Target';
+
+  @override
+  String get progRuleDailyProtein => 'Protein Target';
+
+  @override
+  String get progRuleDailySleep => 'Sleep Target';
+
+  @override
+  String get progRuleWeeklyActivity => 'Weekly Activity';
+
+  @override
+  String get progQuestEarnFirstRewardTitle => 'Earn First Reward';
+
+  @override
+  String get progQuestEarnFirstRewardDesc =>
+      'Earn your first progression reward.';
+
+  @override
+  String get progQuestDailyTwoGoalsTodayTitle => 'Double Win';
+
+  @override
+  String get progQuestDailyTwoGoalsTodayDesc =>
+      'Complete any 2 daily goals in the current day.';
+
+  @override
+  String get progQuestDailyTripleWinTodayTitle => 'Triple Win';
+
+  @override
+  String get progQuestDailyTripleWinTodayDesc =>
+      'Complete any 3 daily goals in the current day.';
+
+  @override
+  String get progQuestDailyFourPillarsTodayTitle => 'Four Pillars';
+
+  @override
+  String get progQuestDailyFourPillarsTodayDesc =>
+      'Complete all 4 daily goals in the current day.';
+
+  @override
+  String get progQuestDailyNutritionComboTodayTitle => 'Nutrition Combo';
+
+  @override
+  String get progQuestDailyNutritionComboTodayDesc =>
+      'Complete both calorie and protein goals in the current day.';
+
+  @override
+  String get progQuestDailyRecoveryFocusTodayTitle => 'Recovery Focus';
+
+  @override
+  String get progQuestDailyRecoveryFocusTodayDesc =>
+      'Complete both steps and sleep goals in the current day.';
+
+  @override
+  String get progQuestDailyStepsTodayTitle => 'Today\'s Step Goal';
+
+  @override
+  String get progQuestDailyStepsTodayDesc =>
+      'Complete the daily steps rule in the current day.';
+
+  @override
+  String get progQuestDailyCaloriesTodayTitle => 'Today\'s Calorie Goal';
+
+  @override
+  String get progQuestDailyCaloriesTodayDesc =>
+      'Complete the daily calorie rule in the current day.';
+
+  @override
+  String get progQuestDailyProteinTodayTitle => 'Today\'s Protein Goal';
+
+  @override
+  String get progQuestDailyProteinTodayDesc =>
+      'Complete the daily protein rule in the current day.';
+
+  @override
+  String get progQuestDailySleepTodayTitle => 'Today\'s Sleep Goal';
+
+  @override
+  String get progQuestDailySleepTodayDesc =>
+      'Complete the daily sleep rule in the current day.';
+
+  @override
+  String get progQuestReach500XpTitle => 'Reach 500 XP';
+
+  @override
+  String get progQuestReach500XpDesc => 'Accumulate at least 500 XP.';
+
+  @override
+  String get progQuestReach2000XpTitle => 'Reach 2,000 XP';
+
+  @override
+  String get progQuestReach2000XpDesc => 'Accumulate at least 2,000 XP.';
+
+  @override
+  String get progQuestReach5000XpTitle => 'Reach 5,000 XP';
+
+  @override
+  String get progQuestReach5000XpDesc => 'Accumulate at least 5,000 XP.';
+
+  @override
+  String get progQuestEarn25RewardsTitle => 'Earn 25 Rewards';
+
+  @override
+  String get progQuestEarn25RewardsDesc =>
+      'Collect 25 progression rewards in total.';
+
+  @override
+  String get progQuestEarn100RewardsTitle => 'Earn 100 Rewards';
+
+  @override
+  String get progQuestEarn100RewardsDesc =>
+      'Collect 100 progression rewards in total.';
+
+  @override
+  String get progQuestStepsStreak3Title => 'Steps Streak';
+
+  @override
+  String get progQuestStepsStreak3Desc =>
+      'Complete the daily steps rule 3 periods in a row.';
+
+  @override
+  String get progQuestNutritionRewards5Title => 'Nutrition Rhythm';
+
+  @override
+  String get progQuestNutritionRewards5Desc => 'Earn 5 nutrition rewards.';
+
+  @override
+  String get progQuestNutritionRewards25Title => 'Nutrition Mastery';
+
+  @override
+  String get progQuestNutritionRewards25Desc => 'Earn 25 nutrition rewards.';
+
+  @override
+  String get progQuestTotalSteps100kTitle => 'Walk 100K Steps';
+
+  @override
+  String get progQuestTotalSteps100kDesc => 'Accumulate 100,000 total steps.';
+
+  @override
+  String get progQuestTotalSteps500kTitle => 'Walk 500K Steps';
+
+  @override
+  String get progQuestTotalSteps500kDesc => 'Accumulate 500,000 total steps.';
+
+  @override
+  String get progQuestWeeklyActivityOnceTitle => 'Weekly Activity';
+
+  @override
+  String get progQuestWeeklyActivityOnceDesc =>
+      'Complete the weekly activity rule once.';
+
+  @override
+  String get progQuestWeeklyActivity4Title => 'Weekly Activity Momentum';
+
+  @override
+  String get progQuestWeeklyActivity4Desc =>
+      'Complete the weekly activity rule 4 times.';
+
+  @override
+  String get progQuestWeeklyActivity12Title => 'Weekly Activity Legend';
+
+  @override
+  String get progQuestWeeklyActivity12Desc =>
+      'Complete the weekly activity rule 12 times.';
+
+  @override
+  String get progQuestUnlockStepChainTitle => 'Unlock Step Chain';
+
+  @override
+  String get progQuestUnlockStepChainDesc =>
+      'Unlock the Step Chain achievement.';
+
+  @override
+  String get progQuestStepsStreak7Title => 'Step Discipline';
+
+  @override
+  String get progQuestStepsStreak7Desc =>
+      'Complete the daily steps rule 7 periods in a row.';
+
+  @override
+  String get progQuestStepsStreak14Title => 'Step Guardian';
+
+  @override
+  String get progQuestStepsStreak14Desc =>
+      'Complete the daily steps rule 14 periods in a row.';
+
+  @override
+  String get progAchievementFirstRewardTitle => 'First Reward';
+
+  @override
+  String get progAchievementFirstRewardDesc =>
+      'Earn your first progression reward.';
+
+  @override
+  String get progAchievementRewardHunter25Title => 'Reward Hunter';
+
+  @override
+  String get progAchievementRewardHunter25Desc =>
+      'Earn 25 progression rewards.';
+
+  @override
+  String get progAchievementRewardHunter100Title => 'Reward Legend';
+
+  @override
+  String get progAchievementRewardHunter100Desc =>
+      'Earn 100 progression rewards.';
+
+  @override
+  String get progAchievementPathfinderTitle => 'Pathfinder';
+
+  @override
+  String get progAchievementPathfinderDesc =>
+      'Reach level 5 through earned XP.';
+
+  @override
+  String get progAchievementForgeKnight5000Title => 'Forge Knight';
+
+  @override
+  String get progAchievementForgeKnight5000Desc => 'Accumulate 5,000 XP.';
+
+  @override
+  String get progAchievementLivingLegend15000Title => 'Living Legend';
+
+  @override
+  String get progAchievementLivingLegend15000Desc => 'Accumulate 15,000 XP.';
+
+  @override
+  String get progAchievementSteps100kTitle => 'Centurion Walker';
+
+  @override
+  String get progAchievementSteps100kDesc => 'Accumulate 100,000 total steps.';
+
+  @override
+  String get progAchievementSteps500kTitle => 'Half-Million March';
+
+  @override
+  String get progAchievementSteps500kDesc => 'Accumulate 500,000 total steps.';
+
+  @override
+  String get progAchievementSteps1000000Title => 'Million Step Myth';
+
+  @override
+  String get progAchievementSteps1000000Desc =>
+      'Accumulate 1,000,000 total steps.';
+
+  @override
+  String get progAchievementStepChainTitle => 'Step Chain';
+
+  @override
+  String get progAchievementStepChainDesc =>
+      'Hit the daily steps rule for 3 periods in a row.';
+
+  @override
+  String get progAchievementStepDisciplineTitle => 'Step Discipline';
+
+  @override
+  String get progAchievementStepDisciplineDesc =>
+      'Hit the daily steps rule for 7 periods in a row.';
+
+  @override
+  String get progAchievementStepSovereignTitle => 'Step Sovereign';
+
+  @override
+  String get progAchievementStepSovereignDesc =>
+      'Hit the daily steps rule for 30 periods in a row.';
+
+  @override
+  String get progAchievementBalancedRhythmTitle => 'Balanced Rhythm';
+
+  @override
+  String get progAchievementBalancedRhythmDesc =>
+      'Earn at least one nutrition reward for 3 periods in a row.';
+
+  @override
+  String get progAchievementNutritionRewards25Title => 'Macro Maestro';
+
+  @override
+  String get progAchievementNutritionRewards25Desc =>
+      'Earn 25 nutrition rewards.';
+
+  @override
+  String get progAchievementWeeklyWarriorTitle => 'Weekly Warrior';
+
+  @override
+  String get progAchievementWeeklyWarriorDesc =>
+      'Complete the weekly activity rule at least once.';
+
+  @override
+  String get progAchievementWeeklyActivity4Title => 'Activity Vanguard';
+
+  @override
+  String get progAchievementWeeklyActivity4Desc =>
+      'Complete the weekly activity rule 4 times.';
+
+  @override
+  String get progAchievementWeeklyActivity12Title => 'Seasoned Mover';
+
+  @override
+  String get progAchievementWeeklyActivity12Desc =>
+      'Complete the weekly activity rule 12 times.';
+
+  @override
+  String get progQuestCriterionTotalXp => 'Based on total XP';
+
+  @override
+  String progQuestCriterionRewardCountWithRule(String rule) {
+    return 'Based on $rule';
+  }
+
+  @override
+  String get progQuestCriterionRewardCount => 'Based on reward count';
+
+  @override
+  String progQuestCriterionStreakWithRule(String rule) {
+    return 'Based on $rule streak';
+  }
+
+  @override
+  String progQuestCriterionStreakWithDomain(String domain) {
+    return 'Based on $domain streak';
+  }
+
+  @override
+  String get progQuestCriterionStreakGeneric => 'Based on streak consistency';
+
+  @override
+  String progQuestCriterionTotalRuleValueWithRule(String rule) {
+    return 'Based on total $rule';
+  }
+
+  @override
+  String get progQuestCriterionTotalRuleValueGeneric =>
+      'Based on accumulated total';
+
+  @override
+  String progQuestCriterionCurrentPeriodRule(String rule) {
+    return 'For the current period: $rule';
+  }
+
+  @override
+  String get progQuestCriterionCurrentPeriodGeneric => 'For the current period';
+
+  @override
+  String get progQuestCriterionCurrentPeriodRuleSet =>
+      'For a current-period combo';
+
+  @override
+  String get progQuestCriterionAchievement => 'Based on achievement unlock';
+
+  @override
+  String progQuestCriterionCompletionsWithRule(String rule) {
+    return 'Based on $rule completions';
+  }
+
+  @override
+  String get progQuestCriterionCompletionsGeneric =>
+      'Based on rule completions';
+
+  @override
+  String progQuestCriterionDomainRewardsWithDomain(String domain) {
+    return 'Based on $domain rewards';
+  }
+
+  @override
+  String get progQuestCriterionDomainRewardsGeneric =>
+      'Based on domain rewards';
 }

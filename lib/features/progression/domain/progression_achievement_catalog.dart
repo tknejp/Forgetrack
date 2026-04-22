@@ -1,0 +1,161 @@
+import 'progression_models.dart';
+
+class ProgressionAchievementCatalog {
+  const ProgressionAchievementCatalog();
+
+  List<ProgressionAchievementDefinition> build() {
+    return const [
+      ProgressionAchievementDefinition(
+        id: 'first_reward',
+        type: ProgressionAchievementType.milestone,
+        criterionType: ProgressionAchievementCriterionType.rewardCountAtLeast,
+        title: 'First Reward',
+        description: 'Earn your first progression reward.',
+        targetValue: 1,
+      ),
+      ProgressionAchievementDefinition(
+        id: 'reward_hunter_25',
+        type: ProgressionAchievementType.mastery,
+        criterionType: ProgressionAchievementCriterionType.rewardCountAtLeast,
+        title: 'Reward Hunter',
+        description: 'Earn 25 progression rewards.',
+        targetValue: 25,
+      ),
+      ProgressionAchievementDefinition(
+        id: 'reward_hunter_100',
+        type: ProgressionAchievementType.mastery,
+        criterionType: ProgressionAchievementCriterionType.rewardCountAtLeast,
+        title: 'Reward Legend',
+        description: 'Earn 100 progression rewards.',
+        targetValue: 100,
+      ),
+      ProgressionAchievementDefinition(
+        id: 'pathfinder_level_5',
+        type: ProgressionAchievementType.milestone,
+        criterionType: ProgressionAchievementCriterionType.totalXpAtLeast,
+        title: 'Pathfinder',
+        description: 'Reach level 5 through earned XP.',
+        targetValue: 1000,
+      ),
+      ProgressionAchievementDefinition(
+        id: 'forge_knight_xp_5000',
+        type: ProgressionAchievementType.milestone,
+        criterionType: ProgressionAchievementCriterionType.totalXpAtLeast,
+        title: 'Forge Knight',
+        description: 'Accumulate 5,000 XP.',
+        targetValue: 5000,
+      ),
+      ProgressionAchievementDefinition(
+        id: 'living_legend_xp_15000',
+        type: ProgressionAchievementType.milestone,
+        criterionType: ProgressionAchievementCriterionType.totalXpAtLeast,
+        title: 'Living Legend',
+        description: 'Accumulate 15,000 XP.',
+        targetValue: 15000,
+      ),
+      ProgressionAchievementDefinition(
+        id: 'steps_total_100k',
+        type: ProgressionAchievementType.mastery,
+        criterionType:
+            ProgressionAchievementCriterionType.totalRuleValueAtLeast,
+        title: 'Centurion Walker',
+        description: 'Accumulate 100,000 total steps.',
+        targetValue: 100000,
+        ruleId: 'daily_steps',
+      ),
+      ProgressionAchievementDefinition(
+        id: 'steps_total_500k',
+        type: ProgressionAchievementType.mastery,
+        criterionType:
+            ProgressionAchievementCriterionType.totalRuleValueAtLeast,
+        title: 'Half-Million March',
+        description: 'Accumulate 500,000 total steps.',
+        targetValue: 500000,
+        ruleId: 'daily_steps',
+      ),
+      ProgressionAchievementDefinition(
+        id: 'steps_total_1000000',
+        type: ProgressionAchievementType.mastery,
+        criterionType:
+            ProgressionAchievementCriterionType.totalRuleValueAtLeast,
+        title: 'Million Step Myth',
+        description: 'Accumulate 1,000,000 total steps.',
+        targetValue: 1000000,
+        ruleId: 'daily_steps',
+      ),
+      ProgressionAchievementDefinition(
+        id: 'steps_streak_3',
+        type: ProgressionAchievementType.streak,
+        criterionType: ProgressionAchievementCriterionType.bestStreakAtLeast,
+        title: 'Step Chain',
+        description: 'Hit the daily steps rule for 3 periods in a row.',
+        targetValue: 3,
+        ruleId: 'daily_steps',
+      ),
+      ProgressionAchievementDefinition(
+        id: 'steps_streak_7',
+        type: ProgressionAchievementType.streak,
+        criterionType: ProgressionAchievementCriterionType.bestStreakAtLeast,
+        title: 'Step Discipline',
+        description: 'Hit the daily steps rule for 7 periods in a row.',
+        targetValue: 7,
+        ruleId: 'daily_steps',
+      ),
+      ProgressionAchievementDefinition(
+        id: 'steps_streak_30',
+        type: ProgressionAchievementType.streak,
+        criterionType: ProgressionAchievementCriterionType.bestStreakAtLeast,
+        title: 'Step Sovereign',
+        description: 'Hit the daily steps rule for 30 periods in a row.',
+        targetValue: 30,
+        ruleId: 'daily_steps',
+      ),
+      ProgressionAchievementDefinition(
+        id: 'nutrition_streak_3',
+        type: ProgressionAchievementType.streak,
+        criterionType: ProgressionAchievementCriterionType.bestStreakAtLeast,
+        title: 'Balanced Rhythm',
+        description:
+            'Earn at least one nutrition reward for 3 periods in a row.',
+        targetValue: 3,
+        domain: ProgressionDomain.nutrition,
+      ),
+      ProgressionAchievementDefinition(
+        id: 'nutrition_rewards_25',
+        type: ProgressionAchievementType.mastery,
+        criterionType: ProgressionAchievementCriterionType.rewardCountAtLeast,
+        title: 'Macro Maestro',
+        description: 'Earn 25 nutrition rewards.',
+        targetValue: 25,
+        domain: ProgressionDomain.nutrition,
+      ),
+      ProgressionAchievementDefinition(
+        id: 'weekly_activity_mastery',
+        type: ProgressionAchievementType.mastery,
+        criterionType: ProgressionAchievementCriterionType.rewardCountAtLeast,
+        title: 'Weekly Warrior',
+        description: 'Complete the weekly activity rule at least once.',
+        targetValue: 1,
+        ruleId: 'weekly_activity',
+      ),
+      ProgressionAchievementDefinition(
+        id: 'weekly_activity_4',
+        type: ProgressionAchievementType.mastery,
+        criterionType: ProgressionAchievementCriterionType.rewardCountAtLeast,
+        title: 'Activity Vanguard',
+        description: 'Complete the weekly activity rule 4 times.',
+        targetValue: 4,
+        ruleId: 'weekly_activity',
+      ),
+      ProgressionAchievementDefinition(
+        id: 'weekly_activity_12',
+        type: ProgressionAchievementType.mastery,
+        criterionType: ProgressionAchievementCriterionType.rewardCountAtLeast,
+        title: 'Seasoned Mover',
+        description: 'Complete the weekly activity rule 12 times.',
+        targetValue: 12,
+        ruleId: 'weekly_activity',
+      ),
+    ];
+  }
+}

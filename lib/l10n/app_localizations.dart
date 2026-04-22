@@ -1495,6 +1495,1038 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Saturated fat (g)'**
   String get exportHeaderSaturatedFat;
+
+  /// No description provided for @progScreenEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'PROGRESSION PROFILE'**
+  String get progScreenEyebrow;
+
+  /// No description provided for @progScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your long-term journey'**
+  String get progScreenTitle;
+
+  /// No description provided for @progScreenLoadingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing your legend'**
+  String get progScreenLoadingHint;
+
+  /// No description provided for @progScreenEntryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Progression profile'**
+  String get progScreenEntryTitle;
+
+  /// No description provided for @progScreenEntrySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{levelTitle} · {totalXp} XP · {unlocked} achievements'**
+  String progScreenEntrySubtitle(String levelTitle, int totalXp, int unlocked);
+
+  /// No description provided for @progOpenCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Open progression profile'**
+  String get progOpenCta;
+
+  /// No description provided for @progBadgeTotalXp.
+  ///
+  /// In en, this message translates to:
+  /// **'TOTAL XP'**
+  String get progBadgeTotalXp;
+
+  /// No description provided for @progBadgeLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'LEVEL {level} · {title}'**
+  String progBadgeLevel(int level, String title);
+
+  /// No description provided for @progBadgeStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} streak'**
+  String progBadgeStreak(int count);
+
+  /// No description provided for @progBadgeStreakEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No current streak'**
+  String get progBadgeStreakEmpty;
+
+  /// No description provided for @progBadgeStreakHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Build your first chain'**
+  String get progBadgeStreakHint;
+
+  /// No description provided for @progBadgeUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} unlocked'**
+  String progBadgeUnlocked(int count);
+
+  /// No description provided for @progBadgeAchievements.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievements'**
+  String get progBadgeAchievements;
+
+  /// No description provided for @progBadgeXpRange.
+  ///
+  /// In en, this message translates to:
+  /// **'{current} / {max} XP'**
+  String progBadgeXpRange(int current, int max);
+
+  /// No description provided for @progLastSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Last synced {time}'**
+  String progLastSynced(String time);
+
+  /// No description provided for @progStreakSectionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Streaks'**
+  String get progStreakSectionLabel;
+
+  /// No description provided for @progStreakSectionCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Current and best streaks across your domains.'**
+  String get progStreakSectionCaption;
+
+  /// No description provided for @progStreakCurrentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'CURRENT STREAK'**
+  String get progStreakCurrentLabel;
+
+  /// No description provided for @progStreakBestLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'BEST STREAK'**
+  String get progStreakBestLabel;
+
+  /// No description provided for @progStreakDaysSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'days'**
+  String get progStreakDaysSuffix;
+
+  /// No description provided for @progActiveQuestsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Active quests'**
+  String get progActiveQuestsLabel;
+
+  /// No description provided for @progShowAllCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all ({count}) →'**
+  String progShowAllCount(int count);
+
+  /// No description provided for @progMiniStatTotalXp.
+  ///
+  /// In en, this message translates to:
+  /// **'Total XP'**
+  String get progMiniStatTotalXp;
+
+  /// No description provided for @progMiniStatToNext.
+  ///
+  /// In en, this message translates to:
+  /// **'To next'**
+  String get progMiniStatToNext;
+
+  /// No description provided for @progMiniStatAchievements.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievements'**
+  String get progMiniStatAchievements;
+
+  /// No description provided for @progMiniStatQuests.
+  ///
+  /// In en, this message translates to:
+  /// **'Quests'**
+  String get progMiniStatQuests;
+
+  /// No description provided for @progSummarySectionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Progression Summary'**
+  String get progSummarySectionLabel;
+
+  /// No description provided for @progSummaryCurrentStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Streak'**
+  String get progSummaryCurrentStreak;
+
+  /// No description provided for @progSummaryBestStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Best Streak'**
+  String get progSummaryBestStreak;
+
+  /// No description provided for @progSummaryCompletedQuests.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed Quests'**
+  String get progSummaryCompletedQuests;
+
+  /// No description provided for @progSummaryAchievements.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievements'**
+  String get progSummaryAchievements;
+
+  /// No description provided for @progSummaryNoActiveChain.
+  ///
+  /// In en, this message translates to:
+  /// **'No active chain yet'**
+  String get progSummaryNoActiveChain;
+
+  /// No description provided for @progSummaryBuildConsistency.
+  ///
+  /// In en, this message translates to:
+  /// **'Build consistency'**
+  String get progSummaryBuildConsistency;
+
+  /// No description provided for @progQuestsSectionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Quests'**
+  String get progQuestsSectionLabel;
+
+  /// No description provided for @progQuestsSectionCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Active quests first, completed ones below.'**
+  String get progQuestsSectionCaption;
+
+  /// No description provided for @progQuestsActiveHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'ACTIVE QUESTS'**
+  String get progQuestsActiveHeader;
+
+  /// No description provided for @progQuestsCompletedHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'COMPLETED QUESTS'**
+  String get progQuestsCompletedHeader;
+
+  /// No description provided for @progQuestsEmptyActiveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No active quests right now.'**
+  String get progQuestsEmptyActiveTitle;
+
+  /// No description provided for @progQuestsEmptyActiveCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'You have cleared the current static quest catalog.'**
+  String get progQuestsEmptyActiveCaption;
+
+  /// No description provided for @progQuestsEmptyCompletedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No completed quests yet.'**
+  String get progQuestsEmptyCompletedTitle;
+
+  /// No description provided for @progQuestsEmptyCompletedCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Your finished milestones will appear here.'**
+  String get progQuestsEmptyCompletedCaption;
+
+  /// No description provided for @progQuestStatusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get progQuestStatusActive;
+
+  /// No description provided for @progQuestStatusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get progQuestStatusCompleted;
+
+  /// No description provided for @progQuestCompletedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed {time}'**
+  String progQuestCompletedOn(String time);
+
+  /// No description provided for @progProgressRatio.
+  ///
+  /// In en, this message translates to:
+  /// **'{current} / {target}'**
+  String progProgressRatio(int current, int target);
+
+  /// No description provided for @progPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{value}%'**
+  String progPercent(int value);
+
+  /// No description provided for @progAchievementsSectionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievements'**
+  String get progAchievementsSectionLabel;
+
+  /// No description provided for @progAchievementsSectionCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocked badges and current progress.'**
+  String get progAchievementsSectionCaption;
+
+  /// No description provided for @progAchievementsUnlockedHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'UNLOCKED'**
+  String get progAchievementsUnlockedHeader;
+
+  /// No description provided for @progAchievementsInProgressHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'IN PROGRESS'**
+  String get progAchievementsInProgressHeader;
+
+  /// No description provided for @progAchievementsEmptyUnlockedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No achievements unlocked yet.'**
+  String get progAchievementsEmptyUnlockedTitle;
+
+  /// No description provided for @progAchievementsEmptyUnlockedCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Your earned badges will light up here.'**
+  String get progAchievementsEmptyUnlockedCaption;
+
+  /// No description provided for @progAchievementsEmptyInProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything in the current catalog is unlocked.'**
+  String get progAchievementsEmptyInProgressTitle;
+
+  /// No description provided for @progAchievementsEmptyInProgressCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Add more achievements to expand the journey.'**
+  String get progAchievementsEmptyInProgressCaption;
+
+  /// No description provided for @progAchievementStatusUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocked'**
+  String get progAchievementStatusUnlocked;
+
+  /// No description provided for @progAchievementStatusInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get progAchievementStatusInProgress;
+
+  /// No description provided for @progRewardsSectionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Rewards'**
+  String get progRewardsSectionLabel;
+
+  /// No description provided for @progRewardsSectionCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest XP grants earned across your domains.'**
+  String get progRewardsSectionCaption;
+
+  /// No description provided for @progRewardsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No rewards granted yet.'**
+  String get progRewardsEmptyTitle;
+
+  /// No description provided for @progRewardsEmptyCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed goals will start filling your journal.'**
+  String get progRewardsEmptyCaption;
+
+  /// No description provided for @progRewardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{domain} · +{xp} XP'**
+  String progRewardSubtitle(String domain, int xp);
+
+  /// No description provided for @progDomainSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps'**
+  String get progDomainSteps;
+
+  /// No description provided for @progDomainNutrition.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition'**
+  String get progDomainNutrition;
+
+  /// No description provided for @progDomainSleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep'**
+  String get progDomainSleep;
+
+  /// No description provided for @progDomainActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get progDomainActivity;
+
+  /// No description provided for @progRuleDailySteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Steps'**
+  String get progRuleDailySteps;
+
+  /// No description provided for @progRuleDailyCalories.
+  ///
+  /// In en, this message translates to:
+  /// **'Calorie Target'**
+  String get progRuleDailyCalories;
+
+  /// No description provided for @progRuleDailyProtein.
+  ///
+  /// In en, this message translates to:
+  /// **'Protein Target'**
+  String get progRuleDailyProtein;
+
+  /// No description provided for @progRuleDailySleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep Target'**
+  String get progRuleDailySleep;
+
+  /// No description provided for @progRuleWeeklyActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Activity'**
+  String get progRuleWeeklyActivity;
+
+  /// No description provided for @progQuestEarnFirstRewardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn First Reward'**
+  String get progQuestEarnFirstRewardTitle;
+
+  /// No description provided for @progQuestEarnFirstRewardDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn your first progression reward.'**
+  String get progQuestEarnFirstRewardDesc;
+
+  /// No description provided for @progQuestDailyTwoGoalsTodayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Double Win'**
+  String get progQuestDailyTwoGoalsTodayTitle;
+
+  /// No description provided for @progQuestDailyTwoGoalsTodayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete any 2 daily goals in the current day.'**
+  String get progQuestDailyTwoGoalsTodayDesc;
+
+  /// No description provided for @progQuestDailyTripleWinTodayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Triple Win'**
+  String get progQuestDailyTripleWinTodayTitle;
+
+  /// No description provided for @progQuestDailyTripleWinTodayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete any 3 daily goals in the current day.'**
+  String get progQuestDailyTripleWinTodayDesc;
+
+  /// No description provided for @progQuestDailyFourPillarsTodayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Four Pillars'**
+  String get progQuestDailyFourPillarsTodayTitle;
+
+  /// No description provided for @progQuestDailyFourPillarsTodayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete all 4 daily goals in the current day.'**
+  String get progQuestDailyFourPillarsTodayDesc;
+
+  /// No description provided for @progQuestDailyNutritionComboTodayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition Combo'**
+  String get progQuestDailyNutritionComboTodayTitle;
+
+  /// No description provided for @progQuestDailyNutritionComboTodayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete both calorie and protein goals in the current day.'**
+  String get progQuestDailyNutritionComboTodayDesc;
+
+  /// No description provided for @progQuestDailyRecoveryFocusTodayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery Focus'**
+  String get progQuestDailyRecoveryFocusTodayTitle;
+
+  /// No description provided for @progQuestDailyRecoveryFocusTodayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete both steps and sleep goals in the current day.'**
+  String get progQuestDailyRecoveryFocusTodayDesc;
+
+  /// No description provided for @progQuestDailyStepsTodayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Step Goal'**
+  String get progQuestDailyStepsTodayTitle;
+
+  /// No description provided for @progQuestDailyStepsTodayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the daily steps rule in the current day.'**
+  String get progQuestDailyStepsTodayDesc;
+
+  /// No description provided for @progQuestDailyCaloriesTodayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Calorie Goal'**
+  String get progQuestDailyCaloriesTodayTitle;
+
+  /// No description provided for @progQuestDailyCaloriesTodayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the daily calorie rule in the current day.'**
+  String get progQuestDailyCaloriesTodayDesc;
+
+  /// No description provided for @progQuestDailyProteinTodayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Protein Goal'**
+  String get progQuestDailyProteinTodayTitle;
+
+  /// No description provided for @progQuestDailyProteinTodayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the daily protein rule in the current day.'**
+  String get progQuestDailyProteinTodayDesc;
+
+  /// No description provided for @progQuestDailySleepTodayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Sleep Goal'**
+  String get progQuestDailySleepTodayTitle;
+
+  /// No description provided for @progQuestDailySleepTodayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the daily sleep rule in the current day.'**
+  String get progQuestDailySleepTodayDesc;
+
+  /// No description provided for @progQuestReach500XpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach 500 XP'**
+  String get progQuestReach500XpTitle;
+
+  /// No description provided for @progQuestReach500XpDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate at least 500 XP.'**
+  String get progQuestReach500XpDesc;
+
+  /// No description provided for @progQuestReach2000XpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach 2,000 XP'**
+  String get progQuestReach2000XpTitle;
+
+  /// No description provided for @progQuestReach2000XpDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate at least 2,000 XP.'**
+  String get progQuestReach2000XpDesc;
+
+  /// No description provided for @progQuestReach5000XpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach 5,000 XP'**
+  String get progQuestReach5000XpTitle;
+
+  /// No description provided for @progQuestReach5000XpDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate at least 5,000 XP.'**
+  String get progQuestReach5000XpDesc;
+
+  /// No description provided for @progQuestEarn25RewardsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn 25 Rewards'**
+  String get progQuestEarn25RewardsTitle;
+
+  /// No description provided for @progQuestEarn25RewardsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Collect 25 progression rewards in total.'**
+  String get progQuestEarn25RewardsDesc;
+
+  /// No description provided for @progQuestEarn100RewardsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn 100 Rewards'**
+  String get progQuestEarn100RewardsTitle;
+
+  /// No description provided for @progQuestEarn100RewardsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Collect 100 progression rewards in total.'**
+  String get progQuestEarn100RewardsDesc;
+
+  /// No description provided for @progQuestStepsStreak3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps Streak'**
+  String get progQuestStepsStreak3Title;
+
+  /// No description provided for @progQuestStepsStreak3Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the daily steps rule 3 periods in a row.'**
+  String get progQuestStepsStreak3Desc;
+
+  /// No description provided for @progQuestNutritionRewards5Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition Rhythm'**
+  String get progQuestNutritionRewards5Title;
+
+  /// No description provided for @progQuestNutritionRewards5Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn 5 nutrition rewards.'**
+  String get progQuestNutritionRewards5Desc;
+
+  /// No description provided for @progQuestNutritionRewards25Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition Mastery'**
+  String get progQuestNutritionRewards25Title;
+
+  /// No description provided for @progQuestNutritionRewards25Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn 25 nutrition rewards.'**
+  String get progQuestNutritionRewards25Desc;
+
+  /// No description provided for @progQuestTotalSteps100kTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk 100K Steps'**
+  String get progQuestTotalSteps100kTitle;
+
+  /// No description provided for @progQuestTotalSteps100kDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 100,000 total steps.'**
+  String get progQuestTotalSteps100kDesc;
+
+  /// No description provided for @progQuestTotalSteps500kTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk 500K Steps'**
+  String get progQuestTotalSteps500kTitle;
+
+  /// No description provided for @progQuestTotalSteps500kDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 500,000 total steps.'**
+  String get progQuestTotalSteps500kDesc;
+
+  /// No description provided for @progQuestWeeklyActivityOnceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Activity'**
+  String get progQuestWeeklyActivityOnceTitle;
+
+  /// No description provided for @progQuestWeeklyActivityOnceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the weekly activity rule once.'**
+  String get progQuestWeeklyActivityOnceDesc;
+
+  /// No description provided for @progQuestWeeklyActivity4Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Activity Momentum'**
+  String get progQuestWeeklyActivity4Title;
+
+  /// No description provided for @progQuestWeeklyActivity4Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the weekly activity rule 4 times.'**
+  String get progQuestWeeklyActivity4Desc;
+
+  /// No description provided for @progQuestWeeklyActivity12Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Activity Legend'**
+  String get progQuestWeeklyActivity12Title;
+
+  /// No description provided for @progQuestWeeklyActivity12Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the weekly activity rule 12 times.'**
+  String get progQuestWeeklyActivity12Desc;
+
+  /// No description provided for @progQuestUnlockStepChainTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Step Chain'**
+  String get progQuestUnlockStepChainTitle;
+
+  /// No description provided for @progQuestUnlockStepChainDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock the Step Chain achievement.'**
+  String get progQuestUnlockStepChainDesc;
+
+  /// No description provided for @progQuestStepsStreak7Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Step Discipline'**
+  String get progQuestStepsStreak7Title;
+
+  /// No description provided for @progQuestStepsStreak7Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the daily steps rule 7 periods in a row.'**
+  String get progQuestStepsStreak7Desc;
+
+  /// No description provided for @progQuestStepsStreak14Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Step Guardian'**
+  String get progQuestStepsStreak14Title;
+
+  /// No description provided for @progQuestStepsStreak14Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the daily steps rule 14 periods in a row.'**
+  String get progQuestStepsStreak14Desc;
+
+  /// No description provided for @progAchievementFirstRewardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'First Reward'**
+  String get progAchievementFirstRewardTitle;
+
+  /// No description provided for @progAchievementFirstRewardDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn your first progression reward.'**
+  String get progAchievementFirstRewardDesc;
+
+  /// No description provided for @progAchievementRewardHunter25Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Reward Hunter'**
+  String get progAchievementRewardHunter25Title;
+
+  /// No description provided for @progAchievementRewardHunter25Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn 25 progression rewards.'**
+  String get progAchievementRewardHunter25Desc;
+
+  /// No description provided for @progAchievementRewardHunter100Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Reward Legend'**
+  String get progAchievementRewardHunter100Title;
+
+  /// No description provided for @progAchievementRewardHunter100Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn 100 progression rewards.'**
+  String get progAchievementRewardHunter100Desc;
+
+  /// No description provided for @progAchievementPathfinderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pathfinder'**
+  String get progAchievementPathfinderTitle;
+
+  /// No description provided for @progAchievementPathfinderDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 5 through earned XP.'**
+  String get progAchievementPathfinderDesc;
+
+  /// No description provided for @progAchievementForgeKnight5000Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Forge Knight'**
+  String get progAchievementForgeKnight5000Title;
+
+  /// No description provided for @progAchievementForgeKnight5000Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 5,000 XP.'**
+  String get progAchievementForgeKnight5000Desc;
+
+  /// No description provided for @progAchievementLivingLegend15000Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Living Legend'**
+  String get progAchievementLivingLegend15000Title;
+
+  /// No description provided for @progAchievementLivingLegend15000Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 15,000 XP.'**
+  String get progAchievementLivingLegend15000Desc;
+
+  /// No description provided for @progAchievementSteps100kTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Centurion Walker'**
+  String get progAchievementSteps100kTitle;
+
+  /// No description provided for @progAchievementSteps100kDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 100,000 total steps.'**
+  String get progAchievementSteps100kDesc;
+
+  /// No description provided for @progAchievementSteps500kTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Half-Million March'**
+  String get progAchievementSteps500kTitle;
+
+  /// No description provided for @progAchievementSteps500kDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 500,000 total steps.'**
+  String get progAchievementSteps500kDesc;
+
+  /// No description provided for @progAchievementSteps1000000Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Million Step Myth'**
+  String get progAchievementSteps1000000Title;
+
+  /// No description provided for @progAchievementSteps1000000Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 1,000,000 total steps.'**
+  String get progAchievementSteps1000000Desc;
+
+  /// No description provided for @progAchievementStepChainTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Step Chain'**
+  String get progAchievementStepChainTitle;
+
+  /// No description provided for @progAchievementStepChainDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Hit the daily steps rule for 3 periods in a row.'**
+  String get progAchievementStepChainDesc;
+
+  /// No description provided for @progAchievementStepDisciplineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Step Discipline'**
+  String get progAchievementStepDisciplineTitle;
+
+  /// No description provided for @progAchievementStepDisciplineDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Hit the daily steps rule for 7 periods in a row.'**
+  String get progAchievementStepDisciplineDesc;
+
+  /// No description provided for @progAchievementStepSovereignTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Step Sovereign'**
+  String get progAchievementStepSovereignTitle;
+
+  /// No description provided for @progAchievementStepSovereignDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Hit the daily steps rule for 30 periods in a row.'**
+  String get progAchievementStepSovereignDesc;
+
+  /// No description provided for @progAchievementBalancedRhythmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced Rhythm'**
+  String get progAchievementBalancedRhythmTitle;
+
+  /// No description provided for @progAchievementBalancedRhythmDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn at least one nutrition reward for 3 periods in a row.'**
+  String get progAchievementBalancedRhythmDesc;
+
+  /// No description provided for @progAchievementNutritionRewards25Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Macro Maestro'**
+  String get progAchievementNutritionRewards25Title;
+
+  /// No description provided for @progAchievementNutritionRewards25Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn 25 nutrition rewards.'**
+  String get progAchievementNutritionRewards25Desc;
+
+  /// No description provided for @progAchievementWeeklyWarriorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Warrior'**
+  String get progAchievementWeeklyWarriorTitle;
+
+  /// No description provided for @progAchievementWeeklyWarriorDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the weekly activity rule at least once.'**
+  String get progAchievementWeeklyWarriorDesc;
+
+  /// No description provided for @progAchievementWeeklyActivity4Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity Vanguard'**
+  String get progAchievementWeeklyActivity4Title;
+
+  /// No description provided for @progAchievementWeeklyActivity4Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the weekly activity rule 4 times.'**
+  String get progAchievementWeeklyActivity4Desc;
+
+  /// No description provided for @progAchievementWeeklyActivity12Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Seasoned Mover'**
+  String get progAchievementWeeklyActivity12Title;
+
+  /// No description provided for @progAchievementWeeklyActivity12Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the weekly activity rule 12 times.'**
+  String get progAchievementWeeklyActivity12Desc;
+
+  /// No description provided for @progQuestCriterionTotalXp.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on total XP'**
+  String get progQuestCriterionTotalXp;
+
+  /// No description provided for @progQuestCriterionRewardCountWithRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on {rule}'**
+  String progQuestCriterionRewardCountWithRule(String rule);
+
+  /// No description provided for @progQuestCriterionRewardCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on reward count'**
+  String get progQuestCriterionRewardCount;
+
+  /// No description provided for @progQuestCriterionStreakWithRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on {rule} streak'**
+  String progQuestCriterionStreakWithRule(String rule);
+
+  /// No description provided for @progQuestCriterionStreakWithDomain.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on {domain} streak'**
+  String progQuestCriterionStreakWithDomain(String domain);
+
+  /// No description provided for @progQuestCriterionStreakGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on streak consistency'**
+  String get progQuestCriterionStreakGeneric;
+
+  /// No description provided for @progQuestCriterionTotalRuleValueWithRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on total {rule}'**
+  String progQuestCriterionTotalRuleValueWithRule(String rule);
+
+  /// No description provided for @progQuestCriterionTotalRuleValueGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on accumulated total'**
+  String get progQuestCriterionTotalRuleValueGeneric;
+
+  /// No description provided for @progQuestCriterionCurrentPeriodRule.
+  ///
+  /// In en, this message translates to:
+  /// **'For the current period: {rule}'**
+  String progQuestCriterionCurrentPeriodRule(String rule);
+
+  /// No description provided for @progQuestCriterionCurrentPeriodGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'For the current period'**
+  String get progQuestCriterionCurrentPeriodGeneric;
+
+  /// No description provided for @progQuestCriterionCurrentPeriodRuleSet.
+  ///
+  /// In en, this message translates to:
+  /// **'For a current-period combo'**
+  String get progQuestCriterionCurrentPeriodRuleSet;
+
+  /// No description provided for @progQuestCriterionAchievement.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on achievement unlock'**
+  String get progQuestCriterionAchievement;
+
+  /// No description provided for @progQuestCriterionCompletionsWithRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on {rule} completions'**
+  String progQuestCriterionCompletionsWithRule(String rule);
+
+  /// No description provided for @progQuestCriterionCompletionsGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on rule completions'**
+  String get progQuestCriterionCompletionsGeneric;
+
+  /// No description provided for @progQuestCriterionDomainRewardsWithDomain.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on {domain} rewards'**
+  String progQuestCriterionDomainRewardsWithDomain(String domain);
+
+  /// No description provided for @progQuestCriterionDomainRewardsGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on domain rewards'**
+  String get progQuestCriterionDomainRewardsGeneric;
 }
 
 class _AppLocalizationsDelegate

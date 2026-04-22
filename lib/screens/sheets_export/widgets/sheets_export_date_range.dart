@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../providers/sheets_export_provider.dart';
 import '../../../theme/ft_design_tokens.dart';
 import '../../../widgets/ft/ft_plain_card.dart';
@@ -9,10 +10,13 @@ class SheetsExportDateRange extends StatelessWidget {
   final SheetsExportProvider provider;
   const SheetsExportDateRange({super.key, required this.provider});
 
-  static final DateFormat _fmt = DateFormat('EEE, d MMM yyyy');
+  static final DateFormat _fmt = DateFormat('dd.MM.yyyy');
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final rangeLabel = '${_fmt.format(provider.from)} – ${_fmt.format(provider.to)}';
+
     return FtPlainCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -20,9 +24,9 @@ class SheetsExportDateRange extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'DATE RANGE',
-                style: TextStyle(
+              Text(
+                l10n.exportRangeLabel.toUpperCase(),
+                style: const TextStyle(
                   fontSize: FtTokens.fontSizeMicro,
                   fontWeight: FontWeight.w700,
                   color: FtTokens.onSurfaceMuted,
@@ -30,7 +34,7 @@ class SheetsExportDateRange extends StatelessWidget {
                 ),
               ),
               Text(
-                '${provider.dayCount} day(s)',
+                l10n.exportRangeDayCount(provider.dayCount),
                 style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
@@ -40,28 +44,45 @@ class SheetsExportDateRange extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: _DateField(
-                  label: 'From',
-                  date: provider.from,
-                  onPick: (d) => provider.setFrom(d),
-                  firstDate: DateTime(2020),
-                  lastDate: DateTime.now(),
-                ),
+          GestureDetector(
+            onTap: () => _pickRange(context),
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0x08FFFFFF),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: FtTokens.cardBorder),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _DateField(
-                  label: 'To',
-                  date: provider.to,
-                  onPick: (d) => provider.setTo(d),
-                  firstDate: DateTime(2020),
-                  lastDate: DateTime.now(),
-                ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.calendar_month_outlined,
+                    size: 18,
+                    color: FtTokens.onSurfaceMuted,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      rangeLabel,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: FtTokens.onSurface,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    l10n.exportRangePickButton,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: FtTokens.accent,
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
           const SizedBox(height: 10),
           Wrap(
@@ -69,33 +90,56 @@ class SheetsExportDateRange extends StatelessWidget {
             runSpacing: 8,
             children: [
               _Preset(
-                label: 'Last 7d',
+                label: l10n.exportRangePresetLast7,
                 onTap: () => _applyLastNDays(7),
               ),
               _Preset(
-                label: 'Last 30d',
+                label: l10n.exportRangePresetLast30,
                 onTap: () => _applyLastNDays(30),
               ),
               _Preset(
-                label: 'This month',
+                label: l10n.exportRangePresetThisMonth,
                 onTap: _applyThisMonth,
               ),
               _Preset(
-                label: 'Last month',
+                label: l10n.exportRangePresetLastMonth,
                 onTap: _applyLastMonth,
               ),
             ],
           ),
           if (!provider.hasValidRange) ...[
             const SizedBox(height: 8),
-            const Text(
-              '"To" must be on or after "From".',
-              style: TextStyle(fontSize: 11, color: Color(0xFFF87171)),
+            Text(
+              l10n.exportRangeInvalid,
+              style: const TextStyle(fontSize: 11, color: Color(0xFFF87171)),
             ),
           ],
         ],
       ),
     );
+  }
+
+  Future<void> _pickRange(BuildContext context) async {
+    final today = DateTime.now();
+    final lastDate = DateTime(today.year, today.month, today.day);
+    final picked = await showDateRangePicker(
+      context: context,
+      initialDateRange: DateTimeRange(start: provider.from, end: provider.to),
+      firstDate: DateTime(2020),
+      lastDate: lastDate,
+      builder: (ctx, child) => Theme(
+        data: Theme.of(ctx).copyWith(
+          colorScheme: Theme.of(ctx).colorScheme.copyWith(
+                primary: FtTokens.accent,
+                onPrimary: Colors.white,
+              ),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) {
+      provider.setRange(picked.start, picked.end);
+    }
   }
 
   void _applyLastNDays(int n) {
@@ -117,80 +161,6 @@ class SheetsExportDateRange extends StatelessWidget {
     final start = DateTime(now.year, now.month - 1, 1);
     final end = DateTime(now.year, now.month, 0);
     provider.setRange(start, end);
-  }
-}
-
-// ── Sub-widgets ──────────────────────────────────────────────────────────────
-
-class _DateField extends StatelessWidget {
-  final String label;
-  final DateTime date;
-  final ValueChanged<DateTime> onPick;
-  final DateTime firstDate;
-  final DateTime lastDate;
-
-  const _DateField({
-    required this.label,
-    required this.date,
-    required this.onPick,
-    required this.firstDate,
-    required this.lastDate,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () async {
-        final picked = await showDatePicker(
-          context: context,
-          initialDate: date,
-          firstDate: firstDate,
-          lastDate: lastDate,
-          builder: (ctx, child) => Theme(
-            data: Theme.of(ctx).copyWith(
-              colorScheme: Theme.of(ctx).colorScheme.copyWith(
-                    primary: FtTokens.accent,
-                    onPrimary: Colors.white,
-                  ),
-            ),
-            child: child!,
-          ),
-        );
-        if (picked != null) onPick(picked);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: const Color(0x08FFFFFF),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: FtTokens.cardBorder),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label.toUpperCase(),
-              style: const TextStyle(
-                fontSize: FtTokens.fontSizeMicro,
-                fontWeight: FontWeight.w700,
-                color: FtTokens.onSurfaceMuted,
-                letterSpacing: 0.8,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              SheetsExportDateRange._fmt.format(date),
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: FtTokens.onSurface,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
 

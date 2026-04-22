@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../providers/sheets_export_provider.dart';
 import '../../../theme/ft_design_tokens.dart';
 
@@ -18,10 +19,11 @@ class SheetsExportActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final fields = provider.selectedFields.length;
-    final summary =
-        '${provider.dayCount} day(s) · $fields field(s) · '
+    final range =
         '${_short.format(provider.from)} – ${_short.format(provider.to)}';
+    final summary = l10n.exportSummary(provider.dayCount, fields, range);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -55,10 +57,10 @@ class SheetsExportActionBar extends StatelessWidget {
             ),
             onPressed: provider.canExport ? onExport : null,
             child: provider.isExporting
-                ? const Row(
+                ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      SizedBox(
+                      const SizedBox(
                         width: 18,
                         height: 18,
                         child: CircularProgressIndicator(
@@ -67,24 +69,24 @@ class SheetsExportActionBar extends StatelessWidget {
                               AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       ),
-                      SizedBox(width: 12),
+                      const SizedBox(width: 12),
                       Text(
-                        'Exporting…',
-                        style: TextStyle(
+                        l10n.exportButtonRunning,
+                        style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
                     ],
                   )
-                : const Row(
+                : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.cloud_upload_rounded, size: 18),
-                      SizedBox(width: 8),
+                      const Icon(Icons.cloud_upload_rounded, size: 18),
+                      const SizedBox(width: 8),
                       Text(
-                        'Export to Sheets',
-                        style: TextStyle(
+                        l10n.exportButton,
+                        style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.2,

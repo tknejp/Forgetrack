@@ -103,6 +103,17 @@ class _ActivitiesContent extends StatelessWidget {
         final now = DateTime.now();
         final today = DateTime(now.year, now.month, now.day);
         final weekStart = today.subtract(Duration(days: today.weekday - 1));
+        final monthStart = today.subtract(const Duration(days: 29));
+        final monthStepsHistory =
+            fitness.stepsHistoryForRange(monthStart, today);
+        final monthActivities = fitness.activities.where((activity) {
+          final day = DateTime(
+            activity.startTime.year,
+            activity.startTime.month,
+            activity.startTime.day,
+          );
+          return !day.isBefore(monthStart) && !day.isAfter(today);
+        }).toList();
 
         int todayActiveMins = 0;
         int weekActiveMins = 0;
@@ -111,7 +122,7 @@ class _ActivitiesContent extends StatelessWidget {
         int weekWorkoutCalories = 0;
         int monthWorkoutTotalMins = 0;
         int monthWorkoutCalories = 0;
-        for (final a in fitness.activities) {
+        for (final a in monthActivities) {
           final aDay =
               DateTime(a.startTime.year, a.startTime.month, a.startTime.day);
           final mins = a.duration.inMinutes;
@@ -126,7 +137,7 @@ class _ActivitiesContent extends StatelessWidget {
             weekWorkoutCalories += cal;
           }
         }
-        final monthWorkoutCount = fitness.activities.length;
+        final monthWorkoutCount = monthActivities.length;
         final avgWorkoutMins = monthWorkoutCount > 0
             ? (monthWorkoutTotalMins / monthWorkoutCount).round()
             : 0;
@@ -135,12 +146,10 @@ class _ActivitiesContent extends StatelessWidget {
             ? fitness.stepsHistory.sublist(fitness.stepsHistory.length - 7)
             : fitness.stepsHistory;
 
-        final avgSteps = fitness.stepsHistory.isEmpty
+        final avgSteps = monthStepsHistory.isEmpty
             ? 0
-            : (fitness.stepsHistory
-                        .map((e) => e.steps)
-                        .reduce((a, b) => a + b) /
-                    fitness.stepsHistory.length)
+            : (monthStepsHistory.map((e) => e.steps).reduce((a, b) => a + b) /
+                    monthStepsHistory.length)
                 .round();
 
         return ListView(

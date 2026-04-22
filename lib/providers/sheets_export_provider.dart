@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../core/app_log.dart';
+import '../l10n/app_localizations.dart';
 import '../models/sheet_export_field.dart';
 import '../services/sheets_export_service.dart';
 
@@ -119,17 +120,20 @@ class SheetsExportProvider extends ChangeNotifier {
 
   // ─── Export ────────────────────────────────────────────────────────────────
 
-  Future<void> runExport(SheetExportDataSources src) async {
+  Future<void> runExport(
+    SheetExportDataSources src, {
+    required AppLocalizations l10n,
+  }) async {
     if (isExporting) {
       AppLog.sync.debug('runExport: skipped — already exporting');
       return;
     }
     if (!hasValidRange) {
-      _failWith('Invalid range: "to" is before "from".');
+      _failWith(l10n.exportErrorInvalidRange);
       return;
     }
     if (!hasAnyFieldSelected) {
-      _failWith('Select at least one field to export.');
+      _failWith(l10n.exportErrorNoFields);
       return;
     }
 
@@ -144,6 +148,7 @@ class SheetsExportProvider extends ChangeNotifier {
         to: _to,
         selected: selectedFields,
         src: src,
+        l10n: l10n,
       );
       _lastResult = result;
       _spreadsheetId = result.spreadsheetId;
@@ -155,7 +160,7 @@ class SheetsExportProvider extends ChangeNotifier {
       return;
     } catch (e, st) {
       AppLog.sync.error('runExport: unexpected error', err: e, stackTrace: st);
-      _failWith('Export failed: $e');
+      _failWith(l10n.exportErrorPrefix(e.toString()));
       return;
     }
     notifyListeners();

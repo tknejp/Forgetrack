@@ -18,7 +18,6 @@ class HealthDatabase {
 
   static const _logName = 'HealthDatabase';
   static const _isarName = 'health';
-  static const _historyDays = 30;
 
   // ─── In-memory cache ──────────────────────────────────────────────────────
 
@@ -77,20 +76,26 @@ class HealthDatabase {
 
   Future<void> _loadCache() async {
     final isar = _isar!;
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final rangeStart = today.subtract(Duration(days: _historyDays - 1));
+    final today = _today();
 
     // Steps — dense 30-day array, oldest first, 0 for missing days.
     final stepRows = await isar.hcStepsDayRecords.where().findAll();
+    stepRows.sort((a, b) => a.dateKey.compareTo(b.dateKey));
     final stepsByKey = {for (final r in stepRows) r.dateKey: r.steps};
-    _stepsHistory = [
-      for (var i = 0; i < _historyDays; i++)
-        StepsRecord(
-          date: rangeStart.add(Duration(days: i)),
-          steps: stepsByKey[_toKey(rangeStart.add(Duration(days: i)))] ?? 0,
-        ),
-    ];
+    if (stepRows.isEmpty) {
+      _stepsHistory = [];
+    } else {
+      final oldestStoredDay = _fromKey(stepRows.first.dateKey);
+      final totalDays = today.difference(oldestStoredDay).inDays + 1;
+      _stepsHistory = [
+        for (var i = 0; i < totalDays; i++)
+          StepsRecord(
+            date: oldestStoredDay.add(Duration(days: i)),
+            steps:
+                stepsByKey[_toKey(oldestStoredDay.add(Duration(days: i)))] ?? 0,
+          ),
+      ];
+    }
 
     // Active calories — aligned with steps by date key.
     final calRows = await isar.hcCalorieDayRecords.where().findAll();
@@ -263,8 +268,21 @@ class HealthDatabase {
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
-  static String _toKey(DateTime dt) =>
-      '${dt.year.toString().padLeft(4, '0')}-'
+  static String _toKey(DateTime dt) => '${dt.year.toString().padLeft(4, '0')}-'
       '${dt.month.toString().padLeft(2, '0')}-'
       '${dt.day.toString().padLeft(2, '0')}';
+
+  static DateTime _fromKey(String key) {
+    final parts = key.split('-');
+    return DateTime(
+      int.parse(parts[0]),
+      int.parse(parts[1]),
+      int.parse(parts[2]),
+    );
+  }
+
+  static DateTime _today() {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
 }

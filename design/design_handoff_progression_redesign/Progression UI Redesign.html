@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Forgetrack · Progression UI Redesign</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#050710;display:flex;align-items:flex-start;justify-content:center;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;padding:24px 16px 40px}
+::-webkit-scrollbar{display:none}
+
+@keyframes card-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes expand-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spark{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.35)}}
+@keyframes glow-pulse{0%,100%{box-shadow:0 0 14px rgba(124,111,255,.4),0 0 0 1px rgba(124,111,255,.2)}50%{box-shadow:0 0 26px rgba(124,111,255,.65),0 0 0 1px rgba(124,111,255,.35)}}
+@keyframes slide-right{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slide-left{from{transform:translateX(-100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes badge-pop{0%{transform:scale(.75);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+@keyframes bar-fill{from{width:0}to{width:var(--w)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+
+.skel{background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 75%);background-size:200% 100%;animation:shimmer 1.6s ease-in-out infinite;border-radius:8px}
+
+/* tweaks panel */
+#tp{position:fixed;bottom:20px;right:20px;background:rgba(15,17,35,.97);border:1px solid rgba(124,111,255,.3);border-radius:16px;padding:14px;width:210px;display:none;z-index:999;box-shadow:0 8px 32px rgba(0,0,0,.6)}
+#tp.on{display:block}
+#tp h4{font-size:10px;font-weight:700;color:#7C6FFF;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+.tr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.tr label{font-size:11px;color:rgba(255,255,255,.55);font-weight:500}
+.tog{width:34px;height:18px;border-radius:9px;border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.tog.on{background:#7C6FFF}.tog.off{background:rgba(255,255,255,.1)}
+.tog::after{content:'';position:absolute;top:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .2s}
+.tog.on::after{left:18px}.tog.off::after{left:2px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div id="tp">
+  <h4>Tweaks</h4>
+  <div class="tr"><label>Glow efekty</label><button class="tog on" id="tw-glow"></button></div>
+  <div class="tr"><label>Sparkles</label><button class="tog on" id="tw-sparkles"></button></div>
+  <div class="tr"><label>Card rozbalena</label><button class="tog off" id="tw-expanded"></button></div>
+  <div class="tr"><label>Loading state</label><button class="tog off" id="tw-loading"></button></div>
+</div>
+
+<script type="text/babel">
+
+// ─── TOKENS ──────────────────────────────────────────────────────────────────
+const C = {
+  bg:       '#0D0F1C',
+  surface:  'rgba(255,255,255,0.03)',
+  border:   'rgba(255,255,255,0.07)',
+  accent:   '#7C6FFF',
+  accentDim:'rgba(124,111,255,0.18)',
+  accentGlow:'rgba(124,111,255,0.35)',
+  teal:     '#2DD4BF', tealDim:'rgba(45,212,191,0.18)',  tealGlow:'rgba(45,212,191,0.25)',
+  amber:    '#FBBF24', amberDim:'rgba(251,191,36,0.18)', amberGlow:'rgba(251,191,36,0.25)',
+  green:    '#34D399', greenDim:'rgba(52,211,153,0.18)', greenGlow:'rgba(52,211,153,0.25)',
+  violet:   '#A89BFF',
+  t1:'rgba(255,255,255,0.95)',
+  t2:'rgba(255,255,255,0.6)',
+  t3:'rgba(255,255,255,0.35)',
+  t4:'rgba(255,255,255,0.2)',
+};
+
+const DOMAINS = {
+  steps:    {color:'#34D399',dim:'rgba(52,211,153,0.18)',glow:'rgba(52,211,153,0.25)',label:'Kroky'},
+  nutrition:{color:'#FBBF24',dim:'rgba(251,191,36,0.18)',glow:'rgba(251,191,36,0.25)',label:'Výživa'},
+  sleep:    {color:'#A89BFF',dim:'rgba(168,155,255,0.18)',glow:'rgba(168,155,255,0.25)',label:'Spánek'},
+  activity: {color:'#2DD4BF',dim:'rgba(45,212,191,0.18)',glow:'rgba(45,212,191,0.25)',label:'Aktivita'},
+  xp:       {color:'#7C6FFF',dim:'rgba(124,111,255,0.18)',glow:'rgba(124,111,255,0.25)',label:'XP'},
+};
+
+const PLAYER = {
+  name:'Tomáš Knejp', title:'Forge Knight', level:16,
+  totalXP:3870, xpIn:120, xpMax:250,
+  streak:5, bestStreak:12, streakDomain:'Aktivita', bestStreakDomain:'Kroky',
+  achievements:5, questsDone:6,
+};
+
+const ACTIVE_QUESTS = [
+  {title:'Krok za krokem', desc:'50 000 kroků za týden', domain:'steps', current:31200, target:50000, progress:.624},
+  {title:'Výživový rytmus', desc:'10 odměn za výživu', domain:'nutrition', current:7, target:10, progress:.7},
+];
+
+const COMP_QUESTS = [
+  {title:'Získej první odměnu', source:'Podle počtu odměn', domain:'xp', at:'21 dub · 22:19'},
+  {title:'Rytmus výživy', source:'Podle odměn: Výživa', domain:'nutrition', at:'21 dub · 22:19'},
+  {title:'Dosáhni 500 XP', source:'Podle celkového XP', domain:'xp', at:'21 dub · 22:19'},
+  {title:'Týdenní aktivita', source:'Podle: Týdenní aktivita', domain:'activity', at:'21 dub · 22:19'},
+  {title:'Série kroků', source:'Podle série: Denní kroky', domain:'steps', at:'3 dub · 00:00'},
+];
+
+const ACHIEV_UNLOCKED = [
+  {title:'Vyvážený rytmus', desc:'Výživa 3 dny v řadě', domain:'nutrition', p:6, t:3, at:'26 bře'},
+  {title:'Řetěz kroků', desc:'Kroky 3 dny v řadě', domain:'steps', p:17, t:3, at:'3 dub'},
+  {title:'První odměna', desc:'První progression odměna', domain:'xp', p:55, t:1, at:'21 dub'},
+  {title:'Stopař', desc:'Dosáhni levelu 5 XP', domain:'xp', p:3870, t:1000, at:'21 dub'},
+  {title:'Týdenní válečník', desc:'Týdenní cíl aktivity', domain:'activity', p:5, t:1, at:'21 dub'},
+];
+
+const ACHIEV_PROGRESS = [
+  {title:'Měsíční maratón', desc:'30 dní kroků v řadě', domain:'steps', p:5, t:30},
+  {title:'Spánkový mistr', desc:'Skóre 90+ po 7 nocí', domain:'sleep', p:2, t:7},
+  {title:'Kalorický rytmus', desc:'14 dní kalorický cíl', domain:'nutrition', p:4, t:14},
+];
+
+const HISTORY = [
+  {title:'Denní kroky',    domain:'steps',     xp:80,  ts:'21 dub · 22:35'},
+  {title:'Kalorický cíl',  domain:'nutrition', xp:60,  ts:'21 dub · 22:19'},
+  {title:'Týdenní aktivita',domain:'activity', xp:120, ts:'21 dub · 22:19'},
+  {title:'Denní kroky',    domain:'steps',     xp:80,  ts:'21 dub · 22:19'},
+  {title:'Kalorický cíl',  domain:'nutrition', xp:60,  ts:'21 dub · 22:19'},
+  {title:'Dobrý spánek',   domain:'sleep',     xp:40,  ts:'20 dub · 08:10'},
+];
+
+// ─── PRIMITIVES ───────────────────────────────────────────────────────────────
+function PBar({value, color, glow, h=5}){
+  const pct = Math.min(1,Math.max(0,value))*100;
+  return (
+    <div style={{height:h,borderRadius:99,background:'rgba(255,255,255,0.08)',overflow:'hidden'}}>
+      <div style={{height:'100%',width:`${pct}%`,borderRadius:99,
+        background:`linear-gradient(90deg,${color},${color}cc)`,
+        boxShadow:`0 0 8px ${glow}`,transition:'width .6s cubic-bezier(.4,0,.2,1)'}}/>
+    </div>
+  );
+}
+
+function StarIco({color='#7C6FFF',size=9}){
+  return <svg width={size} height={size} viewBox="0 0 10 10"><path d="M5 0L5.8 4.2 10 5 5.8 5.8 5 10 4.2 5.8 0 5 4.2 4.2 5 0z" fill={color}/></svg>;
+}
+
+function SectionHead({label, sub, color='#7C6FFF'}){
+  return (
+    <div style={{display:'flex',alignItems:'center',gap:7,padding:'2px 0'}}>
+      <StarIco color={color}/>
+      <div>
+        <div style={{fontSize:11,fontWeight:700,color,textTransform:'uppercase',letterSpacing:'.1em',lineHeight:1}}>{label}</div>
+        {sub && <div style={{fontSize:10,color:C.t3,fontWeight:500,marginTop:2}}>{sub}</div>}
+      </div>
+    </div>
+  );
+}
+
+function DomIco({domain, size=30}){
+  const d = DOMAINS[domain]||DOMAINS.xp;
+  // simple SVG icons per domain
+  const icons = {
+    steps:    <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M5 13l2.5-11 2.5 11" stroke={d.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><path d="M2.5 9h10" stroke={d.color} strokeWidth="1.8" strokeLinecap="round"/></svg>,
+    nutrition:<svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M4.5 2c0 2.2-2.2 2.8-2.2 5a5.2 5.2 0 0010.4 0C12.7 4.8 10.5 4.2 10.5 2" stroke={d.color} strokeWidth="1.6" strokeLinecap="round" fill="none"/><path d="M7.5 7v3" stroke={d.color} strokeWidth="1.6" strokeLinecap="round"/></svg>,
+    sleep:    <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M10 2.5a6 6 0 01-7 7A6 6 0 1010 2.5z" fill={d.color} opacity=".9"/></svg>,
+    activity: <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M1 7.5h2l2-4.5 3 9 2-4.5h4" stroke={d.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+    xp:       <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1l1.6 4 4.2.4-3.1 2.8.9 4.2L7.5 10l-3.6 2.4.9-4.2L1.7 5.4l4.2-.4z" fill={d.color}/></svg>,
+  };
+  return (
+    <div style={{width:size,height:size,borderRadius:size*.3,background:d.dim,
+      border:`1px solid ${d.color}44`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+      {icons[domain]||icons.xp}
+    </div>
+  );
+}
+
+function Skeleton({w, h=12, style={}}){
+  return <div className="skel" style={{width:w,height:h,...style}}/>;
+}
+
+// ─── HOME SCREEN ─────────────────────────────────────────────────────────────
+
+// Compact progression card header (always visible)
+function CardCompact({tweaks}){
+  return (
+    <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
+      {/* level orb */}
+      <div style={{
+        width:36,height:36,borderRadius:11,flexShrink:0,
+        background:`linear-gradient(135deg,${C.accent},${C.accent}88)`,
+        border:`1.5px solid ${C.accent}66`,
+        display:'flex',alignItems:'center',justifyContent:'center',
+        fontSize:14,fontWeight:900,color:'#fff',
+        animation: tweaks.glow ? 'glow-pulse 3s ease-in-out infinite' : 'none',
+        boxShadow: tweaks.glow ? `0 0 14px ${C.accentGlow}` : 'none',
+      }}>{PLAYER.level}</div>
+
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:4}}>
+          <span style={{fontSize:10,fontWeight:700,color:C.accent,textTransform:'uppercase',letterSpacing:'.07em'}}>
+            Level {PLAYER.level} · {PLAYER.title}
+          </span>
+          <span style={{fontSize:10,color:C.t3,fontWeight:500,fontVariantNumeric:'tabular-nums'}}>
+            {PLAYER.xpIn} / {PLAYER.xpMax} XP
+          </span>
+        </div>
+        <PBar value={PLAYER.xpIn/PLAYER.xpMax} color={C.accent} glow={C.accentGlow} h={5}/>
+      </div>
+    </div>
+  );
+}
+
+// Highlight pills below bar (compact state only)
+function CardHighlights(){
+  return (
+    <div style={{display:'flex',gap:6}}>
+      <div style={{display:'flex',alignItems:'center',gap:5,background:C.tealDim,
+        border:`1px solid ${C.teal}33`,borderRadius:99,padding:'4px 10px 4px 7px'}}>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M6 1l1.2 3.2 3.2.3-2.4 2.1.7 3.4L6 8.5l-2.7 1.5.7-3.4L1.6 4.5l3.2-.3z" fill={C.teal}/>
+        </svg>
+        <span style={{fontSize:11,fontWeight:700,color:C.teal}}>{PLAYER.streak}</span>
+        <span style={{fontSize:10,fontWeight:500,color:'rgba(45,212,191,0.6)'}}>série · {PLAYER.streakDomain}</span>
+      </div>
+      <div style={{display:'flex',alignItems:'center',gap:5,background:C.accentDim,
+        border:`1px solid ${C.accent}33`,borderRadius:99,padding:'4px 10px 4px 7px'}}>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <circle cx="6" cy="6" r="4" stroke={C.accent} strokeWidth="1.4" fill="none"/>
+          <circle cx="6" cy="6" r="1.8" fill={C.accent}/>
+        </svg>
+        <span style={{fontSize:11,fontWeight:700,color:C.accent}}>{PLAYER.achievements}</span>
+        <span style={{fontSize:10,fontWeight:500,color:'rgba(124,111,255,0.6)'}}>úspěchů</span>
+      </div>
+    </div>
+  );
+}
+
+// Stat mini cell for expanded grid
+function MiniStat({icon, label, value, unit, color, delay=0}){
+  return (
+    <div style={{flex:1,borderRadius:12,padding:'11px 10px',background:'rgba(255,255,255,0.04)',
+      border:'1px solid rgba(255,255,255,0.07)',animation:`expand-in .28s ease ${delay}s both`}}>
+      <div style={{marginBottom:6}}>{icon}</div>
+      <div style={{fontSize:18,fontWeight:900,color,letterSpacing:'-0.03em',lineHeight:1,fontVariantNumeric:'tabular-nums'}}>
+        {value}{unit && <span style={{fontSize:10,fontWeight:600,color:C.t3,marginLeft:2}}>{unit}</span>}
+      </div>
+      <div style={{fontSize:9,fontWeight:600,color:C.t4,textTransform:'uppercase',letterSpacing:'.07em',marginTop:3}}>{label}</div>
+    </div>
+  );
+}
+
+// Streak duel row
+function StreakDuel({tweaks}){
+  const pill = (label, value, domain, color, dim, glow, delay) => (
+    <div style={{flex:1,borderRadius:12,padding:'11px 12px',
+      background:`linear-gradient(135deg,${dim},transparent)`,
+      border:`1px solid ${color}28`,
+      boxShadow: tweaks.glow ? `0 2px 14px ${glow}` : 'none',
+      animation:`expand-in .28s ease ${delay}s both`}}>
+      <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:6}}>
+        <DomIco domain={domain} size={24}/>
+        <span style={{fontSize:9,fontWeight:700,color,textTransform:'uppercase',letterSpacing:'.08em'}}>{label}</span>
+      </div>
+      <div style={{fontSize:24,fontWeight:900,color,letterSpacing:'-0.04em',lineHeight:1}}>
+        {value}<span style={{fontSize:11,fontWeight:600,color:`${color}88`,marginLeft:3}}>dní</span>
+      </div>
+      <div style={{fontSize:9,color:`${color}70`,fontWeight:500,marginTop:3,textTransform:'uppercase',letterSpacing:'.06em'}}>
+        {domain === 'activity' ? PLAYER.streakDomain : PLAYER.bestStreakDomain}
+      </div>
+    </div>
+  );
+  return (
+    <div style={{display:'flex',gap:8}}>
+      {pill('Aktuální série', PLAYER.streak,     'activity', C.teal,  C.tealDim,  C.tealGlow,  0.04)}
+      {pill('Nejlepší série', PLAYER.bestStreak, 'steps',    C.amber, C.amberDim, C.amberGlow, 0.08)}
+    </div>
+  );
+}
+
+// Mini quest preview row in home card
+function MiniQuestRow({q, isLast}){
+  const d = DOMAINS[q.domain]||DOMAINS.xp;
+  return (
+    <div style={{display:'flex',alignItems:'center',gap:9,padding:'8px 0',
+      borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.06)'}}>
+      <DomIco domain={q.domain} size={26}/>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontSize:12,fontWeight:700,color:C.t1,letterSpacing:'-0.01em',
+          whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{q.title}</div>
+        <div style={{marginTop:4}}>
+          <PBar value={q.progress} color={d.color} glow={d.glow} h={3}/>
+        </div>
+      </div>
+      <div style={{fontSize:10,fontWeight:700,color:d.color,flexShrink:0,fontVariantNumeric:'tabular-nums'}}>
+        {Math.round(q.progress*100)}%
+      </div>
+    </div>
+  );
+}
+
+// Expanded section of the card
+function CardExpanded({tweaks, onOpen}){
+  return (
+    <div style={{borderTop:'1px solid rgba(255,255,255,0.08)',marginTop:12,paddingTop:12,
+      display:'flex',flexDirection:'column',gap:10}}>
+
+      {/* 2×2 stat grid */}
+      <div style={{display:'flex',gap:6}}>
+        <MiniStat
+          icon={<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1l1.8 4 4.2.4-3.1 2.8.9 4.3L8 10.2 4.2 12.5l.9-4.3L1.8 5.4l4.2-.4z" fill={C.accent}/></svg>}
+          label="Celkem XP" value="3,87" unit="tis." color={C.accent} delay={0}/>
+        <MiniStat
+          icon={<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M10 5l3 3-3 3" stroke={C.violet} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+          label="Do dalšího" value={PLAYER.xpMax - PLAYER.xpIn} unit="XP" color={C.violet} delay={0.04}/>
+        <MiniStat
+          icon={<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke={C.accent} strokeWidth="1.5" fill="none"/><circle cx="8" cy="8" r="2.5" fill={C.accent}/></svg>}
+          label="Úspěchy" value={PLAYER.achievements} color={C.accent} delay={0.08}/>
+        <MiniStat
+          icon={<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 4" stroke={C.green} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+          label="Questy" value={PLAYER.questsDone} color={C.green} delay={0.12}/>
+      </div>
+
+      {/* streak duel */}
+      <StreakDuel tweaks={tweaks}/>
+
+      {/* active quests preview */}
+      {ACTIVE_QUESTS.length > 0 && (
+        <div style={{borderRadius:12,background:'rgba(0,0,0,0.2)',border:'1px solid rgba(255,255,255,0.05)',
+          padding:'4px 10px 2px',animation:'expand-in .28s ease .16s both'}}>
+          <div style={{fontSize:9,fontWeight:700,color:C.t4,textTransform:'uppercase',
+            letterSpacing:'.1em',padding:'6px 0 4px'}}>Aktivní questy</div>
+          {ACTIVE_QUESTS.map((q,i)=>(
+            <MiniQuestRow key={i} q={q} isLast={i===ACTIVE_QUESTS.length-1}/>
+          ))}
+        </div>
+      )}
+
+      {/* CTA */}
+      <button onClick={onOpen} style={{
+        width:'100%',height:42,borderRadius:12,border:'none',cursor:'pointer',
+        background:`linear-gradient(135deg, ${C.accent}cc, ${C.accent}88)`,
+        boxShadow: tweaks.glow ? `0 4px 18px ${C.accentGlow}` : 'none',
+        color:'#fff',fontSize:13,fontWeight:700,fontFamily:'Inter,sans-serif',
+        display:'flex',alignItems:'center',justifyContent:'center',gap:6,
+        animation:'expand-in .28s ease .2s both',
+        transition:'filter .15s',
+      }}>
+        <span>Otevřít progression profil</span>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M1 7h12M8 3l4 4-4 4" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  );
+}
+
+// Loading skeleton state for card
+function CardSkeleton(){
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:10}}>
+      <div style={{display:'flex',alignItems:'center',gap:10}}>
+        <div className="skel" style={{width:36,height:36,borderRadius:11}}/>
+        <div style={{flex:1,display:'flex',flexDirection:'column',gap:5}}>
+          <Skeleton w="50%" h={10}/>
+          <Skeleton w="100%" h={5} style={{borderRadius:99}}/>
+        </div>
+      </div>
+      <div style={{display:'flex',gap:6}}>
+        <Skeleton w="40%" h={24} style={{borderRadius:99}}/>
+        <Skeleton w="40%" h={24} style={{borderRadius:99}}/>
+      </div>
+    </div>
+  );
+}
+
+// The full progression card
+function ProgressionCard({tweaks, onOpen}){
+  const [open, setOpen] = React.useState(tweaks.expanded);
+
+  React.useEffect(()=>{ setOpen(tweaks.expanded); }, [tweaks.expanded]);
+
+  if(tweaks.loading) return (
+    <div style={{borderRadius:18,background:`linear-gradient(135deg,${C.accentDim},rgba(124,111,255,0.04))`,
+      border:`1px solid ${C.accent}22`,padding:'14px 14px 14px'}}>
+      <CardSkeleton/>
+    </div>
+  );
+
+  return (
+    <div style={{borderRadius:18,
+      background:`linear-gradient(145deg, rgba(124,111,255,0.14) 0%, rgba(124,111,255,0.04) 100%)`,
+      border:`1px solid ${C.accent}2a`,
+      boxShadow: tweaks.glow ? `0 4px 24px rgba(124,111,255,0.18), 0 1px 0 rgba(255,255,255,0.05) inset` : '0 2px 8px rgba(0,0,0,0.3)',
+      padding:'14px',position:'relative',overflow:'hidden',
+      animation:'card-in .32s ease both',
+    }}>
+      {/* ambient sparkles */}
+      {tweaks.sparkles && [
+        {x:90,y:8,s:.65,d:.3},{x:4,y:75,s:.5,d:.9},{x:88,y:85,s:.55,d:1.5}
+      ].map((sp,i)=>(
+        <div key={i} style={{position:'absolute',left:`${sp.x}%`,top:`${sp.y}%`,pointerEvents:'none',
+          animation:`spark 2.4s ease-in-out ${sp.d}s infinite`}}>
+          <svg width={9*sp.s} height={9*sp.s} viewBox="0 0 10 10"><path d="M5 0L5.8 4.2 10 5 5.8 5.8 5 10 4.2 5.8 0 5 4.2 4.2 5 0z" fill={C.accent}/></svg>
+        </div>
+      ))}
+
+      {/* tap to expand/collapse */}
+      <button onClick={()=>setOpen(o=>!o)} style={{all:'unset',display:'block',width:'100%',cursor:'pointer'}}>
+        <CardCompact tweaks={tweaks}/>
+        {!open && <CardHighlights/>}
+      </button>
+
+      {/* chevron */}
+      <button onClick={()=>setOpen(o=>!o)} style={{
+        position:'absolute',top:14,right:14,width:28,height:28,border:'none',cursor:'pointer',
+        background:'rgba(255,255,255,0.07)',borderRadius:8,
+        display:'flex',alignItems:'center',justifyContent:'center',
+      }}>
+        <svg width="10" height="10" viewBox="0 0 10 10" style={{transition:'transform .2s',transform:open?'rotate(180deg)':'none'}}>
+          <path d="M2 3.5L5 6.5l3-3" stroke="rgba(255,255,255,0.5)" strokeWidth="1.6" strokeLinecap="round" fill="none"/>
+        </svg>
+      </button>
+
+      {open && <CardExpanded tweaks={tweaks} onOpen={onOpen}/>}
+    </div>
+  );
+}
+
+// Fake domain stat card (existing app style)
+function DomainCard({icon, label, badge, xpBadge, value, unit, domain, progress}){
+  const d = DOMAINS[domain]||DOMAINS.steps;
+  return (
+    <div style={{borderRadius:18,padding:'14px 16px',
+      background:`linear-gradient(135deg,${d.dim},transparent)`,
+      border:`1px solid ${d.color}33`,marginBottom:10}}>
+      <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
+        <div style={{width:36,height:36,borderRadius:11,background:d.dim,border:`1px solid ${d.color}44`,
+          display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>{icon}</div>
+        <span style={{fontWeight:700,fontSize:14,color:C.t1,flex:1}}>{label}</span>
+        <div style={{background:d.dim,border:`1px solid ${d.color}44`,borderRadius:99,
+          padding:'2px 9px',fontSize:11,fontWeight:700,color:d.color}}>{badge}</div>
+        <div style={{background:C.accentDim,border:`1px solid ${C.accent}44`,borderRadius:99,
+          padding:'2px 8px',fontSize:10,fontWeight:700,color:C.violet}}>{xpBadge}</div>
+      </div>
+      <div style={{fontSize:34,fontWeight:900,color:d.color,letterSpacing:'-0.04em',lineHeight:1,marginBottom:8}}>
+        {value}<span style={{fontSize:14,fontWeight:600,color:`${d.color}99`,marginLeft:4}}>{unit}</span>
+      </div>
+      <PBar value={progress} color={d.color} glow={d.glow} h={5}/>
+    </div>
+  );
+}
+
+function HomeScreen({tweaks, onOpenProfile}){
+  return (
+    <div style={{background:C.bg,minHeight:'100%',paddingBottom:32}}>
+      {/* header */}
+      <div style={{padding:'10px 16px 6px'}}>
+        <div style={{fontSize:12,color:C.t3,fontWeight:500,marginBottom:2}}>Good morning, Tomáš ✦</div>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <div style={{fontSize:22,fontWeight:800,color:'#fff',letterSpacing:'-0.03em'}}>Dashboard</div>
+          <div style={{width:36,height:36,borderRadius:11,background:`linear-gradient(135deg,${C.accent}55,${C.accent}22)`,
+            border:`1px solid ${C.accent}44`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16}}>⚔️</div>
+        </div>
+      </div>
+
+      {/* tab pill */}
+      <div style={{padding:'0 16px 10px'}}>
+        <div style={{display:'flex',background:'rgba(255,255,255,0.06)',borderRadius:14,padding:3,gap:2}}>
+          {['Den','Týden','Měsíc'].map((t,i)=>{
+            const on = i===1;
+            return <button key={t} style={{flex:1,height:32,borderRadius:11,border:'none',cursor:'pointer',
+              background:on?`linear-gradient(135deg,${C.accent}cc,${C.accent}99)`:'transparent',
+              color:on?'#fff':'rgba(255,255,255,0.4)',fontWeight:on?700:500,fontSize:13,fontFamily:'Inter,sans-serif'}}>{t}</button>;
+          })}
+        </div>
+      </div>
+
+      {/* date nav */}
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 16px 12px'}}>
+        <button style={{width:30,height:30,borderRadius:9,border:'none',background:'rgba(255,255,255,0.08)',color:'rgba(255,255,255,0.6)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <svg width="7" height="12" viewBox="0 0 7 12"><path d="M6 1L1 6l5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" fill="none"/></svg>
+        </button>
+        <div style={{textAlign:'center'}}>
+          <div style={{fontSize:14,fontWeight:700,color:'#fff'}}>20 apr – 26 apr</div>
+          <div style={{fontSize:10,color:C.t3,marginTop:1}}>Synced 23:14</div>
+        </div>
+        <button style={{width:30,height:30,borderRadius:9,border:'none',background:'rgba(255,255,255,0.08)',color:'rgba(255,255,255,0.6)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <svg width="7" height="12" viewBox="0 0 7 12"><path d="M1 1l5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" fill="none"/></svg>
+        </button>
+      </div>
+
+      {/* PROGRESSION CARD */}
+      <div style={{padding:'0 14px 12px'}}>
+        <ProgressionCard tweaks={tweaks} onOpen={onOpenProfile}/>
+      </div>
+
+      {/* domain cards */}
+      <div style={{padding:'0 14px'}}>
+        <DomainCard icon="🥾" label="Kroky · avg/den" badge="100%" xpBadge="+160 XP" value="10 570" unit="kroků" domain="steps" progress={1}/>
+        <DomainCard icon="🔥" label="Kalorie · avg/den" badge="98%"  xpBadge="+120 XP" value="2 743" unit="kcal" domain="nutrition" progress={.98}/>
+      </div>
+    </div>
+  );
+}
+
+// ─── PROGRESSION PROFILE SCREEN ───────────────────────────────────────────────
+
+function HeroCard({tweaks}){
+  return (
+    <div style={{borderRadius:18,overflow:'hidden',position:'relative',
+      background:'linear-gradient(135deg, rgba(124,111,255,0.17) 0%, rgba(124,111,255,0.05) 100%)',
+      border:`1px solid rgba(124,111,255,0.26)`,
+      boxShadow: tweaks.glow ? `0 4px 28px rgba(124,111,255,0.22), 0 1px 0 rgba(255,255,255,0.05) inset` : '0 2px 12px rgba(0,0,0,0.4)',
+      padding:16, animation:'card-in .35s ease both'}}>
+
+      {tweaks.sparkles && [{x:89,y:7,s:.65,d:.3},{x:4,y:80,s:.5,d:.9},{x:90,y:82,s:.55,d:1.6}].map((sp,i)=>(
+        <div key={i} style={{position:'absolute',left:`${sp.x}%`,top:`${sp.y}%`,pointerEvents:'none',
+          animation:`spark 2.4s ease-in-out ${sp.d}s infinite`}}>
+          <svg width={9*sp.s} height={9*sp.s} viewBox="0 0 10 10"><path d="M5 0L5.8 4.2 10 5 5.8 5.8 5 10 4.2 5.8 0 5 4.2 4.2 5 0z" fill={C.accent}/></svg>
+        </div>
+      ))}
+
+      {/* top row */}
+      <div style={{display:'flex',alignItems:'flex-start',gap:12,marginBottom:12}}>
+        <div style={{
+          width:52,height:52,borderRadius:16,flexShrink:0,
+          background:`linear-gradient(135deg,${C.accent}cc,${C.accent}66)`,
+          border:`2px solid ${C.accent}77`,
+          display:'flex',alignItems:'center',justifyContent:'center',
+          fontSize:22,fontWeight:900,color:'#fff',
+          animation: tweaks.glow ? 'glow-pulse 3s ease-in-out infinite' : 'none',
+        }}>{PLAYER.level}</div>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontSize:18,fontWeight:800,color:'#fff',letterSpacing:'-0.02em',lineHeight:1.15}}>{PLAYER.name}</div>
+          <div style={{fontSize:12,fontWeight:600,color:C.t3,marginTop:3}}>{PLAYER.title}</div>
+        </div>
+        <div style={{textAlign:'right',flexShrink:0}}>
+          <div style={{fontSize:9,fontWeight:700,color:C.t4,textTransform:'uppercase',letterSpacing:'.08em',marginBottom:2}}>Celkem XP</div>
+          <div style={{fontSize:20,fontWeight:900,color:'#fff',letterSpacing:'-0.04em'}}>
+            3,87<span style={{fontSize:11,fontWeight:600,color:C.t3,marginLeft:2}}>tis.</span>
+          </div>
+        </div>
+      </div>
+
+      {/* XP bar */}
+      <div style={{background:'rgba(0,0,0,0.22)',borderRadius:12,padding:'8px 11px',marginBottom:10,
+        border:'1px solid rgba(255,255,255,0.06)'}}>
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:5}}>
+          <div style={{width:22,height:22,borderRadius:7,background:`linear-gradient(135deg,${C.accent},${C.accent}88)`,
+            display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:800,color:'#fff',flexShrink:0}}>{PLAYER.level}</div>
+          <span style={{fontSize:10,fontWeight:700,color:C.accent,textTransform:'uppercase',letterSpacing:'.06em',flex:1}}>
+            Level {PLAYER.level} · {PLAYER.title}
+          </span>
+          <span style={{fontSize:10,color:C.t3,fontWeight:500,fontVariantNumeric:'tabular-nums'}}>
+            {PLAYER.xpIn} / {PLAYER.xpMax} XP
+          </span>
+        </div>
+        <PBar value={PLAYER.xpIn/PLAYER.xpMax} color={C.accent} glow={C.accentGlow} h={5}/>
+      </div>
+
+      {/* highlight pills */}
+      <div style={{display:'flex',gap:8,marginBottom:10}}>
+        {[
+          {label:'série · aktivita', val:PLAYER.streak, color:C.teal, dim:C.tealDim},
+          {label:'odemčeno', val:PLAYER.achievements, color:C.accent, dim:C.accentDim},
+        ].map((p,i)=>(
+          <div key={i} style={{flex:1,borderRadius:11,background:p.dim,border:`1px solid ${p.color}22`,
+            padding:'9px 12px',display:'flex',alignItems:'center',gap:8}}>
+            <div style={{width:26,height:26,borderRadius:8,background:p.dim,border:`1px solid ${p.color}44`,
+              display:'flex',alignItems:'center',justifyContent:'center'}}>
+              {i===0
+                ? <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1l1.4 3.4 3.4.3-2.5 2.2.8 3.6-3.1-1.8-3.1 1.8.8-3.6L1.7 4.7l3.4-.3z" fill={p.color}/></svg>
+                : <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="4.5" stroke={p.color} strokeWidth="1.4" fill="none"/><circle cx="6.5" cy="6.5" r="2" fill={p.color}/></svg>
+              }
+            </div>
+            <div>
+              <div style={{fontSize:16,fontWeight:900,color:p.color,letterSpacing:'-0.03em'}}>{p.val}</div>
+              <div style={{fontSize:9,color:'rgba(255,255,255,0.35)',fontWeight:600,textTransform:'uppercase',letterSpacing:'.07em',marginTop:1}}>{p.label}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{fontSize:10,color:C.t4,fontWeight:500,textAlign:'center'}}>
+        Naposled synchronizováno {PLAYER.name.split(' ')[0] === 'Tomáš' ? '21 dub · 23:14' : '—'}
+      </div>
+    </div>
+  );
+}
+
+function SummaryGrid({tweaks}){
+  const cells = [
+    {icon:<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2l1.6 4.2 4.2.4-3.1 2.7 1 4.4L10 11.5l-3.7 2.2 1-4.4L4.2 6.6l4.2-.4z" fill={C.teal}/></svg>, val:PLAYER.streak, label:'Aktuální série', color:C.teal, sub:'dní'},
+    {icon:<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10h12M13 6l4 4-4 4" stroke={C.amber} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>, val:PLAYER.bestStreak, label:'Nejlepší série', color:C.amber, sub:'dní'},
+    {icon:<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 10l4.5 4.5L17 5" stroke={C.green} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>, val:PLAYER.questsDone, label:'Dokončené questy', color:C.green},
+    {icon:<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="6.5" stroke={C.accent} strokeWidth="1.7" fill="none"/><circle cx="10" cy="10" r="3" fill={C.accent}/></svg>, val:PLAYER.achievements, label:'Úspěchy', color:C.accent},
+  ];
+  return (
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+      {cells.map((c,i)=>(
+        <div key={i} style={{borderRadius:16,padding:'14px 14px 12px',
+          background:C.surface,border:C.border,
+          animation:`card-in .35s ease ${i*0.06}s both`}}>
+          <div style={{marginBottom:8}}>{c.icon}</div>
+          <div style={{fontSize:26,fontWeight:900,color:c.color,letterSpacing:'-0.04em',lineHeight:1,fontVariantNumeric:'tabular-nums'}}>
+            {c.val}{c.sub && <span style={{fontSize:11,fontWeight:600,color:C.t4,marginLeft:3}}>{c.sub}</span>}
+          </div>
+          <div style={{fontSize:9,color:C.t4,fontWeight:600,textTransform:'uppercase',letterSpacing:'.07em',marginTop:4}}>{c.label}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ActiveQCard({q, tweaks, delay=0}){
+  const d = DOMAINS[q.domain]||DOMAINS.xp;
+  return (
+    <div style={{borderRadius:14,padding:'13px 14px',
+      background:`linear-gradient(135deg,${d.dim},transparent)`,
+      border:`1px solid ${d.color}30`,
+      boxShadow: tweaks.glow ? `0 3px 16px ${d.glow}` : 'none',
+      animation:`card-in .32s ease ${delay}s both`}}>
+      <div style={{display:'flex',alignItems:'flex-start',gap:10,marginBottom:9}}>
+        <DomIco domain={q.domain}/>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontSize:14,fontWeight:800,color:C.t1,letterSpacing:'-0.01em',lineHeight:1.2}}>{q.title}</div>
+          <div style={{fontSize:11,color:C.t3,marginTop:2,fontWeight:500}}>{q.desc}</div>
+        </div>
+        <div style={{background:d.dim,border:`1px solid ${d.color}44`,borderRadius:99,
+          padding:'3px 8px',fontSize:10,fontWeight:700,color:d.color,flexShrink:0,
+          textTransform:'uppercase',letterSpacing:'.05em'}}>Aktivní</div>
+      </div>
+      <PBar value={q.progress} color={d.color} glow={d.glow} h={5}/>
+      <div style={{display:'flex',justifyContent:'space-between',marginTop:5}}>
+        <span style={{fontSize:10,color:d.color,fontWeight:600}}>
+          {d.label}
+        </span>
+        <span style={{fontSize:10,color:C.t3,fontWeight:500,fontVariantNumeric:'tabular-nums'}}>
+          {q.current.toLocaleString('cs')} / {q.target.toLocaleString('cs')}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function CompQRow({q, delay=0}){
+  const d = DOMAINS[q.domain]||DOMAINS.xp;
+  return (
+    <div style={{borderRadius:12,padding:'10px 12px',
+      background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.06)',
+      display:'flex',alignItems:'center',gap:10,
+      animation:`card-in .3s ease ${delay}s both`}}>
+      <DomIco domain={q.domain} size={28}/>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontSize:13,fontWeight:700,color:'rgba(255,255,255,0.72)',letterSpacing:'-0.01em'}}>{q.title}</div>
+        <div style={{fontSize:10,color:d.color,fontWeight:600,marginTop:1}}>{q.source}</div>
+        <div style={{fontSize:9,color:C.t4,fontWeight:500,marginTop:1}}>Dokončeno {q.at}</div>
+      </div>
+      <div style={{fontSize:10,fontWeight:700,color:C.t4,background:'rgba(255,255,255,0.05)',
+        border:'1px solid rgba(255,255,255,0.08)',borderRadius:99,padding:'2px 9px',flexShrink:0}}>Hotovo</div>
+    </div>
+  );
+}
+
+function QuestsSection({tweaks}){
+  const [all, setAll] = React.useState(false);
+  const shown = all ? COMP_QUESTS : COMP_QUESTS.slice(0,3);
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:8}}>
+      <SectionHead label="Questy" sub="Aktivní nahoře · dokončené níže"/>
+      <div style={{background:'rgba(0,0,0,0.2)',borderRadius:14,padding:10,border:'1px solid rgba(255,255,255,0.05)'}}>
+        <div style={{fontSize:9,fontWeight:700,color:C.t4,textTransform:'uppercase',letterSpacing:'.1em',marginBottom:8,paddingLeft:2}}>Aktivní questy</div>
+        {ACTIVE_QUESTS.length===0
+          ? <div style={{borderRadius:12,padding:'14px',background:C.surface,border:C.border,textAlign:'center'}}>
+              <div style={{fontSize:13,fontWeight:700,color:'rgba(255,255,255,0.45)'}}>Žádné aktivní questy.</div>
+              <div style={{fontSize:11,color:C.t4,marginTop:4}}>Prošel jsi aktuální katalog questů.</div>
+            </div>
+          : <div style={{display:'flex',flexDirection:'column',gap:8}}>
+              {ACTIVE_QUESTS.map((q,i)=><ActiveQCard key={i} q={q} tweaks={tweaks} delay={i*0.05}/>)}
+            </div>
+        }
+      </div>
+      <div style={{background:'rgba(0,0,0,0.15)',borderRadius:14,padding:10,border:'1px solid rgba(255,255,255,0.04)'}}>
+        <div style={{fontSize:9,fontWeight:700,color:'rgba(255,255,255,0.2)',textTransform:'uppercase',letterSpacing:'.1em',marginBottom:8,paddingLeft:2}}>Dokončené questy</div>
+        <div style={{display:'flex',flexDirection:'column',gap:6}}>
+          {shown.map((q,i)=><CompQRow key={i} q={q} delay={i*0.04}/>)}
+        </div>
+        {!all && COMP_QUESTS.length>3 && (
+          <button onClick={()=>setAll(true)} style={{
+            width:'100%',marginTop:8,padding:'8px',borderRadius:10,
+            background:'rgba(124,111,255,0.08)',border:`1px solid rgba(124,111,255,0.2)`,
+            color:C.accent,fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'Inter,sans-serif'
+          }}>Zobrazit vše ({COMP_QUESTS.length}) →</button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function UnlockedACard({a, tweaks, delay=0}){
+  const d = DOMAINS[a.domain]||DOMAINS.xp;
+  return (
+    <div style={{borderRadius:14,padding:'13px 14px',overflow:'hidden',position:'relative',
+      background:`linear-gradient(135deg,${d.dim},transparent)`,
+      border:`1px solid ${d.color}40`,
+      boxShadow: tweaks.glow ? `0 3px 16px ${d.glow}` : 'none',
+      animation:`card-in .32s ease ${delay}s both`}}>
+      {tweaks.sparkles && [{x:89,y:8,s:.65,d:.3},{x:5,y:78,s:.5,d:.8}].map((sp,i)=>(
+        <div key={i} style={{position:'absolute',left:`${sp.x}%`,top:`${sp.y}%`,pointerEvents:'none',
+          animation:`spark 2.4s ease-in-out ${sp.d}s infinite`}}>
+          <svg width={8*sp.s} height={8*sp.s} viewBox="0 0 10 10"><path d="M5 0L5.8 4.2 10 5 5.8 5.8 5 10 4.2 5.8 0 5 4.2 4.2 5 0z" fill={d.color}/></svg>
+        </div>
+      ))}
+      <div style={{display:'flex',alignItems:'flex-start',gap:10}}>
+        <DomIco domain={a.domain}/>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontSize:14,fontWeight:800,color:C.t1}}>{a.title}</div>
+          <div style={{fontSize:11,color:C.t3,marginTop:2,fontWeight:500}}>{a.desc}</div>
+        </div>
+        <div style={{background:d.dim,border:`1px solid ${d.color}44`,borderRadius:99,
+          padding:'3px 8px',fontSize:10,fontWeight:700,color:d.color,flexShrink:0,
+          animation:'badge-pop .4s ease both'
+        }}>Odemčeno</div>
+      </div>
+      <div style={{marginTop:9}}>
+        <PBar value={Math.min(a.p/a.t,1)} color={d.color} glow={d.glow} h={4}/>
+        <div style={{display:'flex',justifyContent:'space-between',marginTop:4}}>
+          <span style={{fontSize:10,color:C.t4,fontVariantNumeric:'tabular-nums'}}>{a.p.toLocaleString()} / {a.t.toLocaleString()}</span>
+          <span style={{fontSize:10,color:C.t4}}>{a.at}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InProgressACard({a, tweaks, delay=0}){
+  const d = DOMAINS[a.domain]||DOMAINS.xp;
+  const pct = a.p/a.t;
+  return (
+    <div style={{borderRadius:14,padding:'12px 13px',
+      background:'rgba(255,255,255,0.025)',border:'1px solid rgba(255,255,255,0.07)',
+      animation:`card-in .3s ease ${delay}s both`}}>
+      <div style={{display:'flex',alignItems:'flex-start',gap:10,marginBottom:8}}>
+        <DomIco domain={a.domain}/>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontSize:13,fontWeight:700,color:'rgba(255,255,255,0.82)'}}>{a.title}</div>
+          <div style={{fontSize:11,color:C.t3,marginTop:2,fontWeight:500}}>{a.desc}</div>
+        </div>
+        <div style={{fontSize:11,fontWeight:700,color:C.t3,flexShrink:0}}>{Math.round(pct*100)}%</div>
+      </div>
+      <PBar value={pct} color={d.color} glow={d.glow} h={4}/>
+      <div style={{display:'flex',justifyContent:'space-between',marginTop:4}}>
+        <span style={{fontSize:10,color:d.color,fontWeight:600}}>{a.p} / {a.t}</span>
+        <span style={{fontSize:10,color:C.t4}}>zbývá {a.t-a.p}</span>
+      </div>
+    </div>
+  );
+}
+
+function AchievSection({tweaks}){
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:8}}>
+      <SectionHead label="Úspěchy" sub="Odemčené odznaky a aktuální postup"/>
+      <div style={{background:'rgba(0,0,0,0.2)',borderRadius:14,padding:10,border:'1px solid rgba(255,255,255,0.05)'}}>
+        <div style={{fontSize:9,fontWeight:700,color:C.t4,textTransform:'uppercase',letterSpacing:'.1em',marginBottom:8,paddingLeft:2}}>Odemčeno</div>
+        <div style={{display:'flex',flexDirection:'column',gap:8}}>
+          {ACHIEV_UNLOCKED.map((a,i)=><UnlockedACard key={a.title} a={a} tweaks={tweaks} delay={i*0.05}/>)}
+        </div>
+      </div>
+      <div style={{background:'rgba(0,0,0,0.15)',borderRadius:14,padding:10,border:'1px solid rgba(255,255,255,0.04)'}}>
+        <div style={{fontSize:9,fontWeight:700,color:'rgba(255,255,255,0.2)',textTransform:'uppercase',letterSpacing:'.1em',marginBottom:8,paddingLeft:2}}>V průběhu</div>
+        <div style={{display:'flex',flexDirection:'column',gap:7}}>
+          {ACHIEV_PROGRESS.map((a,i)=><InProgressACard key={a.title} a={a} tweaks={tweaks} delay={i*0.05}/>)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StreakSection({tweaks}){
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:8}}>
+      <SectionHead label="Série" sub="Aktuální a nejlepší série napříč doménami"/>
+      <div style={{display:'flex',gap:8}}>
+        {[
+          {label:'Aktuální série', val:PLAYER.streak,     domain:'activity', color:C.teal,  dim:C.tealDim,  glow:C.tealGlow,  sub:PLAYER.streakDomain},
+          {label:'Nejlepší série', val:PLAYER.bestStreak, domain:'steps',    color:C.amber, dim:C.amberDim, glow:C.amberGlow, sub:PLAYER.bestStreakDomain},
+        ].map((s,i)=>(
+          <div key={i} style={{flex:1,borderRadius:14,padding:'14px 14px 12px',
+            background:`linear-gradient(135deg,${s.dim},transparent)`,
+            border:`1px solid ${s.color}28`,
+            boxShadow: tweaks.glow ? `0 3px 14px ${s.glow}` : 'none',
+            animation:`card-in .32s ease ${i*0.08}s both`}}>
+            <div style={{display:'flex',alignItems:'center',gap:7,marginBottom:10}}>
+              <DomIco domain={s.domain} size={26}/>
+              <span style={{fontSize:9,fontWeight:700,color:s.color,textTransform:'uppercase',letterSpacing:'.08em'}}>{s.label}</span>
+            </div>
+            <div style={{fontSize:30,fontWeight:900,color:s.color,letterSpacing:'-0.04em',lineHeight:1}}>
+              {s.val}<span style={{fontSize:12,fontWeight:600,color:`${s.color}77`,marginLeft:3}}>dní</span>
+            </div>
+            <div style={{fontSize:9,color:`${s.color}66`,fontWeight:600,marginTop:4,textTransform:'uppercase',letterSpacing:'.07em'}}>{s.sub}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HistorySection(){
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:8}}>
+      <SectionHead label="Nedávné odměny" color={C.accent} sub="Poslední získaná XP napříč doménami"/>
+      <div style={{borderRadius:14,overflow:'hidden',background:'rgba(255,255,255,0.025)',
+        border:'1px solid rgba(255,255,255,0.07)',animation:'card-in .32s ease both'}}>
+        {HISTORY.map((h,i)=>{
+          const d = DOMAINS[h.domain]||DOMAINS.xp;
+          return (
+            <div key={i} style={{display:'flex',alignItems:'center',gap:11,padding:'11px 13px',
+              borderBottom: i<HISTORY.length-1 ? '1px solid rgba(255,255,255,0.05)' : 'none'}}>
+              <DomIco domain={h.domain}/>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:13,fontWeight:700,color:'rgba(255,255,255,0.85)',letterSpacing:'-0.01em'}}>{h.title}</div>
+                <div style={{fontSize:10,color:d.color,fontWeight:600,marginTop:1}}>{d.label}</div>
+              </div>
+              <div style={{textAlign:'right',flexShrink:0}}>
+                <div style={{fontSize:12,fontWeight:800,color:C.violet,fontVariantNumeric:'tabular-nums'}}>+{h.xp} XP</div>
+                <div style={{fontSize:9,color:C.t4,fontWeight:500,marginTop:2}}>{h.ts}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ProfileScreen({tweaks, onBack}){
+  return (
+    <div style={{background:C.bg,minHeight:'100%',paddingBottom:40}}>
+      {/* nav */}
+      <div style={{padding:'10px 16px 4px',display:'flex',alignItems:'center',gap:10}}>
+        <button onClick={onBack} style={{width:30,height:30,borderRadius:9,border:'none',
+          background:'rgba(255,255,255,0.08)',cursor:'pointer',color:'rgba(255,255,255,0.6)',
+          display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <svg width="8" height="13" viewBox="0 0 8 13" fill="none">
+            <path d="M7 1L1 6.5l6 5.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+        <div>
+          <div style={{fontSize:10,fontWeight:700,color:C.accent,textTransform:'uppercase',letterSpacing:'.1em',lineHeight:1}}>Progression profil</div>
+          <div style={{fontSize:18,fontWeight:800,color:'#fff',letterSpacing:'-0.03em',lineHeight:1.2}}>Tvá dlouhodobá cesta</div>
+        </div>
+      </div>
+
+      <div style={{padding:'10px 14px',display:'flex',flexDirection:'column',gap:16}}>
+        <HeroCard tweaks={tweaks}/>
+        <div>
+          <SectionHead label="Přehled postupu" color={C.accent}/>
+          <div style={{marginTop:8}}><SummaryGrid tweaks={tweaks}/></div>
+        </div>
+        <StreakSection tweaks={tweaks}/>
+        <QuestsSection tweaks={tweaks}/>
+        <AchievSection tweaks={tweaks}/>
+        <HistorySection/>
+      </div>
+    </div>
+  );
+}
+
+// ─── DEVICE FRAME ────────────────────────────────────────────────────────────
+
+function DeviceFrame({children, label}){
+  return (
+    <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:12}}>
+      <div style={{fontSize:10,fontWeight:600,color:'rgba(255,255,255,0.3)',textTransform:'uppercase',letterSpacing:'.12em'}}>{label}</div>
+      <div style={{
+        width:390,height:844,borderRadius:52,overflow:'hidden',position:'relative',
+        background:'#000',
+        boxShadow:'0 0 0 1px rgba(255,255,255,0.1), 0 40px 80px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05)',
+      }}>
+        {/* dynamic island */}
+        <div style={{position:'absolute',top:12,left:'50%',transform:'translateX(-50%)',
+          width:120,height:34,borderRadius:22,background:'#000',zIndex:50,
+          boxShadow:'0 0 0 1px rgba(255,255,255,0.08)'}}/>
+        {/* status bar */}
+        <div style={{position:'absolute',top:0,left:0,right:0,height:54,zIndex:40,
+          display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px 28px 0',pointerEvents:'none'}}>
+          <span style={{fontSize:15,fontWeight:600,color:'#fff',fontFamily:'-apple-system,sans-serif'}}>1:07</span>
+          <div style={{display:'flex',alignItems:'center',gap:5}}>
+            <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="6" width="3" height="5" rx=".6" fill="rgba(255,255,255,0.6)"/><rect x="4.5" y="4" width="3" height="7" rx=".6" fill="rgba(255,255,255,0.6)"/><rect x="9" y="2" width="3" height="9" rx=".6" fill="#fff"/><rect x="13.5" y="0" width="3" height="11" rx=".6" fill="#fff"/></svg>
+            <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 3C10 3 11.8 3.8 13.1 5.1L14 4.2C12.4 2.6 10.3 1.5 8 1.5S3.6 2.6 2 4.2l.9.9C4.2 3.8 6 3 8 3z" fill="#fff"/><path d="M8 6.5c1 0 1.9.4 2.5 1L11.4 6.6C10.5 5.7 9.3 5.1 8 5.1S5.5 5.7 4.6 6.6l.9.9C6.1 6.9 7 6.5 8 6.5z" fill="#fff"/><circle cx="8" cy="9.5" r="1.5" fill="#fff"/></svg>
+            <svg width="25" height="12" viewBox="0 0 25 12"><rect x=".5" y=".5" width="21" height="11" rx="3.5" stroke="rgba(255,255,255,0.35)" fill="none"/><rect x="2" y="2" width="16" height="8" rx="2" fill="#fff"/><path d="M23 4.5v3c.7-.3 1.2-1 1.2-1.5s-.5-1.2-1.2-1.5z" fill="rgba(255,255,255,0.4)"/></svg>
+          </div>
+        </div>
+        {/* scrollable content */}
+        <div style={{position:'absolute',inset:0,overflowY:'auto',paddingTop:54}}>
+          {children}
+        </div>
+        {/* home indicator */}
+        <div style={{position:'absolute',bottom:8,left:'50%',transform:'translateX(-50%)',
+          width:134,height:5,borderRadius:100,background:'rgba(255,255,255,0.6)',zIndex:50,pointerEvents:'none'}}/>
+      </div>
+    </div>
+  );
+}
+
+// ─── APP ROOT ─────────────────────────────────────────────────────────────────
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "glow": true,
+  "sparkles": true,
+  "expanded": false,
+  "loading": false
+}/*EDITMODE-END*/;
+
+function App(){
+  const saved = (() => { try { return JSON.parse(localStorage.getItem('ft_ui_tweaks')||'{}'); } catch(e){ return {}; } })();
+  const [tw, setTw] = React.useState({...TWEAK_DEFAULTS,...saved});
+  const [screen, setScreen] = React.useState('home'); // 'home' | 'profile'
+  const [editMode, setEditMode] = React.useState(false);
+
+  React.useEffect(()=>{ localStorage.setItem('ft_ui_tweaks', JSON.stringify(tw)); }, [tw]);
+
+  React.useEffect(()=>{
+    const h = (e)=>{
+      if(e.data?.type==='__activate_edit_mode') setEditMode(true);
+      if(e.data?.type==='__deactivate_edit_mode') setEditMode(false);
+    };
+    window.addEventListener('message',h);
+    window.parent.postMessage({type:'__edit_mode_available'},'*');
+    return ()=>window.removeEventListener('message',h);
+  },[]);
+
+  // sync tweaks panel buttons
+  React.useEffect(()=>{
+    const defs = [{id:'tw-glow',k:'glow'},{id:'tw-sparkles',k:'sparkles'},{id:'tw-expanded',k:'expanded'},{id:'tw-loading',k:'loading'}];
+    defs.forEach(({id,k})=>{
+      const btn = document.getElementById(id);
+      if(!btn) return;
+      btn.className = 'tog '+(tw[k]?'on':'off');
+      btn.onclick = ()=>{ setTw(p=>({...p,[k]:!p[k]})); };
+    });
+    const panel = document.getElementById('tp');
+    if(panel) panel.className = editMode ? 'on' : '';
+  });
+
+  const containerStyle = {
+    display:'flex', gap:32, alignItems:'flex-start', flexWrap:'wrap', justifyContent:'center',
+  };
+
+  return (
+    <div>
+      <div style={containerStyle}>
+        <DeviceFrame label="Home · Progression Card">
+          <HomeScreen tweaks={tw} onOpenProfile={()=>setScreen('profile')}/>
+        </DeviceFrame>
+        <DeviceFrame label="Progression Profile">
+          <ProfileScreen tweaks={tw} onBack={()=>setScreen('home')}/>
+        </DeviceFrame>
+      </div>
+      <div style={{textAlign:'center',marginTop:20,fontSize:11,color:'rgba(255,255,255,0.18)',fontFamily:'Inter,sans-serif',fontWeight:500}}>
+        Forgetrack · Progression UI Redesign · tap card to expand · use Tweaks to explore
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

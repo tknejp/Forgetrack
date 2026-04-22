@@ -108,11 +108,14 @@ class _BodyContent extends StatelessWidget {
         final currentWeight = fitness.latestWeight;
         final bodyFat = fitness.latestBodyFat;
 
-        double? change30d;
-        if (fitness.weightHistory.length >= 2) {
-          change30d = fitness.weightHistory.last.weight -
-              fitness.weightHistory.first.weight;
-        }
+        final today = DateTime.now();
+        final change30d = fitness
+            .weightMetricsForRange(
+              DateTime(today.year, today.month, today.day)
+                  .subtract(const Duration(days: 29)),
+              today,
+            )
+            .trend;
 
         final chartPoints = fitness.dailyWeightChart(30);
 
