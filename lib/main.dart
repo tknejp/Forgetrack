@@ -6,25 +6,30 @@ import 'package:provider/provider.dart';
 
 import 'app.dart';
 import 'core/app_log.dart';
+import 'features/auth/application/auth_provider.dart';
+import 'features/auth/data/google_auth_service.dart';
 import 'features/progression/application/progression_engine.dart';
 import 'features/progression/data/local/progression_database.dart';
 import 'features/progression/data/progression_repository_impl.dart';
 import 'features/progression/presentation/progression_provider.dart';
-import 'features/auth/application/auth_provider.dart';
+import 'features/sheets_export/application/sheets_export_provider.dart';
+import 'features/social/application/social_provider.dart';
+import 'features/social/data/social_firebase_bootstrap.dart';
+import 'features/social/data/social_firebase_session.dart';
+import 'features/social/data/social_repository_disabled.dart';
+import 'features/social/data/social_repository_firestore.dart';
 import 'providers/calorie_provider.dart';
 import 'providers/fitness_provider.dart';
 import 'providers/goals_provider.dart';
 import 'providers/kaloricke_tabulky_provider.dart';
 import 'providers/locale_provider.dart';
-import 'features/sheets_export/application/sheets_export_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/time_theme_provider.dart';
 import 'services/calorie_api_service.dart';
-import 'features/auth/data/google_auth_service.dart';
-import 'services/health_connect_service.dart';
 import 'services/db/health_database.dart';
-import 'services/kaloricke_tabulky_service.dart';
 import 'services/db/kt_nutrition_database.dart';
+import 'services/health_connect_service.dart';
+import 'services/kaloricke_tabulky_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,9 +53,6 @@ Future<void> main() async {
   final timeThemeProvider = TimeThemeProvider();
   await timeThemeProvider.init();
 
-  // Don't block app startup on lightweight Google auth restore.
-  // On Android this can surface UI (Credential Manager / One Tap), which would
-  // otherwise delay runApp() and prevent Health Connect from loading on a cold start.
   unawaited(GoogleAuthService.instance.initialize());
   AppLog.app.debug('Google auth initialization started');
 
@@ -58,10 +60,12 @@ Future<void> main() async {
   final healthDb = HealthDatabase();
   await healthDb.open();
   final fitnessProvider = FitnessProvider(healthService, healthDb);
+
   final calorieApi = CalorieApiService();
   final ktService = KalorickeTabulkyService();
   final ktDb = KtNutritionDatabase();
   await ktDb.open();
+
   final progressionDb = ProgressionDatabase();
   await progressionDb.open();
 
@@ -69,7 +73,15 @@ Future<void> main() async {
   final progressionEngine = ProgressionEngine(
     repository: ProgressionRepositoryImpl(progressionDb),
   );
-  AppLog.app.info('Providers ready — launching KT initialize()');
+  final socialBackendState = await SocialFirebaseBootstrap.ensureInitialized();
+  final socialRepository = socialBackendState.isReady
+      ? FirestoreSocialRepository()
+      : DisabledSocialRepository(reason: socialBackendState.message);
+  final socialSession = SocialFirebaseSession(
+    isEnabled: socialBackendState.isReady,
+  );
+
+  AppLog.app.info('Providers ready, launching KT initialize()');
   unawaited(ktProvider.initialize());
 
   final goalsProvider = GoalsProvider();
@@ -95,6 +107,21 @@ Future<void> main() async {
               goalsProvider: goals,
               fitnessProvider: fitness,
               nutritionProvider: kt,
+            );
+            return provider;
+          },
+        ),
+        ChangeNotifierProxyProvider2<AuthProvider, ProgressionProvider,
+            SocialProvider>(
+          create: (_) => SocialProvider(
+            repository: socialRepository,
+            session: socialSession,
+            backendState: socialBackendState,
+          ),
+          update: (_, auth, progression, provider) {
+            provider!.bind(
+              authProvider: auth,
+              progressionProvider: progression,
             );
             return provider;
           },

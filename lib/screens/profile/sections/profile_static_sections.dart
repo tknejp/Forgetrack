@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/constants.dart';
+import '../../../features/social/presentation/social_prototype_screen.dart';
 import '../../../l10n/l10n.dart';
 import '../../../features/auth/application/auth_provider.dart';
 import '../../../widgets/app_logo.dart';
@@ -18,6 +19,17 @@ class ProfileDataSection extends StatelessWidget {
 
     return ProfileSettingsCard(
       children: [
+        ProfileSettingsTile(
+          icon: Icons.people_alt_outlined,
+          label: 'Friends & social prototype',
+          subtitle: 'Friend requests, leaderboard and shared achievements.',
+          showChevron: true,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const SocialPrototypeScreen()),
+          ),
+        ),
+        const ProfileTileDivider(),
         ProfileSettingsTile(
           icon: Icons.table_chart_outlined,
           label: l10n.profileExportToSheets,

@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "798278342104",
+    "firebase_url": "https://forgetracker-493415-default-rtdb.europe-west1.firebasedatabase.app",
     "project_id": "forgetracker-493415",
     "storage_bucket": "forgetracker-493415.firebasestorage.app"
   },
@@ -22,7 +23,7 @@
           }
         },
         {
-          "client_id": "798278342104-2fbpll2cvco1d4c79mdk9t6t344fkjbp.apps.googleusercontent.com",
+          "client_id": "798278342104-d2g19o54jbvlo88ih844busim0f74qeu.apps.googleusercontent.com",
           "client_type": 3
         }
       ],

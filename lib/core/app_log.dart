@@ -79,8 +79,7 @@ class AppLogger {
     if (!_shouldLog(level)) return;
 
     final now = DateTime.now();
-    final ts =
-        '${now.hour.toString().padLeft(2, '0')}:'
+    final ts = '${now.hour.toString().padLeft(2, '0')}:'
         '${now.minute.toString().padLeft(2, '0')}:'
         '${now.second.toString().padLeft(2, '0')}.'
         '${now.millisecond.toString().padLeft(3, '0')}';
@@ -146,6 +145,7 @@ abstract final class AppLog {
   static const app = AppLogger('APP');
   static const auth = AppLogger('AUTH');
   static const health = AppLogger('HEALTH');
+  static const social = AppLogger('SOCIAL');
   static const sync = AppLogger('SYNC');
   static const nav = AppLogger('NAV');
   static const ui = AppLogger('UI');

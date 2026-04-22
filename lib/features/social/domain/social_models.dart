@@ -1,0 +1,240 @@
+class SocialUserStats {
+  const SocialUserStats({
+    required this.level,
+    required this.totalXp,
+    required this.unlockedAchievementCount,
+    required this.claimedRewardCount,
+    required this.pendingRewardCount,
+    required this.bestStepsStreak,
+    required this.bestNutritionStreak,
+    this.updatedAt,
+  });
+
+  final int level;
+  final int totalXp;
+  final int unlockedAchievementCount;
+  final int claimedRewardCount;
+  final int pendingRewardCount;
+  final int bestStepsStreak;
+  final int bestNutritionStreak;
+  final DateTime? updatedAt;
+}
+
+class SocialUserProfile {
+  const SocialUserProfile({
+    required this.uid,
+    required this.displayName,
+    required this.handle,
+    required this.email,
+    required this.socialEnabled,
+    required this.stats,
+    this.photoUrl,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  final String uid;
+  final String displayName;
+  final String handle;
+  final String email;
+  final String? photoUrl;
+  final bool socialEnabled;
+  final SocialUserStats stats;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+}
+
+class SocialUnlockedAchievement {
+  const SocialUnlockedAchievement({
+    required this.achievementId,
+    required this.title,
+    required this.description,
+    required this.difficulty,
+    required this.type,
+    required this.unlockedAt,
+    this.domain,
+    this.ruleId,
+  });
+
+  final String achievementId;
+  final String title;
+  final String description;
+  final String difficulty;
+  final String type;
+  final String? domain;
+  final String? ruleId;
+  final DateTime unlockedAt;
+}
+
+enum SocialFriendRequestStatus {
+  pending,
+  accepted,
+  declined,
+}
+
+class SocialFriendRequest {
+  const SocialFriendRequest({
+    required this.id,
+    required this.fromUid,
+    required this.toUid,
+    required this.status,
+    required this.createdAt,
+    this.respondedAt,
+  });
+
+  final String id;
+  final String fromUid;
+  final String toUid;
+  final SocialFriendRequestStatus status;
+  final DateTime createdAt;
+  final DateTime? respondedAt;
+
+  bool get isPending => status == SocialFriendRequestStatus.pending;
+}
+
+class SocialFriendship {
+  const SocialFriendship({
+    required this.id,
+    required this.memberUids,
+    required this.createdAt,
+    this.sourceRequestId,
+  });
+
+  final String id;
+  final List<String> memberUids;
+  final DateTime createdAt;
+  final String? sourceRequestId;
+
+  String counterpartFor(String uid) {
+    for (final memberUid in memberUids) {
+      if (memberUid != uid) return memberUid;
+    }
+    return uid;
+  }
+}
+
+enum SocialShareVisibility {
+  friends,
+}
+
+class SocialAchievementActorSnapshot {
+  const SocialAchievementActorSnapshot({
+    required this.displayName,
+    this.photoUrl,
+  });
+
+  final String displayName;
+  final String? photoUrl;
+}
+
+class SocialAchievementSnapshot {
+  const SocialAchievementSnapshot({
+    required this.title,
+    required this.description,
+    required this.difficulty,
+    required this.type,
+    this.domain,
+  });
+
+  final String title;
+  final String description;
+  final String difficulty;
+  final String type;
+  final String? domain;
+}
+
+class SocialAchievementShare {
+  const SocialAchievementShare({
+    required this.id,
+    required this.actorUid,
+    required this.achievementId,
+    required this.createdAt,
+    required this.visibility,
+    required this.actorSnapshot,
+    required this.achievementSnapshot,
+    this.message,
+  });
+
+  final String id;
+  final String actorUid;
+  final String achievementId;
+  final DateTime createdAt;
+  final String? message;
+  final SocialShareVisibility visibility;
+  final SocialAchievementActorSnapshot actorSnapshot;
+  final SocialAchievementSnapshot achievementSnapshot;
+}
+
+class SocialProfileSyncPayload {
+  const SocialProfileSyncPayload({
+    required this.uid,
+    required this.displayName,
+    required this.email,
+    required this.handle,
+    required this.photoUrl,
+    required this.socialEnabled,
+    required this.stats,
+    required this.unlockedAchievements,
+  });
+
+  final String uid;
+  final String displayName;
+  final String email;
+  final String handle;
+  final String? photoUrl;
+  final bool socialEnabled;
+  final SocialUserStats stats;
+  final List<SocialUnlockedAchievement> unlockedAchievements;
+}
+
+String normalizeSocialHandle(String value) {
+  final normalized = value
+      .trim()
+      .toLowerCase()
+      .replaceAll(RegExp(r'[^a-z0-9_]'), '_')
+      .replaceAll(RegExp(r'_+'), '_')
+      .replaceAll(RegExp(r'^_+|_+$'), '');
+  return normalized;
+}
+
+String buildDefaultSocialHandle({
+  required String uid,
+  required String email,
+  String? displayName,
+}) {
+  final candidates = <String>[
+    if (displayName != null && displayName.trim().isNotEmpty) displayName,
+    email.split('@').first,
+    'user_$uid',
+  ];
+
+  for (final candidate in candidates) {
+    final handle = normalizeSocialHandle(candidate);
+    if (handle.isNotEmpty) return handle;
+  }
+
+  return 'user';
+}
+
+List<String> buildSocialHandleSearchTokens(String handle) {
+  final normalized = normalizeSocialHandle(handle);
+  if (normalized.isEmpty) return const [];
+
+  final tokens = <String>{};
+  for (var i = 1; i <= normalized.length; i++) {
+    tokens.add(normalized.substring(0, i));
+  }
+
+  final ordered = tokens.toList()..sort((a, b) => a.length.compareTo(b.length));
+  return ordered;
+}
+
+String buildSocialFriendshipId(String firstUid, String secondUid) {
+  final sorted = [firstUid, secondUid]..sort();
+  return '${sorted[0]}__${sorted[1]}';
+}
+
+String buildSocialParticipantsKey(String firstUid, String secondUid) {
+  final sorted = [firstUid, secondUid]..sort();
+  return '${sorted[0]}:${sorted[1]}';
+}

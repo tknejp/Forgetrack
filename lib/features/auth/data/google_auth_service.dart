@@ -11,7 +11,7 @@ import 'google_auth_platform_adapter.dart';
 
 class GoogleAuthService {
   static const String _serverClientId =
-      '798278342104-2fbpll2cvco1d4c79mdk9t6t344fkjbp.apps.googleusercontent.com';
+      '798278342104-d2g19o54jbvlo88ih844busim0f74qeu.apps.googleusercontent.com';
 
   GoogleAuthService._() {
     installGoogleAuthPlatformAdapter();
