@@ -83,6 +83,92 @@ class GoalsProvider extends ChangeNotifier {
       key: _kWeeklyActivityMinsHistory,
       fallbackValue: _weeklyActivityMins.toDouble(),
     );
+    final today = progressionDate(DateTime.now());
+    final currentWeekStart = startOfProgressionWeek(today);
+    var historyChanged = false;
+
+    final migratedDailyStepsHistory = _ensureRevisionForAnchor(
+      entries: _dailyStepsHistory,
+      anchor: today,
+      currentValue: _dailySteps.toDouble(),
+    );
+    if (!_sameHistory(_dailyStepsHistory, migratedDailyStepsHistory)) {
+      _dailyStepsHistory = migratedDailyStepsHistory;
+      historyChanged = true;
+      await _saveHistory(
+        prefs: prefs,
+        key: _kDailyStepsHistory,
+        entries: _dailyStepsHistory,
+      );
+    }
+
+    final migratedDailyCaloriesHistory = _ensureRevisionForAnchor(
+      entries: _dailyCaloriesHistory,
+      anchor: today,
+      currentValue: _dailyCalories,
+    );
+    if (!_sameHistory(_dailyCaloriesHistory, migratedDailyCaloriesHistory)) {
+      _dailyCaloriesHistory = migratedDailyCaloriesHistory;
+      historyChanged = true;
+      await _saveHistory(
+        prefs: prefs,
+        key: _kDailyCaloriesHistory,
+        entries: _dailyCaloriesHistory,
+      );
+    }
+
+    final migratedDailyProteinHistory = _ensureRevisionForAnchor(
+      entries: _dailyProteinHistory,
+      anchor: today,
+      currentValue: _dailyProtein,
+    );
+    if (!_sameHistory(_dailyProteinHistory, migratedDailyProteinHistory)) {
+      _dailyProteinHistory = migratedDailyProteinHistory;
+      historyChanged = true;
+      await _saveHistory(
+        prefs: prefs,
+        key: _kDailyProteinHistory,
+        entries: _dailyProteinHistory,
+      );
+    }
+
+    final migratedSleepHoursHistory = _ensureRevisionForAnchor(
+      entries: _sleepHoursHistory,
+      anchor: today,
+      currentValue: _sleepHours,
+    );
+    if (!_sameHistory(_sleepHoursHistory, migratedSleepHoursHistory)) {
+      _sleepHoursHistory = migratedSleepHoursHistory;
+      historyChanged = true;
+      await _saveHistory(
+        prefs: prefs,
+        key: _kSleepHoursHistory,
+        entries: _sleepHoursHistory,
+      );
+    }
+
+    final migratedWeeklyActivityHistory = _ensureRevisionForAnchor(
+      entries: _weeklyActivityMinsHistory,
+      anchor: currentWeekStart,
+      currentValue: _weeklyActivityMins.toDouble(),
+    );
+    if (!_sameHistory(
+      _weeklyActivityMinsHistory,
+      migratedWeeklyActivityHistory,
+    )) {
+      _weeklyActivityMinsHistory = migratedWeeklyActivityHistory;
+      historyChanged = true;
+      await _saveHistory(
+        prefs: prefs,
+        key: _kWeeklyActivityMinsHistory,
+        entries: _weeklyActivityMinsHistory,
+      );
+    }
+
+    if (historyChanged) {
+      notifyListeners();
+      return;
+    }
     notifyListeners();
   }
 
@@ -283,6 +369,43 @@ class GoalsProvider extends ChangeNotifier {
       ..add(_GoalHistoryEntry(effectiveFrom: normalized, value: value))
       ..sort((a, b) => a.effectiveFrom.compareTo(b.effectiveFrom));
     return nextEntries;
+  }
+
+  List<_GoalHistoryEntry> _ensureRevisionForAnchor({
+    required List<_GoalHistoryEntry> entries,
+    required DateTime anchor,
+    required double currentValue,
+  }) {
+    final normalizedAnchor = progressionDate(anchor);
+    final resolved = _resolveValue(entries, normalizedAnchor);
+    if (resolved == currentValue) {
+      return entries;
+    }
+
+    return _withRevision(
+      entries: entries,
+      effectiveFrom: normalizedAnchor,
+      value: currentValue,
+    );
+  }
+
+  bool _sameHistory(
+    List<_GoalHistoryEntry> left,
+    List<_GoalHistoryEntry> right,
+  ) {
+    if (left.length != right.length) return false;
+
+    for (var index = 0; index < left.length; index++) {
+      if (progressionDate(left[index].effectiveFrom) !=
+          progressionDate(right[index].effectiveFrom)) {
+        return false;
+      }
+      if (left[index].value != right[index].value) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   double _resolveValue(List<_GoalHistoryEntry> entries, DateTime effectiveDay) {

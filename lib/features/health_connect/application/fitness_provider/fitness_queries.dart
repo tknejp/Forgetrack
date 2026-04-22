@@ -1,7 +1,7 @@
-import '../../models/activity_record.dart';
-import '../../models/sleep_record.dart';
-import '../../models/weight_card_data.dart';
-import '../../models/weight_record.dart';
+import '../../../../models/weight_card_data.dart';
+import '../../domain/activity_record.dart';
+import '../../domain/sleep_record.dart';
+import '../../domain/weight_record.dart';
 
 /// Pure read-only query and aggregation helpers for [FitnessProvider].
 ///

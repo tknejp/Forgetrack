@@ -1,6 +1,6 @@
 import 'package:health/health.dart';
 
-import '../../models/activity_record.dart';
+import '../../domain/activity_record.dart';
 import 'hc_read_client.dart';
 
 class HcStepsService {
@@ -70,5 +70,48 @@ class HcStepsService {
       'getStepsHistory(): produced ${records.length} daily records',
     );
     return records;
+  }
+
+  Future<List<StepsRecord>> getStepsHistoryForRange(
+    DateTime start,
+    DateTime end,
+  ) async {
+    final startDay = _client.dayOnly(start);
+    final endDay = _client.dayOnly(end);
+    final now = DateTime.now();
+    final queryEnd = endDay.add(const Duration(days: 1)).isBefore(now)
+        ? endDay.add(const Duration(days: 1))
+        : now;
+
+    if (endDay.isBefore(startDay) || !queryEnd.isAfter(startDay)) {
+      return const [];
+    }
+
+    _client.logDebug(
+      'getStepsHistoryForRange(${_client.fmt(startDay)} -> ${_client.fmt(endDay)})',
+    );
+
+    final points = await _client.fetchData(
+      label: 'STEPS_HISTORY_RANGE',
+      start: startDay,
+      end: queryEnd,
+      types: const [HealthDataType.STEPS],
+    );
+
+    final stepsByDay = <DateTime, int>{};
+    for (final point in points) {
+      final day = _client.dayOnly(point.dateFrom);
+      final steps = _client.numericValue(point).round();
+      stepsByDay.update(day, (value) => value + steps, ifAbsent: () => steps);
+    }
+
+    final totalDays = endDay.difference(startDay).inDays + 1;
+    return [
+      for (int i = 0; i < totalDays; i++)
+        StepsRecord(
+          date: startDay.add(Duration(days: i)),
+          steps: stepsByDay[startDay.add(Duration(days: i))] ?? 0,
+        ),
+    ];
   }
 }

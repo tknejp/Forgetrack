@@ -58,10 +58,14 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
 
   KtDayNutrition? nutritionForDate(DateTime date) => _db.getDay(date);
 
+  Map<String, KtDayNutrition> nutritionRange(DateTime start, DateTime end) =>
+      _db.getRange(start, end);
+
   /// Average daily calories over [start, end], excluding today and days with
   /// nothing logged. Returns null when no valid days are available.
   double? avgCaloriesForRange(DateTime start, DateTime end) =>
-      KtNutritionQueries.avgField(_db, start, end, (d) => d.calories, 'calories');
+      KtNutritionQueries.avgField(
+          _db, start, end, (d) => d.calories, 'calories');
 
   double? avgProteinForRange(DateTime start, DateTime end) =>
       KtNutritionQueries.avgField(_db, start, end, (d) => d.protein, 'protein');

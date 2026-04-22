@@ -7,20 +7,20 @@ import 'package:provider/provider.dart';
 
 import '../../core/app_log.dart';
 import '../../l10n/l10n.dart';
-import '../../models/activity_record.dart';
-import '../../models/selected_period.dart';
-import '../../models/sleep_record.dart';
-import '../../models/weight_card_data.dart';
+import '../../features/health_connect/application/fitness_provider.dart';
+import '../../features/health_connect/domain/activity_record.dart';
+import '../../features/health_connect/domain/sleep_record.dart';
+import '../../features/health_connect/presentation/activities/activities_screen.dart';
+import '../../features/health_connect/presentation/body/body_screen.dart';
 import '../../features/nutrition/application/calorie_provider.dart';
 import '../../features/nutrition/application/kaloricke_tabulky_provider.dart';
 import '../../features/nutrition/presentation/calories_screen.dart';
-import '../../providers/fitness_provider.dart';
+import '../../models/selected_period.dart';
+import '../../models/weight_card_data.dart';
 import '../../providers/goals_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/parallax_background.dart';
 import '../../widgets/top_level_app_bar.dart';
-import '../activities/activities_screen.dart';
-import '../body/body_screen.dart';
 import 'widgets/calorie_summary_card.dart';
 import 'widgets/sleep_card.dart';
 import 'widgets/steps_card.dart';
@@ -105,7 +105,7 @@ Future<void> _refreshOverview(
   SelectedPeriod period,
 ) async {
   await Future.wait([
-    fitness.refresh(),
+    fitness.refreshRange(period.start, period.end),
     if (kt.isLoggedIn) kt.refreshRange(period.start, period.end),
   ]);
 }
@@ -471,8 +471,6 @@ class _ResolvedOverviewMetrics {
 
   static List<StepsRecord> _last7Steps(FitnessProvider fitness) {
     final history = fitness.stepsHistory;
-    return history.length >= 7
-        ? history.sublist(history.length - 7)
-        : history;
+    return history.length >= 7 ? history.sublist(history.length - 7) : history;
   }
 }

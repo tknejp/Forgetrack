@@ -1,8 +1,8 @@
 import 'package:health/health.dart';
 
-import '../models/activity_record.dart';
-import '../models/sleep_record.dart';
-import '../models/weight_record.dart';
+import '../domain/activity_record.dart';
+import '../domain/sleep_record.dart';
+import '../domain/weight_record.dart';
 import 'health_connect_service/hc_body_service.dart';
 import 'health_connect_service/hc_calories_service.dart';
 import 'health_connect_service/hc_permission_service.dart';
@@ -70,6 +70,12 @@ class HealthConnectService {
   Future<List<StepsRecord>> getStepsHistory(int days) =>
       _steps.getStepsHistory(days);
 
+  Future<List<StepsRecord>> getStepsHistoryForRange(
+    DateTime start,
+    DateTime end,
+  ) =>
+      _steps.getStepsHistoryForRange(start, end);
+
   // ─── Active calories ───────────────────────────────────────────────────────
 
   Future<double> getActiveCaloriesBurned(DateTime start, DateTime end) =>
@@ -78,12 +84,25 @@ class HealthConnectService {
   Future<List<double>> getActiveCaloriesHistory(int days) =>
       _calories.getActiveCaloriesHistory(days);
 
+  Future<List<double>> getActiveCaloriesHistoryForRange(
+    DateTime start,
+    DateTime end,
+  ) =>
+      _calories.getActiveCaloriesHistoryForRange(start, end);
+
   // ─── Weight / body ─────────────────────────────────────────────────────────
 
   Future<List<WeightRecord>> getWeightHistory(int days) =>
       _body.getWeightHistory(days);
 
-  Future<double?> getLatestBodyFat() => _body.getLatestBodyFat();
+  Future<List<WeightRecord>> getWeightHistoryForRange(
+    DateTime start,
+    DateTime end,
+  ) =>
+      _body.getWeightHistoryForRange(start, end);
+
+  Future<double?> getLatestBodyFat({int lookbackDays = 365}) =>
+      _body.getLatestBodyFat(lookbackDays: lookbackDays);
 
   // ─── Activities ────────────────────────────────────────────────────────────
 
@@ -127,6 +146,12 @@ class HealthConnectService {
 
   Future<List<SleepRecord>> getSleepHistory(int nights) =>
       _sleep.getSleepHistory(nights);
+
+  Future<List<SleepRecord>> getSleepHistoryForRange(
+    DateTime start,
+    DateTime end,
+  ) =>
+      _sleep.getSleepHistoryForRange(start, end);
 
   // ─── Debug helpers ─────────────────────────────────────────────────────────
 

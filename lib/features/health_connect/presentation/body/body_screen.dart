@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../l10n/l10n.dart';
-import '../../providers/fitness_provider.dart';
-import '../../providers/goals_provider.dart';
-import '../../theme/app_theme.dart';
-import '../../widgets/hc_state_widgets.dart';
-import '../../widgets/stat_display.dart';
-import '../../widgets/top_level_app_bar.dart';
+import '../../../../l10n/l10n.dart';
+import '../../../../providers/goals_provider.dart';
+import '../../../../theme/app_theme.dart';
+import '../../../../widgets/stat_display.dart';
+import '../../../../widgets/top_level_app_bar.dart';
+import '../../application/fitness_provider.dart';
+import '../hc_state_widgets.dart';
 import 'widgets/body_cards.dart';
 import 'widgets/sleep_section.dart';
 

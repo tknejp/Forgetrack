@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../l10n/l10n.dart';
-import '../../../models/sleep_record.dart';
+import '../../../features/health_connect/domain/sleep_record.dart';
 import '../../../theme/app_theme.dart';
 
 class SleepCard extends StatefulWidget {

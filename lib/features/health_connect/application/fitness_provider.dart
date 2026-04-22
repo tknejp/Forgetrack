@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
-import '../models/activity_record.dart';
-import '../models/sleep_record.dart';
-import '../models/weight_card_data.dart';
-import '../models/weight_record.dart';
-import '../services/health_connect_service.dart';
-import '../services/db/health_database.dart';
+import '../../../models/weight_card_data.dart';
+import '../data/health_connect_service.dart';
+import '../data/local/health_database.dart';
+import '../domain/activity_record.dart';
+import '../domain/sleep_record.dart';
+import '../domain/weight_record.dart';
 import 'fitness_provider/fitness_queries.dart';
 
 enum FitnessAccessState {
@@ -263,6 +263,31 @@ class FitnessProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> refreshRange(DateTime start, DateTime end) async {
+    if (_inFlight) return;
+    if (!_isHealthConnectAvailable || !_hasPermissions) {
+      await initialize();
+      return;
+    }
+    _inFlight = true;
+    _isRefreshing = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _refreshHistoryAccess(interactive: true);
+      await _fetchOverviewRangeFromHC(start, end);
+    } on _QuotaExceededException {
+      // Quota exhausted — serve existing DB data, do not touch _lastSyncedAt.
+    } catch (e) {
+      _errorMessage = e.toString();
+    } finally {
+      _isRefreshing = false;
+      _inFlight = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> installHealthConnect() => _service.installHealthConnect();
 
   /// Requests the WORKOUT permission and, if granted, fetches activities and
@@ -405,6 +430,64 @@ class FitnessProvider extends ChangeNotifier {
       latestBodyFat: _latestBodyFat,
       lastSyncedAt: _lastSyncedAt!,
     );
+  }
+
+  Future<void> _fetchOverviewRangeFromHC(DateTime start, DateTime end) async {
+    final rangeStart = DateTime(start.year, start.month, start.day);
+    final rangeEnd = DateTime(end.year, end.month, end.day);
+
+    List<StepsRecord> steps;
+    List<double> calories;
+    List<WeightRecord> weight;
+    List<SleepRecord> sleep;
+    double? latestBodyFat;
+
+    try {
+      steps = await _service.getStepsHistoryForRange(rangeStart, rangeEnd);
+    } catch (e) {
+      if (_isQuotaError(e)) throw const _QuotaExceededException();
+      rethrow;
+    }
+
+    try {
+      calories =
+          await _service.getActiveCaloriesHistoryForRange(rangeStart, rangeEnd);
+    } catch (e) {
+      if (_isQuotaError(e)) throw const _QuotaExceededException();
+      rethrow;
+    }
+
+    try {
+      weight = await _service.getWeightHistoryForRange(rangeStart, rangeEnd);
+    } catch (e) {
+      if (_isQuotaError(e)) throw const _QuotaExceededException();
+      rethrow;
+    }
+
+    try {
+      sleep = await _service.getSleepHistoryForRange(rangeStart, rangeEnd);
+    } catch (e) {
+      if (_isQuotaError(e)) throw const _QuotaExceededException();
+      rethrow;
+    }
+
+    try {
+      latestBodyFat = await _service.getLatestBodyFat(lookbackDays: 365);
+    } catch (e) {
+      if (_isQuotaError(e)) throw const _QuotaExceededException();
+      rethrow;
+    }
+
+    _lastSyncedAt = DateTime.now();
+    await _db.saveOverviewRange(
+      steps: steps,
+      calories: calories,
+      weight: weight,
+      sleep: sleep,
+      latestBodyFat: latestBodyFat,
+      lastSyncedAt: _lastSyncedAt!,
+    );
+    _loadFromDb();
   }
 
   int get _historyLookbackDays =>

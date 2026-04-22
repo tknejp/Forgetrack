@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../models/weight_card_data.dart';
-import '../providers/fitness_provider.dart';
-import '../providers/goals_provider.dart';
-import '../theme/ft_design_tokens.dart';
-import '../widgets/ft/ft_plain_card.dart';
-import '../widgets/ft/ft_screen_header.dart';
-import '../widgets/ft/ft_stat_card.dart';
-import '../widgets/ft/ft_tab_pill.dart';
-import '../widgets/ft/ft_trend_chart.dart';
+import '../../../models/weight_card_data.dart';
+import '../../../providers/goals_provider.dart';
+import '../../../theme/ft_design_tokens.dart';
+import '../../../widgets/ft/ft_plain_card.dart';
+import '../../../widgets/ft/ft_screen_header.dart';
+import '../../../widgets/ft/ft_stat_card.dart';
+import '../../../widgets/ft/ft_tab_pill.dart';
+import '../../../widgets/ft/ft_trend_chart.dart';
+import '../application/fitness_provider.dart';
 
 class FtBodyScreen extends StatefulWidget {
   const FtBodyScreen({super.key});

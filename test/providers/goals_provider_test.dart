@@ -34,5 +34,24 @@ void main() {
       final now = DateTime.now();
       expect(provider.progressionWeeklyActivityMinsForWeek(now), 240);
     });
+
+    test('migrates stale delayed goal history to today on init', () async {
+      final today = DateTime.now();
+      final tomorrow = DateTime(today.year, today.month, today.day + 1);
+      SharedPreferences.setMockInitialValues({
+        'goal_daily_calories': 2785.0,
+        'goal_daily_protein': 230.0,
+        'goal_daily_calories_history':
+            '[{"effectiveFrom":"1970-01-01T00:00:00.000","value":2000.0},{"effectiveFrom":"${tomorrow.toIso8601String()}","value":2785.0}]',
+        'goal_daily_protein_history':
+            '[{"effectiveFrom":"1970-01-01T00:00:00.000","value":150.0},{"effectiveFrom":"${tomorrow.toIso8601String()}","value":230.0}]',
+      });
+
+      final provider = GoalsProvider();
+      await provider.init();
+
+      expect(provider.progressionDailyCaloriesForDate(today), 2785);
+      expect(provider.progressionDailyProteinForDate(today), 230);
+    });
   });
 }

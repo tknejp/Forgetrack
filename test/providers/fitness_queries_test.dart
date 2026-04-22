@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:forgetrack/models/weight_record.dart';
-import 'package:forgetrack/providers/fitness_provider/fitness_queries.dart';
+import 'package:forgetrack/features/health_connect/application/fitness_provider/fitness_queries.dart';
+import 'package:forgetrack/features/health_connect/domain/weight_record.dart';
 
 void main() {
   group('FitnessQueries weight filters', () {

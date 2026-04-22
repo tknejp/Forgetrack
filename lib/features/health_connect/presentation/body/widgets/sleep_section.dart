@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../../l10n/l10n.dart';
-import '../../../models/sleep_record.dart';
-import '../../../theme/app_theme.dart';
-import '../../../widgets/stat_display.dart';
+import '../../../../../l10n/l10n.dart';
+import '../../../../../theme/app_theme.dart';
+import '../../../../../widgets/stat_display.dart';
+import '../../../domain/sleep_record.dart';
 
 class SleepSummaryCard extends StatelessWidget {
   final SleepRecord? todaySleep;

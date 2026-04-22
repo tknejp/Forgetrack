@@ -2,10 +2,10 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../../l10n/l10n.dart';
-import '../../../models/activity_record.dart';
-import '../../../theme/app_theme.dart';
-import '../../../widgets/stat_display.dart';
+import '../../../../../l10n/l10n.dart';
+import '../../../../../theme/app_theme.dart';
+import '../../../../../widgets/stat_display.dart';
+import '../../../domain/activity_record.dart';
 
 class StepsSummaryCard extends StatelessWidget {
   final int todaySteps;

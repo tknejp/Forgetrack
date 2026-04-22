@@ -59,4 +59,48 @@ class HcCaloriesService {
     );
     return result;
   }
+
+  Future<List<double>> getActiveCaloriesHistoryForRange(
+    DateTime start,
+    DateTime end,
+  ) async {
+    final startDay = _client.dayOnly(start);
+    final endDay = _client.dayOnly(end);
+    final now = DateTime.now();
+    final queryEnd = endDay.add(const Duration(days: 1)).isBefore(now)
+        ? endDay.add(const Duration(days: 1))
+        : now;
+
+    if (endDay.isBefore(startDay) || !queryEnd.isAfter(startDay)) {
+      return const [];
+    }
+
+    _client.logDebug(
+      'getActiveCaloriesHistoryForRange(${_client.fmt(startDay)} -> ${_client.fmt(endDay)})',
+    );
+
+    final points = await _client.fetchData(
+      label: 'ACTIVE_ENERGY_BURNED_HISTORY_RANGE',
+      start: startDay,
+      end: queryEnd,
+      types: const [HealthDataType.ACTIVE_ENERGY_BURNED],
+    );
+
+    final caloriesByDay = <DateTime, double>{};
+    for (final point in points) {
+      final day = _client.dayOnly(point.dateFrom);
+      final calories = _client.numericValue(point);
+      caloriesByDay.update(
+        day,
+        (value) => value + calories,
+        ifAbsent: () => calories,
+      );
+    }
+
+    final totalDays = endDay.difference(startDay).inDays + 1;
+    return [
+      for (int i = 0; i < totalDays; i++)
+        caloriesByDay[startDay.add(Duration(days: i))] ?? 0.0,
+    ];
+  }
 }

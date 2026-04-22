@@ -2,7 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../l10n/l10n.dart';
-import '../../../models/activity_record.dart';
+import '../../../features/health_connect/domain/activity_record.dart';
 import '../../../theme/app_theme.dart';
 
 class StepsCard extends StatefulWidget {

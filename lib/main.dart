@@ -23,13 +23,13 @@ import 'features/nutrition/application/kaloricke_tabulky_provider.dart';
 import 'features/nutrition/data/calorie_api_service.dart';
 import 'features/nutrition/data/kaloricke_tabulky_service.dart';
 import 'features/nutrition/data/local/kt_nutrition_database.dart';
-import 'providers/fitness_provider.dart';
+import 'features/health_connect/application/fitness_provider.dart';
+import 'features/health_connect/data/health_connect_service.dart';
+import 'features/health_connect/data/local/health_database.dart';
 import 'providers/goals_provider.dart';
 import 'providers/locale_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/time_theme_provider.dart';
-import 'services/db/health_database.dart';
-import 'services/health_connect_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

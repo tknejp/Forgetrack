@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../models/activity_record.dart';
+import '../../../features/health_connect/domain/activity_record.dart';
 
 class ActivityCard extends StatelessWidget {
   final List<ActivityRecord> activities;

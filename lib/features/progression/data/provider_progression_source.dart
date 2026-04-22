@@ -1,6 +1,7 @@
-import '../../../providers/fitness_provider.dart';
+import '../../health_connect/application/fitness_provider.dart';
 import '../../../providers/goals_provider.dart';
 import '../../nutrition/application/kaloricke_tabulky_provider.dart';
+import '../../nutrition/data/kaloricke_tabulky_service.dart';
 import '../application/progression_source.dart';
 import '../domain/progression_models.dart';
 
@@ -48,16 +49,15 @@ class ProviderProgressionSource implements ProgressionSource {
   @override
   List<ProgressionSnapshot> buildDailySnapshots() {
     final days = _availableDays();
+    final prefetchedNutritionByKey = _prefetchNutrition(days);
+    final today = progressionDate(_clock());
+
     return [
       for (final day in days)
-        ProgressionSnapshot(
-          period: ProgressionPeriod.day(day),
-          steps: _fitnessProvider.stepsForDate(day),
-          calories: _caloriesForDay(day),
-          proteinGrams: _proteinForDay(day),
-          sleepMinutes:
-              _fitnessProvider.sleepForDate(day)?.totalDuration.inMinutes ?? 0,
-          activityMinutes: _activityMinutesForRange(day, day),
+        _dailySnapshotFor(
+          day,
+          prefetchedNutritionByKey: prefetchedNutritionByKey,
+          today: today,
         ),
     ];
   }
@@ -124,28 +124,37 @@ class ProviderProgressionSource implements ProgressionSource {
     return sorted;
   }
 
-  double _caloriesForDay(DateTime day) {
-    final nutrition = _nutritionProvider.nutritionForDate(day);
-    if (nutrition != null) return nutrition.calories;
+  ProgressionSnapshot _dailySnapshotFor(
+    DateTime day, {
+    required Map<String, KtDayNutrition> prefetchedNutritionByKey,
+    required DateTime today,
+  }) {
+    final nutrition = prefetchedNutritionByKey[progressionDateKey(day)];
+    final isToday = progressionDate(day) == today;
 
-    final today = progressionDate(_clock());
-    if (progressionDate(day) == today) {
-      return _nutritionProvider.todayCalories;
-    }
-
-    return 0;
+    return ProgressionSnapshot(
+      period: ProgressionPeriod.day(day),
+      steps: _fitnessProvider.stepsForDate(day),
+      calories: nutrition?.calories ??
+          (isToday ? _nutritionProvider.todayCalories : 0),
+      proteinGrams:
+          nutrition?.protein ?? (isToday ? _nutritionProvider.todayProtein : 0),
+      sleepMinutes:
+          _fitnessProvider.sleepForDate(day)?.totalDuration.inMinutes ?? 0,
+      activityMinutes: _activityMinutesForRange(day, day),
+    );
   }
 
-  double _proteinForDay(DateTime day) {
-    final nutrition = _nutritionProvider.nutritionForDate(day);
-    if (nutrition != null) return nutrition.protein;
-
-    final today = progressionDate(_clock());
-    if (progressionDate(day) == today) {
-      return _nutritionProvider.todayProtein;
+  Map<String, KtDayNutrition> _prefetchNutrition(List<DateTime> days) {
+    if (days.isEmpty) {
+      return const {};
     }
 
-    return 0;
+    final sortedDays = [...days]..sort();
+    return _nutritionProvider.nutritionRange(
+      sortedDays.first,
+      sortedDays.last,
+    );
   }
 
   int _activityMinutesForRange(DateTime start, DateTime end) {

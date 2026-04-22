@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../l10n/l10n.dart';
-import '../providers/fitness_provider.dart';
+import '../../../l10n/l10n.dart';
+import '../application/fitness_provider.dart';
 
 class HcUnavailableState extends StatelessWidget {
   final FitnessProvider fitness;

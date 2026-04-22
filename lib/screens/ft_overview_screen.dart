@@ -7,7 +7,7 @@ import '../features/progression/presentation/progression_provider.dart';
 import '../features/progression/presentation/widgets/ft_progression_home_card.dart';
 import '../models/selected_period.dart';
 import '../features/auth/application/auth_provider.dart';
-import '../providers/fitness_provider.dart';
+import '../features/health_connect/application/fitness_provider.dart';
 import '../providers/goals_provider.dart';
 import '../features/nutrition/application/kaloricke_tabulky_provider.dart';
 import '../screens/ft_progression_screen.dart';

@@ -1,11 +1,11 @@
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../../core/app_log.dart';
-import '../../models/activity_record.dart';
-import '../../models/hc_records.dart';
-import '../../models/sleep_record.dart';
-import '../../models/weight_record.dart';
+import '../../../../core/app_log.dart';
+import '../../domain/activity_record.dart';
+import '../../domain/sleep_record.dart';
+import '../../domain/weight_record.dart';
+import 'hc_records.dart';
 
 /// Isar-backed local store for Health Connect data.
 ///
@@ -264,6 +264,65 @@ class HealthDatabase {
 
     _activities = activities;
     _workoutPermission = workoutPermission;
+  }
+
+  Future<void> saveOverviewRange({
+    required List<StepsRecord> steps,
+    required List<double> calories,
+    required List<WeightRecord> weight,
+    required List<SleepRecord> sleep,
+    required double? latestBodyFat,
+    required DateTime lastSyncedAt,
+  }) async {
+    final isar = _isar!;
+
+    await isar.writeTxn(() async {
+      await isar.hcStepsDayRecords.putAll([
+        for (final r in steps)
+          HcStepsDayRecord()
+            ..dateKey = _toKey(r.date)
+            ..steps = r.steps,
+      ]);
+
+      await isar.hcCalorieDayRecords.putAll([
+        for (var i = 0; i < calories.length && i < steps.length; i++)
+          HcCalorieDayRecord()
+            ..dateKey = _toKey(steps[i].date)
+            ..kcal = calories[i],
+      ]);
+
+      await isar.hcWeightRecords.putAll([
+        for (final r in weight)
+          HcWeightRecord()
+            ..date = r.date
+            ..weight = r.weight
+            ..bodyFat = r.bodyFat,
+      ]);
+
+      await isar.hcSleepRecords.putAll([
+        for (final r in sleep)
+          HcSleepRecord()
+            ..dateKey = _toKey(r.wakeTime)
+            ..sleepStart = r.sleepStart
+            ..wakeTime = r.wakeTime
+            ..totalDurationSeconds = r.totalDuration.inSeconds,
+      ]);
+
+      final meta = (await isar.hcMetaRecords.get(1)) ?? HcMetaRecord();
+      await isar.hcMetaRecords.put(
+        meta
+          ..lastSyncedAt = lastSyncedAt
+          ..latestBodyFat = latestBodyFat,
+      );
+    });
+
+    await _loadCache();
+
+    AppLog.app.info(
+      '$_logName: saveOverviewRange() done — '
+      'steps=${steps.length}d calories=${calories.length}d '
+      'weight=${weight.length} sleep=${sleep.length}n',
+    );
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────

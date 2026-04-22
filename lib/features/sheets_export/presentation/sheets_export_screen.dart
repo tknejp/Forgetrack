@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../l10n/l10n.dart';
-import '../../../providers/fitness_provider.dart';
+import '../../health_connect/application/fitness_provider.dart';
 import '../../nutrition/application/kaloricke_tabulky_provider.dart';
 import '../../../theme/ft_design_tokens.dart';
 import '../../../widgets/ft/ft_plain_card.dart';

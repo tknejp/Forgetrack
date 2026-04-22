@@ -1,6 +1,6 @@
 import 'package:health/health.dart';
 
-import '../../models/activity_record.dart';
+import '../../domain/activity_record.dart';
 import 'hc_read_client.dart';
 
 class HcWorkoutService {

@@ -1,6 +1,6 @@
 import 'package:health/health.dart';
 
-import '../../models/sleep_record.dart';
+import '../../domain/sleep_record.dart';
 import 'hc_read_client.dart';
 
 class HcSleepService {
@@ -36,7 +36,8 @@ class HcSleepService {
       if (!end.isAfter(start)) continue;
 
       total += end.difference(start);
-      earliest = earliest == null || start.isBefore(earliest) ? start : earliest;
+      earliest =
+          earliest == null || start.isBefore(earliest) ? start : earliest;
       latest = latest == null || end.isAfter(latest) ? end : latest;
     }
 
@@ -62,7 +63,8 @@ class HcSleepService {
   /// wake, which would inflate the number by awake time between sessions.
   Future<SleepRecord?> getSleepForNight(DateTime date) async {
     final dayStart = _client.dayOnly(date);
-    final windowStart = dayStart.subtract(const Duration(hours: 6)); // 18:00 prev day
+    final windowStart =
+        dayStart.subtract(const Duration(hours: 6)); // 18:00 prev day
     final windowEnd = dayStart.add(const Duration(hours: 14)); // 14:00 today
     final now = DateTime.now();
     final end = windowEnd.isBefore(now) ? windowEnd : now;
@@ -138,6 +140,62 @@ class HcSleepService {
 
     _client.logInfo(
       'getSleepHistory(): produced ${records.length} nightly records',
+    );
+    return records;
+  }
+
+  Future<List<SleepRecord>> getSleepHistoryForRange(
+    DateTime start,
+    DateTime end,
+  ) async {
+    final oldestDay = _client.dayOnly(start);
+    final latestDay = _client.dayOnly(end);
+    final now = DateTime.now();
+    final queryStart = oldestDay.subtract(const Duration(hours: 6));
+    final rawQueryEnd = latestDay.add(const Duration(hours: 14));
+    final queryEnd = rawQueryEnd.isBefore(now) ? rawQueryEnd : now;
+
+    if (latestDay.isBefore(oldestDay) || !queryEnd.isAfter(queryStart)) {
+      return const [];
+    }
+
+    _client.logDebug(
+      'getSleepHistoryForRange(${_client.fmt(oldestDay)} -> ${_client.fmt(latestDay)})',
+    );
+
+    final points = await _client.fetchData(
+      label: 'SLEEP_SESSION_HISTORY_RANGE',
+      start: queryStart,
+      end: queryEnd,
+      types: const [HealthDataType.SLEEP_SESSION],
+    );
+
+    final records = <SleepRecord>[];
+    final totalDays = latestDay.difference(oldestDay).inDays + 1;
+
+    for (int i = 0; i < totalDays; i++) {
+      final dayStart = latestDay.subtract(Duration(days: i));
+      final windowStart = dayStart.subtract(const Duration(hours: 6));
+      final rawWindowEnd = dayStart.add(const Duration(hours: 14));
+      final windowEnd = rawWindowEnd.isBefore(now) ? rawWindowEnd : now;
+
+      final nightlyPoints = points
+          .where((point) => _overlapsWindow(point, windowStart, windowEnd))
+          .toList();
+
+      final record = _buildSleepRecord(
+        nightlyPoints,
+        windowStart: windowStart,
+        windowEnd: windowEnd,
+      );
+
+      if (record != null) {
+        records.add(record);
+      }
+    }
+
+    _client.logInfo(
+      'getSleepHistoryForRange(): produced ${records.length} nightly records',
     );
     return records;
   }
