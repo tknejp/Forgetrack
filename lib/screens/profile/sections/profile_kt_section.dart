@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../l10n/l10n.dart';
-import '../../../providers/kaloricke_tabulky_provider.dart';
+import '../../../features/nutrition/application/kaloricke_tabulky_provider.dart';
 import '../dialogs/profile_dialogs.dart';
 import '../widgets/profile_settings_widgets.dart';
 

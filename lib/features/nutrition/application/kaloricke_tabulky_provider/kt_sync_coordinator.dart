@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import '../../core/app_log.dart';
-import '../../services/kaloricke_tabulky_service.dart';
-import '../../services/db/kt_nutrition_database.dart';
+import '../../../../core/app_log.dart';
+import '../../data/kaloricke_tabulky_service.dart';
+import '../../data/local/kt_nutrition_database.dart';
 import 'kt_nutrition_queries.dart';
 
 /// The result of a successful sync operation.

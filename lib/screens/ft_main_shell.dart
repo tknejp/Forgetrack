@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import '../theme/ft_design_tokens.dart';
 import 'ft_activities_screen.dart';
 import 'ft_body_screen.dart';
-import 'ft_nutrition_screen.dart';
+import '../features/nutrition/presentation/ft_nutrition_screen.dart';
 import 'ft_overview_screen.dart';
 
 class FtMainShell extends StatefulWidget {

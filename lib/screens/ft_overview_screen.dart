@@ -9,7 +9,7 @@ import '../models/selected_period.dart';
 import '../features/auth/application/auth_provider.dart';
 import '../providers/fitness_provider.dart';
 import '../providers/goals_provider.dart';
-import '../providers/kaloricke_tabulky_provider.dart';
+import '../features/nutrition/application/kaloricke_tabulky_provider.dart';
 import '../screens/ft_progression_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../theme/ft_design_tokens.dart';

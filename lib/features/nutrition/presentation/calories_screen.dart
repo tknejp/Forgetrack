@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../l10n/l10n.dart';
-import '../../providers/goals_provider.dart';
-import '../../providers/kaloricke_tabulky_provider.dart';
-import '../../theme/app_theme.dart';
-import '../../widgets/top_level_app_bar.dart';
-import '../profile/profile_screen.dart';
+import '../../../l10n/l10n.dart';
+import '../../../providers/goals_provider.dart';
+import '../../../screens/profile/profile_screen.dart';
+import '../../../theme/app_theme.dart';
+import '../../../widgets/top_level_app_bar.dart';
+import '../application/kaloricke_tabulky_provider.dart';
 
 part 'calories_screen/nutrition_states.dart';
 part 'calories_screen/nutrition_sections.dart';

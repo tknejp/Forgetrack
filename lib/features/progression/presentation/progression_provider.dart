@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../../providers/fitness_provider.dart';
 import '../../../providers/goals_provider.dart';
-import '../../../providers/kaloricke_tabulky_provider.dart';
+import '../../nutrition/application/kaloricke_tabulky_provider.dart';
 import '../application/progression_engine.dart';
 import '../data/provider_progression_source.dart';
 import '../domain/progression_models.dart';

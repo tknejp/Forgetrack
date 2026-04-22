@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../core/constants.dart';
-import '../models/calorie_entry.dart';
+import '../../../core/constants.dart';
+import '../domain/calorie_entry.dart';
 
 /// REST client for the kalorické tabulky food database.
 ///

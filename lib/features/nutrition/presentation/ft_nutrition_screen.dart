@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/selected_period.dart';
-import '../providers/goals_provider.dart';
-import '../providers/kaloricke_tabulky_provider.dart';
-import '../screens/profile/profile_screen.dart';
-import '../theme/ft_design_tokens.dart';
-import '../widgets/ft/ft_date_nav.dart';
-import '../widgets/ft/ft_macro_row.dart';
-import '../widgets/ft/ft_plain_card.dart';
-import '../widgets/ft/ft_screen_header.dart';
-import '../widgets/ft/ft_stat_card.dart';
-import '../widgets/ft/ft_tab_pill.dart';
+import '../../../models/selected_period.dart';
+import '../../../providers/goals_provider.dart';
+import '../../../screens/profile/profile_screen.dart';
+import '../../../theme/ft_design_tokens.dart';
+import '../../../widgets/ft/ft_date_nav.dart';
+import '../../../widgets/ft/ft_macro_row.dart';
+import '../../../widgets/ft/ft_plain_card.dart';
+import '../../../widgets/ft/ft_screen_header.dart';
+import '../../../widgets/ft/ft_stat_card.dart';
+import '../../../widgets/ft/ft_tab_pill.dart';
+import '../application/kaloricke_tabulky_provider.dart';
 
 class FtNutritionScreen extends StatefulWidget {
   const FtNutritionScreen({super.key});

@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import '../models/calorie_entry.dart';
-import '../services/calorie_api_service.dart';
+import '../data/calorie_api_service.dart';
+import '../domain/calorie_entry.dart';
 
 class CalorieProvider extends ChangeNotifier {
   final CalorieApiService _api;
