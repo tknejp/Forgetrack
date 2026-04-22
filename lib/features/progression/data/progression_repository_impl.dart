@@ -1,20 +1,14 @@
 import 'package:isar/isar.dart';
 
 import '../domain/progression_models.dart';
-import '../domain/progression_reward_finalization_policy.dart';
 import '../domain/progression_repository.dart';
 import 'local/progression_database.dart';
 import 'local/progression_local_models.dart';
 
 class ProgressionRepositoryImpl implements ProgressionRepository {
-  ProgressionRepositoryImpl(
-    this._database, {
-    ProgressionRewardFinalizationPolicy finalizationPolicy =
-        const ProgressionRewardFinalizationPolicy(),
-  }) : _finalizationPolicy = finalizationPolicy;
+  ProgressionRepositoryImpl(this._database);
 
   final ProgressionDatabase _database;
-  final ProgressionRewardFinalizationPolicy _finalizationPolicy;
 
   @override
   Future<ProgressionLedgerSnapshot> loadLedger() async {
@@ -67,10 +61,6 @@ class ProgressionRepositoryImpl implements ProgressionRepository {
 
       final newRewardRecords = evaluations
           .where((evaluation) => evaluation.achieved && evaluation.rewardXp > 0)
-          .where((evaluation) => _finalizationPolicy.canFinalizeReward(
-                period: evaluation.period,
-                evaluatedAt: evaluatedAt,
-              ))
           .where((evaluation) =>
               !existingRewardKeys.contains(evaluation.rewardKey))
           .map(

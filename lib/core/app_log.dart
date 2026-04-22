@@ -89,6 +89,16 @@ class AppLogger {
     final line =
         '${level._prefix} [$ts][${level._tag}]$domainTag $message$payloadStr';
 
+    // Mirror logs to the terminal so `flutter run` shows them without DevTools.
+    debugPrint(line);
+
+    if (err != null) {
+      debugPrint('error: $err');
+    }
+    if (stackTrace != null) {
+      debugPrintStack(stackTrace: stackTrace);
+    }
+
     dev.log(
       line,
       name: 'FT',

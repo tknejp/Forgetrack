@@ -1297,10 +1297,7 @@ class _InMemoryProgressionRepository implements ProgressionRepository {
 
 class _StaticProgressionRepository implements ProgressionRepository {
   const _StaticProgressionRepository({
-    this.evaluations = const [],
     this.rewardGrants = const [],
-    this.activeQuestIds = const <String>{},
-    this.lastEvaluatedAt,
   });
 
   final List<ProgressionEvaluation> evaluations;

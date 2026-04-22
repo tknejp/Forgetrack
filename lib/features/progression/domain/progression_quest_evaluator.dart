@@ -1,3 +1,4 @@
+import '../../../core/app_log.dart';
 import 'progression_models.dart';
 import 'progression_streak_policy.dart';
 
@@ -13,6 +14,8 @@ class ProgressionQuestEvaluationResult {
 
 class ProgressionQuestEvaluator {
   const ProgressionQuestEvaluator();
+
+  static const _questLog = AppLogger('PROG', scope: 'QUEST');
 
   ProgressionQuestEvaluationResult evaluate({
     required List<ProgressionQuestDefinition> definitions,
@@ -716,17 +719,49 @@ class ProgressionQuestEvaluator {
     );
     if (latestPeriodStart == null) return 0;
 
-    final completedRuleIds = _matchingEvaluations(
+    final matchingEvaluations = _matchingEvaluations(
       definition: definition,
       evaluations: evaluations,
-    )
+    );
+    final latestPeriodDay = progressionDate(latestPeriodStart);
+    final relevantPeriodEvaluations = matchingEvaluations
         .where((evaluation) {
-          return progressionDate(evaluation.period.start) ==
-                  progressionDate(latestPeriodStart) &&
-              evaluation.achieved;
+          return progressionDate(evaluation.period.start) == latestPeriodDay;
         })
+        .toList()
+      ..sort((left, right) => left.ruleId.compareTo(right.ruleId));
+    final completedRuleIds = relevantPeriodEvaluations
+        .where((evaluation) => evaluation.achieved)
         .map((evaluation) => evaluation.ruleId)
         .toSet();
+
+    if (definition.id == 'daily_nutrition_combo_today') {
+      _questLog.debug(
+        'Evaluated rule-set quest ${definition.id}',
+        payload: {
+          'periodStart': latestPeriodStart.toIso8601String(),
+          'targetValue': definition.targetValue,
+          'relatedRuleIds': definition.relatedRuleIds,
+          'completedRuleIds': completedRuleIds.toList()..sort(),
+          'completedCount': completedRuleIds.length,
+          'evaluations': [
+            for (final evaluation in relevantPeriodEvaluations)
+              {
+                'ruleId': evaluation.ruleId,
+                'achieved': evaluation.achieved,
+                'actualValue': evaluation.actualValue,
+                'targetValue': evaluation.targetValue,
+                'upperTargetValue': evaluation.upperTargetValue,
+                'toleranceRatio': evaluation.toleranceRatio,
+                'progress': evaluation.progress,
+                'status': evaluation.status.name,
+                'missReason': evaluation.missReason?.name,
+                'explanation': evaluation.explanation,
+              },
+          ],
+        },
+      );
+    }
 
     return completedRuleIds.length;
   }

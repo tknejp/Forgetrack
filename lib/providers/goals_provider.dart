@@ -93,7 +93,7 @@ class GoalsProvider extends ChangeNotifier {
     await prefs.setInt(_kDailySteps, v);
     _dailyStepsHistory = _withRevision(
       entries: _dailyStepsHistory,
-      effectiveFrom: _startOfNextDay(DateTime.now()),
+      effectiveFrom: progressionDate(DateTime.now()),
       value: v.toDouble(),
     );
     await _saveHistory(
@@ -117,7 +117,7 @@ class GoalsProvider extends ChangeNotifier {
     await prefs.setDouble(_kDailyCalories, v);
     _dailyCaloriesHistory = _withRevision(
       entries: _dailyCaloriesHistory,
-      effectiveFrom: _startOfNextDay(DateTime.now()),
+      effectiveFrom: progressionDate(DateTime.now()),
       value: v,
     );
     await _saveHistory(
@@ -134,7 +134,7 @@ class GoalsProvider extends ChangeNotifier {
     await prefs.setDouble(_kDailyProtein, v);
     _dailyProteinHistory = _withRevision(
       entries: _dailyProteinHistory,
-      effectiveFrom: _startOfNextDay(DateTime.now()),
+      effectiveFrom: progressionDate(DateTime.now()),
       value: v,
     );
     await _saveHistory(
@@ -165,7 +165,7 @@ class GoalsProvider extends ChangeNotifier {
     await prefs.setDouble(_kSleepHours, v);
     _sleepHoursHistory = _withRevision(
       entries: _sleepHoursHistory,
-      effectiveFrom: _startOfNextDay(DateTime.now()),
+      effectiveFrom: progressionDate(DateTime.now()),
       value: v,
     );
     await _saveHistory(
@@ -182,7 +182,7 @@ class GoalsProvider extends ChangeNotifier {
     await prefs.setInt(_kWeeklyActivityMins, v);
     _weeklyActivityMinsHistory = _withRevision(
       entries: _weeklyActivityMinsHistory,
-      effectiveFrom: _startOfNextWeek(DateTime.now()),
+      effectiveFrom: startOfProgressionWeek(DateTime.now()),
       value: v.toDouble(),
     );
     await _saveHistory(
@@ -308,12 +308,6 @@ class GoalsProvider extends ChangeNotifier {
         )
         .join(',');
   }
-
-  DateTime _startOfNextDay(DateTime now) =>
-      progressionDate(now).add(const Duration(days: 1));
-
-  DateTime _startOfNextWeek(DateTime now) =>
-      startOfProgressionWeek(now).add(const Duration(days: 7));
 
   DateTime progressionDate(DateTime value) =>
       DateTime(value.year, value.month, value.day);
