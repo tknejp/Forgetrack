@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../l10n/l10n.dart';
 import '../../models/sheet_export_field.dart';
-import '../../providers/auth_provider.dart';
+import '../../features/auth/application/auth_provider.dart';
 import '../../providers/fitness_provider.dart';
 import '../../providers/kaloricke_tabulky_provider.dart';
 import '../../providers/sheets_export_provider.dart';

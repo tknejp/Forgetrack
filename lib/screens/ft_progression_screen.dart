@@ -9,7 +9,7 @@ import '../features/progression/presentation/widgets/ft_progression_domain_theme
 import '../features/progression/presentation/widgets/ft_progression_primitives.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/l10n.dart';
-import '../providers/auth_provider.dart';
+import '../features/auth/application/auth_provider.dart';
 import '../theme/ft_design_tokens.dart';
 import '../widgets/ft/ft_progress_bar.dart';
 

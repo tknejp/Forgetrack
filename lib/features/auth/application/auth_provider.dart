@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-import '../services/google_auth_service.dart';
+import '../data/google_auth_service.dart';
 
 enum AuthSessionState { checking, signedIn, signedOut }
 

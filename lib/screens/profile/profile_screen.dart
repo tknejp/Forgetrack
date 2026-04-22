@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../features/progression/presentation/progression_provider.dart';
 import '../../l10n/l10n.dart';
-import '../../providers/auth_provider.dart';
+import '../../features/auth/application/auth_provider.dart';
 import '../ft_progression_screen.dart';
 import 'sections/profile_goals_section.dart';
 import 'sections/profile_header_section.dart';

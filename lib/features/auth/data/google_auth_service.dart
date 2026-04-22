@@ -6,8 +6,8 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/sheets/v4.dart';
 import 'package:http/http.dart' as http;
 
-import '../core/app_log.dart';
-import 'google_auth_service/google_auth_platform_adapter.dart';
+import '../../../core/app_log.dart';
+import 'google_auth_platform_adapter.dart';
 
 class GoogleAuthService {
   static const String _serverClientId =

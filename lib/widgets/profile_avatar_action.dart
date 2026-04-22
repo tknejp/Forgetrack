@@ -3,7 +3,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/l10n.dart';
-import '../providers/auth_provider.dart';
+import '../features/auth/application/auth_provider.dart';
 import '../screens/profile/profile_screen.dart';
 
 class ProfileAvatarAction extends StatelessWidget {

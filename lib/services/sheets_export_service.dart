@@ -5,7 +5,7 @@ import '../core/app_log.dart';
 import '../core/constants.dart';
 import '../l10n/app_localizations.dart';
 import '../models/sheet_export_field.dart';
-import 'google_auth_service.dart';
+import '../features/auth/data/google_auth_service.dart';
 import 'sheets_export/sheet_merge_engine.dart';
 import 'sheets_service.dart';
 

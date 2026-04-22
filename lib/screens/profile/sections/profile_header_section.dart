@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../l10n/l10n.dart';
-import '../../../providers/auth_provider.dart';
+import '../../../features/auth/application/auth_provider.dart';
+import '../../../features/auth/presentation/google_logo_icon.dart';
+import '../../../features/auth/presentation/google_sign_in_button.dart';
 import '../../../widgets/app_logo.dart';
-import '../../../widgets/google_logo_icon.dart';
-import '../../../widgets/google_sign_in_button.dart';
 
 class ProfileHeaderCard extends StatelessWidget {
   final AuthProvider auth;

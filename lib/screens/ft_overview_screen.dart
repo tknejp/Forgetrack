@@ -6,7 +6,7 @@ import '../features/progression/domain/progression_models.dart';
 import '../features/progression/presentation/progression_provider.dart';
 import '../features/progression/presentation/widgets/ft_progression_home_card.dart';
 import '../models/selected_period.dart';
-import '../providers/auth_provider.dart';
+import '../features/auth/application/auth_provider.dart';
 import '../providers/fitness_provider.dart';
 import '../providers/goals_provider.dart';
 import '../providers/kaloricke_tabulky_provider.dart';

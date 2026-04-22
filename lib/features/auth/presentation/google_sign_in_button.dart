@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../l10n/l10n.dart';
+import '../../../l10n/l10n.dart';
 import 'google_logo_icon.dart';
 
 class GoogleSignInButton extends StatelessWidget {

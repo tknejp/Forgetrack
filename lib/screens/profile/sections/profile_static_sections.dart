@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/constants.dart';
 import '../../../l10n/l10n.dart';
-import '../../../providers/auth_provider.dart';
+import '../../../features/auth/application/auth_provider.dart';
 import '../../../widgets/app_logo.dart';
 import '../../sheets_export/sheets_export_screen.dart';
 import '../dialogs/profile_dialogs.dart';
