@@ -45,15 +45,19 @@ class FtProgressionScreen extends StatelessWidget {
 
     final activeQuests = [...progression.activeQuests]
       ..sort((a, b) => b.progress.compareTo(a.progress));
-    final completedQuests = [...progression.completedQuests]
-      ..sort((a, b) {
+    final completedQuests = [...progression.completedQuests]..sort((a, b) {
         final at = a.completedAt?.millisecondsSinceEpoch ?? 0;
         final bt = b.completedAt?.millisecondsSinceEpoch ?? 0;
         return bt.compareTo(at);
       });
+    final pendingRewards = [...progression.pendingRewards]
+      ..sort((a, b) => b.unlockedAt.compareTo(a.unlockedAt));
 
-    final rewardHistory = [...progression.rewardGrants]
-      ..sort((a, b) => b.grantedAt.compareTo(a.grantedAt));
+    final rewardHistory = [...progression.claimedRewards]..sort((a, b) {
+        final aTime = a.claimedAt ?? a.unlockedAt;
+        final bTime = b.claimedAt ?? b.unlockedAt;
+        return bTime.compareTo(aTime);
+      });
 
     final current = _topStreak(progression, best: false);
     final best = _topStreak(progression, best: true);
@@ -77,33 +81,43 @@ class FtProgressionScreen extends StatelessWidget {
     }
 
     return _ProgressionScaffold(
-      child: RefreshIndicator(
-        onRefresh: progression.refresh,
-        color: FtTokens.accent,
-        backgroundColor: FtTokens.surface,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(14, 8, 14, 28),
-          children: [
-            const _TopBar(),
-            const SizedBox(height: 12),
-            _HeroCard(
-              displayName: displayName ?? firstName,
-              profile: profile,
-              xpSpan: xpSpan,
-              currentStreakCount: current?.currentStreak ?? 0,
-              currentStreakDomain:
-                  current == null ? null : progL10n.domainLabel(current.domain),
-              unlockedCount: unlocked.length,
-              lastEvaluatedAt: progression.lastEvaluatedAt,
-              l10n: l10n,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
+            child: Column(
+              children: [
+                const _TopBar(),
+                const SizedBox(height: 12),
+                _HeroCard(
+                  displayName: displayName ?? firstName,
+                  profile: profile,
+                  xpSpan: xpSpan,
+                  currentStreakCount: current?.currentStreak ?? 0,
+                  currentStreakDomain: current == null
+                      ? null
+                      : progL10n.domainLabel(current.domain),
+                  unlockedCount: unlocked.length,
+                  lastEvaluatedAt: progression.lastEvaluatedAt,
+                  l10n: l10n,
+                ),
+                if (progression.error != null) ...[
+                  const SizedBox(height: 10),
+                  _InlineErrorBanner(message: progression.error!),
+                ],
+              ],
             ),
-            if (progression.error != null) ...[
-              const SizedBox(height: 10),
-              _InlineErrorBanner(message: progression.error!),
-            ],
-            const SizedBox(height: 16),
-            FtProgSectionHead(
+          ),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: progression.refresh,
+              color: FtTokens.accent,
+              backgroundColor: FtTokens.surface,
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(14, 16, 14, 28),
+                children: [
+                  FtProgSectionHead(
               label: l10n.progSummarySectionLabel,
               accent: FtTokens.accent,
             ),
@@ -198,13 +212,250 @@ class FtProgressionScreen extends StatelessWidget {
               accent: FtTokens.calories.color,
             ),
             const SizedBox(height: 8),
+            _PendingRewardsSection(
+              pendingRewards: pendingRewards,
+              isRefreshing: progression.isRefreshing,
+            ),
+            if (pendingRewards.isNotEmpty) const SizedBox(height: 8),
             _HistoryFeed(
               grants: rewardHistory,
               l10n: l10n,
               progL10n: progL10n,
             ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PendingRewardsSection extends StatelessWidget {
+  const _PendingRewardsSection({
+    required this.pendingRewards,
+    required this.isRefreshing,
+  });
+
+  final List<ProgressionRewardGrant> pendingRewards;
+  final bool isRefreshing;
+
+  @override
+  Widget build(BuildContext context) {
+    if (pendingRewards.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0x1A7C6FFF),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: FtTokens.accent.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  context.l10n.progRewardsPendingTitle,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              _ClaimAllButton(
+                enabled: !isRefreshing,
+                onTap: () =>
+                    context.read<ProgressionProvider>().claimAllRewards(),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            context.l10n.progRewardsPendingCaption,
+            style: const TextStyle(
+              fontSize: 11,
+              height: 1.4,
+              color: FtTokens.onSurfaceMuted,
+            ),
+          ),
+          const SizedBox(height: 10),
+          for (int i = 0; i < pendingRewards.length; i++) ...[
+            if (i > 0) const SizedBox(height: 8),
+            _PendingRewardCard(
+              reward: pendingRewards[i],
+              enabled: !isRefreshing,
+            ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ClaimAllButton extends StatelessWidget {
+  const _ClaimAllButton({
+    required this.enabled,
+    required this.onTap,
+  });
+
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: enabled ? onTap : null,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        decoration: BoxDecoration(
+          color: enabled
+              ? FtTokens.accent.withValues(alpha: 0.16)
+              : Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: enabled
+                ? FtTokens.accent.withValues(alpha: 0.24)
+                : Colors.white.withValues(alpha: 0.08),
+          ),
         ),
+        child: Text(
+          l10n.progRewardsClaimAll,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            color: enabled ? FtTokens.accent : FtTokens.onSurfaceFaint,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PendingRewardCard extends StatelessWidget {
+  const _PendingRewardCard({
+    required this.reward,
+    required this.enabled,
+  });
+
+  final ProgressionRewardGrant reward;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = FtProgressionDomainTheme.colorFor(reward.domain);
+    final locale = Localizations.localeOf(context).toString();
+    final l10n = context.l10n;
+    final progL10n = ProgressionL10n(l10n);
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              FtProgDomIco(domain: reward.domain, size: 28),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      progL10n.ruleTitle(reward.ruleId),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _rewardDetailText(reward, l10n),
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: FtTokens.onSurfaceMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '+${reward.xpGranted} XP',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFFA89BFF),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.progRewardsUnlockedAt(
+                    _formatDateTime(reward.unlockedAt, locale),
+                  ),
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: color.withValues(alpha: 0.82),
+                  ),
+                ),
+              ),
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: enabled
+                    ? () => context
+                        .read<ProgressionProvider>()
+                        .claimReward(reward.rewardKey)
+                    : null,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: enabled
+                        ? color.withValues(alpha: 0.18)
+                        : Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: enabled
+                          ? color.withValues(alpha: 0.28)
+                          : Colors.white.withValues(alpha: 0.08),
+                    ),
+                  ),
+                  child: Text(
+                    l10n.progRewardsClaim,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: enabled ? color : FtTokens.onSurfaceFaint,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -244,7 +495,8 @@ class _TopBar extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: FtTokens.cardBorder),
               ),
-              child: const Icon(Icons.chevron_left_rounded, color: Colors.white),
+              child:
+                  const Icon(Icons.chevron_left_rounded, color: Colors.white),
             ),
           )
         else
@@ -321,9 +573,7 @@ class _HeroCard extends StatelessWidget {
         border: Border.all(color: FtTokens.accent.withValues(alpha: 0.28)),
         boxShadow: const [
           BoxShadow(
-              color: Color(0x387C6FFF),
-              blurRadius: 28,
-              offset: Offset(0, 4)),
+              color: Color(0x387C6FFF), blurRadius: 28, offset: Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -757,7 +1007,8 @@ class _QuestsSectionState extends State<_QuestsSection> {
                     progL10n: widget.progL10n,
                   ),
                 ],
-              if (widget.completed.length > _compactLimit && !_showAllCompleted) ...[
+              if (widget.completed.length > _compactLimit &&
+                  !_showAllCompleted) ...[
                 const SizedBox(height: 8),
                 GestureDetector(
                   onTap: () => setState(() => _showAllCompleted = true),
@@ -807,7 +1058,10 @@ class _ActiveQuestCard extends StatelessWidget {
         gradient: token.gradient,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: color.withValues(alpha: 0.28)),
-        boxShadow: [BoxShadow(color: token.glow, blurRadius: 16, offset: const Offset(0, 3))],
+        boxShadow: [
+          BoxShadow(
+              color: token.glow, blurRadius: 16, offset: const Offset(0, 3))
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -877,7 +1131,7 @@ class _ActiveQuestCard extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                l10n.progPercent((quest.progress * 100).round()),
+                l10n.progPercent(_safePercent(quest.progress)),
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
@@ -977,60 +1231,25 @@ class _AchievementsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final achievements = [...unlocked, ...inProgress];
     return Column(
       children: [
-        _SubContainer(
-          background: Colors.black.withValues(alpha: 0.2),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _SubHeader(
-                label: l10n.progAchievementsUnlockedHeader,
-                color: FtTokens.accent,
-              ),
-              const SizedBox(height: 10),
-              if (unlocked.isEmpty)
-                _EmptyLine(
-                  title: l10n.progAchievementsEmptyUnlockedTitle,
-                  caption: l10n.progAchievementsEmptyUnlockedCaption,
-                )
-              else
-                for (int i = 0; i < unlocked.length; i++) ...[
-                  if (i > 0) const SizedBox(height: 8),
-                  _UnlockedAchievementCard(
-                    achievement: unlocked[i],
-                    l10n: l10n,
-                    progL10n: progL10n,
-                  ),
-                ],
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
         _SubContainer(
           background: Colors.black.withValues(alpha: 0.15),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _SubHeader(
-                label: l10n.progAchievementsInProgressHeader,
-                color: FtTokens.onSurfaceMuted,
-              ),
-              const SizedBox(height: 10),
-              if (inProgress.isEmpty)
+              if (achievements.isEmpty)
                 _EmptyLine(
-                  title: l10n.progAchievementsEmptyInProgressTitle,
-                  caption: l10n.progAchievementsEmptyInProgressCaption,
+                  title: l10n.progAchievementsEmptyUnlockedTitle,
+                  caption: l10n.progAchievementsEmptyUnlockedCaption,
                 )
               else
-                for (int i = 0; i < inProgress.length; i++) ...[
-                  if (i > 0) const SizedBox(height: 8),
-                  _InProgressAchievementCard(
-                    achievement: inProgress[i],
-                    l10n: l10n,
-                    progL10n: progL10n,
-                  ),
-                ],
+                _AchievementBadgeGrid(
+                  achievements: achievements,
+                  l10n: l10n,
+                  progL10n: progL10n,
+                ),
             ],
           ),
         ),
@@ -1039,8 +1258,47 @@ class _AchievementsSection extends StatelessWidget {
   }
 }
 
-class _UnlockedAchievementCard extends StatelessWidget {
-  const _UnlockedAchievementCard({
+class _AchievementBadgeGrid extends StatelessWidget {
+  const _AchievementBadgeGrid({
+    required this.achievements,
+    required this.l10n,
+    required this.progL10n,
+  });
+
+  final List<ProgressionAchievement> achievements;
+  final AppLocalizations l10n;
+  final ProgressionL10n progL10n;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final crossAxisCount = width >= 620 ? 4 : 3;
+        final aspectRatio = width >= 620 ? 0.98 : 0.9;
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+            childAspectRatio: aspectRatio,
+          ),
+          itemCount: achievements.length,
+          itemBuilder: (context, index) => _AchievementTile(
+            achievement: achievements[index],
+            l10n: l10n,
+            progL10n: progL10n,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _AchievementTile extends StatelessWidget {
+  const _AchievementTile({
     required this.achievement,
     required this.l10n,
     required this.progL10n,
@@ -1052,74 +1310,120 @@ class _UnlockedAchievementCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final domain = FtProgressionDomainTheme.resolveForAchievement(achievement);
-    final token = FtProgressionDomainTheme.tokenFor(domain);
-    final color = token.color;
+    final achievement = this.achievement;
+    final badge = _achievementBadgeSpec(achievement);
+    final color = badge.color;
+    final unlocked = achievement.unlocked;
 
-    return Container(
-      padding: const EdgeInsets.all(13),
-      decoration: BoxDecoration(
-        gradient: token.gradient,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-        boxShadow: [BoxShadow(color: token.glow, blurRadius: 16, offset: const Offset(0, 3))],
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => _showAchievementDetailsSheet(
+        context,
+        achievement: achievement,
+        l10n: l10n,
+        progL10n: progL10n,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+      child: Opacity(
+        opacity: unlocked ? 1.0 : 0.45,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: unlocked
+                ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      color.withValues(alpha: 0.13),
+                      color.withValues(alpha: 0.03),
+                    ],
+                  )
+                : null,
+            color: unlocked ? null : const Color(0x08FFFFFF),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: unlocked
+                  ? color.withValues(alpha: 0.27)
+                  : const Color(0x0FFFFFFF),
+            ),
+            boxShadow: unlocked
+                ? [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.2),
+                      blurRadius: 12,
+                    ),
+                  ]
+                : null,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 30,
-                height: 30,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: color.withValues(alpha: 0.32)),
-                ),
-                child: Icon(Icons.workspace_premium_rounded, size: 16, color: color),
+              Text(
+                badge.emoji,
+                style: const TextStyle(fontSize: 22),
               ),
-              const SizedBox(width: 10),
-              Expanded(
+              const SizedBox(height: 6),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Text(
-                  progL10n.achievementTitle(achievement),
-                  maxLines: 1,
+                  _achievementDisplayLabel(achievement, context),
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: FtTokens.fontSizeTiny,
+                    fontWeight: FontWeight.w700,
+                    color: unlocked ? color : const Color(0x66FFFFFF),
+                    letterSpacing: 0.5,
+                    height: 1.15,
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              FtProgTinyPill(label: l10n.progAchievementStatusUnlocked, color: color),
             ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            progL10n.achievementDescription(achievement),
-            style: const TextStyle(
-              fontSize: 11,
-              height: 1.4,
-              color: FtTokens.onSurfaceMuted,
-            ),
-          ),
-          const SizedBox(height: 10),
-          FtProgressBar(
-            value: 1,
-            color: color,
-            glow: color.withValues(alpha: 0.4),
-            height: 4,
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _InProgressAchievementCard extends StatelessWidget {
-  const _InProgressAchievementCard({
+class _AchievementEmojiBadge extends StatelessWidget {
+  const _AchievementEmojiBadge({
+    required this.emoji,
+    required this.color,
+    required this.unlocked,
+  });
+
+  final String emoji;
+  final Color color;
+  final bool unlocked;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 34,
+      height: 34,
+      decoration: BoxDecoration(
+        color: unlocked
+            ? color.withValues(alpha: 0.2)
+            : Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(11),
+        border: Border.all(
+          color: unlocked
+              ? color.withValues(alpha: 0.32)
+              : Colors.white.withValues(alpha: 0.08),
+        ),
+      ),
+      child: Center(
+        child: Text(
+          emoji,
+          style: const TextStyle(fontSize: 20),
+        ),
+      ),
+    );
+  }
+}
+
+class _AchievementDetailsSheet extends StatelessWidget {
+  const _AchievementDetailsSheet({
     required this.achievement,
     required this.l10n,
     required this.progL10n,
@@ -1131,79 +1435,359 @@ class _InProgressAchievementCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final domain = FtProgressionDomainTheme.resolveForAchievement(achievement);
-    final color = FtProgressionDomainTheme.colorFor(domain);
-    final pct = (achievement.progress * 100).round();
+    final badge = _achievementBadgeSpec(achievement);
+    final color = badge.color;
+    final locale = Localizations.localeOf(context).toString();
+    final unlocked = achievement.unlocked;
+    final progressLabel = l10n.progProgressRatio(
+      achievement.currentValue,
+      achievement.targetValue,
+    );
+    final summary = _achievementCompactSummary(
+      achievement,
+      l10n,
+      progL10n,
+      locale,
+    );
 
-    return Container(
-      padding: const EdgeInsets.all(13),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              FtProgDomIco(domain: domain, size: 28),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  progL10n.achievementTitle(achievement),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: FtTokens.onSurfaceMuted,
+    return SafeArea(
+      top: false,
+      child: Container(
+        decoration: BoxDecoration(
+          color: FtTokens.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        ),
+        padding: const EdgeInsets.fromLTRB(18, 12, 18, 22),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 42,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _AchievementEmojiBadge(
+                  emoji: badge.emoji,
+                  color: color,
+                  unlocked: unlocked,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        progL10n.achievementTitle(achievement),
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          letterSpacing: -0.4,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        summary,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: color.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+                const SizedBox(width: 8),
+                FtProgTinyPill(
+                  label: unlocked
+                      ? l10n.progAchievementStatusUnlocked
+                      : l10n.progAchievementStatusInProgress,
+                  color: unlocked ? color : FtTokens.onSurfaceMuted,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              progL10n.achievementDescription(achievement),
+              style: const TextStyle(
+                fontSize: 12,
+                height: 1.45,
+                color: FtTokens.onSurfaceMuted,
               ),
-              const SizedBox(width: 8),
-              Text(
-                '$pct%',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
+            ),
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                FtProgTinyPill(
+                  label: progressLabel,
                   color: color,
                 ),
+                if (achievement.ruleId != null)
+                  FtProgTinyPill(
+                    label: progL10n.ruleTitle(achievement.ruleId!),
+                    color: color.withValues(alpha: 0.88),
+                  )
+                else if (achievement.domain != null)
+                  FtProgTinyPill(
+                    label: progL10n.domainLabel(achievement.domain!),
+                    color: color.withValues(alpha: 0.88),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.03),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
               ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            progL10n.achievementDescription(achievement),
-            style: const TextStyle(
-              fontSize: 11,
-              height: 1.4,
-              color: FtTokens.onSurfaceFaint,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  FtProgressBar(
+                    value: unlocked ? 1 : achievement.progress,
+                    color: color,
+                    glow: color.withValues(alpha: 0.35),
+                    height: 4,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    progressLabel,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                  if (unlocked && achievement.unlockedAt != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.progQuestCompletedOn(
+                        _formatDateTime(achievement.unlockedAt!, locale),
+                      ),
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                        color: color.withValues(alpha: 0.82),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
-          FtProgressBar(
-            value: achievement.progress,
-            color: color,
-            glow: color.withValues(alpha: 0.3),
-            height: 4,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            l10n.progProgressRatio(
-              achievement.currentValue,
-              achievement.targetValue,
-            ),
-            style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: FtTokens.onSurfaceFaint,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
+}
+
+void _showAchievementDetailsSheet(
+  BuildContext context, {
+  required ProgressionAchievement achievement,
+  required AppLocalizations l10n,
+  required ProgressionL10n progL10n,
+}) {
+  showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    builder: (context) => _AchievementDetailsSheet(
+      achievement: achievement,
+      l10n: l10n,
+      progL10n: progL10n,
+    ),
+  );
+}
+
+@immutable
+class _AchievementBadgeSpec {
+  const _AchievementBadgeSpec({
+    required this.emoji,
+    required this.color,
+  });
+
+  final String emoji;
+  final Color color;
+}
+
+_AchievementBadgeSpec _achievementBadgeSpec(ProgressionAchievement achievement) {
+  switch (achievement.id) {
+    case 'first_reward':
+      return const _AchievementBadgeSpec(
+        emoji: '🏆',
+        color: Color(0xFFFBBF24),
+      );
+    case 'reward_hunter_25':
+    case 'reward_hunter_100':
+      return const _AchievementBadgeSpec(
+        emoji: '⚔️',
+        color: Color(0xFF7C6FFF),
+      );
+    case 'forge_knight_xp_5000':
+      return const _AchievementBadgeSpec(
+        emoji: '🔥',
+        color: Color(0xFFF472B6),
+      );
+    case 'pathfinder_level_5':
+    case 'steps_total_100k':
+      return const _AchievementBadgeSpec(
+        emoji: '🛡️',
+        color: Color(0xFF34D399),
+      );
+    case 'steps_total_500k':
+    case 'nutrition_rewards_25':
+      return const _AchievementBadgeSpec(
+        emoji: '💎',
+        color: Color(0xFF60A5FA),
+      );
+    case 'living_legend_xp_15000':
+    case 'steps_streak_30':
+      return const _AchievementBadgeSpec(
+        emoji: '👑',
+        color: Color(0xFFA89BFF),
+      );
+    case 'steps_streak_3':
+    case 'steps_streak_7':
+      return const _AchievementBadgeSpec(
+        emoji: '🔥',
+        color: Color(0xFFF472B6),
+      );
+    case 'steps_total_1000000':
+      return const _AchievementBadgeSpec(
+        emoji: '🌟',
+        color: Color(0xFFFBBF24),
+      );
+    case 'nutrition_streak_3':
+      return const _AchievementBadgeSpec(
+        emoji: '🥗',
+        color: Color(0xFF34D399),
+      );
+    case 'weekly_activity_mastery':
+    case 'weekly_activity_4':
+      return const _AchievementBadgeSpec(
+        emoji: '⚡',
+        color: Color(0xFF2DD4BF),
+      );
+    case 'weekly_activity_12':
+      return const _AchievementBadgeSpec(
+        emoji: '🚀',
+        color: Color(0xFFA89BFF),
+      );
+    default:
+      final domain = FtProgressionDomainTheme.resolveForAchievement(achievement);
+      return _AchievementBadgeSpec(
+        emoji: '🏅',
+        color: FtProgressionDomainTheme.colorFor(domain),
+      );
+  }
+}
+
+String _achievementDisplayLabel(
+  ProgressionAchievement achievement,
+  BuildContext context,
+) {
+  final isCzech = Localizations.localeOf(context).languageCode == 'cs';
+  switch (achievement.id) {
+    case 'first_reward':
+      return isCzech ? 'PRVNÍ ODMĚNA' : 'FIRST REWARD';
+    case 'reward_hunter_25':
+      return isCzech ? '25 ODMĚN' : '25 REWARDS';
+    case 'reward_hunter_100':
+      return isCzech ? '100 ODMĚN' : '100 REWARDS';
+    case 'pathfinder_level_5':
+      return 'LEVEL 5';
+    case 'forge_knight_xp_5000':
+      return '5K XP';
+    case 'living_legend_xp_15000':
+      return '15K XP';
+    case 'steps_total_100k':
+      return isCzech ? '100K KROKŮ' : '100K STEPS';
+    case 'steps_total_500k':
+      return isCzech ? '500K KROKŮ' : '500K STEPS';
+    case 'steps_total_1000000':
+      return isCzech ? '1M KROKŮ' : '1M STEPS';
+    case 'steps_streak_3':
+      return isCzech ? '3 DNY' : '3-DAY STREAK';
+    case 'steps_streak_7':
+      return isCzech ? '7 DNÍ' : '7-DAY STREAK';
+    case 'steps_streak_30':
+      return isCzech ? '30 DNÍ' : '30-DAY STREAK';
+    case 'nutrition_streak_3':
+      return isCzech ? '3 DNY VÝŽIVY' : '3-DAY FUEL';
+    case 'nutrition_rewards_25':
+      return isCzech ? '25 ODMĚN VÝŽIVY' : '25 FOOD WINS';
+    case 'weekly_activity_mastery':
+      return isCzech ? 'TÝDENNÍ WIN' : 'WEEKLY WIN';
+    case 'weekly_activity_4':
+      return isCzech ? '4 TÝDNY' : '4 WEEK WINS';
+    case 'weekly_activity_12':
+      return isCzech ? '12 TÝDNŮ' : '12 WEEK WINS';
+    default:
+      return ProgressionL10n(context.l10n)
+          .achievementTitle(achievement)
+          .toUpperCase();
+  }
+}
+
+String _achievementCompactSummary(
+  ProgressionAchievement achievement,
+  AppLocalizations l10n,
+  ProgressionL10n progL10n,
+  String locale,
+) {
+  switch (achievement.criterionType) {
+    case ProgressionAchievementCriterionType.totalXpAtLeast:
+      return '${_formatCompactInt(achievement.targetValue, locale)} XP';
+    case ProgressionAchievementCriterionType.rewardCountAtLeast:
+      if (achievement.ruleId != null) {
+        return '${achievement.targetValue}x ${progL10n.ruleTitle(achievement.ruleId!)}';
+      }
+      if (achievement.domain != null) {
+        return '${achievement.targetValue}x ${progL10n.domainLabel(achievement.domain!)}';
+      }
+      return '${achievement.targetValue} ${l10n.progRewardsSectionLabel}';
+    case ProgressionAchievementCriterionType.bestStreakAtLeast:
+      return '${achievement.targetValue} ${l10n.progStreakDaysSuffix}';
+    case ProgressionAchievementCriterionType.totalRuleValueAtLeast:
+      final unit = _achievementUnitForRule(achievement.ruleId, l10n);
+      return '${_formatCompactInt(achievement.targetValue, locale)} $unit';
+  }
+}
+
+String _achievementUnitForRule(String? ruleId, AppLocalizations l10n) {
+  switch (ruleId) {
+    case 'daily_steps':
+      return l10n.goalUnitSteps;
+    case 'daily_calories':
+      return l10n.goalUnitKcal;
+    case 'daily_protein':
+      return l10n.goalUnitG;
+    case 'daily_sleep':
+    case 'weekly_activity':
+      return l10n.goalUnitMins;
+    default:
+      return '';
+  }
+}
+
+String _formatCompactInt(int value, String locale) {
+  return NumberFormat.compact(locale: locale).format(value);
 }
 
 class _HistoryFeed extends StatelessWidget {
@@ -1267,64 +1851,120 @@ class _HistoryRow extends StatelessWidget {
     final color = FtProgressionDomainTheme.colorFor(domain);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          FtProgDomIco(domain: domain, size: 30),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  progL10n.ruleTitle(grant.ruleId),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  progL10n.domainLabel(domain),
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: color,
-                    letterSpacing: 0.4,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                '+${grant.xpGranted} XP',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFFA89BFF),
+              FtProgDomIco(domain: domain, size: 30),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      progL10n.ruleTitle(grant.ruleId),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 1),
+                    Text(
+                      progL10n.domainLabel(domain),
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: color,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 1),
-              Text(
-                _formatDateTime(grant.grantedAt, locale),
-                style: const TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w600,
-                  color: FtTokens.onSurfaceFaint,
-                ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '+${grant.xpGranted} XP',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFFA89BFF),
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    _formatDateTime(
+                        grant.claimedAt ?? grant.unlockedAt, locale),
+                    style: const TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      color: FtTokens.onSurfaceFaint,
+                    ),
+                  ),
+                ],
               ),
             ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            _rewardDetailText(grant, context.l10n),
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: FtTokens.onSurfaceMuted,
+            ),
           ),
         ],
       ),
     );
+  }
+}
+
+String _rewardDetailText(
+  ProgressionRewardGrant reward,
+  AppLocalizations l10n,
+) {
+  final unit = _rewardUnit(reward.ruleId, l10n);
+  final target = _formatRewardMetric(reward.ruleId, reward.targetValue);
+  final actual = _formatRewardMetric(reward.ruleId, reward.actualValue);
+  return l10n.progRewardDetail(target, unit, actual);
+}
+
+String _formatRewardMetric(String ruleId, double value) {
+  final safe = (value.isNaN || value.isInfinite) ? 0.0 : value;
+  switch (ruleId) {
+    case 'daily_steps':
+    case 'daily_sleep':
+    case 'weekly_activity':
+      return safe.round().toString();
+    case 'daily_calories':
+    case 'daily_protein':
+      return safe.toStringAsFixed(safe.truncateToDouble() == safe ? 0 : 1);
+    default:
+      return safe.toStringAsFixed(safe.truncateToDouble() == safe ? 0 : 1);
+  }
+}
+
+String _rewardUnit(String ruleId, AppLocalizations l10n) {
+  switch (ruleId) {
+    case 'daily_steps':
+      return l10n.goalUnitSteps;
+    case 'daily_calories':
+      return l10n.goalUnitKcal;
+    case 'daily_protein':
+      return l10n.goalUnitG;
+    case 'daily_sleep':
+    case 'weekly_activity':
+      return l10n.goalUnitMins;
+    default:
+      return '';
   }
 }
 
@@ -1485,6 +2125,12 @@ _DomainStreak? _topStreak(ProgressionProvider provider, {required bool best}) {
     if (metric > winning) winner = candidate;
   }
   return winner;
+}
+
+int _safePercent(double progress) {
+  final pct = progress * 100;
+  if (pct.isNaN || pct.isInfinite) return 0;
+  return pct.clamp(0, 100).round();
 }
 
 String _formatDateTime(DateTime value, String locale) {

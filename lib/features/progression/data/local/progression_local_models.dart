@@ -54,9 +54,17 @@ class ProgressionRewardGrantRecord {
 
   late DateTime periodEnd;
   late int xpGranted;
+  late double targetValue;
+  late double actualValue;
+  double? upperTargetValue;
+  late double toleranceRatio;
+  late String rewardStatusName;
 
   @Index()
-  late DateTime grantedAt;
+  late DateTime unlockedAt;
+
+  @Index()
+  DateTime? claimedAt;
 }
 
 @Collection()

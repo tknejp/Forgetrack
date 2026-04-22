@@ -8,6 +8,15 @@ abstract class ProgressionRepository {
     required DateTime evaluatedAt,
   });
 
+  Future<ProgressionLedgerSnapshot> claimReward({
+    required String rewardKey,
+    required DateTime claimedAt,
+  });
+
+  Future<ProgressionLedgerSnapshot> claimAllRewards({
+    required DateTime claimedAt,
+  });
+
   Future<ProgressionLedgerSnapshot> persistActiveQuestSet({
     required Set<String> activeQuestIds,
   });

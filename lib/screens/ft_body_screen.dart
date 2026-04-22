@@ -21,16 +21,6 @@ class FtBodyScreen extends StatefulWidget {
 class _FtBodyScreenState extends State<FtBodyScreen> {
   String _tab = 'Month';
 
-  // TODO: wire to real achievements/milestones system
-  static const _achievements = [
-    _Achievement(emoji: '🏆', label: '7-day streak', color: Color(0xFFFBBF24), unlocked: true),
-    _Achievement(emoji: '⚔️', label: '100 quests', color: Color(0xFF7C6FFF), unlocked: true),
-    _Achievement(emoji: '🔥', label: 'Fat burner', color: Color(0xFFF472B6), unlocked: true),
-    _Achievement(emoji: '🛡️', label: '10k/day', color: Color(0xFF34D399), unlocked: false),
-    _Achievement(emoji: '💎', label: '−5 kg goal', color: Color(0xFF60A5FA), unlocked: false),
-    _Achievement(emoji: '👑', label: 'Level 20', color: Color(0xFFA89BFF), unlocked: false),
-  ];
-
   List<FtChartBar> _buildWeightChart(FitnessProvider fitness, String tab) {
     if (tab == 'Year') {
       final monthly = fitness.monthlyWeightChart(12);
@@ -227,109 +217,7 @@ class _FtBodyScreenState extends State<FtBodyScreen> {
             badge: sleep != null ? '${(sleepProgress * 100).round()}%' : null,
             // TODO: no sleep score in SleepRecord — needs dedicated scoring model
           ),
-          const SizedBox(height: 10),
-          FtPlainCard(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'ACHIEVEMENTS',
-                  style: TextStyle(
-                    fontSize: FtTokens.fontSizeCaption,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0x80FFFFFF),
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                GridView.count(
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 8,
-                  crossAxisSpacing: 8,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    for (final a in _achievements)
-                      _AchievementTile(achievement: a),
-                  ],
-                ),
-              ],
-            ),
-          ),
         ],
-      ),
-    );
-  }
-}
-
-@immutable
-class _Achievement {
-  final String emoji;
-  final String label;
-  final Color color;
-  final bool unlocked;
-
-  const _Achievement({
-    required this.emoji,
-    required this.label,
-    required this.color,
-    required this.unlocked,
-  });
-}
-
-class _AchievementTile extends StatelessWidget {
-  final _Achievement achievement;
-  const _AchievementTile({required this.achievement});
-
-  @override
-  Widget build(BuildContext context) {
-    final a = achievement;
-    return Opacity(
-      opacity: a.unlocked ? 1.0 : 0.45,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: a.unlocked
-              ? LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    a.color.withValues(alpha: 0.13),
-                    a.color.withValues(alpha: 0.03),
-                  ],
-                )
-              : null,
-          color: a.unlocked ? null : const Color(0x08FFFFFF),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: a.unlocked
-                ? a.color.withValues(alpha: 0.27)
-                : const Color(0x0FFFFFFF),
-          ),
-          boxShadow: a.unlocked
-              ? [BoxShadow(color: a.color.withValues(alpha: 0.2), blurRadius: 12)]
-              : null,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(a.emoji, style: const TextStyle(fontSize: 22)),
-            const SizedBox(height: 4),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Text(
-                a.label.toUpperCase(),
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: FtTokens.fontSizeTiny,
-                  fontWeight: FontWeight.w700,
-                  color: a.unlocked ? a.color : const Color(0x66FFFFFF),
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -5,6 +5,7 @@ import 'package:forgetrack/features/progression/application/progression_source.d
 import 'package:forgetrack/features/progression/domain/progression_evaluator.dart';
 import 'package:forgetrack/features/progression/domain/progression_level_policy.dart';
 import 'package:forgetrack/features/progression/domain/progression_models.dart';
+import 'package:forgetrack/features/progression/domain/progression_reward_finalization_policy.dart';
 import 'package:forgetrack/features/progression/domain/progression_repository.dart';
 
 void main() {
@@ -887,6 +888,60 @@ void main() {
     });
   });
 
+  group('ProgressionRewardFinalizationPolicy', () {
+    test('finalizes daily rewards after the next-day grace window', () {
+      const policy = ProgressionRewardFinalizationPolicy(
+        dailyGraceWindow: Duration(hours: 3),
+      );
+      final period = ProgressionPeriod.day(DateTime(2026, 4, 21));
+
+      expect(
+        policy.finalizationCutoffFor(period),
+        DateTime(2026, 4, 22, 3),
+      );
+      expect(
+        policy.canFinalizeReward(
+          period: period,
+          evaluatedAt: DateTime(2026, 4, 22, 2, 59),
+        ),
+        isFalse,
+      );
+      expect(
+        policy.canFinalizeReward(
+          period: period,
+          evaluatedAt: DateTime(2026, 4, 22, 3),
+        ),
+        isTrue,
+      );
+    });
+
+    test('finalizes weekly rewards after the next-week grace window', () {
+      const policy = ProgressionRewardFinalizationPolicy(
+        weeklyGraceWindow: Duration(hours: 3),
+      );
+      final period = ProgressionPeriod.week(DateTime(2026, 4, 13));
+
+      expect(
+        policy.finalizationCutoffFor(period),
+        DateTime(2026, 4, 20, 3),
+      );
+      expect(
+        policy.canFinalizeReward(
+          period: period,
+          evaluatedAt: DateTime(2026, 4, 20, 2, 59),
+        ),
+        isFalse,
+      );
+      expect(
+        policy.canFinalizeReward(
+          period: period,
+          evaluatedAt: DateTime(2026, 4, 20, 3),
+        ),
+        isTrue,
+      );
+    });
+  });
+
   group('ProgressionEvaluator', () {
     test('treats tolerance boundaries as achieved', () {
       const evaluator = ProgressionEvaluator();
@@ -1010,13 +1065,18 @@ void main() {
 
 class _FakeProgressionSource implements ProgressionSource {
   const _FakeProgressionSource({
-    required this.goals,
+    required ProgressionGoalSet goals,
     required this.dailySnapshots,
     required this.weeklySnapshots,
-  });
+  }) : currentGoals = goals;
 
   @override
-  final ProgressionGoalSet goals;
+  final ProgressionGoalSet currentGoals;
+
+  ProgressionGoalSet get goals => currentGoals;
+
+  @override
+  ProgressionGoalSet goalsForPeriod(ProgressionPeriod period) => currentGoals;
 
   final List<ProgressionSnapshot> dailySnapshots;
   final List<ProgressionSnapshot> weeklySnapshots;
@@ -1067,12 +1127,53 @@ class _InMemoryProgressionRepository implements ProgressionRepository {
           domain: evaluation.domain,
           period: evaluation.period,
           xpGranted: evaluation.rewardXp,
-          grantedAt: evaluatedAt,
+          targetValue: evaluation.targetValue,
+          actualValue: evaluation.actualValue,
+          upperTargetValue: evaluation.upperTargetValue,
+          toleranceRatio: evaluation.toleranceRatio,
+          rewardStatus: ProgressionRewardStatus.claimed,
+          unlockedAt: evaluatedAt,
+          claimedAt: evaluatedAt,
         ),
       );
     }
 
     _lastEvaluatedAt = evaluatedAt;
+    return loadLedger();
+  }
+
+  @override
+  Future<ProgressionLedgerSnapshot> claimReward({
+    required String rewardKey,
+    required DateTime claimedAt,
+  }) async {
+    final reward = _rewardGrants[rewardKey];
+    if (reward == null) return loadLedger();
+    _rewardGrants[rewardKey] = ProgressionRewardGrant(
+      rewardKey: reward.rewardKey,
+      ruleId: reward.ruleId,
+      ruleVersion: reward.ruleVersion,
+      domain: reward.domain,
+      period: reward.period,
+      xpGranted: reward.xpGranted,
+      targetValue: reward.targetValue,
+      actualValue: reward.actualValue,
+      upperTargetValue: reward.upperTargetValue,
+      toleranceRatio: reward.toleranceRatio,
+      rewardStatus: ProgressionRewardStatus.claimed,
+      unlockedAt: reward.unlockedAt,
+      claimedAt: claimedAt,
+    );
+    return loadLedger();
+  }
+
+  @override
+  Future<ProgressionLedgerSnapshot> claimAllRewards({
+    required DateTime claimedAt,
+  }) async {
+    for (final rewardKey in _rewardGrants.keys.toList()) {
+      await claimReward(rewardKey: rewardKey, claimedAt: claimedAt);
+    }
     return loadLedger();
   }
 

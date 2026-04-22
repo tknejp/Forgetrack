@@ -21,13 +21,29 @@ class ProviderProgressionSource implements ProgressionSource {
   final DateTime Function() _clock;
 
   @override
-  ProgressionGoalSet get goals => ProgressionGoalSet(
+  ProgressionGoalSet get currentGoals => ProgressionGoalSet(
         dailySteps: _goalsProvider.dailySteps,
         dailyCalories: _goalsProvider.dailyCalories,
         dailyProteinGrams: _goalsProvider.dailyProtein,
         sleepMinutes: (_goalsProvider.sleepHours * 60).round(),
         weeklyActivityMinutes: _goalsProvider.weeklyActivityMins,
       );
+
+  @override
+  ProgressionGoalSet goalsForPeriod(ProgressionPeriod period) {
+    final anchor = progressionDate(period.start);
+    return ProgressionGoalSet(
+      dailySteps: _goalsProvider.progressionDailyStepsForDate(anchor),
+      dailyCalories: _goalsProvider.progressionDailyCaloriesForDate(anchor),
+      dailyProteinGrams: _goalsProvider.progressionDailyProteinForDate(anchor),
+      sleepMinutes:
+          (_goalsProvider.progressionSleepHoursForDate(anchor) * 60).round(),
+      weeklyActivityMinutes:
+          _goalsProvider.progressionWeeklyActivityMinsForWeek(
+        startOfProgressionWeek(anchor),
+      ),
+    );
+  }
 
   @override
   List<ProgressionSnapshot> buildDailySnapshots() {
@@ -83,6 +99,7 @@ class ProviderProgressionSource implements ProgressionSource {
       _goalsProvider.dailyProtein,
       _goalsProvider.sleepHours,
       _goalsProvider.weeklyActivityMins,
+      _goalsProvider.progressionHistorySignature,
       _fitnessProvider.lastSyncedAt?.toIso8601String() ?? 'no-fitness-sync',
       _nutritionProvider.lastSyncedAt?.toIso8601String() ?? 'no-nutrition-sync',
       _nutritionProvider.isLoggedIn,

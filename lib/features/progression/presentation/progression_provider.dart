@@ -77,6 +77,10 @@ class ProgressionProvider extends ChangeNotifier {
       _state?.evaluations ?? const [];
   List<ProgressionRewardGrant> get rewardGrants =>
       _state?.rewardGrants ?? const [];
+  List<ProgressionRewardGrant> get pendingRewards =>
+      rewardGrants.where((grant) => grant.isUnlocked).toList(growable: false);
+  List<ProgressionRewardGrant> get claimedRewards =>
+      rewardGrants.where((grant) => grant.isClaimed).toList(growable: false);
   List<ProgressionAchievement> get achievements =>
       _state?.achievements ?? const [];
   List<ProgressionQuest> get quests => _state?.quests ?? const [];
@@ -189,6 +193,40 @@ class ProgressionProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> claimReward(String rewardKey) async {
+    if (_isRefreshing) return;
+
+    _isRefreshing = true;
+    notifyListeners();
+
+    try {
+      _state = await _engine.claimReward(rewardKey);
+      _error = null;
+    } catch (error) {
+      _error = error.toString();
+    } finally {
+      _isRefreshing = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> claimAllRewards() async {
+    if (_isRefreshing) return;
+
+    _isRefreshing = true;
+    notifyListeners();
+
+    try {
+      _state = await _engine.claimAllRewards();
+      _error = null;
+    } catch (error) {
+      _error = error.toString();
+    } finally {
+      _isRefreshing = false;
+      notifyListeners();
+    }
+  }
+
   ProgressionDomainRangeSummary summaryForDomainRange({
     required ProgressionDomain domain,
     required DateTime start,
@@ -204,7 +242,8 @@ class ProgressionProvider extends ChangeNotifier {
     });
 
     final grants = matchingGrants.toList();
-    final earnedXp = grants.fold<int>(0, (sum, grant) => sum + grant.xpGranted);
+    final earnedXp =
+        grants.fold<int>(0, (sum, grant) => sum + grant.effectiveXpGranted);
 
     return ProgressionDomainRangeSummary(
       earnedXp: earnedXp,

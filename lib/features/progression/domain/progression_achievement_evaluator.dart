@@ -27,6 +27,13 @@ class ProgressionAchievementEvaluator {
     ];
   }
 
+  double _safeProgress(int currentValue, int targetValue) {
+    if (targetValue <= 0) return currentValue > 0 ? 1 : 0;
+    final ratio = currentValue / targetValue;
+    if (ratio.isNaN || ratio.isInfinite) return currentValue > 0 ? 1 : 0;
+    return ratio.clamp(0, 1).toDouble();
+  }
+
   ProgressionAchievement _evaluateDefinition({
     required ProgressionAchievementDefinition definition,
     required ProgressionProfile profile,
@@ -61,7 +68,7 @@ class ProgressionAchievementEvaluator {
       description: definition.description,
       targetValue: definition.targetValue,
       currentValue: currentValue,
-      progress: (currentValue / definition.targetValue).clamp(0, 1).toDouble(),
+      progress: _safeProgress(currentValue, definition.targetValue),
       unlocked: unlocked,
       unlockedAt: unlockedAt,
       ruleId: definition.ruleId,
@@ -129,22 +136,22 @@ class ProgressionAchievementEvaluator {
           }
           return true;
         }).toList()
-          ..sort((a, b) => a.grantedAt.compareTo(b.grantedAt));
+          ..sort((a, b) => a.progressionAt.compareTo(b.progressionAt));
 
         if (matching.length < definition.targetValue) return null;
-        return matching[definition.targetValue - 1].grantedAt;
+        return matching[definition.targetValue - 1].progressionAt;
       case ProgressionAchievementCriterionType.totalXpAtLeast:
         final ordered = [...rewardGrants]
-          ..sort((a, b) => a.grantedAt.compareTo(b.grantedAt));
+          ..sort((a, b) => a.progressionAt.compareTo(b.progressionAt));
         var runningXp = 0;
         for (final grant in ordered) {
-          runningXp += grant.xpGranted;
+          runningXp += grant.effectiveXpGranted;
           if (runningXp >= definition.targetValue) {
-            return grant.grantedAt;
+            return grant.progressionAt;
           }
         }
         return profile.totalXp >= definition.targetValue && ordered.isNotEmpty
-            ? ordered.last.grantedAt
+            ? ordered.last.progressionAt
             : null;
       case ProgressionAchievementCriterionType.bestStreakAtLeast:
         final relevant = evaluations.where((evaluation) {

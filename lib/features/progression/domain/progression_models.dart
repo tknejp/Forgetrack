@@ -81,6 +81,11 @@ enum ProgressionQuestStatus {
   completed,
 }
 
+enum ProgressionRewardStatus {
+  unlocked,
+  claimed,
+}
+
 class ProgressionGoalSet {
   const ProgressionGoalSet({
     required this.dailySteps,
@@ -303,7 +308,13 @@ class ProgressionRewardGrant {
     required this.domain,
     required this.period,
     required this.xpGranted,
-    required this.grantedAt,
+    required this.targetValue,
+    required this.actualValue,
+    required this.rewardStatus,
+    required this.unlockedAt,
+    this.upperTargetValue,
+    this.toleranceRatio = 0,
+    this.claimedAt,
   });
 
   final String rewardKey;
@@ -312,7 +323,18 @@ class ProgressionRewardGrant {
   final ProgressionDomain domain;
   final ProgressionPeriod period;
   final int xpGranted;
-  final DateTime grantedAt;
+  final double targetValue;
+  final double actualValue;
+  final double? upperTargetValue;
+  final double toleranceRatio;
+  final ProgressionRewardStatus rewardStatus;
+  final DateTime unlockedAt;
+  final DateTime? claimedAt;
+
+  bool get isClaimed => rewardStatus == ProgressionRewardStatus.claimed;
+  bool get isUnlocked => rewardStatus == ProgressionRewardStatus.unlocked;
+  int get effectiveXpGranted => isClaimed ? xpGranted : 0;
+  DateTime get progressionAt => claimedAt ?? unlockedAt;
 }
 
 class ProgressionProfile {

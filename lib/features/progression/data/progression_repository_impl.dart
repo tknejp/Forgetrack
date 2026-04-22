@@ -1,14 +1,20 @@
 import 'package:isar/isar.dart';
 
 import '../domain/progression_models.dart';
+import '../domain/progression_reward_finalization_policy.dart';
 import '../domain/progression_repository.dart';
 import 'local/progression_database.dart';
 import 'local/progression_local_models.dart';
 
 class ProgressionRepositoryImpl implements ProgressionRepository {
-  ProgressionRepositoryImpl(this._database);
+  ProgressionRepositoryImpl(
+    this._database, {
+    ProgressionRewardFinalizationPolicy finalizationPolicy =
+        const ProgressionRewardFinalizationPolicy(),
+  }) : _finalizationPolicy = finalizationPolicy;
 
   final ProgressionDatabase _database;
+  final ProgressionRewardFinalizationPolicy _finalizationPolicy;
 
   @override
   Future<ProgressionLedgerSnapshot> loadLedger() async {
@@ -61,18 +67,72 @@ class ProgressionRepositoryImpl implements ProgressionRepository {
 
       final newRewardRecords = evaluations
           .where((evaluation) => evaluation.achieved && evaluation.rewardXp > 0)
+          .where((evaluation) => _finalizationPolicy.canFinalizeReward(
+                period: evaluation.period,
+                evaluatedAt: evaluatedAt,
+              ))
           .where((evaluation) =>
               !existingRewardKeys.contains(evaluation.rewardKey))
           .map(
             (evaluation) => _toGrantRecord(
               evaluation: evaluation,
-              grantedAt: evaluatedAt,
+              unlockedAt: evaluatedAt,
             ),
           )
           .toList();
 
       if (newRewardRecords.isNotEmpty) {
         await isar.progressionRewardGrantRecords.putAll(newRewardRecords);
+      }
+    });
+
+    return loadLedger();
+  }
+
+  @override
+  Future<ProgressionLedgerSnapshot> claimReward({
+    required String rewardKey,
+    required DateTime claimedAt,
+  }) async {
+    final isar = _database.isar;
+
+    await isar.writeTxn(() async {
+      final record = await isar.progressionRewardGrantRecords
+          .filter()
+          .rewardKeyEqualTo(rewardKey)
+          .findFirst();
+      if (record == null) return;
+      if (record.rewardStatusName == ProgressionRewardStatus.claimed.name) {
+        return;
+      }
+
+      record.rewardStatusName = ProgressionRewardStatus.claimed.name;
+      record.claimedAt = claimedAt;
+      await isar.progressionRewardGrantRecords.put(record);
+    });
+
+    return loadLedger();
+  }
+
+  @override
+  Future<ProgressionLedgerSnapshot> claimAllRewards({
+    required DateTime claimedAt,
+  }) async {
+    final isar = _database.isar;
+
+    await isar.writeTxn(() async {
+      final unlockedRecords = await isar.progressionRewardGrantRecords
+          .filter()
+          .rewardStatusNameEqualTo(ProgressionRewardStatus.unlocked.name)
+          .findAll();
+
+      for (final record in unlockedRecords) {
+        record.rewardStatusName = ProgressionRewardStatus.claimed.name;
+        record.claimedAt = claimedAt;
+      }
+
+      if (unlockedRecords.isNotEmpty) {
+        await isar.progressionRewardGrantRecords.putAll(unlockedRecords);
       }
     });
 
@@ -104,6 +164,19 @@ class ProgressionRepositoryImpl implements ProgressionRepository {
     return loadLedger();
   }
 
+  double _sanitizeDouble(double value) {
+    if (value.isNaN || value.isInfinite) return 0;
+    return value;
+  }
+
+  T? _parseEnum<T extends Enum>(List<T> values, String? name) {
+    if (name == null || name.isEmpty) return null;
+    for (final value in values) {
+      if (value.name == name) return value;
+    }
+    return null;
+  }
+
   ProgressionEvaluation _mapEvaluation(ProgressionEvaluationRecord record) {
     return ProgressionEvaluation(
       evaluationKey: record.evaluationKey,
@@ -117,20 +190,23 @@ class ProgressionRepositoryImpl implements ProgressionRepository {
         end: progressionDate(record.periodEnd),
       ),
       comparator: ProgressionComparator.values.byName(record.comparatorName),
-      actualValue: record.actualValue,
-      targetValue: record.targetValue,
-      upperTargetValue: record.upperTargetValue,
-      toleranceRatio: record.toleranceRatio,
-      progress: record.progress,
-      achieved: record.achieved,
-      status: record.statusName == null
-          ? (record.achieved
-              ? ProgressionEvaluationStatus.achieved
-              : ProgressionEvaluationStatus.missed)
-          : ProgressionEvaluationStatus.values.byName(record.statusName!),
-      missReason: record.missReasonName == null
+      actualValue: _sanitizeDouble(record.actualValue),
+      targetValue: _sanitizeDouble(record.targetValue),
+      upperTargetValue: record.upperTargetValue == null
           ? null
-          : ProgressionMissReason.values.byName(record.missReasonName!),
+          : _sanitizeDouble(record.upperTargetValue!),
+      toleranceRatio: _sanitizeDouble(record.toleranceRatio),
+      progress: _sanitizeDouble(record.progress),
+      achieved: record.achieved,
+      status: _parseEnum(
+            ProgressionEvaluationStatus.values,
+            record.statusName,
+          ) ??
+          (record.achieved
+              ? ProgressionEvaluationStatus.achieved
+              : ProgressionEvaluationStatus.missed),
+      missReason:
+          _parseEnum(ProgressionMissReason.values, record.missReasonName),
       rewardXp: record.rewardXp,
       title: record.title,
       description: record.description,
@@ -150,7 +226,17 @@ class ProgressionRepositoryImpl implements ProgressionRepository {
         end: progressionDate(record.periodEnd),
       ),
       xpGranted: record.xpGranted,
-      grantedAt: record.grantedAt,
+      targetValue: _sanitizeDouble(record.targetValue),
+      actualValue: _sanitizeDouble(record.actualValue),
+      upperTargetValue: record.upperTargetValue == null
+          ? null
+          : _sanitizeDouble(record.upperTargetValue!),
+      toleranceRatio: _sanitizeDouble(record.toleranceRatio),
+      rewardStatus:
+          _parseEnum(ProgressionRewardStatus.values, record.rewardStatusName) ??
+              ProgressionRewardStatus.unlocked,
+      unlockedAt: record.unlockedAt,
+      claimedAt: record.claimedAt,
     );
   }
 
@@ -185,7 +271,7 @@ class ProgressionRepositoryImpl implements ProgressionRepository {
 
   ProgressionRewardGrantRecord _toGrantRecord({
     required ProgressionEvaluation evaluation,
-    required DateTime grantedAt,
+    required DateTime unlockedAt,
   }) {
     return ProgressionRewardGrantRecord()
       ..rewardKey = evaluation.rewardKey
@@ -196,6 +282,12 @@ class ProgressionRepositoryImpl implements ProgressionRepository {
       ..periodStart = evaluation.period.start
       ..periodEnd = evaluation.period.end
       ..xpGranted = evaluation.rewardXp
-      ..grantedAt = grantedAt;
+      ..targetValue = evaluation.targetValue
+      ..actualValue = evaluation.actualValue
+      ..upperTargetValue = evaluation.upperTargetValue
+      ..toleranceRatio = evaluation.toleranceRatio
+      ..rewardStatusName = ProgressionRewardStatus.unlocked.name
+      ..unlockedAt = unlockedAt
+      ..claimedAt = null;
   }
 }

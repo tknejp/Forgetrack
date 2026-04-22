@@ -62,6 +62,13 @@ class ProgressionQuestEvaluator {
     );
   }
 
+  double _safeProgress(int currentValue, int targetValue) {
+    if (targetValue <= 0) return currentValue > 0 ? 1 : 0;
+    final ratio = currentValue / targetValue;
+    if (ratio.isNaN || ratio.isInfinite) return currentValue > 0 ? 1 : 0;
+    return ratio.clamp(0, 1).toDouble();
+  }
+
   ProgressionQuest _evaluateDefinition({
     required ProgressionQuestDefinition definition,
     required Map<String, ProgressionQuest> questsById,
@@ -124,7 +131,7 @@ class ProgressionQuestEvaluator {
               : ProgressionQuestStatus.available,
       targetValue: definition.targetValue,
       currentValue: currentValue,
-      progress: (currentValue / definition.targetValue).clamp(0, 1).toDouble(),
+      progress: _safeProgress(currentValue, definition.targetValue),
       prerequisiteQuestIds: definition.prerequisiteQuestIds,
       sortOrder: definition.sortOrder,
       priority: definition.priority,
@@ -552,7 +559,7 @@ class ProgressionQuestEvaluator {
           ..sort(_sortRewardGrants);
 
         if (ordered.length < definition.targetValue) return null;
-        return ordered[definition.targetValue - 1].grantedAt;
+        return ordered[definition.targetValue - 1].progressionAt;
     }
   }
 
@@ -564,14 +571,14 @@ class ProgressionQuestEvaluator {
     final ordered = [...rewardGrants]..sort(_sortRewardGrants);
     var runningXp = 0;
     for (final grant in ordered) {
-      runningXp += grant.xpGranted;
+      runningXp += grant.effectiveXpGranted;
       if (runningXp >= targetValue) {
-        return grant.grantedAt;
+        return grant.progressionAt;
       }
     }
 
     return profile.totalXp >= targetValue && ordered.isNotEmpty
-        ? ordered.last.grantedAt
+        ? ordered.last.progressionAt
         : null;
   }
 
@@ -581,7 +588,7 @@ class ProgressionQuestEvaluator {
   }) {
     final ordered = [...rewardGrants]..sort(_sortRewardGrants);
     if (ordered.length < targetValue) return null;
-    return ordered[targetValue - 1].grantedAt;
+    return ordered[targetValue - 1].progressionAt;
   }
 
   DateTime? _resolveStreakCompletedAt({
@@ -814,7 +821,7 @@ class ProgressionQuestEvaluator {
     ProgressionRewardGrant left,
     ProgressionRewardGrant right,
   ) {
-    final byGrantedAt = left.grantedAt.compareTo(right.grantedAt);
+    final byGrantedAt = left.progressionAt.compareTo(right.progressionAt);
     if (byGrantedAt != 0) return byGrantedAt;
 
     final byPeriod = left.period.start.compareTo(right.period.start);

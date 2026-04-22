@@ -38,6 +38,48 @@ class FtProgressionDomainTheme {
     }
   }
 
+  static IconData iconForAchievement(ProgressionAchievement achievement) {
+    switch (achievement.id) {
+      case 'first_reward':
+        return Icons.emoji_events_rounded;
+      case 'reward_hunter_25':
+        return Icons.workspace_premium_rounded;
+      case 'reward_hunter_100':
+        return Icons.shield_moon_rounded;
+      case 'pathfinder_level_5':
+        return Icons.explore_rounded;
+      case 'forge_knight_xp_5000':
+        return Icons.local_fire_department_rounded;
+      case 'living_legend_xp_15000':
+        return Icons.auto_awesome_rounded;
+      case 'steps_total_100k':
+        return Icons.directions_walk_rounded;
+      case 'steps_total_500k':
+        return Icons.route_rounded;
+      case 'steps_total_1000000':
+        return Icons.military_tech_rounded;
+      case 'steps_streak_3':
+        return Icons.local_fire_department_rounded;
+      case 'steps_streak_7':
+        return Icons.bolt_rounded;
+      case 'steps_streak_30':
+        return Icons.whatshot_rounded;
+      case 'nutrition_streak_3':
+        return Icons.restaurant_menu_rounded;
+      case 'nutrition_rewards_25':
+        return Icons.restaurant_rounded;
+      case 'weekly_activity_mastery':
+        return Icons.fitness_center_rounded;
+      case 'weekly_activity_4':
+        return Icons.flash_on_rounded;
+      case 'weekly_activity_12':
+        return Icons.rocket_launch_rounded;
+      default:
+        final domain = resolveForAchievement(achievement);
+        return iconFor(domain);
+    }
+  }
+
   /// Rule-id → domain map. Kept in sync with ProgressionRuleCatalog.
   static ProgressionDomain? domainForRuleId(String? ruleId) {
     switch (ruleId) {

@@ -1574,6 +1574,12 @@ abstract class AppLocalizations {
   /// **'Achievements'**
   String get progBadgeAchievements;
 
+  /// No description provided for @progBadgePendingClaims.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} to claim'**
+  String progBadgePendingClaims(int count);
+
   /// No description provided for @progBadgeXpRange.
   ///
   /// In en, this message translates to:
@@ -1843,6 +1849,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Latest XP grants earned across your domains.'**
   String get progRewardsSectionCaption;
+
+  /// No description provided for @progRewardsPendingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending Rewards'**
+  String get progRewardsPendingTitle;
+
+  /// No description provided for @progRewardsPendingCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal-bound rewards unlock after the day or week closes. Claiming adds XP to your profile.'**
+  String get progRewardsPendingCaption;
+
+  /// No description provided for @progRewardsClaimAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Claim all'**
+  String get progRewardsClaimAll;
+
+  /// No description provided for @progRewardsClaim.
+  ///
+  /// In en, this message translates to:
+  /// **'Claim'**
+  String get progRewardsClaim;
+
+  /// No description provided for @progRewardsUnlockedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocked {time}'**
+  String progRewardsUnlockedAt(String time);
+
+  /// No description provided for @progRewardDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Target {target} {unit} | Actual {actual} {unit}'**
+  String progRewardDetail(String target, String unit, String actual);
 
   /// No description provided for @progRewardsEmptyTitle.
   ///

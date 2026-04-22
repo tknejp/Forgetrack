@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -10,6 +12,11 @@ class GoalsProvider extends ChangeNotifier {
   static const _kDailyCarbs = 'goal_daily_carbs';
   static const _kSleepHours = 'goal_sleep_hours';
   static const _kWeeklyActivityMins = 'goal_weekly_activity_mins';
+  static const _kDailyStepsHistory = 'goal_daily_steps_history';
+  static const _kDailyCaloriesHistory = 'goal_daily_calories_history';
+  static const _kDailyProteinHistory = 'goal_daily_protein_history';
+  static const _kSleepHoursHistory = 'goal_sleep_hours_history';
+  static const _kWeeklyActivityMinsHistory = 'goal_weekly_activity_history';
 
   int _dailySteps = 10000;
   double _targetWeight = 75.0;
@@ -19,6 +26,11 @@ class GoalsProvider extends ChangeNotifier {
   double _dailyCarbs = 250;
   double _sleepHours = 8.0;
   int _weeklyActivityMins = 150;
+  List<_GoalHistoryEntry> _dailyStepsHistory = const [];
+  List<_GoalHistoryEntry> _dailyCaloriesHistory = const [];
+  List<_GoalHistoryEntry> _dailyProteinHistory = const [];
+  List<_GoalHistoryEntry> _sleepHoursHistory = const [];
+  List<_GoalHistoryEntry> _weeklyActivityMinsHistory = const [];
 
   int get dailySteps => _dailySteps;
   double get targetWeight => _targetWeight;
@@ -28,6 +40,13 @@ class GoalsProvider extends ChangeNotifier {
   double get dailyCarbs => _dailyCarbs;
   double get sleepHours => _sleepHours;
   int get weeklyActivityMins => _weeklyActivityMins;
+  String get progressionHistorySignature => [
+        _historySignature(_dailyStepsHistory),
+        _historySignature(_dailyCaloriesHistory),
+        _historySignature(_dailyProteinHistory),
+        _historySignature(_sleepHoursHistory),
+        _historySignature(_weeklyActivityMinsHistory),
+      ].join('|');
 
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
@@ -39,6 +58,31 @@ class GoalsProvider extends ChangeNotifier {
     _dailyCarbs = prefs.getDouble(_kDailyCarbs) ?? 250;
     _sleepHours = prefs.getDouble(_kSleepHours) ?? 8.0;
     _weeklyActivityMins = prefs.getInt(_kWeeklyActivityMins) ?? 150;
+    _dailyStepsHistory = _loadHistory(
+      prefs: prefs,
+      key: _kDailyStepsHistory,
+      fallbackValue: _dailySteps.toDouble(),
+    );
+    _dailyCaloriesHistory = _loadHistory(
+      prefs: prefs,
+      key: _kDailyCaloriesHistory,
+      fallbackValue: _dailyCalories,
+    );
+    _dailyProteinHistory = _loadHistory(
+      prefs: prefs,
+      key: _kDailyProteinHistory,
+      fallbackValue: _dailyProtein,
+    );
+    _sleepHoursHistory = _loadHistory(
+      prefs: prefs,
+      key: _kSleepHoursHistory,
+      fallbackValue: _sleepHours,
+    );
+    _weeklyActivityMinsHistory = _loadHistory(
+      prefs: prefs,
+      key: _kWeeklyActivityMinsHistory,
+      fallbackValue: _weeklyActivityMins.toDouble(),
+    );
     notifyListeners();
   }
 
@@ -47,6 +91,16 @@ class GoalsProvider extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_kDailySteps, v);
+    _dailyStepsHistory = _withRevision(
+      entries: _dailyStepsHistory,
+      effectiveFrom: _startOfNextDay(DateTime.now()),
+      value: v.toDouble(),
+    );
+    await _saveHistory(
+      prefs: prefs,
+      key: _kDailyStepsHistory,
+      entries: _dailyStepsHistory,
+    );
   }
 
   Future<void> setTargetWeight(double v) async {
@@ -61,6 +115,16 @@ class GoalsProvider extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(_kDailyCalories, v);
+    _dailyCaloriesHistory = _withRevision(
+      entries: _dailyCaloriesHistory,
+      effectiveFrom: _startOfNextDay(DateTime.now()),
+      value: v,
+    );
+    await _saveHistory(
+      prefs: prefs,
+      key: _kDailyCaloriesHistory,
+      entries: _dailyCaloriesHistory,
+    );
   }
 
   Future<void> setDailyProtein(double v) async {
@@ -68,6 +132,16 @@ class GoalsProvider extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(_kDailyProtein, v);
+    _dailyProteinHistory = _withRevision(
+      entries: _dailyProteinHistory,
+      effectiveFrom: _startOfNextDay(DateTime.now()),
+      value: v,
+    );
+    await _saveHistory(
+      prefs: prefs,
+      key: _kDailyProteinHistory,
+      entries: _dailyProteinHistory,
+    );
   }
 
   Future<void> setDailyFat(double v) async {
@@ -89,6 +163,16 @@ class GoalsProvider extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(_kSleepHours, v);
+    _sleepHoursHistory = _withRevision(
+      entries: _sleepHoursHistory,
+      effectiveFrom: _startOfNextDay(DateTime.now()),
+      value: v,
+    );
+    await _saveHistory(
+      prefs: prefs,
+      key: _kSleepHoursHistory,
+      entries: _sleepHoursHistory,
+    );
   }
 
   Future<void> setWeeklyActivityMins(int v) async {
@@ -96,5 +180,169 @@ class GoalsProvider extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_kWeeklyActivityMins, v);
+    _weeklyActivityMinsHistory = _withRevision(
+      entries: _weeklyActivityMinsHistory,
+      effectiveFrom: _startOfNextWeek(DateTime.now()),
+      value: v.toDouble(),
+    );
+    await _saveHistory(
+      prefs: prefs,
+      key: _kWeeklyActivityMinsHistory,
+      entries: _weeklyActivityMinsHistory,
+    );
   }
+
+  int progressionDailyStepsForDate(DateTime day) =>
+      _resolveValue(_dailyStepsHistory, progressionDate(day)).round();
+
+  double progressionDailyCaloriesForDate(DateTime day) =>
+      _resolveValue(_dailyCaloriesHistory, progressionDate(day));
+
+  double progressionDailyProteinForDate(DateTime day) =>
+      _resolveValue(_dailyProteinHistory, progressionDate(day));
+
+  double progressionSleepHoursForDate(DateTime day) =>
+      _resolveValue(_sleepHoursHistory, progressionDate(day));
+
+  int progressionWeeklyActivityMinsForWeek(DateTime weekStart) => _resolveValue(
+        _weeklyActivityMinsHistory,
+        startOfProgressionWeek(weekStart),
+      ).round();
+
+  List<_GoalHistoryEntry> _loadHistory({
+    required SharedPreferences prefs,
+    required String key,
+    required double fallbackValue,
+  }) {
+    final raw = prefs.getString(key);
+    if (raw == null || raw.isEmpty) {
+      return [
+        _GoalHistoryEntry(
+          effectiveFrom: DateTime(1970, 1, 1),
+          value: fallbackValue,
+        ),
+      ];
+    }
+
+    final decoded = jsonDecode(raw);
+    if (decoded is! List) {
+      return [
+        _GoalHistoryEntry(
+          effectiveFrom: DateTime(1970, 1, 1),
+          value: fallbackValue,
+        ),
+      ];
+    }
+
+    final entries = decoded
+        .whereType<Map>()
+        .map(
+          (entry) => _GoalHistoryEntry.fromJson(
+            entry.map(
+              (key, value) => MapEntry(key.toString(), value),
+            ),
+          ),
+        )
+        .toList()
+      ..sort((a, b) => a.effectiveFrom.compareTo(b.effectiveFrom));
+
+    if (entries.isEmpty) {
+      return [
+        _GoalHistoryEntry(
+          effectiveFrom: DateTime(1970, 1, 1),
+          value: fallbackValue,
+        ),
+      ];
+    }
+
+    return entries;
+  }
+
+  Future<void> _saveHistory({
+    required SharedPreferences prefs,
+    required String key,
+    required List<_GoalHistoryEntry> entries,
+  }) {
+    return prefs.setString(
+      key,
+      jsonEncode([
+        for (final entry in entries) entry.toJson(),
+      ]),
+    );
+  }
+
+  List<_GoalHistoryEntry> _withRevision({
+    required List<_GoalHistoryEntry> entries,
+    required DateTime effectiveFrom,
+    required double value,
+  }) {
+    final normalized = progressionDate(effectiveFrom);
+    final nextEntries = entries
+        .where((entry) => progressionDate(entry.effectiveFrom) != normalized)
+        .toList()
+      ..add(_GoalHistoryEntry(effectiveFrom: normalized, value: value))
+      ..sort((a, b) => a.effectiveFrom.compareTo(b.effectiveFrom));
+    return nextEntries;
+  }
+
+  double _resolveValue(List<_GoalHistoryEntry> entries, DateTime effectiveDay) {
+    final normalizedDay = progressionDate(effectiveDay);
+    _GoalHistoryEntry? match;
+
+    for (final entry in entries) {
+      final entryDay = progressionDate(entry.effectiveFrom);
+      if (entryDay.isAfter(normalizedDay)) {
+        break;
+      }
+      match = entry;
+    }
+
+    return match?.value ?? entries.first.value;
+  }
+
+  String _historySignature(List<_GoalHistoryEntry> entries) {
+    return entries
+        .map(
+          (entry) =>
+              '${progressionDate(entry.effectiveFrom).toIso8601String()}:${entry.value}',
+        )
+        .join(',');
+  }
+
+  DateTime _startOfNextDay(DateTime now) =>
+      progressionDate(now).add(const Duration(days: 1));
+
+  DateTime _startOfNextWeek(DateTime now) =>
+      startOfProgressionWeek(now).add(const Duration(days: 7));
+
+  DateTime progressionDate(DateTime value) =>
+      DateTime(value.year, value.month, value.day);
+
+  DateTime startOfProgressionWeek(DateTime value) {
+    final normalized = progressionDate(value);
+    return normalized
+        .subtract(Duration(days: normalized.weekday - DateTime.monday));
+  }
+}
+
+class _GoalHistoryEntry {
+  const _GoalHistoryEntry({
+    required this.effectiveFrom,
+    required this.value,
+  });
+
+  factory _GoalHistoryEntry.fromJson(Map<String, dynamic> json) {
+    return _GoalHistoryEntry(
+      effectiveFrom: DateTime.parse(json['effectiveFrom'] as String),
+      value: (json['value'] as num).toDouble(),
+    );
+  }
+
+  final DateTime effectiveFrom;
+  final double value;
+
+  Map<String, dynamic> toJson() => {
+        'effectiveFrom': effectiveFrom.toIso8601String(),
+        'value': value,
+      };
 }

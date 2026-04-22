@@ -75,14 +75,14 @@ class ProgressionEngine {
   }
 
   Future<ProgressionEngineState> sync(ProgressionSource source) async {
-    final rules = _ruleCatalog.build(source.goals);
-    final evaluations = _evaluateAll(source, rules);
+    final now = _clock();
+    final evaluations = _evaluateAll(source);
 
     var ledger = await _repository.persistEvaluations(
       evaluations: evaluations,
-      evaluatedAt: _clock(),
+      evaluatedAt: now,
     );
-    var state = _toState(ledger, evaluationDate: _clock());
+    var state = _toState(ledger, evaluationDate: now);
     final nextActiveQuestIds = state.quests
         .where((quest) => quest.status == ProgressionQuestStatus.active)
         .map((quest) => quest.id)
@@ -92,10 +92,25 @@ class ProgressionEngine {
       ledger = await _repository.persistActiveQuestSet(
         activeQuestIds: nextActiveQuestIds,
       );
-      state = _toState(ledger, evaluationDate: _clock());
+      state = _toState(ledger, evaluationDate: now);
     }
 
     return state;
+  }
+
+  Future<ProgressionEngineState> claimReward(String rewardKey) async {
+    final now = _clock();
+    final ledger = await _repository.claimReward(
+      rewardKey: rewardKey,
+      claimedAt: now,
+    );
+    return _toState(ledger, evaluationDate: now);
+  }
+
+  Future<ProgressionEngineState> claimAllRewards() async {
+    final now = _clock();
+    final ledger = await _repository.claimAllRewards(claimedAt: now);
+    return _toState(ledger, evaluationDate: now);
   }
 
   ProgressionEngineState _toState(
@@ -104,7 +119,7 @@ class ProgressionEngine {
   }) {
     final totalXp = ledger.rewardGrants.fold<int>(
       0,
-      (sum, grant) => sum + grant.xpGranted,
+      (sum, grant) => sum + grant.effectiveXpGranted,
     );
 
     final evaluations = [...ledger.evaluations]
@@ -149,6 +164,42 @@ class ProgressionEngine {
 
   List<ProgressionEvaluation> _evaluateAll(
     ProgressionSource source,
+  ) {
+    final dailySnapshots = [...source.buildDailySnapshots()]
+      ..sort((a, b) => a.period.start.compareTo(b.period.start));
+    final weeklySnapshots = [...source.buildWeeklySnapshots()]
+      ..sort((a, b) => a.period.start.compareTo(b.period.start));
+
+    final evaluations = <ProgressionEvaluation>[
+      ..._evaluateSnapshots(
+        source: source,
+        snapshots: dailySnapshots,
+      ),
+      ..._evaluateSnapshots(
+        source: source,
+        snapshots: weeklySnapshots,
+      ),
+    ];
+
+    evaluations.sort((a, b) => a.evaluationKey.compareTo(b.evaluationKey));
+    return evaluations;
+  }
+
+  Iterable<ProgressionEvaluation> _evaluateSnapshots({
+    required ProgressionSource source,
+    required List<ProgressionSnapshot> snapshots,
+  }) sync* {
+    for (final snapshot in snapshots) {
+      final rules = _sortedRulesForPeriod(
+        _ruleCatalog.build(source.goalsForPeriod(snapshot.period)),
+      ).where((rule) => rule.periodKind == snapshot.period.kind);
+      for (final rule in rules) {
+        yield _evaluator.evaluate(rule: rule, snapshot: snapshot);
+      }
+    }
+  }
+
+  List<ProgressionRuleDefinition> _sortedRulesForPeriod(
     List<ProgressionRuleDefinition> rules,
   ) {
     final sortedRules = [...rules]..sort((a, b) {
@@ -158,38 +209,7 @@ class ProgressionEngine {
         if (byId != 0) return byId;
         return a.version.compareTo(b.version);
       });
-
-    final dailySnapshots = [...source.buildDailySnapshots()]
-      ..sort((a, b) => a.period.start.compareTo(b.period.start));
-    final weeklySnapshots = [...source.buildWeeklySnapshots()]
-      ..sort((a, b) => a.period.start.compareTo(b.period.start));
-
-    final evaluations = <ProgressionEvaluation>[
-      ..._evaluateSnapshots(
-        snapshots: dailySnapshots,
-        rules: sortedRules
-            .where((rule) => rule.periodKind == ProgressionPeriodKind.day),
-      ),
-      ..._evaluateSnapshots(
-        snapshots: weeklySnapshots,
-        rules: sortedRules
-            .where((rule) => rule.periodKind == ProgressionPeriodKind.week),
-      ),
-    ];
-
-    evaluations.sort((a, b) => a.evaluationKey.compareTo(b.evaluationKey));
-    return evaluations;
-  }
-
-  Iterable<ProgressionEvaluation> _evaluateSnapshots({
-    required List<ProgressionSnapshot> snapshots,
-    required Iterable<ProgressionRuleDefinition> rules,
-  }) sync* {
-    for (final snapshot in snapshots) {
-      for (final rule in rules) {
-        yield _evaluator.evaluate(rule: rule, snapshot: snapshot);
-      }
-    }
+    return sortedRules;
   }
 
   bool _sameQuestSet(Set<String> left, Set<String> right) {

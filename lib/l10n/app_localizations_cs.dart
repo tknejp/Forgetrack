@@ -793,6 +793,11 @@ class AppLocalizationsCs extends AppLocalizations {
   String get progBadgeAchievements => 'Úspěchy';
 
   @override
+  String progBadgePendingClaims(int count) {
+    return '$count k vyzvednutí';
+  }
+
+  @override
   String progBadgeXpRange(int current, int max) {
     return '$current / $max XP';
   }
@@ -950,6 +955,29 @@ class AppLocalizationsCs extends AppLocalizations {
       'Poslední získaná XP napříč doménami.';
 
   @override
+  String get progRewardsPendingTitle => 'Odměny k vyzvednutí';
+
+  @override
+  String get progRewardsPendingCaption =>
+      'Odměny vázané na cíl se odemknou po uzavření dne nebo týdne. Vyzvednutím se XP připíše do tvého profilu.';
+
+  @override
+  String get progRewardsClaimAll => 'Vyzvednout vše';
+
+  @override
+  String get progRewardsClaim => 'Vyzvednout';
+
+  @override
+  String progRewardsUnlockedAt(String time) {
+    return 'Odemčeno $time';
+  }
+
+  @override
+  String progRewardDetail(String target, String unit, String actual) {
+    return 'Cíl $target $unit | Skutečnost $actual $unit';
+  }
+
+  @override
   String get progRewardsEmptyTitle => 'Zatím žádné odměny.';
 
   @override
@@ -995,39 +1023,39 @@ class AppLocalizationsCs extends AppLocalizations {
       'Získej svou první progression odměnu.';
 
   @override
-  String get progQuestDailyTwoGoalsTodayTitle => 'DvojitĂ© vĂ­tÄ›zstvĂ­';
+  String get progQuestDailyTwoGoalsTodayTitle => 'Dvojité vítězství';
 
   @override
   String get progQuestDailyTwoGoalsTodayDesc =>
-      'SplĹ v aktuĂˇlnĂ­m dni libovolnĂ© 2 dennĂ­ cĂ­le.';
+      'Splň v aktuálním dni libovolné 2 denní cíle.';
 
   @override
-  String get progQuestDailyTripleWinTodayTitle => 'TrojitĂ© vĂ­tÄ›zstvĂ­';
+  String get progQuestDailyTripleWinTodayTitle => 'Trojité vítězství';
 
   @override
   String get progQuestDailyTripleWinTodayDesc =>
-      'SplĹ v aktuĂˇlnĂ­m dni libovolnĂ© 3 dennĂ­ cĂ­le.';
+      'Splň v aktuálním dni libovolné 3 denní cíle.';
 
   @override
-  String get progQuestDailyFourPillarsTodayTitle => 'ÄŚtyĹ™i pilĂ­Ĺ™e';
+  String get progQuestDailyFourPillarsTodayTitle => 'Čtyři pilíře';
 
   @override
   String get progQuestDailyFourPillarsTodayDesc =>
-      'SplĹ v aktuĂˇlnĂ­m dni vĹˇechny 4 dennĂ­ cĂ­le.';
+      'Splň v aktuálním dni všechny 4 denní cíle.';
 
   @override
-  String get progQuestDailyNutritionComboTodayTitle => 'NutriÄŤnĂ­ kombo';
+  String get progQuestDailyNutritionComboTodayTitle => 'Nutriční kombo';
 
   @override
   String get progQuestDailyNutritionComboTodayDesc =>
-      'SplĹ v aktuĂˇlnĂ­m dni kalorickĂ˝ i proteinovĂ˝ cĂ­l.';
+      'Splň v aktuálním dni kalorický i proteinový cíl.';
 
   @override
-  String get progQuestDailyRecoveryFocusTodayTitle => 'RegeneraÄŤnĂ­ fokus';
+  String get progQuestDailyRecoveryFocusTodayTitle => 'Regenerační fokus';
 
   @override
   String get progQuestDailyRecoveryFocusTodayDesc =>
-      'SplĹ v aktuĂˇlnĂ­m dni cĂ­l krokĹŻ i spĂˇnku.';
+      'Splň v aktuálním dni cíl kroků i spánku.';
 
   @override
   String get progQuestDailyStepsTodayTitle => 'Dnešní cíl kroků';
@@ -1037,11 +1065,11 @@ class AppLocalizationsCs extends AppLocalizations {
       'Splň denní pravidlo kroků v aktuálním dni.';
 
   @override
-  String get progQuestDailyCaloriesTodayTitle => 'DneĹˇnĂ­ kalorickĂ˝ cĂ­l';
+  String get progQuestDailyCaloriesTodayTitle => 'Dnešní kalorický cíl';
 
   @override
   String get progQuestDailyCaloriesTodayDesc =>
-      'SplĹ dennĂ­ kalorickĂ˝ cĂ­l v aktuĂˇlnĂ­m dni.';
+      'Splň denní kalorický cíl v aktuálním dni.';
 
   @override
   String get progQuestDailyProteinTodayTitle => 'Dnešní cíl bílkovin';
@@ -1070,10 +1098,10 @@ class AppLocalizationsCs extends AppLocalizations {
   String get progQuestReach2000XpDesc => 'Nasbírej alespoň 2 000 XP.';
 
   @override
-  String get progQuestReach5000XpTitle => 'DosĂˇhni 5 000 XP';
+  String get progQuestReach5000XpTitle => 'Dosáhni 5 000 XP';
 
   @override
-  String get progQuestReach5000XpDesc => 'NasbĂ­rej alespoĹ 5 000 XP.';
+  String get progQuestReach5000XpDesc => 'Nasbírej alespoň 5 000 XP.';
 
   @override
   String get progQuestEarn25RewardsTitle => 'Získej 25 odměn';
@@ -1083,11 +1111,11 @@ class AppLocalizationsCs extends AppLocalizations {
       'Nasbírej celkem 25 progression odměn.';
 
   @override
-  String get progQuestEarn100RewardsTitle => 'ZĂ­skej 100 odmÄ›n';
+  String get progQuestEarn100RewardsTitle => 'Získej 100 odměn';
 
   @override
   String get progQuestEarn100RewardsDesc =>
-      'NasbĂ­rej celkem 100 progression odmÄ›n.';
+      'Nasbírej celkem 100 progression odměn.';
 
   @override
   String get progQuestStepsStreak3Title => 'Série kroků';
@@ -1102,23 +1130,22 @@ class AppLocalizationsCs extends AppLocalizations {
   String get progQuestNutritionRewards5Desc => 'Získej 5 odměn za výživu.';
 
   @override
-  String get progQuestNutritionRewards25Title => 'MistrovstvĂ­ vĂ˝Ĺľivy';
+  String get progQuestNutritionRewards25Title => 'Mistrovství výživy';
 
   @override
-  String get progQuestNutritionRewards25Desc =>
-      'ZĂ­skej 25 odmÄ›n za vĂ˝Ĺľivu.';
+  String get progQuestNutritionRewards25Desc => 'Získej 25 odměn za výživu.';
 
   @override
-  String get progQuestTotalSteps100kTitle => 'Ujdi 100 tisĂ­c krokĹŻ';
+  String get progQuestTotalSteps100kTitle => 'Ujdi 100 tisíc kroků';
 
   @override
-  String get progQuestTotalSteps100kDesc => 'NasbĂ­rej celkem 100 000 krokĹŻ.';
+  String get progQuestTotalSteps100kDesc => 'Nasbírej celkem 100 000 kroků.';
 
   @override
-  String get progQuestTotalSteps500kTitle => 'Ujdi 500 tisĂ­c krokĹŻ';
+  String get progQuestTotalSteps500kTitle => 'Ujdi 500 tisíc kroků';
 
   @override
-  String get progQuestTotalSteps500kDesc => 'NasbĂ­rej celkem 500 000 krokĹŻ.';
+  String get progQuestTotalSteps500kDesc => 'Nasbírej celkem 500 000 kroků.';
 
   @override
   String get progQuestWeeklyActivityOnceTitle => 'Týdenní aktivita';
@@ -1135,11 +1162,11 @@ class AppLocalizationsCs extends AppLocalizations {
       'Splň týdenní cíl aktivity čtyřikrát.';
 
   @override
-  String get progQuestWeeklyActivity12Title => 'Legenda tĂ˝dennĂ­ aktivity';
+  String get progQuestWeeklyActivity12Title => 'Legenda týdenní aktivity';
 
   @override
   String get progQuestWeeklyActivity12Desc =>
-      'SplĹ tĂ˝dennĂ­ cĂ­l aktivity dvanĂˇctkrĂˇt.';
+      'Splň týdenní cíl aktivity dvanáctkrát.';
 
   @override
   String get progQuestUnlockStepChainTitle => 'Odemkni Řetěz kroků';
@@ -1154,11 +1181,11 @@ class AppLocalizationsCs extends AppLocalizations {
   String get progQuestStepsStreak7Desc => 'Splň denní cíl kroků 7 dní v řadě.';
 
   @override
-  String get progQuestStepsStreak14Title => 'StrĂˇĹľce krokĹŻ';
+  String get progQuestStepsStreak14Title => 'Strážce kroků';
 
   @override
   String get progQuestStepsStreak14Desc =>
-      'SplĹ dennĂ­ cĂ­l krokĹŻ 14 dnĂ­ v Ĺ™adÄ›.';
+      'Splň denní cíl kroků 14 dní v řadě.';
 
   @override
   String get progAchievementFirstRewardTitle => 'První odměna';
@@ -1168,18 +1195,18 @@ class AppLocalizationsCs extends AppLocalizations {
       'Získej svou první progression odměnu.';
 
   @override
-  String get progAchievementRewardHunter25Title => 'Lovec odmÄ›n';
+  String get progAchievementRewardHunter25Title => 'Lovec odměn';
 
   @override
   String get progAchievementRewardHunter25Desc =>
-      'ZĂ­skej 25 progression odmÄ›n.';
+      'Získej 25 progression odměn.';
 
   @override
-  String get progAchievementRewardHunter100Title => 'Legenda odmÄ›n';
+  String get progAchievementRewardHunter100Title => 'Legenda odměn';
 
   @override
   String get progAchievementRewardHunter100Desc =>
-      'ZĂ­skej 100 progression odmÄ›n.';
+      'Získej 100 progression odměn.';
 
   @override
   String get progAchievementPathfinderTitle => 'Stopař';
@@ -1188,35 +1215,35 @@ class AppLocalizationsCs extends AppLocalizations {
   String get progAchievementPathfinderDesc => 'Dosáhni levelu 5 získaným XP.';
 
   @override
-  String get progAchievementForgeKnight5000Title => 'RytĂ­Ĺ™ kovĂˇrny';
+  String get progAchievementForgeKnight5000Title => 'Rytíř kovárny';
 
   @override
-  String get progAchievementForgeKnight5000Desc => 'NasbĂ­rej 5 000 XP.';
+  String get progAchievementForgeKnight5000Desc => 'Nasbírej 5 000 XP.';
 
   @override
-  String get progAchievementLivingLegend15000Title => 'Ĺ˝ivĂˇ legenda';
+  String get progAchievementLivingLegend15000Title => 'Živá legenda';
 
   @override
-  String get progAchievementLivingLegend15000Desc => 'NasbĂ­rej 15 000 XP.';
+  String get progAchievementLivingLegend15000Desc => 'Nasbírej 15 000 XP.';
 
   @override
-  String get progAchievementSteps100kTitle => 'StotisĂ­covĂ˝ chodec';
+  String get progAchievementSteps100kTitle => 'Stotisícový chodec';
 
   @override
-  String get progAchievementSteps100kDesc => 'NasbĂ­rej celkem 100 000 krokĹŻ.';
+  String get progAchievementSteps100kDesc => 'Nasbírej celkem 100 000 kroků.';
 
   @override
-  String get progAchievementSteps500kTitle => 'Pochod pĹŻl milionu';
+  String get progAchievementSteps500kTitle => 'Pochod půl milionu';
 
   @override
-  String get progAchievementSteps500kDesc => 'NasbĂ­rej celkem 500 000 krokĹŻ.';
+  String get progAchievementSteps500kDesc => 'Nasbírej celkem 500 000 kroků.';
 
   @override
-  String get progAchievementSteps1000000Title => 'MĂ˝tus milionu krokĹŻ';
+  String get progAchievementSteps1000000Title => 'Mýtus milionu kroků';
 
   @override
   String get progAchievementSteps1000000Desc =>
-      'NasbĂ­rej celkem 1 000 000 krokĹŻ.';
+      'Nasbírej celkem 1 000 000 kroků.';
 
   @override
   String get progAchievementStepChainTitle => 'Řetěz kroků';
@@ -1226,18 +1253,18 @@ class AppLocalizationsCs extends AppLocalizations {
       'Splň denní cíl kroků 3 dny v řadě.';
 
   @override
-  String get progAchievementStepDisciplineTitle => 'DisciplĂ­na krokĹŻ';
+  String get progAchievementStepDisciplineTitle => 'Disciplína kroků';
 
   @override
   String get progAchievementStepDisciplineDesc =>
-      'SplĹ dennĂ­ cĂ­l krokĹŻ 7 dnĂ­ v Ĺ™adÄ›.';
+      'Splň denní cíl kroků 7 dní v řadě.';
 
   @override
-  String get progAchievementStepSovereignTitle => 'VlĂˇdce krokĹŻ';
+  String get progAchievementStepSovereignTitle => 'Vládce kroků';
 
   @override
   String get progAchievementStepSovereignDesc =>
-      'SplĹ dennĂ­ cĂ­l krokĹŻ 30 dnĂ­ v Ĺ™adÄ›.';
+      'Splň denní cíl kroků 30 dní v řadě.';
 
   @override
   String get progAchievementBalancedRhythmTitle => 'Vyvážený rytmus';
@@ -1251,7 +1278,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get progAchievementNutritionRewards25Desc =>
-      'ZĂ­skej 25 odmÄ›n za vĂ˝Ĺľivu.';
+      'Získej 25 odměn za výživu.';
 
   @override
   String get progAchievementWeeklyWarriorTitle => 'Týdenní válečník';
@@ -1261,18 +1288,18 @@ class AppLocalizationsCs extends AppLocalizations {
       'Splň týdenní cíl aktivity alespoň jednou.';
 
   @override
-  String get progAchievementWeeklyActivity4Title => 'PĹ™edvoj aktivity';
+  String get progAchievementWeeklyActivity4Title => 'Předvoj aktivity';
 
   @override
   String get progAchievementWeeklyActivity4Desc =>
-      'SplĹ tĂ˝dennĂ­ cĂ­l aktivity ÄŤtyĹ™ikrĂˇt.';
+      'Splň týdenní cíl aktivity čtyřikrát.';
 
   @override
-  String get progAchievementWeeklyActivity12Title => 'OstĹ™Ă­lenĂ˝ hĂ˝baÄŤ';
+  String get progAchievementWeeklyActivity12Title => 'Ostřílený hýbač';
 
   @override
   String get progAchievementWeeklyActivity12Desc =>
-      'SplĹ tĂ˝dennĂ­ cĂ­l aktivity dvanĂˇctkrĂˇt.';
+      'Splň týdenní cíl aktivity dvanáctkrát.';
 
   @override
   String get progQuestCriterionTotalXp => 'Podle celkového XP';
@@ -1300,12 +1327,12 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String progQuestCriterionTotalRuleValueWithRule(String rule) {
-    return 'Podle celkovĂ©ho souÄŤtu: $rule';
+    return 'Podle celkového součtu: $rule';
   }
 
   @override
   String get progQuestCriterionTotalRuleValueGeneric =>
-      'Podle nasbĂ­ranĂ©ho souÄŤtu';
+      'Podle nasbíraného součtu';
 
   @override
   String progQuestCriterionCurrentPeriodRule(String rule) {
@@ -1317,7 +1344,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get progQuestCriterionCurrentPeriodRuleSet =>
-      'Pro combo v aktuĂˇlnĂ­m obdobĂ­';
+      'Pro combo v aktuálním období';
 
   @override
   String get progQuestCriterionAchievement => 'Podle odemčení úspěchu';

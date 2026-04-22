@@ -792,6 +792,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progBadgeAchievements => 'Achievements';
 
   @override
+  String progBadgePendingClaims(int count) {
+    return '$count to claim';
+  }
+
+  @override
   String progBadgeXpRange(int current, int max) {
     return '$current / $max XP';
   }
@@ -947,6 +952,29 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get progRewardsSectionCaption =>
       'Latest XP grants earned across your domains.';
+
+  @override
+  String get progRewardsPendingTitle => 'Pending Rewards';
+
+  @override
+  String get progRewardsPendingCaption =>
+      'Goal-bound rewards unlock after the day or week closes. Claiming adds XP to your profile.';
+
+  @override
+  String get progRewardsClaimAll => 'Claim all';
+
+  @override
+  String get progRewardsClaim => 'Claim';
+
+  @override
+  String progRewardsUnlockedAt(String time) {
+    return 'Unlocked $time';
+  }
+
+  @override
+  String progRewardDetail(String target, String unit, String actual) {
+    return 'Target $target $unit | Actual $actual $unit';
+  }
 
   @override
   String get progRewardsEmptyTitle => 'No rewards granted yet.';

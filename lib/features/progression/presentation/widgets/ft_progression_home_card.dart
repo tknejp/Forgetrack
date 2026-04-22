@@ -48,6 +48,7 @@ class _FtProgressionCardState extends State<FtProgressionCard> {
 
     final current = _topStreak(progression, best: false);
     final best = _topStreak(progression, best: true);
+    final pendingRewardCount = progression.pendingRewards.length;
     final unlockedCount = progression.achievements
         .where((achievement) => achievement.unlocked)
         .length;
@@ -89,6 +90,9 @@ class _FtProgressionCardState extends State<FtProgressionCard> {
               xpMax: xpSpan,
               xpProgress: xpProgress,
               expanded: _expanded,
+              pendingRewardBadge: pendingRewardCount > 0
+                  ? l10n.progBadgePendingClaims(pendingRewardCount)
+                  : null,
               onToggle: _toggle,
             ),
             if (!_expanded) ...[
@@ -155,6 +159,7 @@ class _CompactHeader extends StatelessWidget {
     required this.xpMax,
     required this.xpProgress,
     required this.expanded,
+    required this.pendingRewardBadge,
     required this.onToggle,
   });
 
@@ -164,6 +169,7 @@ class _CompactHeader extends StatelessWidget {
   final int xpMax;
   final double xpProgress;
   final bool expanded;
+  final String? pendingRewardBadge;
   final VoidCallback onToggle;
 
   @override
@@ -184,7 +190,8 @@ class _CompactHeader extends StatelessWidget {
               ],
             ),
             borderRadius: BorderRadius.circular(11),
-            border: Border.all(color: FtTokens.accent.withValues(alpha: 0.4), width: 1.5),
+            border: Border.all(
+                color: FtTokens.accent.withValues(alpha: 0.4), width: 1.5),
             boxShadow: const [
               BoxShadow(color: FtTokens.accentGlow, blurRadius: 14),
             ],
@@ -223,13 +230,45 @@ class _CompactHeader extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    '$xpInto / $xpMax XP',
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: FtTokens.onSurfaceFaint,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '$xpInto / $xpMax XP',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: FtTokens.onSurfaceFaint,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (pendingRewardBadge != null) ...[
+                        const SizedBox(height: 3),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color:
+                                FtTokens.calories.color.withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(99),
+                            border: Border.all(
+                              color: FtTokens.calories.color
+                                  .withValues(alpha: 0.28),
+                            ),
+                          ),
+                          child: Text(
+                            pendingRewardBadge!,
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              color: FtTokens.calories.color,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),
@@ -556,7 +595,10 @@ class _MiniQuestRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final domain = FtProgressionDomainTheme.resolveForQuest(quest);
     final color = FtProgressionDomainTheme.colorFor(domain);
-    final pct = (quest.progress * 100).clamp(0, 100).round();
+    final rawPct = quest.progress * 100;
+    final pct = (rawPct.isNaN || rawPct.isInfinite)
+        ? 0
+        : rawPct.clamp(0, 100).round();
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -626,7 +668,10 @@ class _OpenCta extends StatelessWidget {
           ),
           borderRadius: BorderRadius.circular(12),
           boxShadow: const [
-            BoxShadow(color: FtTokens.accentGlow, blurRadius: 18, offset: Offset(0, 4)),
+            BoxShadow(
+                color: FtTokens.accentGlow,
+                blurRadius: 18,
+                offset: Offset(0, 4)),
           ],
         ),
         child: Row(
@@ -642,7 +687,8 @@ class _OpenCta extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 6),
-            const Icon(Icons.arrow_forward_rounded, size: 16, color: Colors.white),
+            const Icon(Icons.arrow_forward_rounded,
+                size: 16, color: Colors.white),
           ],
         ),
       ),
