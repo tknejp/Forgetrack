@@ -3,6 +3,7 @@ enum ProgressionDomain {
   nutrition,
   sleep,
   activity,
+  body,
 }
 
 enum ProgressionMetric {
@@ -11,6 +12,7 @@ enum ProgressionMetric {
   proteinGrams,
   sleepMinutes,
   activityMinutes,
+  weightKg,
 }
 
 enum ProgressionPeriodKind {
@@ -101,6 +103,7 @@ class ProgressionGoalSet {
     required this.dailyProteinGrams,
     required this.sleepMinutes,
     required this.weeklyActivityMinutes,
+    this.targetWeightKg = 70.0,
   });
 
   final int dailySteps;
@@ -108,6 +111,7 @@ class ProgressionGoalSet {
   final double dailyProteinGrams;
   final int sleepMinutes;
   final int weeklyActivityMinutes;
+  final double targetWeightKg;
 }
 
 class ProgressionPeriod {
@@ -150,6 +154,7 @@ class ProgressionSnapshot {
     this.proteinGrams = 0,
     this.sleepMinutes = 0,
     this.activityMinutes = 0,
+    this.weightKg = 0.0,
   });
 
   final ProgressionPeriod period;
@@ -158,6 +163,7 @@ class ProgressionSnapshot {
   final double proteinGrams;
   final int sleepMinutes;
   final int activityMinutes;
+  final double weightKg;
 
   double metricValue(ProgressionMetric metric) {
     switch (metric) {
@@ -171,6 +177,8 @@ class ProgressionSnapshot {
         return sleepMinutes.toDouble();
       case ProgressionMetric.activityMinutes:
         return activityMinutes.toDouble();
+      case ProgressionMetric.weightKg:
+        return weightKg;
     }
   }
 }
@@ -375,14 +383,41 @@ class ProgressionLedgerSnapshot {
   const ProgressionLedgerSnapshot({
     required this.evaluations,
     required this.rewardGrants,
+    this.questRewardGrants = const [],
     this.activeQuestIds = const <String>{},
     this.lastEvaluatedAt,
   });
 
   final List<ProgressionEvaluation> evaluations;
   final List<ProgressionRewardGrant> rewardGrants;
+  final List<ProgressionQuestRewardGrant> questRewardGrants;
   final Set<String> activeQuestIds;
   final DateTime? lastEvaluatedAt;
+}
+
+class ProgressionQuestRewardGrant {
+  const ProgressionQuestRewardGrant({
+    required this.rewardKey,
+    required this.questId,
+    required this.xpGranted,
+    required this.rewardStatus,
+    required this.unlockedAt,
+    required this.completedAt,
+    this.claimedAt,
+  });
+
+  final String rewardKey;
+  final String questId;
+  final int xpGranted;
+  final ProgressionRewardStatus rewardStatus;
+  final DateTime unlockedAt;
+  final DateTime completedAt;
+  final DateTime? claimedAt;
+
+  bool get isClaimed => rewardStatus == ProgressionRewardStatus.claimed;
+  bool get isUnlocked => rewardStatus == ProgressionRewardStatus.unlocked;
+  int get effectiveXpGranted => isClaimed ? xpGranted : 0;
+  DateTime get progressionAt => claimedAt ?? unlockedAt;
 }
 
 class ProgressionAchievementDefinition {
@@ -456,6 +491,7 @@ class ProgressionQuestDefinition {
     required this.category,
     required this.criterionType,
     required this.targetValue,
+    required this.rewardXp,
     this.ruleId,
     this.domain,
     this.periodKind,
@@ -475,6 +511,7 @@ class ProgressionQuestDefinition {
   final ProgressionQuestCategory category;
   final ProgressionQuestCriterionType criterionType;
   final int targetValue;
+  final int rewardXp;
   final String? ruleId;
   final ProgressionDomain? domain;
   final ProgressionPeriodKind? periodKind;
@@ -485,6 +522,18 @@ class ProgressionQuestDefinition {
   final List<String> prerequisiteQuestIds;
   final int sortOrder;
   final int priority;
+
+  bool get isRepeatableReward =>
+      criterionType ==
+          ProgressionQuestCriterionType.currentPeriodRuleCompletion ||
+      criterionType ==
+          ProgressionQuestCriterionType.currentPeriodRuleSetAtLeast;
+
+  String rewardKeyFor(DateTime completedAt) {
+    if (!isRepeatableReward) return 'quest|$id|reward';
+    final anchor = progressionDateKey(completedAt);
+    return 'quest|$id|$anchor|reward';
+  }
 }
 
 class ProgressionQuest {
@@ -503,6 +552,11 @@ class ProgressionQuest {
     required this.sortOrder,
     required this.priority,
     required this.isHighlighted,
+    this.rewardXp = 0,
+    this.rewardKey,
+    this.rewardStatus,
+    this.rewardUnlockedAt,
+    this.rewardClaimedAt,
     this.completedAt,
     this.ruleId,
     this.domain,
@@ -527,6 +581,11 @@ class ProgressionQuest {
   final int sortOrder;
   final int priority;
   final bool isHighlighted;
+  final int rewardXp;
+  final String? rewardKey;
+  final ProgressionRewardStatus? rewardStatus;
+  final DateTime? rewardUnlockedAt;
+  final DateTime? rewardClaimedAt;
   final DateTime? completedAt;
   final String? ruleId;
   final ProgressionDomain? domain;
@@ -539,6 +598,10 @@ class ProgressionQuest {
   bool get isCompleted => status == ProgressionQuestStatus.completed;
   bool get isLocked => status == ProgressionQuestStatus.locked;
   bool get isActive => status == ProgressionQuestStatus.active;
+  bool get hasReward => rewardXp > 0;
+  bool get isRewardClaimable =>
+      rewardStatus == ProgressionRewardStatus.unlocked;
+  bool get isRewardClaimed => rewardStatus == ProgressionRewardStatus.claimed;
 }
 
 DateTime progressionDate(DateTime value) =>

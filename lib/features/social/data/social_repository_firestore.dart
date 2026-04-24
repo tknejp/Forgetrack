@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../domain/social_models.dart';
@@ -28,9 +30,13 @@ class FirestoreSocialRepository implements SocialRepository {
   }) {
     return _friendRequests
         .where('toUid', isEqualTo: uid)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map(_mapFriendRequest).toList());
+        .map((snapshot) {
+      // Keep live queries index-light; sort in memory instead.
+      final requests = snapshot.docs.map(_mapFriendRequest).toList();
+      requests.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return requests;
+    });
   }
 
   @override
@@ -39,9 +45,12 @@ class FirestoreSocialRepository implements SocialRepository {
   }) {
     return _friendRequests
         .where('fromUid', isEqualTo: uid)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map(_mapFriendRequest).toList());
+        .map((snapshot) {
+      final requests = snapshot.docs.map(_mapFriendRequest).toList();
+      requests.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return requests;
+    });
   }
 
   @override
@@ -50,9 +59,74 @@ class FirestoreSocialRepository implements SocialRepository {
   }) {
     return _friendships
         .where('members', arrayContains: uid)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map(_mapFriendship).toList());
+        .map((snapshot) {
+      final friendships = snapshot.docs.map(_mapFriendship).toList();
+      friendships.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return friendships;
+    });
+  }
+
+  @override
+  Stream<List<SocialUserProfile>> watchProfilesByIds(Iterable<String> uids) {
+    final ids = uids.toSet().where((uid) => uid.isNotEmpty).toList();
+    if (ids.isEmpty) {
+      return Stream<List<SocialUserProfile>>.value(const []);
+    }
+
+    final chunks = _chunk(ids, 10).toList(growable: false);
+    if (chunks.length == 1) {
+      return _users
+          .where(FieldPath.documentId, whereIn: chunks.first)
+          .snapshots()
+          .map(
+        (snapshot) {
+          final profiles = snapshot.docs.map(_mapUserProfile).toList();
+          profiles.sort((a, b) => a.displayName.compareTo(b.displayName));
+          return profiles;
+        },
+      );
+    }
+
+    late StreamController<List<SocialUserProfile>> controller;
+    final latestChunks =
+        List<List<SocialUserProfile>?>.filled(chunks.length, null);
+    final subscriptions =
+        <StreamSubscription<QuerySnapshot<Map<String, dynamic>>>>[];
+
+    void emitIfReady() {
+      if (latestChunks.any((profiles) => profiles == null)) return;
+      final merged = <SocialUserProfile>[
+        for (final profiles in latestChunks) ...profiles!,
+      ];
+      merged.sort((a, b) => a.displayName.compareTo(b.displayName));
+      controller.add(merged);
+    }
+
+    controller = StreamController<List<SocialUserProfile>>(
+      onListen: () {
+        for (var index = 0; index < chunks.length; index++) {
+          final subscription = _users
+              .where(FieldPath.documentId, whereIn: chunks[index])
+              .snapshots()
+              .listen(
+            (snapshot) {
+              latestChunks[index] = snapshot.docs.map(_mapUserProfile).toList();
+              emitIfReady();
+            },
+            onError: controller.addError,
+          );
+          subscriptions.add(subscription);
+        }
+      },
+      onCancel: () async {
+        for (final subscription in subscriptions) {
+          await subscription.cancel();
+        }
+      },
+    );
+
+    return controller.stream;
   }
 
   @override
@@ -108,7 +182,6 @@ class FirestoreSocialRepository implements SocialRepository {
     for (final chunk in _chunk(ids, 10)) {
       final snapshot = await _achievementShares
           .where('actorUid', whereIn: chunk)
-          .orderBy('createdAt', descending: true)
           .limit(limit)
           .get();
       shares.addAll(snapshot.docs.map(_mapAchievementShare));
@@ -116,6 +189,72 @@ class FirestoreSocialRepository implements SocialRepository {
 
     shares.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return shares.take(limit).toList(growable: false);
+  }
+
+  @override
+  Stream<List<SocialAchievementShare>> watchRecentAchievementShares({
+    required Iterable<String> actorUids,
+    int limit = 20,
+  }) {
+    final ids = actorUids.toSet().where((uid) => uid.isNotEmpty).toList();
+    if (ids.isEmpty) {
+      return Stream<List<SocialAchievementShare>>.value(const []);
+    }
+
+    final chunks = _chunk(ids, 10).toList(growable: false);
+    if (chunks.length == 1) {
+      return _achievementShares
+          .where('actorUid', whereIn: chunks.first)
+          .limit(limit)
+          .snapshots()
+          .map((snapshot) {
+        final shares = snapshot.docs.map(_mapAchievementShare).toList();
+        shares.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        return shares.take(limit).toList(growable: false);
+      });
+    }
+
+    late StreamController<List<SocialAchievementShare>> controller;
+    final latestChunks =
+        List<List<SocialAchievementShare>?>.filled(chunks.length, null);
+    final subscriptions =
+        <StreamSubscription<QuerySnapshot<Map<String, dynamic>>>>[];
+
+    void emitIfReady() {
+      if (latestChunks.any((shares) => shares == null)) return;
+      final merged = <SocialAchievementShare>[
+        for (final shares in latestChunks) ...shares!,
+      ];
+      merged.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      controller.add(merged.take(limit).toList(growable: false));
+    }
+
+    controller = StreamController<List<SocialAchievementShare>>(
+      onListen: () {
+        for (var index = 0; index < chunks.length; index++) {
+          final subscription = _achievementShares
+              .where('actorUid', whereIn: chunks[index])
+              .limit(limit)
+              .snapshots()
+              .listen(
+            (snapshot) {
+              latestChunks[index] =
+                  snapshot.docs.map(_mapAchievementShare).toList();
+              emitIfReady();
+            },
+            onError: controller.addError,
+          );
+          subscriptions.add(subscription);
+        }
+      },
+      onCancel: () async {
+        for (final subscription in subscriptions) {
+          await subscription.cancel();
+        }
+      },
+    );
+
+    return controller.stream;
   }
 
   @override
@@ -270,6 +409,19 @@ class FirestoreSocialRepository implements SocialRepository {
   }
 
   @override
+  Future<List<SocialUnlockedAchievement>> fetchUnlockedAchievements(
+    String uid,
+  ) async {
+    final snapshot =
+        await _users.doc(uid).collection('achievement_unlocks').get();
+    final list = snapshot.docs
+        .map(_mapUnlockedAchievement)
+        .toList(growable: true)
+      ..sort((a, b) => b.unlockedAt.compareTo(a.unlockedAt));
+    return list;
+  }
+
+  @override
   Future<void> shareAchievement(SocialAchievementShare share) async {
     await _achievementShares.add({
       'actorUid': share.actorUid,
@@ -289,6 +441,20 @@ class FirestoreSocialRepository implements SocialRepository {
         'domain': share.achievementSnapshot.domain,
       },
     });
+  }
+
+  @override
+  Stream<List<SocialUnlockedAchievement>> watchUnlockedAchievements(
+      String uid) {
+    return _users.doc(uid).collection('achievement_unlocks').snapshots().map(
+      (snapshot) {
+        final achievements = snapshot.docs
+            .map(_mapUnlockedAchievement)
+            .toList(growable: true)
+          ..sort((a, b) => b.unlockedAt.compareTo(a.unlockedAt));
+        return achievements;
+      },
+    );
   }
 
   SocialFriendRequest _mapFriendRequest(
@@ -377,6 +543,28 @@ class FirestoreSocialRepository implements SocialRepository {
         type: achievementSnapshot['type'] as String? ?? '',
         domain: achievementSnapshot['domain'] as String?,
       ),
+    );
+  }
+
+  @override
+  Future<void> removeFriend({required String friendshipId}) async {
+    await _friendships.doc(friendshipId).delete();
+  }
+
+  SocialUnlockedAchievement _mapUnlockedAchievement(
+    QueryDocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
+    final data = doc.data();
+    return SocialUnlockedAchievement(
+      achievementId: data['achievementId'] as String? ?? doc.id,
+      title: data['title'] as String? ?? '',
+      description: data['description'] as String? ?? '',
+      difficulty: data['difficulty'] as String? ?? '',
+      type: data['type'] as String? ?? '',
+      domain: data['domain'] as String?,
+      ruleId: data['ruleId'] as String?,
+      unlockedAt: _readDateTime(data['unlockedAt']) ??
+          DateTime.fromMillisecondsSinceEpoch(0),
     );
   }
 

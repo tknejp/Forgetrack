@@ -17,6 +17,8 @@ class ProgressionRepositoryImpl implements ProgressionRepository {
         await isar.progressionEvaluationRecords.where().findAll();
     final rewardRecords =
         await isar.progressionRewardGrantRecords.where().findAll();
+    final questRewardRecords =
+        await isar.progressionQuestRewardGrantRecords.where().findAll();
     final activeQuestRecords =
         await isar.progressionActiveQuestRecords.where().findAll();
 
@@ -29,6 +31,7 @@ class ProgressionRepositoryImpl implements ProgressionRepository {
     return ProgressionLedgerSnapshot(
       evaluations: evaluationRecords.map(_mapEvaluation).toList(),
       rewardGrants: rewardRecords.map(_mapGrant).toList(),
+      questRewardGrants: questRewardRecords.map(_mapQuestRewardGrant).toList(),
       activeQuestIds:
           activeQuestRecords.map((record) => record.questId).toSet(),
       lastEvaluatedAt: lastEvaluatedAt,
@@ -123,6 +126,72 @@ class ProgressionRepositoryImpl implements ProgressionRepository {
 
       if (unlockedRecords.isNotEmpty) {
         await isar.progressionRewardGrantRecords.putAll(unlockedRecords);
+      }
+    });
+
+    return loadLedger();
+  }
+
+  @override
+  Future<ProgressionLedgerSnapshot> persistQuestRewardGrants({
+    required List<ProgressionQuestRewardGrant> grants,
+  }) async {
+    final isar = _database.isar;
+    if (grants.isEmpty) return loadLedger();
+
+    await isar.writeTxn(() async {
+      await isar.progressionQuestRewardGrantRecords.putAll(
+        grants.map(_toQuestRewardGrantRecord).toList(),
+      );
+    });
+
+    return loadLedger();
+  }
+
+  @override
+  Future<ProgressionLedgerSnapshot> claimQuestReward({
+    required String rewardKey,
+    required DateTime claimedAt,
+  }) async {
+    final isar = _database.isar;
+
+    await isar.writeTxn(() async {
+      final record = await isar.progressionQuestRewardGrantRecords
+          .filter()
+          .rewardKeyEqualTo(rewardKey)
+          .findFirst();
+      if (record == null) return;
+      if (record.rewardStatusName == ProgressionRewardStatus.claimed.name) {
+        return;
+      }
+
+      record.rewardStatusName = ProgressionRewardStatus.claimed.name;
+      record.claimedAt = claimedAt;
+      await isar.progressionQuestRewardGrantRecords.put(record);
+    });
+
+    return loadLedger();
+  }
+
+  @override
+  Future<ProgressionLedgerSnapshot> claimAllQuestRewards({
+    required DateTime claimedAt,
+  }) async {
+    final isar = _database.isar;
+
+    await isar.writeTxn(() async {
+      final unlockedRecords = await isar.progressionQuestRewardGrantRecords
+          .filter()
+          .rewardStatusNameEqualTo(ProgressionRewardStatus.unlocked.name)
+          .findAll();
+
+      for (final record in unlockedRecords) {
+        record.rewardStatusName = ProgressionRewardStatus.claimed.name;
+        record.claimedAt = claimedAt;
+      }
+
+      if (unlockedRecords.isNotEmpty) {
+        await isar.progressionQuestRewardGrantRecords.putAll(unlockedRecords);
       }
     });
 
@@ -230,6 +299,22 @@ class ProgressionRepositoryImpl implements ProgressionRepository {
     );
   }
 
+  ProgressionQuestRewardGrant _mapQuestRewardGrant(
+    ProgressionQuestRewardGrantRecord record,
+  ) {
+    return ProgressionQuestRewardGrant(
+      rewardKey: record.rewardKey,
+      questId: record.questId,
+      xpGranted: record.xpGranted,
+      rewardStatus:
+          _parseEnum(ProgressionRewardStatus.values, record.rewardStatusName) ??
+              ProgressionRewardStatus.unlocked,
+      unlockedAt: record.unlockedAt,
+      completedAt: record.completedAt,
+      claimedAt: record.claimedAt,
+    );
+  }
+
   ProgressionEvaluationRecord _toEvaluationRecord({
     required ProgressionEvaluation evaluation,
     required DateTime evaluatedAt,
@@ -279,5 +364,18 @@ class ProgressionRepositoryImpl implements ProgressionRepository {
       ..rewardStatusName = ProgressionRewardStatus.unlocked.name
       ..unlockedAt = unlockedAt
       ..claimedAt = null;
+  }
+
+  ProgressionQuestRewardGrantRecord _toQuestRewardGrantRecord(
+    ProgressionQuestRewardGrant grant,
+  ) {
+    return ProgressionQuestRewardGrantRecord()
+      ..rewardKey = grant.rewardKey
+      ..questId = grant.questId
+      ..xpGranted = grant.xpGranted
+      ..rewardStatusName = grant.rewardStatus.name
+      ..unlockedAt = grant.unlockedAt
+      ..completedAt = grant.completedAt
+      ..claimedAt = grant.claimedAt;
   }
 }

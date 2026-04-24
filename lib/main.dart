@@ -7,7 +7,6 @@ import 'package:provider/provider.dart';
 import 'app.dart';
 import 'core/app_log.dart';
 import 'features/auth/application/auth_provider.dart';
-import 'features/auth/data/google_auth_service.dart';
 import 'features/progression/application/progression_engine.dart';
 import 'features/progression/data/local/progression_database.dart';
 import 'features/progression/data/progression_repository_impl.dart';
@@ -52,9 +51,6 @@ Future<void> main() async {
 
   final timeThemeProvider = TimeThemeProvider();
   await timeThemeProvider.init();
-
-  unawaited(GoogleAuthService.instance.initialize());
-  AppLog.app.debug('Google auth initialization started');
 
   final healthService = HealthConnectService();
   final healthDb = HealthDatabase();

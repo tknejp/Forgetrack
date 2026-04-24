@@ -27,6 +27,14 @@ class DisabledSocialRepository implements SocialRepository {
   }
 
   @override
+  Stream<List<SocialAchievementShare>> watchRecentAchievementShares({
+    required Iterable<String> actorUids,
+    int limit = 20,
+  }) {
+    return Stream<List<SocialAchievementShare>>.value(const []);
+  }
+
+  @override
   Future<List<SocialUserProfile>> fetchProfilesByIds(
     Iterable<String> uids,
   ) async {
@@ -81,9 +89,32 @@ class DisabledSocialRepository implements SocialRepository {
   }
 
   @override
+  Stream<List<SocialUserProfile>> watchProfilesByIds(Iterable<String> uids) {
+    return Stream<List<SocialUserProfile>>.value(const []);
+  }
+
+  @override
   Stream<List<SocialFriendRequest>> watchOutgoingFriendRequests({
     required String uid,
   }) {
     return const Stream<List<SocialFriendRequest>>.empty();
+  }
+
+  @override
+  Stream<List<SocialUnlockedAchievement>> watchUnlockedAchievements(
+      String uid) {
+    return Stream<List<SocialUnlockedAchievement>>.value(const []);
+  }
+
+  @override
+  Future<List<SocialUnlockedAchievement>> fetchUnlockedAchievements(
+    String uid,
+  ) async {
+    return const [];
+  }
+
+  @override
+  Future<void> removeFriend({required String friendshipId}) {
+    throw StateError(reason);
   }
 }

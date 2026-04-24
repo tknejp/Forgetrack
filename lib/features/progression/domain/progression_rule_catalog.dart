@@ -69,6 +69,31 @@ class ProgressionRuleCatalog {
         title: 'Weekly Activity',
         description: 'Accumulate the configured weekly activity minutes.',
       ),
+      ProgressionRuleDefinition(
+        id: 'daily_weight_log',
+        version: _version,
+        domain: ProgressionDomain.body,
+        metric: ProgressionMetric.weightKg,
+        periodKind: ProgressionPeriodKind.day,
+        comparator: ProgressionComparator.atLeast,
+        targetValue: 1.0,
+        rewardXp: 20,
+        title: 'Daily Weight Log',
+        description: 'Log your weight at least once today.',
+      ),
+      ProgressionRuleDefinition(
+        id: 'daily_weight_goal',
+        version: _version,
+        domain: ProgressionDomain.body,
+        metric: ProgressionMetric.weightKg,
+        periodKind: ProgressionPeriodKind.day,
+        comparator: ProgressionComparator.withinRelativeTolerance,
+        targetValue: goals.targetWeightKg,
+        toleranceRatio: 0.03,
+        rewardXp: 150,
+        title: 'Weight Goal',
+        description: 'Log a weight within ±3% of your target weight.',
+      ),
     ];
   }
 }

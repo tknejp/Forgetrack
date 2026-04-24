@@ -57,7 +57,9 @@ class GoogleAuthService {
   Future<void> _initialize() async {
     if (_initialized) return;
 
-    AppLog.auth.info('initializing', payload: 'serverClientId=$_serverClientId platform=$defaultTargetPlatform');
+    AppLog.auth.info('initializing',
+        payload:
+            'serverClientId=$_serverClientId platform=$defaultTargetPlatform');
     await _signIn.initialize(serverClientId: _serverClientId);
     AppLog.auth.info('initialize done');
 
@@ -65,7 +67,8 @@ class GoogleAuthService {
       (GoogleSignInAuthenticationEvent event) {
         switch (event) {
           case GoogleSignInAuthenticationEventSignIn():
-            AppLog.auth.info('event: sign-in', payload: 'user=${event.user.email}');
+            AppLog.auth
+                .info('event: sign-in', payload: 'user=${event.user.email}');
             _currentUser = event.user;
             break;
           case GoogleSignInAuthenticationEventSignOut():
@@ -77,7 +80,8 @@ class GoogleAuthService {
         _authChangedController.add(_currentUser);
       },
       onError: (Object error, StackTrace stackTrace) {
-        AppLog.auth.error('authenticationEvents error', err: error, stackTrace: stackTrace);
+        AppLog.auth.error('authenticationEvents error',
+            err: error, stackTrace: stackTrace);
         _currentUser = null;
         _sessionResolved = true;
         _authChangedController.add(null);
@@ -85,7 +89,6 @@ class GoogleAuthService {
     );
 
     _initialized = true;
-    await _restoreSession();
   }
 
   Future<void> initialize() => _ensureInitialized();
@@ -140,7 +143,8 @@ class GoogleAuthService {
         _authChangedController.add(_currentUser);
       }
 
-      AppLog.auth.info('restoreSession', payload: 'result=${user?.email ?? 'null'}');
+      AppLog.auth
+          .info('restoreSession', payload: 'result=${user?.email ?? 'null'}');
       return user;
     } catch (e, st) {
       AppLog.auth.error('restoreSession', err: e, stackTrace: st);

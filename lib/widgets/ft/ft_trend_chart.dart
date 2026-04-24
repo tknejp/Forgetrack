@@ -38,6 +38,7 @@ class FtTrendCard extends StatefulWidget {
   final String? referenceLabel;
   final String emptyLabel;
   final bool expandable;
+  final bool collapsible;
   final bool initiallyExpanded;
   final double chartHeight;
   final double expandedChartHeight;
@@ -55,6 +56,7 @@ class FtTrendCard extends StatefulWidget {
     this.referenceLabel,
     required this.emptyLabel,
     this.expandable = true,
+    this.collapsible = true,
     this.initiallyExpanded = false,
     this.chartHeight = 132,
     this.expandedChartHeight = 176,
@@ -70,7 +72,7 @@ class _FtTrendCardState extends State<FtTrendCard> {
   @override
   void initState() {
     super.initState();
-    _expanded = widget.initiallyExpanded;
+    _expanded = widget.collapsible ? widget.initiallyExpanded : true;
   }
 
   @override
@@ -78,7 +80,9 @@ class _FtTrendCardState extends State<FtTrendCard> {
     final domain = widget.domain;
 
     return GestureDetector(
-      onTap: widget.expandable ? () => setState(() => _expanded = !_expanded) : null,
+      onTap: widget.expandable && widget.collapsible
+          ? () => setState(() => _expanded = !_expanded)
+          : null,
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: domain.cardDecoration(),
@@ -100,7 +104,8 @@ class _FtTrendCardState extends State<FtTrendCard> {
                       height: 36,
                       decoration: BoxDecoration(
                         color: domain.dim,
-                        borderRadius: BorderRadius.circular(FtTokens.radiusIcon),
+                        borderRadius:
+                            BorderRadius.circular(FtTokens.radiusIcon),
                         border: Border.all(
                           color: domain.color.withValues(alpha: 0.27),
                         ),
@@ -135,7 +140,7 @@ class _FtTrendCardState extends State<FtTrendCard> {
                         ],
                       ),
                     ),
-                    if (widget.expandable)
+                    if (widget.expandable && widget.collapsible)
                       AnimatedRotation(
                         turns: _expanded ? 0.5 : 0,
                         duration: const Duration(milliseconds: 220),
@@ -187,7 +192,8 @@ class _FtTrendCardState extends State<FtTrendCard> {
                       referenceValue: widget.referenceValue,
                     ),
                   ),
-                  if (widget.referenceValue != null && widget.referenceLabel != null) ...[
+                  if (widget.referenceValue != null &&
+                      widget.referenceLabel != null) ...[
                     const SizedBox(height: 10),
                     _ReferencePill(
                       label:
@@ -251,13 +257,13 @@ class FtTrendChart extends StatelessWidget {
         builder: (context, constraints) {
           final isCompact = constraints.maxWidth < 340;
           final gap = bars.length >= 10 || isCompact ? 4.0 : 6.0;
-          final valueAreaH = bars.any((bar) => bar.isToday)
-              ? (isCompact ? 18.0 : 22.0)
-              : 0.0;
+          final valueAreaH =
+              bars.any((bar) => bar.isToday) ? (isCompact ? 18.0 : 22.0) : 0.0;
           final labelAreaH = isCompact ? 16.0 : 20.0;
-          final chartAreaH = (constraints.maxHeight - valueAreaH - labelAreaH - 4)
-              .clamp(28.0, constraints.maxHeight)
-              .toDouble();
+          final chartAreaH =
+              (constraints.maxHeight - valueAreaH - labelAreaH - 4)
+                  .clamp(28.0, constraints.maxHeight)
+                  .toDouble();
           final referencePct = referenceValue == null
               ? null
               : ((referenceValue! - minVal) / range).clamp(0.0, 1.0);
@@ -304,7 +310,8 @@ class FtTrendChart extends StatelessWidget {
                       Positioned(
                         left: 0,
                         right: 0,
-                        bottom: (referencePct * chartAreaH).clamp(0.0, chartAreaH - 1),
+                        bottom: (referencePct * chartAreaH)
+                            .clamp(0.0, chartAreaH - 1),
                         child: Container(
                           height: 1,
                           color: domain.color.withValues(alpha: 0.28),

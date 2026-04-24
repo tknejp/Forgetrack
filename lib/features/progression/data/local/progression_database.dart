@@ -16,6 +16,7 @@ class ProgressionDatabase {
       [
         ProgressionEvaluationRecordSchema,
         ProgressionRewardGrantRecordSchema,
+        ProgressionQuestRewardGrantRecordSchema,
         ProgressionActiveQuestRecordSchema,
       ],
       directory: dir.path,

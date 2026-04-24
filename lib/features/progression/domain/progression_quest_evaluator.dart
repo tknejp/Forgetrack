@@ -24,6 +24,7 @@ class ProgressionQuestEvaluator {
     required ProgressionProfile profile,
     required List<ProgressionEvaluation> evaluations,
     required List<ProgressionRewardGrant> rewardGrants,
+    required List<ProgressionQuestRewardGrant> questRewardGrants,
     required List<ProgressionAchievement> achievements,
     required Map<String, ProgressionStreakSummary> streaksByRuleId,
     required Map<ProgressionDomain, ProgressionStreakSummary> streaksByDomain,
@@ -39,6 +40,7 @@ class ProgressionQuestEvaluator {
         profile: profile,
         evaluations: evaluations,
         rewardGrants: rewardGrants,
+        questRewardGrants: questRewardGrants,
         achievements: achievements,
         streaksByRuleId: streaksByRuleId,
         streaksByDomain: streaksByDomain,
@@ -79,6 +81,7 @@ class ProgressionQuestEvaluator {
     required ProgressionProfile profile,
     required List<ProgressionEvaluation> evaluations,
     required List<ProgressionRewardGrant> rewardGrants,
+    required List<ProgressionQuestRewardGrant> questRewardGrants,
     required List<ProgressionAchievement> achievements,
     required Map<String, ProgressionStreakSummary> streaksByRuleId,
     required Map<ProgressionDomain, ProgressionStreakSummary> streaksByDomain,
@@ -88,6 +91,7 @@ class ProgressionQuestEvaluator {
       profile: profile,
       evaluations: evaluations,
       rewardGrants: rewardGrants,
+      questRewardGrants: questRewardGrants,
       achievements: achievements,
       streaksByRuleId: streaksByRuleId,
       streaksByDomain: streaksByDomain,
@@ -116,6 +120,7 @@ class ProgressionQuestEvaluator {
                 profile: profile,
                 evaluations: evaluations,
                 rewardGrants: rewardGrants,
+                questRewardGrants: questRewardGrants,
                 achievements: achievements,
               )
             : null;
@@ -139,6 +144,7 @@ class ProgressionQuestEvaluator {
       sortOrder: definition.sortOrder,
       priority: definition.priority,
       isHighlighted: false,
+      rewardXp: definition.rewardXp,
       completedAt: completedAt,
       ruleId: definition.ruleId,
       domain: definition.domain,
@@ -180,6 +186,11 @@ class ProgressionQuestEvaluator {
       sortOrder: quest.sortOrder,
       priority: quest.priority,
       isHighlighted: isActive,
+      rewardXp: quest.rewardXp,
+      rewardKey: quest.rewardKey,
+      rewardStatus: quest.rewardStatus,
+      rewardUnlockedAt: quest.rewardUnlockedAt,
+      rewardClaimedAt: quest.rewardClaimedAt,
       completedAt: quest.completedAt,
       ruleId: quest.ruleId,
       domain: quest.domain,
@@ -389,6 +400,7 @@ class ProgressionQuestEvaluator {
     required ProgressionProfile profile,
     required List<ProgressionEvaluation> evaluations,
     required List<ProgressionRewardGrant> rewardGrants,
+    required List<ProgressionQuestRewardGrant> questRewardGrants,
     required List<ProgressionAchievement> achievements,
     required Map<String, ProgressionStreakSummary> streaksByRuleId,
     required Map<ProgressionDomain, ProgressionStreakSummary> streaksByDomain,
@@ -454,6 +466,7 @@ class ProgressionQuestEvaluator {
     required ProgressionProfile profile,
     required List<ProgressionEvaluation> evaluations,
     required List<ProgressionRewardGrant> rewardGrants,
+    required List<ProgressionQuestRewardGrant> questRewardGrants,
     required List<ProgressionAchievement> achievements,
   }) {
     final criterionCompletedAt = _resolveCompletedAt(
@@ -461,6 +474,7 @@ class ProgressionQuestEvaluator {
       profile: profile,
       evaluations: evaluations,
       rewardGrants: rewardGrants,
+      questRewardGrants: questRewardGrants,
       achievements: achievements,
     );
 
@@ -477,6 +491,7 @@ class ProgressionQuestEvaluator {
     required ProgressionProfile profile,
     required List<ProgressionEvaluation> evaluations,
     required List<ProgressionRewardGrant> rewardGrants,
+    required List<ProgressionQuestRewardGrant> questRewardGrants,
     required List<ProgressionAchievement> achievements,
   }) {
     switch (definition.criterionType) {
@@ -484,6 +499,7 @@ class ProgressionQuestEvaluator {
         return _resolveTotalXpCompletedAt(
           targetValue: definition.targetValue,
           rewardGrants: rewardGrants,
+          questRewardGrants: questRewardGrants,
           profile: profile,
         );
       case ProgressionQuestCriterionType.rewardCountAtLeast:
@@ -569,19 +585,23 @@ class ProgressionQuestEvaluator {
   DateTime? _resolveTotalXpCompletedAt({
     required int targetValue,
     required List<ProgressionRewardGrant> rewardGrants,
+    required List<ProgressionQuestRewardGrant> questRewardGrants,
     required ProgressionProfile profile,
   }) {
-    final ordered = [...rewardGrants]..sort(_sortRewardGrants);
+    final ordered = _xpEvents(
+      rewardGrants: rewardGrants,
+      questRewardGrants: questRewardGrants,
+    )..sort((a, b) => a.at.compareTo(b.at));
     var runningXp = 0;
-    for (final grant in ordered) {
-      runningXp += grant.effectiveXpGranted;
+    for (final event in ordered) {
+      runningXp += event.xp;
       if (runningXp >= targetValue) {
-        return grant.progressionAt;
+        return event.at;
       }
     }
 
     return profile.totalXp >= targetValue && ordered.isNotEmpty
-        ? ordered.last.progressionAt
+        ? ordered.last.at
         : null;
   }
 
@@ -724,11 +744,9 @@ class ProgressionQuestEvaluator {
       evaluations: evaluations,
     );
     final latestPeriodDay = progressionDate(latestPeriodStart);
-    final relevantPeriodEvaluations = matchingEvaluations
-        .where((evaluation) {
-          return progressionDate(evaluation.period.start) == latestPeriodDay;
-        })
-        .toList()
+    final relevantPeriodEvaluations = matchingEvaluations.where((evaluation) {
+      return progressionDate(evaluation.period.start) == latestPeriodDay;
+    }).toList()
       ..sort((left, right) => left.ruleId.compareTo(right.ruleId));
     final completedRuleIds = relevantPeriodEvaluations
         .where((evaluation) => evaluation.achieved)
@@ -864,6 +882,26 @@ class ProgressionQuestEvaluator {
 
     return left.rewardKey.compareTo(right.rewardKey);
   }
+
+  List<_QuestXpEvent> _xpEvents({
+    required List<ProgressionRewardGrant> rewardGrants,
+    required List<ProgressionQuestRewardGrant> questRewardGrants,
+  }) {
+    return [
+      for (final grant in rewardGrants)
+        if (grant.effectiveXpGranted > 0)
+          _QuestXpEvent(
+            at: grant.progressionAt,
+            xp: grant.effectiveXpGranted,
+          ),
+      for (final grant in questRewardGrants)
+        if (grant.effectiveXpGranted > 0)
+          _QuestXpEvent(
+            at: grant.progressionAt,
+            xp: grant.effectiveXpGranted,
+          ),
+    ];
+  }
 }
 
 class _QuestStreakEntry {
@@ -876,4 +914,14 @@ class _QuestStreakEntry {
   final ProgressionPeriodKind kind;
   final DateTime start;
   final bool achieved;
+}
+
+class _QuestXpEvent {
+  const _QuestXpEvent({
+    required this.at,
+    required this.xp,
+  });
+
+  final DateTime at;
+  final int xp;
 }

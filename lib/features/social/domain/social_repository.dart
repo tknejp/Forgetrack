@@ -13,6 +13,8 @@ abstract class SocialRepository {
     required String uid,
   });
 
+  Stream<List<SocialUserProfile>> watchProfilesByIds(Iterable<String> uids);
+
   Future<List<SocialUserProfile>> fetchProfilesByIds(Iterable<String> uids);
 
   Future<List<SocialUserProfile>> searchProfilesByHandle(
@@ -22,6 +24,11 @@ abstract class SocialRepository {
   });
 
   Future<List<SocialAchievementShare>> fetchRecentAchievementShares({
+    required Iterable<String> actorUids,
+    int limit = 20,
+  });
+
+  Stream<List<SocialAchievementShare>> watchRecentAchievementShares({
     required Iterable<String> actorUids,
     int limit = 20,
   });
@@ -47,4 +54,10 @@ abstract class SocialRepository {
   });
 
   Future<void> shareAchievement(SocialAchievementShare share);
+
+  Stream<List<SocialUnlockedAchievement>> watchUnlockedAchievements(String uid);
+
+  Future<List<SocialUnlockedAchievement>> fetchUnlockedAchievements(String uid);
+
+  Future<void> removeFriend({required String friendshipId});
 }

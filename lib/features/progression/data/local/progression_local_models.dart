@@ -68,6 +68,29 @@ class ProgressionRewardGrantRecord {
 }
 
 @Collection()
+class ProgressionQuestRewardGrantRecord {
+  Id id = Isar.autoIncrement;
+
+  @Index(unique: true, replace: false)
+  late String rewardKey;
+
+  @Index()
+  late String questId;
+
+  late int xpGranted;
+  late String rewardStatusName;
+
+  @Index()
+  late DateTime unlockedAt;
+
+  @Index()
+  late DateTime completedAt;
+
+  @Index()
+  DateTime? claimedAt;
+}
+
+@Collection()
 class ProgressionActiveQuestRecord {
   Id id = Isar.autoIncrement;
 

@@ -927,6 +927,182 @@ void main() {
         ProgressionQuestStatus.locked,
       );
     });
+
+    test('creates quest reward grants only once when quests first complete',
+        () async {
+      final repository = _InMemoryProgressionRepository();
+      final engine = ProgressionEngine(
+        repository: repository,
+        clock: () => DateTime(2026, 4, 21, 9),
+      );
+      final source = _FakeProgressionSource(
+        goals: const ProgressionGoalSet(
+          dailySteps: 10000,
+          dailyCalories: 2000,
+          dailyProteinGrams: 150,
+          sleepMinutes: 480,
+          weeklyActivityMinutes: 150,
+        ),
+        dailySnapshots: [
+          ProgressionSnapshot(
+            period: ProgressionPeriod.day(DateTime(2026, 4, 21)),
+            steps: 12000,
+            sleepMinutes: 500,
+          ),
+        ],
+        weeklySnapshots: const [],
+      );
+
+      final firstState = await engine.sync(source);
+      final secondState = await engine.sync(source);
+      final firstRewardQuest = firstState.quests
+          .firstWhere((quest) => quest.id == 'earn_first_reward');
+      final firstRewardGrant = firstState.questRewardGrants.firstWhere(
+        (grant) => grant.questId == 'earn_first_reward',
+      );
+
+      expect(firstRewardQuest.isCompleted, isTrue);
+      expect(firstRewardQuest.isRewardClaimable, isTrue);
+      expect(firstRewardQuest.isRewardClaimed, isFalse);
+      expect(firstRewardQuest.rewardKey, firstRewardGrant.rewardKey);
+      expect(firstRewardQuest.rewardXp, firstRewardGrant.xpGranted);
+      expect(firstRewardGrant.rewardStatus, ProgressionRewardStatus.unlocked);
+      expect(
+        secondState.questRewardGrants
+            .where((grant) => grant.questId == 'earn_first_reward'),
+        hasLength(1),
+      );
+    });
+
+    test('claiming a quest reward is idempotent and adds bonus xp once',
+        () async {
+      final repository = _InMemoryProgressionRepository();
+      final engine = ProgressionEngine(
+        repository: repository,
+        clock: () => DateTime(2026, 4, 21, 9),
+      );
+      final source = _FakeProgressionSource(
+        goals: const ProgressionGoalSet(
+          dailySteps: 10000,
+          dailyCalories: 2000,
+          dailyProteinGrams: 150,
+          sleepMinutes: 480,
+          weeklyActivityMinutes: 150,
+        ),
+        dailySnapshots: [
+          ProgressionSnapshot(
+            period: ProgressionPeriod.day(DateTime(2026, 4, 21)),
+            steps: 12000,
+            sleepMinutes: 500,
+          ),
+        ],
+        weeklySnapshots: const [],
+      );
+
+      final syncedState = await engine.sync(source);
+      final firstRewardQuest = syncedState.quests
+          .firstWhere((quest) => quest.id == 'earn_first_reward');
+      final firstClaimedState =
+          await engine.claimQuestReward(firstRewardQuest.rewardKey!);
+      final secondClaimedState =
+          await engine.claimQuestReward(firstRewardQuest.rewardKey!);
+      final firstClaimedGrant = firstClaimedState.questRewardGrants.firstWhere(
+        (grant) => grant.rewardKey == firstRewardQuest.rewardKey,
+      );
+      final secondClaimedGrant =
+          secondClaimedState.questRewardGrants.firstWhere(
+        (grant) => grant.rewardKey == firstRewardQuest.rewardKey,
+      );
+
+      expect(
+        firstClaimedState.profile.totalXp,
+        syncedState.profile.totalXp + firstRewardQuest.rewardXp,
+      );
+      expect(
+        secondClaimedState.profile.totalXp,
+        firstClaimedState.profile.totalXp,
+      );
+      expect(firstClaimedGrant.isClaimed, isTrue);
+      expect(secondClaimedGrant.isClaimed, isTrue);
+      expect(secondClaimedGrant.claimedAt, firstClaimedGrant.claimedAt);
+      expect(
+        secondClaimedState.questRewardGrants
+            .where((grant) => grant.rewardKey == firstRewardQuest.rewardKey),
+        hasLength(1),
+      );
+    });
+
+    test('keeps reward and quest bulk claim flows separate', () async {
+      final repository = _InMemoryProgressionRepository(
+        rewardGrants: [
+          _unlockedReward(
+            rewardKey: 'reward-steps-1',
+            xpGranted: 120,
+            progressionAt: DateTime(2026, 4, 21, 9),
+          ),
+        ],
+        questRewardGrants: [
+          _unlockedQuestReward(
+            rewardKey: 'quest|earn_first_reward|reward',
+            questId: 'earn_first_reward',
+            xpGranted: 80,
+            completedAt: DateTime(2026, 4, 21, 9),
+            unlockedAt: DateTime(2026, 4, 21, 9, 30),
+          ),
+        ],
+      );
+      final engine = ProgressionEngine(
+        repository: repository,
+        clock: () => DateTime(2026, 4, 23, 9),
+      );
+
+      final rewardsClaimed = await engine.claimAllRewards();
+      final questsClaimed = await engine.claimAllQuestRewards();
+
+      expect(rewardsClaimed.rewardGrants.single.isClaimed, isTrue);
+      expect(rewardsClaimed.questRewardGrants.single.isUnlocked, isTrue);
+      expect(rewardsClaimed.profile.totalXp, 120);
+
+      expect(questsClaimed.rewardGrants.single.isClaimed, isTrue);
+      expect(questsClaimed.questRewardGrants.single.isClaimed, isTrue);
+      expect(questsClaimed.profile.totalXp, 200);
+    });
+
+    test('does not count quest rewards toward reward-count achievements',
+        () async {
+      final repository = _InMemoryProgressionRepository(
+        rewardGrants: [
+          for (var index = 0; index < 24; index++)
+            _claimedReward(
+              rewardKey: 'reward-$index',
+              xpGranted: 10,
+              progressionAt: DateTime(2026, 4, 1).add(Duration(days: index)),
+            ),
+        ],
+        questRewardGrants: [
+          for (var index = 0; index < 5; index++)
+            _claimedQuestReward(
+              rewardKey: 'quest-reward-$index',
+              questId: 'quest-$index',
+              xpGranted: 80,
+              completedAt: DateTime(2026, 4, 20).add(Duration(days: index)),
+              claimedAt: DateTime(2026, 4, 20).add(Duration(days: index)),
+            ),
+        ],
+      );
+      final engine = ProgressionEngine(
+        repository: repository,
+        clock: () => DateTime(2026, 4, 25, 9),
+      );
+
+      final state = await engine.load();
+      final rewardCountAchievement = state.achievements.firstWhere(
+        (achievement) => achievement.id == 'reward_hunter_25',
+      );
+
+      expect(rewardCountAchievement.unlocked, isFalse);
+      expect(rewardCountAchievement.currentValue, 24);
+    });
   });
 
   group('ProgressionLevelPolicy', () {
@@ -991,9 +1167,12 @@ void main() {
         policy.scaledRewardXp(baseXp: 80, level: 100),
         12000,
       );
-      expect(policy.targetDaysForLevel(30), greaterThan(policy.targetDaysForLevel(10)));
-      expect(policy.targetDaysForLevel(50), greaterThan(policy.targetDaysForLevel(30)));
-      expect(policy.targetDaysForLevel(100), greaterThan(policy.targetDaysForLevel(50)));
+      expect(policy.targetDaysForLevel(30),
+          greaterThan(policy.targetDaysForLevel(10)));
+      expect(policy.targetDaysForLevel(50),
+          greaterThan(policy.targetDaysForLevel(30)));
+      expect(policy.targetDaysForLevel(100),
+          greaterThan(policy.targetDaysForLevel(50)));
     });
   });
 
@@ -1201,9 +1380,29 @@ class _FakeProgressionSource implements ProgressionSource {
 }
 
 class _InMemoryProgressionRepository implements ProgressionRepository {
+  _InMemoryProgressionRepository({
+    List<ProgressionEvaluation> evaluations = const [],
+    List<ProgressionRewardGrant> rewardGrants = const [],
+    List<ProgressionQuestRewardGrant> questRewardGrants = const [],
+    Set<String> activeQuestIds = const <String>{},
+    DateTime? lastEvaluatedAt,
+  })  : _activeQuestIds = {...activeQuestIds},
+        _lastEvaluatedAt = lastEvaluatedAt {
+    for (final evaluation in evaluations) {
+      _evaluations[evaluation.evaluationKey] = evaluation;
+    }
+    for (final grant in rewardGrants) {
+      _rewardGrants[grant.rewardKey] = grant;
+    }
+    for (final grant in questRewardGrants) {
+      _questRewardGrants[grant.rewardKey] = grant;
+    }
+  }
+
   final Map<String, ProgressionEvaluation> _evaluations = {};
   final Map<String, ProgressionRewardGrant> _rewardGrants = {};
-  Set<String> _activeQuestIds = <String>{};
+  final Map<String, ProgressionQuestRewardGrant> _questRewardGrants = {};
+  Set<String> _activeQuestIds;
   DateTime? _lastEvaluatedAt;
 
   @override
@@ -1211,6 +1410,7 @@ class _InMemoryProgressionRepository implements ProgressionRepository {
     return ProgressionLedgerSnapshot(
       evaluations: _evaluations.values.toList(),
       rewardGrants: _rewardGrants.values.toList(),
+      questRewardGrants: _questRewardGrants.values.toList(),
       activeQuestIds: _activeQuestIds,
       lastEvaluatedAt: _lastEvaluatedAt,
     );
@@ -1287,6 +1487,46 @@ class _InMemoryProgressionRepository implements ProgressionRepository {
   }
 
   @override
+  Future<ProgressionLedgerSnapshot> persistQuestRewardGrants({
+    required List<ProgressionQuestRewardGrant> grants,
+  }) async {
+    for (final grant in grants) {
+      _questRewardGrants.putIfAbsent(grant.rewardKey, () => grant);
+    }
+    return loadLedger();
+  }
+
+  @override
+  Future<ProgressionLedgerSnapshot> claimQuestReward({
+    required String rewardKey,
+    required DateTime claimedAt,
+  }) async {
+    final reward = _questRewardGrants[rewardKey];
+    if (reward == null) return loadLedger();
+    if (reward.isClaimed) return loadLedger();
+    _questRewardGrants[rewardKey] = ProgressionQuestRewardGrant(
+      rewardKey: reward.rewardKey,
+      questId: reward.questId,
+      xpGranted: reward.xpGranted,
+      rewardStatus: ProgressionRewardStatus.claimed,
+      unlockedAt: reward.unlockedAt,
+      completedAt: reward.completedAt,
+      claimedAt: claimedAt,
+    );
+    return loadLedger();
+  }
+
+  @override
+  Future<ProgressionLedgerSnapshot> claimAllQuestRewards({
+    required DateTime claimedAt,
+  }) async {
+    for (final rewardKey in _questRewardGrants.keys.toList()) {
+      await claimQuestReward(rewardKey: rewardKey, claimedAt: claimedAt);
+    }
+    return loadLedger();
+  }
+
+  @override
   Future<ProgressionLedgerSnapshot> persistActiveQuestSet({
     required Set<String> activeQuestIds,
   }) async {
@@ -1297,22 +1537,21 @@ class _InMemoryProgressionRepository implements ProgressionRepository {
 
 class _StaticProgressionRepository implements ProgressionRepository {
   const _StaticProgressionRepository({
-    this.evaluations = const [],
     this.rewardGrants = const [],
-    this.activeQuestIds = const <String>{},
-    this.lastEvaluatedAt,
   });
 
-  final List<ProgressionEvaluation> evaluations;
+  final List<ProgressionEvaluation> evaluations = const [];
   final List<ProgressionRewardGrant> rewardGrants;
-  final Set<String> activeQuestIds;
-  final DateTime? lastEvaluatedAt;
+  final List<ProgressionQuestRewardGrant> questRewardGrants = const [];
+  final Set<String> activeQuestIds = const <String>{};
+  final DateTime? lastEvaluatedAt = null;
 
   @override
   Future<ProgressionLedgerSnapshot> loadLedger() async {
     return ProgressionLedgerSnapshot(
       evaluations: evaluations,
       rewardGrants: rewardGrants,
+      questRewardGrants: questRewardGrants,
       activeQuestIds: activeQuestIds,
       lastEvaluatedAt: lastEvaluatedAt,
     );
@@ -1322,23 +1561,46 @@ class _StaticProgressionRepository implements ProgressionRepository {
   Future<ProgressionLedgerSnapshot> persistEvaluations({
     required List<ProgressionEvaluation> evaluations,
     required DateTime evaluatedAt,
-  }) async => loadLedger();
+  }) async =>
+      loadLedger();
 
   @override
   Future<ProgressionLedgerSnapshot> claimReward({
     required String rewardKey,
     required DateTime claimedAt,
-  }) async => loadLedger();
+  }) async =>
+      loadLedger();
 
   @override
   Future<ProgressionLedgerSnapshot> claimAllRewards({
     required DateTime claimedAt,
-  }) async => loadLedger();
+  }) async =>
+      loadLedger();
+
+  @override
+  Future<ProgressionLedgerSnapshot> persistQuestRewardGrants({
+    required List<ProgressionQuestRewardGrant> grants,
+  }) async =>
+      loadLedger();
+
+  @override
+  Future<ProgressionLedgerSnapshot> claimQuestReward({
+    required String rewardKey,
+    required DateTime claimedAt,
+  }) async =>
+      loadLedger();
+
+  @override
+  Future<ProgressionLedgerSnapshot> claimAllQuestRewards({
+    required DateTime claimedAt,
+  }) async =>
+      loadLedger();
 
   @override
   Future<ProgressionLedgerSnapshot> persistActiveQuestSet({
     required Set<String> activeQuestIds,
-  }) async => loadLedger();
+  }) async =>
+      loadLedger();
 }
 
 ProgressionRewardGrant _claimedReward({
@@ -1358,5 +1620,59 @@ ProgressionRewardGrant _claimedReward({
     rewardStatus: ProgressionRewardStatus.claimed,
     unlockedAt: progressionAt,
     claimedAt: progressionAt,
+  );
+}
+
+ProgressionRewardGrant _unlockedReward({
+  required String rewardKey,
+  required int xpGranted,
+  required DateTime progressionAt,
+}) {
+  return ProgressionRewardGrant(
+    rewardKey: rewardKey,
+    ruleId: 'daily_steps',
+    ruleVersion: 'test',
+    domain: ProgressionDomain.steps,
+    period: ProgressionPeriod.day(progressionAt),
+    xpGranted: xpGranted,
+    targetValue: 10000,
+    actualValue: 10000,
+    rewardStatus: ProgressionRewardStatus.unlocked,
+    unlockedAt: progressionAt,
+  );
+}
+
+ProgressionQuestRewardGrant _claimedQuestReward({
+  required String rewardKey,
+  required String questId,
+  required int xpGranted,
+  required DateTime completedAt,
+  required DateTime claimedAt,
+}) {
+  return ProgressionQuestRewardGrant(
+    rewardKey: rewardKey,
+    questId: questId,
+    xpGranted: xpGranted,
+    rewardStatus: ProgressionRewardStatus.claimed,
+    unlockedAt: completedAt,
+    completedAt: completedAt,
+    claimedAt: claimedAt,
+  );
+}
+
+ProgressionQuestRewardGrant _unlockedQuestReward({
+  required String rewardKey,
+  required String questId,
+  required int xpGranted,
+  required DateTime completedAt,
+  required DateTime unlockedAt,
+}) {
+  return ProgressionQuestRewardGrant(
+    rewardKey: rewardKey,
+    questId: questId,
+    xpGranted: xpGranted,
+    rewardStatus: ProgressionRewardStatus.unlocked,
+    unlockedAt: unlockedAt,
+    completedAt: completedAt,
   );
 }

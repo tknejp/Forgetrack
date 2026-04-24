@@ -25,6 +25,8 @@ class FtProgressionDomainTheme {
         return FtTokens.sleep;
       case ProgressionDomain.activity:
         return FtTokens.active;
+      case ProgressionDomain.body:
+        return FtTokens.weight;
     }
   }
 
@@ -55,6 +57,8 @@ class FtProgressionDomainTheme {
         return Icons.nightlight_round;
       case ProgressionDomain.activity:
         return Icons.bolt_rounded;
+      case ProgressionDomain.body:
+        return Icons.monitor_weight_outlined;
     }
   }
 
@@ -144,6 +148,9 @@ class FtProgressionDomainTheme {
         return ProgressionDomain.sleep;
       case 'weekly_activity':
         return ProgressionDomain.activity;
+      case 'daily_weight_log':
+      case 'daily_weight_goal':
+        return ProgressionDomain.body;
       default:
         return null;
     }

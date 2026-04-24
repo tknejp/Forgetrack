@@ -15,6 +15,15 @@ class AppLocalizationsCs extends AppLocalizations {
   String get navOverview => 'Přehled';
 
   @override
+  String get navQuests => 'Questy';
+
+  @override
+  String get navHero => 'Hero';
+
+  @override
+  String get navSocial => 'Social';
+
+  @override
   String get navActivities => 'Aktivity';
 
   @override
@@ -356,6 +365,9 @@ class AppLocalizationsCs extends AppLocalizations {
   String get sleepNoData => 'Žádná data o spánku';
 
   @override
+  String get homeOpenDetailCta => 'Otevřít detail';
+
+  @override
   String get activitiesWeekTotal => 'Tento týden';
 
   @override
@@ -412,6 +424,18 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get bodyNoData => 'Žádné záznamy váhy';
+
+  @override
+  String get weightProgressExplanation =>
+      'Procento ukazuje postup k cíli na základě zaznamenané historie váhy.';
+
+  @override
+  String get weightProgressExplanationLoss =>
+      'Procento ukazuje postup od nejvyšší zaznamenané váhy k cíli, ne poměr aktuální váhy vůči cíli.';
+
+  @override
+  String get weightProgressExplanationGain =>
+      'Procento ukazuje postup od nejnižší zaznamenané váhy k cíli, ne poměr aktuální váhy vůči cíli.';
 
   @override
   String get bodyProgressToGoal => 'Postup k cíli';
@@ -746,10 +770,10 @@ class AppLocalizationsCs extends AppLocalizations {
   String get exportHeaderSaturatedFat => 'Nasycené tuky (g)';
 
   @override
-  String get progScreenEyebrow => 'PROGRESSION PROFIL';
+  String get progScreenEyebrow => 'HERO PROFIL';
 
   @override
-  String get progScreenTitle => 'Tvá dlouhodobá cesta';
+  String get progScreenTitle => 'Tvoje hero cesta';
 
   @override
   String get progScreenLoadingHint => 'Připravujeme tvou legendu';
@@ -869,10 +893,19 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get progQuestsSectionCaption =>
-      'Aktivní questy nahoře, dokončené níže.';
+      'Aktivní a zamčené questy nahoře, dokončené níže.';
+
+  @override
+  String get questsScreenEyebrow => 'QUESTY';
+
+  @override
+  String get questsScreenTitle => 'Tvoje questy a odměny';
 
   @override
   String get progQuestsActiveHeader => 'AKTIVNÍ QUESTY';
+
+  @override
+  String get progQuestsLockedHeader => 'ZAMČENÉ QUESTY';
 
   @override
   String get progQuestsCompletedHeader => 'DOKONČENÉ QUESTY';
@@ -885,6 +918,14 @@ class AppLocalizationsCs extends AppLocalizations {
       'Prošel jsi aktuální katalog questů.';
 
   @override
+  String get progQuestsEmptyLockedTitle =>
+      'Teď tu nejsou žádné zamčené questy.';
+
+  @override
+  String get progQuestsEmptyLockedCaption =>
+      'Další gated questy se objeví tady, až bude co odemykat.';
+
+  @override
   String get progQuestsEmptyCompletedTitle => 'Zatím žádné dokončené questy.';
 
   @override
@@ -895,7 +936,19 @@ class AppLocalizationsCs extends AppLocalizations {
   String get progQuestStatusActive => 'Aktivní';
 
   @override
+  String get progQuestStatusLocked => 'Zamčeno';
+
+  @override
+  String get progQuestStatusClaimed => 'Vyzvednuto';
+
+  @override
   String get progQuestStatusCompleted => 'Dokončeno';
+
+  @override
+  String get progQuestClaimAll => 'Vyzvednout questy';
+
+  @override
+  String get progQuestClaim => 'Vyzvednout quest';
 
   @override
   String progQuestCompletedOn(String time) {

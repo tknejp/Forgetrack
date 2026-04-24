@@ -28,6 +28,7 @@ class ProviderProgressionSource implements ProgressionSource {
         dailyProteinGrams: _goalsProvider.dailyProtein,
         sleepMinutes: (_goalsProvider.sleepHours * 60).round(),
         weeklyActivityMinutes: _goalsProvider.weeklyActivityMins,
+        targetWeightKg: _goalsProvider.targetWeight,
       );
 
   @override
@@ -43,6 +44,7 @@ class ProviderProgressionSource implements ProgressionSource {
           _goalsProvider.progressionWeeklyActivityMinsForWeek(
         startOfProgressionWeek(anchor),
       ),
+      targetWeightKg: _goalsProvider.targetWeight,
     );
   }
 
@@ -84,6 +86,10 @@ class ProviderProgressionSource implements ProgressionSource {
     final stepSignature = _fitnessProvider.stepsHistory
         .map((record) => '${progressionDateKey(record.date)}:${record.steps}')
         .join(',');
+    final weightSignature = _fitnessProvider.weightHistory
+        .map((record) =>
+            '${progressionDateKey(record.date)}:${record.weight}')
+        .join(',');
     final sleepSignature = _fitnessProvider.sleepHistory
         .map((record) =>
             '${progressionDateKey(record.wakeTime)}:${record.totalDuration.inMinutes}')
@@ -108,6 +114,7 @@ class ProviderProgressionSource implements ProgressionSource {
       activitySignature,
       _nutritionProvider.todayCalories,
       _nutritionProvider.todayProtein,
+      weightSignature,
     ].join('|');
   }
 
@@ -142,6 +149,7 @@ class ProviderProgressionSource implements ProgressionSource {
       sleepMinutes:
           _fitnessProvider.sleepForDate(day)?.totalDuration.inMinutes ?? 0,
       activityMinutes: _activityMinutesForRange(day, day),
+      weightKg: _fitnessProvider.weightForDate(day)?.weight ?? 0.0,
     );
   }
 

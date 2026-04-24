@@ -15,6 +15,7 @@ class ProgressionEngineState {
     required this.profile,
     required this.evaluations,
     required this.rewardGrants,
+    required this.questRewardGrants,
     required this.achievements,
     required this.quests,
     required this.streaksByRuleId,
@@ -25,6 +26,7 @@ class ProgressionEngineState {
   final ProgressionProfile profile;
   final List<ProgressionEvaluation> evaluations;
   final List<ProgressionRewardGrant> rewardGrants;
+  final List<ProgressionQuestRewardGrant> questRewardGrants;
   final List<ProgressionAchievement> achievements;
   final List<ProgressionQuest> quests;
   final Map<String, ProgressionStreakSummary> streaksByRuleId;
@@ -87,6 +89,19 @@ class ProgressionEngine {
       evaluatedAt: now,
     );
     var state = _toState(ledger, evaluationDate: now);
+    final newQuestRewardGrants = _newQuestRewardGrants(
+      state.quests,
+      existingGrants: ledger.questRewardGrants,
+      unlockedAt: now,
+    );
+
+    if (newQuestRewardGrants.isNotEmpty) {
+      ledger = await _repository.persistQuestRewardGrants(
+        grants: newQuestRewardGrants,
+      );
+      state = _toState(ledger, evaluationDate: now);
+    }
+
     final nextActiveQuestIds = state.quests
         .where((quest) => quest.status == ProgressionQuestStatus.active)
         .map((quest) => quest.id)
@@ -117,49 +132,80 @@ class ProgressionEngine {
     return _toState(ledger, evaluationDate: now);
   }
 
+  Future<ProgressionEngineState> claimQuestReward(String rewardKey) async {
+    final now = _clock();
+    final ledger = await _repository.claimQuestReward(
+      rewardKey: rewardKey,
+      claimedAt: now,
+    );
+    return _toState(ledger, evaluationDate: now);
+  }
+
+  Future<ProgressionEngineState> claimAllQuestRewards() async {
+    final now = _clock();
+    final ledger = await _repository.claimAllQuestRewards(claimedAt: now);
+    return _toState(ledger, evaluationDate: now);
+  }
+
   ProgressionEngineState _toState(
     ProgressionLedgerSnapshot ledger, {
     required DateTime evaluationDate,
   }) {
     final totalXp = ledger.rewardGrants.fold<int>(
-      0,
-      (sum, grant) => sum + grant.effectiveXpGranted,
-    );
+          0,
+          (sum, grant) => sum + grant.effectiveXpGranted,
+        ) +
+        ledger.questRewardGrants.fold<int>(
+          0,
+          (sum, grant) => sum + grant.effectiveXpGranted,
+        );
 
     final evaluations = [...ledger.evaluations]
       ..sort((a, b) => b.period.start.compareTo(a.period.start));
     final rewardGrants = [...ledger.rewardGrants]
       ..sort((a, b) => b.period.start.compareTo(a.period.start));
+    final questRewardGrants = [...ledger.questRewardGrants]
+      ..sort((a, b) => b.unlockedAt.compareTo(a.unlockedAt));
     final profile = _levelPolicy.resolve(totalXp);
     final streaksByRuleId = _streakPolicy.summarizeByRule(evaluations);
     final streaksByDomain = _streakPolicy.summarizeByDomain(evaluations);
+    final questDefinitions = _questCatalog.build();
     final achievements = _achievementEvaluator.evaluate(
       definitions: _achievementCatalog.build(),
       profile: profile,
       evaluations: evaluations,
       rewardGrants: rewardGrants,
+      questRewardGrants: questRewardGrants,
       streaksByRuleId: streaksByRuleId,
       streaksByDomain: streaksByDomain,
     );
 
     final questResult = _questEvaluator.evaluate(
-      definitions: _questCatalog.build(),
+      definitions: questDefinitions,
       previousActiveQuestIds: ledger.activeQuestIds,
       evaluationDate: evaluationDate,
       profile: profile,
       evaluations: evaluations,
       rewardGrants: rewardGrants,
+      questRewardGrants: questRewardGrants,
       achievements: achievements,
       streaksByRuleId: streaksByRuleId,
       streaksByDomain: streaksByDomain,
+    );
+    final quests = _decorateQuestRewards(
+      quests: questResult.quests,
+      definitions: questDefinitions,
+      grants: questRewardGrants,
+      profile: profile,
     );
 
     return ProgressionEngineState(
       profile: profile,
       evaluations: evaluations,
       rewardGrants: rewardGrants,
+      questRewardGrants: questRewardGrants,
       achievements: achievements,
-      quests: questResult.quests,
+      quests: quests,
       streaksByRuleId: streaksByRuleId,
       streaksByDomain: streaksByDomain,
       lastEvaluatedAt: ledger.lastEvaluatedAt,
@@ -251,5 +297,104 @@ class ProgressionEngine {
       if (!right.contains(item)) return false;
     }
     return true;
+  }
+
+  List<ProgressionQuestRewardGrant> _newQuestRewardGrants(
+    List<ProgressionQuest> quests, {
+    required List<ProgressionQuestRewardGrant> existingGrants,
+    required DateTime unlockedAt,
+  }) {
+    final existingKeys = {
+      for (final grant in existingGrants) grant.rewardKey,
+    };
+
+    return [
+      for (final quest in quests)
+        if (quest.isCompleted &&
+            quest.rewardKey != null &&
+            quest.rewardXp > 0 &&
+            !existingKeys.contains(quest.rewardKey))
+          ProgressionQuestRewardGrant(
+            rewardKey: quest.rewardKey!,
+            questId: quest.id,
+            xpGranted: quest.rewardXp,
+            rewardStatus: ProgressionRewardStatus.unlocked,
+            unlockedAt: unlockedAt,
+            completedAt: quest.completedAt!,
+          ),
+    ];
+  }
+
+  List<ProgressionQuest> _decorateQuestRewards({
+    required List<ProgressionQuest> quests,
+    required List<ProgressionQuestDefinition> definitions,
+    required List<ProgressionQuestRewardGrant> grants,
+    required ProgressionProfile profile,
+  }) {
+    final definitionsById = {
+      for (final definition in definitions) definition.id: definition,
+    };
+    final grantsByRewardKey = {
+      for (final grant in grants) grant.rewardKey: grant,
+    };
+
+    return [
+      for (final quest in quests)
+        _withQuestRewardState(
+          quest,
+          definition: definitionsById[quest.id],
+          grantsByRewardKey: grantsByRewardKey,
+          profile: profile,
+        ),
+    ];
+  }
+
+  ProgressionQuest _withQuestRewardState(
+    ProgressionQuest quest, {
+    required ProgressionQuestDefinition? definition,
+    required Map<String, ProgressionQuestRewardGrant> grantsByRewardKey,
+    required ProgressionProfile profile,
+  }) {
+    if (definition == null) return quest;
+
+    final rewardKey = quest.completedAt == null
+        ? null
+        : definition.rewardKeyFor(quest.completedAt!);
+    final rewardGrant = rewardKey == null ? null : grantsByRewardKey[rewardKey];
+    final previewXp = rewardGrant?.xpGranted ??
+        _levelPolicy.scaledRewardXp(
+          baseXp: definition.rewardXp,
+          level: profile.level,
+        );
+
+    return ProgressionQuest(
+      id: quest.id,
+      title: quest.title,
+      description: quest.description,
+      type: quest.type,
+      category: quest.category,
+      criterionType: quest.criterionType,
+      status: quest.status,
+      targetValue: quest.targetValue,
+      currentValue: quest.currentValue,
+      progress: quest.progress,
+      prerequisiteQuestIds: quest.prerequisiteQuestIds,
+      sortOrder: quest.sortOrder,
+      priority: quest.priority,
+      isHighlighted: quest.isHighlighted,
+      rewardXp: previewXp,
+      rewardKey: rewardKey,
+      rewardStatus: rewardGrant?.rewardStatus,
+      rewardUnlockedAt: rewardGrant?.unlockedAt,
+      rewardClaimedAt: rewardGrant?.claimedAt,
+      completedAt: quest.completedAt,
+      ruleId: quest.ruleId,
+      domain: quest.domain,
+      periodKind: quest.periodKind,
+      achievementId: quest.achievementId,
+      relatedRuleIds: quest.relatedRuleIds,
+      minimumLevel: quest.minimumLevel,
+      minimumTrackedDays: quest.minimumTrackedDays,
+    );
   }
 }

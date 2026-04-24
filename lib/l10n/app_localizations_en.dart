@@ -15,6 +15,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navOverview => 'Overview';
 
   @override
+  String get navQuests => 'Quests';
+
+  @override
+  String get navHero => 'Hero';
+
+  @override
+  String get navSocial => 'Social';
+
+  @override
   String get navActivities => 'Activities';
 
   @override
@@ -356,6 +365,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sleepNoData => 'No sleep data recorded';
 
   @override
+  String get homeOpenDetailCta => 'Open details';
+
+  @override
   String get activitiesWeekTotal => 'This week';
 
   @override
@@ -412,6 +424,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bodyNoData => 'No weight data recorded';
+
+  @override
+  String get weightProgressExplanation =>
+      'This percentage shows progress toward your goal based on your recorded weight history.';
+
+  @override
+  String get weightProgressExplanationLoss =>
+      'This percentage shows progress from your highest recorded weight toward your goal, not current weight divided by goal.';
+
+  @override
+  String get weightProgressExplanationGain =>
+      'This percentage shows progress from your lowest recorded weight toward your goal, not current weight divided by goal.';
 
   @override
   String get bodyProgressToGoal => 'Progress to goal';
@@ -745,10 +769,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exportHeaderSaturatedFat => 'Saturated fat (g)';
 
   @override
-  String get progScreenEyebrow => 'PROGRESSION PROFILE';
+  String get progScreenEyebrow => 'HERO PROFILE';
 
   @override
-  String get progScreenTitle => 'Your long-term journey';
+  String get progScreenTitle => 'Your hero journey';
 
   @override
   String get progScreenLoadingHint => 'Preparing your legend';
@@ -868,10 +892,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get progQuestsSectionCaption =>
-      'Active quests first, completed ones below.';
+      'Active and locked quests first, completed ones below.';
+
+  @override
+  String get questsScreenEyebrow => 'QUESTS';
+
+  @override
+  String get questsScreenTitle => 'Your quests and rewards';
 
   @override
   String get progQuestsActiveHeader => 'ACTIVE QUESTS';
+
+  @override
+  String get progQuestsLockedHeader => 'LOCKED QUESTS';
 
   @override
   String get progQuestsCompletedHeader => 'COMPLETED QUESTS';
@@ -884,6 +917,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'You have cleared the current static quest catalog.';
 
   @override
+  String get progQuestsEmptyLockedTitle => 'No locked quests right now.';
+
+  @override
+  String get progQuestsEmptyLockedCaption =>
+      'New gated quests will appear here when there is something to unlock later.';
+
+  @override
   String get progQuestsEmptyCompletedTitle => 'No completed quests yet.';
 
   @override
@@ -894,7 +934,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progQuestStatusActive => 'Active';
 
   @override
+  String get progQuestStatusLocked => 'Locked';
+
+  @override
+  String get progQuestStatusClaimed => 'Claimed';
+
+  @override
   String get progQuestStatusCompleted => 'Completed';
+
+  @override
+  String get progQuestClaimAll => 'Claim all quests';
+
+  @override
+  String get progQuestClaim => 'Claim quest';
 
   @override
   String progQuestCompletedOn(String time) {

@@ -17,6 +17,19 @@ abstract class ProgressionRepository {
     required DateTime claimedAt,
   });
 
+  Future<ProgressionLedgerSnapshot> persistQuestRewardGrants({
+    required List<ProgressionQuestRewardGrant> grants,
+  });
+
+  Future<ProgressionLedgerSnapshot> claimQuestReward({
+    required String rewardKey,
+    required DateTime claimedAt,
+  });
+
+  Future<ProgressionLedgerSnapshot> claimAllQuestRewards({
+    required DateTime claimedAt,
+  });
+
   Future<ProgressionLedgerSnapshot> persistActiveQuestSet({
     required Set<String> activeQuestIds,
   });

@@ -66,6 +66,20 @@ class FtDateNav extends StatelessWidget {
                         color: Color(0x66FFFFFF),
                       ),
                     ],
+                    if (showTodayButton && onTodayTap != null) ...[
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: onTodayTap,
+                        child: const Text(
+                          '· Today',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: FtTokens.accent,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
                 if (syncedAt != null) ...[
@@ -76,31 +90,6 @@ class FtDateNav extends StatelessWidget {
                       fontSize: FtTokens.fontSizeMicro,
                       color: FtTokens.onSurfaceMuted,
                       fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-                if (showTodayButton && onTodayTap != null) ...[
-                  const SizedBox(height: 4),
-                  GestureDetector(
-                    onTap: onTodayTap,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: FtTokens.accent.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(99),
-                        border: Border.all(
-                          color: FtTokens.accent.withValues(alpha: 0.4),
-                        ),
-                      ),
-                      child: const Text(
-                        '↩ Today',
-                        style: TextStyle(
-                          fontSize: FtTokens.fontSizeMicro,
-                          fontWeight: FontWeight.w700,
-                          color: FtTokens.accent,
-                        ),
-                      ),
                     ),
                   ),
                 ],

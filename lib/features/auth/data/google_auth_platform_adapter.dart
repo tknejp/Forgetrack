@@ -4,7 +4,8 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in_android/google_sign_in_android.dart';
-import 'package:google_sign_in_android/src/messages.g.dart' as google_sign_in_android;
+import 'package:google_sign_in_android/src/messages.g.dart'
+    as google_sign_in_android;
 import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart';
 
 bool _adapterInstalled = false;
@@ -166,19 +167,22 @@ class _PassiveStartupGoogleSignInPlatform extends GoogleSignInPlatform {
       case google_sign_in_android.GetCredentialFailureType.noActivity:
       case google_sign_in_android.GetCredentialFailureType.unsupported:
         return null;
-      case google_sign_in_android.GetCredentialFailureType.unexpectedCredentialType:
+      case google_sign_in_android
+            .GetCredentialFailureType.unexpectedCredentialType:
         throw GoogleSignInException(
           code: GoogleSignInExceptionCode.providerConfigurationError,
           description: 'Unexpected credential type: ${failure.message}',
           details: failure.details,
         );
-      case google_sign_in_android.GetCredentialFailureType.providerConfigurationIssue:
+      case google_sign_in_android
+            .GetCredentialFailureType.providerConfigurationIssue:
         throw GoogleSignInException(
           code: GoogleSignInExceptionCode.providerConfigurationError,
           description: failure.message,
           details: failure.details,
         );
-      case google_sign_in_android.GetCredentialFailureType.missingServerClientId:
+      case google_sign_in_android
+            .GetCredentialFailureType.missingServerClientId:
         throw GoogleSignInException(
           code: GoogleSignInExceptionCode.clientConfigurationError,
           description: 'serverClientId must be provided on Android',

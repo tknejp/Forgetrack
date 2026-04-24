@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../theme/ft_design_tokens.dart';
 import '../../../../widgets/ft/ft_progress_bar.dart';
+import '../../../../widgets/ft/ft_progression_xp_style.dart';
 import '../../domain/progression_models.dart';
 import '../progression_l10n.dart';
 import '../progression_provider.dart';
@@ -15,16 +16,22 @@ import 'ft_progression_primitives.dart';
 ///
 /// Compact state: level orb + XP bar + streak & achievement pills.
 /// Expanded state: 4-column mini stat grid + streak duel + active quest
-/// preview + "open profile" CTA.
+/// preview + optional "open profile" CTA.
 class FtProgressionCard extends StatefulWidget {
   const FtProgressionCard({
     super.key,
-    required this.onOpen,
+    this.onOpen,
     this.initiallyExpanded = false,
+    this.barKey,
+    this.forceExpanded,
   });
 
-  final VoidCallback onOpen;
+  final VoidCallback? onOpen;
   final bool initiallyExpanded;
+  final GlobalKey? barKey;
+
+  /// When non-null, overrides the tap-to-toggle behaviour.
+  final bool? forceExpanded;
 
   @override
   State<FtProgressionCard> createState() => _FtProgressionCardState();
@@ -33,7 +40,12 @@ class FtProgressionCard extends StatefulWidget {
 class _FtProgressionCardState extends State<FtProgressionCard> {
   late bool _expanded = widget.initiallyExpanded;
 
-  void _toggle() => setState(() => _expanded = !_expanded);
+  bool get _isExpanded => widget.forceExpanded ?? _expanded;
+
+  void _toggle() {
+    if (widget.forceExpanded != null) return;
+    setState(() => _expanded = !_expanded);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,15 +75,9 @@ class _FtProgressionCardState extends State<FtProgressionCard> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOut,
-        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment(-0.8, -1),
-            end: Alignment(1, 1),
-            colors: [Color(0x247C6FFF), Color(0x0A7C6FFF)],
-          ),
+          color: FtTokens.bg,
           borderRadius: BorderRadius.circular(FtTokens.radiusCard),
-          border: Border.all(color: FtTokens.accent.withValues(alpha: 0.28)),
           boxShadow: const [
             BoxShadow(
               color: Color(0x2E7C6FFF),
@@ -80,71 +86,89 @@ class _FtProgressionCardState extends State<FtProgressionCard> {
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _CompactHeader(
-              level: profile.level,
-              levelTitle: profile.levelTitle,
-              xpInto: profile.xpIntoLevel,
-              xpMax: xpSpan,
-              xpProgress: xpProgress,
-              expanded: _expanded,
-              pendingRewardBadge: pendingRewardCount > 0
-                  ? l10n.progBadgePendingClaims(pendingRewardCount)
-                  : null,
-              onToggle: _toggle,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment(-0.8, -1),
+              end: Alignment(1, 1),
+              colors: [Color(0x247C6FFF), Color(0x0A7C6FFF)],
             ),
-            if (!_expanded) ...[
-              const SizedBox(height: 12),
-              _HighlightPills(
-                currentStreak: current,
-                unlockedCount: unlockedCount,
-                progL10n: progL10n,
-                achievementsLabel: l10n.progBadgeAchievements,
-              ),
-            ] else ...[
-              const SizedBox(height: 12),
-              const Divider(color: Color(0x12FFFFFF), height: 1),
-              const SizedBox(height: 12),
-              _MiniStatGrid(
-                totalXp: profile.totalXp,
-                toNext: profile.xpToNextLevel < 0 ? 0 : profile.xpToNextLevel,
-                achievements: unlockedCount,
-                questsDone: progression.completedQuests.length,
-                l10n: l10n,
-              ),
-              const SizedBox(height: 10),
-              FtProgStreakDuel(
-                currentLabel: l10n.progStreakCurrentLabel,
-                currentValue: current?.currentStreak ?? 0,
-                currentCaption: current == null
-                    ? l10n.progBadgeStreakEmpty
-                    : progL10n.domainLabel(current.domain),
-                currentDomain: current?.domain,
-                bestLabel: l10n.progStreakBestLabel,
-                bestValue: best?.bestStreak ?? 0,
-                bestCaption: best == null
-                    ? l10n.progBadgeStreakHint
-                    : progL10n.domainLabel(best.domain),
-                bestDomain: best?.domain,
-                daysSuffix: l10n.progStreakDaysSuffix,
-              ),
-              if (previewQuests.isNotEmpty) ...[
-                const SizedBox(height: 10),
-                _ActiveQuestsPreview(
-                  quests: previewQuests,
-                  label: l10n.progActiveQuestsLabel,
-                  progL10n: progL10n,
+            borderRadius: BorderRadius.circular(FtTokens.radiusCard),
+            border: Border.all(color: FtTokens.accent.withValues(alpha: 0.28)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _CompactHeader(
+                  level: profile.level,
+                  levelTitle: profile.levelTitle,
+                  xpInto: profile.xpIntoLevel,
+                  xpMax: xpSpan,
+                  xpProgress: xpProgress,
+                  expanded: _isExpanded,
+                  pendingRewardBadge: pendingRewardCount > 0
+                      ? l10n.progBadgePendingClaims(pendingRewardCount)
+                      : null,
+                  onToggle: _toggle,
+                  barKey: widget.barKey,
                 ),
+                if (!_isExpanded) ...[
+                  const SizedBox(height: 12),
+                  _HighlightPills(
+                    currentStreak: current,
+                    unlockedCount: unlockedCount,
+                    progL10n: progL10n,
+                    achievementsLabel: l10n.progBadgeAchievements,
+                  ),
+                ] else if (_isExpanded) ...[
+                  const SizedBox(height: 12),
+                  const Divider(color: Color(0x12FFFFFF), height: 1),
+                  const SizedBox(height: 12),
+                  _MiniStatGrid(
+                    totalXp: profile.totalXp,
+                    toNext:
+                        profile.xpToNextLevel < 0 ? 0 : profile.xpToNextLevel,
+                    achievements: unlockedCount,
+                    questsDone: progression.completedQuests.length,
+                    l10n: l10n,
+                  ),
+                  const SizedBox(height: 10),
+                  FtProgStreakDuel(
+                    currentLabel: l10n.progStreakCurrentLabel,
+                    currentValue: current?.currentStreak ?? 0,
+                    currentCaption: current == null
+                        ? l10n.progBadgeStreakEmpty
+                        : progL10n.domainLabel(current.domain),
+                    currentDomain: current?.domain,
+                    bestLabel: l10n.progStreakBestLabel,
+                    bestValue: best?.bestStreak ?? 0,
+                    bestCaption: best == null
+                        ? l10n.progBadgeStreakHint
+                        : progL10n.domainLabel(best.domain),
+                    bestDomain: best?.domain,
+                    daysSuffix: l10n.progStreakDaysSuffix,
+                  ),
+                  if (previewQuests.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    _ActiveQuestsPreview(
+                      quests: previewQuests,
+                      label: l10n.progActiveQuestsLabel,
+                      progL10n: progL10n,
+                    ),
+                  ],
+                  if (widget.onOpen != null) ...[
+                    const SizedBox(height: 12),
+                    _OpenCta(
+                      label: l10n.progOpenCta,
+                      onTap: widget.onOpen!,
+                    ),
+                  ],
+                ],
               ],
-              const SizedBox(height: 12),
-              _OpenCta(
-                label: l10n.progOpenCta,
-                onTap: widget.onOpen,
-              ),
-            ],
-          ],
+            ),
+          ),
         ),
       ),
     );
@@ -161,6 +185,7 @@ class _CompactHeader extends StatelessWidget {
     required this.expanded,
     required this.pendingRewardBadge,
     required this.onToggle,
+    this.barKey,
   });
 
   final int level;
@@ -171,6 +196,7 @@ class _CompactHeader extends StatelessWidget {
   final bool expanded;
   final String? pendingRewardBadge;
   final VoidCallback onToggle;
+  final GlobalKey? barKey;
 
   @override
   Widget build(BuildContext context) {
@@ -273,11 +299,14 @@ class _CompactHeader extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 4),
-              FtProgressBar(
-                value: xpProgress,
-                color: FtTokens.accent,
-                glow: FtTokens.accentGlow,
-                height: 5,
+              SizedBox(
+                key: barKey,
+                child: FtProgressBar(
+                  value: xpProgress,
+                  color: FtProgressionXpStyle.color,
+                  glow: FtProgressionXpStyle.glow,
+                  height: 5,
+                ),
               ),
             ],
           ),
@@ -596,9 +625,8 @@ class _MiniQuestRow extends StatelessWidget {
     final domain = FtProgressionDomainTheme.resolveForQuest(quest);
     final color = FtProgressionDomainTheme.colorFor(domain);
     final rawPct = quest.progress * 100;
-    final pct = (rawPct.isNaN || rawPct.isInfinite)
-        ? 0
-        : rawPct.clamp(0, 100).round();
+    final pct =
+        (rawPct.isNaN || rawPct.isInfinite) ? 0 : rawPct.clamp(0, 100).round();
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(

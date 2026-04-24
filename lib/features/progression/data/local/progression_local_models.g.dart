@@ -6982,6 +6982,1973 @@ extension ProgressionRewardGrantRecordQueryProperty on QueryBuilder<
 // coverage:ignore-file
 // ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
 
+extension GetProgressionQuestRewardGrantRecordCollection on Isar {
+  IsarCollection<ProgressionQuestRewardGrantRecord>
+      get progressionQuestRewardGrantRecords => this.collection();
+}
+
+const ProgressionQuestRewardGrantRecordSchema = CollectionSchema(
+  name: r'ProgressionQuestRewardGrantRecord',
+  id: -6982180433604569691,
+  properties: {
+    r'claimedAt': PropertySchema(
+      id: 0,
+      name: r'claimedAt',
+      type: IsarType.dateTime,
+    ),
+    r'completedAt': PropertySchema(
+      id: 1,
+      name: r'completedAt',
+      type: IsarType.dateTime,
+    ),
+    r'questId': PropertySchema(
+      id: 2,
+      name: r'questId',
+      type: IsarType.string,
+    ),
+    r'rewardKey': PropertySchema(
+      id: 3,
+      name: r'rewardKey',
+      type: IsarType.string,
+    ),
+    r'rewardStatusName': PropertySchema(
+      id: 4,
+      name: r'rewardStatusName',
+      type: IsarType.string,
+    ),
+    r'unlockedAt': PropertySchema(
+      id: 5,
+      name: r'unlockedAt',
+      type: IsarType.dateTime,
+    ),
+    r'xpGranted': PropertySchema(
+      id: 6,
+      name: r'xpGranted',
+      type: IsarType.long,
+    )
+  },
+  estimateSize: _progressionQuestRewardGrantRecordEstimateSize,
+  serialize: _progressionQuestRewardGrantRecordSerialize,
+  deserialize: _progressionQuestRewardGrantRecordDeserialize,
+  deserializeProp: _progressionQuestRewardGrantRecordDeserializeProp,
+  idName: r'id',
+  indexes: {
+    r'rewardKey': IndexSchema(
+      id: -8530480136332084194,
+      name: r'rewardKey',
+      unique: true,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'rewardKey',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'questId': IndexSchema(
+      id: -312090079606683354,
+      name: r'questId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'questId',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'unlockedAt': IndexSchema(
+      id: -2486051207984852976,
+      name: r'unlockedAt',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'unlockedAt',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'completedAt': IndexSchema(
+      id: -3156591011457686752,
+      name: r'completedAt',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'completedAt',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'claimedAt': IndexSchema(
+      id: 3602182620203233795,
+      name: r'claimedAt',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'claimedAt',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    )
+  },
+  links: {},
+  embeddedSchemas: {},
+  getId: _progressionQuestRewardGrantRecordGetId,
+  getLinks: _progressionQuestRewardGrantRecordGetLinks,
+  attach: _progressionQuestRewardGrantRecordAttach,
+  version: '3.1.0+1',
+);
+
+int _progressionQuestRewardGrantRecordEstimateSize(
+  ProgressionQuestRewardGrantRecord object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  bytesCount += 3 + object.questId.length * 3;
+  bytesCount += 3 + object.rewardKey.length * 3;
+  bytesCount += 3 + object.rewardStatusName.length * 3;
+  return bytesCount;
+}
+
+void _progressionQuestRewardGrantRecordSerialize(
+  ProgressionQuestRewardGrantRecord object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeDateTime(offsets[0], object.claimedAt);
+  writer.writeDateTime(offsets[1], object.completedAt);
+  writer.writeString(offsets[2], object.questId);
+  writer.writeString(offsets[3], object.rewardKey);
+  writer.writeString(offsets[4], object.rewardStatusName);
+  writer.writeDateTime(offsets[5], object.unlockedAt);
+  writer.writeLong(offsets[6], object.xpGranted);
+}
+
+ProgressionQuestRewardGrantRecord _progressionQuestRewardGrantRecordDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = ProgressionQuestRewardGrantRecord();
+  object.claimedAt = reader.readDateTimeOrNull(offsets[0]);
+  object.completedAt = reader.readDateTime(offsets[1]);
+  object.id = id;
+  object.questId = reader.readString(offsets[2]);
+  object.rewardKey = reader.readString(offsets[3]);
+  object.rewardStatusName = reader.readString(offsets[4]);
+  object.unlockedAt = reader.readDateTime(offsets[5]);
+  object.xpGranted = reader.readLong(offsets[6]);
+  return object;
+}
+
+P _progressionQuestRewardGrantRecordDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 1:
+      return (reader.readDateTime(offset)) as P;
+    case 2:
+      return (reader.readString(offset)) as P;
+    case 3:
+      return (reader.readString(offset)) as P;
+    case 4:
+      return (reader.readString(offset)) as P;
+    case 5:
+      return (reader.readDateTime(offset)) as P;
+    case 6:
+      return (reader.readLong(offset)) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+Id _progressionQuestRewardGrantRecordGetId(
+    ProgressionQuestRewardGrantRecord object) {
+  return object.id;
+}
+
+List<IsarLinkBase<dynamic>> _progressionQuestRewardGrantRecordGetLinks(
+    ProgressionQuestRewardGrantRecord object) {
+  return [];
+}
+
+void _progressionQuestRewardGrantRecordAttach(IsarCollection<dynamic> col,
+    Id id, ProgressionQuestRewardGrantRecord object) {
+  object.id = id;
+}
+
+extension ProgressionQuestRewardGrantRecordByIndex
+    on IsarCollection<ProgressionQuestRewardGrantRecord> {
+  Future<ProgressionQuestRewardGrantRecord?> getByRewardKey(String rewardKey) {
+    return getByIndex(r'rewardKey', [rewardKey]);
+  }
+
+  ProgressionQuestRewardGrantRecord? getByRewardKeySync(String rewardKey) {
+    return getByIndexSync(r'rewardKey', [rewardKey]);
+  }
+
+  Future<bool> deleteByRewardKey(String rewardKey) {
+    return deleteByIndex(r'rewardKey', [rewardKey]);
+  }
+
+  bool deleteByRewardKeySync(String rewardKey) {
+    return deleteByIndexSync(r'rewardKey', [rewardKey]);
+  }
+
+  Future<List<ProgressionQuestRewardGrantRecord?>> getAllByRewardKey(
+      List<String> rewardKeyValues) {
+    final values = rewardKeyValues.map((e) => [e]).toList();
+    return getAllByIndex(r'rewardKey', values);
+  }
+
+  List<ProgressionQuestRewardGrantRecord?> getAllByRewardKeySync(
+      List<String> rewardKeyValues) {
+    final values = rewardKeyValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'rewardKey', values);
+  }
+
+  Future<int> deleteAllByRewardKey(List<String> rewardKeyValues) {
+    final values = rewardKeyValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'rewardKey', values);
+  }
+
+  int deleteAllByRewardKeySync(List<String> rewardKeyValues) {
+    final values = rewardKeyValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'rewardKey', values);
+  }
+
+  Future<Id> putByRewardKey(ProgressionQuestRewardGrantRecord object) {
+    return putByIndex(r'rewardKey', object);
+  }
+
+  Id putByRewardKeySync(ProgressionQuestRewardGrantRecord object,
+      {bool saveLinks = true}) {
+    return putByIndexSync(r'rewardKey', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllByRewardKey(
+      List<ProgressionQuestRewardGrantRecord> objects) {
+    return putAllByIndex(r'rewardKey', objects);
+  }
+
+  List<Id> putAllByRewardKeySync(
+      List<ProgressionQuestRewardGrantRecord> objects,
+      {bool saveLinks = true}) {
+    return putAllByIndexSync(r'rewardKey', objects, saveLinks: saveLinks);
+  }
+}
+
+extension ProgressionQuestRewardGrantRecordQueryWhereSort on QueryBuilder<
+    ProgressionQuestRewardGrantRecord,
+    ProgressionQuestRewardGrantRecord,
+    QWhere> {
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterWhere> anyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterWhere> anyUnlockedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'unlockedAt'),
+      );
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterWhere> anyCompletedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'completedAt'),
+      );
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterWhere> anyClaimedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'claimedAt'),
+      );
+    });
+  }
+}
+
+extension ProgressionQuestRewardGrantRecordQueryWhere on QueryBuilder<
+    ProgressionQuestRewardGrantRecord,
+    ProgressionQuestRewardGrantRecord,
+    QWhereClause> {
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterWhereClause> idEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterWhereClause> idNotEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            )
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            )
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterWhereClause> idGreaterThan(Id id, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.greaterThan(lower: id, includeLower: include),
+      );
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterWhereClause> idLessThan(Id id, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.lessThan(upper: id, includeUpper: include),
+      );
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterWhereClause> idBetween(
+    Id lowerId,
+    Id upperId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterWhereClause> rewardKeyEqualTo(String rewardKey) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'rewardKey',
+        value: [rewardKey],
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterWhereClause> rewardKeyNotEqualTo(String rewardKey) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'rewardKey',
+              lower: [],
+              upper: [rewardKey],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'rewardKey',
+              lower: [rewardKey],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'rewardKey',
+              lower: [rewardKey],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'rewardKey',
+              lower: [],
+              upper: [rewardKey],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterWhereClause> questIdEqualTo(String questId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'questId',
+        value: [questId],
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterWhereClause> questIdNotEqualTo(String questId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'questId',
+              lower: [],
+              upper: [questId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'questId',
+              lower: [questId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'questId',
+              lower: [questId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'questId',
+              lower: [],
+              upper: [questId],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterWhereClause> unlockedAtEqualTo(DateTime unlockedAt) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'unlockedAt',
+        value: [unlockedAt],
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterWhereClause> unlockedAtNotEqualTo(DateTime unlockedAt) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'unlockedAt',
+              lower: [],
+              upper: [unlockedAt],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'unlockedAt',
+              lower: [unlockedAt],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'unlockedAt',
+              lower: [unlockedAt],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'unlockedAt',
+              lower: [],
+              upper: [unlockedAt],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterWhereClause> unlockedAtGreaterThan(
+    DateTime unlockedAt, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'unlockedAt',
+        lower: [unlockedAt],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterWhereClause> unlockedAtLessThan(
+    DateTime unlockedAt, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'unlockedAt',
+        lower: [],
+        upper: [unlockedAt],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterWhereClause> unlockedAtBetween(
+    DateTime lowerUnlockedAt,
+    DateTime upperUnlockedAt, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'unlockedAt',
+        lower: [lowerUnlockedAt],
+        includeLower: includeLower,
+        upper: [upperUnlockedAt],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterWhereClause> completedAtEqualTo(DateTime completedAt) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'completedAt',
+        value: [completedAt],
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterWhereClause> completedAtNotEqualTo(DateTime completedAt) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'completedAt',
+              lower: [],
+              upper: [completedAt],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'completedAt',
+              lower: [completedAt],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'completedAt',
+              lower: [completedAt],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'completedAt',
+              lower: [],
+              upper: [completedAt],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterWhereClause> completedAtGreaterThan(
+    DateTime completedAt, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'completedAt',
+        lower: [completedAt],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterWhereClause> completedAtLessThan(
+    DateTime completedAt, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'completedAt',
+        lower: [],
+        upper: [completedAt],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterWhereClause> completedAtBetween(
+    DateTime lowerCompletedAt,
+    DateTime upperCompletedAt, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'completedAt',
+        lower: [lowerCompletedAt],
+        includeLower: includeLower,
+        upper: [upperCompletedAt],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterWhereClause> claimedAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'claimedAt',
+        value: [null],
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterWhereClause> claimedAtIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'claimedAt',
+        lower: [null],
+        includeLower: false,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterWhereClause> claimedAtEqualTo(DateTime? claimedAt) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'claimedAt',
+        value: [claimedAt],
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterWhereClause> claimedAtNotEqualTo(DateTime? claimedAt) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'claimedAt',
+              lower: [],
+              upper: [claimedAt],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'claimedAt',
+              lower: [claimedAt],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'claimedAt',
+              lower: [claimedAt],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'claimedAt',
+              lower: [],
+              upper: [claimedAt],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterWhereClause> claimedAtGreaterThan(
+    DateTime? claimedAt, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'claimedAt',
+        lower: [claimedAt],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterWhereClause> claimedAtLessThan(
+    DateTime? claimedAt, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'claimedAt',
+        lower: [],
+        upper: [claimedAt],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterWhereClause> claimedAtBetween(
+    DateTime? lowerClaimedAt,
+    DateTime? upperClaimedAt, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'claimedAt',
+        lower: [lowerClaimedAt],
+        includeLower: includeLower,
+        upper: [upperClaimedAt],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+}
+
+extension ProgressionQuestRewardGrantRecordQueryFilter on QueryBuilder<
+    ProgressionQuestRewardGrantRecord,
+    ProgressionQuestRewardGrantRecord,
+    QFilterCondition> {
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> claimedAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'claimedAt',
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> claimedAtIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'claimedAt',
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> claimedAtEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'claimedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> claimedAtGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'claimedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> claimedAtLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'claimedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> claimedAtBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'claimedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> completedAtEqualTo(DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'completedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> completedAtGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'completedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> completedAtLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'completedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> completedAtBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'completedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> idEqualTo(Id value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterFilterCondition> idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterFilterCondition> idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterFilterCondition> idBetween(
+    Id lower,
+    Id upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterFilterCondition> questIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'questId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> questIdGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'questId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterFilterCondition> questIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'questId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterFilterCondition> questIdBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'questId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> questIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'questId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterFilterCondition> questIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'questId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+          ProgressionQuestRewardGrantRecord, QAfterFilterCondition>
+      questIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'questId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+          ProgressionQuestRewardGrantRecord, QAfterFilterCondition>
+      questIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'questId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> questIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'questId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> questIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'questId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> rewardKeyEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'rewardKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> rewardKeyGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'rewardKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> rewardKeyLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'rewardKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> rewardKeyBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'rewardKey',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> rewardKeyStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'rewardKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> rewardKeyEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'rewardKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+          ProgressionQuestRewardGrantRecord, QAfterFilterCondition>
+      rewardKeyContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'rewardKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+          ProgressionQuestRewardGrantRecord, QAfterFilterCondition>
+      rewardKeyMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'rewardKey',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> rewardKeyIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'rewardKey',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> rewardKeyIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'rewardKey',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> rewardStatusNameEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'rewardStatusName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> rewardStatusNameGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'rewardStatusName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> rewardStatusNameLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'rewardStatusName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> rewardStatusNameBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'rewardStatusName',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> rewardStatusNameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'rewardStatusName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> rewardStatusNameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'rewardStatusName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+          ProgressionQuestRewardGrantRecord, QAfterFilterCondition>
+      rewardStatusNameContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'rewardStatusName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+          ProgressionQuestRewardGrantRecord, QAfterFilterCondition>
+      rewardStatusNameMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'rewardStatusName',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> rewardStatusNameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'rewardStatusName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> rewardStatusNameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'rewardStatusName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> unlockedAtEqualTo(DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'unlockedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> unlockedAtGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'unlockedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> unlockedAtLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'unlockedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> unlockedAtBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'unlockedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> xpGrantedEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'xpGranted',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> xpGrantedGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'xpGranted',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> xpGrantedLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'xpGranted',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> xpGrantedBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'xpGranted',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+}
+
+extension ProgressionQuestRewardGrantRecordQueryObject on QueryBuilder<
+    ProgressionQuestRewardGrantRecord,
+    ProgressionQuestRewardGrantRecord,
+    QFilterCondition> {}
+
+extension ProgressionQuestRewardGrantRecordQueryLinks on QueryBuilder<
+    ProgressionQuestRewardGrantRecord,
+    ProgressionQuestRewardGrantRecord,
+    QFilterCondition> {}
+
+extension ProgressionQuestRewardGrantRecordQuerySortBy on QueryBuilder<
+    ProgressionQuestRewardGrantRecord,
+    ProgressionQuestRewardGrantRecord,
+    QSortBy> {
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> sortByClaimedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'claimedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> sortByClaimedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'claimedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> sortByCompletedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'completedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> sortByCompletedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'completedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> sortByQuestId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'questId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> sortByQuestIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'questId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> sortByRewardKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'rewardKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> sortByRewardKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'rewardKey', Sort.desc);
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterSortBy> sortByRewardStatusName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'rewardStatusName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterSortBy> sortByRewardStatusNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'rewardStatusName', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> sortByUnlockedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'unlockedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> sortByUnlockedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'unlockedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> sortByXpGranted() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'xpGranted', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> sortByXpGrantedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'xpGranted', Sort.desc);
+    });
+  }
+}
+
+extension ProgressionQuestRewardGrantRecordQuerySortThenBy on QueryBuilder<
+    ProgressionQuestRewardGrantRecord,
+    ProgressionQuestRewardGrantRecord,
+    QSortThenBy> {
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> thenByClaimedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'claimedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> thenByClaimedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'claimedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> thenByCompletedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'completedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> thenByCompletedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'completedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> thenById() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> thenByIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> thenByQuestId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'questId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> thenByQuestIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'questId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> thenByRewardKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'rewardKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> thenByRewardKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'rewardKey', Sort.desc);
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterSortBy> thenByRewardStatusName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'rewardStatusName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterSortBy> thenByRewardStatusNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'rewardStatusName', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> thenByUnlockedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'unlockedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> thenByUnlockedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'unlockedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> thenByXpGranted() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'xpGranted', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> thenByXpGrantedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'xpGranted', Sort.desc);
+    });
+  }
+}
+
+extension ProgressionQuestRewardGrantRecordQueryWhereDistinct on QueryBuilder<
+    ProgressionQuestRewardGrantRecord,
+    ProgressionQuestRewardGrantRecord,
+    QDistinct> {
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QDistinct> distinctByClaimedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'claimedAt');
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QDistinct> distinctByCompletedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'completedAt');
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QDistinct> distinctByQuestId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'questId', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QDistinct> distinctByRewardKey({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'rewardKey', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QDistinct> distinctByRewardStatusName({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'rewardStatusName',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QDistinct> distinctByUnlockedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'unlockedAt');
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QDistinct> distinctByXpGranted() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'xpGranted');
+    });
+  }
+}
+
+extension ProgressionQuestRewardGrantRecordQueryProperty on QueryBuilder<
+    ProgressionQuestRewardGrantRecord,
+    ProgressionQuestRewardGrantRecord,
+    QQueryProperty> {
+  QueryBuilder<ProgressionQuestRewardGrantRecord, int, QQueryOperations>
+      idProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord, DateTime?, QQueryOperations>
+      claimedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'claimedAt');
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord, DateTime, QQueryOperations>
+      completedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'completedAt');
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord, String, QQueryOperations>
+      questIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'questId');
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord, String, QQueryOperations>
+      rewardKeyProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'rewardKey');
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord, String, QQueryOperations>
+      rewardStatusNameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'rewardStatusName');
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord, DateTime, QQueryOperations>
+      unlockedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'unlockedAt');
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord, int, QQueryOperations>
+      xpGrantedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'xpGranted');
+    });
+  }
+}
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
 extension GetProgressionActiveQuestRecordCollection on Isar {
   IsarCollection<ProgressionActiveQuestRecord>
       get progressionActiveQuestRecords => this.collection();

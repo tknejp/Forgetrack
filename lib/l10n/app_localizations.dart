@@ -110,6 +110,24 @@ abstract class AppLocalizations {
   /// **'Overview'**
   String get navOverview;
 
+  /// Bottom navigation label for the Quests tab
+  ///
+  /// In en, this message translates to:
+  /// **'Quests'**
+  String get navQuests;
+
+  /// Bottom navigation label for the Hero tab
+  ///
+  /// In en, this message translates to:
+  /// **'Hero'**
+  String get navHero;
+
+  /// Bottom navigation label for the Social tab
+  ///
+  /// In en, this message translates to:
+  /// **'Social'**
+  String get navSocial;
+
   /// Bottom navigation label for the Activities tab
   ///
   /// In en, this message translates to:
@@ -764,6 +782,12 @@ abstract class AppLocalizations {
   /// **'No sleep data recorded'**
   String get sleepNoData;
 
+  /// Shortcut button on an expanded overview card that opens the corresponding detail screen
+  ///
+  /// In en, this message translates to:
+  /// **'Open details'**
+  String get homeOpenDetailCta;
+
   /// Label for this week's step total in Activities screen
   ///
   /// In en, this message translates to:
@@ -877,6 +901,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No weight data recorded'**
   String get bodyNoData;
+
+  /// Generic helper text explaining weight progress calculation
+  ///
+  /// In en, this message translates to:
+  /// **'This percentage shows progress toward your goal based on your recorded weight history.'**
+  String get weightProgressExplanation;
+
+  /// Helper text explaining weight-loss progress calculation
+  ///
+  /// In en, this message translates to:
+  /// **'This percentage shows progress from your highest recorded weight toward your goal, not current weight divided by goal.'**
+  String get weightProgressExplanationLoss;
+
+  /// Helper text explaining weight-gain progress calculation
+  ///
+  /// In en, this message translates to:
+  /// **'This percentage shows progress from your lowest recorded weight toward your goal, not current weight divided by goal.'**
+  String get weightProgressExplanationGain;
 
   /// Label for progress bar toward target weight
   ///
@@ -1499,13 +1541,13 @@ abstract class AppLocalizations {
   /// No description provided for @progScreenEyebrow.
   ///
   /// In en, this message translates to:
-  /// **'PROGRESSION PROFILE'**
+  /// **'HERO PROFILE'**
   String get progScreenEyebrow;
 
   /// No description provided for @progScreenTitle.
   ///
   /// In en, this message translates to:
-  /// **'Your long-term journey'**
+  /// **'Your hero journey'**
   String get progScreenTitle;
 
   /// No description provided for @progScreenLoadingHint.
@@ -1709,14 +1751,32 @@ abstract class AppLocalizations {
   /// No description provided for @progQuestsSectionCaption.
   ///
   /// In en, this message translates to:
-  /// **'Active quests first, completed ones below.'**
+  /// **'Active and locked quests first, completed ones below.'**
   String get progQuestsSectionCaption;
+
+  /// No description provided for @questsScreenEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'QUESTS'**
+  String get questsScreenEyebrow;
+
+  /// No description provided for @questsScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your quests and rewards'**
+  String get questsScreenTitle;
 
   /// No description provided for @progQuestsActiveHeader.
   ///
   /// In en, this message translates to:
   /// **'ACTIVE QUESTS'**
   String get progQuestsActiveHeader;
+
+  /// No description provided for @progQuestsLockedHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'LOCKED QUESTS'**
+  String get progQuestsLockedHeader;
 
   /// No description provided for @progQuestsCompletedHeader.
   ///
@@ -1736,6 +1796,18 @@ abstract class AppLocalizations {
   /// **'You have cleared the current static quest catalog.'**
   String get progQuestsEmptyActiveCaption;
 
+  /// No description provided for @progQuestsEmptyLockedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No locked quests right now.'**
+  String get progQuestsEmptyLockedTitle;
+
+  /// No description provided for @progQuestsEmptyLockedCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'New gated quests will appear here when there is something to unlock later.'**
+  String get progQuestsEmptyLockedCaption;
+
   /// No description provided for @progQuestsEmptyCompletedTitle.
   ///
   /// In en, this message translates to:
@@ -1754,11 +1826,35 @@ abstract class AppLocalizations {
   /// **'Active'**
   String get progQuestStatusActive;
 
+  /// No description provided for @progQuestStatusLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get progQuestStatusLocked;
+
+  /// No description provided for @progQuestStatusClaimed.
+  ///
+  /// In en, this message translates to:
+  /// **'Claimed'**
+  String get progQuestStatusClaimed;
+
   /// No description provided for @progQuestStatusCompleted.
   ///
   /// In en, this message translates to:
   /// **'Completed'**
   String get progQuestStatusCompleted;
+
+  /// No description provided for @progQuestClaimAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Claim all quests'**
+  String get progQuestClaimAll;
+
+  /// No description provided for @progQuestClaim.
+  ///
+  /// In en, this message translates to:
+  /// **'Claim quest'**
+  String get progQuestClaim;
 
   /// No description provided for @progQuestCompletedOn.
   ///

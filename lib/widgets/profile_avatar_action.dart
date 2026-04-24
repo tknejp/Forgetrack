@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
+import '../features/auth/application/auth_user.dart';
 import '../l10n/l10n.dart';
 import '../features/auth/application/auth_provider.dart';
 import '../screens/profile/profile_screen.dart';
@@ -69,7 +69,7 @@ class ProfileAvatarAction extends StatelessWidget {
     );
   }
 
-  String? _buildInitials(GoogleSignInAccount? user) {
+  String? _buildInitials(AuthUser? user) {
     final displayName = user?.displayName?.trim();
     final raw = displayName != null && displayName.isNotEmpty
         ? displayName
@@ -83,9 +83,8 @@ class ProfileAvatarAction extends StatelessWidget {
         .toList();
     if (parts.isEmpty) return null;
 
-    final initials = parts
-        .map((part) => part.substring(0, 1).toUpperCase())
-        .join();
+    final initials =
+        parts.map((part) => part.substring(0, 1).toUpperCase()).join();
     return initials.isEmpty ? null : initials;
   }
 }

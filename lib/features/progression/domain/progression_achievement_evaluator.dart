@@ -9,6 +9,7 @@ class ProgressionAchievementEvaluator {
     required ProgressionProfile profile,
     required List<ProgressionEvaluation> evaluations,
     required List<ProgressionRewardGrant> rewardGrants,
+    required List<ProgressionQuestRewardGrant> questRewardGrants,
     required Map<String, ProgressionStreakSummary> streaksByRuleId,
     required Map<ProgressionDomain, ProgressionStreakSummary> streaksByDomain,
   }) {
@@ -21,6 +22,7 @@ class ProgressionAchievementEvaluator {
           profile: profile,
           evaluations: evaluations,
           rewardGrants: rewardGrants,
+          questRewardGrants: questRewardGrants,
           streaksByRuleId: streaksByRuleId,
           streaksByDomain: streaksByDomain,
         ),
@@ -39,6 +41,7 @@ class ProgressionAchievementEvaluator {
     required ProgressionProfile profile,
     required List<ProgressionEvaluation> evaluations,
     required List<ProgressionRewardGrant> rewardGrants,
+    required List<ProgressionQuestRewardGrant> questRewardGrants,
     required Map<String, ProgressionStreakSummary> streaksByRuleId,
     required Map<ProgressionDomain, ProgressionStreakSummary> streaksByDomain,
   }) {
@@ -47,6 +50,7 @@ class ProgressionAchievementEvaluator {
       profile: profile,
       evaluations: evaluations,
       rewardGrants: rewardGrants,
+      questRewardGrants: questRewardGrants,
       streaksByRuleId: streaksByRuleId,
       streaksByDomain: streaksByDomain,
     );
@@ -56,6 +60,7 @@ class ProgressionAchievementEvaluator {
             definition: definition,
             evaluations: evaluations,
             rewardGrants: rewardGrants,
+            questRewardGrants: questRewardGrants,
             profile: profile,
           )
         : null;
@@ -83,6 +88,7 @@ class ProgressionAchievementEvaluator {
     required ProgressionProfile profile,
     required List<ProgressionEvaluation> evaluations,
     required List<ProgressionRewardGrant> rewardGrants,
+    required List<ProgressionQuestRewardGrant> questRewardGrants,
     required Map<String, ProgressionStreakSummary> streaksByRuleId,
     required Map<ProgressionDomain, ProgressionStreakSummary> streaksByDomain,
   }) {
@@ -117,7 +123,8 @@ class ProgressionAchievementEvaluator {
               (sum, evaluation) => sum + evaluation.actualValue,
             )
             .round();
-      case ProgressionAchievementCriterionType.bestRollingWindowRuleValueAtLeast:
+      case ProgressionAchievementCriterionType
+            .bestRollingWindowRuleValueAtLeast:
         return _bestRollingWindowValue(
           definition: definition,
           evaluations: evaluations,
@@ -129,6 +136,7 @@ class ProgressionAchievementEvaluator {
     required ProgressionAchievementDefinition definition,
     required List<ProgressionEvaluation> evaluations,
     required List<ProgressionRewardGrant> rewardGrants,
+    required List<ProgressionQuestRewardGrant> questRewardGrants,
     required ProgressionProfile profile,
   }) {
     switch (definition.criterionType) {
@@ -147,17 +155,19 @@ class ProgressionAchievementEvaluator {
         if (matching.length < definition.targetValue) return null;
         return matching[definition.targetValue - 1].progressionAt;
       case ProgressionAchievementCriterionType.totalXpAtLeast:
-        final ordered = [...rewardGrants]
-          ..sort((a, b) => a.progressionAt.compareTo(b.progressionAt));
+        final ordered = _xpEvents(
+          rewardGrants: rewardGrants,
+          questRewardGrants: questRewardGrants,
+        )..sort((a, b) => a.at.compareTo(b.at));
         var runningXp = 0;
-        for (final grant in ordered) {
-          runningXp += grant.effectiveXpGranted;
+        for (final event in ordered) {
+          runningXp += event.xp;
           if (runningXp >= definition.targetValue) {
-            return grant.progressionAt;
+            return event.at;
           }
         }
         return profile.totalXp >= definition.targetValue && ordered.isNotEmpty
-            ? ordered.last.progressionAt
+            ? ordered.last.at
             : null;
       case ProgressionAchievementCriterionType.bestStreakAtLeast:
         final relevant = evaluations.where((evaluation) {
@@ -197,7 +207,8 @@ class ProgressionAchievementEvaluator {
           }
         }
         return null;
-      case ProgressionAchievementCriterionType.bestRollingWindowRuleValueAtLeast:
+      case ProgressionAchievementCriterionType
+            .bestRollingWindowRuleValueAtLeast:
         return _resolveRollingWindowUnlockedAt(
           definition: definition,
           evaluations: evaluations,
@@ -279,9 +290,7 @@ class ProgressionAchievementEvaluator {
     var start = 0;
     for (var end = 0; end < entries.length; end++) {
       running += entries[end].value;
-      while (entries[end].start
-              .difference(entries[start].start)
-              .inDays >=
+      while (entries[end].start.difference(entries[start].start).inDays >=
           windowDays) {
         running -= entries[start].value;
         start++;
@@ -310,9 +319,7 @@ class ProgressionAchievementEvaluator {
     var start = 0;
     for (var end = 0; end < entries.length; end++) {
       running += entries[end].value;
-      while (entries[end].start
-              .difference(entries[start].start)
-              .inDays >=
+      while (entries[end].start.difference(entries[start].start).inDays >=
           windowDays) {
         running -= entries[start].value;
         start++;
@@ -387,6 +394,26 @@ class ProgressionAchievementEvaluator {
     };
     return progressionDate(expected) == progressionDate(current.start);
   }
+
+  List<_AchievementXpEvent> _xpEvents({
+    required List<ProgressionRewardGrant> rewardGrants,
+    required List<ProgressionQuestRewardGrant> questRewardGrants,
+  }) {
+    return [
+      for (final grant in rewardGrants)
+        if (grant.effectiveXpGranted > 0)
+          _AchievementXpEvent(
+            at: grant.progressionAt,
+            xp: grant.effectiveXpGranted,
+          ),
+      for (final grant in questRewardGrants)
+        if (grant.effectiveXpGranted > 0)
+          _AchievementXpEvent(
+            at: grant.progressionAt,
+            xp: grant.effectiveXpGranted,
+          ),
+    ];
+  }
 }
 
 class _AchievementStreakEntry {
@@ -409,4 +436,14 @@ class _AchievementRollingEntry {
 
   final DateTime start;
   final double value;
+}
+
+class _AchievementXpEvent {
+  const _AchievementXpEvent({
+    required this.at,
+    required this.xp,
+  });
+
+  final DateTime at;
+  final int xp;
 }

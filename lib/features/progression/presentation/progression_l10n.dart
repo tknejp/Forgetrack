@@ -22,6 +22,8 @@ class ProgressionL10n {
         return _l10n.progDomainSleep;
       case ProgressionDomain.activity:
         return _l10n.progDomainActivity;
+      case ProgressionDomain.body:
+        return 'Body';
     }
   }
 

@@ -77,10 +77,18 @@ class ProgressionProvider extends ChangeNotifier {
       _state?.evaluations ?? const [];
   List<ProgressionRewardGrant> get rewardGrants =>
       _state?.rewardGrants ?? const [];
+  List<ProgressionQuestRewardGrant> get questRewardGrants =>
+      _state?.questRewardGrants ?? const [];
   List<ProgressionRewardGrant> get pendingRewards =>
       rewardGrants.where((grant) => grant.isUnlocked).toList(growable: false);
   List<ProgressionRewardGrant> get claimedRewards =>
       rewardGrants.where((grant) => grant.isClaimed).toList(growable: false);
+  List<ProgressionQuestRewardGrant> get pendingQuestRewards => questRewardGrants
+      .where((grant) => grant.isUnlocked)
+      .toList(growable: false);
+  List<ProgressionQuestRewardGrant> get claimedQuestRewards => questRewardGrants
+      .where((grant) => grant.isClaimed)
+      .toList(growable: false);
   List<ProgressionAchievement> get achievements =>
       _state?.achievements ?? const [];
   List<ProgressionQuest> get quests => _state?.quests ?? const [];
@@ -218,6 +226,40 @@ class ProgressionProvider extends ChangeNotifier {
 
     try {
       _state = await _engine.claimAllRewards();
+      _error = null;
+    } catch (error) {
+      _error = error.toString();
+    } finally {
+      _isRefreshing = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> claimQuestReward(String rewardKey) async {
+    if (_isRefreshing) return;
+
+    _isRefreshing = true;
+    notifyListeners();
+
+    try {
+      _state = await _engine.claimQuestReward(rewardKey);
+      _error = null;
+    } catch (error) {
+      _error = error.toString();
+    } finally {
+      _isRefreshing = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> claimAllQuestRewards() async {
+    if (_isRefreshing) return;
+
+    _isRefreshing = true;
+    notifyListeners();
+
+    try {
+      _state = await _engine.claimAllQuestRewards();
       _error = null;
     } catch (error) {
       _error = error.toString();

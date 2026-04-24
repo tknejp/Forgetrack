@@ -2,25 +2,42 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../features/health_connect/application/fitness_provider.dart';
+import '../features/nutrition/application/kaloricke_tabulky_provider.dart';
 import '../features/progression/domain/progression_models.dart';
 import '../features/progression/presentation/progression_provider.dart';
-import '../features/progression/presentation/widgets/ft_progression_home_card.dart';
+import '../l10n/l10n.dart';
 import '../models/selected_period.dart';
-import '../features/auth/application/auth_provider.dart';
-import '../features/health_connect/application/fitness_provider.dart';
 import '../providers/goals_provider.dart';
-import '../features/nutrition/application/kaloricke_tabulky_provider.dart';
-import '../screens/ft_progression_screen.dart';
-import '../screens/profile/profile_screen.dart';
 import '../theme/ft_design_tokens.dart';
 import '../widgets/ft/ft_date_nav.dart';
+import '../widgets/ft/ft_detail_shortcut_button.dart';
 import '../widgets/ft/ft_macro_row.dart';
-import '../widgets/ft/ft_screen_header.dart';
 import '../widgets/ft/ft_stat_card.dart';
 import '../widgets/ft/ft_tab_pill.dart';
+import '../widgets/ft/ft_drag_reveal_pager.dart';
+import '../widgets/ft/ft_xp_claim_pill.dart';
+import '../widgets/ft/ft_xp_sparkle_overlay.dart';
 
 class FtOverviewScreen extends StatefulWidget {
-  const FtOverviewScreen({super.key});
+  final PageController outerController;
+  final GlobalKey barKey;
+  final double topContentInset;
+  final VoidCallback onOpenActivities;
+  final VoidCallback onOpenNutrition;
+  final VoidCallback onOpenBody;
+  final VoidCallback onOpenSleep;
+
+  const FtOverviewScreen({
+    super.key,
+    required this.outerController,
+    required this.barKey,
+    this.topContentInset = 0,
+    required this.onOpenActivities,
+    required this.onOpenNutrition,
+    required this.onOpenBody,
+    required this.onOpenSleep,
+  });
 
   @override
   State<FtOverviewScreen> createState() => _FtOverviewScreenState();
@@ -88,101 +105,117 @@ class _FtOverviewScreenState extends State<FtOverviewScreen>
     }
   }
 
-  String _greeting(String? firstName) {
-    final h = DateTime.now().hour;
-    final base = h < 12
-        ? 'Good morning'
-        : h < 18
-            ? 'Good afternoon'
-            : 'Good evening';
-    return '$base${firstName != null ? ', $firstName' : ''} ✦';
-  }
-
-  String _monthShort(int m) => const [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
-      ][m - 1];
-
-  String? _dateNavOverride() {
-    switch (_period.type) {
+  String? _dateNavOverride(BuildContext context, SelectedPeriod period) {
+    final locale = Localizations.localeOf(context).toString();
+    switch (period.type) {
       case PeriodType.day:
         return null;
       case PeriodType.week:
-        final s = _period.start;
-        final e = _period.end;
-        return '${s.day} ${_monthShort(s.month)} – ${e.day} ${_monthShort(e.month)}';
+        final start = period.start;
+        final end = period.end;
+        return '${start.day} ${DateFormat.MMM(locale).format(start)} - ${end.day} ${DateFormat.MMM(locale).format(end)}';
       case PeriodType.month:
-        return '${_monthShort(_period.referenceDate.month)} ${_period.referenceDate.year}';
+        return DateFormat.yMMM(locale).format(period.referenceDate);
       case PeriodType.custom:
         return null;
     }
   }
 
   void _changeTab(String tab) {
-    final type = tab == 'Day'
+    final l10n = context.l10n;
+    final type = tab == l10n.periodDay
         ? PeriodType.day
-        : tab == 'Week'
+        : tab == l10n.periodWeek
             ? PeriodType.week
             : PeriodType.month;
     setState(() => _period = _period.withType(type));
   }
 
-  void _onSwipe(double velocity) {
-    if (velocity.abs() < 300) return;
-    setState(() {
-      if (velocity > 0) {
-        _period = _period.backward();
-      } else if (_period.canGoForward) {
-        _period = _period.forward();
-      }
-    });
+  String _fmtSleep(Duration? duration) {
+    if (duration == null) return '--';
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes - hours * 60;
+    return '${hours}h ${minutes.toString().padLeft(2, '0')}m';
   }
 
-  String _fmtSleep(Duration? d) {
-    if (d == null) return '--';
-    final h = d.inHours;
-    final m = d.inMinutes - h * 60;
-    return '${h}h ${m.toString().padLeft(2, '0')}m';
+  FtXpClaimPillData? _xpPillData(
+    BuildContext context,
+    ProgressionProvider progression,
+    ProgressionDomain domain,
+    SelectedPeriod period,
+  ) {
+    if (period.type != PeriodType.day || !period.isCurrentPeriod) return null;
+
+    final today = progressionDate(DateTime.now());
+
+    final pending = progression.pendingRewards
+        .where(
+          (g) => g.domain == domain && progressionDate(g.period.start) == today,
+        )
+        .toList();
+
+    if (pending.isNotEmpty) {
+      final totalXp = pending.fold<int>(0, (sum, g) => sum + g.xpGranted);
+      return FtXpClaimPillData.claimable(
+        totalXp,
+        onTap: (center) {
+          _onXpClaimed(center);
+          for (final g in pending) {
+            progression.claimReward(g.rewardKey);
+          }
+        },
+      );
+    }
+
+    final locked = progression.evaluations
+        .where(
+          (e) =>
+              e.domain == domain &&
+              !e.achieved &&
+              progressionDate(e.period.start) == today,
+        )
+        .toList();
+
+    if (locked.isNotEmpty) {
+      final totalXp = locked.fold<int>(0, (sum, e) => sum + e.rewardXp);
+      return FtXpClaimPillData.locked(totalXp);
+    }
+
+    return null;
   }
 
-  String? _xpLabel(int earnedXp) {
-    if (earnedXp <= 0) return null;
-    return '+$earnedXp XP';
+  void _onXpClaimed(Offset from) {
+    FtXpSparkleLauncher.launchToKey(
+      context,
+      from: from,
+      targetKey: widget.barKey,
+    );
   }
 
-  double? _weightForSelectedPeriod(FitnessProvider fitness) {
-    switch (_period.type) {
+  double? _weightForPeriod(FitnessProvider fitness, SelectedPeriod period) {
+    switch (period.type) {
       case PeriodType.day:
-        return fitness.weightForDate(_period.start)?.weight;
+        return fitness.weightForDate(period.start)?.weight;
       case PeriodType.week:
-        return fitness.weekAvgWeight(_period.start);
+        return fitness.weekAvgWeight(period.start);
       case PeriodType.month:
-        return fitness.monthAvgWeight(_period.referenceDate);
+        return fitness.monthAvgWeight(period.referenceDate);
       case PeriodType.custom:
-        return fitness.monthAvgWeight(_period.referenceDate);
+        return fitness.monthAvgWeight(period.referenceDate);
     }
   }
 
-  double? _previousWeightForSelectedPeriod(FitnessProvider fitness) {
-    switch (_period.type) {
+  double? _previousWeightForPeriod(
+      FitnessProvider fitness, SelectedPeriod period) {
+    switch (period.type) {
       case PeriodType.day:
-        return fitness.previousWeightBefore(_period.start);
+        return fitness.previousWeightBefore(period.start);
       case PeriodType.week:
         return fitness.weekAvgWeight(
-          _period.start.subtract(const Duration(days: 7)),
+          period.start.subtract(const Duration(days: 7)),
         );
       case PeriodType.month:
-        final ref = _period.referenceDate;
+        final ref = period.referenceDate;
         return fitness.monthAvgWeight(DateTime(ref.year, ref.month - 1, 1));
       case PeriodType.custom:
         return null;
@@ -191,326 +224,406 @@ class _FtOverviewScreenState extends State<FtOverviewScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final locale = Localizations.localeOf(context).toString();
     final fitness = context.watch<FitnessProvider>();
     final kt = context.watch<KalorickeTabulkyProvider>();
     final goals = context.watch<GoalsProvider>();
-    final auth = context.watch<AuthProvider>();
     final progression = context.watch<ProgressionProvider>();
 
-    final firstName = auth.user?.displayName?.split(' ').firstOrNull;
     final tab = _period.type == PeriodType.week
-        ? 'Week'
+        ? l10n.periodWeek
         : _period.type == PeriodType.month
-            ? 'Month'
-            : 'Day';
-    final stepsXp = progression.summaryForDomainRange(
-      domain: ProgressionDomain.steps,
-      start: _period.start,
-      end: _period.end,
-    );
-    final nutritionXp = progression.summaryForDomainRange(
-      domain: ProgressionDomain.nutrition,
-      start: _period.start,
-      end: _period.end,
-    );
-    final sleepXp = progression.summaryForDomainRange(
-      domain: ProgressionDomain.sleep,
-      start: _period.start,
-      end: _period.end,
-    );
+            ? l10n.periodMonth
+            : l10n.periodDay;
+    final fmt = NumberFormat('#,##0', locale);
+    final syncedAt = fitness.lastSyncedAt != null
+        ? DateFormat('HH:mm', locale).format(fitness.lastSyncedAt!)
+        : null;
 
-    // ── Steps ─────────────────────────────────────────────────────────────────
-    final steps = _period.type == PeriodType.day
-        ? fitness.stepsForDate(_period.start)
-        : fitness.stepsAvgForRange(_period.start, _period.end);
+    return FtEdgePageHandoff(
+      controller: widget.outerController,
+      currentPage: 0,
+      targetPage: 1,
+      isEnabled: () => !_period.canGoForward,
+      child: RefreshIndicator(
+        onRefresh: _refresh,
+        color: FtTokens.accent,
+        backgroundColor: FtTokens.surface,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding:
+                    EdgeInsets.fromLTRB(14, widget.topContentInset + 8, 14, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    FtTabPill(
+                      tabs: [l10n.periodDay, l10n.periodWeek, l10n.periodMonth],
+                      active: tab,
+                      onChange: _changeTab,
+                    ),
+                    const SizedBox(height: 10),
+                    FtDateNav(
+                      date: _period.referenceDate,
+                      onPrev: () =>
+                          setState(() => _period = _period.backward()),
+                      onNext: _period.canGoForward
+                          ? () => setState(() => _period = _period.forward())
+                          : null,
+                      syncedAt: syncedAt,
+                      labelOverride: _dateNavOverride(context, _period),
+                      onDateTap: _period.type == PeriodType.day
+                          ? _openDatePicker
+                          : null,
+                      showTodayButton: !_period.isCurrentPeriod,
+                      onTodayTap: () => setState(
+                          () => _period = _period.withType(_period.type)),
+                    ),
+                    if (fitness.accessState ==
+                        FitnessAccessState.permissionRequired) ...[
+                      const SizedBox(height: 10),
+                      _PermissionBanner(
+                          onTap: () => fitness.requestPermissions()),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(14, 10, 14, 24),
+              sliver: SliverToBoxAdapter(
+                child: FtDragRevealPager<SelectedPeriod>(
+                  item: _period,
+                  pageGap: 16,
+                  hasPrevious: (_) => true,
+                  hasNext: (period) => period.canGoForward,
+                  previousOf: (period) => period.backward(),
+                  nextOf: (period) => period.forward(),
+                  onCommit: (period) => setState(() => _period = period),
+                  builder: (context, period) => _DayContent(
+                    key: ValueKey(period),
+                    period: period,
+                    fitness: fitness,
+                    kt: kt,
+                    goals: goals,
+                    fmt: fmt,
+                    l10n: l10n,
+                    fmtSleep: _fmtSleep,
+                    xpPillData: (context, progression, domain) =>
+                        _xpPillData(context, progression, domain, period),
+                    progression: progression,
+                    weightForPeriod: _weightForPeriod(fitness, period),
+                    prevWeight: _previousWeightForPeriod(fitness, period),
+                    onOpenActivities: widget.onOpenActivities,
+                    onOpenNutrition: widget.onOpenNutrition,
+                    onOpenBody: widget.onOpenBody,
+                    onOpenSleep: widget.onOpenSleep,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Day content (animated on day change) ─────────────────────────────────────
+
+class _DayContent extends StatelessWidget {
+  const _DayContent({
+    super.key,
+    required this.period,
+    required this.fitness,
+    required this.kt,
+    required this.goals,
+    required this.fmt,
+    required this.l10n,
+    required this.fmtSleep,
+    required this.xpPillData,
+    required this.progression,
+    required this.weightForPeriod,
+    required this.prevWeight,
+    required this.onOpenActivities,
+    required this.onOpenNutrition,
+    required this.onOpenBody,
+    required this.onOpenSleep,
+  });
+
+  final SelectedPeriod period;
+  final FitnessProvider fitness;
+  final KalorickeTabulkyProvider kt;
+  final GoalsProvider goals;
+  final NumberFormat fmt;
+  final dynamic l10n;
+  final String Function(Duration?) fmtSleep;
+  final FtXpClaimPillData? Function(
+      BuildContext, ProgressionProvider, ProgressionDomain) xpPillData;
+  final ProgressionProvider progression;
+  final double? weightForPeriod;
+  final double? prevWeight;
+  final VoidCallback onOpenActivities;
+  final VoidCallback onOpenNutrition;
+  final VoidCallback onOpenBody;
+  final VoidCallback onOpenSleep;
+
+  @override
+  Widget build(BuildContext context) {
+    final steps = period.type == PeriodType.day
+        ? fitness.stepsForDate(period.start)
+        : fitness.stepsAvgForRange(period.start, period.end);
     final stepsGoal = goals.dailySteps;
     final stepsProgress =
         stepsGoal > 0 ? (steps / stepsGoal).clamp(0.0, 1.0) : 0.0;
     final stepsLeft = (stepsGoal - steps).clamp(0, stepsGoal);
 
-    // ── Calories ──────────────────────────────────────────────────────────────
-    final dayNutrition = kt.nutritionForDate(_period.start);
+    final dayNutrition = kt.nutritionForDate(period.start);
     final isCurrentDay =
-        _period.type == PeriodType.day && _period.isCurrentPeriod;
-    final double kcal = _period.type == PeriodType.day
+        period.type == PeriodType.day && period.isCurrentPeriod;
+    final kcal = period.type == PeriodType.day
         ? (dayNutrition?.calories ?? (isCurrentDay ? kt.todayCalories : 0.0))
-        : (kt.avgCaloriesForRange(_period.start, _period.end) ?? 0.0);
+        : (kt.avgCaloriesForRange(period.start, period.end) ?? 0.0);
     final kcalGoal = goals.dailyCalories;
     final kcalProgress = kcalGoal > 0 ? (kcal / kcalGoal).clamp(0.0, 1.0) : 0.0;
     final kcalDiff = kcal - kcalGoal;
     final kcalPct = kcalGoal > 0 ? ((kcal / kcalGoal) * 100).round() : 0;
-    final protein = _period.type == PeriodType.day
+    final protein = period.type == PeriodType.day
         ? (dayNutrition?.protein ?? (isCurrentDay ? kt.todayProtein : 0.0))
-        : (kt.avgProteinForRange(_period.start, _period.end) ?? 0.0);
-    final fat = _period.type == PeriodType.day
+        : (kt.avgProteinForRange(period.start, period.end) ?? 0.0);
+    final fat = period.type == PeriodType.day
         ? (dayNutrition?.fat ?? (isCurrentDay ? kt.todayFat : 0.0))
-        : (kt.avgFatForRange(_period.start, _period.end) ?? 0.0);
-    final carbs = _period.type == PeriodType.day
+        : (kt.avgFatForRange(period.start, period.end) ?? 0.0);
+    final carbs = period.type == PeriodType.day
         ? (dayNutrition?.carbs ?? (isCurrentDay ? kt.todayCarbs : 0.0))
-        : (kt.avgCarbsForRange(_period.start, _period.end) ?? 0.0);
-    final fiber = _period.type == PeriodType.day
+        : (kt.avgCarbsForRange(period.start, period.end) ?? 0.0);
+    final fiber = period.type == PeriodType.day
         ? (dayNutrition?.fiber ?? (isCurrentDay ? kt.todayFiber : 0.0))
-        : (kt.avgFiberForRange(_period.start, _period.end) ?? 0.0);
+        : (kt.avgFiberForRange(period.start, period.end) ?? 0.0);
     final nutritionHasDetails =
         kcal > 0 || protein > 0 || fat > 0 || carbs > 0 || fiber > 0;
     final remainingToTarget = kcalGoal - kcal;
 
-    // ── Weight ────────────────────────────────────────────────────────────────
-    final currentWeight = _weightForSelectedPeriod(fitness);
-    final prevWeight = _previousWeightForSelectedPeriod(fitness);
-    final weightChange = (currentWeight != null && prevWeight != null)
-        ? currentWeight - prevWeight
+    final weightChange = (weightForPeriod != null && prevWeight != null)
+        ? weightForPeriod! - prevWeight!
         : null;
     final targetWeight = goals.targetWeight;
-    final wHistory = fitness.weightHistory;
-    final wMax = wHistory.isNotEmpty
-        ? wHistory.map((w) => w.weight).reduce((a, b) => a > b ? a : b)
+    final weightHistory = fitness.weightHistory;
+    final maxWeight = weightHistory.isNotEmpty
+        ? weightHistory.map((e) => e.weight).reduce((a, b) => a > b ? a : b)
         : null;
-    final wProgress =
-        (currentWeight != null && wMax != null && wMax > targetWeight)
-            ? ((wMax - currentWeight) / (wMax - targetWeight)).clamp(0.0, 1.0)
-            : 0.0;
-    final weightPrimaryLabel =
-        _period.type == PeriodType.day ? 'Current' : 'Average';
-    final weightTrendLabel = _period.type == PeriodType.day
-        ? 'Change'
-        : _period.type == PeriodType.week
-            ? 'Vs prev week'
-            : 'Vs prev month';
-
-    // ── Sleep ─────────────────────────────────────────────────────────────────
-    final sleep = _period.type == PeriodType.day
-        ? fitness.sleepForDate(_period.start)
-        : null;
-    final avgSleep = _period.type != PeriodType.day
-        ? fitness.avgSleepForRange(_period.start, _period.end)
-        : null;
-    final sleepDuration = sleep?.totalDuration ?? avgSleep;
-    final sleepGoalMins = goals.sleepHours * 60;
-    final sleepProgress = sleepDuration != null
-        ? (sleepDuration.inMinutes / sleepGoalMins).clamp(0.0, 1.0)
+    final weightProgress = (weightForPeriod != null &&
+            maxWeight != null &&
+            maxWeight > targetWeight)
+        ? ((maxWeight - weightForPeriod!) / (maxWeight - targetWeight))
+            .clamp(0.0, 1.0)
         : 0.0;
 
-    final fmt = NumberFormat('#,##0', 'en_US');
-    final syncedAt = fitness.lastSyncedAt != null
-        ? DateFormat('HH:mm').format(fitness.lastSyncedAt!)
+    final sleep = period.type == PeriodType.day
+        ? fitness.sleepForDate(period.start)
         : null;
+    final avgSleep = period.type != PeriodType.day
+        ? fitness.avgSleepForRange(period.start, period.end)
+        : null;
+    final sleepDuration = sleep?.totalDuration ?? avgSleep;
+    final sleepGoalMinutes = goals.sleepHours * 60;
+    final sleepProgress = sleepDuration != null
+        ? (sleepDuration.inMinutes / sleepGoalMinutes).clamp(0.0, 1.0)
+        : 0.0;
 
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onHorizontalDragEnd: (d) => _onSwipe(d.primaryVelocity ?? 0),
-      child: RefreshIndicator(
-        onRefresh: _refresh,
-        color: FtTokens.accent,
-        backgroundColor: FtTokens.surface,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(14, 8, 14, 24),
+    final locale = Localizations.localeOf(context).toString();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        FtStatCard(
+          icon: '\uD83E\uDD7E',
+          label: l10n.stepsTitle,
+          domain: FtTokens.steps,
+          stats: [
+            FtStatStat(value: fmt.format(steps), label: l10n.stepsTitle),
+            FtStatStat(
+              value: fmt.format(stepsGoal),
+              label: l10n.stepsGoal,
+            ),
+            FtStatStat(
+              value:
+                  period.type == PeriodType.day ? fmt.format(stepsLeft) : '--',
+              label: period.type == PeriodType.day ? l10n.stepsRemaining : '',
+            ),
+          ],
+          progress: stepsProgress,
+          badge: '${(stepsProgress * 100).round()}%',
+          xpData: xpPillData(context, progression, ProgressionDomain.steps),
           children: [
-            FtScreenHeader(
-              greeting: _greeting(firstName),
-              title: 'Dashboard',
-              onAvatarTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ProfileScreen()),
-              ),
-            ),
-            const SizedBox(height: 10),
-            FtTabPill(
-              tabs: const ['Day', 'Week', 'Month'],
-              active: tab,
-              onChange: _changeTab,
-            ),
-            const SizedBox(height: 10),
-            FtDateNav(
-              date: _period.referenceDate,
-              onPrev: () => setState(() => _period = _period.backward()),
-              onNext: _period.canGoForward
-                  ? () => setState(() => _period = _period.forward())
-                  : null,
-              syncedAt: syncedAt,
-              labelOverride: _dateNavOverride(),
-              onDateTap:
-                  _period.type == PeriodType.day ? _openDatePicker : null,
-              showTodayButton: !_period.isCurrentPeriod,
-              onTodayTap: () =>
-                  setState(() => _period = _period.withType(_period.type)),
-            ),
-            if (fitness.accessState ==
-                FitnessAccessState.permissionRequired) ...[
-              const SizedBox(height: 10),
-              _PermissionBanner(onTap: () => fitness.requestPermissions()),
-            ],
-            const SizedBox(height: 10),
-            FtProgressionCard(
-              onOpen: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const FtProgressionScreen(),
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            FtStatCard(
-              icon: '🥾',
-              label: tab == 'Day' ? 'Steps today' : 'Steps · avg/day',
+            FtDetailShortcutButton(
+              onTap: onOpenActivities,
               domain: FtTokens.steps,
-              stats: [
-                FtStatStat(value: fmt.format(steps), label: 'Steps'),
-                FtStatStat(value: fmt.format(stepsGoal), label: 'Goal'),
-                FtStatStat(
-                  value: tab == 'Day' ? fmt.format(stepsLeft) : '--',
-                  label: tab == 'Day' ? 'Left' : '',
-                ),
-              ],
-              progress: stepsProgress,
-              badge: '${(stepsProgress * 100).round()}%',
-              xp: _xpLabel(stepsXp.earnedXp),
-            ),
-            const SizedBox(height: 10),
-            FtStatCard(
-              icon: '🔥',
-              label: tab == 'Day' ? 'Calories today' : 'Calories · avg/day',
-              domain: FtTokens.calories,
-              stats: [
-                FtStatStat(
-                  value: fmt.format(kcal.round()),
-                  label: 'Intake',
-                  unit: 'kcal',
-                ),
-                FtStatStat(
-                  value: fmt.format(kcalGoal.round()),
-                  label: 'Target',
-                  unit: 'kcal',
-                ),
-                FtStatStat(
-                  value:
-                      '${kcalDiff >= 0 ? '+' : ''}${fmt.format(kcalDiff.round())}',
-                  label: kcalDiff >= 0 ? 'Over' : 'Under',
-                  unit: 'kcal',
-                ),
-              ],
-              progress: kcalProgress,
-              badge: '$kcalPct%',
-              xp: _xpLabel(nutritionXp.earnedXp),
-              children: [
-                const SizedBox(height: 12),
-                if (nutritionHasDetails) ...[
-                  FtMacroRow(
-                    label: 'Protein',
-                    value: protein,
-                    goal: goals.dailyProtein,
-                    unit: 'g',
-                    domain: FtTokens.protein,
-                  ),
-                  FtMacroRow(
-                    label: 'Carbs',
-                    value: carbs,
-                    goal: goals.dailyCarbs,
-                    unit: 'g',
-                    domain: FtTokens.carbs,
-                  ),
-                  FtMacroRow(
-                    label: 'Fats',
-                    value: fat,
-                    goal: goals.dailyFat,
-                    unit: 'g',
-                    domain: FtTokens.fat,
-                    isLast: true,
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _NutritionDetailTile(
-                          label: 'Fiber',
-                          value: '${fiber.toStringAsFixed(0)} g',
-                          color: FtTokens.calories.color,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _NutritionDetailTile(
-                          label: remainingToTarget >= 0
-                              ? 'Remaining'
-                              : 'Over target',
-                          value: '${remainingToTarget.abs().round()} kcal',
-                          color: remainingToTarget >= 0
-                              ? FtTokens.calories.color
-                              : const Color(0xFFF87171),
-                        ),
-                      ),
-                    ],
-                  ),
-                ] else
-                  const Padding(
-                    padding: EdgeInsets.only(top: 2),
-                    child: Text(
-                      'No nutrition details available for this period yet.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: FtTokens.onSurfaceMuted,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            FtStatCard(
-              icon: '⚖️',
-              label: 'Weight',
-              domain: FtTokens.weight,
-              stats: [
-                FtStatStat(
-                  value: currentWeight?.toStringAsFixed(1) ?? '--',
-                  label: weightPrimaryLabel,
-                  unit: 'kg',
-                ),
-                FtStatStat(
-                  value: weightChange != null
-                      ? '${weightChange >= 0 ? '+' : ''}${weightChange.toStringAsFixed(1)}'
-                      : '--',
-                  label: weightTrendLabel,
-                  unit: 'kg',
-                ),
-                FtStatStat(
-                  value: targetWeight.toStringAsFixed(1),
-                  label: 'Goal',
-                  unit: 'kg',
-                ),
-              ],
-              progress: wProgress,
-              trophy: true,
-            ),
-            const SizedBox(height: 10),
-            FtStatCard(
-              icon: '🌙',
-              label: tab == 'Day' ? 'Sleep · last night' : 'Sleep · avg/night',
-              domain: FtTokens.sleep,
-              stats: [
-                FtStatStat(value: _fmtSleep(sleepDuration), label: 'Duration'),
-                FtStatStat(
-                  value: sleep?.sleepStart != null
-                      ? DateFormat('HH:mm').format(sleep!.sleepStart)
-                      : '--',
-                  label: 'Bedtime',
-                ),
-                FtStatStat(
-                  value: sleep?.wakeTime != null
-                      ? DateFormat('HH:mm').format(sleep!.wakeTime)
-                      : '--',
-                  label: 'Wake',
-                ),
-              ],
-              progress: sleepProgress,
-              badge: sleepDuration != null
-                  ? '${(sleepProgress * 100).round()}%'
-                  : null,
-              xp: _xpLabel(sleepXp.earnedXp),
             ),
           ],
         ),
-      ),
+        const SizedBox(height: 10),
+        FtStatCard(
+          icon: '\uD83D\uDD25',
+          label: period.type == PeriodType.day
+              ? l10n.caloriesTodayTitle
+              : l10n.caloriesAvgPerDay,
+          domain: FtTokens.calories,
+          stats: [
+            FtStatStat(
+              value: fmt.format(kcal.round()),
+              label: l10n.caloriesConsumed,
+              unit: 'kcal',
+            ),
+            FtStatStat(
+              value: fmt.format(kcalGoal.round()),
+              label: l10n.weightGoal,
+              unit: 'kcal',
+            ),
+            FtStatStat(
+              value:
+                  '${kcalDiff >= 0 ? '+' : ''}${fmt.format(kcalDiff.round())}',
+              label:
+                  kcalDiff >= 0 ? l10n.caloriesBurned : l10n.caloriesRemaining,
+              unit: 'kcal',
+            ),
+          ],
+          progress: kcalProgress,
+          badge: '$kcalPct%',
+          xpData: xpPillData(context, progression, ProgressionDomain.nutrition),
+          children: [
+            const SizedBox(height: 12),
+            if (nutritionHasDetails) ...[
+              FtMacroRow(
+                label: l10n.macroProtein,
+                value: protein,
+                goal: goals.dailyProtein,
+                unit: 'g',
+                domain: FtTokens.protein,
+              ),
+              FtMacroRow(
+                label: l10n.macroCarbs,
+                value: carbs,
+                goal: goals.dailyCarbs,
+                unit: 'g',
+                domain: FtTokens.carbs,
+              ),
+              FtMacroRow(
+                label: l10n.macroFat,
+                value: fat,
+                goal: goals.dailyFat,
+                unit: 'g',
+                domain: FtTokens.fat,
+                isLast: true,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _NutritionDetailTile(
+                      label: 'Fiber',
+                      value: '${fiber.toStringAsFixed(0)} g',
+                      color: FtTokens.calories.color,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _NutritionDetailTile(
+                      label: l10n.caloriesRemaining,
+                      value: '${remainingToTarget.abs().round()} kcal',
+                      color: remainingToTarget >= 0
+                          ? FtTokens.calories.color
+                          : const Color(0xFFF87171),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            FtDetailShortcutButton(
+              onTap: onOpenNutrition,
+              domain: FtTokens.calories,
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        FtStatCard(
+          icon: '\u2696',
+          label: l10n.weightTitle,
+          domain: FtTokens.weight,
+          stats: [
+            FtStatStat(
+              value: weightForPeriod?.toStringAsFixed(1) ?? '--',
+              label: period.type == PeriodType.day
+                  ? l10n.bodyCurrentWeight
+                  : l10n.weightAverage,
+              unit: 'kg',
+            ),
+            FtStatStat(
+              value: weightChange != null
+                  ? '${weightChange >= 0 ? '+' : ''}${weightChange.toStringAsFixed(1)}'
+                  : '--',
+              label: period.type == PeriodType.week
+                  ? l10n.weightVsPrevWeek
+                  : period.type == PeriodType.month
+                      ? l10n.weightVsPrevMonth
+                      : l10n.weightAverage,
+              unit: 'kg',
+            ),
+            FtStatStat(
+              value: targetWeight.toStringAsFixed(1),
+              label: l10n.weightGoal,
+              unit: 'kg',
+            ),
+          ],
+          progress: weightProgress,
+          trophy: true,
+          xpData: xpPillData(context, progression, ProgressionDomain.body),
+          children: [
+            FtDetailShortcutButton(
+              onTap: onOpenBody,
+              domain: FtTokens.weight,
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        FtStatCard(
+          icon: '\uD83C\uDF19',
+          label: l10n.sleepTitle,
+          domain: FtTokens.sleep,
+          stats: [
+            FtStatStat(
+              value: fmtSleep(sleepDuration),
+              label: l10n.sleepDuration,
+            ),
+            FtStatStat(
+              value: sleep?.sleepStart != null
+                  ? DateFormat('HH:mm', locale).format(sleep!.sleepStart)
+                  : '--',
+              label: l10n.sleepFellAsleep,
+            ),
+            FtStatStat(
+              value: sleep?.wakeTime != null
+                  ? DateFormat('HH:mm', locale).format(sleep!.wakeTime)
+                  : '--',
+              label: l10n.sleepWokeUp,
+            ),
+          ],
+          progress: sleepProgress,
+          badge: sleepDuration != null
+              ? '${(sleepProgress * 100).round()}%'
+              : null,
+          xpData: xpPillData(context, progression, ProgressionDomain.sleep),
+          children: [
+            FtDetailShortcutButton(
+              onTap: onOpenSleep,
+              domain: FtTokens.sleep,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -562,12 +675,16 @@ class _NutritionDetailTile extends StatelessWidget {
   }
 }
 
+// ── Permission banner ───────────────────────────────────────────────────────
+
 class _PermissionBanner extends StatelessWidget {
   final VoidCallback onTap;
+
   const _PermissionBanner({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -579,24 +696,16 @@ class _PermissionBanner extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Text('🔗', style: TextStyle(fontSize: 16)),
+            const Icon(Icons.favorite_border, size: 16, color: FtTokens.accent),
             const SizedBox(width: 10),
-            const Expanded(
+            Expanded(
               child: Text(
-                'Connect Health Connect to sync your activity data',
-                style: TextStyle(
+                l10n.healthPermissionBody,
+                style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: Color(0xCCFFFFFF),
                 ),
-              ),
-            ),
-            const Text(
-              'Allow →',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: FtTokens.accent,
               ),
             ),
           ],

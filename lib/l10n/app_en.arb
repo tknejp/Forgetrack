@@ -7,6 +7,15 @@
   "navOverview": "Overview",
   "@navOverview": { "description": "Bottom navigation label for the Overview tab" },
 
+  "navQuests": "Quests",
+  "@navQuests": { "description": "Bottom navigation label for the Quests tab" },
+
+  "navHero": "Hero",
+  "@navHero": { "description": "Bottom navigation label for the Hero tab" },
+
+  "navSocial": "Social",
+  "@navSocial": { "description": "Bottom navigation label for the Social tab" },
+
   "navActivities": "Activities",
   "@navActivities": { "description": "Bottom navigation label for the Activities tab" },
 
@@ -349,6 +358,9 @@
   "sleepNoData": "No sleep data recorded",
   "@sleepNoData": { "description": "Empty state text when no sleep data is available" },
 
+  "homeOpenDetailCta": "Open details",
+  "@homeOpenDetailCta": { "description": "Shortcut button on an expanded overview card that opens the corresponding detail screen" },
+
   "activitiesWeekTotal": "This week",
   "@activitiesWeekTotal": { "description": "Label for this week's step total in Activities screen" },
 
@@ -406,6 +418,12 @@
   "bodyNoData": "No weight data recorded",
   "@bodyNoData": { "description": "Empty state when no weight data is available in Body screen" },
 
+  "weightProgressExplanation": "This percentage shows progress toward your goal based on your recorded weight history.",
+  "@weightProgressExplanation": { "description": "Generic helper text explaining weight progress calculation" },
+  "weightProgressExplanationLoss": "This percentage shows progress from your highest recorded weight toward your goal, not current weight divided by goal.",
+  "@weightProgressExplanationLoss": { "description": "Helper text explaining weight-loss progress calculation" },
+  "weightProgressExplanationGain": "This percentage shows progress from your lowest recorded weight toward your goal, not current weight divided by goal.",
+  "@weightProgressExplanationGain": { "description": "Helper text explaining weight-gain progress calculation" },
   "bodyProgressToGoal": "Progress to goal",
   "@bodyProgressToGoal": { "description": "Label for progress bar toward target weight" },
 
@@ -749,8 +767,8 @@
   "exportHeaderSaturatedFat": "Saturated fat (g)",
   "@exportHeaderSaturatedFat": { "description": "Sheet column header for saturated fat intake" },
 
-  "progScreenEyebrow": "PROGRESSION PROFILE",
-  "progScreenTitle": "Your long-term journey",
+  "progScreenEyebrow": "HERO PROFILE",
+  "progScreenTitle": "Your hero journey",
   "progScreenLoadingHint": "Preparing your legend",
   "progScreenEntryTitle": "Progression profile",
   "progScreenEntrySubtitle": "{levelTitle} · {totalXp} XP · {unlocked} achievements",
@@ -816,15 +834,24 @@
   "progSummaryBuildConsistency": "Build consistency",
 
   "progQuestsSectionLabel": "Quests",
-  "progQuestsSectionCaption": "Active quests first, completed ones below.",
+  "progQuestsSectionCaption": "Active and locked quests first, completed ones below.",
+  "questsScreenEyebrow": "QUESTS",
+  "questsScreenTitle": "Your quests and rewards",
   "progQuestsActiveHeader": "ACTIVE QUESTS",
+  "progQuestsLockedHeader": "LOCKED QUESTS",
   "progQuestsCompletedHeader": "COMPLETED QUESTS",
   "progQuestsEmptyActiveTitle": "No active quests right now.",
   "progQuestsEmptyActiveCaption": "You have cleared the current static quest catalog.",
+  "progQuestsEmptyLockedTitle": "No locked quests right now.",
+  "progQuestsEmptyLockedCaption": "New gated quests will appear here when there is something to unlock later.",
   "progQuestsEmptyCompletedTitle": "No completed quests yet.",
   "progQuestsEmptyCompletedCaption": "Your finished milestones will appear here.",
   "progQuestStatusActive": "Active",
+  "progQuestStatusLocked": "Locked",
+  "progQuestStatusClaimed": "Claimed",
   "progQuestStatusCompleted": "Completed",
+  "progQuestClaimAll": "Claim all quests",
+  "progQuestClaim": "Claim quest",
   "progQuestCompletedOn": "Completed {time}",
   "@progQuestCompletedOn": { "placeholders": { "time": { "type": "String" } } },
   "progProgressRatio": "{current} / {target}",

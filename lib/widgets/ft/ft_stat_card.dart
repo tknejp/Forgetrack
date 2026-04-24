@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../theme/ft_design_tokens.dart';
 import 'ft_progress_bar.dart';
 import 'ft_stat_cell.dart';
+import 'ft_xp_claim_pill.dart';
 
 class FtStatStat {
   final String value;
@@ -24,8 +25,10 @@ class FtStatCard extends StatefulWidget {
   final String? badge;
   final bool trophy;
   final String? xp;
+  final FtXpClaimPillData? xpData;
   final List<Widget> children;
   final bool initiallyExpanded;
+  final bool collapsible;
 
   const FtStatCard({
     super.key,
@@ -37,8 +40,10 @@ class FtStatCard extends StatefulWidget {
     this.badge,
     this.trophy = false,
     this.xp,
+    this.xpData,
     this.children = const [],
     this.initiallyExpanded = false,
+    this.collapsible = true,
   });
 
   @override
@@ -51,14 +56,14 @@ class _FtStatCardState extends State<FtStatCard> {
   @override
   void initState() {
     super.initState();
-    _open = widget.initiallyExpanded;
+    _open = widget.collapsible ? widget.initiallyExpanded : true;
   }
 
   @override
   Widget build(BuildContext context) {
     final d = widget.domain;
     return GestureDetector(
-      onTap: () => setState(() => _open = !_open),
+      onTap: widget.collapsible ? () => setState(() => _open = !_open) : null,
       child: Container(
         decoration: d.cardDecoration(),
         padding: const EdgeInsets.all(14),
@@ -116,19 +121,23 @@ class _FtStatCardState extends State<FtStatCard> {
           const Text('🏆', style: TextStyle(fontSize: 16)),
           const SizedBox(width: 6),
         ],
-        if (widget.xp != null) ...[
+        if (widget.xpData != null) ...[
+          FtXpClaimPill(data: widget.xpData!),
+          const SizedBox(width: 6),
+        ] else if (widget.xp != null) ...[
           _XpPill(label: widget.xp!),
           const SizedBox(width: 6),
         ],
-        AnimatedRotation(
-          turns: _open ? 0 : -0.25,
-          duration: const Duration(milliseconds: 220),
-          child: const Icon(
-            Icons.keyboard_arrow_down,
-            color: Color(0x66FFFFFF),
-            size: 18,
+        if (widget.collapsible)
+          AnimatedRotation(
+            turns: _open ? 0 : -0.25,
+            duration: const Duration(milliseconds: 220),
+            child: const Icon(
+              Icons.keyboard_arrow_down,
+              color: Color(0x66FFFFFF),
+              size: 18,
+            ),
           ),
-        ),
       ],
     );
   }
@@ -259,7 +268,8 @@ class _BadgePill extends StatelessWidget {
   final String label;
   final Color color;
   final Color bg;
-  const _BadgePill({required this.label, required this.color, required this.bg});
+  const _BadgePill(
+      {required this.label, required this.color, required this.bg});
 
   @override
   Widget build(BuildContext context) {

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../features/auth/application/auth_provider.dart';
 import '../../../features/progression/presentation/progression_provider.dart';
+import '../../../l10n/l10n.dart';
 import '../../../screens/profile/widgets/profile_settings_widgets.dart';
 import '../../../screens/profile/widgets/profile_section.dart';
 import '../application/social_provider.dart';
@@ -43,7 +44,7 @@ class _SocialPrototypeScreenState extends State<SocialPrototypeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Social Prototype'),
+        title: Text(context.l10n.navSocial),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),

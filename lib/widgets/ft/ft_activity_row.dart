@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+
 import '../../theme/ft_design_tokens.dart';
 
 enum FtActivityType { walking, strength }
 
 class FtActivityRow extends StatelessWidget {
   final FtActivityType type;
-  final String? typeLabel; // overrides default WALKING/STRENGTH label
-  final String? typeEmoji; // overrides default emoji
+  final String? typeLabel;
+  final String? typeEmoji;
   final String date;
   final String duration;
   final String kcal;
@@ -26,7 +27,7 @@ class FtActivityRow extends StatelessWidget {
   });
 
   String get _displayEmoji =>
-      typeEmoji ?? (type == FtActivityType.walking ? '🥾' : '⚔️');
+      typeEmoji ?? (type == FtActivityType.walking ? '\uD83D\uDEB6' : '\u2694');
 
   String get _displayLabel =>
       typeLabel ?? (type == FtActivityType.walking ? 'WALKING' : 'STRENGTH');
@@ -99,7 +100,7 @@ class FtActivityRow extends StatelessWidget {
               const SizedBox(height: 1),
               Text.rich(
                 TextSpan(
-                  text: '$kcal · ',
+                  text: '$kcal | ',
                   style: const TextStyle(
                     fontSize: FtTokens.fontSizeMicro,
                     color: FtTokens.onSurfaceMuted,

@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../../core/app_log.dart';
+import '../../auth/application/auth_user.dart';
 
 class SocialFirebaseSession {
   SocialFirebaseSession({
@@ -9,15 +9,10 @@ class SocialFirebaseSession {
     this.isEnabled = true,
   }) : _auth = auth ?? FirebaseAuth.instance;
 
-  static const List<String> _googleScopes = <String>[
-    'email',
-    'profile',
-  ];
-
   final FirebaseAuth _auth;
   final bool isEnabled;
 
-  Future<void> ensureSignedInWithGoogle(GoogleSignInAccount user) async {
+  Future<void> ensureSignedInWithGoogle(AuthUser user) async {
     if (!isEnabled) return;
 
     final currentUser = _auth.currentUser;
@@ -25,19 +20,21 @@ class SocialFirebaseSession {
       return;
     }
 
-    final idToken = user.authentication.idToken;
+    final googleAccount = user.googleAccount;
+    if (googleAccount == null) {
+      throw StateError(
+        'Google account tokens are unavailable for Firebase sign-in.',
+      );
+    }
+
+    final idToken = googleAccount.authentication.idToken;
     if (idToken == null || idToken.isEmpty) {
       throw StateError('Google sign-in did not return an ID token.');
     }
 
-    final authorization =
-        await user.authorizationClient.authorizationForScopes(_googleScopes) ??
-            await user.authorizationClient.authorizeScopes(_googleScopes);
-
-    final credential = GoogleAuthProvider.credential(
-      idToken: idToken,
-      accessToken: authorization.accessToken,
-    );
+    // Firebase Auth only requires the ID token — no interactive scope
+    // authorization needed here.
+    final credential = GoogleAuthProvider.credential(idToken: idToken);
 
     await _auth.signInWithCredential(credential);
     AppLog.social.success(
