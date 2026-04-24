@@ -35,7 +35,6 @@ class _ProfileExpandableTileState extends State<ProfileExpandableTile> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
     return Material(
@@ -61,6 +60,7 @@ class _ProfileExpandableTileState extends State<ProfileExpandableTile> {
                         Text(
                           widget.label,
                           style: tt.bodyLarge?.copyWith(
+                            color: FtTokens.onSurface,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -68,7 +68,7 @@ class _ProfileExpandableTileState extends State<ProfileExpandableTile> {
                         Text(
                           widget.summary,
                           style: tt.bodySmall?.copyWith(
-                            color: cs.onSurfaceVariant,
+                            color: FtTokens.onSurfaceMuted,
                             height: 1.25,
                           ),
                         ),
@@ -81,7 +81,7 @@ class _ProfileExpandableTileState extends State<ProfileExpandableTile> {
                     duration: const Duration(milliseconds: 180),
                     child: Icon(
                       Icons.keyboard_arrow_down_rounded,
-                      color: cs.onSurfaceVariant,
+                      color: FtTokens.onSurfaceMuted,
                     ),
                   ),
                 ],

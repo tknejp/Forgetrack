@@ -61,6 +61,7 @@ class ProfileSettingsTile extends StatelessWidget {
                       label,
                       style: labelStyle ??
                           (compact ? tt.bodyMedium : tt.bodyLarge)?.copyWith(
+                            color: FtTokens.onSurface,
                             fontWeight: FontWeight.w600,
                           ),
                     ),
@@ -69,7 +70,7 @@ class ProfileSettingsTile extends StatelessWidget {
                       Text(
                         subtitle!,
                         style: tt.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          color: FtTokens.onSurfaceMuted,
                           height: 1.25,
                         ),
                       ),

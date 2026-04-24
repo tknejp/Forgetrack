@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../features/progression/domain/progression_models.dart';
+import '../features/social/application/social_provider.dart';
 import '../features/progression/presentation/progression_l10n.dart';
 import '../features/progression/presentation/progression_provider.dart';
 import '../features/progression/presentation/widgets/ft_progression_domain_theme.dart';
@@ -1327,7 +1328,7 @@ class _AchievementEmojiBadge extends StatelessWidget {
   }
 }
 
-class _AchievementDetailsSheet extends StatelessWidget {
+class _AchievementDetailsSheet extends StatefulWidget {
   const _AchievementDetailsSheet({
     required this.achievement,
     required this.l10n,
@@ -1339,7 +1340,41 @@ class _AchievementDetailsSheet extends StatelessWidget {
   final ProgressionL10n progL10n;
 
   @override
+  State<_AchievementDetailsSheet> createState() =>
+      _AchievementDetailsSheetState();
+}
+
+class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
+  bool _sharing = false;
+  bool _shared = false;
+
+  Future<void> _share() async {
+    setState(() => _sharing = true);
+    final social = context.read<SocialProvider>();
+    await social.shareAchievement(widget.achievement.id);
+    if (!mounted) return;
+    setState(() {
+      _sharing = false;
+      _shared = social.error == null;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: FtTokens.surface,
+        content: Text(
+          social.error == null
+              ? 'Achievement sdílen do feedu přátel.'
+              : 'Chyba: ${social.error}',
+          style: const TextStyle(color: FtTokens.onSurface),
+        ),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final achievement = widget.achievement;
+    final l10n = widget.l10n;
+    final progL10n = widget.progL10n;
     final badge = _achievementBadgeSpec(achievement);
     final color = badge.color;
     final locale = Localizations.localeOf(context).toString();
@@ -1499,6 +1534,77 @@ class _AchievementDetailsSheet extends StatelessWidget {
                 ],
               ),
             ),
+            if (unlocked) ...[
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                child: GestureDetector(
+                  onTap: (_sharing || _shared) ? null : _share,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      gradient: _shared
+                          ? null
+                          : LinearGradient(
+                              colors: [
+                                color.withValues(alpha: 0.28),
+                                color.withValues(alpha: 0.14),
+                              ],
+                            ),
+                      color: _shared
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : null,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: _shared
+                            ? Colors.white.withValues(alpha: 0.10)
+                            : color.withValues(alpha: 0.40),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (_sharing)
+                          SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: color,
+                            ),
+                          )
+                        else
+                          Icon(
+                            _shared
+                                ? Icons.check_rounded
+                                : Icons.share_rounded,
+                            size: 16,
+                            color: _shared
+                                ? FtTokens.onSurfaceMuted
+                                : color,
+                          ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _shared
+                              ? 'Sdíleno'
+                              : _sharing
+                                  ? 'Sdílení...'
+                                  : 'Sdílet do feedu přátel',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: _shared
+                                ? FtTokens.onSurfaceMuted
+                                : color,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

@@ -36,15 +36,17 @@ class ProfileSwitchTile extends StatelessWidget {
                   children: [
                     Text(
                       label,
-                      style:
-                          tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                      style: tt.bodyLarge?.copyWith(
+                        color: FtTokens.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     if (subtitle != null) ...[
                       const SizedBox(height: 2),
                       Text(
                         subtitle!,
                         style: tt.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          color: FtTokens.onSurfaceMuted,
                           height: 1.25,
                         ),
                       ),
@@ -55,6 +57,7 @@ class ProfileSwitchTile extends StatelessWidget {
               Switch.adaptive(
                 value: value,
                 onChanged: onChanged,
+                activeThumbColor: FtTokens.accent,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
             ],

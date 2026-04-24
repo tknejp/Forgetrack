@@ -192,6 +192,9 @@
   "profileContinueWithGoogle": "Continue with Google",
   "@profileContinueWithGoogle": { "description": "Label for the Google sign-in CTA button" },
 
+  "authSigningIn": "Signing in...",
+  "@authSigningIn": { "description": "Generic loading label shown while Google sign-in is in progress" },
+
   "profileConnectedGoogle": "Connected with Google",
   "@profileConnectedGoogle": { "description": "Badge shown when user is signed in via Google" },
 
@@ -524,6 +527,9 @@
 
   "exportSignInLoading": "Signing in…",
   "@exportSignInLoading": { "description": "Loading label on the sign-in button while auth is in progress" },
+
+  "exportAuthorizationNote": "Export may ask for Google Sheets permission when you run it.",
+  "@exportAuthorizationNote": { "description": "Note explaining that Sheets export authorization may be requested on demand" },
 
   "exportTargetLabel": "Target spreadsheet",
   "@exportTargetLabel": { "description": "Section label for the target spreadsheet card" },

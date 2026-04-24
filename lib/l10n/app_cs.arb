@@ -74,6 +74,7 @@
   "profileNotSignedIn": "Nepřihlášen",
   "profileSignInBenefit": "Synchronizujte tréninky, kalorie a pokrok napříč zařízeními",
   "profileContinueWithGoogle": "Pokračovat s Googlem",
+  "authSigningIn": "Přihlašování...",
   "profileConnectedGoogle": "Připojeno přes Google",
   "profileSignOutConfirmTitle": "Odhlásit se?",
   "profileSignOutConfirmMessage": "Pro synchronizaci dat se budete muset znovu přihlásit.",
@@ -192,6 +193,7 @@
   "exportSignInBody": "Export do Sheets potřebuje váš účet Google pro zápis do tabulky. Pro pokračování se přihlaste.",
   "exportSignInButton": "Přihlásit se",
   "exportSignInLoading": "Přihlašování…",
+  "exportAuthorizationNote": "Při exportu si aplikace může vyžádat oprávnění pro Google Sheets.",
 
   "exportTargetLabel": "Cílová tabulka",
   "exportTargetMissingBody": "Žádná tabulka zatím není propojená. Při prvním exportu se vytvoří nová tabulka „Forgetrack Data\" ve vašem Google Drive.",

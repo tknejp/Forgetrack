@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../../features/nutrition/application/kaloricke_tabulky_provider.dart';
+import '../../../theme/ft_design_tokens.dart';
 import '../dialogs/profile_dialogs.dart';
 import '../widgets/profile_settings_widgets.dart';
 
@@ -199,9 +200,22 @@ class _KtLoginCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final l10n = context.l10n;
 
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            FtTokens.calories.color.withValues(alpha: 0.11),
+            Colors.white.withValues(alpha: 0.025),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(FtTokens.radiusCard),
+        border: Border.all(
+          color: FtTokens.calories.color.withValues(alpha: 0.22),
+        ),
+      ),
       clipBehavior: Clip.antiAlias,
-      margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
         child: Column(
@@ -251,7 +265,6 @@ class _KtLoginHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l10n = context.l10n;
 
@@ -262,13 +275,16 @@ class _KtLoginHeader extends StatelessWidget {
           width: 38,
           height: 38,
           decoration: BoxDecoration(
-            color: cs.surfaceContainerHigh.withValues(alpha: 0.72),
+            color: FtTokens.calories.color.withValues(alpha: 0.14),
             borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: FtTokens.calories.color.withValues(alpha: 0.24),
+            ),
           ),
           child: Icon(
             Icons.restaurant_menu_rounded,
             size: 18,
-            color: cs.onSurfaceVariant,
+            color: FtTokens.calories.color,
           ),
         ),
         const SizedBox(width: 12),
@@ -279,6 +295,7 @@ class _KtLoginHeader extends StatelessWidget {
               Text(
                 l10n.ktSectionTitle,
                 style: tt.bodyLarge?.copyWith(
+                  color: FtTokens.onSurface,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -286,7 +303,7 @@ class _KtLoginHeader extends StatelessWidget {
               Text(
                 l10n.ktConnectBody,
                 style: tt.bodySmall?.copyWith(
-                  color: cs.onSurfaceVariant,
+                  color: FtTokens.onSurfaceMuted,
                   height: 1.35,
                 ),
               ),

@@ -15,9 +15,7 @@ class ProfileTileDivider extends StatelessWidget {
       thickness: 1,
       indent: indent,
       endIndent: 0,
-      color: Theme.of(
-        context,
-      ).colorScheme.outlineVariant.withValues(alpha: 0.45),
+      color: FtTokens.divider,
     );
   }
 }

@@ -117,4 +117,34 @@ class DisabledSocialRepository implements SocialRepository {
   Future<void> removeFriend({required String friendshipId}) {
     throw StateError(reason);
   }
+
+  @override
+  Future<void> addReaction({
+    required String shareId,
+    required String actorUid,
+    required String actorName,
+    required String? actorPhoto,
+    required String emoji,
+    required String shareOwnerUid,
+    required String achievementTitle,
+  }) {
+    throw StateError(reason);
+  }
+
+  @override
+  Future<void> removeReaction({
+    required String shareId,
+    required String actorUid,
+    required String shareOwnerUid,
+  }) {
+    throw StateError(reason);
+  }
+
+  @override
+  Stream<List<SocialNotification>> watchNotifications(String uid) {
+    return Stream<List<SocialNotification>>.value(const []);
+  }
+
+  @override
+  Future<void> markNotificationsRead(String uid) async {}
 }

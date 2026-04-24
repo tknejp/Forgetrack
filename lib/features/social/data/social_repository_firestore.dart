@@ -523,6 +523,23 @@ class FirestoreSocialRepository implements SocialRepository {
         data['actorSnapshot'] as Map<String, dynamic>? ?? const {};
     final achievementSnapshot =
         data['achievementSnapshot'] as Map<String, dynamic>? ?? const {};
+    final reactionsRaw = data['reactions'] as Map<String, dynamic>? ?? const {};
+    final reactorSnapshotsRaw =
+        data['reactorSnapshots'] as Map<String, dynamic>? ?? const {};
+
+    final reactions = reactionsRaw.map(
+      (uid, emoji) => MapEntry(uid, emoji.toString()),
+    );
+    final reactorSnapshots = reactorSnapshotsRaw.map((uid, raw) {
+      final snap = raw as Map<String, dynamic>? ?? const {};
+      return MapEntry(
+        uid,
+        SocialReactionSnapshot(
+          displayName: snap['displayName'] as String? ?? '',
+          photoUrl: snap['photoUrl'] as String?,
+        ),
+      );
+    });
 
     return SocialAchievementShare(
       id: doc.id,
@@ -543,12 +560,116 @@ class FirestoreSocialRepository implements SocialRepository {
         type: achievementSnapshot['type'] as String? ?? '',
         domain: achievementSnapshot['domain'] as String?,
       ),
+      reactions: reactions,
+      reactorSnapshots: reactorSnapshots,
     );
   }
 
   @override
   Future<void> removeFriend({required String friendshipId}) async {
     await _friendships.doc(friendshipId).delete();
+  }
+
+  @override
+  Future<void> addReaction({
+    required String shareId,
+    required String actorUid,
+    required String actorName,
+    required String? actorPhoto,
+    required String emoji,
+    required String shareOwnerUid,
+    required String achievementTitle,
+  }) async {
+    final shareRef = _achievementShares.doc(shareId);
+    final notifRef = _users
+        .doc(shareOwnerUid)
+        .collection('notifications')
+        .doc('${shareId}_$actorUid');
+
+    final batch = _firestore.batch();
+    batch.update(shareRef, {
+      'reactions.$actorUid': emoji,
+      'reactorSnapshots.$actorUid': {
+        'displayName': actorName,
+        'photoUrl': actorPhoto,
+      },
+    });
+    batch.set(notifRef, {
+      'actorUid': actorUid,
+      'actorName': actorName,
+      'actorPhoto': actorPhoto,
+      'shareId': shareId,
+      'achievementTitle': achievementTitle,
+      'emoji': emoji,
+      'createdAt': FieldValue.serverTimestamp(),
+      'read': false,
+    });
+    await batch.commit();
+  }
+
+  @override
+  Future<void> removeReaction({
+    required String shareId,
+    required String actorUid,
+    required String shareOwnerUid,
+  }) async {
+    final shareRef = _achievementShares.doc(shareId);
+    final notifRef = _users
+        .doc(shareOwnerUid)
+        .collection('notifications')
+        .doc('${shareId}_$actorUid');
+
+    final batch = _firestore.batch();
+    batch.update(shareRef, {
+      'reactions.$actorUid': FieldValue.delete(),
+      'reactorSnapshots.$actorUid': FieldValue.delete(),
+    });
+    batch.delete(notifRef);
+    await batch.commit();
+  }
+
+  @override
+  Stream<List<SocialNotification>> watchNotifications(String uid) {
+    return _users
+        .doc(uid)
+        .collection('notifications')
+        .orderBy('createdAt', descending: true)
+        .limit(50)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map(_mapNotification).toList());
+  }
+
+  @override
+  Future<void> markNotificationsRead(String uid) async {
+    final snapshot = await _users
+        .doc(uid)
+        .collection('notifications')
+        .where('read', isEqualTo: false)
+        .get();
+    if (snapshot.docs.isEmpty) return;
+    final batch = _firestore.batch();
+    for (final doc in snapshot.docs) {
+      batch.update(doc.reference, {'read': true});
+    }
+    await batch.commit();
+  }
+
+  SocialNotification _mapNotification(
+    QueryDocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
+    final data = doc.data();
+    return SocialNotification(
+      id: doc.id,
+      actorUid: data['actorUid'] as String? ?? '',
+      actorName: data['actorName'] as String? ?? '',
+      actorPhoto: data['actorPhoto'] as String?,
+      shareId: data['shareId'] as String? ?? '',
+      achievementTitle: data['achievementTitle'] as String? ?? '',
+      emoji: data['emoji'] as String? ?? '👏',
+      createdAt: _readDateTime(data['createdAt']) ??
+          DateTime.fromMillisecondsSinceEpoch(0),
+      read: data['read'] == true,
+    );
   }
 
   SocialUnlockedAchievement _mapUnlockedAchievement(

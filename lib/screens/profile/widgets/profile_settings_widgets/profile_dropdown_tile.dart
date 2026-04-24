@@ -20,7 +20,6 @@ class ProfileDropdownTile<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
     return Padding(
@@ -35,14 +34,17 @@ class ProfileDropdownTile<T> extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                  style: tt.bodyLarge?.copyWith(
+                    color: FtTokens.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 if (subtitle != null) ...[
                   const SizedBox(height: 2),
                   Text(
                     subtitle!,
                     style: tt.bodySmall?.copyWith(
-                      color: cs.onSurfaceVariant,
+                      color: FtTokens.onSurfaceMuted,
                       height: 1.25,
                     ),
                   ),
@@ -54,10 +56,10 @@ class ProfileDropdownTile<T> extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
             decoration: BoxDecoration(
-              color: cs.surfaceContainerHigh.withValues(alpha: 0.68),
+              color: Colors.white.withValues(alpha: 0.055),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: cs.outlineVariant.withValues(alpha: 0.55),
+                color: Colors.white.withValues(alpha: 0.08),
               ),
             ),
             child: DropdownButtonHideUnderline(
@@ -65,12 +67,12 @@ class ProfileDropdownTile<T> extends StatelessWidget {
                 value: value,
                 isDense: true,
                 borderRadius: BorderRadius.circular(12),
-                dropdownColor: cs.surfaceContainerHigh,
-                style: tt.bodyMedium?.copyWith(color: cs.onSurface),
+                dropdownColor: FtTokens.surface,
+                style: tt.bodyMedium?.copyWith(color: FtTokens.onSurface),
                 icon: Icon(
                   Icons.keyboard_arrow_down_rounded,
                   size: 18,
-                  color: cs.onSurfaceVariant,
+                  color: FtTokens.onSurfaceMuted,
                 ),
                 items: items,
                 onChanged: onChanged,

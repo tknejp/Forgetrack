@@ -60,4 +60,24 @@ abstract class SocialRepository {
   Future<List<SocialUnlockedAchievement>> fetchUnlockedAchievements(String uid);
 
   Future<void> removeFriend({required String friendshipId});
+
+  Future<void> addReaction({
+    required String shareId,
+    required String actorUid,
+    required String actorName,
+    required String? actorPhoto,
+    required String emoji,
+    required String shareOwnerUid,
+    required String achievementTitle,
+  });
+
+  Future<void> removeReaction({
+    required String shareId,
+    required String actorUid,
+    required String shareOwnerUid,
+  });
+
+  Stream<List<SocialNotification>> watchNotifications(String uid);
+
+  Future<void> markNotificationsRead(String uid);
 }

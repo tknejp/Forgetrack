@@ -15,21 +15,51 @@ class SheetsExportFieldList extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return FtPlainCard(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                l10n.exportFieldsLabel.toUpperCase(),
-                style: const TextStyle(
-                  fontSize: FtTokens.fontSizeMicro,
-                  fontWeight: FontWeight.w700,
-                  color: FtTokens.onSurfaceMuted,
-                  letterSpacing: 0.9,
-                ),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.view_column_outlined,
+                    size: 14,
+                    color: FtTokens.accent,
+                  ),
+                  const SizedBox(width: 7),
+                  Text(
+                    l10n.exportFieldsLabel.toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: FtTokens.fontSizeMicro,
+                      fontWeight: FontWeight.w800,
+                      color: FtTokens.accent,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: FtTokens.accent.withValues(alpha: 0.11),
+                      borderRadius: BorderRadius.circular(99),
+                      border: Border.all(
+                        color: FtTokens.accent.withValues(alpha: 0.22),
+                      ),
+                    ),
+                    child: Text(
+                      '${provider.selectedFields.length}/${SheetExportFields.all.length}',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: FtTokens.accent,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               Row(
                 children: [
@@ -74,6 +104,7 @@ class _CategoryGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     final fields = SheetExportFields.byCategory(category);
     if (fields.isEmpty) return const SizedBox.shrink();
+    final color = _categoryColor(category);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,17 +113,18 @@ class _CategoryGroup extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(0, 12, 0, 4),
           child: Text(
             SheetExportFields.categoryLabel(category, l10n),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w800,
-              color: FtTokens.onSurface,
-              letterSpacing: -0.2,
+              color: color,
+              letterSpacing: 0.8,
             ),
           ),
         ),
         for (final f in fields)
           _FieldRow(
             field: f,
+            color: color,
             l10n: l10n,
             checked: provider.selectedKeys.contains(f.key),
             onChanged: (v) => provider.toggleField(f.key, v),
@@ -104,12 +136,14 @@ class _CategoryGroup extends StatelessWidget {
 
 class _FieldRow extends StatelessWidget {
   final SheetExportField field;
+  final Color color;
   final AppLocalizations l10n;
   final bool checked;
   final ValueChanged<bool> onChanged;
 
   const _FieldRow({
     required this.field,
+    required this.color,
     required this.l10n,
     required this.checked,
     required this.onChanged,
@@ -122,7 +156,7 @@ class _FieldRow extends StatelessWidget {
       borderRadius: BorderRadius.circular(8),
       onTap: () => onChanged(!checked),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 7),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -132,9 +166,12 @@ class _FieldRow extends StatelessWidget {
               child: Checkbox(
                 value: checked,
                 onChanged: (v) => onChanged(v ?? false),
-                activeColor: FtTokens.accent,
+                activeColor: color,
                 checkColor: Colors.white,
-                side: const BorderSide(color: Color(0x55FFFFFF)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                side: BorderSide(color: color.withValues(alpha: 0.48)),
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 visualDensity: VisualDensity.compact,
               ),
@@ -146,10 +183,12 @@ class _FieldRow extends StatelessWidget {
                 children: [
                   Text(
                     field.label(l10n),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: FtTokens.onSurface,
+                      color: checked
+                          ? FtTokens.onSurface
+                          : FtTokens.onSurface.withValues(alpha: 0.62),
                     ),
                   ),
                   if (desc != null) ...[
@@ -180,16 +219,36 @@ class _LinkButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: FtTokens.accent,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(99),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: FtTokens.accent,
+            ),
+          ),
         ),
       ),
     );
+  }
+}
+
+Color _categoryColor(SheetExportCategory category) {
+  switch (category) {
+    case SheetExportCategory.activity:
+      return FtTokens.steps.color;
+    case SheetExportCategory.body:
+      return FtTokens.weight.color;
+    case SheetExportCategory.sleep:
+      return FtTokens.sleep.color;
+    case SheetExportCategory.nutrition:
+      return FtTokens.calories.color;
   }
 }

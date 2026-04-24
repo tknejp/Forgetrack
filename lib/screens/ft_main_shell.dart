@@ -179,7 +179,8 @@ class _FtMainShellState extends State<FtMainShell> {
         bottomNavigationBar: _FtBottomNav(
           index: _currentIndex,
           onTap: _goToPage,
-          socialBadge: context.watch<SocialProvider>().incomingRequests.length,
+          socialBadge: context.watch<SocialProvider>().incomingRequests.length +
+              context.watch<SocialProvider>().unreadNotificationCount,
         ),
       ),
     );
@@ -314,7 +315,7 @@ class _AvatarButton extends StatelessWidget {
           boxShadow: [BoxShadow(color: FtTokens.accentGlow, blurRadius: 16)],
         ),
         child: const Center(
-          child: Icon(Icons.shield_outlined, size: 18, color: Colors.white),
+          child: Icon(Icons.tune_rounded, size: 18, color: Colors.white),
         ),
       ),
     );

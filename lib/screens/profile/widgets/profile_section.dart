@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../theme/ft_design_tokens.dart';
+
 class ProfileSection extends StatelessWidget {
   final String title;
   final Widget child;
@@ -33,17 +35,26 @@ class ProfileSectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Padding(
       padding: const EdgeInsets.only(left: 4),
-      child: Text(
-        title.toUpperCase(),
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: theme.colorScheme.onSurfaceVariant,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.9,
-        ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.auto_awesome_rounded,
+            size: 13,
+            color: FtTokens.accent.withValues(alpha: 0.92),
+          ),
+          const SizedBox(width: 7),
+          Text(
+            title.toUpperCase(),
+            style: const TextStyle(
+              color: FtTokens.accent,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.1,
+            ),
+          ),
+        ],
       ),
     );
   }

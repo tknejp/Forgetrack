@@ -4,10 +4,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/app_log.dart';
 import '../../../core/constants.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../auth/data/google_auth_service.dart';
 import '../data/sheets_service.dart';
 import '../domain/sheet_export_field.dart';
 import '../domain/sheet_merge_engine.dart';
+import 'google_sheets_auth_service.dart';
 
 class SheetsExportException implements Exception {
   final String message;
@@ -39,13 +39,13 @@ class SheetsExportResult {
 /// [SheetMergeEngine]. This class owns the orchestration and logging.
 class SheetsExportService {
   final SheetsService _sheets;
-  final GoogleAuthService _auth;
+  final GoogleSheetsAuthService _sheetsAuth;
 
   SheetsExportService({
     SheetsService? sheets,
-    GoogleAuthService? auth,
+    GoogleSheetsAuthService? sheetsAuth,
   })  : _sheets = sheets ?? SheetsService(),
-        _auth = auth ?? GoogleAuthService.instance;
+        _sheetsAuth = sheetsAuth ?? GoogleSheetsAuthService();
 
   // ─── Spreadsheet ID persistence ────────────────────────────────────────────
 
@@ -72,8 +72,8 @@ class SheetsExportService {
   Future<({String spreadsheetId, String sheetName})> _prepare(
     AppLocalizations l10n,
   ) async {
-    AppLog.sync.info('prepare: requesting auth client');
-    final client = await _auth.getAuthClient();
+    AppLog.sync.info('prepare: requesting Sheets auth client');
+    final client = await _sheetsAuth.getAuthClient(interactive: true);
     if (client == null) {
       throw SheetsExportException(l10n.exportErrorNotSignedIn);
     }
@@ -96,8 +96,8 @@ class SheetsExportService {
       AppLog.sync.info('prepare: creating new export spreadsheet');
       spreadsheetId = await _sheets.createExportSpreadsheet();
       await _saveSpreadsheetId(spreadsheetId);
-      AppLog.sync.success('prepare: spreadsheet created',
-          payload: spreadsheetId);
+      AppLog.sync
+          .success('prepare: spreadsheet created', payload: spreadsheetId);
     }
 
     await _sheets.ensureSheetExists(
@@ -234,8 +234,7 @@ class SheetsExportService {
 
   static DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
-  static String _isoKey(DateTime d) =>
-      '${d.year.toString().padLeft(4, '0')}-'
+  static String _isoKey(DateTime d) => '${d.year.toString().padLeft(4, '0')}-'
       '${d.month.toString().padLeft(2, '0')}-'
       '${d.day.toString().padLeft(2, '0')}';
 

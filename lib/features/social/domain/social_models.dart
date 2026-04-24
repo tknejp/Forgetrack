@@ -143,6 +143,12 @@ class SocialAchievementSnapshot {
   final String? domain;
 }
 
+class SocialReactionSnapshot {
+  const SocialReactionSnapshot({required this.displayName, this.photoUrl});
+  final String displayName;
+  final String? photoUrl;
+}
+
 class SocialAchievementShare {
   const SocialAchievementShare({
     required this.id,
@@ -153,6 +159,8 @@ class SocialAchievementShare {
     required this.actorSnapshot,
     required this.achievementSnapshot,
     this.message,
+    this.reactions = const {},
+    this.reactorSnapshots = const {},
   });
 
   final String id;
@@ -163,6 +171,34 @@ class SocialAchievementShare {
   final SocialShareVisibility visibility;
   final SocialAchievementActorSnapshot actorSnapshot;
   final SocialAchievementSnapshot achievementSnapshot;
+  /// uid → emoji
+  final Map<String, String> reactions;
+  /// uid → snapshot
+  final Map<String, SocialReactionSnapshot> reactorSnapshots;
+}
+
+class SocialNotification {
+  const SocialNotification({
+    required this.id,
+    required this.actorUid,
+    required this.actorName,
+    required this.shareId,
+    required this.achievementTitle,
+    required this.emoji,
+    required this.createdAt,
+    required this.read,
+    this.actorPhoto,
+  });
+
+  final String id;
+  final String actorUid;
+  final String actorName;
+  final String? actorPhoto;
+  final String shareId;
+  final String achievementTitle;
+  final String emoji;
+  final DateTime createdAt;
+  final bool read;
 }
 
 class SocialProfileSyncPayload {

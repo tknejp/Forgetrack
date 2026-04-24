@@ -19,37 +19,46 @@ class SheetsExportTargetCard extends StatelessWidget {
     final url = provider.spreadsheetUrl;
 
     return FtPlainCard(
+      domain: id == null ? null : FtTokens.steps,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SectionLabel(l10n.exportTargetLabel),
-          const SizedBox(height: 8),
+          _SectionLabel(
+            icon: Icons.table_chart_rounded,
+            text: l10n.exportTargetLabel,
+            color: id == null ? FtTokens.accent : FtTokens.steps.color,
+          ),
+          const SizedBox(height: 12),
           if (id == null) ...[
-            Text(
-              l10n.exportTargetMissingBody,
-              style: const TextStyle(
-                fontSize: 13,
-                color: FtTokens.onSurfaceMuted,
-                height: 1.4,
-              ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _TargetIcon(
+                  icon: Icons.add_to_drive_rounded,
+                  color: FtTokens.accent,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    l10n.exportTargetMissingBody,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: FtTokens.onSurfaceMuted,
+                      height: 1.4,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ] else ...[
             Row(
               children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: FtTokens.steps.dim,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.table_chart_rounded,
-                    size: 18,
-                    color: FtTokens.steps.color,
-                  ),
+                _TargetIcon(
+                  icon: Icons.table_chart_rounded,
+                  color: FtTokens.steps.color,
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,9 +67,10 @@ class SheetsExportTargetCard extends StatelessWidget {
                       const Text(
                         'Forgetrack Data',
                         style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
                           color: FtTokens.onSurface,
+                          letterSpacing: -0.2,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -70,7 +80,7 @@ class SheetsExportTargetCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontSize: 11,
-                          color: FtTokens.onSurfaceMuted,
+                          color: Color(0x99FFFFFF),
                         ),
                       ),
                     ],
@@ -83,9 +93,8 @@ class SheetsExportTargetCard extends StatelessWidget {
                     size: 18,
                     color: FtTokens.onSurfaceMuted,
                   ),
-                  onPressed: url == null
-                      ? null
-                      : () => _copyLink(context, url, l10n),
+                  onPressed:
+                      url == null ? null : () => _copyLink(context, url, l10n),
                 ),
               ],
             ),
@@ -144,18 +153,56 @@ class SheetsExportTargetCard extends StatelessWidget {
 }
 
 class _SectionLabel extends StatelessWidget {
+  final IconData icon;
   final String text;
-  const _SectionLabel(this.text);
+  final Color color;
+
+  const _SectionLabel({
+    required this.icon,
+    required this.text,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text.toUpperCase(),
-      style: const TextStyle(
-        fontSize: FtTokens.fontSizeMicro,
-        fontWeight: FontWeight.w700,
-        color: FtTokens.onSurfaceMuted,
-        letterSpacing: 0.9,
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: color),
+        const SizedBox(width: 7),
+        Text(
+          text.toUpperCase(),
+          style: TextStyle(
+            fontSize: FtTokens.fontSizeMicro,
+            fontWeight: FontWeight.w800,
+            color: color,
+            letterSpacing: 1.0,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TargetIcon extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+
+  const _TargetIcon({required this.icon, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 38,
+      height: 38,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.26)),
+      ),
+      child: Icon(
+        icon,
+        size: 20,
+        color: color,
       ),
     );
   }

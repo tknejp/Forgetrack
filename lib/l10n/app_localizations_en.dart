@@ -198,6 +198,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileContinueWithGoogle => 'Continue with Google';
 
   @override
+  String get authSigningIn => 'Signing in...';
+
+  @override
   String get profileConnectedGoogle => 'Connected with Google';
 
   @override
@@ -535,6 +538,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get exportSignInLoading => 'Signing in…';
+
+  @override
+  String get exportAuthorizationNote =>
+      'Export may ask for Google Sheets permission when you run it.';
 
   @override
   String get exportTargetLabel => 'Target spreadsheet';

@@ -250,6 +250,9 @@ class _FtOverviewScreenState extends State<FtOverviewScreen>
         onRefresh: _refresh,
         color: FtTokens.accent,
         backgroundColor: FtTokens.surface,
+        edgeOffset: widget.topContentInset,
+        displacement: 16,
+        strokeWidth: 2.5,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [

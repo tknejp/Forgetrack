@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../theme/ft_design_tokens.dart';
+
 part 'profile_settings_widgets/profile_dropdown_tile.dart';
 part 'profile_settings_widgets/profile_expandable_tile.dart';
 part 'profile_settings_widgets/profile_settings_card.dart';

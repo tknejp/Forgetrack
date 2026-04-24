@@ -470,6 +470,12 @@ abstract class AppLocalizations {
   /// **'Continue with Google'**
   String get profileContinueWithGoogle;
 
+  /// Generic loading label shown while Google sign-in is in progress
+  ///
+  /// In en, this message translates to:
+  /// **'Signing in...'**
+  String get authSigningIn;
+
   /// Badge shown when user is signed in via Google
   ///
   /// In en, this message translates to:
@@ -1111,6 +1117,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Signing in…'**
   String get exportSignInLoading;
+
+  /// Note explaining that Sheets export authorization may be requested on demand
+  ///
+  /// In en, this message translates to:
+  /// **'Export may ask for Google Sheets permission when you run it.'**
+  String get exportAuthorizationNote;
 
   /// Section label for the target spreadsheet card
   ///

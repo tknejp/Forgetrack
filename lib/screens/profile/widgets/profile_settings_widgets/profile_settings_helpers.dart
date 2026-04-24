@@ -13,7 +13,6 @@ class _ProfileTileTrailing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final children = <Widget>[];
 
@@ -24,7 +23,7 @@ class _ProfileTileTrailing extends StatelessWidget {
         Text(
           trailingLabel!,
           style: tt.bodySmall?.copyWith(
-            color: cs.onSurfaceVariant,
+            color: FtTokens.onSurfaceMuted,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -36,10 +35,10 @@ class _ProfileTileTrailing extends StatelessWidget {
         children.add(const SizedBox(width: 4));
       }
       children.add(
-        Icon(
+        const Icon(
           Icons.chevron_right_rounded,
           size: 20,
-          color: cs.onSurfaceVariant,
+          color: FtTokens.onSurfaceMuted,
         ),
       );
     }
@@ -70,10 +69,9 @@ class _ProfileIconBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final resolvedIconColor = iconColor ?? cs.onSurfaceVariant;
+    final resolvedIconColor = iconColor ?? FtTokens.accent;
     final bg = backgroundColor ??
-        cs.surfaceContainerHigh.withValues(alpha: compact ? 0.8 : 0.72);
+        FtTokens.accent.withValues(alpha: compact ? 0.12 : 0.16);
     final size = compact ? 32.0 : 36.0;
 
     return Container(
@@ -82,6 +80,9 @@ class _ProfileIconBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(compact ? 10 : 12),
+        border: Border.all(
+          color: resolvedIconColor.withValues(alpha: compact ? 0.20 : 0.24),
+        ),
       ),
       child: Icon(
         icon,

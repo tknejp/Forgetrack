@@ -15,7 +15,8 @@ class SheetsExportDateRange extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final rangeLabel = '${_fmt.format(provider.from)} – ${_fmt.format(provider.to)}';
+    final rangeLabel =
+        '${_fmt.format(provider.from)} - ${_fmt.format(provider.to)}';
 
     return FtPlainCard(
       child: Column(
@@ -24,63 +25,89 @@ class SheetsExportDateRange extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                l10n.exportRangeLabel.toUpperCase(),
-                style: const TextStyle(
-                  fontSize: FtTokens.fontSizeMicro,
-                  fontWeight: FontWeight.w700,
-                  color: FtTokens.onSurfaceMuted,
-                  letterSpacing: 0.9,
-                ),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.calendar_month_outlined,
+                    size: 14,
+                    color: FtTokens.accent,
+                  ),
+                  const SizedBox(width: 7),
+                  Text(
+                    l10n.exportRangeLabel.toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: FtTokens.fontSizeMicro,
+                      fontWeight: FontWeight.w800,
+                      color: FtTokens.accent,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                ],
               ),
-              Text(
-                l10n.exportRangeDayCount(provider.dayCount),
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: FtTokens.accent,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                decoration: BoxDecoration(
+                  color: FtTokens.accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(99),
+                  border: Border.all(
+                    color: FtTokens.accent.withValues(alpha: 0.24),
+                  ),
+                ),
+                child: Text(
+                  l10n.exportRangeDayCount(provider.dayCount),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: FtTokens.accent,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 10),
-          GestureDetector(
-            onTap: () => _pickRange(context),
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: const Color(0x08FFFFFF),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: FtTokens.cardBorder),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.calendar_month_outlined,
-                    size: 18,
-                    color: FtTokens.onSurfaceMuted,
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => _pickRange(context),
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.045),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.08),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      rangeLabel,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: FtTokens.onSurface,
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.date_range_rounded,
+                      size: 18,
+                      color: FtTokens.onSurfaceMuted,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        rangeLabel,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: FtTokens.onSurface,
+                        ),
                       ),
                     ),
-                  ),
-                  Text(
-                    l10n.exportRangePickButton,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: FtTokens.accent,
+                    Text(
+                      l10n.exportRangePickButton,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: FtTokens.accent,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -171,21 +198,25 @@ class _Preset extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: FtTokens.accent.withValues(alpha: 0.10),
-          borderRadius: BorderRadius.circular(99),
-          border: Border.all(color: FtTokens.accent.withValues(alpha: 0.25)),
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: FtTokens.accent,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(99),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            color: FtTokens.accent.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(99),
+            border: Border.all(color: FtTokens.accent.withValues(alpha: 0.25)),
+          ),
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: FtTokens.accent,
+            ),
           ),
         ),
       ),

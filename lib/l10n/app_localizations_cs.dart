@@ -198,6 +198,9 @@ class AppLocalizationsCs extends AppLocalizations {
   String get profileContinueWithGoogle => 'Pokračovat s Googlem';
 
   @override
+  String get authSigningIn => 'Přihlašování...';
+
+  @override
   String get profileConnectedGoogle => 'Připojeno přes Google';
 
   @override
@@ -535,6 +538,10 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get exportSignInLoading => 'Přihlašování…';
+
+  @override
+  String get exportAuthorizationNote =>
+      'Při exportu si aplikace může vyžádat oprávnění pro Google Sheets.';
 
   @override
   String get exportTargetLabel => 'Cílová tabulka';

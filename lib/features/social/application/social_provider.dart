@@ -33,6 +33,7 @@ class SocialProvider extends ChangeNotifier {
   StreamSubscription<List<SocialFriendship>>? _friendshipsSubscription;
   StreamSubscription<List<SocialUserProfile>>? _friendProfilesSubscription;
   StreamSubscription<List<SocialAchievementShare>>? _recentSharesSubscription;
+  StreamSubscription<List<SocialNotification>>? _notificationsSubscription;
 
   List<SocialFriendRequest> _incomingRequests = const [];
   List<SocialFriendRequest> _outgoingRequests = const [];
@@ -40,6 +41,7 @@ class SocialProvider extends ChangeNotifier {
   List<SocialUserProfile> _friends = const [];
   List<SocialAchievementShare> _recentShares = const [];
   List<SocialUserProfile> _searchResults = const [];
+  List<SocialNotification> _notifications = const [];
 
   bool _isReconcilingSession = false;
   bool _reconcileQueued = false;
@@ -58,6 +60,7 @@ class SocialProvider extends ChangeNotifier {
   bool get isReady => _isReady;
   bool get isSearching => _isSearching;
   String? get error => _error;
+  String? get currentUid => _activeUid;
 
   List<SocialFriendRequest> get incomingRequests =>
       _incomingRequests.where((r) => r.isPending).toList();
@@ -67,6 +70,9 @@ class SocialProvider extends ChangeNotifier {
   List<SocialUserProfile> get friends => _friends;
   List<SocialAchievementShare> get recentShares => _recentShares;
   List<SocialUserProfile> get searchResults => _searchResults;
+  List<SocialNotification> get notifications => _notifications;
+  int get unreadNotificationCount =>
+      _notifications.where((n) => !n.read).length;
 
   void bind({
     required AuthProvider authProvider,
@@ -261,6 +267,66 @@ class SocialProvider extends ChangeNotifier {
       _recordError('shareAchievement', error, stackTrace);
     }
     notifyListeners();
+  }
+
+  Future<void> addReaction(String shareId, String emoji) async {
+    final uid = _activeUid;
+    final authProvider = _authProvider;
+    if (uid == null || authProvider?.user == null) return;
+
+    final share = _recentShares.where((s) => s.id == shareId).firstOrNull;
+    if (share == null) return;
+
+    final user = authProvider!.user!;
+    final actorName = user.displayName?.trim().isNotEmpty == true
+        ? user.displayName!.trim()
+        : user.email.split('@').first;
+
+    try {
+      await _repository.addReaction(
+        shareId: shareId,
+        actorUid: uid,
+        actorName: actorName,
+        actorPhoto: user.photoUrl,
+        emoji: emoji,
+        shareOwnerUid: share.actorUid,
+        achievementTitle: share.achievementSnapshot.title,
+      );
+      _error = null;
+    } catch (error, stackTrace) {
+      _recordError('addReaction', error, stackTrace);
+    }
+    notifyListeners();
+  }
+
+  Future<void> removeReaction(String shareId) async {
+    final uid = _activeUid;
+    if (uid == null) return;
+
+    final share = _recentShares.where((s) => s.id == shareId).firstOrNull;
+    if (share == null) return;
+
+    try {
+      await _repository.removeReaction(
+        shareId: shareId,
+        actorUid: uid,
+        shareOwnerUid: share.actorUid,
+      );
+      _error = null;
+    } catch (error, stackTrace) {
+      _recordError('removeReaction', error, stackTrace);
+    }
+    notifyListeners();
+  }
+
+  Future<void> markNotificationsRead() async {
+    final uid = _activeUid;
+    if (uid == null) return;
+    try {
+      await _repository.markNotificationsRead(uid);
+    } catch (error, stackTrace) {
+      _recordError('markNotificationsRead', error, stackTrace);
+    }
   }
 
   Future<void> _reconcileSession() async {
@@ -484,6 +550,16 @@ class SocialProvider extends ChangeNotifier {
           _recordError('watchFriendships', error, stackTrace),
     );
 
+    _notificationsSubscription =
+        _repository.watchNotifications(uid).listen(
+      (notifications) {
+        _notifications = notifications;
+        notifyListeners();
+      },
+      onError: (error, stackTrace) =>
+          _recordError('watchNotifications', error, stackTrace),
+    );
+
     await _handleFriendshipsUpdated();
   }
 
@@ -561,6 +637,7 @@ class SocialProvider extends ChangeNotifier {
     _friends = const [];
     _recentShares = const [];
     _searchResults = const [];
+    _notifications = const [];
     await _cancelSubscriptions();
   }
 
@@ -570,11 +647,13 @@ class SocialProvider extends ChangeNotifier {
     await _friendshipsSubscription?.cancel();
     await _friendProfilesSubscription?.cancel();
     await _recentSharesSubscription?.cancel();
+    await _notificationsSubscription?.cancel();
     _incomingRequestsSubscription = null;
     _outgoingRequestsSubscription = null;
     _friendshipsSubscription = null;
     _friendProfilesSubscription = null;
     _recentSharesSubscription = null;
+    _notificationsSubscription = null;
   }
 
   void _recordError(String operation, Object error, StackTrace stackTrace) {

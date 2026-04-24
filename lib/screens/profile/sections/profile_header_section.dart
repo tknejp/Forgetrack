@@ -5,6 +5,7 @@ import '../../../l10n/l10n.dart';
 import '../../../features/auth/application/auth_provider.dart';
 import '../../../features/auth/presentation/google_logo_icon.dart';
 import '../../../features/auth/presentation/google_sign_in_button.dart';
+import '../../../theme/ft_design_tokens.dart';
 import '../../../widgets/app_logo.dart';
 
 class ProfileHeaderCard extends StatelessWidget {
@@ -14,7 +15,26 @@ class ProfileHeaderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            FtTokens.accent.withValues(alpha: 0.15),
+            Colors.white.withValues(alpha: 0.025),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(FtTokens.radiusCard),
+        border: Border.all(color: FtTokens.accent.withValues(alpha: 0.22)),
+        boxShadow: [
+          BoxShadow(
+            color: FtTokens.accentGlow.withValues(alpha: 0.45),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
       clipBehavior: Clip.antiAlias,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
@@ -75,13 +95,13 @@ class _SignedInHeaderContent extends StatelessWidget {
             CircleAvatar(
               radius: 32,
               backgroundImage: hasPhoto ? NetworkImage(photoUrl) : null,
-              backgroundColor: cs.primaryContainer,
+              backgroundColor: FtTokens.accent.withValues(alpha: 0.22),
               child: hasPhoto
                   ? null
                   : Icon(
                       Icons.person,
                       size: 28,
-                      color: cs.onPrimaryContainer,
+                      color: FtTokens.onSurface,
                     ),
             ),
             const SizedBox(width: 14),
@@ -93,6 +113,7 @@ class _SignedInHeaderContent extends StatelessWidget {
                   Text(
                     primaryLine,
                     style: tt.titleMedium?.copyWith(
+                      color: FtTokens.onSurface,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -101,7 +122,7 @@ class _SignedInHeaderContent extends StatelessWidget {
                     Text(
                       user.email,
                       style: tt.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
+                        color: FtTokens.onSurfaceMuted,
                       ),
                     ),
                   ],
@@ -166,6 +187,7 @@ class _SignedOutHeaderContent extends StatelessWidget {
                   Text(
                     l10n.profileNotSignedIn,
                     style: tt.titleMedium?.copyWith(
+                      color: FtTokens.onSurface,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -178,7 +200,7 @@ class _SignedOutHeaderContent extends StatelessWidget {
         Text(
           l10n.profileSignInBenefit,
           style: tt.bodySmall?.copyWith(
-            color: cs.onSurfaceVariant,
+            color: FtTokens.onSurfaceMuted,
             height: 1.35,
           ),
         ),
@@ -216,15 +238,13 @@ class _HeaderBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: cs.primaryContainer.withValues(alpha: 0.5),
+        color: FtTokens.accent.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-          color: cs.primary.withValues(alpha: 0.14),
+          color: FtTokens.accent.withValues(alpha: 0.28),
         ),
       ),
       child: child,

@@ -76,7 +76,6 @@ Future<void> main() async {
   final socialSession = SocialFirebaseSession(
     isEnabled: socialBackendState.isReady,
   );
-
   AppLog.app.info('Providers ready, launching KT initialize()');
   unawaited(ktProvider.initialize());
 

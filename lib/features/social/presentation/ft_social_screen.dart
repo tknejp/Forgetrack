@@ -279,11 +279,19 @@ class _FtSocialScreenState extends State<FtSocialScreen>
   @override
   void initState() {
     super.initState();
-    _tab = TabController(length: 3, vsync: this);
+    _tab = TabController(length: 4, vsync: this);
+    _tab.addListener(_onTabChanged);
+  }
+
+  void _onTabChanged() {
+    if (_tab.index == 3 && !_tab.indexIsChanging) {
+      context.read<SocialProvider>().markNotificationsRead();
+    }
   }
 
   @override
   void dispose() {
+    _tab.removeListener(_onTabChanged);
     _tab.dispose();
     super.dispose();
   }
@@ -293,6 +301,7 @@ class _FtSocialScreenState extends State<FtSocialScreen>
     final social = context.watch<SocialProvider>();
     final auth = context.watch<AuthProvider>();
     final pendingCount = social.incomingRequests.length;
+    final unreadNotifCount = social.unreadNotificationCount;
 
     final showBanner = !social.backendReady ||
         !social.isReady ||
@@ -310,9 +319,17 @@ class _FtSocialScreenState extends State<FtSocialScreen>
                 backendReady: social.backendReady,
                 sessionReady: social.isReady,
                 signedIn: auth.isSignedIn,
+                isSigningIn: auth.isBusy,
                 error: social.error ?? social.backendMessage,
+                onSignIn: auth.isBusy
+                    ? null
+                    : () => context.read<AuthProvider>().signIn(),
               ),
-            _TabBar(controller: _tab, pendingCount: pendingCount),
+            _TabBar(
+              controller: _tab,
+              pendingCount: pendingCount,
+              unreadNotifCount: unreadNotifCount,
+            ),
             Expanded(
               child: FtEdgePageHandoff(
                 controller: widget.outerController,
@@ -323,8 +340,9 @@ class _FtSocialScreenState extends State<FtSocialScreen>
                   controller: _tab,
                   children: const [
                     _FeedTab(),
-                    _FriendsTab(),
+                    _ActivityTab(),
                     _LeaderboardTab(),
+                    _FriendsTab(),
                   ],
                 ),
               ),
@@ -341,13 +359,17 @@ class _StatusBanner extends StatelessWidget {
     required this.backendReady,
     required this.sessionReady,
     required this.signedIn,
+    required this.isSigningIn,
     required this.error,
+    this.onSignIn,
   });
 
   final bool backendReady;
   final bool sessionReady;
   final bool signedIn;
+  final bool isSigningIn;
   final String error;
+  final VoidCallback? onSignIn;
 
   @override
   Widget build(BuildContext context) {
@@ -381,6 +403,26 @@ class _StatusBanner extends StatelessWidget {
                 style: TextStyle(
                     fontSize: 11, color: color, fontWeight: FontWeight.w600)),
           ),
+          if (!signedIn)
+            TextButton(
+              onPressed: onSignIn,
+              style: TextButton.styleFrom(
+                foregroundColor: color,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text(
+                isSigningIn
+                    ? context.l10n.authSigningIn
+                    : context.l10n.profileContinueWithGoogle,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -390,9 +432,14 @@ class _StatusBanner extends StatelessWidget {
 // ── Tab bar ───────────────────────────────────────────────────────────────────
 
 class _TabBar extends StatelessWidget {
-  const _TabBar({required this.controller, required this.pendingCount});
+  const _TabBar({
+    required this.controller,
+    required this.pendingCount,
+    required this.unreadNotifCount,
+  });
   final TabController controller;
   final int pendingCount;
+  final int unreadNotifCount;
 
   @override
   Widget build(BuildContext context) {
@@ -418,32 +465,54 @@ class _TabBar extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Přátelé'),
-                if (pendingCount > 0) ...[
+                const Text('Aktivita'),
+                if (unreadNotifCount > 0) ...[
                   const SizedBox(width: 5),
-                  Container(
-                    width: pendingCount > 9 ? 20.0 : 14.0,
-                    height: 14,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEF4444),
-                      borderRadius: BorderRadius.circular(99),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      pendingCount > 9 ? '9+' : '$pendingCount',
-                      style: const TextStyle(
-                          fontSize: 8,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          height: 1),
-                    ),
-                  ),
+                  _TabBadge(count: unreadNotifCount),
                 ],
               ],
             ),
           ),
           const Tab(text: 'Žebříček'),
+          Tab(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Přátelé'),
+                if (pendingCount > 0) ...[
+                  const SizedBox(width: 5),
+                  _TabBadge(count: pendingCount),
+                ],
+              ],
+            ),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _TabBadge extends StatelessWidget {
+  const _TabBadge({required this.count});
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: count > 9 ? 20.0 : 14.0,
+      height: 14,
+      decoration: BoxDecoration(
+        color: const Color(0xFFEF4444),
+        borderRadius: BorderRadius.circular(99),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        count > 9 ? '9+' : '$count',
+        style: const TextStyle(
+            fontSize: 8,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+            height: 1),
       ),
     );
   }
@@ -451,81 +520,19 @@ class _TabBar extends StatelessWidget {
 
 // ── Feed tab ──────────────────────────────────────────────────────────────────
 
-class _FeedTab extends StatefulWidget {
+class _FeedTab extends StatelessWidget {
   const _FeedTab();
-
-  @override
-  State<_FeedTab> createState() => _FeedTabState();
-}
-
-class _FeedTabState extends State<_FeedTab> {
-  late final TextEditingController _messageController;
-
-  @override
-  void initState() {
-    super.initState();
-    _messageController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _messageController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _share(
-    BuildContext context,
-    ProgressionAchievement achievement,
-  ) async {
-    final messenger = ScaffoldMessenger.of(context);
-    final social = context.read<SocialProvider>();
-    final message = _messageController.text.trim();
-
-    await social.shareAchievement(
-      achievement.id,
-      message: message.isEmpty ? null : message,
-    );
-
-    if (!mounted) return;
-
-    if (social.error == null) {
-      _messageController.clear();
-    }
-
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          social.error == null
-              ? 'Uspech byl nasdilen do social feedu.'
-              : 'Chyba: ${social.error}',
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     final social = context.watch<SocialProvider>();
-    final progression = context.watch<ProgressionProvider>();
     final shares = social.recentShares;
-    final unlockedAchievements = progression.achievements
-        .where((achievement) => achievement.unlocked)
-        .toList(growable: false)
-        .reversed
-        .take(6)
-        .toList(growable: false);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 24),
       children: [
-        _ShareComposer(
-          controller: _messageController,
-          achievements: unlockedAchievements,
-          onShare: (achievement) => _share(context, achievement),
-        ),
-        const SizedBox(height: 14),
         const Padding(
-          padding: EdgeInsets.only(bottom: 8),
+          padding: EdgeInsets.only(bottom: 10),
           child: Text(
             'AKTIVITA PŘÁTEL',
             style: TextStyle(
@@ -545,7 +552,7 @@ class _FeedTabState extends State<_FeedTab> {
         else
           ...shares.map(
             (s) => Padding(
-              padding: const EdgeInsets.only(bottom: 7),
+              padding: const EdgeInsets.only(bottom: 10),
               child: _FeedCard(share: s),
             ),
           ),
@@ -554,155 +561,433 @@ class _FeedTabState extends State<_FeedTab> {
   }
 }
 
-class _ShareComposer extends StatelessWidget {
-  const _ShareComposer({
-    required this.controller,
-    required this.achievements,
-    required this.onShare,
-  });
+// ── Feed helpers ──────────────────────────────────────────────────────────────
 
-  final TextEditingController controller;
-  final List<ProgressionAchievement> achievements;
-  final Future<void> Function(ProgressionAchievement achievement) onShare;
+String _emojiForAchievementId(String id) {
+  switch (id) {
+    case 'pathfinder_level_5':
+    case 'trail_vanguard_level_10':
+      return '🧭';
+    case 'forge_knight_level_15':
+      return '⚒️';
+    case 'iron_warden_level_20':
+      return '🛡️';
+    case 'storm_herald_level_25':
+      return '🌩️';
+    case 'dawn_sentinel_level_30':
+      return '🌅';
+    case 'rift_walker_level_40':
+      return '🌀';
+    case 'mythic_ranger_level_50':
+    case 'titan_forger_level_60':
+    case 'astral_champion_level_70':
+    case 'eternal_paragon_level_80':
+    case 'realm_sovereign_level_90':
+    case 'living_legend_level_100':
+      return '👑';
+    case 'first_reward':
+      return '🏆';
+    case 'reward_hunter_25':
+    case 'reward_hunter_100':
+      return '⚔️';
+    case 'xp_100000':
+    case 'xp_1000000':
+      return '🔥';
+    case 'steps_total_100k':
+    case 'steps_total_500k':
+    case 'steps_total_1000000':
+    case 'steps_total_5000000':
+    case 'steps_total_10000000':
+      return '👟';
+    case 'steps_streak_3':
+      return '🔥';
+    case 'steps_streak_7':
+      return '⚡';
+    case 'steps_streak_30':
+    case 'steps_streak_100':
+      return '🌟';
+    case 'nutrition_streak_3':
+    case 'nutrition_streak_30':
+    case 'nutrition_streak_100':
+    case 'nutrition_rewards_25':
+      return '🥗';
+    case 'sleep_total_250h':
+    case 'sleep_total_1000h':
+    case 'sleep_month_225h':
+    case 'sleep_month_240h':
+      return '🌙';
+    case 'weekly_activity_mastery':
+    case 'weekly_activity_4':
+    case 'weekly_activity_12':
+    case 'weekly_activity_24':
+    case 'weekly_activity_52':
+      return '💪';
+    default:
+      return '🏅';
+  }
+}
+
+Color _colorForDifficultyString(String diff) {
+  switch (diff) {
+    case 'easy':
+      return FtProgressionDomainTheme.achievementEasy;
+    case 'medium':
+      return FtProgressionDomainTheme.achievementMedium;
+    case 'hard':
+      return FtProgressionDomainTheme.achievementHard;
+    case 'extraHard':
+      return FtProgressionDomainTheme.achievementExtraHard;
+    default:
+      return FtTokens.accent;
+  }
+}
+
+// ── Feed card ─────────────────────────────────────────────────────────────────
+
+class _FeedCard extends StatelessWidget {
+  const _FeedCard({required this.share});
+  final SocialAchievementShare share;
+
+  void _react(BuildContext context, String emoji, String? myCurrentEmoji) {
+    final social = context.read<SocialProvider>();
+    if (myCurrentEmoji == emoji) {
+      social.removeReaction(share.id);
+    } else {
+      social.addReaction(share.id, emoji);
+    }
+  }
+
+  void _showReactors(BuildContext context, String emoji) {
+    final reactors = share.reactions.entries
+        .where((e) => e.value == emoji)
+        .map((e) => (
+              uid: e.key,
+              emoji: e.value,
+              snapshot: share.reactorSnapshots[e.key],
+            ))
+        .toList();
+    if (reactors.isEmpty) return;
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _ReactorsSheet(
+        emoji: emoji,
+        reactors: reactors,
+        onOpenProfile: (uid, snapshot) {
+          Navigator.of(context).pop();
+          _openReactorProfile(context, uid, snapshot);
+        },
+      ),
+    );
+  }
+
+  void _openReactorProfile(
+    BuildContext context,
+    String uid,
+    SocialReactionSnapshot? snapshot,
+  ) {
+    final social = context.read<SocialProvider>();
+    final isFriend = social.friendships
+        .any((f) => f.memberUids.contains(uid) && f.memberUids.contains(social.currentUid));
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => isFriend
+          ? _ProfileSheet(
+              initialFriend: SocialUserProfile(
+                uid: uid,
+                displayName: snapshot?.displayName ?? '',
+                handle: '',
+                email: '',
+                socialEnabled: true,
+                stats: const SocialUserStats(
+                  level: 0,
+                  totalXp: 0,
+                  unlockedAchievementCount: 0,
+                  claimedRewardCount: 0,
+                  pendingRewardCount: 0,
+                  bestStepsStreak: 0,
+                  bestNutritionStreak: 0,
+                ),
+                photoUrl: snapshot?.photoUrl,
+              ),
+              watchProfile: social.watchProfileById,
+              watchAchievements: social.watchFriendAchievements,
+              onRemove: () async {
+                await social.removeFriend(uid);
+                if (ctx.mounted) Navigator.of(ctx).pop();
+              },
+            )
+          : _StrangerProfileSheet(
+              uid: uid,
+              displayName: snapshot?.displayName ?? '',
+              photoUrl: snapshot?.photoUrl,
+            ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final social = context.watch<SocialProvider>();
+    final myUid = social.currentUid;
+    final myCurrentEmoji = share.reactions[myUid];
+
+    final color = _colorForDifficultyString(share.achievementSnapshot.difficulty);
+    final emoji = _emojiForAchievementId(share.achievementId);
+    final diffLabel = switch (share.achievementSnapshot.difficulty) {
+      'easy' => 'Snadný',
+      'medium' => 'Střední',
+      'hard' => 'Těžký',
+      'extraHard' => 'Extra těžký',
+      _ => '',
+    };
+
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: FtTokens.cardBorder),
+        gradient: LinearGradient(
+          begin: const Alignment(-1, -1),
+          end: const Alignment(1, 1),
+          colors: [color.withValues(alpha: 0.10), FtTokens.surface],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'SDILET VLASTNI USPECH',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              color: FtTokens.accent,
-              letterSpacing: 1.1,
-            ),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'Vyber odemceny achievement a posli ho do feedu pratel.',
-            style: TextStyle(
-              fontSize: 12,
-              color: FtTokens.onSurfaceMuted,
-              height: 1.35,
+          // ── Header: avatar + name + time ─────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _Avatar(
+                  name: share.actorSnapshot.displayName,
+                  photoUrl: share.actorSnapshot.photoUrl,
+                  size: 34,
+                  color: color,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        share.actorSnapshot.displayName,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: color,
+                          height: 1.2,
+                        ),
+                      ),
+                      const Text(
+                        'odemkl(a) achievement',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: FtTokens.onSurfaceMuted,
+                          height: 1.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  _relativeTime(share.createdAt),
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: FtTokens.onSurfaceFaint,
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 10),
-          TextField(
-            controller: controller,
-            maxLength: 80,
-            style: const TextStyle(
-              fontSize: 13,
-              color: FtTokens.onSurface,
-            ),
-            decoration: const InputDecoration(
-              hintText: 'Volitelna zprava do feedu...',
-              counterText: '',
-            ),
-          ),
-          const SizedBox(height: 10),
-          if (achievements.isEmpty)
-            const Text(
-              'Nejdriv odemkni nejaky achievement a potom ho muzes sdilet.',
-              style: TextStyle(
-                fontSize: 12,
-                color: FtTokens.onSurfaceFaint,
+          // ── Achievement block ─────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.07),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: color.withValues(alpha: 0.18)),
               ),
-            )
-          else
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: achievements
-                  .map(
-                    (achievement) => _ShareAchievementTile(
-                      achievement: achievement,
-                      onShare: () => onShare(achievement),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.16),
+                      borderRadius: BorderRadius.circular(13),
+                      border: Border.all(color: color.withValues(alpha: 0.28)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.22),
+                          blurRadius: 10,
+                        ),
+                      ],
                     ),
-                  )
-                  .toList(growable: false),
+                    child: Center(
+                      child: Text(emoji, style: const TextStyle(fontSize: 24)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          share.achievementSnapshot.title,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            letterSpacing: -0.3,
+                            height: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          share.achievementSnapshot.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: FtTokens.onSurfaceMuted,
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
+          ),
+          if (share.message?.trim().isNotEmpty == true) ...[
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Text(
+                '"${share.message!}"',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                  color: FtTokens.onSurface,
+                  height: 1.35,
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
+          // ── Footer: difficulty + reactions ────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            child: Row(
+              children: [
+                if (diffLabel.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(99),
+                      border:
+                          Border.all(color: color.withValues(alpha: 0.28)),
+                    ),
+                    child: Text(
+                      diffLabel,
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        color: color,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ),
+                const Spacer(),
+                for (final e in ['👏', '🔥', '💪']) ...[
+                  _ReactionButton(
+                    emoji: e,
+                    count: share.reactions.values.where((v) => v == e).length,
+                    active: myCurrentEmoji == e,
+                    color: color,
+                    onTap: () => _react(context, e, myCurrentEmoji),
+                    onLongPress: () => _showReactors(context, e),
+                  ),
+                  if (e != '💪') const SizedBox(width: 6),
+                ],
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _ShareAchievementTile extends StatelessWidget {
-  const _ShareAchievementTile({
-    required this.achievement,
-    required this.onShare,
+class _ReactionButton extends StatelessWidget {
+  const _ReactionButton({
+    required this.emoji,
+    required this.count,
+    required this.active,
+    required this.color,
+    required this.onTap,
+    this.onLongPress,
   });
 
-  final ProgressionAchievement achievement;
-  final VoidCallback onShare;
+  final String emoji;
+  final int count;
+  final bool active;
+  final Color color;
+  final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
-    final color = FtProgressionDomainTheme.colorForAchievementDifficulty(
-      achievement.difficulty,
-    );
-    final icon = FtProgressionDomainTheme.iconForAchievement(achievement);
-
     return GestureDetector(
-      onTap: onShare,
-      child: Container(
-        width: 112,
-        padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+      onTap: onTap,
+      onLongPress: onLongPress,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              color.withValues(alpha: 0.13),
-              color.withValues(alpha: 0.03),
-            ],
+          color: active
+              ? color.withValues(alpha: 0.15)
+              : Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(99),
+          border: Border.all(
+            color: active
+                ? color.withValues(alpha: 0.35)
+                : Colors.white.withValues(alpha: 0.08),
           ),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.28)),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: color.withValues(alpha: 0.3)),
+            Text(emoji, style: const TextStyle(fontSize: 13)),
+            if (count > 0) ...[
+              const SizedBox(width: 4),
+              Text(
+                '$count',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                ),
               ),
-              child: Icon(icon, size: 16, color: color),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              achievement.title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: FtTokens.onSurface,
-                height: 1.2,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Sdilet',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                color: color,
-              ),
-            ),
+            ],
           ],
         ),
       ),
@@ -710,48 +995,274 @@ class _ShareAchievementTile extends StatelessWidget {
   }
 }
 
-class _FeedCard extends StatelessWidget {
-  const _FeedCard({required this.share});
-  final SocialAchievementShare share;
+// ── Reactors sheet ────────────────────────────────────────────────────────────
+
+class _ReactorsSheet extends StatelessWidget {
+  const _ReactorsSheet({
+    required this.emoji,
+    required this.reactors,
+    required this.onOpenProfile,
+  });
+
+  final String emoji;
+  final List<({String uid, String emoji, SocialReactionSnapshot? snapshot})>
+      reactors;
+  final void Function(String uid, SocialReactionSnapshot? snapshot)
+      onOpenProfile;
 
   @override
   Widget build(BuildContext context) {
-    final dom = _domainFor(share.achievementSnapshot.domain);
-    final diff = share.achievementSnapshot.difficulty;
-    final diffLabel = switch (diff) {
-      'easy' => 'Snadný',
-      'medium' => 'Střední',
-      'hard' => 'Těžký',
-      'extraHard' => 'Extra těžký',
-      _ => diff,
-    };
-
+    final bottomPad = MediaQuery.of(context).padding.bottom;
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 11, 12, 12),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: const Alignment(-1, -1),
-          end: const Alignment(1, 1),
-          colors: [dom.dim, FtTokens.surface],
+        color: FtTokens.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        border: Border.all(color: FtTokens.cardBorder),
+      ),
+      padding: EdgeInsets.fromLTRB(16, 12, 16, bottomPad + 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: FtTokens.cardBorder,
+              borderRadius: BorderRadius.circular(99),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 20)),
+              const SizedBox(width: 8),
+              Text(
+                'Reagovali (${reactors.length})',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: FtTokens.onSurface,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...reactors.map((r) {
+            final name = r.snapshot?.displayName ?? r.uid;
+            return GestureDetector(
+              onTap: () => onOpenProfile(r.uid, r.snapshot),
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 7),
+                child: Row(
+                  children: [
+                    _Avatar(
+                      name: name,
+                      photoUrl: r.snapshot?.photoUrl,
+                      size: 36,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        name,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: FtTokens.onSurface,
+                        ),
+                      ),
+                    ),
+                    Text(r.emoji, style: const TextStyle(fontSize: 16)),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.chevron_right_rounded,
+                        size: 16, color: FtTokens.onSurfaceFaint),
+                  ],
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Stranger profile sheet ────────────────────────────────────────────────────
+
+class _StrangerProfileSheet extends StatefulWidget {
+  const _StrangerProfileSheet({
+    required this.uid,
+    required this.displayName,
+    this.photoUrl,
+  });
+
+  final String uid;
+  final String displayName;
+  final String? photoUrl;
+
+  @override
+  State<_StrangerProfileSheet> createState() => _StrangerProfileSheetState();
+}
+
+class _StrangerProfileSheetState extends State<_StrangerProfileSheet> {
+  bool _sending = false;
+  bool _sent = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+    return Container(
+      decoration: BoxDecoration(
+        color: FtTokens.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        border: Border.all(color: FtTokens.cardBorder),
+      ),
+      padding: EdgeInsets.fromLTRB(16, 12, 16, bottomPad + 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: FtTokens.cardBorder,
+              borderRadius: BorderRadius.circular(99),
+            ),
+          ),
+          const SizedBox(height: 20),
+          _Avatar(
+            name: widget.displayName,
+            photoUrl: widget.photoUrl,
+            size: 64,
+            radius: 18,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            widget.displayName,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: FtTokens.onSurface,
+            ),
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: (_sending || _sent)
+                  ? null
+                  : () async {
+                      setState(() => _sending = true);
+                      await context
+                          .read<SocialProvider>()
+                          .sendFriendRequest(widget.uid);
+                      if (mounted) {
+                        setState(() {
+                          _sending = false;
+                          _sent = true;
+                        });
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: FtTokens.accent,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              icon: _sending
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white))
+                  : Icon(_sent
+                      ? Icons.check_rounded
+                      : Icons.person_add_rounded),
+              label: Text(
+                _sent ? 'Žádost odeslána' : 'Přidat přítele',
+                style: const TextStyle(
+                    fontSize: 14, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Activity tab ──────────────────────────────────────────────────────────────
+
+class _ActivityTab extends StatelessWidget {
+  const _ActivityTab();
+
+  @override
+  Widget build(BuildContext context) {
+    final social = context.watch<SocialProvider>();
+    final notifications = social.notifications;
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 24),
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(bottom: 10),
+          child: Text(
+            'NEDÁVNÁ AKTIVITA',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: FtTokens.onSurfaceFaint,
+              letterSpacing: 1.1,
+            ),
+          ),
         ),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: dom.color.withValues(alpha: 0.22)),
+        if (notifications.isEmpty)
+          const _Empty(
+            icon: Icons.notifications_none_rounded,
+            title: 'Žádné upozornění',
+            subtitle: 'Zde uvidíš reakce přátel na tvoje sdílené achievementy.',
+          )
+        else
+          ...notifications.map((n) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: _NotificationCard(notification: n),
+              )),
+      ],
+    );
+  }
+}
+
+class _NotificationCard extends StatelessWidget {
+  const _NotificationCard({required this.notification});
+  final SocialNotification notification;
+
+  @override
+  Widget build(BuildContext context) {
+    final unread = !notification.read;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      decoration: BoxDecoration(
+        color: unread
+            ? FtTokens.accent.withValues(alpha: 0.08)
+            : Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: unread
+              ? FtTokens.accent.withValues(alpha: 0.22)
+              : FtTokens.cardBorder,
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: dom.color.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(11),
-              border: Border.all(color: dom.color.withValues(alpha: 0.3)),
-            ),
-            child: Icon(Icons.workspace_premium_rounded,
-                size: 18, color: dom.color),
+          _Avatar(
+            name: notification.actorName,
+            photoUrl: notification.actorPhoto,
+            size: 36,
+            color: unread ? FtTokens.accent : FtTokens.onSurfaceMuted,
           ),
-          const SizedBox(width: 11),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -759,69 +1270,50 @@ class _FeedCard extends StatelessWidget {
                 RichText(
                   text: TextSpan(
                     style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: FtTokens.onSurface,
-                      height: 1.35,
-                    ),
+                        fontSize: 12,
+                        color: FtTokens.onSurfaceMuted,
+                        height: 1.4),
                     children: [
                       TextSpan(
-                        text: share.actorSnapshot.displayName,
-                        style: TextStyle(color: dom.color),
+                        text: notification.actorName,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: FtTokens.onSurface),
                       ),
-                      const TextSpan(text: ' odemkl(a) úspěch'),
+                      const TextSpan(text: ' reagoval(a) '),
+                      TextSpan(
+                        text: notification.emoji,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                      const TextSpan(text: ' na tvůj achievement '),
+                      TextSpan(
+                        text: notification.achievementTitle,
+                        style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: FtTokens.accent.withValues(alpha: 0.9)),
+                      ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  '"${share.achievementSnapshot.title}"',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: FtTokens.onSurfaceMuted,
-                  ),
-                ),
-                if (share.message?.trim().isNotEmpty == true) ...[
-                  const SizedBox(height: 5),
-                  Text(
-                    share.message!,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: FtTokens.onSurface,
-                      height: 1.35,
-                    ),
-                  ),
-                ],
                 const SizedBox(height: 5),
                 Row(
                   children: [
                     Text(
-                      _relativeTime(share.createdAt),
+                      _relativeTime(notification.createdAt),
                       style: const TextStyle(
                           fontSize: 10, color: FtTokens.onSurfaceFaint),
                     ),
-                    const Spacer(),
-                    if (diffLabel.isNotEmpty)
+                    if (unread) ...[
+                      const SizedBox(width: 6),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 7, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: dom.color.withValues(alpha: 0.14),
-                          borderRadius: BorderRadius.circular(99),
-                          border: Border.all(
-                              color: dom.color.withValues(alpha: 0.28)),
-                        ),
-                        child: Text(
-                          diffLabel,
-                          style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            color: dom.color,
-                            letterSpacing: 0.3,
-                          ),
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: FtTokens.accent,
+                          shape: BoxShape.circle,
                         ),
                       ),
+                    ],
                   ],
                 ),
               ],
