@@ -534,5 +534,8 @@
   "progAchievementDifficultyExtraHard": "Extra těžké",
   "progQuestCriterionTotalRuleValueWithRule": "Podle celkového součtu: {rule}",
   "progQuestCriterionTotalRuleValueGeneric": "Podle nasbíraného součtu",
-  "progQuestCriterionCurrentPeriodRuleSet": "Pro combo v aktuálním období"
+  "progQuestCriterionCurrentPeriodRuleSet": "Pro combo v aktuálním období",
+
+  "settingsDeveloperTools": "Nástroje vývojáře",
+  "devtoolsTitle": "Nástroje vývojáře"
 }

@@ -7,6 +7,36 @@ import '../data/kaloricke_tabulky_service.dart';
 import '../data/local/kt_nutrition_database.dart';
 import 'kaloricke_tabulky_provider/kt_nutrition_queries.dart';
 import 'kaloricke_tabulky_provider/kt_sync_coordinator.dart';
+import '../../devtools/application/devtools_sync_logger.dart';
+import '../../devtools/domain/devtools_sync_event.dart';
+
+class KtNutritionRangeSummary {
+  final double calories;
+  final double protein;
+  final double fat;
+  final double carbs;
+  final double fiber;
+  final double sugar;
+  final double salt;
+  final double saturatedFat;
+  final int validDays;
+  final int excludedDays;
+
+  const KtNutritionRangeSummary({
+    required this.calories,
+    required this.protein,
+    required this.fat,
+    required this.carbs,
+    required this.fiber,
+    required this.sugar,
+    required this.salt,
+    required this.saturatedFat,
+    required this.validDays,
+    required this.excludedDays,
+  });
+
+  bool get hasData => validDays > 0;
+}
 
 class KalorickeTabulkyProvider extends ChangeNotifier {
   final KalorickeTabulkyService _service;
@@ -45,6 +75,12 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
   bool get hasLoadedToday => _today != null;
   bool get hasTodayData => _today?.hasData ?? false;
 
+  // ─── Debug/diagnostic getters (read-only, no side effects) ─────────────────
+
+  int get debugNutritionCacheCount => _db.debugCacheCount;
+  String? get debugNutritionFirstDateKey => _db.debugCacheFirstDateKey;
+  String? get debugNutritionLastDateKey => _db.debugCacheLastDateKey;
+
   double get todayCalories => _today?.calories ?? 0;
   double get todayProtein => _today?.protein ?? 0;
   double get todayFat => _today?.fat ?? 0;
@@ -61,33 +97,137 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
   Map<String, KtDayNutrition> nutritionRange(DateTime start, DateTime end) =>
       _db.getRange(start, end);
 
+  /// Average daily nutrition over [start, end], excluding today and days with
+  /// nothing logged.
+  ///
+  /// This is optimized for UI cards: it calls `_db.getRange()` only once and
+  /// computes all macro averages from the same cached range.
+  KtNutritionRangeSummary? nutritionSummaryForRange(
+    DateTime start,
+    DateTime end,
+  ) {
+    final normalizedStart = KtNutritionQueries.dateOnly(start);
+    final normalizedEnd = KtNutritionQueries.dateOnly(end);
+
+    final days = _db.getRange(normalizedStart, normalizedEnd);
+    if (days.isEmpty) return null;
+
+    final todayKey = KtNutritionQueries.storeKey(
+      KtNutritionQueries.dateOnly(DateTime.now()),
+    );
+
+    final valid = <KtDayNutrition>[];
+    var excludedDays = 0;
+
+    for (final entry in days.entries) {
+      final isToday = entry.key == todayKey;
+      final day = entry.value;
+
+      if (isToday || !day.hasData) {
+        excludedDays++;
+        continue;
+      }
+
+      valid.add(day);
+    }
+
+    if (valid.isEmpty) return null;
+
+    double avg(double Function(KtDayNutrition day) pick) {
+      final total = valid.fold<double>(0, (sum, day) => sum + pick(day));
+      return total / valid.length;
+    }
+
+    return KtNutritionRangeSummary(
+      calories: avg((d) => d.calories),
+      protein: avg((d) => d.protein),
+      fat: avg((d) => d.fat),
+      carbs: avg((d) => d.carbs),
+      fiber: avg((d) => d.fiber),
+      sugar: avg((d) => d.sugar),
+      salt: avg((d) => d.salt),
+      saturatedFat: avg((d) => d.saturatedFat),
+      validDays: valid.length,
+      excludedDays: excludedDays,
+    );
+  }
+
   /// Average daily calories over [start, end], excluding today and days with
   /// nothing logged. Returns null when no valid days are available.
+  ///
+  /// Kept for compatibility. Prefer [nutritionSummaryForRange] in UI when
+  /// multiple fields are needed.
   double? avgCaloriesForRange(DateTime start, DateTime end) =>
       KtNutritionQueries.avgField(
-          _db, start, end, (d) => d.calories, 'calories');
+        _db,
+        start,
+        end,
+        (d) => d.calories,
+        'calories',
+      );
 
   double? avgProteinForRange(DateTime start, DateTime end) =>
-      KtNutritionQueries.avgField(_db, start, end, (d) => d.protein, 'protein');
+      KtNutritionQueries.avgField(
+        _db,
+        start,
+        end,
+        (d) => d.protein,
+        'protein',
+      );
 
   double? avgFatForRange(DateTime start, DateTime end) =>
-      KtNutritionQueries.avgField(_db, start, end, (d) => d.fat, 'fat');
+      KtNutritionQueries.avgField(
+        _db,
+        start,
+        end,
+        (d) => d.fat,
+        'fat',
+      );
 
   double? avgCarbsForRange(DateTime start, DateTime end) =>
-      KtNutritionQueries.avgField(_db, start, end, (d) => d.carbs, 'carbs');
+      KtNutritionQueries.avgField(
+        _db,
+        start,
+        end,
+        (d) => d.carbs,
+        'carbs',
+      );
 
   double? avgFiberForRange(DateTime start, DateTime end) =>
-      KtNutritionQueries.avgField(_db, start, end, (d) => d.fiber, 'fiber');
+      KtNutritionQueries.avgField(
+        _db,
+        start,
+        end,
+        (d) => d.fiber,
+        'fiber',
+      );
 
   double? avgSugarForRange(DateTime start, DateTime end) =>
-      KtNutritionQueries.avgField(_db, start, end, (d) => d.sugar, 'sugar');
+      KtNutritionQueries.avgField(
+        _db,
+        start,
+        end,
+        (d) => d.sugar,
+        'sugar',
+      );
 
   double? avgSaltForRange(DateTime start, DateTime end) =>
-      KtNutritionQueries.avgField(_db, start, end, (d) => d.salt, 'salt');
+      KtNutritionQueries.avgField(
+        _db,
+        start,
+        end,
+        (d) => d.salt,
+        'salt',
+      );
 
   double? avgSaturatedFatForRange(DateTime start, DateTime end) =>
       KtNutritionQueries.avgField(
-          _db, start, end, (d) => d.saturatedFat, 'saturatedFat');
+        _db,
+        start,
+        end,
+        (d) => d.saturatedFat,
+        'saturatedFat',
+      );
 
   // ─── Lifecycle ─────────────────────────────────────────────────────────────
 
@@ -131,7 +271,8 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
       AppLog.ktProvider.info(
         'initialize() finished',
         payload: 'loggedIn=$isLoggedIn, todayLoaded=${_today != null}, '
-            'syncError=$_syncError, lastSyncedAt=${_lastSyncedAt?.toIso8601String()}',
+            'syncError=$_syncError, '
+            'lastSyncedAt=${_lastSyncedAt?.toIso8601String()}',
       );
       _isInitializing = false;
       notifyListeners();
@@ -202,23 +343,28 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
     }
 
     AppLog.ktProvider.info('refresh() started');
+    final syncStart = DateTime.now();
     _isRefreshing = true;
     _syncError = null;
     notifyListeners();
 
+    String? syncError;
     try {
       await _doSyncRecentDays();
     } on KtAuthException catch (e) {
       AppLog.ktProvider.warn('refresh() auth error: ${e.message}');
       _authError = e.message;
+      syncError = 'auth: ${e.message}';
       await _service.logout();
       _resetLocalData(keepErrors: true);
     } on KtApiException catch (e) {
       AppLog.ktProvider.warn('refresh() API error: ${e.message}');
       _syncError = e.message;
+      syncError = 'api: ${e.message}';
     } catch (e) {
       AppLog.ktProvider.warn('refresh() unexpected error: $e');
       _syncError = e.toString();
+      syncError = e.toString();
     } finally {
       AppLog.ktProvider.info(
         'refresh() finished',
@@ -228,6 +374,19 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
       _isRefreshing = false;
       notifyListeners();
     }
+
+    unawaited(
+      DevToolsSyncLogger.instance.record(
+        DevToolsSyncEvent(
+          timestamp: syncStart,
+          source: 'manual',
+          feature: 'nutrition',
+          result: syncError != null ? 'failure' : 'success',
+          durationMs: DateTime.now().difference(syncStart).inMilliseconds,
+          errorMessage: syncError,
+        ),
+      ),
+    );
   }
 
   Future<void> refreshRange(DateTime start, DateTime end) async {
@@ -251,24 +410,33 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
       payload:
           '${KtNutritionQueries.storeKey(normalizedStart)} -> ${KtNutritionQueries.storeKey(normalizedEnd)}',
     );
+
+    final syncStart = DateTime.now();
     _isRefreshing = true;
     _syncError = null;
     notifyListeners();
 
+    String? syncError;
     try {
-      await _doSyncRange(normalizedStart, normalizedEnd,
-          reason: 'manual-range-refresh');
+      await _doSyncRange(
+        normalizedStart,
+        normalizedEnd,
+        reason: 'manual-range-refresh',
+      );
     } on KtAuthException catch (e) {
       AppLog.ktProvider.warn('refreshRange() auth error: ${e.message}');
       _authError = e.message;
+      syncError = 'auth: ${e.message}';
       await _service.logout();
       _resetLocalData(keepErrors: true);
     } on KtApiException catch (e) {
       AppLog.ktProvider.warn('refreshRange() API error: ${e.message}');
       _syncError = e.message;
+      syncError = 'api: ${e.message}';
     } catch (e) {
       AppLog.ktProvider.warn('refreshRange() unexpected error: $e');
       _syncError = e.toString();
+      syncError = e.toString();
     } finally {
       AppLog.ktProvider.info(
         'refreshRange() finished',
@@ -278,6 +446,23 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
       _isRefreshing = false;
       notifyListeners();
     }
+
+    unawaited(
+      DevToolsSyncLogger.instance.record(
+        DevToolsSyncEvent(
+          timestamp: syncStart,
+          source: 'manual',
+          feature: 'nutrition',
+          result: syncError != null ? 'failure' : 'success',
+          durationMs: DateTime.now().difference(syncStart).inMilliseconds,
+          errorMessage: syncError,
+          extra: {
+            'rangeStart': KtNutritionQueries.storeKey(normalizedStart),
+            'rangeEnd': KtNutritionQueries.storeKey(normalizedEnd),
+          },
+        ),
+      ),
+    );
   }
 
   // ─── Sync delegation ───────────────────────────────────────────────────────

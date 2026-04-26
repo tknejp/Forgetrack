@@ -1637,4 +1637,10 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get progQuestCriterionDomainRewardsGeneric => 'Podle odměn v doméně';
+
+  @override
+  String get settingsDeveloperTools => 'Nástroje vývojáře';
+
+  @override
+  String get devtoolsTitle => 'Nástroje vývojáře';
 }

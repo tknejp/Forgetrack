@@ -8,6 +8,8 @@ import '../domain/activity_record.dart';
 import '../domain/sleep_record.dart';
 import '../domain/weight_record.dart';
 import 'fitness_provider/fitness_queries.dart';
+import '../../devtools/application/devtools_sync_logger.dart';
+import '../../devtools/domain/devtools_sync_event.dart';
 
 enum FitnessAccessState {
   checking,
@@ -19,6 +21,7 @@ enum FitnessAccessState {
 class FitnessProvider extends ChangeNotifier {
   static const int _defaultHistoryDays = 30;
   static const int _extendedHistoryDays = 365;
+  static const int _normalRefreshDays = 7;
 
   final HealthConnectService _service;
   final HealthDatabase _db;
@@ -49,6 +52,23 @@ class FitnessProvider extends ChangeNotifier {
   SleepRecord? _todaySleep;
   List<SleepRecord> _sleepHistory = [];
 
+  // ─── Debug / pipeline diagnostics (diagnostic-only, no production effect) ─
+  String? _debugLastRefreshSource;
+  DateTime? _debugLastRefreshStartedAt;
+  DateTime? _debugLastRefreshCompletedAt;
+  int? _debugLastRefreshDurationMs;
+  String? _debugLastRefreshError;
+  int? _debugTodayStepsBeforeRefresh;
+  int? _debugTodayStepsAfterRefresh;
+  int? _debugLastRecordStepsBefore;
+  DateTime? _debugLastRecordDateBefore;
+  int? _debugLastRecordStepsAfter;
+  DateTime? _debugLastRecordDateAfter;
+  int? _debugLastFetchedTodaySteps;
+  int? _debugLastQueryDays;
+  DateTime? _debugLastDbWatcherFiredAt;
+  int? _debugDbWatcherTodaySteps;
+
   // ─── Public getters ───────────────────────────────────────────────────────
   bool get isLoading => _isLoading;
   bool get hasInitialized => _hasInitialized;
@@ -73,6 +93,47 @@ class FitnessProvider extends ChangeNotifier {
   double? get latestBodyFat => _latestBodyFat;
   SleepRecord? get todaySleep => _todaySleep;
   List<SleepRecord> get sleepHistory => _sleepHistory;
+
+  // ─── Debug/diagnostic getters (read-only, no side effects) ──────────────
+  int get debugStepsRecordCount => _stepsHistory.length;
+  int get debugWeightRecordCount => _weightHistory.length;
+  int get debugSleepRecordCount => _sleepHistory.length;
+  int get debugActivitiesCount => _activities.length;
+  DateTime? get debugStepsFirstDate =>
+      _stepsHistory.isNotEmpty ? _stepsHistory.first.date : null;
+  DateTime? get debugStepsLastDate =>
+      _stepsHistory.isNotEmpty ? _stepsHistory.last.date : null;
+
+  // Pipeline debug getters — all cheap in-memory reads.
+  String? get debugLastRefreshSource => _debugLastRefreshSource;
+  DateTime? get debugLastRefreshStartedAt => _debugLastRefreshStartedAt;
+  DateTime? get debugLastRefreshCompletedAt => _debugLastRefreshCompletedAt;
+  int? get debugLastRefreshDurationMs => _debugLastRefreshDurationMs;
+  String? get debugLastRefreshError => _debugLastRefreshError;
+  int? get debugTodayStepsBeforeRefresh => _debugTodayStepsBeforeRefresh;
+  int? get debugTodayStepsAfterRefresh => _debugTodayStepsAfterRefresh;
+  int? get debugLastRecordStepsBefore => _debugLastRecordStepsBefore;
+  DateTime? get debugLastRecordDateBefore => _debugLastRecordDateBefore;
+  int? get debugLastRecordStepsAfter => _debugLastRecordStepsAfter;
+  DateTime? get debugLastRecordDateAfter => _debugLastRecordDateAfter;
+  int? get debugLastFetchedTodaySteps => _debugLastFetchedTodaySteps;
+  int? get debugLastQueryDays => _debugLastQueryDays;
+  DateTime? get debugLastDbWatcherFiredAt => _debugLastDbWatcherFiredAt;
+  int? get debugDbWatcherTodaySteps => _debugDbWatcherTodaySteps;
+
+  /// Today's steps by date matching (vs todaySteps which uses .last position).
+  int get debugTodayStepsDateMatch => stepsForDate(DateTime.now());
+
+  /// Last ≤5 step records: (dateKey, steps). Cheap slice — no DB access.
+  List<({String dateKey, int steps})> get debugStepRecordsPreview {
+    const limit = 5;
+    final src = _stepsHistory.length > limit
+        ? _stepsHistory.sublist(_stepsHistory.length - limit)
+        : _stepsHistory;
+    return [
+      for (final r in src) (dateKey: _fmtDateKey(r.date), steps: r.steps)
+    ];
+  }
 
   // ─── Computed step totals ─────────────────────────────────────────────────
 
@@ -199,7 +260,9 @@ class FitnessProvider extends ChangeNotifier {
         // Set up live DB watcher — when background task writes data, reload it.
         _dbChangeSubscription?.cancel();
         _dbChangeSubscription = _db.watchForChanges().listen((_) {
+          _debugLastDbWatcherFiredAt = DateTime.now();
           _loadFromDb();
+          _debugDbWatcherTodaySteps = todaySteps;
           notifyListeners();
         });
       } else {
@@ -255,23 +318,71 @@ class FitnessProvider extends ChangeNotifier {
       await initialize();
       return;
     }
+    final syncStart = DateTime.now();
+    final stepsBefore = todaySteps;
+    final lastRecordBefore = _stepsHistory.lastOrNull;
+
+    _debugLastRefreshSource = 'manual';
+    _debugLastRefreshStartedAt = syncStart;
+    _debugLastRefreshCompletedAt = null;
+    _debugTodayStepsBeforeRefresh = stepsBefore;
+    _debugLastRecordStepsBefore = lastRecordBefore?.steps;
+    _debugLastRecordDateBefore = lastRecordBefore?.date;
+    _debugLastRefreshError = null;
+    _debugLastFetchedTodaySteps = null;
+    _debugLastQueryDays = null;
+
     _inFlight = true;
     _isRefreshing = true;
     _errorMessage = null;
     notifyListeners();
 
+    String? syncError;
     try {
       await _refreshHistoryAccess(interactive: true);
+      _debugLastQueryDays = _historyLookbackDays;
       await _fetchFromHC();
+      _debugLastFetchedTodaySteps = stepsForDate(DateTime.now());
     } on _QuotaExceededException {
-      // Quota exhausted — serve existing DB data, do not touch _lastSyncedAt.
+      syncError = 'quota_exceeded';
+      _debugLastRefreshError = syncError;
     } catch (e) {
       _errorMessage = e.toString();
+      syncError = e.toString();
+      _debugLastRefreshError = syncError;
     } finally {
+      final completedAt = DateTime.now();
+      _debugLastRefreshCompletedAt = completedAt;
+      _debugLastRefreshDurationMs =
+          completedAt.difference(syncStart).inMilliseconds;
+      _debugTodayStepsAfterRefresh = todaySteps;
+      _debugLastRecordStepsAfter = _stepsHistory.lastOrNull?.steps;
+      _debugLastRecordDateAfter = _stepsHistory.lastOrNull?.date;
       _isRefreshing = false;
       _inFlight = false;
       notifyListeners();
     }
+
+    unawaited(DevToolsSyncLogger.instance.record(DevToolsSyncEvent(
+      timestamp: syncStart,
+      source: 'manual',
+      feature: 'health',
+      result: syncError != null ? 'failure' : 'success',
+      durationMs: DateTime.now().difference(syncStart).inMilliseconds,
+      errorMessage: syncError,
+      extra: {
+        'stepsBefore': stepsBefore,
+        'stepsAfter': todaySteps,
+        'stepsDateMatch': debugTodayStepsDateMatch,
+        'lastRecordDate': _stepsHistory.lastOrNull != null
+            ? _fmtDateKey(_stepsHistory.lastOrNull!.date)
+            : null,
+        'lastRecordSteps': _stepsHistory.lastOrNull?.steps,
+        'recordCount': debugStepsRecordCount,
+        'queryDays': _debugLastQueryDays,
+        'fetchedTodaySteps': _debugLastFetchedTodaySteps,
+      },
+    )));
   }
 
   /// Background-safe variant of [refresh] – never shows interactive dialogs.
@@ -282,47 +393,155 @@ class FitnessProvider extends ChangeNotifier {
       await initialize();
       return;
     }
+    final syncStart = DateTime.now();
+    final stepsBefore = todaySteps;
+    final lastRecordBefore = _stepsHistory.lastOrNull;
+
+    _debugLastRefreshSource = 'background';
+    _debugLastRefreshStartedAt = syncStart;
+    _debugLastRefreshCompletedAt = null;
+    _debugTodayStepsBeforeRefresh = stepsBefore;
+    _debugLastRecordStepsBefore = lastRecordBefore?.steps;
+    _debugLastRecordDateBefore = lastRecordBefore?.date;
+    _debugLastRefreshError = null;
+    _debugLastFetchedTodaySteps = null;
+    _debugLastQueryDays = null;
+
     _inFlight = true;
     _isRefreshing = true;
     notifyListeners();
 
+    String? syncError;
     try {
       await _refreshHistoryAccess(interactive: false);
+      _debugLastQueryDays = _historyLookbackDays;
       await _fetchFromHC();
+      _debugLastFetchedTodaySteps = stepsForDate(DateTime.now());
     } on _QuotaExceededException {
-      // silent
-    } catch (_) {
-      // silently ignore background errors
+      syncError = 'quota_exceeded';
+      _debugLastRefreshError = syncError;
+    } catch (e) {
+      syncError = e.toString();
+      _debugLastRefreshError = syncError;
     } finally {
+      final completedAt = DateTime.now();
+      _debugLastRefreshCompletedAt = completedAt;
+      _debugLastRefreshDurationMs =
+          completedAt.difference(syncStart).inMilliseconds;
+      _debugTodayStepsAfterRefresh = todaySteps;
+      _debugLastRecordStepsAfter = _stepsHistory.lastOrNull?.steps;
+      _debugLastRecordDateAfter = _stepsHistory.lastOrNull?.date;
       _isRefreshing = false;
       _inFlight = false;
       notifyListeners();
     }
+
+    unawaited(DevToolsSyncLogger.instance.record(DevToolsSyncEvent(
+      timestamp: syncStart,
+      source: 'background',
+      feature: 'health',
+      result: syncError != null ? 'failure' : 'success',
+      durationMs: DateTime.now().difference(syncStart).inMilliseconds,
+      errorMessage: syncError,
+      extra: {
+        'stepsBefore': stepsBefore,
+        'stepsAfter': todaySteps,
+        'stepsDateMatch': stepsForDate(DateTime.now()),
+        'lastRecordDate': _stepsHistory.lastOrNull != null
+            ? _fmtDateKey(_stepsHistory.lastOrNull!.date)
+            : null,
+        'lastRecordSteps': _stepsHistory.lastOrNull?.steps,
+        'recordCount': debugStepsRecordCount,
+        'queryDays': _debugLastQueryDays,
+        'fetchedTodaySteps': _debugLastFetchedTodaySteps,
+      },
+    )));
   }
 
   Future<void> refreshRange(DateTime start, DateTime end) async {
     if (_inFlight) return;
+
     if (!_isHealthConnectAvailable || !_hasPermissions) {
       await initialize();
-      return;
+
+      if (!_isHealthConnectAvailable || !_hasPermissions) {
+        return;
+      }
     }
+
+    final syncStart = DateTime.now();
+    final normalizedStart = DateTime(start.year, start.month, start.day);
+    final normalizedEnd = DateTime(end.year, end.month, end.day);
+
+    _debugLastRefreshSource = 'range';
+    _debugLastRefreshStartedAt = syncStart;
+    _debugLastRefreshCompletedAt = null;
+    _debugLastRefreshError = null;
+    _debugLastQueryDays =
+        normalizedEnd.difference(normalizedStart).inDays.abs() + 1;
+
     _inFlight = true;
     _isRefreshing = true;
     _errorMessage = null;
     notifyListeners();
 
+    String? syncError;
+
     try {
       await _refreshHistoryAccess(interactive: true);
-      await _fetchOverviewRangeFromHC(start, end);
+      await _fetchOverviewRangeFromHC(normalizedStart, normalizedEnd);
+      _debugLastFetchedTodaySteps = stepsForDate(DateTime.now());
     } on _QuotaExceededException {
-      // Quota exhausted — serve existing DB data, do not touch _lastSyncedAt.
+      syncError = 'quota_exceeded';
+      _debugLastRefreshError = syncError;
+
+      // Preserve UI from existing DB cache.
+      _loadFromDb();
     } catch (e) {
-      _errorMessage = e.toString();
+      syncError = e.toString();
+      _errorMessage = syncError;
+      _debugLastRefreshError = syncError;
+
+      // Preserve UI from existing DB cache if fetch partially failed.
+      _loadFromDb();
     } finally {
+      final completedAt = DateTime.now();
+      _debugLastRefreshCompletedAt = completedAt;
+      _debugLastRefreshDurationMs =
+          completedAt.difference(syncStart).inMilliseconds;
+      _debugTodayStepsAfterRefresh = todaySteps;
+      _debugLastRecordStepsAfter = _stepsHistory.lastOrNull?.steps;
+      _debugLastRecordDateAfter = _stepsHistory.lastOrNull?.date;
+
       _isRefreshing = false;
       _inFlight = false;
       notifyListeners();
     }
+
+    unawaited(
+      DevToolsSyncLogger.instance.record(
+        DevToolsSyncEvent(
+          timestamp: syncStart,
+          source: 'manual',
+          feature: 'health',
+          result: syncError != null ? 'failure' : 'success',
+          durationMs: DateTime.now().difference(syncStart).inMilliseconds,
+          errorMessage: syncError,
+          extra: {
+            'rangeStart': _fmtDateKey(normalizedStart),
+            'rangeEnd': _fmtDateKey(normalizedEnd),
+            'stepsAfter': todaySteps,
+            'stepsDateMatch': debugTodayStepsDateMatch,
+            'lastRecordDate': _stepsHistory.lastOrNull != null
+                ? _fmtDateKey(_stepsHistory.lastOrNull!.date)
+                : null,
+            'lastRecordSteps': _stepsHistory.lastOrNull?.steps,
+            'recordCount': debugStepsRecordCount,
+            'queryDays': _debugLastQueryDays,
+          },
+        ),
+      ),
+    );
   }
 
   Future<void> installHealthConnect() => _service.installHealthConnect();
@@ -397,81 +616,183 @@ class FitnessProvider extends ChangeNotifier {
     _hasHistoricalDataAccess = authorized;
   }
 
-  /// Fetches all data from HC. On success, persists to DB and stamps sync time.
-  /// Throws [_QuotaExceededException] so [refresh] can handle it silently.
-  Future<void> _fetchFromHC() async {
-    final days = _historyLookbackDays;
+  /// Fetches recent data from Health Connect and safely merges successful
+  /// metric groups into the local DB.
+  ///
+  /// Safety rules:
+  /// - no full-table clear during normal refresh
+  /// - failed metric groups are skipped
+  /// - existing cached data is preserved on failure
+  /// - quota errors are captured but do not overwrite cache with empty/zero data
+  Future<void> _fetchFromHC({int? daysOverride}) async {
+    final days = daysOverride ?? _normalRefreshDays;
+    final syncTime = DateTime.now();
 
+    var anySuccess = false;
+    var anyFailure = false;
+
+    final succeededGroups = <String>[];
+    final failedGroups = <String>[];
+
+    List<StepsRecord>? fetchedSteps;
+
+    // ─── Steps ──────────────────────────────────────────────────────────────
     try {
-      _stepsHistory = await _service.getStepsHistory(days);
-    } catch (e) {
-      if (_isQuotaError(e)) throw const _QuotaExceededException();
-      _stepsHistory = [];
-    }
-    try {
-      _activeCaloriesHistory = await _service.getActiveCaloriesHistory(days);
-    } catch (e) {
-      if (_isQuotaError(e)) throw const _QuotaExceededException();
-      _activeCaloriesHistory = [];
-    }
-    try {
-      _weightHistory = await _service.getWeightHistory(days);
-    } catch (e) {
-      if (_isQuotaError(e)) throw const _QuotaExceededException();
-      _weightHistory = [];
-    }
-    try {
-      _latestBodyFat = await _service.getLatestBodyFat();
-    } catch (e) {
-      if (_isQuotaError(e)) throw const _QuotaExceededException();
-      _latestBodyFat = null;
-    }
-    try {
-      _workoutPermissionGranted = await _service.hasWorkoutPermission() == true;
-    } catch (e) {
-      if (_isQuotaError(e)) throw const _QuotaExceededException();
-      _workoutPermissionGranted = false;
-    }
-    if (_workoutPermissionGranted) {
-      try {
-        final now = DateTime.now();
-        _activities = await _service.getActivities(
-          now.subtract(Duration(days: days - 1)),
-          now,
-        );
-      } catch (e) {
-        if (_isQuotaError(e)) throw const _QuotaExceededException();
-        _activities = [];
+      fetchedSteps = await _service.getStepsHistory(days);
+
+      if (fetchedSteps.isNotEmpty) {
+        await _db.saveStepsPartial(fetchedSteps);
+        succeededGroups.add('steps');
+        anySuccess = true;
+      } else {
+        // Empty can be valid, but normal refresh must not wipe old cache.
+        failedGroups.add('steps_empty_skipped');
+        anyFailure = true;
       }
-    } else {
-      _activities = [];
-    }
-    try {
-      _sleepHistory = await _service.getSleepHistory(days);
-      _todaySleep = _sleepHistory.isNotEmpty ? _sleepHistory.first : null;
     } catch (e) {
-      if (_isQuotaError(e)) throw const _QuotaExceededException();
-      _sleepHistory = [];
-      _todaySleep = null;
+      failedGroups.add(_isQuotaError(e) ? 'steps_quota' : 'steps_error');
+      anyFailure = true;
     }
 
-    // All HC calls succeeded — persist and stamp the sync time.
-    _lastSyncedAt = DateTime.now();
-    await _db.saveAll(
-      steps: _stepsHistory,
-      calories: _activeCaloriesHistory,
-      weight: _weightHistory,
-      sleep: _sleepHistory,
-      activities: _activities,
+    // ─── Active calories ────────────────────────────────────────────────────
+    try {
+      final calories = await _service.getActiveCaloriesHistory(days);
+
+      // Current calorie model is index-aligned to step dates.
+      // If steps failed, do not guess date keys for calories in this refactor.
+      if (calories.isNotEmpty &&
+          fetchedSteps != null &&
+          fetchedSteps.isNotEmpty) {
+        await _db.saveCaloriesPartial(
+          dateReference: fetchedSteps,
+          calories: calories,
+        );
+        succeededGroups.add('calories');
+        anySuccess = true;
+      } else {
+        failedGroups.add('calories_empty_or_no_date_reference_skipped');
+        anyFailure = true;
+      }
+    } catch (e) {
+      failedGroups.add(_isQuotaError(e) ? 'calories_quota' : 'calories_error');
+      anyFailure = true;
+    }
+
+    // ─── Weight ─────────────────────────────────────────────────────────────
+    try {
+      final weight = await _service.getWeightHistory(days);
+
+      if (weight.isNotEmpty) {
+        await _db.saveWeightPartial(weight);
+        succeededGroups.add('weight');
+        anySuccess = true;
+      } else {
+        // Empty weight is common; preserve existing cache.
+        failedGroups.add('weight_empty_skipped');
+      }
+    } catch (e) {
+      failedGroups.add(_isQuotaError(e) ? 'weight_quota' : 'weight_error');
+      anyFailure = true;
+    }
+
+    // ─── Latest body fat ────────────────────────────────────────────────────
+    try {
+      final latestBodyFat = await _service.getLatestBodyFat();
+
+      if (latestBodyFat != null) {
+        _latestBodyFat = latestBodyFat;
+        await _db.updateMeta(latestBodyFat: latestBodyFat);
+        succeededGroups.add('bodyFat');
+        anySuccess = true;
+      }
+    } catch (e) {
+      failedGroups.add(_isQuotaError(e) ? 'bodyFat_quota' : 'bodyFat_error');
+      anyFailure = true;
+    }
+
+    // ─── Workout permission + activities ────────────────────────────────────
+    try {
+      final workoutPermission = await _service.hasWorkoutPermission() == true;
+      _workoutPermissionGranted = workoutPermission;
+      await _db.updateMeta(workoutPermission: workoutPermission);
+
+      if (workoutPermission) {
+        try {
+          final now = DateTime.now();
+          final activities = await _service.getActivities(
+            now.subtract(Duration(days: days - 1)),
+            now,
+          );
+
+          if (activities.isNotEmpty) {
+            await _db.saveActivitiesPartial(activities);
+            succeededGroups.add('activities');
+            anySuccess = true;
+          } else {
+            // Empty activities can be valid. Preserve existing cache.
+            failedGroups.add('activities_empty_skipped');
+          }
+        } catch (e) {
+          failedGroups.add(
+            _isQuotaError(e) ? 'activities_quota' : 'activities_error',
+          );
+          anyFailure = true;
+        }
+      }
+    } catch (e) {
+      failedGroups.add(
+        _isQuotaError(e)
+            ? 'workoutPermission_quota'
+            : 'workoutPermission_error',
+      );
+      anyFailure = true;
+    }
+
+    // ─── Sleep ──────────────────────────────────────────────────────────────
+    try {
+      final sleep = await _service.getSleepHistory(days);
+
+      if (sleep.isNotEmpty) {
+        await _db.saveSleepPartial(sleep);
+        succeededGroups.add('sleep');
+        anySuccess = true;
+      } else {
+        // Empty sleep can happen; preserve existing cache.
+        failedGroups.add('sleep_empty_skipped');
+      }
+    } catch (e) {
+      failedGroups.add(_isQuotaError(e) ? 'sleep_quota' : 'sleep_error');
+      anyFailure = true;
+    }
+
+    if (!anySuccess) {
+      _debugLastRefreshError = failedGroups.isEmpty
+          ? 'health_sync_no_successful_groups'
+          : 'health_sync_failed: ${failedGroups.join(",")}';
+      throw Exception(_debugLastRefreshError);
+    }
+
+    _lastSyncedAt = syncTime;
+
+    await _db.updateMeta(
+      lastSyncedAt: _lastSyncedAt!,
       workoutPermission: _workoutPermissionGranted,
       latestBodyFat: _latestBodyFat,
-      lastSyncedAt: _lastSyncedAt!,
     );
+
+    _loadFromDb();
+
+    _debugLastRefreshError =
+        anyFailure ? 'partial_success failed=${failedGroups.join(",")}' : null;
+
+    _debugLastFetchedTodaySteps = stepsForDate(DateTime.now());
+    _debugLastQueryDays = days;
   }
 
   Future<void> _fetchOverviewRangeFromHC(DateTime start, DateTime end) async {
     final rangeStart = DateTime(start.year, start.month, start.day);
     final rangeEnd = DateTime(end.year, end.month, end.day);
+    final rangeEndExclusive = rangeEnd.add(const Duration(days: 1));
 
     List<StepsRecord> steps;
     List<double> calories;
@@ -480,29 +801,40 @@ class FitnessProvider extends ChangeNotifier {
     double? latestBodyFat;
 
     try {
-      steps = await _service.getStepsHistoryForRange(rangeStart, rangeEnd);
+      steps = await _service.getStepsHistoryForRange(
+        rangeStart,
+        rangeEndExclusive,
+      );
     } catch (e) {
       if (_isQuotaError(e)) throw const _QuotaExceededException();
       rethrow;
     }
 
     try {
-      calories =
-          await _service.getActiveCaloriesHistoryForRange(rangeStart, rangeEnd);
+      calories = await _service.getActiveCaloriesHistoryForRange(
+        rangeStart,
+        rangeEndExclusive,
+      );
     } catch (e) {
       if (_isQuotaError(e)) throw const _QuotaExceededException();
       rethrow;
     }
 
     try {
-      weight = await _service.getWeightHistoryForRange(rangeStart, rangeEnd);
+      weight = await _service.getWeightHistoryForRange(
+        rangeStart,
+        rangeEndExclusive,
+      );
     } catch (e) {
       if (_isQuotaError(e)) throw const _QuotaExceededException();
       rethrow;
     }
 
     try {
-      sleep = await _service.getSleepHistoryForRange(rangeStart, rangeEnd);
+      sleep = await _service.getSleepHistoryForRange(
+        rangeStart,
+        rangeEndExclusive,
+      );
     } catch (e) {
       if (_isQuotaError(e)) throw const _QuotaExceededException();
       rethrow;
@@ -515,7 +847,26 @@ class FitnessProvider extends ChangeNotifier {
       rethrow;
     }
 
+    steps = steps
+        .where((r) => _isDateInInclusiveRange(r.date, rangeStart, rangeEnd))
+        .toList();
+
+    weight = weight
+        .where((r) => _isDateInInclusiveRange(r.date, rangeStart, rangeEnd))
+        .toList();
+
+    sleep = sleep
+        .where((r) => _isDateInInclusiveRange(r.wakeTime, rangeStart, rangeEnd))
+        .toList();
+
+    // Calories are positional/aligned with the fetched steps range.
+    // If HC returned one extra day because of exclusive end handling, trim it.
+    if (calories.length > steps.length) {
+      calories = calories.sublist(0, steps.length);
+    }
+
     _lastSyncedAt = DateTime.now();
+
     await _db.saveOverviewRange(
       steps: steps,
       calories: calories,
@@ -524,7 +875,36 @@ class FitnessProvider extends ChangeNotifier {
       latestBodyFat: latestBodyFat,
       lastSyncedAt: _lastSyncedAt!,
     );
+
     _loadFromDb();
+  }
+
+  bool _isDateInInclusiveRange(
+    DateTime value,
+    DateTime start,
+    DateTime end,
+  ) {
+    final day = DateTime(value.year, value.month, value.day);
+    final startDay = DateTime(start.year, start.month, start.day);
+    final endDay = DateTime(end.year, end.month, end.day);
+
+    return !day.isBefore(startDay) && !day.isAfter(endDay);
+  }
+
+  bool _isSameOrAfterDay(DateTime value, DateTime start) {
+    final day = DateTime(value.year, value.month, value.day);
+    final startDay = DateTime(start.year, start.month, start.day);
+    return !day.isBefore(startDay);
+  }
+
+  bool _isSameOrBeforeDay(DateTime value, DateTime end) {
+    final day = DateTime(value.year, value.month, value.day);
+    final endDay = DateTime(end.year, end.month, end.day);
+    return !day.isAfter(endDay);
+  }
+
+  bool _isInDayRange(DateTime value, DateTime start, DateTime end) {
+    return _isSameOrAfterDay(value, start) && _isSameOrBeforeDay(value, end);
   }
 
   int get _historyLookbackDays =>
@@ -542,6 +922,11 @@ class FitnessProvider extends ChangeNotifier {
 
   static bool _isQuotaError(Object e) =>
       e.toString().toLowerCase().contains('quota exceeded');
+
+  static String _fmtDateKey(DateTime dt) =>
+      '${dt.year.toString().padLeft(4, '0')}-'
+      '${dt.month.toString().padLeft(2, '0')}-'
+      '${dt.day.toString().padLeft(2, '0')}';
 }
 
 class _QuotaExceededException implements Exception {

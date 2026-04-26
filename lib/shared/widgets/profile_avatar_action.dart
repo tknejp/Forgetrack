@@ -53,7 +53,7 @@ class ProfileAvatarAction extends StatelessWidget {
           child: CircleAvatar(
             radius: 16,
             foregroundImage: hasPhoto
-                ? NetworkImage(trimmedPhotoUrl!)
+                ? NetworkImage(trimmedPhotoUrl)
                 : null,
             backgroundColor: isSignedIn
                 ? colorScheme.primaryContainer

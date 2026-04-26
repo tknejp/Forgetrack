@@ -4,8 +4,10 @@ import 'package:provider/provider.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../auth/application/auth_provider.dart';
+import '../../devtools/application/devtools_permission_service.dart';
 import '../../../shared/theme/ft_design_tokens.dart';
 import '../../../shared/widgets/ft/ft_screen_header.dart';
+import 'sections/settings_devtools_section.dart';
 import 'sections/settings_goals_section.dart';
 import 'sections/settings_header_section.dart';
 import 'sections/settings_kt_section.dart';
@@ -72,8 +74,13 @@ class SettingsScreen extends StatelessWidget {
             if (auth.isSignedIn)
               SettingsSection(
                 title: l10n.sectionAccount,
-                bottomSpacing: 0,
                 child: const SettingsAccountSection(),
+              ),
+            if (DevToolsPermissionService.hasAccess(auth.user?.firebaseUid))
+              SettingsSection(
+                title: l10n.settingsDeveloperTools,
+                bottomSpacing: 0,
+                child: const SettingsDevToolsSection(),
               ),
           ],
         ),

@@ -378,6 +378,183 @@ class HealthDatabase {
     );
   }
 
+    /// Partial update: upserts step records only.
+  ///
+  /// Does not clear existing steps. Safe for normal refresh.
+  Future<void> saveStepsPartial(List<StepsRecord> steps) async {
+    if (steps.isEmpty) {
+      AppLog.app.debug('$_logName: saveStepsPartial() skipped — empty input');
+      return;
+    }
+
+    final isar = _isar!;
+
+    await isar.writeTxn(() async {
+      await isar.hcStepsDayRecords.putAll([
+        for (final r in steps)
+          HcStepsDayRecord()
+            ..dateKey = _toKey(r.date)
+            ..steps = r.steps,
+      ]);
+    });
+
+    await _loadCache();
+
+    AppLog.app.info(
+      '$_logName: saveStepsPartial() done — steps=${steps.length}d',
+    );
+  }
+
+  /// Partial update: upserts active calorie records only.
+  ///
+  /// Calories are currently aligned by index to [dateReference].
+  /// This preserves existing records outside the refreshed range.
+  Future<void> saveCaloriesPartial({
+    required List<StepsRecord> dateReference,
+    required List<double> calories,
+  }) async {
+    if (dateReference.isEmpty || calories.isEmpty) {
+      AppLog.app.debug(
+        '$_logName: saveCaloriesPartial() skipped — empty input',
+      );
+      return;
+    }
+
+    final isar = _isar!;
+
+    await isar.writeTxn(() async {
+      await isar.hcCalorieDayRecords.putAll([
+        for (var i = 0; i < calories.length && i < dateReference.length; i++)
+          HcCalorieDayRecord()
+            ..dateKey = _toKey(dateReference[i].date)
+            ..kcal = calories[i],
+      ]);
+    });
+
+    await _loadCache();
+
+    AppLog.app.info(
+      '$_logName: saveCaloriesPartial() done — calories=${calories.length}d',
+    );
+  }
+
+  /// Partial update: upserts weight records only.
+  Future<void> saveWeightPartial(List<WeightRecord> weight) async {
+    if (weight.isEmpty) {
+      AppLog.app.debug('$_logName: saveWeightPartial() skipped — empty input');
+      return;
+    }
+
+    final isar = _isar!;
+
+    await isar.writeTxn(() async {
+      await isar.hcWeightRecords.putAll([
+        for (final r in weight)
+          HcWeightRecord()
+            ..date = r.date
+            ..weight = r.weight
+            ..bodyFat = r.bodyFat,
+      ]);
+    });
+
+    await _loadCache();
+
+    AppLog.app.info(
+      '$_logName: saveWeightPartial() done — weight=${weight.length}',
+    );
+  }
+
+  /// Partial update: upserts sleep records only.
+  ///
+  /// Does not clear existing sleep records.
+  Future<void> saveSleepPartial(List<SleepRecord> sleep) async {
+    if (sleep.isEmpty) {
+      AppLog.app.debug('$_logName: saveSleepPartial() skipped — empty input');
+      return;
+    }
+
+    final isar = _isar!;
+
+    await isar.writeTxn(() async {
+      await isar.hcSleepRecords.putAll([
+        for (final r in sleep)
+          HcSleepRecord()
+            ..dateKey = _toKey(r.wakeTime)
+            ..sleepStart = r.sleepStart
+            ..wakeTime = r.wakeTime
+            ..totalDurationSeconds = r.totalDuration.inSeconds,
+      ]);
+    });
+
+    await _loadCache();
+
+    AppLog.app.info(
+      '$_logName: saveSleepPartial() done — sleep=${sleep.length}n',
+    );
+  }
+
+  /// Partial update: upserts activities only.
+  ///
+  /// Does not clear existing activities.
+  Future<void> saveActivitiesPartial(List<ActivityRecord> activities) async {
+    if (activities.isEmpty) {
+      AppLog.app.debug(
+        '$_logName: saveActivitiesPartial() skipped — empty input',
+      );
+      return;
+    }
+
+    final isar = _isar!;
+
+    await isar.writeTxn(() async {
+      await isar.hcActivityRecords.putAll([
+        for (final r in activities)
+          HcActivityRecord()
+            ..startTime = r.startTime
+            ..endTime = r.endTime
+            ..type = r.type
+            ..caloriesBurned = r.caloriesBurned
+            ..distanceKm = r.distanceKm,
+      ]);
+    });
+
+    await _loadCache();
+
+    AppLog.app.info(
+      '$_logName: saveActivitiesPartial() done — '
+      'activities=${activities.length}',
+    );
+  }
+
+  /// Updates metadata only.
+  ///
+  /// Null values mean "preserve existing".
+  Future<void> updateMeta({
+    DateTime? lastSyncedAt,
+    bool? workoutPermission,
+    double? latestBodyFat,
+  }) async {
+    final isar = _isar!;
+
+    await isar.writeTxn(() async {
+      final meta = (await isar.hcMetaRecords.get(1)) ?? HcMetaRecord();
+
+      await isar.hcMetaRecords.put(
+        meta
+          ..lastSyncedAt = lastSyncedAt ?? meta.lastSyncedAt
+          ..workoutPermission = workoutPermission ?? meta.workoutPermission
+          ..latestBodyFat = latestBodyFat ?? meta.latestBodyFat,
+      );
+    });
+
+    await _loadCache();
+
+    AppLog.app.debug(
+      '$_logName: updateMeta() done — '
+      'lastSync=${_lastSyncedAt?.toIso8601String() ?? "never"} '
+      'workoutPermission=$_workoutPermission',
+    );
+  }
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
   static String _toKey(DateTime dt) => '${dt.year.toString().padLeft(4, '0')}-'

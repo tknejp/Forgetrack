@@ -1642,4 +1642,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get progQuestCriterionDomainRewardsGeneric =>
       'Based on domain rewards';
+
+  @override
+  String get settingsDeveloperTools => 'Developer Tools';
+
+  @override
+  String get devtoolsTitle => 'Developer Tools';
 }

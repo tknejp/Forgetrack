@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
 
@@ -10,6 +11,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../logging/app_log.dart';
 import 'notification_service.dart';
+import '../../features/devtools/application/devtools_sync_logger.dart';
+import '../../features/devtools/domain/devtools_sync_event.dart';
 
 /// Returns the same canonical UID as AuthUser.fromFirebase – Google subject ID
 /// when present, falling back to Firebase Auth UID.
@@ -112,12 +115,29 @@ class FcmService {
 
   bool _initialized = false;
 
+  // ─── Debug/diagnostic getters (read-only) ────────────────────────────────
+  bool get isInitialized => _initialized;
+
+  /// Returns a masked preview of the FCM token: first 6 + last 4 chars.
+  /// Never returns the full token. Returns null if unavailable.
+  Future<String?> debugGetTokenPreview() async {
+    try {
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token == null) return null;
+      if (token.length <= 10) return '(${token.length} chars)';
+      return '${token.substring(0, 6)}…${token.substring(token.length - 4)}';
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> initialize() async {
     if (_initialized) {
       AppLog.app.debug('$_log: initialize skipped, already initialized');
       return;
     }
 
+    final initStart = DateTime.now();
     _initialized = true;
 
     AppLog.app.info('$_log: initialize start');
@@ -214,6 +234,13 @@ class FcmService {
     });
 
     AppLog.app.success('$_log: initialize done');
+    unawaited(DevToolsSyncLogger.instance.record(DevToolsSyncEvent(
+      timestamp: initStart,
+      source: 'appStart',
+      feature: 'social',
+      result: 'success',
+      durationMs: DateTime.now().difference(initStart).inMilliseconds,
+    )));
   }
 
   Future<void> _requestNotificationPermission() async {

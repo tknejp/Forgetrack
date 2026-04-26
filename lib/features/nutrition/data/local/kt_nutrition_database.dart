@@ -104,6 +104,22 @@ class KtNutritionDatabase {
     );
   }
 
+  // ─── Debug/diagnostic getters (read-only, no side effects) ──────────────
+
+  int get debugCacheCount => _cache.length;
+
+  String? get debugCacheFirstDateKey {
+    if (_cache.isEmpty) return null;
+    final keys = _cache.keys.toList()..sort();
+    return keys.first;
+  }
+
+  String? get debugCacheLastDateKey {
+    if (_cache.isEmpty) return null;
+    final keys = _cache.keys.toList()..sort();
+    return keys.last;
+  }
+
   // ─── Sync reads (from cache) ───────────────────────────────────────────────
 
   KtDayNutrition? getDay(DateTime date) {

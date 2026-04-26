@@ -32,6 +32,7 @@ import 'features/health_connect/application/fitness_provider.dart';
 import 'features/health_connect/data/health_connect_service.dart';
 import 'features/health_connect/data/local/health_database.dart';
 import 'features/health_connect/application/goals_provider.dart';
+import 'features/devtools/application/devtools_provider.dart';
 import 'app/locale_provider.dart';
 import 'shared/theme/theme_provider.dart';
 import 'shared/theme/time_theme_provider.dart';
@@ -113,6 +114,9 @@ Future<void> main() async {
   final goalsProvider = GoalsProvider();
   await goalsProvider.init();
 
+  final devToolsProvider = DevToolsProvider();
+  await devToolsProvider.init();
+
   runApp(
     MultiProvider(
       providers: [
@@ -125,6 +129,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => CalorieProvider(calorieApi)),
         ChangeNotifierProvider.value(value: ktProvider),
         ChangeNotifierProvider(create: (_) => SheetsExportProvider()),
+        ChangeNotifierProvider.value(value: devToolsProvider),
         ChangeNotifierProxyProvider3<GoalsProvider, FitnessProvider,
             KalorickeTabulkyProvider, ProgressionProvider>(
           create: (_) => ProgressionProvider(engine: progressionEngine),

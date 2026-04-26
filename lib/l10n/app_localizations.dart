@@ -3049,6 +3049,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Based on domain rewards'**
   String get progQuestCriterionDomainRewardsGeneric;
+
+  /// Settings section title for the developer tools entry
+  ///
+  /// In en, this message translates to:
+  /// **'Developer Tools'**
+  String get settingsDeveloperTools;
+
+  /// Title of the developer tools screen
+  ///
+  /// In en, this message translates to:
+  /// **'Developer Tools'**
+  String get devtoolsTitle;
 }
 
 class _AppLocalizationsDelegate

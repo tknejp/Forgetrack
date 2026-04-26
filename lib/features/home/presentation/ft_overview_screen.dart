@@ -73,11 +73,22 @@ class _FtOverviewScreenState extends State<FtOverviewScreen>
   Future<void> _refresh() async {
     final fitness = context.read<FitnessProvider>();
     final kt = context.read<KalorickeTabulkyProvider>();
-    final futures = <Future>[fitness.refresh()];
+
+    final isCurrentDay =
+        _period.type == PeriodType.day && _period.isCurrentPeriod;
+
+    final futures = <Future>[
+      isCurrentDay
+          ? fitness.refresh()
+          : fitness.refreshRange(_period.start, _period.end),
+    ];
+
     if (kt.isLoggedIn) {
       futures.add(kt.refreshRange(_period.start, _period.end));
     }
+
     await Future.wait(futures);
+
     if (mounted) {
       await context.read<ProgressionProvider>().refresh();
     }
@@ -385,28 +396,40 @@ class _DayContent extends StatelessWidget {
         stepsGoal > 0 ? (steps / stepsGoal).clamp(0.0, 1.0) : 0.0;
     final stepsLeft = (stepsGoal - steps).clamp(0, stepsGoal);
 
-    final dayNutrition = kt.nutritionForDate(period.start);
-    final isCurrentDay =
-        period.type == PeriodType.day && period.isCurrentPeriod;
+    final isCurrentDay = period.type == PeriodType.day && period.isCurrentPeriod;
+
+    final dayNutrition = period.type == PeriodType.day
+        ? kt.nutritionForDate(period.start)
+        : null;
+
+    final nutritionSummary = period.type == PeriodType.day
+        ? null
+        : kt.nutritionSummaryForRange(period.start, period.end);
+
     final kcal = period.type == PeriodType.day
         ? (dayNutrition?.calories ?? (isCurrentDay ? kt.todayCalories : 0.0))
-        : (kt.avgCaloriesForRange(period.start, period.end) ?? 0.0);
+        : (nutritionSummary?.calories ?? 0.0);
+
     final kcalGoal = goals.dailyCalories;
     final kcalProgress = kcalGoal > 0 ? (kcal / kcalGoal).clamp(0.0, 1.0) : 0.0;
     final kcalDiff = kcal - kcalGoal;
     final kcalPct = kcalGoal > 0 ? ((kcal / kcalGoal) * 100).round() : 0;
+
     final protein = period.type == PeriodType.day
         ? (dayNutrition?.protein ?? (isCurrentDay ? kt.todayProtein : 0.0))
-        : (kt.avgProteinForRange(period.start, period.end) ?? 0.0);
+        : (nutritionSummary?.protein ?? 0.0);
+
     final fat = period.type == PeriodType.day
         ? (dayNutrition?.fat ?? (isCurrentDay ? kt.todayFat : 0.0))
-        : (kt.avgFatForRange(period.start, period.end) ?? 0.0);
+        : (nutritionSummary?.fat ?? 0.0);
+
     final carbs = period.type == PeriodType.day
         ? (dayNutrition?.carbs ?? (isCurrentDay ? kt.todayCarbs : 0.0))
-        : (kt.avgCarbsForRange(period.start, period.end) ?? 0.0);
+        : (nutritionSummary?.carbs ?? 0.0);
+
     final fiber = period.type == PeriodType.day
         ? (dayNutrition?.fiber ?? (isCurrentDay ? kt.todayFiber : 0.0))
-        : (kt.avgFiberForRange(period.start, period.end) ?? 0.0);
+        : (nutritionSummary?.fiber ?? 0.0);
     final nutritionHasDetails =
         kcal > 0 || protein > 0 || fat > 0 || carbs > 0 || fiber > 0;
     final remainingToTarget = kcalGoal - kcal;

@@ -8,6 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 
 import '../logging/app_log.dart';
+import '../../features/devtools/application/devtools_sync_logger.dart';
+import '../../features/devtools/domain/devtools_sync_event.dart';
 import '../../features/health_connect/application/fitness_provider.dart';
 import '../../features/health_connect/data/health_connect_service.dart';
 import '../../features/health_connect/data/local/health_database.dart';
@@ -43,7 +45,9 @@ void backgroundSyncCallback() {
     HealthDatabase? healthDb;
     KtNutritionDatabase? ktDb;
     ProgressionDatabase? progressionDb;
+    bool sendDebugNotifs = false;
 
+    final bgSyncStart = DateTime.now();
     try {
       WidgetsFlutterBinding.ensureInitialized();
       DartPluginRegistrant.ensureInitialized();
@@ -57,6 +61,21 @@ void backgroundSyncCallback() {
       await NotificationService.instance.initialize(
         requestPermissions: false,
       );
+
+      // ── Debug notification flags (SharedPreferences, read-only) ──────────
+      {
+        final dp = await SharedPreferences.getInstance();
+        sendDebugNotifs =
+            (dp.getBool('devtools_access_granted_last_known') ?? false) &&
+            (dp.getBool('devtools_debug_mode') ?? false) &&
+            (dp.getBool('devtools_bg_debug_notifications_enabled') ?? false);
+      }
+      if (sendDebugNotifs) {
+        await NotificationService.instance.showDebugNotification(
+          title: '[DevTools] BG sync started',
+          body: taskName,
+        );
+      }
 
       // ── Databáze ──────────────────────────────────────────────────────────
       healthDb = HealthDatabase();
@@ -198,6 +217,22 @@ void backgroundSyncCallback() {
         'BackgroundSyncService: task completed task=$taskName',
       );
 
+      await DevToolsSyncLogger.instance.record(DevToolsSyncEvent(
+        timestamp: bgSyncStart,
+        source: 'background',
+        feature: 'all',
+        result: 'success',
+        durationMs: DateTime.now().difference(bgSyncStart).inMilliseconds,
+      ));
+
+      if (sendDebugNotifs) {
+        final durationS = DateTime.now().difference(bgSyncStart).inSeconds;
+        await NotificationService.instance.showDebugNotification(
+          title: '[DevTools] BG sync done',
+          body: '${durationS}s — $taskName',
+        );
+      }
+
       return true;
     } catch (e, st) {
       AppLog.app.error(
@@ -205,6 +240,23 @@ void backgroundSyncCallback() {
         err: e,
         stackTrace: st,
       );
+
+      await DevToolsSyncLogger.instance.record(DevToolsSyncEvent(
+        timestamp: bgSyncStart,
+        source: 'background',
+        feature: 'all',
+        result: 'failure',
+        durationMs: DateTime.now().difference(bgSyncStart).inMilliseconds,
+        errorMessage: e.toString(),
+      ));
+
+      if (sendDebugNotifs) {
+        final err = e.toString();
+        await NotificationService.instance.showDebugNotification(
+          title: '[DevTools] BG sync failed',
+          body: err.length > 80 ? '${err.substring(0, 80)}…' : err,
+        );
+      }
 
       // Záměrně true:
       // - WorkManager nebude točit retry loop.
@@ -285,6 +337,11 @@ Future<void> _closeDatabases({
 
 class BackgroundSyncService {
   BackgroundSyncService._();
+
+  // ─── Debug/diagnostic constants (read-only) ──────────────────────────────
+  static const String debugTaskId = _taskTag;
+  static const String debugTaskName = _taskName;
+  static const Duration debugSyncInterval = _syncInterval;
 
   static Future<void> register() async {
     if (!Platform.isAndroid) {

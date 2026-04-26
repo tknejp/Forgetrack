@@ -1100,5 +1100,11 @@
   "progQuestCriterionCompletionsGeneric": "Based on rule completions",
   "progQuestCriterionDomainRewardsWithDomain": "Based on {domain} rewards",
   "@progQuestCriterionDomainRewardsWithDomain": { "placeholders": { "domain": { "type": "String" } } },
-  "progQuestCriterionDomainRewardsGeneric": "Based on domain rewards"
+  "progQuestCriterionDomainRewardsGeneric": "Based on domain rewards",
+
+  "settingsDeveloperTools": "Developer Tools",
+  "@settingsDeveloperTools": { "description": "Settings section title for the developer tools entry" },
+
+  "devtoolsTitle": "Developer Tools",
+  "@devtoolsTitle": { "description": "Title of the developer tools screen" }
 }

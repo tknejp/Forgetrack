@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../logging/app_log.dart';
 import '../navigation/navigator_key.dart';
+import '../../features/devtools/application/devtools_sync_logger.dart';
+import '../../features/devtools/domain/devtools_sync_event.dart';
 
 class NotificationService {
   NotificationService._();
@@ -25,6 +28,7 @@ class NotificationService {
   static const _idReactionBase = 5000;
   static const _idGoalReminder = 6000;
   static const _idFcmForeground = 7000;
+  static const _idDebug = 8000; // DevTools debug notifications — no business state
 
   // Android notification channels
   static const _chProgression = AndroidNotificationChannel(
@@ -48,6 +52,16 @@ class NotificationService {
     importance: Importance.defaultImportance,
   );
 
+  static const _chDebug = AndroidNotificationChannel(
+    'devtools_debug',
+    'DevTools Debug',
+    description: 'Debug notifications — only visible when DevTools debug mode is ON',
+    importance: Importance.low,
+  );
+
+  // ─── Debug/diagnostic getters (read-only) ────────────────────────────────
+  bool get isInitialized => _initialized;
+
   /// Main notification initialization.
   ///
   /// [requestPermissions] must be true only from normal app startup / foreground.
@@ -57,6 +71,7 @@ class NotificationService {
   }) async {
     try {
       if (!_initialized) {
+        final initStart = DateTime.now();
         const android = AndroidInitializationSettings('@mipmap/ic_launcher');
         const settings = InitializationSettings(android: android);
 
@@ -72,6 +87,13 @@ class NotificationService {
         _initialized = true;
 
         AppLog.app.debug('$_log: initialized');
+        unawaited(DevToolsSyncLogger.instance.record(DevToolsSyncEvent(
+          timestamp: initStart,
+          source: 'appStart',
+          feature: 'social',
+          result: 'success',
+          durationMs: DateTime.now().difference(initStart).inMilliseconds,
+        )));
       }
 
       if (requestPermissions && !_permissionsRequested) {
@@ -83,6 +105,13 @@ class NotificationService {
         err: e,
         stackTrace: st,
       );
+      unawaited(DevToolsSyncLogger.instance.record(DevToolsSyncEvent(
+        timestamp: DateTime.now(),
+        source: 'appStart',
+        feature: 'social',
+        result: 'failure',
+        errorMessage: e.toString(),
+      )));
       rethrow;
     }
   }
@@ -114,6 +143,7 @@ class NotificationService {
     await androidPlugin?.createNotificationChannel(_chProgression);
     await androidPlugin?.createNotificationChannel(_chSocial);
     await androidPlugin?.createNotificationChannel(_chReminders);
+    await androidPlugin?.createNotificationChannel(_chDebug);
   }
 
   /// Parses notification payload and switches tab.
@@ -242,6 +272,36 @@ class NotificationService {
 
     return details.notificationResponse?.payload;
   }
+
+  /// Shows a debug-only local notification. Does NOT update any business state
+  /// (no last_goal_reminder_date or other SharedPreferences side effects).
+  Future<void> showDebugNotification({
+    required String title,
+    required String body,
+  }) async {
+    await initialize();
+    return _plugin.show(
+      _idDebug,
+      title,
+      body,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          _chDebug.id,
+          _chDebug.name,
+          channelDescription: _chDebug.description,
+          importance: Importance.low,
+          priority: Priority.low,
+        ),
+      ),
+      payload: null, // no tap handler — no tab switch
+    );
+  }
+
+  /// DevTools test notification. Wraps [showDebugNotification].
+  Future<void> showDebugTestNotification() => showDebugNotification(
+        title: '[DevTools] Test notification',
+        body: 'Debug test — no business state mutated',
+      );
 
   Future<void> showGoalReminder() async {
     await initialize();
