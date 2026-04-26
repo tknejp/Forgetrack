@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../l10n/l10n.dart';
-import '../../../providers/goals_provider.dart';
-import '../../../screens/profile/profile_screen.dart';
-import '../../../theme/app_theme.dart';
-import '../../../widgets/top_level_app_bar.dart';
+import '../../../features/auth/application/auth_provider.dart';
+import '../../../features/health_connect/application/goals_provider.dart';
+import '../../settings/presentation/settings_screen.dart';
+import '../../../shared/theme/app_theme.dart';
+import '../../../shared/widgets/top_level_app_bar.dart';
 import '../application/kaloricke_tabulky_provider.dart';
 
 part 'calories_screen/nutrition_states.dart';
@@ -31,6 +32,7 @@ class NutritionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final auth = context.watch<AuthProvider>();
     return Consumer<KalorickeTabulkyProvider>(
       builder: (context, kt, _) {
         return Scaffold(
@@ -42,6 +44,11 @@ class NutritionScreen extends StatelessWidget {
               syncCopy: AppHeaderSyncCopy.nutrition,
               syncedAt: kt.lastSyncedAt,
             ),
+            isSignedIn: auth.isSignedIn,
+            photoUrl: auth.user?.photoUrl,
+            displayName: auth.user?.displayName,
+            email: auth.user?.email,
+            sessionStateKey: auth.sessionState.name,
           ),
           body: _NutritionStateBody(kt: kt),
         );
@@ -136,14 +143,14 @@ class _NutritionDataViewState extends State<_NutritionDataView> {
       dailyCarbsGoal: goals.dailyCarbs,
       onRefresh: _onRefresh,
       onPeriodChanged: (period) => setState(() => _period = period),
-      onOpenGoals: () => _openProfileSettings(context),
+      onOpenGoals: () => _openSettings(context),
     );
   }
 }
 
-Future<void> _openProfileSettings(BuildContext context) {
+Future<void> _openSettings(BuildContext context) {
   return Navigator.push(
     context,
-    MaterialPageRoute(builder: (_) => const ProfileScreen()),
+    MaterialPageRoute(builder: (_) => const SettingsScreen()),
   );
 }

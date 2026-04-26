@@ -3,6 +3,13 @@
     <!-- Internet pro REST API a Google Sheets -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Lokální notifikace (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- WorkManager: přeplánování po restartu zařízení -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
     <!-- Health Connect oprávnění (READ) -->
     <uses-permission android:name="android.permission.health.READ_STEPS" />
     <uses-permission android:name="android.permission.health.READ_EXERCISE" />
@@ -66,6 +73,11 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- FCM: výchozí kanál pro notifikace přijaté když app není v popředí -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="social" />
     </application>
 
     <queries>

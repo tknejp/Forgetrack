@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
-import '../../../../theme/ft_design_tokens.dart';
-import '../../../../widgets/ft/ft_plain_card.dart';
+import '../../../../shared/theme/ft_design_tokens.dart';
+import '../../../../shared/widgets/ft/ft_plain_card.dart';
 import '../../application/sheets_export_provider.dart';
 import '../../domain/sheet_export_field.dart';
 

@@ -1,4 +1,4 @@
-import '../../../core/app_log.dart';
+import '../../../core/logging/app_log.dart';
 import 'progression_models.dart';
 import 'progression_streak_policy.dart';
 

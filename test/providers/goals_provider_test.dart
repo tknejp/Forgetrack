@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:forgetrack/providers/goals_provider.dart';
+import 'package:forgetrack/features/health_connect/application/goals_provider.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

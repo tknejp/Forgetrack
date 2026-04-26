@@ -3,17 +3,17 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../l10n/l10n.dart';
-import '../../../models/selected_period.dart';
-import '../../../providers/goals_provider.dart';
-import '../../../theme/ft_design_tokens.dart';
-import '../../../widgets/ft/ft_activity_row.dart';
-import '../../../widgets/ft/ft_date_nav.dart';
-import '../../../widgets/ft/ft_drag_reveal_pager.dart';
-import '../../../widgets/ft/ft_plain_card.dart';
-import '../../../widgets/ft/ft_screen_header.dart';
-import '../../../widgets/ft/ft_stat_card.dart';
-import '../../../widgets/ft/ft_tab_pill.dart';
-import '../../../widgets/ft/ft_trend_chart.dart';
+import '../../../shared/selected_period.dart';
+import '../../../features/health_connect/application/goals_provider.dart';
+import '../../../shared/theme/ft_design_tokens.dart';
+import '../../../shared/widgets/ft/ft_activity_row.dart';
+import '../../../shared/widgets/ft/ft_date_nav.dart';
+import '../../../shared/widgets/ft/ft_drag_reveal_pager.dart';
+import '../../../shared/widgets/ft/ft_plain_card.dart';
+import '../../../shared/widgets/ft/ft_screen_header.dart';
+import '../../../shared/widgets/ft/ft_stat_card.dart';
+import '../../../shared/widgets/ft/ft_tab_pill.dart';
+import '../../../shared/widgets/ft/ft_trend_chart.dart';
 import '../application/fitness_provider.dart';
 import '../domain/activity_record.dart';
 

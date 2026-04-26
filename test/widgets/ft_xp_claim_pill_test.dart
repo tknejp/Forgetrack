@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:forgetrack/widgets/ft/ft_xp_claim_pill.dart';
+import 'package:forgetrack/shared/widgets/ft/ft_xp_claim_pill.dart';
 
 void main() {
   group('FtXpClaimPill', () {

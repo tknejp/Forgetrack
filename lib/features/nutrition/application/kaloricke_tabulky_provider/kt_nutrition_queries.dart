@@ -1,4 +1,4 @@
-import '../../../../core/app_log.dart';
+import '../../../../core/logging/app_log.dart';
 import '../../data/kaloricke_tabulky_service.dart';
 import '../../data/local/kt_nutrition_database.dart';
 

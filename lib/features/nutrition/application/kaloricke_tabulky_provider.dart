@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import '../../../core/app_log.dart';
+import '../../../core/logging/app_log.dart';
 import '../data/kaloricke_tabulky_service.dart';
 import '../data/local/kt_nutrition_database.dart';
 import 'kaloricke_tabulky_provider/kt_nutrition_queries.dart';
@@ -312,6 +312,10 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
   }
 
   // ─── Local helpers ─────────────────────────────────────────────────────────
+
+  /// Načte dnešní data z in-memory cache DB bez síťového volání.
+  /// Určeno pro background isolat, kde je DB již naplněna přes KtSyncCoordinator.
+  void loadFromCache() => _loadTodayFromStore(reason: 'background-cache');
 
   void _loadTodayFromStore({required String reason}) {
     final today = KtNutritionQueries.dateOnly(DateTime.now());

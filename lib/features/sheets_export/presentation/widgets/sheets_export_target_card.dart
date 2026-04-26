@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
-import '../../../../screens/profile/dialogs/profile_dialogs.dart';
-import '../../../../theme/ft_design_tokens.dart';
-import '../../../../widgets/ft/ft_plain_card.dart';
+import '../../../settings/presentation/dialogs/settings_dialogs.dart';
+import '../../../../shared/theme/ft_design_tokens.dart';
+import '../../../../shared/widgets/ft/ft_plain_card.dart';
 import '../../application/sheets_export_provider.dart';
 
 class SheetsExportTargetCard extends StatelessWidget {
@@ -140,7 +140,7 @@ class SheetsExportTargetCard extends StatelessWidget {
     BuildContext context,
     AppLocalizations l10n,
   ) async {
-    final confirmed = await showProfileConfirmationDialog(
+    final confirmed = await showSettingsConfirmationDialog(
       context,
       title: l10n.exportTargetForgetConfirmTitle,
       message: l10n.exportTargetForgetConfirmMessage,

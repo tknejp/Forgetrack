@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../theme/ft_design_tokens.dart';
+import '../../../../shared/theme/ft_design_tokens.dart';
 import '../../domain/progression_models.dart';
 
 /// Maps progression domain ids to visual tokens and Material icons.
@@ -71,6 +71,7 @@ class FtProgressionDomainTheme {
       case 'reward_hunter_100':
         return Icons.shield_moon_rounded;
       case 'pathfinder_level_5':
+        return Icons.hiking_rounded;
       case 'trail_vanguard_level_10':
         return Icons.explore_rounded;
       case 'forge_knight_level_15':
@@ -80,36 +81,45 @@ class FtProgressionDomainTheme {
       case 'storm_herald_level_25':
         return Icons.thunderstorm_rounded;
       case 'dawn_sentinel_level_30':
-        return Icons.wb_twilight_rounded;
+        return Icons.castle_rounded;
       case 'rift_walker_level_40':
-        return Icons.blur_circular_rounded;
-      case 'xp_100000':
-      case 'xp_1000000':
         return Icons.local_fire_department_rounded;
+      case 'xp_100000':
+        return Icons.local_fire_department_rounded;
+      case 'xp_1000000':
+        return Icons.star_rounded;
       case 'mythic_ranger_level_50':
+        return Icons.sports_rounded;
       case 'titan_forger_level_60':
+        return Icons.anchor_rounded;
       case 'astral_champion_level_70':
+        return Icons.auto_awesome_rounded;
       case 'eternal_paragon_level_80':
+        return Icons.all_inclusive_rounded;
       case 'realm_sovereign_level_90':
-      case 'living_legend_level_100':
         return Icons.workspace_premium_rounded;
+      case 'living_legend_level_100':
+        return Icons.star_rounded;
       case 'steps_total_100k':
         return Icons.directions_walk_rounded;
       case 'steps_total_500k':
       case 'steps_month_300k':
         return Icons.route_rounded;
       case 'steps_total_1000000':
-      case 'steps_total_5000000':
-      case 'steps_total_10000000':
       case 'steps_month_600k':
         return Icons.military_tech_rounded;
+      case 'steps_total_5000000':
+        return Icons.diamond_rounded;
+      case 'steps_total_10000000':
+        return Icons.landscape_rounded;
       case 'steps_streak_3':
         return Icons.local_fire_department_rounded;
       case 'steps_streak_7':
         return Icons.bolt_rounded;
       case 'steps_streak_30':
-      case 'steps_streak_100':
         return Icons.whatshot_rounded;
+      case 'steps_streak_100':
+        return Icons.link_rounded;
       case 'nutrition_streak_3':
       case 'nutrition_streak_30':
       case 'nutrition_streak_100':

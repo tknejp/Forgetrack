@@ -488,6 +488,9 @@ class AppLocalizationsCs extends AppLocalizations {
   String get goalUnitMins => 'min';
 
   @override
+  String get goalUnitKg => 'kg';
+
+  @override
   String get goalEditTitle => 'Nastavit cíl';
 
   @override
@@ -866,7 +869,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get progMiniStatTotalXp => 'Celkem XP';
 
   @override
-  String get progMiniStatToNext => 'Do dalšího';
+  String get progMiniStatToNext => 'Do dalšího levelu';
 
   @override
   String get progMiniStatAchievements => 'Úspěchy';
@@ -1076,6 +1079,17 @@ class AppLocalizationsCs extends AppLocalizations {
   String get progRuleWeeklyActivity => 'Týdenní aktivita';
 
   @override
+  String get progRuleDailyWeightLog => 'Záznam váhy';
+
+  @override
+  String get progRuleDailyWeightGoal => 'Cílová váha';
+
+  @override
+  String progRewardDetailWeightLogged(String actual) {
+    return 'Zaznamenáno: $actual kg';
+  }
+
+  @override
   String get progQuestEarnFirstRewardTitle => 'Získej první odměnu';
 
   @override
@@ -1269,13 +1283,13 @@ class AppLocalizationsCs extends AppLocalizations {
       'Získej 100 progression odměn.';
 
   @override
-  String get progAchievementPathfinderTitle => 'Stopař';
+  String get progAchievementPathfinderTitle => 'Tulák';
 
   @override
   String get progAchievementPathfinderDesc => 'Dosáhni levelu 5 získaným XP.';
 
   @override
-  String get progAchievementTrailVanguardLevel10Title => 'Předvoj stezky';
+  String get progAchievementTrailVanguardLevel10Title => 'Stopař';
 
   @override
   String get progAchievementTrailVanguardLevel10Desc =>
@@ -1303,14 +1317,14 @@ class AppLocalizationsCs extends AppLocalizations {
       'Dosáhni levelu 25 pomocí získaného XP.';
 
   @override
-  String get progAchievementDawnSentinelLevel30Title => 'Strážce úsvitu';
+  String get progAchievementDawnSentinelLevel30Title => 'Hradní pán';
 
   @override
   String get progAchievementDawnSentinelLevel30Desc =>
       'Dosáhni levelu 30 pomocí získaného XP.';
 
   @override
-  String get progAchievementRiftWalkerLevel40Title => 'Poutník trhlinou';
+  String get progAchievementRiftWalkerLevel40Title => 'Dračí jezdec';
 
   @override
   String get progAchievementRiftWalkerLevel40Desc =>
@@ -1335,7 +1349,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get progAchievementXp100000Desc => 'Nasbírej 100 000 XP.';
 
   @override
-  String get progAchievementXp1000000Title => 'Mytická hodnost';
+  String get progAchievementXp1000000Title => 'Zářný vzestup';
 
   @override
   String get progAchievementXp1000000Desc => 'Nasbírej 1 000 000 XP.';
@@ -1402,14 +1416,14 @@ class AppLocalizationsCs extends AppLocalizations {
       'Nasbírej celkem 1 000 000 kroků.';
 
   @override
-  String get progAchievementSteps5000000Title => 'Nekonečná cesta';
+  String get progAchievementSteps5000000Title => 'Stezka drahokamů';
 
   @override
   String get progAchievementSteps5000000Desc =>
       'Nasbírej celkem 5 000 000 kroků.';
 
   @override
-  String get progAchievementSteps10000000Title => 'Desetimilionový trek';
+  String get progAchievementSteps10000000Title => 'Vrchol legend';
 
   @override
   String get progAchievementSteps10000000Desc =>
@@ -1451,7 +1465,7 @@ class AppLocalizationsCs extends AppLocalizations {
       'Splň denní cíl kroků 30 dní v řadě.';
 
   @override
-  String get progAchievementStepCenturionTitle => 'Sto denní řetěz';
+  String get progAchievementStepCenturionTitle => 'Železný řetěz';
 
   @override
   String get progAchievementStepCenturionDesc =>

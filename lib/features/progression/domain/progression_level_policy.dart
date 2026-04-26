@@ -158,14 +158,14 @@ class ProgressionLevelPolicy {
     if (level >= 70) return 'Astral Champion';
     if (level >= 60) return 'Titan Forger';
     if (level >= 50) return 'Mythic Ranger';
-    if (level >= 40) return 'Rift Walker';
-    if (level >= 30) return 'Dawn Sentinel';
+    if (level >= 40) return 'Dragon Rider';
+    if (level >= 30) return 'Castle Lord';
     if (level >= 25) return 'Storm Herald';
     if (level >= 20) return 'Iron Warden';
     if (level >= 15) return 'Forge Knight';
-    if (level >= 10) return 'Trail Vanguard';
-    if (level >= 5) return 'Pathfinder';
-    return 'Novice Adventurer';
+    if (level >= 10) return 'Pathfinder';
+    if (level >= 5) return 'Wanderer';
+    return 'Troll';
   }
 
   double _lerp(double start, double end, double t) => start + (end - start) * t;

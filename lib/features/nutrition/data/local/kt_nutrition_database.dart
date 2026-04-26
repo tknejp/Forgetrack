@@ -1,7 +1,7 @@
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../../../../core/app_log.dart';
+import '../../../../core/logging/app_log.dart';
 import '../kaloricke_tabulky_service.dart';
 import 'nutrition_day_record.dart';
 
@@ -13,6 +13,16 @@ class KtNutritionDatabase {
   final Map<String, KtDayNutrition> _cache = {};
   bool _opened = false;
 
+  static const _isarName = 'nutrition';
+
+  Isar get isar {
+    final value = _isar;
+    if (value == null) {
+      throw StateError('KtNutritionDatabase must be opened before use.');
+    }
+    return value;
+  }
+
   Future<void> open() async {
     if (_opened) {
       AppLog.ktDb.debug('open() skipped — already open');
@@ -20,27 +30,77 @@ class KtNutritionDatabase {
     }
 
     _opened = true;
-    final dir = await getApplicationDocumentsDirectory();
-    AppLog.ktDb.info('Opening Isar store', payload: dir.path);
-    _isar = await Isar.open(
-      [NutritionDayRecordSchema],
-      directory: dir.path,
-    );
-    await _loadCache();
-    AppLog.ktDb.success(
-      'Isar store ready',
-      payload: '${_cache.length} cached day(s): ${_previewKeys(_cache.keys)}',
-    );
+
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+
+      AppLog.ktDb.info('Opening Isar store', payload: dir.path);
+
+      _isar = await Isar.open(
+        [NutritionDayRecordSchema],
+        directory: dir.path,
+        name: _isarName,
+      );
+
+      await _loadCache();
+
+      AppLog.ktDb.success(
+        'Isar store ready',
+        payload: '${_cache.length} cached day(s): ${_previewKeys(_cache.keys)}',
+      );
+    } catch (_) {
+      _opened = false;
+      _isar = null;
+      rethrow;
+    }
+  }
+
+  Future<void> close({bool clearMemoryCache = false}) async {
+    final value = _isar;
+
+    if (value == null) {
+      _opened = false;
+
+      if (clearMemoryCache) {
+        _cache.clear();
+      }
+
+      return;
+    }
+
+    try {
+      await value.close();
+
+      AppLog.ktDb.debug('Isar store closed');
+    } catch (e, st) {
+      AppLog.ktDb.error(
+        'close() failed',
+        err: e,
+        stackTrace: st,
+      );
+    } finally {
+      _isar = null;
+      _opened = false;
+
+      if (clearMemoryCache) {
+        _cache.clear();
+      }
+    }
   }
 
   Future<void> _loadCache() async {
-    final records = await _isar!.nutritionDayRecords.where().findAll();
+    final records = await isar.nutritionDayRecords.where().findAll();
+
+    _cache.clear();
+
     for (final r in records) {
       _cache[r.dateKey] = _fromRecord(r);
     }
+
     AppLog.ktDb.info(
       'Cache loaded from Isar',
-      payload: '${records.length} record(s): ${_previewKeys(records.map((r) => r.dateKey))}',
+      payload:
+          '${records.length} record(s): ${_previewKeys(records.map((r) => r.dateKey))}',
     );
   }
 
@@ -79,29 +139,41 @@ class KtNutritionDatabase {
   // ─── Async writes ──────────────────────────────────────────────────────────
 
   Future<void> saveDay(DateTime date, KtDayNutrition nutrition) async {
+    final db = isar;
     final key = _toKey(date);
+
     AppLog.ktDb.info(
       'saveDay($key)',
       payload: _describeNutrition(nutrition),
     );
+
     _cache[key] = nutrition;
     final record = _toRecord(key, nutrition);
-    await _isar!.writeTxn(() async {
-      await _isar!.nutritionDayRecords.putByDateKey(record);
+
+    await db.writeTxn(() async {
+      await db.nutritionDayRecords.putByDateKey(record);
     });
-    final persisted = await _isar!.nutritionDayRecords.getByDateKey(key);
+
+    final persisted = await db.nutritionDayRecords.getByDateKey(key);
+
     AppLog.ktDb.success(
       'saveDay($key) persisted=${persisted != null}',
-      payload: persisted == null ? null : _describeNutrition(_fromRecord(persisted)),
+      payload:
+          persisted == null ? null : _describeNutrition(_fromRecord(persisted)),
     );
   }
 
   Future<void> clear() async {
+    final db = isar;
+
     AppLog.ktDb.info('clear() removing ${_cache.length} cached day(s)');
+
     _cache.clear();
-    await _isar!.writeTxn(() async {
-      await _isar!.nutritionDayRecords.clear();
+
+    await db.writeTxn(() async {
+      await db.nutritionDayRecords.clear();
     });
+
     AppLog.ktDb.success('clear() done');
   }
 
@@ -139,8 +211,7 @@ class KtNutritionDatabase {
       ..syncedAt = n.lastSyncedAt;
   }
 
-  static String _toKey(DateTime dt) =>
-      '${dt.year.toString().padLeft(4, '0')}-'
+  static String _toKey(DateTime dt) => '${dt.year.toString().padLeft(4, '0')}-'
       '${dt.month.toString().padLeft(2, '0')}-'
       '${dt.day.toString().padLeft(2, '0')}';
 

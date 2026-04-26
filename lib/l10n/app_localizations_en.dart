@@ -488,6 +488,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get goalUnitMins => 'min';
 
   @override
+  String get goalUnitKg => 'kg';
+
+  @override
   String get goalEditTitle => 'Set goal';
 
   @override
@@ -1075,6 +1078,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progRuleWeeklyActivity => 'Weekly Activity';
 
   @override
+  String get progRuleDailyWeightLog => 'Weight Log';
+
+  @override
+  String get progRuleDailyWeightGoal => 'Weight Goal';
+
+  @override
+  String progRewardDetailWeightLogged(String actual) {
+    return 'Logged: $actual kg';
+  }
+
+  @override
   String get progQuestEarnFirstRewardTitle => 'Earn First Reward';
 
   @override
@@ -1271,14 +1285,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Earn 100 progression rewards.';
 
   @override
-  String get progAchievementPathfinderTitle => 'Pathfinder';
+  String get progAchievementPathfinderTitle => 'Wanderer';
 
   @override
   String get progAchievementPathfinderDesc =>
       'Reach level 5 through earned XP.';
 
   @override
-  String get progAchievementTrailVanguardLevel10Title => 'Trail Vanguard';
+  String get progAchievementTrailVanguardLevel10Title => 'Pathfinder';
 
   @override
   String get progAchievementTrailVanguardLevel10Desc =>
@@ -1306,14 +1320,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Reach level 25 through earned XP.';
 
   @override
-  String get progAchievementDawnSentinelLevel30Title => 'Dawn Sentinel';
+  String get progAchievementDawnSentinelLevel30Title => 'Castle Lord';
 
   @override
   String get progAchievementDawnSentinelLevel30Desc =>
       'Reach level 30 through earned XP.';
 
   @override
-  String get progAchievementRiftWalkerLevel40Title => 'Rift Walker';
+  String get progAchievementRiftWalkerLevel40Title => 'Dragon Rider';
 
   @override
   String get progAchievementRiftWalkerLevel40Desc =>
@@ -1338,7 +1352,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progAchievementXp100000Desc => 'Accumulate 100,000 XP.';
 
   @override
-  String get progAchievementXp1000000Title => 'Mythic Rank';
+  String get progAchievementXp1000000Title => 'Radiant Ascension';
 
   @override
   String get progAchievementXp1000000Desc => 'Accumulate 1,000,000 XP.';
@@ -1405,14 +1419,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Accumulate 1,000,000 total steps.';
 
   @override
-  String get progAchievementSteps5000000Title => 'Endless Road';
+  String get progAchievementSteps5000000Title => 'Gemstone Path';
 
   @override
   String get progAchievementSteps5000000Desc =>
       'Accumulate 5,000,000 total steps.';
 
   @override
-  String get progAchievementSteps10000000Title => 'Ten-Million Trek';
+  String get progAchievementSteps10000000Title => 'Summit of Legends';
 
   @override
   String get progAchievementSteps10000000Desc =>
@@ -1454,7 +1468,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Hit the daily steps rule for 30 periods in a row.';
 
   @override
-  String get progAchievementStepCenturionTitle => 'Centurion Chain';
+  String get progAchievementStepCenturionTitle => 'Iron Chain';
 
   @override
   String get progAchievementStepCenturionDesc =>

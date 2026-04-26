@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-import '../../../core/app_log.dart';
+import '../../../core/logging/app_log.dart';
 import 'google_auth_platform_adapter.dart';
 
 class GoogleAuthService {

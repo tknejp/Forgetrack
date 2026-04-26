@@ -1,5 +1,5 @@
 import '../../health_connect/application/fitness_provider.dart';
-import '../../../providers/goals_provider.dart';
+import '../../../features/health_connect/application/goals_provider.dart';
 import '../../nutrition/application/kaloricke_tabulky_provider.dart';
 import '../../nutrition/data/kaloricke_tabulky_service.dart';
 import '../application/progression_source.dart';

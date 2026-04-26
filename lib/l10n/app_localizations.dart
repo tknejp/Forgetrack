@@ -1016,6 +1016,12 @@ abstract class AppLocalizations {
   /// **'min'**
   String get goalUnitMins;
 
+  /// Unit suffix for weight in kilograms
+  ///
+  /// In en, this message translates to:
+  /// **'kg'**
+  String get goalUnitKg;
+
   /// Dialog title when editing a goal value
   ///
   /// In en, this message translates to:
@@ -2066,6 +2072,24 @@ abstract class AppLocalizations {
   /// **'Weekly Activity'**
   String get progRuleWeeklyActivity;
 
+  /// No description provided for @progRuleDailyWeightLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight Log'**
+  String get progRuleDailyWeightLog;
+
+  /// No description provided for @progRuleDailyWeightGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight Goal'**
+  String get progRuleDailyWeightGoal;
+
+  /// No description provided for @progRewardDetailWeightLogged.
+  ///
+  /// In en, this message translates to:
+  /// **'Logged: {actual} kg'**
+  String progRewardDetailWeightLogged(String actual);
+
   /// No description provided for @progQuestEarnFirstRewardTitle.
   ///
   /// In en, this message translates to:
@@ -2417,7 +2441,7 @@ abstract class AppLocalizations {
   /// No description provided for @progAchievementPathfinderTitle.
   ///
   /// In en, this message translates to:
-  /// **'Pathfinder'**
+  /// **'Wanderer'**
   String get progAchievementPathfinderTitle;
 
   /// No description provided for @progAchievementPathfinderDesc.
@@ -2429,7 +2453,7 @@ abstract class AppLocalizations {
   /// No description provided for @progAchievementTrailVanguardLevel10Title.
   ///
   /// In en, this message translates to:
-  /// **'Trail Vanguard'**
+  /// **'Pathfinder'**
   String get progAchievementTrailVanguardLevel10Title;
 
   /// No description provided for @progAchievementTrailVanguardLevel10Desc.
@@ -2477,7 +2501,7 @@ abstract class AppLocalizations {
   /// No description provided for @progAchievementDawnSentinelLevel30Title.
   ///
   /// In en, this message translates to:
-  /// **'Dawn Sentinel'**
+  /// **'Castle Lord'**
   String get progAchievementDawnSentinelLevel30Title;
 
   /// No description provided for @progAchievementDawnSentinelLevel30Desc.
@@ -2489,7 +2513,7 @@ abstract class AppLocalizations {
   /// No description provided for @progAchievementRiftWalkerLevel40Title.
   ///
   /// In en, this message translates to:
-  /// **'Rift Walker'**
+  /// **'Dragon Rider'**
   String get progAchievementRiftWalkerLevel40Title;
 
   /// No description provided for @progAchievementRiftWalkerLevel40Desc.
@@ -2537,7 +2561,7 @@ abstract class AppLocalizations {
   /// No description provided for @progAchievementXp1000000Title.
   ///
   /// In en, this message translates to:
-  /// **'Mythic Rank'**
+  /// **'Radiant Ascension'**
   String get progAchievementXp1000000Title;
 
   /// No description provided for @progAchievementXp1000000Desc.
@@ -2657,7 +2681,7 @@ abstract class AppLocalizations {
   /// No description provided for @progAchievementSteps5000000Title.
   ///
   /// In en, this message translates to:
-  /// **'Endless Road'**
+  /// **'Gemstone Path'**
   String get progAchievementSteps5000000Title;
 
   /// No description provided for @progAchievementSteps5000000Desc.
@@ -2669,7 +2693,7 @@ abstract class AppLocalizations {
   /// No description provided for @progAchievementSteps10000000Title.
   ///
   /// In en, this message translates to:
-  /// **'Ten-Million Trek'**
+  /// **'Summit of Legends'**
   String get progAchievementSteps10000000Title;
 
   /// No description provided for @progAchievementSteps10000000Desc.
@@ -2741,7 +2765,7 @@ abstract class AppLocalizations {
   /// No description provided for @progAchievementStepCenturionTitle.
   ///
   /// In en, this message translates to:
-  /// **'Centurion Chain'**
+  /// **'Iron Chain'**
   String get progAchievementStepCenturionTitle;
 
   /// No description provided for @progAchievementStepCenturionDesc.

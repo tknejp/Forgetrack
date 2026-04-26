@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
-import 'core/constants.dart';
+import 'core/config/constants.dart';
+import 'core/navigation/navigator_key.dart';
 import 'l10n/app_localizations.dart';
-import 'providers/locale_provider.dart';
-import 'providers/theme_provider.dart';
-import 'providers/time_theme_provider.dart';
-import 'screens/ft_main_shell.dart';
-import 'theme/app_theme.dart';
-import 'theme/time_theme.dart';
+import 'app/locale_provider.dart';
+import 'shared/theme/theme_provider.dart';
+import 'shared/theme/time_theme_provider.dart';
+import 'features/app_shell/presentation/ft_main_shell.dart';
+import 'shared/theme/app_theme.dart';
+import 'shared/theme/time_theme.dart';
 
 class ForgetrackApp extends StatelessWidget {
   const ForgetrackApp({super.key});
@@ -48,6 +49,7 @@ class ForgetrackApp extends StatelessWidget {
         : null;
 
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(timePalette),

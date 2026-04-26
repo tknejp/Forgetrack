@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../../l10n/l10n.dart';
-import '../../../../../theme/app_theme.dart';
-import '../../../../../widgets/stat_display.dart';
+import '../../../../../shared/theme/app_theme.dart';
+import '../../../../../shared/widgets/stat_display.dart';
 import '../../../domain/activity_record.dart';
 
 class StepsSummaryCard extends StatelessWidget {

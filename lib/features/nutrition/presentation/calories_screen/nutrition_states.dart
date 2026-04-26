@@ -12,7 +12,7 @@ class _NutritionStateBody extends StatelessWidget {
     }
     if (!kt.isLoggedIn) {
       return _NotConnectedState(
-        onGoToSettings: () => _openProfileSettings(context),
+        onGoToSettings: () => _openSettings(context),
       );
     }
     if (kt.isLoading) {

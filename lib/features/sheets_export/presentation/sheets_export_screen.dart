@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../l10n/l10n.dart';
-import '../../../theme/ft_design_tokens.dart';
+import '../../../shared/theme/ft_design_tokens.dart';
 import '../../health_connect/application/fitness_provider.dart';
 import '../../nutrition/application/kaloricke_tabulky_provider.dart';
 import '../application/sheets_export_provider.dart';

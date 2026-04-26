@@ -4,7 +4,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
-import '../../../core/app_log.dart';
+import '../../../core/logging/app_log.dart';
 
 part 'kaloricke_tabulky_service/kt_diary_service.dart';
 part 'kaloricke_tabulky_service/kt_nutrition_parser.dart';

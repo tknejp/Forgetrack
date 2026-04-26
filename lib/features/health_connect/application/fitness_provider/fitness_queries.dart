@@ -1,4 +1,4 @@
-import '../../../../models/weight_card_data.dart';
+import '../../domain/weight_card_data.dart';
 import '../../domain/activity_record.dart';
 import '../../domain/sleep_record.dart';
 import '../../domain/weight_record.dart';

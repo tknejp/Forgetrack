@@ -3,14 +3,14 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../l10n/l10n.dart';
-import '../../../models/weight_card_data.dart';
-import '../../../providers/goals_provider.dart';
-import '../../../theme/ft_design_tokens.dart';
-import '../../../widgets/ft/ft_drag_reveal_pager.dart';
-import '../../../widgets/ft/ft_screen_header.dart';
-import '../../../widgets/ft/ft_stat_card.dart';
-import '../../../widgets/ft/ft_tab_pill.dart';
-import '../../../widgets/ft/ft_trend_chart.dart';
+import '../domain/weight_card_data.dart';
+import '../../../features/health_connect/application/goals_provider.dart';
+import '../../../shared/theme/ft_design_tokens.dart';
+import '../../../shared/widgets/ft/ft_drag_reveal_pager.dart';
+import '../../../shared/widgets/ft/ft_screen_header.dart';
+import '../../../shared/widgets/ft/ft_stat_card.dart';
+import '../../../shared/widgets/ft/ft_tab_pill.dart';
+import '../../../shared/widgets/ft/ft_trend_chart.dart';
 import '../application/fitness_provider.dart';
 import '../domain/weight_record.dart';
 

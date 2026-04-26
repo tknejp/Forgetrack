@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../theme/ft_design_tokens.dart';
+import '../../../../shared/theme/ft_design_tokens.dart';
 import '../../domain/progression_models.dart';
 import 'ft_progression_domain_theme.dart';
 
@@ -134,6 +134,12 @@ class FtProgStreakDuel extends StatelessWidget {
     required this.bestDomain,
     required this.daysSuffix,
     this.valueSize = 24,
+    this.currentColor,
+    this.currentDim,
+    this.currentGlow,
+    this.bestColor,
+    this.bestDim,
+    this.bestGlow,
   });
 
   final String currentLabel;
@@ -148,6 +154,12 @@ class FtProgStreakDuel extends StatelessWidget {
 
   final String daysSuffix;
   final double valueSize;
+  final Color? currentColor;
+  final Color? currentDim;
+  final Color? currentGlow;
+  final Color? bestColor;
+  final Color? bestDim;
+  final Color? bestGlow;
 
   @override
   Widget build(BuildContext context) {
@@ -159,9 +171,9 @@ class FtProgStreakDuel extends StatelessWidget {
             value: currentValue,
             caption: currentCaption,
             daysSuffix: daysSuffix,
-            color: FtTokens.active.color,
-            dim: FtTokens.active.dim,
-            glow: FtTokens.active.glow,
+            color: currentColor ?? FtTokens.active.color,
+            dim: currentDim ?? FtTokens.active.dim,
+            glow: currentGlow ?? FtTokens.active.glow,
             domain: currentDomain,
             valueSize: valueSize,
           ),
@@ -173,9 +185,9 @@ class FtProgStreakDuel extends StatelessWidget {
             value: bestValue,
             caption: bestCaption,
             daysSuffix: daysSuffix,
-            color: FtTokens.calories.color,
-            dim: FtTokens.calories.dim,
-            glow: FtTokens.calories.glow,
+            color: bestColor ?? FtTokens.calories.color,
+            dim: bestDim ?? FtTokens.calories.dim,
+            glow: bestGlow ?? FtTokens.calories.glow,
             domain: bestDomain,
             valueSize: valueSize,
           ),

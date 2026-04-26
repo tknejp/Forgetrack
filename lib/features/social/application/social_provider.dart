@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 
-import '../../../core/app_log.dart';
+import '../../../core/logging/app_log.dart';
 import '../../auth/application/auth_provider.dart';
 import '../../progression/domain/progression_models.dart';
-import '../../progression/presentation/progression_provider.dart';
+import '../../progression/application/progression_provider.dart';
 import '../data/social_firebase_bootstrap.dart';
 import '../data/social_firebase_session.dart';
 import '../domain/social_models.dart';
@@ -49,11 +49,23 @@ class SocialProvider extends ChangeNotifier {
   bool _profileSyncQueued = false;
   bool _isSearching = false;
   bool _isReady = false;
+
   String? _activeUid;
   String? _error;
   String? _lastAuthSignature;
   String? _lastProfileSignature;
   String _friendIdsSignature = '';
+
+  // Stream diff tracking.
+  // First stream emission is used only as seed, so existing data does not trigger
+  // local side effects after app startup/resubscribe.
+  bool _requestStreamSeeded = false;
+  bool _outgoingRequestStreamSeeded = false;
+  bool _notificationStreamSeeded = false;
+
+  Set<String> _knownRequestIds = {};
+  Set<String> _knownPendingOutgoingIds = {};
+  Set<String> _knownNotificationIds = {};
 
   bool get backendReady => _backendState.isReady;
   String get backendMessage => _backendState.message;
@@ -64,13 +76,16 @@ class SocialProvider extends ChangeNotifier {
 
   List<SocialFriendRequest> get incomingRequests =>
       _incomingRequests.where((r) => r.isPending).toList();
+
   List<SocialFriendRequest> get outgoingRequests =>
       _outgoingRequests.where((r) => r.isPending).toList();
+
   List<SocialFriendship> get friendships => _friendships;
   List<SocialUserProfile> get friends => _friends;
   List<SocialAchievementShare> get recentShares => _recentShares;
   List<SocialUserProfile> get searchResults => _searchResults;
   List<SocialNotification> get notifications => _notifications;
+
   int get unreadNotificationCount =>
       _notifications.where((n) => !n.read).length;
 
@@ -92,6 +107,7 @@ class SocialProvider extends ChangeNotifier {
 
   Future<void> searchUsers(String query) async {
     final uid = _activeUid;
+
     if (!backendReady || uid == null) {
       _searchResults = const [];
       notifyListeners();
@@ -124,6 +140,7 @@ class SocialProvider extends ChangeNotifier {
 
   void clearSearchResults() {
     if (_searchResults.isEmpty) return;
+
     _searchResults = const [];
     notifyListeners();
   }
@@ -139,6 +156,7 @@ class SocialProvider extends ChangeNotifier {
     } catch (error, stackTrace) {
       _recordError('sendFriendRequest', error, stackTrace);
     }
+
     notifyListeners();
   }
 
@@ -149,6 +167,7 @@ class SocialProvider extends ChangeNotifier {
     } catch (error, stackTrace) {
       _recordError('acceptFriendRequest', error, stackTrace);
     }
+
     notifyListeners();
   }
 
@@ -159,56 +178,96 @@ class SocialProvider extends ChangeNotifier {
     } catch (error, stackTrace) {
       _recordError('declineFriendRequest', error, stackTrace);
     }
+
     notifyListeners();
   }
 
   Future<SocialUserProfile?> fetchProfileById(String uid) async {
     final results = await _repository.fetchProfilesByIds([uid]);
-    return results.isEmpty ? null : results.first;
+    return results.firstOrNull;
   }
 
-  Future<List<SocialUnlockedAchievement>> fetchFriendAchievements(
-    String uid,
-  ) {
+  Future<List<SocialUnlockedAchievement>> fetchFriendAchievements(String uid) {
     return _repository.fetchUnlockedAchievements(uid);
   }
 
   Stream<SocialUserProfile?> watchProfileById(String uid) {
     return _repository
-        .watchProfilesByIds([uid]).map((profiles) => profiles.firstOrNull);
+        .watchProfilesByIds([uid])
+        .map((profiles) => profiles.firstOrNull);
   }
 
   Stream<List<SocialUnlockedAchievement>> watchFriendAchievements(String uid) {
     return _repository.watchUnlockedAchievements(uid);
   }
 
+  SocialAchievementShare? shareById(String id) {
+    return _recentShares.where((s) => s.id == id).firstOrNull;
+  }
+
   Future<void> removeFriend(String friendUid) async {
     final uid = _activeUid;
     if (uid == null) {
-      AppLog.social.debug('removeFriend: no active uid');
+      AppLog.social.debug('removeFriend skipped: no active uid');
       return;
     }
-    AppLog.social.debug('removeFriend',
-        payload:
-            'friendUid=$friendUid uid=$uid friendships=${_friendships.length}');
+
+    AppLog.social.debug(
+      'removeFriend',
+      payload: 'uid=$uid friendUid=$friendUid friendships=${_friendships.length}',
+    );
+
     final friendship = _friendships
         .where(
-          (f) => f.memberUids.contains(friendUid) && f.memberUids.contains(uid),
+          (f) => f.memberUids.contains(uid) && f.memberUids.contains(friendUid),
         )
         .firstOrNull;
+
     if (friendship == null) {
-      AppLog.social
-          .debug('removeFriend: no friendship found for friendUid=$friendUid');
+      AppLog.social.debug(
+        'removeFriend: no friendship found',
+        payload: 'uid=$uid friendUid=$friendUid',
+      );
+
       throw StateError(
-          'Přátelství nebylo nalezeno (friendships=${_friendships.length}).');
+        'Přátelství nebylo nalezeno (friendships=${_friendships.length}).',
+      );
     }
+
     try {
       await _repository.removeFriend(friendshipId: friendship.id);
       _error = null;
     } catch (error, stackTrace) {
       _recordError('removeFriend', error, stackTrace);
     }
+
     notifyListeners();
+  }
+
+  bool isFriendWith(String uid) {
+    final me = _activeUid;
+    if (me == null) return false;
+
+    return _friendships.any(
+      (f) => f.memberUids.contains(me) && f.memberUids.contains(uid),
+    );
+  }
+
+  String? getFriendshipId(String uid) {
+    final me = _activeUid;
+    if (me == null) return null;
+
+    return _friendships
+        .where((f) => f.memberUids.contains(me) && f.memberUids.contains(uid))
+        .map((f) => f.id)
+        .firstOrNull;
+  }
+
+  String? getPendingRequestTo(String uid) {
+    return _outgoingRequests
+        .where((r) => r.toUid == uid && r.isPending)
+        .map((r) => r.id)
+        .firstOrNull;
   }
 
   Future<void> shareAchievement(
@@ -218,6 +277,7 @@ class SocialProvider extends ChangeNotifier {
     final uid = _activeUid;
     final authProvider = _authProvider;
     final progressionProvider = _progressionProvider;
+
     if (uid == null ||
         authProvider?.user == null ||
         progressionProvider == null) {
@@ -238,6 +298,11 @@ class SocialProvider extends ChangeNotifier {
       return;
     }
 
+    final user = authProvider!.user!;
+    final displayName = user.displayName?.trim().isNotEmpty == true
+        ? user.displayName!.trim()
+        : user.email.split('@').first;
+
     final share = SocialAchievementShare(
       id: '',
       actorUid: uid,
@@ -246,10 +311,8 @@ class SocialProvider extends ChangeNotifier {
       message: message?.trim().isEmpty ?? true ? null : message!.trim(),
       visibility: SocialShareVisibility.friends,
       actorSnapshot: SocialAchievementActorSnapshot(
-        displayName: authProvider!.user!.displayName?.trim().isNotEmpty == true
-            ? authProvider.user!.displayName!.trim()
-            : authProvider.user!.email.split('@').first,
-        photoUrl: authProvider.user!.photoUrl,
+        displayName: displayName,
+        photoUrl: user.photoUrl,
       ),
       achievementSnapshot: SocialAchievementSnapshot(
         title: achievement.title,
@@ -266,16 +329,27 @@ class SocialProvider extends ChangeNotifier {
     } catch (error, stackTrace) {
       _recordError('shareAchievement', error, stackTrace);
     }
+
     notifyListeners();
   }
 
   Future<void> addReaction(String shareId, String emoji) async {
     final uid = _activeUid;
     final authProvider = _authProvider;
+
     if (uid == null || authProvider?.user == null) return;
 
     final share = _recentShares.where((s) => s.id == shareId).firstOrNull;
     if (share == null) return;
+
+    final isSelfReaction = share.actorUid == uid;
+
+    if (isSelfReaction) {
+      AppLog.social.debug(
+        'addReaction: self reaction detected; repository must suppress notification',
+        payload: 'shareId=$shareId uid=$uid emoji=$emoji',
+      );
+    }
 
     final user = authProvider!.user!;
     final actorName = user.displayName?.trim().isNotEmpty == true
@@ -296,6 +370,7 @@ class SocialProvider extends ChangeNotifier {
     } catch (error, stackTrace) {
       _recordError('addReaction', error, stackTrace);
     }
+
     notifyListeners();
   }
 
@@ -316,12 +391,14 @@ class SocialProvider extends ChangeNotifier {
     } catch (error, stackTrace) {
       _recordError('removeReaction', error, stackTrace);
     }
+
     notifyListeners();
   }
 
   Future<void> markNotificationsRead() async {
     final uid = _activeUid;
     if (uid == null) return;
+
     try {
       await _repository.markNotificationsRead(uid);
     } catch (error, stackTrace) {
@@ -336,8 +413,10 @@ class SocialProvider extends ChangeNotifier {
     }
 
     _isReconcilingSession = true;
+
     try {
       final authProvider = _authProvider;
+
       if (!backendReady || authProvider == null || !authProvider.isSignedIn) {
         await _session.signOut();
         await _clearSessionState();
@@ -354,11 +433,13 @@ class SocialProvider extends ChangeNotifier {
 
       final uid = user.id;
       final shouldResubscribe = _activeUid != uid;
+
       _activeUid = uid;
       _isReady = true;
       _error = null;
 
       if (shouldResubscribe) {
+        AppLog.social.info('Subscribing social streams', payload: 'uid=$uid');
         await _subscribe(uid);
       }
     } catch (error, stackTrace) {
@@ -388,19 +469,20 @@ class SocialProvider extends ChangeNotifier {
     if (payload == null) return;
 
     final signature = _buildProfileSignature(payload);
-    if (signature == _lastProfileSignature) {
-      return;
-    }
+    if (signature == _lastProfileSignature) return;
 
     _isSyncingProfile = true;
+
     try {
       await _repository.upsertProfile(payload);
       await _repository.replaceUnlockedAchievements(
         uid: payload.uid,
         achievements: payload.unlockedAchievements,
       );
+
       _lastProfileSignature = signature;
       _error = null;
+
       AppLog.social.debug(
         'Profile synced',
         payload: 'uid=${payload.uid} xp=${payload.stats.totalXp}',
@@ -421,6 +503,7 @@ class SocialProvider extends ChangeNotifier {
   SocialProfileSyncPayload? _buildSyncPayload() {
     final authProvider = _authProvider;
     final progressionProvider = _progressionProvider;
+
     if (!backendReady ||
         !_isReady ||
         authProvider == null ||
@@ -431,21 +514,19 @@ class SocialProvider extends ChangeNotifier {
     }
 
     final user = authProvider.user!;
+
     final unlockedAchievements = progressionProvider.achievements
-        .where(
-          (achievement) =>
-              achievement.unlocked && achievement.unlockedAt != null,
-        )
+        .where((a) => a.unlocked && a.unlockedAt != null)
         .map(
-          (achievement) => SocialUnlockedAchievement(
-            achievementId: achievement.id,
-            title: achievement.title,
-            description: achievement.description,
-            difficulty: achievement.difficulty.name,
-            type: achievement.type.name,
-            domain: achievement.domain?.name,
-            ruleId: achievement.ruleId,
-            unlockedAt: achievement.unlockedAt!,
+          (a) => SocialUnlockedAchievement(
+            achievementId: a.id,
+            title: a.title,
+            description: a.description,
+            difficulty: a.difficulty.name,
+            type: a.type.name,
+            domain: a.domain?.name,
+            ruleId: a.ruleId,
+            unlockedAt: a.unlockedAt!,
           ),
         )
         .toList(growable: false);
@@ -486,6 +567,7 @@ class SocialProvider extends ChangeNotifier {
 
   String _buildAuthSignature(AuthProvider authProvider) {
     final user = authProvider.user;
+
     return [
       authProvider.sessionState.name,
       user?.id ?? '',
@@ -496,8 +578,7 @@ class SocialProvider extends ChangeNotifier {
   String _buildProfileSignature(SocialProfileSyncPayload payload) {
     final unlockedIds = payload.unlockedAchievements
         .map(
-          (achievement) =>
-              '${achievement.achievementId}@${achievement.unlockedAt.millisecondsSinceEpoch}',
+          (a) => '${a.achievementId}@${a.unlockedAt.millisecondsSinceEpoch}',
         )
         .join(',');
 
@@ -520,24 +601,48 @@ class SocialProvider extends ChangeNotifier {
   Future<void> _subscribe(String uid) async {
     await _cancelSubscriptions();
 
+    _resetStreamDiffState();
+
     _incomingRequestsSubscription =
         _repository.watchIncomingFriendRequests(uid: uid).listen(
       (requests) {
+        final newPending = _diffIncomingRequests(requests);
         _incomingRequests = requests;
+
+        if (newPending.isNotEmpty) {
+          AppLog.social.info(
+            'Incoming friend requests updated',
+            payload:
+                'new=${newPending.length} total=${requests.length} handledBy=FCM',
+          );
+        }
+
         notifyListeners();
       },
-      onError: (error, stackTrace) =>
-          _recordError('watchIncomingFriendRequests', error, stackTrace),
+      onError: (error, stackTrace) {
+        _recordError('watchIncomingFriendRequests', error, stackTrace);
+      },
     );
 
     _outgoingRequestsSubscription =
         _repository.watchOutgoingFriendRequests(uid: uid).listen(
       (requests) {
+        final newlyAccepted = _diffAcceptedOutgoing(requests);
         _outgoingRequests = requests;
+
+        if (newlyAccepted.isNotEmpty) {
+          AppLog.social.info(
+            'Outgoing friend requests updated',
+            payload:
+                'accepted=${newlyAccepted.length} total=${requests.length} handledBy=FCM',
+          );
+        }
+
         notifyListeners();
       },
-      onError: (error, stackTrace) =>
-          _recordError('watchOutgoingFriendRequests', error, stackTrace),
+      onError: (error, stackTrace) {
+        _recordError('watchOutgoingFriendRequests', error, stackTrace);
+      },
     );
 
     _friendshipsSubscription = _repository.watchFriendships(uid: uid).listen(
@@ -546,18 +651,29 @@ class SocialProvider extends ChangeNotifier {
         notifyListeners();
         unawaited(_handleFriendshipsUpdated());
       },
-      onError: (error, stackTrace) =>
-          _recordError('watchFriendships', error, stackTrace),
+      onError: (error, stackTrace) {
+        _recordError('watchFriendships', error, stackTrace);
+      },
     );
 
-    _notificationsSubscription =
-        _repository.watchNotifications(uid).listen(
+    _notificationsSubscription = _repository.watchNotifications(uid).listen(
       (notifications) {
+        final newUnread = _diffNotifications(notifications);
         _notifications = notifications;
+
+        if (newUnread.isNotEmpty) {
+          AppLog.social.info(
+            'Social notifications updated',
+            payload:
+                'new=${newUnread.length} total=${notifications.length} handledBy=FCM',
+          );
+        }
+
         notifyListeners();
       },
-      onError: (error, stackTrace) =>
-          _recordError('watchNotifications', error, stackTrace),
+      onError: (error, stackTrace) {
+        _recordError('watchNotifications', error, stackTrace);
+      },
     );
 
     await _handleFriendshipsUpdated();
@@ -575,11 +691,17 @@ class SocialProvider extends ChangeNotifier {
       ..sort();
 
     final signature = friendIds.join('|');
-    if (signature != _friendIdsSignature) {
-      _friendIdsSignature = signature;
-      await _subscribeFriendProfiles(friendIds);
-      await _subscribeRecentShares(friendIds);
-    }
+    if (signature == _friendIdsSignature) return;
+
+    _friendIdsSignature = signature;
+
+    AppLog.social.debug(
+      'Friend list changed',
+      payload: 'friendCount=${friendIds.length}',
+    );
+
+    await _subscribeFriendProfiles(friendIds);
+    await _subscribeRecentShares(friendIds);
   }
 
   Future<void> _subscribeFriendProfiles(List<String> friendIds) async {
@@ -599,8 +721,9 @@ class SocialProvider extends ChangeNotifier {
         _error = null;
         notifyListeners();
       },
-      onError: (error, stackTrace) =>
-          _recordError('watchProfilesByIds', error, stackTrace),
+      onError: (error, stackTrace) {
+        _recordError('watchProfilesByIds', error, stackTrace);
+      },
     );
   }
 
@@ -608,21 +731,28 @@ class SocialProvider extends ChangeNotifier {
     await _recentSharesSubscription?.cancel();
     _recentSharesSubscription = null;
 
-    if (friendIds.isEmpty) {
+    final uid = _activeUid;
+    final actorUids = [
+      if (uid != null) uid,
+      ...friendIds,
+    ];
+
+    if (actorUids.isEmpty) {
       _recentShares = const [];
       notifyListeners();
       return;
     }
 
     _recentSharesSubscription =
-        _repository.watchRecentAchievementShares(actorUids: friendIds).listen(
+        _repository.watchRecentAchievementShares(actorUids: actorUids).listen(
       (shares) {
         _recentShares = shares;
         _error = null;
         notifyListeners();
       },
-      onError: (error, stackTrace) =>
-          _recordError('watchRecentAchievementShares', error, stackTrace),
+      onError: (error, stackTrace) {
+        _recordError('watchRecentAchievementShares', error, stackTrace);
+      },
     );
   }
 
@@ -631,6 +761,7 @@ class SocialProvider extends ChangeNotifier {
     _isReady = false;
     _lastProfileSignature = null;
     _friendIdsSignature = '';
+
     _incomingRequests = const [];
     _outgoingRequests = const [];
     _friendships = const [];
@@ -638,7 +769,97 @@ class SocialProvider extends ChangeNotifier {
     _recentShares = const [];
     _searchResults = const [];
     _notifications = const [];
+
+    _resetStreamDiffState();
+
     await _cancelSubscriptions();
+  }
+
+  void _resetStreamDiffState() {
+    _requestStreamSeeded = false;
+    _outgoingRequestStreamSeeded = false;
+    _notificationStreamSeeded = false;
+
+    _knownRequestIds = {};
+    _knownPendingOutgoingIds = {};
+    _knownNotificationIds = {};
+  }
+
+  List<SocialFriendRequest> _diffIncomingRequests(
+    List<SocialFriendRequest> requests,
+  ) {
+    final pendingIds =
+        requests.where((r) => r.isPending).map((r) => r.id).toSet();
+
+    if (!_requestStreamSeeded) {
+      _requestStreamSeeded = true;
+      _knownRequestIds = pendingIds;
+
+      AppLog.social.debug(
+        'Incoming request stream seeded',
+        payload: 'pending=${pendingIds.length}',
+      );
+
+      return const [];
+    }
+
+    final newRequests = requests
+        .where((r) => r.isPending && !_knownRequestIds.contains(r.id))
+        .toList();
+
+    _knownRequestIds = pendingIds;
+    return newRequests;
+  }
+
+  List<SocialFriendRequest> _diffAcceptedOutgoing(
+    List<SocialFriendRequest> requests,
+  ) {
+    final pendingIds =
+        requests.where((r) => r.isPending).map((r) => r.id).toSet();
+
+    if (!_outgoingRequestStreamSeeded) {
+      _outgoingRequestStreamSeeded = true;
+      _knownPendingOutgoingIds = pendingIds;
+
+      AppLog.social.debug(
+        'Outgoing request stream seeded',
+        payload: 'pending=${pendingIds.length}',
+      );
+
+      return const [];
+    }
+
+    final newlyAccepted = requests
+        .where((r) => !r.isPending && _knownPendingOutgoingIds.contains(r.id))
+        .toList();
+
+    _knownPendingOutgoingIds = pendingIds;
+    return newlyAccepted;
+  }
+
+  List<SocialNotification> _diffNotifications(
+    List<SocialNotification> notifications,
+  ) {
+    final allIds = notifications.map((n) => n.id).toSet();
+
+    if (!_notificationStreamSeeded) {
+      _notificationStreamSeeded = true;
+      _knownNotificationIds = allIds;
+
+      AppLog.social.debug(
+        'Notification stream seeded',
+        payload: 'count=${allIds.length}',
+      );
+
+      return const [];
+    }
+
+    final newNotifications = notifications
+        .where((n) => !_knownNotificationIds.contains(n.id))
+        .toList();
+
+    _knownNotificationIds = allIds;
+    return newNotifications;
   }
 
   Future<void> _cancelSubscriptions() async {
@@ -648,6 +869,7 @@ class SocialProvider extends ChangeNotifier {
     await _friendProfilesSubscription?.cancel();
     await _recentSharesSubscription?.cancel();
     await _notificationsSubscription?.cancel();
+
     _incomingRequestsSubscription = null;
     _outgoingRequestsSubscription = null;
     _friendshipsSubscription = null;
@@ -658,6 +880,7 @@ class SocialProvider extends ChangeNotifier {
 
   void _recordError(String operation, Object error, StackTrace stackTrace) {
     _error = _describeError(error);
+
     AppLog.social.error(
       operation,
       err: error,
@@ -689,21 +912,27 @@ class SocialProvider extends ChangeNotifier {
         raw.contains('failed-precondition')) {
       return 'Sociální data se ještě připravují. Zkus to prosím za chvíli znovu.';
     }
+
     if (raw.contains('permission-denied')) {
       return 'Přístup k sociálním datům byl zamítnut. Zkus se znovu přihlásit.';
     }
+
     if (raw.contains('unauthenticated')) {
       return 'Pro sociální funkce je potřeba být přihlášený.';
     }
+
     if (raw.contains('google sign-in did not return an id token')) {
       return 'Google přihlášení se nepodařilo dokončit. Zkus to prosím znovu.';
     }
+
     if (raw.contains('friend request not found')) {
       return 'Žádost o přátelství už není dostupná.';
     }
+
     if (raw.contains('payload is empty')) {
       return 'Sociální data dorazila nekompletní. Zkus to prosím znovu.';
     }
+
     if (raw.contains('a user cannot send a friend request to themselves')) {
       return 'Sám sobě žádost o přátelství poslat nejde.';
     }

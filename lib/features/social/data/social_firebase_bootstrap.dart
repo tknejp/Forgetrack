@@ -1,7 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 
-import '../../../core/app_log.dart';
+import '../../../core/logging/app_log.dart';
 
 class SocialBackendState {
   const SocialBackendState._({

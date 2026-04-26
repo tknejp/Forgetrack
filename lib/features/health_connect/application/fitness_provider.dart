@@ -1,5 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
-import '../../../models/weight_card_data.dart';
+import '../domain/weight_card_data.dart';
 import '../data/health_connect_service.dart';
 import '../data/local/health_database.dart';
 import '../domain/activity_record.dart';
@@ -25,6 +27,7 @@ class FitnessProvider extends ChangeNotifier {
 
   // ─── Concurrency guard ────────────────────────────────────────────────────
   bool _inFlight = false;
+  StreamSubscription<void>? _dbChangeSubscription;
 
   // ─── State ────────────────────────────────────────────────────────────────
   bool _isLoading = false;
@@ -173,6 +176,7 @@ class FitnessProvider extends ChangeNotifier {
 
   /// Checks HC availability and permissions, then loads data from the local
   /// DB cache. No Health Connect data reads — safe on every app start/resume.
+  /// Also sets up live DB watchers so UI updates when background task writes data.
   Future<void> initialize() async {
     if (_inFlight) return;
     _inFlight = true;
@@ -191,6 +195,13 @@ class FitnessProvider extends ChangeNotifier {
       if (_hasPermissions) {
         await _refreshHistoryAccess(interactive: false);
         _loadFromDb();
+
+        // Set up live DB watcher — when background task writes data, reload it.
+        _dbChangeSubscription?.cancel();
+        _dbChangeSubscription = _db.watchForChanges().listen((_) {
+          _loadFromDb();
+          notifyListeners();
+        });
       } else {
         _hasHistoricalDataAccess = false;
       }
@@ -256,6 +267,32 @@ class FitnessProvider extends ChangeNotifier {
       // Quota exhausted — serve existing DB data, do not touch _lastSyncedAt.
     } catch (e) {
       _errorMessage = e.toString();
+    } finally {
+      _isRefreshing = false;
+      _inFlight = false;
+      notifyListeners();
+    }
+  }
+
+  /// Background-safe variant of [refresh] – never shows interactive dialogs.
+  /// Safe to call from a WorkManager isolate.
+  Future<void> refreshBackground() async {
+    if (_inFlight) return;
+    if (!_isHealthConnectAvailable || !_hasPermissions) {
+      await initialize();
+      return;
+    }
+    _inFlight = true;
+    _isRefreshing = true;
+    notifyListeners();
+
+    try {
+      await _refreshHistoryAccess(interactive: false);
+      await _fetchFromHC();
+    } on _QuotaExceededException {
+      // silent
+    } catch (_) {
+      // silently ignore background errors
     } finally {
       _isRefreshing = false;
       _inFlight = false;

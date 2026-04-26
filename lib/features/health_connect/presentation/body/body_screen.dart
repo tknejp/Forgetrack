@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../l10n/l10n.dart';
-import '../../../../providers/goals_provider.dart';
-import '../../../../theme/app_theme.dart';
-import '../../../../widgets/stat_display.dart';
-import '../../../../widgets/top_level_app_bar.dart';
+import '../../../../features/auth/application/auth_provider.dart';
+import '../../../../features/health_connect/application/goals_provider.dart';
+import '../../../../shared/theme/app_theme.dart';
+import '../../../../shared/widgets/stat_display.dart';
+import '../../../../shared/widgets/top_level_app_bar.dart';
 import '../../application/fitness_provider.dart';
 import '../hc_state_widgets.dart';
 import 'widgets/body_cards.dart';
@@ -16,6 +17,7 @@ class BodyScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
     return Consumer<FitnessProvider>(
       builder: (context, fitness, _) {
         return Scaffold(
@@ -27,6 +29,11 @@ class BodyScreen extends StatelessWidget {
               syncCopy: AppHeaderSyncCopy.health,
               syncedAt: fitness.lastSyncedAt,
             ),
+            isSignedIn: auth.isSignedIn,
+            photoUrl: auth.user?.photoUrl,
+            displayName: auth.user?.displayName,
+            email: auth.user?.email,
+            sessionStateKey: auth.sessionState.name,
           ),
           body: _buildBody(context, fitness),
         );

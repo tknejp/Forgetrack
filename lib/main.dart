@@ -5,12 +5,18 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 
 import 'app.dart';
-import 'core/app_log.dart';
+import 'core/logging/app_log.dart';
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
+import 'package:firebase_messaging/firebase_messaging.dart';
+
+import 'core/services/background_sync_service.dart';
+import 'core/services/fcm_service.dart';
+import 'core/services/notification_service.dart';
 import 'features/auth/application/auth_provider.dart';
 import 'features/progression/application/progression_engine.dart';
 import 'features/progression/data/local/progression_database.dart';
 import 'features/progression/data/progression_repository_impl.dart';
-import 'features/progression/presentation/progression_provider.dart';
+import 'features/progression/application/progression_provider.dart';
 import 'features/sheets_export/application/sheets_export_provider.dart';
 import 'features/social/application/social_provider.dart';
 import 'features/social/data/social_firebase_bootstrap.dart';
@@ -25,10 +31,10 @@ import 'features/nutrition/data/local/kt_nutrition_database.dart';
 import 'features/health_connect/application/fitness_provider.dart';
 import 'features/health_connect/data/health_connect_service.dart';
 import 'features/health_connect/data/local/health_database.dart';
-import 'providers/goals_provider.dart';
-import 'providers/locale_provider.dart';
-import 'providers/theme_provider.dart';
-import 'providers/time_theme_provider.dart';
+import 'features/health_connect/application/goals_provider.dart';
+import 'app/locale_provider.dart';
+import 'shared/theme/theme_provider.dart';
+import 'shared/theme/time_theme_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -56,6 +62,7 @@ Future<void> main() async {
   final healthDb = HealthDatabase();
   await healthDb.open();
   final fitnessProvider = FitnessProvider(healthService, healthDb);
+  await fitnessProvider.initialize();
 
   final calorieApi = CalorieApiService();
   final ktService = KalorickeTabulkyService();
@@ -70,12 +77,36 @@ Future<void> main() async {
     repository: ProgressionRepositoryImpl(progressionDb),
   );
   final socialBackendState = await SocialFirebaseBootstrap.ensureInitialized();
+  // Musí být registrován před runApp – top-level handler pro FCM v background/terminated stavu
+  FirebaseMessaging.onBackgroundMessage(fcmBackgroundHandler);
   final socialRepository = socialBackendState.isReady
       ? FirestoreSocialRepository()
       : DisabledSocialRepository(reason: socialBackendState.message);
   final socialSession = SocialFirebaseSession(
     isEnabled: socialBackendState.isReady,
   );
+  await NotificationService.instance.initialize();
+  unawaited(FcmService.instance.initialize());
+  unawaited(BackgroundSyncService.register());
+
+  // Navigace z tapu na notifikaci při studeném startu
+  final launchDetails =
+      await NotificationService.instance.getLaunchDetails();
+  if (launchDetails != null) {
+    NotificationService.instance.handleNotificationTap(launchDetails);
+  }
+
+  // Při změně locale sync do Firestore, aby Cloud Functions mohly lokalizovat push notifikace
+  localeProvider.addListener(() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      unawaited(FcmService.instance.saveLocale(
+        canonicalUid(user),
+        localeProvider.locale?.languageCode ?? 'cs',
+      ));
+    }
+  });
+
   AppLog.app.info('Providers ready, launching KT initialize()');
   unawaited(ktProvider.initialize());
 

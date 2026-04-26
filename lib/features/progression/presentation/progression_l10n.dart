@@ -39,6 +39,10 @@ class ProgressionL10n {
         return _l10n.progRuleDailySleep;
       case 'weekly_activity':
         return _l10n.progRuleWeeklyActivity;
+      case 'daily_weight_log':
+        return _l10n.progRuleDailyWeightLog;
+      case 'daily_weight_goal':
+        return _l10n.progRuleDailyWeightGoal;
       default:
         return fallback ?? ruleId.replaceAll('_', ' ');
     }

@@ -43,3 +43,21 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Firebase related
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Firebase Functions
+functions/node_modules/
+functions/.firebase/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Screenshots
+old_screenshots/

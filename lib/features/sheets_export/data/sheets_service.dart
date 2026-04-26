@@ -1,6 +1,6 @@
 import 'package:googleapis/sheets/v4.dart' as sheets;
 import 'package:http/http.dart' as http;
-import '../../../core/constants.dart';
+import '../../../core/config/constants.dart';
 
 /// Wrapper around Google Sheets API v4.
 /// Call [initialize] with an authenticated HTTP client before use.

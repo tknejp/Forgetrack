@@ -581,30 +581,46 @@ class FirestoreSocialRepository implements SocialRepository {
     required String achievementTitle,
   }) async {
     final shareRef = _achievementShares.doc(shareId);
+    final isSelfReaction = actorUid == shareOwnerUid;
+
     final notifRef = _users
         .doc(shareOwnerUid)
         .collection('notifications')
         .doc('${shareId}_$actorUid');
 
-    final batch = _firestore.batch();
-    batch.update(shareRef, {
-      'reactions.$actorUid': emoji,
-      'reactorSnapshots.$actorUid': {
-        'displayName': actorName,
-        'photoUrl': actorPhoto,
-      },
+    await _firestore.runTransaction((transaction) async {
+      // Firestore transactions require all reads before writes.
+      final notifSnapshot =
+          isSelfReaction ? null : await transaction.get(notifRef);
+
+      transaction.update(shareRef, {
+        'reactions.$actorUid': emoji,
+        'reactorSnapshots.$actorUid': {
+          'displayName': actorName,
+          'photoUrl': actorPhoto,
+        },
+      });
+
+      if (isSelfReaction) {
+        return;
+      }
+
+      if (notifSnapshot != null && notifSnapshot.exists) {
+        return;
+      }
+
+      transaction.set(notifRef, {
+        'type': 'reaction',
+        'actorUid': actorUid,
+        'actorName': actorName,
+        'actorPhoto': actorPhoto,
+        'shareId': shareId,
+        'achievementTitle': achievementTitle,
+        'emoji': emoji,
+        'createdAt': FieldValue.serverTimestamp(),
+        'read': false,
+      });
     });
-    batch.set(notifRef, {
-      'actorUid': actorUid,
-      'actorName': actorName,
-      'actorPhoto': actorPhoto,
-      'shareId': shareId,
-      'achievementTitle': achievementTitle,
-      'emoji': emoji,
-      'createdAt': FieldValue.serverTimestamp(),
-      'read': false,
-    });
-    await batch.commit();
   }
 
   @override
@@ -614,18 +630,11 @@ class FirestoreSocialRepository implements SocialRepository {
     required String shareOwnerUid,
   }) async {
     final shareRef = _achievementShares.doc(shareId);
-    final notifRef = _users
-        .doc(shareOwnerUid)
-        .collection('notifications')
-        .doc('${shareId}_$actorUid');
 
-    final batch = _firestore.batch();
-    batch.update(shareRef, {
+    await shareRef.update({
       'reactions.$actorUid': FieldValue.delete(),
       'reactorSnapshots.$actorUid': FieldValue.delete(),
     });
-    batch.delete(notifRef);
-    await batch.commit();
   }
 
   @override

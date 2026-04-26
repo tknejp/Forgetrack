@@ -1,7 +1,9 @@
+import 'dart:async';
+
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../../../../core/app_log.dart';
+import '../../../../core/logging/app_log.dart';
 import '../../domain/activity_record.dart';
 import '../../domain/sleep_record.dart';
 import '../../domain/weight_record.dart';
@@ -48,30 +50,81 @@ class HealthDatabase {
       AppLog.app.debug('$_logName: open() skipped — already open');
       return;
     }
+
     _opened = true;
-    final dir = await getApplicationDocumentsDirectory();
-    AppLog.app.info('$_logName: opening Isar store', payload: dir.path);
-    _isar = await Isar.open(
-      [
-        HcStepsDayRecordSchema,
-        HcCalorieDayRecordSchema,
-        HcWeightRecordSchema,
-        HcSleepRecordSchema,
-        HcActivityRecordSchema,
-        HcMetaRecordSchema,
-      ],
-      directory: dir.path,
-      name: _isarName,
-    );
-    await _loadCache();
-    AppLog.app.info(
-      '$_logName: ready — '
-      'steps=${_stepsHistory.length}d '
-      'weight=${_weightHistory.length} '
-      'sleep=${_sleepHistory.length}n '
-      'activities=${_activities.length} '
-      'lastSync=${_lastSyncedAt?.toIso8601String() ?? "never"}',
-    );
+
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+
+      AppLog.app.info('$_logName: opening Isar store', payload: dir.path);
+
+      _isar = await Isar.open(
+        [
+          HcStepsDayRecordSchema,
+          HcCalorieDayRecordSchema,
+          HcWeightRecordSchema,
+          HcSleepRecordSchema,
+          HcActivityRecordSchema,
+          HcMetaRecordSchema,
+        ],
+        directory: dir.path,
+        name: _isarName,
+      );
+
+      await _loadCache();
+
+      AppLog.app.info(
+        '$_logName: ready — '
+        'steps=${_stepsHistory.length}d '
+        'weight=${_weightHistory.length} '
+        'sleep=${_sleepHistory.length}n '
+        'activities=${_activities.length} '
+        'lastSync=${_lastSyncedAt?.toIso8601String() ?? "never"}',
+      );
+    } catch (_) {
+      _opened = false;
+      _isar = null;
+      rethrow;
+    }
+  }
+
+  Future<void> close({bool clearMemoryCache = false}) async {
+    final value = _isar;
+
+    if (value == null) {
+      _opened = false;
+      if (clearMemoryCache) {
+        _clearMemoryCache();
+      }
+      return;
+    }
+    try {
+      await value.close();
+      AppLog.app.debug('$_logName: closed');
+    } catch (e, st) {
+      AppLog.app.error(
+        '$_logName: close() failed',
+        err: e,
+        stackTrace: st,
+      );
+    } finally {
+      _isar = null;
+      _opened = false;
+      if (clearMemoryCache) {
+        _clearMemoryCache();
+      }
+    }
+  }
+
+  void _clearMemoryCache() {
+    _stepsHistory = [];
+    _caloriesHistory = [];
+    _weightHistory = [];
+    _sleepHistory = [];
+    _activities = [];
+    _lastSyncedAt = null;
+    _workoutPermission = false;
+    _latestBodyFat = null;
   }
 
   Future<void> _loadCache() async {
@@ -343,5 +396,42 @@ class HealthDatabase {
   static DateTime _today() {
     final now = DateTime.now();
     return DateTime(now.year, now.month, now.day);
+  }
+
+  /// Streams notifications when any health data changes in the DB.
+  /// Used for live reactive updates when background task writes new data.
+  Stream<void> watchForChanges() {
+    final isar = _isar;
+    if (isar == null) return const Stream.empty();
+
+    late final StreamController<void> controller;
+    final subscriptions = <StreamSubscription<void>>[];
+
+    void notify(_) {
+      if (!controller.isClosed) {
+        controller.add(null);
+      }
+    }
+
+    controller = StreamController<void>.broadcast(
+      onListen: () {
+        subscriptions.addAll([
+          isar.hcStepsDayRecords.watchLazy().listen(notify),
+          isar.hcCalorieDayRecords.watchLazy().listen(notify),
+          isar.hcWeightRecords.watchLazy().listen(notify),
+          isar.hcSleepRecords.watchLazy().listen(notify),
+          isar.hcActivityRecords.watchLazy().listen(notify),
+          isar.hcMetaRecords.watchLazy().listen(notify),
+        ]);
+      },
+      onCancel: () async {
+        for (final subscription in subscriptions) {
+          await subscription.cancel();
+        }
+        subscriptions.clear();
+      },
+    );
+
+    return controller.stream;
   }
 }
