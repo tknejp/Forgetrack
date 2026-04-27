@@ -363,6 +363,103 @@ void main() {
       expect(prefs.getBool('progression_migrated_uid-user2'), true);
     });
   });
+
+  // ── Summary update (Phase 4e) ───────────────────────────────────────────────
+
+  group('progression summary (Phase 4e)', () {
+    test('logged-out claim does not update summary', () async {
+      local.rewardGrants = [_unlockedRuleGrant('key1')];
+      final repo = buildRepo(() => null);
+      await repo.claimReward(
+        rewardKey: 'key1',
+        claimedAt: DateTime(2026, 4, 27),
+        finalXp: 80,
+        levelAtClaim: 1,
+        multiplierAtClaim: 1.0,
+      );
+      expect(gateway.updateSummaryCalls, 0);
+    });
+
+    test('logged-in claimReward updates summary', () async {
+      local.rewardGrants = [_claimedRuleGrant('key1', finalXp: 80)];
+      final repo = buildRepo(() => 'uid-abc');
+      await repo.claimReward(
+        rewardKey: 'key1',
+        claimedAt: DateTime(2026, 4, 27),
+        finalXp: 80,
+        levelAtClaim: 1,
+        multiplierAtClaim: 1.0,
+      );
+      expect(gateway.updateSummaryCalls, 1);
+      expect(gateway.lastSummaryUid, 'uid-abc');
+      expect(gateway.lastSummaryLedger, isNotNull);
+    });
+
+    test('logged-in claimQuestReward updates summary', () async {
+      local.questRewardGrants = [_claimedQuestGrant('qkey1', finalXp: 150)];
+      final repo = buildRepo(() => 'uid-abc');
+      await repo.claimQuestReward(
+        rewardKey: 'qkey1',
+        claimedAt: DateTime(2026, 4, 27),
+        finalXp: 150,
+        levelAtClaim: 2,
+        multiplierAtClaim: 1.2,
+      );
+      expect(gateway.updateSummaryCalls, 1);
+      expect(gateway.lastSummaryUid, 'uid-abc');
+    });
+
+    test('logged-in persistAchievementUnlocks updates summary', () async {
+      final unlock = _unlock('achievement|first_reward', 'first_reward');
+      final repo = buildRepo(() => 'uid-abc');
+      // Persistence adds the unlock to local
+      await repo.persistAchievementUnlocks(unlocks: [unlock]);
+      expect(gateway.updateSummaryCalls, 1);
+      expect(gateway.lastSummaryUid, 'uid-abc');
+      expect(gateway.lastSummaryLedger?.achievementUnlocks, hasLength(1));
+    });
+
+    test('summary uses effectiveXpGranted from claimed grants', () async {
+      // Claim two grants: one with finalXp set, one legacy with finalXp=null
+      local.rewardGrants = [
+        _claimedRuleGrant('key1', finalXp: 100),
+        _claimedRuleGrant('key2', xpGranted: 80, finalXp: null),
+      ];
+      final repo = buildRepo(() => 'uid-abc');
+      await repo.claimReward(
+        rewardKey: 'key1',
+        claimedAt: DateTime(2026, 4, 27),
+        finalXp: 100,
+        levelAtClaim: 1,
+        multiplierAtClaim: 1.0,
+      );
+      final summary = gateway.lastSummaryLedger;
+      expect(summary, isNotNull);
+      // effectiveXpGranted for key1: finalXp ?? xpGranted = 100 ?? ? = 100
+      // effectiveXpGranted for key2: finalXp ?? xpGranted = null ?? 80 = 80
+      final totalEffective = summary!.rewardGrants.fold<int>(
+        0,
+        (sum, g) => sum + g.effectiveXpGranted,
+      );
+      expect(totalEffective, 180); // 100 + 80
+    });
+
+    test('summary write failure does not break local claim', () async {
+      gateway.shouldFailSummary = true;
+      local.rewardGrants = [_unlockedRuleGrant('key1')];
+      final repo = buildRepo(() => 'uid-abc');
+      final ledger = await repo.claimReward(
+        rewardKey: 'key1',
+        claimedAt: DateTime(2026, 4, 27),
+        finalXp: 80,
+        levelAtClaim: 1,
+        multiplierAtClaim: 1.0,
+      );
+      // Claim should succeed even though summary write failed
+      expect(local.claimRewardCalls, 1);
+      expect(ledger, isNotNull);
+    });
+  });
 }
 
 
@@ -386,7 +483,11 @@ ProgressionRewardGrant _unlockedRuleGrant(String rewardKey) =>
       unlockedAt: DateTime(2026, 4, 27),
     );
 
-ProgressionRewardGrant _claimedRuleGrant(String rewardKey) =>
+ProgressionRewardGrant _claimedRuleGrant(
+  String rewardKey, {
+  int? xpGranted,
+  int? finalXp,
+}) =>
     ProgressionRewardGrant(
       rewardKey: rewardKey,
       ruleId: 'daily_steps',
@@ -397,13 +498,13 @@ ProgressionRewardGrant _claimedRuleGrant(String rewardKey) =>
         start: DateTime(2026, 4, 27),
         end: DateTime(2026, 4, 27),
       ),
-      xpGranted: 80,
+      xpGranted: xpGranted ?? 80,
       targetValue: 10000,
       actualValue: 12000,
       rewardStatus: ProgressionRewardStatus.claimed,
       unlockedAt: DateTime(2026, 4, 27),
       claimedAt: DateTime(2026, 4, 27, 12),
-      finalXp: 80,
+      finalXp: finalXp ?? 80,
       levelAtClaim: 1,
       multiplierAtClaim: 1.0,
     );
@@ -418,16 +519,20 @@ ProgressionQuestRewardGrant _unlockedQuestGrant(String rewardKey) =>
       completedAt: DateTime(2026, 4, 27),
     );
 
-ProgressionQuestRewardGrant _claimedQuestGrant(String rewardKey) =>
+ProgressionQuestRewardGrant _claimedQuestGrant(
+  String rewardKey, {
+  int? xpGranted,
+  int? finalXp,
+}) =>
     ProgressionQuestRewardGrant(
       rewardKey: rewardKey,
       questId: 'first_steps',
-      xpGranted: 200,
+      xpGranted: xpGranted ?? 200,
       rewardStatus: ProgressionRewardStatus.claimed,
       unlockedAt: DateTime(2026, 4, 27),
       completedAt: DateTime(2026, 4, 27),
       claimedAt: DateTime(2026, 4, 27, 12),
-      finalXp: 200,
+      finalXp: finalXp ?? 200,
       levelAtClaim: 1,
       multiplierAtClaim: 1.0,
     );
@@ -587,13 +692,17 @@ class _FakeGateway implements ProgressionCloudGateway {
   int pushUnlockCalls = 0;
   int pullClaimsCalls = 0;
   int migrationCalls = 0;
+  int updateSummaryCalls = 0;
   String? lastPushRuleUid;
   String? lastPushQuestUid;
   String? lastMigrationUid;
+  String? lastSummaryUid;
+  ProgressionLedgerSnapshot? lastSummaryLedger;
   List<ProgressionRewardGrant>? lastMigrationRuleGrants;
   List<ProgressionQuestRewardGrant>? lastMigrationQuestGrants;
   List<ProgressionAchievementUnlockEvent>? lastMigrationAchievementUnlocks;
   bool shouldFailMigration = false;
+  bool shouldFailSummary = false;
   Duration pullDelay = Duration.zero;
 
   ({
@@ -659,6 +768,19 @@ class _FakeGateway implements ProgressionCloudGateway {
     lastMigrationAchievementUnlocks = achievementUnlocks;
     if (shouldFailMigration) {
       throw Exception('Simulated migration failure');
+    }
+  }
+
+  @override
+  Future<void> updateProgressionSummary({
+    required String uid,
+    required ProgressionLedgerSnapshot ledger,
+  }) async {
+    updateSummaryCalls++;
+    lastSummaryUid = uid;
+    lastSummaryLedger = ledger;
+    if (shouldFailSummary) {
+      throw Exception('Simulated summary write failure');
     }
   }
 }
