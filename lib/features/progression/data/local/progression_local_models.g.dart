@@ -9743,3 +9743,1134 @@ extension ProgressionActiveQuestRecordQueryProperty on QueryBuilder<
     });
   }
 }
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+extension GetProgressionAchievementUnlockRecordCollection on Isar {
+  IsarCollection<ProgressionAchievementUnlockRecord>
+      get progressionAchievementUnlockRecords => this.collection();
+}
+
+const ProgressionAchievementUnlockRecordSchema = CollectionSchema(
+  name: r'ProgressionAchievementUnlockRecord',
+  id: -7533353973035278816,
+  properties: {
+    r'achievementId': PropertySchema(
+      id: 0,
+      name: r'achievementId',
+      type: IsarType.string,
+    ),
+    r'unlockKey': PropertySchema(
+      id: 1,
+      name: r'unlockKey',
+      type: IsarType.string,
+    ),
+    r'unlockedAt': PropertySchema(
+      id: 2,
+      name: r'unlockedAt',
+      type: IsarType.dateTime,
+    )
+  },
+  estimateSize: _progressionAchievementUnlockRecordEstimateSize,
+  serialize: _progressionAchievementUnlockRecordSerialize,
+  deserialize: _progressionAchievementUnlockRecordDeserialize,
+  deserializeProp: _progressionAchievementUnlockRecordDeserializeProp,
+  idName: r'id',
+  indexes: {
+    r'unlockKey': IndexSchema(
+      id: -2036961389800305509,
+      name: r'unlockKey',
+      unique: true,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'unlockKey',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'achievementId': IndexSchema(
+      id: 547487615361511857,
+      name: r'achievementId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'achievementId',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'unlockedAt': IndexSchema(
+      id: -2486051207984852976,
+      name: r'unlockedAt',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'unlockedAt',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    )
+  },
+  links: {},
+  embeddedSchemas: {},
+  getId: _progressionAchievementUnlockRecordGetId,
+  getLinks: _progressionAchievementUnlockRecordGetLinks,
+  attach: _progressionAchievementUnlockRecordAttach,
+  version: '3.1.0+1',
+);
+
+int _progressionAchievementUnlockRecordEstimateSize(
+  ProgressionAchievementUnlockRecord object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  bytesCount += 3 + object.achievementId.length * 3;
+  bytesCount += 3 + object.unlockKey.length * 3;
+  return bytesCount;
+}
+
+void _progressionAchievementUnlockRecordSerialize(
+  ProgressionAchievementUnlockRecord object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeString(offsets[0], object.achievementId);
+  writer.writeString(offsets[1], object.unlockKey);
+  writer.writeDateTime(offsets[2], object.unlockedAt);
+}
+
+ProgressionAchievementUnlockRecord
+    _progressionAchievementUnlockRecordDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = ProgressionAchievementUnlockRecord();
+  object.achievementId = reader.readString(offsets[0]);
+  object.id = id;
+  object.unlockKey = reader.readString(offsets[1]);
+  object.unlockedAt = reader.readDateTime(offsets[2]);
+  return object;
+}
+
+P _progressionAchievementUnlockRecordDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readString(offset)) as P;
+    case 1:
+      return (reader.readString(offset)) as P;
+    case 2:
+      return (reader.readDateTime(offset)) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+Id _progressionAchievementUnlockRecordGetId(
+    ProgressionAchievementUnlockRecord object) {
+  return object.id;
+}
+
+List<IsarLinkBase<dynamic>> _progressionAchievementUnlockRecordGetLinks(
+    ProgressionAchievementUnlockRecord object) {
+  return [];
+}
+
+void _progressionAchievementUnlockRecordAttach(IsarCollection<dynamic> col,
+    Id id, ProgressionAchievementUnlockRecord object) {
+  object.id = id;
+}
+
+extension ProgressionAchievementUnlockRecordByIndex
+    on IsarCollection<ProgressionAchievementUnlockRecord> {
+  Future<ProgressionAchievementUnlockRecord?> getByUnlockKey(String unlockKey) {
+    return getByIndex(r'unlockKey', [unlockKey]);
+  }
+
+  ProgressionAchievementUnlockRecord? getByUnlockKeySync(String unlockKey) {
+    return getByIndexSync(r'unlockKey', [unlockKey]);
+  }
+
+  Future<bool> deleteByUnlockKey(String unlockKey) {
+    return deleteByIndex(r'unlockKey', [unlockKey]);
+  }
+
+  bool deleteByUnlockKeySync(String unlockKey) {
+    return deleteByIndexSync(r'unlockKey', [unlockKey]);
+  }
+
+  Future<List<ProgressionAchievementUnlockRecord?>> getAllByUnlockKey(
+      List<String> unlockKeyValues) {
+    final values = unlockKeyValues.map((e) => [e]).toList();
+    return getAllByIndex(r'unlockKey', values);
+  }
+
+  List<ProgressionAchievementUnlockRecord?> getAllByUnlockKeySync(
+      List<String> unlockKeyValues) {
+    final values = unlockKeyValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'unlockKey', values);
+  }
+
+  Future<int> deleteAllByUnlockKey(List<String> unlockKeyValues) {
+    final values = unlockKeyValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'unlockKey', values);
+  }
+
+  int deleteAllByUnlockKeySync(List<String> unlockKeyValues) {
+    final values = unlockKeyValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'unlockKey', values);
+  }
+
+  Future<Id> putByUnlockKey(ProgressionAchievementUnlockRecord object) {
+    return putByIndex(r'unlockKey', object);
+  }
+
+  Id putByUnlockKeySync(ProgressionAchievementUnlockRecord object,
+      {bool saveLinks = true}) {
+    return putByIndexSync(r'unlockKey', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllByUnlockKey(
+      List<ProgressionAchievementUnlockRecord> objects) {
+    return putAllByIndex(r'unlockKey', objects);
+  }
+
+  List<Id> putAllByUnlockKeySync(
+      List<ProgressionAchievementUnlockRecord> objects,
+      {bool saveLinks = true}) {
+    return putAllByIndexSync(r'unlockKey', objects, saveLinks: saveLinks);
+  }
+}
+
+extension ProgressionAchievementUnlockRecordQueryWhereSort on QueryBuilder<
+    ProgressionAchievementUnlockRecord,
+    ProgressionAchievementUnlockRecord,
+    QWhere> {
+  QueryBuilder<ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord, QAfterWhere> anyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord, QAfterWhere> anyUnlockedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'unlockedAt'),
+      );
+    });
+  }
+}
+
+extension ProgressionAchievementUnlockRecordQueryWhere on QueryBuilder<
+    ProgressionAchievementUnlockRecord,
+    ProgressionAchievementUnlockRecord,
+    QWhereClause> {
+  QueryBuilder<ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord, QAfterWhereClause> idEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterWhereClause> idNotEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            )
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            )
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterWhereClause> idGreaterThan(Id id, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.greaterThan(lower: id, includeLower: include),
+      );
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterWhereClause> idLessThan(Id id, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.lessThan(upper: id, includeUpper: include),
+      );
+    });
+  }
+
+  QueryBuilder<ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord, QAfterWhereClause> idBetween(
+    Id lowerId,
+    Id upperId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterWhereClause> unlockKeyEqualTo(String unlockKey) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'unlockKey',
+        value: [unlockKey],
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterWhereClause> unlockKeyNotEqualTo(String unlockKey) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'unlockKey',
+              lower: [],
+              upper: [unlockKey],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'unlockKey',
+              lower: [unlockKey],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'unlockKey',
+              lower: [unlockKey],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'unlockKey',
+              lower: [],
+              upper: [unlockKey],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterWhereClause> achievementIdEqualTo(String achievementId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'achievementId',
+        value: [achievementId],
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterWhereClause> achievementIdNotEqualTo(String achievementId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'achievementId',
+              lower: [],
+              upper: [achievementId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'achievementId',
+              lower: [achievementId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'achievementId',
+              lower: [achievementId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'achievementId',
+              lower: [],
+              upper: [achievementId],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterWhereClause> unlockedAtEqualTo(DateTime unlockedAt) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'unlockedAt',
+        value: [unlockedAt],
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterWhereClause> unlockedAtNotEqualTo(DateTime unlockedAt) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'unlockedAt',
+              lower: [],
+              upper: [unlockedAt],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'unlockedAt',
+              lower: [unlockedAt],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'unlockedAt',
+              lower: [unlockedAt],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'unlockedAt',
+              lower: [],
+              upper: [unlockedAt],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterWhereClause> unlockedAtGreaterThan(
+    DateTime unlockedAt, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'unlockedAt',
+        lower: [unlockedAt],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord, QAfterWhereClause> unlockedAtLessThan(
+    DateTime unlockedAt, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'unlockedAt',
+        lower: [],
+        upper: [unlockedAt],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord, QAfterWhereClause> unlockedAtBetween(
+    DateTime lowerUnlockedAt,
+    DateTime upperUnlockedAt, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'unlockedAt',
+        lower: [lowerUnlockedAt],
+        includeLower: includeLower,
+        upper: [upperUnlockedAt],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+}
+
+extension ProgressionAchievementUnlockRecordQueryFilter on QueryBuilder<
+    ProgressionAchievementUnlockRecord,
+    ProgressionAchievementUnlockRecord,
+    QFilterCondition> {
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterFilterCondition> achievementIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'achievementId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterFilterCondition> achievementIdGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'achievementId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterFilterCondition> achievementIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'achievementId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterFilterCondition> achievementIdBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'achievementId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterFilterCondition> achievementIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'achievementId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterFilterCondition> achievementIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'achievementId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionAchievementUnlockRecord,
+          ProgressionAchievementUnlockRecord, QAfterFilterCondition>
+      achievementIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'achievementId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionAchievementUnlockRecord,
+          ProgressionAchievementUnlockRecord, QAfterFilterCondition>
+      achievementIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'achievementId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterFilterCondition> achievementIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'achievementId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterFilterCondition> achievementIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'achievementId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterFilterCondition> idEqualTo(Id value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord, QAfterFilterCondition> idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord, QAfterFilterCondition> idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord, QAfterFilterCondition> idBetween(
+    Id lower,
+    Id upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterFilterCondition> unlockKeyEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'unlockKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterFilterCondition> unlockKeyGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'unlockKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterFilterCondition> unlockKeyLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'unlockKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterFilterCondition> unlockKeyBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'unlockKey',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterFilterCondition> unlockKeyStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'unlockKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterFilterCondition> unlockKeyEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'unlockKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionAchievementUnlockRecord,
+          ProgressionAchievementUnlockRecord, QAfterFilterCondition>
+      unlockKeyContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'unlockKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionAchievementUnlockRecord,
+          ProgressionAchievementUnlockRecord, QAfterFilterCondition>
+      unlockKeyMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'unlockKey',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterFilterCondition> unlockKeyIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'unlockKey',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterFilterCondition> unlockKeyIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'unlockKey',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterFilterCondition> unlockedAtEqualTo(DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'unlockedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterFilterCondition> unlockedAtGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'unlockedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterFilterCondition> unlockedAtLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'unlockedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterFilterCondition> unlockedAtBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'unlockedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+}
+
+extension ProgressionAchievementUnlockRecordQueryObject on QueryBuilder<
+    ProgressionAchievementUnlockRecord,
+    ProgressionAchievementUnlockRecord,
+    QFilterCondition> {}
+
+extension ProgressionAchievementUnlockRecordQueryLinks on QueryBuilder<
+    ProgressionAchievementUnlockRecord,
+    ProgressionAchievementUnlockRecord,
+    QFilterCondition> {}
+
+extension ProgressionAchievementUnlockRecordQuerySortBy on QueryBuilder<
+    ProgressionAchievementUnlockRecord,
+    ProgressionAchievementUnlockRecord,
+    QSortBy> {
+  QueryBuilder<ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord, QAfterSortBy> sortByAchievementId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'achievementId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterSortBy> sortByAchievementIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'achievementId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord, QAfterSortBy> sortByUnlockKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'unlockKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord, QAfterSortBy> sortByUnlockKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'unlockKey', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord, QAfterSortBy> sortByUnlockedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'unlockedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord, QAfterSortBy> sortByUnlockedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'unlockedAt', Sort.desc);
+    });
+  }
+}
+
+extension ProgressionAchievementUnlockRecordQuerySortThenBy on QueryBuilder<
+    ProgressionAchievementUnlockRecord,
+    ProgressionAchievementUnlockRecord,
+    QSortThenBy> {
+  QueryBuilder<ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord, QAfterSortBy> thenByAchievementId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'achievementId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QAfterSortBy> thenByAchievementIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'achievementId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord, QAfterSortBy> thenById() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord, QAfterSortBy> thenByIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord, QAfterSortBy> thenByUnlockKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'unlockKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord, QAfterSortBy> thenByUnlockKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'unlockKey', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord, QAfterSortBy> thenByUnlockedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'unlockedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord, QAfterSortBy> thenByUnlockedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'unlockedAt', Sort.desc);
+    });
+  }
+}
+
+extension ProgressionAchievementUnlockRecordQueryWhereDistinct on QueryBuilder<
+    ProgressionAchievementUnlockRecord,
+    ProgressionAchievementUnlockRecord,
+    QDistinct> {
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QDistinct> distinctByAchievementId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'achievementId',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<
+      ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord,
+      QDistinct> distinctByUnlockKey({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'unlockKey', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ProgressionAchievementUnlockRecord,
+      ProgressionAchievementUnlockRecord, QDistinct> distinctByUnlockedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'unlockedAt');
+    });
+  }
+}
+
+extension ProgressionAchievementUnlockRecordQueryProperty on QueryBuilder<
+    ProgressionAchievementUnlockRecord,
+    ProgressionAchievementUnlockRecord,
+    QQueryProperty> {
+  QueryBuilder<ProgressionAchievementUnlockRecord, int, QQueryOperations>
+      idProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<ProgressionAchievementUnlockRecord, String, QQueryOperations>
+      achievementIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'achievementId');
+    });
+  }
+
+  QueryBuilder<ProgressionAchievementUnlockRecord, String, QQueryOperations>
+      unlockKeyProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'unlockKey');
+    });
+  }
+
+  QueryBuilder<ProgressionAchievementUnlockRecord, DateTime, QQueryOperations>
+      unlockedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'unlockedAt');
+    });
+  }
+}

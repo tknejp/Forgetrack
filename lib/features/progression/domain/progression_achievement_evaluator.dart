@@ -12,6 +12,7 @@ class ProgressionAchievementEvaluator {
     required List<ProgressionQuestRewardGrant> questRewardGrants,
     required Map<String, ProgressionStreakSummary> streaksByRuleId,
     required Map<ProgressionDomain, ProgressionStreakSummary> streaksByDomain,
+    Map<String, DateTime> existingUnlocks = const {},
   }) {
     final orderedDefinitions = [...definitions]
       ..sort((a, b) => a.id.compareTo(b.id));
@@ -25,6 +26,7 @@ class ProgressionAchievementEvaluator {
           questRewardGrants: questRewardGrants,
           streaksByRuleId: streaksByRuleId,
           streaksByDomain: streaksByDomain,
+          existingUnlocks: existingUnlocks,
         ),
     ];
   }
@@ -44,7 +46,38 @@ class ProgressionAchievementEvaluator {
     required List<ProgressionQuestRewardGrant> questRewardGrants,
     required Map<String, ProgressionStreakSummary> streaksByRuleId,
     required Map<ProgressionDomain, ProgressionStreakSummary> streaksByDomain,
+    required Map<String, DateTime> existingUnlocks,
   }) {
+    // If a persisted unlock record exists, use it as the authoritative state.
+    final persistedUnlockedAt = existingUnlocks[definition.id];
+    if (persistedUnlockedAt != null) {
+      final currentValue = _currentValue(
+        definition: definition,
+        profile: profile,
+        evaluations: evaluations,
+        rewardGrants: rewardGrants,
+        questRewardGrants: questRewardGrants,
+        streaksByRuleId: streaksByRuleId,
+        streaksByDomain: streaksByDomain,
+      );
+      return ProgressionAchievement(
+        id: definition.id,
+        type: definition.type,
+        difficulty: definition.difficulty,
+        criterionType: definition.criterionType,
+        title: definition.title,
+        description: definition.description,
+        targetValue: definition.targetValue,
+        currentValue: currentValue,
+        progress: _safeProgress(currentValue, definition.targetValue),
+        unlocked: true,
+        unlockedAt: persistedUnlockedAt,
+        ruleId: definition.ruleId,
+        domain: definition.domain,
+        relatedRuleIds: definition.relatedRuleIds,
+      );
+    }
+
     final currentValue = _currentValue(
       definition: definition,
       profile: profile,

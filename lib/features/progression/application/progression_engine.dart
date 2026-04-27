@@ -89,6 +89,16 @@ class ProgressionEngine {
       evaluatedAt: now,
     );
     var state = _toState(ledger, evaluationDate: now);
+
+    final newUnlocks = _newAchievementUnlocks(
+      state.achievements,
+      existingUnlocks: ledger.achievementUnlocks,
+    );
+    if (newUnlocks.isNotEmpty) {
+      ledger = await _repository.persistAchievementUnlocks(unlocks: newUnlocks);
+      state = _toState(ledger, evaluationDate: now);
+    }
+
     final newQuestRewardGrants = _newQuestRewardGrants(
       state.quests,
       existingGrants: ledger.questRewardGrants,
@@ -170,6 +180,9 @@ class ProgressionEngine {
     final streaksByRuleId = _streakPolicy.summarizeByRule(evaluations);
     final streaksByDomain = _streakPolicy.summarizeByDomain(evaluations);
     final questDefinitions = _questCatalog.build();
+    final existingUnlocks = {
+      for (final u in ledger.achievementUnlocks) u.achievementId: u.unlockedAt,
+    };
     final achievements = _achievementEvaluator.evaluate(
       definitions: _achievementCatalog.build(),
       profile: profile,
@@ -178,6 +191,7 @@ class ProgressionEngine {
       questRewardGrants: questRewardGrants,
       streaksByRuleId: streaksByRuleId,
       streaksByDomain: streaksByDomain,
+      existingUnlocks: existingUnlocks,
     );
 
     final questResult = _questEvaluator.evaluate(
@@ -297,6 +311,25 @@ class ProgressionEngine {
       if (!right.contains(item)) return false;
     }
     return true;
+  }
+
+  List<ProgressionAchievementUnlockEvent> _newAchievementUnlocks(
+    List<ProgressionAchievement> achievements, {
+    required List<ProgressionAchievementUnlockEvent> existingUnlocks,
+  }) {
+    final existingIds = {
+      for (final u in existingUnlocks) u.achievementId,
+    };
+    return [
+      for (final achievement in achievements)
+        if (achievement.unlocked && !existingIds.contains(achievement.id))
+          ProgressionAchievementUnlockEvent(
+            unlockKey: 'achievement|${achievement.id}',
+            achievementId: achievement.id,
+            // Prefer the evaluator's estimated timestamp; fall back to now.
+            unlockedAt: achievement.unlockedAt ?? _clock(),
+          ),
+    ];
   }
 
   List<ProgressionQuestRewardGrant> _newQuestRewardGrants(

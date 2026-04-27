@@ -33,4 +33,8 @@ abstract class ProgressionRepository {
   Future<ProgressionLedgerSnapshot> persistActiveQuestSet({
     required Set<String> activeQuestIds,
   });
+
+  Future<ProgressionLedgerSnapshot> persistAchievementUnlocks({
+    required List<ProgressionAchievementUnlockEvent> unlocks,
+  });
 }

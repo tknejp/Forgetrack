@@ -100,3 +100,17 @@ class ProgressionActiveQuestRecord {
   @Index()
   late DateTime assignedAt;
 }
+
+@Collection()
+class ProgressionAchievementUnlockRecord {
+  Id id = Isar.autoIncrement;
+
+  @Index(unique: true, replace: false)
+  late String unlockKey;
+
+  @Index()
+  late String achievementId;
+
+  @Index()
+  late DateTime unlockedAt;
+}

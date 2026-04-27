@@ -21,6 +21,8 @@ class ProgressionRepositoryImpl implements ProgressionRepository {
         await isar.progressionQuestRewardGrantRecords.where().findAll();
     final activeQuestRecords =
         await isar.progressionActiveQuestRecords.where().findAll();
+    final achievementUnlockRecords =
+        await isar.progressionAchievementUnlockRecords.where().findAll();
 
     final lastEvaluatedAt = evaluationRecords.isEmpty
         ? null
@@ -34,6 +36,8 @@ class ProgressionRepositoryImpl implements ProgressionRepository {
       questRewardGrants: questRewardRecords.map(_mapQuestRewardGrant).toList(),
       activeQuestIds:
           activeQuestRecords.map((record) => record.questId).toSet(),
+      achievementUnlocks:
+          achievementUnlockRecords.map(_mapAchievementUnlock).toList(),
       lastEvaluatedAt: lastEvaluatedAt,
     );
   }
@@ -192,6 +196,32 @@ class ProgressionRepositoryImpl implements ProgressionRepository {
 
       if (unlockedRecords.isNotEmpty) {
         await isar.progressionQuestRewardGrantRecords.putAll(unlockedRecords);
+      }
+    });
+
+    return loadLedger();
+  }
+
+  @override
+  Future<ProgressionLedgerSnapshot> persistAchievementUnlocks({
+    required List<ProgressionAchievementUnlockEvent> unlocks,
+  }) async {
+    final isar = _database.isar;
+    if (unlocks.isEmpty) return loadLedger();
+
+    await isar.writeTxn(() async {
+      final existingKeys =
+          (await isar.progressionAchievementUnlockRecords.where().findAll())
+              .map((record) => record.unlockKey)
+              .toSet();
+
+      final newRecords = unlocks
+          .where((unlock) => !existingKeys.contains(unlock.unlockKey))
+          .map(_toAchievementUnlockRecord)
+          .toList();
+
+      if (newRecords.isNotEmpty) {
+        await isar.progressionAchievementUnlockRecords.putAll(newRecords);
       }
     });
 
@@ -377,5 +407,24 @@ class ProgressionRepositoryImpl implements ProgressionRepository {
       ..unlockedAt = grant.unlockedAt
       ..completedAt = grant.completedAt
       ..claimedAt = grant.claimedAt;
+  }
+
+  ProgressionAchievementUnlockEvent _mapAchievementUnlock(
+    ProgressionAchievementUnlockRecord record,
+  ) {
+    return ProgressionAchievementUnlockEvent(
+      unlockKey: record.unlockKey,
+      achievementId: record.achievementId,
+      unlockedAt: record.unlockedAt,
+    );
+  }
+
+  ProgressionAchievementUnlockRecord _toAchievementUnlockRecord(
+    ProgressionAchievementUnlockEvent unlock,
+  ) {
+    return ProgressionAchievementUnlockRecord()
+      ..unlockKey = unlock.unlockKey
+      ..achievementId = unlock.achievementId
+      ..unlockedAt = unlock.unlockedAt;
   }
 }

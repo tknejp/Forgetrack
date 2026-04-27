@@ -379,12 +379,25 @@ class ProgressionProfile {
   }
 }
 
+class ProgressionAchievementUnlockEvent {
+  const ProgressionAchievementUnlockEvent({
+    required this.unlockKey,
+    required this.achievementId,
+    required this.unlockedAt,
+  });
+
+  final String unlockKey;
+  final String achievementId;
+  final DateTime unlockedAt;
+}
+
 class ProgressionLedgerSnapshot {
   const ProgressionLedgerSnapshot({
     required this.evaluations,
     required this.rewardGrants,
     this.questRewardGrants = const [],
     this.activeQuestIds = const <String>{},
+    this.achievementUnlocks = const [],
     this.lastEvaluatedAt,
   });
 
@@ -392,6 +405,7 @@ class ProgressionLedgerSnapshot {
   final List<ProgressionRewardGrant> rewardGrants;
   final List<ProgressionQuestRewardGrant> questRewardGrants;
   final Set<String> activeQuestIds;
+  final List<ProgressionAchievementUnlockEvent> achievementUnlocks;
   final DateTime? lastEvaluatedAt;
 }
 
@@ -446,6 +460,8 @@ class ProgressionAchievementDefinition {
   final ProgressionDomain? domain;
   final int? windowSizeDays;
   final List<String> relatedRuleIds;
+
+  String get unlockKey => 'achievement|$id';
 }
 
 class ProgressionAchievement {

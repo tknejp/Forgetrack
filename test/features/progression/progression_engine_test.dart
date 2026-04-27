@@ -1402,6 +1402,7 @@ class _InMemoryProgressionRepository implements ProgressionRepository {
   final Map<String, ProgressionEvaluation> _evaluations = {};
   final Map<String, ProgressionRewardGrant> _rewardGrants = {};
   final Map<String, ProgressionQuestRewardGrant> _questRewardGrants = {};
+  final Map<String, ProgressionAchievementUnlockEvent> _achievementUnlocks = {};
   Set<String> _activeQuestIds;
   DateTime? _lastEvaluatedAt;
 
@@ -1412,6 +1413,7 @@ class _InMemoryProgressionRepository implements ProgressionRepository {
       rewardGrants: _rewardGrants.values.toList(),
       questRewardGrants: _questRewardGrants.values.toList(),
       activeQuestIds: _activeQuestIds,
+      achievementUnlocks: _achievementUnlocks.values.toList(),
       lastEvaluatedAt: _lastEvaluatedAt,
     );
   }
@@ -1533,6 +1535,16 @@ class _InMemoryProgressionRepository implements ProgressionRepository {
     _activeQuestIds = {...activeQuestIds};
     return loadLedger();
   }
+
+  @override
+  Future<ProgressionLedgerSnapshot> persistAchievementUnlocks({
+    required List<ProgressionAchievementUnlockEvent> unlocks,
+  }) async {
+    for (final unlock in unlocks) {
+      _achievementUnlocks.putIfAbsent(unlock.achievementId, () => unlock);
+    }
+    return loadLedger();
+  }
 }
 
 class _StaticProgressionRepository implements ProgressionRepository {
@@ -1599,6 +1611,12 @@ class _StaticProgressionRepository implements ProgressionRepository {
   @override
   Future<ProgressionLedgerSnapshot> persistActiveQuestSet({
     required Set<String> activeQuestIds,
+  }) async =>
+      loadLedger();
+
+  @override
+  Future<ProgressionLedgerSnapshot> persistAchievementUnlocks({
+    required List<ProgressionAchievementUnlockEvent> unlocks,
   }) async =>
       loadLedger();
 }

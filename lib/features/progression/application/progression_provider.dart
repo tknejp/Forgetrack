@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../devtools/application/devtools_sync_logger.dart';
+import '../../devtools/domain/devtools_sync_event.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../../core/services/notification_service.dart';
@@ -183,6 +185,7 @@ class ProgressionProvider extends ChangeNotifier {
       return;
     }
 
+    final syncStart = DateTime.now();
     _isRefreshing = true;
     notifyListeners();
 
@@ -196,17 +199,32 @@ class ProgressionProvider extends ChangeNotifier {
         {};
     final hadState = _state != null;
 
+    String? syncError;
     try {
       _state = await _engine.sync(source);
       _error = null;
       if (hadState) unawaited(_emitProgressionNotifications(prevGrantKeys, prevUnlockedIds));
     } catch (error) {
       _error = error.toString();
+      syncError = error.toString();
     } finally {
       _isLoading = false;
       _isRefreshing = false;
       notifyListeners();
     }
+
+    unawaited(DevToolsSyncLogger.instance.record(DevToolsSyncEvent(
+      timestamp: syncStart,
+      source: 'foreground',
+      feature: 'progression',
+      result: syncError != null ? 'failure' : 'success',
+      durationMs: DateTime.now().difference(syncStart).inMilliseconds,
+      errorMessage: syncError,
+      extra: {
+        'level': profile.level,
+        'totalXp': profile.totalXp,
+      },
+    )));
 
     final latestSignature = _source?.auditSignature;
     if (_refreshQueued || latestSignature != _lastRequestedSignature) {
