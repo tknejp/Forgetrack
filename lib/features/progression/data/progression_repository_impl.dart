@@ -90,6 +90,9 @@ class ProgressionRepositoryImpl implements ProgressionRepository {
   Future<ProgressionLedgerSnapshot> claimReward({
     required String rewardKey,
     required DateTime claimedAt,
+    required int finalXp,
+    required int levelAtClaim,
+    required double multiplierAtClaim,
   }) async {
     final isar = _database.isar;
 
@@ -105,32 +108,10 @@ class ProgressionRepositoryImpl implements ProgressionRepository {
 
       record.rewardStatusName = ProgressionRewardStatus.claimed.name;
       record.claimedAt = claimedAt;
+      record.finalXp = finalXp;
+      record.levelAtClaim = levelAtClaim;
+      record.multiplierAtClaim = multiplierAtClaim;
       await isar.progressionRewardGrantRecords.put(record);
-    });
-
-    return loadLedger();
-  }
-
-  @override
-  Future<ProgressionLedgerSnapshot> claimAllRewards({
-    required DateTime claimedAt,
-  }) async {
-    final isar = _database.isar;
-
-    await isar.writeTxn(() async {
-      final unlockedRecords = await isar.progressionRewardGrantRecords
-          .filter()
-          .rewardStatusNameEqualTo(ProgressionRewardStatus.unlocked.name)
-          .findAll();
-
-      for (final record in unlockedRecords) {
-        record.rewardStatusName = ProgressionRewardStatus.claimed.name;
-        record.claimedAt = claimedAt;
-      }
-
-      if (unlockedRecords.isNotEmpty) {
-        await isar.progressionRewardGrantRecords.putAll(unlockedRecords);
-      }
     });
 
     return loadLedger();
@@ -156,6 +137,9 @@ class ProgressionRepositoryImpl implements ProgressionRepository {
   Future<ProgressionLedgerSnapshot> claimQuestReward({
     required String rewardKey,
     required DateTime claimedAt,
+    required int finalXp,
+    required int levelAtClaim,
+    required double multiplierAtClaim,
   }) async {
     final isar = _database.isar;
 
@@ -171,32 +155,10 @@ class ProgressionRepositoryImpl implements ProgressionRepository {
 
       record.rewardStatusName = ProgressionRewardStatus.claimed.name;
       record.claimedAt = claimedAt;
+      record.finalXp = finalXp;
+      record.levelAtClaim = levelAtClaim;
+      record.multiplierAtClaim = multiplierAtClaim;
       await isar.progressionQuestRewardGrantRecords.put(record);
-    });
-
-    return loadLedger();
-  }
-
-  @override
-  Future<ProgressionLedgerSnapshot> claimAllQuestRewards({
-    required DateTime claimedAt,
-  }) async {
-    final isar = _database.isar;
-
-    await isar.writeTxn(() async {
-      final unlockedRecords = await isar.progressionQuestRewardGrantRecords
-          .filter()
-          .rewardStatusNameEqualTo(ProgressionRewardStatus.unlocked.name)
-          .findAll();
-
-      for (final record in unlockedRecords) {
-        record.rewardStatusName = ProgressionRewardStatus.claimed.name;
-        record.claimedAt = claimedAt;
-      }
-
-      if (unlockedRecords.isNotEmpty) {
-        await isar.progressionQuestRewardGrantRecords.putAll(unlockedRecords);
-      }
     });
 
     return loadLedger();
@@ -326,6 +288,9 @@ class ProgressionRepositoryImpl implements ProgressionRepository {
               ProgressionRewardStatus.unlocked,
       unlockedAt: record.unlockedAt,
       claimedAt: record.claimedAt,
+      finalXp: record.finalXp,
+      levelAtClaim: record.levelAtClaim,
+      multiplierAtClaim: record.multiplierAtClaim,
     );
   }
 
@@ -342,6 +307,9 @@ class ProgressionRepositoryImpl implements ProgressionRepository {
       unlockedAt: record.unlockedAt,
       completedAt: record.completedAt,
       claimedAt: record.claimedAt,
+      finalXp: record.finalXp,
+      levelAtClaim: record.levelAtClaim,
+      multiplierAtClaim: record.multiplierAtClaim,
     );
   }
 

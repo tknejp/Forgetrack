@@ -129,32 +129,108 @@ class ProgressionEngine {
 
   Future<ProgressionEngineState> claimReward(String rewardKey) async {
     final now = _clock();
-    final ledger = await _repository.claimReward(
+    var ledger = await _repository.loadLedger();
+    final grant =
+        ledger.rewardGrants.where((g) => g.rewardKey == rewardKey).firstOrNull;
+    if (grant == null || grant.isClaimed) {
+      return _toState(ledger, evaluationDate: now);
+    }
+    final claimedXp = _totalClaimedXp(ledger);
+    final level = _levelPolicy.levelForXp(claimedXp);
+    ledger = await _repository.claimReward(
       rewardKey: rewardKey,
       claimedAt: now,
+      finalXp: _levelPolicy.scaledRewardXp(baseXp: grant.xpGranted, level: level),
+      levelAtClaim: level,
+      multiplierAtClaim: _levelPolicy.rewardMultiplierForLevel(level),
     );
     return _toState(ledger, evaluationDate: now);
   }
 
   Future<ProgressionEngineState> claimAllRewards() async {
     final now = _clock();
-    final ledger = await _repository.claimAllRewards(claimedAt: now);
+    var ledger = await _repository.loadLedger();
+    var runningClaimedXp = _totalClaimedXp(ledger);
+
+    final unclaimedGrants = ledger.rewardGrants
+        .where((g) => g.isUnlocked)
+        .toList()
+      ..sort((a, b) => a.period.start.compareTo(b.period.start));
+
+    for (final grant in unclaimedGrants) {
+      final level = _levelPolicy.levelForXp(runningClaimedXp);
+      final finalXp =
+          _levelPolicy.scaledRewardXp(baseXp: grant.xpGranted, level: level);
+      ledger = await _repository.claimReward(
+        rewardKey: grant.rewardKey,
+        claimedAt: now,
+        finalXp: finalXp,
+        levelAtClaim: level,
+        multiplierAtClaim: _levelPolicy.rewardMultiplierForLevel(level),
+      );
+      runningClaimedXp += finalXp;
+    }
+
     return _toState(ledger, evaluationDate: now);
   }
 
   Future<ProgressionEngineState> claimQuestReward(String rewardKey) async {
     final now = _clock();
-    final ledger = await _repository.claimQuestReward(
+    var ledger = await _repository.loadLedger();
+    final grant = ledger.questRewardGrants
+        .where((g) => g.rewardKey == rewardKey)
+        .firstOrNull;
+    if (grant == null || grant.isClaimed) {
+      return _toState(ledger, evaluationDate: now);
+    }
+    final claimedXp = _totalClaimedXp(ledger);
+    final level = _levelPolicy.levelForXp(claimedXp);
+    ledger = await _repository.claimQuestReward(
       rewardKey: rewardKey,
       claimedAt: now,
+      finalXp: _levelPolicy.scaledRewardXp(baseXp: grant.xpGranted, level: level),
+      levelAtClaim: level,
+      multiplierAtClaim: _levelPolicy.rewardMultiplierForLevel(level),
     );
     return _toState(ledger, evaluationDate: now);
   }
 
   Future<ProgressionEngineState> claimAllQuestRewards() async {
     final now = _clock();
-    final ledger = await _repository.claimAllQuestRewards(claimedAt: now);
+    var ledger = await _repository.loadLedger();
+    var runningClaimedXp = _totalClaimedXp(ledger);
+
+    final unclaimedGrants = ledger.questRewardGrants
+        .where((g) => g.isUnlocked)
+        .toList()
+      ..sort((a, b) => a.completedAt.compareTo(b.completedAt));
+
+    for (final grant in unclaimedGrants) {
+      final level = _levelPolicy.levelForXp(runningClaimedXp);
+      final finalXp =
+          _levelPolicy.scaledRewardXp(baseXp: grant.xpGranted, level: level);
+      ledger = await _repository.claimQuestReward(
+        rewardKey: grant.rewardKey,
+        claimedAt: now,
+        finalXp: finalXp,
+        levelAtClaim: level,
+        multiplierAtClaim: _levelPolicy.rewardMultiplierForLevel(level),
+      );
+      runningClaimedXp += finalXp;
+    }
+
     return _toState(ledger, evaluationDate: now);
+  }
+
+  int _totalClaimedXp(ProgressionLedgerSnapshot ledger) {
+    return ledger.rewardGrants.fold<int>(
+          0,
+          (sum, g) => sum + g.effectiveXpGranted,
+        ) +
+        ledger.questRewardGrants.fold<int>(
+          0,
+          (sum, g) => sum + g.effectiveXpGranted,
+        );
   }
 
   ProgressionEngineState _toState(
@@ -260,9 +336,13 @@ class ProgressionEngine {
       for (final grant in existingLedger.rewardGrants) grant.rewardKey: grant,
     };
     var runningXp = existingLedger.rewardGrants.fold<int>(
-      0,
-      (sum, grant) => sum + grant.xpGranted,
-    );
+          0,
+          (sum, grant) => sum + grant.effectiveXpGranted,
+        ) +
+        existingLedger.questRewardGrants.fold<int>(
+          0,
+          (sum, grant) => sum + grant.effectiveXpGranted,
+        );
 
     for (final snapshot in snapshots) {
       final rules = _sortedRulesForPeriod(

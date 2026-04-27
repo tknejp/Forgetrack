@@ -4071,63 +4071,78 @@ const ProgressionRewardGrantRecordSchema = CollectionSchema(
       name: r'domainName',
       type: IsarType.string,
     ),
-    r'periodEnd': PropertySchema(
+    r'finalXp': PropertySchema(
       id: 3,
+      name: r'finalXp',
+      type: IsarType.long,
+    ),
+    r'levelAtClaim': PropertySchema(
+      id: 4,
+      name: r'levelAtClaim',
+      type: IsarType.long,
+    ),
+    r'multiplierAtClaim': PropertySchema(
+      id: 5,
+      name: r'multiplierAtClaim',
+      type: IsarType.double,
+    ),
+    r'periodEnd': PropertySchema(
+      id: 6,
       name: r'periodEnd',
       type: IsarType.dateTime,
     ),
     r'periodKindName': PropertySchema(
-      id: 4,
+      id: 7,
       name: r'periodKindName',
       type: IsarType.string,
     ),
     r'periodStart': PropertySchema(
-      id: 5,
+      id: 8,
       name: r'periodStart',
       type: IsarType.dateTime,
     ),
     r'rewardKey': PropertySchema(
-      id: 6,
+      id: 9,
       name: r'rewardKey',
       type: IsarType.string,
     ),
     r'rewardStatusName': PropertySchema(
-      id: 7,
+      id: 10,
       name: r'rewardStatusName',
       type: IsarType.string,
     ),
     r'ruleId': PropertySchema(
-      id: 8,
+      id: 11,
       name: r'ruleId',
       type: IsarType.string,
     ),
     r'ruleVersion': PropertySchema(
-      id: 9,
+      id: 12,
       name: r'ruleVersion',
       type: IsarType.string,
     ),
     r'targetValue': PropertySchema(
-      id: 10,
+      id: 13,
       name: r'targetValue',
       type: IsarType.double,
     ),
     r'toleranceRatio': PropertySchema(
-      id: 11,
+      id: 14,
       name: r'toleranceRatio',
       type: IsarType.double,
     ),
     r'unlockedAt': PropertySchema(
-      id: 12,
+      id: 15,
       name: r'unlockedAt',
       type: IsarType.dateTime,
     ),
     r'upperTargetValue': PropertySchema(
-      id: 13,
+      id: 16,
       name: r'upperTargetValue',
       type: IsarType.double,
     ),
     r'xpGranted': PropertySchema(
-      id: 14,
+      id: 17,
       name: r'xpGranted',
       type: IsarType.long,
     )
@@ -4223,18 +4238,21 @@ void _progressionRewardGrantRecordSerialize(
   writer.writeDouble(offsets[0], object.actualValue);
   writer.writeDateTime(offsets[1], object.claimedAt);
   writer.writeString(offsets[2], object.domainName);
-  writer.writeDateTime(offsets[3], object.periodEnd);
-  writer.writeString(offsets[4], object.periodKindName);
-  writer.writeDateTime(offsets[5], object.periodStart);
-  writer.writeString(offsets[6], object.rewardKey);
-  writer.writeString(offsets[7], object.rewardStatusName);
-  writer.writeString(offsets[8], object.ruleId);
-  writer.writeString(offsets[9], object.ruleVersion);
-  writer.writeDouble(offsets[10], object.targetValue);
-  writer.writeDouble(offsets[11], object.toleranceRatio);
-  writer.writeDateTime(offsets[12], object.unlockedAt);
-  writer.writeDouble(offsets[13], object.upperTargetValue);
-  writer.writeLong(offsets[14], object.xpGranted);
+  writer.writeLong(offsets[3], object.finalXp);
+  writer.writeLong(offsets[4], object.levelAtClaim);
+  writer.writeDouble(offsets[5], object.multiplierAtClaim);
+  writer.writeDateTime(offsets[6], object.periodEnd);
+  writer.writeString(offsets[7], object.periodKindName);
+  writer.writeDateTime(offsets[8], object.periodStart);
+  writer.writeString(offsets[9], object.rewardKey);
+  writer.writeString(offsets[10], object.rewardStatusName);
+  writer.writeString(offsets[11], object.ruleId);
+  writer.writeString(offsets[12], object.ruleVersion);
+  writer.writeDouble(offsets[13], object.targetValue);
+  writer.writeDouble(offsets[14], object.toleranceRatio);
+  writer.writeDateTime(offsets[15], object.unlockedAt);
+  writer.writeDouble(offsets[16], object.upperTargetValue);
+  writer.writeLong(offsets[17], object.xpGranted);
 }
 
 ProgressionRewardGrantRecord _progressionRewardGrantRecordDeserialize(
@@ -4247,19 +4265,22 @@ ProgressionRewardGrantRecord _progressionRewardGrantRecordDeserialize(
   object.actualValue = reader.readDouble(offsets[0]);
   object.claimedAt = reader.readDateTimeOrNull(offsets[1]);
   object.domainName = reader.readString(offsets[2]);
+  object.finalXp = reader.readLongOrNull(offsets[3]);
   object.id = id;
-  object.periodEnd = reader.readDateTime(offsets[3]);
-  object.periodKindName = reader.readString(offsets[4]);
-  object.periodStart = reader.readDateTime(offsets[5]);
-  object.rewardKey = reader.readString(offsets[6]);
-  object.rewardStatusName = reader.readString(offsets[7]);
-  object.ruleId = reader.readString(offsets[8]);
-  object.ruleVersion = reader.readString(offsets[9]);
-  object.targetValue = reader.readDouble(offsets[10]);
-  object.toleranceRatio = reader.readDouble(offsets[11]);
-  object.unlockedAt = reader.readDateTime(offsets[12]);
-  object.upperTargetValue = reader.readDoubleOrNull(offsets[13]);
-  object.xpGranted = reader.readLong(offsets[14]);
+  object.levelAtClaim = reader.readLongOrNull(offsets[4]);
+  object.multiplierAtClaim = reader.readDoubleOrNull(offsets[5]);
+  object.periodEnd = reader.readDateTime(offsets[6]);
+  object.periodKindName = reader.readString(offsets[7]);
+  object.periodStart = reader.readDateTime(offsets[8]);
+  object.rewardKey = reader.readString(offsets[9]);
+  object.rewardStatusName = reader.readString(offsets[10]);
+  object.ruleId = reader.readString(offsets[11]);
+  object.ruleVersion = reader.readString(offsets[12]);
+  object.targetValue = reader.readDouble(offsets[13]);
+  object.toleranceRatio = reader.readDouble(offsets[14]);
+  object.unlockedAt = reader.readDateTime(offsets[15]);
+  object.upperTargetValue = reader.readDoubleOrNull(offsets[16]);
+  object.xpGranted = reader.readLong(offsets[17]);
   return object;
 }
 
@@ -4277,28 +4298,34 @@ P _progressionRewardGrantRecordDeserializeProp<P>(
     case 2:
       return (reader.readString(offset)) as P;
     case 3:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 4:
-      return (reader.readString(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 5:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readDoubleOrNull(offset)) as P;
     case 6:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 7:
       return (reader.readString(offset)) as P;
     case 8:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 9:
       return (reader.readString(offset)) as P;
     case 10:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 11:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 12:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 13:
-      return (reader.readDoubleOrNull(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 14:
+      return (reader.readDouble(offset)) as P;
+    case 15:
+      return (reader.readDateTime(offset)) as P;
+    case 16:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 17:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -5116,6 +5143,80 @@ extension ProgressionRewardGrantRecordQueryFilter on QueryBuilder<
   }
 
   QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterFilterCondition> finalXpIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'finalXp',
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterFilterCondition> finalXpIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'finalXp',
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterFilterCondition> finalXpEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'finalXp',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterFilterCondition> finalXpGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'finalXp',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterFilterCondition> finalXpLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'finalXp',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterFilterCondition> finalXpBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'finalXp',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
       QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -5167,6 +5268,164 @@ extension ProgressionRewardGrantRecordQueryFilter on QueryBuilder<
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterFilterCondition> levelAtClaimIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'levelAtClaim',
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterFilterCondition> levelAtClaimIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'levelAtClaim',
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterFilterCondition> levelAtClaimEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'levelAtClaim',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterFilterCondition> levelAtClaimGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'levelAtClaim',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterFilterCondition> levelAtClaimLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'levelAtClaim',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterFilterCondition> levelAtClaimBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'levelAtClaim',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterFilterCondition> multiplierAtClaimIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'multiplierAtClaim',
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterFilterCondition> multiplierAtClaimIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'multiplierAtClaim',
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterFilterCondition> multiplierAtClaimEqualTo(
+    double? value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'multiplierAtClaim',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterFilterCondition> multiplierAtClaimGreaterThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'multiplierAtClaim',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterFilterCondition> multiplierAtClaimLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'multiplierAtClaim',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterFilterCondition> multiplierAtClaimBetween(
+    double? lower,
+    double? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'multiplierAtClaim',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
       ));
     });
   }
@@ -6357,6 +6616,48 @@ extension ProgressionRewardGrantRecordQuerySortBy on QueryBuilder<
   }
 
   QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterSortBy> sortByFinalXp() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'finalXp', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterSortBy> sortByFinalXpDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'finalXp', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterSortBy> sortByLevelAtClaim() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'levelAtClaim', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterSortBy> sortByLevelAtClaimDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'levelAtClaim', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterSortBy> sortByMultiplierAtClaim() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'multiplierAtClaim', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterSortBy> sortByMultiplierAtClaimDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'multiplierAtClaim', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
       QAfterSortBy> sortByPeriodEnd() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'periodEnd', Sort.asc);
@@ -6570,6 +6871,20 @@ extension ProgressionRewardGrantRecordQuerySortThenBy on QueryBuilder<
   }
 
   QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterSortBy> thenByFinalXp() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'finalXp', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterSortBy> thenByFinalXpDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'finalXp', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
       QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -6580,6 +6895,34 @@ extension ProgressionRewardGrantRecordQuerySortThenBy on QueryBuilder<
       QAfterSortBy> thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterSortBy> thenByLevelAtClaim() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'levelAtClaim', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterSortBy> thenByLevelAtClaimDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'levelAtClaim', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterSortBy> thenByMultiplierAtClaim() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'multiplierAtClaim', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QAfterSortBy> thenByMultiplierAtClaimDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'multiplierAtClaim', Sort.desc);
     });
   }
 
@@ -6776,6 +7119,27 @@ extension ProgressionRewardGrantRecordQueryWhereDistinct on QueryBuilder<
   }
 
   QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QDistinct> distinctByFinalXp() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'finalXp');
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QDistinct> distinctByLevelAtClaim() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'levelAtClaim');
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
+      QDistinct> distinctByMultiplierAtClaim() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'multiplierAtClaim');
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, ProgressionRewardGrantRecord,
       QDistinct> distinctByPeriodEnd() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'periodEnd');
@@ -6894,6 +7258,27 @@ extension ProgressionRewardGrantRecordQueryProperty on QueryBuilder<
     });
   }
 
+  QueryBuilder<ProgressionRewardGrantRecord, int?, QQueryOperations>
+      finalXpProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'finalXp');
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, int?, QQueryOperations>
+      levelAtClaimProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'levelAtClaim');
+    });
+  }
+
+  QueryBuilder<ProgressionRewardGrantRecord, double?, QQueryOperations>
+      multiplierAtClaimProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'multiplierAtClaim');
+    });
+  }
+
   QueryBuilder<ProgressionRewardGrantRecord, DateTime, QQueryOperations>
       periodEndProperty() {
     return QueryBuilder.apply(this, (query) {
@@ -7001,28 +7386,43 @@ const ProgressionQuestRewardGrantRecordSchema = CollectionSchema(
       name: r'completedAt',
       type: IsarType.dateTime,
     ),
-    r'questId': PropertySchema(
+    r'finalXp': PropertySchema(
       id: 2,
+      name: r'finalXp',
+      type: IsarType.long,
+    ),
+    r'levelAtClaim': PropertySchema(
+      id: 3,
+      name: r'levelAtClaim',
+      type: IsarType.long,
+    ),
+    r'multiplierAtClaim': PropertySchema(
+      id: 4,
+      name: r'multiplierAtClaim',
+      type: IsarType.double,
+    ),
+    r'questId': PropertySchema(
+      id: 5,
       name: r'questId',
       type: IsarType.string,
     ),
     r'rewardKey': PropertySchema(
-      id: 3,
+      id: 6,
       name: r'rewardKey',
       type: IsarType.string,
     ),
     r'rewardStatusName': PropertySchema(
-      id: 4,
+      id: 7,
       name: r'rewardStatusName',
       type: IsarType.string,
     ),
     r'unlockedAt': PropertySchema(
-      id: 5,
+      id: 8,
       name: r'unlockedAt',
       type: IsarType.dateTime,
     ),
     r'xpGranted': PropertySchema(
-      id: 6,
+      id: 9,
       name: r'xpGranted',
       type: IsarType.long,
     )
@@ -7127,11 +7527,14 @@ void _progressionQuestRewardGrantRecordSerialize(
 ) {
   writer.writeDateTime(offsets[0], object.claimedAt);
   writer.writeDateTime(offsets[1], object.completedAt);
-  writer.writeString(offsets[2], object.questId);
-  writer.writeString(offsets[3], object.rewardKey);
-  writer.writeString(offsets[4], object.rewardStatusName);
-  writer.writeDateTime(offsets[5], object.unlockedAt);
-  writer.writeLong(offsets[6], object.xpGranted);
+  writer.writeLong(offsets[2], object.finalXp);
+  writer.writeLong(offsets[3], object.levelAtClaim);
+  writer.writeDouble(offsets[4], object.multiplierAtClaim);
+  writer.writeString(offsets[5], object.questId);
+  writer.writeString(offsets[6], object.rewardKey);
+  writer.writeString(offsets[7], object.rewardStatusName);
+  writer.writeDateTime(offsets[8], object.unlockedAt);
+  writer.writeLong(offsets[9], object.xpGranted);
 }
 
 ProgressionQuestRewardGrantRecord _progressionQuestRewardGrantRecordDeserialize(
@@ -7143,12 +7546,15 @@ ProgressionQuestRewardGrantRecord _progressionQuestRewardGrantRecordDeserialize(
   final object = ProgressionQuestRewardGrantRecord();
   object.claimedAt = reader.readDateTimeOrNull(offsets[0]);
   object.completedAt = reader.readDateTime(offsets[1]);
+  object.finalXp = reader.readLongOrNull(offsets[2]);
   object.id = id;
-  object.questId = reader.readString(offsets[2]);
-  object.rewardKey = reader.readString(offsets[3]);
-  object.rewardStatusName = reader.readString(offsets[4]);
-  object.unlockedAt = reader.readDateTime(offsets[5]);
-  object.xpGranted = reader.readLong(offsets[6]);
+  object.levelAtClaim = reader.readLongOrNull(offsets[3]);
+  object.multiplierAtClaim = reader.readDoubleOrNull(offsets[4]);
+  object.questId = reader.readString(offsets[5]);
+  object.rewardKey = reader.readString(offsets[6]);
+  object.rewardStatusName = reader.readString(offsets[7]);
+  object.unlockedAt = reader.readDateTime(offsets[8]);
+  object.xpGranted = reader.readLong(offsets[9]);
   return object;
 }
 
@@ -7164,14 +7570,20 @@ P _progressionQuestRewardGrantRecordDeserializeProp<P>(
     case 1:
       return (reader.readDateTime(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 3:
-      return (reader.readString(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 4:
-      return (reader.readString(offset)) as P;
+      return (reader.readDoubleOrNull(offset)) as P;
     case 5:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 6:
+      return (reader.readString(offset)) as P;
+    case 7:
+      return (reader.readString(offset)) as P;
+    case 8:
+      return (reader.readDateTime(offset)) as P;
+    case 9:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -7948,6 +8360,88 @@ extension ProgressionQuestRewardGrantRecordQueryFilter on QueryBuilder<
   QueryBuilder<
       ProgressionQuestRewardGrantRecord,
       ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> finalXpIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'finalXp',
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> finalXpIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'finalXp',
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> finalXpEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'finalXp',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> finalXpGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'finalXp',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterFilterCondition> finalXpLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'finalXp',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterFilterCondition> finalXpBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'finalXp',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
       QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -7999,6 +8493,188 @@ extension ProgressionQuestRewardGrantRecordQueryFilter on QueryBuilder<
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> levelAtClaimIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'levelAtClaim',
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> levelAtClaimIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'levelAtClaim',
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> levelAtClaimEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'levelAtClaim',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> levelAtClaimGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'levelAtClaim',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> levelAtClaimLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'levelAtClaim',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> levelAtClaimBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'levelAtClaim',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> multiplierAtClaimIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'multiplierAtClaim',
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> multiplierAtClaimIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'multiplierAtClaim',
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> multiplierAtClaimEqualTo(
+    double? value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'multiplierAtClaim',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> multiplierAtClaimGreaterThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'multiplierAtClaim',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> multiplierAtClaimLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'multiplierAtClaim',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterFilterCondition> multiplierAtClaimBetween(
+    double? lower,
+    double? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'multiplierAtClaim',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
       ));
     });
   }
@@ -8629,6 +9305,54 @@ extension ProgressionQuestRewardGrantRecordQuerySortBy on QueryBuilder<
   }
 
   QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> sortByFinalXp() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'finalXp', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> sortByFinalXpDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'finalXp', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> sortByLevelAtClaim() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'levelAtClaim', Sort.asc);
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterSortBy> sortByLevelAtClaimDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'levelAtClaim', Sort.desc);
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterSortBy> sortByMultiplierAtClaim() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'multiplierAtClaim', Sort.asc);
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterSortBy> sortByMultiplierAtClaimDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'multiplierAtClaim', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
       ProgressionQuestRewardGrantRecord, QAfterSortBy> sortByQuestId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'questId', Sort.asc);
@@ -8736,6 +9460,20 @@ extension ProgressionQuestRewardGrantRecordQuerySortThenBy on QueryBuilder<
   }
 
   QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> thenByFinalXp() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'finalXp', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> thenByFinalXpDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'finalXp', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
       ProgressionQuestRewardGrantRecord, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -8746,6 +9484,40 @@ extension ProgressionQuestRewardGrantRecordQuerySortThenBy on QueryBuilder<
       ProgressionQuestRewardGrantRecord, QAfterSortBy> thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QAfterSortBy> thenByLevelAtClaim() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'levelAtClaim', Sort.asc);
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterSortBy> thenByLevelAtClaimDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'levelAtClaim', Sort.desc);
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterSortBy> thenByMultiplierAtClaim() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'multiplierAtClaim', Sort.asc);
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QAfterSortBy> thenByMultiplierAtClaimDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'multiplierAtClaim', Sort.desc);
     });
   }
 
@@ -8842,6 +9614,29 @@ extension ProgressionQuestRewardGrantRecordQueryWhereDistinct on QueryBuilder<
     });
   }
 
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QDistinct> distinctByFinalXp() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'finalXp');
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord, QDistinct> distinctByLevelAtClaim() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'levelAtClaim');
+    });
+  }
+
+  QueryBuilder<
+      ProgressionQuestRewardGrantRecord,
+      ProgressionQuestRewardGrantRecord,
+      QDistinct> distinctByMultiplierAtClaim() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'multiplierAtClaim');
+    });
+  }
+
   QueryBuilder<
       ProgressionQuestRewardGrantRecord,
       ProgressionQuestRewardGrantRecord,
@@ -8907,6 +9702,27 @@ extension ProgressionQuestRewardGrantRecordQueryProperty on QueryBuilder<
       completedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'completedAt');
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord, int?, QQueryOperations>
+      finalXpProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'finalXp');
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord, int?, QQueryOperations>
+      levelAtClaimProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'levelAtClaim');
+    });
+  }
+
+  QueryBuilder<ProgressionQuestRewardGrantRecord, double?, QQueryOperations>
+      multiplierAtClaimProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'multiplierAtClaim');
     });
   }
 

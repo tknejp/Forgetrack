@@ -1103,6 +1103,264 @@ void main() {
       expect(rewardCountAchievement.unlocked, isFalse);
       expect(rewardCountAchievement.currentValue, 24);
     });
+
+    // ── Phase 2: XP scaling and claim-time snapshot ────────────────────────
+
+    test('unclaimed rule rewards do not contribute to profile XP or level',
+        () async {
+      const levelPolicy = ProgressionLevelPolicy();
+      final repository = _InMemoryProgressionRepository(
+        rewardGrants: [
+          for (var i = 0; i < 5; i++)
+            _unlockedReward(
+              rewardKey: 'reward-$i',
+              xpGranted: levelPolicy.xpRequiredForLevel(10),
+              progressionAt: DateTime(2026, 4, 1).add(Duration(days: i)),
+            ),
+        ],
+      );
+      final engine = ProgressionEngine(
+        repository: repository,
+        clock: () => DateTime(2026, 4, 10, 9),
+      );
+
+      final state = await engine.load();
+
+      expect(state.profile.totalXp, 0);
+      expect(state.profile.level, 1);
+    });
+
+    test('unclaimed rewards do not inflate level used for new reward scaling',
+        () async {
+      const levelPolicy = ProgressionLevelPolicy();
+      final repository = _InMemoryProgressionRepository(
+        rewardGrants: [
+          for (var i = 0; i < 10; i++)
+            _unlockedReward(
+              rewardKey: 'reward-$i',
+              xpGranted: levelPolicy.xpRequiredForLevel(10),
+              progressionAt: DateTime(2026, 4, 1).add(Duration(days: i)),
+            ),
+        ],
+      );
+      final engine = ProgressionEngine(
+        repository: repository,
+        clock: () => DateTime(2026, 4, 15, 9),
+      );
+
+      // Sync with a new day that meets the steps goal.
+      final source = _FakeProgressionSource(
+        goals: const ProgressionGoalSet(
+          dailySteps: 10000,
+          dailyCalories: 2000,
+          dailyProteinGrams: 150,
+          sleepMinutes: 480,
+          weeklyActivityMinutes: 150,
+        ),
+        dailySnapshots: [
+          ProgressionSnapshot(
+            period: ProgressionPeriod.day(DateTime(2026, 4, 15)),
+            steps: 12000,
+          ),
+        ],
+        weeklySnapshots: const [],
+      );
+      final state = await engine.sync(source);
+
+      // The new steps grant must be scaled at level 1 (0 claimed XP),
+      // not at the inflated level the unclaimed grants would produce.
+      // daily_steps rule has rewardXp: 80; at level 1 multiplier = 1.0.
+      const stepsBaseXp = 80;
+      final newGrant = state.rewardGrants.firstWhere(
+        (g) =>
+            g.ruleId == 'daily_steps' &&
+            g.period.start == DateTime(2026, 4, 15),
+      );
+      final expectedXp =
+          levelPolicy.scaledRewardXp(baseXp: stepsBaseXp, level: 1);
+      expect(newGrant.xpGranted, expectedXp);
+    });
+
+    test('finalXp is frozen at claim-time level', () async {
+      const levelPolicy = ProgressionLevelPolicy();
+      // Pre-load enough claimed XP to put the user at level 2.
+      final level2Xp = levelPolicy.xpRequiredForLevel(2);
+      final repository = _InMemoryProgressionRepository(
+        rewardGrants: [
+          _claimedReward(
+            rewardKey: 'seed-reward',
+            xpGranted: level2Xp,
+            progressionAt: DateTime(2026, 4, 1),
+          ),
+          _unlockedReward(
+            rewardKey: 'pending-reward',
+            xpGranted: levelPolicy.baseDailyRewardXp,
+            progressionAt: DateTime(2026, 4, 2),
+          ),
+        ],
+      );
+      final engine = ProgressionEngine(
+        repository: repository,
+        clock: () => DateTime(2026, 4, 10, 9),
+      );
+
+      final state = await engine.claimReward('pending-reward');
+      final claimedGrant =
+          state.rewardGrants.firstWhere((g) => g.rewardKey == 'pending-reward');
+
+      final expectedFinalXp = levelPolicy.scaledRewardXp(
+        baseXp: levelPolicy.baseDailyRewardXp,
+        level: 2,
+      );
+      expect(claimedGrant.isClaimed, isTrue);
+      expect(claimedGrant.finalXp, expectedFinalXp);
+      expect(claimedGrant.levelAtClaim, 2);
+      expect(state.profile.totalXp, level2Xp + expectedFinalXp);
+    });
+
+    test('claimAllRewards processes in chronological order with cumulative level',
+        () async {
+      const levelPolicy = ProgressionLevelPolicy();
+      // Enough claimed XP to start at level 2.
+      final level2Xp = levelPolicy.xpRequiredForLevel(2);
+      final level3Xp = levelPolicy.xpRequiredForLevel(3);
+
+      final repository = _InMemoryProgressionRepository(
+        rewardGrants: [
+          _claimedReward(
+            rewardKey: 'seed',
+            xpGranted: level2Xp,
+            progressionAt: DateTime(2026, 4, 1),
+          ),
+          _unlockedReward(
+            rewardKey: 'reward-day1',
+            xpGranted: levelPolicy.baseDailyRewardXp,
+            progressionAt: DateTime(2026, 4, 2),
+          ),
+          _unlockedReward(
+            rewardKey: 'reward-day2',
+            xpGranted: levelPolicy.baseDailyRewardXp,
+            progressionAt: DateTime(2026, 4, 3),
+          ),
+        ],
+      );
+      final engine = ProgressionEngine(
+        repository: repository,
+        clock: () => DateTime(2026, 4, 10, 9),
+      );
+
+      final state = await engine.claimAllRewards();
+      final grant1 =
+          state.rewardGrants.firstWhere((g) => g.rewardKey == 'reward-day1');
+      final grant2 =
+          state.rewardGrants.firstWhere((g) => g.rewardKey == 'reward-day2');
+
+      // grant1 claimed at level 2 (seed XP = xpRequiredForLevel(2))
+      final expectedXpLevel2 = levelPolicy.scaledRewardXp(
+        baseXp: levelPolicy.baseDailyRewardXp,
+        level: 2,
+      );
+      expect(grant1.finalXp, expectedXpLevel2);
+      expect(grant1.levelAtClaim, 2);
+
+      // grant2 claimed after grant1 — running XP = level2Xp + expectedXpLevel2
+      final runningAfterGrant1 = level2Xp + expectedXpLevel2;
+      final levelAfterGrant1 = levelPolicy.levelForXp(runningAfterGrant1);
+      final expectedXpGrant2 = levelPolicy.scaledRewardXp(
+        baseXp: levelPolicy.baseDailyRewardXp,
+        level: levelAfterGrant1,
+      );
+      expect(grant2.finalXp, expectedXpGrant2);
+
+      // Total XP = seed + grant1.finalXp + grant2.finalXp
+      expect(
+        state.profile.totalXp,
+        level2Xp + expectedXpLevel2 + expectedXpGrant2,
+      );
+
+      // Verify we don't accidentally level into level 3 range just from these
+      // test values — keep the expectation structural, not hard-coded.
+      final level3Threshold = level3Xp;
+      expect(runningAfterGrant1 < level3Threshold || levelAfterGrant1 >= 3,
+          isTrue);
+    });
+
+    test('already-claimed migrated grant keeps counting toward XP', () async {
+      const levelPolicy = ProgressionLevelPolicy();
+      final historicalXp = levelPolicy.xpRequiredForLevel(5);
+      final repository = _InMemoryProgressionRepository(
+        rewardGrants: [
+          // Simulates a record claimed before Phase 2 (finalXp is null).
+          _claimedReward(
+            rewardKey: 'legacy-reward',
+            xpGranted: historicalXp,
+            progressionAt: DateTime(2026, 1, 1),
+          ),
+        ],
+      );
+      final engine = ProgressionEngine(
+        repository: repository,
+        clock: () => DateTime(2026, 4, 10, 9),
+      );
+
+      final state = await engine.load();
+
+      expect(state.profile.totalXp, historicalXp);
+      expect(state.profile.level, 5);
+    });
+
+    test('claimed reward remains valid if later evaluation becomes false',
+        () async {
+      final repository = _InMemoryProgressionRepository();
+      final engine = ProgressionEngine(
+        repository: repository,
+        clock: () => DateTime(2026, 4, 21, 8),
+      );
+
+      final achievedSource = _FakeProgressionSource(
+        goals: const ProgressionGoalSet(
+          dailySteps: 10000,
+          dailyCalories: 2000,
+          dailyProteinGrams: 150,
+          sleepMinutes: 480,
+          weeklyActivityMinutes: 150,
+        ),
+        dailySnapshots: [
+          ProgressionSnapshot(
+            period: ProgressionPeriod.day(DateTime(2026, 4, 21)),
+            steps: 12000,
+          ),
+        ],
+        weeklySnapshots: const [],
+      );
+      final syncedState = await engine.sync(achievedSource);
+      final stepsGrant = syncedState.rewardGrants.firstWhere(
+        (g) => g.ruleId == 'daily_steps',
+      );
+      // Auto-claimed in the in-memory repo; record the XP.
+      final xpBefore = stepsGrant.effectiveXpGranted;
+
+      // Now re-sync with missed steps — evaluation becomes false.
+      final missedSource = _FakeProgressionSource(
+        goals: achievedSource.goals,
+        dailySnapshots: [
+          ProgressionSnapshot(
+            period: ProgressionPeriod.day(DateTime(2026, 4, 21)),
+            steps: 5000,
+          ),
+        ],
+        weeklySnapshots: const [],
+      );
+      final resyncedState = await engine.sync(missedSource);
+      final resyncedGrant = resyncedState.rewardGrants.firstWhere(
+        (g) => g.ruleId == 'daily_steps',
+      );
+
+      // Grant must still be claimed; XP unchanged.
+      expect(resyncedGrant.isClaimed, isTrue);
+      expect(resyncedGrant.effectiveXpGranted, xpBefore);
+      expect(resyncedState.profile.totalXp, syncedState.profile.totalXp);
+    });
   });
 
   group('ProgressionLevelPolicy', () {
@@ -1457,9 +1715,13 @@ class _InMemoryProgressionRepository implements ProgressionRepository {
   Future<ProgressionLedgerSnapshot> claimReward({
     required String rewardKey,
     required DateTime claimedAt,
+    required int finalXp,
+    required int levelAtClaim,
+    required double multiplierAtClaim,
   }) async {
     final reward = _rewardGrants[rewardKey];
     if (reward == null) return loadLedger();
+    if (reward.isClaimed) return loadLedger();
     _rewardGrants[rewardKey] = ProgressionRewardGrant(
       rewardKey: reward.rewardKey,
       ruleId: reward.ruleId,
@@ -1474,17 +1736,10 @@ class _InMemoryProgressionRepository implements ProgressionRepository {
       rewardStatus: ProgressionRewardStatus.claimed,
       unlockedAt: reward.unlockedAt,
       claimedAt: claimedAt,
+      finalXp: finalXp,
+      levelAtClaim: levelAtClaim,
+      multiplierAtClaim: multiplierAtClaim,
     );
-    return loadLedger();
-  }
-
-  @override
-  Future<ProgressionLedgerSnapshot> claimAllRewards({
-    required DateTime claimedAt,
-  }) async {
-    for (final rewardKey in _rewardGrants.keys.toList()) {
-      await claimReward(rewardKey: rewardKey, claimedAt: claimedAt);
-    }
     return loadLedger();
   }
 
@@ -1502,6 +1757,9 @@ class _InMemoryProgressionRepository implements ProgressionRepository {
   Future<ProgressionLedgerSnapshot> claimQuestReward({
     required String rewardKey,
     required DateTime claimedAt,
+    required int finalXp,
+    required int levelAtClaim,
+    required double multiplierAtClaim,
   }) async {
     final reward = _questRewardGrants[rewardKey];
     if (reward == null) return loadLedger();
@@ -1514,17 +1772,10 @@ class _InMemoryProgressionRepository implements ProgressionRepository {
       unlockedAt: reward.unlockedAt,
       completedAt: reward.completedAt,
       claimedAt: claimedAt,
+      finalXp: finalXp,
+      levelAtClaim: levelAtClaim,
+      multiplierAtClaim: multiplierAtClaim,
     );
-    return loadLedger();
-  }
-
-  @override
-  Future<ProgressionLedgerSnapshot> claimAllQuestRewards({
-    required DateTime claimedAt,
-  }) async {
-    for (final rewardKey in _questRewardGrants.keys.toList()) {
-      await claimQuestReward(rewardKey: rewardKey, claimedAt: claimedAt);
-    }
     return loadLedger();
   }
 
@@ -1580,12 +1831,9 @@ class _StaticProgressionRepository implements ProgressionRepository {
   Future<ProgressionLedgerSnapshot> claimReward({
     required String rewardKey,
     required DateTime claimedAt,
-  }) async =>
-      loadLedger();
-
-  @override
-  Future<ProgressionLedgerSnapshot> claimAllRewards({
-    required DateTime claimedAt,
+    required int finalXp,
+    required int levelAtClaim,
+    required double multiplierAtClaim,
   }) async =>
       loadLedger();
 
@@ -1599,12 +1847,9 @@ class _StaticProgressionRepository implements ProgressionRepository {
   Future<ProgressionLedgerSnapshot> claimQuestReward({
     required String rewardKey,
     required DateTime claimedAt,
-  }) async =>
-      loadLedger();
-
-  @override
-  Future<ProgressionLedgerSnapshot> claimAllQuestRewards({
-    required DateTime claimedAt,
+    required int finalXp,
+    required int levelAtClaim,
+    required double multiplierAtClaim,
   }) async =>
       loadLedger();
 

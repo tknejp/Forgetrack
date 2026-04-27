@@ -65,6 +65,10 @@ class ProgressionRewardGrantRecord {
 
   @Index()
   DateTime? claimedAt;
+
+  int? finalXp;
+  int? levelAtClaim;
+  double? multiplierAtClaim;
 }
 
 @Collection()
@@ -88,6 +92,10 @@ class ProgressionQuestRewardGrantRecord {
 
   @Index()
   DateTime? claimedAt;
+
+  int? finalXp;
+  int? levelAtClaim;
+  double? multiplierAtClaim;
 }
 
 @Collection()

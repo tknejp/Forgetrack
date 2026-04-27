@@ -11,10 +11,9 @@ abstract class ProgressionRepository {
   Future<ProgressionLedgerSnapshot> claimReward({
     required String rewardKey,
     required DateTime claimedAt,
-  });
-
-  Future<ProgressionLedgerSnapshot> claimAllRewards({
-    required DateTime claimedAt,
+    required int finalXp,
+    required int levelAtClaim,
+    required double multiplierAtClaim,
   });
 
   Future<ProgressionLedgerSnapshot> persistQuestRewardGrants({
@@ -24,10 +23,9 @@ abstract class ProgressionRepository {
   Future<ProgressionLedgerSnapshot> claimQuestReward({
     required String rewardKey,
     required DateTime claimedAt,
-  });
-
-  Future<ProgressionLedgerSnapshot> claimAllQuestRewards({
-    required DateTime claimedAt,
+    required int finalXp,
+    required int levelAtClaim,
+    required double multiplierAtClaim,
   });
 
   Future<ProgressionLedgerSnapshot> persistActiveQuestSet({

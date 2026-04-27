@@ -331,6 +331,9 @@ class ProgressionRewardGrant {
     this.upperTargetValue,
     this.toleranceRatio = 0,
     this.claimedAt,
+    this.finalXp,
+    this.levelAtClaim,
+    this.multiplierAtClaim,
   });
 
   final String rewardKey;
@@ -346,10 +349,14 @@ class ProgressionRewardGrant {
   final ProgressionRewardStatus rewardStatus;
   final DateTime unlockedAt;
   final DateTime? claimedAt;
+  final int? finalXp;
+  final int? levelAtClaim;
+  final double? multiplierAtClaim;
 
   bool get isClaimed => rewardStatus == ProgressionRewardStatus.claimed;
   bool get isUnlocked => rewardStatus == ProgressionRewardStatus.unlocked;
-  int get effectiveXpGranted => isClaimed ? xpGranted : 0;
+  // For already-claimed migrated records where finalXp was not set: fall back to xpGranted.
+  int get effectiveXpGranted => isClaimed ? (finalXp ?? xpGranted) : 0;
   DateTime get progressionAt => claimedAt ?? unlockedAt;
 }
 
@@ -418,6 +425,9 @@ class ProgressionQuestRewardGrant {
     required this.unlockedAt,
     required this.completedAt,
     this.claimedAt,
+    this.finalXp,
+    this.levelAtClaim,
+    this.multiplierAtClaim,
   });
 
   final String rewardKey;
@@ -427,10 +437,13 @@ class ProgressionQuestRewardGrant {
   final DateTime unlockedAt;
   final DateTime completedAt;
   final DateTime? claimedAt;
+  final int? finalXp;
+  final int? levelAtClaim;
+  final double? multiplierAtClaim;
 
   bool get isClaimed => rewardStatus == ProgressionRewardStatus.claimed;
   bool get isUnlocked => rewardStatus == ProgressionRewardStatus.unlocked;
-  int get effectiveXpGranted => isClaimed ? xpGranted : 0;
+  int get effectiveXpGranted => isClaimed ? (finalXp ?? xpGranted) : 0;
   DateTime get progressionAt => claimedAt ?? unlockedAt;
 }
 
