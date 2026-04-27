@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Forgetrack – Flutter Design Handoff</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { min-height: 100%; background: #0A0B14; font-family: 'Inter', sans-serif; color: #fff; }
+  #root { min-height: 100vh; }
+
+  .doc-scroll::-webkit-scrollbar { width: 4px; }
+  .doc-scroll::-webkit-scrollbar-track { background: transparent; }
+  .doc-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 99px; }
+
+  #tweaks-panel { display:none; position:fixed; bottom:24px; right:24px; background:#1A1C2E; border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:20px; width:260px; z-index:9999; box-shadow:0 20px 60px rgba(0,0,0,0.6); }
+  #tweaks-panel.open { display:block; }
+  .tw-title { font-size:13px; font-weight:700; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:16px; }
+  .tw-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .tw-label { font-size:13px; color:rgba(255,255,255,0.75); }
+  .tw-select { background:#0D0F1C; border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:8px; padding:4px 8px; font-size:12px; font-family:'Inter',sans-serif; }
+  .tw-tog { width:40px; height:22px; background:rgba(255,255,255,0.15); border-radius:99px; cursor:pointer; position:relative; transition:background 0.2s; flex-shrink:0; }
+  .tw-tog.on { background:#7C6FFF; }
+  .tw-tog::after { content:''; position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%; background:#fff; transition:transform 0.2s; }
+  .tw-tog.on::after { transform:translateX(18px); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div id="tweaks-panel">
+  <div class="tw-title">Tweaks</div>
+  <div class="tw-row"><span class="tw-label">Color theme</span>
+    <select class="tw-select" id="tw-theme">
+      <option value="violet">Violet</option>
+      <option value="cyan">Cyan</option>
+      <option value="rose">Rose</option>
+    </select>
+  </div>
+  <div class="tw-row"><span class="tw-label">Card glow</span><div class="tw-tog on" id="tw-glow"></div></div>
+  <div class="tw-row"><span class="tw-label">Sparkles</span><div class="tw-tog on" id="tw-sparkles"></div></div>
+  <div class="tw-row"><span class="tw-label">Compact cards</span><div class="tw-tog on" id="tw-compact"></div></div>
+  <div class="tw-row"><span class="tw-label">Doc panel</span><div class="tw-tog on" id="tw-doc"></div></div>
+</div>
+
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="ft-tokens.jsx"></script>
+<script type="text/babel" src="ft-components.jsx"></script>
+<script type="text/babel" src="ft-screens.jsx"></script>
+
+<script type="text/babel">
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "theme": "violet",
+  "glow": true,
+  "sparkles": true,
+  "compact": false,
+  "doc": true
+}/*EDITMODE-END*/;
+
+// ── Handoff doc data (per-screen) ───────────────────────────────────────
+const SCREENS_DOC = {
+  overview: {
+    name: 'Dashboard',
+    domain: 'steps',
+    subtitle: 'Daily stat hub · greeting, date scope, XP, stat cards',
+    layout: [
+      'Scaffold',
+      '  body: SafeArea → Column',
+      '    ScreenHeader (greeting + title + avatar)',
+      '    TabPill [Day · Week · Month]',
+      '    DateNav (prev · date + sync · next)',
+      '    XpBar (level badge + title + bar)',
+      '    StatCard: Steps',
+      '    StatCard: Calories (100% → +200 XP chip)',
+      '    StatCard: Weight (🏆 trophy)',
+      '  bottomNavigationBar: BottomNav',
+    ],
+    components: [
+      { name:'ScreenHeader', widget:'Row(Column, GlowBadge)', note:'Greeting "Good morning ✦" + H1 title + ⚔️ avatar chip w/ glow' },
+      { name:'TabPill', widget:'Row + AnimatedContainer', note:'Segmented pill, active = gradient + glow shadow' },
+      { name:'DateNav', widget:'Row + IconButton × 2 + Center', note:'32×32 round buttons, centered date + "Synced HH:MM"' },
+      { name:'XpBar', widget:'Row(LevelBadge + Column(label + ProgressBar))', note:'28px level square + "Level N · Title" caps + thin bar' },
+      { name:'StatCard', widget:'GestureDetector → AnimatedContainer', note:'Gradient bg + border + glow boxShadow + Sparkles overlay. Tap to collapse.' },
+      { name:'StatCell', widget:'Expanded(Column(Text + Text))', note:'Big 22px/800 value (domain color on index 0) + 10px caps label' },
+      { name:'ProgressBar', widget:'Stack(Container track + Container fill)', note:'6px rounded, fill = linear-gradient + 8px glow shadow' },
+      { name:'Sparkles', widget:'Stack(AnimatedOpacity ×4)', note:'4 sparkle SVGs at fixed %, 2.4s ease pulse, staggered delays' },
+    ],
+    states: [
+      { s:'Default', desc:'Cards animate in staggered (50/120/190ms); bar fills over 600ms' },
+      { s:'Complete', desc:'Progress ≥ 1.0 → badge "100%" + "+200 XP" chip in violet' },
+      { s:'Trophy', desc:'Weight card shows 🏆 in place of badge (long-term goal)' },
+      { s:'Collapsed', desc:'Tap header → chevron rotates −90°, stats/progress hidden' },
+      { s:'Loading', desc:'Swap StatCell row for shimmer bars of equal geometry' },
+    ],
+    specs: [
+      'Card radius: 18px · padding 14×16 (12×14 compact)',
+      'Card gap: 10px · screen h-padding: 14px',
+      'Glow shadow: 0 4px 24px color@25%',
+      'Icon box: 36×36 (32 compact) · radius 10 · 1px border color@27%',
+      'Bar height: 6px (5 compact) · radius 99',
+      'Big value: 22/800 · label: 10/500 CAPS · letter 0.06em',
+      'Bottom nav: 24px safe area + 10px pad',
+    ],
+    flutter: [
+      'AnimatedContainer on fill width, duration 600ms, Curves.easeOut',
+      'Sparkles = List<AnimatedOpacity>(4) with staggered Tween delays',
+      'Glow = BoxShadow(blurRadius:24, color:colorGlow) — no spread',
+      'TabPill: use AnimatedAlign or AnimatedContainer to slide gradient',
+      'Use ThemeExtension for DomainColor {color, dim, glow, gradient}',
+      'Persist expanded state per-card in ValueNotifier or provider',
+    ],
+  },
+  activities: {
+    name: 'Activities',
+    domain: 'active',
+    subtitle: 'Weekly aggregates · trend chart · recent "quests"',
+    layout: [
+      'Scaffold',
+      '  body: SafeArea → Column',
+      '    ScreenHeader ("Keep moving ✦" + ⚔️)',
+      '    TabPill [Day · Week · Month]',
+      '    StatCard: Active minutes (+420 XP)',
+      '    PlainCard: 7-day step trend (TrendChart)',
+      '    PlainCard: Recent quests list',
+      '  bottomNavigationBar: BottomNav',
+    ],
+    components: [
+      { name:'TrendChart', widget:'Row of Expanded(Column)', note:'Bars height = value/max; today bar glows + gradient fill' },
+      { name:'PlainCard', widget:'Container(BoxDecoration)', note:'Non-stat card shell — same radius/padding/shadow as StatCard' },
+      { name:'ActivityRow', widget:'Row(IconBox + Column + Column)', note:'Type caps left, duration + kcal + XP chip right' },
+      { name:'SectionHead (inline)', widget:'Row(Text caps + Spacer + Text)', note:'"Recent quests" + right action "View all →" in theme accent' },
+    ],
+    states: [
+      { s:'Default', desc:'Chart animates bar-grow stagger; rows stream in' },
+      { s:'Empty quests', desc:'Show centered 🧘 + "No quests today" muted — keep card chrome' },
+      { s:'Loading', desc:'Chart → 7 shimmer bars of random heights; rows → 3 shimmer rows' },
+      { s:'Past day', desc:'Today glow disabled, chart all muted' },
+    ],
+    specs: [
+      'TrendChart height: 80px · bar radius 5 · gap 6',
+      'Bar min-height: 6px (always visible)',
+      'Activity row: 11px top/bot · 12px gap · 1px bottom divider',
+      'XP chip: inline violet, 10/700 caps',
+      'Icon box in row: 34×34 · radius 10',
+    ],
+    flutter: [
+      'TrendChart: normalize with data.map((e)=>e/max).toList() — clamp max to 1',
+      'Use ListView.separated(Divider(height:1,color:...)) for quests',
+      'Today detection: pass Set<int> highlightedIndices, don\'t hardcode last',
+      'Wrap screen in SingleChildScrollView — no nested scrollables',
+      'Section action "View all →" = TextButton with theme.accent',
+    ],
+  },
+  nutrition: {
+    name: 'Nutrition',
+    domain: 'calories',
+    subtitle: 'Calorie hero · macro progress · meals log',
+    layout: [
+      'Scaffold',
+      '  body: SafeArea → Column',
+      '    ScreenHeader ("Fuel up ✦")',
+      '    TabPill [Day · Week · Month]',
+      '    StatCard: Calories today (119% over)',
+      '    PlainCard: Macros (P · F · C with MacroRow)',
+      '    PlainCard: Today\'s meals (+ Log meal)',
+      '  bottomNavigationBar: BottomNav',
+    ],
+    components: [
+      { name:'MacroRow', widget:'Column(Row + ProgressBar)', note:'Label left, value/goal right (warning red when > goal), 5px bar' },
+      { name:'MealRow', widget:'Row(IconBox emoji + Column + kcal)', note:'Emoji tile, name CAPS + time, big kcal value in domain color' },
+      { name:'OverBadge', widget:'(inline on MacroRow)', note:'Value text turns #F87171 when value > goal; bar fills at clamp(1.3)' },
+    ],
+    states: [
+      { s:'Under goal', desc:'All bars in domain color, value text muted white' },
+      { s:'At goal', desc:'Progress bar fills 100%, badge "100%" in domain color' },
+      { s:'Over goal', desc:'Hero badge shows "119%"; row value + bar switch to #F87171 warning' },
+      { s:'Empty log', desc:'Hide meal rows, show "+ Log meal" as big primary CTA in card' },
+    ],
+    specs: [
+      'Hero calorie StatCard: standard 14/16 padding · 22px value',
+      'MacroRow gap: 12px bottom margin · 7px above bar',
+      'Meal row: emoji 34×34 (calories domain tint)',
+      'Warning color: #F87171 · glow rgba(248,113,113,0.3)',
+      '"+ Log meal" action: 11/600 in theme.accent, right-aligned',
+    ],
+    flutter: [
+      'Compare value > goal → pass barColor param; don\'t branch widget tree',
+      'ProgressBar supports values > 1 — clamp at 1.3 for visual overshoot',
+      'Meals use ListView.separated same as Activities — identical widget',
+      'Tab switching: re-fetch by period in BLoC, same card layout',
+      '"Log meal" tap → push /meals/new route with pre-filled period',
+    ],
+  },
+  body: {
+    name: 'Body · Weight + Sleep',
+    domain: 'weight',
+    subtitle: 'Long-horizon metrics · trends · achievements',
+    layout: [
+      'Scaffold',
+      '  body: SafeArea → Column',
+      '    ScreenHeader ("The long game ✦")',
+      '    TabPill [Week · Month · Year]',
+      '    StatCard: Weight (🏆 trophy · 35% to goal)',
+      '    PlainCard: Weight trend (6-week TrendChart)',
+      '    StatCard: Sleep last night (+60 XP)',
+      '    PlainCard: Achievements grid (3×2)',
+      '  bottomNavigationBar: BottomNav',
+    ],
+    components: [
+      { name:'TrendChart', widget:'Row of Expanded(Column)', note:'Same widget as Activities · pass weight domain color · "Now" tagged' },
+      { name:'AchievementTile', widget:'AspectRatio + Container', note:'3×2 grid · locked = grayscale(1) + 0.45 opacity · unlocked = color glow' },
+      { name:'SleepCard', widget:'StatCard instance', note:'Uses sleep domain (#A89BFF) · 3 cells: duration, score, bedtime' },
+    ],
+    states: [
+      { s:'Default', desc:'All cards populated; achievements show 3 unlocked / 3 locked' },
+      { s:'No sleep data', desc:'Show "—" for all cells, bar 0%, XP chip hidden' },
+      { s:'Goal approach', desc:'Weight card trophy pulses when within 5% of goal' },
+      { s:'All unlocked', desc:'Achievements grid fills with animated seal burst on last unlock' },
+    ],
+    specs: [
+      'Achievement tile: aspect-ratio 1 · radius 12 · gap 8',
+      'Tile emoji: 22px · label 9/700 CAPS',
+      'Locked opacity: 0.45 · grayscale(1) on emoji',
+      'TrendChart height: 80px same as Activities',
+      'Sleep domain color: #A89BFF (violet family)',
+    ],
+    flutter: [
+      'Achievements: GridView.count(3, shrinkWrap: true, physics: NeverScrollable)',
+      'Two domain colors per screen (weight + sleep) — just swap `domain:` prop',
+      'Unlock animation: AnimatedSwitcher with scale+rotate transition',
+      'Weight trend: same TrendChart — pass dateRange:6, unit:"kg"',
+      'Tab period switches chart x-axis labels, not widget',
+    ],
+  },
+};
+
+// ── Doc panel ───────────────────────────────────────────────────────────
+function DocPanel({ screenKey, theme }) {
+  const [tab, setTab] = React.useState('layout');
+  const doc = SCREENS_DOC[screenKey];
+  if (!doc) return null;
+  const d = DOMAINS[doc.domain];
+  const c = d.color;
+
+  const tabs = [['layout','Layout'],['components','Components'],['specs','Specs'],['flutter','Flutter']];
+
+  const chip = (txt, color) => (
+    <span style={{ fontSize:10, fontFamily:'JetBrains Mono, monospace', color: color||c, background:`${color||c}18`, border:`1px solid ${color||c}35`, borderRadius:5, padding:'2px 6px', flexShrink:0 }}>{txt}</span>
+  );
+  const label = (txt) => <div style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:8, marginTop:16 }}>{txt}</div>;
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', height:'100%' }}>
+      <div style={{ padding:'28px 24px 16px', borderBottom:'1px solid rgba(255,255,255,0.06)', flexShrink:0, display:'flex', gap:10, alignItems:'flex-start' }}>
+        <svg width="14" height="14" viewBox="0 0 14 14" style={{ flexShrink:0, marginTop:5 }}><path d="M7 0L8.1 5.9 14 7 8.1 8.1 7 14 5.9 8.1 0 7 5.9 5.9 7 0z" fill={c}/></svg>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ fontSize:16, fontWeight:800, color:'#fff', letterSpacing:'-0.02em', marginBottom:4 }}>{doc.name}</div>
+          <div style={{ fontSize:11, color:'rgba(255,255,255,0.4)', lineHeight:1.4 }}>{doc.subtitle}</div>
+        </div>
+      </div>
+
+      <div style={{ display:'flex', padding:'10px 16px 0', gap:4, flexShrink:0, borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
+        {tabs.map(([k,lbl]) => (
+          <button key={k} onClick={() => setTab(k)} style={{
+            padding:'6px 12px 10px', border:'none', background:'transparent', cursor:'pointer',
+            fontSize:12, fontWeight: k===tab?700:500,
+            color: k===tab ? c : 'rgba(255,255,255,0.35)',
+            borderBottom: k===tab ? `2px solid ${c}` : '2px solid transparent',
+            transition:'all 0.15s', fontFamily:'Inter,sans-serif',
+          }}>{lbl}</button>
+        ))}
+      </div>
+
+      <div className="doc-scroll" style={{ flex:1, overflowY:'auto', padding:'4px 20px 32px' }}>
+
+        {tab === 'layout' && <>
+          {label('Screen layout tree')}
+          <div style={{ fontFamily:'JetBrains Mono, monospace', fontSize:11, lineHeight:1.9, color:'rgba(255,255,255,0.65)' }}>
+            {doc.layout.map((l,i) => {
+              const indent = l.startsWith('    ') ? 2 : l.startsWith('  ') ? 1 : 0;
+              return (
+                <div key={i} style={{ paddingLeft: indent*14, color: indent===0 ? 'rgba(255,255,255,0.85)' : indent===1 ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.45)' }}>
+                  {indent>0 && <span style={{ color:`${c}70`, marginRight:4 }}>└</span>}
+                  {l.trim()}
+                </div>
+              );
+            })}
+          </div>
+        </>}
+
+        {tab === 'components' && <>
+          {label('Component inventory')}
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            {doc.components.map((comp,i) => (
+              <div key={i} style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:10, padding:'10px 12px' }}>
+                <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4, flexWrap:'wrap' }}>
+                  <span style={{ fontSize:13, fontWeight:700, color:'#fff' }}>{comp.name}</span>
+                  {chip(comp.widget)}
+                </div>
+                <div style={{ fontSize:11, color:'rgba(255,255,255,0.45)', lineHeight:1.55 }}>{comp.note}</div>
+              </div>
+            ))}
+          </div>
+          {label('Component states')}
+          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+            {doc.states.map((st,i) => (
+              <div key={i} style={{ display:'flex', gap:10, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:9, padding:'9px 12px' }}>
+                {chip(st.s, st.s.match(/Over|Warning|Empty|Loading|No /) ? 'rgba(255,255,255,0.45)' : c)}
+                <span style={{ fontSize:11, color:'rgba(255,255,255,0.55)', lineHeight:1.5 }}>{st.desc}</span>
+              </div>
+            ))}
+          </div>
+        </>}
+
+        {tab === 'specs' && <>
+          {label('Spacing & sizing')}
+          <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
+            {doc.specs.map((s,i) => (
+              <div key={i} style={{ display:'flex', alignItems:'baseline', gap:10, padding:'8px 10px', background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.05)', borderRadius:8 }}>
+                <div style={{ width:5, height:5, borderRadius:'50%', background:c, flexShrink:0, marginTop:1 }}/>
+                <span style={{ fontSize:11, fontFamily:'JetBrains Mono, monospace', color:'rgba(255,255,255,0.65)', lineHeight:1.5 }}>{s}</span>
+              </div>
+            ))}
+          </div>
+          {label('Domain color tokens')}
+          <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+            {Object.entries(DOMAINS).map(([k,v]) => (
+              <div key={k} style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:8, padding:'6px 10px' }}>
+                <div style={{ width:12, height:12, borderRadius:3, background:v.color, flexShrink:0, boxShadow:`0 0 6px ${v.glow}` }}/>
+                <span style={{ fontSize:10, fontFamily:'JetBrains Mono, monospace', color:'rgba(255,255,255,0.6)' }}>{k}</span>
+                <span style={{ fontSize:9, fontFamily:'JetBrains Mono, monospace', color:'rgba(255,255,255,0.3)' }}>{v.color}</span>
+              </div>
+            ))}
+          </div>
+          {label('Type scale')}
+          <div style={{ display:'flex', flexDirection:'column', gap:8, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:10, padding:12 }}>
+            {[
+              ['Display','20/800','Dashboard'],
+              ['Card value','22/800','7 235'],
+              ['Card label','10/500 CAPS','CURRENT'],
+              ['Body','13–15/500–700','Steps'],
+              ['Caption','10/500','7 235 / 10 000'],
+            ].map(([n,s,e]) => (
+              <div key={n} style={{ display:'flex', alignItems:'baseline', gap:12 }}>
+                <div style={{ width:80, fontSize:10, color:'rgba(255,255,255,0.3)', fontWeight:600, flexShrink:0 }}>{n}</div>
+                <div style={{ fontSize:10, fontFamily:'JetBrains Mono, monospace', color:'rgba(255,255,255,0.25)', width:100, flexShrink:0 }}>{s}</div>
+                <div style={{ fontSize:13, color:'rgba(255,255,255,0.75)', fontWeight:600 }}>{e}</div>
+              </div>
+            ))}
+          </div>
+        </>}
+
+        {tab === 'flutter' && <>
+          {label('Implementation notes')}
+          <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
+            {doc.flutter.map((n,i) => (
+              <div key={i} style={{ display:'flex', gap:10, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:9, padding:'10px 12px' }}>
+                <span style={{ fontSize:11, fontWeight:800, color:c, flexShrink:0, width:18, textAlign:'right', fontFamily:'JetBrains Mono, monospace' }}>{String(i+1).padStart(2,'0')}</span>
+                <span style={{ fontSize:11, color:'rgba(255,255,255,0.6)', lineHeight:1.65 }}>{n}</span>
+              </div>
+            ))}
+          </div>
+          {label('Reusable widget map')}
+          <div style={{ fontFamily:'JetBrains Mono, monospace', fontSize:10, lineHeight:2, color:'rgba(255,255,255,0.5)', background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:10, padding:'12px 14px' }}>
+            {[
+              'Scaffold',
+              '├─ AppBar (custom — ScreenHeader)',
+              '├─ body: SingleChildScrollView',
+              '│  └─ Column',
+              '│     ├─ TabPill (optional)',
+              '│     ├─ XpBar (Overview only)',
+              '│     ├─ StatCard · N',
+              '│     └─ PlainCard · M (charts, lists, grids)',
+              '└─ bottomNavigationBar: BottomNav',
+            ].map((l,i) => (
+              <div key={i} style={{ color: i===0?'#fff':i<4?'rgba(255,255,255,0.7)':'rgba(255,255,255,0.45)' }}>{l}</div>
+            ))}
+          </div>
+        </>}
+      </div>
+    </div>
+  );
+}
+
+// ── Root ────────────────────────────────────────────────────────────────
+function Root() {
+  const [screen, setScreen] = React.useState('overview');
+  const [tweaks, setTweaks] = React.useState(TWEAK_DEFAULTS);
+  const tweaksRef = React.useRef(tweaks);
+  tweaksRef.current = tweaks;
+
+  const theme = THEMES[tweaks.theme] || THEMES.violet;
+
+  React.useEffect(() => {
+    const panel = document.getElementById('tweaks-panel');
+    const themeEl = document.getElementById('tw-theme');
+    const glowEl = document.getElementById('tw-glow');
+    const sparklesEl = document.getElementById('tw-sparkles');
+    const compactEl = document.getElementById('tw-compact');
+    const docEl = document.getElementById('tw-doc');
+
+    themeEl.value = tweaksRef.current.theme;
+    [[glowEl,'glow'],[sparklesEl,'sparkles'],[compactEl,'compact'],[docEl,'doc']].forEach(([el,k])=>{
+      if (tweaksRef.current[k]) el.classList.add('on'); else el.classList.remove('on');
+    });
+
+    themeEl.addEventListener('change', e => {
+      const v = e.target.value;
+      setTweaks(t => ({ ...t, theme: v }));
+      window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { theme: v } }, '*');
+    });
+    const tog = (el, key) => {
+      el.addEventListener('click', () => {
+        el.classList.toggle('on');
+        const v = el.classList.contains('on');
+        setTweaks(t => ({ ...t, [key]: v }));
+        window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [key]: v } }, '*');
+      });
+    };
+    tog(glowEl, 'glow');
+    tog(sparklesEl, 'sparkles');
+    tog(compactEl, 'compact');
+    tog(docEl, 'doc');
+
+    window.addEventListener('message', e => {
+      if (e.data?.type === '__activate_edit_mode') panel.classList.add('open');
+      if (e.data?.type === '__deactivate_edit_mode') panel.classList.remove('open');
+    });
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+  }, []);
+
+  const screenMap = {
+    overview: <OverviewScreen   tweaks={tweaks} theme={theme}/>,
+    activities: <ActivitiesScreen tweaks={tweaks} theme={theme}/>,
+    nutrition:  <NutritionScreen  tweaks={tweaks} theme={theme}/>,
+    body:       <BodyScreen       tweaks={tweaks} theme={theme}/>,
+  };
+
+  const screenNav = [
+    { id:'overview',   label:'Overview',   domain:'steps' },
+    { id:'activities', label:'Activities', domain:'active' },
+    { id:'nutrition',  label:'Nutrition',  domain:'calories' },
+    { id:'body',       label:'Body',       domain:'weight' },
+  ];
+
+  return (
+    <div style={{ display:'flex', width:'100%', minHeight:'100vh', alignItems:'flex-start', padding:'32px 28px 60px', gap:40, flexWrap:'wrap', justifyContent:'center' }} data-screen-label={`Handoff · ${screen}`}>
+      <style>{`
+        @keyframes ft-spark { 0%,100%{opacity:0; transform:scale(0.5)} 50%{opacity:1; transform:scale(1)} }
+        @keyframes ft-card-in { from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:translateY(0)} }
+        @keyframes ft-bar-grow { from{height:0 !important} }
+      `}</style>
+
+      {/* Left: phone + screen switcher */}
+      <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:16, flexShrink:0 }}>
+        <div style={{ display:'flex', gap:6 }}>
+          {screenNav.map(s => {
+            const d = DOMAINS[s.domain];
+            const on = screen === s.id;
+            return (
+              <button key={s.id} onClick={() => setScreen(s.id)} style={{
+                border: on?`1px solid ${d.color}60`:'1px solid rgba(255,255,255,0.09)',
+                background: on?d.dim:'rgba(255,255,255,0.04)',
+                color: on?d.color:'rgba(255,255,255,0.45)',
+                borderRadius:99, padding:'6px 14px',
+                fontSize:11, fontWeight: on?700:500, cursor:'pointer', fontFamily:'Inter',
+                transition:'all 0.15s',
+                boxShadow: on?`0 2px 10px ${d.glow}`:'none',
+              }}>{s.label}</button>
+            );
+          })}
+        </div>
+
+        <IOSDevice width={375} height={812} dark={true}>
+          <div style={{
+            height:'100%',
+            background:'linear-gradient(180deg, #0D0F1E 0%, #0A0C18 100%)',
+            display:'flex', flexDirection:'column',
+            fontFamily:'Inter, sans-serif',
+            WebkitFontSmoothing:'antialiased',
+            overflowX:'hidden', position:'relative',
+          }}>
+            <BgStars show={tweaks.sparkles}/>
+            <div style={{ height:54, flexShrink:0 }}/>
+            {screenMap[screen]}
+            <BottomNav
+              active={screen==='overview'?'overview':screen==='activities'?'activities':screen==='nutrition'?'nutrition':'body'}
+              onChange={(id)=>setScreen(id)}
+              accent={theme.accent} accentGlow={theme.accentGlow}
+            />
+          </div>
+        </IOSDevice>
+
+        <div style={{ fontSize:10, color:'rgba(255,255,255,0.25)', textAlign:'center', fontWeight:500 }}>
+          Tap bottom nav or top pills to switch screens · Tweaks via toolbar
+        </div>
+      </div>
+
+      {/* Right: doc panel */}
+      {tweaks.doc && (
+        <div style={{
+          flex:1, minWidth:340, maxWidth:480,
+          height:812, marginTop:40,
+          background:'#0D0F1E', border:'1px solid rgba(255,255,255,0.08)',
+          borderRadius:24, overflow:'hidden',
+          boxShadow:'0 20px 60px rgba(0,0,0,0.5)',
+          display:'flex', flexDirection:'column',
+        }}>
+          <DocPanel screenKey={screen} theme={theme}/>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Root/>);
+</script>
+
+<template id="__bundler_thumbnail">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+  <rect width="120" height="80" fill="#0A0B14"/>
+  <rect x="8" y="8" width="36" height="64" rx="5" fill="#0D0F1E" stroke="#1a1d2e" stroke-width="0.8"/>
+  <rect x="11" y="14" width="30" height="3" rx="1.5" fill="#7C6FFF" opacity="0.8"/>
+  <rect x="11" y="21" width="30" height="9" rx="2.5" fill="#34D399" opacity="0.2"/>
+  <rect x="11" y="34" width="30" height="9" rx="2.5" fill="#FBBF24" opacity="0.2"/>
+  <rect x="11" y="47" width="30" height="9" rx="2.5" fill="#60A5FA" opacity="0.2"/>
+  <rect x="52" y="8" width="60" height="64" rx="5" fill="#0D0F1E" stroke="#1a1d2e" stroke-width="0.8"/>
+  <rect x="56" y="14" width="20" height="3" rx="1" fill="#7C6FFF" opacity="0.7"/>
+  <rect x="56" y="22" width="48" height="6" rx="2" fill="rgba(255,255,255,0.06)"/>
+  <rect x="56" y="32" width="48" height="4" rx="1.5" fill="rgba(255,255,255,0.04)"/>
+  <rect x="56" y="40" width="48" height="4" rx="1.5" fill="rgba(255,255,255,0.04)"/>
+  <rect x="56" y="48" width="48" height="4" rx="1.5" fill="rgba(255,255,255,0.04)"/>
+  <rect x="56" y="56" width="48" height="4" rx="1.5" fill="rgba(255,255,255,0.04)"/>
+</svg>
+</template>
+</body>
+</html>

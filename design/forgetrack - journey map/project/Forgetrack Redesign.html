@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Forgetrack – Redesign</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0A0B14;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 24px 80px;
+    color: #fff;
+  }
+  #root { width: 100%; max-width: 1200px; }
+
+  /* Tweaks panel */
+  #tweaks-panel {
+    display: none;
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: #1A1C2E;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 20px;
+    width: 260px;
+    z-index: 9999;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+  #tweaks-panel.open { display: block; }
+  .tweak-title { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; }
+  .tweak-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .tweak-label { font-size: 13px; color: rgba(255,255,255,0.75); }
+  .tweak-select, .tweak-range {
+    background: #0D0F1C; border: 1px solid rgba(255,255,255,0.15);
+    color: #fff; border-radius: 8px; padding: 4px 8px;
+    font-size: 12px; font-family: 'Inter', sans-serif;
+  }
+  .tweak-range { width: 110px; accent-color: #7C6FFF; }
+  .tweak-toggle {
+    width: 40px; height: 22px; background: rgba(255,255,255,0.15);
+    border-radius: 99px; cursor: pointer; position: relative; transition: background 0.2s;
+  }
+  .tweak-toggle.on { background: #7C6FFF; }
+  .tweak-toggle::after {
+    content: ''; position: absolute; top: 3px; left: 3px;
+    width: 16px; height: 16px; border-radius: 50%; background: #fff;
+    transition: transform 0.2s;
+  }
+  .tweak-toggle.on::after { transform: translateX(18px); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div id="tweaks-panel">
+  <div class="tweak-title">Tweaks</div>
+  <div class="tweak-row">
+    <span class="tweak-label">Color theme</span>
+    <select class="tweak-select" id="tw-theme">
+      <option value="violet">Violet</option>
+      <option value="cyan">Cyan</option>
+      <option value="rose">Rose</option>
+    </select>
+  </div>
+  <div class="tweak-row">
+    <span class="tweak-label">Card glow</span>
+    <div class="tweak-toggle on" id="tw-glow"></div>
+  </div>
+  <div class="tweak-row">
+    <span class="tweak-label">Sparkles</span>
+    <div class="tweak-toggle on" id="tw-sparkles"></div>
+  </div>
+  <div class="tweak-row">
+    <span class="tweak-label">Dark mode</span>
+    <div class="tweak-toggle on" id="tw-dark"></div>
+  </div>
+  <div class="tweak-row">
+    <span class="tweak-label">Compact cards</span>
+    <div class="tweak-toggle" id="tw-compact"></div>
+  </div>
+</div>
+
+<script type="text/babel" src="ios-frame.jsx"></script>
+
+<script type="text/babel">
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "theme": "violet",
+  "glow": true,
+  "sparkles": true,
+  "dark": true,
+  "compact": true
+}/*EDITMODE-END*/;
+
+// ── Tokens ────────────────────────────────────────────────────────────────
+const THEMES = {
+  violet: { accent: '#7C6FFF', accentGlow: 'rgba(124,111,255,0.35)' },
+  cyan:   { accent: '#22D3EE', accentGlow: 'rgba(34,211,238,0.35)' },
+  rose:   { accent: '#F472B6', accentGlow: 'rgba(244,114,182,0.35)' },
+};
+
+const CARDS = [
+  {
+    id: 'steps',
+    label: 'Steps',
+    icon: '🥾',
+    color:     '#34D399',
+    colorDim:  'rgba(52,211,153,0.18)',
+    colorGlow: 'rgba(52,211,153,0.25)',
+    gradient:  'linear-gradient(135deg, rgba(52,211,153,0.22) 0%, rgba(16,185,129,0.08) 100%)',
+    stats: [
+      { value: '7 235', label: 'Current' },
+      { value: '10 000', label: 'Goal' },
+      { value: '2 765', label: 'Left' },
+    ],
+    progress: 0.72,
+    badge: '72%',
+    xp: '+144 XP',
+  },
+  {
+    id: 'calories',
+    label: 'Calories today',
+    icon: '🔥',
+    color:     '#FBBF24',
+    colorDim:  'rgba(251,191,36,0.18)',
+    colorGlow: 'rgba(251,191,36,0.25)',
+    gradient:  'linear-gradient(135deg, rgba(251,191,36,0.22) 0%, rgba(245,158,11,0.06) 100%)',
+    stats: [
+      { value: '3 321', label: 'Intake', unit: 'kcal' },
+      { value: '0', label: 'Burned', unit: 'kcal' },
+      { value: '−536', label: 'Left', unit: 'kcal' },
+    ],
+    progress: 1.0,
+    badge: '100%',
+    xp: '+200 XP',
+    alert: true,
+  },
+  {
+    id: 'weight',
+    label: 'Weight',
+    icon: '⚖️',
+    color:     '#60A5FA',
+    colorDim:  'rgba(96,165,250,0.18)',
+    colorGlow: 'rgba(96,165,250,0.25)',
+    gradient:  'linear-gradient(135deg, rgba(96,165,250,0.22) 0%, rgba(59,130,246,0.06) 100%)',
+    stats: [
+      { value: '103.9', label: 'Weight', unit: 'kg' },
+      { value: '+0.3', label: 'Change', unit: 'kg' },
+      { value: '75.0', label: 'Goal', unit: 'kg' },
+    ],
+    progress: 0.35,
+    badge: null,
+    xp: null,
+    trophy: true,
+  },
+];
+
+const NAV_ITEMS = [
+  { id: 'overview', label: 'Overview', icon: (c) => (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <rect x="2" y="2" width="8" height="8" rx="2" fill={c}/>
+      <rect x="12" y="2" width="8" height="8" rx="2" fill={c} opacity="0.5"/>
+      <rect x="2" y="12" width="8" height="8" rx="2" fill={c} opacity="0.5"/>
+      <rect x="12" y="12" width="8" height="8" rx="2" fill={c} opacity="0.5"/>
+    </svg>
+  )},
+  { id: 'activities', label: 'Activities', icon: (c) => (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <path d="M11 3l2 5h5l-4 3 1.5 5L11 13l-4.5 3L8 11 4 8h5z" fill={c}/>
+    </svg>
+  )},
+  { id: 'nutrition', label: 'Nutrition', icon: (c) => (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <path d="M7 3c0 3-3 4-3 7a7 7 0 0014 0c0-3-3-4-3-7" stroke={c} strokeWidth="1.8" strokeLinecap="round" fill="none"/>
+      <path d="M11 10v5" stroke={c} strokeWidth="1.8" strokeLinecap="round"/>
+    </svg>
+  )},
+  { id: 'body', label: 'Body', icon: (c) => (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <circle cx="11" cy="5" r="2.5" fill={c}/>
+      <path d="M6 9h10l-1 4H7L6 9z" fill={c} opacity="0.6"/>
+      <path d="M8 13l-1 6M14 13l1 6" stroke={c} strokeWidth="1.8" strokeLinecap="round"/>
+    </svg>
+  )},
+];
+
+// ── Sparkle component ──────────────────────────────────────────────────────
+function Sparkles({ color, show }) {
+  if (!show) return null;
+  const sparks = [
+    { x: 8, y: 10, s: 1.0, delay: 0 },
+    { x: 85, y: 8, s: 0.7, delay: 0.4 },
+    { x: 92, y: 75, s: 0.8, delay: 0.9 },
+    { x: 5, y: 80, s: 0.6, delay: 0.6 },
+  ];
+  return (
+    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', borderRadius: 'inherit' }}>
+      <style>{`
+        @keyframes sparkle-pop {
+          0%, 100% { opacity: 0; transform: scale(0.5); }
+          50% { opacity: 1; transform: scale(1); }
+        }
+      `}</style>
+      {sparks.map((sp, i) => (
+        <div key={i} style={{
+          position: 'absolute',
+          left: `${sp.x}%`, top: `${sp.y}%`,
+          animation: `sparkle-pop 2.4s ease-in-out ${sp.delay}s infinite`,
+        }}>
+          <svg width={10 * sp.s} height={10 * sp.s} viewBox="0 0 10 10">
+            <path d="M5 0L5.8 4.2 10 5 5.8 5.8 5 10 4.2 5.8 0 5 4.2 4.2 5 0z" fill={color}/>
+          </svg>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Progress bar ───────────────────────────────────────────────────────────
+function ProgressBar({ value, color, colorGlow, compact }) {
+  const clamped = Math.min(1, Math.max(0, value));
+  const h = compact ? 5 : 6;
+  return (
+    <div style={{
+      height: h, borderRadius: 99, background: 'rgba(255,255,255,0.08)',
+      overflow: 'hidden', position: 'relative',
+    }}>
+      <div style={{
+        height: '100%', width: `${clamped * 100}%`,
+        borderRadius: 99,
+        background: `linear-gradient(90deg, ${color}, ${color}cc)`,
+        boxShadow: `0 0 8px ${colorGlow}`,
+        transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)',
+      }}/>
+    </div>
+  );
+}
+
+// ── Stat cell ──────────────────────────────────────────────────────────────
+function StatCell({ value, label, unit, color, compact }) {
+  return (
+    <div style={{ flex: 1, textAlign: 'center' }}>
+      <div style={{
+        fontSize: compact ? 18 : 22,
+        fontWeight: 800,
+        color: color,
+        lineHeight: 1,
+        letterSpacing: '-0.03em',
+      }}>
+        {value}<span style={{ fontSize: compact ? 11 : 13, fontWeight: 600, opacity: 0.7, marginLeft: 1 }}>{unit}</span>
+      </div>
+      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', marginTop: 3, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
+    </div>
+  );
+}
+
+// ── Stat card ──────────────────────────────────────────────────────────────
+function StatCard({ card, showGlow, showSparkles, compact, accentColor }) {
+  const [expanded, setExpanded] = React.useState(true);
+  const pad = compact ? '12px 14px' : '14px 16px';
+  return (
+    <div
+      onClick={() => setExpanded(e => !e)}
+      style={{
+        borderRadius: 18,
+        background: card.gradient,
+        border: `1px solid ${card.colorDim}`,
+        boxShadow: showGlow
+          ? `0 4px 24px ${card.colorGlow}, 0 1px 0 rgba(255,255,255,0.06) inset`
+          : '0 2px 8px rgba(0,0,0,0.3)',
+        padding: pad,
+        position: 'relative',
+        overflow: 'hidden',
+        cursor: 'pointer',
+        transition: 'box-shadow 0.2s',
+      }}
+    >
+      <Sparkles color={card.color} show={showSparkles} />
+
+      {/* Header row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: expanded ? 12 : 0 }}>
+        {/* Icon */}
+        <div style={{
+          width: compact ? 32 : 36, height: compact ? 32 : 36,
+          borderRadius: 10,
+          background: card.colorDim,
+          border: `1px solid ${card.color}44`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: compact ? 16 : 18, flexShrink: 0,
+        }}>{card.icon}</div>
+
+        <span style={{ fontWeight: 700, fontSize: compact ? 14 : 15, color: 'rgba(255,255,255,0.95)', flex: 1 }}>{card.label}</span>
+
+        {/* Badge */}
+        {card.badge && (
+          <div style={{
+            background: card.colorDim, border: `1px solid ${card.color}55`,
+            borderRadius: 99, padding: '2px 9px',
+            fontSize: 11, fontWeight: 700, color: card.color,
+          }}>{card.badge}</div>
+        )}
+        {card.trophy && (
+          <span style={{ fontSize: 16 }}>🏆</span>
+        )}
+        {card.xp && (
+          <div style={{
+            background: 'rgba(124,111,255,0.18)', border: `1px solid rgba(124,111,255,0.35)`,
+            borderRadius: 99, padding: '2px 8px',
+            fontSize: 10, fontWeight: 700, color: '#A89BFF',
+          }}>{card.xp}</div>
+        )}
+        {/* chevron */}
+        <svg width="14" height="14" viewBox="0 0 14 14" style={{ flexShrink: 0, transition: 'transform 0.2s', transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)' }}>
+          <path d="M3 5l4 4 4-4" stroke="rgba(255,255,255,0.4)" strokeWidth="1.8" strokeLinecap="round" fill="none"/>
+        </svg>
+      </div>
+
+      {/* Stats row */}
+      {expanded && (
+        <>
+          <div style={{
+            display: 'flex', gap: 4, marginBottom: 10,
+            paddingTop: 8,
+            borderTop: '1px solid rgba(255,255,255,0.07)',
+          }}>
+            {card.stats.map((s, i) => (
+              <React.Fragment key={i}>
+                {i > 0 && <div style={{ width: 1, background: 'rgba(255,255,255,0.07)', alignSelf: 'stretch' }}/>}
+                <StatCell {...s} color={i === 0 ? card.color : 'rgba(255,255,255,0.85)'} compact={compact} />
+              </React.Fragment>
+            ))}
+          </div>
+
+          {/* Progress */}
+          <ProgressBar value={card.progress} color={card.color} colorGlow={card.colorGlow} compact={compact} />
+          <div style={{
+            display: 'flex', justifyContent: 'space-between',
+            marginTop: 5,
+            fontSize: 10, color: 'rgba(255,255,255,0.35)', fontWeight: 500,
+          }}>
+            <span>{card.stats[0].value} / {card.stats[1].value}{card.stats[1].unit ? ' ' + card.stats[1].unit : ''}</span>
+            <span>{Math.round(card.progress * 100)}%</span>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Tab pill ───────────────────────────────────────────────────────────────
+function TabPill({ tabs, active, onChange, accentColor, accentGlow }) {
+  return (
+    <div style={{
+      display: 'flex',
+      background: 'rgba(255,255,255,0.06)',
+      borderRadius: 14,
+      padding: 3,
+      gap: 2,
+    }}>
+      {tabs.map(t => {
+        const isActive = t === active;
+        return (
+          <button key={t} onClick={() => onChange(t)} style={{
+            flex: 1, height: 34, borderRadius: 11,
+            border: 'none', cursor: 'pointer',
+            background: isActive
+              ? `linear-gradient(135deg, ${accentColor}cc, ${accentColor}99)`
+              : 'transparent',
+            color: isActive ? '#fff' : 'rgba(255,255,255,0.45)',
+            fontWeight: isActive ? 700 : 500,
+            fontSize: 13,
+            fontFamily: 'Inter, sans-serif',
+            boxShadow: isActive ? `0 2px 12px ${accentGlow}` : 'none',
+            transition: 'all 0.2s',
+          }}>{t}</button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Date nav ───────────────────────────────────────────────────────────────
+function DateNav({ date, onPrev, onNext }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px' }}>
+      <button onClick={onPrev} style={{
+        width: 32, height: 32, borderRadius: 10, border: 'none',
+        background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)',
+        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <svg width="8" height="14" viewBox="0 0 8 14"><path d="M7 1L1 7l6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/></svg>
+      </button>
+
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', letterSpacing: '-0.01em' }}>{date.day}</div>
+        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 1, fontWeight: 500 }}>Synced 17:19</div>
+      </div>
+
+      <button onClick={onNext} style={{
+        width: 32, height: 32, borderRadius: 10, border: 'none',
+        background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)',
+        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <svg width="8" height="14" viewBox="0 0 8 14"><path d="M1 1l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/></svg>
+      </button>
+    </div>
+  );
+}
+
+// ── Bottom nav ─────────────────────────────────────────────────────────────
+function BottomNav({ active, onChange, accentColor, accentGlow }) {
+  return (
+    <div style={{
+      display: 'flex',
+      background: 'rgba(13,15,28,0.95)',
+      borderTop: '1px solid rgba(255,255,255,0.07)',
+      paddingBottom: 24, paddingTop: 10, paddingLeft: 8, paddingRight: 8,
+    }}>
+      {NAV_ITEMS.map(item => {
+        const isActive = item.id === active;
+        return (
+          <button key={item.id} onClick={() => onChange(item.id)} style={{
+            flex: 1, border: 'none', background: 'transparent',
+            cursor: 'pointer', display: 'flex', flexDirection: 'column',
+            alignItems: 'center', gap: 3, padding: '4px 0',
+          }}>
+            <div style={{
+              width: 42, height: 32, borderRadius: 10,
+              background: isActive ? `linear-gradient(135deg, ${accentColor}33, ${accentColor}18)` : 'transparent',
+              border: isActive ? `1px solid ${accentColor}44` : '1px solid transparent',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'all 0.2s',
+              boxShadow: isActive ? `0 2px 10px ${accentGlow}` : 'none',
+            }}>
+              {item.icon(isActive ? accentColor : 'rgba(255,255,255,0.35)')}
+            </div>
+            <span style={{
+              fontSize: 10, fontWeight: isActive ? 700 : 500,
+              color: isActive ? accentColor : 'rgba(255,255,255,0.35)',
+              fontFamily: 'Inter, sans-serif',
+            }}>{item.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── App Screen ─────────────────────────────────────────────────────────────
+function AppScreen({ tweaks }) {
+  const [tab, setTab] = React.useState('Day');
+  const [navActive, setNavActive] = React.useState('overview');
+  const [dateOffset, setDateOffset] = React.useState(0);
+  const theme = THEMES[tweaks.theme] || THEMES.violet;
+
+  const getDate = (offset) => {
+    const d = new Date(2026, 3, 19 + offset);
+    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return { day: `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}` };
+  };
+
+  return (
+    <div style={{
+      height: '100%',
+      background: 'linear-gradient(180deg, #0D0F1E 0%, #0A0C18 100%)',
+      display: 'flex', flexDirection: 'column',
+      fontFamily: 'Inter, sans-serif',
+      WebkitFontSmoothing: 'antialiased',
+      overflowX: 'hidden',
+    }}>
+      {/* Subtle bg stars */}
+      {tweaks.sparkles && (
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+          {[...Array(18)].map((_, i) => (
+            <div key={i} style={{
+              position: 'absolute',
+              left: `${(i * 37 + 7) % 100}%`,
+              top: `${(i * 53 + 13) % 80}%`,
+              width: i % 3 === 0 ? 2 : 1,
+              height: i % 3 === 0 ? 2 : 1,
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.25)',
+              animation: `sparkle-pop ${2 + (i % 3) * 0.7}s ease-in-out ${(i * 0.3) % 2}s infinite`,
+            }}/>
+          ))}
+        </div>
+      )}
+
+      {/* Status bar spacer */}
+      <div style={{ height: 54 }} />
+
+      {/* Main content area */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+
+        {/* Header */}
+        <div style={{ padding: '4px 0 2px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>Good morning ✦</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em', marginTop: 1 }}>Dashboard</div>
+          </div>
+          <div style={{
+            width: 36, height: 36, borderRadius: 12,
+            background: `linear-gradient(135deg, ${theme.accent}55, ${theme.accent}22)`,
+            border: `1px solid ${theme.accent}44`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 18,
+            boxShadow: `0 4px 16px ${theme.accentGlow}`,
+          }}>⚔️</div>
+        </div>
+
+        {/* Tab + date row */}
+        <TabPill
+          tabs={['Day','Week','Month']}
+          active={tab} onChange={setTab}
+          accentColor={theme.accent} accentGlow={theme.accentGlow}
+        />
+        <DateNav
+          date={getDate(dateOffset)}
+          onPrev={() => setDateOffset(o => o - 1)}
+          onNext={() => setDateOffset(o => o + 1)}
+        />
+
+        {/* XP / level bar */}
+        <div style={{
+          background: 'rgba(255,255,255,0.05)',
+          borderRadius: 12, padding: '8px 12px',
+          display: 'flex', alignItems: 'center', gap: 10,
+          border: '1px solid rgba(255,255,255,0.07)',
+        }}>
+          <div style={{
+            width: 28, height: 28, borderRadius: 8,
+            background: `linear-gradient(135deg, ${theme.accent}, ${theme.accent}88)`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 12, fontWeight: 800, color: '#fff', flexShrink: 0,
+          }}>14</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: theme.accent, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Level 14 · Forge Knight</span>
+              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>2 340 / 3 000 XP</span>
+            </div>
+            <ProgressBar value={0.78} color={theme.accent} colorGlow={theme.accentGlow} compact={true}/>
+          </div>
+        </div>
+
+        {/* Stat cards */}
+        {CARDS.map(card => (
+          <StatCard
+            key={card.id}
+            card={card}
+            showGlow={tweaks.glow}
+            showSparkles={tweaks.sparkles}
+            compact={tweaks.compact}
+            accentColor={theme.accent}
+          />
+        ))}
+
+        <div style={{ height: 8 }} />
+      </div>
+
+      {/* Bottom nav */}
+      <BottomNav active={navActive} onChange={setNavActive} accentColor={theme.accent} accentGlow={theme.accentGlow} />
+    </div>
+  );
+}
+
+// ── Design system panel ────────────────────────────────────────────────────
+function DSPanel({ tweaks }) {
+  const theme = THEMES[tweaks.theme] || THEMES.violet;
+  const colors = [
+    { name: 'Background', hex: '#0D0F1E', dark: true },
+    { name: 'Surface', hex: '#151728', dark: true },
+    { name: 'Border', hex: 'rgba(255,255,255,0.08)', dark: true },
+    { name: 'Accent', hex: theme.accent, dark: false },
+    { name: 'Steps', hex: '#34D399', dark: false },
+    { name: 'Calories', hex: '#FBBF24', dark: false },
+    { name: 'Weight', hex: '#60A5FA', dark: false },
+    { name: 'Text Hi', hex: '#FFFFFF', dark: true },
+    { name: 'Text Lo', hex: 'rgba(255,255,255,0.4)', dark: true },
+  ];
+
+  const components = [
+    { name: 'StatCard', desc: 'Container + gradient bg + border + BoxShadow (glow)', widget: 'Container → BoxDecoration' },
+    { name: 'ProgressBar', desc: 'Rounded track + colored fill + glow shadow', widget: 'Stack → LinearProgressIndicator custom' },
+    { name: 'TabPill', desc: 'Segmented control w/ gradient active state', widget: 'Row → GestureDetector → AnimatedContainer' },
+    { name: 'DateNav', desc: 'Prev/Next buttons + date label', widget: 'Row → IconButton + Text' },
+    { name: 'StatCell', desc: 'Large value + unit + small label', widget: 'Column → Text × 2' },
+    { name: 'XpBar', desc: 'Level badge + progress bar', widget: 'Row → Container + LinearProgressIndicator' },
+    { name: 'BottomNav', desc: 'Icon + label pill tabs, gradient active', widget: 'BottomNavigationBar custom' },
+    { name: 'Sparkle', desc: 'Animated star dot (optional decoration)', widget: 'AnimatedOpacity → Transform.scale' },
+  ];
+
+  const notes = [
+    'Replace emoji icons with flutter_svg or Material symbols for consistency.',
+    'Gradients: use LinearGradient(colors: [colorA, colorB]) — never more than 2 stops per component.',
+    'Card glow: BoxDecoration boxShadow with spreadRadius: 0, blurRadius: 20.',
+    'XP bar: reuse ProgressBar with theme accent color — same widget, different data.',
+    'Background stars: a Stack with randomly-positioned small Containers — skip in MVP.',
+    'Dark theme only for V1; all colors are hardcoded dark-mode values. No adaptive tokens needed yet.',
+    'Fonts: Inter (Google Fonts package) — fontWeight 500/700/800 variants.',
+    'Bottom nav: build custom, not BottomNavigationBar — the pill indicator can\'t be done natively.',
+  ];
+
+  const sectionHead = (t) => (
+    <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12, marginTop: 28 }}>{t}</div>
+  );
+
+  return (
+    <div style={{ color: '#fff', fontFamily: 'Inter, sans-serif' }}>
+      <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.03em', color: '#fff', marginBottom: 4 }}>Design System</div>
+      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>Forgetrack — Flutter-ready tokens & components</div>
+
+      {sectionHead('Color Tokens')}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        {colors.map(c => (
+          <div key={c.name} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '8px 12px', minWidth: 140 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 7, background: c.hex, border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}/>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: '#fff' }}>{c.name}</div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', fontFamily: 'monospace' }}>{c.hex}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {sectionHead('Type Scale')}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: 16 }}>
+        {[
+          { name: 'Display', size: '22px / 800', sample: 'Dashboard' },
+          { name: 'Card Value', size: '22px / 800', sample: '7 235' },
+          { name: 'Card Label', size: '10px / 500 CAPS', sample: 'CURRENT' },
+          { name: 'Body', size: '13–15px / 500–700', sample: 'Steps' },
+          { name: 'Caption', size: '10px / 500', sample: '7 235 / 10 000' },
+        ].map(t => (
+          <div key={t.name} style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
+            <div style={{ width: 100, fontSize: 10, color: 'rgba(255,255,255,0.35)', fontWeight: 600, flexShrink: 0 }}>{t.name}</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', fontFamily: 'monospace', width: 140, flexShrink: 0 }}>{t.size}</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>{t.sample}</div>
+          </div>
+        ))}
+      </div>
+
+      {sectionHead('Reusable Components')}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {components.map(c => (
+          <div key={c.name} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+            <div style={{ width: 8, height: 8, borderRadius: 2, background: theme.accent, marginTop: 4, flexShrink: 0 }}/>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 3 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{c.name}</span>
+                <span style={{ fontSize: 10, fontFamily: 'monospace', color: theme.accent, background: `${theme.accent}18`, padding: '1px 6px', borderRadius: 5 }}>{c.widget}</span>
+              </div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>{c.desc}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {sectionHead('Flutter Implementation Notes')}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+        {notes.map((n, i) => (
+          <div key={i} style={{ display: 'flex', gap: 10, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '10px 12px' }}>
+            <span style={{ fontSize: 11, fontWeight: 800, color: theme.accent, flexShrink: 0, marginTop: 1 }}>{String(i+1).padStart(2,'0')}</span>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', lineHeight: 1.6 }}>{n}</span>
+          </div>
+        ))}
+      </div>
+
+      {sectionHead('Spacing & Radius Scale')}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        {[
+          { token: 'radius-sm', val: '10px', use: 'icons, badges' },
+          { token: 'radius-md', val: '14px', use: 'tabs, buttons' },
+          { token: 'radius-lg', val: '18px', use: 'stat cards' },
+          { token: 'radius-xl', val: '24px', use: 'device frame' },
+          { token: 'space-xs', val: '4px', use: 'gap-xs' },
+          { token: 'space-sm', val: '8px', use: 'internal padding' },
+          { token: 'space-md', val: '14px', use: 'card padding' },
+          { token: 'space-lg', val: '24px', use: 'screen padding' },
+        ].map(s => (
+          <div key={s.token} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '8px 12px', minWidth: 130 }}>
+            <div style={{ fontSize: 10, fontFamily: 'monospace', color: theme.accent, marginBottom: 2 }}>{s.token}</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{s.val}</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{s.use}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Root ───────────────────────────────────────────────────────────────────
+function Root() {
+  const [tweaks, setTweaks] = React.useState(TWEAK_DEFAULTS);
+  const tweaksRef = React.useRef(tweaks);
+  tweaksRef.current = tweaks;
+
+  // Tweaks panel wiring
+  React.useEffect(() => {
+    const panel = document.getElementById('tweaks-panel');
+
+    // bind controls
+    const themeEl = document.getElementById('tw-theme');
+    const glowEl = document.getElementById('tw-glow');
+    const sparklesEl = document.getElementById('tw-sparkles');
+    const darkEl = document.getElementById('tw-dark');
+    const compactEl = document.getElementById('tw-compact');
+
+    themeEl.value = tweaksRef.current.theme;
+    if (tweaksRef.current.glow) glowEl.classList.add('on'); else glowEl.classList.remove('on');
+    if (tweaksRef.current.sparkles) sparklesEl.classList.add('on'); else sparklesEl.classList.remove('on');
+    if (tweaksRef.current.dark) darkEl.classList.add('on'); else darkEl.classList.remove('on');
+    if (tweaksRef.current.compact) compactEl.classList.add('on'); else compactEl.classList.remove('on');
+
+    themeEl.addEventListener('change', e => {
+      const v = e.target.value;
+      setTweaks(t => ({ ...t, theme: v }));
+      window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { theme: v } }, '*');
+    });
+
+    const toggle = (el, key) => {
+      el.addEventListener('click', () => {
+        el.classList.toggle('on');
+        const v = el.classList.contains('on');
+        setTweaks(t => ({ ...t, [key]: v }));
+        window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [key]: v } }, '*');
+      });
+    };
+    toggle(glowEl, 'glow');
+    toggle(sparklesEl, 'sparkles');
+    toggle(darkEl, 'dark');
+    toggle(compactEl, 'compact');
+
+    window.addEventListener('message', e => {
+      if (e.data?.type === '__activate_edit_mode') panel.classList.add('open');
+      if (e.data?.type === '__deactivate_edit_mode') panel.classList.remove('open');
+    });
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+  }, []);
+
+  return (
+    <div>
+      <style>{`
+        @keyframes sparkle-pop {
+          0%, 100% { opacity: 0; transform: scale(0.4); }
+          50% { opacity: 1; transform: scale(1); }
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 99px; }
+      `}</style>
+
+      <div style={{ display: 'flex', gap: 60, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        {/* Left: Phone mockup */}
+        <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Redesigned Mockup</div>
+          <IOSDevice width={375} height={812} dark={true}>
+            <AppScreen tweaks={tweaks} />
+          </IOSDevice>
+        </div>
+
+        {/* Right: Design system */}
+        <div style={{ flex: 1, minWidth: 340, paddingTop: 36 }}>
+          <DSPanel tweaks={tweaks} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Root/>);
+</script>
+
+<template id="__bundler_thumbnail">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+  <rect width="120" height="80" fill="#0D0F1E"/>
+  <rect x="40" y="8" width="40" height="64" rx="6" fill="#151728"/>
+  <rect x="44" y="16" width="32" height="6" rx="3" fill="#7C6FFF" opacity="0.8"/>
+  <rect x="44" y="26" width="32" height="12" rx="4" fill="#34D399" opacity="0.3"/>
+  <rect x="44" y="42" width="32" height="12" rx="4" fill="#FBBF24" opacity="0.3"/>
+  <rect x="44" y="58" width="32" height="8" rx="3" fill="#60A5FA" opacity="0.3"/>
+</svg>
+</template>
+</body>
+</html>

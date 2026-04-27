@@ -10,6 +10,7 @@ import '../application/progression_provider.dart';
 import 'widgets/ft_achievement_badge_spec.dart';
 import 'widgets/ft_progression_domain_theme.dart';
 import 'widgets/ft_progression_primitives.dart';
+import 'widgets/journey_preview_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/l10n.dart';
 import '../../../shared/theme/ft_design_tokens.dart';
@@ -339,6 +340,8 @@ class _FtProgressionScreenState extends State<FtProgressionScreen> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 16),
+                  const JourneyPreviewCard(),
                   const SizedBox(height: 16),
                   FtProgSectionHead(
                     label: l10n.progStreakSectionLabel,
