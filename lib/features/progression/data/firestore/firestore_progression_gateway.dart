@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../domain/progression_level_policy.dart';
 import '../../domain/progression_models.dart';
 import 'progression_cloud_gateway.dart';
 import 'progression_firestore_mapper.dart';
@@ -137,6 +138,7 @@ class FirestoreProgressionGateway implements ProgressionCloudGateway {
   ///
   /// Phase 4d stub — not wired until [HybridProgressionRepository] calls it
   /// from the migration flow on first login.
+  @override
   Future<void> migrateLocalLedger({
     required String uid,
     required List<ProgressionRewardGrant> ruleGrants,
@@ -202,5 +204,60 @@ class FirestoreProgressionGateway implements ProgressionCloudGateway {
       _unlocksRef(uid),
       existingUnlockKeys,
     );
+
+    // Update the derived summary document after migration completes
+    final ledgerSnapshot = ProgressionLedgerSnapshot(
+      evaluations: const [],
+      rewardGrants: ruleGrants,
+      questRewardGrants: questGrants,
+      activeQuestIds: const {},
+      achievementUnlocks: achievementUnlocks,
+    );
+    updateProgressionSummary(uid: uid, ledger: ledgerSnapshot).ignore();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Summary cache (Phase 4e)
+  // ---------------------------------------------------------------------------
+
+  /// Updates the derived progression state summary document at
+  /// users/{uid}/progression/state. Computes derived fields from the
+  /// current ledger snapshot: totalXp, level, claimCount, achievementCount.
+  /// This is a best-effort cache — failures do not break local behavior.
+  @override
+  Future<void> updateProgressionSummary({
+    required String uid,
+    required ProgressionLedgerSnapshot ledger,
+  }) async {
+    const levelPolicy = ProgressionLevelPolicy();
+
+    final totalXp = ledger.rewardGrants.fold<int>(
+          0,
+          (total, grant) => total + grant.effectiveXpGranted,
+        ) +
+        ledger.questRewardGrants.fold<int>(
+          0,
+          (total, grant) => total + grant.effectiveXpGranted,
+        );
+    final level = levelPolicy.levelForXp(totalXp);
+    final claimCount = ledger.rewardGrants.where((g) => g.isClaimed).length +
+        ledger.questRewardGrants.where((g) => g.isClaimed).length;
+    final achievementCount = ledger.achievementUnlocks.length;
+
+    await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('progression')
+        .doc('state')
+        .set(
+          {
+            'totalXp': totalXp,
+            'level': level,
+            'claimCount': claimCount,
+            'achievementCount': achievementCount,
+            'lastSyncedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true),
+        );
   }
 }

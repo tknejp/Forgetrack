@@ -41,4 +41,16 @@ abstract class ProgressionCloudGateway {
     required List<ProgressionQuestRewardGrant> questGrants,
     required List<ProgressionAchievementUnlockEvent> achievementUnlocks,
   });
+
+  /// Updates the derived progression state summary document at
+  /// users/{uid}/progression/state with derived cache fields:
+  /// totalXp, level, claimCount, achievementCount, lastSyncedAt.
+  ///
+  /// Phase 4e: called after successful claim/unlock/migration writes
+  /// to keep the summary document in sync. Best-effort only — failures
+  /// are logged but do not block local behavior.
+  Future<void> updateProgressionSummary({
+    required String uid,
+    required ProgressionLedgerSnapshot ledger,
+  });
 }

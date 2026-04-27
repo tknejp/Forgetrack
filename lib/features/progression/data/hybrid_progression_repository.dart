@@ -78,6 +78,7 @@ class HybridProgressionRepository implements ProgressionLocalRepository {
       if (grant != null) {
         _remote.pushRuleClaimIfMissing(uid, grant).ignore();
       }
+      _remote.updateProgressionSummary(uid: uid, ledger: ledger).ignore();
     }
     return ledger;
   }
@@ -105,6 +106,7 @@ class HybridProgressionRepository implements ProgressionLocalRepository {
       if (grant != null) {
         _remote.pushQuestClaimIfMissing(uid, grant).ignore();
       }
+      _remote.updateProgressionSummary(uid: uid, ledger: ledger).ignore();
     }
     return ledger;
   }
@@ -131,6 +133,7 @@ class HybridProgressionRepository implements ProgressionLocalRepository {
       for (final unlock in unlocks) {
         _remote.pushAchievementUnlockIfMissing(uid, unlock).ignore();
       }
+      _remote.updateProgressionSummary(uid: uid, ledger: ledger).ignore();
     }
     return ledger;
   }
