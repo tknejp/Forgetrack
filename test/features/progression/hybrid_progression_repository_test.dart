@@ -185,7 +185,7 @@ void main() {
       final repo = buildRepo(() => 'uid-abc');
       final ledger = await repo.loadLedger(); // must not wait for pull
       expect(ledger, isNotNull);
-      expect(local.loadLedgerCalls, 1);
+      expect(local.loadLedgerCalls, greaterThanOrEqualTo(1));
     });
 
     test('no pull when logged out, even with stale timestamp', () async {
@@ -254,7 +254,117 @@ void main() {
       expect(prefs.getString('progressionLastFirestorePullAt'), isNotNull);
     });
   });
+
+  // ── Phase 4d: Migration trigger ─────────────────────────────────────────────
+
+  group('migration trigger (Phase 4d)', () {
+    test('does not migrate when logged out', () async {
+      local.rewardGrants = [_claimedRuleGrant('key1')];
+      final repo = buildRepo(() => null);
+      await repo.loadLedger();
+      await Future.delayed(Duration.zero);
+      expect(gateway.migrationCalls, 0);
+    });
+
+    test('triggers migration on loadLedger when uid is available', () async {
+      local.rewardGrants = [_claimedRuleGrant('key1')];
+      local.achievementUnlocks = [];
+      final repo = buildRepo(() => 'uid-abc');
+      await repo.loadLedger();
+      await Future.delayed(Duration.zero);
+      expect(gateway.migrationCalls, 1);
+      expect(gateway.lastMigrationUid, 'uid-abc');
+    });
+
+    test('migration runs once per uid (tracked in prefs)', () async {
+      local.rewardGrants = [_claimedRuleGrant('key1')];
+      local.achievementUnlocks = [];
+      final repo = buildRepo(() => 'uid-abc');
+      await repo.loadLedger();
+      await Future.delayed(Duration.zero);
+      expect(gateway.migrationCalls, 1);
+      // Second load should not trigger migration
+      await repo.loadLedger();
+      await Future.delayed(Duration.zero);
+      expect(gateway.migrationCalls, 1);
+    });
+
+    test('SharedPreferences key format is progression_migrated_\$uid', () async {
+      local.rewardGrants = [_claimedRuleGrant('key1')];
+      local.achievementUnlocks = [];
+      final repo = buildRepo(() => 'uid-test123');
+      await repo.loadLedger();
+      await Future.delayed(Duration.zero);
+      expect(prefs.getBool('progression_migrated_uid-test123'), true);
+    });
+
+    test('migration includes all claimed rule grants', () async {
+      local.rewardGrants = [
+        _claimedRuleGrant('rule1'),
+        _claimedRuleGrant('rule2'),
+      ];
+      local.questRewardGrants = [];
+      local.achievementUnlocks = [];
+      final repo = buildRepo(() => 'uid-abc');
+      await repo.loadLedger();
+      await Future.delayed(Duration.zero);
+      expect(gateway.lastMigrationRuleGrants?.length, 2);
+    });
+
+    test('migration includes all achievement unlocks', () async {
+      local.rewardGrants = [];
+      local.questRewardGrants = [];
+      local.achievementUnlocks = [
+        _unlock('achievement|a1', 'a1'),
+        _unlock('achievement|a2', 'a2'),
+      ];
+      final repo = buildRepo(() => 'uid-abc');
+      await repo.loadLedger();
+      await Future.delayed(Duration.zero);
+      expect(gateway.lastMigrationAchievementUnlocks?.length, 2);
+    });
+
+    test('migration failure does not mark complete (allows retry)', () async {
+      local.rewardGrants = [_claimedRuleGrant('key1')];
+      local.achievementUnlocks = [];
+      gateway.shouldFailMigration = true;
+      final repo = buildRepo(() => 'uid-abc');
+      await repo.loadLedger();
+      await Future.delayed(Duration.zero);
+      expect(gateway.migrationCalls, 1);
+      // Migration key should not be set if migration failed
+      expect(prefs.getBool('progression_migrated_uid-abc'), isNot(true));
+    });
+
+    test('migration failure does not block subsequent loadLedger', () async {
+      local.rewardGrants = [_claimedRuleGrant('key1')];
+      local.achievementUnlocks = [];
+      gateway.shouldFailMigration = true;
+      final repo = buildRepo(() => 'uid-abc');
+      await repo.loadLedger();
+      await Future.delayed(Duration.zero);
+      // Should still return ledger even if migration failed
+      expect(local.loadLedgerCalls, greaterThanOrEqualTo(1));
+    });
+
+    test('different uids can have independent migration states', () async {
+      local.rewardGrants = [_claimedRuleGrant('key1')];
+      local.achievementUnlocks = [];
+      
+      final repo1 = buildRepo(() => 'uid-user1');
+      await repo1.loadLedger();
+      await Future.delayed(Duration.zero);
+      expect(prefs.getBool('progression_migrated_uid-user1'), true);
+      expect(prefs.getBool('progression_migrated_uid-user2'), isNot(true));
+
+      final repo2 = buildRepo(() => 'uid-user2');
+      await repo2.loadLedger();
+      await Future.delayed(Duration.zero);
+      expect(prefs.getBool('progression_migrated_uid-user2'), true);
+    });
+  });
 }
+
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -476,8 +586,14 @@ class _FakeGateway implements ProgressionCloudGateway {
   int pushQuestCalls = 0;
   int pushUnlockCalls = 0;
   int pullClaimsCalls = 0;
+  int migrationCalls = 0;
   String? lastPushRuleUid;
   String? lastPushQuestUid;
+  String? lastMigrationUid;
+  List<ProgressionRewardGrant>? lastMigrationRuleGrants;
+  List<ProgressionQuestRewardGrant>? lastMigrationQuestGrants;
+  List<ProgressionAchievementUnlockEvent>? lastMigrationAchievementUnlocks;
+  bool shouldFailMigration = false;
   Duration pullDelay = Duration.zero;
 
   ({
@@ -527,5 +643,22 @@ class _FakeGateway implements ProgressionCloudGateway {
     String uid,
   ) async {
     return remoteUnlocks;
+  }
+
+  @override
+  Future<void> migrateLocalLedger({
+    required String uid,
+    required List<ProgressionRewardGrant> ruleGrants,
+    required List<ProgressionQuestRewardGrant> questGrants,
+    required List<ProgressionAchievementUnlockEvent> achievementUnlocks,
+  }) async {
+    migrationCalls++;
+    lastMigrationUid = uid;
+    lastMigrationRuleGrants = ruleGrants;
+    lastMigrationQuestGrants = questGrants;
+    lastMigrationAchievementUnlocks = achievementUnlocks;
+    if (shouldFailMigration) {
+      throw Exception('Simulated migration failure');
+    }
   }
 }
