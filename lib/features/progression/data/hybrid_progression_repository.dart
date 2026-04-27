@@ -1,11 +1,13 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/logging/app_log.dart';
 import '../domain/progression_local_repository.dart';
 import '../domain/progression_models.dart';
 import 'firestore/progression_cloud_gateway.dart';
 
 const _kLastPullKey = 'progressionLastFirestorePullAt';
 const _kStaleDuration = Duration(minutes: 5);
+const _kMigrationKeyPrefix = 'progression_migrated_';
 
 /// Wraps [LocalProgressionRepository] (Isar) with a [ProgressionCloudGateway]
 /// for cloud persistence of claimed rewards and achievement unlocks.
@@ -41,6 +43,7 @@ class HybridProgressionRepository implements ProgressionLocalRepository {
 
   @override
   Future<ProgressionLedgerSnapshot> loadLedger() async {
+    _maybeTriggerMigration();
     _maybeTriggerBackgroundPull();
     return _local.loadLedger();
   }
@@ -224,4 +227,59 @@ class HybridProgressionRepository implements ProgressionLocalRepository {
 
     pullAndHydrate(uid).ignore();
   }
+
+  // ---------------------------------------------------------------------------
+  // Migration trigger (Phase 4d)
+  // ---------------------------------------------------------------------------
+
+  /// Triggers migration of local progression ledger to Firestore when uid
+  /// becomes available (after login). Runs once per canonical uid.
+  ///
+  /// **Semantics:**
+  /// - Migration is tracked in SharedPreferences using key `progression_migrated_$uid`.
+  /// - Once migration succeeds for a uid, it is never retried.
+  /// - If migration fails (network, permission, etc.), it is not marked complete,
+  ///   allowing retry on next call.
+  /// - Failures are logged but do not block the app or raise exceptions.
+  /// - Fire-and-forget: does not block normal local claim behavior.
+  ///
+  /// **Data uploaded:**
+  /// - Only claimed rewards and achievement unlocks (verified via mapper).
+  /// - Unclaimed rewards, evaluations, active quest set, raw health/nutrition
+  ///   data remain local-only.
+  /// - Legacy claimed records with finalXp == null are uploaded with
+  ///   finalXp = xpGranted (via mapper).
+  void _maybeTriggerMigration() {
+    final uid = _userIdProvider();
+    if (uid == null) return;
+
+    final migrationKey = '$_kMigrationKeyPrefix$uid';
+    if (_prefs.getBool(migrationKey) ?? false) {
+      return; // Already migrated for this uid
+    }
+
+    _performMigrationAsync(uid, migrationKey).ignore();
+  }
+
+  Future<void> _performMigrationAsync(String uid, String migrationKey) async {
+    try {
+      final ledger = await _local.loadLedger();
+
+      await _remote.migrateLocalLedger(
+        uid: uid,
+        ruleGrants: ledger.rewardGrants,
+        questGrants: ledger.questRewardGrants,
+        achievementUnlocks: ledger.achievementUnlocks,
+      );
+
+      await _prefs.setBool(migrationKey, true);
+    } catch (error) {
+      AppLog.sync.warn(
+        'Phase 4d: Progression migration failed for uid=$uid',
+        payload: error,
+      );
+      // Do not mark migration complete; it can be retried on next app load.
+    }
+  }
 }
+

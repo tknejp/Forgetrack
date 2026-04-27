@@ -28,4 +28,17 @@ abstract class ProgressionCloudGateway {
   Future<List<ProgressionAchievementUnlockEvent>> pullAchievementUnlocks(
     String uid,
   );
+
+  /// Uploads all eligible claimed grants and achievement unlocks from the local
+  /// ledger snapshot to Firestore. Each write is create-if-not-exists and safe
+  /// to retry. Writes are batched in groups of 500 (Firestore WriteBatch limit).
+  ///
+  /// Phase 4d: triggered by [HybridProgressionRepository] on first user load
+  /// after login (idempotent via SharedPreferences tracking).
+  Future<void> migrateLocalLedger({
+    required String uid,
+    required List<ProgressionRewardGrant> ruleGrants,
+    required List<ProgressionQuestRewardGrant> questGrants,
+    required List<ProgressionAchievementUnlockEvent> achievementUnlocks,
+  });
 }
