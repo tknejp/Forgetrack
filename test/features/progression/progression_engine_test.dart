@@ -1389,12 +1389,12 @@ void main() {
     test('supports a long tail rank ladder beyond level 21', () {
       const policy = ProgressionLevelPolicy();
 
-      expect(policy.resolve(0).levelTitle, 'Novice Adventurer');
+      expect(policy.resolve(0).levelTitle, 'Troll');
       expect(policy.resolve(policy.xpRequiredForLevel(5)).levelTitle,
-          'Pathfinder');
+          'Wanderer');
       expect(
         policy.resolve(policy.xpRequiredForLevel(10)).levelTitle,
-        'Trail Vanguard',
+        'Pathfinder',
       );
       expect(
         policy.resolve(policy.xpRequiredForLevel(25)).levelTitle,
