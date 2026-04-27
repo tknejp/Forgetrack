@@ -40,7 +40,7 @@ class HcCaloriesService {
 
     final caloriesByDay = <DateTime, double>{};
     for (final point in points) {
-      final day = _client.dayOnly(point.dateFrom);
+      final day = _client.dayOnly(point.dateFrom.toLocal());
       final calories = _client.numericValue(point);
       caloriesByDay.update(
         day,
@@ -88,7 +88,7 @@ class HcCaloriesService {
 
     final caloriesByDay = <DateTime, double>{};
     for (final point in points) {
-      final day = _client.dayOnly(point.dateFrom);
+      final day = _client.dayOnly(point.dateFrom.toLocal());
       final calories = _client.numericValue(point);
       caloriesByDay.update(
         day,

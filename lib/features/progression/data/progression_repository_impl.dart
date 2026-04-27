@@ -291,6 +291,7 @@ class ProgressionRepositoryImpl implements ProgressionLocalRepository {
       finalXp: record.finalXp,
       levelAtClaim: record.levelAtClaim,
       multiplierAtClaim: record.multiplierAtClaim,
+      baseXp: record.baseXp,
     );
   }
 
@@ -310,6 +311,7 @@ class ProgressionRepositoryImpl implements ProgressionLocalRepository {
       finalXp: record.finalXp,
       levelAtClaim: record.levelAtClaim,
       multiplierAtClaim: record.multiplierAtClaim,
+      baseXp: record.baseXp,
     );
   }
 
@@ -355,6 +357,7 @@ class ProgressionRepositoryImpl implements ProgressionLocalRepository {
       ..periodStart = evaluation.period.start
       ..periodEnd = evaluation.period.end
       ..xpGranted = evaluation.rewardXp
+      ..baseXp = evaluation.baseXp
       ..targetValue = evaluation.targetValue
       ..actualValue = evaluation.actualValue
       ..upperTargetValue = evaluation.upperTargetValue
@@ -371,6 +374,7 @@ class ProgressionRepositoryImpl implements ProgressionLocalRepository {
       ..rewardKey = grant.rewardKey
       ..questId = grant.questId
       ..xpGranted = grant.xpGranted
+      ..baseXp = grant.baseXp
       ..rewardStatusName = grant.rewardStatus.name
       ..unlockedAt = grant.unlockedAt
       ..completedAt = grant.completedAt
@@ -398,6 +402,7 @@ class ProgressionRepositoryImpl implements ProgressionLocalRepository {
           ..periodStart = grant.period.start
           ..periodEnd = grant.period.end
           ..xpGranted = grant.xpGranted
+          ..baseXp = grant.baseXp
           ..targetValue = 0.0
           ..actualValue = 0.0
           ..toleranceRatio = 0.0
@@ -427,6 +432,7 @@ class ProgressionRepositoryImpl implements ProgressionLocalRepository {
           ..rewardKey = grant.rewardKey
           ..questId = grant.questId
           ..xpGranted = grant.xpGranted
+          ..baseXp = grant.baseXp
           ..rewardStatusName = ProgressionRewardStatus.claimed.name
           ..unlockedAt = grant.unlockedAt
           ..completedAt = grant.completedAt

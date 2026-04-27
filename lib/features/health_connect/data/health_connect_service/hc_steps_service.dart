@@ -41,21 +41,63 @@ class HcStepsService {
     _client.logDebug('getStepsHistory(days=$days)');
 
     final now = DateTime.now();
-    final start = _client.dayOnly(now).subtract(Duration(days: days - 1));
+    final today = _client.dayOnly(now);
+    final tomorrowStart = today.add(const Duration(days: 1));
+    final start = today.subtract(Duration(days: days - 1));
 
-    // Single range fetch instead of one HC API call per day.
+    // Diagnostic: compare today's steps via aggregate with two different query
+    // ends. Samsung Health writes an all-day record (dateTo=23:59) that HC only
+    // returns when the query end covers the full interval.
+    final todayStepsToNow = await _client.getTotalStepsInInterval(today, now) ?? 0;
+    final todayStepsFullDay = await _client.getTotalStepsInInterval(today, tomorrowStart) ?? 0;
+    _client.logInfo(
+      'getStepsHistory(): today aggregate: '
+      'todayStart->now=$todayStepsToNow  '
+      'todayStart->tomorrowStart=$todayStepsFullDay',
+    );
+
+    // Fetch raw data using tomorrowStart as end (not now) so that Samsung
+    // Health all-day records (dateFrom=0:00, dateTo=23:59) are included.
     final points = await _client.fetchData(
       label: 'STEPS_HISTORY',
       start: start,
-      end: now,
+      end: tomorrowStart,
       types: const [HealthDataType.STEPS],
     );
 
+    _client.logDebug(
+      'query local start=${_client.fmt(start)} end=${_client.fmt(tomorrowStart)} '
+      'UTC start=${start.toUtc()} end=${tomorrowStart.toUtc()}',
+    );
+    _client.logDebug('raw step point count=${points.length}');
+
+    // Log unique sources and today's individual records to detect origin issues.
+    final sources = points.map((p) => '${p.sourceName}/${p.sourceId}').toSet();
+    _client.logDebug('raw step sources: $sources');
+    for (final point in points) {
+      if (_client.dayOnly(point.dateFrom.toLocal()) == today) {
+        _client.logDebug(
+          'today raw record: from=${_client.fmt(point.dateFrom.toLocal())} '
+          'to=${_client.fmt(point.dateTo.toLocal())} '
+          'src=${point.sourceName} pkg=${point.sourceId} '
+          'steps=${_client.numericValue(point).round()}',
+        );
+      }
+    }
+
     final stepsByDay = <DateTime, int>{};
     for (final point in points) {
-      final day = _client.dayOnly(point.dateFrom);
+      final day = _client.dayOnly(point.dateFrom.toLocal());
       final steps = _client.numericValue(point).round();
       stepsByDay.update(day, (value) => value + steps, ifAbsent: () => steps);
+    }
+
+    // Always override today with the full-day aggregate result so that Samsung
+    // Health all-day totals are captured even when raw records are missing.
+    stepsByDay[today] = todayStepsFullDay;
+
+    for (final entry in stepsByDay.entries) {
+      _client.logDebug('daily bucket ${_client.fmt(entry.key)}: ${entry.value} steps');
     }
 
     final records = <StepsRecord>[
@@ -67,7 +109,8 @@ class HcStepsService {
     ];
 
     _client.logInfo(
-      'getStepsHistory(): produced ${records.length} daily records',
+      'getStepsHistory(): produced ${records.length} daily records, '
+      'today=${records.last.steps} steps',
     );
     return records;
   }
@@ -78,14 +121,14 @@ class HcStepsService {
   ) async {
     final startDay = _client.dayOnly(start);
     final endDay = _client.dayOnly(end);
-    final now = DateTime.now();
-    final queryEnd = endDay.add(const Duration(days: 1)).isBefore(now)
-        ? endDay.add(const Duration(days: 1))
-        : now;
 
-    if (endDay.isBefore(startDay) || !queryEnd.isAfter(startDay)) {
+    if (endDay.isBefore(startDay)) {
       return const [];
     }
+
+    // Always use the full calendar day end — do not cap at now — so Samsung
+    // Health all-day records (dateTo=23:59) are included for the requested range.
+    final queryEnd = endDay.add(const Duration(days: 1));
 
     _client.logDebug(
       'getStepsHistoryForRange(${_client.fmt(startDay)} -> ${_client.fmt(endDay)})',
@@ -100,9 +143,18 @@ class HcStepsService {
 
     final stepsByDay = <DateTime, int>{};
     for (final point in points) {
-      final day = _client.dayOnly(point.dateFrom);
+      final day = _client.dayOnly(point.dateFrom.toLocal());
       final steps = _client.numericValue(point).round();
       stepsByDay.update(day, (value) => value + steps, ifAbsent: () => steps);
+    }
+
+    // Override today with the full-day aggregate if today falls in the range.
+    final today = _client.dayOnly(DateTime.now());
+    if (!today.isBefore(startDay) && !today.isAfter(endDay)) {
+      final tomorrowStart = today.add(const Duration(days: 1));
+      final todaySteps = await _client.getTotalStepsInInterval(today, tomorrowStart) ?? 0;
+      stepsByDay[today] = todaySteps;
+      _client.logDebug('getStepsHistoryForRange(): today aggregate override=$todaySteps');
     }
 
     final totalDays = endDay.difference(startDay).inDays + 1;

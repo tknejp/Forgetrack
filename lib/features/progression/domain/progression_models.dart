@@ -283,6 +283,7 @@ class ProgressionEvaluation {
     required this.title,
     required this.description,
     required this.explanation,
+    this.baseXp,
   });
 
   final String evaluationKey;
@@ -304,6 +305,7 @@ class ProgressionEvaluation {
   final String title;
   final String description;
   final String explanation;
+  final int? baseXp;
 
   double get deltaFromTarget => actualValue - targetValue;
 
@@ -334,6 +336,7 @@ class ProgressionRewardGrant {
     this.finalXp,
     this.levelAtClaim,
     this.multiplierAtClaim,
+    this.baseXp,
   });
 
   final String rewardKey;
@@ -352,6 +355,7 @@ class ProgressionRewardGrant {
   final int? finalXp;
   final int? levelAtClaim;
   final double? multiplierAtClaim;
+  final int? baseXp;
 
   bool get isClaimed => rewardStatus == ProgressionRewardStatus.claimed;
   bool get isUnlocked => rewardStatus == ProgressionRewardStatus.unlocked;
@@ -428,6 +432,7 @@ class ProgressionQuestRewardGrant {
     this.finalXp,
     this.levelAtClaim,
     this.multiplierAtClaim,
+    this.baseXp,
   });
 
   final String rewardKey;
@@ -440,6 +445,7 @@ class ProgressionQuestRewardGrant {
   final int? finalXp;
   final int? levelAtClaim;
   final double? multiplierAtClaim;
+  final int? baseXp;
 
   bool get isClaimed => rewardStatus == ProgressionRewardStatus.claimed;
   bool get isUnlocked => rewardStatus == ProgressionRewardStatus.unlocked;

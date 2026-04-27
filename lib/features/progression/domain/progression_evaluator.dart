@@ -67,6 +67,7 @@ class ProgressionEvaluator {
         status: status,
         missReason: missReason,
       ),
+      baseXp: rule.rewardXp,
     );
   }
 

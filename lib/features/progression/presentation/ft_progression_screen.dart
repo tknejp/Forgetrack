@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../domain/progression_models.dart';
+import '../domain/progression_level_policy.dart';
 import '../../social/application/social_provider.dart';
 import 'progression_l10n.dart';
 import '../application/progression_provider.dart';
@@ -509,6 +510,8 @@ class _PendingRewardCard extends StatelessWidget {
     final locale = Localizations.localeOf(context).toString();
     final l10n = context.l10n;
     final progL10n = ProgressionL10n(l10n);
+    final progression = context.watch<ProgressionProvider>();
+    final displayXp = _computeDisplayXp(reward, progression.profile);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -553,7 +556,7 @@ class _PendingRewardCard extends StatelessWidget {
               FtXpClaimPill(
                 key: pillKey,
                 data: FtXpClaimPillData.claimable(
-                  reward.xpGranted,
+                  displayXp,
                   onTap: enabled
                       ? (center) => onClaim(reward, from: center)
                       : (_) {},
@@ -590,6 +593,15 @@ class _PendingRewardCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  int _computeDisplayXp(ProgressionRewardGrant grant, ProgressionProfile profile) {
+    if (grant.isClaimed) {
+      return grant.effectiveXpGranted;
+    }
+    final levelPolicy = ProgressionLevelPolicy();
+    final baseXp = grant.baseXp ?? grant.xpGranted;
+    return levelPolicy.scaledRewardXp(baseXp: baseXp, level: profile.level);
   }
 }
 

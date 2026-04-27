@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:forgetrack/core/logging/app_log.dart';
 import '../domain/weight_card_data.dart';
 import '../data/health_connect_service.dart';
 import '../data/local/health_database.dart';
@@ -135,9 +136,8 @@ class FitnessProvider extends ChangeNotifier {
     ];
   }
 
-  // ─── Computed step totals ─────────────────────────────────────────────────
-
-  int get todaySteps => _stepsHistory.isNotEmpty ? _stepsHistory.last.steps : 0;
+  /// Today's steps by date matching (vs positional .last).
+  int get todaySteps => stepsForDate(DateTime.now());
 
   int get stepsWeekTotal {
     if (_stepsHistory.isEmpty) return 0;
@@ -342,6 +342,7 @@ class FitnessProvider extends ChangeNotifier {
       await _refreshHistoryAccess(interactive: true);
       _debugLastQueryDays = _historyLookbackDays;
       await _fetchFromHC();
+      _loadFromDb();
       _debugLastFetchedTodaySteps = stepsForDate(DateTime.now());
     } on _QuotaExceededException {
       syncError = 'quota_exceeded';
@@ -416,6 +417,7 @@ class FitnessProvider extends ChangeNotifier {
       await _refreshHistoryAccess(interactive: false);
       _debugLastQueryDays = _historyLookbackDays;
       await _fetchFromHC();
+      _loadFromDb();
       _debugLastFetchedTodaySteps = stepsForDate(DateTime.now());
     } on _QuotaExceededException {
       syncError = 'quota_exceeded';
@@ -490,6 +492,7 @@ class FitnessProvider extends ChangeNotifier {
     try {
       await _refreshHistoryAccess(interactive: true);
       await _fetchOverviewRangeFromHC(normalizedStart, normalizedEnd);
+      _loadFromDb();
       _debugLastFetchedTodaySteps = stepsForDate(DateTime.now());
     } on _QuotaExceededException {
       syncError = 'quota_exceeded';
@@ -588,6 +591,16 @@ class FitnessProvider extends ChangeNotifier {
     _sleepHistory = _db.sleepHistory;
     _todaySleep = _sleepHistory.isNotEmpty ? _sleepHistory.first : null;
     _lastSyncedAt = _db.lastSyncedAt;
+    AppLog.app.warn(
+      'FitnessProvider(${identityHashCode(this)}): _loadFromDb from '
+      'HealthDatabase(${identityHashCode(_db)}) — '
+      'dbSteps=${_db.stepsHistory.length}, '
+      'dbLast=${_db.stepsHistory.isEmpty ? "none" : "${_fmtDateKey(_db.stepsHistory.last.date)}=${_db.stepsHistory.last.steps}"}, '
+      'dbToday=${_db.stepsHistory.where((r) => _fmtDateKey(r.date) == _fmtDateKey(DateTime.now())).map((r) => r.steps).toList()}, '
+      'providerSteps=${_stepsHistory.length}, '
+      'providerLast=${_stepsHistory.isEmpty ? "none" : "${_fmtDateKey(_stepsHistory.last.date)}=${_stepsHistory.last.steps}"}, '
+      'providerToday=${_stepsHistory.where((r) => _fmtDateKey(r.date) == _fmtDateKey(DateTime.now())).map((r) => r.steps).toList()}',
+    );
   }
 
   Future<void> _refreshHistoryAccess({required bool interactive}) async {

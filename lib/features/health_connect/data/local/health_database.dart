@@ -130,29 +130,70 @@ class HealthDatabase {
   Future<void> _loadCache() async {
     final isar = _isar!;
     final today = _today();
+    final todayKey = _toKey(today);
 
-    // Steps — dense 30-day array, oldest first, 0 for missing days.
-    final stepRows = await isar.hcStepsDayRecords.where().findAll();
-    stepRows.sort((a, b) => a.dateKey.compareTo(b.dateKey));
-    final stepsByKey = {for (final r in stepRows) r.dateKey: r.steps};
+    // Steps — dense local-calendar-day array, oldest first, 0 for missing days.
+    //
+    // Important:
+    // - Do not use DateTime.difference(...).inDays for local calendar days.
+    //   DST can make the duration 1 hour shorter/longer and truncate the day count.
+    // - Ignore future rows. They can exist from older buggy range syncs and should
+    //   not affect the in-memory timeline.
+    final rawStepRows = await isar.hcStepsDayRecords.where().findAll();
+    final stepRows = rawStepRows
+        .where((r) => r.dateKey.compareTo(todayKey) <= 0)
+        .toList()
+      ..sort((a, b) => a.dateKey.compareTo(b.dateKey));
+
+    final stepsByKey = <String, int>{};
+    for (final r in stepRows) {
+      stepsByKey[r.dateKey] = r.steps;
+    }
+
     if (stepRows.isEmpty) {
       _stepsHistory = [];
     } else {
       final oldestStoredDay = _fromKey(stepRows.first.dateKey);
-      final totalDays = today.difference(oldestStoredDay).inDays + 1;
-      _stepsHistory = [
-        for (var i = 0; i < totalDays; i++)
+      final history = <StepsRecord>[];
+
+      var day = oldestStoredDay;
+      while (!day.isAfter(today)) {
+        final key = _toKey(day);
+
+        history.add(
           StepsRecord(
-            date: oldestStoredDay.add(Duration(days: i)),
-            steps:
-                stepsByKey[_toKey(oldestStoredDay.add(Duration(days: i)))] ?? 0,
+            date: day,
+            steps: stepsByKey[key] ?? 0,
           ),
-      ];
+        );
+
+        // Calendar-day increment, DST-safe.
+        day = DateTime(day.year, day.month, day.day + 1);
+      }
+
+      _stepsHistory = history;
+      AppLog.app.warn(
+        '$_logName(${identityHashCode(this)}): _loadCache steps — '
+        'rawRows=${rawStepRows.length}, '
+        'usableRows=${stepRows.length}, '
+        'first=${stepRows.isEmpty ? "none" : stepRows.first.dateKey}, '
+        'last=${stepRows.isEmpty ? "none" : stepRows.last.dateKey}, '
+        'cacheCount=${_stepsHistory.length}, '
+        'cacheLast=${_stepsHistory.isEmpty ? "none" : "${_toKey(_stepsHistory.last.date)}=${_stepsHistory.last.steps}"}, '
+        'today=${_stepsHistory.where((r) => _toKey(r.date) == todayKey).map((r) => r.steps).toList()}',
+      );
     }
 
     // Active calories — aligned with steps by date key.
-    final calRows = await isar.hcCalorieDayRecords.where().findAll();
-    final calByKey = {for (final r in calRows) r.dateKey: r.kcal};
+    // Ignore future calorie rows for the same reason as steps.
+    final rawCalRows = await isar.hcCalorieDayRecords.where().findAll();
+    final calByKey = <String, double>{};
+    for (final r in rawCalRows) {
+      if (r.dateKey.compareTo(todayKey) <= 0) {
+        calByKey[r.dateKey] = r.kcal;
+      }
+    }
+
     _caloriesHistory = [
       for (final s in _stepsHistory) calByKey[_toKey(s.date)] ?? 0.0,
     ];
@@ -160,14 +201,20 @@ class HealthDatabase {
     // Weight — sorted oldest first.
     final weightRows = await isar.hcWeightRecords.where().findAll();
     weightRows.sort((a, b) => a.date.compareTo(b.date));
+
     _weightHistory = [
       for (final r in weightRows)
-        WeightRecord(date: r.date, weight: r.weight, bodyFat: r.bodyFat),
+        WeightRecord(
+          date: r.date,
+          weight: r.weight,
+          bodyFat: r.bodyFat,
+        ),
     ];
 
     // Sleep — sorted newest first (provider expects [0] = last night).
     final sleepRows = await isar.hcSleepRecords.where().findAll();
     sleepRows.sort((a, b) => b.dateKey.compareTo(a.dateKey));
+
     _sleepHistory = [
       for (final r in sleepRows)
         SleepRecord(
@@ -180,6 +227,7 @@ class HealthDatabase {
     // Activities — sorted newest first.
     final actRows = await isar.hcActivityRecords.where().findAll();
     actRows.sort((a, b) => b.startTime.compareTo(a.startTime));
+
     _activities = [
       for (final r in actRows)
         ActivityRecord(
@@ -197,7 +245,6 @@ class HealthDatabase {
     _workoutPermission = meta?.workoutPermission ?? false;
     _latestBodyFat = meta?.latestBodyFat;
   }
-
   // ─── Writes ───────────────────────────────────────────────────────────────
 
   /// Replaces all health data in a single Isar transaction and updates the
@@ -400,8 +447,11 @@ class HealthDatabase {
 
     await _loadCache();
 
-    AppLog.app.info(
-      '$_logName: saveStepsPartial() done — steps=${steps.length}d',
+    AppLog.app.warn(
+      'HealthDatabase(${identityHashCode(this)}): saveStepsPartial after load — '
+      'steps=${_stepsHistory.length}, '
+      'last=${_stepsHistory.isEmpty ? "none" : "${_toKey(_stepsHistory.last.date)}=${_stepsHistory.last.steps}"}, '
+      'today=${_stepsHistory.where((r) => _toKey(r.date) == _toKey(_today())).map((r) => r.steps).toList()}',
     );
   }
 

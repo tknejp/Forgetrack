@@ -54,6 +54,7 @@ class ProgressionRewardGrantRecord {
 
   late DateTime periodEnd;
   late int xpGranted;
+  int? baseXp;
   late double targetValue;
   late double actualValue;
   double? upperTargetValue;
@@ -85,6 +86,7 @@ class ProgressionQuestRewardGrantRecord {
   late String questId;
 
   late int xpGranted;
+  int? baseXp;
   late String rewardStatusName;
 
   @Index()

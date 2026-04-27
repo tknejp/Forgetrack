@@ -137,10 +137,11 @@ class ProgressionEngine {
     }
     final claimedXp = _totalClaimedXp(ledger);
     final level = _levelPolicy.levelForXp(claimedXp);
+    final baseXpValue = grant.baseXp ?? grant.xpGranted;
     ledger = await _repository.claimReward(
       rewardKey: rewardKey,
       claimedAt: now,
-      finalXp: _levelPolicy.scaledRewardXp(baseXp: grant.xpGranted, level: level),
+      finalXp: _levelPolicy.scaledRewardXp(baseXp: baseXpValue, level: level),
       levelAtClaim: level,
       multiplierAtClaim: _levelPolicy.rewardMultiplierForLevel(level),
     );
@@ -159,8 +160,9 @@ class ProgressionEngine {
 
     for (final grant in unclaimedGrants) {
       final level = _levelPolicy.levelForXp(runningClaimedXp);
+      final baseXpValue = grant.baseXp ?? grant.xpGranted;
       final finalXp =
-          _levelPolicy.scaledRewardXp(baseXp: grant.xpGranted, level: level);
+          _levelPolicy.scaledRewardXp(baseXp: baseXpValue, level: level);
       ledger = await _repository.claimReward(
         rewardKey: grant.rewardKey,
         claimedAt: now,
@@ -185,10 +187,11 @@ class ProgressionEngine {
     }
     final claimedXp = _totalClaimedXp(ledger);
     final level = _levelPolicy.levelForXp(claimedXp);
+    final baseXpValue = grant.baseXp ?? grant.xpGranted;
     ledger = await _repository.claimQuestReward(
       rewardKey: rewardKey,
       claimedAt: now,
-      finalXp: _levelPolicy.scaledRewardXp(baseXp: grant.xpGranted, level: level),
+      finalXp: _levelPolicy.scaledRewardXp(baseXp: baseXpValue, level: level),
       levelAtClaim: level,
       multiplierAtClaim: _levelPolicy.rewardMultiplierForLevel(level),
     );
@@ -207,8 +210,9 @@ class ProgressionEngine {
 
     for (final grant in unclaimedGrants) {
       final level = _levelPolicy.levelForXp(runningClaimedXp);
+      final baseXpValue = grant.baseXp ?? grant.xpGranted;
       final finalXp =
-          _levelPolicy.scaledRewardXp(baseXp: grant.xpGranted, level: level);
+          _levelPolicy.scaledRewardXp(baseXp: baseXpValue, level: level);
       ledger = await _repository.claimQuestReward(
         rewardKey: grant.rewardKey,
         claimedAt: now,
