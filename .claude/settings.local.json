@@ -33,7 +33,8 @@
       "Bash(sed -i 's|'\\\\''../../../models/weight_card_data\\\\.dart'\\\\''|'\\\\''../domain/weight_card_data.dart'\\\\''|g' lib/features/health_connect/application/fitness_provider.dart lib/features/health_connect/presentation/ft_body_screen.dart)",
       "Bash(sed -i 's|'\\\\''../../../../models/weight_card_data\\\\.dart'\\\\''|'\\\\''../../domain/weight_card_data.dart'\\\\''|g' lib/features/health_connect/application/fitness_provider/fitness_queries.dart)",
       "Bash(sed -i 's|'\\\\''../../../../../models/weight_card_data\\\\.dart'\\\\''|'\\\\''../../../domain/weight_card_data.dart'\\\\''|g' lib/features/health_connect/presentation/body/widgets/body_cards.dart)",
-      "Bash(git stash *)"
+      "Bash(git stash *)",
+      "Bash(python3 -c ' *)"
     ]
   }
 }

@@ -891,22 +891,6 @@ class FitnessProvider extends ChangeNotifier {
     return !day.isBefore(startDay) && !day.isAfter(endDay);
   }
 
-  bool _isSameOrAfterDay(DateTime value, DateTime start) {
-    final day = DateTime(value.year, value.month, value.day);
-    final startDay = DateTime(start.year, start.month, start.day);
-    return !day.isBefore(startDay);
-  }
-
-  bool _isSameOrBeforeDay(DateTime value, DateTime end) {
-    final day = DateTime(value.year, value.month, value.day);
-    final endDay = DateTime(end.year, end.month, end.day);
-    return !day.isAfter(endDay);
-  }
-
-  bool _isInDayRange(DateTime value, DateTime start, DateTime end) {
-    return _isSameOrAfterDay(value, start) && _isSameOrBeforeDay(value, end);
-  }
-
   int get _historyLookbackDays =>
       _hasHistoricalDataAccess ? _extendedHistoryDays : _defaultHistoryDays;
 

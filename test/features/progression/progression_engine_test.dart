@@ -1361,6 +1361,181 @@ void main() {
       expect(resyncedGrant.effectiveXpGranted, xpBefore);
       expect(resyncedState.profile.totalXp, syncedState.profile.totalXp);
     });
+
+    group('XP display consistency', () {
+      test('claimed rule grant with finalXp returns finalXp from effectiveXpGranted',
+          () {
+        final grant = ProgressionRewardGrant(
+          rewardKey: 'daily_steps|v1|day|2026-04-01|reward',
+          ruleId: 'daily_steps',
+          ruleVersion: 'v1',
+          domain: ProgressionDomain.steps,
+          period: ProgressionPeriod(
+            kind: ProgressionPeriodKind.day,
+            start: DateTime(2026, 4, 1),
+            end: DateTime(2026, 4, 2),
+          ),
+          xpGranted: 80,
+          targetValue: 10000,
+          actualValue: 10000,
+          rewardStatus: ProgressionRewardStatus.claimed,
+          unlockedAt: DateTime(2026, 4, 1),
+          claimedAt: DateTime(2026, 4, 1),
+          finalXp: 778,
+          levelAtClaim: 10,
+        );
+
+        expect(grant.isClaimed, isTrue);
+        expect(grant.effectiveXpGranted, 778);
+      });
+
+      test('legacy claimed grant with null finalXp falls back to xpGranted', () {
+        final grant = ProgressionRewardGrant(
+          rewardKey: 'legacy|reward',
+          ruleId: 'daily_steps',
+          ruleVersion: 'v1',
+          domain: ProgressionDomain.steps,
+          period: ProgressionPeriod(
+            kind: ProgressionPeriodKind.day,
+            start: DateTime(2026, 1, 1),
+            end: DateTime(2026, 1, 2),
+          ),
+          xpGranted: 80,
+          targetValue: 10000,
+          actualValue: 10000,
+          rewardStatus: ProgressionRewardStatus.claimed,
+          unlockedAt: DateTime(2026, 1, 1),
+          claimedAt: DateTime(2026, 1, 1),
+          // finalXp intentionally left null — legacy record
+        );
+
+        expect(grant.isClaimed, isTrue);
+        expect(grant.finalXp, isNull);
+        expect(grant.effectiveXpGranted, 80);
+      });
+
+      test('unclaimed quest shows current-level preview, not stale grant xpGranted',
+          () async {
+        const levelPolicy = ProgressionLevelPolicy();
+        // Seed enough claimed XP to reach level 3.
+        final level3Xp = levelPolicy.xpRequiredForLevel(3);
+        final repository = _InMemoryProgressionRepository(
+          rewardGrants: [
+            _claimedReward(
+              rewardKey: 'seed',
+              xpGranted: level3Xp,
+              progressionAt: DateTime(2026, 4, 1),
+            ),
+          ],
+          questRewardGrants: [
+            _unlockedQuestReward(
+              rewardKey: 'quest|earn_first_reward|reward',
+              questId: 'earn_first_reward',
+              // stale xpGranted stored at level-1 time (earn_first_reward has rewardXp=80)
+              xpGranted: levelPolicy.scaledRewardXp(
+                baseXp: 80,
+                level: 1,
+              ),
+              completedAt: DateTime(2026, 4, 2),
+              unlockedAt: DateTime(2026, 4, 2),
+            ),
+          ],
+        );
+        final engine = ProgressionEngine(
+          repository: repository,
+          clock: () => DateTime(2026, 4, 10, 9),
+        );
+        final source = _FakeProgressionSource(
+          goals: const ProgressionGoalSet(
+            dailySteps: 10000,
+            dailyCalories: 2000,
+            dailyProteinGrams: 150,
+            sleepMinutes: 480,
+            weeklyActivityMinutes: 150,
+          ),
+          dailySnapshots: [
+            ProgressionSnapshot(
+              period: ProgressionPeriod.day(DateTime(2026, 4, 10)),
+              steps: 12000,
+            ),
+          ],
+          weeklySnapshots: const [],
+        );
+
+        final state = await engine.sync(source);
+        final quest = state.quests.firstWhere(
+          (q) => q.id == 'earn_first_reward',
+          orElse: () => throw StateError('quest not found'),
+        );
+        // Preview XP must be the current-level-3 estimate (earn_first_reward rewardXp=80),
+        // not the stale level-1 value stored on the grant.
+        final staleXp = levelPolicy.scaledRewardXp(baseXp: 80, level: 1);
+        final expectedPreviewXp = levelPolicy.scaledRewardXp(
+          baseXp: 80,
+          level: 3,
+        );
+        expect(quest.rewardXp, isNot(staleXp));
+        expect(quest.rewardXp, expectedPreviewXp);
+      });
+
+      test('claimed quest reward shows effectiveXpGranted in quest.rewardXp',
+          () async {
+        const levelPolicy = ProgressionLevelPolicy();
+        final level2Xp = levelPolicy.xpRequiredForLevel(2);
+        final claimedFinalXp = levelPolicy.scaledRewardXp(baseXp: 100, level: 2);
+        final repository = _InMemoryProgressionRepository(
+          rewardGrants: [
+            _claimedReward(
+              rewardKey: 'seed',
+              xpGranted: level2Xp,
+              progressionAt: DateTime(2026, 4, 1),
+            ),
+          ],
+          questRewardGrants: [
+            ProgressionQuestRewardGrant(
+              rewardKey: 'quest|earn_first_reward|reward',
+              questId: 'earn_first_reward',
+              xpGranted: 100,
+              rewardStatus: ProgressionRewardStatus.claimed,
+              unlockedAt: DateTime(2026, 4, 2),
+              completedAt: DateTime(2026, 4, 2),
+              claimedAt: DateTime(2026, 4, 2),
+              finalXp: claimedFinalXp,
+              levelAtClaim: 2,
+            ),
+          ],
+        );
+        final engine = ProgressionEngine(
+          repository: repository,
+          clock: () => DateTime(2026, 4, 10, 9),
+        );
+        final source = _FakeProgressionSource(
+          goals: const ProgressionGoalSet(
+            dailySteps: 10000,
+            dailyCalories: 2000,
+            dailyProteinGrams: 150,
+            sleepMinutes: 480,
+            weeklyActivityMinutes: 150,
+          ),
+          dailySnapshots: [
+            ProgressionSnapshot(
+              period: ProgressionPeriod.day(DateTime(2026, 4, 10)),
+              steps: 12000,
+            ),
+          ],
+          weeklySnapshots: const [],
+        );
+
+        final state = await engine.sync(source);
+        final quest = state.quests.firstWhere(
+          (q) => q.id == 'earn_first_reward',
+          orElse: () => throw StateError('quest not found'),
+        );
+        // Claimed quest must show finalXp, not evaluation-time xpGranted.
+        expect(quest.rewardXp, claimedFinalXp);
+        expect(quest.rewardXp, isNot(100));
+      });
+    });
   });
 
   group('ProgressionLevelPolicy', () {

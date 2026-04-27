@@ -1,11 +1,11 @@
 import 'package:isar/isar.dart';
 
+import '../domain/progression_local_repository.dart';
 import '../domain/progression_models.dart';
-import '../domain/progression_repository.dart';
 import 'local/progression_database.dart';
 import 'local/progression_local_models.dart';
 
-class ProgressionRepositoryImpl implements ProgressionRepository {
+class ProgressionRepositoryImpl implements ProgressionLocalRepository {
   ProgressionRepositoryImpl(this._database);
 
   final ProgressionDatabase _database;
@@ -375,6 +375,67 @@ class ProgressionRepositoryImpl implements ProgressionRepository {
       ..unlockedAt = grant.unlockedAt
       ..completedAt = grant.completedAt
       ..claimedAt = grant.claimedAt;
+  }
+
+  /// Inserts a claimed rule grant restored from Firestore into Isar.
+  /// Skips silently if the [rewardKey] already exists (replace: false).
+  @override
+  Future<void> insertRestoredRuleGrant(ProgressionRewardGrant grant) async {
+    final isar = _database.isar;
+    await isar.writeTxn(() async {
+      final existing = await isar.progressionRewardGrantRecords
+          .filter()
+          .rewardKeyEqualTo(grant.rewardKey)
+          .findFirst();
+      if (existing != null) return;
+      await isar.progressionRewardGrantRecords.put(
+        ProgressionRewardGrantRecord()
+          ..rewardKey = grant.rewardKey
+          ..ruleId = grant.ruleId
+          ..ruleVersion = grant.ruleVersion
+          ..domainName = grant.domain.name
+          ..periodKindName = grant.period.kind.name
+          ..periodStart = grant.period.start
+          ..periodEnd = grant.period.end
+          ..xpGranted = grant.xpGranted
+          ..targetValue = 0.0
+          ..actualValue = 0.0
+          ..toleranceRatio = 0.0
+          ..rewardStatusName = ProgressionRewardStatus.claimed.name
+          ..unlockedAt = grant.unlockedAt
+          ..claimedAt = grant.claimedAt
+          ..finalXp = grant.finalXp
+          ..levelAtClaim = grant.levelAtClaim
+          ..multiplierAtClaim = grant.multiplierAtClaim,
+      );
+    });
+  }
+
+  /// Inserts a claimed quest grant restored from Firestore into Isar.
+  /// Skips silently if the [rewardKey] already exists (replace: false).
+  @override
+  Future<void> insertRestoredQuestGrant(ProgressionQuestRewardGrant grant) async {
+    final isar = _database.isar;
+    await isar.writeTxn(() async {
+      final existing = await isar.progressionQuestRewardGrantRecords
+          .filter()
+          .rewardKeyEqualTo(grant.rewardKey)
+          .findFirst();
+      if (existing != null) return;
+      await isar.progressionQuestRewardGrantRecords.put(
+        ProgressionQuestRewardGrantRecord()
+          ..rewardKey = grant.rewardKey
+          ..questId = grant.questId
+          ..xpGranted = grant.xpGranted
+          ..rewardStatusName = ProgressionRewardStatus.claimed.name
+          ..unlockedAt = grant.unlockedAt
+          ..completedAt = grant.completedAt
+          ..claimedAt = grant.claimedAt
+          ..finalXp = grant.finalXp
+          ..levelAtClaim = grant.levelAtClaim
+          ..multiplierAtClaim = grant.multiplierAtClaim,
+      );
+    });
   }
 
   ProgressionAchievementUnlockEvent _mapAchievementUnlock(

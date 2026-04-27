@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../domain/progression_models.dart';
+import 'progression_cloud_gateway.dart';
 import 'progression_firestore_mapper.dart';
 
 /// Handles all Firestore I/O for the progression ledger.
@@ -10,7 +11,7 @@ import 'progression_firestore_mapper.dart';
 ///
 /// All writes use create-if-not-exists transactions: if the document already
 /// exists the write is silently skipped, making every operation idempotent.
-class FirestoreProgressionGateway {
+class FirestoreProgressionGateway implements ProgressionCloudGateway {
   FirestoreProgressionGateway({FirebaseFirestore? firestore})
       : _firestore = firestore ?? FirebaseFirestore.instance;
 
@@ -32,6 +33,7 @@ class FirestoreProgressionGateway {
 
   /// Pushes a claimed rule grant to Firestore if the document does not exist.
   /// Skips records that fail [ProgressionFirestoreMapper.isRuleGrantUploadable].
+  @override
   Future<void> pushRuleClaimIfMissing(
     String uid,
     ProgressionRewardGrant grant,
@@ -50,6 +52,7 @@ class FirestoreProgressionGateway {
 
   /// Pushes a claimed quest grant to Firestore if the document does not exist.
   /// Skips records that fail [ProgressionFirestoreMapper.isQuestGrantUploadable].
+  @override
   Future<void> pushQuestClaimIfMissing(
     String uid,
     ProgressionQuestRewardGrant grant,
@@ -67,6 +70,7 @@ class FirestoreProgressionGateway {
   }
 
   /// Pushes an achievement unlock to Firestore if the document does not exist.
+  @override
   Future<void> pushAchievementUnlockIfMissing(
     String uid,
     ProgressionAchievementUnlockEvent unlock,
@@ -88,6 +92,7 @@ class FirestoreProgressionGateway {
 
   /// Fetches all claimed grants for [uid] and deserializes them.
   /// Documents with unknown or missing `type` fields are silently skipped.
+  @override
   Future<({
     List<ProgressionRewardGrant> ruleGrants,
     List<ProgressionQuestRewardGrant> questGrants,
@@ -110,6 +115,7 @@ class FirestoreProgressionGateway {
   }
 
   /// Fetches all achievement unlocks for [uid] and deserializes them.
+  @override
   Future<List<ProgressionAchievementUnlockEvent>> pullAchievementUnlocks(
     String uid,
   ) async {

@@ -474,11 +474,12 @@ class ProgressionEngine {
         ? null
         : definition.rewardKeyFor(quest.completedAt!);
     final rewardGrant = rewardKey == null ? null : grantsByRewardKey[rewardKey];
-    final previewXp = rewardGrant?.xpGranted ??
-        _levelPolicy.scaledRewardXp(
-          baseXp: definition.rewardXp,
-          level: profile.level,
-        );
+    final displayXp = rewardGrant?.isClaimed == true
+        ? rewardGrant!.effectiveXpGranted
+        : _levelPolicy.scaledRewardXp(
+            baseXp: definition.rewardXp,
+            level: profile.level,
+          );
 
     return ProgressionQuest(
       id: quest.id,
@@ -495,7 +496,7 @@ class ProgressionEngine {
       sortOrder: quest.sortOrder,
       priority: quest.priority,
       isHighlighted: quest.isHighlighted,
-      rewardXp: previewXp,
+      rewardXp: displayXp,
       rewardKey: rewardKey,
       rewardStatus: rewardGrant?.rewardStatus,
       rewardUnlockedAt: rewardGrant?.unlockedAt,

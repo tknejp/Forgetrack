@@ -1850,7 +1850,7 @@ class _HistoryRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final domain = grant.domain;
     final color = FtProgressionDomainTheme.colorFor(domain);
-    final xpLabel = _formatFullInt(grant.xpGranted, locale);
+    final xpLabel = _formatFullInt(grant.effectiveXpGranted, locale);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Column(
