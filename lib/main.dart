@@ -9,11 +9,15 @@ import 'core/logging/app_log.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:firebase_messaging/firebase_messaging.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'core/services/background_sync_service.dart';
 import 'core/services/fcm_service.dart';
 import 'core/services/notification_service.dart';
 import 'features/auth/application/auth_provider.dart';
 import 'features/progression/application/progression_engine.dart';
+import 'features/progression/data/firestore/firestore_progression_gateway.dart';
+import 'features/progression/data/hybrid_progression_repository.dart';
 import 'features/progression/data/local/progression_database.dart';
 import 'features/progression/data/progression_repository_impl.dart';
 import 'features/progression/application/progression_provider.dart';
@@ -74,10 +78,23 @@ Future<void> main() async {
   await progressionDb.open();
 
   final ktProvider = KalorickeTabulkyProvider(ktService, ktDb);
-  final progressionEngine = ProgressionEngine(
-    repository: ProgressionRepositoryImpl(progressionDb),
-  );
   final socialBackendState = await SocialFirebaseBootstrap.ensureInitialized();
+
+  final prefs = await SharedPreferences.getInstance();
+  final localProgressionRepo = ProgressionRepositoryImpl(progressionDb);
+  final progressionEngine = ProgressionEngine(
+    repository: socialBackendState.isReady
+        ? HybridProgressionRepository(
+            local: localProgressionRepo,
+            remote: FirestoreProgressionGateway(),
+            userIdProvider: () {
+              final user = FirebaseAuth.instance.currentUser;
+              return user != null ? canonicalUid(user) : null;
+            },
+            prefs: prefs,
+          )
+        : localProgressionRepo,
+  );
   // Musí být registrován před runApp – top-level handler pro FCM v background/terminated stavu
   FirebaseMessaging.onBackgroundMessage(fcmBackgroundHandler);
   final socialRepository = socialBackendState.isReady
