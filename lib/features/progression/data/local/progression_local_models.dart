@@ -69,6 +69,9 @@ class ProgressionRewardGrantRecord {
   int? finalXp;
   int? levelAtClaim;
   double? multiplierAtClaim;
+
+  String? userId;
+  String? sourceDeviceId;
 }
 
 @Collection()
@@ -96,6 +99,9 @@ class ProgressionQuestRewardGrantRecord {
   int? finalXp;
   int? levelAtClaim;
   double? multiplierAtClaim;
+
+  String? userId;
+  String? sourceDeviceId;
 }
 
 @Collection()
@@ -121,4 +127,6 @@ class ProgressionAchievementUnlockRecord {
 
   @Index()
   late DateTime unlockedAt;
+
+  String? userId;
 }

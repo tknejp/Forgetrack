@@ -396,3 +396,8 @@ class ProgressionRepositoryImpl implements ProgressionRepository {
       ..unlockedAt = unlock.unlockedAt;
   }
 }
+
+/// Convenience alias that makes the Phase 4 Firestore substitution explicit.
+/// Replace with `FirestoreProgressionRepository` (implements same interface)
+/// when cloud sync is added.
+typedef LocalProgressionRepository = ProgressionRepositoryImpl;

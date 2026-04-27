@@ -1,5 +1,17 @@
 import 'progression_models.dart';
 
+/// Storage-agnostic interface for the progression ledger.
+///
+/// **Current source of truth**: local Isar (`ProgressionRepositoryImpl`).
+/// Records are append-only and keyed by deterministic strings so any storage
+/// backend can enforce idempotency.
+///
+/// **Future source of truth (Phase 4)**: Firestore.
+/// Only claimed rewards (`ProgressionRewardGrant`, `ProgressionQuestRewardGrant`)
+/// and achievement unlocks (`ProgressionAchievementUnlockEvent`) will be synced
+/// to the cloud — these are the events that must survive reinstall.
+/// Raw evaluations, active quest assignments, and raw health/nutrition data are
+/// derived locally and must never leave the device.
 abstract class ProgressionRepository {
   Future<ProgressionLedgerSnapshot> loadLedger();
 
