@@ -7,43 +7,55 @@ import '../../domain/journey_models.dart';
 // Type → colour / icon / label helpers (shared by preview and full map)
 // ─────────────────────────────────────────────────────────────────────────────
 
+/// Primary colour for a journey event type. Distinct enough that achievements
+/// (warm violet) don't blend into quests (green) or level milestones (gold).
 Color journeyColor(JourneyEventType type) {
   switch (type) {
+    case JourneyEventType.titleMilestone:
+      // Major title milestones use the gold→purple "title" tone — they're
+      // clearly distinct from minor level checkpoints.
+      return const Color(0xFFD4AF37); // rich gold; gradient does the rest.
     case JourneyEventType.level:
-      return FtTokens.calories.color; // gold
-    case JourneyEventType.title:
-      return FtTokens.accent; // purple
+      return FtTokens.calories.color; // amber/gold — minor milestone tone
     case JourneyEventType.achievement:
-      return FtTokens.active.color; // teal
+      return const Color(0xFFC77DFF); // warm violet
     case JourneyEventType.quest:
       return FtTokens.steps.color; // green
     case JourneyEventType.streak:
-      return FtTokens.calories.color; // gold/orange
+      return FtTokens.calories.color;
     case JourneyEventType.xpMilestone:
-      return FtTokens.accent; // purple
+      return FtTokens.accent;
   }
+}
+
+/// Event colour with optional item-specific override, e.g. achievement rarity.
+Color journeyCheckpointColor(JourneyCheckpoint checkpoint) {
+  final override = checkpoint.accentColorValue;
+  if (override != null) return Color(override);
+  return journeyColor(checkpoint.type);
 }
 
 /// Foreground colour drawn on top of the filled node circle.
 Color journeyFgColor(JourneyEventType type) {
   switch (type) {
+    case JourneyEventType.titleMilestone:
     case JourneyEventType.level:
     case JourneyEventType.achievement:
     case JourneyEventType.quest:
     case JourneyEventType.streak:
-      return const Color(0xFF0D0F1C); // dark — high contrast on bright fill
-    case JourneyEventType.title:
+      return const Color(0xFF0D0F1C);
     case JourneyEventType.xpMilestone:
       return Colors.white;
   }
 }
 
+/// Material icon fallback when a checkpoint doesn't carry an emoji yet.
 IconData journeyIcon(JourneyEventType type) {
   switch (type) {
+    case JourneyEventType.titleMilestone:
+      return Icons.workspace_premium_rounded;
     case JourneyEventType.level:
       return Icons.arrow_upward_rounded;
-    case JourneyEventType.title:
-      return Icons.workspace_premium_rounded;
     case JourneyEventType.achievement:
       return Icons.shield_moon_rounded;
     case JourneyEventType.quest:
@@ -55,29 +67,14 @@ IconData journeyIcon(JourneyEventType type) {
   }
 }
 
-String journeyTypeLabel(JourneyEventType type) {
-  switch (type) {
-    case JourneyEventType.level:
-      return 'LEVEL';
-    case JourneyEventType.title:
-      return 'TITUL';
-    case JourneyEventType.achievement:
-      return 'ÚSPĚCH';
-    case JourneyEventType.quest:
-      return 'QUEST';
-    case JourneyEventType.streak:
-      return 'SÉRIE';
-    case JourneyEventType.xpMilestone:
-      return 'XP';
-  }
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Checkpoint node
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// Interactive circle representing a single journey milestone.
-/// Supports current / selected / unlocked / locked visual states.
+/// Interactive circle representing a single journey milestone. Visual
+/// hierarchy is type-driven: title milestones are largest (gold + purple
+/// double ring), achievements medium (violet), quests small (green), minor
+/// level checkpoints sit between minor and achievement.
 class JourneyCheckpointNode extends StatelessWidget {
   const JourneyCheckpointNode({
     super.key,
@@ -93,19 +90,16 @@ class JourneyCheckpointNode extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
   final double baseSize;
-
-  /// Pass the repeating [Animation] only for the current node (pulse ring).
   final Animation<double>? pulseAnimation;
-
-  /// Compact mode shrinks padding so the node fits in a tight preview path.
   final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final cp = checkpoint;
-    final color = journeyColor(cp.type);
+    final color = journeyCheckpointColor(cp);
+    final isMajor = cp.isMajorMilestone;
     final nodeSize = isSelected ? baseSize + 3.0 : baseSize;
-    final pad = compact ? 14.0 : 26.0;
+    final pad = compact ? 14.0 : 28.0;
     final totalSize = baseSize + pad;
 
     return GestureDetector(
@@ -138,6 +132,32 @@ class JourneyCheckpointNode extends StatelessWidget {
                   );
                 },
               ),
+
+            // Major-milestone outer ring (purple) — adds the "title" accent
+            // around the gold core. Drawn before the selection ring so the
+            // selection can highlight on top.
+            if (((isMajor && cp.isUnlocked) || cp.isNext) && !compact)
+              Container(
+                width: nodeSize + (cp.isNext ? 14 : 10),
+                height: nodeSize + (cp.isNext ? 14 : 10),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: (cp.isNext ? color : FtTokens.accent)
+                        .withValues(alpha: cp.isNext ? 0.70 : 0.55),
+                    width: cp.isNext ? 2.0 : 1.4,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (cp.isNext ? color : FtTokens.accent)
+                          .withValues(alpha: cp.isNext ? 0.34 : 0.30),
+                      blurRadius: cp.isNext ? 18 : 14,
+                      spreadRadius: -2,
+                    ),
+                  ],
+                ),
+              ),
+
             if (isSelected)
               Container(
                 width: nodeSize + 6,
@@ -150,6 +170,7 @@ class JourneyCheckpointNode extends StatelessWidget {
                   ),
                 ),
               ),
+
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               width: nodeSize,
@@ -158,36 +179,69 @@ class JourneyCheckpointNode extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: cp.isUnlocked
                     ? RadialGradient(
-                        colors: [
-                          color.withValues(alpha: 0.95),
-                          color.withValues(alpha: 0.65),
-                        ],
+                        colors: isMajor
+                            ? [
+                                const Color(0xFFFFD980),
+                                const Color(0xFFE5A833),
+                              ]
+                            : [
+                                color.withValues(alpha: 0.95),
+                                color.withValues(alpha: 0.65),
+                              ],
                         radius: 0.85,
                       )
                     : null,
-                color: cp.isUnlocked
-                    ? null
-                    : Colors.white.withValues(alpha: 0.07),
+                color:
+                    cp.isUnlocked ? null : Colors.white.withValues(alpha: 0.07),
                 border: Border.all(
                   color: cp.isUnlocked
-                      ? color.withValues(alpha: 0.88)
+                      ? color.withValues(alpha: 0.92)
                       : Colors.white.withValues(alpha: 0.15),
-                  width: cp.isCurrent ? 2.0 : 1.5,
+                  width: cp.isCurrent || isMajor ? 2.0 : 1.5,
                 ),
                 boxShadow: cp.isUnlocked
                     ? [
                         BoxShadow(
                           color: color.withValues(
-                            alpha: cp.isCurrent ? 0.52 : 0.28,
+                            alpha: cp.isCurrent || isMajor ? 0.55 : 0.28,
                           ),
-                          blurRadius: cp.isCurrent ? 16 : 8,
-                          spreadRadius: cp.isCurrent ? 1 : 0,
+                          blurRadius: cp.isCurrent || isMajor ? 18 : 8,
+                          spreadRadius: cp.isCurrent || isMajor ? 1 : 0,
                         ),
                       ]
                     : null,
               ),
               child: Center(child: _buildContent(cp, nodeSize)),
             ),
+
+            // Tiny level-number badge for unlocked major milestones — emoji is
+            // the primary visual; the level number sits as a small chip.
+            if (isMajor && cp.isUnlocked && cp.levelNumber != null && !compact)
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0D0F1C),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: FtTokens.accent.withValues(alpha: 0.55),
+                    ),
+                  ),
+                  child: Text(
+                    '${cp.levelNumber}',
+                    style: const TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: -0.2,
+                      height: 1,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -198,15 +252,41 @@ class JourneyCheckpointNode extends StatelessWidget {
     if (!cp.isUnlocked) {
       return Icon(
         Icons.lock_outline_rounded,
-        size: nodeSize * 0.40,
+        size: nodeSize * 0.42,
         color: FtTokens.onSurfaceFaint,
       );
     }
-    if (cp.type == JourneyEventType.level && cp.levelNumber != null) {
+
+    // The static origin is a named story node, not a tiny numeric level.
+    if (cp.id == 'start' && cp.emoji != null) {
+      return Text(
+        cp.emoji!,
+        style: TextStyle(
+          fontSize: nodeSize * 0.52,
+          height: 1,
+        ),
+        textAlign: TextAlign.center,
+      );
+    }
+
+    // Major title milestone → emoji is the dominant visual.
+    if (cp.isMajorMilestone && cp.emoji != null) {
+      return Text(
+        cp.emoji!,
+        style: TextStyle(
+          fontSize: nodeSize * 0.50,
+          height: 1,
+        ),
+        textAlign: TextAlign.center,
+      );
+    }
+
+    // Minor level milestone → level number is the dominant visual.
+    if (cp.isMinorMilestone && cp.levelNumber != null) {
       return Text(
         '${cp.levelNumber}',
         style: TextStyle(
-          fontSize: nodeSize * 0.34,
+          fontSize: nodeSize * 0.36,
           fontWeight: FontWeight.w900,
           color: journeyFgColor(cp.type),
           letterSpacing: -0.5,
@@ -214,6 +294,17 @@ class JourneyCheckpointNode extends StatelessWidget {
         ),
       );
     }
+
+    // Achievement → emoji.
+    if (cp.type == JourneyEventType.achievement && cp.emoji != null) {
+      return Text(
+        cp.emoji!,
+        style: TextStyle(fontSize: nodeSize * 0.50, height: 1),
+        textAlign: TextAlign.center,
+      );
+    }
+
+    // Quest / fallback → material icon.
     return Icon(
       journeyIcon(cp.type),
       size: nodeSize * 0.46,
@@ -231,27 +322,32 @@ class JourneyPathPainter extends CustomPainter {
     required this.nodePositions,
     required this.pathColor,
     this.dashedHeadCount = 0,
+    this.solidSegments,
+    this.dashedSegments,
   });
 
-  /// Absolute pixel positions of every node, in display order
-  /// (index 0 first along the path).
   final List<Offset> nodePositions;
   final Color pathColor;
+  final List<List<Offset>>? solidSegments;
+  final List<List<Offset>>? dashedSegments;
 
   /// Number of leading SEGMENTS drawn dashed (representing future / locked
-  /// nodes anchored at the start of the path, e.g. "next milestone" above
-  /// the current node). The dashed run connects
+  /// nodes anchored at the start of the path). The dashed run connects
   /// `nodePositions[0..dashedHeadCount]`; from `dashedHeadCount` onward the
   /// path is drawn solid.
   final int dashedHeadCount;
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (solidSegments != null || dashedSegments != null) {
+      _paintSegments(canvas, size);
+      return;
+    }
+
     if (nodePositions.length < 2) return;
 
     final dashedHead = dashedHeadCount.clamp(0, nodePositions.length - 1);
 
-    // Dashed leading segment (future / locked).
     if (dashedHead >= 1) {
       final dashedPts =
           nodePositions.take(dashedHead + 1).toList(growable: false);
@@ -268,7 +364,6 @@ class JourneyPathPainter extends CustomPainter {
       }
     }
 
-    // Solid segment from the first unlocked node onward.
     final solidPts = nodePositions.sublist(dashedHead).toList(growable: false);
     if (solidPts.length >= 2) {
       final solidPath = _buildSmoothPath(solidPts);
@@ -298,8 +393,70 @@ class JourneyPathPainter extends CustomPainter {
     }
   }
 
-  /// Smooth "through-all-points" path using midpoint quadratic beziers.
-  /// Starts exactly at `pts[0]` and ends exactly at `pts.last`.
+  void _paintSegments(Canvas canvas, Size size) {
+    final dashed = dashedSegments ?? const <List<Offset>>[];
+    final solid = solidSegments ?? const <List<Offset>>[];
+
+    if (dashed.isNotEmpty) {
+      _drawSegmentSet(
+        canvas,
+        dashed,
+        Paint()
+          ..color = pathColor.withValues(alpha: 0.30)
+          ..strokeWidth = 1.6
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round,
+        dashed: true,
+      );
+    }
+
+    if (solid.isEmpty) return;
+
+    _drawSegmentSet(
+      canvas,
+      solid,
+      Paint()
+        ..color = pathColor.withValues(alpha: 0.22)
+        ..strokeWidth = 10
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+      dashed: false,
+    );
+
+    _drawSegmentSet(
+      canvas,
+      solid,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [pathColor, pathColor.withValues(alpha: 0.48)],
+        ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+        ..strokeWidth = 2.5
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round,
+      dashed: false,
+    );
+  }
+
+  void _drawSegmentSet(
+    Canvas canvas,
+    List<List<Offset>> segments,
+    Paint paint, {
+    required bool dashed,
+  }) {
+    for (final segment in segments) {
+      if (segment.length < 2) continue;
+      final path = _buildSmoothPath(segment);
+      if (dashed) {
+        _drawDashed(canvas, path, paint);
+      } else {
+        canvas.drawPath(path, paint);
+      }
+    }
+  }
+
   Path _buildSmoothPath(List<Offset> pts) {
     final path = Path()..moveTo(pts[0].dx, pts[0].dy);
     for (int i = 0; i < pts.length - 1; i++) {
@@ -327,5 +484,7 @@ class JourneyPathPainter extends CustomPainter {
   bool shouldRepaint(JourneyPathPainter old) =>
       nodePositions != old.nodePositions ||
       pathColor != old.pathColor ||
-      dashedHeadCount != old.dashedHeadCount;
+      dashedHeadCount != old.dashedHeadCount ||
+      solidSegments != old.solidSegments ||
+      dashedSegments != old.dashedSegments;
 }

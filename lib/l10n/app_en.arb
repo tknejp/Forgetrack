@@ -1106,5 +1106,76 @@
   "@settingsDeveloperTools": { "description": "Settings section title for the developer tools entry" },
 
   "devtoolsTitle": "Developer Tools",
-  "@devtoolsTitle": { "description": "Title of the developer tools screen" }
+  "@devtoolsTitle": { "description": "Title of the developer tools screen" },
+
+  "journeyTitle": "Hero Journey",
+  "journeyPreviewKicker": "HERO JOURNEY",
+  "journeyOpenMap": "Open map",
+  "journeyPanHint": "Swipe for more",
+  "journeyHistoryHeader": "Milestone history",
+  "journeyLastMilestone": "Last milestone",
+  "journeyNextGoal": "Next goal",
+  "journeyTitleLabel": "Title",
+  "journeyFilterAll": "All",
+  "journeyFilterLevels": "Levels",
+  "journeyFilterTitles": "Titles",
+  "journeyFilterAchievements": "Achievements",
+  "journeyFilterQuests": "Quests",
+  "journeyEventLevelReached": "Level reached",
+  "journeyEventTitleUnlocked": "Title unlocked",
+  "journeyEventAchievementUnlocked": "Achievement unlocked",
+  "journeyEventQuestCompleted": "Quest completed",
+  "journeyMilestoneReached": "Milestone reached",
+  "journeyBadgeLocked": "LOCKED",
+  "journeyBadgeHere": "HERE",
+  "journeyTypeLevel": "LEVEL",
+  "journeyTypeTitle": "TITLE",
+  "journeyTypeAchievement": "ACHIEVEMENT",
+  "journeyTypeQuest": "QUEST",
+  "journeyEmptyMapTitle": "Your journey starts now",
+  "journeyEmptyMapBody": "Complete a quest, unlock an achievement or log activity — milestones will start appearing on the map.",
+  "journeyEmptyFeedAll": "No milestones yet. Complete a quest or unlock an achievement.",
+  "journeyEmptyFeedFiltered": "No milestones in this category yet.",
+  "journeyMiniMapEmpty": "Milestones will appear once you reach your first goal.",
+  "journeyRelativeNow": "just now",
+  "journeyRelativeMinutes": "{count} min ago",
+  "@journeyRelativeMinutes": { "placeholders": { "count": { "type": "int" } } },
+  "journeyRelativeHours": "{count} h ago",
+  "@journeyRelativeHours": { "placeholders": { "count": { "type": "int" } } },
+  "journeyRelativeDays": "{count} days ago",
+  "@journeyRelativeDays": { "placeholders": { "count": { "type": "int" } } },
+  "journeyRelativeWeeks": "{count} weeks ago",
+  "@journeyRelativeWeeks": { "placeholders": { "count": { "type": "int" } } },
+  "journeyRelativeMonths": "{count} months ago",
+  "@journeyRelativeMonths": { "placeholders": { "count": { "type": "int" } } },
+  "journeyRelativeYears": "{count} years ago",
+  "@journeyRelativeYears": { "placeholders": { "count": { "type": "int" } } },
+  "journeyStartLabel": "Journey begins",
+  "journeyStartDescription": "The beginning of your hero journey.",
+  "journeyStartSublabel": "Level {level} · {title}",
+  "@journeyStartSublabel": {
+    "placeholders": {
+      "level": {},
+      "title": {}
+    }
+  },
+  "journeyLevelLabel": "Level {level}",
+  "@journeyLevelLabel": {
+    "placeholders": {
+      "level": {}
+    }
+  },
+  "journeyLevelWithTitle": "Level {level} · {title}",
+  "@journeyLevelWithTitle": {
+    "placeholders": {
+      "level": {},
+      "title": {}
+    }
+  },
+  "journeyTotalXp": "{xp} XP total",
+  "@journeyTotalXp": {
+    "placeholders": {
+      "xp": {}
+    }
+  }
 }

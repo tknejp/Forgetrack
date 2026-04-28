@@ -537,5 +537,76 @@
   "progQuestCriterionCurrentPeriodRuleSet": "Pro combo v aktuálním období",
 
   "settingsDeveloperTools": "Nástroje vývojáře",
-  "devtoolsTitle": "Nástroje vývojáře"
+  "devtoolsTitle": "Nástroje vývojáře",
+
+  "journeyTitle": "Cesta hrdiny",
+  "journeyPreviewKicker": "CESTA HRDINY",
+  "journeyOpenMap": "Otevřít mapu",
+  "journeyPanHint": "Posuň pro více",
+  "journeyHistoryHeader": "Historie milníků",
+  "journeyLastMilestone": "Posl. milník",
+  "journeyNextGoal": "Další cíl",
+  "journeyTitleLabel": "Titul",
+  "journeyFilterAll": "Vše",
+  "journeyFilterLevels": "Levely",
+  "journeyFilterTitles": "Tituly",
+  "journeyFilterAchievements": "Úspěchy",
+  "journeyFilterQuests": "Questy",
+  "journeyEventLevelReached": "Level dosažen",
+  "journeyEventTitleUnlocked": "Titul odemčen",
+  "journeyEventAchievementUnlocked": "Úspěch odemčen",
+  "journeyEventQuestCompleted": "Quest dokončen",
+  "journeyMilestoneReached": "Milník dosažen",
+  "journeyBadgeLocked": "ZAMČENO",
+  "journeyBadgeHere": "TADY",
+  "journeyTypeLevel": "LEVEL",
+  "journeyTypeTitle": "TITUL",
+  "journeyTypeAchievement": "ÚSPĚCH",
+  "journeyTypeQuest": "QUEST",
+  "journeyEmptyMapTitle": "Tvá cesta právě začíná",
+  "journeyEmptyMapBody": "Splň první quest, odemkni úspěch nebo zaznamenej aktivitu — milníky se začnou objevovat na mapě.",
+  "journeyEmptyFeedAll": "Zatím tu žádné události nejsou. Splň první quest nebo odemkni úspěch.",
+  "journeyEmptyFeedFiltered": "V této kategorii zatím žádné události nejsou.",
+  "journeyMiniMapEmpty": "Tvé milníky se objeví, jakmile dosáhneš prvního cíle.",
+  "journeyRelativeNow": "právě teď",
+  "journeyRelativeMinutes": "před {count} min",
+  "@journeyRelativeMinutes": { "placeholders": { "count": { "type": "int" } } },
+  "journeyRelativeHours": "před {count} h",
+  "@journeyRelativeHours": { "placeholders": { "count": { "type": "int" } } },
+  "journeyRelativeDays": "před {count} dny",
+  "@journeyRelativeDays": { "placeholders": { "count": { "type": "int" } } },
+  "journeyRelativeWeeks": "před {count} týdny",
+  "@journeyRelativeWeeks": { "placeholders": { "count": { "type": "int" } } },
+  "journeyRelativeMonths": "před {count} měsíci",
+  "@journeyRelativeMonths": { "placeholders": { "count": { "type": "int" } } },
+  "journeyRelativeYears": "před {count} lety",
+  "@journeyRelativeYears": { "placeholders": { "count": { "type": "int" } } },
+  "journeyStartLabel": "Začátek cesty",
+  "journeyStartDescription": "Začátek tvé hrdinské cesty.",
+  "journeyStartSublabel": "Level {level} · {title}",
+  "@journeyStartSublabel": {
+    "placeholders": {
+      "level": {},
+      "title": {}
+    }
+  },
+  "journeyLevelLabel": "Level {level}",
+  "@journeyLevelLabel": {
+    "placeholders": {
+      "level": {}
+    }
+  },
+  "journeyLevelWithTitle": "Level {level} · {title}",
+  "@journeyLevelWithTitle": {
+    "placeholders": {
+      "level": {},
+      "title": {}
+    }
+  },
+  "journeyTotalXp": "{xp} XP celkem",
+  "@journeyTotalXp": {
+    "placeholders": {
+      "xp": {}
+    }
+  }
 }

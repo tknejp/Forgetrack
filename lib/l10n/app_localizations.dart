@@ -3061,6 +3061,258 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Developer Tools'**
   String get devtoolsTitle;
+
+  /// No description provided for @journeyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hero Journey'**
+  String get journeyTitle;
+
+  /// No description provided for @journeyPreviewKicker.
+  ///
+  /// In en, this message translates to:
+  /// **'HERO JOURNEY'**
+  String get journeyPreviewKicker;
+
+  /// No description provided for @journeyOpenMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Open map'**
+  String get journeyOpenMap;
+
+  /// No description provided for @journeyPanHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe for more'**
+  String get journeyPanHint;
+
+  /// No description provided for @journeyHistoryHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Milestone history'**
+  String get journeyHistoryHeader;
+
+  /// No description provided for @journeyLastMilestone.
+  ///
+  /// In en, this message translates to:
+  /// **'Last milestone'**
+  String get journeyLastMilestone;
+
+  /// No description provided for @journeyNextGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Next goal'**
+  String get journeyNextGoal;
+
+  /// No description provided for @journeyTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get journeyTitleLabel;
+
+  /// No description provided for @journeyFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get journeyFilterAll;
+
+  /// No description provided for @journeyFilterLevels.
+  ///
+  /// In en, this message translates to:
+  /// **'Levels'**
+  String get journeyFilterLevels;
+
+  /// No description provided for @journeyFilterTitles.
+  ///
+  /// In en, this message translates to:
+  /// **'Titles'**
+  String get journeyFilterTitles;
+
+  /// No description provided for @journeyFilterAchievements.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievements'**
+  String get journeyFilterAchievements;
+
+  /// No description provided for @journeyFilterQuests.
+  ///
+  /// In en, this message translates to:
+  /// **'Quests'**
+  String get journeyFilterQuests;
+
+  /// No description provided for @journeyEventLevelReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Level reached'**
+  String get journeyEventLevelReached;
+
+  /// No description provided for @journeyEventTitleUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Title unlocked'**
+  String get journeyEventTitleUnlocked;
+
+  /// No description provided for @journeyEventAchievementUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievement unlocked'**
+  String get journeyEventAchievementUnlocked;
+
+  /// No description provided for @journeyEventQuestCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Quest completed'**
+  String get journeyEventQuestCompleted;
+
+  /// No description provided for @journeyMilestoneReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Milestone reached'**
+  String get journeyMilestoneReached;
+
+  /// No description provided for @journeyBadgeLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'LOCKED'**
+  String get journeyBadgeLocked;
+
+  /// No description provided for @journeyBadgeHere.
+  ///
+  /// In en, this message translates to:
+  /// **'HERE'**
+  String get journeyBadgeHere;
+
+  /// No description provided for @journeyTypeLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'LEVEL'**
+  String get journeyTypeLevel;
+
+  /// No description provided for @journeyTypeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'TITLE'**
+  String get journeyTypeTitle;
+
+  /// No description provided for @journeyTypeAchievement.
+  ///
+  /// In en, this message translates to:
+  /// **'ACHIEVEMENT'**
+  String get journeyTypeAchievement;
+
+  /// No description provided for @journeyTypeQuest.
+  ///
+  /// In en, this message translates to:
+  /// **'QUEST'**
+  String get journeyTypeQuest;
+
+  /// No description provided for @journeyEmptyMapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your journey starts now'**
+  String get journeyEmptyMapTitle;
+
+  /// No description provided for @journeyEmptyMapBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete a quest, unlock an achievement or log activity — milestones will start appearing on the map.'**
+  String get journeyEmptyMapBody;
+
+  /// No description provided for @journeyEmptyFeedAll.
+  ///
+  /// In en, this message translates to:
+  /// **'No milestones yet. Complete a quest or unlock an achievement.'**
+  String get journeyEmptyFeedAll;
+
+  /// No description provided for @journeyEmptyFeedFiltered.
+  ///
+  /// In en, this message translates to:
+  /// **'No milestones in this category yet.'**
+  String get journeyEmptyFeedFiltered;
+
+  /// No description provided for @journeyMiniMapEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Milestones will appear once you reach your first goal.'**
+  String get journeyMiniMapEmpty;
+
+  /// No description provided for @journeyRelativeNow.
+  ///
+  /// In en, this message translates to:
+  /// **'just now'**
+  String get journeyRelativeNow;
+
+  /// No description provided for @journeyRelativeMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} min ago'**
+  String journeyRelativeMinutes(int count);
+
+  /// No description provided for @journeyRelativeHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} h ago'**
+  String journeyRelativeHours(int count);
+
+  /// No description provided for @journeyRelativeDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days ago'**
+  String journeyRelativeDays(int count);
+
+  /// No description provided for @journeyRelativeWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} weeks ago'**
+  String journeyRelativeWeeks(int count);
+
+  /// No description provided for @journeyRelativeMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} months ago'**
+  String journeyRelativeMonths(int count);
+
+  /// No description provided for @journeyRelativeYears.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} years ago'**
+  String journeyRelativeYears(int count);
+
+  /// No description provided for @journeyStartLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Journey begins'**
+  String get journeyStartLabel;
+
+  /// No description provided for @journeyStartDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The beginning of your hero journey.'**
+  String get journeyStartDescription;
+
+  /// No description provided for @journeyStartSublabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {level} · {title}'**
+  String journeyStartSublabel(Object level, Object title);
+
+  /// No description provided for @journeyLevelLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {level}'**
+  String journeyLevelLabel(Object level);
+
+  /// No description provided for @journeyLevelWithTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {level} · {title}'**
+  String journeyLevelWithTitle(Object level, Object title);
+
+  /// No description provided for @journeyTotalXp.
+  ///
+  /// In en, this message translates to:
+  /// **'{xp} XP total'**
+  String journeyTotalXp(Object xp);
 }
 
 class _AppLocalizationsDelegate

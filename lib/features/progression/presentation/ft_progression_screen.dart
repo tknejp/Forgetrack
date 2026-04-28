@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:forgetrack/features/progression/presentation/badges/progression_badge_specs.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -7,7 +8,6 @@ import '../domain/progression_level_policy.dart';
 import '../../social/application/social_provider.dart';
 import 'progression_l10n.dart';
 import '../application/progression_provider.dart';
-import 'widgets/ft_achievement_badge_spec.dart';
 import 'widgets/ft_progression_domain_theme.dart';
 import 'widgets/ft_progression_primitives.dart';
 import 'widgets/journey_preview_card.dart';

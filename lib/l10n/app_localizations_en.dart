@@ -1648,4 +1648,153 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get devtoolsTitle => 'Developer Tools';
+
+  @override
+  String get journeyTitle => 'Hero Journey';
+
+  @override
+  String get journeyPreviewKicker => 'HERO JOURNEY';
+
+  @override
+  String get journeyOpenMap => 'Open map';
+
+  @override
+  String get journeyPanHint => 'Swipe for more';
+
+  @override
+  String get journeyHistoryHeader => 'Milestone history';
+
+  @override
+  String get journeyLastMilestone => 'Last milestone';
+
+  @override
+  String get journeyNextGoal => 'Next goal';
+
+  @override
+  String get journeyTitleLabel => 'Title';
+
+  @override
+  String get journeyFilterAll => 'All';
+
+  @override
+  String get journeyFilterLevels => 'Levels';
+
+  @override
+  String get journeyFilterTitles => 'Titles';
+
+  @override
+  String get journeyFilterAchievements => 'Achievements';
+
+  @override
+  String get journeyFilterQuests => 'Quests';
+
+  @override
+  String get journeyEventLevelReached => 'Level reached';
+
+  @override
+  String get journeyEventTitleUnlocked => 'Title unlocked';
+
+  @override
+  String get journeyEventAchievementUnlocked => 'Achievement unlocked';
+
+  @override
+  String get journeyEventQuestCompleted => 'Quest completed';
+
+  @override
+  String get journeyMilestoneReached => 'Milestone reached';
+
+  @override
+  String get journeyBadgeLocked => 'LOCKED';
+
+  @override
+  String get journeyBadgeHere => 'HERE';
+
+  @override
+  String get journeyTypeLevel => 'LEVEL';
+
+  @override
+  String get journeyTypeTitle => 'TITLE';
+
+  @override
+  String get journeyTypeAchievement => 'ACHIEVEMENT';
+
+  @override
+  String get journeyTypeQuest => 'QUEST';
+
+  @override
+  String get journeyEmptyMapTitle => 'Your journey starts now';
+
+  @override
+  String get journeyEmptyMapBody =>
+      'Complete a quest, unlock an achievement or log activity — milestones will start appearing on the map.';
+
+  @override
+  String get journeyEmptyFeedAll =>
+      'No milestones yet. Complete a quest or unlock an achievement.';
+
+  @override
+  String get journeyEmptyFeedFiltered => 'No milestones in this category yet.';
+
+  @override
+  String get journeyMiniMapEmpty =>
+      'Milestones will appear once you reach your first goal.';
+
+  @override
+  String get journeyRelativeNow => 'just now';
+
+  @override
+  String journeyRelativeMinutes(int count) {
+    return '$count min ago';
+  }
+
+  @override
+  String journeyRelativeHours(int count) {
+    return '$count h ago';
+  }
+
+  @override
+  String journeyRelativeDays(int count) {
+    return '$count days ago';
+  }
+
+  @override
+  String journeyRelativeWeeks(int count) {
+    return '$count weeks ago';
+  }
+
+  @override
+  String journeyRelativeMonths(int count) {
+    return '$count months ago';
+  }
+
+  @override
+  String journeyRelativeYears(int count) {
+    return '$count years ago';
+  }
+
+  @override
+  String get journeyStartLabel => 'Journey begins';
+
+  @override
+  String get journeyStartDescription => 'The beginning of your hero journey.';
+
+  @override
+  String journeyStartSublabel(Object level, Object title) {
+    return 'Level $level · $title';
+  }
+
+  @override
+  String journeyLevelLabel(Object level) {
+    return 'Level $level';
+  }
+
+  @override
+  String journeyLevelWithTitle(Object level, Object title) {
+    return 'Level $level · $title';
+  }
+
+  @override
+  String journeyTotalXp(Object xp) {
+    return '$xp XP total';
+  }
 }

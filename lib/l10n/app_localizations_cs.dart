@@ -1643,4 +1643,154 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get devtoolsTitle => 'Nástroje vývojáře';
+
+  @override
+  String get journeyTitle => 'Cesta hrdiny';
+
+  @override
+  String get journeyPreviewKicker => 'CESTA HRDINY';
+
+  @override
+  String get journeyOpenMap => 'Otevřít mapu';
+
+  @override
+  String get journeyPanHint => 'Posuň pro více';
+
+  @override
+  String get journeyHistoryHeader => 'Historie milníků';
+
+  @override
+  String get journeyLastMilestone => 'Posl. milník';
+
+  @override
+  String get journeyNextGoal => 'Další cíl';
+
+  @override
+  String get journeyTitleLabel => 'Titul';
+
+  @override
+  String get journeyFilterAll => 'Vše';
+
+  @override
+  String get journeyFilterLevels => 'Levely';
+
+  @override
+  String get journeyFilterTitles => 'Tituly';
+
+  @override
+  String get journeyFilterAchievements => 'Úspěchy';
+
+  @override
+  String get journeyFilterQuests => 'Questy';
+
+  @override
+  String get journeyEventLevelReached => 'Level dosažen';
+
+  @override
+  String get journeyEventTitleUnlocked => 'Titul odemčen';
+
+  @override
+  String get journeyEventAchievementUnlocked => 'Úspěch odemčen';
+
+  @override
+  String get journeyEventQuestCompleted => 'Quest dokončen';
+
+  @override
+  String get journeyMilestoneReached => 'Milník dosažen';
+
+  @override
+  String get journeyBadgeLocked => 'ZAMČENO';
+
+  @override
+  String get journeyBadgeHere => 'TADY';
+
+  @override
+  String get journeyTypeLevel => 'LEVEL';
+
+  @override
+  String get journeyTypeTitle => 'TITUL';
+
+  @override
+  String get journeyTypeAchievement => 'ÚSPĚCH';
+
+  @override
+  String get journeyTypeQuest => 'QUEST';
+
+  @override
+  String get journeyEmptyMapTitle => 'Tvá cesta právě začíná';
+
+  @override
+  String get journeyEmptyMapBody =>
+      'Splň první quest, odemkni úspěch nebo zaznamenej aktivitu — milníky se začnou objevovat na mapě.';
+
+  @override
+  String get journeyEmptyFeedAll =>
+      'Zatím tu žádné události nejsou. Splň první quest nebo odemkni úspěch.';
+
+  @override
+  String get journeyEmptyFeedFiltered =>
+      'V této kategorii zatím žádné události nejsou.';
+
+  @override
+  String get journeyMiniMapEmpty =>
+      'Tvé milníky se objeví, jakmile dosáhneš prvního cíle.';
+
+  @override
+  String get journeyRelativeNow => 'právě teď';
+
+  @override
+  String journeyRelativeMinutes(int count) {
+    return 'před $count min';
+  }
+
+  @override
+  String journeyRelativeHours(int count) {
+    return 'před $count h';
+  }
+
+  @override
+  String journeyRelativeDays(int count) {
+    return 'před $count dny';
+  }
+
+  @override
+  String journeyRelativeWeeks(int count) {
+    return 'před $count týdny';
+  }
+
+  @override
+  String journeyRelativeMonths(int count) {
+    return 'před $count měsíci';
+  }
+
+  @override
+  String journeyRelativeYears(int count) {
+    return 'před $count lety';
+  }
+
+  @override
+  String get journeyStartLabel => 'Začátek cesty';
+
+  @override
+  String get journeyStartDescription => 'Začátek tvé hrdinské cesty.';
+
+  @override
+  String journeyStartSublabel(Object level, Object title) {
+    return 'Level $level · $title';
+  }
+
+  @override
+  String journeyLevelLabel(Object level) {
+    return 'Level $level';
+  }
+
+  @override
+  String journeyLevelWithTitle(Object level, Object title) {
+    return 'Level $level · $title';
+  }
+
+  @override
+  String journeyTotalXp(Object xp) {
+    return '$xp XP celkem';
+  }
 }

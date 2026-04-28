@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:forgetrack/features/progression/presentation/badges/progression_badge_specs.dart';
 import 'package:provider/provider.dart';
-
-import '../../../../features/progression/presentation/widgets/ft_achievement_badge_spec.dart';
 import '../../../../shared/theme/ft_design_tokens.dart';
 import '../../application/social_provider.dart';
 import '../../domain/social_models.dart';

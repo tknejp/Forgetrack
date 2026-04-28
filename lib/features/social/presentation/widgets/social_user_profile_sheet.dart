@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:forgetrack/features/progression/presentation/badges/progression_badge_specs.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../features/progression/domain/progression_models.dart';
 import '../../../../features/progression/presentation/progression_l10n.dart';
-import '../../../../features/progression/presentation/widgets/ft_achievement_badge_spec.dart';
 import '../../../../features/progression/presentation/widgets/ft_progression_primitives.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';

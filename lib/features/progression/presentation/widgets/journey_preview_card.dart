@@ -16,18 +16,19 @@ import 'journey_shared.dart';
 ///
 /// - Mini horizontal path with 3–5 checkpoints (oldest left → newest right).
 /// - Summary text: last milestone, current title, next goal.
-/// - Whole card is tappable; opens [HeroJourneyMapScreen].
+/// - Whole card is tappable; opens `HeroJourneyMapScreen`.
 ///
-/// Height constraint: ≈ 200 px so the Hero screen stays scrollable and the
+/// Height stays around ~200 px so the Hero screen stays scrollable and the
 /// preview reads as an entry-point, not the main content.
 class JourneyPreviewCard extends StatelessWidget {
   const JourneyPreviewCard({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final progression = context.watch<ProgressionProvider>();
-    final progL10n = ProgressionL10n(context.l10n);
-    final preview = JourneyAdapter.buildPreview(progression, progL10n);
+    final progL10n = ProgressionL10n(l10n);
+    final preview = JourneyAdapter.buildPreview(progression, progL10n, l10n);
 
     return Material(
       color: Colors.transparent,
@@ -64,7 +65,7 @@ class JourneyPreviewCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _Header(),
+              const _Header(),
               const SizedBox(height: 8),
               SizedBox(
                 height: 76,
@@ -85,17 +86,20 @@ class JourneyPreviewCard extends StatelessWidget {
 }
 
 class _Header extends StatelessWidget {
+  const _Header();
+
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Row(
       children: [
         const Icon(Icons.auto_awesome_rounded,
             size: 14, color: FtTokens.accent),
         const SizedBox(width: 6),
-        const Expanded(
+        Expanded(
           child: Text(
-            'CESTA HRDINY',
-            style: TextStyle(
+            l10n.journeyPreviewKicker,
+            style: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w800,
               color: FtTokens.accent,
@@ -116,7 +120,7 @@ class _Header extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Otevřít mapu',
+                l10n.journeyOpenMap,
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w800,
@@ -157,7 +161,6 @@ class _MiniMap extends StatelessWidget {
         final positions = List<Offset>.generate(n, (i) {
           final t = n == 1 ? 0.5 : i / (n - 1);
           final x = 14 + t * (w - 28);
-          // Gentle wave, more pronounced for more nodes.
           final y = h * 0.5 + math.sin(i * 1.4) * h * 0.22;
           return Offset(x, y);
         });
@@ -173,7 +176,6 @@ class _MiniMap extends StatelessWidget {
             ),
             for (int i = 0; i < n; i++)
               Positioned(
-                // Center the compact node widget on the computed point.
                 left: positions[i].dx - _halfNode(ordered[i]),
                 top: positions[i].dy - _halfNode(ordered[i]),
                 child: IgnorePointer(
@@ -182,7 +184,7 @@ class _MiniMap extends StatelessWidget {
                     checkpoint: ordered[i],
                     isSelected: false,
                     onTap: () {},
-                    baseSize: ordered[i].isCurrent ? 24 : 16,
+                    baseSize: _baseSize(ordered[i]),
                     compact: true,
                   ),
                 ),
@@ -193,9 +195,15 @@ class _MiniMap extends StatelessWidget {
     );
   }
 
+  static double _baseSize(JourneyCheckpoint cp) {
+    if (cp.isCurrent) return 24;
+    if (cp.isMajorMilestone) return 22;
+    if (cp.type == JourneyEventType.achievement) return 18;
+    return 16;
+  }
+
   static double _halfNode(JourneyCheckpoint cp) {
-    final base = cp.isCurrent ? 24.0 : 16.0;
-    return (base + 14) / 2; // 14 == compact padding from JourneyCheckpointNode
+    return (_baseSize(cp) + 14) / 2;
   }
 }
 
@@ -205,7 +213,7 @@ class _MiniMapEmpty extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Text(
-        'Tvé milníky se objeví, jakmile dosáhneš prvního cíle.',
+        context.l10n.journeyMiniMapEmpty,
         textAlign: TextAlign.center,
         style: TextStyle(
           fontSize: 11,
@@ -230,7 +238,8 @@ class _SummaryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // First non-current unlocked node is the most recent past milestone.
+    final l10n = context.l10n;
+
     final lastMilestone = preview.firstWhere(
       (c) => !c.isCurrent && c.isUnlocked,
       orElse: () => const JourneyCheckpoint(
@@ -256,7 +265,7 @@ class _SummaryRow extends StatelessWidget {
         Expanded(
           child: _SummaryItem(
             icon: Icons.history_rounded,
-            label: 'Posl. milník',
+            label: l10n.journeyLastMilestone,
             value: lastMilestone.id == '_none' ? '—' : lastMilestone.label,
             color: FtTokens.active.color,
           ),
@@ -265,7 +274,7 @@ class _SummaryRow extends StatelessWidget {
         Expanded(
           child: _SummaryItem(
             icon: Icons.workspace_premium_rounded,
-            label: 'Titul · L $profileLevel',
+            label: '${l10n.journeyTitleLabel} · L $profileLevel',
             value: profileTitle,
             color: FtTokens.accent,
           ),
@@ -274,7 +283,7 @@ class _SummaryRow extends StatelessWidget {
         Expanded(
           child: _SummaryItem(
             icon: Icons.flag_outlined,
-            label: 'Další cíl',
+            label: l10n.journeyNextGoal,
             value: nextLocked.id == '_none' ? '—' : nextLocked.label,
             color: FtTokens.calories.color,
           ),

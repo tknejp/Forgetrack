@@ -1,198 +1,550 @@
+import '../../../../l10n/app_localizations.dart';
 import '../../application/progression_provider.dart';
 import '../../domain/journey_models.dart';
+import '../../domain/progression_level_policy.dart';
 import '../../domain/progression_models.dart';
+import '../badges/progression_badge_specs.dart';
 import '../progression_l10n.dart';
 
-/// Builds [JourneyCheckpoint] lists for both the Hero preview and the detail
-/// map screen, plus a flat feed of milestone events for the detail screen feed.
+/// Builds the [JourneyCheckpoint] lists used by the Hero preview, the detail
+/// map and the milestone feed. All three views read from the same provider
+/// snapshot so glyphs, dates and labels stay consistent.
 ///
-/// TODO(journey): Replace with a full progression ledger
-/// (`GET /journey/events?userId=…`) once the backend stores level-up,
-/// title-unlock and streak-milestone timestamps. For now the adapter derives
-/// what it can from the in-memory progression snapshot and synthesises past
-/// level milestones (every 10 levels) without timestamps. Production UI must
-/// not show fake or hard-coded sample events outside debug builds.
+/// Streak / XP events are intentionally omitted — they fluctuate often and
+/// would clutter the journey timeline. Streaks remain visible through their
+/// own section on the Hero/Profile screen.
+///
+/// Level milestone timestamps come from the matching `*_level_<N>`
+/// achievement's `unlockedAt` when the achievement is unlocked. There are no
+/// fake or synthesised dates: a milestone without a real timestamp simply
+/// gets `null`, which the feed honours by sorting it after dated entries.
+///
+/// TODO(journey): Replace with a dedicated journey ledger
+/// (`GET /journey/events`) once the backend persists level-up, title-unlock
+/// and streak-milestone timestamps independently of the achievement table.
 abstract final class JourneyAdapter {
-  /// Compact 3–5 node list for the Hero preview card.
+  static const _levelPolicy = ProgressionLevelPolicy();
+
+  static const int _startLevel = 1;
+  static const int _maxLevel = 100;
+  static const int _targetMapNodeCount = 30;
+
+  /// The complete static map spine, bottom-to-top in level order.
+  ///
+  /// Rendering reverses this list so level 100 is the top/final destination
+  /// and level 1 is the bottom/start. Keep this intentionally sparse: regular
+  /// levels, quests and achievements do not become map anchors in this pass.
+  static const List<int> _staticMilestoneLevels = [
+    1,
+    5,
+    10,
+    15,
+    20,
+    25,
+    30,
+    40,
+    50,
+    60,
+    70,
+    80,
+    90,
+    100,
+  ];
+
+  /// Compact node list for the Hero preview card, derived from the same static
+  /// milestone spine as the full map.
   static List<JourneyCheckpoint> buildPreview(
     ProgressionProvider provider,
     ProgressionL10n progL10n,
+    AppLocalizations l10n,
   ) {
-    return buildFull(provider, progL10n)
-        .take(5)
-        .toList(growable: false);
+    final map = buildMilestoneMap(provider, progL10n, l10n);
+    return _nearbyPreviewMilestones(map);
   }
 
-  /// Up to 14 nodes for the detail map (newest at top, oldest at bottom).
-  /// First node may be a future locked level milestone.
+  /// Stable milestone map: level 100 at the top, level 1 at the bottom.
+  ///
+  /// This intentionally excludes achievements and quests so the map length and
+  /// node positions never change when historical feed events are added.
+  static List<JourneyCheckpoint> buildMilestoneMap(
+    ProgressionProvider provider,
+    ProgressionL10n progL10n,
+    AppLocalizations l10n,
+  ) {
+    final currentLevel = _clampLevel(provider.profile.level);
+    final anchors = buildMilestoneAnchors(provider);
+    final anchorCheckpoints = <JourneyCheckpoint>[];
+
+    for (var i = 0; i < anchors.length; i++) {
+      final anchor = anchors[i];
+      anchorCheckpoints.add(
+        _checkpointForAnchor(
+          anchor,
+          l10n,
+          totalXp: provider.profile.totalXp,
+          mapProgress: _anchorProgressAtIndex(i, anchors.length),
+          mapUnlockedThroughPointId: anchor.isCurrent ? currentLevel : null,
+        ),
+      );
+    }
+
+    final sideEventLimit =
+        (_targetMapNodeCount - anchorCheckpoints.length).clamp(0, 999).toInt();
+    final sideEvents = _buildMapSideEvents(
+      provider,
+      progL10n,
+      l10n,
+      limit: sideEventLimit,
+      currentLevel: currentLevel,
+      anchorCount: anchors.length,
+    );
+
+    return [
+      ...anchorCheckpoints,
+      ...sideEvents,
+    ]..sort(_compareMapCheckpoints);
+  }
+
+  /// Data-only version of the static map spine. Useful when a caller needs
+  /// levels/titles/status without Journey UI labels.
+  static List<JourneyMilestoneAnchor> buildMilestoneAnchors(
+    ProgressionProvider provider,
+  ) {
+    final currentLevel = _clampLevel(provider.profile.level);
+    final currentAnchorLevel = _currentStaticMilestoneFor(currentLevel);
+    final nextAnchorLevel = _nextStaticMilestoneAfter(currentLevel);
+    final levelDates = _levelUnlockDates(provider);
+
+    return _staticMilestoneLevels.reversed.map((level) {
+      final isUnlocked = level <= currentLevel;
+      final title = _levelPolicy.titleForLevel(level);
+
+      return JourneyMilestoneAnchor(
+        level: level,
+        title: title,
+        emoji: emojiForLevel(level),
+        isUnlocked: isUnlocked,
+        isCurrent: level == currentAnchorLevel,
+        isNext: level == nextAnchorLevel,
+        unlockedAt: isUnlocked ? levelDates[level] : null,
+      );
+    }).toList(growable: false);
+  }
+
+  /// Backwards-compatible map entry point. Prefer [buildMilestoneMap] for new
+  /// map callers; [buildFeed] remains the historical event source.
   static List<JourneyCheckpoint> buildFull(
     ProgressionProvider provider,
     ProgressionL10n progL10n,
-  ) {
-    final profile = provider.profile;
-    final list = <JourneyCheckpoint>[];
+    AppLocalizations l10n,
+  ) =>
+      buildMilestoneMap(provider, progL10n, l10n);
 
-    // 1. Future locked next level milestone (every 5 levels).
-    final nextMilestone = ((profile.level ~/ 5) + 1) * 5;
-    if (nextMilestone > profile.level) {
-      list.add(JourneyCheckpoint(
-        id: 'level_future_$nextMilestone',
-        type: JourneyEventType.level,
-        label: 'Level $nextMilestone',
-        sublabel: 'Další cíl',
-        isUnlocked: false,
-        levelNumber: nextMilestone,
-      ));
-    }
-
-    // 2. Current level — always present, marked current.
-    list.add(JourneyCheckpoint(
-      id: 'level_current_${profile.level}',
-      type: JourneyEventType.level,
-      label: profile.levelTitle,
-      sublabel: 'Level ${profile.level}',
-      description: '${profile.totalXp} XP celkem',
-      isUnlocked: true,
-      isCurrent: true,
-      levelNumber: profile.level,
-    ));
-
-    // 3. Recent unlocked achievements + completed quests, time-sorted desc.
-    final dated = <_DatedCp>[];
-    for (final a in provider.achievements) {
-      if (a.unlocked && a.unlockedAt != null) {
-        dated.add(_DatedCp(
-          a.unlockedAt!,
-          JourneyCheckpoint(
-            id: 'ach_${a.id}',
-            type: JourneyEventType.achievement,
-            label: progL10n.achievementTitle(a),
-            sublabel: 'Úspěch odemčen',
-            description: progL10n.achievementDescription(a),
-            unlockedAt: a.unlockedAt,
-            isUnlocked: true,
-          ),
-        ));
-      }
-    }
-    for (final q in provider.completedQuests) {
-      if (q.completedAt != null) {
-        dated.add(_DatedCp(
-          q.completedAt!,
-          JourneyCheckpoint(
-            id: 'quest_${q.id}',
-            type: JourneyEventType.quest,
-            label: progL10n.questTitle(q),
-            sublabel: 'Quest dokončen',
-            description: progL10n.questDescription(q),
-            unlockedAt: q.completedAt,
-            isUnlocked: true,
-          ),
-        ));
-      }
-    }
-    dated.sort((a, b) => b.at.compareTo(a.at));
-    for (final d in dated.take(8)) {
-      list.add(d.cp);
-    }
-
-    // 4. Best streak per domain (≥7 days). No reliable timestamp.
-    for (final domain in ProgressionDomain.values) {
-      final s = provider.streakForDomain(domain);
-      if (s.bestStreak >= 7) {
-        list.add(JourneyCheckpoint(
-          id: 'streak_${domain.name}',
-          type: JourneyEventType.streak,
-          label: '${s.bestStreak} dní v řadě',
-          sublabel: progL10n.domainLabel(domain),
-          isUnlocked: true,
-        ));
-      }
-    }
-
-    // 5. Past level milestones (every 10 levels below current).
-    // Synthetic — no timestamps available yet.
-    for (int lvl = (profile.level ~/ 10) * 10; lvl > 0; lvl -= 10) {
-      if (lvl >= profile.level) continue; // skip current's own milestone
-      list.add(JourneyCheckpoint(
-        id: 'level_past_$lvl',
-        type: JourneyEventType.level,
-        label: 'Level $lvl',
-        sublabel: 'Milník dosažen',
-        levelNumber: lvl,
-        isUnlocked: true,
-      ));
-    }
-
-    // 6. Journey start anchor — only if user is past level 1.
-    if (profile.level > 1) {
-      list.add(const JourneyCheckpoint(
-        id: 'journey_start',
-        type: JourneyEventType.level,
-        label: 'Začátek cesty',
-        sublabel: 'Level 1',
-        levelNumber: 1,
-        isUnlocked: true,
-      ));
-    }
-
-    // Cap to keep the map readable. Preview takes its own subset off the top.
-    return list.take(14).toList(growable: false);
-  }
-
-  /// Flat list of milestone events for the feed under the big map.
-  /// Sorted by date desc. Includes only events with a known timestamp.
+  /// Flat list of milestone events for the detail-screen feed.
+  ///
+  /// Sorted newest-first, all entries are unlocked. Includes:
+  /// - reached title-breakpoint level milestones,
+  /// - non-level achievements,
+  /// - completed quests.
+  ///
+  /// Start checkpoint is intentionally not included in the feed; it is a map
+  /// origin, not a timeline event with a persisted timestamp.
   static List<JourneyCheckpoint> buildFeed(
     ProgressionProvider provider,
     ProgressionL10n progL10n,
+    AppLocalizations l10n,
   ) {
+    final profile = provider.profile;
+    final levelDates = _levelUnlockDates(provider);
+    final dated = <_DatedCp>[];
+    final undated = <JourneyCheckpoint>[];
+
+    // Achievements, excluding level achievements.
+    for (final a in provider.achievements) {
+      if (!a.unlocked || a.unlockedAt == null) continue;
+      if (achievementLevelTarget(a) != null) continue;
+      final badge = achievementBadgeSpec(a);
+
+      dated.add(_DatedCp(
+        a.unlockedAt!,
+        JourneyCheckpoint(
+          id: 'feed_ach_${a.id}',
+          type: JourneyEventType.achievement,
+          label: progL10n.achievementTitle(a),
+          sublabel: l10n.journeyEventAchievementUnlocked,
+          description: progL10n.achievementDescription(a),
+          unlockedAt: a.unlockedAt,
+          emoji: badge.emoji,
+          accentColorValue: badge.color.toARGB32(),
+          achievementDifficultyLabel: _achievementDifficultyLabel(a, l10n),
+          isUnlocked: true,
+        ),
+      ));
+    }
+
+    // Quests.
+    for (final q in provider.completedQuests) {
+      if (q.completedAt == null) continue;
+
+      dated.add(_DatedCp(
+        q.completedAt!,
+        JourneyCheckpoint(
+          id: 'feed_quest_${q.id}',
+          type: JourneyEventType.quest,
+          label: progL10n.questTitle(q),
+          sublabel: l10n.journeyEventQuestCompleted,
+          description: progL10n.questDescription(q),
+          unlockedAt: q.completedAt,
+          isUnlocked: true,
+        ),
+      ));
+    }
+
+    // Level/title milestones.
+    //
+    // Each milestone is a single row: "Level X · Title".
+    // No separate title event is emitted.
+    for (final bp in kJourneyTitleBreakpoints) {
+      if (bp > profile.level) break;
+
+      final at = levelDates[bp];
+      final cp = _breakpointMilestone(
+        level: bp,
+        unlockedAt: at,
+        isUnlocked: true,
+        idSuffix: 'feed_',
+        l10n: l10n,
+      );
+
+      if (at != null) {
+        dated.add(_DatedCp(at, cp));
+      } else {
+        undated.add(cp);
+      }
+    }
+
+    dated.sort((a, b) => b.at.compareTo(a.at));
+
+    return [
+      ...dated.map((d) => d.cp),
+      ...undated,
+    ];
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────
+
+  /// Maps level → unlockedAt for every unlocked level achievement available.
+  static Map<int, DateTime> _levelUnlockDates(ProgressionProvider provider) {
+    final out = <int, DateTime>{};
+
+    for (final a in provider.achievements) {
+      final lvl = achievementLevelTarget(a);
+      if (lvl == null) continue;
+      if (!a.unlocked || a.unlockedAt == null) continue;
+
+      // Multiple achievements may map to the same level defensively; keep the
+      // earliest known timestamp.
+      final existing = out[lvl];
+      if (existing == null || a.unlockedAt!.isBefore(existing)) {
+        out[lvl] = a.unlockedAt!;
+      }
+    }
+
+    return out;
+  }
+
+  static List<JourneyCheckpoint> _buildMapSideEvents(
+    ProgressionProvider provider,
+    ProgressionL10n progL10n,
+    AppLocalizations l10n, {
+    required int limit,
+    required int currentLevel,
+    required int anchorCount,
+  }) {
+    if (limit <= 0) return const [];
+
     final dated = <_DatedCp>[];
 
     for (final a in provider.achievements) {
-      if (a.unlocked && a.unlockedAt != null) {
-        dated.add(_DatedCp(
-          a.unlockedAt!,
-          JourneyCheckpoint(
-            id: 'feed_ach_${a.id}',
-            type: JourneyEventType.achievement,
-            label: progL10n.achievementTitle(a),
-            sublabel: 'Úspěch odemčen',
-            description: progL10n.achievementDescription(a),
-            unlockedAt: a.unlockedAt,
-            isUnlocked: true,
+      if (!a.unlocked || a.unlockedAt == null) continue;
+
+      // Level achievements are already represented by the static title path.
+      if (achievementLevelTarget(a) != null) continue;
+      final badge = achievementBadgeSpec(a);
+
+      dated.add(_DatedCp(
+        a.unlockedAt!,
+        JourneyCheckpoint(
+          id: 'map_ach_${a.id}',
+          type: JourneyEventType.achievement,
+          label: progL10n.achievementTitle(a),
+          sublabel: l10n.journeyEventAchievementUnlocked,
+          description: progL10n.achievementDescription(a),
+          unlockedAt: a.unlockedAt,
+          emoji: badge.emoji,
+          accentColorValue: badge.color.toARGB32(),
+          achievementDifficultyLabel: _achievementDifficultyLabel(a, l10n),
+          isUnlocked: true,
+          isPathAnchor: false,
+          mapPointId: _sideEventPointId(
+            index: dated.length,
+            total: limit,
+            currentLevel: currentLevel,
           ),
-        ));
-      }
+        ),
+      ));
     }
 
-    for (final q in provider.completedQuests) {
-      if (q.completedAt != null) {
-        dated.add(_DatedCp(
-          q.completedAt!,
-          JourneyCheckpoint(
-            id: 'feed_quest_${q.id}',
-            type: JourneyEventType.quest,
-            label: progL10n.questTitle(q),
-            sublabel: 'Quest dokončen',
-            description: progL10n.questDescription(q),
-            unlockedAt: q.completedAt,
-            isUnlocked: true,
-          ),
-        ));
-      }
-    }
+    if (dated.isEmpty) return const [];
 
-    // TODO(journey): Add level-up and title-unlock events here once the
-    // ledger persists their timestamps. Streak milestones likewise need
-    // per-milestone dates — currently only `bestStreak` is exposed.
-
+    // Keep the map readable at roughly 30 nodes: newest side events are most
+    // relevant, then placed oldest-to-newest from start toward current level.
     dated.sort((a, b) => b.at.compareTo(a.at));
-    return dated.map((d) => d.cp).toList(growable: false);
+    final selected = dated.take(limit).toList(growable: false)
+      ..sort((a, b) => a.at.compareTo(b.at));
+
+    final currentAnchorLevel = _currentStaticMilestoneFor(currentLevel);
+    final currentAnchorIndex =
+        _staticMilestoneLevels.reversed.toList().indexOf(currentAnchorLevel);
+    final currentProgress = _anchorProgressAtIndex(
+      currentAnchorIndex < 0 ? anchorCount - 1 : currentAnchorIndex,
+      anchorCount,
+    );
+
+    final bottomProgress = 0.96;
+    final topProgress = (currentProgress + 0.08).clamp(0.12, 0.90).toDouble();
+    final span = bottomProgress - topProgress;
+
+    return List<JourneyCheckpoint>.generate(selected.length, (index) {
+      final cp = selected[index].cp;
+      final t = selected.length == 1 ? 1.0 : index / (selected.length - 1);
+      final progress = (bottomProgress - (span * t)).clamp(0.04, 0.98);
+
+      return JourneyCheckpoint(
+        id: cp.id,
+        type: cp.type,
+        label: cp.label,
+        sublabel: cp.sublabel,
+        description: cp.description,
+        unlockedAt: cp.unlockedAt,
+        levelNumber: cp.levelNumber,
+        title: cp.title,
+        emoji: cp.emoji,
+        accentColorValue: cp.accentColorValue,
+        achievementDifficultyLabel: cp.achievementDifficultyLabel,
+        isUnlocked: cp.isUnlocked,
+        isCurrent: cp.isCurrent,
+        isNext: cp.isNext,
+        isPathAnchor: false,
+        mapPointId: _sideEventPointId(
+          index: index,
+          total: selected.length,
+          currentLevel: currentLevel,
+        ),
+        mapProgress: progress.toDouble(),
+        mapSide: _sideBiasForId(cp.id),
+      );
+    }, growable: false);
+  }
+
+  static int _clampLevel(int level) {
+    if (level < _startLevel) return _startLevel;
+    if (level > _maxLevel) return _maxLevel;
+    return level;
+  }
+
+  static String _achievementDifficultyLabel(
+    ProgressionAchievement achievement,
+    AppLocalizations l10n,
+  ) {
+    switch (achievement.difficulty) {
+      case ProgressionAchievementDifficulty.easy:
+        return l10n.progAchievementDifficultyEasy;
+      case ProgressionAchievementDifficulty.medium:
+        return l10n.progAchievementDifficultyMedium;
+      case ProgressionAchievementDifficulty.hard:
+        return l10n.progAchievementDifficultyHard;
+      case ProgressionAchievementDifficulty.extraHard:
+        return l10n.progAchievementDifficultyExtraHard;
+    }
+  }
+
+  static int _currentStaticMilestoneFor(int currentLevel) {
+    var currentAnchor = _startLevel;
+    for (final level in _staticMilestoneLevels) {
+      if (level > currentLevel) break;
+      currentAnchor = level;
+    }
+    return currentAnchor;
+  }
+
+  static int? _nextStaticMilestoneAfter(int currentLevel) {
+    for (final level in _staticMilestoneLevels) {
+      if (level > currentLevel) return level;
+    }
+    return null;
+  }
+
+  static double _anchorProgressAtIndex(int index, int count) {
+    if (count <= 1) return 0.5;
+    return index / (count - 1);
+  }
+
+  static int _sideEventPointId({
+    required int index,
+    required int total,
+    required int currentLevel,
+  }) {
+    final maxPoint = currentLevel.clamp(_startLevel, _maxLevel);
+    if (total <= 1) return maxPoint;
+    final t = index / (total - 1);
+    return (_startLevel + ((maxPoint - _startLevel) * t))
+        .round()
+        .clamp(_startLevel, _maxLevel);
+  }
+
+  static int _compareMapCheckpoints(JourneyCheckpoint a, JourneyCheckpoint b) {
+    final byProgress = (a.mapProgress ?? 1.0).compareTo(b.mapProgress ?? 1.0);
+    if (byProgress != 0) return byProgress;
+    if (a.isPathAnchor != b.isPathAnchor) return a.isPathAnchor ? -1 : 1;
+    return a.id.compareTo(b.id);
+  }
+
+  static double _sideBiasForId(String id) {
+    final hash = _stableHash(id);
+    final direction = hash.isEven ? -1.0 : 1.0;
+    final magnitude = 0.52 + ((hash % 7) * 0.12);
+    return direction * magnitude;
+  }
+
+  static int _stableHash(String value) {
+    var hash = 0;
+    for (final unit in value.codeUnits) {
+      hash = (hash * 31 + unit) & 0x7fffffff;
+    }
+    return hash;
+  }
+
+  static List<JourneyCheckpoint> _nearbyPreviewMilestones(
+    List<JourneyCheckpoint> map,
+  ) {
+    if (map.isEmpty) return const [];
+
+    final indexes = <int>[];
+    void addIndex(int index) {
+      if (index < 0 || index >= map.length || indexes.contains(index)) return;
+      if (indexes.length >= 5) return;
+      indexes.add(index);
+    }
+
+    final currentIndex = map.indexWhere((cp) => cp.isCurrent);
+    final focusIndex = currentIndex >= 0
+        ? currentIndex
+        : map.indexWhere((cp) => cp.isPathAnchor && cp.isUnlocked);
+    final nextIndex = map.indexWhere((cp) => cp.isPathAnchor && cp.isNext);
+
+    addIndex(nextIndex);
+    addIndex(focusIndex);
+
+    for (var i = focusIndex + 1; i < map.length && indexes.length < 5; i++) {
+      if (map[i].isPathAnchor && map[i].isUnlocked) addIndex(i);
+    }
+
+    for (var i = focusIndex - 1; i >= 0 && indexes.length < 5; i--) {
+      if (map[i].isPathAnchor && !map[i].isUnlocked) addIndex(i);
+    }
+
+    indexes.sort();
+    return indexes.map((i) => map[i]).toList(growable: false);
+  }
+
+  static JourneyCheckpoint _checkpointForAnchor(
+    JourneyMilestoneAnchor anchor,
+    AppLocalizations l10n, {
+    required int totalXp,
+    required double mapProgress,
+    required int? mapUnlockedThroughPointId,
+  }) {
+    if (anchor.level == _startLevel) {
+      return _startCheckpoint(
+        anchor,
+        l10n,
+        mapProgress: mapProgress,
+        mapUnlockedThroughPointId: mapUnlockedThroughPointId,
+      );
+    }
+
+    return JourneyCheckpoint(
+      id: 'level_${anchor.level}',
+      type: JourneyEventType.titleMilestone,
+      label: l10n.journeyLevelWithTitle(anchor.level, anchor.title),
+      description: anchor.isCurrent ? l10n.journeyTotalXp(totalXp) : null,
+      unlockedAt: anchor.unlockedAt,
+      levelNumber: anchor.level,
+      title: anchor.title,
+      emoji: anchor.emoji,
+      isUnlocked: anchor.isUnlocked,
+      isCurrent: anchor.isCurrent,
+      isNext: anchor.isNext,
+      mapPointId: anchor.level,
+      mapUnlockedThroughPointId: mapUnlockedThroughPointId,
+      mapProgress: mapProgress,
+    );
+  }
+
+  /// Permanent bottom node that gives the map a clear origin.
+  static JourneyCheckpoint _startCheckpoint(
+    JourneyMilestoneAnchor anchor,
+    AppLocalizations l10n, {
+    required double mapProgress,
+    required int? mapUnlockedThroughPointId,
+  }) {
+    return JourneyCheckpoint(
+      id: 'start',
+      type: JourneyEventType.level,
+      label: l10n.journeyStartLabel,
+      sublabel: l10n.journeyStartSublabel(anchor.level, anchor.title),
+      description: l10n.journeyStartDescription,
+      unlockedAt: anchor.unlockedAt,
+      levelNumber: anchor.level,
+      title: anchor.title,
+      emoji: anchor.emoji,
+      isUnlocked: true,
+      isCurrent: anchor.isCurrent,
+      isNext: anchor.isNext,
+      mapPointId: 0,
+      mapUnlockedThroughPointId: mapUnlockedThroughPointId,
+      mapProgress: mapProgress,
+    );
+  }
+
+  /// Single source for level/title milestone nodes.
+  static JourneyCheckpoint _breakpointMilestone({
+    required int level,
+    required DateTime? unlockedAt,
+    required bool isUnlocked,
+    required AppLocalizations l10n,
+    String idSuffix = '',
+  }) {
+    final title = _levelPolicy.titleForLevel(level);
+
+    return JourneyCheckpoint(
+      id: '${idSuffix}level_$level',
+      type: JourneyEventType.titleMilestone,
+      label: l10n.journeyLevelWithTitle(level, title),
+      sublabel: null,
+      unlockedAt: unlockedAt,
+      levelNumber: level,
+      title: title,
+      emoji: emojiForLevel(level),
+      isUnlocked: isUnlocked,
+    );
   }
 }
 
 class _DatedCp {
   const _DatedCp(this.at, this.cp);
+
   final DateTime at;
   final JourneyCheckpoint cp;
 }

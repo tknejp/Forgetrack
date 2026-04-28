@@ -144,14 +144,14 @@ class ProgressionLevelPolicy {
     return ProgressionProfile(
       totalXp: safeXp,
       level: level,
-      levelTitle: _titleForLevel(level),
+      levelTitle: titleForLevel(level),
       levelFloorXp: levelFloorXp,
       nextLevelXp: nextLevelXp,
       xpIntoLevel: safeXp - levelFloorXp,
     );
   }
 
-  String _titleForLevel(int level) {
+  String titleForLevel(int level) {
     if (level >= 100) return 'Living Legend';
     if (level >= 90) return 'Realm Sovereign';
     if (level >= 80) return 'Eternal Paragon';

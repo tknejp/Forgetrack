@@ -5,23 +5,24 @@ import '../../../l10n/l10n.dart';
 import '../../../shared/theme/ft_design_tokens.dart';
 import '../application/progression_provider.dart';
 import '../domain/journey_models.dart';
-import '../domain/progression_models.dart';
 import 'progression_l10n.dart';
 import 'widgets/journey_adapter.dart';
 import 'widgets/journey_event_feed.dart';
 import 'widgets/journey_interactive_map.dart';
-import 'widgets/journey_shared.dart';
 
-/// Dedicated detail screen for the Hero Journey, reached by tapping the
+/// Dedicated detail screen for the Hero Journey, opened from
 /// `JourneyPreviewCard` on the Hero/Profile screen.
 ///
-/// Layout is map-dominant:
-///   - AppBar (back + title)
-///   - Big interactive [JourneyInteractiveMap] — fixed to ~62 % of viewport
-///     height (clamped 500–650 px). Has its own gesture context so pan
-///     doesn't fight with the feed scroll.
-///   - Compact horizontal stat chips (no large stat grid).
-///   - Filterable [JourneyEventFeed] below.
+/// Layout uses a [CustomScrollView] with a pinned [SliverPersistentHeader]
+/// for the map: expanded the map is fully interactive (pan, tap, tooltip);
+/// as the user scrolls into the milestone history below, the header
+/// gracefully collapses into a static mini preview that stays visible. The
+/// transition between interactive ↔ static avoids any gesture conflict
+/// between [InteractiveViewer] and the surrounding scroll view.
+///
+/// The horizontal stat-pills row from the previous iteration has been
+/// removed — Level / Title were duplicating the Hero progression header
+/// and other counts didn't earn their vertical space. Map + feed only.
 class HeroJourneyMapScreen extends StatefulWidget {
   const HeroJourneyMapScreen({super.key});
 
@@ -30,20 +31,23 @@ class HeroJourneyMapScreen extends StatefulWidget {
 }
 
 class _HeroJourneyMapScreenState extends State<HeroJourneyMapScreen> {
-  /// `null` = no checkpoint selected. The screen opens with no overlay so
-  /// the user sees the bare map; tapping a node selects it, the tooltip's
-  /// X clears it.
+  /// `null` = no checkpoint selected. Tapping a node selects it; the
+  /// tooltip's X clears it back to null. Selection is hidden automatically
+  /// in the collapsed / static state.
   int? _selectedIndex;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final progression = context.watch<ProgressionProvider>();
-    final progL10n = ProgressionL10n(context.l10n);
-    final checkpoints = JourneyAdapter.buildFull(progression, progL10n);
-    final feed = JourneyAdapter.buildFeed(progression, progL10n);
+    final progL10n = ProgressionL10n(l10n);
+    final checkpoints =
+        JourneyAdapter.buildMilestoneMap(progression, progL10n, l10n);
+    final feed = JourneyAdapter.buildFeed(progression, progL10n, l10n);
 
     final screenH = MediaQuery.of(context).size.height;
-    final mapHeight = (screenH * 0.62).clamp(500.0, 650.0);
+    final mapMaxHeight = (screenH * 0.62).clamp(500.0, 650.0);
+    const mapMinHeight = 200.0;
 
     return Scaffold(
       backgroundColor: FtTokens.bg,
@@ -52,9 +56,9 @@ class _HeroJourneyMapScreenState extends State<HeroJourneyMapScreen> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: const BackButton(color: FtTokens.onSurface),
-        title: const Text(
-          'Cesta hrdiny',
-          style: TextStyle(
+        title: Text(
+          l10n.journeyTitle,
+          style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w800,
             color: FtTokens.onSurface,
@@ -64,49 +68,42 @@ class _HeroJourneyMapScreenState extends State<HeroJourneyMapScreen> {
       ),
       body: SafeArea(
         top: false,
-        child: Column(
-          children: [
-            // ── Map area: fixed height, owns its gestures ────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(14, 4, 14, 0),
-              child: SizedBox(
-                height: mapHeight,
-                width: double.infinity,
-                child: checkpoints.isEmpty
-                    ? const _EmptyJourney()
-                    : JourneyInteractiveMap(
-                        checkpoints: checkpoints,
-                        selectedIndex: _selectedIndex,
-                        onSelected: (i) =>
-                            setState(() => _selectedIndex = i),
-                        height: mapHeight,
-                      ),
-              ),
-            ),
-
-            // ── Below-the-map content scrolls independently ──────────────
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: progression.refresh,
-                color: FtTokens.accent,
-                backgroundColor: FtTokens.surface,
-                child: ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
-                  children: [
-                    _CompactStatChips(
-                      provider: progression,
-                      checkpoints: checkpoints,
-                    ),
-                    const SizedBox(height: 16),
-                    const _SectionLabel(label: 'Historie milníků'),
-                    const SizedBox(height: 8),
-                    JourneyEventFeed(events: feed),
-                  ],
+        child: RefreshIndicator(
+          onRefresh: progression.refresh,
+          color: FtTokens.accent,
+          backgroundColor: FtTokens.surface,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _MapHeaderDelegate(
+                  checkpoints: checkpoints,
+                  selectedIndex: _selectedIndex,
+                  onSelected: (i) => setState(() => _selectedIndex = i),
+                  maxHeight: mapMaxHeight,
+                  minHeight: mapMinHeight,
                 ),
               ),
-            ),
-          ],
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(14, 6, 14, 24),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    // Drag affordance — a small handle pill that visually
+                    // separates the map from the milestone history. Drags
+                    // landing here belong to the parent CustomScrollView, so
+                    // they collapse the map / scroll the feed (vs. drags on
+                    // the map area, which scroll the map's own canvas).
+                    const _DragHandle(),
+                    const SizedBox(height: 6),
+                    _SectionLabel(label: l10n.journeyHistoryHeader),
+                    const SizedBox(height: 8),
+                    JourneyEventFeed(events: feed),
+                  ]),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -114,126 +111,101 @@ class _HeroJourneyMapScreenState extends State<HeroJourneyMapScreen> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Compact horizontal stat chips — replaces the previous large stat grid.
-// Lives directly below the map. Horizontal-scroll on small screens.
+// Sliver header delegate — interpolates between expanded interactive map and
+// collapsed static mini preview.
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _CompactStatChips extends StatelessWidget {
-  const _CompactStatChips({
-    required this.provider,
+class _MapHeaderDelegate extends SliverPersistentHeaderDelegate {
+  _MapHeaderDelegate({
     required this.checkpoints,
+    required this.selectedIndex,
+    required this.onSelected,
+    required this.maxHeight,
+    required this.minHeight,
   });
 
-  final ProgressionProvider provider;
   final List<JourneyCheckpoint> checkpoints;
+  final int? selectedIndex;
+  final ValueChanged<int?> onSelected;
+  final double maxHeight;
+  final double minHeight;
+
+  /// Threshold at which the header switches from interactive to static.
+  /// Picked at 0.5 so the user has clear "hand-off" feedback as they scroll.
+  static const double _staticThreshold = 0.5;
 
   @override
-  Widget build(BuildContext context) {
-    final achCount = provider.achievements.where((a) => a.unlocked).length;
-    final questCount = provider.completedQuests.length;
-    final streakCount = ProgressionDomain.values
-        .where((d) => provider.streakForDomain(d).bestStreak >= 7)
-        .length;
-    final nextLocked = checkpoints.firstWhere(
-      (c) => !c.isUnlocked,
-      orElse: () => const JourneyCheckpoint(
-        id: '_none',
-        type: JourneyEventType.level,
-        label: '',
-        isUnlocked: false,
-      ),
-    );
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    final progress = (shrinkOffset / (maxHeight - minHeight)).clamp(0.0, 1.0);
+    final isCollapsed = progress >= _staticThreshold;
+    final currentHeight =
+        (maxHeight - shrinkOffset).clamp(minHeight, maxHeight);
 
-    final chips = <Widget>[
-      _StatChip(
-        type: JourneyEventType.achievement,
-        value: '$achCount',
-        label: achCount == 1 ? 'úspěch' : 'úspěchů',
-      ),
-      _StatChip(
-        type: JourneyEventType.quest,
-        value: '$questCount',
-        label: questCount == 1 ? 'quest' : 'questů',
-      ),
-      _StatChip(
-        type: JourneyEventType.streak,
-        value: '$streakCount',
-        label: streakCount == 1 ? 'série' : 'sérií',
-      ),
-      if (nextLocked.id != '_none')
-        _StatChip(
-          type: JourneyEventType.level,
-          value: 'Další',
-          label: nextLocked.label,
-        ),
-    ];
-
-    return SizedBox(
-      height: 32,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.zero,
-        itemCount: chips.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 6),
-        itemBuilder: (_, i) => chips[i],
+    return Container(
+      color: FtTokens.bg,
+      padding: const EdgeInsets.fromLTRB(14, 4, 14, 4),
+      child: SizedBox(
+        height: currentHeight - 8,
+        width: double.infinity,
+        child: checkpoints.isEmpty
+            ? const _EmptyJourney()
+            : JourneyInteractiveMap(
+                checkpoints: checkpoints,
+                // Hide tooltip in collapsed state so the mini preview reads
+                // cleanly, regardless of what the user last tapped.
+                selectedIndex: isCollapsed ? null : selectedIndex,
+                onSelected: onSelected,
+                height: currentHeight - 8,
+                interactive: !isCollapsed,
+              ),
       ),
     );
   }
-}
-
-class _StatChip extends StatelessWidget {
-  const _StatChip({
-    required this.type,
-    required this.value,
-    required this.label,
-  });
-
-  final JourneyEventType type;
-  final String value;
-  final String label;
 
   @override
-  Widget build(BuildContext context) {
-    final color = journeyColor(type);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(99),
-        border: Border.all(color: color.withValues(alpha: 0.28)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(journeyIcon(type), size: 12, color: color),
-          const SizedBox(width: 6),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-              letterSpacing: -0.1,
-            ),
-          ),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: color.withValues(alpha: 0.85),
-            ),
-          ),
-        ],
-      ),
-    );
+  double get maxExtent => maxHeight;
+
+  @override
+  double get minExtent => minHeight;
+
+  @override
+  bool shouldRebuild(covariant _MapHeaderDelegate old) {
+    return checkpoints != old.checkpoints ||
+        selectedIndex != old.selectedIndex ||
+        maxHeight != old.maxHeight ||
+        minHeight != old.minHeight;
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Section label + empty state
 // ─────────────────────────────────────────────────────────────────────────────
+
+/// Small horizontal handle pill rendered between the map and the feed.
+/// Purely decorative — its job is to make the boundary obvious so the user
+/// can predict where to drag for "scroll the page" vs. "scroll the map".
+class _DragHandle extends StatelessWidget {
+  const _DragHandle();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        width: 38,
+        height: 4,
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.16),
+          borderRadius: BorderRadius.circular(99),
+        ),
+      ),
+    );
+  }
+}
 
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel({required this.label});
@@ -264,6 +236,7 @@ class _EmptyJourney extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -276,9 +249,9 @@ class _EmptyJourney extends StatelessWidget {
         children: [
           const Icon(Icons.explore_outlined, color: FtTokens.accent, size: 28),
           const SizedBox(height: 10),
-          const Text(
-            'Tvá cesta právě začíná',
-            style: TextStyle(
+          Text(
+            l10n.journeyEmptyMapTitle,
+            style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w800,
               color: Colors.white,
@@ -286,8 +259,7 @@ class _EmptyJourney extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Splň první quest, odemkni úspěch nebo zaznamenej aktivitu — '
-            'milníky se začnou objevovat na mapě.',
+            l10n.journeyEmptyMapBody,
             style: TextStyle(
               fontSize: 12,
               height: 1.45,
