@@ -9,143 +9,146 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../shared/theme/ft_design_tokens.dart';
 import '../../domain/journey_models.dart';
+import 'journey_map_route.dart';
 import 'journey_shared.dart';
 
-class JourneyMapPoint {
-  const JourneyMapPoint({
-    required this.id,
-    required this.x,
-    required this.y,
-  });
-
-  factory JourneyMapPoint.fromJson(Map<String, dynamic> json) {
-    return JourneyMapPoint(
-      id: (json['id'] as num).toInt(),
-      x: (json['x'] as num).toDouble(),
-      y: (json['y'] as num).toDouble(),
-    );
-  }
-
-  final int id;
-  final double x;
-  final double y;
-
-  Offset toOffset({
-    required double mapWidth,
-    required double mapHeight,
-  }) {
-    return Offset(
-      x * mapWidth,
-      y * mapHeight,
-    );
-  }
+abstract final class _JourneyMapAssets {
+  static const route = 'assets/map/journey_map_route.json';
+  static const background = 'assets/ui/journey_map_bg.png';
+  static const collapsedBackground = 'assets/ui/journey_map_bg_collapsed.png';
+  static const fallbackBackground = 'assets/ui/journey_map_bg.jpg';
 }
 
-class JourneyMapEdge {
-  const JourneyMapEdge({
-    required this.from,
-    required this.to,
-  });
+abstract final class _JourneyMapLayout {
+  static const imageWidth = 1408.0;
+  static const imageHeight = 11712.0;
+  static const imageAspectRatio = imageHeight / imageWidth;
 
-  factory JourneyMapEdge.fromJson(Map<String, dynamic> json) {
-    return JourneyMapEdge(
-      from: (json['from'] as num).toInt(),
-      to: (json['to'] as num).toInt(),
-    );
-  }
+  static const collapsedTopPadding = 58.0;
+  static const collapsedBottomPadding = 58.0;
+  static const collapsedSingleNodeX = 0.50;
+  static const collapsedSingleNodeY = 0.50;
+  static const collapsedNodeXs = [0.34, 0.66];
 
-  final int from;
-  final int to;
+  static const sideEventTangentEpsilon = 0.1;
+  static const sideEventDistanceFactor = 0.12;
+  static const sideEventMinDistance = 38.0;
+  static const sideEventMaxDistance = 68.0;
+  static const sideEventPreferredMin = 0.65;
+  static const sideEventPreferredMax = 1.35;
+  static const sideEventDistanceSteps = [0.0, 0.42, 0.84];
+  static const sideEventAlongShifts = [0.0, -18.0, 18.0, -34.0, 34.0];
+  static const collisionGap = 4.0;
+
+  static const routePointStart = 0;
+  static const routePointMinLevel = 1;
+  static const routePointMaxLevel = 100;
+  static const currentLevelDotSize = 14.0;
+  static const unlockedLevelDotSize = 8.0;
+  static const lockedLevelDotSize = 7.0;
+
+  static const mapRadius = 20.0;
+  static const focusScrollAnchor = 0.62;
 }
 
-class JourneyMapRoute {
-  JourneyMapRoute({
-    required List<JourneyMapPoint> points,
-    required this.edges,
-  })  : points = List.unmodifiable(points),
-        _pointsById = {
-          for (final point in points) point.id: point,
-        };
+abstract final class _JourneyMapMotion {
+  static const pulseDuration = Duration(milliseconds: 2200);
+  static const overlaySwitchDuration = Duration(milliseconds: 180);
+  static const overlayScaleBegin = 0.94;
+  static const pulseScale = 0.75;
+}
 
-  factory JourneyMapRoute.fromJson(Map<String, dynamic> json) {
-    final pointsJson = json['points'] as List<dynamic>? ?? const [];
-    final edgesJson = json['edges'] as List<dynamic>? ?? const [];
+abstract final class _JourneyMapNodeSizes {
+  static const finalLevel = 38.0;
+  static const start = 34.0;
+  static const current = 36.0;
+  static const next = 34.0;
+  static const titleMilestone = 32.0;
+  static const achievement = 22.0;
+  static const level = 22.0;
+  static const quest = 20.0;
+  static const fallback = 22.0;
 
-    return JourneyMapRoute(
-      points: pointsJson
-          .whereType<Map<String, dynamic>>()
-          .map(JourneyMapPoint.fromJson)
-          .toList(growable: false),
-      edges: edgesJson
-          .whereType<Map<String, dynamic>>()
-          .map(JourneyMapEdge.fromJson)
-          .toList(growable: false),
-    );
-  }
+  static const nodeTapPadding = 28.0;
+  static const specialHaloPadding = 12.0;
+}
 
-  final List<JourneyMapPoint> points;
-  final List<JourneyMapEdge> edges;
-  final Map<int, JourneyMapPoint> _pointsById;
+abstract final class _JourneyMapCollisionRadii {
+  static const specialAnchor = 34.0;
+  static const highlightedAnchor = 32.0;
+  static const pathAnchor = 30.0;
+  static const achievement = 24.0;
+  static const fallback = 22.0;
+}
 
-  JourneyMapPoint? pointById(int id) => _pointsById[id];
+abstract final class _JourneyMapLevelDotStyle {
+  static const unlockedColor = Color(0xFFD4AF37);
+  static const currentTextColor = Color(0xFF20160A);
+  static const currentTextSize = 7.0;
+  static const currentLetterSpacing = -0.7;
+  static const currentBorderWidth = 1.6;
+  static const defaultBorderWidth = 0.8;
+  static const currentGlowBlur = 9.0;
+  static const defaultGlowBlur = 6.0;
+  static const currentGlowAlpha = 0.42;
+  static const defaultGlowAlpha = 0.32;
+  static const pulseBorderWidth = 2.0;
+}
 
-  JourneyMapPoint? pointForCheckpoint(JourneyCheckpoint checkpoint) {
-    final pointId = checkpoint.mapPointId;
-    if (pointId != null) return pointById(pointId);
+abstract final class _JourneyMapShellStyle {
+  static const gradientStart = Color(0xFF1A1838);
+  static const gradientEnd = Color(0xFF0F1226);
+  static const borderAlpha = 0.08;
+  static const accentShadowAlpha = 0.10;
+  static const accentShadowBlur = 20.0;
+  static const accentShadowSpread = -4.0;
+  static const shadowOffset = Offset(0, 4);
 
-    if (checkpoint.id == 'start') return pointById(0);
-    final level = checkpoint.levelNumber;
-    if (level != null) return pointById(level);
-    return null;
-  }
+  static const panHintInset = 10.0;
+  static const panHintHorizontalPadding = 8.0;
+  static const panHintVerticalPadding = 4.0;
+  static const panHintRadius = 8.0;
+  static const panHintBgAlpha = 0.40;
+  static const panHintBorderAlpha = 0.10;
+  static const panHintIconSize = 11.0;
+  static const panHintGap = 4.0;
+  static const panHintFontSize = 9.0;
+  static const panHintTextAlpha = 0.78;
+  static const panHintLetterSpacing = 0.4;
+}
 
-  Offset tangentForPointId({
-    required int pointId,
-    required double mapWidth,
-    required double mapHeight,
-  }) {
-    JourneyMapPoint? before;
-    JourneyMapPoint? after;
+abstract final class _JourneyMapTooltipStyle {
+  static const maxWidth = 240.0;
+  static const approxHeight = 130.0;
+  static const nodeRadius = 18.0;
+  static const gap = 10.0;
+  static const edgePadding = 8.0;
+  static const flipAtCanvasFraction = 0.55;
 
-    for (final edge in edges) {
-      if (edge.to == pointId) before ??= pointById(edge.from);
-      if (edge.from == pointId) after ??= pointById(edge.to);
-    }
+  static const cardColor = Color(0xEE0F1226);
+  static const cardRadius = 13.0;
+  static const padding = EdgeInsets.fromLTRB(11, 9, 6, 11);
+  static const iconBoxSize = 34.0;
+  static const iconSize = 18.0;
+}
 
-    before ??= pointById(pointId - 1);
-    after ??= pointById(pointId + 1);
+abstract final class _JourneyMapBackgroundStyle {
+  static const topGlowSize = 280.0;
+  static const topGlowAlpha = 0.22;
+  static const topGlowOffset = Offset(-60, -80);
 
-    final center = pointById(pointId);
-    final start = before ?? center;
-    final end = after ?? center;
-    if (start == null || end == null) return const Offset(0, -1);
+  static const middleGlowSize = 240.0;
+  static const middleGlowAlpha = 0.14;
+  static const middleGlowTopFactor = 0.4;
+  static const middleGlowRight = -80.0;
 
-    return end.toOffset(mapWidth: mapWidth, mapHeight: mapHeight) -
-        start.toOffset(mapWidth: mapWidth, mapHeight: mapHeight);
-  }
+  static const bottomGlowSize = 220.0;
+  static const bottomGlowAlpha = 0.12;
+  static const bottomGlowLeft = -50.0;
+  static const bottomGlowBottom = -60.0;
 
-  List<List<Offset>> edgeSegments({
-    required double mapWidth,
-    required double mapHeight,
-    required bool Function(JourneyMapEdge edge) where,
-  }) {
-    final segments = <List<Offset>>[];
-
-    for (final edge in edges) {
-      if (!where(edge)) continue;
-
-      final from = pointById(edge.from);
-      final to = pointById(edge.to);
-      if (from == null || to == null) continue;
-
-      segments.add([
-        from.toOffset(mapWidth: mapWidth, mapHeight: mapHeight),
-        to.toOffset(mapWidth: mapWidth, mapHeight: mapHeight),
-      ]);
-    }
-
-    return segments;
-  }
+  static const overlayTopAlpha = 0.20;
+  static const overlayBottomAlpha = 0.45;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -178,21 +181,16 @@ class JourneyInteractiveMap extends StatefulWidget {
   /// When `false`, behaves as a static mini preview (collapsed state).
   final bool interactive;
 
-  static const String _routeAssetPath = 'assets/map/journey_map_route.json';
-  static const double _mapImageWidth = 1408;
-  static const double _mapImageHeight = 11712;
-  static const double _mapAspectRatio = _mapImageHeight / _mapImageWidth;
-
-  static const double _collapsedTopPadding = 58;
-  static const double _collapsedBottomPadding = 58;
-
   static double _canvasHeight({
     required double viewportWidth,
     required double viewportHeight,
     required bool interactive,
   }) {
     if (!interactive) return viewportHeight;
-    return math.max(viewportHeight, viewportWidth * _mapAspectRatio);
+    return math.max(
+      viewportHeight,
+      viewportWidth * _JourneyMapLayout.imageAspectRatio,
+    );
   }
 
   static List<Offset> _nodePositions({
@@ -209,25 +207,31 @@ class JourneyInteractiveMap extends StatefulWidget {
     if (!interactive) {
       if (checkpointCount == 1) {
         return [
-          Offset(viewportWidth * 0.50, viewportHeight * 0.50),
+          Offset(
+            viewportWidth * _JourneyMapLayout.collapsedSingleNodeX,
+            viewportHeight * _JourneyMapLayout.collapsedSingleNodeY,
+          ),
         ];
       }
 
       final availableHeight = math.max(
         1.0,
-        viewportHeight - _collapsedTopPadding - _collapsedBottomPadding,
+        viewportHeight -
+            _JourneyMapLayout.collapsedTopPadding -
+            _JourneyMapLayout.collapsedBottomPadding,
       );
       final step = availableHeight / (checkpointCount - 1);
 
       // Collapsed mode is not a compressed full map. It is a clean recent
       // progress preview, so keep the points readable and centered.
-      const collapsedXs = [0.34, 0.66];
 
       return List<Offset>.generate(
         checkpointCount,
         (index) => Offset(
-          viewportWidth * collapsedXs[index % collapsedXs.length],
-          _collapsedTopPadding + (index * step),
+          viewportWidth *
+              _JourneyMapLayout.collapsedNodeXs[
+                  index % _JourneyMapLayout.collapsedNodeXs.length],
+          _JourneyMapLayout.collapsedTopPadding + (index * step),
         ),
         growable: false,
       );
@@ -305,29 +309,36 @@ class JourneyInteractiveMap extends StatefulWidget {
       mapHeight: mapHeight,
     );
     final length = tangent.distance;
-    final normal = length <= 0.1
+    final normal = length <= _JourneyMapLayout.sideEventTangentEpsilon
         ? const Offset(1, 0)
         : Offset(-tangent.dy / length, tangent.dx / length);
 
     final preferredSide = checkpoint.mapSide ?? 1.0;
     final preferredSign = preferredSide >= 0 ? 1.0 : -1.0;
-    final preferredMagnitude = preferredSide.abs().clamp(0.65, 1.35);
-    final baseDistance = (mapWidth * 0.12).clamp(38.0, 68.0).toDouble();
-    final along = length <= 0.1
+    final preferredMagnitude = preferredSide.abs().clamp(
+          _JourneyMapLayout.sideEventPreferredMin,
+          _JourneyMapLayout.sideEventPreferredMax,
+        );
+    final baseDistance = (mapWidth * _JourneyMapLayout.sideEventDistanceFactor)
+        .clamp(
+          _JourneyMapLayout.sideEventMinDistance,
+          _JourneyMapLayout.sideEventMaxDistance,
+        )
+        .toDouble();
+    final along = length <= _JourneyMapLayout.sideEventTangentEpsilon
         ? const Offset(0, -1)
         : Offset(tangent.dx / length, tangent.dy / length);
     final radius = _collisionRadius(checkpoint);
 
     final candidates = <Offset>[
       for (final sign in [preferredSign, -preferredSign])
-        for (final distanceMultiplier in [
-          preferredMagnitude,
-          preferredMagnitude + 0.42,
-          preferredMagnitude + 0.84,
-        ])
-          for (final alongShift in [0.0, -18.0, 18.0, -34.0, 34.0])
+        for (final distanceStep in _JourneyMapLayout.sideEventDistanceSteps)
+          for (final alongShift in _JourneyMapLayout.sideEventAlongShifts)
             base +
-                normal * baseDistance * distanceMultiplier * sign +
+                normal *
+                    baseDistance *
+                    (preferredMagnitude + distanceStep) *
+                    sign +
                 along * alongShift,
     ];
 
@@ -336,7 +347,7 @@ class JourneyInteractiveMap extends StatefulWidget {
               candidate,
               mapWidth: mapWidth,
               mapHeight: mapHeight,
-              inset: radius + 4,
+              inset: radius + _JourneyMapLayout.collisionGap,
             ))
         .firstWhere(
           (candidate) => !_collides(
@@ -348,7 +359,7 @@ class JourneyInteractiveMap extends StatefulWidget {
             candidates.first,
             mapWidth: mapWidth,
             mapHeight: mapHeight,
-            inset: radius + 4,
+            inset: radius + _JourneyMapLayout.collisionGap,
           ),
         );
   }
@@ -359,7 +370,8 @@ class JourneyInteractiveMap extends StatefulWidget {
     required List<_MapCollisionCircle> occupied,
   }) {
     for (final circle in occupied) {
-      final minDistance = radius + circle.radius + 4;
+      final minDistance =
+          radius + circle.radius + _JourneyMapLayout.collisionGap;
       if ((candidate - circle.center).distance < minDistance) return true;
     }
     return false;
@@ -378,11 +390,18 @@ class JourneyInteractiveMap extends StatefulWidget {
   }
 
   static double _collisionRadius(JourneyCheckpoint checkpoint) {
-    if (checkpoint.id == 'start' || checkpoint.levelNumber == 100) return 34;
-    if (checkpoint.isCurrent || checkpoint.isNext) return 32;
-    if (checkpoint.isPathAnchor) return 30;
-    if (checkpoint.type == JourneyEventType.achievement) return 24;
-    return 22;
+    if (checkpoint.id == 'start' ||
+        checkpoint.levelNumber == _JourneyMapLayout.routePointMaxLevel) {
+      return _JourneyMapCollisionRadii.specialAnchor;
+    }
+    if (checkpoint.isCurrent || checkpoint.isNext) {
+      return _JourneyMapCollisionRadii.highlightedAnchor;
+    }
+    if (checkpoint.isPathAnchor) return _JourneyMapCollisionRadii.pathAnchor;
+    if (checkpoint.type == JourneyEventType.achievement) {
+      return _JourneyMapCollisionRadii.achievement;
+    }
+    return _JourneyMapCollisionRadii.fallback;
   }
 
   static List<Widget> _routeLevelDots({
@@ -391,12 +410,13 @@ class JourneyInteractiveMap extends StatefulWidget {
     required double mapHeight,
     required int currentRoutePointId,
     required Set<int> hiddenPointIds,
+    required Animation<double> pulseAnimation,
   }) {
     final points = route.points
         .where(
           (point) =>
-              point.id >= 1 &&
-              point.id <= 100 &&
+              point.id >= _JourneyMapLayout.routePointMinLevel &&
+              point.id <= _JourneyMapLayout.routePointMaxLevel &&
               !hiddenPointIds.contains(point.id),
         )
         .toList(growable: false)
@@ -404,14 +424,44 @@ class JourneyInteractiveMap extends StatefulWidget {
 
     return [
       for (final point in points)
-        Positioned(
-          left: point.toOffset(mapWidth: mapWidth, mapHeight: mapHeight).dx - 4,
-          top: point.toOffset(mapWidth: mapWidth, mapHeight: mapHeight).dy - 4,
-          child: IgnorePointer(
-            child: _RouteLevelDot(isUnlocked: point.id <= currentRoutePointId),
-          ),
+        _routeLevelDotPositioned(
+          point: point,
+          mapWidth: mapWidth,
+          mapHeight: mapHeight,
+          currentRoutePointId: currentRoutePointId,
+          pulseAnimation: pulseAnimation,
         ),
     ];
+  }
+
+  static Widget _routeLevelDotPositioned({
+    required JourneyMapPoint point,
+    required double mapWidth,
+    required double mapHeight,
+    required int currentRoutePointId,
+    required Animation<double> pulseAnimation,
+  }) {
+    final isUnlocked = point.id <= currentRoutePointId;
+    final isCurrent = point.id == currentRoutePointId;
+    final center = point.toOffset(mapWidth: mapWidth, mapHeight: mapHeight);
+    final size = isCurrent
+        ? _JourneyMapLayout.currentLevelDotSize
+        : isUnlocked
+            ? _JourneyMapLayout.unlockedLevelDotSize
+            : _JourneyMapLayout.lockedLevelDotSize;
+
+    return Positioned(
+      left: center.dx - size / 2,
+      top: center.dy - size / 2,
+      child: IgnorePointer(
+        child: _RouteLevelDot(
+          level: point.id,
+          isUnlocked: isUnlocked,
+          isCurrent: isCurrent,
+          pulseAnimation: isCurrent ? pulseAnimation : null,
+        ),
+      ),
+    );
   }
 
   /// Collapsed header should not show the whole map compressed into a small box.
@@ -481,8 +531,20 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
     _routeFuture = _loadRoute();
     _pulse = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2200),
+      duration: _JourneyMapMotion.pulseDuration,
     )..repeat();
+  }
+
+  @override
+  void didUpdateWidget(covariant JourneyInteractiveMap oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Collapsed mode detaches the inner scrollable. When the user expands the
+    // map again, let the normal focus-scroll path run once more so the player
+    // lands near their current journey position instead of the top of the map.
+    if (!oldWidget.interactive && widget.interactive) {
+      _lastFocusKey = null;
+    }
   }
 
   @override
@@ -546,6 +608,7 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
                     mapHeight: canvasH,
                     currentRoutePointId: currentRoutePointId,
                     hiddenPointIds: hiddenDotPointIds,
+                    pulseAnimation: _pulse,
                   )
                 : const <Widget>[];
             final solidSegments = route.edgeSegments(
@@ -575,6 +638,7 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
                 selected != null &&
                 selected >= 0 &&
                 selected < visibleCheckpoints.length;
+            final showMapOverlays = widget.interactive;
 
             final canvasStack = GestureDetector(
               behavior: HitTestBehavior.opaque,
@@ -586,8 +650,13 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
                 height: canvasH,
                 child: Stack(
                   children: [
-                    _MapBackground(width: viewportW, height: canvasH),
-                    if (solidSegments.isNotEmpty || dashedSegments.isNotEmpty)
+                    _MapBackground(
+                      width: viewportW,
+                      height: canvasH,
+                      collapsed: !widget.interactive,
+                    ),
+                    if (showMapOverlays &&
+                        (solidSegments.isNotEmpty || dashedSegments.isNotEmpty))
                       CustomPaint(
                         size: Size(viewportW, canvasH),
                         painter: JourneyPathPainter(
@@ -598,26 +667,19 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
                               widget.interactive ? dashedSegments : const [],
                         ),
                       ),
-                    ...routeLevelDots,
-                    for (int i = 0; i < n; i++)
-                      Positioned(
-                        left: absPos[i].dx -
-                            _halfNodeWidget(visibleCheckpoints[i]),
-                        top: absPos[i].dy -
-                            _halfNodeWidget(visibleCheckpoints[i]),
-                        child: _nodeWithOptionalStartHalo(
+                    if (showMapOverlays) ...[
+                      ...routeLevelDots,
+                      for (int i = 0; i < n; i++)
+                        _checkpointNodePositioned(
                           checkpoint: visibleCheckpoints[i],
-                          isSelected: widget.interactive && selected == i,
-                          onTap: widget.interactive
-                              ? () => widget.onSelected(i)
-                              : () {},
-                          pulseAnimation: visibleCheckpoints[i].isCurrent &&
-                                  widget.interactive
-                              ? _pulse
-                              : null,
+                          position: absPos[i],
+                          index: i,
+                          selectedIndex: selected,
+                          currentRoutePointId: currentRoutePointId,
+                          pulseAnimation: _pulse,
                           compact: !widget.interactive,
                         ),
-                      ),
+                    ],
                     if (hasSelection)
                       _TooltipPosition(
                         anchor: absPos[selected],
@@ -629,7 +691,7 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
                           child: JourneyCheckpointOverlayCard(
                             checkpoint: visibleCheckpoints[selected],
                             onClose: () => widget.onSelected(null),
-                            maxWidth: 240,
+                            maxWidth: _JourneyMapTooltipStyle.maxWidth,
                           ),
                         ),
                       ),
@@ -645,21 +707,32 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
                 gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFF1A1838), Color(0xFF0F1226)],
+                  colors: [
+                    _JourneyMapShellStyle.gradientStart,
+                    _JourneyMapShellStyle.gradientEnd,
+                  ],
                 ),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                borderRadius:
+                    BorderRadius.circular(_JourneyMapLayout.mapRadius),
+                border: Border.all(
+                  color: Colors.white.withValues(
+                    alpha: _JourneyMapShellStyle.borderAlpha,
+                  ),
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: FtTokens.accent.withValues(alpha: 0.10),
-                    blurRadius: 20,
-                    spreadRadius: -4,
-                    offset: const Offset(0, 4),
+                    color: FtTokens.accent.withValues(
+                      alpha: _JourneyMapShellStyle.accentShadowAlpha,
+                    ),
+                    blurRadius: _JourneyMapShellStyle.accentShadowBlur,
+                    spreadRadius: _JourneyMapShellStyle.accentShadowSpread,
+                    offset: _JourneyMapShellStyle.shadowOffset,
                   ),
                 ],
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius:
+                    BorderRadius.circular(_JourneyMapLayout.mapRadius),
                 child: Stack(
                   children: [
                     if (widget.interactive)
@@ -689,32 +762,53 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
                     // Pan hint pill — visible only in interactive (expanded) state.
                     if (widget.interactive)
                       Positioned(
-                        top: 10,
-                        right: 10,
+                        top: _JourneyMapShellStyle.panHintInset,
+                        right: _JourneyMapShellStyle.panHintInset,
                         child: IgnorePointer(
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
+                              horizontal: _JourneyMapShellStyle
+                                  .panHintHorizontalPadding,
+                              vertical:
+                                  _JourneyMapShellStyle.panHintVerticalPadding,
+                            ),
                             decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.40),
-                              borderRadius: BorderRadius.circular(8),
+                              color: Colors.black.withValues(
+                                alpha: _JourneyMapShellStyle.panHintBgAlpha,
+                              ),
+                              borderRadius: BorderRadius.circular(
+                                _JourneyMapShellStyle.panHintRadius,
+                              ),
                               border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.10),
+                                color: Colors.white.withValues(
+                                  alpha:
+                                      _JourneyMapShellStyle.panHintBorderAlpha,
+                                ),
                               ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.swipe_vertical_rounded,
-                                    size: 11, color: Colors.white70),
-                                const SizedBox(width: 4),
+                                const Icon(
+                                  Icons.swipe_vertical_rounded,
+                                  size: _JourneyMapShellStyle.panHintIconSize,
+                                  color: Colors.white70,
+                                ),
+                                const SizedBox(
+                                  width: _JourneyMapShellStyle.panHintGap,
+                                ),
                                 Text(
                                   l10n.journeyPanHint,
                                   style: TextStyle(
-                                    fontSize: 9,
+                                    fontSize:
+                                        _JourneyMapShellStyle.panHintFontSize,
                                     fontWeight: FontWeight.w700,
-                                    color: Colors.white.withValues(alpha: 0.78),
-                                    letterSpacing: 0.4,
+                                    color: Colors.white.withValues(
+                                      alpha: _JourneyMapShellStyle
+                                          .panHintTextAlpha,
+                                    ),
+                                    letterSpacing: _JourneyMapShellStyle
+                                        .panHintLetterSpacing,
                                   ),
                                 ),
                               ],
@@ -734,7 +828,7 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
 
   static Future<JourneyMapRoute> _loadRoute() async {
     final raw = await rootBundle.loadString(
-      JourneyInteractiveMap._routeAssetPath,
+      _JourneyMapAssets.route,
     );
     return JourneyMapRoute.fromJson(jsonDecode(raw) as Map<String, dynamic>);
   }
@@ -743,8 +837,14 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
     final unlocked = checkpoints.where((cp) => cp.isUnlocked).map((cp) =>
         cp.mapUnlockedThroughPointId ?? cp.mapPointId ?? cp.levelNumber ?? 0);
 
-    if (unlocked.isEmpty) return 0;
-    return unlocked.reduce(math.max).clamp(0, 100);
+    if (unlocked.isEmpty) return _JourneyMapLayout.routePointStart;
+    return unlocked
+        .reduce(math.max)
+        .clamp(
+          _JourneyMapLayout.routePointStart,
+          _JourneyMapLayout.routePointMaxLevel,
+        )
+        .toInt();
   }
 
   void _scheduleFocusScroll({
@@ -768,7 +868,8 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
       if (!mounted || !_scroll.hasClients) return;
 
       final maxScroll = math.max(0.0, canvasHeight - viewportHeight);
-      final target = (positions[focusIndex].dy - viewportHeight * 0.62)
+      final target = (positions[focusIndex].dy -
+              viewportHeight * _JourneyMapLayout.focusScrollAnchor)
           .clamp(0.0, maxScroll);
       _scroll.jumpTo(target);
     });
@@ -776,30 +877,91 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
 
   /// Type-driven sizing — major title milestones are the largest, quests
   /// the smallest. Current player level is also up-sized (regardless of type).
-  static double _nodeSize(JourneyCheckpoint cp) {
-    if (cp.levelNumber == 100) return 38.0;
-    if (cp.id == 'start') return cp.isCurrent ? 36.0 : 34.0;
-    if (cp.isCurrent) return 36.0;
-    if (cp.isNext) return 34.0;
+  Widget _checkpointNodePositioned({
+    required JourneyCheckpoint checkpoint,
+    required Offset position,
+    required int index,
+    required int? selectedIndex,
+    required int currentRoutePointId,
+    required Animation<double> pulseAnimation,
+    required bool compact,
+  }) {
+    final isExactCurrent = _isExactCurrentCheckpoint(
+      checkpoint,
+      currentRoutePointId: currentRoutePointId,
+    );
+    final halfNode = _halfNodeWidget(
+      checkpoint,
+      highlightAsCurrent: isExactCurrent,
+    );
+
+    return Positioned(
+      left: position.dx - halfNode,
+      top: position.dy - halfNode,
+      child: _nodeWithOptionalStartHalo(
+        checkpoint: checkpoint,
+        isSelected: widget.interactive && selectedIndex == index,
+        onTap: widget.interactive ? () => widget.onSelected(index) : () {},
+        pulseAnimation:
+            isExactCurrent && widget.interactive ? pulseAnimation : null,
+        compact: compact,
+        highlightAsCurrent: isExactCurrent,
+      ),
+    );
+  }
+
+  bool _isExactCurrentCheckpoint(
+    JourneyCheckpoint checkpoint, {
+    required int currentRoutePointId,
+  }) {
+    if (!checkpoint.isCurrent) return false;
+    final pointId = checkpoint.mapPointId ?? checkpoint.levelNumber;
+    return pointId == currentRoutePointId;
+  }
+
+  static double _nodeSize(
+    JourneyCheckpoint cp, {
+    bool? highlightAsCurrent,
+  }) {
+    final isCurrentVisual = highlightAsCurrent ?? cp.isCurrent;
+    if (cp.levelNumber == _JourneyMapLayout.routePointMaxLevel) {
+      return _JourneyMapNodeSizes.finalLevel;
+    }
+    if (cp.id == 'start') {
+      return isCurrentVisual
+          ? _JourneyMapNodeSizes.current
+          : _JourneyMapNodeSizes.start;
+    }
+    if (isCurrentVisual) return _JourneyMapNodeSizes.current;
+    if (cp.isNext) return _JourneyMapNodeSizes.next;
 
     switch (cp.type) {
       case JourneyEventType.titleMilestone:
-        return 32.0;
+        return _JourneyMapNodeSizes.titleMilestone;
       case JourneyEventType.achievement:
-        return 22.0;
+        return _JourneyMapNodeSizes.achievement;
       case JourneyEventType.level:
-        return 22.0;
+        return _JourneyMapNodeSizes.level;
       case JourneyEventType.quest:
-        return 20.0;
+        return _JourneyMapNodeSizes.quest;
       case JourneyEventType.streak:
       case JourneyEventType.xpMilestone:
-        return 22.0;
+        return _JourneyMapNodeSizes.fallback;
     }
   }
 
-  static double _halfNodeWidget(JourneyCheckpoint cp) {
-    final haloPadding = cp.id == 'start' || cp.levelNumber == 100 ? 12.0 : 0.0;
-    return (_nodeSize(cp) + 28 + haloPadding) / 2;
+  static double _halfNodeWidget(
+    JourneyCheckpoint cp, {
+    bool? highlightAsCurrent,
+  }) {
+    final haloPadding = cp.id == 'start' ||
+            cp.levelNumber == _JourneyMapLayout.routePointMaxLevel
+        ? _JourneyMapNodeSizes.specialHaloPadding
+        : 0.0;
+    return (_nodeSize(cp, highlightAsCurrent: highlightAsCurrent) +
+            _JourneyMapNodeSizes.nodeTapPadding +
+            haloPadding) /
+        2;
   }
 
   Widget _nodeWithOptionalStartHalo({
@@ -808,14 +970,16 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
     required VoidCallback onTap,
     required Animation<double>? pulseAnimation,
     required bool compact,
+    required bool highlightAsCurrent,
   }) {
     final node = JourneyCheckpointNode(
       checkpoint: checkpoint,
       isSelected: isSelected,
       onTap: onTap,
-      baseSize: _nodeSize(checkpoint),
+      baseSize: _nodeSize(checkpoint, highlightAsCurrent: highlightAsCurrent),
       pulseAnimation: pulseAnimation,
       compact: compact,
+      highlightAsCurrent: highlightAsCurrent,
     );
 
     if (checkpoint.id == 'start') {
@@ -844,7 +1008,7 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
       );
     }
 
-    if (checkpoint.levelNumber == 100) {
+    if (checkpoint.levelNumber == _JourneyMapLayout.routePointMaxLevel) {
       return Container(
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
@@ -880,37 +1044,110 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _RouteLevelDot extends StatelessWidget {
-  const _RouteLevelDot({required this.isUnlocked});
+  const _RouteLevelDot({
+    required this.level,
+    required this.isUnlocked,
+    required this.isCurrent,
+    this.pulseAnimation,
+  });
 
+  final int level;
   final bool isUnlocked;
+  final bool isCurrent;
+  final Animation<double>? pulseAnimation;
 
   @override
   Widget build(BuildContext context) {
     final color = isUnlocked
-        ? const Color(0xFFD4AF37)
+        ? _JourneyMapLevelDotStyle.unlockedColor
         : Colors.white.withValues(alpha: 0.26);
+    final size = isCurrent
+        ? _JourneyMapLayout.currentLevelDotSize
+        : isUnlocked
+            ? _JourneyMapLayout.unlockedLevelDotSize
+            : _JourneyMapLayout.lockedLevelDotSize;
 
-    return Container(
-      width: isUnlocked ? 8 : 7,
-      height: isUnlocked ? 8 : 7,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color,
-        border: Border.all(
-          color: isUnlocked
-              ? Colors.white.withValues(alpha: 0.34)
-              : Colors.white.withValues(alpha: 0.12),
-          width: 0.8,
-        ),
-        boxShadow: isUnlocked
-            ? [
-                BoxShadow(
-                  color: color.withValues(alpha: 0.32),
-                  blurRadius: 6,
-                  spreadRadius: -1,
-                ),
-              ]
-            : null,
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        alignment: Alignment.center,
+        clipBehavior: Clip.none,
+        children: [
+          if (pulseAnimation != null)
+            AnimatedBuilder(
+              animation: pulseAnimation!,
+              builder: (_, __) {
+                final v = pulseAnimation!.value;
+                return Transform.scale(
+                  scale: 1.0 + v * _JourneyMapMotion.pulseScale,
+                  child: Container(
+                    width: size,
+                    height: size,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: color.withValues(alpha: (1 - v) * 0.62),
+                        width: _JourneyMapLevelDotStyle.pulseBorderWidth,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: isCurrent
+                  ? const RadialGradient(
+                      colors: [Color(0xFFFFD980), Color(0xFFE5A833)],
+                      radius: 0.85,
+                    )
+                  : null,
+              color: isCurrent ? null : color,
+              border: Border.all(
+                color: isUnlocked
+                    ? Colors.white.withValues(alpha: isCurrent ? 0.70 : 0.34)
+                    : Colors.white.withValues(alpha: 0.12),
+                width: isCurrent
+                    ? _JourneyMapLevelDotStyle.currentBorderWidth
+                    : _JourneyMapLevelDotStyle.defaultBorderWidth,
+              ),
+              boxShadow: isUnlocked
+                  ? [
+                      BoxShadow(
+                        color: color.withValues(
+                          alpha: isCurrent
+                              ? _JourneyMapLevelDotStyle.currentGlowAlpha
+                              : _JourneyMapLevelDotStyle.defaultGlowAlpha,
+                        ),
+                        blurRadius: isCurrent
+                            ? _JourneyMapLevelDotStyle.currentGlowBlur
+                            : _JourneyMapLevelDotStyle.defaultGlowBlur,
+                        spreadRadius: isCurrent ? 0 : -1,
+                      ),
+                    ]
+                  : null,
+            ),
+            child: isCurrent
+                ? Center(
+                    child: Text(
+                      '$level',
+                      style: const TextStyle(
+                        fontSize: _JourneyMapLevelDotStyle.currentTextSize,
+                        fontWeight: FontWeight.w900,
+                        color: _JourneyMapLevelDotStyle.currentTextColor,
+                        letterSpacing:
+                            _JourneyMapLevelDotStyle.currentLetterSpacing,
+                        height: 1,
+                      ),
+                    ),
+                  )
+                : null,
+          ),
+        ],
       ),
     );
   }
@@ -940,10 +1177,16 @@ class _MapLoadingShell extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF1A1838), Color(0xFF0F1226)],
+          colors: [
+            _JourneyMapShellStyle.gradientStart,
+            _JourneyMapShellStyle.gradientEnd,
+          ],
         ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        borderRadius: BorderRadius.circular(_JourneyMapLayout.mapRadius),
+        border: Border.all(
+          color:
+              Colors.white.withValues(alpha: _JourneyMapShellStyle.borderAlpha),
+        ),
       ),
       child: const Center(
         child: SizedBox(
@@ -972,34 +1215,38 @@ class _TooltipPosition extends StatelessWidget {
   final double canvasHeight;
   final Widget child;
 
-  static const double _tooltipMaxWidth = 240;
-  static const double _tooltipApproxHeight = 130;
-  static const double _nodeRadius = 18;
-  static const double _gap = 10;
-  static const double _edgePadding = 8;
-
   @override
   Widget build(BuildContext context) {
-    final placeRight = anchor.dx < canvasWidth * 0.55;
+    final placeRight =
+        anchor.dx < canvasWidth * _JourneyMapTooltipStyle.flipAtCanvasFraction;
 
     double left = placeRight
-        ? anchor.dx + _nodeRadius + _gap
-        : anchor.dx - _nodeRadius - _gap - _tooltipMaxWidth;
+        ? anchor.dx +
+            _JourneyMapTooltipStyle.nodeRadius +
+            _JourneyMapTooltipStyle.gap
+        : anchor.dx -
+            _JourneyMapTooltipStyle.nodeRadius -
+            _JourneyMapTooltipStyle.gap -
+            _JourneyMapTooltipStyle.maxWidth;
     left = left.clamp(
-      _edgePadding,
-      canvasWidth - _tooltipMaxWidth - _edgePadding,
+      _JourneyMapTooltipStyle.edgePadding,
+      canvasWidth -
+          _JourneyMapTooltipStyle.maxWidth -
+          _JourneyMapTooltipStyle.edgePadding,
     );
 
-    double top = anchor.dy - _tooltipApproxHeight / 2;
+    double top = anchor.dy - _JourneyMapTooltipStyle.approxHeight / 2;
     top = top.clamp(
-      _edgePadding,
-      canvasHeight - _tooltipApproxHeight - _edgePadding,
+      _JourneyMapTooltipStyle.edgePadding,
+      canvasHeight -
+          _JourneyMapTooltipStyle.approxHeight -
+          _JourneyMapTooltipStyle.edgePadding,
     );
 
     return Positioned(
       left: left,
       top: top,
-      width: _tooltipMaxWidth,
+      width: _JourneyMapTooltipStyle.maxWidth,
       child: child,
     );
   }
@@ -1010,9 +1257,15 @@ class _TooltipPosition extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _MapBackground extends StatelessWidget {
-  const _MapBackground({required this.width, required this.height});
+  const _MapBackground({
+    required this.width,
+    required this.height,
+    this.collapsed = false,
+  });
+
   final double width;
   final double height;
+  final bool collapsed;
 
   @override
   Widget build(BuildContext context) {
@@ -1023,28 +1276,42 @@ class _MapBackground extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           Image.asset(
-            'assets/ui/journey_map_bg.png',
+            collapsed
+                ? _JourneyMapAssets.collapsedBackground
+                : _JourneyMapAssets.background,
             fit: BoxFit.fill,
             errorBuilder: (_, __, ___) => Image.asset(
-              'assets/ui/journey_map_bg.jpg',
+              _JourneyMapAssets.fallbackBackground,
               fit: BoxFit.fill,
               errorBuilder: (_, __, ___) => const SizedBox.shrink(),
             ),
           ),
           Positioned(
-            top: -80,
-            left: -60,
-            child: _Glow(size: 280, color: FtTokens.accent, alpha: 0.22),
+            top: _JourneyMapBackgroundStyle.topGlowOffset.dy,
+            left: _JourneyMapBackgroundStyle.topGlowOffset.dx,
+            child: _Glow(
+              size: _JourneyMapBackgroundStyle.topGlowSize,
+              color: FtTokens.accent,
+              alpha: _JourneyMapBackgroundStyle.topGlowAlpha,
+            ),
           ),
           Positioned(
-            top: height * 0.4,
-            right: -80,
-            child: _Glow(size: 240, color: FtTokens.active.color, alpha: 0.14),
+            top: height * _JourneyMapBackgroundStyle.middleGlowTopFactor,
+            right: _JourneyMapBackgroundStyle.middleGlowRight,
+            child: _Glow(
+              size: _JourneyMapBackgroundStyle.middleGlowSize,
+              color: FtTokens.active.color,
+              alpha: _JourneyMapBackgroundStyle.middleGlowAlpha,
+            ),
           ),
           Positioned(
-            bottom: -60,
-            left: -50,
-            child: _Glow(size: 220, color: FtTokens.accent, alpha: 0.12),
+            bottom: _JourneyMapBackgroundStyle.bottomGlowBottom,
+            left: _JourneyMapBackgroundStyle.bottomGlowLeft,
+            child: _Glow(
+              size: _JourneyMapBackgroundStyle.bottomGlowSize,
+              color: FtTokens.accent,
+              alpha: _JourneyMapBackgroundStyle.bottomGlowAlpha,
+            ),
           ),
           Container(
             decoration: BoxDecoration(
@@ -1052,8 +1319,12 @@ class _MapBackground extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withValues(alpha: 0.20),
-                  Colors.black.withValues(alpha: 0.45),
+                  Colors.black.withValues(
+                    alpha: _JourneyMapBackgroundStyle.overlayTopAlpha,
+                  ),
+                  Colors.black.withValues(
+                    alpha: _JourneyMapBackgroundStyle.overlayBottomAlpha,
+                  ),
                 ],
               ),
             ),
@@ -1115,10 +1386,10 @@ class JourneyCheckpointOverlayCard extends StatelessWidget {
         : null;
 
     final card = Container(
-      padding: const EdgeInsets.fromLTRB(11, 9, 6, 11),
+      padding: _JourneyMapTooltipStyle.padding,
       decoration: BoxDecoration(
-        color: const Color(0xEE0F1226),
-        borderRadius: BorderRadius.circular(13),
+        color: _JourneyMapTooltipStyle.cardColor,
+        borderRadius: BorderRadius.circular(_JourneyMapTooltipStyle.cardRadius),
         border: Border.all(color: color.withValues(alpha: 0.36)),
         boxShadow: [
           BoxShadow(
@@ -1180,16 +1451,6 @@ class JourneyCheckpointOverlayCard extends StatelessWidget {
               if (cp.isCurrent) ...[
                 const SizedBox(width: 5),
                 const _CurrentDot(),
-                const SizedBox(width: 3),
-                Text(
-                  l10n.journeyBadgeHere,
-                  style: const TextStyle(
-                    fontSize: 8,
-                    fontWeight: FontWeight.w800,
-                    color: FtTokens.accent,
-                    letterSpacing: 0.7,
-                  ),
-                ),
               ],
               if (!cp.isUnlocked) ...[
                 const SizedBox(width: 5),
@@ -1217,14 +1478,20 @@ class JourneyCheckpointOverlayCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  width: 34,
-                  height: 34,
+                  width: _JourneyMapTooltipStyle.iconBoxSize,
+                  height: _JourneyMapTooltipStyle.iconBoxSize,
                   decoration: BoxDecoration(
                     color: color.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(9),
                     border: Border.all(color: color.withValues(alpha: 0.32)),
                   ),
-                  child: Center(child: _emojiOrIcon(cp, color, 18)),
+                  child: Center(
+                    child: _emojiOrIcon(
+                      cp,
+                      color,
+                      _JourneyMapTooltipStyle.iconSize,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 9),
                 Expanded(
@@ -1284,11 +1551,14 @@ class JourneyCheckpointOverlayCard extends StatelessWidget {
     );
 
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 180),
+      duration: _JourneyMapMotion.overlaySwitchDuration,
       transitionBuilder: (child, anim) => FadeTransition(
         opacity: anim,
         child: ScaleTransition(
-          scale: Tween<double>(begin: 0.94, end: 1.0).animate(anim),
+          scale: Tween<double>(
+            begin: _JourneyMapMotion.overlayScaleBegin,
+            end: 1.0,
+          ).animate(anim),
           alignment: Alignment.centerLeft,
           child: child,
         ),

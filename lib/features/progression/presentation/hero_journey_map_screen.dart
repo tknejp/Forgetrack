@@ -35,6 +35,7 @@ class _HeroJourneyMapScreenState extends State<HeroJourneyMapScreen> {
   /// tooltip's X clears it back to null. Selection is hidden automatically
   /// in the collapsed / static state.
   int? _selectedIndex;
+  JourneyFeedFilter _selectedFeedFilter = JourneyFeedFilter.all;
 
   @override
   Widget build(BuildContext context) {
@@ -44,10 +45,15 @@ class _HeroJourneyMapScreenState extends State<HeroJourneyMapScreen> {
     final checkpoints =
         JourneyAdapter.buildMilestoneMap(progression, progL10n, l10n);
     final feed = JourneyAdapter.buildFeed(progression, progL10n, l10n);
+    final filteredFeedCount = feed
+        .where((e) => journeyFeedMatchesFilter(_selectedFeedFilter, e))
+        .length;
 
     final screenH = MediaQuery.of(context).size.height;
     final mapMaxHeight = (screenH * 0.62).clamp(500.0, 650.0);
     const mapMinHeight = 200.0;
+    final collapseScrollReserve =
+        filteredFeedCount < 6 ? mapMaxHeight - mapMinHeight : 0.0;
 
     return Scaffold(
       backgroundColor: FtTokens.bg,
@@ -79,8 +85,13 @@ class _HeroJourneyMapScreenState extends State<HeroJourneyMapScreen> {
                 pinned: true,
                 delegate: _MapHeaderDelegate(
                   checkpoints: checkpoints,
+                  feed: feed,
                   selectedIndex: _selectedIndex,
+                  selectedFeedFilter: _selectedFeedFilter,
                   onSelected: (i) => setState(() => _selectedIndex = i),
+                  onFeedFilterSelected: (filter) {
+                    setState(() => _selectedFeedFilter = filter);
+                  },
                   maxHeight: mapMaxHeight,
                   minHeight: mapMinHeight,
                 ),
@@ -89,16 +100,12 @@ class _HeroJourneyMapScreenState extends State<HeroJourneyMapScreen> {
                 padding: const EdgeInsets.fromLTRB(14, 6, 14, 24),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    // Drag affordance — a small handle pill that visually
-                    // separates the map from the milestone history. Drags
-                    // landing here belong to the parent CustomScrollView, so
-                    // they collapse the map / scroll the feed (vs. drags on
-                    // the map area, which scroll the map's own canvas).
-                    const _DragHandle(),
-                    const SizedBox(height: 6),
-                    _SectionLabel(label: l10n.journeyHistoryHeader),
-                    const SizedBox(height: 8),
-                    JourneyEventFeed(events: feed),
+                    JourneyEventFeed(
+                      events: feed,
+                      selectedFilter: _selectedFeedFilter,
+                    ),
+                    if (collapseScrollReserve > 0)
+                      SizedBox(height: collapseScrollReserve),
                   ]),
                 ),
               ),
@@ -118,21 +125,28 @@ class _HeroJourneyMapScreenState extends State<HeroJourneyMapScreen> {
 class _MapHeaderDelegate extends SliverPersistentHeaderDelegate {
   _MapHeaderDelegate({
     required this.checkpoints,
+    required this.feed,
     required this.selectedIndex,
+    required this.selectedFeedFilter,
     required this.onSelected,
+    required this.onFeedFilterSelected,
     required this.maxHeight,
     required this.minHeight,
   });
 
   final List<JourneyCheckpoint> checkpoints;
+  final List<JourneyCheckpoint> feed;
   final int? selectedIndex;
+  final JourneyFeedFilter selectedFeedFilter;
   final ValueChanged<int?> onSelected;
+  final ValueChanged<JourneyFeedFilter> onFeedFilterSelected;
   final double maxHeight;
   final double minHeight;
 
   /// Threshold at which the header switches from interactive to static.
   /// Picked at 0.5 so the user has clear "hand-off" feedback as they scroll.
   static const double _staticThreshold = 0.5;
+  static const double _controlsHeight = 88;
 
   @override
   Widget build(
@@ -142,40 +156,65 @@ class _MapHeaderDelegate extends SliverPersistentHeaderDelegate {
   ) {
     final progress = (shrinkOffset / (maxHeight - minHeight)).clamp(0.0, 1.0);
     final isCollapsed = progress >= _staticThreshold;
-    final currentHeight =
+    final currentMapHeight =
         (maxHeight - shrinkOffset).clamp(minHeight, maxHeight);
 
     return Container(
       color: FtTokens.bg,
-      padding: const EdgeInsets.fromLTRB(14, 4, 14, 4),
-      child: SizedBox(
-        height: currentHeight - 8,
-        width: double.infinity,
-        child: checkpoints.isEmpty
-            ? const _EmptyJourney()
-            : JourneyInteractiveMap(
-                checkpoints: checkpoints,
-                // Hide tooltip in collapsed state so the mini preview reads
-                // cleanly, regardless of what the user last tapped.
-                selectedIndex: isCollapsed ? null : selectedIndex,
-                onSelected: onSelected,
-                height: currentHeight - 8,
-                interactive: !isCollapsed,
-              ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 4, 14, 4),
+            child: SizedBox(
+              height: currentMapHeight - 8,
+              width: double.infinity,
+              child: checkpoints.isEmpty
+                  ? const _EmptyJourney()
+                  : JourneyInteractiveMap(
+                      checkpoints: checkpoints,
+                      // Hide tooltip in collapsed state so the mini preview
+                      // reads cleanly, regardless of what the user last tapped.
+                      selectedIndex: isCollapsed ? null : selectedIndex,
+                      onSelected: onSelected,
+                      height: currentMapHeight - 8,
+                      interactive: !isCollapsed,
+                    ),
+            ),
+          ),
+          const _DragHandle(),
+          const SizedBox(height: 6),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: _SectionLabel(label: context.l10n.journeyHistoryHeader),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: JourneyFeedFilterPills(
+              events: feed,
+              selectedFilter: selectedFeedFilter,
+              onSelected: onFeedFilterSelected,
+            ),
+          ),
+          const SizedBox(height: 10),
+        ],
       ),
     );
   }
 
   @override
-  double get maxExtent => maxHeight;
+  double get maxExtent => maxHeight + _controlsHeight;
 
   @override
-  double get minExtent => minHeight;
+  double get minExtent => minHeight + _controlsHeight;
 
   @override
   bool shouldRebuild(covariant _MapHeaderDelegate old) {
     return checkpoints != old.checkpoints ||
+        feed != old.feed ||
         selectedIndex != old.selectedIndex ||
+        selectedFeedFilter != old.selectedFeedFilter ||
         maxHeight != old.maxHeight ||
         minHeight != old.minHeight;
   }

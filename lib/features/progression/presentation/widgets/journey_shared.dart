@@ -84,6 +84,7 @@ class JourneyCheckpointNode extends StatelessWidget {
     required this.baseSize,
     this.pulseAnimation,
     this.compact = false,
+    this.highlightAsCurrent,
   });
 
   final JourneyCheckpoint checkpoint;
@@ -92,12 +93,14 @@ class JourneyCheckpointNode extends StatelessWidget {
   final double baseSize;
   final Animation<double>? pulseAnimation;
   final bool compact;
+  final bool? highlightAsCurrent;
 
   @override
   Widget build(BuildContext context) {
     final cp = checkpoint;
     final color = journeyCheckpointColor(cp);
     final isMajor = cp.isMajorMilestone;
+    final isCurrentVisual = highlightAsCurrent ?? cp.isCurrent;
     final nodeSize = isSelected ? baseSize + 3.0 : baseSize;
     final pad = compact ? 14.0 : 28.0;
     final totalSize = baseSize + pad;
@@ -197,16 +200,16 @@ class JourneyCheckpointNode extends StatelessWidget {
                   color: cp.isUnlocked
                       ? color.withValues(alpha: 0.92)
                       : Colors.white.withValues(alpha: 0.15),
-                  width: cp.isCurrent || isMajor ? 2.0 : 1.5,
+                  width: isCurrentVisual || isMajor ? 2.0 : 1.5,
                 ),
                 boxShadow: cp.isUnlocked
                     ? [
                         BoxShadow(
                           color: color.withValues(
-                            alpha: cp.isCurrent || isMajor ? 0.55 : 0.28,
+                            alpha: isCurrentVisual || isMajor ? 0.55 : 0.28,
                           ),
-                          blurRadius: cp.isCurrent || isMajor ? 18 : 8,
-                          spreadRadius: cp.isCurrent || isMajor ? 1 : 0,
+                          blurRadius: isCurrentVisual || isMajor ? 18 : 8,
+                          spreadRadius: isCurrentVisual || isMajor ? 1 : 0,
                         ),
                       ]
                     : null,

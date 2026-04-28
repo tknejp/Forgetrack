@@ -7,83 +7,32 @@ import '../../../../shared/theme/ft_design_tokens.dart';
 import '../../domain/journey_models.dart';
 import 'journey_shared.dart';
 
-/// Filterable feed of milestone events shown under the big map on
-/// `HeroJourneyMapScreen`. The adapter delivers events newest-first; this
-/// widget only owns the filter UI.
-class JourneyEventFeed extends StatefulWidget {
-  const JourneyEventFeed({super.key, required this.events});
+/// Feed of milestone events shown under the big map on `HeroJourneyMapScreen`.
+/// The adapter delivers events newest-first; the parent owns the selected
+/// filter so controls can stay pinned with the map.
+class JourneyEventFeed extends StatelessWidget {
+  const JourneyEventFeed({
+    super.key,
+    required this.events,
+    this.selectedFilter = JourneyFeedFilter.all,
+  });
 
   /// Pre-sorted (date desc, undated last) milestone events from
   /// `JourneyAdapter.buildFeed`.
   final List<JourneyCheckpoint> events;
-
-  @override
-  State<JourneyEventFeed> createState() => _JourneyEventFeedState();
-}
-
-/// Logical filter buckets exposed in the chip row. The "Levely" bucket
-/// covers BOTH minor `level` and major `titleMilestone` event types — both
-/// are level/title breakpoints from the same progression system, so a
-/// separate "Tituly" filter would just duplicate the same rows.
-enum _FeedFilter { all, levels, achievements, quests }
-
-class _JourneyEventFeedState extends State<JourneyEventFeed> {
-  _FeedFilter _filter = _FeedFilter.all;
-
-  bool _matches(_FeedFilter filter, JourneyCheckpoint e) {
-    switch (filter) {
-      case _FeedFilter.all:
-        return true;
-      case _FeedFilter.levels:
-        return e.type == JourneyEventType.level ||
-            e.type == JourneyEventType.titleMilestone;
-      case _FeedFilter.achievements:
-        return e.type == JourneyEventType.achievement;
-      case _FeedFilter.quests:
-        return e.type == JourneyEventType.quest;
-    }
-  }
+  final JourneyFeedFilter selectedFilter;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
-    // Only surface chips for buckets that actually have at least one event.
-    final available = <_FeedFilter>[
-      for (final f in _FeedFilter.values)
-        if (f == _FeedFilter.all || widget.events.any((e) => _matches(f, e))) f,
-    ];
-
-    final filtered = widget.events
-        .where((e) => _matches(_filter, e))
+    final filtered = events
+        .where((e) => journeyFeedMatchesFilter(selectedFilter, e))
         .toList(growable: false);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (available.length > 2) ...[
-          SizedBox(
-            height: 30,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.zero,
-              children: [
-                for (int i = 0; i < available.length; i++) ...[
-                  if (i > 0) const SizedBox(width: 6),
-                  _Chip(
-                    label: _filterLabel(l10n, available[i]),
-                    color: _filterColor(available[i]),
-                    selected: _filter == available[i],
-                    onTap: () => setState(() => _filter = available[i]),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-        ],
         if (filtered.isEmpty)
-          _EmptyHint(filterIsAll: _filter == _FeedFilter.all)
+          _EmptyHint(filterIsAll: selectedFilter == JourneyFeedFilter.all)
         else
           Container(
             decoration: BoxDecoration(
@@ -108,31 +57,94 @@ class _JourneyEventFeedState extends State<JourneyEventFeed> {
       ],
     );
   }
+}
 
-  String _filterLabel(AppLocalizations l10n, _FeedFilter f) {
+/// Logical filter buckets exposed in the chip row. The "Levely" bucket
+/// covers BOTH minor `level` and major `titleMilestone` event types — both
+/// are level/title breakpoints from the same progression system, so a
+/// separate "Tituly" filter would just duplicate the same rows.
+enum JourneyFeedFilter { all, levels, achievements, quests }
+
+bool journeyFeedMatchesFilter(JourneyFeedFilter filter, JourneyCheckpoint e) {
+  switch (filter) {
+    case JourneyFeedFilter.all:
+      return true;
+    case JourneyFeedFilter.levels:
+      return e.type == JourneyEventType.level ||
+          e.type == JourneyEventType.titleMilestone;
+    case JourneyFeedFilter.achievements:
+      return e.type == JourneyEventType.achievement;
+    case JourneyFeedFilter.quests:
+      return e.type == JourneyEventType.quest;
+  }
+}
+
+class JourneyFeedFilterPills extends StatelessWidget {
+  const JourneyFeedFilterPills({
+    super.key,
+    required this.events,
+    required this.selectedFilter,
+    required this.onSelected,
+  });
+
+  final List<JourneyCheckpoint> events;
+  final JourneyFeedFilter selectedFilter;
+  final ValueChanged<JourneyFeedFilter> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final available = <JourneyFeedFilter>[
+      for (final f in JourneyFeedFilter.values)
+        if (f == JourneyFeedFilter.all ||
+            events.any((e) => journeyFeedMatchesFilter(f, e)))
+          f,
+    ];
+
+    if (available.length <= 2) return const SizedBox.shrink();
+
+    return SizedBox(
+      height: 30,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.zero,
+        children: [
+          for (int i = 0; i < available.length; i++) ...[
+            if (i > 0) const SizedBox(width: 6),
+            _Chip(
+              label: _filterLabel(l10n, available[i]),
+              color: _filterColor(available[i]),
+              selected: selectedFilter == available[i],
+              onTap: () => onSelected(available[i]),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _filterLabel(AppLocalizations l10n, JourneyFeedFilter f) {
     switch (f) {
-      case _FeedFilter.all:
+      case JourneyFeedFilter.all:
         return l10n.journeyFilterAll;
-      case _FeedFilter.levels:
+      case JourneyFeedFilter.levels:
         return l10n.journeyFilterLevels;
-      case _FeedFilter.achievements:
+      case JourneyFeedFilter.achievements:
         return l10n.journeyFilterAchievements;
-      case _FeedFilter.quests:
+      case JourneyFeedFilter.quests:
         return l10n.journeyFilterQuests;
     }
   }
 
-  Color _filterColor(_FeedFilter f) {
+  Color _filterColor(JourneyFeedFilter f) {
     switch (f) {
-      case _FeedFilter.all:
+      case JourneyFeedFilter.all:
         return FtTokens.accent;
-      case _FeedFilter.levels:
-        // Title-breakpoint milestones dominate this bucket — use the
-        // major (gold) tone so the chip matches the prominent rows.
+      case JourneyFeedFilter.levels:
         return journeyColor(JourneyEventType.titleMilestone);
-      case _FeedFilter.achievements:
+      case JourneyFeedFilter.achievements:
         return journeyColor(JourneyEventType.achievement);
-      case _FeedFilter.quests:
+      case JourneyFeedFilter.quests:
         return journeyColor(JourneyEventType.quest);
     }
   }

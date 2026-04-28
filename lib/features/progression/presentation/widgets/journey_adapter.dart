@@ -165,39 +165,43 @@ abstract final class JourneyAdapter {
       if (achievementLevelTarget(a) != null) continue;
       final badge = achievementBadgeSpec(a);
 
-      dated.add(_DatedCp(
-        a.unlockedAt!,
-        JourneyCheckpoint(
-          id: 'feed_ach_${a.id}',
-          type: JourneyEventType.achievement,
-          label: progL10n.achievementTitle(a),
-          sublabel: l10n.journeyEventAchievementUnlocked,
-          description: progL10n.achievementDescription(a),
-          unlockedAt: a.unlockedAt,
-          emoji: badge.emoji,
-          accentColorValue: badge.color.toARGB32(),
-          achievementDifficultyLabel: _achievementDifficultyLabel(a, l10n),
-          isUnlocked: true,
+      dated.add(
+        _DatedCp(
+          a.unlockedAt!,
+          JourneyCheckpoint(
+            id: 'feed_ach_${a.id}',
+            type: JourneyEventType.achievement,
+            label: progL10n.achievementTitle(a),
+            sublabel: l10n.journeyEventAchievementUnlocked,
+            description: progL10n.achievementDescription(a),
+            unlockedAt: a.unlockedAt,
+            emoji: badge.emoji,
+            accentColorValue: badge.color.toARGB32(),
+            achievementDifficultyLabel: _achievementDifficultyLabel(a, l10n),
+            isUnlocked: true,
+          ),
         ),
-      ));
+      );
     }
 
     // Quests.
     for (final q in provider.completedQuests) {
       if (q.completedAt == null) continue;
 
-      dated.add(_DatedCp(
-        q.completedAt!,
-        JourneyCheckpoint(
-          id: 'feed_quest_${q.id}',
-          type: JourneyEventType.quest,
-          label: progL10n.questTitle(q),
-          sublabel: l10n.journeyEventQuestCompleted,
-          description: progL10n.questDescription(q),
-          unlockedAt: q.completedAt,
-          isUnlocked: true,
+      dated.add(
+        _DatedCp(
+          q.completedAt!,
+          JourneyCheckpoint(
+            id: 'feed_quest_${q.id}',
+            type: JourneyEventType.quest,
+            label: progL10n.questTitle(q),
+            sublabel: l10n.journeyEventQuestCompleted,
+            description: progL10n.questDescription(q),
+            unlockedAt: q.completedAt,
+            isUnlocked: true,
+          ),
         ),
-      ));
+      );
     }
 
     // Level/title milestones.
@@ -217,13 +221,14 @@ abstract final class JourneyAdapter {
       );
 
       if (at != null) {
-        dated.add(_DatedCp(at, cp));
+        dated.add(_DatedCp(at, cp, timelineRank: bp));
       } else {
         undated.add(cp);
       }
     }
 
-    dated.sort((a, b) => b.at.compareTo(a.at));
+    dated.sort(_compareFeedDatedCheckpoints);
+    undated.sort(_compareUndatedFeedCheckpoints);
 
     return [
       ...dated.map((d) => d.cp),
@@ -410,6 +415,28 @@ abstract final class JourneyAdapter {
     return a.id.compareTo(b.id);
   }
 
+  static int _compareFeedDatedCheckpoints(_DatedCp a, _DatedCp b) {
+    final byDate = b.at.compareTo(a.at);
+    if (byDate != 0) return byDate;
+
+    // Level achievements can be backfilled with the same unlock timestamp
+    // when the profile is evaluated after several levels were already earned.
+    // In that case, keep the timeline intuitive by showing later levels first.
+    final byRank = b.timelineRank.compareTo(a.timelineRank);
+    if (byRank != 0) return byRank;
+
+    return a.cp.id.compareTo(b.cp.id);
+  }
+
+  static int _compareUndatedFeedCheckpoints(
+    JourneyCheckpoint a,
+    JourneyCheckpoint b,
+  ) {
+    final byLevel = (b.levelNumber ?? 0).compareTo(a.levelNumber ?? 0);
+    if (byLevel != 0) return byLevel;
+    return a.id.compareTo(b.id);
+  }
+
   static double _sideBiasForId(String id) {
     final hash = _stableHash(id);
     final direction = hash.isEven ? -1.0 : 1.0;
@@ -543,8 +570,13 @@ abstract final class JourneyAdapter {
 }
 
 class _DatedCp {
-  const _DatedCp(this.at, this.cp);
+  const _DatedCp(
+    this.at,
+    this.cp, {
+    this.timelineRank = 0,
+  });
 
   final DateTime at;
   final JourneyCheckpoint cp;
+  final int timelineRank;
 }
