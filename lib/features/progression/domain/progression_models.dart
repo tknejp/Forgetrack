@@ -368,7 +368,6 @@ class ProgressionProfile {
   const ProgressionProfile({
     required this.totalXp,
     required this.level,
-    required this.levelTitle,
     required this.levelFloorXp,
     required this.nextLevelXp,
     required this.xpIntoLevel,
@@ -376,7 +375,6 @@ class ProgressionProfile {
 
   final int totalXp;
   final int level;
-  final String levelTitle;
   final int levelFloorXp;
   final int nextLevelXp;
   final int xpIntoLevel;

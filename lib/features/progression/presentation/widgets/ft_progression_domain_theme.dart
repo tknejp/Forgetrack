@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../shared/theme/ft_design_tokens.dart';
+import '../../domain/progression_level_config.dart';
 import '../../domain/progression_models.dart';
 
 /// Maps progression domain ids to visual tokens and Material icons.
@@ -63,6 +64,9 @@ class FtProgressionDomainTheme {
   }
 
   static IconData iconForAchievement(ProgressionAchievement achievement) {
+    final levelTarget = levelFromAchievementId(achievement.id);
+    if (levelTarget != null) return _iconForLevelMilestone(levelTarget);
+
     switch (achievement.id) {
       case 'first_reward':
         return Icons.emoji_events_rounded;
@@ -70,35 +74,9 @@ class FtProgressionDomainTheme {
         return Icons.workspace_premium_rounded;
       case 'reward_hunter_100':
         return Icons.shield_moon_rounded;
-      case 'pathfinder_level_5':
-        return Icons.hiking_rounded;
-      case 'trail_vanguard_level_10':
-        return Icons.explore_rounded;
-      case 'forge_knight_level_15':
-        return Icons.hardware_rounded;
-      case 'iron_warden_level_20':
-        return Icons.shield_rounded;
-      case 'storm_herald_level_25':
-        return Icons.thunderstorm_rounded;
-      case 'dawn_sentinel_level_30':
-        return Icons.castle_rounded;
-      case 'rift_walker_level_40':
-        return Icons.local_fire_department_rounded;
       case 'xp_100000':
         return Icons.local_fire_department_rounded;
       case 'xp_1000000':
-        return Icons.star_rounded;
-      case 'mythic_ranger_level_50':
-        return Icons.sports_rounded;
-      case 'titan_forger_level_60':
-        return Icons.anchor_rounded;
-      case 'astral_champion_level_70':
-        return Icons.auto_awesome_rounded;
-      case 'eternal_paragon_level_80':
-        return Icons.all_inclusive_rounded;
-      case 'realm_sovereign_level_90':
-        return Icons.workspace_premium_rounded;
-      case 'living_legend_level_100':
         return Icons.star_rounded;
       case 'steps_total_100k':
         return Icons.directions_walk_rounded;
@@ -143,6 +121,42 @@ class FtProgressionDomainTheme {
       default:
         final domain = resolveForAchievement(achievement);
         return iconFor(domain);
+    }
+  }
+
+  /// Material icon for a level-milestone achievement at [level]. Keyed by
+  /// the level number rather than the (mutable) title, so future title
+  /// changes don't require touching this map.
+  static IconData _iconForLevelMilestone(int level) {
+    switch (level) {
+      case 5:
+        return Icons.hiking_rounded;
+      case 10:
+        return Icons.explore_rounded;
+      case 15:
+        return Icons.hardware_rounded;
+      case 20:
+        return Icons.shield_rounded;
+      case 25:
+        return Icons.thunderstorm_rounded;
+      case 30:
+        return Icons.castle_rounded;
+      case 40:
+        return Icons.local_fire_department_rounded;
+      case 50:
+        return Icons.sports_rounded;
+      case 60:
+        return Icons.anchor_rounded;
+      case 70:
+        return Icons.auto_awesome_rounded;
+      case 80:
+        return Icons.all_inclusive_rounded;
+      case 90:
+        return Icons.workspace_premium_rounded;
+      case 100:
+        return Icons.star_rounded;
+      default:
+        return Icons.workspace_premium_rounded;
     }
   }
 

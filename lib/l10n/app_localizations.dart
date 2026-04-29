@@ -3313,6 +3313,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{xp} XP total'**
   String journeyTotalXp(Object xp);
+
+  /// No description provided for @progLevelTitle1.
+  ///
+  /// In en, this message translates to:
+  /// **'Wanderer'**
+  String get progLevelTitle1;
+
+  /// No description provided for @progLevelTitle5.
+  ///
+  /// In en, this message translates to:
+  /// **'Trail Explorer'**
+  String get progLevelTitle5;
+
+  /// No description provided for @progLevelTitle10.
+  ///
+  /// In en, this message translates to:
+  /// **'Ranger of the Wildwood'**
+  String get progLevelTitle10;
+
+  /// No description provided for @progLevelTitle15.
+  ///
+  /// In en, this message translates to:
+  /// **'Guardian of the Pass'**
+  String get progLevelTitle15;
+
+  /// No description provided for @progLevelTitle20.
+  ///
+  /// In en, this message translates to:
+  /// **'Conqueror of Ruins'**
+  String get progLevelTitle20;
+
+  /// No description provided for @progLevelTitle25.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeper of the Old Gates'**
+  String get progLevelTitle25;
+
+  /// No description provided for @progLevelTitle30.
+  ///
+  /// In en, this message translates to:
+  /// **'Delver of the Depths'**
+  String get progLevelTitle30;
+
+  /// No description provided for @progLevelTitle40.
+  ///
+  /// In en, this message translates to:
+  /// **'Dwarven Ally'**
+  String get progLevelTitle40;
+
+  /// No description provided for @progLevelTitle50.
+  ///
+  /// In en, this message translates to:
+  /// **'Lord of the Underground Paths'**
+  String get progLevelTitle50;
+
+  /// No description provided for @progLevelTitle60.
+  ///
+  /// In en, this message translates to:
+  /// **'Guardian of Frost'**
+  String get progLevelTitle60;
+
+  /// No description provided for @progLevelTitle70.
+  ///
+  /// In en, this message translates to:
+  /// **'Icewalker'**
+  String get progLevelTitle70;
+
+  /// No description provided for @progLevelTitle80.
+  ///
+  /// In en, this message translates to:
+  /// **'Mountain Challenger'**
+  String get progLevelTitle80;
+
+  /// No description provided for @progLevelTitle90.
+  ///
+  /// In en, this message translates to:
+  /// **'Dragon Rider'**
+  String get progLevelTitle90;
+
+  /// No description provided for @progLevelTitle100.
+  ///
+  /// In en, this message translates to:
+  /// **'Lord of Dragonrock'**
+  String get progLevelTitle100;
+
+  /// No description provided for @progLevelAchievementDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level {level} through earned XP.'**
+  String progLevelAchievementDesc(int level);
 }
 
 class _AppLocalizationsDelegate

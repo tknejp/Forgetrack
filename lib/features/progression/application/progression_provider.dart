@@ -73,7 +73,6 @@ class ProgressionProvider extends ChangeNotifier {
       const ProgressionProfile(
         totalXp: 0,
         level: 1,
-        levelTitle: 'Troll',
         levelFloorXp: 0,
         nextLevelXp: 250,
         xpIntoLevel: 0,
@@ -203,7 +202,9 @@ class ProgressionProvider extends ChangeNotifier {
     try {
       _state = await _engine.sync(source);
       _error = null;
-      if (hadState) unawaited(_emitProgressionNotifications(prevGrantKeys, prevUnlockedIds));
+      if (hadState)
+        unawaited(
+            _emitProgressionNotifications(prevGrantKeys, prevUnlockedIds));
     } catch (error) {
       _error = error.toString();
       syncError = error.toString();
@@ -345,8 +346,7 @@ class ProgressionProvider extends ChangeNotifier {
       final grant = newGrants[i];
       final quest =
           state.quests.where((q) => q.id == grant.questId).firstOrNull;
-      final title =
-          quest != null ? progressionL10n.questTitle(quest) : 'Quest';
+      final title = quest != null ? progressionL10n.questTitle(quest) : 'Quest';
       unawaited(NotificationService.instance
           .showQuestCompleted(title, grant.xpGranted, index: i));
     }

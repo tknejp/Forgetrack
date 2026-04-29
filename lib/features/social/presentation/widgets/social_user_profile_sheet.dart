@@ -138,7 +138,8 @@ class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
                                       if (stats != null) ...[
                                         const SizedBox(height: 6),
                                         Text(
-                                          socialLevelTitle(stats.level)
+                                          ProgressionL10n(context.l10n)
+                                              .levelTitle(stats.level)
                                               .toUpperCase(),
                                           style: const TextStyle(
                                               fontSize: 7,

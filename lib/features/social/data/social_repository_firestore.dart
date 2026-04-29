@@ -24,6 +24,9 @@ class FirestoreSocialRepository implements SocialRepository {
   CollectionReference<Map<String, dynamic>> get _achievementShares =>
       _firestore.collection('achievement_shares');
 
+  CollectionReference<Map<String, dynamic>> get _handles =>
+      _firestore.collection('handles');
+
   @override
   Stream<List<SocialFriendRequest>> watchIncomingFriendRequests({
     required String uid,
@@ -260,16 +263,108 @@ class FirestoreSocialRepository implements SocialRepository {
   @override
   Future<void> upsertProfile(SocialProfileSyncPayload payload) async {
     final doc = _users.doc(payload.uid);
-    await doc.set({
+
+    await _firestore.runTransaction((transaction) async {
+      final userSnapshot = await transaction.get(doc);
+      final existingData = userSnapshot.data();
+      final existingHandle =
+          normalizeSocialHandle(existingData?['handle'] as String? ?? '');
+
+      final handleReservation = await _reserveHandleInTransaction(
+        transaction: transaction,
+        uid: payload.uid,
+        desiredHandle: payload.handle,
+        existingHandle: existingHandle,
+      );
+
+      transaction.set(
+        handleReservation.ref,
+        {
+          'uid': payload.uid,
+          'handle': handleReservation.handle,
+          'baseHandle': normalizeSocialHandle(payload.handle),
+          'updatedAt': FieldValue.serverTimestamp(),
+          if (!handleReservation.exists)
+            'createdAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+
+      transaction.set(
+        doc,
+        _profileData(
+          payload: payload,
+          handle: handleReservation.handle,
+          includeCreatedAt: !userSnapshot.exists,
+        ),
+        SetOptions(merge: true),
+      );
+    });
+  }
+
+  Future<
+      ({
+        DocumentReference<Map<String, dynamic>> ref,
+        String handle,
+        bool exists
+      })> _reserveHandleInTransaction({
+    required Transaction transaction,
+    required String uid,
+    required String desiredHandle,
+    required String existingHandle,
+  }) async {
+    final normalizedDesired = normalizeSocialHandle(desiredHandle);
+    final baseHandle =
+        normalizedDesired.isNotEmpty ? normalizedDesired : 'user';
+
+    if (existingHandle.isNotEmpty) {
+      final existingRef = _handles.doc(existingHandle);
+      final existingReservation = await transaction.get(existingRef);
+      final reservationUid = existingReservation.data()?['uid'] as String?;
+      if (!existingReservation.exists || reservationUid == uid) {
+        return (
+          ref: existingRef,
+          handle: existingHandle,
+          exists: existingReservation.exists,
+        );
+      }
+    }
+
+    for (var suffix = 0; suffix < 1000; suffix++) {
+      final candidate = buildNumberedSocialHandle(
+        baseHandle: baseHandle,
+        suffix: suffix,
+      );
+      final candidateRef = _handles.doc(candidate);
+      final candidateReservation = await transaction.get(candidateRef);
+      final reservationUid = candidateReservation.data()?['uid'] as String?;
+      if (!candidateReservation.exists || reservationUid == uid) {
+        return (
+          ref: candidateRef,
+          handle: candidate,
+          exists: candidateReservation.exists,
+        );
+      }
+    }
+
+    throw StateError('No available social handle for "$baseHandle".');
+  }
+
+  Map<String, dynamic> _profileData({
+    required SocialProfileSyncPayload payload,
+    required String handle,
+    required bool includeCreatedAt,
+  }) {
+    return {
       'displayName': payload.displayName,
       'email': payload.email,
-      'handle': payload.handle,
-      'handleLower': payload.handle.toLowerCase(),
-      'handleSearchTokens': buildSocialHandleSearchTokens(payload.handle),
+      'handle': handle,
+      'handleLower': handle.toLowerCase(),
+      'handleSearchTokens': buildSocialHandleSearchTokens(handle),
       'photoUrl': payload.photoUrl,
       'socialEnabled': payload.socialEnabled,
       'updatedAt': FieldValue.serverTimestamp(),
-      'createdAt': FieldValue.serverTimestamp(),
+      if (includeCreatedAt) 'createdAt': FieldValue.serverTimestamp(),
       'stats': {
         'level': payload.stats.level,
         'totalXp': payload.stats.totalXp,
@@ -280,7 +375,7 @@ class FirestoreSocialRepository implements SocialRepository {
         'bestNutritionStreak': payload.stats.bestNutritionStreak,
         'updatedAt': FieldValue.serverTimestamp(),
       },
-    }, SetOptions(merge: true));
+    };
   }
 
   @override

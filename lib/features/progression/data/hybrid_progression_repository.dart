@@ -53,7 +53,8 @@ class HybridProgressionRepository implements ProgressionLocalRepository {
     required List<ProgressionEvaluation> evaluations,
     required DateTime evaluatedAt,
   }) =>
-      _local.persistEvaluations(evaluations: evaluations, evaluatedAt: evaluatedAt);
+      _local.persistEvaluations(
+          evaluations: evaluations, evaluatedAt: evaluatedAt);
 
   @override
   Future<ProgressionLedgerSnapshot> claimReward({
@@ -76,9 +77,18 @@ class HybridProgressionRepository implements ProgressionLocalRepository {
           .where((g) => g.rewardKey == rewardKey)
           .firstOrNull;
       if (grant != null) {
-        _remote.pushRuleClaimIfMissing(uid, grant).ignore();
+        _trackRemoteWrite(
+          _remote.pushRuleClaimIfMissing(uid, grant),
+          'pushRuleClaimIfMissing',
+          uid: uid,
+          key: grant.rewardKey,
+        );
       }
-      _remote.updateProgressionSummary(uid: uid, ledger: ledger).ignore();
+      _trackRemoteWrite(
+        _remote.updateProgressionSummary(uid: uid, ledger: ledger),
+        'updateProgressionSummary',
+        uid: uid,
+      );
     }
     return ledger;
   }
@@ -104,9 +114,18 @@ class HybridProgressionRepository implements ProgressionLocalRepository {
           .where((g) => g.rewardKey == rewardKey)
           .firstOrNull;
       if (grant != null) {
-        _remote.pushQuestClaimIfMissing(uid, grant).ignore();
+        _trackRemoteWrite(
+          _remote.pushQuestClaimIfMissing(uid, grant),
+          'pushQuestClaimIfMissing',
+          uid: uid,
+          key: grant.rewardKey,
+        );
       }
-      _remote.updateProgressionSummary(uid: uid, ledger: ledger).ignore();
+      _trackRemoteWrite(
+        _remote.updateProgressionSummary(uid: uid, ledger: ledger),
+        'updateProgressionSummary',
+        uid: uid,
+      );
     }
     return ledger;
   }
@@ -131,9 +150,18 @@ class HybridProgressionRepository implements ProgressionLocalRepository {
     final uid = _userIdProvider();
     if (uid != null) {
       for (final unlock in unlocks) {
-        _remote.pushAchievementUnlockIfMissing(uid, unlock).ignore();
+        _trackRemoteWrite(
+          _remote.pushAchievementUnlockIfMissing(uid, unlock),
+          'pushAchievementUnlockIfMissing',
+          uid: uid,
+          key: unlock.achievementId,
+        );
       }
-      _remote.updateProgressionSummary(uid: uid, ledger: ledger).ignore();
+      _trackRemoteWrite(
+        _remote.updateProgressionSummary(uid: uid, ledger: ledger),
+        'updateProgressionSummary',
+        uid: uid,
+      );
     }
     return ledger;
   }
@@ -222,8 +250,7 @@ class HybridProgressionRepository implements ProgressionLocalRepository {
     final raw = _prefs.getString(_kLastPullKey);
     if (raw != null) {
       final last = DateTime.tryParse(raw);
-      if (last != null &&
-          DateTime.now().difference(last) < _kStaleDuration) {
+      if (last != null && DateTime.now().difference(last) < _kStaleDuration) {
         return;
       }
     }
@@ -284,5 +311,24 @@ class HybridProgressionRepository implements ProgressionLocalRepository {
       // Do not mark migration complete; it can be retried on next app load.
     }
   }
-}
 
+  void _trackRemoteWrite(
+    Future<void> future,
+    String operation, {
+    required String uid,
+    String? key,
+  }) {
+    future.then((_) {
+      AppLog.sync.debug(
+        'Progression cloud write ok: $operation uid=$uid'
+        '${key == null ? '' : ' key=$key'}',
+      );
+    }).catchError((Object error, StackTrace stackTrace) {
+      AppLog.sync.warn(
+        'Progression cloud write failed: $operation uid=$uid'
+        '${key == null ? '' : ' key=$key'}',
+        payload: error,
+      );
+    });
+  }
+}

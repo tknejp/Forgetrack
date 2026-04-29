@@ -171,8 +171,10 @@ class SocialAchievementShare {
   final SocialShareVisibility visibility;
   final SocialAchievementActorSnapshot actorSnapshot;
   final SocialAchievementSnapshot achievementSnapshot;
+
   /// uid → emoji
   final Map<String, String> reactions;
+
   /// uid → snapshot
   final Map<String, SocialReactionSnapshot> reactorSnapshots;
 }
@@ -250,6 +252,16 @@ String buildDefaultSocialHandle({
   }
 
   return 'user';
+}
+
+String buildNumberedSocialHandle({
+  required String baseHandle,
+  required int suffix,
+}) {
+  final normalized = normalizeSocialHandle(baseHandle);
+  final fallback = normalized.isNotEmpty ? normalized : 'user';
+  if (suffix <= 0) return fallback;
+  return '${fallback}_$suffix';
 }
 
 List<String> buildSocialHandleSearchTokens(String handle) {

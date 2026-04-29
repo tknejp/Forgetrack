@@ -1,4 +1,5 @@
 import '../../../l10n/app_localizations.dart';
+import '../domain/progression_level_config.dart';
 import '../domain/progression_models.dart';
 
 /// Presentation-layer localizer that maps stable domain IDs
@@ -11,6 +12,44 @@ class ProgressionL10n {
   ProgressionL10n(this._l10n);
 
   final AppLocalizations _l10n;
+
+  /// Returns the localised title for the tier governing [level].
+  /// Single source of truth for level titles across the app.
+  String levelTitle(int level) {
+    final tier = tierForLevel(level);
+    switch (tier.level) {
+      case 1:
+        return _l10n.progLevelTitle1;
+      case 5:
+        return _l10n.progLevelTitle5;
+      case 10:
+        return _l10n.progLevelTitle10;
+      case 15:
+        return _l10n.progLevelTitle15;
+      case 20:
+        return _l10n.progLevelTitle20;
+      case 25:
+        return _l10n.progLevelTitle25;
+      case 30:
+        return _l10n.progLevelTitle30;
+      case 40:
+        return _l10n.progLevelTitle40;
+      case 50:
+        return _l10n.progLevelTitle50;
+      case 60:
+        return _l10n.progLevelTitle60;
+      case 70:
+        return _l10n.progLevelTitle70;
+      case 80:
+        return _l10n.progLevelTitle80;
+      case 90:
+        return _l10n.progLevelTitle90;
+      case 100:
+        return _l10n.progLevelTitle100;
+      default:
+        return _l10n.progLevelTitle1;
+    }
+  }
 
   String domainLabel(ProgressionDomain domain) {
     switch (domain) {
@@ -167,6 +206,11 @@ class ProgressionL10n {
   }
 
   String achievementTitle(ProgressionAchievement achievement) {
+    // Level milestone achievements share their title with the level itself
+    // (single source of truth: the level config).
+    final levelTarget = levelFromAchievementId(achievement.id);
+    if (levelTarget != null) return levelTitle(levelTarget);
+
     switch (achievement.id) {
       case 'first_reward':
         return _l10n.progAchievementFirstRewardTitle;
@@ -174,36 +218,10 @@ class ProgressionL10n {
         return _l10n.progAchievementRewardHunter25Title;
       case 'reward_hunter_100':
         return _l10n.progAchievementRewardHunter100Title;
-      case 'pathfinder_level_5':
-        return _l10n.progAchievementPathfinderTitle;
-      case 'trail_vanguard_level_10':
-        return _l10n.progAchievementTrailVanguardLevel10Title;
-      case 'forge_knight_level_15':
-        return _l10n.progAchievementForgeKnightLevel15Title;
-      case 'iron_warden_level_20':
-        return _l10n.progAchievementIronWardenLevel20Title;
-      case 'storm_herald_level_25':
-        return _l10n.progAchievementStormHeraldLevel25Title;
-      case 'dawn_sentinel_level_30':
-        return _l10n.progAchievementDawnSentinelLevel30Title;
-      case 'rift_walker_level_40':
-        return _l10n.progAchievementRiftWalkerLevel40Title;
       case 'xp_100000':
         return _l10n.progAchievementXp100000Title;
       case 'xp_1000000':
         return _l10n.progAchievementXp1000000Title;
-      case 'mythic_ranger_level_50':
-        return _l10n.progAchievementMythicRangerLevel50Title;
-      case 'titan_forger_level_60':
-        return _l10n.progAchievementTitanForgerLevel60Title;
-      case 'astral_champion_level_70':
-        return _l10n.progAchievementAstralChampionLevel70Title;
-      case 'eternal_paragon_level_80':
-        return _l10n.progAchievementEternalParagonLevel80Title;
-      case 'realm_sovereign_level_90':
-        return _l10n.progAchievementRealmSovereignLevel90Title;
-      case 'living_legend_level_100':
-        return _l10n.progAchievementLivingLegendLevel100Title;
       case 'steps_total_100k':
         return _l10n.progAchievementSteps100kTitle;
       case 'steps_total_500k':
@@ -258,6 +276,10 @@ class ProgressionL10n {
   }
 
   String achievementDescription(ProgressionAchievement achievement) {
+    // Level milestone achievements share a single parametrised description.
+    final levelTarget = levelFromAchievementId(achievement.id);
+    if (levelTarget != null) return _l10n.progLevelAchievementDesc(levelTarget);
+
     switch (achievement.id) {
       case 'first_reward':
         return _l10n.progAchievementFirstRewardDesc;
@@ -265,36 +287,10 @@ class ProgressionL10n {
         return _l10n.progAchievementRewardHunter25Desc;
       case 'reward_hunter_100':
         return _l10n.progAchievementRewardHunter100Desc;
-      case 'pathfinder_level_5':
-        return _l10n.progAchievementPathfinderDesc;
-      case 'trail_vanguard_level_10':
-        return _l10n.progAchievementTrailVanguardLevel10Desc;
-      case 'forge_knight_level_15':
-        return _l10n.progAchievementForgeKnightLevel15Desc;
-      case 'iron_warden_level_20':
-        return _l10n.progAchievementIronWardenLevel20Desc;
-      case 'storm_herald_level_25':
-        return _l10n.progAchievementStormHeraldLevel25Desc;
-      case 'dawn_sentinel_level_30':
-        return _l10n.progAchievementDawnSentinelLevel30Desc;
-      case 'rift_walker_level_40':
-        return _l10n.progAchievementRiftWalkerLevel40Desc;
       case 'xp_100000':
         return _l10n.progAchievementXp100000Desc;
       case 'xp_1000000':
         return _l10n.progAchievementXp1000000Desc;
-      case 'mythic_ranger_level_50':
-        return _l10n.progAchievementMythicRangerLevel50Desc;
-      case 'titan_forger_level_60':
-        return _l10n.progAchievementTitanForgerLevel60Desc;
-      case 'astral_champion_level_70':
-        return _l10n.progAchievementAstralChampionLevel70Desc;
-      case 'eternal_paragon_level_80':
-        return _l10n.progAchievementEternalParagonLevel80Desc;
-      case 'realm_sovereign_level_90':
-        return _l10n.progAchievementRealmSovereignLevel90Desc;
-      case 'living_legend_level_100':
-        return _l10n.progAchievementLivingLegendLevel100Desc;
       case 'steps_total_100k':
         return _l10n.progAchievementSteps100kDesc;
       case 'steps_total_500k':

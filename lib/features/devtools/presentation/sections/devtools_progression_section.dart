@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../features/progression/application/progression_provider.dart';
+import '../../../../features/progression/presentation/progression_l10n.dart';
+import '../../../../l10n/l10n.dart';
 import '../widgets/devtools_action_tile.dart';
 import '../widgets/devtools_section_card.dart';
 import '../widgets/devtools_status_tile.dart';
@@ -34,12 +36,14 @@ class _DevToolsProgressionSectionState
     final p = context.watch<ProgressionProvider>();
     final cs = Theme.of(context).colorScheme;
 
+    final progL10n = ProgressionL10n(context.l10n);
     return DevToolsSectionCard(
       title: 'Progression / RPG', // TODO: l10n
       children: [
         DevToolsStatusTile(
           label: 'Level',
-          value: '${p.profile.level}  (${p.profile.levelTitle})',
+          value:
+              '${p.profile.level}  (${progL10n.levelTitle(p.profile.level)})',
         ),
         const DevToolsSectionDivider(),
         DevToolsStatusTile(

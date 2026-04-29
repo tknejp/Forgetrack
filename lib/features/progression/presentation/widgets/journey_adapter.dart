@@ -1,7 +1,7 @@
 import '../../../../l10n/app_localizations.dart';
 import '../../application/progression_provider.dart';
 import '../../domain/journey_models.dart';
-import '../../domain/progression_level_policy.dart';
+import '../../domain/progression_level_config.dart' as level_config;
 import '../../domain/progression_models.dart';
 import '../badges/progression_badge_specs.dart';
 import '../progression_l10n.dart';
@@ -23,33 +23,14 @@ import '../progression_l10n.dart';
 /// (`GET /journey/events`) once the backend persists level-up, title-unlock
 /// and streak-milestone timestamps independently of the achievement table.
 abstract final class JourneyAdapter {
-  static const _levelPolicy = ProgressionLevelPolicy();
-
   static const int _startLevel = 1;
   static const int _maxLevel = 100;
   static const int _targetMapNodeCount = 30;
 
   /// The complete static map spine, bottom-to-top in level order.
-  ///
-  /// Rendering reverses this list so level 100 is the top/final destination
-  /// and level 1 is the bottom/start. Keep this intentionally sparse: regular
-  /// levels, quests and achievements do not become map anchors in this pass.
-  static const List<int> _staticMilestoneLevels = [
-    1,
-    5,
-    10,
-    15,
-    20,
-    25,
-    30,
-    40,
-    50,
-    60,
-    70,
-    80,
-    90,
-    100,
-  ];
+  /// Sourced from `progression_level_config.kJourneyMapAnchors` — the single
+  /// source of truth for which levels appear as map anchors.
+  static List<int> get _staticMilestoneLevels => level_config.kJourneyMapAnchors;
 
   /// Compact node list for the Hero preview card, derived from the same static
   /// milestone spine as the full map.
@@ -72,7 +53,7 @@ abstract final class JourneyAdapter {
     AppLocalizations l10n,
   ) {
     final currentLevel = _clampLevel(provider.profile.level);
-    final anchors = buildMilestoneAnchors(provider);
+    final anchors = buildMilestoneAnchors(provider, progL10n);
     final anchorCheckpoints = <JourneyCheckpoint>[];
 
     for (var i = 0; i < anchors.length; i++) {
@@ -109,6 +90,7 @@ abstract final class JourneyAdapter {
   /// levels/titles/status without Journey UI labels.
   static List<JourneyMilestoneAnchor> buildMilestoneAnchors(
     ProgressionProvider provider,
+    ProgressionL10n progL10n,
   ) {
     final currentLevel = _clampLevel(provider.profile.level);
     final currentAnchorLevel = _currentStaticMilestoneFor(currentLevel);
@@ -117,7 +99,7 @@ abstract final class JourneyAdapter {
 
     return _staticMilestoneLevels.reversed.map((level) {
       final isUnlocked = level <= currentLevel;
-      final title = _levelPolicy.titleForLevel(level);
+      final title = progL10n.levelTitle(level);
 
       return JourneyMilestoneAnchor(
         level: level,
@@ -218,6 +200,7 @@ abstract final class JourneyAdapter {
         isUnlocked: true,
         idSuffix: 'feed_',
         l10n: l10n,
+        progL10n: progL10n,
       );
 
       if (at != null) {
@@ -551,9 +534,10 @@ abstract final class JourneyAdapter {
     required DateTime? unlockedAt,
     required bool isUnlocked,
     required AppLocalizations l10n,
+    required ProgressionL10n progL10n,
     String idSuffix = '',
   }) {
-    final title = _levelPolicy.titleForLevel(level);
+    final title = progL10n.levelTitle(level);
 
     return JourneyCheckpoint(
       id: '${idSuffix}level_$level',

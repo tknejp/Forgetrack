@@ -5,7 +5,9 @@ import '../../../../features/health_connect/application/fitness_provider.dart';
 import '../../../../features/health_connect/application/goals_provider.dart';
 import '../../../../features/nutrition/application/kaloricke_tabulky_provider.dart';
 import '../../../../features/progression/application/progression_provider.dart';
+import '../../../../features/progression/presentation/progression_l10n.dart';
 import '../../../../features/social/application/social_provider.dart';
+import '../../../../l10n/l10n.dart';
 import '../widgets/devtools_section_card.dart';
 import '../widgets/devtools_status_tile.dart';
 
@@ -140,7 +142,9 @@ class _ProgressionCard extends StatelessWidget {
         DevToolsStatusTile(label: 'Level / total XP',
             value: '${p.profile.level} / ${p.profile.totalXp} XP'),
         const DevToolsSectionDivider(),
-        DevToolsStatusTile(label: 'Level title', value: p.profile.levelTitle),
+        DevToolsStatusTile(
+            label: 'Level title',
+            value: ProgressionL10n(context.l10n).levelTitle(p.profile.level)),
         const DevToolsSectionDivider(),
         DevToolsStatusTile(label: 'Quests (total / completed)',
             value: '${p.quests.length} / ${p.completedQuests.length}'),

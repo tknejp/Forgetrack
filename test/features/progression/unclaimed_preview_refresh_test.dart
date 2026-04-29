@@ -35,7 +35,6 @@ void main() {
       final profileLevel11 = ProgressionProfile(
         totalXp: 5000,
         level: 11,
-        levelTitle: 'Test',
         levelFloorXp: 0,
         nextLevelXp: 10000,
         xpIntoLevel: 5000,
@@ -90,7 +89,6 @@ void main() {
       final profileLevel20 = ProgressionProfile(
         totalXp: 50000,
         level: 20,
-        levelTitle: 'Test',
         levelFloorXp: 0,
         nextLevelXp: 100000,
         xpIntoLevel: 50000,
@@ -139,7 +137,6 @@ void main() {
       final profile = ProgressionProfile(
         totalXp: 1000,
         level: 5,
-        levelTitle: 'Test',
         levelFloorXp: 0,
         nextLevelXp: 5000,
         xpIntoLevel: 1000,

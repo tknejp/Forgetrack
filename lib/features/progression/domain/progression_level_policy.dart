@@ -144,28 +144,10 @@ class ProgressionLevelPolicy {
     return ProgressionProfile(
       totalXp: safeXp,
       level: level,
-      levelTitle: titleForLevel(level),
       levelFloorXp: levelFloorXp,
       nextLevelXp: nextLevelXp,
       xpIntoLevel: safeXp - levelFloorXp,
     );
-  }
-
-  String titleForLevel(int level) {
-    if (level >= 100) return 'Living Legend';
-    if (level >= 90) return 'Realm Sovereign';
-    if (level >= 80) return 'Eternal Paragon';
-    if (level >= 70) return 'Astral Champion';
-    if (level >= 60) return 'Titan Forger';
-    if (level >= 50) return 'Mythic Ranger';
-    if (level >= 40) return 'Dragon Rider';
-    if (level >= 30) return 'Castle Lord';
-    if (level >= 25) return 'Storm Herald';
-    if (level >= 20) return 'Iron Warden';
-    if (level >= 15) return 'Forge Knight';
-    if (level >= 10) return 'Pathfinder';
-    if (level >= 5) return 'Wanderer';
-    return 'Troll';
   }
 
   double _lerp(double start, double end, double t) => start + (end - start) * t;

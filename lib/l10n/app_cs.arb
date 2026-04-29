@@ -608,5 +608,25 @@
     "placeholders": {
       "xp": {}
     }
+  },
+  "progLevelTitle1": "Poutník",
+  "progLevelTitle5": "Průzkumník stezek",
+  "progLevelTitle10": "Hraničář hvozdu",
+  "progLevelTitle15": "Strážce průsmyku",
+  "progLevelTitle20": "Dobyvatel ruin",
+  "progLevelTitle25": "Klíčník starých bran",
+  "progLevelTitle30": "Sestupník hlubin",
+  "progLevelTitle40": "Trpasličí spojenec",
+  "progLevelTitle50": "Pán podzemních cest",
+  "progLevelTitle60": "Strážce mrazu",
+  "progLevelTitle70": "Ledový chodec",
+  "progLevelTitle80": "Horský vyzyvatel",
+  "progLevelTitle90": "Dračí jezdec",
+  "progLevelTitle100": "Pán dračí skály",
+  "progLevelAchievementDesc": "Dosáhni levelu {level} pomocí získaného XP.",
+  "@progLevelAchievementDesc": {
+    "placeholders": {
+      "level": { "type": "int" }
+    }
   }
 }

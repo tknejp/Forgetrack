@@ -1177,5 +1177,25 @@
     "placeholders": {
       "xp": {}
     }
+  },
+  "progLevelTitle1": "Wanderer",
+  "progLevelTitle5": "Trail Explorer",
+  "progLevelTitle10": "Ranger of the Wildwood",
+  "progLevelTitle15": "Guardian of the Pass",
+  "progLevelTitle20": "Conqueror of Ruins",
+  "progLevelTitle25": "Keeper of the Old Gates",
+  "progLevelTitle30": "Delver of the Depths",
+  "progLevelTitle40": "Dwarven Ally",
+  "progLevelTitle50": "Lord of the Underground Paths",
+  "progLevelTitle60": "Guardian of Frost",
+  "progLevelTitle70": "Icewalker",
+  "progLevelTitle80": "Mountain Challenger",
+  "progLevelTitle90": "Dragon Rider",
+  "progLevelTitle100": "Lord of Dragonrock",
+  "progLevelAchievementDesc": "Reach level {level} through earned XP.",
+  "@progLevelAchievementDesc": {
+    "placeholders": {
+      "level": { "type": "int" }
+    }
   }
 }

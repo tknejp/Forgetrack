@@ -14,23 +14,6 @@ import '../domain/social_models.dart';
 
 // ── Level / domain helpers ────────────────────────────────────────────────────
 
-String socialLevelTitle(int level) {
-  if (level >= 100) return 'Living Legend';
-  if (level >= 90) return 'Realm Sovereign';
-  if (level >= 80) return 'Eternal Paragon';
-  if (level >= 70) return 'Astral Champion';
-  if (level >= 60) return 'Titan Forger';
-  if (level >= 50) return 'Mythic Ranger';
-  if (level >= 40) return 'Rift Walker';
-  if (level >= 30) return 'Dawn Sentinel';
-  if (level >= 25) return 'Storm Herald';
-  if (level >= 20) return 'Iron Warden';
-  if (level >= 15) return 'Forge Knight';
-  if (level >= 10) return 'Trail Vanguard';
-  if (level >= 5) return 'Pathfinder';
-  return 'Novice Adventurer';
-}
-
 FtDomain socialDomainFor(String? domain) {
   switch (domain) {
     case 'steps':

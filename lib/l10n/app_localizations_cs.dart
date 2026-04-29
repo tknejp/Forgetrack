@@ -1793,4 +1793,51 @@ class AppLocalizationsCs extends AppLocalizations {
   String journeyTotalXp(Object xp) {
     return '$xp XP celkem';
   }
+
+  @override
+  String get progLevelTitle1 => 'Poutník';
+
+  @override
+  String get progLevelTitle5 => 'Průzkumník stezek';
+
+  @override
+  String get progLevelTitle10 => 'Hraničář hvozdu';
+
+  @override
+  String get progLevelTitle15 => 'Strážce průsmyku';
+
+  @override
+  String get progLevelTitle20 => 'Dobyvatel ruin';
+
+  @override
+  String get progLevelTitle25 => 'Klíčník starých bran';
+
+  @override
+  String get progLevelTitle30 => 'Sestupník hlubin';
+
+  @override
+  String get progLevelTitle40 => 'Trpasličí spojenec';
+
+  @override
+  String get progLevelTitle50 => 'Pán podzemních cest';
+
+  @override
+  String get progLevelTitle60 => 'Strážce mrazu';
+
+  @override
+  String get progLevelTitle70 => 'Ledový chodec';
+
+  @override
+  String get progLevelTitle80 => 'Horský vyzyvatel';
+
+  @override
+  String get progLevelTitle90 => 'Dračí jezdec';
+
+  @override
+  String get progLevelTitle100 => 'Pán dračí skály';
+
+  @override
+  String progLevelAchievementDesc(int level) {
+    return 'Dosáhni levelu $level pomocí získaného XP.';
+  }
 }

@@ -1797,4 +1797,51 @@ class AppLocalizationsEn extends AppLocalizations {
   String journeyTotalXp(Object xp) {
     return '$xp XP total';
   }
+
+  @override
+  String get progLevelTitle1 => 'Wanderer';
+
+  @override
+  String get progLevelTitle5 => 'Trail Explorer';
+
+  @override
+  String get progLevelTitle10 => 'Ranger of the Wildwood';
+
+  @override
+  String get progLevelTitle15 => 'Guardian of the Pass';
+
+  @override
+  String get progLevelTitle20 => 'Conqueror of Ruins';
+
+  @override
+  String get progLevelTitle25 => 'Keeper of the Old Gates';
+
+  @override
+  String get progLevelTitle30 => 'Delver of the Depths';
+
+  @override
+  String get progLevelTitle40 => 'Dwarven Ally';
+
+  @override
+  String get progLevelTitle50 => 'Lord of the Underground Paths';
+
+  @override
+  String get progLevelTitle60 => 'Guardian of Frost';
+
+  @override
+  String get progLevelTitle70 => 'Icewalker';
+
+  @override
+  String get progLevelTitle80 => 'Mountain Challenger';
+
+  @override
+  String get progLevelTitle90 => 'Dragon Rider';
+
+  @override
+  String get progLevelTitle100 => 'Lord of Dragonrock';
+
+  @override
+  String progLevelAchievementDesc(int level) {
+    return 'Reach level $level through earned XP.';
+  }
 }

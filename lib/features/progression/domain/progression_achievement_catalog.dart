@@ -1,3 +1,4 @@
+import 'progression_level_config.dart';
 import 'progression_level_policy.dart';
 import 'progression_models.dart';
 
@@ -16,24 +17,21 @@ class ProgressionAchievementCatalog {
         description: 'Earn your first progression reward.',
         targetValue: 1,
       ),
-      ProgressionAchievementDefinition(
-        id: 'pathfinder_level_5',
-        type: ProgressionAchievementType.milestone,
-        difficulty: ProgressionAchievementDifficulty.easy,
-        criterionType: ProgressionAchievementCriterionType.totalXpAtLeast,
-        title: 'Wanderer',
-        description: 'Reach level 5 through earned XP.',
-        targetValue: levelPolicy.xpRequiredForLevel(5),
-      ),
-      ProgressionAchievementDefinition(
-        id: 'trail_vanguard_level_10',
-        type: ProgressionAchievementType.milestone,
-        difficulty: ProgressionAchievementDifficulty.easy,
-        criterionType: ProgressionAchievementCriterionType.totalXpAtLeast,
-        title: 'Pathfinder',
-        description: 'Reach level 10 through earned XP.',
-        targetValue: levelPolicy.xpRequiredForLevel(10),
-      ),
+      // Level milestone achievements — generated from kProgressionLevelTiers.
+      // Level 1 is the journey origin (not a milestone the player "earns") so
+      // it is excluded from the catalog. Title and description are fallbacks
+      // only — the live UI reads them through ProgressionL10n which routes to
+      // the localized progLevelTitle*/progLevelAchievementDesc keys.
+      for (final tier in kProgressionLevelTiers.where((t) => t.level > 1))
+        ProgressionAchievementDefinition(
+          id: tier.achievementId,
+          type: ProgressionAchievementType.milestone,
+          difficulty: tier.difficulty,
+          criterionType: ProgressionAchievementCriterionType.totalXpAtLeast,
+          title: 'Level ${tier.level}',
+          description: 'Reach level ${tier.level} through earned XP.',
+          targetValue: levelPolicy.xpRequiredForLevel(tier.level),
+        ),
       ProgressionAchievementDefinition(
         id: 'steps_total_100k',
         type: ProgressionAchievementType.mastery,
@@ -95,24 +93,6 @@ class ProgressionAchievementCatalog {
         title: 'Reward Hunter',
         description: 'Earn 25 progression rewards.',
         targetValue: 25,
-      ),
-      ProgressionAchievementDefinition(
-        id: 'forge_knight_level_15',
-        type: ProgressionAchievementType.milestone,
-        difficulty: ProgressionAchievementDifficulty.medium,
-        criterionType: ProgressionAchievementCriterionType.totalXpAtLeast,
-        title: 'Forge Knight',
-        description: 'Reach level 15 through earned XP.',
-        targetValue: levelPolicy.xpRequiredForLevel(15),
-      ),
-      ProgressionAchievementDefinition(
-        id: 'iron_warden_level_20',
-        type: ProgressionAchievementType.milestone,
-        difficulty: ProgressionAchievementDifficulty.medium,
-        criterionType: ProgressionAchievementCriterionType.totalXpAtLeast,
-        title: 'Iron Warden',
-        description: 'Reach level 20 through earned XP.',
-        targetValue: levelPolicy.xpRequiredForLevel(20),
       ),
       ProgressionAchievementDefinition(
         id: 'steps_total_500k',
@@ -186,33 +166,6 @@ class ProgressionAchievementCatalog {
         title: 'Reward Legend',
         description: 'Earn 100 progression rewards.',
         targetValue: 100,
-      ),
-      ProgressionAchievementDefinition(
-        id: 'storm_herald_level_25',
-        type: ProgressionAchievementType.milestone,
-        difficulty: ProgressionAchievementDifficulty.hard,
-        criterionType: ProgressionAchievementCriterionType.totalXpAtLeast,
-        title: 'Storm Herald',
-        description: 'Reach level 25 through earned XP.',
-        targetValue: levelPolicy.xpRequiredForLevel(25),
-      ),
-      ProgressionAchievementDefinition(
-        id: 'dawn_sentinel_level_30',
-        type: ProgressionAchievementType.milestone,
-        difficulty: ProgressionAchievementDifficulty.hard,
-        criterionType: ProgressionAchievementCriterionType.totalXpAtLeast,
-        title: 'Castle Lord',
-        description: 'Reach level 30 through earned XP.',
-        targetValue: levelPolicy.xpRequiredForLevel(30),
-      ),
-      ProgressionAchievementDefinition(
-        id: 'rift_walker_level_40',
-        type: ProgressionAchievementType.milestone,
-        difficulty: ProgressionAchievementDifficulty.hard,
-        criterionType: ProgressionAchievementCriterionType.totalXpAtLeast,
-        title: 'Dragon Rider',
-        description: 'Reach level 40 through earned XP.',
-        targetValue: levelPolicy.xpRequiredForLevel(40),
       ),
       ProgressionAchievementDefinition(
         id: 'xp_100000',
@@ -307,60 +260,6 @@ class ProgressionAchievementCatalog {
         title: 'Radiant Ascension',
         description: 'Accumulate 1,000,000 XP.',
         targetValue: 1000000,
-      ),
-      ProgressionAchievementDefinition(
-        id: 'mythic_ranger_level_50',
-        type: ProgressionAchievementType.milestone,
-        difficulty: ProgressionAchievementDifficulty.extraHard,
-        criterionType: ProgressionAchievementCriterionType.totalXpAtLeast,
-        title: 'Mythic Ranger',
-        description: 'Reach level 50 through earned XP.',
-        targetValue: levelPolicy.xpRequiredForLevel(50),
-      ),
-      ProgressionAchievementDefinition(
-        id: 'titan_forger_level_60',
-        type: ProgressionAchievementType.milestone,
-        difficulty: ProgressionAchievementDifficulty.extraHard,
-        criterionType: ProgressionAchievementCriterionType.totalXpAtLeast,
-        title: 'Titan Forger',
-        description: 'Reach level 60 through earned XP.',
-        targetValue: levelPolicy.xpRequiredForLevel(60),
-      ),
-      ProgressionAchievementDefinition(
-        id: 'astral_champion_level_70',
-        type: ProgressionAchievementType.milestone,
-        difficulty: ProgressionAchievementDifficulty.extraHard,
-        criterionType: ProgressionAchievementCriterionType.totalXpAtLeast,
-        title: 'Astral Champion',
-        description: 'Reach level 70 through earned XP.',
-        targetValue: levelPolicy.xpRequiredForLevel(70),
-      ),
-      ProgressionAchievementDefinition(
-        id: 'eternal_paragon_level_80',
-        type: ProgressionAchievementType.milestone,
-        difficulty: ProgressionAchievementDifficulty.extraHard,
-        criterionType: ProgressionAchievementCriterionType.totalXpAtLeast,
-        title: 'Eternal Paragon',
-        description: 'Reach level 80 through earned XP.',
-        targetValue: levelPolicy.xpRequiredForLevel(80),
-      ),
-      ProgressionAchievementDefinition(
-        id: 'realm_sovereign_level_90',
-        type: ProgressionAchievementType.milestone,
-        difficulty: ProgressionAchievementDifficulty.extraHard,
-        criterionType: ProgressionAchievementCriterionType.totalXpAtLeast,
-        title: 'Realm Sovereign',
-        description: 'Reach level 90 through earned XP.',
-        targetValue: levelPolicy.xpRequiredForLevel(90),
-      ),
-      ProgressionAchievementDefinition(
-        id: 'living_legend_level_100',
-        type: ProgressionAchievementType.milestone,
-        difficulty: ProgressionAchievementDifficulty.extraHard,
-        criterionType: ProgressionAchievementCriterionType.totalXpAtLeast,
-        title: 'Living Legend',
-        description: 'Reach level 100 through earned XP.',
-        targetValue: levelPolicy.xpRequiredForLevel(100),
       ),
       ProgressionAchievementDefinition(
         id: 'steps_total_5000000',

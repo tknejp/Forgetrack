@@ -117,7 +117,7 @@ class _FtProgressionCardState extends State<FtProgressionCard> {
               children: [
                 _CompactHeader(
                   level: profile.level,
-                  levelTitle: profile.levelTitle,
+                  levelTitle: progL10n.levelTitle(profile.level),
                   xpInto: profile.xpIntoLevel,
                   xpMax: xpSpan,
                   xpProgress: xpProgress,

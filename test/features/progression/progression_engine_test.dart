@@ -289,7 +289,7 @@ void main() {
       expect(achievementsById['weekly_activity_mastery']!.unlocked, isTrue);
       expect(achievementsById['steps_streak_3']!.unlocked, isTrue);
       expect(achievementsById['nutrition_streak_3']!.unlocked, isTrue);
-      expect(achievementsById['pathfinder_level_5']!.unlocked, isFalse);
+      expect(achievementsById['level_5']!.unlocked, isFalse);
       expect(
         achievementsById['steps_streak_3']!.unlockedAt,
         DateTime(2026, 4, 23),
@@ -414,17 +414,17 @@ void main() {
       };
 
       expect(state.profile.level, 100);
-      expect(achievementsById['pathfinder_level_5']!.unlocked, isTrue);
-      expect(achievementsById['trail_vanguard_level_10']!.unlocked, isTrue);
-      expect(achievementsById['iron_warden_level_20']!.unlocked, isTrue);
-      expect(achievementsById['mythic_ranger_level_50']!.unlocked, isTrue);
-      expect(achievementsById['living_legend_level_100']!.unlocked, isTrue);
+      expect(achievementsById['level_5']!.unlocked, isTrue);
+      expect(achievementsById['level_10']!.unlocked, isTrue);
+      expect(achievementsById['level_20']!.unlocked, isTrue);
+      expect(achievementsById['level_50']!.unlocked, isTrue);
+      expect(achievementsById['level_100']!.unlocked, isTrue);
       expect(
-        achievementsById['living_legend_level_100']!.difficulty,
+        achievementsById['level_100']!.difficulty,
         ProgressionAchievementDifficulty.extraHard,
       );
       expect(
-        achievementsById['living_legend_level_100']!.unlockedAt,
+        achievementsById['level_100']!.unlockedAt,
         DateTime(2026, 4, 30, 9),
       );
     });
@@ -1561,24 +1561,14 @@ void main() {
       expect(profile.levelProgress, 0);
     });
 
-    test('supports a long tail rank ladder beyond level 21', () {
+    test('resolve() returns the expected level for tier-boundary XP totals', () {
       const policy = ProgressionLevelPolicy();
 
-      expect(policy.resolve(0).levelTitle, 'Troll');
-      expect(policy.resolve(policy.xpRequiredForLevel(5)).levelTitle,
-          'Wanderer');
-      expect(
-        policy.resolve(policy.xpRequiredForLevel(10)).levelTitle,
-        'Pathfinder',
-      );
-      expect(
-        policy.resolve(policy.xpRequiredForLevel(25)).levelTitle,
-        'Storm Herald',
-      );
-      expect(
-        policy.resolve(policy.xpRequiredForLevel(100)).levelTitle,
-        'Living Legend',
-      );
+      expect(policy.resolve(0).level, 1);
+      expect(policy.resolve(policy.xpRequiredForLevel(5)).level, 5);
+      expect(policy.resolve(policy.xpRequiredForLevel(10)).level, 10);
+      expect(policy.resolve(policy.xpRequiredForLevel(25)).level, 25);
+      expect(policy.resolve(policy.xpRequiredForLevel(100)).level, 100);
     });
 
     test('scales reward XP aggressively while keeping late levels slower', () {

@@ -74,7 +74,7 @@ class JourneyPreviewCard extends StatelessWidget {
               const SizedBox(height: 10),
               _SummaryRow(
                 preview: preview,
-                profileTitle: progression.profile.levelTitle,
+                profileTitle: progL10n.levelTitle(progression.profile.level),
                 profileLevel: progression.profile.level,
               ),
             ],
