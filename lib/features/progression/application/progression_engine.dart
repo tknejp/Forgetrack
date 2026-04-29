@@ -2,6 +2,7 @@ import '../domain/progression_achievement_catalog.dart';
 import '../domain/progression_achievement_evaluator.dart';
 import '../domain/progression_evaluator.dart';
 import '../domain/progression_level_policy.dart';
+import '../domain/progression_local_repository.dart';
 import '../domain/progression_models.dart';
 import '../domain/progression_quest_catalog.dart';
 import '../domain/progression_quest_evaluator.dart';
@@ -72,8 +73,80 @@ class ProgressionEngine {
   final DateTime Function() _clock;
 
   Future<ProgressionEngineState> load() async {
+    final now = _clock();
     final ledger = await _repository.loadLedger();
-    return _toState(ledger, evaluationDate: _clock());
+    return _stateWithPersistedAchievementUnlocks(
+      ledger,
+      evaluationDate: now,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Devtools — never call from production code paths.
+  // ---------------------------------------------------------------------------
+
+  /// Wipes the entire progression ledger (evaluations, grants, quest grants,
+  /// active quests, achievement unlocks) and returns the empty post-wipe
+  /// state. Profile becomes level 1 / 0 XP.
+  Future<ProgressionEngineState> devToolsResetLedger() async {
+    final local = _requireLocalRepository();
+    await local.wipeAllProgressionData();
+    return load();
+  }
+
+  /// Wipes the ledger and inserts a single synthetic claimed rule grant whose
+  /// final XP equals [xp]. Resulting profile total XP is exactly [xp]; level
+  /// is derived through the regular [ProgressionLevelPolicy].
+  ///
+  /// Note: any subsequent `sync()` will additively re-evaluate live source
+  /// data and may grant further XP on top — for an exact level/XP test, do
+  /// not trigger a refresh after this call.
+  Future<ProgressionEngineState> devToolsSetTotalXp(int xp) async {
+    final clamped = xp < 0 ? 0 : xp;
+    final local = _requireLocalRepository();
+    await local.wipeAllProgressionData();
+
+    if (clamped > 0) {
+      final now = _clock();
+      final period = ProgressionPeriod(
+        kind: ProgressionPeriodKind.day,
+        start: now,
+        end: now,
+      );
+      await local.insertRestoredRuleGrant(
+        ProgressionRewardGrant(
+          rewardKey: 'devtools_xp_override',
+          ruleId: 'devtools_synthetic',
+          ruleVersion: 'v1',
+          domain: ProgressionDomain.steps,
+          period: period,
+          xpGranted: clamped,
+          baseXp: clamped,
+          targetValue: 0,
+          actualValue: 0,
+          toleranceRatio: 0,
+          rewardStatus: ProgressionRewardStatus.claimed,
+          unlockedAt: now,
+          claimedAt: now,
+          finalXp: clamped,
+          levelAtClaim: 1,
+          multiplierAtClaim: 1.0,
+        ),
+      );
+    }
+
+    return load();
+  }
+
+  ProgressionLocalRepository _requireLocalRepository() {
+    final repo = _repository;
+    if (repo is! ProgressionLocalRepository) {
+      throw StateError(
+        'Devtools methods require a ProgressionLocalRepository '
+        '(got ${repo.runtimeType}).',
+      );
+    }
+    return repo;
   }
 
   Future<ProgressionEngineState> sync(ProgressionSource source) async {
@@ -88,16 +161,11 @@ class ProgressionEngine {
       evaluations: evaluations,
       evaluatedAt: now,
     );
-    var state = _toState(ledger, evaluationDate: now);
-
-    final newUnlocks = _newAchievementUnlocks(
-      state.achievements,
-      existingUnlocks: ledger.achievementUnlocks,
+    var state = await _stateWithPersistedAchievementUnlocks(
+      ledger,
+      evaluationDate: now,
     );
-    if (newUnlocks.isNotEmpty) {
-      ledger = await _repository.persistAchievementUnlocks(unlocks: newUnlocks);
-      state = _toState(ledger, evaluationDate: now);
-    }
+    ledger = await _repository.loadLedger();
 
     final newQuestRewardGrants = _newQuestRewardGrants(
       state.quests,
@@ -145,7 +213,10 @@ class ProgressionEngine {
       levelAtClaim: level,
       multiplierAtClaim: _levelPolicy.rewardMultiplierForLevel(level),
     );
-    return _toState(ledger, evaluationDate: now);
+    return _stateWithPersistedAchievementUnlocks(
+      ledger,
+      evaluationDate: now,
+    );
   }
 
   Future<ProgressionEngineState> claimAllRewards() async {
@@ -173,7 +244,10 @@ class ProgressionEngine {
       runningClaimedXp += finalXp;
     }
 
-    return _toState(ledger, evaluationDate: now);
+    return _stateWithPersistedAchievementUnlocks(
+      ledger,
+      evaluationDate: now,
+    );
   }
 
   Future<ProgressionEngineState> claimQuestReward(String rewardKey) async {
@@ -195,7 +269,10 @@ class ProgressionEngine {
       levelAtClaim: level,
       multiplierAtClaim: _levelPolicy.rewardMultiplierForLevel(level),
     );
-    return _toState(ledger, evaluationDate: now);
+    return _stateWithPersistedAchievementUnlocks(
+      ledger,
+      evaluationDate: now,
+    );
   }
 
   Future<ProgressionEngineState> claimAllQuestRewards() async {
@@ -223,7 +300,26 @@ class ProgressionEngine {
       runningClaimedXp += finalXp;
     }
 
-    return _toState(ledger, evaluationDate: now);
+    return _stateWithPersistedAchievementUnlocks(
+      ledger,
+      evaluationDate: now,
+    );
+  }
+
+  Future<ProgressionEngineState> _stateWithPersistedAchievementUnlocks(
+    ProgressionLedgerSnapshot ledger, {
+    required DateTime evaluationDate,
+  }) async {
+    var state = _toState(ledger, evaluationDate: evaluationDate);
+    final newUnlocks = _newAchievementUnlocks(
+      state.achievements,
+      existingUnlocks: ledger.achievementUnlocks,
+    );
+    if (newUnlocks.isEmpty) return state;
+
+    final updatedLedger =
+        await _repository.persistAchievementUnlocks(unlocks: newUnlocks);
+    return _toState(updatedLedger, evaluationDate: evaluationDate);
   }
 
   int _totalClaimedXp(ProgressionLedgerSnapshot ledger) {

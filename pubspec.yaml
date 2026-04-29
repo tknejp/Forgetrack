@@ -57,6 +57,10 @@ dependencies:
 
   # --- Firebase Cloud Messaging (push notifikace) ---
   firebase_messaging: ^16.2.0
+  image_picker: ^1.2.2
+  firebase_storage: ^13.3.0
+  image_picker_android: ^0.8.13+16
+  image_picker_platform_interface: ^2.11.1
 
 dev_dependencies:
   flutter_test:

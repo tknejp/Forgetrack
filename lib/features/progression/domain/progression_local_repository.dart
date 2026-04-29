@@ -14,4 +14,12 @@ abstract class ProgressionLocalRepository extends ProgressionRepository {
   /// Inserts a claimed quest grant that was restored from Firestore.
   /// Must be a no-op if the [rewardKey] already exists locally.
   Future<void> insertRestoredQuestGrant(ProgressionQuestRewardGrant grant);
+
+  /// **Devtools only.** Removes every progression record from local storage
+  /// and (for hybrid repos) clears the matching cloud documents and any
+  /// migration / pull-tracking flags.
+  ///
+  /// Intended for the in-app devtools panel and tests. Never call from
+  /// production code paths.
+  Future<void> wipeAllProgressionData();
 }

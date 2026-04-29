@@ -53,4 +53,12 @@ abstract class ProgressionCloudGateway {
     required String uid,
     required ProgressionLedgerSnapshot ledger,
   });
+
+  /// **Devtools only.** Deletes every progression document for [uid] in the
+  /// cloud: all `progressionClaims`, all `achievementUnlocks`, and the
+  /// derived `progression/state` summary doc.
+  ///
+  /// Used together with the local wipe to put a single user back to a
+  /// pristine state. Never call from production code paths.
+  Future<void> wipeAllRemoteData(String uid);
 }

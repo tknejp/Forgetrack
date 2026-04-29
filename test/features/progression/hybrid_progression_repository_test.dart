@@ -683,6 +683,16 @@ class _FakeLocalRepository implements ProgressionLocalRepository {
     insertRestoredQuestGrantCalls++;
     questRewardGrants = [...questRewardGrants, grant];
   }
+
+  int wipeAllProgressionDataCalls = 0;
+
+  @override
+  Future<void> wipeAllProgressionData() async {
+    wipeAllProgressionDataCalls++;
+    rewardGrants = [];
+    questRewardGrants = [];
+    achievementUnlocks = [];
+  }
 }
 
 class _FakeGateway implements ProgressionCloudGateway {
@@ -782,5 +792,20 @@ class _FakeGateway implements ProgressionCloudGateway {
     if (shouldFailSummary) {
       throw Exception('Simulated summary write failure');
     }
+  }
+
+  int wipeAllRemoteDataCalls = 0;
+  String? lastWipeUid;
+  bool shouldFailWipe = false;
+
+  @override
+  Future<void> wipeAllRemoteData(String uid) async {
+    wipeAllRemoteDataCalls++;
+    lastWipeUid = uid;
+    if (shouldFailWipe) {
+      throw Exception('Simulated wipe failure');
+    }
+    remoteClaims = (ruleGrants: [], questGrants: []);
+    remoteUnlocks = [];
   }
 }

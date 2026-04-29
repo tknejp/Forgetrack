@@ -31,6 +31,7 @@ class SocialUserProfile {
     this.photoUrl,
     this.createdAt,
     this.updatedAt,
+    this.pinnedAchievementIds = const [],
   });
 
   final String uid;
@@ -42,6 +43,7 @@ class SocialUserProfile {
   final SocialUserStats stats;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final List<String> pinnedAchievementIds;
 }
 
 class SocialUnlockedAchievement {
@@ -223,7 +225,31 @@ class SocialProfileSyncPayload {
   final bool socialEnabled;
   final SocialUserStats stats;
   final List<SocialUnlockedAchievement> unlockedAchievements;
+
+  SocialProfileSyncPayload copyWith({
+    String? displayName,
+    String? email,
+    String? handle,
+    Object? photoUrl = _unchanged,
+    bool? socialEnabled,
+    SocialUserStats? stats,
+    List<SocialUnlockedAchievement>? unlockedAchievements,
+  }) {
+    return SocialProfileSyncPayload(
+      uid: uid,
+      displayName: displayName ?? this.displayName,
+      email: email ?? this.email,
+      handle: handle ?? this.handle,
+      photoUrl:
+          identical(photoUrl, _unchanged) ? this.photoUrl : photoUrl as String?,
+      socialEnabled: socialEnabled ?? this.socialEnabled,
+      stats: stats ?? this.stats,
+      unlockedAchievements: unlockedAchievements ?? this.unlockedAchievements,
+    );
+  }
 }
+
+const Object _unchanged = Object();
 
 String normalizeSocialHandle(String value) {
   final normalized = value

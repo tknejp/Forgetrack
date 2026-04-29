@@ -1218,7 +1218,62 @@ void main() {
       expect(state.profile.totalXp, level2Xp + expectedFinalXp);
     });
 
-    test('claimAllRewards processes in chronological order with cumulative level',
+    test('claimReward persists newly unlocked level achievements', () async {
+      const levelPolicy = ProgressionLevelPolicy();
+      final level5Xp = levelPolicy.xpRequiredForLevel(5);
+      final repository = _InMemoryProgressionRepository(
+        rewardGrants: [
+          _unlockedReward(
+            rewardKey: 'pending-level-5',
+            xpGranted: level5Xp,
+            progressionAt: DateTime(2026, 4, 2),
+          ),
+        ],
+      );
+      final engine = ProgressionEngine(
+        repository: repository,
+        clock: () => DateTime(2026, 4, 10, 9),
+      );
+
+      final state = await engine.claimReward('pending-level-5');
+      final ledger = await repository.loadLedger();
+      final persistedIds =
+          ledger.achievementUnlocks.map((unlock) => unlock.achievementId);
+
+      expect(state.profile.level, 5);
+      expect(state.achievements.firstWhere((a) => a.id == 'level_5').unlocked,
+          isTrue);
+      expect(persistedIds, contains('level_5'));
+    });
+
+    test('load backfills missing achievement unlock records', () async {
+      const levelPolicy = ProgressionLevelPolicy();
+      final level5Xp = levelPolicy.xpRequiredForLevel(5);
+      final repository = _InMemoryProgressionRepository(
+        rewardGrants: [
+          _claimedReward(
+            rewardKey: 'historical-level-5',
+            xpGranted: level5Xp,
+            progressionAt: DateTime(2026, 4, 2),
+          ),
+        ],
+      );
+      final engine = ProgressionEngine(
+        repository: repository,
+        clock: () => DateTime(2026, 4, 10, 9),
+      );
+
+      final state = await engine.load();
+      final ledger = await repository.loadLedger();
+      final persistedIds =
+          ledger.achievementUnlocks.map((unlock) => unlock.achievementId);
+
+      expect(state.profile.level, 5);
+      expect(persistedIds, contains('level_5'));
+    });
+
+    test(
+        'claimAllRewards processes in chronological order with cumulative level',
         () async {
       const levelPolicy = ProgressionLevelPolicy();
       // Enough claimed XP to start at level 2.
@@ -1363,7 +1418,8 @@ void main() {
     });
 
     group('XP display consistency', () {
-      test('claimed rule grant with finalXp returns finalXp from effectiveXpGranted',
+      test(
+          'claimed rule grant with finalXp returns finalXp from effectiveXpGranted',
           () {
         final grant = ProgressionRewardGrant(
           rewardKey: 'daily_steps|v1|day|2026-04-01|reward',
@@ -1389,7 +1445,8 @@ void main() {
         expect(grant.effectiveXpGranted, 778);
       });
 
-      test('legacy claimed grant with null finalXp falls back to xpGranted', () {
+      test('legacy claimed grant with null finalXp falls back to xpGranted',
+          () {
         final grant = ProgressionRewardGrant(
           rewardKey: 'legacy|reward',
           ruleId: 'daily_steps',
@@ -1414,7 +1471,8 @@ void main() {
         expect(grant.effectiveXpGranted, 80);
       });
 
-      test('unclaimed quest shows current-level preview, not stale grant xpGranted',
+      test(
+          'unclaimed quest shows current-level preview, not stale grant xpGranted',
           () async {
         const levelPolicy = ProgressionLevelPolicy();
         // Seed enough claimed XP to reach level 3.
@@ -1482,7 +1540,8 @@ void main() {
           () async {
         const levelPolicy = ProgressionLevelPolicy();
         final level2Xp = levelPolicy.xpRequiredForLevel(2);
-        final claimedFinalXp = levelPolicy.scaledRewardXp(baseXp: 100, level: 2);
+        final claimedFinalXp =
+            levelPolicy.scaledRewardXp(baseXp: 100, level: 2);
         final repository = _InMemoryProgressionRepository(
           rewardGrants: [
             _claimedReward(
@@ -1561,7 +1620,8 @@ void main() {
       expect(profile.levelProgress, 0);
     });
 
-    test('resolve() returns the expected level for tier-boundary XP totals', () {
+    test('resolve() returns the expected level for tier-boundary XP totals',
+        () {
       const policy = ProgressionLevelPolicy();
 
       expect(policy.resolve(0).level, 1);

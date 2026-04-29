@@ -174,6 +174,38 @@ class HybridProgressionRepository implements ProgressionLocalRepository {
   Future<void> insertRestoredQuestGrant(ProgressionQuestRewardGrant grant) =>
       _local.insertRestoredQuestGrant(grant);
 
+  @override
+  Future<void> wipeAllProgressionData() async {
+    // Local wipe is authoritative — fail loudly if it doesn't succeed.
+    await _local.wipeAllProgressionData();
+
+    // Reset pull / migration markers so the next sync round-trip starts fresh.
+    await _prefs.remove(_kLastPullKey);
+    final keysToRemove = _prefs
+        .getKeys()
+        .where((k) => k.startsWith(_kMigrationKeyPrefix))
+        .toList(growable: false);
+    for (final k in keysToRemove) {
+      await _prefs.remove(k);
+    }
+
+    // Remote wipe is best-effort: a failure here would otherwise resurface
+    // old claims via the next pull, but a) devtools resets are typically
+    // followed by manual verification, and b) we'd rather keep the local
+    // wipe successful than tear it down on a transient network blip.
+    final uid = _userIdProvider();
+    if (uid != null) {
+      try {
+        await _remote.wipeAllRemoteData(uid);
+      } catch (error) {
+        AppLog.sync.warn(
+          'Devtools: remote progression wipe failed for uid=$uid',
+          payload: error,
+        );
+      }
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Pull / hydration
   // ---------------------------------------------------------------------------

@@ -42,14 +42,6 @@ class DisabledSocialRepository implements SocialRepository {
   }
 
   @override
-  Future<void> replaceUnlockedAchievements({
-    required String uid,
-    required List<SocialUnlockedAchievement> achievements,
-  }) {
-    throw StateError(reason);
-  }
-
-  @override
   Future<List<SocialUserProfile>> searchProfilesByHandle(
     String query, {
     required String excludeUid,
@@ -73,6 +65,31 @@ class DisabledSocialRepository implements SocialRepository {
 
   @override
   Future<void> upsertProfile(SocialProfileSyncPayload payload) {
+    throw StateError(reason);
+  }
+
+  @override
+  Future<String> updateProfileHandle({
+    required String uid,
+    required String desiredHandle,
+  }) {
+    throw StateError(reason);
+  }
+
+  @override
+  Future<void> updateProfilePhotoUrl({
+    required String uid,
+    required String? photoUrl,
+  }) {
+    throw StateError(reason);
+  }
+
+  @override
+  Future<void> updatePinnedAchievement({
+    required String uid,
+    required String achievementId,
+    required bool pinned,
+  }) {
     throw StateError(reason);
   }
 

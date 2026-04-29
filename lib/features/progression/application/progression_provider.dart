@@ -155,6 +155,50 @@ class ProgressionProvider extends ChangeNotifier {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Devtools — never call from production code paths.
+  // ---------------------------------------------------------------------------
+
+  /// Wipes the local + cloud progression ledger and refreshes the provider
+  /// state. Resets the user back to level 1 / 0 XP. Used by the in-app
+  /// devtools panel only.
+  Future<void> devToolsResetProgression() async {
+    _isRefreshing = true;
+    notifyListeners();
+    try {
+      _state = await _engine.devToolsResetLedger();
+      _error = null;
+      // Force the next bind() to re-trigger a real evaluation rather than
+      // dedupe by signature.
+      _lastRequestedSignature = null;
+    } catch (error) {
+      _error = error.toString();
+    } finally {
+      _isLoading = false;
+      _isRefreshing = false;
+      notifyListeners();
+    }
+  }
+
+  /// Wipes the ledger and inserts a synthetic claimed grant equal to [xp],
+  /// then refreshes the provider state. Resulting profile is exactly [xp]
+  /// total XP at the policy-derived level.
+  Future<void> devToolsSetTotalXp(int xp) async {
+    _isRefreshing = true;
+    notifyListeners();
+    try {
+      _state = await _engine.devToolsSetTotalXp(xp);
+      _error = null;
+      _lastRequestedSignature = null;
+    } catch (error) {
+      _error = error.toString();
+    } finally {
+      _isLoading = false;
+      _isRefreshing = false;
+      notifyListeners();
+    }
+  }
+
   void bind({
     required GoalsProvider goalsProvider,
     required FitnessProvider fitnessProvider,

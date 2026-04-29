@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../domain/progression_models.dart';
 import '../domain/progression_level_policy.dart';
 import '../../social/application/social_provider.dart';
+import '../../social/domain/social_models.dart';
 import 'progression_l10n.dart';
 import '../application/progression_provider.dart';
 import 'widgets/ft_progression_domain_theme.dart';
@@ -483,7 +484,8 @@ class _ClaimAllButton extends StatelessWidget {
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w800,
-            color: enabled ? (color ?? FtTokens.accent) : FtTokens.onSurfaceFaint,
+            color:
+                enabled ? (color ?? FtTokens.accent) : FtTokens.onSurfaceFaint,
           ),
         ),
       ),
@@ -598,7 +600,8 @@ class _PendingRewardCard extends StatelessWidget {
     );
   }
 
-  int _computeDisplayXp(ProgressionRewardGrant grant, ProgressionProfile profile) {
+  int _computeDisplayXp(
+      ProgressionRewardGrant grant, ProgressionProfile profile) {
     if (grant.isClaimed) {
       return grant.effectiveXpGranted;
     }
@@ -1350,6 +1353,7 @@ class _AchievementDetailsSheet extends StatefulWidget {
 class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
   bool _sharing = false;
   bool _shared = false;
+  bool _pinning = false;
 
   Future<void> _share() async {
     setState(() => _sharing = true);
@@ -1366,6 +1370,31 @@ class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
         content: Text(
           social.error == null
               ? 'Achievement sdílen do feedu přátel.'
+              : 'Chyba: ${social.error}',
+          style: const TextStyle(color: FtTokens.onSurface),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _setPinned(bool pinned) async {
+    setState(() => _pinning = true);
+    final social = context.read<SocialProvider>();
+    final messenger = ScaffoldMessenger.of(context);
+    await social.setCurrentAchievementPinned(
+      achievementId: widget.achievement.id,
+      pinned: pinned,
+    );
+    if (!mounted) return;
+    setState(() => _pinning = false);
+    messenger.showSnackBar(
+      SnackBar(
+        backgroundColor: FtTokens.surface,
+        content: Text(
+          social.error == null
+              ? (pinned
+                  ? 'Achievement pripnut na profil.'
+                  : 'Achievement odebran z profilu.')
               : 'Chyba: ${social.error}',
           style: const TextStyle(color: FtTokens.onSurface),
         ),
@@ -1392,16 +1421,18 @@ class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
       progL10n,
       locale,
     );
+    final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return SafeArea(
       top: false,
+      bottom: false,
       child: Container(
         decoration: BoxDecoration(
           color: FtTokens.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         ),
-        padding: const EdgeInsets.fromLTRB(18, 12, 18, 22),
+        padding: EdgeInsets.fromLTRB(18, 12, 18, bottomPad + 22),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1539,6 +1570,13 @@ class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
             ),
             if (unlocked) ...[
               const SizedBox(height: 14),
+              _PinnedAchievementAction(
+                achievementId: achievement.id,
+                color: color,
+                busy: _pinning,
+                onToggle: _setPinned,
+              ),
+              const SizedBox(height: 10),
               SizedBox(
                 width: double.infinity,
                 child: GestureDetector(
@@ -1555,9 +1593,8 @@ class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
                                 color.withValues(alpha: 0.14),
                               ],
                             ),
-                      color: _shared
-                          ? Colors.white.withValues(alpha: 0.05)
-                          : null,
+                      color:
+                          _shared ? Colors.white.withValues(alpha: 0.05) : null,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: _shared
@@ -1579,13 +1616,9 @@ class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
                           )
                         else
                           Icon(
-                            _shared
-                                ? Icons.check_rounded
-                                : Icons.share_rounded,
+                            _shared ? Icons.check_rounded : Icons.share_rounded,
                             size: 16,
-                            color: _shared
-                                ? FtTokens.onSurfaceMuted
-                                : color,
+                            color: _shared ? FtTokens.onSurfaceMuted : color,
                           ),
                         const SizedBox(width: 8),
                         Text(
@@ -1597,9 +1630,7 @@ class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
-                            color: _shared
-                                ? FtTokens.onSurfaceMuted
-                                : color,
+                            color: _shared ? FtTokens.onSurfaceMuted : color,
                           ),
                         ),
                       ],
@@ -1611,6 +1642,91 @@ class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _PinnedAchievementAction extends StatelessWidget {
+  const _PinnedAchievementAction({
+    required this.achievementId,
+    required this.color,
+    required this.busy,
+    required this.onToggle,
+  });
+
+  final String achievementId;
+  final Color color;
+  final bool busy;
+  final ValueChanged<bool> onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<SocialProvider>(
+      builder: (context, social, _) {
+        final uid = social.currentUid;
+        if (uid == null || !social.backendReady || !social.isReady) {
+          return const SizedBox.shrink();
+        }
+
+        return StreamBuilder<SocialUserProfile?>(
+          stream: social.watchProfileById(uid),
+          builder: (context, snap) {
+            final pinned =
+                snap.data?.pinnedAchievementIds.contains(achievementId) ??
+                    false;
+            return GestureDetector(
+              onTap: busy ? null : () => onToggle(!pinned),
+              behavior: HitTestBehavior.opaque,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: pinned
+                      ? color.withValues(alpha: 0.16)
+                      : Colors.white.withValues(alpha: 0.04),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: pinned
+                        ? color.withValues(alpha: 0.38)
+                        : Colors.white.withValues(alpha: 0.10),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (busy)
+                      SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: color,
+                        ),
+                      )
+                    else
+                      Icon(
+                        pinned
+                            ? Icons.push_pin_rounded
+                            : Icons.push_pin_outlined,
+                        size: 16,
+                        color: pinned ? color : FtTokens.onSurfaceMuted,
+                      ),
+                    const SizedBox(width: 8),
+                    Text(
+                      pinned ? 'Pripnuto na profilu' : 'Pripnout na profil',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: pinned ? color : FtTokens.onSurfaceMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -1632,7 +1748,6 @@ void _showAchievementDetailsSheet(
     ),
   );
 }
-
 
 String _achievementDisplayLabel(
   ProgressionAchievement achievement,
@@ -1737,7 +1852,6 @@ String _achievementDifficultyLabel(
       return l10n.progAchievementDifficultyExtraHard;
   }
 }
-
 
 String _achievementCompactSummary(
   ProgressionAchievement achievement,

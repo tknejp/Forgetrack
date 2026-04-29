@@ -12,6 +12,7 @@ import '../../application/social_provider.dart';
 import '../../domain/social_models.dart';
 import '../social_helpers.dart';
 import 'social_avatar.dart';
+import 'social_feed_card.dart';
 import 'social_lv_badge.dart';
 
 class SocialUserProfileSheet extends StatefulWidget {
@@ -33,6 +34,8 @@ class SocialUserProfileSheet extends StatefulWidget {
 class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
   late final Stream<SocialUserProfile?> _profileStream;
   late final Stream<List<SocialUnlockedAchievement>> _achievementsStream;
+  late final Stream<List<SocialAchievementShare>> _sharesStream;
+  late final Stream<List<SocialUserProfile>> _friendsStream;
   bool _actionBusy = false;
 
   @override
@@ -41,6 +44,8 @@ class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
     final social = context.read<SocialProvider>();
     _profileStream = social.watchProfileById(widget.uid);
     _achievementsStream = social.watchFriendAchievements(widget.uid);
+    _sharesStream = social.watchProfileShares(widget.uid);
+    _friendsStream = social.watchFriendProfilesForUser(widget.uid);
   }
 
   @override
@@ -83,8 +88,7 @@ class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
                 final stats = profile?.stats;
 
                 return SingleChildScrollView(
-                  padding:
-                      EdgeInsets.fromLTRB(16, 8, 16, bottomPad + 24),
+                  padding: EdgeInsets.fromLTRB(16, 8, 16, bottomPad + 24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -153,8 +157,7 @@ class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
                                 ),
                                 if (stats != null)
                                   Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.end,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
                                       SocialLvBadge(
                                           level: stats.level, size: 40),
@@ -170,14 +173,12 @@ class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
                                       const Text('XP',
                                           style: TextStyle(
                                               fontSize: 9,
-                                              color:
-                                                  FtTokens.onSurfaceFaint)),
+                                              color: FtTokens.onSurfaceFaint)),
                                     ],
                                   ),
                               ],
                             ),
-                            if (!isMe &&
-                                social.isFriendWith(widget.uid)) ...[
+                            if (!isMe && social.isFriendWith(widget.uid)) ...[
                               const SizedBox(height: 12),
                               Container(
                                 height: 1,
@@ -193,60 +194,33 @@ class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
                         const SizedBox(height: 12),
                         _buildStats(stats),
                       ],
+                      const SizedBox(height: 10),
+                      _ProfileFriendsSection(stream: _friendsStream),
                       if (!isMe && !social.isFriendWith(widget.uid)) ...[
                         const SizedBox(height: 10),
                         _buildActionArea(context, social, displayName),
                       ],
                       const SizedBox(height: 16),
-                      const Row(
-                        children: [
-                          Icon(Icons.auto_awesome_rounded,
-                              size: 14, color: FtTokens.accent),
-                          SizedBox(width: 8),
-                          Text(
-                            'ÚSPĚCHY',
-                            style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                                color: FtTokens.accent,
-                                letterSpacing: 1.1),
-                          ),
-                        ],
+                      const _SectionTitle(
+                        icon: Icons.push_pin_rounded,
+                        title: 'PRIPNUTE ACHIEVEMENTY',
                       ),
                       const SizedBox(height: 10),
-                      StreamBuilder<List<SocialUnlockedAchievement>>(
+                      _PinnedAchievementsSection(
+                        profile: profile,
+                        isMe: isMe,
                         stream: _achievementsStream,
-                        builder: (context, snap) {
-                          if (snap.connectionState ==
-                                  ConnectionState.waiting &&
-                              !snap.hasData) {
-                            return const Center(
-                              child: Padding(
-                                padding:
-                                    EdgeInsets.symmetric(vertical: 24),
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: FtTokens.accent),
-                              ),
-                            );
-                          }
-                          final ach = snap.data ?? const [];
-                          if (ach.isEmpty) {
-                            return const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 16),
-                              child: Text('Žádné úspěchy zatím.',
-                                  style: TextStyle(
-                                      fontSize: 13,
-                                      color: FtTokens.onSurfaceFaint)),
-                            );
-                          }
-                          return _FriendAchievementsGrid(
-                            achievements:
-                                mapSocialAchievementsToProgression(ach),
-                            l10n: l10n,
-                            progL10n: progL10n,
-                          );
-                        },
+                        l10n: l10n,
+                        progL10n: progL10n,
+                      ),
+                      const SizedBox(height: 18),
+                      const _SectionTitle(
+                        icon: Icons.forum_rounded,
+                        title: 'SDILENE PRISPEVKY',
+                      ),
+                      const SizedBox(height: 10),
+                      _ProfileSharesSection(
+                        stream: _sharesStream,
                       ),
                     ],
                   ),
@@ -331,6 +305,391 @@ class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
 
 // ── Action area widgets ───────────────────────────────────────────────────────
 
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({
+    required this.icon,
+    required this.title,
+  });
+
+  final IconData icon;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: FtTokens.accent),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            color: FtTokens.accent,
+            letterSpacing: 1.1,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PinnedAchievementsSection extends StatelessWidget {
+  const _PinnedAchievementsSection({
+    required this.profile,
+    required this.isMe,
+    required this.stream,
+    required this.l10n,
+    required this.progL10n,
+  });
+
+  final SocialUserProfile? profile;
+  final bool isMe;
+  final Stream<List<SocialUnlockedAchievement>> stream;
+  final AppLocalizations l10n;
+  final ProgressionL10n progL10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final pinnedIds = profile?.pinnedAchievementIds ?? const [];
+    if (pinnedIds.isEmpty) {
+      return _ProfileEmptyLine(
+        text: isMe
+            ? 'Zatim nemas nic pripnuteho. Otevri detail achievementu a pripni ho na profil.'
+            : 'Zadne pripnute achievementy.',
+      );
+    }
+
+    return StreamBuilder<List<SocialUnlockedAchievement>>(
+      stream: stream,
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting && !snap.hasData) {
+          return const _ProfileSectionLoader();
+        }
+
+        final achievements = mapSocialAchievementsToProgression(
+          snap.data ?? const [],
+        );
+        final byId = {
+          for (final achievement in achievements) achievement.id: achievement,
+        };
+        final pinned = <ProgressionAchievement>[];
+        for (final id in pinnedIds) {
+          final achievement = byId[id];
+          if (achievement != null) pinned.add(achievement);
+        }
+
+        if (pinned.isEmpty) {
+          return const _ProfileEmptyLine(
+            text: 'Pripnute achievementy uz nejsou dostupne.',
+          );
+        }
+
+        return _FriendAchievementsGrid(
+          achievements: pinned,
+          l10n: l10n,
+          progL10n: progL10n,
+        );
+      },
+    );
+  }
+}
+
+class _ProfileSharesSection extends StatelessWidget {
+  const _ProfileSharesSection({required this.stream});
+
+  final Stream<List<SocialAchievementShare>> stream;
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<List<SocialAchievementShare>>(
+      stream: stream,
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting && !snap.hasData) {
+          return const _ProfileSectionLoader();
+        }
+
+        final shares = snap.data ?? const [];
+        if (shares.isEmpty) {
+          return const _ProfileEmptyLine(
+            text: 'Zadne sdilene prispevky zatim.',
+          );
+        }
+
+        return Column(
+          children: [
+            for (final share in shares)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: SocialFeedCard(share: share),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ProfileFriendsSection extends StatefulWidget {
+  const _ProfileFriendsSection({required this.stream});
+
+  final Stream<List<SocialUserProfile>> stream;
+
+  @override
+  State<_ProfileFriendsSection> createState() => _ProfileFriendsSectionState();
+}
+
+class _ProfileFriendsSectionState extends State<_ProfileFriendsSection> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<List<SocialUserProfile>>(
+      stream: widget.stream,
+      builder: (context, snap) {
+        final loading =
+            snap.connectionState == ConnectionState.waiting && !snap.hasData;
+        final friends = snap.data ?? const <SocialUserProfile>[];
+
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+          ),
+          child: Column(
+            children: [
+              InkWell(
+                onTap: friends.isEmpty
+                    ? null
+                    : () => setState(() => _expanded = !_expanded),
+                borderRadius: BorderRadius.circular(14),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 11, 12, 11),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: FtTokens.active.dim,
+                          borderRadius: BorderRadius.circular(9),
+                          border: Border.all(
+                            color:
+                                FtTokens.active.color.withValues(alpha: 0.22),
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.groups_rounded,
+                          size: 16,
+                          color: FtTokens.active.color,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      const Expanded(
+                        child: Text(
+                          'PRATELE',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: FtTokens.onSurfaceFaint,
+                            letterSpacing: 0.9,
+                          ),
+                        ),
+                      ),
+                      if (loading)
+                        const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: FtTokens.accent,
+                          ),
+                        )
+                      else
+                        Text(
+                          '${friends.length}',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
+                            color: FtTokens.active.color,
+                          ),
+                        ),
+                      const SizedBox(width: 8),
+                      AnimatedRotation(
+                        duration: const Duration(milliseconds: 180),
+                        turns: _expanded ? 0.5 : 0,
+                        child: const Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          size: 20,
+                          color: FtTokens.onSurfaceFaint,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              AnimatedCrossFade(
+                duration: const Duration(milliseconds: 200),
+                firstChild: const SizedBox(width: double.infinity),
+                secondChild: _ProfileFriendList(friends: friends),
+                crossFadeState: _expanded
+                    ? CrossFadeState.showSecond
+                    : CrossFadeState.showFirst,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ProfileFriendList extends StatelessWidget {
+  const _ProfileFriendList({required this.friends});
+
+  final List<SocialUserProfile> friends;
+
+  @override
+  Widget build(BuildContext context) {
+    if (friends.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.fromLTRB(12, 0, 12, 12),
+        child: Text(
+          'Zadni pratele zatim.',
+          style: TextStyle(
+            fontSize: 12,
+            color: FtTokens.onSurfaceFaint,
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+      child: Column(
+        children: [
+          Container(
+            height: 1,
+            color: Colors.white.withValues(alpha: 0.06),
+          ),
+          const SizedBox(height: 6),
+          for (final friend in friends) _ProfileFriendRow(friend: friend),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileFriendRow extends StatelessWidget {
+  const _ProfileFriendRow({required this.friend});
+
+  final SocialUserProfile friend;
+
+  @override
+  Widget build(BuildContext context) {
+    final title = ProgressionL10n(context.l10n).levelTitle(friend.stats.level);
+    final subtitle = friend.handle.isEmpty
+        ? 'Level ${friend.stats.level} $title'
+        : '@${friend.handle} - Level ${friend.stats.level} $title';
+
+    return InkWell(
+      onTap: () => openUserProfile(
+        context,
+        uid: friend.uid,
+        initialDisplayName: friend.displayName,
+        initialPhotoUrl: friend.photoUrl,
+      ),
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 7),
+        child: Row(
+          children: [
+            SocialAvatar(
+              name: friend.displayName,
+              size: 36,
+              photoUrl: friend.photoUrl,
+              radius: 11,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    friend.displayName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: FtTokens.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: FtTokens.onSurfaceFaint,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 16,
+              color: FtTokens.onSurfaceFaint,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileSectionLoader extends StatelessWidget {
+  const _ProfileSectionLoader();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          color: FtTokens.accent,
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileEmptyLine extends StatelessWidget {
+  const _ProfileEmptyLine({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 13,
+          color: FtTokens.onSurfaceFaint,
+          height: 1.35,
+        ),
+      ),
+    );
+  }
+}
+
 class _AddFriendButton extends StatelessWidget {
   const _AddFriendButton({required this.busy, required this.onTap});
   final bool busy;
@@ -374,8 +733,7 @@ class _PendingRequestChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: FtTokens.accent.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
-        border:
-            Border.all(color: FtTokens.accent.withValues(alpha: 0.35)),
+        border: Border.all(color: FtTokens.accent.withValues(alpha: 0.35)),
       ),
       child: const Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -715,18 +1073,18 @@ class _FriendAchievementDetailsSheet extends StatelessWidget {
       progL10n,
       locale,
     );
+    final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return SafeArea(
       top: false,
+      bottom: false,
       child: Container(
         decoration: BoxDecoration(
           color: FtTokens.surface,
-          borderRadius:
-              const BorderRadius.vertical(top: Radius.circular(28)),
-          border:
-              Border.all(color: Colors.white.withValues(alpha: 0.08)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         ),
-        padding: const EdgeInsets.fromLTRB(18, 12, 18, 22),
+        padding: EdgeInsets.fromLTRB(18, 12, 18, bottomPad + 22),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -797,8 +1155,7 @@ class _FriendAchievementDetailsSheet extends StatelessWidget {
               runSpacing: 8,
               children: [
                 FtProgTinyPill(
-                  label:
-                      friendAchievementDifficultyLabel(achievement, l10n),
+                  label: friendAchievementDifficultyLabel(achievement, l10n),
                   color: color,
                 ),
                 if (achievement.ruleId != null)
@@ -821,13 +1178,12 @@ class _FriendAchievementDetailsSheet extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.03),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.06)),
+                  border:
+                      Border.all(color: Colors.white.withValues(alpha: 0.06)),
                 ),
                 child: Text(
                   l10n.progQuestCompletedOn(
-                    formatAchievementDateTime(
-                        achievement.unlockedAt!, locale),
+                    formatAchievementDateTime(achievement.unlockedAt!, locale),
                   ),
                   style: TextStyle(
                     fontSize: 12,

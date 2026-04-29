@@ -12,6 +12,7 @@ import '../../progression/application/progression_provider.dart';
 import '../../progression/presentation/widgets/ft_progression_home_card.dart';
 import '../../social/application/social_provider.dart';
 import '../../social/presentation/ft_social_screen.dart';
+import '../../social/presentation/widgets/social_profile_header.dart';
 import '../../../l10n/l10n.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../../../shared/theme/ft_design_tokens.dart';
@@ -76,6 +77,14 @@ class _FtMainShellState extends State<FtMainShell> {
     );
   }
 
+  void _handlePageChanged(int index) {
+    setState(() => _currentIndex = index);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measureTopChrome());
+    Future<void>.delayed(const Duration(milliseconds: 340), () {
+      if (mounted) _measureTopChrome();
+    });
+  }
+
   Future<void> _openActivitiesScreen() => Navigator.of(context)
       .push(MaterialPageRoute(builder: (_) => const FtActivitiesScreen()));
 
@@ -136,7 +145,7 @@ class _FtMainShellState extends State<FtMainShell> {
               Positioned.fill(
                 child: PageView(
                   controller: _pageController,
-                  onPageChanged: (i) => setState(() => _currentIndex = i),
+                  onPageChanged: _handlePageChanged,
                   children: screens,
                 ),
               ),
@@ -156,33 +165,69 @@ class _FtMainShellState extends State<FtMainShell> {
                           child: _HeaderScrim(),
                         ),
                       ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 220),
-                            child: _ShellHeader(
-                              key: ValueKey(_currentIndex),
-                              eyebrow: headerData.eyebrow,
-                              title: headerData.title,
-                              trailing: _currentIndex == 0
-                                  ? _AvatarButton(
-                                      onTap: () => Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => const SettingsScreen(),
+                      AnimatedSize(
+                        duration: const Duration(milliseconds: 280),
+                        curve: Curves.easeInOutCubic,
+                        alignment: Alignment.topCenter,
+                        onEnd: _measureTopChrome,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 220),
+                              child: _ShellHeader(
+                                key: ValueKey(_currentIndex),
+                                eyebrow: headerData.eyebrow,
+                                title: headerData.title,
+                                trailing: _currentIndex == 0
+                                    ? _AvatarButton(
+                                        onTap: () => Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) =>
+                                                const SettingsScreen(),
+                                          ),
                                         ),
-                                      ),
-                                    )
-                                  : null,
+                                      )
+                                    : null,
+                              ),
                             ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
-                            child:
-                                FtProgressionCard(barKey: _progressionBarKey),
-                          ),
-                        ],
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 280),
+                                switchInCurve: Curves.easeOutCubic,
+                                switchOutCurve: Curves.easeInCubic,
+                                transitionBuilder: (child, animation) {
+                                  final curved = CurvedAnimation(
+                                    parent: animation,
+                                    curve: Curves.easeOutCubic,
+                                  );
+                                  return FadeTransition(
+                                    opacity: curved,
+                                    child: SlideTransition(
+                                      position: Tween<Offset>(
+                                        begin: const Offset(0, -0.04),
+                                        end: Offset.zero,
+                                      ).animate(curved),
+                                      child: child,
+                                    ),
+                                  );
+                                },
+                                child: _currentIndex == 3
+                                    ? const SocialProfileHeader(
+                                        key: ValueKey('social-profile-header'),
+                                      )
+                                    : FtProgressionCard(
+                                        key: const ValueKey(
+                                          'progression-header-card',
+                                        ),
+                                        barKey: _progressionBarKey,
+                                      ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -194,7 +239,8 @@ class _FtMainShellState extends State<FtMainShell> {
         bottomNavigationBar: _FtBottomNav(
           index: _currentIndex,
           onTap: _goToPage,
-          questBadge: context.watch<ProgressionProvider>().pendingRewards.length,
+          questBadge:
+              context.watch<ProgressionProvider>().pendingRewards.length,
           socialBadge: context.watch<SocialProvider>().incomingRequests.length +
               context.watch<SocialProvider>().unreadNotificationCount,
         ),
@@ -376,10 +422,13 @@ class _FtBottomNav extends StatelessWidget {
                 item: items[i],
                 isActive: i == index,
                 onTap: () => onTap(i),
-                badge: i == 1 ? questBadge : i == 3 ? socialBadge : 0,
-                badgeColor: i == 1
-                    ? const Color(0xFFFFBD2E)
-                    : const Color(0xFFEF4444),
+                badge: i == 1
+                    ? questBadge
+                    : i == 3
+                        ? socialBadge
+                        : 0,
+                badgeColor:
+                    i == 1 ? const Color(0xFFFFBD2E) : const Color(0xFFEF4444),
               ),
             ),
         ],
@@ -496,4 +545,3 @@ class _NavItemTile extends StatelessWidget {
     );
   }
 }
-

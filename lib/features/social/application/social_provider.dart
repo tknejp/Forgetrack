@@ -1,7 +1,8 @@
 import 'dart:async';
 
-import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../core/logging/app_log.dart';
 import '../../auth/application/auth_provider.dart';
@@ -145,6 +146,94 @@ class SocialProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<String?> updateCurrentHandle(String desiredHandle) async {
+    final uid = _activeUid;
+    if (uid == null) return null;
+
+    try {
+      final handle = await _repository.updateProfileHandle(
+        uid: uid,
+        desiredHandle: desiredHandle,
+      );
+      _lastProfileSignature = null;
+      _error = null;
+      notifyListeners();
+      return handle;
+    } catch (error, stackTrace) {
+      _recordError('updateCurrentHandle', error, stackTrace);
+      notifyListeners();
+      return null;
+    }
+  }
+
+  Future<void> updateCurrentPhotoUrl(String? photoUrl) async {
+    final uid = _activeUid;
+    if (uid == null) return;
+
+    try {
+      await _repository.updateProfilePhotoUrl(
+        uid: uid,
+        photoUrl: photoUrl,
+      );
+      _lastProfileSignature = null;
+      _error = null;
+    } catch (error, stackTrace) {
+      _recordError('updateCurrentPhotoUrl', error, stackTrace);
+    }
+
+    notifyListeners();
+  }
+
+  Future<String?> uploadCurrentProfilePhoto(XFile image) async {
+    final uid = _activeUid;
+    if (uid == null) return null;
+    if (!backendReady) {
+      _error = backendMessage;
+      notifyListeners();
+      return null;
+    }
+
+    try {
+      final bytes = await image.readAsBytes();
+      if (bytes.isEmpty) {
+        throw StateError('Vybrany obrazek je prazdny.');
+      }
+
+      final contentType = _contentTypeForImage(image);
+      final extension = _extensionForContentType(contentType);
+      final storageUid = _storageSafeId(uid);
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('social_profile_photos')
+          .child(storageUid)
+          .child('profile_$timestamp.$extension');
+
+      await ref.putData(
+        bytes,
+        SettableMetadata(
+          contentType: contentType,
+          cacheControl: 'public,max-age=604800',
+          customMetadata: {
+            'uid': uid,
+            'source': 'forgetrack_social_profile',
+          },
+        ),
+      );
+
+      final url = await ref.getDownloadURL();
+      await _repository.updateProfilePhotoUrl(uid: uid, photoUrl: url);
+      _lastProfileSignature = null;
+      _error = null;
+      notifyListeners();
+      return url;
+    } catch (error, stackTrace) {
+      _recordError('uploadCurrentProfilePhoto', error, stackTrace);
+      notifyListeners();
+      return null;
+    }
+  }
+
   Future<void> sendFriendRequest(String toUid) async {
     final uid = _activeUid;
     if (uid == null) return;
@@ -193,12 +282,60 @@ class SocialProvider extends ChangeNotifier {
 
   Stream<SocialUserProfile?> watchProfileById(String uid) {
     return _repository
-        .watchProfilesByIds([uid])
-        .map((profiles) => profiles.firstOrNull);
+        .watchProfilesByIds([uid]).map((profiles) => profiles.firstOrNull);
   }
 
   Stream<List<SocialUnlockedAchievement>> watchFriendAchievements(String uid) {
     return _repository.watchUnlockedAchievements(uid);
+  }
+
+  Stream<List<SocialAchievementShare>> watchProfileShares(
+    String uid, {
+    int limit = 20,
+  }) {
+    return _repository.watchRecentAchievementShares(
+      actorUids: [uid],
+      limit: limit,
+    );
+  }
+
+  Stream<List<SocialUserProfile>> watchFriendProfilesForUser(String uid) {
+    if (!backendReady || uid.isEmpty) {
+      return Stream<List<SocialUserProfile>>.value(const []);
+    }
+
+    return _repository.watchFriendships(uid: uid).asyncMap((friendships) async {
+      final friendIds = friendships
+          .map((friendship) => friendship.counterpartFor(uid))
+          .where((friendUid) => friendUid.isNotEmpty && friendUid != uid)
+          .toSet()
+          .toList()
+        ..sort();
+
+      if (friendIds.isEmpty) return const <SocialUserProfile>[];
+      return _repository.fetchProfilesByIds(friendIds);
+    });
+  }
+
+  Future<void> setCurrentAchievementPinned({
+    required String achievementId,
+    required bool pinned,
+  }) async {
+    final uid = _activeUid;
+    if (uid == null) return;
+
+    try {
+      await _repository.updatePinnedAchievement(
+        uid: uid,
+        achievementId: achievementId,
+        pinned: pinned,
+      );
+      _error = null;
+    } catch (error, stackTrace) {
+      _recordError('setCurrentAchievementPinned', error, stackTrace);
+    }
+
+    notifyListeners();
   }
 
   SocialAchievementShare? shareById(String id) {
@@ -214,7 +351,8 @@ class SocialProvider extends ChangeNotifier {
 
     AppLog.social.debug(
       'removeFriend',
-      payload: 'uid=$uid friendUid=$friendUid friendships=${_friendships.length}',
+      payload:
+          'uid=$uid friendUid=$friendUid friendships=${_friendships.length}',
     );
 
     final friendship = _friendships
@@ -302,6 +440,11 @@ class SocialProvider extends ChangeNotifier {
     final displayName = user.displayName?.trim().isNotEmpty == true
         ? user.displayName!.trim()
         : user.email.split('@').first;
+    final actorSnapshot = await _buildCurrentActorSnapshot(
+      uid: uid,
+      fallbackDisplayName: displayName,
+      fallbackPhotoUrl: user.photoUrl,
+    );
 
     final share = SocialAchievementShare(
       id: '',
@@ -311,8 +454,8 @@ class SocialProvider extends ChangeNotifier {
       message: message?.trim().isEmpty ?? true ? null : message!.trim(),
       visibility: SocialShareVisibility.friends,
       actorSnapshot: SocialAchievementActorSnapshot(
-        displayName: displayName,
-        photoUrl: user.photoUrl,
+        displayName: actorSnapshot.displayName,
+        photoUrl: actorSnapshot.photoUrl,
       ),
       achievementSnapshot: SocialAchievementSnapshot(
         title: achievement.title,
@@ -355,13 +498,18 @@ class SocialProvider extends ChangeNotifier {
     final actorName = user.displayName?.trim().isNotEmpty == true
         ? user.displayName!.trim()
         : user.email.split('@').first;
+    final actorSnapshot = await _buildCurrentActorSnapshot(
+      uid: uid,
+      fallbackDisplayName: actorName,
+      fallbackPhotoUrl: user.photoUrl,
+    );
 
     try {
       await _repository.addReaction(
         shareId: shareId,
         actorUid: uid,
-        actorName: actorName,
-        actorPhoto: user.photoUrl,
+        actorName: actorSnapshot.displayName,
+        actorPhoto: actorSnapshot.photoUrl,
         emoji: emoji,
         shareOwnerUid: share.actorUid,
         achievementTitle: share.achievementSnapshot.title,
@@ -475,10 +623,6 @@ class SocialProvider extends ChangeNotifier {
 
     try {
       await _repository.upsertProfile(payload);
-      await _repository.replaceUnlockedAchievements(
-        uid: payload.uid,
-        achievements: payload.unlockedAchievements,
-      );
 
       _lastProfileSignature = signature;
       _error = null;
@@ -862,6 +1006,32 @@ class SocialProvider extends ChangeNotifier {
     return newNotifications;
   }
 
+  Future<SocialAchievementActorSnapshot> _buildCurrentActorSnapshot({
+    required String uid,
+    required String fallbackDisplayName,
+    required String? fallbackPhotoUrl,
+  }) async {
+    try {
+      final profile = (await _repository.fetchProfilesByIds([uid])).firstOrNull;
+      final displayName = profile?.displayName.trim().isNotEmpty == true
+          ? profile!.displayName.trim()
+          : fallbackDisplayName;
+      final photoUrl = profile?.photoUrl?.trim().isNotEmpty == true
+          ? profile!.photoUrl!.trim()
+          : fallbackPhotoUrl;
+
+      return SocialAchievementActorSnapshot(
+        displayName: displayName,
+        photoUrl: photoUrl,
+      );
+    } catch (_) {
+      return SocialAchievementActorSnapshot(
+        displayName: fallbackDisplayName,
+        photoUrl: fallbackPhotoUrl,
+      );
+    }
+  }
+
   Future<void> _cancelSubscriptions() async {
     await _incomingRequestsSubscription?.cancel();
     await _outgoingRequestsSubscription?.cancel();
@@ -891,6 +1061,11 @@ class SocialProvider extends ChangeNotifier {
   String _describeError(Object error) {
     if (error is FirebaseException) {
       switch (error.code) {
+        case 'canceled':
+        case 'cancelled':
+          return 'Vyber byl zrusen.';
+        case 'unauthorized':
+          return 'Profilovou fotku nejde nahrat. Zkontroluj Firebase Storage pravidla.';
         case 'failed-precondition':
           return 'Sociální data se ještě připravují. Zkus to prosím za chvíli znovu.';
         case 'permission-denied':
@@ -950,4 +1125,42 @@ class SocialProvider extends ChangeNotifier {
     unawaited(_cancelSubscriptions());
     super.dispose();
   }
+}
+
+String _contentTypeForImage(XFile image) {
+  final mimeType = image.mimeType?.trim().toLowerCase();
+  if (mimeType == 'image/png' ||
+      mimeType == 'image/webp' ||
+      mimeType == 'image/heic' ||
+      mimeType == 'image/heif') {
+    return mimeType!;
+  }
+
+  final lowerName = image.name.toLowerCase();
+  if (lowerName.endsWith('.png')) return 'image/png';
+  if (lowerName.endsWith('.webp')) return 'image/webp';
+  if (lowerName.endsWith('.heic')) return 'image/heic';
+  if (lowerName.endsWith('.heif')) return 'image/heif';
+  return 'image/jpeg';
+}
+
+String _extensionForContentType(String contentType) {
+  switch (contentType) {
+    case 'image/png':
+      return 'png';
+    case 'image/webp':
+      return 'webp';
+    case 'image/heic':
+      return 'heic';
+    case 'image/heif':
+      return 'heif';
+    case 'image/jpeg':
+    default:
+      return 'jpg';
+  }
+}
+
+String _storageSafeId(String value) {
+  final safe = value.replaceAll(RegExp(r'[^A-Za-z0-9_.-]'), '_');
+  return safe.isEmpty ? 'user' : safe;
 }

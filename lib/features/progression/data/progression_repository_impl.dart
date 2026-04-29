@@ -416,6 +416,18 @@ class ProgressionRepositoryImpl implements ProgressionLocalRepository {
     });
   }
 
+  @override
+  Future<void> wipeAllProgressionData() async {
+    final isar = _database.isar;
+    await isar.writeTxn(() async {
+      await isar.progressionEvaluationRecords.clear();
+      await isar.progressionRewardGrantRecords.clear();
+      await isar.progressionQuestRewardGrantRecords.clear();
+      await isar.progressionActiveQuestRecords.clear();
+      await isar.progressionAchievementUnlockRecords.clear();
+    });
+  }
+
   /// Inserts a claimed quest grant restored from Firestore into Isar.
   /// Skips silently if the [rewardKey] already exists (replace: false).
   @override

@@ -27,6 +27,9 @@ class FirestoreSocialRepository implements SocialRepository {
   CollectionReference<Map<String, dynamic>> get _handles =>
       _firestore.collection('handles');
 
+  CollectionReference<Map<String, dynamic>> _achievementUnlocks(String uid) =>
+      _users.doc(uid).collection('achievementUnlocks');
+
   @override
   Stream<List<SocialFriendRequest>> watchIncomingFriendRequests({
     required String uid,
@@ -269,6 +272,10 @@ class FirestoreSocialRepository implements SocialRepository {
       final existingData = userSnapshot.data();
       final existingHandle =
           normalizeSocialHandle(existingData?['handle'] as String? ?? '');
+      final existingPhotoUrl = (existingData?['photoUrl'] as String?)?.trim();
+      final effectivePhotoUrl = existingPhotoUrl?.isNotEmpty == true
+          ? existingPhotoUrl
+          : payload.photoUrl;
 
       final handleReservation = await _reserveHandleInTransaction(
         transaction: transaction,
@@ -293,13 +300,128 @@ class FirestoreSocialRepository implements SocialRepository {
       transaction.set(
         doc,
         _profileData(
-          payload: payload,
+          payload: payload.copyWith(photoUrl: effectivePhotoUrl),
           handle: handleReservation.handle,
           includeCreatedAt: !userSnapshot.exists,
         ),
         SetOptions(merge: true),
       );
     });
+  }
+
+  @override
+  Future<String> updateProfileHandle({
+    required String uid,
+    required String desiredHandle,
+  }) async {
+    final doc = _users.doc(uid);
+    final normalizedDesired = normalizeSocialHandle(desiredHandle);
+    if (normalizedDesired.isEmpty) {
+      throw ArgumentError('Social ID cannot be empty.');
+    }
+
+    return _firestore.runTransaction<String>((transaction) async {
+      final userSnapshot = await transaction.get(doc);
+      final existingData = userSnapshot.data();
+      final existingHandle =
+          normalizeSocialHandle(existingData?['handle'] as String? ?? '');
+
+      DocumentReference<Map<String, dynamic>>? selectedRef;
+      String? selectedHandle;
+      var selectedExists = false;
+
+      for (var suffix = 0; suffix < 1000; suffix++) {
+        final candidate = buildNumberedSocialHandle(
+          baseHandle: normalizedDesired,
+          suffix: suffix,
+        );
+        final candidateRef = _handles.doc(candidate);
+        final candidateSnapshot = await transaction.get(candidateRef);
+        final reservationUid = candidateSnapshot.data()?['uid'] as String?;
+
+        if (!candidateSnapshot.exists ||
+            reservationUid == uid ||
+            candidate == existingHandle) {
+          selectedRef = candidateRef;
+          selectedHandle = candidate;
+          selectedExists = candidateSnapshot.exists;
+          break;
+        }
+      }
+
+      if (selectedRef == null || selectedHandle == null) {
+        throw StateError(
+            'No available social handle for "$normalizedDesired".');
+      }
+
+      if (existingHandle.isNotEmpty && existingHandle != selectedHandle) {
+        final oldRef = _handles.doc(existingHandle);
+        final oldSnapshot = await transaction.get(oldRef);
+        if (oldSnapshot.data()?['uid'] == uid) {
+          transaction.delete(oldRef);
+        }
+      }
+
+      transaction.set(
+        selectedRef,
+        {
+          'uid': uid,
+          'handle': selectedHandle,
+          'baseHandle': normalizedDesired,
+          'updatedAt': FieldValue.serverTimestamp(),
+          if (!selectedExists) 'createdAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+
+      transaction.set(
+        doc,
+        {
+          'handle': selectedHandle,
+          'handleLower': selectedHandle.toLowerCase(),
+          'handleSearchTokens': buildSocialHandleSearchTokens(selectedHandle),
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+
+      return selectedHandle;
+    });
+  }
+
+  @override
+  Future<void> updateProfilePhotoUrl({
+    required String uid,
+    required String? photoUrl,
+  }) async {
+    final normalized = photoUrl?.trim();
+    await _users.doc(uid).set(
+      {
+        'photoUrl': normalized?.isEmpty == true ? null : normalized,
+        'updatedAt': FieldValue.serverTimestamp(),
+      },
+      SetOptions(merge: true),
+    );
+  }
+
+  @override
+  Future<void> updatePinnedAchievement({
+    required String uid,
+    required String achievementId,
+    required bool pinned,
+  }) async {
+    final normalizedId = achievementId.trim();
+    if (normalizedId.isEmpty) return;
+
+    await _users.doc(uid).set(
+      {
+        'pinnedAchievementIds': pinned
+            ? FieldValue.arrayUnion([normalizedId])
+            : FieldValue.arrayRemove([normalizedId]),
+        'updatedAt': FieldValue.serverTimestamp(),
+      },
+      SetOptions(merge: true),
+    );
   }
 
   Future<
@@ -376,38 +498,6 @@ class FirestoreSocialRepository implements SocialRepository {
         'updatedAt': FieldValue.serverTimestamp(),
       },
     };
-  }
-
-  @override
-  Future<void> replaceUnlockedAchievements({
-    required String uid,
-    required List<SocialUnlockedAchievement> achievements,
-  }) async {
-    final collection = _users.doc(uid).collection('achievement_unlocks');
-    final existingSnapshot = await collection.get();
-    final existingIds = existingSnapshot.docs.map((doc) => doc.id).toSet();
-    final newIds =
-        achievements.map((achievement) => achievement.achievementId).toSet();
-
-    final batch = _firestore.batch();
-    for (final achievement in achievements) {
-      batch.set(collection.doc(achievement.achievementId), {
-        'achievementId': achievement.achievementId,
-        'title': achievement.title,
-        'description': achievement.description,
-        'difficulty': achievement.difficulty,
-        'type': achievement.type,
-        'domain': achievement.domain,
-        'ruleId': achievement.ruleId,
-        'unlockedAt': Timestamp.fromDate(achievement.unlockedAt),
-      });
-    }
-
-    for (final staleId in existingIds.difference(newIds)) {
-      batch.delete(collection.doc(staleId));
-    }
-
-    await batch.commit();
   }
 
   @override
@@ -507,8 +597,7 @@ class FirestoreSocialRepository implements SocialRepository {
   Future<List<SocialUnlockedAchievement>> fetchUnlockedAchievements(
     String uid,
   ) async {
-    final snapshot =
-        await _users.doc(uid).collection('achievement_unlocks').get();
+    final snapshot = await _achievementUnlocks(uid).get();
     final list = snapshot.docs
         .map(_mapUnlockedAchievement)
         .toList(growable: true)
@@ -541,7 +630,7 @@ class FirestoreSocialRepository implements SocialRepository {
   @override
   Stream<List<SocialUnlockedAchievement>> watchUnlockedAchievements(
       String uid) {
-    return _users.doc(uid).collection('achievement_unlocks').snapshots().map(
+    return _achievementUnlocks(uid).snapshots().map(
       (snapshot) {
         final achievements = snapshot.docs
             .map(_mapUnlockedAchievement)
@@ -595,6 +684,11 @@ class FirestoreSocialRepository implements SocialRepository {
       handle: data['handle'] as String? ?? '',
       photoUrl: data['photoUrl'] as String?,
       socialEnabled: data['socialEnabled'] == true,
+      pinnedAchievementIds:
+          (data['pinnedAchievementIds'] as List<dynamic>? ?? const [])
+              .map((value) => value.toString())
+              .where((value) => value.isNotEmpty)
+              .toList(growable: false),
       createdAt: _readDateTime(data['createdAt']),
       updatedAt: _readDateTime(data['updatedAt']),
       stats: SocialUserStats(

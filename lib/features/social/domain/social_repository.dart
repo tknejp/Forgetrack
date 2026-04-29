@@ -35,9 +35,20 @@ abstract class SocialRepository {
 
   Future<void> upsertProfile(SocialProfileSyncPayload payload);
 
-  Future<void> replaceUnlockedAchievements({
+  Future<String> updateProfileHandle({
     required String uid,
-    required List<SocialUnlockedAchievement> achievements,
+    required String desiredHandle,
+  });
+
+  Future<void> updateProfilePhotoUrl({
+    required String uid,
+    required String? photoUrl,
+  });
+
+  Future<void> updatePinnedAchievement({
+    required String uid,
+    required String achievementId,
+    required bool pinned,
   });
 
   Future<void> sendFriendRequest({

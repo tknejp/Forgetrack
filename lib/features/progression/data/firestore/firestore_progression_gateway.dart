@@ -260,4 +260,39 @@ class FirestoreProgressionGateway implements ProgressionCloudGateway {
           SetOptions(merge: true),
         );
   }
+
+  // ---------------------------------------------------------------------------
+  // Devtools wipe
+  // ---------------------------------------------------------------------------
+
+  @override
+  Future<void> wipeAllRemoteData(String uid) async {
+    Future<void> deleteAll(
+      CollectionReference<Map<String, dynamic>> collection,
+    ) async {
+      final snapshot = await collection.get();
+      if (snapshot.docs.isEmpty) return;
+      var batch = _firestore.batch();
+      var count = 0;
+      for (final doc in snapshot.docs) {
+        batch.delete(doc.reference);
+        count++;
+        if (count == 500) {
+          await batch.commit();
+          batch = _firestore.batch();
+          count = 0;
+        }
+      }
+      if (count > 0) await batch.commit();
+    }
+
+    await deleteAll(_claimsRef(uid));
+    await deleteAll(_unlocksRef(uid));
+    await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('progression')
+        .doc('state')
+        .delete();
+  }
 }
