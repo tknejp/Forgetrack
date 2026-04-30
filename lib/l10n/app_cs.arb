@@ -83,13 +83,6 @@
   "sectionData": "Data",
   "sectionAbout": "O aplikaci",
   "sectionAccount": "Účet",
-  "settingsTheme": "Motiv",
-  "settingsTimeTheme": "Dynamický motiv dle času",
-  "settingsTimeThemeDesc": "Přizpůsobuje vzhled aplikace podle aktuální denní doby.",
-  "themeSystem": "Systémový",
-  "themeLight": "Světlý",
-  "themeDark": "Tmavý",
-  "themeDynamic": "Dynamický",
   "settingsAppVersion": "Verze aplikace",
   "settingsPrivacy": "Zásady ochrany osobních údajů",
   "settingsTerms": "Podmínky použití",
@@ -333,6 +326,17 @@
   "progQuestClaimAll": "Vyzvednout questy",
   "progQuestClaim": "Vyzvednout quest",
   "progQuestCompletedOn": "Dokončeno {time}",
+  "progQuestDetailRewards": "Odměny",
+  "progQuestDetailUnlocksNext": "Odemkne dál",
+  "progQuestDetailLockedBecause": "Zamčeno kvůli",
+  "progQuestDetailRequiresLevel": "Vyžaduje level {level}",
+  "progQuestDetailTrackDays": "Trackuj {days} dní",
+  "progQuestDetailCompleteQuest": "Dokonči {quest}",
+  "progQuestDetailRelatedGoals": "Související cíle",
+  "progQuestDetailTapForDetails": "Klepni pro detail",
+  "progQuestDetailHiddenUntilUnlocked": "Skryto do odemčení",
+  "progQuestDetailHiddenReward": "Skryto",
+  "progQuestDetailNoFollowUp": "Zatím bez navazujícího questu",
   "progProgressRatio": "{current} / {target}",
   "progPercent": "{value} %",
 
@@ -628,5 +632,40 @@
     "placeholders": {
       "level": { "type": "int" }
     }
-  }
+  },
+
+  "cosmeticFrameLvl1Name": "Poutnický rámeček",
+  "cosmeticFrameLvl1Desc": "Prostý dřevěný rámeček pro každého, kdo se vydal na cestu.",
+
+  "cosmeticFrameLvl10Name": "Rámeček hvozdu",
+  "cosmeticFrameLvl10Desc": "Tmavé dřevo a jemné lesní rytiny pro ty, kteří se naučili číst stezky hvozdu.",
+
+  "cosmeticFrameLvl25Name": "Rámeček starých bran",
+  "cosmeticFrameLvl25Desc": "Zvětralý kámen a zašlý bronz z průsmyku, kde se stezka mění v ruiny.",
+
+  "cosmeticFrameLvl40Name": "Trpasličí rám",
+  "cosmeticFrameLvl40Desc": "Pevný rám z kovaného kovu a důlního kamene, vyrobený v hlubinách trpasličích síní.",
+
+  "cosmeticFrameLvl60Name": "Mrazový rám",
+  "cosmeticFrameLvl60Desc": "Chladný stříbrný rám s ledovým leskem, zrozený v tichu zamrzlé země.",
+
+  "cosmeticFrameLvl80Name": "Rám horského vyzyvatele",
+  "cosmeticFrameLvl80Desc": "Temný horský kámen a černěná ocel pro ty, kteří vystoupali k cestě na pevnost.",
+
+  "cosmeticFrameLvl100Name": "Rám dračí skály",
+  "cosmeticFrameLvl100Desc": "Legendární rám z obsidiánu, dračího kamene a zlatých detailů, určený pro pána dračí skály.",
+
+  "cosmeticRelicOldCompassName": "Starý kompas",
+  "cosmeticRelicOldCompassDesc": "Mosazný kompas, jehož střelka občas ukazuje jinam, než by měla.",
+  "cosmeticBackgroundForestTrailName": "Lesní stezka",
+  "cosmeticBackgroundForestTrailDesc": "Mlžná pěšina vedoucí pod koruny vysokých stromů.",
+  "cosmeticEmblemForestMarkName": "Znak lesa",
+  "cosmeticEmblemForestMarkDesc": "Znamení vyryté do kůry — pozdrav prvních cestovatelů.",
+  "cosmeticFrameRuinedBronzeName": "Zvětralý bronz",
+  "cosmeticFrameRuinedBronzeDesc": "Patinou pokrytý rámeček, vytažený ze starých rozvalin.",
+  "cosmeticRelicOldGateKeyName": "Klíč od staré brány",
+  "cosmeticRelicOldGateKeyDesc": "Těžký klíč, jehož zámek už dávno neexistuje.",
+
+  "cosmeticEquippedBadge": "VYBAVENO",
+  "cosmeticUnknown": "Neznámá kosmetika"
 }

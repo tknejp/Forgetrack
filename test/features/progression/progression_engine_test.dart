@@ -966,6 +966,7 @@ void main() {
       expect(firstRewardQuest.isRewardClaimed, isFalse);
       expect(firstRewardQuest.rewardKey, firstRewardGrant.rewardKey);
       expect(firstRewardQuest.rewardXp, firstRewardGrant.xpGranted);
+      expect(firstRewardGrant.baseXp, 80);
       expect(firstRewardGrant.rewardStatus, ProgressionRewardStatus.unlocked);
       expect(
         secondState.questRewardGrants
@@ -1216,6 +1217,55 @@ void main() {
       expect(claimedGrant.finalXp, expectedFinalXp);
       expect(claimedGrant.levelAtClaim, 2);
       expect(state.profile.totalXp, level2Xp + expectedFinalXp);
+    });
+
+    test('claimQuestReward does not double-scale legacy pending quest XP',
+        () async {
+      const levelPolicy = ProgressionLevelPolicy();
+      final level51Xp = levelPolicy.xpRequiredForLevel(51);
+      final scaledPreviewXp = levelPolicy.scaledRewardXp(
+        baseXp: 80,
+        level: 51,
+      );
+      final doubleScaledXp = levelPolicy.scaledRewardXp(
+        baseXp: scaledPreviewXp,
+        level: 51,
+      );
+      final repository = _InMemoryProgressionRepository(
+        rewardGrants: [
+          _claimedReward(
+            rewardKey: 'seed-level-51',
+            xpGranted: level51Xp,
+            progressionAt: DateTime(2026, 4, 1),
+          ),
+        ],
+        questRewardGrants: [
+          ProgressionQuestRewardGrant(
+            rewardKey: 'quest|earn_first_reward|reward',
+            questId: 'earn_first_reward',
+            // Old buggy records stored a level-scaled preview here without
+            // preserving the raw quest base XP.
+            xpGranted: scaledPreviewXp,
+            rewardStatus: ProgressionRewardStatus.unlocked,
+            unlockedAt: DateTime(2026, 4, 2),
+            completedAt: DateTime(2026, 4, 2),
+          ),
+        ],
+      );
+      final engine = ProgressionEngine(
+        repository: repository,
+        clock: () => DateTime(2026, 4, 10, 9),
+      );
+
+      final state =
+          await engine.claimQuestReward('quest|earn_first_reward|reward');
+      final claimedGrant = state.questRewardGrants.firstWhere(
+        (g) => g.rewardKey == 'quest|earn_first_reward|reward',
+      );
+
+      expect(claimedGrant.finalXp, scaledPreviewXp);
+      expect(claimedGrant.finalXp, isNot(doubleScaledXp));
+      expect(state.profile.totalXp, level51Xp + scaledPreviewXp);
     });
 
     test('claimReward persists newly unlocked level achievements', () async {
@@ -1928,6 +1978,7 @@ class _InMemoryProgressionRepository implements ProgressionRepository {
           rewardStatus: ProgressionRewardStatus.claimed,
           unlockedAt: evaluatedAt,
           claimedAt: evaluatedAt,
+          baseXp: evaluation.baseXp,
         ),
       );
     }
@@ -1964,6 +2015,7 @@ class _InMemoryProgressionRepository implements ProgressionRepository {
       finalXp: finalXp,
       levelAtClaim: levelAtClaim,
       multiplierAtClaim: multiplierAtClaim,
+      baseXp: reward.baseXp,
     );
     return loadLedger();
   }
@@ -2000,6 +2052,7 @@ class _InMemoryProgressionRepository implements ProgressionRepository {
       finalXp: finalXp,
       levelAtClaim: levelAtClaim,
       multiplierAtClaim: multiplierAtClaim,
+      baseXp: reward.baseXp,
     );
     return loadLedger();
   }

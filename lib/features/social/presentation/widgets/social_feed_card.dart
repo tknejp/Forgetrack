@@ -5,7 +5,7 @@ import '../../../../shared/theme/ft_design_tokens.dart';
 import '../../application/social_provider.dart';
 import '../../domain/social_models.dart';
 import '../social_helpers.dart';
-import 'social_avatar.dart';
+import 'social_cosmetic_avatar.dart';
 
 class SocialFeedCard extends StatelessWidget {
   const SocialFeedCard({super.key, required this.share});
@@ -89,65 +89,7 @@ class SocialFeedCard extends StatelessWidget {
           // ── Header: avatar + name + time ─────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                GestureDetector(
-                  onTap: () => openUserProfile(
-                    context,
-                    uid: share.actorUid,
-                    initialDisplayName: share.actorSnapshot.displayName,
-                    initialPhotoUrl: share.actorSnapshot.photoUrl,
-                  ),
-                  child: SocialAvatar(
-                    name: share.actorSnapshot.displayName,
-                    photoUrl: share.actorSnapshot.photoUrl,
-                    size: 34,
-                    color: color,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      GestureDetector(
-                        onTap: () => openUserProfile(
-                          context,
-                          uid: share.actorUid,
-                          initialDisplayName: share.actorSnapshot.displayName,
-                          initialPhotoUrl: share.actorSnapshot.photoUrl,
-                        ),
-                        child: Text(
-                          share.actorSnapshot.displayName,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                            color: color,
-                            height: 1.2,
-                          ),
-                        ),
-                      ),
-                      const Text(
-                        'odemkl(a) achievement',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: FtTokens.onSurfaceMuted,
-                          height: 1.2,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Text(
-                  socialRelativeTime(share.createdAt),
-                  style: const TextStyle(
-                    fontSize: 10,
-                    color: FtTokens.onSurfaceFaint,
-                  ),
-                ),
-              ],
-            ),
+            child: _ShareActorHeader(share: share, color: color),
           ),
           const SizedBox(height: 10),
           // ── Achievement block ─────────────────────────────────────────────
@@ -169,8 +111,7 @@ class SocialFeedCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: color.withValues(alpha: 0.16),
                       borderRadius: BorderRadius.circular(13),
-                      border:
-                          Border.all(color: color.withValues(alpha: 0.28)),
+                      border: Border.all(color: color.withValues(alpha: 0.28)),
                       boxShadow: [
                         BoxShadow(
                           color: color.withValues(alpha: 0.22),
@@ -179,8 +120,7 @@ class SocialFeedCard extends StatelessWidget {
                       ],
                     ),
                     child: Center(
-                      child:
-                          Text(emoji, style: const TextStyle(fontSize: 24)),
+                      child: Text(emoji, style: const TextStyle(fontSize: 24)),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -239,13 +179,12 @@ class SocialFeedCard extends StatelessWidget {
               children: [
                 if (diffLabel.isNotEmpty)
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 7, vertical: 3),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                     decoration: BoxDecoration(
                       color: color.withValues(alpha: 0.14),
                       borderRadius: BorderRadius.circular(99),
-                      border: Border.all(
-                          color: color.withValues(alpha: 0.28)),
+                      border: Border.all(color: color.withValues(alpha: 0.28)),
                     ),
                     child: Text(
                       diffLabel,
@@ -274,6 +213,91 @@ class SocialFeedCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ShareActorHeader extends StatelessWidget {
+  const _ShareActorHeader({
+    required this.share,
+    required this.color,
+  });
+
+  final SocialAchievementShare share;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final social = context.read<SocialProvider>();
+    return StreamBuilder<SocialUserProfile?>(
+      stream: social.watchProfileById(share.actorUid),
+      builder: (context, snapshot) {
+        final profile = snapshot.data;
+        final displayName = profile?.displayName.trim().isNotEmpty == true
+            ? profile!.displayName.trim()
+            : share.actorSnapshot.displayName;
+        final photoUrl = profile?.photoUrl?.trim().isNotEmpty == true
+            ? profile!.photoUrl
+            : share.actorSnapshot.photoUrl;
+
+        void openProfile() => openUserProfile(
+              context,
+              uid: share.actorUid,
+              initialDisplayName: displayName,
+              initialPhotoUrl: photoUrl,
+            );
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            GestureDetector(
+              onTap: openProfile,
+              child: SocialCosmeticAvatar(
+                name: displayName,
+                photoUrl: photoUrl,
+                profile: profile,
+                size: 34,
+                color: color,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  GestureDetector(
+                    onTap: openProfile,
+                    child: Text(
+                      displayName,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: color,
+                        height: 1.2,
+                      ),
+                    ),
+                  ),
+                  const Text(
+                    'odemkl(a) achievement',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: FtTokens.onSurfaceMuted,
+                      height: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              socialRelativeTime(share.createdAt),
+              style: const TextStyle(
+                fontSize: 10,
+                color: FtTokens.onSurfaceFaint,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -400,10 +424,10 @@ class _ReactorsSheet extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 7),
                 child: Row(
                   children: [
-                    SocialAvatar(
-                      name: name,
-                      photoUrl: r.snapshot?.photoUrl,
-                      size: 36,
+                    _LiveReactorAvatar(
+                      uid: r.uid,
+                      fallbackName: name,
+                      fallbackPhotoUrl: r.snapshot?.photoUrl,
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -427,6 +451,41 @@ class _ReactorsSheet extends StatelessWidget {
           }),
         ],
       ),
+    );
+  }
+}
+
+class _LiveReactorAvatar extends StatelessWidget {
+  const _LiveReactorAvatar({
+    required this.uid,
+    required this.fallbackName,
+    required this.fallbackPhotoUrl,
+  });
+
+  final String uid;
+  final String fallbackName;
+  final String? fallbackPhotoUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final social = context.read<SocialProvider>();
+    return StreamBuilder<SocialUserProfile?>(
+      stream: social.watchProfileById(uid),
+      builder: (context, snapshot) {
+        final profile = snapshot.data;
+        final name = profile?.displayName.trim().isNotEmpty == true
+            ? profile!.displayName.trim()
+            : fallbackName;
+        final photoUrl = profile?.photoUrl?.trim().isNotEmpty == true
+            ? profile!.photoUrl
+            : fallbackPhotoUrl;
+        return SocialCosmeticAvatar(
+          name: name,
+          photoUrl: photoUrl,
+          profile: profile,
+          size: 36,
+        );
+      },
     );
   }
 }

@@ -49,7 +49,7 @@ class ProgressionFirestoreMapper {
       'domainName': grant.domain.name,
       'periodKindName': grant.period.kind.name,
       'periodStart': Timestamp.fromDate(grant.period.start),
-      'baseXp': grant.xpGranted,
+      'baseXp': grant.baseXp ?? grant.xpGranted,
       'finalXp': grant.finalXp ?? grant.xpGranted,
       'levelAtClaim': grant.levelAtClaim,
       'multiplierAtClaim': grant.multiplierAtClaim,
@@ -64,14 +64,15 @@ class ProgressionFirestoreMapper {
   /// uploads [ProgressionQuestRewardGrant.xpGranted] as the `finalXp` value.
   ///
   /// Precondition: [isQuestGrantUploadable] must return true.
-  static Map<String, dynamic> questGrantToMap(ProgressionQuestRewardGrant grant) {
+  static Map<String, dynamic> questGrantToMap(
+      ProgressionQuestRewardGrant grant) {
     assert(isQuestGrantUploadable(grant),
         'questGrantToMap called on non-uploadable grant: ${grant.rewardKey}');
     return {
       'rewardKey': grant.rewardKey,
       'type': 'quest',
       'questId': grant.questId,
-      'baseXp': grant.xpGranted,
+      'baseXp': grant.baseXp ?? grant.xpGranted,
       'finalXp': grant.finalXp ?? grant.xpGranted,
       'levelAtClaim': grant.levelAtClaim,
       'multiplierAtClaim': grant.multiplierAtClaim,

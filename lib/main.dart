@@ -15,6 +15,13 @@ import 'core/services/background_sync_service.dart';
 import 'core/services/fcm_service.dart';
 import 'core/services/notification_service.dart';
 import 'features/auth/application/auth_provider.dart';
+import 'features/cosmetics/application/cosmetics_provider.dart';
+import 'features/cosmetics/application/cosmetics_service.dart';
+import 'features/cosmetics/config/cosmetics_config.dart';
+import 'features/cosmetics/data/cosmetic_entitlements_source.dart';
+import 'features/cosmetics/data/firestore_cosmetic_entitlements_source.dart';
+import 'features/cosmetics/data/isar_cosmetics_repository.dart';
+import 'features/cosmetics/data/local/cosmetics_database.dart';
 import 'features/progression/application/progression_engine.dart';
 import 'features/progression/data/firestore/firestore_progression_gateway.dart';
 import 'features/progression/data/hybrid_progression_repository.dart';
@@ -38,8 +45,6 @@ import 'features/health_connect/data/local/health_database.dart';
 import 'features/health_connect/application/goals_provider.dart';
 import 'features/devtools/application/devtools_provider.dart';
 import 'app/locale_provider.dart';
-import 'shared/theme/theme_provider.dart';
-import 'shared/theme/time_theme_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -56,12 +61,6 @@ Future<void> main() async {
 
   final localeProvider = LocaleProvider();
   await localeProvider.init();
-
-  final themeProvider = ThemeProvider();
-  await themeProvider.init();
-
-  final timeThemeProvider = TimeThemeProvider();
-  await timeThemeProvider.init();
 
   final healthService = HealthConnectService();
   final healthDb = HealthDatabase();
@@ -108,8 +107,7 @@ Future<void> main() async {
   unawaited(BackgroundSyncService.register());
 
   // Navigace z tapu na notifikaci při studeném startu
-  final launchDetails =
-      await NotificationService.instance.getLaunchDetails();
+  final launchDetails = await NotificationService.instance.getLaunchDetails();
   if (launchDetails != null) {
     NotificationService.instance.handleNotificationTap(launchDetails);
   }
@@ -134,12 +132,27 @@ Future<void> main() async {
   final devToolsProvider = DevToolsProvider();
   await devToolsProvider.init();
 
+  // Cosmetics: Isar-backed local persistence. Firestore sync lands in a
+  // later phase (mirror progression's hybrid pattern when it does).
+  final cosmeticsDatabase = CosmeticsDatabase();
+  await cosmeticsDatabase.open();
+  final cosmeticsConfig = CosmeticsConfig.standard();
+  final cosmeticsRepository = IsarCosmeticsRepository(
+    database: cosmeticsDatabase,
+    config: cosmeticsConfig,
+  );
+  final cosmeticsService = CosmeticsService(
+    repository: cosmeticsRepository,
+    config: cosmeticsConfig,
+  );
+  final cosmeticEntitlementsSource = socialBackendState.isReady
+      ? FirestoreCosmeticEntitlementsSource()
+      : const NoopCosmeticEntitlementsSource();
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: localeProvider),
-        ChangeNotifierProvider.value(value: themeProvider),
-        ChangeNotifierProvider.value(value: timeThemeProvider),
         ChangeNotifierProvider.value(value: goalsProvider),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider.value(value: fitnessProvider),
@@ -147,29 +160,41 @@ Future<void> main() async {
         ChangeNotifierProvider.value(value: ktProvider),
         ChangeNotifierProvider(create: (_) => SheetsExportProvider()),
         ChangeNotifierProvider.value(value: devToolsProvider),
-        ChangeNotifierProxyProvider3<GoalsProvider, FitnessProvider,
-            KalorickeTabulkyProvider, ProgressionProvider>(
+        ChangeNotifierProxyProvider<AuthProvider, CosmeticsProvider>(
+          create: (_) => CosmeticsProvider(
+            service: cosmeticsService,
+            entitlementsSource: cosmeticEntitlementsSource,
+          ),
+          update: (_, auth, provider) {
+            provider!.bindUser(auth.isSignedIn ? auth.user?.id : null);
+            return provider;
+          },
+        ),
+        ChangeNotifierProxyProvider4<GoalsProvider, FitnessProvider,
+            KalorickeTabulkyProvider, CosmeticsProvider, ProgressionProvider>(
           create: (_) => ProgressionProvider(engine: progressionEngine),
-          update: (_, goals, fitness, kt, provider) {
+          update: (_, goals, fitness, kt, cosmetics, provider) {
             provider!.bind(
               goalsProvider: goals,
               fitnessProvider: fitness,
               nutritionProvider: kt,
+              cosmeticsProvider: cosmetics,
             );
             return provider;
           },
         ),
-        ChangeNotifierProxyProvider2<AuthProvider, ProgressionProvider,
-            SocialProvider>(
+        ChangeNotifierProxyProvider3<AuthProvider, ProgressionProvider,
+            CosmeticsProvider, SocialProvider>(
           create: (_) => SocialProvider(
             repository: socialRepository,
             session: socialSession,
             backendState: socialBackendState,
           ),
-          update: (_, auth, progression, provider) {
+          update: (_, auth, progression, cosmetics, provider) {
             provider!.bind(
               authProvider: auth,
               progressionProvider: progression,
+              cosmeticsProvider: cosmetics,
             );
             return provider;
           },

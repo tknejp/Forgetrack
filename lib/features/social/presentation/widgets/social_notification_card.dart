@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../shared/theme/ft_design_tokens.dart';
+import '../../application/social_provider.dart';
 import '../../domain/social_models.dart';
 import '../social_helpers.dart';
-import 'social_avatar.dart';
+import 'social_cosmetic_avatar.dart';
 
 class SocialNotificationCard extends StatelessWidget {
   const SocialNotificationCard({
@@ -40,10 +42,8 @@ class SocialNotificationCard extends StatelessWidget {
               initialDisplayName: notification.actorName,
               initialPhotoUrl: notification.actorPhoto,
             ),
-            child: SocialAvatar(
-              name: notification.actorName,
-              photoUrl: notification.actorPhoto,
-              size: 36,
+            child: _LiveNotificationAvatar(
+              notification: notification,
               color: unread ? FtTokens.accent : FtTokens.onSurfaceMuted,
             ),
           ),
@@ -81,8 +81,7 @@ class SocialNotificationCard extends StatelessWidget {
                     ),
                     Text(
                       notification.emoji,
-                      style:
-                          const TextStyle(fontSize: 13, height: 1.4),
+                      style: const TextStyle(fontSize: 13, height: 1.4),
                     ),
                     const Text(
                       ' na tvůj achievement ',
@@ -153,6 +152,40 @@ class SocialNotificationCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _LiveNotificationAvatar extends StatelessWidget {
+  const _LiveNotificationAvatar({
+    required this.notification,
+    required this.color,
+  });
+
+  final SocialNotification notification;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final social = context.read<SocialProvider>();
+    return StreamBuilder<SocialUserProfile?>(
+      stream: social.watchProfileById(notification.actorUid),
+      builder: (context, snapshot) {
+        final profile = snapshot.data;
+        final name = profile?.displayName.trim().isNotEmpty == true
+            ? profile!.displayName.trim()
+            : notification.actorName;
+        final photoUrl = profile?.photoUrl?.trim().isNotEmpty == true
+            ? profile!.photoUrl
+            : notification.actorPhoto;
+        return SocialCosmeticAvatar(
+          name: name,
+          photoUrl: photoUrl,
+          profile: profile,
+          size: 36,
+          color: color,
+        );
+      },
     );
   }
 }

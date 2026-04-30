@@ -226,28 +226,6 @@ class AppLocalizationsCs extends AppLocalizations {
   String get sectionAccount => 'Účet';
 
   @override
-  String get settingsTheme => 'Motiv';
-
-  @override
-  String get settingsTimeTheme => 'Dynamický motiv dle času';
-
-  @override
-  String get settingsTimeThemeDesc =>
-      'Přizpůsobuje vzhled aplikace podle aktuální denní doby.';
-
-  @override
-  String get themeSystem => 'Systémový';
-
-  @override
-  String get themeLight => 'Světlý';
-
-  @override
-  String get themeDark => 'Tmavý';
-
-  @override
-  String get themeDynamic => 'Dynamický';
-
-  @override
   String get settingsAppVersion => 'Verze aplikace';
 
   @override
@@ -964,6 +942,45 @@ class AppLocalizationsCs extends AppLocalizations {
   String progQuestCompletedOn(String time) {
     return 'Dokončeno $time';
   }
+
+  @override
+  String get progQuestDetailRewards => 'Odměny';
+
+  @override
+  String get progQuestDetailUnlocksNext => 'Odemkne dál';
+
+  @override
+  String get progQuestDetailLockedBecause => 'Zamčeno kvůli';
+
+  @override
+  String progQuestDetailRequiresLevel(int level) {
+    return 'Vyžaduje level $level';
+  }
+
+  @override
+  String progQuestDetailTrackDays(int days) {
+    return 'Trackuj $days dní';
+  }
+
+  @override
+  String progQuestDetailCompleteQuest(String quest) {
+    return 'Dokonči $quest';
+  }
+
+  @override
+  String get progQuestDetailRelatedGoals => 'Související cíle';
+
+  @override
+  String get progQuestDetailTapForDetails => 'Klepni pro detail';
+
+  @override
+  String get progQuestDetailHiddenUntilUnlocked => 'Skryto do odemčení';
+
+  @override
+  String get progQuestDetailHiddenReward => 'Skryto';
+
+  @override
+  String get progQuestDetailNoFollowUp => 'Zatím bez navazujícího questu';
 
   @override
   String progProgressRatio(int current, int target) {
@@ -1840,4 +1857,94 @@ class AppLocalizationsCs extends AppLocalizations {
   String progLevelAchievementDesc(int level) {
     return 'Dosáhni levelu $level pomocí získaného XP.';
   }
+
+  @override
+  String get cosmeticFrameLvl1Name => 'Poutnický rámeček';
+
+  @override
+  String get cosmeticFrameLvl1Desc =>
+      'Prostý dřevěný rámeček pro každého, kdo se vydal na cestu.';
+
+  @override
+  String get cosmeticFrameLvl10Name => 'Rámeček hvozdu';
+
+  @override
+  String get cosmeticFrameLvl10Desc =>
+      'Tmavé dřevo a jemné lesní rytiny pro ty, kteří se naučili číst stezky hvozdu.';
+
+  @override
+  String get cosmeticFrameLvl25Name => 'Rámeček starých bran';
+
+  @override
+  String get cosmeticFrameLvl25Desc =>
+      'Zvětralý kámen a zašlý bronz z průsmyku, kde se stezka mění v ruiny.';
+
+  @override
+  String get cosmeticFrameLvl40Name => 'Trpasličí rám';
+
+  @override
+  String get cosmeticFrameLvl40Desc =>
+      'Pevný rám z kovaného kovu a důlního kamene, vyrobený v hlubinách trpasličích síní.';
+
+  @override
+  String get cosmeticFrameLvl60Name => 'Mrazový rám';
+
+  @override
+  String get cosmeticFrameLvl60Desc =>
+      'Chladný stříbrný rám s ledovým leskem, zrozený v tichu zamrzlé země.';
+
+  @override
+  String get cosmeticFrameLvl80Name => 'Rám horského vyzyvatele';
+
+  @override
+  String get cosmeticFrameLvl80Desc =>
+      'Temný horský kámen a černěná ocel pro ty, kteří vystoupali k cestě na pevnost.';
+
+  @override
+  String get cosmeticFrameLvl100Name => 'Rám dračí skály';
+
+  @override
+  String get cosmeticFrameLvl100Desc =>
+      'Legendární rám z obsidiánu, dračího kamene a zlatých detailů, určený pro pána dračí skály.';
+
+  @override
+  String get cosmeticRelicOldCompassName => 'Starý kompas';
+
+  @override
+  String get cosmeticRelicOldCompassDesc =>
+      'Mosazný kompas, jehož střelka občas ukazuje jinam, než by měla.';
+
+  @override
+  String get cosmeticBackgroundForestTrailName => 'Lesní stezka';
+
+  @override
+  String get cosmeticBackgroundForestTrailDesc =>
+      'Mlžná pěšina vedoucí pod koruny vysokých stromů.';
+
+  @override
+  String get cosmeticEmblemForestMarkName => 'Znak lesa';
+
+  @override
+  String get cosmeticEmblemForestMarkDesc =>
+      'Znamení vyryté do kůry — pozdrav prvních cestovatelů.';
+
+  @override
+  String get cosmeticFrameRuinedBronzeName => 'Zvětralý bronz';
+
+  @override
+  String get cosmeticFrameRuinedBronzeDesc =>
+      'Patinou pokrytý rámeček, vytažený ze starých rozvalin.';
+
+  @override
+  String get cosmeticRelicOldGateKeyName => 'Klíč od staré brány';
+
+  @override
+  String get cosmeticRelicOldGateKeyDesc =>
+      'Těžký klíč, jehož zámek už dávno neexistuje.';
+
+  @override
+  String get cosmeticEquippedBadge => 'VYBAVENO';
+
+  @override
+  String get cosmeticUnknown => 'Neznámá kosmetika';
 }

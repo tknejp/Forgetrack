@@ -219,27 +219,6 @@
   "sectionAccount": "Account",
   "@sectionAccount": { "description": "Settings section header: account / danger zone" },
 
-  "settingsTheme": "Theme",
-  "@settingsTheme": { "description": "Label for the theme mode setting" },
-
-  "settingsTimeTheme": "Dynamic Time Theme",
-  "@settingsTimeTheme": { "description": "Label for the Dynamic Time Theme toggle setting" },
-
-  "settingsTimeThemeDesc": "Adjusts visuals based on the current time of day.",
-  "@settingsTimeThemeDesc": { "description": "Short description for the Dynamic Time Theme toggle" },
-
-  "themeSystem": "System",
-  "@themeSystem": { "description": "Theme mode option: follow system setting" },
-
-  "themeLight": "Light",
-  "@themeLight": { "description": "Theme mode option: always light" },
-
-  "themeDark": "Dark",
-  "@themeDark": { "description": "Theme mode option: always dark" },
-
-  "themeDynamic": "Dynamic",
-  "@themeDynamic": { "description": "Theme mode option: auto light/dark + palette driven by time of day" },
-
   "settingsAppVersion": "App version",
   "@settingsAppVersion": { "description": "Label for the app version row" },
 
@@ -863,6 +842,20 @@
   "progQuestClaim": "Claim quest",
   "progQuestCompletedOn": "Completed {time}",
   "@progQuestCompletedOn": { "placeholders": { "time": { "type": "String" } } },
+  "progQuestDetailRewards": "Rewards",
+  "progQuestDetailUnlocksNext": "Unlocks next",
+  "progQuestDetailLockedBecause": "Locked because",
+  "progQuestDetailRequiresLevel": "Requires level {level}",
+  "@progQuestDetailRequiresLevel": { "placeholders": { "level": { "type": "int" } } },
+  "progQuestDetailTrackDays": "Track {days} days",
+  "@progQuestDetailTrackDays": { "placeholders": { "days": { "type": "int" } } },
+  "progQuestDetailCompleteQuest": "Complete {quest}",
+  "@progQuestDetailCompleteQuest": { "placeholders": { "quest": { "type": "String" } } },
+  "progQuestDetailRelatedGoals": "Related goals",
+  "progQuestDetailTapForDetails": "Tap for details",
+  "progQuestDetailHiddenUntilUnlocked": "Hidden until unlocked",
+  "progQuestDetailHiddenReward": "Hidden",
+  "progQuestDetailNoFollowUp": "No follow-up quest yet",
   "progProgressRatio": "{current} / {target}",
   "@progProgressRatio": {
     "placeholders": {
@@ -1197,5 +1190,40 @@
     "placeholders": {
       "level": { "type": "int" }
     }
-  }
+  },
+
+  "cosmeticFrameLvl1Name": "Pilgrim's Frame",
+  "cosmeticFrameLvl1Desc": "A plain wooden frame for anyone who set out on the road.",
+
+  "cosmeticFrameLvl10Name": "Wildwood Frame",
+  "cosmeticFrameLvl10Desc": "Dark wood and subtle forest carvings for those who learned to read the paths of the wildwood.",
+
+  "cosmeticFrameLvl25Name": "Old Gates Frame",
+  "cosmeticFrameLvl25Desc": "Weathered stone and aged bronze from the pass where the trail gives way to ruins.",
+
+  "cosmeticFrameLvl40Name": "Dwarven Frame",
+  "cosmeticFrameLvl40Desc": "A sturdy frame of forged metal and mine stone, crafted in the depths of dwarven halls.",
+
+  "cosmeticFrameLvl60Name": "Frost Frame",
+  "cosmeticFrameLvl60Desc": "A cold silver frame with an icy sheen, born in the silence of the frozen lands.",
+
+  "cosmeticFrameLvl80Name": "Mountain Challenger's Frame",
+  "cosmeticFrameLvl80Desc": "Dark mountain stone and blackened steel for those who climbed toward the fortress path.",
+
+  "cosmeticFrameLvl100Name": "Dragonrock Frame",
+  "cosmeticFrameLvl100Desc": "A legendary frame of obsidian, dragonstone, and golden details, reserved for the lord of Dragonrock.",
+
+  "cosmeticRelicOldCompassName": "Old Compass",
+  "cosmeticRelicOldCompassDesc": "A brass compass whose needle sometimes points the wrong way.",
+  "cosmeticBackgroundForestTrailName": "Forest Trail",
+  "cosmeticBackgroundForestTrailDesc": "A misty path winding under the tall canopy.",
+  "cosmeticEmblemForestMarkName": "Forest Mark",
+  "cosmeticEmblemForestMarkDesc": "A sigil carved into bark — the first travellers' greeting.",
+  "cosmeticFrameRuinedBronzeName": "Ruined Bronze",
+  "cosmeticFrameRuinedBronzeDesc": "A patina-coated frame pulled from ancient ruins.",
+  "cosmeticRelicOldGateKeyName": "Old Gate Key",
+  "cosmeticRelicOldGateKeyDesc": "A heavy key whose lock no longer exists.",
+
+  "cosmeticEquippedBadge": "EQUIPPED",
+  "cosmeticUnknown": "Unknown cosmetic"
 }

@@ -89,8 +89,6 @@ migrated feature-by-feature as part of normal development, not a big-bang rewrit
 | File | New location | Reason |
 |---|---|---|
 | `locale_provider.dart` | `lib/app/locale_provider.dart` | App-level locale state, no feature affinity |
-| `theme_provider.dart` | `lib/shared/theme/theme_provider.dart` | Defines `AppThemeMode`; lives next to theme data |
-| `time_theme_provider.dart` | `lib/shared/theme/time_theme_provider.dart` | Companion to `time_theme.dart` in the same folder |
 | `goals_provider.dart` | `lib/features/health_connect/application/goals_provider.dart` | Manages health/activity/body/nutrition goals; majority of consumers are health_connect screens |
 
 ### Models migration

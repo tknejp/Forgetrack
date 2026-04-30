@@ -8,10 +8,13 @@ import '../../../../features/progression/presentation/widgets/ft_progression_pri
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../shared/theme/ft_design_tokens.dart';
+import '../../../cosmetics/config/cosmetics_config.dart';
+import '../../../cosmetics/presentation/cosmetics_l10n.dart';
+import '../../../cosmetics/presentation/widgets/cosmetic_equipped_chip.dart';
 import '../../application/social_provider.dart';
 import '../../domain/social_models.dart';
 import '../social_helpers.dart';
-import 'social_avatar.dart';
+import 'social_cosmetic_avatar.dart';
 import 'social_feed_card.dart';
 import 'social_lv_badge.dart';
 
@@ -104,6 +107,7 @@ class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
                               FtTokens.accent.withValues(alpha: 0.04),
                             ],
                           ),
+                          image: _profileBackgroundImage(profile),
                           borderRadius: BorderRadius.circular(18),
                           border: Border.all(
                               color: FtTokens.accent.withValues(alpha: 0.26)),
@@ -114,11 +118,14 @@ class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                SocialAvatar(
-                                    name: displayName,
-                                    size: 64,
-                                    photoUrl: photoUrl,
-                                    radius: 18),
+                                SocialCosmeticAvatar(
+                                  name: displayName,
+                                  size: 64,
+                                  photoUrl: photoUrl,
+                                  profile: profile,
+                                  radius: 18,
+                                  frameOverscan: 1.16,
+                                ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
@@ -200,6 +207,7 @@ class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
                         const SizedBox(height: 10),
                         _buildActionArea(context, social, displayName),
                       ],
+                      _ProfileCosmeticsSection(profile: profile),
                       const SizedBox(height: 16),
                       const _SectionTitle(
                         icon: Icons.push_pin_rounded,
@@ -430,6 +438,44 @@ class _ProfileSharesSection extends StatelessWidget {
   }
 }
 
+class _ProfileCosmeticsSection extends StatelessWidget {
+  const _ProfileCosmeticsSection({required this.profile});
+
+  final SocialUserProfile? profile;
+
+  @override
+  Widget build(BuildContext context) {
+    final cosmetics = socialProfileExtraCosmetics(profile);
+    if (cosmetics.isEmpty) return const SizedBox.shrink();
+
+    final l10n = CosmeticsL10n(AppLocalizations.of(context));
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _SectionTitle(
+            icon: Icons.auto_awesome_rounded,
+            title: 'KOSMETIKA',
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final definition in cosmetics)
+                CosmeticEquippedChip(
+                  definition: definition,
+                  l10n: l10n,
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ProfileFriendsSection extends StatefulWidget {
   const _ProfileFriendsSection({required this.stream});
 
@@ -605,10 +651,11 @@ class _ProfileFriendRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 7),
         child: Row(
           children: [
-            SocialAvatar(
+            SocialCosmeticAvatar(
               name: friend.displayName,
               size: 36,
               photoUrl: friend.photoUrl,
+              profile: friend,
               radius: 11,
             ),
             const SizedBox(width: 10),
@@ -667,6 +714,21 @@ class _ProfileSectionLoader extends StatelessWidget {
       ),
     );
   }
+}
+
+DecorationImage? _profileBackgroundImage(SocialUserProfile? profile) {
+  final background =
+      socialBackgroundDefinition(profile?.equippedCosmetics.backgroundId);
+  if (background == null) return null;
+  final assetPath = CosmeticsConfig.standard().resolveAssetPath(
+    background.previewAssetKey ?? background.assetKey,
+  );
+  if (assetPath == null) return null;
+  return DecorationImage(
+    image: AssetImage(assetPath),
+    fit: BoxFit.cover,
+    opacity: 0.18,
+  );
 }
 
 class _ProfileEmptyLine extends StatelessWidget {

@@ -1,0 +1,269 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+
+import '../../../core/logging/app_log.dart';
+import '../data/cosmetic_entitlements_source.dart';
+import '../domain/cosmetic_models.dart';
+import 'cosmetics_service.dart';
+
+const _log = AppLogger('COSMETICS', scope: 'provider');
+
+/// UI-facing state holder for the cosmetics feature.
+///
+/// Mirrors the bind() pattern used by `ProgressionProvider` and
+/// `SocialProvider`: a single uid is bound (typically from AuthProvider in
+/// `main.dart`) and the provider lazily loads state on first bind. No
+/// streams — all reads/writes are Futures and listeners are notified after
+/// each completion.
+class CosmeticsProvider extends ChangeNotifier {
+  CosmeticsProvider({
+    required CosmeticsService service,
+    CosmeticEntitlementsSource entitlementsSource =
+        const NoopCosmeticEntitlementsSource(),
+  })  : _service = service,
+        _entitlementsSource = entitlementsSource;
+
+  final CosmeticsService _service;
+  final CosmeticEntitlementsSource _entitlementsSource;
+
+  bool _isLoading = false;
+  String? _currentUid;
+  UserCosmeticsState? _state;
+  String? _errorMessage;
+
+  bool get isLoading => _isLoading;
+  String? get currentUid => _currentUid;
+  UserCosmeticsState? get state => _state;
+  String? get errorMessage => _errorMessage;
+
+  CosmeticsService get service => _service;
+
+  /// Binds (or re-binds) the provider to a uid. No-op if [uid] matches the
+  /// already-bound user. Pass null on sign-out to clear state.
+  ///
+  /// Synchronous on purpose so it can be called from a
+  /// `ChangeNotifierProxyProvider.update` callback without producing an
+  /// unawaited future. The repository load is fire-and-forget; listeners
+  /// are notified once it resolves.
+  void bindUser(String? uid) {
+    if (uid == _currentUid) return;
+    _log.info('bindUser', payload: 'uid=${uid ?? "<null>"}');
+    _currentUid = uid;
+    _state = null;
+    _errorMessage = null;
+    if (uid == null) {
+      _isLoading = false;
+      notifyListeners();
+      return;
+    }
+    unawaited(_load(uid));
+  }
+
+  /// Reloads the bound user's state from the repository. No-op if no user is
+  /// bound.
+  Future<void> refresh() async {
+    final uid = _currentUid;
+    if (uid == null) return;
+    await _load(uid);
+  }
+
+  Future<void> unlock(
+    String cosmeticId, {
+    required String sourceType,
+    String? sourceId,
+  }) async {
+    final uid = _currentUid;
+    if (uid == null) {
+      _log.warn(
+        'unlock skipped — no uid bound',
+        payload: 'id=$cosmeticId source=$sourceType:${sourceId ?? "-"}',
+      );
+      _errorMessage = 'no_user_bound';
+      notifyListeners();
+      return;
+    }
+    final wasUnlocked = _state?.unlocked.containsKey(cosmeticId) ?? false;
+    try {
+      _state = await _service.unlock(
+        uid,
+        cosmeticId,
+        sourceType: sourceType,
+        sourceId: sourceId,
+      );
+      _errorMessage = null;
+      if (!wasUnlocked) {
+        _log.info(
+          'unlock OK',
+          payload:
+              'id=$cosmeticId source=$sourceType:${sourceId ?? "-"} uid=$uid',
+        );
+      } else {
+        _log.debug(
+          'unlock no-op (already unlocked)',
+          payload: 'id=$cosmeticId',
+        );
+      }
+    } on CosmeticsException catch (error) {
+      _errorMessage = error.code;
+      _log.warn(
+        'unlock rejected',
+        payload: 'id=$cosmeticId code=${error.code} message=${error.message}',
+      );
+    } catch (error, st) {
+      _errorMessage = error.toString();
+      _log.error(
+        'unlock crashed',
+        payload: 'id=$cosmeticId source=$sourceType',
+        err: error,
+        stackTrace: st,
+      );
+    }
+    notifyListeners();
+  }
+
+  Future<void> equip(String cosmeticId) async {
+    final uid = _currentUid;
+    if (uid == null) {
+      _log.warn('equip skipped — no uid bound', payload: 'id=$cosmeticId');
+      _errorMessage = 'no_user_bound';
+      notifyListeners();
+      return;
+    }
+    try {
+      _state = await _service.equip(uid, cosmeticId);
+      _errorMessage = null;
+      _log.info('equip OK', payload: 'id=$cosmeticId uid=$uid');
+    } on CosmeticsException catch (error) {
+      _errorMessage = error.code;
+      _log.warn(
+        'equip rejected',
+        payload: 'id=$cosmeticId code=${error.code} message=${error.message}',
+      );
+    } catch (error, st) {
+      _errorMessage = error.toString();
+      _log.error(
+        'equip crashed',
+        payload: 'id=$cosmeticId',
+        err: error,
+        stackTrace: st,
+      );
+    }
+    notifyListeners();
+  }
+
+  Future<void> unequip(CosmeticType type) async {
+    final uid = _currentUid;
+    if (uid == null) {
+      _log.warn('unequip skipped — no uid bound', payload: 'type=${type.name}');
+      _errorMessage = 'no_user_bound';
+      notifyListeners();
+      return;
+    }
+    try {
+      _state = await _service.unequip(uid, type);
+      _errorMessage = null;
+      _log.info('unequip OK', payload: 'type=${type.name} uid=$uid');
+    } on CosmeticsException catch (error) {
+      _errorMessage = error.code;
+      _log.warn(
+        'unequip rejected',
+        payload: 'type=${type.name} code=${error.code}',
+      );
+    } catch (error, st) {
+      _errorMessage = error.toString();
+      _log.error(
+        'unequip crashed',
+        payload: 'type=${type.name}',
+        err: error,
+        stackTrace: st,
+      );
+    }
+    notifyListeners();
+  }
+
+  Future<void> _load(String uid) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      var nextState = await _service.load(uid);
+      nextState = await _applyEntitlements(uid, nextState);
+      if (_currentUid != uid) return;
+      _state = nextState;
+      _log.info(
+        'load OK',
+        payload:
+            'uid=$uid unlocked=${_state?.unlocked.length ?? 0} equipped=${_state?.equipped.frameId ?? "-"}',
+      );
+    } on CosmeticsException catch (error) {
+      _errorMessage = error.code;
+      _log.warn(
+        'load rejected',
+        payload: 'uid=$uid code=${error.code} message=${error.message}',
+      );
+    } catch (error, st) {
+      _errorMessage = error.toString();
+      _log.error(
+        'load crashed',
+        payload: 'uid=$uid',
+        err: error,
+        stackTrace: st,
+      );
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<UserCosmeticsState> _applyEntitlements(
+    String uid,
+    UserCosmeticsState state,
+  ) async {
+    List<CosmeticEntitlement> entitlements;
+    try {
+      entitlements = await _entitlementsSource.loadForUser(uid);
+    } catch (error, st) {
+      _log.warn(
+        'entitlement load skipped',
+        payload: 'uid=$uid error=$error',
+      );
+      _log.debug(
+        'entitlement load details',
+        payload: st.toString(),
+      );
+      return state;
+    }
+
+    var nextState = state;
+    for (final entitlement in entitlements) {
+      if (nextState.unlocked.containsKey(entitlement.cosmeticId)) continue;
+      try {
+        nextState = await _service.unlock(
+          uid,
+          entitlement.cosmeticId,
+          sourceType: entitlement.sourceType,
+          sourceId: entitlement.sourceId,
+        );
+        _log.info(
+          'entitlement unlock OK',
+          payload:
+              'uid=$uid id=${entitlement.cosmeticId} source=${entitlement.sourceType}:${entitlement.sourceId ?? "-"}',
+        );
+      } on CosmeticsException catch (error) {
+        _log.warn(
+          'entitlement unlock rejected',
+          payload: 'uid=$uid id=${entitlement.cosmeticId} code=${error.code}',
+        );
+      } catch (error, st) {
+        _log.error(
+          'entitlement unlock crashed',
+          payload: 'uid=$uid id=${entitlement.cosmeticId}',
+          err: error,
+          stackTrace: st,
+        );
+      }
+    }
+    return nextState;
+  }
+}

@@ -77,3 +77,8 @@ flutter:
     - assets/icons/google/
     - assets/ui/
     - assets/map/
+    - assets/cosmetics/frames/
+    - assets/cosmetics/relics/
+    - assets/cosmetics/backgrounds/
+    - assets/cosmetics/emblems/
+    - assets/cosmetics/companions/

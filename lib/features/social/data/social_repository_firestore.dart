@@ -485,6 +485,15 @@ class FirestoreSocialRepository implements SocialRepository {
       'handleSearchTokens': buildSocialHandleSearchTokens(handle),
       'photoUrl': payload.photoUrl,
       'socialEnabled': payload.socialEnabled,
+      'equippedCosmetics': {
+        'frameId': payload.equippedCosmetics.frameId,
+        'relicId': payload.equippedCosmetics.relicId,
+        'backgroundId': payload.equippedCosmetics.backgroundId,
+        'emblemId': payload.equippedCosmetics.emblemId,
+        'companionId': payload.equippedCosmetics.companionId,
+        'titleFlairId': payload.equippedCosmetics.titleFlairId,
+        'mapEffectId': payload.equippedCosmetics.mapEffectId,
+      },
       'updatedAt': FieldValue.serverTimestamp(),
       if (includeCreatedAt) 'createdAt': FieldValue.serverTimestamp(),
       'stats': {
@@ -676,6 +685,8 @@ class FirestoreSocialRepository implements SocialRepository {
   ) {
     final data = doc.data();
     final stats = data['stats'] as Map<String, dynamic>? ?? const {};
+    final equipped =
+        data['equippedCosmetics'] as Map<String, dynamic>? ?? const {};
 
     return SocialUserProfile(
       uid: doc.id,
@@ -691,6 +702,15 @@ class FirestoreSocialRepository implements SocialRepository {
               .toList(growable: false),
       createdAt: _readDateTime(data['createdAt']),
       updatedAt: _readDateTime(data['updatedAt']),
+      equippedCosmetics: SocialEquippedCosmetics(
+        frameId: _readNonEmptyString(equipped['frameId']),
+        relicId: _readNonEmptyString(equipped['relicId']),
+        backgroundId: _readNonEmptyString(equipped['backgroundId']),
+        emblemId: _readNonEmptyString(equipped['emblemId']),
+        companionId: _readNonEmptyString(equipped['companionId']),
+        titleFlairId: _readNonEmptyString(equipped['titleFlairId']),
+        mapEffectId: _readNonEmptyString(equipped['mapEffectId']),
+      ),
       stats: SocialUserStats(
         level: _readInt(stats['level']),
         totalXp: _readInt(stats['totalXp']),
@@ -911,6 +931,12 @@ class FirestoreSocialRepository implements SocialRepository {
     if (value is int) return value;
     if (value is num) return value.toInt();
     return 0;
+  }
+
+  String? _readNonEmptyString(dynamic value) {
+    final text = (value as String?)?.trim();
+    if (text == null || text.isEmpty) return null;
+    return text;
   }
 
   Iterable<List<T>> _chunk<T>(List<T> values, int size) sync* {

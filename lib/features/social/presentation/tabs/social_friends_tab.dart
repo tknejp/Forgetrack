@@ -7,7 +7,7 @@ import '../../../../shared/theme/ft_design_tokens.dart';
 import '../../application/social_provider.dart';
 import '../../domain/social_models.dart';
 import '../social_helpers.dart';
-import '../widgets/social_avatar.dart';
+import '../widgets/social_cosmetic_avatar.dart';
 import '../widgets/social_chip.dart';
 import '../widgets/social_empty.dart';
 import '../widgets/social_lv_badge.dart';
@@ -180,20 +180,18 @@ class _FriendCard extends StatelessWidget {
           gradient: LinearGradient(
             begin: const Alignment(-1, -1),
             end: const Alignment(1, 1),
-            colors: [
-              FtTokens.accent.withValues(alpha: 0.1),
-              FtTokens.surface
-            ],
+            colors: [FtTokens.accent.withValues(alpha: 0.1), FtTokens.surface],
           ),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: FtTokens.accent.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [
-            SocialAvatar(
+            SocialCosmeticAvatar(
                 name: friend.displayName,
                 size: 42,
-                photoUrl: friend.photoUrl),
+                photoUrl: friend.photoUrl,
+                profile: friend),
             const SizedBox(width: 11),
             Expanded(
               child: Column(
@@ -211,8 +209,7 @@ class _FriendCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      SocialLvBadge(
-                          level: friend.stats.level, size: 18),
+                      SocialLvBadge(level: friend.stats.level, size: 18),
                       const SizedBox(width: 6),
                       Flexible(
                         child: Text(
@@ -302,15 +299,12 @@ class _RequestsSection extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(13, 10, 13, 10),
               child: Row(
                 children: [
-                  const Icon(Icons.person_add_rounded,
-                      size: 14, color: _red),
+                  const Icon(Icons.person_add_rounded, size: 14, color: _red),
                   const SizedBox(width: 8),
                   const Text(
                     'Žádosti o přátelství',
                     style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: _red),
+                        fontSize: 12, fontWeight: FontWeight.w700, color: _red),
                   ),
                   const SizedBox(width: 6),
                   Container(
@@ -346,8 +340,7 @@ class _RequestsSection extends StatelessWidget {
             ...requests.map(
               (req) => Column(
                 children: [
-                  Container(
-                      height: 1, color: _red.withValues(alpha: 0.18)),
+                  Container(height: 1, color: _red.withValues(alpha: 0.18)),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(13, 10, 13, 10),
                     child: FutureBuilder<SocialUserProfile?>(
@@ -361,16 +354,16 @@ class _RequestsSection extends StatelessWidget {
                                 : req.fromUid);
                         return Row(
                           children: [
-                            SocialAvatar(
+                            SocialCosmeticAvatar(
                                 name: name,
                                 size: 40,
                                 photoUrl: p?.photoUrl,
+                                profile: p,
                                 color: const Color(0xFFF97316)),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     name,
@@ -472,10 +465,11 @@ class _OutgoingRequestsSection extends StatelessWidget {
                           : requests[i].toUid);
                   return Row(
                     children: [
-                      SocialAvatar(
+                      SocialCosmeticAvatar(
                           name: name,
                           size: 40,
-                          photoUrl: profile?.photoUrl),
+                          photoUrl: profile?.photoUrl,
+                          profile: profile),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(
@@ -572,12 +566,12 @@ class _SearchBar extends StatelessWidget {
                   controller: controller,
                   textInputAction: TextInputAction.search,
                   onSubmitted: (_) => onSearch(),
-                  style: const TextStyle(
-                      fontSize: 13, color: FtTokens.onSurface),
+                  style:
+                      const TextStyle(fontSize: 13, color: FtTokens.onSurface),
                   decoration: const InputDecoration(
                     hintText: 'Hledat podle přezdívky…',
-                    hintStyle: TextStyle(
-                        fontSize: 13, color: FtTokens.onSurfaceFaint),
+                    hintStyle:
+                        TextStyle(fontSize: 13, color: FtTokens.onSurfaceFaint),
                     border: InputBorder.none,
                     isDense: true,
                     contentPadding: EdgeInsets.zero,
@@ -588,8 +582,8 @@ class _SearchBar extends StatelessWidget {
               GestureDetector(
                 onTap: isSearching ? null : onSearch,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 5),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                   decoration: BoxDecoration(
                     color: isSearching
                         ? FtTokens.accent.withValues(alpha: 0.4)
@@ -652,7 +646,12 @@ class _SearchResult extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(13, 10, 13, 10),
         child: Row(
           children: [
-            SocialAvatar(name: profile.displayName, size: 36),
+            SocialCosmeticAvatar(
+              name: profile.displayName,
+              size: 36,
+              photoUrl: profile.photoUrl,
+              profile: profile,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
@@ -678,8 +677,8 @@ class _SearchResult extends StatelessWidget {
             GestureDetector(
               onTap: onAdd,
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
                   color: FtTokens.accent.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(8),

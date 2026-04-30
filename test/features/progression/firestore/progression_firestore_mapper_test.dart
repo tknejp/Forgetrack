@@ -15,6 +15,7 @@ void main() {
 
   ProgressionRewardGrant ruleGrant({
     int xpGranted = 80,
+    int? baseXp,
     int? finalXp,
     ProgressionRewardStatus status = ProgressionRewardStatus.claimed,
     int? levelAtClaim,
@@ -39,11 +40,13 @@ void main() {
       finalXp: finalXp,
       levelAtClaim: levelAtClaim,
       multiplierAtClaim: multiplierAtClaim,
+      baseXp: baseXp,
     );
   }
 
   ProgressionQuestRewardGrant questGrant({
     int xpGranted = 200,
+    int? baseXp,
     int? finalXp,
     ProgressionRewardStatus status = ProgressionRewardStatus.claimed,
     int? levelAtClaim,
@@ -60,6 +63,7 @@ void main() {
       finalXp: finalXp,
       levelAtClaim: levelAtClaim,
       multiplierAtClaim: multiplierAtClaim,
+      baseXp: baseXp,
     );
   }
 
@@ -90,7 +94,8 @@ void main() {
       );
     });
 
-    test('claimed grant with xpGranted = 0 and no finalXp is not uploadable', () {
+    test('claimed grant with xpGranted = 0 and no finalXp is not uploadable',
+        () {
       expect(
         ProgressionFirestoreMapper.isRuleGrantUploadable(
           ruleGrant(xpGranted: 0, finalXp: null),
@@ -150,7 +155,13 @@ void main() {
   group('ruleGrantToMap', () {
     test('uploads finalXp when set', () {
       final map = ProgressionFirestoreMapper.ruleGrantToMap(
-        ruleGrant(xpGranted: 80, finalXp: 120, levelAtClaim: 3, multiplierAtClaim: 1.5),
+        ruleGrant(
+          xpGranted: 120,
+          baseXp: 80,
+          finalXp: 120,
+          levelAtClaim: 3,
+          multiplierAtClaim: 1.5,
+        ),
       );
 
       expect(map['finalXp'], 120);
@@ -159,7 +170,9 @@ void main() {
       expect(map['multiplierAtClaim'], 1.5);
     });
 
-    test('uploads xpGranted as finalXp fallback when finalXp is null (legacy record)', () {
+    test(
+        'uploads xpGranted as finalXp fallback when finalXp is null (legacy record)',
+        () {
       final map = ProgressionFirestoreMapper.ruleGrantToMap(
         ruleGrant(xpGranted: 80, finalXp: null),
       );
@@ -196,7 +209,7 @@ void main() {
   group('questGrantToMap', () {
     test('uploads finalXp when set', () {
       final map = ProgressionFirestoreMapper.questGrantToMap(
-        questGrant(xpGranted: 200, finalXp: 300, levelAtClaim: 5),
+        questGrant(xpGranted: 300, baseXp: 200, finalXp: 300, levelAtClaim: 5),
       );
 
       expect(map['finalXp'], 300);
@@ -317,7 +330,8 @@ void main() {
     });
 
     test('round-trip: serialize then deserialize preserves key fields', () {
-      final original = ruleGrant(finalXp: 120, levelAtClaim: 3, multiplierAtClaim: 1.5);
+      final original =
+          ruleGrant(finalXp: 120, levelAtClaim: 3, multiplierAtClaim: 1.5);
       final map = ProgressionFirestoreMapper.ruleGrantToMap(original);
       final restored = ProgressionFirestoreMapper.ruleGrantFromMap(map);
 
@@ -329,7 +343,9 @@ void main() {
       expect(restored.isClaimed, isTrue);
     });
 
-    test('round-trip: legacy grant with null finalXp restores xpGranted as finalXp', () {
+    test(
+        'round-trip: legacy grant with null finalXp restores xpGranted as finalXp',
+        () {
       final legacy = ruleGrant(xpGranted: 80, finalXp: null);
       final map = ProgressionFirestoreMapper.ruleGrantToMap(legacy);
       final restored = ProgressionFirestoreMapper.ruleGrantFromMap(map);
@@ -395,7 +411,8 @@ void main() {
     });
 
     test('round-trip preserves key fields', () {
-      final original = questGrant(finalXp: 300, levelAtClaim: 5, multiplierAtClaim: 2.0);
+      final original =
+          questGrant(finalXp: 300, levelAtClaim: 5, multiplierAtClaim: 2.0);
       final map = ProgressionFirestoreMapper.questGrantToMap(original);
       final restored = ProgressionFirestoreMapper.questGrantFromMap(map);
 
@@ -429,7 +446,8 @@ void main() {
 
     test('returns null for missing required field', () {
       expect(
-        ProgressionFirestoreMapper.achievementUnlockFromMap({'achievementId': 'x'}),
+        ProgressionFirestoreMapper.achievementUnlockFromMap(
+            {'achievementId': 'x'}),
         isNull,
       );
     });

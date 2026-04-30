@@ -32,6 +32,7 @@ class SocialUserProfile {
     this.createdAt,
     this.updatedAt,
     this.pinnedAchievementIds = const [],
+    this.equippedCosmetics = const SocialEquippedCosmetics.empty(),
   });
 
   final String uid;
@@ -44,6 +45,45 @@ class SocialUserProfile {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final List<String> pinnedAchievementIds;
+  final SocialEquippedCosmetics equippedCosmetics;
+}
+
+class SocialEquippedCosmetics {
+  const SocialEquippedCosmetics({
+    this.frameId,
+    this.relicId,
+    this.backgroundId,
+    this.emblemId,
+    this.companionId,
+    this.titleFlairId,
+    this.mapEffectId,
+  });
+
+  const SocialEquippedCosmetics.empty()
+      : frameId = null,
+        relicId = null,
+        backgroundId = null,
+        emblemId = null,
+        companionId = null,
+        titleFlairId = null,
+        mapEffectId = null;
+
+  final String? frameId;
+  final String? relicId;
+  final String? backgroundId;
+  final String? emblemId;
+  final String? companionId;
+  final String? titleFlairId;
+  final String? mapEffectId;
+
+  bool get hasAny =>
+      frameId != null ||
+      relicId != null ||
+      backgroundId != null ||
+      emblemId != null ||
+      companionId != null ||
+      titleFlairId != null ||
+      mapEffectId != null;
 }
 
 class SocialUnlockedAchievement {
@@ -215,6 +255,7 @@ class SocialProfileSyncPayload {
     required this.socialEnabled,
     required this.stats,
     required this.unlockedAchievements,
+    required this.equippedCosmetics,
   });
 
   final String uid;
@@ -225,6 +266,7 @@ class SocialProfileSyncPayload {
   final bool socialEnabled;
   final SocialUserStats stats;
   final List<SocialUnlockedAchievement> unlockedAchievements;
+  final SocialEquippedCosmetics equippedCosmetics;
 
   SocialProfileSyncPayload copyWith({
     String? displayName,
@@ -234,6 +276,7 @@ class SocialProfileSyncPayload {
     bool? socialEnabled,
     SocialUserStats? stats,
     List<SocialUnlockedAchievement>? unlockedAchievements,
+    SocialEquippedCosmetics? equippedCosmetics,
   }) {
     return SocialProfileSyncPayload(
       uid: uid,
@@ -245,6 +288,7 @@ class SocialProfileSyncPayload {
       socialEnabled: socialEnabled ?? this.socialEnabled,
       stats: stats ?? this.stats,
       unlockedAchievements: unlockedAchievements ?? this.unlockedAchievements,
+      equippedCosmetics: equippedCosmetics ?? this.equippedCosmetics,
     );
   }
 }

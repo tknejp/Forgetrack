@@ -7,7 +7,7 @@ import '../../../../shared/theme/ft_design_tokens.dart';
 import '../../application/social_provider.dart';
 import '../../domain/social_models.dart';
 import '../social_helpers.dart';
-import '../widgets/social_avatar.dart';
+import '../widgets/social_cosmetic_avatar.dart';
 import '../widgets/social_empty.dart';
 
 class SocialLeaderboardTab extends StatefulWidget {
@@ -43,6 +43,7 @@ class _SocialLeaderboardTabState extends State<SocialLeaderboardTab> {
         totalXp: prog.profile.totalXp,
         isMe: true,
         photoUrl: u.photoUrl,
+        uid: u.id,
       ));
     }
     for (final f in friends) {
@@ -53,6 +54,7 @@ class _SocialLeaderboardTabState extends State<SocialLeaderboardTab> {
         isMe: false,
         photoUrl: f.photoUrl,
         uid: f.uid,
+        profile: f,
       ));
     }
     list.sort((a, b) => b.totalXp.compareTo(a.totalXp));
@@ -91,8 +93,7 @@ class _SocialLeaderboardTabState extends State<SocialLeaderboardTab> {
         const SizedBox(height: 10),
         if (_weekly) ...[
           Container(
-            padding:
-                const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
+            padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.04),
               borderRadius: BorderRadius.circular(16),
@@ -111,8 +112,8 @@ class _SocialLeaderboardTabState extends State<SocialLeaderboardTab> {
                 SizedBox(height: 4),
                 Text(
                   'Týdenní žebříček bude brzy dostupný.',
-                  style: TextStyle(
-                      fontSize: 12, color: FtTokens.onSurfaceFaint),
+                  style:
+                      TextStyle(fontSize: 12, color: FtTokens.onSurfaceFaint),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -126,9 +127,7 @@ class _SocialLeaderboardTabState extends State<SocialLeaderboardTab> {
           ),
         ] else ...[
           if (entries.length >= 2) ...[
-            _Podium(
-                entries: entries.take(3).toList(),
-                rankColors: _rankColors),
+            _Podium(entries: entries.take(3).toList(), rankColors: _rankColors),
             const SizedBox(height: 10),
           ],
           ...entries.asMap().entries.map(
@@ -157,6 +156,7 @@ class _LbEntry {
     required this.isMe,
     this.photoUrl,
     this.uid,
+    this.profile,
   });
   final String name;
   final int level;
@@ -164,6 +164,7 @@ class _LbEntry {
   final bool isMe;
   final String? photoUrl;
   final String? uid;
+  final SocialUserProfile? profile;
 }
 
 // ── Podium ────────────────────────────────────────────────────────────────────
@@ -192,8 +193,8 @@ class _Podium extends StatelessWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-            color: const Color(0xFFFBBF24).withValues(alpha: 0.22)),
+        border:
+            Border.all(color: const Color(0xFFFBBF24).withValues(alpha: 0.22)),
       ),
       child: Column(
         children: [
@@ -229,14 +230,13 @@ class _Podium extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(_emoji[idx],
-                          style:
-                              TextStyle(fontSize: isFirst ? 24 : 18)),
+                          style: TextStyle(fontSize: isFirst ? 24 : 18)),
                       const SizedBox(height: 6),
-                      SocialAvatar(
-                          name: e.name,
-                          size: _sizes[idx],
-                          photoUrl: e.photoUrl,
-                          color: c),
+                      _LeaderboardAvatar(
+                        entry: e,
+                        size: _sizes[idx],
+                        color: c,
+                      ),
                       const SizedBox(height: 6),
                       Text(
                         e.name.split(' ').first,
@@ -244,9 +244,8 @@ class _Podium extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: isFirst ? 11 : 10,
-                          fontWeight: isFirst
-                              ? FontWeight.w800
-                              : FontWeight.w700,
+                          fontWeight:
+                              isFirst ? FontWeight.w800 : FontWeight.w700,
                           color: isFirst
                               ? FtTokens.onSurface
                               : FtTokens.onSurfaceMuted,
@@ -260,8 +259,7 @@ class _Podium extends StatelessWidget {
                               color: c)),
                       const Text('XP',
                           style: TextStyle(
-                              fontSize: 9,
-                              color: FtTokens.onSurfaceFaint)),
+                              fontSize: 9, color: FtTokens.onSurfaceFaint)),
                       if (e.isMe)
                         Padding(
                           padding: const EdgeInsets.only(top: 4),
@@ -296,6 +294,54 @@ class _Podium extends StatelessWidget {
 }
 
 // ── Leaderboard row ───────────────────────────────────────────────────────────
+
+class _LeaderboardAvatar extends StatelessWidget {
+  const _LeaderboardAvatar({
+    required this.entry,
+    required this.size,
+    required this.color,
+  });
+
+  final _LbEntry entry;
+  final double size;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final uid = entry.uid;
+    if (uid == null) {
+      return SocialCosmeticAvatar(
+        name: entry.name,
+        size: size,
+        photoUrl: entry.photoUrl,
+        profile: entry.profile,
+        color: color,
+      );
+    }
+
+    final social = context.read<SocialProvider>();
+    return StreamBuilder<SocialUserProfile?>(
+      stream: social.watchProfileById(uid),
+      initialData: entry.profile,
+      builder: (context, snapshot) {
+        final profile = snapshot.data;
+        final name = profile?.displayName.trim().isNotEmpty == true
+            ? profile!.displayName.trim()
+            : entry.name;
+        final photoUrl = profile?.photoUrl?.trim().isNotEmpty == true
+            ? profile!.photoUrl
+            : entry.photoUrl;
+        return SocialCosmeticAvatar(
+          name: name,
+          size: size,
+          photoUrl: photoUrl,
+          profile: profile ?? entry.profile,
+          color: color,
+        );
+      },
+    );
+  }
+}
 
 class _LbRow extends StatelessWidget {
   const _LbRow(
@@ -357,6 +403,12 @@ class _LbRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
+            _LeaderboardAvatar(
+              entry: entry,
+              size: 34,
+              color: rankColor,
+            ),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -384,8 +436,7 @@ class _LbRow extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w800,
-                color:
-                    entry.isMe ? FtTokens.accent : FtTokens.onSurfaceMuted,
+                color: entry.isMe ? FtTokens.accent : FtTokens.onSurfaceMuted,
               ),
             ),
           ],
@@ -411,12 +462,11 @@ class _ToggleBtn extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 9),
         decoration: BoxDecoration(
-          color: active
-              ? FtTokens.accent
-              : Colors.white.withValues(alpha: 0.04),
+          color:
+              active ? FtTokens.accent : Colors.white.withValues(alpha: 0.04),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-              color: active ? FtTokens.accent : FtTokens.cardBorder),
+          border:
+              Border.all(color: active ? FtTokens.accent : FtTokens.cardBorder),
         ),
         child: Center(
           child: Text(

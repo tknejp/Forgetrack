@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../core/logging/app_log.dart';
 import '../../auth/application/auth_provider.dart';
+import '../../cosmetics/application/cosmetics_provider.dart';
 import '../../progression/domain/progression_models.dart';
 import '../../progression/application/progression_provider.dart';
 import '../data/social_firebase_bootstrap.dart';
@@ -28,6 +29,7 @@ class SocialProvider extends ChangeNotifier {
 
   AuthProvider? _authProvider;
   ProgressionProvider? _progressionProvider;
+  CosmeticsProvider? _cosmeticsProvider;
 
   StreamSubscription<List<SocialFriendRequest>>? _incomingRequestsSubscription;
   StreamSubscription<List<SocialFriendRequest>>? _outgoingRequestsSubscription;
@@ -93,9 +95,11 @@ class SocialProvider extends ChangeNotifier {
   void bind({
     required AuthProvider authProvider,
     required ProgressionProvider progressionProvider,
+    CosmeticsProvider? cosmeticsProvider,
   }) {
     _authProvider = authProvider;
     _progressionProvider = progressionProvider;
+    _cosmeticsProvider = cosmeticsProvider;
 
     final authSignature = _buildAuthSignature(authProvider);
     if (authSignature != _lastAuthSignature) {
@@ -706,6 +710,21 @@ class SocialProvider extends ChangeNotifier {
         updatedAt: progressionProvider.lastEvaluatedAt,
       ),
       unlockedAchievements: unlockedAchievements,
+      equippedCosmetics: _buildEquippedCosmeticsSnapshot(),
+    );
+  }
+
+  SocialEquippedCosmetics _buildEquippedCosmeticsSnapshot() {
+    final equipped = _cosmeticsProvider?.state?.equipped;
+    if (equipped == null) return const SocialEquippedCosmetics.empty();
+    return SocialEquippedCosmetics(
+      frameId: equipped.frameId,
+      relicId: equipped.relicId,
+      backgroundId: equipped.backgroundId,
+      emblemId: equipped.emblemId,
+      companionId: equipped.companionId,
+      titleFlairId: equipped.titleFlairId,
+      mapEffectId: equipped.mapEffectId,
     );
   }
 
@@ -738,6 +757,13 @@ class SocialProvider extends ChangeNotifier {
       payload.stats.pendingRewardCount.toString(),
       payload.stats.bestStepsStreak.toString(),
       payload.stats.bestNutritionStreak.toString(),
+      payload.equippedCosmetics.frameId ?? '',
+      payload.equippedCosmetics.relicId ?? '',
+      payload.equippedCosmetics.backgroundId ?? '',
+      payload.equippedCosmetics.emblemId ?? '',
+      payload.equippedCosmetics.companionId ?? '',
+      payload.equippedCosmetics.titleFlairId ?? '',
+      payload.equippedCosmetics.mapEffectId ?? '',
       unlockedIds,
     ].join('|');
   }

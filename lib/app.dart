@@ -2,62 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
+import 'app/locale_provider.dart';
 import 'core/config/constants.dart';
 import 'core/navigation/navigator_key.dart';
-import 'l10n/app_localizations.dart';
-import 'app/locale_provider.dart';
-import 'shared/theme/theme_provider.dart';
-import 'shared/theme/time_theme_provider.dart';
 import 'features/app_shell/presentation/ft_main_shell.dart';
+import 'l10n/app_localizations.dart';
 import 'shared/theme/app_theme.dart';
-import 'shared/theme/time_theme.dart';
 
 class ForgetrackApp extends StatelessWidget {
   const ForgetrackApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final selectedLocale  = context.watch<LocaleProvider>().locale;
-    final themeProvider   = context.watch<ThemeProvider>();
-    final timeProvider    = context.watch<TimeThemeProvider>();
-
-    final isDynamic = themeProvider.choice == AppThemeMode.dynamic;
-
-    // ── Effective ThemeMode ─────────────────────────────────────────────────
-    // Dynamic mode auto-switches light/dark based on the time segment.
-    // Dawn → afternoon are light; sunset → night are dark.
-    final ThemeMode effectiveMode;
-    if (isDynamic) {
-      const lightSegments = {
-        TimeSegment.dawn,
-        TimeSegment.morning,
-        TimeSegment.noon,
-        TimeSegment.afternoon,
-      };
-      effectiveMode = lightSegments.contains(timeProvider.segment)
-          ? ThemeMode.light
-          : ThemeMode.dark;
-    } else {
-      effectiveMode = themeProvider.mode;
-    }
-
-    // ── Time palette ────────────────────────────────────────────────────────
-    // Active when Dynamic theme mode is on, or when the background toggle
-    // is on (so backgrounds and palette always stay in sync).
-    final timePalette = (isDynamic || timeProvider.enabled)
-        ? timeProvider.visuals.palette
-        : null;
+    final selectedLocale = context.watch<LocaleProvider>().locale;
 
     return MaterialApp(
       navigatorKey: navigatorKey,
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(timePalette),
-      darkTheme: AppTheme.dark(timePalette),
-      themeMode: effectiveMode,
+      theme: AppTheme.dark(),
+      darkTheme: AppTheme.dark(),
+      themeMode: ThemeMode.dark,
       home: const FtMainShell(),
-
-      // ── Localization setup ────────────────────────────────────────────────
       locale: selectedLocale,
       localizationsDelegates: const [
         AppLocalizations.delegate,
@@ -66,7 +32,6 @@ class ForgetrackApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
-
       localeResolutionCallback: (deviceLocale, supportedLocales) {
         if (deviceLocale == null) return const Locale('en');
         for (final supported in supportedLocales) {

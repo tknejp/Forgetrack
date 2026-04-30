@@ -5,10 +5,17 @@ import 'package:image_picker_platform_interface/image_picker_platform_interface.
 import 'package:provider/provider.dart';
 
 import '../../../../l10n/l10n.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/ft_design_tokens.dart';
 import '../../../../shared/widgets/ft/ft_progress_bar.dart';
 import '../../../../shared/widgets/ft/ft_progression_xp_style.dart';
 import '../../../auth/application/auth_provider.dart';
+import '../../../cosmetics/application/cosmetics_provider.dart';
+import '../../../cosmetics/config/cosmetics_config.dart';
+import '../../../cosmetics/domain/cosmetic_models.dart';
+import '../../../cosmetics/presentation/cosmetics_l10n.dart';
+import '../../../cosmetics/presentation/widgets/cosmetic_equipped_chip.dart';
+import '../../../cosmetics/presentation/widgets/cosmetic_frame_preview.dart';
 import '../../../progression/application/progression_provider.dart';
 import '../../../progression/presentation/progression_l10n.dart';
 import '../../application/social_provider.dart';
@@ -158,11 +165,17 @@ class _SocialProfileHeaderState extends State<SocialProfileHeader> {
         final photoUrl =
             _clean(profile?.photoUrl) ?? _clean(auth.user?.photoUrl);
 
+        final cosmetics = context.watch<CosmeticsProvider>();
+        final equippedFrame = _resolveEquippedFrame(cosmetics);
+        final equippedBackground = _resolveEquippedBackground(cosmetics);
+
         return _HeaderContent(
           displayName: displayName,
           handle: handle,
           photoUrl: photoUrl,
           friendCount: social.friends.length,
+          equippedFrame: equippedFrame,
+          equippedBackground: equippedBackground,
           onOpenProfile: () => openUserProfile(
             context,
             uid: uid,
@@ -178,6 +191,53 @@ class _SocialProfileHeaderState extends State<SocialProfileHeader> {
   }
 }
 
+/// Picks the cosmetic frame to render around the hero avatar.
+///
+/// Priority:
+///   1. The frame the user actually equipped.
+///   2. UI-only fallback: if nothing is equipped but `frame_lvl1` is
+///      unlocked (every default user has it), preview it. Lets the user
+///      see the cosmetics pipeline working before they touch a collection
+///      screen — does NOT mutate persisted state.
+///   3. Null — no frame, plain avatar.
+CosmeticDefinition? _resolveEquippedFrame(CosmeticsProvider cosmetics) {
+  final state = cosmetics.state;
+  if (state == null) return null;
+  final catalog = cosmetics.service.catalog;
+
+  final equippedId = state.equipped.frameId;
+  if (equippedId != null) {
+    final def = catalog.byId(equippedId);
+    if (def != null && def.isEnabled) return def;
+  }
+
+  const fallbackId = 'frame_lvl1';
+  if (state.unlocked.containsKey(fallbackId)) {
+    final def = catalog.byId(fallbackId);
+    if (def != null && def.isEnabled) return def;
+  }
+  return null;
+}
+
+CosmeticDefinition? _resolveEquippedBackground(CosmeticsProvider cosmetics) {
+  final state = cosmetics.state;
+  if (state == null) return null;
+  final catalog = cosmetics.service.catalog;
+
+  final equippedId = state.equipped.backgroundId;
+  if (equippedId != null) {
+    final def = catalog.byId(equippedId);
+    if (def != null && def.isEnabled) return def;
+  }
+
+  const fallbackId = 'background_forest_trail';
+  if (state.unlocked.containsKey(fallbackId)) {
+    final def = catalog.byId(fallbackId);
+    if (def != null && def.isEnabled) return def;
+  }
+  return null;
+}
+
 void _preferAndroidPhotoPicker() {
   final implementation = ImagePickerPlatform.instance;
   if (implementation is ImagePickerAndroid) {
@@ -191,6 +251,8 @@ class _HeaderContent extends StatelessWidget {
     required this.handle,
     required this.photoUrl,
     required this.friendCount,
+    required this.equippedFrame,
+    required this.equippedBackground,
     required this.onOpenProfile,
     required this.onEditHandle,
     required this.onEditPhoto,
@@ -201,6 +263,8 @@ class _HeaderContent extends StatelessWidget {
   final String handle;
   final String? photoUrl;
   final int friendCount;
+  final CosmeticDefinition? equippedFrame;
+  final CosmeticDefinition? equippedBackground;
   final VoidCallback onOpenProfile;
   final VoidCallback onEditHandle;
   final VoidCallback onEditPhoto;
@@ -219,6 +283,7 @@ class _HeaderContent extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onOpenProfile,
       child: _HeaderFrame(
+        backgroundDefinition: equippedBackground,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -228,11 +293,17 @@ class _HeaderContent extends StatelessWidget {
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    SocialAvatar(
-                      name: displayName,
-                      size: 70,
-                      photoUrl: photoUrl,
-                      radius: 20,
+                    CosmeticFramePreview(
+                      definition: equippedFrame,
+                      size: 80,
+                      borderRadius: BorderRadius.circular(22),
+                      frameOverscan: 1.16,
+                      child: SocialAvatar(
+                        name: displayName,
+                        size: 80,
+                        photoUrl: photoUrl,
+                        radius: 22,
+                      ),
                     ),
                     Positioned(
                       right: -4,
@@ -335,13 +406,95 @@ class _HeaderContent extends StatelessWidget {
   }
 }
 
-class _HeaderFrame extends StatelessWidget {
-  const _HeaderFrame({required this.child});
-
-  final Widget child;
+// ignore: unused_element
+class _EquippedLoadoutRow extends StatelessWidget {
+  const _EquippedLoadoutRow();
 
   @override
   Widget build(BuildContext context) {
+    final cosmetics = context.watch<CosmeticsProvider>();
+    final state = cosmetics.state;
+    if (state == null) return const SizedBox.shrink();
+    final equippedDefs = cosmetics.service.getEquippedDefinitions(state);
+    if (equippedDefs.isEmpty) return const SizedBox.shrink();
+
+    final l10n = CosmeticsL10n(AppLocalizations.of(context));
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const _LoadoutLabel(),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Row(
+              children: [
+                for (var i = 0; i < equippedDefs.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 6),
+                  Expanded(
+                    child: CosmeticEquippedChip(
+                      definition: equippedDefs[i],
+                      l10n: l10n,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LoadoutLabel extends StatelessWidget {
+  const _LoadoutLabel();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Icons.auto_awesome,
+          size: 12,
+          color: FtTokens.accent.withValues(alpha: 0.9),
+        ),
+        const SizedBox(width: 4),
+        SizedBox(
+          width: 56,
+          child: Text(
+            'Vybraná\nvýbava',
+            maxLines: 2,
+            style: TextStyle(
+              fontSize: 9.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.4,
+              height: 1.15,
+              color: FtTokens.accent.withValues(alpha: 0.9),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HeaderFrame extends StatelessWidget {
+  const _HeaderFrame({
+    required this.child,
+    this.backgroundDefinition,
+  });
+
+  final Widget child;
+  final CosmeticDefinition? backgroundDefinition;
+
+  @override
+  Widget build(BuildContext context) {
+    final backgroundPath = CosmeticsConfig.standard().resolveAssetPath(
+      backgroundDefinition?.previewAssetKey ?? backgroundDefinition?.assetKey,
+    );
     return AnimatedContainer(
       duration: const Duration(milliseconds: 260),
       curve: Curves.easeOutCubic,
@@ -367,11 +520,18 @@ class _HeaderFrame extends StatelessWidget {
               Color(0x087C6FFF),
             ],
           ),
+          image: backgroundPath == null
+              ? null
+              : DecorationImage(
+                  image: AssetImage(backgroundPath),
+                  fit: BoxFit.cover,
+                  opacity: 0.18,
+                ),
           borderRadius: BorderRadius.circular(FtTokens.radiusCard),
           border: Border.all(color: FtTokens.accent.withValues(alpha: 0.30)),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.fromLTRB(20, 20, 14, 14),
           child: child,
         ),
       ),

@@ -7,9 +7,11 @@ import '../../devtools/domain/devtools_sync_event.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../../core/services/notification_service.dart';
+import '../../cosmetics/application/cosmetics_provider.dart';
 import '../../health_connect/application/fitness_provider.dart';
 import '../../../features/health_connect/application/goals_provider.dart';
 import '../../nutrition/application/kaloricke_tabulky_provider.dart';
+import '../application/cosmetic_unlock_dispatcher.dart';
 import '../application/progression_engine.dart';
 import '../data/provider_progression_source.dart';
 import '../domain/progression_models.dart';
@@ -48,11 +50,15 @@ class ProgressionStreakView {
 class ProgressionProvider extends ChangeNotifier {
   ProgressionProvider({
     required ProgressionEngine engine,
-  }) : _engine = engine {
+    CosmeticUnlockDispatcher? cosmeticUnlockDispatcher,
+  })  : _engine = engine,
+        _cosmeticUnlockDispatcher =
+            cosmeticUnlockDispatcher ?? CosmeticUnlockDispatcher() {
     unawaited(_hydrate());
   }
 
   final ProgressionEngine _engine;
+  final CosmeticUnlockDispatcher _cosmeticUnlockDispatcher;
 
   ProgressionEngineState? _state;
   ProviderProgressionSource? _source;
@@ -187,9 +193,14 @@ class ProgressionProvider extends ChangeNotifier {
     _isRefreshing = true;
     notifyListeners();
     try {
+      final prevState = _state;
       _state = await _engine.devToolsSetTotalXp(xp);
       _error = null;
       _lastRequestedSignature = null;
+      await _cosmeticUnlockDispatcher.dispatch(
+        previous: prevState,
+        current: _state!,
+      );
     } catch (error) {
       _error = error.toString();
     } finally {
@@ -203,12 +214,17 @@ class ProgressionProvider extends ChangeNotifier {
     required GoalsProvider goalsProvider,
     required FitnessProvider fitnessProvider,
     required KalorickeTabulkyProvider nutritionProvider,
+    CosmeticsProvider? cosmeticsProvider,
   }) {
     _source = ProviderProgressionSource(
       goalsProvider: goalsProvider,
       fitnessProvider: fitnessProvider,
       nutritionProvider: nutritionProvider,
     );
+
+    if (cosmeticsProvider != null) {
+      _cosmeticUnlockDispatcher.bindCosmetics(cosmeticsProvider);
+    }
 
     final signature = _source!.auditSignature;
     if (_lastRequestedSignature == signature) {
@@ -240,15 +256,21 @@ class ProgressionProvider extends ChangeNotifier {
             .map((a) => a.id)
             .toSet() ??
         {};
+    final prevState = _state;
     final hadState = _state != null;
 
     String? syncError;
     try {
       _state = await _engine.sync(source);
       _error = null;
-      if (hadState)
+      if (hadState) {
         unawaited(
             _emitProgressionNotifications(prevGrantKeys, prevUnlockedIds));
+      }
+      unawaited(_cosmeticUnlockDispatcher.dispatch(
+        previous: prevState,
+        current: _state!,
+      ));
     } catch (error) {
       _error = error.toString();
       syncError = error.toString();

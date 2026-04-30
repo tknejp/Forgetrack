@@ -226,28 +226,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sectionAccount => 'Account';
 
   @override
-  String get settingsTheme => 'Theme';
-
-  @override
-  String get settingsTimeTheme => 'Dynamic Time Theme';
-
-  @override
-  String get settingsTimeThemeDesc =>
-      'Adjusts visuals based on the current time of day.';
-
-  @override
-  String get themeSystem => 'System';
-
-  @override
-  String get themeLight => 'Light';
-
-  @override
-  String get themeDark => 'Dark';
-
-  @override
-  String get themeDynamic => 'Dynamic';
-
-  @override
   String get settingsAppVersion => 'App version';
 
   @override
@@ -962,6 +940,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String progQuestCompletedOn(String time) {
     return 'Completed $time';
   }
+
+  @override
+  String get progQuestDetailRewards => 'Rewards';
+
+  @override
+  String get progQuestDetailUnlocksNext => 'Unlocks next';
+
+  @override
+  String get progQuestDetailLockedBecause => 'Locked because';
+
+  @override
+  String progQuestDetailRequiresLevel(int level) {
+    return 'Requires level $level';
+  }
+
+  @override
+  String progQuestDetailTrackDays(int days) {
+    return 'Track $days days';
+  }
+
+  @override
+  String progQuestDetailCompleteQuest(String quest) {
+    return 'Complete $quest';
+  }
+
+  @override
+  String get progQuestDetailRelatedGoals => 'Related goals';
+
+  @override
+  String get progQuestDetailTapForDetails => 'Tap for details';
+
+  @override
+  String get progQuestDetailHiddenUntilUnlocked => 'Hidden until unlocked';
+
+  @override
+  String get progQuestDetailHiddenReward => 'Hidden';
+
+  @override
+  String get progQuestDetailNoFollowUp => 'No follow-up quest yet';
 
   @override
   String progProgressRatio(int current, int target) {
@@ -1844,4 +1861,94 @@ class AppLocalizationsEn extends AppLocalizations {
   String progLevelAchievementDesc(int level) {
     return 'Reach level $level through earned XP.';
   }
+
+  @override
+  String get cosmeticFrameLvl1Name => 'Pilgrim\'s Frame';
+
+  @override
+  String get cosmeticFrameLvl1Desc =>
+      'A plain wooden frame for anyone who set out on the road.';
+
+  @override
+  String get cosmeticFrameLvl10Name => 'Wildwood Frame';
+
+  @override
+  String get cosmeticFrameLvl10Desc =>
+      'Dark wood and subtle forest carvings for those who learned to read the paths of the wildwood.';
+
+  @override
+  String get cosmeticFrameLvl25Name => 'Old Gates Frame';
+
+  @override
+  String get cosmeticFrameLvl25Desc =>
+      'Weathered stone and aged bronze from the pass where the trail gives way to ruins.';
+
+  @override
+  String get cosmeticFrameLvl40Name => 'Dwarven Frame';
+
+  @override
+  String get cosmeticFrameLvl40Desc =>
+      'A sturdy frame of forged metal and mine stone, crafted in the depths of dwarven halls.';
+
+  @override
+  String get cosmeticFrameLvl60Name => 'Frost Frame';
+
+  @override
+  String get cosmeticFrameLvl60Desc =>
+      'A cold silver frame with an icy sheen, born in the silence of the frozen lands.';
+
+  @override
+  String get cosmeticFrameLvl80Name => 'Mountain Challenger\'s Frame';
+
+  @override
+  String get cosmeticFrameLvl80Desc =>
+      'Dark mountain stone and blackened steel for those who climbed toward the fortress path.';
+
+  @override
+  String get cosmeticFrameLvl100Name => 'Dragonrock Frame';
+
+  @override
+  String get cosmeticFrameLvl100Desc =>
+      'A legendary frame of obsidian, dragonstone, and golden details, reserved for the lord of Dragonrock.';
+
+  @override
+  String get cosmeticRelicOldCompassName => 'Old Compass';
+
+  @override
+  String get cosmeticRelicOldCompassDesc =>
+      'A brass compass whose needle sometimes points the wrong way.';
+
+  @override
+  String get cosmeticBackgroundForestTrailName => 'Forest Trail';
+
+  @override
+  String get cosmeticBackgroundForestTrailDesc =>
+      'A misty path winding under the tall canopy.';
+
+  @override
+  String get cosmeticEmblemForestMarkName => 'Forest Mark';
+
+  @override
+  String get cosmeticEmblemForestMarkDesc =>
+      'A sigil carved into bark — the first travellers\' greeting.';
+
+  @override
+  String get cosmeticFrameRuinedBronzeName => 'Ruined Bronze';
+
+  @override
+  String get cosmeticFrameRuinedBronzeDesc =>
+      'A patina-coated frame pulled from ancient ruins.';
+
+  @override
+  String get cosmeticRelicOldGateKeyName => 'Old Gate Key';
+
+  @override
+  String get cosmeticRelicOldGateKeyDesc =>
+      'A heavy key whose lock no longer exists.';
+
+  @override
+  String get cosmeticEquippedBadge => 'EQUIPPED';
+
+  @override
+  String get cosmeticUnknown => 'Unknown cosmetic';
 }

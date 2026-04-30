@@ -524,48 +524,6 @@ abstract class AppLocalizations {
   /// **'Account'**
   String get sectionAccount;
 
-  /// Label for the theme mode setting
-  ///
-  /// In en, this message translates to:
-  /// **'Theme'**
-  String get settingsTheme;
-
-  /// Label for the Dynamic Time Theme toggle setting
-  ///
-  /// In en, this message translates to:
-  /// **'Dynamic Time Theme'**
-  String get settingsTimeTheme;
-
-  /// Short description for the Dynamic Time Theme toggle
-  ///
-  /// In en, this message translates to:
-  /// **'Adjusts visuals based on the current time of day.'**
-  String get settingsTimeThemeDesc;
-
-  /// Theme mode option: follow system setting
-  ///
-  /// In en, this message translates to:
-  /// **'System'**
-  String get themeSystem;
-
-  /// Theme mode option: always light
-  ///
-  /// In en, this message translates to:
-  /// **'Light'**
-  String get themeLight;
-
-  /// Theme mode option: always dark
-  ///
-  /// In en, this message translates to:
-  /// **'Dark'**
-  String get themeDark;
-
-  /// Theme mode option: auto light/dark + palette driven by time of day
-  ///
-  /// In en, this message translates to:
-  /// **'Dynamic'**
-  String get themeDynamic;
-
   /// Label for the app version row
   ///
   /// In en, this message translates to:
@@ -1879,6 +1837,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Completed {time}'**
   String progQuestCompletedOn(String time);
+
+  /// No description provided for @progQuestDetailRewards.
+  ///
+  /// In en, this message translates to:
+  /// **'Rewards'**
+  String get progQuestDetailRewards;
+
+  /// No description provided for @progQuestDetailUnlocksNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocks next'**
+  String get progQuestDetailUnlocksNext;
+
+  /// No description provided for @progQuestDetailLockedBecause.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked because'**
+  String get progQuestDetailLockedBecause;
+
+  /// No description provided for @progQuestDetailRequiresLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Requires level {level}'**
+  String progQuestDetailRequiresLevel(int level);
+
+  /// No description provided for @progQuestDetailTrackDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Track {days} days'**
+  String progQuestDetailTrackDays(int days);
+
+  /// No description provided for @progQuestDetailCompleteQuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete {quest}'**
+  String progQuestDetailCompleteQuest(String quest);
+
+  /// No description provided for @progQuestDetailRelatedGoals.
+  ///
+  /// In en, this message translates to:
+  /// **'Related goals'**
+  String get progQuestDetailRelatedGoals;
+
+  /// No description provided for @progQuestDetailTapForDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap for details'**
+  String get progQuestDetailTapForDetails;
+
+  /// No description provided for @progQuestDetailHiddenUntilUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden until unlocked'**
+  String get progQuestDetailHiddenUntilUnlocked;
+
+  /// No description provided for @progQuestDetailHiddenReward.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden'**
+  String get progQuestDetailHiddenReward;
+
+  /// No description provided for @progQuestDetailNoFollowUp.
+  ///
+  /// In en, this message translates to:
+  /// **'No follow-up quest yet'**
+  String get progQuestDetailNoFollowUp;
 
   /// No description provided for @progProgressRatio.
   ///
@@ -3403,6 +3427,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reach level {level} through earned XP.'**
   String progLevelAchievementDesc(int level);
+
+  /// No description provided for @cosmeticFrameLvl1Name.
+  ///
+  /// In en, this message translates to:
+  /// **'Pilgrim\'s Frame'**
+  String get cosmeticFrameLvl1Name;
+
+  /// No description provided for @cosmeticFrameLvl1Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'A plain wooden frame for anyone who set out on the road.'**
+  String get cosmeticFrameLvl1Desc;
+
+  /// No description provided for @cosmeticFrameLvl10Name.
+  ///
+  /// In en, this message translates to:
+  /// **'Wildwood Frame'**
+  String get cosmeticFrameLvl10Name;
+
+  /// No description provided for @cosmeticFrameLvl10Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark wood and subtle forest carvings for those who learned to read the paths of the wildwood.'**
+  String get cosmeticFrameLvl10Desc;
+
+  /// No description provided for @cosmeticFrameLvl25Name.
+  ///
+  /// In en, this message translates to:
+  /// **'Old Gates Frame'**
+  String get cosmeticFrameLvl25Name;
+
+  /// No description provided for @cosmeticFrameLvl25Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Weathered stone and aged bronze from the pass where the trail gives way to ruins.'**
+  String get cosmeticFrameLvl25Desc;
+
+  /// No description provided for @cosmeticFrameLvl40Name.
+  ///
+  /// In en, this message translates to:
+  /// **'Dwarven Frame'**
+  String get cosmeticFrameLvl40Name;
+
+  /// No description provided for @cosmeticFrameLvl40Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'A sturdy frame of forged metal and mine stone, crafted in the depths of dwarven halls.'**
+  String get cosmeticFrameLvl40Desc;
+
+  /// No description provided for @cosmeticFrameLvl60Name.
+  ///
+  /// In en, this message translates to:
+  /// **'Frost Frame'**
+  String get cosmeticFrameLvl60Name;
+
+  /// No description provided for @cosmeticFrameLvl60Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'A cold silver frame with an icy sheen, born in the silence of the frozen lands.'**
+  String get cosmeticFrameLvl60Desc;
+
+  /// No description provided for @cosmeticFrameLvl80Name.
+  ///
+  /// In en, this message translates to:
+  /// **'Mountain Challenger\'s Frame'**
+  String get cosmeticFrameLvl80Name;
+
+  /// No description provided for @cosmeticFrameLvl80Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark mountain stone and blackened steel for those who climbed toward the fortress path.'**
+  String get cosmeticFrameLvl80Desc;
+
+  /// No description provided for @cosmeticFrameLvl100Name.
+  ///
+  /// In en, this message translates to:
+  /// **'Dragonrock Frame'**
+  String get cosmeticFrameLvl100Name;
+
+  /// No description provided for @cosmeticFrameLvl100Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'A legendary frame of obsidian, dragonstone, and golden details, reserved for the lord of Dragonrock.'**
+  String get cosmeticFrameLvl100Desc;
+
+  /// No description provided for @cosmeticRelicOldCompassName.
+  ///
+  /// In en, this message translates to:
+  /// **'Old Compass'**
+  String get cosmeticRelicOldCompassName;
+
+  /// No description provided for @cosmeticRelicOldCompassDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A brass compass whose needle sometimes points the wrong way.'**
+  String get cosmeticRelicOldCompassDesc;
+
+  /// No description provided for @cosmeticBackgroundForestTrailName.
+  ///
+  /// In en, this message translates to:
+  /// **'Forest Trail'**
+  String get cosmeticBackgroundForestTrailName;
+
+  /// No description provided for @cosmeticBackgroundForestTrailDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A misty path winding under the tall canopy.'**
+  String get cosmeticBackgroundForestTrailDesc;
+
+  /// No description provided for @cosmeticEmblemForestMarkName.
+  ///
+  /// In en, this message translates to:
+  /// **'Forest Mark'**
+  String get cosmeticEmblemForestMarkName;
+
+  /// No description provided for @cosmeticEmblemForestMarkDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A sigil carved into bark — the first travellers\' greeting.'**
+  String get cosmeticEmblemForestMarkDesc;
+
+  /// No description provided for @cosmeticFrameRuinedBronzeName.
+  ///
+  /// In en, this message translates to:
+  /// **'Ruined Bronze'**
+  String get cosmeticFrameRuinedBronzeName;
+
+  /// No description provided for @cosmeticFrameRuinedBronzeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A patina-coated frame pulled from ancient ruins.'**
+  String get cosmeticFrameRuinedBronzeDesc;
+
+  /// No description provided for @cosmeticRelicOldGateKeyName.
+  ///
+  /// In en, this message translates to:
+  /// **'Old Gate Key'**
+  String get cosmeticRelicOldGateKeyName;
+
+  /// No description provided for @cosmeticRelicOldGateKeyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A heavy key whose lock no longer exists.'**
+  String get cosmeticRelicOldGateKeyDesc;
+
+  /// No description provided for @cosmeticEquippedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'EQUIPPED'**
+  String get cosmeticEquippedBadge;
+
+  /// No description provided for @cosmeticUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown cosmetic'**
+  String get cosmeticUnknown;
 }
 
 class _AppLocalizationsDelegate

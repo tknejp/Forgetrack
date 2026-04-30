@@ -9,17 +9,22 @@ import '../../application/progression_provider.dart';
 import '../../domain/journey_models.dart';
 import '../hero_journey_map_screen.dart';
 import '../progression_l10n.dart';
+import 'ft_progression_primitives.dart';
 import 'journey_adapter.dart';
 import 'journey_shared.dart';
 
-/// Compact teaser shown directly on the Hero/Profile screen.
-///
-/// - Mini horizontal path with 3–5 checkpoints (oldest left → newest right).
-/// - Summary text: last milestone, current title, next goal.
-/// - Whole card is tappable; opens `HeroJourneyMapScreen`.
-///
-/// Height stays around ~200 px so the Hero screen stays scrollable and the
-/// preview reads as an entry-point, not the main content.
+abstract final class _JourneyPreviewAssets {
+  static const background = 'assets/ui/journey_map_preview_bg.png';
+}
+
+abstract final class _JourneyPreviewLayout {
+  static const mapHeight = 92.0;
+  static const visiblePointCount = 5;
+  static const viewportSidePadding = 52.0;
+  static const mapVerticalCenter = 0.50;
+  static const mapWaveAmplitude = 0.16;
+}
+
 class JourneyPreviewCard extends StatelessWidget {
   const JourneyPreviewCard({super.key});
 
@@ -28,110 +33,61 @@ class JourneyPreviewCard extends StatelessWidget {
     final l10n = context.l10n;
     final progression = context.watch<ProgressionProvider>();
     final progL10n = ProgressionL10n(l10n);
-    final preview = JourneyAdapter.buildPreview(progression, progL10n, l10n);
+    final map = JourneyAdapter.buildMilestoneMap(progression, progL10n, l10n);
 
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(20),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const HeroJourneyMapScreen()),
-        ),
-        splashColor: FtTokens.accent.withValues(alpha: 0.18),
-        highlightColor: FtTokens.accent.withValues(alpha: 0.08),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF1A1838), Color(0xFF0F1226)],
-            ),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: FtTokens.accent.withValues(alpha: 0.24),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: FtTokens.accent.withValues(alpha: 0.10),
-                blurRadius: 16,
-                spreadRadius: -4,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const _Header(),
-              const SizedBox(height: 8),
-              SizedBox(
-                height: 76,
-                child: _MiniMap(checkpoints: preview),
-              ),
-              const SizedBox(height: 10),
-              _SummaryRow(
-                preview: preview,
-                profileTitle: progL10n.levelTitle(progression.profile.level),
-                profileLevel: progression.profile.level,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Header extends StatelessWidget {
-  const _Header();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Icon(Icons.auto_awesome_rounded,
-            size: 14, color: FtTokens.accent),
-        const SizedBox(width: 6),
-        Expanded(
-          child: Text(
-            l10n.journeyPreviewKicker,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-              color: FtTokens.accent,
-              letterSpacing: 1.1,
-            ),
-          ),
+        FtProgSectionHead(
+          label: l10n.journeyTitle,
+          accent: FtTokens.accent,
         ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: FtTokens.accent.withValues(alpha: 0.16),
-            borderRadius: BorderRadius.circular(99),
-            border: Border.all(
-              color: FtTokens.accent.withValues(alpha: 0.36),
+        const SizedBox(height: 8),
+        Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const HeroJourneyMapScreen()),
             ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                l10n.journeyOpenMap,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  color: FtTokens.accent.withValues(alpha: 0.95),
-                  letterSpacing: 0.4,
+            splashColor: FtTokens.accent.withValues(alpha: 0.18),
+            highlightColor: FtTokens.accent.withValues(alpha: 0.08),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF16152F), Color(0xFF0D1021)],
                 ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: FtTokens.accent.withValues(alpha: 0.24),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: FtTokens.accent.withValues(alpha: 0.10),
+                    blurRadius: 16,
+                    spreadRadius: -4,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              const SizedBox(width: 3),
-              const Icon(Icons.arrow_forward_rounded,
-                  size: 12, color: FtTokens.accent),
-            ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    height: _JourneyPreviewLayout.mapHeight,
+                    child: _MiniMap(checkpoints: map),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+                    child: _SummaryRow(preview: map),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ],
@@ -139,10 +95,9 @@ class _Header extends StatelessWidget {
   }
 }
 
-/// Horizontal mini path. Newest (current) is rendered on the right;
-/// oldest on the left, matching the design HTML's horizontal mini-map.
 class _MiniMap extends StatelessWidget {
   const _MiniMap({required this.checkpoints});
+
   final List<JourneyCheckpoint> checkpoints;
 
   @override
@@ -150,111 +105,229 @@ class _MiniMap extends StatelessWidget {
     if (checkpoints.isEmpty) {
       return const _MiniMapEmpty();
     }
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        final w = constraints.maxWidth;
-        final h = constraints.maxHeight;
+        final width = constraints.maxWidth;
+        final height = constraints.maxHeight;
+        final ordered = checkpoints
+            .where((checkpoint) => checkpoint.isPathAnchor)
+            .toList(growable: false)
+          ..sort(
+            (a, b) => _journeyProgress(a).compareTo(_journeyProgress(b)),
+          );
+        final pointSpacing = _pointSpacing(width);
+        final stripWidth = math.max(
+          width,
+          _JourneyPreviewLayout.viewportSidePadding * 2 +
+              pointSpacing * math.max(0, ordered.length - 1),
+        );
+        final offset = _viewportOffset(
+          ordered,
+          pointSpacing: pointSpacing,
+          stripWidth: stripWidth,
+          viewportWidth: width,
+        );
 
-        // Adapter returns newest first → reverse for left-to-right time flow.
-        final ordered = checkpoints.reversed.toList(growable: false);
-        final n = ordered.length;
-        final positions = List<Offset>.generate(n, (i) {
-          final t = n == 1 ? 0.5 : i / (n - 1);
-          final x = 14 + t * (w - 28);
-          final y = h * 0.5 + math.sin(i * 1.4) * h * 0.22;
-          return Offset(x, y);
-        });
-
-        return Stack(
-          children: [
-            CustomPaint(
-              size: Size(w, h),
-              painter: JourneyPathPainter(
-                nodePositions: positions,
-                pathColor: FtTokens.accent,
-              ),
+        final positions = [
+          for (var i = 0; i < ordered.length; i++)
+            _positionFor(
+              index: i,
+              pointCount: ordered.length,
+              pointSpacing: pointSpacing,
+              offset: offset,
+              height: height,
             ),
-            for (int i = 0; i < n; i++)
+        ];
+
+        return ClipRect(
+          child: Stack(
+            children: [
               Positioned(
-                left: positions[i].dx - _halfNode(ordered[i]),
-                top: positions[i].dy - _halfNode(ordered[i]),
-                child: IgnorePointer(
-                  // Whole card already handles taps — nodes are decorative.
-                  child: JourneyCheckpointNode(
-                    checkpoint: ordered[i],
-                    isSelected: false,
-                    onTap: () {},
-                    baseSize: _baseSize(ordered[i]),
-                    compact: true,
-                  ),
+                left: -offset,
+                top: 0,
+                width: stripWidth,
+                height: height,
+                child: Image.asset(
+                  _JourneyPreviewAssets.background,
+                  fit: BoxFit.fill,
                 ),
               ),
-          ],
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.08),
+                      Colors.black.withValues(alpha: 0.42),
+                    ],
+                  ),
+                ),
+                child: const SizedBox.expand(),
+              ),
+              CustomPaint(
+                size: Size(width, height),
+                painter: JourneyPathPainter(
+                  nodePositions: positions,
+                  pathColor: FtTokens.accent,
+                ),
+              ),
+              for (var i = 0; i < ordered.length; i++)
+                Positioned(
+                  left: positions[i].dx - _halfNode(ordered[i]),
+                  top: positions[i].dy - _halfNode(ordered[i]),
+                  child: IgnorePointer(
+                    child: JourneyCheckpointNode(
+                      checkpoint: ordered[i],
+                      isSelected: false,
+                      onTap: () {},
+                      baseSize: _baseSize(ordered[i]),
+                      compact: true,
+                    ),
+                  ),
+                ),
+            ],
+          ),
         );
       },
     );
   }
 
-  static double _baseSize(JourneyCheckpoint cp) {
-    if (cp.isCurrent) return 24;
-    if (cp.isMajorMilestone) return 22;
-    if (cp.type == JourneyEventType.achievement) return 18;
+  static Offset _positionFor({
+    required int index,
+    required int pointCount,
+    required double pointSpacing,
+    required double offset,
+    required double height,
+  }) {
+    final x = _JourneyPreviewLayout.viewportSidePadding +
+        index * pointSpacing -
+        offset;
+    final progress = index / math.max(1, pointCount - 1);
+    final y = height * _JourneyPreviewLayout.mapVerticalCenter +
+        math.sin(progress * math.pi * 7.0) *
+            height *
+            _JourneyPreviewLayout.mapWaveAmplitude;
+    return Offset(x, y);
+  }
+
+  static double _pointSpacing(double viewportWidth) {
+    final available =
+        viewportWidth - _JourneyPreviewLayout.viewportSidePadding * 2;
+    return math.max(
+      1.0,
+      available / (_JourneyPreviewLayout.visiblePointCount - 1),
+    );
+  }
+
+  static double _viewportOffset(
+    List<JourneyCheckpoint> ordered, {
+    required double pointSpacing,
+    required double stripWidth,
+    required double viewportWidth,
+  }) {
+    final currentIndex = _focusIndex(ordered);
+    final scrollAfterIndex = _JourneyPreviewLayout.visiblePointCount - 2;
+    final rawOffset = math.max(
+      0.0,
+      (currentIndex - scrollAfterIndex) * pointSpacing,
+    );
+    final maxOffset = math.max(0.0, stripWidth - viewportWidth);
+    return rawOffset.clamp(0.0, maxOffset).toDouble();
+  }
+
+  static int _focusIndex(List<JourneyCheckpoint> ordered) {
+    final currentIndex = ordered.indexWhere((cp) => cp.isCurrent);
+    if (currentIndex >= 0) return currentIndex;
+
+    final unlockedIndex = ordered.lastIndexWhere((cp) => cp.isUnlocked);
+    if (unlockedIndex >= 0) return unlockedIndex;
+
+    return 0;
+  }
+
+  static double _journeyProgress(JourneyCheckpoint checkpoint) {
+    final mapProgress = checkpoint.mapProgress;
+    if (mapProgress == null) {
+      return checkpoint.isUnlocked ? 1 : 0;
+    }
+    return (1 - mapProgress).clamp(0.0, 1.0).toDouble();
+  }
+
+  static double _baseSize(JourneyCheckpoint checkpoint) {
+    if (checkpoint.isCurrent) return 24;
+    if (checkpoint.isMajorMilestone) return 22;
+    if (checkpoint.type == JourneyEventType.achievement) return 18;
     return 16;
   }
 
-  static double _halfNode(JourneyCheckpoint cp) {
-    return (_baseSize(cp) + 14) / 2;
+  static double _halfNode(JourneyCheckpoint checkpoint) {
+    return (_baseSize(checkpoint) + 14) / 2;
   }
 }
 
 class _MiniMapEmpty extends StatelessWidget {
   const _MiniMapEmpty();
+
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        context.l10n.journeyMiniMapEmpty,
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: 11,
-          height: 1.4,
-          color: Colors.white.withValues(alpha: 0.6),
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(_JourneyPreviewAssets.background, fit: BoxFit.cover),
+        ColoredBox(color: Colors.black.withValues(alpha: 0.34)),
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+            child: Text(
+              context.l10n.journeyMiniMapEmpty,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 11,
+                height: 1.4,
+                color: Colors.white.withValues(alpha: 0.68),
+              ),
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 }
 
 class _SummaryRow extends StatelessWidget {
-  const _SummaryRow({
-    required this.preview,
-    required this.profileTitle,
-    required this.profileLevel,
-  });
+  const _SummaryRow({required this.preview});
 
   final List<JourneyCheckpoint> preview;
-  final String profileTitle;
-  final int profileLevel;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final ordered = preview
+        .where((checkpoint) => checkpoint.isPathAnchor)
+        .toList(growable: false)
+      ..sort(
+        (a, b) => _MiniMap._journeyProgress(a).compareTo(
+          _MiniMap._journeyProgress(b),
+        ),
+      );
 
-    final lastMilestone = preview.firstWhere(
-      (c) => !c.isCurrent && c.isUnlocked,
+    final lastMilestone = ordered.lastWhere(
+      (checkpoint) => checkpoint.isUnlocked,
       orElse: () => const JourneyCheckpoint(
         id: '_none',
         type: JourneyEventType.level,
-        label: '—',
+        label: '-',
         isUnlocked: false,
       ),
     );
-    final nextLocked = preview.firstWhere(
-      (c) => !c.isUnlocked,
+    final nextLocked = ordered.firstWhere(
+      (checkpoint) => !checkpoint.isUnlocked,
       orElse: () => const JourneyCheckpoint(
         id: '_none',
         type: JourneyEventType.level,
-        label: '—',
+        label: '-',
         isUnlocked: false,
       ),
     );
@@ -266,30 +339,31 @@ class _SummaryRow extends StatelessWidget {
           child: _SummaryItem(
             icon: Icons.history_rounded,
             label: l10n.journeyLastMilestone,
-            value: lastMilestone.id == '_none' ? '—' : lastMilestone.label,
+            value: _summaryValue(context, lastMilestone),
             color: FtTokens.active.color,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 12),
         Expanded(
           child: _SummaryItem(
-            icon: Icons.workspace_premium_rounded,
-            label: '${l10n.journeyTitleLabel} · L $profileLevel',
-            value: profileTitle,
-            color: FtTokens.accent,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _SummaryItem(
-            icon: Icons.flag_outlined,
+            icon: Icons.lock_outline_rounded,
             label: l10n.journeyNextGoal,
-            value: nextLocked.id == '_none' ? '—' : nextLocked.label,
+            value: _summaryValue(context, nextLocked),
             color: FtTokens.calories.color,
           ),
         ),
       ],
     );
+  }
+
+  static String _summaryValue(
+    BuildContext context,
+    JourneyCheckpoint checkpoint,
+  ) {
+    if (checkpoint.id == '_none') return '-';
+    final level = checkpoint.levelNumber;
+    if (level != null) return context.l10n.journeyLevelLabel(level);
+    return checkpoint.label;
   }
 }
 
@@ -300,6 +374,7 @@ class _SummaryItem extends StatelessWidget {
     required this.value,
     required this.color,
   });
+
   final IconData icon;
   final String label;
   final String value;
@@ -329,13 +404,13 @@ class _SummaryItem extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 3),
         Text(
           value,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: FontWeight.w800,
             color: Colors.white,
             letterSpacing: -0.1,

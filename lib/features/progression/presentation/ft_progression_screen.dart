@@ -5,9 +5,13 @@ import 'package:provider/provider.dart';
 
 import '../domain/progression_models.dart';
 import '../domain/progression_level_policy.dart';
+import '../../cosmetics/application/cosmetics_provider.dart';
+import '../../cosmetics/domain/cosmetic_models.dart';
+import '../../cosmetics/presentation/cosmetics_screen.dart';
 import '../../social/application/social_provider.dart';
 import '../../social/domain/social_models.dart';
 import 'progression_l10n.dart';
+import 'quest_detail_view_model.dart';
 import '../application/progression_provider.dart';
 import 'widgets/ft_progression_domain_theme.dart';
 import 'widgets/ft_progression_primitives.dart';
@@ -186,6 +190,9 @@ class _FtQuestsScreenState extends State<FtQuestsScreen> {
                     active: viewData.activeQuests,
                     locked: viewData.lockedQuests,
                     completed: viewData.completedQuests,
+                    allQuests: viewData.allQuests,
+                    profile: viewData.profile,
+                    trackedDaysElapsed: viewData.trackedDaysElapsed,
                     isRefreshing: progression.isRefreshing,
                     questPillKeys: _questPillKeys,
                     onClaimQuest: _claimQuestReward,
@@ -320,58 +327,11 @@ class _FtProgressionScreenState extends State<FtProgressionScreen> {
                   28,
                 ),
                 children: [
-                  FtProgSectionHead(
-                    label: l10n.progSummarySectionLabel,
-                    accent: FtTokens.accent,
-                  ),
-                  const SizedBox(height: 8),
-                  _SummaryGrid(
-                    items: [
-                      _SummaryItem(
-                        label: l10n.progSummaryCompletedQuests,
-                        value: '${viewData.completedQuests.length}',
-                        tone: FtTokens.steps.color,
-                        icon: Icons.flag_rounded,
-                      ),
-                      _SummaryItem(
-                        label: l10n.progSummaryAchievements,
-                        value: '${viewData.unlocked.length}',
-                        tone: FtTokens.accent,
-                        icon: Icons.shield_moon_rounded,
-                      ),
-                    ],
-                  ),
+                  // ARCHIVED 2026-04-29: "Přehled postupu" + "Série" sections
+                  // moved to archived_sections.dart. Replaced by inventory.
+                  const _CosmeticsInventorySection(),
                   const SizedBox(height: 16),
                   const JourneyPreviewCard(),
-                  const SizedBox(height: 16),
-                  FtProgSectionHead(
-                    label: l10n.progStreakSectionLabel,
-                    caption: l10n.progStreakSectionCaption,
-                    accent: FtTokens.active.color,
-                  ),
-                  const SizedBox(height: 10),
-                  FtProgStreakDuel(
-                    currentLabel: l10n.progStreakCurrentLabel,
-                    currentValue: viewData.current?.currentStreak ?? 0,
-                    currentCaption: viewData.current == null
-                        ? l10n.progBadgeStreakEmpty
-                        : progL10n.domainLabel(viewData.current!.domain),
-                    currentDomain: viewData.current?.domain,
-                    bestLabel: l10n.progStreakBestLabel,
-                    bestValue: viewData.best?.bestStreak ?? 0,
-                    bestCaption: viewData.best == null
-                        ? l10n.progBadgeStreakHint
-                        : progL10n.domainLabel(viewData.best!.domain),
-                    bestDomain: viewData.best?.domain,
-                    daysSuffix: l10n.progStreakDaysSuffix,
-                    valueSize: 30,
-                    currentColor: FtTokens.calories.color,
-                    currentDim: FtTokens.calories.dim,
-                    currentGlow: FtTokens.calories.glow,
-                    bestColor: FtTokens.active.color,
-                    bestDim: FtTokens.active.dim,
-                    bestGlow: FtTokens.active.glow,
-                  ),
                   const SizedBox(height: 16),
                   FtProgSectionHead(
                     label: l10n.progAchievementsSectionLabel,
@@ -624,89 +584,18 @@ class _ProgressionScaffold extends StatelessWidget {
   }
 }
 
-class _SummaryGrid extends StatelessWidget {
-  const _SummaryGrid({required this.items});
-  final List<_SummaryItem> items;
-
-  @override
-  Widget build(BuildContext context) {
-    return GridView.builder(
-      itemCount: items.length,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-        childAspectRatio: 2.0,
-      ),
-      itemBuilder: (_, index) {
-        final item = items[index];
-        return Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.03),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(item.icon, size: 16, color: item.tone),
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: Text(
-                      item.label.toUpperCase(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w800,
-                        color: FtTokens.onSurfaceMuted,
-                        letterSpacing: 0.9,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const Spacer(),
-              Text(
-                item.value,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w900,
-                  color: item.tone,
-                  letterSpacing: -0.8,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _SummaryItem {
-  const _SummaryItem({
-    required this.label,
-    required this.value,
-    required this.tone,
-    required this.icon,
-  });
-  final String label;
-  final String value;
-  final Color tone;
-  final IconData icon;
-}
+// _SummaryGrid + _SummaryItem moved to archived_sections.dart on 2026-04-29
+// when "Přehled postupu" + "Série" sections were replaced by the cosmetics
+// inventory section. They are not currently rendered anywhere.
 
 class _QuestsSection extends StatefulWidget {
   const _QuestsSection({
     required this.active,
     required this.locked,
     required this.completed,
+    required this.allQuests,
+    required this.profile,
+    required this.trackedDaysElapsed,
     required this.isRefreshing,
     required this.questPillKeys,
     required this.onClaimQuest,
@@ -718,6 +607,9 @@ class _QuestsSection extends StatefulWidget {
   final List<ProgressionQuest> active;
   final List<ProgressionQuest> locked;
   final List<ProgressionQuest> completed;
+  final List<ProgressionQuest> allQuests;
+  final ProgressionProfile profile;
+  final int trackedDaysElapsed;
   final bool isRefreshing;
   final Map<String, GlobalKey> questPillKeys;
   final Future<void> Function(
@@ -738,6 +630,13 @@ class _QuestsSection extends StatefulWidget {
 class _QuestsSectionState extends State<_QuestsSection> {
   static const _compactLimit = 3;
   bool _showAllCompleted = false;
+  String? _expandedQuestId;
+
+  void _toggleQuest(String questId) {
+    setState(() {
+      _expandedQuestId = _expandedQuestId == questId ? null : questId;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -766,6 +665,11 @@ class _QuestsSectionState extends State<_QuestsSection> {
             if (i > 0) const SizedBox(height: 8),
             _ActiveQuestCard(
               quest: widget.active[i],
+              allQuests: widget.allQuests,
+              profile: widget.profile,
+              trackedDaysElapsed: widget.trackedDaysElapsed,
+              isExpanded: _expandedQuestId == widget.active[i].id,
+              onToggle: () => _toggleQuest(widget.active[i].id),
               l10n: widget.l10n,
               progL10n: widget.progL10n,
             ),
@@ -786,6 +690,12 @@ class _QuestsSectionState extends State<_QuestsSection> {
             if (i > 0) const SizedBox(height: 6),
             _LockedQuestRow(
               quest: widget.locked[i],
+              allQuests: widget.allQuests,
+              profile: widget.profile,
+              trackedDaysElapsed: widget.trackedDaysElapsed,
+              isExpanded: _expandedQuestId == widget.locked[i].id,
+              onToggle: () => _toggleQuest(widget.locked[i].id),
+              l10n: widget.l10n,
               progL10n: widget.progL10n,
             ),
           ],
@@ -821,6 +731,11 @@ class _QuestsSectionState extends State<_QuestsSection> {
             if (i > 0) const SizedBox(height: 6),
             _CompletedQuestRow(
               quest: completedToShow[i],
+              allQuests: widget.allQuests,
+              profile: widget.profile,
+              trackedDaysElapsed: widget.trackedDaysElapsed,
+              isExpanded: _expandedQuestId == completedToShow[i].id,
+              onToggle: () => _toggleQuest(completedToShow[i].id),
               l10n: widget.l10n,
               progL10n: widget.progL10n,
               enabled: !widget.isRefreshing,
@@ -856,11 +771,21 @@ class _QuestsSectionState extends State<_QuestsSection> {
 class _ActiveQuestCard extends StatelessWidget {
   const _ActiveQuestCard({
     required this.quest,
+    required this.allQuests,
+    required this.profile,
+    required this.trackedDaysElapsed,
+    required this.isExpanded,
+    required this.onToggle,
     required this.l10n,
     required this.progL10n,
   });
 
   final ProgressionQuest quest;
+  final List<ProgressionQuest> allQuests;
+  final ProgressionProfile profile;
+  final int trackedDaysElapsed;
+  final bool isExpanded;
+  final VoidCallback onToggle;
   final AppLocalizations l10n;
   final ProgressionL10n progL10n;
 
@@ -871,95 +796,107 @@ class _ActiveQuestCard extends StatelessWidget {
     final color = token.color;
     final descriptor = progL10n.questCriterionDescriptor(quest);
 
-    return Container(
-      padding: const EdgeInsets.all(13),
-      decoration: BoxDecoration(
-        gradient: token.gradient,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.28)),
-        boxShadow: [
-          BoxShadow(
-              color: token.glow, blurRadius: 16, offset: const Offset(0, 3))
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              FtProgDomIco(domain: domain, size: 30),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      progL10n.questTitle(quest),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onToggle,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(13),
+        decoration: BoxDecoration(
+          gradient: token.gradient,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withValues(alpha: 0.28)),
+          boxShadow: [
+            BoxShadow(
+                color: token.glow, blurRadius: 16, offset: const Offset(0, 3))
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                FtProgDomIco(domain: domain, size: 30),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        progL10n.questTitle(quest),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      descriptor,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: color.withValues(alpha: 0.78),
+                      const SizedBox(height: 2),
+                      Text(
+                        descriptor,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: color.withValues(alpha: 0.78),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              _QuestRewardPill(quest: quest),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            progL10n.questDescription(quest),
-            style: const TextStyle(
-              fontSize: 11,
-              height: 1.4,
-              color: FtTokens.onSurfaceMuted,
+                const SizedBox(width: 8),
+                _QuestRewardPill(quest: quest),
+                const SizedBox(width: 6),
+                _QuestChevron(expanded: isExpanded, color: color),
+              ],
             ),
-          ),
-          const SizedBox(height: 10),
-          FtProgressBar(
-            value: quest.progress,
-            color: color,
-            glow: color.withValues(alpha: 0.38),
-            height: 5,
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Text(
-                l10n.progProgressRatio(quest.currentValue, quest.targetValue),
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
+            const SizedBox(height: 10),
+            FtProgressBar(
+              value: quest.progress,
+              color: color,
+              glow: color.withValues(alpha: 0.38),
+              height: 5,
+            ),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Text(
+                  l10n.progProgressRatio(quest.currentValue, quest.targetValue),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-              const Spacer(),
-              Text(
-                l10n.progPercent(_safePercent(quest.progress)),
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: color,
+                const Spacer(),
+                Text(
+                  isExpanded
+                      ? l10n.progPercent(_safePercent(quest.progress))
+                      : l10n.progQuestDetailTapForDetails,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: isExpanded ? color : FtTokens.onSurfaceFaint,
+                  ),
                 ),
+              ],
+            ),
+            if (isExpanded) ...[
+              const SizedBox(height: 12),
+              _QuestDetailPanel(
+                quest: quest,
+                allQuests: allQuests,
+                profile: profile,
+                trackedDaysElapsed: trackedDaysElapsed,
+                l10n: l10n,
+                progL10n: progL10n,
+                color: color,
               ),
             ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -968,59 +905,120 @@ class _ActiveQuestCard extends StatelessWidget {
 class _LockedQuestRow extends StatelessWidget {
   const _LockedQuestRow({
     required this.quest,
+    required this.allQuests,
+    required this.profile,
+    required this.trackedDaysElapsed,
+    required this.isExpanded,
+    required this.onToggle,
+    required this.l10n,
     required this.progL10n,
   });
 
   final ProgressionQuest quest;
+  final List<ProgressionQuest> allQuests;
+  final ProgressionProfile profile;
+  final int trackedDaysElapsed;
+  final bool isExpanded;
+  final VoidCallback onToggle;
+  final AppLocalizations l10n;
   final ProgressionL10n progL10n;
 
   @override
   Widget build(BuildContext context) {
     final domain = FtProgressionDomainTheme.resolveForQuest(quest);
+    final detail = QuestDetailViewModel.build(
+      quest: quest,
+      allQuests: allQuests,
+      profile: profile,
+      trackedDaysElapsed: trackedDaysElapsed,
+    );
+    final color = FtProgressionDomainTheme.colorFor(domain);
     return Opacity(
       opacity: 0.82,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.02),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-        ),
-        child: Row(
-          children: [
-            FtProgDomIco(domain: domain, size: 26),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onToggle,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.02),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+          ),
+          child: Column(
+            children: [
+              Row(
                 children: [
-                  Text(
-                    progL10n.questTitle(quest),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: FtTokens.onSurfaceMuted,
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      FtProgDomIco(domain: domain, size: 26),
+                      const Positioned(
+                        right: -3,
+                        bottom: -3,
+                        child: Icon(
+                          Icons.lock_rounded,
+                          size: 12,
+                          color: FtTokens.onSurfaceFaint,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          progL10n.questTitle(quest),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: FtTokens.onSurfaceMuted,
+                          ),
+                        ),
+                        const SizedBox(height: 1),
+                        Text(
+                          _primaryUnlockReasonText(
+                            detail,
+                            allQuests,
+                            l10n,
+                            progL10n,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: FtTokens.onSurfaceFaint,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 1),
-                  Text(
-                    progL10n.questDescription(quest),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: FtTokens.onSurfaceFaint,
-                    ),
-                  ),
+                  const SizedBox(width: 8),
+                  _HiddenRewardPill(label: l10n.progQuestDetailHiddenReward),
+                  const SizedBox(width: 6),
+                  _QuestChevron(expanded: isExpanded, color: color),
                 ],
               ),
-            ),
-            const SizedBox(width: 8),
-            _QuestRewardPill(quest: quest),
-          ],
+              if (isExpanded) ...[
+                const SizedBox(height: 10),
+                _QuestDetailPanel(
+                  quest: quest,
+                  allQuests: allQuests,
+                  profile: profile,
+                  trackedDaysElapsed: trackedDaysElapsed,
+                  l10n: l10n,
+                  progL10n: progL10n,
+                  color: color,
+                  mysteryLocked: true,
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -1030,6 +1028,11 @@ class _LockedQuestRow extends StatelessWidget {
 class _CompletedQuestRow extends StatelessWidget {
   const _CompletedQuestRow({
     required this.quest,
+    required this.allQuests,
+    required this.profile,
+    required this.trackedDaysElapsed,
+    required this.isExpanded,
+    required this.onToggle,
     required this.l10n,
     required this.progL10n,
     required this.enabled,
@@ -1038,6 +1041,11 @@ class _CompletedQuestRow extends StatelessWidget {
   });
 
   final ProgressionQuest quest;
+  final List<ProgressionQuest> allQuests;
+  final ProgressionProfile profile;
+  final int trackedDaysElapsed;
+  final bool isExpanded;
+  final VoidCallback onToggle;
   final AppLocalizations l10n;
   final ProgressionL10n progL10n;
   final bool enabled;
@@ -1053,60 +1061,391 @@ class _CompletedQuestRow extends StatelessWidget {
     final domain = FtProgressionDomainTheme.resolveForQuest(quest);
     final color = FtProgressionDomainTheme.colorFor(domain);
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-      ),
-      child: Row(
-        children: [
-          FtProgDomIco(domain: domain, size: 26),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onToggle,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        ),
+        child: Column(
+          children: [
+            Row(
               children: [
-                Text(
-                  progL10n.questTitle(quest),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: FtTokens.onSurfaceMuted,
+                FtProgDomIco(domain: domain, size: 26),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        progL10n.questTitle(quest),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: FtTokens.onSurfaceMuted,
+                        ),
+                      ),
+                      const SizedBox(height: 1),
+                      Text(
+                        quest.completedAt != null
+                            ? l10n.progQuestCompletedOn(
+                                _formatDateTime(quest.completedAt!, locale))
+                            : progL10n.questCriterionDescriptor(quest),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: color.withValues(alpha: 0.78),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 1),
-                Text(
-                  quest.completedAt != null
-                      ? l10n.progQuestCompletedOn(
-                          _formatDateTime(quest.completedAt!, locale))
-                      : progL10n.questCriterionDescriptor(quest),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: color.withValues(alpha: 0.78),
-                  ),
+                const SizedBox(width: 8),
+                _QuestRewardPill(
+                  key: pillKey,
+                  quest: quest,
+                  claimedLabel: l10n.progQuestStatusClaimed,
+                  onClaim: enabled
+                      ? (center) => onClaimQuest(quest, from: center)
+                      : null,
                 ),
+                const SizedBox(width: 6),
+                _QuestChevron(expanded: isExpanded, color: color),
               ],
             ),
+            if (isExpanded) ...[
+              const SizedBox(height: 10),
+              _QuestDetailPanel(
+                quest: quest,
+                allQuests: allQuests,
+                profile: profile,
+                trackedDaysElapsed: trackedDaysElapsed,
+                l10n: l10n,
+                progL10n: progL10n,
+                color: color,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _QuestDetailPanel extends StatelessWidget {
+  const _QuestDetailPanel({
+    required this.quest,
+    required this.allQuests,
+    required this.profile,
+    required this.trackedDaysElapsed,
+    required this.l10n,
+    required this.progL10n,
+    required this.color,
+    this.mysteryLocked = false,
+  });
+
+  final ProgressionQuest quest;
+  final List<ProgressionQuest> allQuests;
+  final ProgressionProfile profile;
+  final int trackedDaysElapsed;
+  final AppLocalizations l10n;
+  final ProgressionL10n progL10n;
+  final Color color;
+  final bool mysteryLocked;
+
+  @override
+  Widget build(BuildContext context) {
+    final detail = QuestDetailViewModel.build(
+      quest: quest,
+      allQuests: allQuests,
+      profile: profile,
+      trackedDaysElapsed: trackedDaysElapsed,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(height: 1, color: Colors.white.withValues(alpha: 0.06)),
+        const SizedBox(height: 10),
+        if (mysteryLocked)
+          _QuestDetailTextSection(
+            label: l10n.progQuestDetailLockedBecause,
+            color: color,
+            lines: detail.unlockReasons.isEmpty
+                ? [l10n.progQuestDetailHiddenUntilUnlocked]
+                : [
+                    for (final reason in detail.unlockReasons)
+                      _unlockReasonText(
+                        reason,
+                        allQuests,
+                        l10n,
+                        progL10n,
+                      ),
+                  ],
+          )
+        else ...[
+          Text(
+            progL10n.questDescription(quest),
+            style: const TextStyle(
+              fontSize: 11,
+              height: 1.4,
+              color: FtTokens.onSurfaceMuted,
+            ),
           ),
-          const SizedBox(width: 8),
-          _QuestRewardPill(
-            key: pillKey,
-            quest: quest,
-            claimedLabel: l10n.progQuestStatusClaimed,
-            onClaim:
-                enabled ? (center) => onClaimQuest(quest, from: center) : null,
+          const SizedBox(height: 10),
+        ],
+        _QuestDetailLine(
+          label: l10n.progQuestDetailRewards,
+          value: mysteryLocked
+              ? l10n.progQuestDetailHiddenUntilUnlocked
+              : '+${quest.rewardXp} XP',
+          color: color,
+        ),
+        const SizedBox(height: 8),
+        if (mysteryLocked)
+          _QuestDetailLine(
+            label: l10n.progQuestDetailUnlocksNext,
+            value: l10n.progQuestDetailHiddenUntilUnlocked,
+            color: color,
+          )
+        else
+          _QuestDetailTextSection(
+            label: l10n.progQuestDetailUnlocksNext,
+            color: color,
+            lines: detail.unlocksNext.isEmpty
+                ? [l10n.progQuestDetailNoFollowUp]
+                : [
+                    for (final nextQuest in detail.unlocksNext)
+                      progL10n.questTitle(nextQuest),
+                  ],
+          ),
+        if (!mysteryLocked && detail.relatedRuleIds.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            l10n.progQuestDetailRelatedGoals.toUpperCase(),
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w800,
+              color: color.withValues(alpha: 0.76),
+              letterSpacing: 0.8,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final ruleId in detail.relatedRuleIds)
+                FtProgTinyPill(
+                  label: progL10n.ruleTitle(ruleId),
+                  color: color.withValues(alpha: 0.9),
+                ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _QuestDetailTextSection extends StatelessWidget {
+  const _QuestDetailTextSection({
+    required this.label,
+    required this.lines,
+    required this.color,
+  });
+
+  final String label;
+  final List<String> lines;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: TextStyle(
+            fontSize: 9,
+            fontWeight: FontWeight.w800,
+            color: color.withValues(alpha: 0.76),
+            letterSpacing: 0.8,
+          ),
+        ),
+        const SizedBox(height: 5),
+        for (int i = 0; i < lines.length; i++) ...[
+          if (i > 0) const SizedBox(height: 3),
+          Text(
+            lines[i],
+            style: const TextStyle(
+              fontSize: 11,
+              height: 1.35,
+              fontWeight: FontWeight.w600,
+              color: FtTokens.onSurfaceMuted,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _QuestDetailLine extends StatelessWidget {
+  const _QuestDetailLine({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Text(
+            label.toUpperCase(),
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w800,
+              color: color.withValues(alpha: 0.76),
+              letterSpacing: 0.8,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: const TextStyle(
+              fontSize: 11,
+              height: 1.35,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _QuestChevron extends StatelessWidget {
+  const _QuestChevron({
+    required this.expanded,
+    required this.color,
+  });
+
+  final bool expanded;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Icon(
+      expanded
+          ? Icons.keyboard_arrow_up_rounded
+          : Icons.keyboard_arrow_down_rounded,
+      size: 20,
+      color: color.withValues(alpha: 0.82),
+    );
+  }
+}
+
+class _HiddenRewardPill extends StatelessWidget {
+  const _HiddenRewardPill({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.lock_rounded,
+            size: 11,
+            color: FtTokens.onSurfaceFaint,
+          ),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: FtTokens.onSurfaceFaint,
+            ),
           ),
         ],
       ),
     );
   }
+}
+
+String _primaryUnlockReasonText(
+  QuestDetailViewModel detail,
+  List<ProgressionQuest> allQuests,
+  AppLocalizations l10n,
+  ProgressionL10n progL10n,
+) {
+  if (detail.unlockReasons.isEmpty) {
+    return l10n.progQuestDetailHiddenUntilUnlocked;
+  }
+  return _unlockReasonText(
+    detail.unlockReasons.first,
+    allQuests,
+    l10n,
+    progL10n,
+  );
+}
+
+String _unlockReasonText(
+  QuestUnlockReason reason,
+  List<ProgressionQuest> allQuests,
+  AppLocalizations l10n,
+  ProgressionL10n progL10n,
+) {
+  switch (reason.type) {
+    case QuestUnlockReasonType.prerequisiteQuest:
+      final prerequisite = _questById(allQuests, reason.questId);
+      return l10n.progQuestDetailCompleteQuest(
+        prerequisite == null
+            ? (reason.questId ?? '')
+            : progL10n.questTitle(prerequisite),
+      );
+    case QuestUnlockReasonType.level:
+      return l10n.progQuestDetailRequiresLevel(reason.value ?? 0);
+    case QuestUnlockReasonType.trackedDays:
+      return l10n.progQuestDetailTrackDays(reason.value ?? 0);
+  }
+}
+
+ProgressionQuest? _questById(List<ProgressionQuest> quests, String? questId) {
+  if (questId == null) return null;
+  for (final quest in quests) {
+    if (quest.id == questId) return quest;
+  }
+  return null;
 }
 
 class _QuestRewardPill extends StatelessWidget {
@@ -2220,6 +2559,8 @@ class _ProgressionViewData {
     required this.xpSpan,
     required this.unlocked,
     required this.inProgress,
+    required this.allQuests,
+    required this.trackedDaysElapsed,
     required this.activeQuests,
     required this.lockedQuests,
     required this.completedQuests,
@@ -2281,6 +2622,8 @@ class _ProgressionViewData {
       xpSpan: (profile.nextLevelXp - profile.levelFloorXp).clamp(1, 1 << 30),
       unlocked: unlocked,
       inProgress: inProgress,
+      allQuests: progression.quests,
+      trackedDaysElapsed: _trackedDaysElapsed(progression),
       activeQuests: activeQuests,
       lockedQuests: lockedQuests,
       completedQuests: completedQuests,
@@ -2295,6 +2638,8 @@ class _ProgressionViewData {
   final int xpSpan;
   final List<ProgressionAchievement> unlocked;
   final List<ProgressionAchievement> inProgress;
+  final List<ProgressionQuest> allQuests;
+  final int trackedDaysElapsed;
   final List<ProgressionQuest> activeQuests;
   final List<ProgressionQuest> lockedQuests;
   final List<ProgressionQuest> completedQuests;
@@ -2336,6 +2681,28 @@ _DomainStreak? _topStreak(ProgressionProvider provider, {required bool best}) {
   return winner;
 }
 
+int _trackedDaysElapsed(ProgressionProvider provider) {
+  DateTime? earliest;
+
+  for (final evaluation in provider.evaluations) {
+    final start = progressionDate(evaluation.period.start);
+    if (earliest == null || start.isBefore(earliest)) {
+      earliest = start;
+    }
+  }
+
+  for (final grant in provider.rewardGrants) {
+    final start = progressionDate(grant.period.start);
+    if (earliest == null || start.isBefore(earliest)) {
+      earliest = start;
+    }
+  }
+
+  if (earliest == null) return 0;
+  final currentDay = progressionDate(DateTime.now());
+  return currentDay.difference(earliest).inDays + 1;
+}
+
 int _safePercent(double progress) {
   final pct = progress * 100;
   if (pct.isNaN || pct.isInfinite) return 0;
@@ -2344,4 +2711,344 @@ int _safePercent(double progress) {
 
 String _formatDateTime(DateTime value, String locale) {
   return DateFormat('d MMM · HH:mm', locale).format(value);
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Inventory section (replaces archived "Přehled postupu" + "Série")
+// First-pass nicer-than-debug preview: section header + 3 featured type
+// tiles (frames, relics, backgrounds) + "Zobrazit vše" link to the full
+// debug/equip screen. Other types live in the debug screen for now.
+// ──────────────────────────────────────────────────────────────────────────
+
+class _CosmeticsInventorySection extends StatelessWidget {
+  const _CosmeticsInventorySection();
+
+  static const _featuredTypes = <CosmeticType>[
+    CosmeticType.frame,
+    CosmeticType.relic,
+    CosmeticType.background,
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final cosmetics = context.watch<CosmeticsProvider>();
+    final state = cosmetics.state;
+    final catalog = cosmetics.service.catalog;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _InventorySectionHead(
+          onShowAll: state == null
+              ? null
+              : () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const CosmeticsScreen(),
+                    ),
+                  ),
+        ),
+        const SizedBox(height: 10),
+        if (state == null)
+          _InventoryHint(
+            text: cosmetics.isLoading
+                ? 'Načítám inventář…'
+                : 'Inventář bude dostupný po přihlášení.',
+          )
+        else
+          // IntrinsicHeight is needed because we sit inside a ListView item
+          // (unbounded vertical), and Row with crossAxisAlignment.stretch
+          // demands a bounded height to stretch children to.
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 0; i < _featuredTypes.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 10),
+                  Expanded(
+                    child: _FeaturedTypeTile(
+                      type: _featuredTypes[i],
+                      unlocked: catalog
+                          .byType(_featuredTypes[i])
+                          .where((d) => state.unlocked.containsKey(d.id))
+                          .length,
+                      total: catalog.byType(_featuredTypes[i]).length,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => CosmeticsScreen(
+                            initialType: _featuredTypes[i],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _InventorySectionHead extends StatelessWidget {
+  const _InventorySectionHead({required this.onShowAll});
+
+  final VoidCallback? onShowAll;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(Icons.auto_awesome,
+            size: 14, color: FtTokens.accent.withValues(alpha: 0.85)),
+        const SizedBox(width: 6),
+        const Expanded(
+          child: Text(
+            'KOSMETIKA',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              color: FtTokens.accent,
+              letterSpacing: 1.2,
+            ),
+          ),
+        ),
+        if (onShowAll != null)
+          InkWell(
+            onTap: onShowAll,
+            borderRadius: BorderRadius.circular(10),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Zobrazit vše',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: FtTokens.onSurfaceMuted,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  Icon(Icons.chevron_right_rounded,
+                      size: 14, color: FtTokens.onSurfaceMuted),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _InventoryHint extends StatelessWidget {
+  const _InventoryHint({required this.text});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: FtTokens.onSurfaceMuted,
+        ),
+      ),
+    );
+  }
+}
+
+class _FeaturedTypeTile extends StatelessWidget {
+  const _FeaturedTypeTile({
+    required this.type,
+    required this.unlocked,
+    required this.total,
+    required this.onTap,
+  });
+
+  final CosmeticType type;
+  final int unlocked;
+  final int total;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = _accentForType(type);
+    final hasAny = unlocked > 0;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              accent.withValues(alpha: hasAny ? 0.16 : 0.06),
+              accent.withValues(alpha: hasAny ? 0.04 : 0.015),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: accent.withValues(alpha: hasAny ? 0.42 : 0.18),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _TypeThumb(type: type, accent: accent, dim: !hasAny),
+            const SizedBox(height: 10),
+            Text(
+              _labelForType(type).toUpperCase(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                color: FtTokens.onSurfaceMuted,
+                letterSpacing: 0.9,
+              ),
+            ),
+            const SizedBox(height: 2),
+            RichText(
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: '$unlocked',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      color: hasAny ? accent : FtTokens.onSurfaceFaint,
+                      letterSpacing: -0.4,
+                    ),
+                  ),
+                  TextSpan(
+                    text: ' / $total',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: FtTokens.onSurfaceMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Color _accentForType(CosmeticType type) {
+    switch (type) {
+      case CosmeticType.frame:
+        return FtTokens.steps.color;
+      case CosmeticType.relic:
+        return FtTokens.calories.color;
+      case CosmeticType.background:
+        return FtTokens.accent;
+      case CosmeticType.emblem:
+      case CosmeticType.companion:
+      case CosmeticType.titleFlair:
+      case CosmeticType.mapEffect:
+        return FtTokens.accent;
+    }
+  }
+
+  static String _labelForType(CosmeticType type) {
+    switch (type) {
+      case CosmeticType.frame:
+        return 'Rámečky';
+      case CosmeticType.relic:
+        return 'Relikvie';
+      case CosmeticType.background:
+        return 'Pozadí';
+      case CosmeticType.emblem:
+        return 'Znaky';
+      case CosmeticType.companion:
+        return 'Společníci';
+      case CosmeticType.titleFlair:
+        return 'Tituly';
+      case CosmeticType.mapEffect:
+        return 'Efekty mapy';
+    }
+  }
+}
+
+class _TypeThumb extends StatelessWidget {
+  const _TypeThumb({
+    required this.type,
+    required this.accent,
+    required this.dim,
+  });
+
+  final CosmeticType type;
+  final Color accent;
+  final bool dim;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            accent.withValues(alpha: dim ? 0.10 : 0.32),
+            accent.withValues(alpha: dim ? 0.04 : 0.10),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: accent.withValues(alpha: dim ? 0.18 : 0.52),
+          width: 1.2,
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          _iconForType(type),
+          size: 22,
+          color: dim
+              ? FtTokens.onSurfaceFaint
+              : Colors.white.withValues(alpha: 0.94),
+        ),
+      ),
+    );
+  }
+
+  static IconData _iconForType(CosmeticType type) {
+    switch (type) {
+      case CosmeticType.frame:
+        return Icons.crop_square;
+      case CosmeticType.relic:
+        return Icons.auto_awesome;
+      case CosmeticType.background:
+        return Icons.landscape;
+      case CosmeticType.emblem:
+        return Icons.shield;
+      case CosmeticType.companion:
+        return Icons.pets;
+      case CosmeticType.titleFlair:
+        return Icons.title;
+      case CosmeticType.mapEffect:
+        return Icons.map;
+    }
+  }
 }

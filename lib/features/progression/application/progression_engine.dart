@@ -261,7 +261,7 @@ class ProgressionEngine {
     }
     final claimedXp = _totalClaimedXp(ledger);
     final level = _levelPolicy.levelForXp(claimedXp);
-    final baseXpValue = grant.baseXp ?? grant.xpGranted;
+    final baseXpValue = _baseXpForQuestGrant(grant);
     ledger = await _repository.claimQuestReward(
       rewardKey: rewardKey,
       claimedAt: now,
@@ -287,7 +287,7 @@ class ProgressionEngine {
 
     for (final grant in unclaimedGrants) {
       final level = _levelPolicy.levelForXp(runningClaimedXp);
-      final baseXpValue = grant.baseXp ?? grant.xpGranted;
+      final baseXpValue = _baseXpForQuestGrant(grant);
       final finalXp =
           _levelPolicy.scaledRewardXp(baseXp: baseXpValue, level: level);
       ledger = await _repository.claimQuestReward(
@@ -304,6 +304,17 @@ class ProgressionEngine {
       ledger,
       evaluationDate: now,
     );
+  }
+
+  int _baseXpForQuestGrant(ProgressionQuestRewardGrant grant) {
+    if (grant.baseXp != null) return grant.baseXp!;
+
+    final definitions = _questCatalog.build();
+    for (final definition in definitions) {
+      if (definition.id == grant.questId) return definition.rewardXp;
+    }
+
+    return grant.xpGranted;
   }
 
   Future<ProgressionEngineState> _stateWithPersistedAchievementUnlocks(
@@ -517,6 +528,9 @@ class ProgressionEngine {
     required List<ProgressionQuestRewardGrant> existingGrants,
     required DateTime unlockedAt,
   }) {
+    final definitionsById = {
+      for (final definition in _questCatalog.build()) definition.id: definition,
+    };
     final existingKeys = {
       for (final grant in existingGrants) grant.rewardKey,
     };
@@ -531,6 +545,7 @@ class ProgressionEngine {
             rewardKey: quest.rewardKey!,
             questId: quest.id,
             xpGranted: quest.rewardXp,
+            baseXp: definitionsById[quest.id]?.rewardXp,
             rewardStatus: ProgressionRewardStatus.unlocked,
             unlockedAt: unlockedAt,
             completedAt: quest.completedAt!,
