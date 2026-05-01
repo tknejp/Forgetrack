@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../cosmetics/application/cosmetics_provider.dart';
@@ -276,7 +277,7 @@ class _CelebrationData {
     required ProgressionL10n progressionL10n,
     required CosmeticsL10n cosmeticsL10n,
     required List<CosmeticDefinition> cosmeticDefinitions,
-    required dynamic l10n,
+    required AppLocalizations l10n,
   }) {
     switch (event.kind) {
       case ProgressionCelebrationKind.levelMilestone:
@@ -316,9 +317,8 @@ class _CelebrationData {
           title: definition == null
               ? l10n.cosmeticUnknown
               : cosmeticsL10n.name(definition),
-          subtitle: definition == null
-              ? null
-              : _rarityLabel(definition.rarity, l10n),
+          subtitle:
+              definition == null ? null : _rarityLabel(definition.rarity, l10n),
           color: palette.color,
           icon: Icons.auto_awesome_rounded,
         );
@@ -397,7 +397,7 @@ class _CosmeticUnlockStrip extends StatelessWidget {
   final List<CosmeticDefinition> definitions;
   final CosmeticsProvider cosmetics;
   final CosmeticsL10n l10n;
-  final dynamic appL10n;
+  final AppLocalizations appL10n;
 
   @override
   Widget build(BuildContext context) {
@@ -430,7 +430,7 @@ class _CosmeticUnlockChip extends StatelessWidget {
   final CosmeticDefinition definition;
   final String? assetPath;
   final String name;
-  final dynamic appL10n;
+  final AppLocalizations appL10n;
 
   @override
   Widget build(BuildContext context) {
@@ -586,7 +586,7 @@ Color _difficultyColor(ProgressionAchievementDifficulty difficulty) {
   }
 }
 
-String _rarityLabel(CosmeticRarity rarity, dynamic l10n) {
+String _rarityLabel(CosmeticRarity rarity, AppLocalizations l10n) {
   switch (rarity) {
     case CosmeticRarity.common:
       return l10n.cosmeticRarityCommon;
