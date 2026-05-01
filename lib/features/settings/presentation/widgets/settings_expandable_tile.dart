@@ -60,7 +60,7 @@ class _SettingsExpandableTileState extends State<SettingsExpandableTile> {
                         Text(
                           widget.label,
                           style: tt.bodyLarge?.copyWith(
-                            color: FtTokens.onSurface,
+                            color: Tokens.onSurface,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -68,7 +68,7 @@ class _SettingsExpandableTileState extends State<SettingsExpandableTile> {
                         Text(
                           widget.summary,
                           style: tt.bodySmall?.copyWith(
-                            color: FtTokens.onSurfaceMuted,
+                            color: Tokens.onSurfaceMuted,
                             height: 1.25,
                           ),
                         ),
@@ -76,14 +76,7 @@ class _SettingsExpandableTileState extends State<SettingsExpandableTile> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  AnimatedRotation(
-                    turns: _expanded ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 180),
-                    child: Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      color: FtTokens.onSurfaceMuted,
-                    ),
-                  ),
+                  ExpandChevron(expanded: _expanded),
                 ],
               ),
             ),

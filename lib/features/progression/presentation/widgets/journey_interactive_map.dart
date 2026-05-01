@@ -7,10 +7,10 @@ import 'package:intl/intl.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
-import '../../../../shared/theme/ft_design_tokens.dart';
+import '../../../../shared/theme/design_tokens.dart';
 import '../../domain/journey_models.dart';
 import 'journey_map_route.dart';
-import 'journey_shared.dart';
+import 'journey_primitives.dart';
 
 abstract final class _JourneyMapAssets {
   static const route = 'assets/map/journey_map_route.json';
@@ -661,7 +661,7 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
                         size: Size(viewportW, canvasH),
                         painter: JourneyPathPainter(
                           nodePositions: const [],
-                          pathColor: FtTokens.accent,
+                          pathColor: Tokens.accent,
                           solidSegments: solidSegments,
                           dashedSegments:
                               widget.interactive ? dashedSegments : const [],
@@ -721,7 +721,7 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: FtTokens.accent.withValues(
+                    color: Tokens.accent.withValues(
                       alpha: _JourneyMapShellStyle.accentShadowAlpha,
                     ),
                     blurRadius: _JourneyMapShellStyle.accentShadowBlur,
@@ -988,12 +988,12 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
-            color: FtTokens.accent.withValues(alpha: 0.36),
+            color: Tokens.accent.withValues(alpha: 0.36),
             width: 1.4,
           ),
           boxShadow: [
             BoxShadow(
-              color: FtTokens.accent.withValues(alpha: 0.18),
+              color: Tokens.accent.withValues(alpha: 0.18),
               blurRadius: 18,
               spreadRadius: 1,
             ),
@@ -1024,7 +1024,7 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
               spreadRadius: 1,
             ),
             BoxShadow(
-              color: FtTokens.accent.withValues(alpha: 0.16),
+              color: Tokens.accent.withValues(alpha: 0.16),
               blurRadius: 18,
               spreadRadius: -2,
             ),
@@ -1194,7 +1194,7 @@ class _MapLoadingShell extends StatelessWidget {
           height: 18,
           child: CircularProgressIndicator(
             strokeWidth: 2,
-            color: FtTokens.accent,
+            color: Tokens.accent,
           ),
         ),
       ),
@@ -1291,7 +1291,7 @@ class _MapBackground extends StatelessWidget {
             left: _JourneyMapBackgroundStyle.topGlowOffset.dx,
             child: _Glow(
               size: _JourneyMapBackgroundStyle.topGlowSize,
-              color: FtTokens.accent,
+              color: Tokens.accent,
               alpha: _JourneyMapBackgroundStyle.topGlowAlpha,
             ),
           ),
@@ -1300,7 +1300,7 @@ class _MapBackground extends StatelessWidget {
             right: _JourneyMapBackgroundStyle.middleGlowRight,
             child: _Glow(
               size: _JourneyMapBackgroundStyle.middleGlowSize,
-              color: FtTokens.active.color,
+              color: Tokens.active.color,
               alpha: _JourneyMapBackgroundStyle.middleGlowAlpha,
             ),
           ),
@@ -1309,7 +1309,7 @@ class _MapBackground extends StatelessWidget {
             left: _JourneyMapBackgroundStyle.bottomGlowLeft,
             child: _Glow(
               size: _JourneyMapBackgroundStyle.bottomGlowSize,
-              color: FtTokens.accent,
+              color: Tokens.accent,
               alpha: _JourneyMapBackgroundStyle.bottomGlowAlpha,
             ),
           ),
@@ -1455,14 +1455,14 @@ class JourneyCheckpointOverlayCard extends StatelessWidget {
               if (!cp.isUnlocked) ...[
                 const SizedBox(width: 5),
                 const Icon(Icons.lock_outline_rounded,
-                    size: 10, color: FtTokens.onSurfaceFaint),
+                    size: 10, color: Tokens.onSurfaceFaint),
                 const SizedBox(width: 2),
                 Text(
                   l10n.journeyBadgeLocked,
                   style: const TextStyle(
                     fontSize: 8,
                     fontWeight: FontWeight.w800,
-                    color: FtTokens.onSurfaceMuted,
+                    color: Tokens.onSurfaceMuted,
                     letterSpacing: 0.7,
                   ),
                 ),
@@ -1518,7 +1518,7 @@ class JourneyCheckpointOverlayCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 10,
+                            fontSize: Tokens.fontSizeMicro,
                             fontWeight: FontWeight.w600,
                             color: color.withValues(alpha: 0.82),
                           ),
@@ -1539,9 +1539,9 @@ class JourneyCheckpointOverlayCard extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  fontSize: 11,
+                  fontSize: Tokens.fontSizeCaption,
                   height: 1.4,
-                  color: FtTokens.onSurfaceMuted,
+                  color: Tokens.onSurfaceMuted,
                 ),
               ),
             ),
@@ -1583,7 +1583,7 @@ class JourneyCheckpointOverlayCard extends StatelessWidget {
   Widget _emojiOrIcon(JourneyCheckpoint cp, Color color, double size) {
     if (!cp.isUnlocked) {
       return Icon(Icons.lock_outline_rounded,
-          size: size - 2, color: FtTokens.onSurfaceFaint);
+          size: size - 2, color: Tokens.onSurfaceFaint);
     }
     if (cp.emoji != null) {
       return Text(
@@ -1637,7 +1637,7 @@ class _CloseButton extends StatelessWidget {
           child: const Icon(
             Icons.close_rounded,
             size: 14,
-            color: FtTokens.onSurfaceMuted,
+            color: Tokens.onSurfaceMuted,
           ),
         ),
       ),
@@ -1655,10 +1655,10 @@ class _CurrentDot extends StatelessWidget {
       height: 6,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: FtTokens.accent,
+        color: Tokens.accent,
         boxShadow: [
           BoxShadow(
-            color: FtTokens.accent.withValues(alpha: 0.8),
+            color: Tokens.accent.withValues(alpha: 0.8),
             blurRadius: 4,
           ),
         ],

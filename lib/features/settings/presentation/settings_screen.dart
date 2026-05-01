@@ -5,8 +5,9 @@ import 'package:provider/provider.dart';
 import '../../../l10n/l10n.dart';
 import '../../auth/application/auth_provider.dart';
 import '../../devtools/application/devtools_permission_service.dart';
-import '../../../shared/theme/ft_design_tokens.dart';
-import '../../../shared/widgets/ft/ft_screen_header.dart';
+import '../../../shared/theme/design_tokens.dart';
+import '../../../shared/widgets/ft_back_button.dart';
+import '../../../shared/widgets/screen_header.dart';
 import 'sections/settings_devtools_section.dart';
 import 'sections/settings_goals_section.dart';
 import 'sections/settings_header_section.dart';
@@ -27,10 +28,10 @@ class SettingsScreen extends StatelessWidget {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light.copyWith(
         statusBarColor: Colors.transparent,
-        systemNavigationBarColor: FtTokens.bg,
+        systemNavigationBarColor: Tokens.bg,
       ),
       child: Scaffold(
-        backgroundColor: FtTokens.bg,
+        backgroundColor: Tokens.bg,
         body: ListView(
           padding: EdgeInsets.fromLTRB(
             14,
@@ -39,13 +40,11 @@ class SettingsScreen extends StatelessWidget {
             32,
           ),
           children: [
-            FtScreenHeader(
+            ScreenHeader(
               greeting: l10n.settingsSection,
               title: l10n.screenProfile,
               leading: canPop
-                  ? _SettingsBackButton(
-                      onTap: () => Navigator.of(context).maybePop(),
-                    )
+                  ? const FtBackButton()
                   : null,
             ),
             const SizedBox(height: 18),
@@ -83,33 +82,6 @@ class SettingsScreen extends StatelessWidget {
                 child: const SettingsDevToolsSection(),
               ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SettingsBackButton extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _SettingsBackButton({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: const Color(0x0FFFFFFF),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: FtTokens.cardBorder),
-        ),
-        child: const Icon(
-          Icons.arrow_back_rounded,
-          size: 18,
-          color: Colors.white,
         ),
       ),
     );

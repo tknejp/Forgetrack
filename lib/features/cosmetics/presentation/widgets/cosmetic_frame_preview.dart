@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../config/cosmetics_config.dart';
 import '../../domain/cosmetic_models.dart';
+import '../cosmetics_palette.dart';
 
 /// Wraps an avatar [child] with a cosmetic frame.
 ///
@@ -100,38 +101,22 @@ class _PlaceholderRing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = _gradientColors(rarity);
+    final palette = CosmeticsPalette.forRarity(rarity);
     final shape = borderRadius == null ? BoxShape.circle : BoxShape.rectangle;
     return Container(
       decoration: BoxDecoration(
         shape: shape,
         borderRadius: shape == BoxShape.rectangle ? borderRadius : null,
-        border: Border.all(
-          color: colors.last,
-          width: 2,
-        ),
+        border: Border.all(color: palette.color, width: 2),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            colors.first.withValues(alpha: 0.18),
-            colors.last.withValues(alpha: 0.32),
+            palette.gradStart.withValues(alpha: 0.18),
+            palette.color.withValues(alpha: 0.32),
           ],
         ),
       ),
     );
-  }
-
-  static List<Color> _gradientColors(CosmeticRarity rarity) {
-    switch (rarity) {
-      case CosmeticRarity.common:
-        return const [Color(0xFF6E6E6E), Color(0xFF9E9E9E)];
-      case CosmeticRarity.rare:
-        return const [Color(0xFF1F6FEB), Color(0xFF58A6FF)];
-      case CosmeticRarity.epic:
-        return const [Color(0xFF7B3FE4), Color(0xFFB388FF)];
-      case CosmeticRarity.legendary:
-        return const [Color(0xFFE0A800), Color(0xFFFFD54F)];
-    }
   }
 }

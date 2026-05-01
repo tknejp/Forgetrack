@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../../l10n/l10n.dart';
 import '../../../domain/weight_card_data.dart';
 import '../../../../../shared/theme/app_theme.dart';
-import '../../../../../shared/widgets/stat_display.dart';
+import '../../../../../shared/widgets/stat_components.dart';
 
 class WeightSummaryCard extends StatelessWidget {
   final double currentWeight;

@@ -57,7 +57,7 @@ Future<void> fcmBackgroundHandler(RemoteMessage message) async {
       payload: _safeMessageDebugPayload(message),
     );
 
-    // Do not call _showFcmMessage(message) here.
+    // Do not mirror the FCM payload here.
     // Android shows FCM notification payload automatically in background.
   } catch (e, st) {
     AppLog.app.error(
@@ -68,7 +68,7 @@ Future<void> fcmBackgroundHandler(RemoteMessage message) async {
   }
 }
 
-Future<void> _showFcmMessage(RemoteMessage message) async {
+Future<void> _logSuppressedForegroundMessage(RemoteMessage message) async {
   final title = message.notification?.title;
   final body = message.notification?.body;
   final type = message.data['type'] as String?;
@@ -83,12 +83,10 @@ Future<void> _showFcmMessage(RemoteMessage message) async {
   }
 
   AppLog.app.info(
-    'FcmService: showing foreground local notification '
+    'FcmService: foreground notification suppressed '
     'id=${message.messageId} type=$type title=$title',
     payload: _safeMessageDebugPayload(message),
   );
-
-  await NotificationService.instance.showFcmMessage(title, body, type);
 }
 
 Map<String, Object?> _safeMessageDebugPayload(RemoteMessage message) {
@@ -144,8 +142,8 @@ class FcmService {
 
     await _requestNotificationPermission();
 
-    // Foreground messages are not shown by the OS automatically.
-    // Therefore we display them manually via flutter_local_notifications.
+    // Foreground messages stay in-app only; Android does not display the FCM
+    // notification automatically here and we intentionally do not mirror it.
     FirebaseMessaging.onMessage.listen((message) async {
       AppLog.app.info(
         '$_log: foreground message received '
@@ -155,7 +153,7 @@ class FcmService {
         payload: _safeMessageDebugPayload(message),
       );
 
-      await _showFcmMessage(message);
+      await _logSuppressedForegroundMessage(message);
     });
 
     // User tapped a notification while the app was in background.

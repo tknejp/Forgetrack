@@ -34,7 +34,16 @@
       "Bash(sed -i 's|'\\\\''../../../../models/weight_card_data\\\\.dart'\\\\''|'\\\\''../../domain/weight_card_data.dart'\\\\''|g' lib/features/health_connect/application/fitness_provider/fitness_queries.dart)",
       "Bash(sed -i 's|'\\\\''../../../../../models/weight_card_data\\\\.dart'\\\\''|'\\\\''../../../domain/weight_card_data.dart'\\\\''|g' lib/features/health_connect/presentation/body/widgets/body_cards.dart)",
       "Bash(git stash *)",
-      "Bash(python3 -c ' *)"
+      "Bash(python3 -c ' *)",
+      "Bash(xargs -I {} bash -c 'echo \"$\\(grep -c \"style: TextStyle\\(\" {}\\) {}\"')",
+      "Bash(sed -i 's/FtActivityRow/ActivityRow/g' activity_row.dart)",
+      "Bash(sed -i 's/FtDateNav/DateNav/g' date_nav.dart)",
+      "Bash(sed -i 's/FtDetailShortcutButton/DetailShortcutButton/g' detail_shortcut_button.dart)",
+      "Bash(sed -i 's/FtDragRevealPager/DragRevealPager/g; s/FtEdgePageHandoff/EdgePageHandoff/g' drag_reveal_pager.dart)",
+      "Bash(sed -i 's/FtMacroRow/MacroRow/g' macro_row.dart)",
+      "Bash(sed -i \"s|'../../theme/ft_design_tokens.dart'|'../theme/ft_design_tokens.dart'|g\" activity_row.dart date_nav.dart detail_shortcut_button.dart macro_row.dart plain_card.dart progress_bar.dart screen_header.dart stat_card.dart stat_cell.dart tab_pill.dart tiny_pill.dart trend_chart.dart xp_claim_pill.dart xp_sparkle_overlay.dart)",
+      "Bash(sed -i \"s|'../../../l10n/l10n.dart'|'../../l10n/l10n.dart'|g\" detail_shortcut_button.dart)",
+      "Bash(sed -i \"s|'ft_progress_bar.dart'|'progress_bar.dart'|g; s|'ft_stat_cell.dart'|'stat_cell.dart'|g; s|'ft_xp_claim_pill.dart'|'xp_claim_pill.dart'|g\" stat_card.dart macro_row.dart)"
     ]
   }
 }

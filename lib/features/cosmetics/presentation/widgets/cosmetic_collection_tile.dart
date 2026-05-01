@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../shared/theme/ft_design_tokens.dart';
+import '../../../../shared/theme/design_tokens.dart';
 import '../../config/cosmetics_config.dart';
 import '../../domain/cosmetic_models.dart';
 import '../cosmetics_l10n.dart';
@@ -30,32 +30,30 @@ class CosmeticCollectionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final assetPath = (config ?? CosmeticsConfig.standard())
         .resolveAssetPath(definition.previewAssetKey ?? definition.assetKey);
-    final rarityColor = _rarityColor(definition.rarity);
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(Tokens.radiusInner),
       child: Container(
         decoration: BoxDecoration(
-          color: FtTokens.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: rarityColor.withValues(alpha: isUnlocked ? 0.7 : 0.25),
-            width: 1.5,
-          ),
+          color: Tokens.surface.withValues(alpha: isUnlocked ? 0.52 : 0.28),
+          borderRadius: BorderRadius.circular(Tokens.radiusInner),
         ),
         clipBehavior: Clip.antiAlias,
         child: Stack(
           children: [
             Positioned.fill(
-              child: assetPath != null
-                  ? Image.asset(
-                      assetPath,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) =>
-                          _Placeholder(rarityColor: rarityColor),
-                    )
-                  : _Placeholder(rarityColor: rarityColor),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 10, 10, 30),
+                child: assetPath != null
+                    ? Image.asset(
+                        assetPath,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) =>
+                            _Placeholder(type: definition.type),
+                      )
+                    : _Placeholder(type: definition.type),
+              ),
             ),
             if (!isUnlocked)
               Positioned.fill(
@@ -74,14 +72,13 @@ class CosmeticCollectionTile extends StatelessWidget {
               right: 0,
               bottom: 0,
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
                     colors: [
-                      Colors.black.withValues(alpha: 0.75),
+                      Colors.black.withValues(alpha: 0.70),
                       Colors.black.withValues(alpha: 0.0),
                     ],
                   ),
@@ -92,7 +89,7 @@ class CosmeticCollectionTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 11,
+                    fontSize: Tokens.fontSizeCaption,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.2,
                   ),
@@ -104,17 +101,20 @@ class CosmeticCollectionTile extends StatelessWidget {
                 top: 6,
                 right: 6,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 6, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: FtTokens.accent,
-                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.black.withValues(alpha: 0.54),
+                    borderRadius: BorderRadius.circular(Tokens.radiusIcon),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.10),
+                    ),
                   ),
                   child: Text(
                     l10n?.equippedBadge ?? 'EQUIPPED',
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 9,
+                      fontSize: Tokens.fontSizeTiny,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.6,
                     ),
@@ -126,39 +126,40 @@ class CosmeticCollectionTile extends StatelessWidget {
       ),
     );
   }
-
-  static Color _rarityColor(CosmeticRarity rarity) {
-    switch (rarity) {
-      case CosmeticRarity.common:
-        return const Color(0xFF8E8E8E);
-      case CosmeticRarity.rare:
-        return const Color(0xFF58A6FF);
-      case CosmeticRarity.epic:
-        return const Color(0xFFB388FF);
-      case CosmeticRarity.legendary:
-        return const Color(0xFFFFD54F);
-    }
-  }
 }
 
 class _Placeholder extends StatelessWidget {
-  const _Placeholder({required this.rarityColor});
+  const _Placeholder({required this.type});
 
-  final Color rarityColor;
+  final CosmeticType type;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            rarityColor.withValues(alpha: 0.35),
-            rarityColor.withValues(alpha: 0.10),
-          ],
-        ),
+    return Center(
+      child: Icon(
+        _iconForType(type),
+        size: 32,
+        color: Tokens.onSurfaceFaint,
       ),
     );
+  }
+}
+
+IconData _iconForType(CosmeticType type) {
+  switch (type) {
+    case CosmeticType.frame:
+      return Icons.crop_square;
+    case CosmeticType.relic:
+      return Icons.auto_awesome;
+    case CosmeticType.background:
+      return Icons.landscape;
+    case CosmeticType.emblem:
+      return Icons.shield;
+    case CosmeticType.companion:
+      return Icons.pets;
+    case CosmeticType.titleFlair:
+      return Icons.title;
+    case CosmeticType.mapEffect:
+      return Icons.map;
   }
 }

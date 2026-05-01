@@ -4,7 +4,9 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../l10n/l10n.dart';
-import '../../../shared/theme/ft_design_tokens.dart';
+import '../../../shared/theme/design_tokens.dart';
+import '../../../shared/widgets/ft_back_button.dart';
+import '../../../shared/widgets/screen_header.dart';
 import '../../health_connect/application/fitness_provider.dart';
 import '../../nutrition/application/kaloricke_tabulky_provider.dart';
 import '../application/sheets_export_provider.dart';
@@ -30,46 +32,50 @@ class SheetsExportScreen extends StatelessWidget {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light.copyWith(
         statusBarColor: Colors.transparent,
-        systemNavigationBarColor: FtTokens.bg,
+        systemNavigationBarColor: Tokens.bg,
       ),
       child: Scaffold(
-        backgroundColor: FtTokens.bg,
-        body: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 28),
-            children: [
-              _ExportHeader(
-                eyebrow: l10n.sectionData,
-                title: l10n.exportScreenTitle,
-              ),
-              const SizedBox(height: 18),
-              _ExportCommandCard(
-                summary: l10n.exportSummary(
-                  exportProvider.dayCount,
-                  exportProvider.selectedFields.length,
-                  range,
-                ),
-                isReady: exportProvider.canExport,
-              ),
-              const SizedBox(height: 12),
-              SheetsExportTargetCard(provider: exportProvider),
-              const SizedBox(height: 12),
-              SheetsExportDateRange(provider: exportProvider),
-              const SizedBox(height: 12),
-              SheetsExportFieldList(provider: exportProvider),
-              const SizedBox(height: 12),
-              SheetsExportStatusBanner(provider: exportProvider),
-              const SizedBox(height: 16),
-              const _AuthorizationNote(),
-              const SizedBox(height: 10),
-              SheetsExportActionBar(
-                provider: exportProvider,
-                onExport: () => _runExport(context, exportProvider),
-              ),
-              const SizedBox(height: 14),
-              const _ExplainerText(),
-            ],
+        backgroundColor: Tokens.bg,
+        body: ListView(
+          padding: EdgeInsets.fromLTRB(
+            14,
+            MediaQuery.of(context).padding.top + 12,
+            14,
+            28,
           ),
+          children: [
+            ScreenHeader(
+              greeting: l10n.sectionData,
+              title: l10n.exportScreenTitle,
+              leading: const FtBackButton(),
+            ),
+            const SizedBox(height: 18),
+            _ExportCommandCard(
+              summary: l10n.exportSummary(
+                exportProvider.dayCount,
+                exportProvider.selectedFields.length,
+                range,
+              ),
+              isReady: exportProvider.canExport,
+            ),
+            const SizedBox(height: Tokens.spaceMd),
+            SheetsExportTargetCard(provider: exportProvider),
+            const SizedBox(height: Tokens.spaceMd),
+            SheetsExportDateRange(provider: exportProvider),
+            const SizedBox(height: Tokens.spaceMd),
+            SheetsExportFieldList(provider: exportProvider),
+            const SizedBox(height: Tokens.spaceMd),
+            SheetsExportStatusBanner(provider: exportProvider),
+            const SizedBox(height: Tokens.spaceLg),
+            const _AuthorizationNote(),
+            const SizedBox(height: 10),
+            SheetsExportActionBar(
+              provider: exportProvider,
+              onExport: () => _runExport(context, exportProvider),
+            ),
+            const SizedBox(height: 14),
+            const _ExplainerText(),
+          ],
         ),
       ),
     );
@@ -90,81 +96,18 @@ class SheetsExportScreen extends StatelessWidget {
     if (provider.status == SheetsExportStatus.success && result != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: FtTokens.surface,
+          backgroundColor: Tokens.surface,
           content: Text(
             l10n.exportSuccessDetail(
               result.rowsWritten,
               result.rowsAdded,
               result.rowsUpdated,
             ),
-            style: const TextStyle(color: FtTokens.onSurface),
+            style: const TextStyle(color: Tokens.onSurface),
           ),
         ),
       );
     }
-  }
-}
-
-class _ExportHeader extends StatelessWidget {
-  final String eyebrow;
-  final String title;
-
-  const _ExportHeader({required this.eyebrow, required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => Navigator.of(context).maybePop(),
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.055),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-              ),
-              child: const Icon(
-                Icons.chevron_left_rounded,
-                color: Colors.white,
-                size: 25,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                eyebrow.toUpperCase(),
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  color: FtTokens.accent,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                  letterSpacing: -0.6,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
   }
 }
 
@@ -179,7 +122,7 @@ class _ExportCommandCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isReady ? FtTokens.steps.color : FtTokens.accent;
+    final color = isReady ? Tokens.steps.color : Tokens.accent;
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 13),
       decoration: BoxDecoration(
@@ -188,10 +131,10 @@ class _ExportCommandCard extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             color.withValues(alpha: 0.16),
-            FtTokens.accent.withValues(alpha: 0.06),
+            Tokens.accent.withValues(alpha: 0.06),
           ],
         ),
-        borderRadius: BorderRadius.circular(FtTokens.radiusCard),
+        borderRadius: BorderRadius.circular(Tokens.radiusCard),
         border: Border.all(color: color.withValues(alpha: 0.22)),
         boxShadow: [
           BoxShadow(
@@ -217,7 +160,7 @@ class _ExportCommandCard extends StatelessWidget {
               size: 21,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: Tokens.spaceMd),
           Expanded(
             child: Text(
               summary,
@@ -225,7 +168,7 @@ class _ExportCommandCard extends StatelessWidget {
                 fontSize: 13,
                 height: 1.25,
                 fontWeight: FontWeight.w800,
-                color: FtTokens.onSurface,
+                color: Tokens.onSurface,
               ),
             ),
           ),
@@ -243,9 +186,9 @@ class _AuthorizationNote extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: FtTokens.accent.withValues(alpha: 0.07),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: FtTokens.accent.withValues(alpha: 0.18)),
+        color: Tokens.accent.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(Tokens.radiusInner),
+        border: Border.all(color: Tokens.accent.withValues(alpha: 0.18)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -253,16 +196,16 @@ class _AuthorizationNote extends StatelessWidget {
           Icon(
             Icons.privacy_tip_outlined,
             size: 16,
-            color: FtTokens.accent.withValues(alpha: 0.88),
+            color: Tokens.accent.withValues(alpha: 0.88),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: Tokens.spaceSm),
           Expanded(
             child: Text(
               context.l10n.exportAuthorizationNote,
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: Tokens.fontSizeSmall,
                 height: 1.35,
-                color: FtTokens.onSurfaceMuted,
+                color: Tokens.onSurfaceMuted,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -285,8 +228,8 @@ class _ExplainerText extends StatelessWidget {
       child: Text(
         l10n.exportExplainer(today),
         style: const TextStyle(
-          fontSize: 12,
-          color: FtTokens.onSurfaceMuted,
+          fontSize: Tokens.fontSizeSmall,
+          color: Tokens.onSurfaceMuted,
           height: 1.4,
         ),
       ),

@@ -5,7 +5,7 @@ import '../../../../l10n/l10n.dart';
 import '../../../auth/application/auth_provider.dart';
 import '../../../auth/presentation/google_logo_icon.dart';
 import '../../../auth/presentation/google_sign_in_button.dart';
-import '../../../../shared/theme/ft_design_tokens.dart';
+import '../../../../shared/theme/design_tokens.dart';
 import '../../../../shared/widgets/app_logo.dart';
 
 class SettingsHeaderCard extends StatelessWidget {
@@ -21,15 +21,15 @@ class SettingsHeaderCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            FtTokens.accent.withValues(alpha: 0.15),
+            Tokens.accent.withValues(alpha: 0.15),
             Colors.white.withValues(alpha: 0.025),
           ],
         ),
-        borderRadius: BorderRadius.circular(FtTokens.radiusCard),
-        border: Border.all(color: FtTokens.accent.withValues(alpha: 0.22)),
+        borderRadius: BorderRadius.circular(Tokens.radiusCard),
+        border: Border.all(color: Tokens.accent.withValues(alpha: 0.22)),
         boxShadow: [
           BoxShadow(
-            color: FtTokens.accentGlow.withValues(alpha: 0.45),
+            color: Tokens.accentGlow.withValues(alpha: 0.45),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
@@ -95,13 +95,13 @@ class _SignedInHeaderContent extends StatelessWidget {
             CircleAvatar(
               radius: 32,
               backgroundImage: hasPhoto ? NetworkImage(photoUrl) : null,
-              backgroundColor: FtTokens.accent.withValues(alpha: 0.22),
+              backgroundColor: Tokens.accent.withValues(alpha: 0.22),
               child: hasPhoto
                   ? null
                   : Icon(
                       Icons.person,
                       size: 28,
-                      color: FtTokens.onSurface,
+                      color: Tokens.onSurface,
                     ),
             ),
             const SizedBox(width: 14),
@@ -113,7 +113,7 @@ class _SignedInHeaderContent extends StatelessWidget {
                   Text(
                     primaryLine,
                     style: tt.titleMedium?.copyWith(
-                      color: FtTokens.onSurface,
+                      color: Tokens.onSurface,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -122,7 +122,7 @@ class _SignedInHeaderContent extends StatelessWidget {
                     Text(
                       user.email,
                       style: tt.bodySmall?.copyWith(
-                        color: FtTokens.onSurfaceMuted,
+                        color: Tokens.onSurfaceMuted,
                       ),
                     ),
                   ],
@@ -183,11 +183,11 @@ class _SignedOutHeaderContent extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const AppWordmark(height: 22),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: Tokens.spaceSm),
                   Text(
                     l10n.profileNotSignedIn,
                     style: tt.titleMedium?.copyWith(
-                      color: FtTokens.onSurface,
+                      color: Tokens.onSurface,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -196,11 +196,11 @@ class _SignedOutHeaderContent extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: Tokens.spaceMd),
         Text(
           l10n.profileSignInBenefit,
           style: tt.bodySmall?.copyWith(
-            color: FtTokens.onSurfaceMuted,
+            color: Tokens.onSurfaceMuted,
             height: 1.35,
           ),
         ),
@@ -241,10 +241,10 @@ class _HeaderBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: FtTokens.accent.withValues(alpha: 0.14),
+        color: Tokens.accent.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-          color: FtTokens.accent.withValues(alpha: 0.28),
+          color: Tokens.accent.withValues(alpha: 0.28),
         ),
       ),
       child: child,

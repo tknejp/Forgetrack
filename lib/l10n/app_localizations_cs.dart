@@ -1929,11 +1929,11 @@ class AppLocalizationsCs extends AppLocalizations {
       'Znamení vyryté do kůry — pozdrav prvních cestovatelů.';
 
   @override
-  String get cosmeticFrameRuinedBronzeName => 'Zvětralý bronz';
+  String get cosmeticFrameRuinedBronzeName => 'Ruined Bronze';
 
   @override
   String get cosmeticFrameRuinedBronzeDesc =>
-      'Patinou pokrytý rámeček, vytažený ze starých rozvalin.';
+      'A patina-coated frame pulled from ancient ruins.';
 
   @override
   String get cosmeticRelicOldGateKeyName => 'Klíč od staré brány';

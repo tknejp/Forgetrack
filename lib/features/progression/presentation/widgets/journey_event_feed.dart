@@ -3,9 +3,9 @@ import 'package:intl/intl.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
-import '../../../../shared/theme/ft_design_tokens.dart';
+import '../../../../shared/theme/design_tokens.dart';
 import '../../domain/journey_models.dart';
-import 'journey_shared.dart';
+import 'journey_primitives.dart';
 
 /// Feed of milestone events shown under the big map on `HeroJourneyMapScreen`.
 /// The adapter delivers events newest-first; the parent owns the selected
@@ -37,7 +37,7 @@ class JourneyEventFeed extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.03),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(Tokens.radiusTile),
               border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
             ),
             child: Column(
@@ -139,7 +139,7 @@ class JourneyFeedFilterPills extends StatelessWidget {
   Color _filterColor(JourneyFeedFilter f) {
     switch (f) {
       case JourneyFeedFilter.all:
-        return FtTokens.accent;
+        return Tokens.accent;
       case JourneyFeedFilter.levels:
         return journeyColor(JourneyEventType.titleMilestone);
       case JourneyFeedFilter.achievements:
@@ -175,7 +175,7 @@ class _Chip extends StatelessWidget {
           color: selected
               ? color.withValues(alpha: 0.18)
               : Colors.white.withValues(alpha: 0.04),
-          borderRadius: BorderRadius.circular(99),
+          borderRadius: BorderRadius.circular(Tokens.radiusProgress),
           border: Border.all(
             color: selected
                 ? color.withValues(alpha: 0.55)
@@ -185,9 +185,9 @@ class _Chip extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 11,
+            fontSize: Tokens.fontSizeCaption,
             fontWeight: FontWeight.w800,
-            color: selected ? color : FtTokens.onSurfaceMuted,
+            color: selected ? color : Tokens.onSurfaceMuted,
             letterSpacing: 0.4,
           ),
         ),
@@ -232,14 +232,14 @@ class _FeedRow extends StatelessWidget {
               borderRadius: BorderRadius.circular(9),
               border: Border.all(
                 color: isMajor
-                    ? FtTokens.accent.withValues(alpha: 0.55)
+                    ? Tokens.accent.withValues(alpha: 0.55)
                     : color.withValues(alpha: 0.30),
                 width: isMajor ? 1.4 : 1.0,
               ),
               boxShadow: isMajor
                   ? [
                       BoxShadow(
-                        color: FtTokens.accent.withValues(alpha: 0.30),
+                        color: Tokens.accent.withValues(alpha: 0.30),
                         blurRadius: 10,
                         spreadRadius: -2,
                       ),
@@ -295,7 +295,7 @@ class _FeedRow extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: Tokens.fontSizeCaption,
                       fontWeight: FontWeight.w600,
                       color: color.withValues(alpha: 0.78),
                     ),
@@ -308,16 +308,16 @@ class _FeedRow extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 11,
+                      fontSize: Tokens.fontSizeCaption,
                       height: 1.4,
-                      color: FtTokens.onSurfaceMuted,
+                      color: Tokens.onSurfaceMuted,
                     ),
                   ),
                 ],
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: Tokens.spaceSm),
           if (relTime != null && absDate != null)
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -325,7 +325,7 @@ class _FeedRow extends StatelessWidget {
                 Text(
                   relTime,
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: Tokens.fontSizeMicro,
                     fontWeight: FontWeight.w700,
                     color: color.withValues(alpha: 0.82),
                   ),
@@ -334,9 +334,9 @@ class _FeedRow extends StatelessWidget {
                 Text(
                   absDate,
                   style: const TextStyle(
-                    fontSize: 9,
+                    fontSize: Tokens.fontSizeTiny,
                     fontWeight: FontWeight.w600,
-                    color: FtTokens.onSurfaceFaint,
+                    color: Tokens.onSurfaceFaint,
                   ),
                 ),
               ],
@@ -399,15 +399,15 @@ class _EmptyHint extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(Tokens.radiusInner),
         border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Text(
         filterIsAll ? l10n.journeyEmptyFeedAll : l10n.journeyEmptyFeedFiltered,
         style: const TextStyle(
-          fontSize: 12,
+          fontSize: Tokens.fontSizeSmall,
           height: 1.4,
-          color: FtTokens.onSurfaceMuted,
+          color: Tokens.onSurfaceMuted,
         ),
       ),
     );

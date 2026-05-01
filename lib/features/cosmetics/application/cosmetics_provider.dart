@@ -122,6 +122,42 @@ class CosmeticsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<int> devToolsResetProgressionUnlocks() async {
+    final uid = _currentUid;
+    if (uid == null) {
+      _log.warn('devtools progression inventory reset skipped - no uid bound');
+      _errorMessage = 'no_user_bound';
+      notifyListeners();
+      return 0;
+    }
+
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final result = await _service.resetProgressionUnlocks(uid);
+      if (_currentUid != uid) return result.removedCount;
+      _state = result.state;
+      _log.info(
+        'devtools progression inventory reset OK',
+        payload: 'uid=$uid removed=${result.removedCount}',
+      );
+      return result.removedCount;
+    } catch (error, st) {
+      _errorMessage = error.toString();
+      _log.error(
+        'devtools progression inventory reset crashed',
+        payload: 'uid=$uid',
+        err: error,
+        stackTrace: st,
+      );
+      return 0;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> equip(String cosmeticId) async {
     final uid = _currentUid;
     if (uid == null) {

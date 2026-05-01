@@ -17,7 +17,7 @@ class SettingsCard extends StatelessWidget {
             Colors.white.withValues(alpha: 0.018),
           ],
         ),
-        borderRadius: BorderRadius.circular(FtTokens.radiusCard),
+        borderRadius: BorderRadius.circular(Tokens.radiusCard),
         border: Border.all(color: Colors.white.withValues(alpha: 0.075)),
         boxShadow: [
           BoxShadow(

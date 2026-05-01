@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../features/auth/application/auth_provider.dart';
-import '../../../shared/theme/ft_design_tokens.dart';
-import '../../../shared/widgets/ft/ft_drag_reveal_pager.dart';
+import '../../../shared/theme/design_tokens.dart';
+import '../../../shared/widgets/drag_reveal_pager.dart';
 import '../application/social_provider.dart';
 import 'tabs/social_activity_tab.dart';
 import 'tabs/social_feed_tab.dart';
@@ -12,8 +12,8 @@ import 'tabs/social_leaderboard_tab.dart';
 import 'widgets/social_status_banner.dart';
 import 'widgets/social_tab_bar.dart';
 
-class FtSocialScreen extends StatefulWidget {
-  const FtSocialScreen({
+class SocialScreen extends StatefulWidget {
+  const SocialScreen({
     super.key,
     required this.outerController,
     this.topContentInset = 0,
@@ -22,10 +22,10 @@ class FtSocialScreen extends StatefulWidget {
   final double topContentInset;
 
   @override
-  State<FtSocialScreen> createState() => _FtSocialScreenState();
+  State<SocialScreen> createState() => _FtSocialScreenState();
 }
 
-class _FtSocialScreenState extends State<FtSocialScreen>
+class _FtSocialScreenState extends State<SocialScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tab;
 
@@ -60,7 +60,7 @@ class _FtSocialScreenState extends State<FtSocialScreen>
         social.error != null;
 
     return Scaffold(
-      backgroundColor: FtTokens.bg,
+      backgroundColor: Tokens.bg,
       body: Padding(
         padding: EdgeInsets.only(top: widget.topContentInset),
         child: Column(
@@ -82,7 +82,7 @@ class _FtSocialScreenState extends State<FtSocialScreen>
               unreadNotifCount: social.unreadNotificationCount,
             ),
             Expanded(
-              child: FtEdgePageHandoff(
+              child: EdgePageHandoff(
                 controller: widget.outerController,
                 currentPage: 3,
                 targetPage: 2,

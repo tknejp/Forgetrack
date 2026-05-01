@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:forgetrack/features/progression/presentation/badges/progression_badge_specs.dart';
+import 'package:forgetrack/shared/presentation/achievement_badge_specs.dart';
 import 'package:provider/provider.dart';
-import '../../../../shared/theme/ft_design_tokens.dart';
+import '../../../../l10n/l10n.dart';
+import '../../../../shared/theme/design_tokens.dart';
 import '../../application/social_provider.dart';
 import '../../domain/social_models.dart';
-import '../social_helpers.dart';
+import '../social_profile_utils.dart';
 import 'social_cosmetic_avatar.dart';
 
 class SocialFeedCard extends StatelessWidget {
@@ -52,28 +53,24 @@ class SocialFeedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final social = context.watch<SocialProvider>();
+    final l10n = context.l10n;
     final myUid = social.currentUid;
     final myCurrentEmoji = share.reactions[myUid];
 
     final color =
         colorForDifficultyString(share.achievementSnapshot.difficulty);
     final emoji = achievementEmojiForId(share.achievementId);
-    final diffLabel = switch (share.achievementSnapshot.difficulty) {
-      'easy' => 'Snadný',
-      'medium' => 'Střední',
-      'hard' => 'Těžký',
-      'extraHard' => 'Extra těžký',
-      _ => '',
-    };
+    final diffLabel = socialDifficultyLabelForName(
+        share.achievementSnapshot.difficulty, l10n);
 
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: const Alignment(-1, -1),
           end: const Alignment(1, 1),
-          colors: [color.withValues(alpha: 0.10), FtTokens.surface],
+          colors: [color.withValues(alpha: 0.10), Tokens.surface],
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(Tokens.radiusButton),
         border: Border.all(color: color.withValues(alpha: 0.22)),
         boxShadow: [
           BoxShadow(
@@ -99,7 +96,7 @@ class SocialFeedCard extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.07),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(Tokens.radiusInner),
                 border: Border.all(color: color.withValues(alpha: 0.18)),
               ),
               child: Row(
@@ -123,7 +120,7 @@ class SocialFeedCard extends StatelessWidget {
                       child: Text(emoji, style: const TextStyle(fontSize: 24)),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: Tokens.spaceMd),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -131,21 +128,21 @@ class SocialFeedCard extends StatelessWidget {
                         Text(
                           share.achievementSnapshot.title,
                           style: const TextStyle(
-                            fontSize: 14,
+                            fontSize: Tokens.fontSizeBody,
                             fontWeight: FontWeight.w900,
                             color: Colors.white,
                             letterSpacing: -0.3,
                             height: 1.2,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: Tokens.spaceXs),
                         Text(
                           share.achievementSnapshot.description,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontSize: 11,
-                            color: FtTokens.onSurfaceMuted,
+                            fontSize: Tokens.fontSizeCaption,
+                            color: Tokens.onSurfaceMuted,
                             height: 1.35,
                           ),
                         ),
@@ -157,15 +154,15 @@ class SocialFeedCard extends StatelessWidget {
             ),
           ),
           if (share.message?.trim().isNotEmpty == true) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: Tokens.spaceSm),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Text(
                 '"${share.message!}"',
                 style: const TextStyle(
-                  fontSize: 12,
+                  fontSize: Tokens.fontSizeSmall,
                   fontStyle: FontStyle.italic,
-                  color: FtTokens.onSurface,
+                  color: Tokens.onSurface,
                   height: 1.35,
                 ),
               ),
@@ -183,13 +180,14 @@ class SocialFeedCard extends StatelessWidget {
                         const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                     decoration: BoxDecoration(
                       color: color.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(99),
+                      borderRadius:
+                          BorderRadius.circular(Tokens.radiusProgress),
                       border: Border.all(color: color.withValues(alpha: 0.28)),
                     ),
                     child: Text(
                       diffLabel,
                       style: TextStyle(
-                        fontSize: 9,
+                        fontSize: Tokens.fontSizeTiny,
                         fontWeight: FontWeight.w700,
                         color: color,
                         letterSpacing: 0.3,
@@ -277,11 +275,11 @@ class _ShareActorHeader extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const Text(
-                    'odemkl(a) achievement',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: FtTokens.onSurfaceMuted,
+                  Text(
+                    context.l10n.socialAchievementUnlockedAction,
+                    style: const TextStyle(
+                      fontSize: Tokens.fontSizeCaption,
+                      color: Tokens.onSurfaceMuted,
                       height: 1.2,
                     ),
                   ),
@@ -289,10 +287,10 @@ class _ShareActorHeader extends StatelessWidget {
               ),
             ),
             Text(
-              socialRelativeTime(share.createdAt),
+              socialRelativeTime(share.createdAt, context.l10n),
               style: const TextStyle(
-                fontSize: 10,
-                color: FtTokens.onSurfaceFaint,
+                fontSize: Tokens.fontSizeMicro,
+                color: Tokens.onSurfaceFaint,
               ),
             ),
           ],
@@ -334,7 +332,7 @@ class SocialReactionButton extends StatelessWidget {
           color: active
               ? color.withValues(alpha: 0.15)
               : Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(99),
+          borderRadius: BorderRadius.circular(Tokens.radiusProgress),
           border: Border.all(
             color: active
                 ? color.withValues(alpha: 0.35)
@@ -346,11 +344,11 @@ class SocialReactionButton extends StatelessWidget {
           children: [
             Text(emoji, style: const TextStyle(fontSize: 13)),
             if (count > 0) ...[
-              const SizedBox(width: 4),
+              const SizedBox(width: Tokens.spaceXs),
               Text(
                 '$count',
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: Tokens.fontSizeCaption,
                   fontWeight: FontWeight.w700,
                   color: color,
                 ),
@@ -383,9 +381,9 @@ class _ReactorsSheet extends StatelessWidget {
     final bottomPad = MediaQuery.of(context).padding.bottom;
     return Container(
       decoration: BoxDecoration(
-        color: FtTokens.surface,
+        color: Tokens.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        border: Border.all(color: FtTokens.cardBorder),
+        border: Border.all(color: Tokens.cardBorder),
       ),
       padding: EdgeInsets.fromLTRB(16, 12, 16, bottomPad + 16),
       child: Column(
@@ -395,26 +393,27 @@ class _ReactorsSheet extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: FtTokens.cardBorder,
-              borderRadius: BorderRadius.circular(99),
+              color: Tokens.cardBorder,
+              borderRadius: BorderRadius.circular(Tokens.radiusProgress),
             ),
           ),
           const SizedBox(height: 14),
           Row(
             children: [
-              Text(emoji, style: const TextStyle(fontSize: 20)),
-              const SizedBox(width: 8),
+              Text(emoji,
+                  style: const TextStyle(fontSize: Tokens.fontSizeTitle)),
+              const SizedBox(width: Tokens.spaceSm),
               Text(
-                'Reagovali (${reactors.length})',
+                context.l10n.socialReactorsTitle(reactors.length),
                 style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: Tokens.fontSizeBody,
                   fontWeight: FontWeight.w800,
-                  color: FtTokens.onSurface,
+                  color: Tokens.onSurface,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: Tokens.spaceMd),
           ...reactors.map((r) {
             final name = r.snapshot?.displayName ?? r.uid;
             return GestureDetector(
@@ -436,14 +435,14 @@ class _ReactorsSheet extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
-                          color: FtTokens.onSurface,
+                          color: Tokens.onSurface,
                         ),
                       ),
                     ),
                     Text(r.emoji, style: const TextStyle(fontSize: 16)),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: Tokens.spaceXs),
                     const Icon(Icons.chevron_right_rounded,
-                        size: 16, color: FtTokens.onSurfaceFaint),
+                        size: 16, color: Tokens.onSurfaceFaint),
                   ],
                 ),
               ),

@@ -3,10 +3,11 @@ import 'package:provider/provider.dart';
 
 import '../../../../features/auth/application/auth_provider.dart';
 import '../../../../features/progression/application/progression_provider.dart';
-import '../../../../shared/theme/ft_design_tokens.dart';
+import '../../../../l10n/l10n.dart';
+import '../../../../shared/theme/design_tokens.dart';
 import '../../application/social_provider.dart';
 import '../../domain/social_models.dart';
-import '../social_helpers.dart';
+import '../social_profile_utils.dart';
 import '../widgets/social_cosmetic_avatar.dart';
 import '../widgets/social_empty.dart';
 
@@ -67,6 +68,7 @@ class _SocialLeaderboardTabState extends State<SocialLeaderboardTab> {
     final auth = context.watch<AuthProvider>();
     final prog = context.watch<ProgressionProvider>();
     final entries = _buildEntries(auth, prog, social.friends);
+    final l10n = context.l10n;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 24),
@@ -75,7 +77,7 @@ class _SocialLeaderboardTabState extends State<SocialLeaderboardTab> {
           children: [
             Expanded(
               child: _ToggleBtn(
-                label: 'Tento týden',
+                label: l10n.socialLeaderboardThisWeek,
                 active: _weekly,
                 onTap: () => setState(() => _weekly = true),
               ),
@@ -83,7 +85,7 @@ class _SocialLeaderboardTabState extends State<SocialLeaderboardTab> {
             const SizedBox(width: 6),
             Expanded(
               child: _ToggleBtn(
-                label: 'Celkem',
+                label: l10n.socialLeaderboardAllTime,
                 active: !_weekly,
                 onTap: () => setState(() => _weekly = false),
               ),
@@ -96,38 +98,45 @@ class _SocialLeaderboardTabState extends State<SocialLeaderboardTab> {
             padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: FtTokens.cardBorder),
+              borderRadius: BorderRadius.circular(Tokens.radiusButton),
+              border: Border.all(color: Tokens.cardBorder),
             ),
-            child: const Column(
+            child: Column(
               children: [
-                Icon(Icons.calendar_today_outlined,
-                    size: 32, color: FtTokens.onSurfaceFaint),
-                SizedBox(height: 12),
-                Text('Brzy dostupné',
-                    style: TextStyle(
-                        fontSize: 14,
+                const Icon(Icons.calendar_today_outlined,
+                    size: 32, color: Tokens.onSurfaceFaint),
+                const SizedBox(height: Tokens.spaceMd),
+                Text(l10n.socialLeaderboardSoonTitle,
+                    style: const TextStyle(
+                        fontSize: Tokens.fontSizeBody,
                         fontWeight: FontWeight.w700,
-                        color: FtTokens.onSurfaceMuted)),
-                SizedBox(height: 4),
+                        color: Tokens.onSurfaceMuted)),
+                const SizedBox(height: Tokens.spaceXs),
                 Text(
-                  'Týdenní žebříček bude brzy dostupný.',
-                  style:
-                      TextStyle(fontSize: 12, color: FtTokens.onSurfaceFaint),
+                  l10n.socialLeaderboardSoonSubtitle,
+                  style: const TextStyle(
+                      fontSize: Tokens.fontSizeSmall,
+                      color: Tokens.onSurfaceFaint),
                   textAlign: TextAlign.center,
                 ),
               ],
             ),
           ),
         ] else if (entries.isEmpty) ...[
-          const SocialEmpty(
+          SocialEmpty(
             icon: Icons.leaderboard_outlined,
-            title: 'Žebříček je prázdný',
-            subtitle: 'Přidej přátele a porovnej své výsledky.',
+            title: l10n.socialLeaderboardEmptyTitle,
+            subtitle: l10n.socialLeaderboardEmptySubtitle,
           ),
         ] else ...[
           if (entries.length >= 2) ...[
-            _Podium(entries: entries.take(3).toList(), rankColors: _rankColors),
+            _Podium(
+              entries: entries.take(3).toList(),
+              rankColors: _rankColors,
+              topPlayersLabel: l10n.socialLeaderboardTopPlayers,
+              youLabel: l10n.socialYouBadge,
+              xpLabel: l10n.socialXpLabel,
+            ),
             const SizedBox(height: 10),
           ],
           ...entries.asMap().entries.map(
@@ -137,6 +146,9 @@ class _SocialLeaderboardTabState extends State<SocialLeaderboardTab> {
                     rank: e.key + 1,
                     entry: e.value,
                     rankColors: _rankColors,
+                    levelLabel: l10n.socialLevelLabel(e.value.level),
+                    youName: l10n.socialYouSuffix(e.value.name),
+                    xpLabel: l10n.socialXpLabel,
                   ),
                 ),
               ),
@@ -170,9 +182,18 @@ class _LbEntry {
 // ── Podium ────────────────────────────────────────────────────────────────────
 
 class _Podium extends StatelessWidget {
-  const _Podium({required this.entries, required this.rankColors});
+  const _Podium({
+    required this.entries,
+    required this.rankColors,
+    required this.topPlayersLabel,
+    required this.youLabel,
+    required this.xpLabel,
+  });
   final List<_LbEntry> entries;
   final List<Color> rankColors;
+  final String topPlayersLabel;
+  final String youLabel;
+  final String xpLabel;
 
   static const _emoji = ['🥇', '🥈', '🥉'];
   static const _sizes = [50.0, 40.0, 36.0];
@@ -192,21 +213,21 @@ class _Podium extends StatelessWidget {
             Colors.transparent,
           ],
         ),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(Tokens.radiusCard),
         border:
             Border.all(color: const Color(0xFFFBBF24).withValues(alpha: 0.22)),
       ),
       child: Column(
         children: [
-          const Text(
-            'TOP HRÁČI',
-            style: TextStyle(
-                fontSize: 11,
+          Text(
+            topPlayersLabel,
+            style: const TextStyle(
+                fontSize: Tokens.fontSizeCaption,
                 fontWeight: FontWeight.w700,
                 color: Color(0xFFFBBF24),
                 letterSpacing: 1.1),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: Tokens.spaceMd),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: order.map((idx) {
@@ -247,8 +268,8 @@ class _Podium extends StatelessWidget {
                           fontWeight:
                               isFirst ? FontWeight.w800 : FontWeight.w700,
                           color: isFirst
-                              ? FtTokens.onSurface
-                              : FtTokens.onSurfaceMuted,
+                              ? Tokens.onSurface
+                              : Tokens.onSurfaceMuted,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -257,9 +278,10 @@ class _Podium extends StatelessWidget {
                               fontSize: isFirst ? 13 : 11,
                               fontWeight: FontWeight.w800,
                               color: c)),
-                      const Text('XP',
-                          style: TextStyle(
-                              fontSize: 9, color: FtTokens.onSurfaceFaint)),
+                      Text(xpLabel,
+                          style: const TextStyle(
+                              fontSize: Tokens.fontSizeTiny,
+                              color: Tokens.onSurfaceFaint)),
                       if (e.isMe)
                         Padding(
                           padding: const EdgeInsets.only(top: 4),
@@ -269,14 +291,15 @@ class _Podium extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: const Color(0xFFFBBF24)
                                   .withValues(alpha: 0.18),
-                              borderRadius: BorderRadius.circular(99),
+                              borderRadius:
+                                  BorderRadius.circular(Tokens.radiusProgress),
                               border: Border.all(
                                   color: const Color(0xFFFBBF24)
                                       .withValues(alpha: 0.3)),
                             ),
-                            child: const Text('Ty!',
-                                style: TextStyle(
-                                    fontSize: 9,
+                            child: Text(youLabel,
+                                style: const TextStyle(
+                                    fontSize: Tokens.fontSizeTiny,
                                     fontWeight: FontWeight.w800,
                                     color: Color(0xFFFBBF24))),
                           ),
@@ -345,15 +368,23 @@ class _LeaderboardAvatar extends StatelessWidget {
 
 class _LbRow extends StatelessWidget {
   const _LbRow(
-      {required this.rank, required this.entry, required this.rankColors});
+      {required this.rank,
+      required this.entry,
+      required this.rankColors,
+      required this.levelLabel,
+      required this.youName,
+      required this.xpLabel});
   final int rank;
   final _LbEntry entry;
   final List<Color> rankColors;
+  final String levelLabel;
+  final String youName;
+  final String xpLabel;
 
   @override
   Widget build(BuildContext context) {
     final isTop = rank <= 3;
-    final rankColor = isTop ? rankColors[rank - 1] : FtTokens.onSurfaceMuted;
+    final rankColor = isTop ? rankColors[rank - 1] : Tokens.onSurfaceMuted;
 
     return GestureDetector(
       onTap: entry.uid != null
@@ -368,15 +399,15 @@ class _LbRow extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
         decoration: BoxDecoration(
           color: entry.isMe
-              ? FtTokens.accent.withValues(alpha: 0.12)
+              ? Tokens.accent.withValues(alpha: 0.12)
               : Colors.white.withValues(alpha: 0.04),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(Tokens.radiusInner),
           border: Border.all(
               color: entry.isMe
-                  ? FtTokens.accent.withValues(alpha: 0.3)
-                  : FtTokens.cardBorder),
+                  ? Tokens.accent.withValues(alpha: 0.3)
+                  : Tokens.cardBorder),
           boxShadow: entry.isMe
-              ? [const BoxShadow(color: FtTokens.accentGlow, blurRadius: 10)]
+              ? [const BoxShadow(color: Tokens.accentGlow, blurRadius: 10)]
               : null,
         ),
         child: Row(
@@ -392,12 +423,12 @@ class _LbRow extends StatelessWidget {
                 border: Border.all(
                     color: isTop
                         ? rankColor.withValues(alpha: 0.4)
-                        : FtTokens.cardBorder),
+                        : Tokens.cardBorder),
               ),
               child: Center(
                 child: Text('$rank',
                     style: TextStyle(
-                        fontSize: 12,
+                        fontSize: Tokens.fontSizeSmall,
                         fontWeight: FontWeight.w800,
                         color: rankColor)),
               ),
@@ -414,29 +445,29 @@ class _LbRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    entry.isMe ? '${entry.name} (ty)' : entry.name,
+                    entry.isMe ? youName : entry.name,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: entry.isMe
-                          ? FtTokens.onSurface
-                          : FtTokens.onSurfaceMuted,
+                      color:
+                          entry.isMe ? Tokens.onSurface : Tokens.onSurfaceMuted,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  Text('Level ${entry.level}',
+                  Text(levelLabel,
                       style: const TextStyle(
-                          fontSize: 10, color: FtTokens.onSurfaceFaint)),
+                          fontSize: Tokens.fontSizeMicro,
+                          color: Tokens.onSurfaceFaint)),
                 ],
               ),
             ),
             Text(
-              '${socialFmtXp(entry.totalXp)} XP',
+              '${socialFmtXp(entry.totalXp)} $xpLabel',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: Tokens.fontSizeBody,
                 fontWeight: FontWeight.w800,
-                color: entry.isMe ? FtTokens.accent : FtTokens.onSurfaceMuted,
+                color: entry.isMe ? Tokens.accent : Tokens.onSurfaceMuted,
               ),
             ),
           ],
@@ -462,19 +493,17 @@ class _ToggleBtn extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 9),
         decoration: BoxDecoration(
-          color:
-              active ? FtTokens.accent : Colors.white.withValues(alpha: 0.04),
-          borderRadius: BorderRadius.circular(10),
-          border:
-              Border.all(color: active ? FtTokens.accent : FtTokens.cardBorder),
+          color: active ? Tokens.accent : Colors.white.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(Tokens.radiusIcon),
+          border: Border.all(color: active ? Tokens.accent : Tokens.cardBorder),
         ),
         child: Center(
           child: Text(
             label,
             style: TextStyle(
-                fontSize: 12,
+                fontSize: Tokens.fontSizeSmall,
                 fontWeight: FontWeight.w700,
-                color: active ? Colors.white : FtTokens.onSurfaceMuted),
+                color: active ? Colors.white : Tokens.onSurfaceMuted),
           ),
         ),
       ),

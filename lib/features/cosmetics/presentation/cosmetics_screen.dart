@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../../l10n/app_localizations.dart';
-import '../../../shared/theme/ft_design_tokens.dart';
+import '../../../shared/theme/design_tokens.dart';
+import '../../../shared/widgets/ft_back_button.dart';
+import '../../../shared/widgets/screen_header.dart';
 import '../application/cosmetics_provider.dart';
 import '../domain/cosmetic_models.dart';
+import 'cosmetic_details_sheet.dart';
 import 'cosmetics_l10n.dart';
+import 'cosmetics_screen_internals.dart';
 
 class CosmeticsScreen extends StatefulWidget {
   const CosmeticsScreen({super.key, this.initialType});
@@ -30,10 +35,34 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
     final cosmetics = context.watch<CosmeticsProvider>();
     final l10n = CosmeticsL10n(AppLocalizations.of(context));
 
-    return Scaffold(
-      backgroundColor: FtTokens.bg,
-      appBar: const _CosmeticsAppBar(),
-      body: _buildBody(context, cosmetics, l10n),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Tokens.bg,
+      ),
+      child: Scaffold(
+        backgroundColor: Tokens.bg,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                14,
+                MediaQuery.of(context).padding.top + 12,
+                14,
+                0,
+              ),
+              child: ScreenHeader(
+                greeting: '',
+                title: 'Kosmetika',
+                leading: const FtBackButton(),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Expanded(child: _buildBody(context, cosmetics, l10n)),
+          ],
+        ),
+      ),
     );
   }
 
@@ -44,7 +73,7 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
   ) {
     if (cosmetics.isLoading && cosmetics.state == null) {
       return const Center(
-        child: CircularProgressIndicator(color: FtTokens.accent),
+        child: CircularProgressIndicator(color: Tokens.accent),
       );
     }
 
@@ -71,8 +100,8 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
 
     return RefreshIndicator(
       onRefresh: cosmetics.refresh,
-      color: FtTokens.accent,
-      backgroundColor: FtTokens.surface,
+      color: Tokens.accent,
+      backgroundColor: Tokens.surface,
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
@@ -151,44 +180,10 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
       useSafeArea: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _CosmeticDetailsSheet(
+      builder: (_) => CosmeticDetailsSheet(
         definition: definition,
         state: state,
         l10n: l10n,
-      ),
-    );
-  }
-}
-
-class _CosmeticsAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const _CosmeticsAppBar();
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
-
-  @override
-  Widget build(BuildContext context) {
-    return AppBar(
-      backgroundColor: FtTokens.bg,
-      surfaceTintColor: Colors.transparent,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      leading: IconButton(
-        icon: const Icon(
-          Icons.arrow_back_rounded,
-          color: FtTokens.onSurface,
-        ),
-        onPressed: () => Navigator.of(context).maybePop(),
-      ),
-      titleSpacing: 0,
-      title: const Text(
-        'Kosmetika',
-        style: TextStyle(
-          color: FtTokens.onSurface,
-          fontSize: 18,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0,
-        ),
       ),
     );
   }
@@ -282,10 +277,10 @@ class _FilterBar extends StatelessWidget {
                   onTap: () => onSelect(null),
                 ),
                 for (final type in types) ...[
-                  const SizedBox(width: 8),
+                  const SizedBox(width: Tokens.spaceSm),
                   _FilterChipButton(
-                    label: _typeLabel(type),
-                    icon: _iconForType(type),
+                    label: cosmeticTypeLabel(type),
+                    icon: cosmeticIconForType(type),
                     isSelected: selectedType == type,
                     onTap: () => onSelect(type),
                   ),
@@ -314,21 +309,21 @@ class _FilterChipButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isSelected ? FtTokens.accent : FtTokens.onSurfaceMuted;
+    final color = isSelected ? Tokens.accent : Tokens.onSurfaceMuted;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(99),
+      borderRadius: BorderRadius.circular(Tokens.radiusProgress),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 140),
         padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
         decoration: BoxDecoration(
           color: isSelected
-              ? FtTokens.accent.withValues(alpha: 0.14)
+              ? Tokens.accent.withValues(alpha: 0.14)
               : Colors.white.withValues(alpha: 0.03),
-          borderRadius: BorderRadius.circular(99),
+          borderRadius: BorderRadius.circular(Tokens.radiusProgress),
           border: Border.all(
             color: isSelected
-                ? FtTokens.accent.withValues(alpha: 0.44)
+                ? Tokens.accent.withValues(alpha: 0.44)
                 : Colors.white.withValues(alpha: 0.06),
           ),
         ),
@@ -341,7 +336,7 @@ class _FilterChipButton extends StatelessWidget {
               label,
               style: TextStyle(
                 color: color,
-                fontSize: 11,
+                fontSize: Tokens.fontSizeCaption,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 0,
               ),
@@ -368,7 +363,7 @@ class _CosmeticCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = _rarityColor(definition.rarity);
+    final color = cosmeticRarityColor(definition.rarity);
     final assetPath = context
         .read<CosmeticsProvider>()
         .service
@@ -388,7 +383,7 @@ class _CosmeticCard extends StatelessWidget {
               color.withValues(alpha: 0.03),
             ],
           ),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(Tokens.radiusInner),
           border: Border.all(color: color.withValues(alpha: 0.27)),
           boxShadow: [
             BoxShadow(
@@ -406,13 +401,13 @@ class _CosmeticCard extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _CosmeticBadge(
+                    CosmeticBadge(
                       definition: definition,
                       assetPath: assetPath,
                       color: color,
                       size: _cardBadgeSize(definition.type),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: Tokens.spaceSm),
                     Text(
                       l10n.name(definition),
                       maxLines: 2,
@@ -420,7 +415,7 @@ class _CosmeticCard extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: color,
-                        fontSize: FtTokens.fontSizeTiny,
+                        fontSize: Tokens.fontSizeTiny,
                         fontWeight: FontWeight.w800,
                         height: 1.15,
                         letterSpacing: 0,
@@ -447,318 +442,6 @@ class _CosmeticCard extends StatelessWidget {
   }
 }
 
-class _CosmeticBadge extends StatelessWidget {
-  const _CosmeticBadge({
-    required this.definition,
-    required this.assetPath,
-    required this.color,
-    this.size = 42,
-  });
-
-  final CosmeticDefinition definition;
-  final String? assetPath;
-  final Color color;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    final isFrame = definition.type == CosmeticType.frame;
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: isFrame ? 0.10 : 0.18),
-        borderRadius: BorderRadius.circular(size * 0.28),
-        border: Border.all(
-          color: color.withValues(alpha: isFrame ? 0.52 : 0.32),
-          width: isFrame ? 1.8 : 1,
-        ),
-      ),
-      clipBehavior: isFrame ? Clip.none : Clip.antiAlias,
-      child: assetPath == null
-          ? _BadgeFallback(type: definition.type, color: color, size: size)
-          : Image.asset(
-              assetPath!,
-              fit: isFrame ? BoxFit.contain : BoxFit.cover,
-              errorBuilder: (_, __, ___) => _BadgeFallback(
-                type: definition.type,
-                color: color,
-                size: size,
-              ),
-            ),
-    );
-  }
-}
-
-class _BadgeFallback extends StatelessWidget {
-  const _BadgeFallback({
-    required this.type,
-    required this.color,
-    required this.size,
-  });
-
-  final CosmeticType type;
-  final Color color;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            color.withValues(alpha: 0.28),
-            color.withValues(alpha: 0.08),
-          ],
-        ),
-      ),
-      child: Center(
-        child: Icon(
-          _iconForType(type),
-          color: Colors.white.withValues(alpha: 0.9),
-          size: size * 0.52,
-        ),
-      ),
-    );
-  }
-}
-
-class _CosmeticDetailsSheet extends StatefulWidget {
-  const _CosmeticDetailsSheet({
-    required this.definition,
-    required this.state,
-    required this.l10n,
-  });
-
-  final CosmeticDefinition definition;
-  final UserCosmeticsState state;
-  final CosmeticsL10n l10n;
-
-  @override
-  State<_CosmeticDetailsSheet> createState() => _CosmeticDetailsSheetState();
-}
-
-class _CosmeticDetailsSheetState extends State<_CosmeticDetailsSheet> {
-  bool _busy = false;
-
-  Future<void> _toggleEquipped() async {
-    if (_busy) return;
-    setState(() => _busy = true);
-    final provider = context.read<CosmeticsProvider>();
-    final definition = widget.definition;
-    final isEquipped =
-        widget.state.equipped.slotId(definition.type) == definition.id;
-
-    if (isEquipped) {
-      await provider.unequip(definition.type);
-    } else {
-      await provider.equip(definition.id);
-    }
-
-    if (!mounted) return;
-    Navigator.of(context).pop();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final definition = widget.definition;
-    final l10n = widget.l10n;
-    final color = _rarityColor(definition.rarity);
-    final isEquipped =
-        widget.state.equipped.slotId(definition.type) == definition.id;
-    final assetPath = context
-        .read<CosmeticsProvider>()
-        .service
-        .config
-        .resolveAssetPath(definition.previewAssetKey ?? definition.assetKey);
-    final description = l10n.description(definition);
-    final unlock = widget.state.unlocked[definition.id];
-    final bottomPad = MediaQuery.of(context).padding.bottom;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: FtTokens.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-      ),
-      padding: EdgeInsets.fromLTRB(18, 12, 18, bottomPad + 18),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 44,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.16),
-                borderRadius: BorderRadius.circular(99),
-              ),
-            ),
-          ),
-          const SizedBox(height: 18),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _CosmeticBadge(
-                definition: definition,
-                assetPath: assetPath,
-                color: color,
-                size: 94,
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.name(definition),
-                      style: const TextStyle(
-                        color: FtTokens.onSurface,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0,
-                      ),
-                    ),
-                    const SizedBox(height: 7),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: [
-                        _TinyPill(
-                            label: _typeLabel(definition.type), color: color),
-                        _TinyPill(
-                          label: _rarityLabel(definition.rarity),
-                          color: color,
-                        ),
-                        if (isEquipped)
-                          _TinyPill(label: l10n.equippedBadge, color: color),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          if (description.isNotEmpty) ...[
-            const SizedBox(height: 18),
-            Text(
-              description,
-              style: const TextStyle(
-                color: FtTokens.onSurfaceMuted,
-                fontSize: 13,
-                height: 1.45,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-          if (unlock != null) ...[
-            const SizedBox(height: 14),
-            Text(
-              'Odemčeno ${MaterialLocalizations.of(context).formatMediumDate(unlock.unlockedAt)}',
-              style: TextStyle(
-                color: color.withValues(alpha: 0.78),
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0,
-              ),
-            ),
-          ],
-          const SizedBox(height: 18),
-          _ActionButton(
-            label: isEquipped ? 'Odebrat z výbavy' : 'Vybavit',
-            icon: isEquipped
-                ? Icons.remove_circle_outline_rounded
-                : Icons.check_circle_rounded,
-            color: color,
-            busy: _busy,
-            onTap: _toggleEquipped,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ActionButton extends StatelessWidget {
-  const _ActionButton({
-    required this.label,
-    required this.icon,
-    required this.color,
-    required this.busy,
-    required this.onTap,
-  });
-
-  final String label;
-  final IconData icon;
-  final Color color;
-  final bool busy;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: busy ? null : onTap,
-        icon: busy
-            ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : Icon(icon, size: 18),
-        label: Text(label),
-        style: ElevatedButton.styleFrom(
-          elevation: 0,
-          backgroundColor: color,
-          foregroundColor: const Color(0xFF0D0F1C),
-          disabledBackgroundColor: color.withValues(alpha: 0.34),
-          disabledForegroundColor: FtTokens.onSurfaceMuted,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          textStyle: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 0,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _TinyPill extends StatelessWidget {
-  const _TinyPill({required this.label, required this.color});
-
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(99),
-        border: Border.all(color: color.withValues(alpha: 0.22)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: color,
-          fontSize: FtTokens.fontSizeMicro,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0,
-        ),
-      ),
-    );
-  }
-}
 
 class _SectionHead extends StatelessWidget {
   const _SectionHead({required this.label, this.caption});
@@ -772,8 +455,8 @@ class _SectionHead extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Icon(Icons.auto_awesome_rounded,
-            size: 14, color: FtTokens.accent),
-        const SizedBox(width: 8),
+            size: 14, color: Tokens.accent),
+        const SizedBox(width: Tokens.spaceSm),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -781,8 +464,8 @@ class _SectionHead extends StatelessWidget {
               Text(
                 label.toUpperCase(),
                 style: const TextStyle(
-                  color: FtTokens.accent,
-                  fontSize: 11,
+                  color: Tokens.accent,
+                  fontSize: Tokens.fontSizeCaption,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1.1,
                 ),
@@ -792,8 +475,8 @@ class _SectionHead extends StatelessWidget {
                 Text(
                   caption!,
                   style: const TextStyle(
-                    color: FtTokens.onSurfaceFaint,
-                    fontSize: FtTokens.fontSizeCaption,
+                    color: Tokens.onSurfaceFaint,
+                    fontSize: Tokens.fontSizeCaption,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -834,7 +517,7 @@ class _EmptyLine extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(Tokens.radiusInner),
         border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Column(
@@ -843,8 +526,8 @@ class _EmptyLine extends StatelessWidget {
           Text(
             title,
             style: const TextStyle(
-              color: FtTokens.onSurface,
-              fontSize: 12,
+              color: Tokens.onSurface,
+              fontSize: Tokens.fontSizeSmall,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -852,8 +535,8 @@ class _EmptyLine extends StatelessWidget {
           Text(
             caption,
             style: const TextStyle(
-              color: FtTokens.onSurfaceMuted,
-              fontSize: 11,
+              color: Tokens.onSurfaceMuted,
+              fontSize: Tokens.fontSizeCaption,
               height: 1.4,
               fontWeight: FontWeight.w500,
             ),
@@ -892,70 +575,6 @@ double _cardBadgeSize(CosmeticType type) {
     case CosmeticType.titleFlair:
     case CosmeticType.mapEffect:
       return 48;
-  }
-}
-
-IconData _iconForType(CosmeticType type) {
-  switch (type) {
-    case CosmeticType.frame:
-      return Icons.crop_square_rounded;
-    case CosmeticType.relic:
-      return Icons.auto_awesome_rounded;
-    case CosmeticType.background:
-      return Icons.landscape_rounded;
-    case CosmeticType.emblem:
-      return Icons.shield_rounded;
-    case CosmeticType.companion:
-      return Icons.pets_rounded;
-    case CosmeticType.titleFlair:
-      return Icons.title_rounded;
-    case CosmeticType.mapEffect:
-      return Icons.map_rounded;
-  }
-}
-
-String _typeLabel(CosmeticType type) {
-  switch (type) {
-    case CosmeticType.frame:
-      return 'Rámeček';
-    case CosmeticType.relic:
-      return 'Relikvie';
-    case CosmeticType.background:
-      return 'Pozadí';
-    case CosmeticType.emblem:
-      return 'Znak';
-    case CosmeticType.companion:
-      return 'Společník';
-    case CosmeticType.titleFlair:
-      return 'Titul';
-    case CosmeticType.mapEffect:
-      return 'Efekt mapy';
-  }
-}
-
-String _rarityLabel(CosmeticRarity rarity) {
-  switch (rarity) {
-    case CosmeticRarity.common:
-      return 'Běžné';
-    case CosmeticRarity.rare:
-      return 'Vzácné';
-    case CosmeticRarity.epic:
-      return 'Epické';
-    case CosmeticRarity.legendary:
-      return 'Legendární';
-  }
-}
-
-Color _rarityColor(CosmeticRarity rarity) {
-  switch (rarity) {
-    case CosmeticRarity.common:
-      return const Color(0xFF34D399);
-    case CosmeticRarity.rare:
-      return const Color(0xFF60A5FA);
-    case CosmeticRarity.epic:
-      return const Color(0xFFA78BFA);
-    case CosmeticRarity.legendary:
-      return const Color(0xFFFBBF24);
   }
 }
 

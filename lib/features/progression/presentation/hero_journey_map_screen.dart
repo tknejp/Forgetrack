@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../../l10n/l10n.dart';
-import '../../../shared/theme/ft_design_tokens.dart';
+import '../../../shared/theme/design_tokens.dart';
+import '../../../shared/widgets/ft_back_button.dart';
+import '../../../shared/widgets/screen_header.dart';
 import '../application/progression_provider.dart';
 import '../domain/journey_models.dart';
 import 'progression_l10n.dart';
@@ -55,62 +58,68 @@ class _HeroJourneyMapScreenState extends State<HeroJourneyMapScreen> {
     final collapseScrollReserve =
         filteredFeedCount < 6 ? mapMaxHeight - mapMinHeight : 0.0;
 
-    return Scaffold(
-      backgroundColor: FtTokens.bg,
-      appBar: AppBar(
-        backgroundColor: FtTokens.bg,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        leading: const BackButton(color: FtTokens.onSurface),
-        title: Text(
-          l10n.journeyTitle,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-            color: FtTokens.onSurface,
-            letterSpacing: -0.2,
-          ),
-        ),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Tokens.bg,
       ),
-      body: SafeArea(
-        top: false,
-        child: RefreshIndicator(
-          onRefresh: progression.refresh,
-          color: FtTokens.accent,
-          backgroundColor: FtTokens.surface,
-          child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            slivers: [
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _MapHeaderDelegate(
-                  checkpoints: checkpoints,
-                  feed: feed,
-                  selectedIndex: _selectedIndex,
-                  selectedFeedFilter: _selectedFeedFilter,
-                  onSelected: (i) => setState(() => _selectedIndex = i),
-                  onFeedFilterSelected: (filter) {
-                    setState(() => _selectedFeedFilter = filter);
-                  },
-                  maxHeight: mapMaxHeight,
-                  minHeight: mapMinHeight,
+      child: Scaffold(
+        backgroundColor: Tokens.bg,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 8, 14, 4),
+                child: ScreenHeader(
+                  greeting: '',
+                  title: l10n.journeyTitle,
+                  leading: const FtBackButton(),
                 ),
               ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(14, 6, 14, 24),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    JourneyEventFeed(
-                      events: feed,
-                      selectedFilter: _selectedFeedFilter,
+            ),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: progression.refresh,
+                color: Tokens.accent,
+                backgroundColor: Tokens.surface,
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverPersistentHeader(
+                      pinned: true,
+                      delegate: _MapHeaderDelegate(
+                        checkpoints: checkpoints,
+                        feed: feed,
+                        selectedIndex: _selectedIndex,
+                        selectedFeedFilter: _selectedFeedFilter,
+                        onSelected: (i) => setState(() => _selectedIndex = i),
+                        onFeedFilterSelected: (filter) {
+                          setState(() => _selectedFeedFilter = filter);
+                        },
+                        maxHeight: mapMaxHeight,
+                        minHeight: mapMinHeight,
+                      ),
                     ),
-                    if (collapseScrollReserve > 0)
-                      SizedBox(height: collapseScrollReserve),
-                  ]),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(14, 6, 14, 24),
+                      sliver: SliverList(
+                        delegate: SliverChildListDelegate([
+                          JourneyEventFeed(
+                            events: feed,
+                            selectedFilter: _selectedFeedFilter,
+                          ),
+                          if (collapseScrollReserve > 0)
+                            SizedBox(height: collapseScrollReserve),
+                        ]),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -160,7 +169,7 @@ class _MapHeaderDelegate extends SliverPersistentHeaderDelegate {
         (maxHeight - shrinkOffset).clamp(minHeight, maxHeight);
 
     return Container(
-      color: FtTokens.bg,
+      color: Tokens.bg,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -188,7 +197,7 @@ class _MapHeaderDelegate extends SliverPersistentHeaderDelegate {
             padding: const EdgeInsets.symmetric(horizontal: 14),
             child: _SectionLabel(label: context.l10n.journeyHistoryHeader),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: Tokens.spaceSm),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14),
             child: JourneyFeedFilterPills(
@@ -239,7 +248,7 @@ class _DragHandle extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.16),
-          borderRadius: BorderRadius.circular(99),
+          borderRadius: BorderRadius.circular(Tokens.radiusProgress),
         ),
       ),
     );
@@ -254,14 +263,14 @@ class _SectionLabel extends StatelessWidget {
     return Row(
       children: [
         const Icon(Icons.auto_awesome_rounded,
-            size: 14, color: FtTokens.accent),
-        const SizedBox(width: 8),
+            size: 14, color: Tokens.accent),
+        const SizedBox(width: Tokens.spaceSm),
         Text(
           label.toUpperCase(),
           style: const TextStyle(
-            fontSize: 11,
+            fontSize: Tokens.fontSizeCaption,
             fontWeight: FontWeight.w800,
-            color: FtTokens.accent,
+            color: Tokens.accent,
             letterSpacing: 1.1,
           ),
         ),
@@ -280,13 +289,13 @@ class _EmptyJourney extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(Tokens.radiusCard),
         border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.explore_outlined, color: FtTokens.accent, size: 28),
+          const Icon(Icons.explore_outlined, color: Tokens.accent, size: 28),
           const SizedBox(height: 10),
           Text(
             l10n.journeyEmptyMapTitle,
@@ -296,11 +305,11 @@ class _EmptyJourney extends StatelessWidget {
               color: Colors.white,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: Tokens.spaceXs),
           Text(
             l10n.journeyEmptyMapBody,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: Tokens.fontSizeSmall,
               height: 1.45,
               color: Colors.white.withValues(alpha: 0.6),
             ),

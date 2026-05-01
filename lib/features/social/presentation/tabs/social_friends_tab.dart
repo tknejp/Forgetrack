@@ -3,10 +3,10 @@ import 'package:provider/provider.dart';
 
 import '../../../../features/progression/presentation/progression_l10n.dart';
 import '../../../../l10n/l10n.dart';
-import '../../../../shared/theme/ft_design_tokens.dart';
+import '../../../../shared/theme/design_tokens.dart';
 import '../../application/social_provider.dart';
 import '../../domain/social_models.dart';
-import '../social_helpers.dart';
+import '../social_profile_utils.dart';
 import '../widgets/social_cosmetic_avatar.dart';
 import '../widgets/social_chip.dart';
 import '../widgets/social_empty.dart';
@@ -46,6 +46,7 @@ class _SocialFriendsTabState extends State<SocialFriendsTab> {
   @override
   Widget build(BuildContext context) {
     final social = context.watch<SocialProvider>();
+    final l10n = context.l10n;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 24),
@@ -63,8 +64,8 @@ class _SocialFriendsTabState extends State<SocialFriendsTab> {
               if (!mounted) return;
               messenger.showSnackBar(SnackBar(
                 content: Text(sp.error == null
-                    ? 'Žádost přijata.'
-                    : 'Chyba: ${sp.error}'),
+                    ? l10n.socialFriendRequestAccepted
+                    : l10n.socialErrorWithMessage(sp.error!)),
               ));
             },
             onDecline: (id) async {
@@ -74,8 +75,8 @@ class _SocialFriendsTabState extends State<SocialFriendsTab> {
               if (!mounted) return;
               messenger.showSnackBar(SnackBar(
                 content: Text(sp.error == null
-                    ? 'Žádost odmítnuta.'
-                    : 'Chyba: ${sp.error}'),
+                    ? l10n.socialFriendRequestDeclined
+                    : l10n.socialErrorWithMessage(sp.error!)),
               ));
             },
           ),
@@ -103,8 +104,8 @@ class _SocialFriendsTabState extends State<SocialFriendsTab> {
             sp.clearSearchResults();
             messenger.showSnackBar(SnackBar(
               content: Text(sp.error == null
-                  ? 'Žádost o přátelství odeslána.'
-                  : 'Chyba: ${sp.error}'),
+                  ? l10n.socialFriendRequestSent
+                  : l10n.socialErrorWithMessage(sp.error!)),
             ));
           },
           onOpenProfile: (p) => openUserProfile(
@@ -116,10 +117,10 @@ class _SocialFriendsTabState extends State<SocialFriendsTab> {
         ),
         const SizedBox(height: 14),
         if (social.friends.isEmpty)
-          const SocialEmpty(
+          SocialEmpty(
             icon: Icons.group_outlined,
-            title: 'Žádní přátelé',
-            subtitle: 'Přidej přátele vyhledáním jejich přezdívky.',
+            title: l10n.socialFriendsEmptyTitle,
+            subtitle: l10n.socialFriendsEmptySubtitle,
           )
         else ...[
           Padding(
@@ -127,14 +128,14 @@ class _SocialFriendsTabState extends State<SocialFriendsTab> {
             child: Row(
               children: [
                 const Icon(Icons.auto_awesome_rounded,
-                    size: 14, color: FtTokens.accent),
-                const SizedBox(width: 8),
+                    size: 14, color: Tokens.accent),
+                const SizedBox(width: Tokens.spaceSm),
                 Text(
-                  'PŘÁTELÉ  •  ${social.friends.length}',
+                  l10n.socialFriendsSectionCount(social.friends.length),
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: Tokens.fontSizeCaption,
                     fontWeight: FontWeight.w800,
-                    color: FtTokens.accent,
+                    color: Tokens.accent,
                     letterSpacing: 1.1,
                   ),
                 ),
@@ -180,10 +181,10 @@ class _FriendCard extends StatelessWidget {
           gradient: LinearGradient(
             begin: const Alignment(-1, -1),
             end: const Alignment(1, 1),
-            colors: [FtTokens.accent.withValues(alpha: 0.1), FtTokens.surface],
+            colors: [Tokens.accent.withValues(alpha: 0.1), Tokens.surface],
           ),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: FtTokens.accent.withValues(alpha: 0.2)),
+          borderRadius: BorderRadius.circular(Tokens.radiusTile),
+          border: Border.all(color: Tokens.accent.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [
@@ -204,9 +205,9 @@ class _FriendCard extends StatelessWidget {
                     style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: FtTokens.onSurface),
+                        color: Tokens.onSurface),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: Tokens.spaceXs),
                   Row(
                     children: [
                       SocialLvBadge(level: friend.stats.level, size: 18),
@@ -237,18 +238,18 @@ class _FriendCard extends StatelessWidget {
                   style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
-                      color: FtTokens.onSurface),
+                      color: Tokens.onSurface),
                 ),
-                const Text('XP',
-                    style: TextStyle(
-                        fontSize: 9,
-                        color: FtTokens.onSurfaceFaint,
+                Text(context.l10n.socialXpLabel,
+                    style: const TextStyle(
+                        fontSize: Tokens.fontSizeTiny,
+                        color: Tokens.onSurfaceFaint,
                         fontWeight: FontWeight.w600)),
               ],
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: Tokens.spaceXs),
             const Icon(Icons.chevron_right_rounded,
-                size: 16, color: FtTokens.onSurfaceFaint),
+                size: 16, color: Tokens.onSurfaceFaint),
           ],
         ),
       ),
@@ -286,7 +287,7 @@ class _RequestsSection extends StatelessWidget {
           end: Alignment(1, 1),
           colors: [Color(0x1AEF4444), Colors.transparent],
         ),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(Tokens.radiusTile),
         border: Border.all(color: _red.withValues(alpha: 0.3)),
       ),
       clipBehavior: Clip.antiAlias,
@@ -300,11 +301,13 @@ class _RequestsSection extends StatelessWidget {
               child: Row(
                 children: [
                   const Icon(Icons.person_add_rounded, size: 14, color: _red),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Žádosti o přátelství',
-                    style: TextStyle(
-                        fontSize: 12, fontWeight: FontWeight.w700, color: _red),
+                  const SizedBox(width: Tokens.spaceSm),
+                  Text(
+                    context.l10n.socialFriendRequestsTitle,
+                    style: const TextStyle(
+                        fontSize: Tokens.fontSizeSmall,
+                        fontWeight: FontWeight.w700,
+                        color: _red),
                   ),
                   const SizedBox(width: 6),
                   Container(
@@ -313,13 +316,14 @@ class _RequestsSection extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     decoration: BoxDecoration(
                       color: _red,
-                      borderRadius: BorderRadius.circular(99),
+                      borderRadius:
+                          BorderRadius.circular(Tokens.radiusProgress),
                     ),
                     child: Center(
                       child: Text(
                         '${requests.length}',
                         style: const TextStyle(
-                            fontSize: 9,
+                            fontSize: Tokens.fontSizeTiny,
                             fontWeight: FontWeight.w800,
                             color: Colors.white),
                       ),
@@ -330,7 +334,7 @@ class _RequestsSection extends StatelessWidget {
                     duration: const Duration(milliseconds: 200),
                     turns: expanded ? 0.5 : 0,
                     child: const Icon(Icons.keyboard_arrow_down_rounded,
-                        size: 18, color: FtTokens.onSurfaceMuted),
+                        size: 18, color: Tokens.onSurfaceMuted),
                   ),
                 ],
               ),
@@ -370,29 +374,29 @@ class _RequestsSection extends StatelessWidget {
                                     style: const TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w700,
-                                        color: FtTokens.onSurface),
+                                        color: Tokens.onSurface),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   Text(
                                     p?.handle.isNotEmpty == true
                                         ? '@${p!.handle}'
-                                        : 'Chce se stát tvým přítelem',
+                                        : context.l10n.socialWantsToBeFriend,
                                     style: const TextStyle(
-                                        fontSize: 11,
-                                        color: FtTokens.onSurfaceFaint),
+                                        fontSize: Tokens.fontSizeCaption,
+                                        color: Tokens.onSurfaceFaint),
                                   ),
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: Tokens.spaceSm),
                             SocialChip(
-                                label: 'Přijmout',
+                                label: context.l10n.socialAccept,
                                 color: const Color(0xFF10B981),
                                 onTap: () => onAccept(req.id)),
                             const SizedBox(width: 6),
                             SocialChip(
-                                label: 'Odmítnout',
+                                label: context.l10n.socialDecline,
                                 color: _red,
                                 onTap: () => onDecline(req.id)),
                           ],
@@ -420,15 +424,15 @@ class _OutgoingRequestsSection extends StatelessWidget {
   final List<SocialFriendRequest> requests;
   final Future<SocialUserProfile?> Function(String uid) getProfile;
 
-  static const _accent = FtTokens.accent;
+  static const _accent = Tokens.accent;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: FtTokens.cardBorder),
+        borderRadius: BorderRadius.circular(Tokens.radiusTile),
+        border: Border.all(color: Tokens.cardBorder),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -438,11 +442,11 @@ class _OutgoingRequestsSection extends StatelessWidget {
             child: Row(
               children: [
                 const Icon(Icons.send_rounded, size: 14, color: _accent),
-                const SizedBox(width: 8),
+                const SizedBox(width: Tokens.spaceSm),
                 Text(
-                  'Odeslané žádosti • ${requests.length}',
+                  context.l10n.socialOutgoingRequestsCount(requests.length),
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: Tokens.fontSizeSmall,
                     fontWeight: FontWeight.w700,
                     color: _accent,
                   ),
@@ -451,7 +455,7 @@ class _OutgoingRequestsSection extends StatelessWidget {
             ),
           ),
           for (int i = 0; i < requests.length; i++) ...[
-            if (i > 0) Container(height: 1, color: FtTokens.divider),
+            if (i > 0) Container(height: 1, color: Tokens.divider),
             Padding(
               padding: const EdgeInsets.fromLTRB(13, 10, 13, 10),
               child: FutureBuilder<SocialUserProfile?>(
@@ -480,7 +484,7 @@ class _OutgoingRequestsSection extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
-                                color: FtTokens.onSurface,
+                                color: Tokens.onSurface,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -488,10 +492,10 @@ class _OutgoingRequestsSection extends StatelessWidget {
                             Text(
                               profile?.handle.isNotEmpty == true
                                   ? '@${profile!.handle}'
-                                  : 'Čeká na potvrzení',
+                                  : context.l10n.socialAwaitingConfirmation,
                               style: const TextStyle(
-                                fontSize: 11,
-                                color: FtTokens.onSurfaceFaint,
+                                fontSize: Tokens.fontSizeCaption,
+                                color: Tokens.onSurfaceFaint,
                               ),
                             ),
                           ],
@@ -506,10 +510,10 @@ class _OutgoingRequestsSection extends StatelessWidget {
                           border: Border.all(
                               color: _accent.withValues(alpha: 0.24)),
                         ),
-                        child: const Text(
-                          'Pending',
-                          style: TextStyle(
-                              fontSize: 12,
+                        child: Text(
+                          context.l10n.socialPending,
+                          style: const TextStyle(
+                              fontSize: Tokens.fontSizeSmall,
                               fontWeight: FontWeight.w700,
                               color: _accent),
                         ),
@@ -553,32 +557,31 @@ class _SearchBar extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.04),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: FtTokens.cardBorder),
+            borderRadius: BorderRadius.circular(Tokens.radiusInner),
+            border: Border.all(color: Tokens.cardBorder),
           ),
           child: Row(
             children: [
               const Icon(Icons.search_rounded,
-                  size: 15, color: FtTokens.onSurfaceFaint),
-              const SizedBox(width: 8),
+                  size: 15, color: Tokens.onSurfaceFaint),
+              const SizedBox(width: Tokens.spaceSm),
               Expanded(
                 child: TextField(
                   controller: controller,
                   textInputAction: TextInputAction.search,
                   onSubmitted: (_) => onSearch(),
-                  style:
-                      const TextStyle(fontSize: 13, color: FtTokens.onSurface),
-                  decoration: const InputDecoration(
-                    hintText: 'Hledat podle přezdívky…',
-                    hintStyle:
-                        TextStyle(fontSize: 13, color: FtTokens.onSurfaceFaint),
+                  style: const TextStyle(fontSize: 13, color: Tokens.onSurface),
+                  decoration: InputDecoration(
+                    hintText: context.l10n.socialSearchHint,
+                    hintStyle: const TextStyle(
+                        fontSize: 13, color: Tokens.onSurfaceFaint),
                     border: InputBorder.none,
                     isDense: true,
                     contentPadding: EdgeInsets.zero,
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: Tokens.spaceSm),
               GestureDetector(
                 onTap: isSearching ? null : onSearch,
                 child: Container(
@@ -586,14 +589,14 @@ class _SearchBar extends StatelessWidget {
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                   decoration: BoxDecoration(
                     color: isSearching
-                        ? FtTokens.accent.withValues(alpha: 0.4)
-                        : FtTokens.accent,
+                        ? Tokens.accent.withValues(alpha: 0.4)
+                        : Tokens.accent,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    isSearching ? '…' : 'Najít',
+                    isSearching ? '…' : context.l10n.socialSearchButton,
                     style: const TextStyle(
-                        fontSize: 12,
+                        fontSize: Tokens.fontSizeSmall,
                         fontWeight: FontWeight.w700,
                         color: Colors.white),
                   ),
@@ -607,14 +610,14 @@ class _SearchBar extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: FtTokens.cardBorder),
+              borderRadius: BorderRadius.circular(Tokens.radiusInner),
+              border: Border.all(color: Tokens.cardBorder),
             ),
             clipBehavior: Clip.antiAlias,
             child: Column(
               children: [
                 for (int i = 0; i < results.length; i++) ...[
-                  if (i > 0) Container(height: 1, color: FtTokens.divider),
+                  if (i > 0) Container(height: 1, color: Tokens.divider),
                   _SearchResult(
                     profile: results[i],
                     onAdd: () => onAdd(results[i].uid),
@@ -662,14 +665,16 @@ class _SearchResult extends StatelessWidget {
                     style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: FtTokens.onSurface),
+                        color: Tokens.onSurface),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    '@${profile.handle} · Level ${profile.stats.level}',
+                    context.l10n
+                        .socialHandleLevel(profile.handle, profile.stats.level),
                     style: const TextStyle(
-                        fontSize: 11, color: FtTokens.onSurfaceFaint),
+                        fontSize: Tokens.fontSizeCaption,
+                        color: Tokens.onSurfaceFaint),
                   ),
                 ],
               ),
@@ -680,17 +685,17 @@ class _SearchResult extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: FtTokens.accent.withValues(alpha: 0.14),
+                  color: Tokens.accent.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                      color: FtTokens.accent.withValues(alpha: 0.28)),
+                  border:
+                      Border.all(color: Tokens.accent.withValues(alpha: 0.28)),
                 ),
-                child: const Text(
-                  'Přidat',
-                  style: TextStyle(
-                      fontSize: 12,
+                child: Text(
+                  context.l10n.socialAdd,
+                  style: const TextStyle(
+                      fontSize: Tokens.fontSizeSmall,
                       fontWeight: FontWeight.w700,
-                      color: FtTokens.accent),
+                      color: Tokens.accent),
                 ),
               ),
             ),

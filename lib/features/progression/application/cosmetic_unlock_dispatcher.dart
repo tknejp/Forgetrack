@@ -6,6 +6,29 @@ import 'progression_engine.dart';
 
 const _log = AppLogger('COSMETICS', scope: 'dispatch');
 
+class CosmeticUnlockDispatchItem {
+  const CosmeticUnlockDispatchItem({
+    required this.cosmeticId,
+    required this.sourceType,
+    this.sourceId,
+  });
+
+  final String cosmeticId;
+  final String sourceType;
+  final String? sourceId;
+}
+
+class CosmeticUnlockDispatchResult {
+  const CosmeticUnlockDispatchResult({this.items = const []});
+
+  static const empty = CosmeticUnlockDispatchResult();
+
+  final List<CosmeticUnlockDispatchItem> items;
+
+  bool get isEmpty => items.isEmpty;
+  bool get isNotEmpty => items.isNotEmpty;
+}
+
 /// Diffs two [ProgressionEngineState] snapshots and dispatches cosmetic
 /// unlocks for newly unlocked achievements and freshly reached levels.
 ///
@@ -30,18 +53,18 @@ class CosmeticUnlockDispatcher {
     _cosmetics = provider;
   }
 
-  Future<void> dispatch({
+  Future<CosmeticUnlockDispatchResult> dispatch({
     ProgressionEngineState? previous,
     required ProgressionEngineState current,
   }) async {
     final cosmetics = _cosmetics;
     if (cosmetics == null) {
       _log.debug('dispatch skipped — no CosmeticsProvider bound');
-      return;
+      return CosmeticUnlockDispatchResult.empty;
     }
     if (cosmetics.currentUid == null) {
       _log.debug('dispatch skipped — no uid bound on CosmeticsProvider');
-      return;
+      return CosmeticUnlockDispatchResult.empty;
     }
 
     final prevUnlockedAchievementIds = previous == null
@@ -73,7 +96,7 @@ class CosmeticUnlockDispatcher {
         prevLevel == currentLevel &&
         pendingLevelUnlocks.isEmpty) {
       _log.debug('dispatch — no progression changes since last sync');
-      return;
+      return CosmeticUnlockDispatchResult.empty;
     }
 
     _log.info(
@@ -82,28 +105,51 @@ class CosmeticUnlockDispatcher {
           'achievements=${newlyUnlockedAchievements.length} levelDelta=$prevLevel→$currentLevel uid=${cosmetics.currentUid}',
     );
 
+    final unlockedItems = <CosmeticUnlockDispatchItem>[];
+
     for (final achievement in newlyUnlockedAchievements) {
       for (final cosmeticId in _table.cosmeticsForAchievement(achievement.id)) {
-        await _unlock(
+        final didUnlock = await _unlock(
           cosmetics,
           cosmeticId: cosmeticId,
           sourceType: CosmeticUnlockSource.achievement.name,
           sourceId: achievement.id,
         );
+        if (didUnlock) {
+          unlockedItems.add(
+            CosmeticUnlockDispatchItem(
+              cosmeticId: cosmeticId,
+              sourceType: CosmeticUnlockSource.achievement.name,
+              sourceId: achievement.id,
+            ),
+          );
+        }
       }
     }
 
     for (final entry in pendingLevelUnlocks) {
-      await _unlock(
+      final sourceId = 'level_${entry.key}';
+      final didUnlock = await _unlock(
         cosmetics,
         cosmeticId: entry.value,
         sourceType: CosmeticUnlockSource.progressionLevel.name,
-        sourceId: 'level_${entry.key}',
+        sourceId: sourceId,
       );
+      if (didUnlock) {
+        unlockedItems.add(
+          CosmeticUnlockDispatchItem(
+            cosmeticId: entry.value,
+            sourceType: CosmeticUnlockSource.progressionLevel.name,
+            sourceId: sourceId,
+          ),
+        );
+      }
     }
+
+    return CosmeticUnlockDispatchResult(items: unlockedItems);
   }
 
-  Future<void> _unlock(
+  Future<bool> _unlock(
     CosmeticsProvider cosmetics, {
     required String cosmeticId,
     required String sourceType,
@@ -130,7 +176,9 @@ class CosmeticUnlockDispatcher {
           'unlock reported error',
           payload: 'id=$cosmeticId source=$sourceType code=$error',
         );
+        return false;
       }
+      return !alreadyUnlocked;
     } catch (e, st) {
       _log.error(
         'unlock crashed',
@@ -138,6 +186,7 @@ class CosmeticUnlockDispatcher {
         err: e,
         stackTrace: st,
       );
+      return false;
     }
   }
 }

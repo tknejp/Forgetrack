@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../shared/theme/design_tokens.dart';
 import '../../config/cosmetics_config.dart';
 import '../../domain/cosmetic_models.dart';
 import '../cosmetics_l10n.dart';
@@ -36,22 +37,19 @@ class CosmeticEquippedChip extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(Tokens.radiusInner),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
-          ),
+          color:
+              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.72),
+          borderRadius: BorderRadius.circular(Tokens.radiusInner),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             _Thumbnail(
               assetPath: assetPath,
-              rarity: definition.rarity,
               type: definition.type,
               size: 32,
             ),
@@ -66,7 +64,7 @@ class CosmeticEquippedChip extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.labelSmall?.copyWith(
-                      fontSize: 9,
+                      fontSize: Tokens.fontSizeTiny,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.8,
                       color: theme.colorScheme.onSurfaceVariant,
@@ -78,7 +76,7 @@ class CosmeticEquippedChip extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      fontSize: 12,
+                      fontSize: Tokens.fontSizeSmall,
                       fontWeight: FontWeight.w800,
                       color: theme.colorScheme.onSurface,
                     ),
@@ -96,90 +94,52 @@ class CosmeticEquippedChip extends StatelessWidget {
 class _Thumbnail extends StatelessWidget {
   const _Thumbnail({
     required this.assetPath,
-    required this.rarity,
     required this.type,
     required this.size,
   });
 
   final String? assetPath;
-  final CosmeticRarity rarity;
   final CosmeticType type;
   final double size;
 
   @override
   Widget build(BuildContext context) {
-    final rarityColor = _rarityColor(rarity);
-    final radius = BorderRadius.circular(size * 0.28);
-    return Container(
+    return SizedBox(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        borderRadius: radius,
-        border: Border.all(color: rarityColor.withValues(alpha: 0.6)),
-      ),
-      clipBehavior: Clip.antiAlias,
       child: assetPath != null
           ? Image.asset(
               assetPath!,
-              fit: BoxFit.cover,
+              fit: BoxFit.contain,
               errorBuilder: (_, __, ___) => _ThumbFallback(
-                rarityColor: rarityColor,
                 type: type,
                 size: size,
               ),
             )
           : _ThumbFallback(
-              rarityColor: rarityColor,
               type: type,
               size: size,
             ),
     );
   }
-
-  static Color _rarityColor(CosmeticRarity rarity) {
-    switch (rarity) {
-      case CosmeticRarity.common:
-        return const Color(0xFF8E8E8E);
-      case CosmeticRarity.rare:
-        return const Color(0xFF58A6FF);
-      case CosmeticRarity.epic:
-        return const Color(0xFFB388FF);
-      case CosmeticRarity.legendary:
-        return const Color(0xFFFFD54F);
-    }
-  }
 }
 
 class _ThumbFallback extends StatelessWidget {
   const _ThumbFallback({
-    required this.rarityColor,
     required this.type,
     required this.size,
   });
 
-  final Color rarityColor;
   final CosmeticType type;
   final double size;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            rarityColor.withValues(alpha: 0.45),
-            rarityColor.withValues(alpha: 0.12),
-          ],
-        ),
-      ),
-      child: Center(
-        child: Icon(
-          _iconForType(type),
-          size: size * 0.5,
-          color: Colors.white.withValues(alpha: 0.85),
-        ),
+    return Center(
+      child: Icon(
+        _iconForType(type),
+        size: size * 0.5,
+        color: Tokens.onSurfaceFaint,
       ),
     );
   }

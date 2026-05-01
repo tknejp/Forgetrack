@@ -61,7 +61,7 @@ class SettingsTile extends StatelessWidget {
                       label,
                       style: labelStyle ??
                           (compact ? tt.bodyMedium : tt.bodyLarge)?.copyWith(
-                            color: FtTokens.onSurface,
+                            color: Tokens.onSurface,
                             fontWeight: FontWeight.w600,
                           ),
                     ),
@@ -70,7 +70,7 @@ class SettingsTile extends StatelessWidget {
                       Text(
                         subtitle!,
                         style: tt.bodySmall?.copyWith(
-                          color: FtTokens.onSurfaceMuted,
+                          color: Tokens.onSurfaceMuted,
                           height: 1.25,
                         ),
                       ),

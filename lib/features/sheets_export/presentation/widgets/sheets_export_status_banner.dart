@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../l10n/l10n.dart';
-import '../../../../shared/theme/ft_design_tokens.dart';
+import '../../../../shared/theme/design_tokens.dart';
 import '../../application/sheets_export_provider.dart';
 
 class SheetsExportStatusBanner extends StatelessWidget {
@@ -62,7 +62,7 @@ class _Banner extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(Tokens.radiusInner),
         border: Border.all(color: color.withValues(alpha: 0.35)),
       ),
       child: Row(
@@ -86,8 +86,8 @@ class _Banner extends StatelessWidget {
                 Text(
                   message,
                   style: const TextStyle(
-                    fontSize: 12,
-                    color: FtTokens.onSurface,
+                    fontSize: Tokens.fontSizeSmall,
+                    color: Tokens.onSurface,
                     height: 1.35,
                   ),
                 ),
@@ -99,7 +99,7 @@ class _Banner extends StatelessWidget {
               icon: const Icon(
                 Icons.close_rounded,
                 size: 16,
-                color: FtTokens.onSurfaceMuted,
+                color: Tokens.onSurfaceMuted,
               ),
               onPressed: onDismiss,
               padding: EdgeInsets.zero,

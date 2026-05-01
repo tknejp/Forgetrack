@@ -22,8 +22,10 @@ class CosmeticRewardTable {
   /// Player level → cosmetic ids unlocked the moment that level is reached
   /// (i.e. profile.level transitions from `level - 1` to `level`).
   static const Map<int, List<String>> levelToCosmetics = <int, List<String>>{
-    1: ['frame_lvl1'],
-    10: ['frame_lvl10', 'relic_old_gate_key'],
+    1: ['frame_lvl1', 'background_forest_trail'],
+    5: ['relic_old_compass'],
+    10: ['frame_lvl10', 'emblem_forest_mark'],
+    15: ['relic_old_gate_key'],
     25: ['frame_lvl25'],
     40: ['frame_lvl40'],
     60: ['frame_lvl60'],

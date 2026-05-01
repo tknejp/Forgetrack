@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../shared/theme/ft_design_tokens.dart';
+import '../../../../l10n/l10n.dart';
+import '../../../../shared/theme/design_tokens.dart';
 
 class SocialTabBar extends StatelessWidget {
   const SocialTabBar({
@@ -15,34 +16,40 @@ class SocialTabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Container(
       decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: FtTokens.cardBorder)),
+        border: Border(bottom: BorderSide(color: Tokens.cardBorder)),
       ),
       child: TabBar(
         controller: controller,
         padding: const EdgeInsets.symmetric(horizontal: 12),
-        indicatorColor: FtTokens.accent,
+        indicatorColor: Tokens.accent,
         indicatorWeight: 2,
         indicatorSize: TabBarIndicatorSize.label,
-        labelColor: FtTokens.accent,
-        unselectedLabelColor: FtTokens.onSurfaceMuted,
-        labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-        unselectedLabelStyle:
-            const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        labelColor: Tokens.accent,
+        unselectedLabelColor: Tokens.onSurfaceMuted,
+        labelStyle: const TextStyle(
+          fontSize: Tokens.fontSizeSmall,
+          fontWeight: FontWeight.w700,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontSize: Tokens.fontSizeSmall,
+          fontWeight: FontWeight.w600,
+        ),
         dividerColor: Colors.transparent,
         tabs: [
-          const Tab(text: 'Feed'),
+          Tab(text: l10n.socialTabFeed),
           Tab(
             child: _TabWithBadge(
-              label: 'Aktivita',
+              label: l10n.socialTabActivity,
               count: unreadNotifCount,
             ),
           ),
-          const Tab(text: 'Žebříček'),
+          Tab(text: l10n.socialTabLeaderboard),
           Tab(
             child: _TabWithBadge(
-              label: 'Přátelé',
+              label: l10n.socialTabFriends,
               count: pendingCount,
             ),
           ),
@@ -85,16 +92,17 @@ class SocialTabBadge extends StatelessWidget {
       height: 14,
       decoration: BoxDecoration(
         color: const Color(0xFFEF4444),
-        borderRadius: BorderRadius.circular(99),
+        borderRadius: BorderRadius.circular(Tokens.radiusProgress),
       ),
       alignment: Alignment.center,
       child: Text(
         count > 9 ? '9+' : '$count',
         style: const TextStyle(
-            fontSize: 8,
-            fontWeight: FontWeight.w800,
-            color: Colors.white,
-            height: 1),
+          fontSize: 8,
+          fontWeight: FontWeight.w800,
+          color: Colors.white,
+          height: 1,
+        ),
       ),
     );
   }

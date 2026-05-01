@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
-import '../../../../shared/theme/ft_design_tokens.dart';
-import '../../../../shared/widgets/ft/ft_plain_card.dart';
+import '../../../../shared/theme/design_tokens.dart';
+import '../../../../shared/widgets/plain_card.dart';
 import '../../application/sheets_export_provider.dart';
 import '../../domain/sheet_export_field.dart';
 
@@ -14,7 +14,7 @@ class SheetsExportFieldList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return FtPlainCard(
+    return PlainCard(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -27,35 +27,35 @@ class SheetsExportFieldList extends StatelessWidget {
                   const Icon(
                     Icons.view_column_outlined,
                     size: 14,
-                    color: FtTokens.accent,
+                    color: Tokens.accent,
                   ),
                   const SizedBox(width: 7),
                   Text(
                     l10n.exportFieldsLabel.toUpperCase(),
                     style: const TextStyle(
-                      fontSize: FtTokens.fontSizeMicro,
+                      fontSize: Tokens.fontSizeMicro,
                       fontWeight: FontWeight.w800,
-                      color: FtTokens.accent,
+                      color: Tokens.accent,
                       letterSpacing: 1.0,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: Tokens.spaceSm),
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: FtTokens.accent.withValues(alpha: 0.11),
-                      borderRadius: BorderRadius.circular(99),
+                      color: Tokens.accent.withValues(alpha: 0.11),
+                      borderRadius: BorderRadius.circular(Tokens.radiusProgress),
                       border: Border.all(
-                        color: FtTokens.accent.withValues(alpha: 0.22),
+                        color: Tokens.accent.withValues(alpha: 0.22),
                       ),
                     ),
                     child: Text(
                       '${provider.selectedFields.length}/${SheetExportFields.all.length}',
                       style: const TextStyle(
-                        fontSize: 10,
+                        fontSize: Tokens.fontSizeMicro,
                         fontWeight: FontWeight.w800,
-                        color: FtTokens.accent,
+                        color: Tokens.accent,
                       ),
                     ),
                   ),
@@ -67,7 +67,7 @@ class SheetsExportFieldList extends StatelessWidget {
                     label: l10n.exportFieldsSelectAll,
                     onTap: provider.selectAllFields,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: Tokens.spaceSm),
                   _LinkButton(
                     label: l10n.exportFieldsSelectNone,
                     onTap: provider.clearAllFields,
@@ -76,7 +76,7 @@ class SheetsExportFieldList extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: Tokens.spaceXs),
           for (final cat in SheetExportCategory.values)
             _CategoryGroup(
               category: cat,
@@ -114,7 +114,7 @@ class _CategoryGroup extends StatelessWidget {
           child: Text(
             SheetExportFields.categoryLabel(category, l10n),
             style: TextStyle(
-              fontSize: 12,
+              fontSize: Tokens.fontSizeSmall,
               fontWeight: FontWeight.w800,
               color: color,
               letterSpacing: 0.8,
@@ -187,8 +187,8 @@ class _FieldRow extends StatelessWidget {
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color: checked
-                          ? FtTokens.onSurface
-                          : FtTokens.onSurface.withValues(alpha: 0.62),
+                          ? Tokens.onSurface
+                          : Tokens.onSurface.withValues(alpha: 0.62),
                     ),
                   ),
                   if (desc != null) ...[
@@ -196,8 +196,8 @@ class _FieldRow extends StatelessWidget {
                     Text(
                       desc,
                       style: const TextStyle(
-                        fontSize: 11,
-                        color: FtTokens.onSurfaceMuted,
+                        fontSize: Tokens.fontSizeCaption,
+                        color: Tokens.onSurfaceMuted,
                         height: 1.35,
                       ),
                     ),
@@ -223,15 +223,15 @@ class _LinkButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(99),
+        borderRadius: BorderRadius.circular(Tokens.radiusProgress),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
           child: Text(
             label,
             style: const TextStyle(
-              fontSize: 11,
+              fontSize: Tokens.fontSizeCaption,
               fontWeight: FontWeight.w800,
-              color: FtTokens.accent,
+              color: Tokens.accent,
             ),
           ),
         ),
@@ -243,12 +243,12 @@ class _LinkButton extends StatelessWidget {
 Color _categoryColor(SheetExportCategory category) {
   switch (category) {
     case SheetExportCategory.activity:
-      return FtTokens.steps.color;
+      return Tokens.steps.color;
     case SheetExportCategory.body:
-      return FtTokens.weight.color;
+      return Tokens.weight.color;
     case SheetExportCategory.sleep:
-      return FtTokens.sleep.color;
+      return Tokens.sleep.color;
     case SheetExportCategory.nutrition:
-      return FtTokens.calories.color;
+      return Tokens.calories.color;
   }
 }

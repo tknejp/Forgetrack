@@ -26,10 +26,10 @@
 import 'package:flutter/material.dart';
 
 import '../../../l10n/app_localizations.dart';
-import '../../../shared/theme/ft_design_tokens.dart';
+import '../../../shared/theme/design_tokens.dart';
 import '../domain/progression_models.dart';
 import 'progression_l10n.dart';
-import 'widgets/ft_progression_primitives.dart';
+import 'widgets/progression_primitives.dart';
 
 /// Mirror of the screen's private `_DomainStreak`. Kept public here so the
 /// archive file can compile standalone.
@@ -70,23 +70,23 @@ class ArchivedOverviewSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        FtProgSectionHead(
+        ProgSectionHead(
           label: l10n.progSummarySectionLabel,
-          accent: FtTokens.accent,
+          accent: Tokens.accent,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: Tokens.spaceSm),
         ArchivedSummaryGrid(
           items: [
             ArchivedSummaryItem(
               label: l10n.progSummaryCompletedQuests,
               value: '$completedQuestsCount',
-              tone: FtTokens.steps.color,
+              tone: Tokens.steps.color,
               icon: Icons.flag_rounded,
             ),
             ArchivedSummaryItem(
               label: l10n.progSummaryAchievements,
               value: '$unlockedAchievementsCount',
-              tone: FtTokens.accent,
+              tone: Tokens.accent,
               icon: Icons.shield_moon_rounded,
             ),
           ],
@@ -113,13 +113,13 @@ class ArchivedStreakSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        FtProgSectionHead(
+        ProgSectionHead(
           label: l10n.progStreakSectionLabel,
           caption: l10n.progStreakSectionCaption,
-          accent: FtTokens.active.color,
+          accent: Tokens.active.color,
         ),
         const SizedBox(height: 10),
-        FtProgStreakDuel(
+        ProgStreakDuel(
           currentLabel: l10n.progStreakCurrentLabel,
           currentValue: viewData.current?.currentStreak ?? 0,
           currentCaption: viewData.current == null
@@ -134,12 +134,12 @@ class ArchivedStreakSection extends StatelessWidget {
           bestDomain: viewData.best?.domain,
           daysSuffix: l10n.progStreakDaysSuffix,
           valueSize: 30,
-          currentColor: FtTokens.calories.color,
-          currentDim: FtTokens.calories.dim,
-          currentGlow: FtTokens.calories.glow,
-          bestColor: FtTokens.active.color,
-          bestDim: FtTokens.active.dim,
-          bestGlow: FtTokens.active.glow,
+          currentColor: Tokens.calories.color,
+          currentDim: Tokens.calories.dim,
+          currentGlow: Tokens.calories.glow,
+          bestColor: Tokens.active.color,
+          bestDim: Tokens.active.dim,
+          bestGlow: Tokens.active.glow,
         ),
       ],
     );
@@ -168,7 +168,7 @@ class ArchivedSummaryGrid extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.03),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(Tokens.radiusButton),
             border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
           ),
           child: Column(
@@ -184,9 +184,9 @@ class ArchivedSummaryGrid extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 9,
+                        fontSize: Tokens.fontSizeTiny,
                         fontWeight: FontWeight.w800,
-                        color: FtTokens.onSurfaceMuted,
+                        color: Tokens.onSurfaceMuted,
                         letterSpacing: 0.9,
                       ),
                     ),

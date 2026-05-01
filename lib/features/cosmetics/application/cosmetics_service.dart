@@ -3,6 +3,16 @@ import '../data/cosmetics_repository.dart';
 import '../domain/cosmetic_catalog.dart';
 import '../domain/cosmetic_models.dart';
 
+class CosmeticsProgressionResetResult {
+  const CosmeticsProgressionResetResult({
+    required this.state,
+    required this.removedCount,
+  });
+
+  final UserCosmeticsState state;
+  final int removedCount;
+}
+
 /// Pure business layer over [CosmeticCatalog] + [CosmeticsRepository] +
 /// [CosmeticsConfig]. Has no Flutter or persistence dependency, so it is
 /// trivially unit-testable.
@@ -37,6 +47,48 @@ class CosmeticsService {
       sourceId: sourceId,
     );
     return _repository.loadForUser(uid);
+  }
+
+  Future<CosmeticsProgressionResetResult> resetProgressionUnlocks(
+    String uid,
+  ) async {
+    final state = await _repository.loadForUser(uid);
+    final kept = <String, UnlockedCosmetic>{};
+    final removedIds = <String>{};
+
+    for (final entry in state.unlocked.entries) {
+      if (_isProgressionUnlockSource(entry.value.sourceType)) {
+        removedIds.add(entry.key);
+      } else {
+        kept[entry.key] = entry.value;
+      }
+    }
+
+    if (removedIds.isEmpty) {
+      return CosmeticsProgressionResetResult(
+        state: state,
+        removedCount: 0,
+      );
+    }
+
+    var equipped = state.equipped;
+    for (final type in CosmeticType.values) {
+      final equippedId = equipped.slotId(type);
+      if (equippedId != null && removedIds.contains(equippedId)) {
+        equipped = equipped.copyWithSlot(type, null);
+      }
+    }
+
+    final nextState = state.copyWith(
+      unlocked: kept,
+      equipped: equipped,
+      updatedAt: DateTime.now(),
+    );
+    await _repository.saveState(nextState);
+    return CosmeticsProgressionResetResult(
+      state: nextState,
+      removedCount: removedIds.length,
+    );
   }
 
   Future<UserCosmeticsState> equip(String uid, String cosmeticId) async {
@@ -106,7 +158,9 @@ class CosmeticsService {
     if (def == null) {
       return const CanEquipResult.blocked('cosmetic_not_found');
     }
-    if (!def.isEnabled) return const CanEquipResult.blocked('cosmetic_disabled');
+    if (!def.isEnabled) {
+      return const CanEquipResult.blocked('cosmetic_disabled');
+    }
     if (!_config.isUsable(def)) {
       return const CanEquipResult.blocked('slot_disabled');
     }
@@ -142,5 +196,11 @@ class CosmeticsService {
       }
     }
     return warnings;
+  }
+
+  bool _isProgressionUnlockSource(String? sourceType) {
+    return sourceType == CosmeticUnlockSource.progressionLevel.name ||
+        sourceType == CosmeticUnlockSource.achievement.name ||
+        sourceType == CosmeticUnlockSource.quest.name;
   }
 }

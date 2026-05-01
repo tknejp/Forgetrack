@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../../l10n/l10n.dart';
 import '../../../../../shared/theme/app_theme.dart';
-import '../../../../../shared/widgets/stat_display.dart';
+import '../../../../../shared/widgets/stat_components.dart';
 import '../../../domain/sleep_record.dart';
 
 class SleepSummaryCard extends StatelessWidget {

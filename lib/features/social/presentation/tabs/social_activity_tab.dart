@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../shared/theme/ft_design_tokens.dart';
+import '../../../../l10n/l10n.dart';
+import '../../../../shared/theme/design_tokens.dart';
 import '../../application/social_provider.dart';
 import '../../domain/social_models.dart';
 import '../widgets/social_empty.dart';
@@ -26,28 +27,28 @@ class SocialActivityTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final social = context.watch<SocialProvider>();
     final notifications = social.notifications;
+    final l10n = context.l10n;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 24),
       children: [
-        const Padding(
-          padding: EdgeInsets.only(bottom: 10),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
           child: Text(
-            'NEDÁVNÁ AKTIVITA',
-            style: TextStyle(
-              fontSize: 10,
+            l10n.socialSectionRecentActivity,
+            style: const TextStyle(
+              fontSize: Tokens.fontSizeMicro,
               fontWeight: FontWeight.w700,
-              color: FtTokens.onSurfaceFaint,
+              color: Tokens.onSurfaceFaint,
               letterSpacing: 1.1,
             ),
           ),
         ),
         if (notifications.isEmpty)
-          const SocialEmpty(
+          SocialEmpty(
             icon: Icons.notifications_none_rounded,
-            title: 'Žádné upozornění',
-            subtitle:
-                'Zde uvidíš reakce přátel na tvoje sdílené achievementy.',
+            title: l10n.socialNoNotificationsTitle,
+            subtitle: l10n.socialNoNotificationsSubtitle,
           )
         else
           ...notifications.map((n) => Padding(
@@ -71,7 +72,7 @@ class _ShareDetailSheet extends StatelessWidget {
     final bottomPad = MediaQuery.of(context).padding.bottom;
     return Container(
       decoration: const BoxDecoration(
-        color: FtTokens.bg,
+        color: Tokens.bg,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       padding: EdgeInsets.fromLTRB(16, 12, 16, bottomPad + 16),
@@ -82,13 +83,13 @@ class _ShareDetailSheet extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: FtTokens.cardBorder,
-              borderRadius: BorderRadius.circular(99),
+              color: Tokens.cardBorder,
+              borderRadius: BorderRadius.circular(Tokens.radiusProgress),
             ),
           ),
           const SizedBox(height: 14),
           SocialFeedCard(share: share),
-          const SizedBox(height: 4),
+          const SizedBox(height: Tokens.spaceXs),
         ],
       ),
     );

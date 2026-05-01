@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../../core/logging/app_log.dart';
-import '../../../shared/theme/ft_design_tokens.dart';
+import '../../../shared/theme/design_tokens.dart';
+import '../../../shared/widgets/ft_back_button.dart';
+import '../../../shared/widgets/screen_header.dart';
 import '../../auth/application/auth_provider.dart';
 import '../application/devtools_permission_service.dart';
 import '../application/devtools_provider.dart';
@@ -62,49 +64,43 @@ class _DevToolsBody extends StatelessWidget {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light.copyWith(
         statusBarColor: Colors.transparent,
-        systemNavigationBarColor: FtTokens.bg,
+        systemNavigationBarColor: Tokens.bg,
       ),
       child: Scaffold(
-        backgroundColor: FtTokens.bg,
-        appBar: AppBar(
-          backgroundColor: FtTokens.bg,
-          foregroundColor: Colors.white,
-          title: Text(
-            l10n.devtoolsTitle,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-              fontSize: 18,
-            ),
-          ),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded),
-            onPressed: () => Navigator.of(context).maybePop(),
-          ),
-          elevation: 0,
-        ),
+        backgroundColor: Tokens.bg,
         body: ListView(
-          padding: const EdgeInsets.fromLTRB(14, 8, 14, 32),
-          children: const [
-            DevToolsAppSection(),
-            SizedBox(height: 16),
-            DevToolsProviderSection(),
-            SizedBox(height: 16),
-            DevToolsDbSection(),
-            SizedBox(height: 16),
-            DevToolsHealthPipelineSection(),
-            SizedBox(height: 16),
-            DevToolsSyncSection(),
-            SizedBox(height: 16),
-            DevToolsBackgroundSection(),
-            SizedBox(height: 16),
-            DevToolsNotificationSection(),
-            SizedBox(height: 16),
-            DevToolsUiSection(),
-            SizedBox(height: 16),
-            DevToolsProgressionSection(),
-            SizedBox(height: 16),
-            DevToolsOverridesSection(),
+          padding: EdgeInsets.fromLTRB(
+            14,
+            MediaQuery.of(context).padding.top + 12,
+            14,
+            32,
+          ),
+          children: [
+            ScreenHeader(
+              greeting: '',
+              title: l10n.devtoolsTitle,
+              leading: const FtBackButton(),
+            ),
+            const SizedBox(height: 18),
+            const DevToolsAppSection(),
+            const SizedBox(height: Tokens.spaceLg),
+            const DevToolsProviderSection(),
+            const SizedBox(height: Tokens.spaceLg),
+            const DevToolsDbSection(),
+            const SizedBox(height: Tokens.spaceLg),
+            const DevToolsHealthPipelineSection(),
+            const SizedBox(height: Tokens.spaceLg),
+            const DevToolsSyncSection(),
+            const SizedBox(height: Tokens.spaceLg),
+            const DevToolsBackgroundSection(),
+            const SizedBox(height: Tokens.spaceLg),
+            const DevToolsNotificationSection(),
+            const SizedBox(height: Tokens.spaceLg),
+            const DevToolsUiSection(),
+            const SizedBox(height: Tokens.spaceLg),
+            const DevToolsProgressionSection(),
+            const SizedBox(height: Tokens.spaceLg),
+            const DevToolsOverridesSection(),
           ],
         ),
       ),
@@ -121,58 +117,73 @@ class _AccessDeniedScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      backgroundColor: FtTokens.bg,
-      appBar: AppBar(
-        backgroundColor: FtTokens.bg,
-        foregroundColor: Colors.white,
-        title: const Text('Developer Tools'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        elevation: 0,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Tokens.bg,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      child: Scaffold(
+        backgroundColor: Tokens.bg,
+        body: Column(
           children: [
-            Icon(Icons.lock_outline_rounded, size: 48, color: cs.error),
-            const SizedBox(height: 16),
-            Text(
-              'Access Denied', // TODO: l10n
-              style: TextStyle(
-                color: cs.error,
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                14,
+                MediaQuery.of(context).padding.top + 12,
+                14,
+                0,
+              ),
+              child: ScreenHeader(
+                greeting: '',
+                title: 'Developer Tools',
+                leading: const FtBackButton(),
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'This screen is restricted to developers.', // TODO: l10n
-              textAlign: TextAlign.center,
-              style: TextStyle(color: cs.onSurfaceVariant),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.lock_outline_rounded, size: 48, color: cs.error),
+                    const SizedBox(height: Tokens.spaceLg),
+                    Text(
+                      'Access Denied', // TODO: l10n
+                      style: TextStyle(
+                        color: cs.error,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: Tokens.spaceSm),
+                    Text(
+                      'This screen is restricted to developers.', // TODO: l10n
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: cs.onSurfaceVariant),
+                    ),
+                    if (uid != null) ...[
+                      const SizedBox(height: Tokens.spaceLg),
+                      Text(
+                        'Your Firebase UID:',
+                        style: TextStyle(
+                          color: cs.onSurfaceVariant,
+                          fontSize: Tokens.fontSizeSmall,
+                        ),
+                      ),
+                      const SizedBox(height: Tokens.spaceXs),
+                      SelectableText(
+                        uid!,
+                        style: TextStyle(
+                          color: cs.onSurface,
+                          fontSize: Tokens.fontSizeSmall,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ),
-            if (uid != null) ...[
-              const SizedBox(height: 16),
-              Text(
-                'Your Firebase UID:',
-                style: TextStyle(
-                  color: cs.onSurfaceVariant,
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(height: 4),
-              SelectableText(
-                uid!,
-                style: TextStyle(
-                  color: cs.onSurface,
-                  fontSize: 12,
-                  fontFamily: 'monospace',
-                ),
-              ),
-            ],
           ],
         ),
       ),

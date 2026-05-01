@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../l10n/l10n.dart';
-import '../../../../shared/theme/ft_design_tokens.dart';
-import '../../../../shared/widgets/ft/ft_plain_card.dart';
+import '../../../../shared/theme/design_tokens.dart';
+import '../../../../shared/widgets/plain_card.dart';
 import '../../application/sheets_export_provider.dart';
 
 class SheetsExportDateRange extends StatelessWidget {
@@ -18,7 +18,7 @@ class SheetsExportDateRange extends StatelessWidget {
     final rangeLabel =
         '${_fmt.format(provider.from)} - ${_fmt.format(provider.to)}';
 
-    return FtPlainCard(
+    return PlainCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -30,15 +30,15 @@ class SheetsExportDateRange extends StatelessWidget {
                   const Icon(
                     Icons.calendar_month_outlined,
                     size: 14,
-                    color: FtTokens.accent,
+                    color: Tokens.accent,
                   ),
                   const SizedBox(width: 7),
                   Text(
                     l10n.exportRangeLabel.toUpperCase(),
                     style: const TextStyle(
-                      fontSize: FtTokens.fontSizeMicro,
+                      fontSize: Tokens.fontSizeMicro,
                       fontWeight: FontWeight.w800,
-                      color: FtTokens.accent,
+                      color: Tokens.accent,
                       letterSpacing: 1.0,
                     ),
                   ),
@@ -47,18 +47,18 @@ class SheetsExportDateRange extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                 decoration: BoxDecoration(
-                  color: FtTokens.accent.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(99),
+                  color: Tokens.accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(Tokens.radiusProgress),
                   border: Border.all(
-                    color: FtTokens.accent.withValues(alpha: 0.24),
+                    color: Tokens.accent.withValues(alpha: 0.24),
                   ),
                 ),
                 child: Text(
                   l10n.exportRangeDayCount(provider.dayCount),
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: Tokens.fontSizeCaption,
                     fontWeight: FontWeight.w800,
-                    color: FtTokens.accent,
+                    color: Tokens.accent,
                   ),
                 ),
               ),
@@ -69,13 +69,13 @@ class SheetsExportDateRange extends StatelessWidget {
             color: Colors.transparent,
             child: InkWell(
               onTap: () => _pickRange(context),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(Tokens.radiusInner),
               child: Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.045),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(Tokens.radiusInner),
                   border: Border.all(
                     color: Colors.white.withValues(alpha: 0.08),
                   ),
@@ -85,25 +85,25 @@ class SheetsExportDateRange extends StatelessWidget {
                     const Icon(
                       Icons.date_range_rounded,
                       size: 18,
-                      color: FtTokens.onSurfaceMuted,
+                      color: Tokens.onSurfaceMuted,
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         rangeLabel,
                         style: const TextStyle(
-                          fontSize: 14,
+                          fontSize: Tokens.fontSizeBody,
                           fontWeight: FontWeight.w800,
-                          color: FtTokens.onSurface,
+                          color: Tokens.onSurface,
                         ),
                       ),
                     ),
                     Text(
                       l10n.exportRangePickButton,
                       style: const TextStyle(
-                        fontSize: 12,
+                        fontSize: Tokens.fontSizeSmall,
                         fontWeight: FontWeight.w800,
-                        color: FtTokens.accent,
+                        color: Tokens.accent,
                       ),
                     ),
                   ],
@@ -135,10 +135,10 @@ class SheetsExportDateRange extends StatelessWidget {
             ],
           ),
           if (!provider.hasValidRange) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: Tokens.spaceSm),
             Text(
               l10n.exportRangeInvalid,
-              style: const TextStyle(fontSize: 11, color: Color(0xFFF87171)),
+              style: const TextStyle(fontSize: Tokens.fontSizeCaption, color: Color(0xFFF87171)),
             ),
           ],
         ],
@@ -157,7 +157,7 @@ class SheetsExportDateRange extends StatelessWidget {
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
           colorScheme: Theme.of(ctx).colorScheme.copyWith(
-                primary: FtTokens.accent,
+                primary: Tokens.accent,
                 onPrimary: Colors.white,
               ),
         ),
@@ -202,20 +202,20 @@ class _Preset extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(99),
+        borderRadius: BorderRadius.circular(Tokens.radiusProgress),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
-            color: FtTokens.accent.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(99),
-            border: Border.all(color: FtTokens.accent.withValues(alpha: 0.25)),
+            color: Tokens.accent.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(Tokens.radiusProgress),
+            border: Border.all(color: Tokens.accent.withValues(alpha: 0.25)),
           ),
           child: Text(
             label,
             style: const TextStyle(
-              fontSize: 11,
+              fontSize: Tokens.fontSizeCaption,
               fontWeight: FontWeight.w800,
-              color: FtTokens.accent,
+              color: Tokens.accent,
             ),
           ),
         ),

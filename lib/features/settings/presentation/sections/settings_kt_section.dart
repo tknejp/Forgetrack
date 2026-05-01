@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../l10n/l10n.dart';
 import '../../../nutrition/application/kaloricke_tabulky_provider.dart';
-import '../../../../shared/theme/ft_design_tokens.dart';
+import '../../../../shared/theme/design_tokens.dart';
 import '../dialogs/settings_dialogs.dart';
 import '../widgets/settings_widgets.dart';
 
@@ -206,13 +206,13 @@ class _KtLoginCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            FtTokens.calories.color.withValues(alpha: 0.11),
+            Tokens.calories.color.withValues(alpha: 0.11),
             Colors.white.withValues(alpha: 0.025),
           ],
         ),
-        borderRadius: BorderRadius.circular(FtTokens.radiusCard),
+        borderRadius: BorderRadius.circular(Tokens.radiusCard),
         border: Border.all(
-          color: FtTokens.calories.color.withValues(alpha: 0.22),
+          color: Tokens.calories.color.withValues(alpha: 0.22),
         ),
       ),
       clipBehavior: Clip.antiAlias,
@@ -275,19 +275,19 @@ class _KtLoginHeader extends StatelessWidget {
           width: 38,
           height: 38,
           decoration: BoxDecoration(
-            color: FtTokens.calories.color.withValues(alpha: 0.14),
-            borderRadius: BorderRadius.circular(12),
+            color: Tokens.calories.color.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(Tokens.radiusInner),
             border: Border.all(
-              color: FtTokens.calories.color.withValues(alpha: 0.24),
+              color: Tokens.calories.color.withValues(alpha: 0.24),
             ),
           ),
           child: Icon(
             Icons.restaurant_menu_rounded,
             size: 18,
-            color: FtTokens.calories.color,
+            color: Tokens.calories.color,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: Tokens.spaceMd),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -295,7 +295,7 @@ class _KtLoginHeader extends StatelessWidget {
               Text(
                 l10n.ktSectionTitle,
                 style: tt.bodyLarge?.copyWith(
-                  color: FtTokens.onSurface,
+                  color: Tokens.onSurface,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -303,7 +303,7 @@ class _KtLoginHeader extends StatelessWidget {
               Text(
                 l10n.ktConnectBody,
                 style: tt.bodySmall?.copyWith(
-                  color: FtTokens.onSurfaceMuted,
+                  color: Tokens.onSurfaceMuted,
                   height: 1.35,
                 ),
               ),
@@ -349,7 +349,7 @@ class _KtCredentialFields extends StatelessWidget {
             icon: Icons.email_outlined,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: Tokens.spaceMd),
         TextField(
           controller: passwordController,
           enabled: !kt.isLoading,
@@ -420,14 +420,14 @@ InputDecoration _ktFieldDecoration(
     filled: true,
     fillColor: cs.surfaceContainerHigh.withValues(alpha: 0.42),
     border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(Tokens.radiusTile),
     ),
     enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(Tokens.radiusTile),
       borderSide: BorderSide(color: cs.outlineVariant),
     ),
     focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(Tokens.radiusTile),
       borderSide: BorderSide(color: cs.primary),
     ),
     isDense: true,
@@ -462,7 +462,7 @@ class _KtMessageBox extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: cs.errorContainer.withValues(alpha: 0.4),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(Tokens.radiusTile),
           border: Border.all(
             color: color.withValues(alpha: 0.2),
           ),
@@ -470,10 +470,10 @@ class _KtMessageBox extends StatelessWidget {
         child: Row(
           children: [
             Icon(icon, color: color, size: 16),
-            const SizedBox(width: 8),
+            const SizedBox(width: Tokens.spaceSm),
             Expanded(child: Text(message, style: textStyle)),
             if (trailing != null) ...[
-              const SizedBox(width: 8),
+              const SizedBox(width: Tokens.spaceSm),
               trailing!,
             ],
           ],

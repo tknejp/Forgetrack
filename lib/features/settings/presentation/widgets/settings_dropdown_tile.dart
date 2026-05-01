@@ -35,7 +35,7 @@ class SettingsDropdownTile<T> extends StatelessWidget {
                 Text(
                   label,
                   style: tt.bodyLarge?.copyWith(
-                    color: FtTokens.onSurface,
+                    color: Tokens.onSurface,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -44,7 +44,7 @@ class SettingsDropdownTile<T> extends StatelessWidget {
                   Text(
                     subtitle!,
                     style: tt.bodySmall?.copyWith(
-                      color: FtTokens.onSurfaceMuted,
+                      color: Tokens.onSurfaceMuted,
                       height: 1.25,
                     ),
                   ),
@@ -67,12 +67,12 @@ class SettingsDropdownTile<T> extends StatelessWidget {
                 value: value,
                 isDense: true,
                 borderRadius: BorderRadius.circular(12),
-                dropdownColor: FtTokens.surface,
-                style: tt.bodyMedium?.copyWith(color: FtTokens.onSurface),
+                dropdownColor: Tokens.surface,
+                style: tt.bodyMedium?.copyWith(color: Tokens.onSurface),
                 icon: Icon(
                   Icons.keyboard_arrow_down_rounded,
                   size: 18,
-                  color: FtTokens.onSurfaceMuted,
+                  color: Tokens.onSurfaceMuted,
                 ),
                 items: items,
                 onChanged: onChanged,

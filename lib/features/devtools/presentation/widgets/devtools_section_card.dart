@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../shared/theme/ft_design_tokens.dart';
+import '../../../../shared/theme/design_tokens.dart';
 
 class DevToolsSectionCard extends StatelessWidget {
   const DevToolsSectionCard({
@@ -25,14 +25,14 @@ class DevToolsSectionCard extends StatelessWidget {
               Icon(
                 Icons.auto_awesome_rounded,
                 size: 13,
-                color: FtTokens.accent.withValues(alpha: 0.92),
+                color: Tokens.accent.withValues(alpha: 0.92),
               ),
               const SizedBox(width: 7),
               Text(
                 title.toUpperCase(),
                 style: const TextStyle(
-                  color: FtTokens.accent,
-                  fontSize: 11,
+                  color: Tokens.accent,
+                  fontSize: Tokens.fontSizeCaption,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1.1,
                 ),
@@ -44,8 +44,8 @@ class DevToolsSectionCard extends StatelessWidget {
           width: double.infinity,
           decoration: BoxDecoration(
             color: cs.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: FtTokens.cardBorder),
+            borderRadius: BorderRadius.circular(Tokens.radiusInner),
+            border: Border.all(color: Tokens.cardBorder),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,7 +65,7 @@ class DevToolsSectionDivider extends StatelessWidget {
     return Divider(
       height: 1,
       thickness: 1,
-      color: FtTokens.cardBorder,
+      color: Tokens.cardBorder,
     );
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../shared/theme/ft_design_tokens.dart';
+import '../../../../shared/theme/design_tokens.dart';
 
 class SocialAvatar extends StatelessWidget {
   const SocialAvatar({
@@ -20,7 +20,7 @@ class SocialAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = color ?? FtTokens.accent;
+    final c = color ?? Tokens.accent;
     final r = radius ?? size * 0.28;
     final initials = name
         .trim()

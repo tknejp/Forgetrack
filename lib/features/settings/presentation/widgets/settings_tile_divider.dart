@@ -15,7 +15,7 @@ class SettingsTileDivider extends StatelessWidget {
       thickness: 1,
       indent: indent,
       endIndent: 0,
-      color: FtTokens.divider,
+      color: Tokens.divider,
     );
   }
 }

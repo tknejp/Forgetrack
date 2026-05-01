@@ -37,7 +37,7 @@ class SettingsSwitchTile extends StatelessWidget {
                     Text(
                       label,
                       style: tt.bodyLarge?.copyWith(
-                        color: FtTokens.onSurface,
+                        color: Tokens.onSurface,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -46,7 +46,7 @@ class SettingsSwitchTile extends StatelessWidget {
                       Text(
                         subtitle!,
                         style: tt.bodySmall?.copyWith(
-                          color: FtTokens.onSurfaceMuted,
+                          color: Tokens.onSurfaceMuted,
                           height: 1.25,
                         ),
                       ),
@@ -57,7 +57,7 @@ class SettingsSwitchTile extends StatelessWidget {
               Switch.adaptive(
                 value: value,
                 onChanged: onChanged,
-                activeThumbColor: FtTokens.accent,
+                activeThumbColor: Tokens.accent,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
             ],

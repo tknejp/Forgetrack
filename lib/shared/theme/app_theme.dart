@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import 'palettes.dart';
+import 'design_tokens.dart';
 
 @immutable
 class SectionColors {
@@ -95,10 +95,9 @@ extension AppThemeContextX on BuildContext {
 class AppTheme {
   AppTheme._();
 
-  static const AppPalette _palette = AppPalette.calmFit;
-
   /// Returns the dark [ThemeData].
-  static ThemeData dark() => _buildTheme(Brightness.dark);
+  static ThemeData dark({ThemeTokens ft = ThemeTokens.dark}) =>
+      _buildTheme(Brightness.dark, ft);
 
   static NavigationBarThemeData _navBarTheme(
     ColorScheme colorScheme,
@@ -132,11 +131,11 @@ class AppTheme {
     );
   }
 
-  static ThemeData _buildTheme(Brightness brightness) {
+  static ThemeData _buildTheme(Brightness brightness, ThemeTokens ft) {
     final isDark = brightness == Brightness.dark;
 
     // ── Effective accent ────────────────────────────────────────────────────
-    final accent = _palette.accent;
+    final accent = ft.accent;
 
     // ── Surface tinting ─────────────────────────────────────────────────────
     // Compute the ΔR/ΔG/ΔB offset of the time palette surface from the neutral
@@ -147,29 +146,23 @@ class AppTheme {
     // Keep seedColor stable so secondary/tertiary hues don't drift; only
     // override primary and surface-family colours with the time palette values.
     final cs = ColorScheme.fromSeed(
-      seedColor: _palette.accent,
-      secondary: _palette.secondary,
-      tertiary: _palette.tertiary,
+      seedColor: ft.accent,
+      secondary: ft.secondary,
+      tertiary: ft.tertiary,
       brightness: brightness,
     ).copyWith(
       primary: accent,
-      secondary: _palette.secondary,
-      tertiary: _palette.tertiary,
+      secondary: ft.secondary,
+      tertiary: ft.tertiary,
       // Surface family — tinted from the segment's surface base.
-      surface: isDark ? const Color(0xFF151A21) : const Color(0xFFF7F9FB),
-      surfaceContainerLowest:
-          isDark ? const Color(0xFF10151C) : const Color(0xFFFFFFFF),
-      surfaceContainerLow:
-          isDark ? const Color(0xFF171E27) : const Color(0xFFF3F6F8),
-      surfaceContainer:
-          isDark ? const Color(0xFF1C2430) : const Color(0xFFEEF3F6),
-      surfaceContainerHigh:
-          isDark ? const Color(0xFF222C39) : const Color(0xFFE6EDF2),
-      surfaceContainerHighest:
-          isDark ? const Color(0xFF2A3645) : const Color(0xFFDCE6ED),
-      outline: isDark ? const Color(0xFF334252) : const Color(0xFFD6E0E7),
-      outlineVariant:
-          isDark ? const Color(0xFF283341) : const Color(0xFFE5EDF2),
+      surface: ft.bg,
+      surfaceContainerLowest: ft.bg,
+      surfaceContainerLow: ft.surface,
+      surfaceContainer: ft.surface,
+      surfaceContainerHigh: ft.surface.withValues(alpha: isDark ? 0.92 : 1),
+      surfaceContainerHighest: ft.surface.withValues(alpha: isDark ? 0.86 : 1),
+      outline: ft.cardBorder,
+      outlineVariant: ft.divider,
       // Nav indicator inherits the active accent.
       secondaryContainer: accent.withValues(alpha: isDark ? 0.20 : 0.10),
       onSecondaryContainer: accent,
@@ -208,25 +201,25 @@ class AppTheme {
     // Section colours carry semantic meaning and must stay recognisable.
     final tokens = AppThemeTokens(
       steps: SectionColors(
-        accent: _palette.steps.accent,
-        muted: _palette.steps.accentMuted,
+        accent: ft.steps.color,
+        muted: ft.steps.dim,
       ),
       nutrition: SectionColors(
-        accent: _palette.nutrition.accent,
-        muted: _palette.nutrition.accentMuted,
+        accent: ft.calories.color,
+        muted: ft.calories.dim,
       ),
       sleep: SectionColors(
-        accent: _palette.sleep.accent,
-        muted: _palette.sleep.accentMuted,
+        accent: ft.sleep.color,
+        muted: ft.sleep.dim,
       ),
       body: SectionColors(
-        accent: _palette.body.accent,
-        muted: _palette.body.accentMuted,
+        accent: ft.weight.color,
+        muted: ft.weight.dim,
       ),
       cardRadius: 20,
       tileRadius: 14,
-      cardBorder: cs.outlineVariant,
-      subtleShadow: isDark ? Colors.black : const Color(0xFF506070),
+      cardBorder: ft.cardBorder,
+      subtleShadow: isDark ? Colors.black : ft.onSurfaceMuted,
     );
 
     return ThemeData(
@@ -234,7 +227,7 @@ class AppTheme {
       colorScheme: cs,
       textTheme: textTheme,
       scaffoldBackgroundColor: cs.surfaceContainerLowest,
-      extensions: [tokens],
+      extensions: [tokens, ft],
       navigationBarTheme: _navBarTheme(
         cs,
         accent,
@@ -295,7 +288,7 @@ class AppTheme {
           }),
           shape: WidgetStateProperty.all(
             RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(Tokens.radiusTile),
             ),
           ),
           side: WidgetStateProperty.resolveWith((states) {
@@ -323,7 +316,7 @@ class AppTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(Tokens.radiusButton),
           ),
         ),
       ),

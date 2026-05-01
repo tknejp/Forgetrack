@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../l10n/l10n.dart';
-import '../../../../shared/theme/ft_design_tokens.dart';
+import '../../../../shared/theme/design_tokens.dart';
 import '../../application/progression_provider.dart';
 import '../../domain/journey_models.dart';
 import '../hero_journey_map_screen.dart';
 import '../progression_l10n.dart';
-import 'ft_progression_primitives.dart';
+import 'progression_primitives.dart';
 import 'journey_adapter.dart';
-import 'journey_shared.dart';
+import 'journey_primitives.dart';
 
 abstract final class _JourneyPreviewAssets {
   static const background = 'assets/ui/journey_map_preview_bg.png';
@@ -21,6 +21,7 @@ abstract final class _JourneyPreviewLayout {
   static const mapHeight = 92.0;
   static const visiblePointCount = 5;
   static const viewportSidePadding = 52.0;
+  static const pathNodeGap = 8.0;
   static const mapVerticalCenter = 0.50;
   static const mapWaveAmplitude = 0.16;
 }
@@ -38,11 +39,11 @@ class JourneyPreviewCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        FtProgSectionHead(
+        ProgSectionHead(
           label: l10n.journeyTitle,
-          accent: FtTokens.accent,
+          accent: Tokens.accent,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: Tokens.spaceSm),
         Material(
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(20),
@@ -51,8 +52,8 @@ class JourneyPreviewCard extends StatelessWidget {
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const HeroJourneyMapScreen()),
             ),
-            splashColor: FtTokens.accent.withValues(alpha: 0.18),
-            highlightColor: FtTokens.accent.withValues(alpha: 0.08),
+            splashColor: Tokens.accent.withValues(alpha: 0.18),
+            highlightColor: Tokens.accent.withValues(alpha: 0.08),
             child: Container(
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
@@ -62,11 +63,11 @@ class JourneyPreviewCard extends StatelessWidget {
                 ),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: FtTokens.accent.withValues(alpha: 0.24),
+                  color: Tokens.accent.withValues(alpha: 0.24),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: FtTokens.accent.withValues(alpha: 0.10),
+                    color: Tokens.accent.withValues(alpha: 0.10),
                     blurRadius: 16,
                     spreadRadius: -4,
                     offset: const Offset(0, 4),
@@ -139,6 +140,7 @@ class _MiniMap extends StatelessWidget {
               height: height,
             ),
         ];
+        final pathSegments = _pathSegments(ordered, positions);
 
         return ClipRect(
           child: Stack(
@@ -169,24 +171,26 @@ class _MiniMap extends StatelessWidget {
               CustomPaint(
                 size: Size(width, height),
                 painter: JourneyPathPainter(
-                  nodePositions: positions,
-                  pathColor: FtTokens.accent,
+                  nodePositions: const [],
+                  pathColor: Tokens.accent,
+                  solidSegments: pathSegments,
                 ),
               ),
               for (var i = 0; i < ordered.length; i++)
-                Positioned(
-                  left: positions[i].dx - _halfNode(ordered[i]),
-                  top: positions[i].dy - _halfNode(ordered[i]),
-                  child: IgnorePointer(
-                    child: JourneyCheckpointNode(
-                      checkpoint: ordered[i],
-                      isSelected: false,
-                      onTap: () {},
-                      baseSize: _baseSize(ordered[i]),
-                      compact: true,
+                if (_isNodeVisible(ordered[i], positions[i], width))
+                  Positioned(
+                    left: positions[i].dx - _halfNode(ordered[i]),
+                    top: positions[i].dy - _halfNode(ordered[i]),
+                    child: IgnorePointer(
+                      child: JourneyCheckpointNode(
+                        checkpoint: ordered[i],
+                        isSelected: false,
+                        onTap: () {},
+                        baseSize: _baseSize(ordered[i]),
+                        compact: true,
+                      ),
                     ),
                   ),
-                ),
             ],
           ),
         );
@@ -219,6 +223,36 @@ class _MiniMap extends StatelessWidget {
       1.0,
       available / (_JourneyPreviewLayout.visiblePointCount - 1),
     );
+  }
+
+  static List<List<Offset>> _pathSegments(
+    List<JourneyCheckpoint> checkpoints,
+    List<Offset> positions,
+  ) {
+    final segments = <List<Offset>>[];
+
+    for (var i = 0; i < positions.length - 1; i++) {
+      final start = positions[i];
+      final end = positions[i + 1];
+      final delta = end - start;
+      final distance = delta.distance;
+      if (distance <= 0) continue;
+
+      final direction = delta / distance;
+      final startGap =
+          _baseSize(checkpoints[i]) / 2 + _JourneyPreviewLayout.pathNodeGap;
+      final endGap =
+          _baseSize(checkpoints[i + 1]) / 2 + _JourneyPreviewLayout.pathNodeGap;
+
+      if (distance <= startGap + endGap) continue;
+
+      segments.add([
+        start + direction * startGap,
+        end - direction * endGap,
+      ]);
+    }
+
+    return segments;
   }
 
   static double _viewportOffset(
@@ -265,6 +299,16 @@ class _MiniMap extends StatelessWidget {
   static double _halfNode(JourneyCheckpoint checkpoint) {
     return (_baseSize(checkpoint) + 14) / 2;
   }
+
+  static bool _isNodeVisible(
+    JourneyCheckpoint checkpoint,
+    Offset position,
+    double viewportWidth,
+  ) {
+    final halfNode = _halfNode(checkpoint);
+    return position.dx + halfNode >= 0 &&
+        position.dx - halfNode <= viewportWidth;
+  }
 }
 
 class _MiniMapEmpty extends StatelessWidget {
@@ -284,7 +328,7 @@ class _MiniMapEmpty extends StatelessWidget {
               context.l10n.journeyMiniMapEmpty,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: Tokens.fontSizeCaption,
                 height: 1.4,
                 color: Colors.white.withValues(alpha: 0.68),
               ),
@@ -340,16 +384,16 @@ class _SummaryRow extends StatelessWidget {
             icon: Icons.history_rounded,
             label: l10n.journeyLastMilestone,
             value: _summaryValue(context, lastMilestone),
-            color: FtTokens.active.color,
+            color: Tokens.active.color,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: Tokens.spaceMd),
         Expanded(
           child: _SummaryItem(
             icon: Icons.lock_outline_rounded,
             label: l10n.journeyNextGoal,
             value: _summaryValue(context, nextLocked),
-            color: FtTokens.calories.color,
+            color: Tokens.calories.color,
           ),
         ),
       ],
@@ -388,7 +432,7 @@ class _SummaryItem extends StatelessWidget {
         Row(
           children: [
             Icon(icon, size: 11, color: color),
-            const SizedBox(width: 4),
+            const SizedBox(width: Tokens.spaceXs),
             Flexible(
               child: Text(
                 label.toUpperCase(),
@@ -410,7 +454,7 @@ class _SummaryItem extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(
-            fontSize: 12,
+            fontSize: Tokens.fontSizeSmall,
             fontWeight: FontWeight.w800,
             color: Colors.white,
             letterSpacing: -0.1,

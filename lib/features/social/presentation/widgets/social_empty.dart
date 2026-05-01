@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../shared/theme/ft_design_tokens.dart';
+import '../../../../shared/theme/design_tokens.dart';
 
 class SocialEmpty extends StatelessWidget {
   const SocialEmpty({
@@ -19,20 +19,20 @@ class SocialEmpty extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 16),
       child: Column(
         children: [
-          Icon(icon, size: 36, color: FtTokens.onSurfaceFaint),
-          const SizedBox(height: 12),
+          Icon(icon, size: 36, color: Tokens.onSurfaceFaint),
+          const SizedBox(height: Tokens.spaceMd),
           Text(
             title,
             style: const TextStyle(
-                fontSize: 14,
+                fontSize: Tokens.fontSizeBody,
                 fontWeight: FontWeight.w700,
-                color: FtTokens.onSurfaceMuted),
+                color: Tokens.onSurfaceMuted),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: Tokens.spaceXs),
           Text(
             subtitle,
             style:
-                const TextStyle(fontSize: 12, color: FtTokens.onSurfaceFaint),
+                const TextStyle(fontSize: Tokens.fontSizeSmall, color: Tokens.onSurfaceFaint),
             textAlign: TextAlign.center,
           ),
         ],

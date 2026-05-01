@@ -5,7 +5,7 @@ import '../../../../l10n/l10n.dart';
 import '../../../../features/auth/application/auth_provider.dart';
 import '../../../../features/health_connect/application/goals_provider.dart';
 import '../../../../shared/theme/app_theme.dart';
-import '../../../../shared/widgets/stat_display.dart';
+import '../../../../shared/widgets/section_head.dart';
 import '../../../../shared/widgets/top_level_app_bar.dart';
 import '../../application/fitness_provider.dart';
 import '../hc_state_widgets.dart';
@@ -131,9 +131,7 @@ class _BodyContent extends StatelessWidget {
           children: [
             // ── Weight summary ─────────────────────────────────────────────
             if (currentWeight != null) ...[
-              SectionHeader(l10n.weightTitle,
-                  icon: Icons.monitor_weight_outlined,
-                  color: tokens.body.accent),
+              SectionHead(label: l10n.weightTitle, accent: tokens.body.accent),
               const SizedBox(height: 8),
               WeightSummaryCard(
                 currentWeight: currentWeight,
@@ -145,8 +143,7 @@ class _BodyContent extends StatelessWidget {
             // ── Body composition ───────────────────────────────────────────
             if (bodyFat != null && currentWeight != null) ...[
               const SizedBox(height: 16),
-              SectionHeader(l10n.bodyComposition,
-                  icon: Icons.pie_chart_outline, color: tokens.body.accent),
+              SectionHead(label: l10n.bodyComposition, accent: tokens.body.accent),
               const SizedBox(height: 8),
               BodyCompositionCard(weight: currentWeight, bodyFat: bodyFat),
             ],
@@ -154,8 +151,7 @@ class _BodyContent extends StatelessWidget {
             // ── Weight trend chart ─────────────────────────────────────────
             if (chartPoints.length >= 2) ...[
               const SizedBox(height: 16),
-              SectionHeader(l10n.bodyWeightTrend,
-                  icon: Icons.show_chart, color: tokens.body.accent),
+              SectionHead(label: l10n.bodyWeightTrend, accent: tokens.body.accent),
               const SizedBox(height: 8),
               WeightTrendCard(points: chartPoints, locale: locale),
             ],
@@ -163,8 +159,7 @@ class _BodyContent extends StatelessWidget {
             // ── Sleep summary ──────────────────────────────────────────────
             if (fitness.sleepHistory.isNotEmpty) ...[
               const SizedBox(height: 16),
-              SectionHeader(l10n.sleepTitle,
-                  icon: Icons.bedtime_outlined, color: tokens.sleep.accent),
+              SectionHead(label: l10n.sleepTitle, accent: tokens.sleep.accent),
               const SizedBox(height: 8),
               SleepSummaryCard(
                 todaySleep: fitness.todaySleep,

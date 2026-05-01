@@ -5,7 +5,7 @@ import '../../../../l10n/l10n.dart';
 import '../../../../features/auth/application/auth_provider.dart';
 import '../../../../features/health_connect/application/goals_provider.dart';
 import '../../../../shared/theme/app_theme.dart';
-import '../../../../shared/widgets/stat_display.dart';
+import '../../../../shared/widgets/section_head.dart';
 import '../../../../shared/widgets/top_level_app_bar.dart';
 import '../../application/fitness_provider.dart';
 import '../hc_state_widgets.dart';
@@ -163,8 +163,7 @@ class _ActivitiesContent extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 112),
           children: [
             // ── Steps summary ──────────────────────────────────────────────
-            SectionHeader(l10n.stepsTitle,
-                icon: Icons.directions_walk, color: tokens.steps.accent),
+            SectionHead(label: l10n.stepsTitle, accent: tokens.steps.accent),
             const SizedBox(height: 8),
             StepsSummaryCard(
               todaySteps: fitness.todaySteps,
@@ -177,17 +176,14 @@ class _ActivitiesContent extends StatelessWidget {
             // ── 7-day trend chart ──────────────────────────────────────────
             if (chartHistory.length > 1) ...[
               const SizedBox(height: 16),
-              SectionHeader(l10n.activitiesWeeklyTrend,
-                  icon: Icons.show_chart, color: tokens.steps.accent),
+              SectionHead(label: l10n.activitiesWeeklyTrend, accent: tokens.steps.accent),
               const SizedBox(height: 8),
               StepsTrendCard(history: chartHistory, locale: locale),
             ],
 
             // ── Active calories ────────────────────────────────────────────
             const SizedBox(height: 16),
-            SectionHeader(l10n.activitiesActiveCalories,
-                icon: Icons.local_fire_department_outlined,
-                color: tokens.nutrition.accent),
+            SectionHead(label: l10n.activitiesActiveCalories, accent: tokens.nutrition.accent),
             const SizedBox(height: 8),
             ActiveCaloriesCard(
               today: fitness.activeCaloriesBurnedToday,
@@ -197,8 +193,7 @@ class _ActivitiesContent extends StatelessWidget {
 
             // ── Active minutes ─────────────────────────────────────────────
             const SizedBox(height: 16),
-            SectionHeader(l10n.activitiesActiveMins,
-                icon: Icons.timer_outlined, color: tokens.steps.accent),
+            SectionHead(label: l10n.activitiesActiveMins, accent: tokens.steps.accent),
             const SizedBox(height: 8),
             ActiveMinsCard(
               todayMins: todayActiveMins,
@@ -208,8 +203,7 @@ class _ActivitiesContent extends StatelessWidget {
 
             // ── Workout stats ──────────────────────────────────────────────
             const SizedBox(height: 16),
-            SectionHeader(l10n.activitiesWorkouts,
-                icon: Icons.fitness_center_outlined, color: cs.secondary),
+            SectionHead(label: l10n.activitiesWorkouts, accent: cs.secondary),
             const SizedBox(height: 8),
             WorkoutStatsCard(
               weekCount: weekWorkoutCount,
@@ -223,8 +217,7 @@ class _ActivitiesContent extends StatelessWidget {
 
             // ── Recent activity list ───────────────────────────────────────
             const SizedBox(height: 16),
-            SectionHeader(l10n.activitiesRecentActivity,
-                icon: Icons.history, color: cs.secondary),
+            SectionHead(label: l10n.activitiesRecentActivity, accent: cs.secondary),
             const SizedBox(height: 8),
             if (!fitness.workoutPermissionGranted)
               WorkoutPermissionCard(

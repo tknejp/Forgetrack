@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:forgetrack/features/progression/presentation/badges/progression_badge_specs.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../features/progression/domain/progression_models.dart';
 import '../../../../features/progression/presentation/progression_l10n.dart';
-import '../../../../features/progression/presentation/widgets/ft_progression_primitives.dart';
+import '../../../../features/progression/presentation/widgets/progression_level_badge.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../shared/theme/ft_design_tokens.dart';
@@ -13,10 +12,12 @@ import '../../../cosmetics/presentation/cosmetics_l10n.dart';
 import '../../../cosmetics/presentation/widgets/cosmetic_equipped_chip.dart';
 import '../../application/social_provider.dart';
 import '../../domain/social_models.dart';
-import '../social_helpers.dart';
+import '../social_profile_utils.dart';
 import 'social_cosmetic_avatar.dart';
 import 'social_feed_card.dart';
 import 'social_lv_badge.dart';
+import 'social_profile_achievement_grid.dart';
+import 'social_profile_friends_section.dart';
 
 class SocialUserProfileSheet extends StatefulWidget {
   const SocialUserProfileSheet({
@@ -63,9 +64,9 @@ class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
     return Container(
       margin: const EdgeInsets.only(top: 60),
       decoration: BoxDecoration(
-        color: FtTokens.bg,
+        color: Tokens.bg,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        border: Border.all(color: FtTokens.cardBorder),
+        border: Border.all(color: Tokens.cardBorder),
       ),
       child: Column(
         children: [
@@ -75,8 +76,8 @@ class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                  color: FtTokens.cardBorder,
-                  borderRadius: BorderRadius.circular(99)),
+                  color: Tokens.cardBorder,
+                  borderRadius: BorderRadius.circular(Tokens.radiusProgress)),
             ),
           ),
           Expanded(
@@ -103,14 +104,15 @@ class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
                             begin: const Alignment(-1, -1),
                             end: const Alignment(1, 1),
                             colors: [
-                              FtTokens.accent.withValues(alpha: 0.16),
-                              FtTokens.accent.withValues(alpha: 0.04),
+                              Tokens.accent.withValues(alpha: 0.16),
+                              Tokens.accent.withValues(alpha: 0.04),
                             ],
                           ),
                           image: _profileBackgroundImage(profile),
-                          borderRadius: BorderRadius.circular(18),
+                          borderRadius:
+                              BorderRadius.circular(Tokens.radiusCard),
                           border: Border.all(
-                              color: FtTokens.accent.withValues(alpha: 0.26)),
+                              color: Tokens.accent.withValues(alpha: 0.26)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -126,7 +128,7 @@ class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
                                   radius: 18,
                                   frameOverscan: 1.16,
                                 ),
-                                const SizedBox(width: 12),
+                                const SizedBox(width: Tokens.spaceMd),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment:
@@ -137,25 +139,27 @@ class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
                                         style: const TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.w800,
-                                            color: FtTokens.onSurface,
+                                            color: Tokens.onSurface,
                                             letterSpacing: -0.3),
                                       ),
                                       if (handle.isNotEmpty)
                                         Text('@$handle',
                                             style: const TextStyle(
-                                                fontSize: 11,
-                                                color:
-                                                    FtTokens.onSurfaceFaint)),
+                                                fontSize:
+                                                    Tokens.fontSizeCaption,
+                                                color: Tokens.onSurfaceFaint)),
                                       if (stats != null) ...[
                                         const SizedBox(height: 6),
                                         Text(
                                           ProgressionL10n(context.l10n)
                                               .levelTitle(stats.level)
                                               .toUpperCase(),
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                               fontSize: 7,
                                               fontWeight: FontWeight.w800,
-                                              color: Color(0xFFFBBF24),
+                                              color: progressionLevelAccent(
+                                                stats.level,
+                                              ),
                                               letterSpacing: 1.0),
                                         ),
                                       ],
@@ -174,19 +178,19 @@ class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
                                         style: const TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.w900,
-                                            color: FtTokens.onSurface,
+                                            color: Tokens.onSurface,
                                             letterSpacing: -0.5),
                                       ),
-                                      const Text('XP',
-                                          style: TextStyle(
-                                              fontSize: 9,
-                                              color: FtTokens.onSurfaceFaint)),
+                                      Text(l10n.socialXpLabel,
+                                          style: const TextStyle(
+                                              fontSize: Tokens.fontSizeTiny,
+                                              color: Tokens.onSurfaceFaint)),
                                     ],
                                   ),
                               ],
                             ),
                             if (!isMe && social.isFriendWith(widget.uid)) ...[
-                              const SizedBox(height: 12),
+                              const SizedBox(height: Tokens.spaceMd),
                               Container(
                                 height: 1,
                                 color: Colors.white.withValues(alpha: 0.07),
@@ -198,20 +202,20 @@ class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
                         ),
                       ),
                       if (stats != null) ...[
-                        const SizedBox(height: 12),
+                        const SizedBox(height: Tokens.spaceMd),
                         _buildStats(stats),
                       ],
                       const SizedBox(height: 10),
-                      _ProfileFriendsSection(stream: _friendsStream),
+                      ProfileFriendsSection(stream: _friendsStream),
                       if (!isMe && !social.isFriendWith(widget.uid)) ...[
                         const SizedBox(height: 10),
                         _buildActionArea(context, social, displayName),
                       ],
                       _ProfileCosmeticsSection(profile: profile),
-                      const SizedBox(height: 16),
-                      const _SectionTitle(
+                      const SizedBox(height: Tokens.spaceLg),
+                      _SectionTitle(
                         icon: Icons.push_pin_rounded,
-                        title: 'PRIPNUTE ACHIEVEMENTY',
+                        title: l10n.socialProfilePinnedAchievements,
                       ),
                       const SizedBox(height: 10),
                       _PinnedAchievementsSection(
@@ -222,9 +226,9 @@ class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
                         progL10n: progL10n,
                       ),
                       const SizedBox(height: 18),
-                      const _SectionTitle(
+                      _SectionTitle(
                         icon: Icons.forum_rounded,
-                        title: 'SDILENE PRISPEVKY',
+                        title: l10n.socialProfileSharedPosts,
                       ),
                       const SizedBox(height: 10),
                       _ProfileSharesSection(
@@ -242,6 +246,7 @@ class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
   }
 
   Widget _buildStats(SocialUserStats stats) {
+    final l10n = context.l10n;
     final bestStreak = [
       stats.bestStepsStreak,
       stats.bestNutritionStreak,
@@ -253,26 +258,26 @@ class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
           child: _StatCell(
             icon: Icons.shield_moon_rounded,
             value: '${stats.unlockedAchievementCount}',
-            label: 'ÚSPĚCHY',
-            color: FtTokens.accent,
+            label: l10n.socialProfileStatsAchievements,
+            color: Tokens.accent,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: Tokens.spaceSm),
         Expanded(
           child: _StatCell(
             icon: Icons.local_fire_department_rounded,
-            value: '$bestStreak d',
-            label: 'NEJL. SÉRIE',
-            color: FtTokens.active.color,
+            value: l10n.socialDaysShort(bestStreak),
+            label: l10n.socialProfileStatsBestStreak,
+            color: Tokens.active.color,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: Tokens.spaceSm),
         Expanded(
           child: _StatCell(
             icon: Icons.directions_walk_rounded,
-            value: '${stats.bestStepsStreak} d',
-            label: 'KROKY SÉRIE',
-            color: FtTokens.steps.color,
+            value: l10n.socialDaysShort(stats.bestStepsStreak),
+            label: l10n.socialProfileStatsStepsStreak,
+            color: Tokens.steps.color,
           ),
         ),
       ],
@@ -326,14 +331,14 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: FtTokens.accent),
-        const SizedBox(width: 8),
+        Icon(icon, size: 14, color: Tokens.accent),
+        const SizedBox(width: Tokens.spaceSm),
         Text(
           title,
           style: const TextStyle(
-            fontSize: 11,
+            fontSize: Tokens.fontSizeCaption,
             fontWeight: FontWeight.w800,
-            color: FtTokens.accent,
+            color: Tokens.accent,
             letterSpacing: 1.1,
           ),
         ),
@@ -362,9 +367,7 @@ class _PinnedAchievementsSection extends StatelessWidget {
     final pinnedIds = profile?.pinnedAchievementIds ?? const [];
     if (pinnedIds.isEmpty) {
       return _ProfileEmptyLine(
-        text: isMe
-            ? 'Zatim nemas nic pripnuteho. Otevri detail achievementu a pripni ho na profil.'
-            : 'Zadne pripnute achievementy.',
+        text: isMe ? l10n.socialPinnedEmptyMine : l10n.socialPinnedEmptyOther,
       );
     }
 
@@ -388,12 +391,12 @@ class _PinnedAchievementsSection extends StatelessWidget {
         }
 
         if (pinned.isEmpty) {
-          return const _ProfileEmptyLine(
-            text: 'Pripnute achievementy uz nejsou dostupne.',
+          return _ProfileEmptyLine(
+            text: l10n.socialPinnedUnavailable,
           );
         }
 
-        return _FriendAchievementsGrid(
+        return FriendAchievementsGrid(
           achievements: pinned,
           l10n: l10n,
           progL10n: progL10n,
@@ -419,8 +422,8 @@ class _ProfileSharesSection extends StatelessWidget {
 
         final shares = snap.data ?? const [];
         if (shares.isEmpty) {
-          return const _ProfileEmptyLine(
-            text: 'Zadne sdilene prispevky zatim.',
+          return _ProfileEmptyLine(
+            text: context.l10n.socialSharedPostsEmpty,
           );
         }
 
@@ -454,9 +457,9 @@ class _ProfileCosmeticsSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _SectionTitle(
+          _SectionTitle(
             icon: Icons.auto_awesome_rounded,
-            title: 'KOSMETIKA',
+            title: context.l10n.socialProfileCosmetics,
           ),
           const SizedBox(height: 10),
           Wrap(
@@ -476,229 +479,6 @@ class _ProfileCosmeticsSection extends StatelessWidget {
   }
 }
 
-class _ProfileFriendsSection extends StatefulWidget {
-  const _ProfileFriendsSection({required this.stream});
-
-  final Stream<List<SocialUserProfile>> stream;
-
-  @override
-  State<_ProfileFriendsSection> createState() => _ProfileFriendsSectionState();
-}
-
-class _ProfileFriendsSectionState extends State<_ProfileFriendsSection> {
-  bool _expanded = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<List<SocialUserProfile>>(
-      stream: widget.stream,
-      builder: (context, snap) {
-        final loading =
-            snap.connectionState == ConnectionState.waiting && !snap.hasData;
-        final friends = snap.data ?? const <SocialUserProfile>[];
-
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.04),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
-          ),
-          child: Column(
-            children: [
-              InkWell(
-                onTap: friends.isEmpty
-                    ? null
-                    : () => setState(() => _expanded = !_expanded),
-                borderRadius: BorderRadius.circular(14),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 11, 12, 11),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                          color: FtTokens.active.dim,
-                          borderRadius: BorderRadius.circular(9),
-                          border: Border.all(
-                            color:
-                                FtTokens.active.color.withValues(alpha: 0.22),
-                          ),
-                        ),
-                        child: Icon(
-                          Icons.groups_rounded,
-                          size: 16,
-                          color: FtTokens.active.color,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      const Expanded(
-                        child: Text(
-                          'PRATELE',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            color: FtTokens.onSurfaceFaint,
-                            letterSpacing: 0.9,
-                          ),
-                        ),
-                      ),
-                      if (loading)
-                        const SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: FtTokens.accent,
-                          ),
-                        )
-                      else
-                        Text(
-                          '${friends.length}',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w900,
-                            color: FtTokens.active.color,
-                          ),
-                        ),
-                      const SizedBox(width: 8),
-                      AnimatedRotation(
-                        duration: const Duration(milliseconds: 180),
-                        turns: _expanded ? 0.5 : 0,
-                        child: const Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          size: 20,
-                          color: FtTokens.onSurfaceFaint,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              AnimatedCrossFade(
-                duration: const Duration(milliseconds: 200),
-                firstChild: const SizedBox(width: double.infinity),
-                secondChild: _ProfileFriendList(friends: friends),
-                crossFadeState: _expanded
-                    ? CrossFadeState.showSecond
-                    : CrossFadeState.showFirst,
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _ProfileFriendList extends StatelessWidget {
-  const _ProfileFriendList({required this.friends});
-
-  final List<SocialUserProfile> friends;
-
-  @override
-  Widget build(BuildContext context) {
-    if (friends.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.fromLTRB(12, 0, 12, 12),
-        child: Text(
-          'Zadni pratele zatim.',
-          style: TextStyle(
-            fontSize: 12,
-            color: FtTokens.onSurfaceFaint,
-          ),
-        ),
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-      child: Column(
-        children: [
-          Container(
-            height: 1,
-            color: Colors.white.withValues(alpha: 0.06),
-          ),
-          const SizedBox(height: 6),
-          for (final friend in friends) _ProfileFriendRow(friend: friend),
-        ],
-      ),
-    );
-  }
-}
-
-class _ProfileFriendRow extends StatelessWidget {
-  const _ProfileFriendRow({required this.friend});
-
-  final SocialUserProfile friend;
-
-  @override
-  Widget build(BuildContext context) {
-    final title = ProgressionL10n(context.l10n).levelTitle(friend.stats.level);
-    final subtitle = friend.handle.isEmpty
-        ? 'Level ${friend.stats.level} $title'
-        : '@${friend.handle} - Level ${friend.stats.level} $title';
-
-    return InkWell(
-      onTap: () => openUserProfile(
-        context,
-        uid: friend.uid,
-        initialDisplayName: friend.displayName,
-        initialPhotoUrl: friend.photoUrl,
-      ),
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 7),
-        child: Row(
-          children: [
-            SocialCosmeticAvatar(
-              name: friend.displayName,
-              size: 36,
-              photoUrl: friend.photoUrl,
-              profile: friend,
-              radius: 11,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    friend.displayName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: FtTokens.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: FtTokens.onSurfaceFaint,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(
-              Icons.chevron_right_rounded,
-              size: 16,
-              color: FtTokens.onSurfaceFaint,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _ProfileSectionLoader extends StatelessWidget {
   const _ProfileSectionLoader();
 
@@ -709,7 +489,7 @@ class _ProfileSectionLoader extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: 24),
         child: CircularProgressIndicator(
           strokeWidth: 2,
-          color: FtTokens.accent,
+          color: Tokens.accent,
         ),
       ),
     );
@@ -744,7 +524,7 @@ class _ProfileEmptyLine extends StatelessWidget {
         text,
         style: const TextStyle(
           fontSize: 13,
-          color: FtTokens.onSurfaceFaint,
+          color: Tokens.onSurfaceFaint,
           height: 1.35,
         ),
       ),
@@ -764,10 +544,10 @@ class _AddFriendButton extends StatelessWidget {
       child: ElevatedButton.icon(
         onPressed: busy ? null : onTap,
         style: ElevatedButton.styleFrom(
-          backgroundColor: FtTokens.accent,
+          backgroundColor: Tokens.accent,
           foregroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(Tokens.radiusInner)),
           padding: const EdgeInsets.symmetric(vertical: 14),
         ),
         icon: busy
@@ -777,8 +557,9 @@ class _AddFriendButton extends StatelessWidget {
                 child: CircularProgressIndicator(
                     strokeWidth: 2, color: Colors.white))
             : const Icon(Icons.person_add_rounded),
-        label: const Text('Přidat přítele',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+        label: Text(context.l10n.socialAddFriend,
+            style: const TextStyle(
+                fontSize: Tokens.fontSizeBody, fontWeight: FontWeight.w700)),
       ),
     );
   }
@@ -793,20 +574,20 @@ class _PendingRequestChip extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
-        color: FtTokens.accent.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: FtTokens.accent.withValues(alpha: 0.35)),
+        color: Tokens.accent.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(Tokens.radiusInner),
+        border: Border.all(color: Tokens.accent.withValues(alpha: 0.35)),
       ),
-      child: const Row(
+      child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.schedule_rounded, size: 16, color: FtTokens.accent),
-          SizedBox(width: 8),
-          Text('Žádost odeslána',
-              style: TextStyle(
-                  fontSize: 14,
+          const Icon(Icons.schedule_rounded, size: 16, color: Tokens.accent),
+          const SizedBox(width: Tokens.spaceSm),
+          Text(context.l10n.socialRequestSent,
+              style: const TextStyle(
+                  fontSize: Tokens.fontSizeBody,
                   fontWeight: FontWeight.w700,
-                  color: FtTokens.accent)),
+                  color: Tokens.accent)),
         ],
       ),
     );
@@ -829,25 +610,27 @@ class _RemoveFriendButtonState extends State<_RemoveFriendButton> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: FtTokens.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Odebrat přítele',
-            style: TextStyle(
-                color: FtTokens.onSurface, fontWeight: FontWeight.w800)),
+        backgroundColor: Tokens.surface,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(Tokens.radiusButton)),
+        title: Text(context.l10n.socialRemoveFriendConfirmTitle,
+            style: const TextStyle(
+                color: Tokens.onSurface, fontWeight: FontWeight.w800)),
         content: Text(
-          'Opravdu chceš odebrat ${widget.name} ze seznamu přátel?',
-          style: const TextStyle(color: FtTokens.onSurfaceMuted, fontSize: 14),
+          context.l10n.socialRemoveFriendConfirmBody(widget.name),
+          style: const TextStyle(
+              color: Tokens.onSurfaceMuted, fontSize: Tokens.fontSizeBody),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Zrušit',
-                style: TextStyle(color: FtTokens.onSurfaceMuted)),
+            child: Text(context.l10n.socialCancel,
+                style: const TextStyle(color: Tokens.onSurfaceMuted)),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Odebrat',
-                style: TextStyle(
+            child: Text(context.l10n.socialRemoveFriend,
+                style: const TextStyle(
                     color: Color(0xFFEF4444), fontWeight: FontWeight.w700)),
           ),
         ],
@@ -862,7 +645,7 @@ class _RemoveFriendButtonState extends State<_RemoveFriendButton> {
       if (mounted) {
         messenger.showSnackBar(
           SnackBar(
-              content: Text('Chyba: $e'),
+              content: Text(context.l10n.socialErrorWithMessage('$e')),
               backgroundColor: const Color(0xFFEF4444)),
         );
       }
@@ -889,10 +672,10 @@ class _RemoveFriendButtonState extends State<_RemoveFriendButton> {
             const Icon(Icons.person_remove_rounded,
                 size: 13, color: Color(0x88EF4444)),
           const SizedBox(width: 6),
-          const Text(
-            'Odebrat přítele',
-            style: TextStyle(
-              fontSize: 12,
+          Text(
+            context.l10n.socialRemoveFriend,
+            style: const TextStyle(
+              fontSize: Tokens.fontSizeSmall,
               fontWeight: FontWeight.w600,
               color: Color(0x88EF4444),
             ),
@@ -923,7 +706,7 @@ class _StatCell extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(10, 10, 10, 11),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(Tokens.radiusInner),
         border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
       ),
       child: Column(
@@ -945,337 +728,11 @@ class _StatCell extends StatelessWidget {
             style: const TextStyle(
                 fontSize: 8,
                 fontWeight: FontWeight.w700,
-                color: FtTokens.onSurfaceFaint,
+                color: Tokens.onSurfaceFaint,
                 letterSpacing: 0.6),
           ),
         ],
       ),
     );
   }
-}
-
-// ── Achievement grid ──────────────────────────────────────────────────────────
-
-class _FriendAchievementsGrid extends StatelessWidget {
-  const _FriendAchievementsGrid({
-    required this.achievements,
-    required this.l10n,
-    required this.progL10n,
-  });
-
-  final List<ProgressionAchievement> achievements;
-  final AppLocalizations l10n;
-  final ProgressionL10n progL10n;
-
-  static const _difficultyOrder = {
-    'extraHard': 0,
-    'hard': 1,
-    'medium': 2,
-    'easy': 3,
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    final sorted = List<ProgressionAchievement>.from(achievements)
-      ..sort((a, b) {
-        final aOrder =
-            _difficultyOrder[a.difficulty.toString().split('.').last] ?? 99;
-        final bOrder =
-            _difficultyOrder[b.difficulty.toString().split('.').last] ?? 99;
-        return aOrder.compareTo(bOrder);
-      });
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final crossAxisCount = width >= 620 ? 4 : 3;
-        final aspectRatio = width >= 620 ? 0.98 : 0.9;
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: sorted.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            mainAxisSpacing: 10,
-            crossAxisSpacing: 10,
-            childAspectRatio: aspectRatio,
-          ),
-          itemBuilder: (context, index) {
-            return _FriendAchievementTile(
-              achievement: sorted[index],
-              l10n: l10n,
-              progL10n: progL10n,
-            );
-          },
-        );
-      },
-    );
-  }
-}
-
-class _FriendAchievementTile extends StatelessWidget {
-  const _FriendAchievementTile({
-    required this.achievement,
-    required this.l10n,
-    required this.progL10n,
-  });
-
-  final ProgressionAchievement achievement;
-  final AppLocalizations l10n;
-  final ProgressionL10n progL10n;
-
-  @override
-  Widget build(BuildContext context) {
-    final badge = achievementBadgeSpec(achievement);
-    final color = badge.color;
-
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => _showFriendAchievementDetailsSheet(
-        context,
-        achievement: achievement,
-        l10n: l10n,
-        progL10n: progL10n,
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              color.withValues(alpha: 0.13),
-              color.withValues(alpha: 0.03),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.27)),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.2),
-              blurRadius: 12,
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              badge.emoji,
-              style: const TextStyle(fontSize: 22),
-            ),
-            const SizedBox(height: 6),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Text(
-                friendAchievementDisplayLabel(achievement, context),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: FtTokens.fontSizeTiny,
-                  fontWeight: FontWeight.w700,
-                  color: color,
-                  letterSpacing: 0.5,
-                  height: 1.15,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _FriendAchievementEmojiBadge extends StatelessWidget {
-  const _FriendAchievementEmojiBadge({
-    required this.emoji,
-    required this.color,
-  });
-
-  final String emoji;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 34,
-      height: 34,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(11),
-        border: Border.all(color: color.withValues(alpha: 0.32)),
-      ),
-      child: Center(
-        child: Text(emoji, style: const TextStyle(fontSize: 20)),
-      ),
-    );
-  }
-}
-
-class _FriendAchievementDetailsSheet extends StatelessWidget {
-  const _FriendAchievementDetailsSheet({
-    required this.achievement,
-    required this.l10n,
-    required this.progL10n,
-  });
-
-  final ProgressionAchievement achievement;
-  final AppLocalizations l10n;
-  final ProgressionL10n progL10n;
-
-  @override
-  Widget build(BuildContext context) {
-    final badge = achievementBadgeSpec(achievement);
-    final color = badge.color;
-    final locale = Localizations.localeOf(context).toString();
-    final summary = friendAchievementCompactSummary(
-      achievement,
-      l10n,
-      progL10n,
-      locale,
-    );
-    final bottomPad = MediaQuery.of(context).padding.bottom;
-
-    return SafeArea(
-      top: false,
-      bottom: false,
-      child: Container(
-        decoration: BoxDecoration(
-          color: FtTokens.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-        ),
-        padding: EdgeInsets.fromLTRB(18, 12, 18, bottomPad + 22),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 42,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _FriendAchievementEmojiBadge(
-                  emoji: badge.emoji,
-                  color: color,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        progL10n.achievementTitle(achievement),
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          letterSpacing: -0.4,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        summary,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: color.withValues(alpha: 0.9),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                FtProgTinyPill(
-                  label: l10n.progAchievementStatusUnlocked,
-                  color: color,
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              progL10n.achievementDescription(achievement),
-              style: const TextStyle(
-                fontSize: 12,
-                height: 1.45,
-                color: FtTokens.onSurfaceMuted,
-              ),
-            ),
-            const SizedBox(height: 14),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                FtProgTinyPill(
-                  label: friendAchievementDifficultyLabel(achievement, l10n),
-                  color: color,
-                ),
-                if (achievement.ruleId != null)
-                  FtProgTinyPill(
-                    label: progL10n.ruleTitle(achievement.ruleId!),
-                    color: color.withValues(alpha: 0.88),
-                  )
-                else if (achievement.domain != null)
-                  FtProgTinyPill(
-                    label: progL10n.domainLabel(achievement.domain!),
-                    color: color.withValues(alpha: 0.88),
-                  ),
-              ],
-            ),
-            if (achievement.unlockedAt != null) ...[
-              const SizedBox(height: 14),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.03),
-                  borderRadius: BorderRadius.circular(14),
-                  border:
-                      Border.all(color: Colors.white.withValues(alpha: 0.06)),
-                ),
-                child: Text(
-                  l10n.progQuestCompletedOn(
-                    formatAchievementDateTime(achievement.unlockedAt!, locale),
-                  ),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: color.withValues(alpha: 0.9),
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-void _showFriendAchievementDetailsSheet(
-  BuildContext context, {
-  required ProgressionAchievement achievement,
-  required AppLocalizations l10n,
-  required ProgressionL10n progL10n,
-}) {
-  showModalBottomSheet<void>(
-    context: context,
-    backgroundColor: Colors.transparent,
-    isScrollControlled: true,
-    builder: (context) => _FriendAchievementDetailsSheet(
-      achievement: achievement,
-      l10n: l10n,
-      progL10n: progL10n,
-    ),
-  );
 }
