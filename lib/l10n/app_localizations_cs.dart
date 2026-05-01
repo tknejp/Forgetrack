@@ -1947,4 +1947,335 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get cosmeticUnknown => 'Neznámá kosmetika';
+
+  @override
+  String get cosmeticRarityCommon => 'Běžné';
+
+  @override
+  String get cosmeticRarityRare => 'Vzácné';
+
+  @override
+  String get cosmeticRarityEpic => 'Epické';
+
+  @override
+  String get cosmeticRarityLegendary => 'Legendární';
+
+  @override
+  String get celebrationCosmeticUnlockedEyebrow => 'Odemčeno v inventáři';
+
+  @override
+  String get socialTabFeed => 'Feed';
+
+  @override
+  String get socialTabActivity => 'Aktivita';
+
+  @override
+  String get socialTabLeaderboard => 'Žebříček';
+
+  @override
+  String get socialTabFriends => 'Přátelé';
+
+  @override
+  String get socialSectionRecentActivity => 'NEDÁVNÁ AKTIVITA';
+
+  @override
+  String get socialSectionFriendActivity => 'AKTIVITA PŘÁTEL';
+
+  @override
+  String get socialNoNotificationsTitle => 'Žádné upozornění';
+
+  @override
+  String get socialNoNotificationsSubtitle =>
+      'Zde uvidíš reakce přátel na tvoje sdílené achievementy.';
+
+  @override
+  String get socialFeedEmptyTitle => 'Feed je prázdný';
+
+  @override
+  String get socialFeedEmptySubtitle =>
+      'Sdílené achievementy přátel se zobrazí zde.';
+
+  @override
+  String get socialFriendsEmptyTitle => 'Žádní přátelé';
+
+  @override
+  String get socialFriendsEmptySubtitle =>
+      'Přidej přátele vyhledáním jejich přezdívky.';
+
+  @override
+  String socialFriendsSectionCount(int count) {
+    return 'PŘÁTELÉ  •  $count';
+  }
+
+  @override
+  String get socialFriendRequestsTitle => 'Žádosti o přátelství';
+
+  @override
+  String socialOutgoingRequestsCount(int count) {
+    return 'Odeslané žádosti • $count';
+  }
+
+  @override
+  String get socialFriendRequestAccepted => 'Žádost přijata.';
+
+  @override
+  String get socialFriendRequestDeclined => 'Žádost odmítnuta.';
+
+  @override
+  String get socialFriendRequestSent => 'Žádost o přátelství odeslána.';
+
+  @override
+  String socialErrorWithMessage(String message) {
+    return 'Chyba: $message';
+  }
+
+  @override
+  String get socialWantsToBeFriend => 'Chce se stát tvým přítelem';
+
+  @override
+  String get socialAccept => 'Přijmout';
+
+  @override
+  String get socialDecline => 'Odmítnout';
+
+  @override
+  String get socialAwaitingConfirmation => 'Čeká na potvrzení';
+
+  @override
+  String get socialPending => 'Pending';
+
+  @override
+  String get socialSearchHint => 'Hledat podle přezdívky…';
+
+  @override
+  String get socialSearchButton => 'Najít';
+
+  @override
+  String get socialAdd => 'Přidat';
+
+  @override
+  String socialHandleLevel(String handle, int level) {
+    return '@$handle · Level $level';
+  }
+
+  @override
+  String socialLevelLabel(int level) {
+    return 'Level $level';
+  }
+
+  @override
+  String socialFriendCount(int count) {
+    return '$count přátel';
+  }
+
+  @override
+  String get socialLeaderboardThisWeek => 'Tento týden';
+
+  @override
+  String get socialLeaderboardAllTime => 'Celkem';
+
+  @override
+  String get socialLeaderboardSoonTitle => 'Brzy dostupné';
+
+  @override
+  String get socialLeaderboardSoonSubtitle =>
+      'Týdenní žebříček bude brzy dostupný.';
+
+  @override
+  String get socialLeaderboardEmptyTitle => 'Žebříček je prázdný';
+
+  @override
+  String get socialLeaderboardEmptySubtitle =>
+      'Přidej přátele a porovnej své výsledky.';
+
+  @override
+  String get socialLeaderboardTopPlayers => 'TOP HRÁČI';
+
+  @override
+  String get socialYouBadge => 'Ty!';
+
+  @override
+  String socialYouSuffix(String name) {
+    return '$name (ty)';
+  }
+
+  @override
+  String get socialXpLabel => 'XP';
+
+  @override
+  String get socialStatusSignInRequired =>
+      'Přihlášení přes Google je vyžadováno pro sociální funkce.';
+
+  @override
+  String socialStatusBackendUnavailable(String error) {
+    return 'Firebase backend nedostupný: $error';
+  }
+
+  @override
+  String get socialStatusConnecting => 'Připojování k sociálnímu backendu…';
+
+  @override
+  String socialStatusError(String error) {
+    return 'Chyba: $error';
+  }
+
+  @override
+  String get socialEditHandleTitle => 'Změnit Social ID';
+
+  @override
+  String get socialEditHandleDescription =>
+      'ID slouží pro vyhledání v social části.';
+
+  @override
+  String get socialEditHandleValidation => 'Zadej alespoň jeden znak.';
+
+  @override
+  String get socialCancel => 'Zrušit';
+
+  @override
+  String get socialSave => 'Uložit';
+
+  @override
+  String get socialEditHandleTooltip => 'Změnit ID';
+
+  @override
+  String get socialEditPhotoTooltip => 'Změnit fotku';
+
+  @override
+  String socialHandleSaveFailed(String error) {
+    return 'ID se nepodařilo uložit: $error';
+  }
+
+  @override
+  String socialHandleSaved(String handle) {
+    return 'Social ID uloženo: @$handle';
+  }
+
+  @override
+  String socialPhotoPickFailed(String error) {
+    return 'Výběr fotky se nepodařil: $error';
+  }
+
+  @override
+  String socialPhotoSaveFailed(String error) {
+    return 'Fotku se nepodařilo uložit: $error';
+  }
+
+  @override
+  String get socialPhotoSaved => 'Profilová fotka uložena.';
+
+  @override
+  String get socialTryAgain => 'zkus to znovu';
+
+  @override
+  String get socialSelectedLoadout => 'Vybraná\nvýbava';
+
+  @override
+  String get socialProfilePinnedAchievements => 'PŘIPNUTÉ ACHIEVEMENTY';
+
+  @override
+  String get socialProfileSharedPosts => 'SDÍLENÉ PŘÍSPĚVKY';
+
+  @override
+  String get socialProfileStatsAchievements => 'ÚSPĚCHY';
+
+  @override
+  String get socialProfileStatsBestStreak => 'NEJL. SÉRIE';
+
+  @override
+  String get socialProfileStatsStepsStreak => 'KROKY SÉRIE';
+
+  @override
+  String socialDaysShort(int count) {
+    return '$count d';
+  }
+
+  @override
+  String get socialPinnedEmptyMine =>
+      'Zatím nemáš nic připnutého. Otevři detail achievementu a připni ho na profil.';
+
+  @override
+  String get socialPinnedEmptyOther => 'Žádné připnuté achievementy.';
+
+  @override
+  String get socialPinnedUnavailable =>
+      'Připnuté achievementy už nejsou dostupné.';
+
+  @override
+  String get socialSharedPostsEmpty => 'Žádné sdílené příspěvky zatím.';
+
+  @override
+  String get socialProfileCosmetics => 'KOSMETIKA';
+
+  @override
+  String get socialAddFriend => 'Přidat přítele';
+
+  @override
+  String get socialRequestSent => 'Žádost odeslána';
+
+  @override
+  String get socialRemoveFriend => 'Odebrat přítele';
+
+  @override
+  String get socialRemoveFriendConfirmTitle => 'Odebrat přítele';
+
+  @override
+  String socialRemoveFriendConfirmBody(String name) {
+    return 'Opravdu chceš odebrat $name ze seznamu přátel?';
+  }
+
+  @override
+  String get socialNotificationReactedPrefix => ' reagoval(a) ';
+
+  @override
+  String get socialNotificationReactedSuffix => ' na tvůj achievement ';
+
+  @override
+  String get socialNotificationOpenPost => 'Zobrazit příspěvek';
+
+  @override
+  String get socialAchievementUnlockedAction => 'odemkl(a) achievement';
+
+  @override
+  String socialReactorsTitle(int count) {
+    return 'Reagovali ($count)';
+  }
+
+  @override
+  String get socialProfileFriendsTitle => 'PŘÁTELÉ';
+
+  @override
+  String get socialProfileNoFriends => 'Žádní přátelé zatím.';
+
+  @override
+  String socialFriendLevelSubtitle(int level, String title) {
+    return 'Level $level $title';
+  }
+
+  @override
+  String socialFriendHandleLevelSubtitle(
+      String handle, int level, String title) {
+    return '@$handle - Level $level $title';
+  }
+
+  @override
+  String get socialRelativeNow => 'právě teď';
+
+  @override
+  String socialRelativeMinutesAgo(int count) {
+    return 'před $count min';
+  }
+
+  @override
+  String socialRelativeHoursAgo(int count) {
+    return 'před $count hod';
+  }
+
+  @override
+  String get socialRelativeYesterday => 'včera';
+
+  @override
+  String socialRelativeDaysAgo(int count) {
+    return 'před $count dny';
+  }
 }

@@ -1951,4 +1951,335 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cosmeticUnknown => 'Unknown cosmetic';
+
+  @override
+  String get cosmeticRarityCommon => 'Common';
+
+  @override
+  String get cosmeticRarityRare => 'Rare';
+
+  @override
+  String get cosmeticRarityEpic => 'Epic';
+
+  @override
+  String get cosmeticRarityLegendary => 'Legendary';
+
+  @override
+  String get celebrationCosmeticUnlockedEyebrow => 'Inventory unlocked';
+
+  @override
+  String get socialTabFeed => 'Feed';
+
+  @override
+  String get socialTabActivity => 'Activity';
+
+  @override
+  String get socialTabLeaderboard => 'Leaderboard';
+
+  @override
+  String get socialTabFriends => 'Friends';
+
+  @override
+  String get socialSectionRecentActivity => 'RECENT ACTIVITY';
+
+  @override
+  String get socialSectionFriendActivity => 'FRIEND ACTIVITY';
+
+  @override
+  String get socialNoNotificationsTitle => 'No notifications';
+
+  @override
+  String get socialNoNotificationsSubtitle =>
+      'Reactions from friends on your shared achievements will appear here.';
+
+  @override
+  String get socialFeedEmptyTitle => 'Feed is empty';
+
+  @override
+  String get socialFeedEmptySubtitle =>
+      'Shared achievements from friends will appear here.';
+
+  @override
+  String get socialFriendsEmptyTitle => 'No friends yet';
+
+  @override
+  String get socialFriendsEmptySubtitle =>
+      'Add friends by searching for their handle.';
+
+  @override
+  String socialFriendsSectionCount(int count) {
+    return 'FRIENDS  •  $count';
+  }
+
+  @override
+  String get socialFriendRequestsTitle => 'Friend requests';
+
+  @override
+  String socialOutgoingRequestsCount(int count) {
+    return 'Sent requests • $count';
+  }
+
+  @override
+  String get socialFriendRequestAccepted => 'Request accepted.';
+
+  @override
+  String get socialFriendRequestDeclined => 'Request declined.';
+
+  @override
+  String get socialFriendRequestSent => 'Friend request sent.';
+
+  @override
+  String socialErrorWithMessage(String message) {
+    return 'Error: $message';
+  }
+
+  @override
+  String get socialWantsToBeFriend => 'Wants to become your friend';
+
+  @override
+  String get socialAccept => 'Accept';
+
+  @override
+  String get socialDecline => 'Decline';
+
+  @override
+  String get socialAwaitingConfirmation => 'Waiting for confirmation';
+
+  @override
+  String get socialPending => 'Pending';
+
+  @override
+  String get socialSearchHint => 'Search by handle…';
+
+  @override
+  String get socialSearchButton => 'Find';
+
+  @override
+  String get socialAdd => 'Add';
+
+  @override
+  String socialHandleLevel(String handle, int level) {
+    return '@$handle · Level $level';
+  }
+
+  @override
+  String socialLevelLabel(int level) {
+    return 'Level $level';
+  }
+
+  @override
+  String socialFriendCount(int count) {
+    return '$count friends';
+  }
+
+  @override
+  String get socialLeaderboardThisWeek => 'This week';
+
+  @override
+  String get socialLeaderboardAllTime => 'All time';
+
+  @override
+  String get socialLeaderboardSoonTitle => 'Coming soon';
+
+  @override
+  String get socialLeaderboardSoonSubtitle =>
+      'Weekly leaderboard will be available soon.';
+
+  @override
+  String get socialLeaderboardEmptyTitle => 'Leaderboard is empty';
+
+  @override
+  String get socialLeaderboardEmptySubtitle =>
+      'Add friends and compare your results.';
+
+  @override
+  String get socialLeaderboardTopPlayers => 'TOP PLAYERS';
+
+  @override
+  String get socialYouBadge => 'You!';
+
+  @override
+  String socialYouSuffix(String name) {
+    return '$name (you)';
+  }
+
+  @override
+  String get socialXpLabel => 'XP';
+
+  @override
+  String get socialStatusSignInRequired =>
+      'Google sign-in is required for social features.';
+
+  @override
+  String socialStatusBackendUnavailable(String error) {
+    return 'Firebase backend unavailable: $error';
+  }
+
+  @override
+  String get socialStatusConnecting => 'Connecting to social backend…';
+
+  @override
+  String socialStatusError(String error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String get socialEditHandleTitle => 'Change Social ID';
+
+  @override
+  String get socialEditHandleDescription =>
+      'Your ID is used to find you in Social.';
+
+  @override
+  String get socialEditHandleValidation => 'Enter at least one character.';
+
+  @override
+  String get socialCancel => 'Cancel';
+
+  @override
+  String get socialSave => 'Save';
+
+  @override
+  String get socialEditHandleTooltip => 'Change ID';
+
+  @override
+  String get socialEditPhotoTooltip => 'Change photo';
+
+  @override
+  String socialHandleSaveFailed(String error) {
+    return 'ID could not be saved: $error';
+  }
+
+  @override
+  String socialHandleSaved(String handle) {
+    return 'Social ID saved: @$handle';
+  }
+
+  @override
+  String socialPhotoPickFailed(String error) {
+    return 'Photo selection failed: $error';
+  }
+
+  @override
+  String socialPhotoSaveFailed(String error) {
+    return 'Photo could not be saved: $error';
+  }
+
+  @override
+  String get socialPhotoSaved => 'Profile photo saved.';
+
+  @override
+  String get socialTryAgain => 'try again';
+
+  @override
+  String get socialSelectedLoadout => 'Selected\nloadout';
+
+  @override
+  String get socialProfilePinnedAchievements => 'PINNED ACHIEVEMENTS';
+
+  @override
+  String get socialProfileSharedPosts => 'SHARED POSTS';
+
+  @override
+  String get socialProfileStatsAchievements => 'ACHIEVEMENTS';
+
+  @override
+  String get socialProfileStatsBestStreak => 'BEST STREAK';
+
+  @override
+  String get socialProfileStatsStepsStreak => 'STEPS STREAK';
+
+  @override
+  String socialDaysShort(int count) {
+    return '$count d';
+  }
+
+  @override
+  String get socialPinnedEmptyMine =>
+      'You have nothing pinned yet. Open an achievement detail and pin it to your profile.';
+
+  @override
+  String get socialPinnedEmptyOther => 'No pinned achievements.';
+
+  @override
+  String get socialPinnedUnavailable =>
+      'Pinned achievements are no longer available.';
+
+  @override
+  String get socialSharedPostsEmpty => 'No shared posts yet.';
+
+  @override
+  String get socialProfileCosmetics => 'COSMETICS';
+
+  @override
+  String get socialAddFriend => 'Add friend';
+
+  @override
+  String get socialRequestSent => 'Request sent';
+
+  @override
+  String get socialRemoveFriend => 'Remove friend';
+
+  @override
+  String get socialRemoveFriendConfirmTitle => 'Remove friend';
+
+  @override
+  String socialRemoveFriendConfirmBody(String name) {
+    return 'Do you really want to remove $name from your friends?';
+  }
+
+  @override
+  String get socialNotificationReactedPrefix => ' reacted ';
+
+  @override
+  String get socialNotificationReactedSuffix => ' to your achievement ';
+
+  @override
+  String get socialNotificationOpenPost => 'View post';
+
+  @override
+  String get socialAchievementUnlockedAction => 'unlocked an achievement';
+
+  @override
+  String socialReactorsTitle(int count) {
+    return 'Reacted ($count)';
+  }
+
+  @override
+  String get socialProfileFriendsTitle => 'FRIENDS';
+
+  @override
+  String get socialProfileNoFriends => 'No friends yet.';
+
+  @override
+  String socialFriendLevelSubtitle(int level, String title) {
+    return 'Level $level $title';
+  }
+
+  @override
+  String socialFriendHandleLevelSubtitle(
+      String handle, int level, String title) {
+    return '@$handle - Level $level $title';
+  }
+
+  @override
+  String get socialRelativeNow => 'just now';
+
+  @override
+  String socialRelativeMinutesAgo(int count) {
+    return '$count min ago';
+  }
+
+  @override
+  String socialRelativeHoursAgo(int count) {
+    return '$count h ago';
+  }
+
+  @override
+  String get socialRelativeYesterday => 'yesterday';
+
+  @override
+  String socialRelativeDaysAgo(int count) {
+    return '$count days ago';
+  }
 }

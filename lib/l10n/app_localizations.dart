@@ -3583,6 +3583,565 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unknown cosmetic'**
   String get cosmeticUnknown;
+
+  /// No description provided for @cosmeticRarityCommon.
+  ///
+  /// In en, this message translates to:
+  /// **'Common'**
+  String get cosmeticRarityCommon;
+
+  /// No description provided for @cosmeticRarityRare.
+  ///
+  /// In en, this message translates to:
+  /// **'Rare'**
+  String get cosmeticRarityRare;
+
+  /// No description provided for @cosmeticRarityEpic.
+  ///
+  /// In en, this message translates to:
+  /// **'Epic'**
+  String get cosmeticRarityEpic;
+
+  /// No description provided for @cosmeticRarityLegendary.
+  ///
+  /// In en, this message translates to:
+  /// **'Legendary'**
+  String get cosmeticRarityLegendary;
+
+  /// No description provided for @celebrationCosmeticUnlockedEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory unlocked'**
+  String get celebrationCosmeticUnlockedEyebrow;
+
+  /// No description provided for @socialTabFeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Feed'**
+  String get socialTabFeed;
+
+  /// No description provided for @socialTabActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get socialTabActivity;
+
+  /// No description provided for @socialTabLeaderboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Leaderboard'**
+  String get socialTabLeaderboard;
+
+  /// No description provided for @socialTabFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends'**
+  String get socialTabFriends;
+
+  /// No description provided for @socialSectionRecentActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'RECENT ACTIVITY'**
+  String get socialSectionRecentActivity;
+
+  /// No description provided for @socialSectionFriendActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'FRIEND ACTIVITY'**
+  String get socialSectionFriendActivity;
+
+  /// No description provided for @socialNoNotificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications'**
+  String get socialNoNotificationsTitle;
+
+  /// No description provided for @socialNoNotificationsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reactions from friends on your shared achievements will appear here.'**
+  String get socialNoNotificationsSubtitle;
+
+  /// No description provided for @socialFeedEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Feed is empty'**
+  String get socialFeedEmptyTitle;
+
+  /// No description provided for @socialFeedEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared achievements from friends will appear here.'**
+  String get socialFeedEmptySubtitle;
+
+  /// No description provided for @socialFriendsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No friends yet'**
+  String get socialFriendsEmptyTitle;
+
+  /// No description provided for @socialFriendsEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add friends by searching for their handle.'**
+  String get socialFriendsEmptySubtitle;
+
+  /// No description provided for @socialFriendsSectionCount.
+  ///
+  /// In en, this message translates to:
+  /// **'FRIENDS  •  {count}'**
+  String socialFriendsSectionCount(int count);
+
+  /// No description provided for @socialFriendRequestsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend requests'**
+  String get socialFriendRequestsTitle;
+
+  /// No description provided for @socialOutgoingRequestsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent requests • {count}'**
+  String socialOutgoingRequestsCount(int count);
+
+  /// No description provided for @socialFriendRequestAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Request accepted.'**
+  String get socialFriendRequestAccepted;
+
+  /// No description provided for @socialFriendRequestDeclined.
+  ///
+  /// In en, this message translates to:
+  /// **'Request declined.'**
+  String get socialFriendRequestDeclined;
+
+  /// No description provided for @socialFriendRequestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend request sent.'**
+  String get socialFriendRequestSent;
+
+  /// No description provided for @socialErrorWithMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {message}'**
+  String socialErrorWithMessage(String message);
+
+  /// No description provided for @socialWantsToBeFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Wants to become your friend'**
+  String get socialWantsToBeFriend;
+
+  /// No description provided for @socialAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get socialAccept;
+
+  /// No description provided for @socialDecline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get socialDecline;
+
+  /// No description provided for @socialAwaitingConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for confirmation'**
+  String get socialAwaitingConfirmation;
+
+  /// No description provided for @socialPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get socialPending;
+
+  /// No description provided for @socialSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by handle…'**
+  String get socialSearchHint;
+
+  /// No description provided for @socialSearchButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Find'**
+  String get socialSearchButton;
+
+  /// No description provided for @socialAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get socialAdd;
+
+  /// No description provided for @socialHandleLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'@{handle} · Level {level}'**
+  String socialHandleLevel(String handle, int level);
+
+  /// No description provided for @socialLevelLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {level}'**
+  String socialLevelLabel(int level);
+
+  /// No description provided for @socialFriendCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} friends'**
+  String socialFriendCount(int count);
+
+  /// No description provided for @socialLeaderboardThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get socialLeaderboardThisWeek;
+
+  /// No description provided for @socialLeaderboardAllTime.
+  ///
+  /// In en, this message translates to:
+  /// **'All time'**
+  String get socialLeaderboardAllTime;
+
+  /// No description provided for @socialLeaderboardSoonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon'**
+  String get socialLeaderboardSoonTitle;
+
+  /// No description provided for @socialLeaderboardSoonSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly leaderboard will be available soon.'**
+  String get socialLeaderboardSoonSubtitle;
+
+  /// No description provided for @socialLeaderboardEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leaderboard is empty'**
+  String get socialLeaderboardEmptyTitle;
+
+  /// No description provided for @socialLeaderboardEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add friends and compare your results.'**
+  String get socialLeaderboardEmptySubtitle;
+
+  /// No description provided for @socialLeaderboardTopPlayers.
+  ///
+  /// In en, this message translates to:
+  /// **'TOP PLAYERS'**
+  String get socialLeaderboardTopPlayers;
+
+  /// No description provided for @socialYouBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'You!'**
+  String get socialYouBadge;
+
+  /// No description provided for @socialYouSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (you)'**
+  String socialYouSuffix(String name);
+
+  /// No description provided for @socialXpLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'XP'**
+  String get socialXpLabel;
+
+  /// No description provided for @socialStatusSignInRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in is required for social features.'**
+  String get socialStatusSignInRequired;
+
+  /// No description provided for @socialStatusBackendUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Firebase backend unavailable: {error}'**
+  String socialStatusBackendUnavailable(String error);
+
+  /// No description provided for @socialStatusConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting to social backend…'**
+  String get socialStatusConnecting;
+
+  /// No description provided for @socialStatusError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {error}'**
+  String socialStatusError(String error);
+
+  /// No description provided for @socialEditHandleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Social ID'**
+  String get socialEditHandleTitle;
+
+  /// No description provided for @socialEditHandleDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your ID is used to find you in Social.'**
+  String get socialEditHandleDescription;
+
+  /// No description provided for @socialEditHandleValidation.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter at least one character.'**
+  String get socialEditHandleValidation;
+
+  /// No description provided for @socialCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get socialCancel;
+
+  /// No description provided for @socialSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get socialSave;
+
+  /// No description provided for @socialEditHandleTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Change ID'**
+  String get socialEditHandleTooltip;
+
+  /// No description provided for @socialEditPhotoTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Change photo'**
+  String get socialEditPhotoTooltip;
+
+  /// No description provided for @socialHandleSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'ID could not be saved: {error}'**
+  String socialHandleSaveFailed(String error);
+
+  /// No description provided for @socialHandleSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Social ID saved: @{handle}'**
+  String socialHandleSaved(String handle);
+
+  /// No description provided for @socialPhotoPickFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo selection failed: {error}'**
+  String socialPhotoPickFailed(String error);
+
+  /// No description provided for @socialPhotoSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo could not be saved: {error}'**
+  String socialPhotoSaveFailed(String error);
+
+  /// No description provided for @socialPhotoSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile photo saved.'**
+  String get socialPhotoSaved;
+
+  /// No description provided for @socialTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'try again'**
+  String get socialTryAgain;
+
+  /// No description provided for @socialSelectedLoadout.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected\nloadout'**
+  String get socialSelectedLoadout;
+
+  /// No description provided for @socialProfilePinnedAchievements.
+  ///
+  /// In en, this message translates to:
+  /// **'PINNED ACHIEVEMENTS'**
+  String get socialProfilePinnedAchievements;
+
+  /// No description provided for @socialProfileSharedPosts.
+  ///
+  /// In en, this message translates to:
+  /// **'SHARED POSTS'**
+  String get socialProfileSharedPosts;
+
+  /// No description provided for @socialProfileStatsAchievements.
+  ///
+  /// In en, this message translates to:
+  /// **'ACHIEVEMENTS'**
+  String get socialProfileStatsAchievements;
+
+  /// No description provided for @socialProfileStatsBestStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'BEST STREAK'**
+  String get socialProfileStatsBestStreak;
+
+  /// No description provided for @socialProfileStatsStepsStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'STEPS STREAK'**
+  String get socialProfileStatsStepsStreak;
+
+  /// No description provided for @socialDaysShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} d'**
+  String socialDaysShort(int count);
+
+  /// No description provided for @socialPinnedEmptyMine.
+  ///
+  /// In en, this message translates to:
+  /// **'You have nothing pinned yet. Open an achievement detail and pin it to your profile.'**
+  String get socialPinnedEmptyMine;
+
+  /// No description provided for @socialPinnedEmptyOther.
+  ///
+  /// In en, this message translates to:
+  /// **'No pinned achievements.'**
+  String get socialPinnedEmptyOther;
+
+  /// No description provided for @socialPinnedUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned achievements are no longer available.'**
+  String get socialPinnedUnavailable;
+
+  /// No description provided for @socialSharedPostsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No shared posts yet.'**
+  String get socialSharedPostsEmpty;
+
+  /// No description provided for @socialProfileCosmetics.
+  ///
+  /// In en, this message translates to:
+  /// **'COSMETICS'**
+  String get socialProfileCosmetics;
+
+  /// No description provided for @socialAddFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Add friend'**
+  String get socialAddFriend;
+
+  /// No description provided for @socialRequestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Request sent'**
+  String get socialRequestSent;
+
+  /// No description provided for @socialRemoveFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove friend'**
+  String get socialRemoveFriend;
+
+  /// No description provided for @socialRemoveFriendConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove friend'**
+  String get socialRemoveFriendConfirmTitle;
+
+  /// No description provided for @socialRemoveFriendConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you really want to remove {name} from your friends?'**
+  String socialRemoveFriendConfirmBody(String name);
+
+  /// No description provided for @socialNotificationReactedPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **' reacted '**
+  String get socialNotificationReactedPrefix;
+
+  /// No description provided for @socialNotificationReactedSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **' to your achievement '**
+  String get socialNotificationReactedSuffix;
+
+  /// No description provided for @socialNotificationOpenPost.
+  ///
+  /// In en, this message translates to:
+  /// **'View post'**
+  String get socialNotificationOpenPost;
+
+  /// No description provided for @socialAchievementUnlockedAction.
+  ///
+  /// In en, this message translates to:
+  /// **'unlocked an achievement'**
+  String get socialAchievementUnlockedAction;
+
+  /// No description provided for @socialReactorsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reacted ({count})'**
+  String socialReactorsTitle(int count);
+
+  /// No description provided for @socialProfileFriendsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'FRIENDS'**
+  String get socialProfileFriendsTitle;
+
+  /// No description provided for @socialProfileNoFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'No friends yet.'**
+  String get socialProfileNoFriends;
+
+  /// No description provided for @socialFriendLevelSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {level} {title}'**
+  String socialFriendLevelSubtitle(int level, String title);
+
+  /// No description provided for @socialFriendHandleLevelSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'@{handle} - Level {level} {title}'**
+  String socialFriendHandleLevelSubtitle(
+      String handle, int level, String title);
+
+  /// No description provided for @socialRelativeNow.
+  ///
+  /// In en, this message translates to:
+  /// **'just now'**
+  String get socialRelativeNow;
+
+  /// No description provided for @socialRelativeMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} min ago'**
+  String socialRelativeMinutesAgo(int count);
+
+  /// No description provided for @socialRelativeHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} h ago'**
+  String socialRelativeHoursAgo(int count);
+
+  /// No description provided for @socialRelativeYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'yesterday'**
+  String get socialRelativeYesterday;
+
+  /// No description provided for @socialRelativeDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days ago'**
+  String socialRelativeDaysAgo(int count);
 }
 
 class _AppLocalizationsDelegate

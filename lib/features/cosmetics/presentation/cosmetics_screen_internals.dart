@@ -12,12 +12,14 @@ class CosmeticBadge extends StatelessWidget {
     required this.assetPath,
     required this.color,
     this.size = 42,
+    this.framed = true,
   });
 
   final CosmeticDefinition definition;
   final String? assetPath;
   final Color color;
   final double size;
+  final bool framed;
 
   @override
   Widget build(BuildContext context) {
@@ -25,17 +27,20 @@ class CosmeticBadge extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: isFrame ? 0.10 : 0.18),
-        borderRadius: BorderRadius.circular(size * 0.28),
-        border: Border.all(
-          color: color.withValues(alpha: isFrame ? 0.52 : 0.32),
-          width: isFrame ? 1.8 : 1,
-        ),
-      ),
-      clipBehavior: isFrame ? Clip.none : Clip.antiAlias,
+      decoration: framed
+          ? BoxDecoration(
+              color: color.withValues(alpha: isFrame ? 0.10 : 0.18),
+              borderRadius: BorderRadius.circular(size * 0.28),
+              border: Border.all(
+                color: color.withValues(alpha: isFrame ? 0.52 : 0.32),
+                width: isFrame ? 1.8 : 1,
+              ),
+            )
+          : null,
+      clipBehavior: framed && !isFrame ? Clip.antiAlias : Clip.none,
       child: assetPath == null
-          ? CosmeticBadgeFallback(type: definition.type, color: color, size: size)
+          ? CosmeticBadgeFallback(
+              type: definition.type, color: color, size: size)
           : Image.asset(
               assetPath!,
               fit: isFrame ? BoxFit.contain : BoxFit.cover,

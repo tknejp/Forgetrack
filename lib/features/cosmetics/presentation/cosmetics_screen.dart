@@ -406,6 +406,7 @@ class _CosmeticCard extends StatelessWidget {
                       assetPath: assetPath,
                       color: color,
                       size: _cardBadgeSize(definition.type),
+                      framed: false,
                     ),
                     const SizedBox(height: Tokens.spaceSm),
                     Text(
@@ -442,7 +443,6 @@ class _CosmeticCard extends StatelessWidget {
   }
 }
 
-
 class _SectionHead extends StatelessWidget {
   const _SectionHead({required this.label, this.caption});
 
@@ -454,8 +454,7 @@ class _SectionHead extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Icon(Icons.auto_awesome_rounded,
-            size: 14, color: Tokens.accent),
+        const Icon(Icons.auto_awesome_rounded, size: 14, color: Tokens.accent),
         const SizedBox(width: Tokens.spaceSm),
         Expanded(
           child: Column(
