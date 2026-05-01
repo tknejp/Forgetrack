@@ -91,6 +91,25 @@ class CosmeticsService {
     );
   }
 
+  /// Developer / admin: removes [cosmeticId] from the user's unlocked set
+  /// and clears the equipped slot if the cosmetic is equipped. Returns the
+  /// reloaded state. No-op when the cosmetic is not unlocked.
+  Future<UserCosmeticsState> revoke(String uid, String cosmeticId) async {
+    await _repository.revokeCosmetic(uid: uid, cosmeticId: cosmeticId);
+    return _repository.loadForUser(uid);
+  }
+
+  /// Developer / admin: wipes every unlock and equipped slot for [uid].
+  /// Returns `(state, removedCount)` so DevTools can surface a confirmation.
+  Future<CosmeticsProgressionResetResult> clearAllUnlocks(String uid) async {
+    final removed = await _repository.clearAllUnlocks(uid);
+    final state = await _repository.loadForUser(uid);
+    return CosmeticsProgressionResetResult(
+      state: state,
+      removedCount: removed,
+    );
+  }
+
   Future<UserCosmeticsState> equip(String uid, String cosmeticId) async {
     final definition = _catalog.byId(cosmeticId);
     if (definition == null) {

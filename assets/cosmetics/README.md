@@ -34,6 +34,44 @@ arrives.
 | `background_forest_trail`| `backgrounds/`| `forest_trail.png`|
 | `emblem_forest_mark`     | `emblems/`    | `forest_mark.png` |
 
+## Expected files for the journey reward set
+
+The catalog references the assets below. Drop the PNGs into the listed
+paths; cosmetics with missing artwork render as rarity-coloured
+placeholders until the file ships.
+
+**Backgrounds** (`backgrounds/`):
+`camp.png`, `forest_trail.png`, `ravine.png`, `ruins.png`,
+`bridge_crossing.png`, `mines.png`, `frostlands.png`, `frozen_lake.png`,
+`rocky_mountains.png`, `dragonrock_fortress.png`.
+
+**Emblems** (`emblems/` — badge / insignia style, ceremonial):
+`pilgrim_mark.png`, `forest_mark.png`, `ruin_sigil.png`,
+`gatekeeper_mark.png`, `mine_crest.png`, `underways_mark.png`,
+`frost_sigil.png`, `icewalker_mark.png`, `mountain_crest.png`,
+`dragon_mark.png`, `dragonrock_emblem.png`.
+
+**Relics** (`relics/`):
+`old_compass.png`, `old_gate_key.png`, `campfire_spark.png`,
+`pilgrim_cloak.png`, `trail_compass.png`, `ancient_root.png`,
+`ravine_stone.png`, `ruin_seal.png`, `bridge_key.png`,
+`miners_lantern.png`, `polar_lantern.png`, `frost_shard.png`,
+`frozen_lake_heart.png`, `dragon_scale.png`, `dragon_crown.png`,
+`dragonrock_crown.png`.
+
+**Frames** (`frames/`):
+`lvl1.png`, `lvl10.png`, `lvl25.png`, `lvl40.png`, `lvl60.png`,
+`lvl80.png`, `lvl100.png` (the `lvl100.png` doubles as the Dragonrock
+endgame frame — there is no separate `dragonrock_frame.png`),
+`frame_developer_tom.png`, `discipline.png`, `endurance.png`,
+`steel.png`, `eternal_flame.png`, `balance.png`, `master_routine.png`,
+`endless_trail.png`, `worldwalker.png`.
+
+**Companions** (`companions/`):
+`ember_sprite.png`, `forest_fox.png`, `ruin_raven.png`,
+`lantern_golem.png`, `ice_wisp.png`, `mountain_gryphon.png`,
+`dragonling.png`.
+
 The asset key declared in the catalog (`cosmetics.frames.pilgrim`) is mapped
 to the on-disk path by `CosmeticsConfig.resolveAssetPath` — keep the
 `cosmetics.<bucket>.<name>` shape so the resolver finds it.

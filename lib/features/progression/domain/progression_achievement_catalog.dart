@@ -8,6 +8,20 @@ class ProgressionAchievementCatalog {
   List<ProgressionAchievementDefinition> build() {
     const levelPolicy = ProgressionLevelPolicy();
     return [
+      // Visible welcome reward — fires immediately on first sync because
+      // every player satisfies `totalXp >= 0`. Drives the
+      // `welcome_to_journey` → background_camp + emblem_pilgrim_mark mapping
+      // in CosmeticRewardTable so the player sees a real achievement
+      // rather than a silent default unlock.
+      ProgressionAchievementDefinition(
+        id: 'welcome_to_journey',
+        type: ProgressionAchievementType.milestone,
+        difficulty: ProgressionAchievementDifficulty.easy,
+        criterionType: ProgressionAchievementCriterionType.totalXpAtLeast,
+        title: 'Welcome to the Journey',
+        description: 'You set out on the road.',
+        targetValue: 0,
+      ),
       ProgressionAchievementDefinition(
         id: 'first_reward',
         type: ProgressionAchievementType.milestone,
@@ -195,6 +209,16 @@ class ProgressionAchievementCatalog {
         title: 'Step Sovereign',
         description: 'Hit the daily steps rule for 30 periods in a row.',
         targetValue: 30,
+        ruleId: 'daily_steps',
+      ),
+      ProgressionAchievementDefinition(
+        id: 'steps_streak_50',
+        type: ProgressionAchievementType.streak,
+        difficulty: ProgressionAchievementDifficulty.hard,
+        criterionType: ProgressionAchievementCriterionType.bestStreakAtLeast,
+        title: 'Iron Resolve',
+        description: 'Hit the daily steps rule for 50 periods in a row.',
+        targetValue: 50,
         ruleId: 'daily_steps',
       ),
       ProgressionAchievementDefinition(

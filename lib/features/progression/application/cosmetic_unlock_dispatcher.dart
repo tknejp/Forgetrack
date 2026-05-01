@@ -1,10 +1,19 @@
 import '../../../core/logging/app_log.dart';
 import '../../cosmetics/application/cosmetics_provider.dart';
 import '../../cosmetics/domain/cosmetic_models.dart';
+import '../../cosmetics/domain/cosmetic_unlock_evaluator.dart';
+import '../../cosmetics/domain/cosmetic_unlock_rules.dart';
 import '../domain/cosmetic_reward_table.dart';
+import 'cosmetic_unlock_snapshot_extractor.dart';
 import 'progression_engine.dart';
 
 const _log = AppLogger('COSMETICS', scope: 'dispatch');
+
+/// Three is more than enough for the depth of compound chains in the current
+/// catalog (the longest is two cosmetics deep — e.g. relic_dragonrock_crown
+/// → companion_dragonling). Bounding iteration keeps log noise + runtime in
+/// check.
+const int _kMaxTier2Iterations = 3;
 
 class CosmeticUnlockDispatchItem {
   const CosmeticUnlockDispatchItem({
@@ -30,7 +39,18 @@ class CosmeticUnlockDispatchResult {
 }
 
 /// Diffs two [ProgressionEngineState] snapshots and dispatches cosmetic
-/// unlocks for newly unlocked achievements and freshly reached levels.
+/// unlocks. There are three passes per call:
+///
+/// 1. **Tier-1 achievement catch-up** — every currently-unlocked achievement
+///    is checked against [CosmeticRewardTable]; any cosmetic not yet in the
+///    player's `unlocked` map is granted. This catches up users whose
+///    achievement was unlocked before a new mapping was added (or for whom
+///    `previous == null` on cold start).
+/// 2. **Tier-1 level catch-up** — same idea for `cosmeticsForLevel(...)`
+///    iterated 1..currentLevel.
+/// 3. **Tier-2 rule evaluator** — runs in a bounded fixed-point loop so
+///    compound rules whose dependencies were just granted by passes 1–2
+///    fire in the same dispatch.
 ///
 /// Dependency direction: `progression` → `cosmetics`. The cosmetics feature
 /// knows nothing about progression; this dispatcher is the only seam.
@@ -41,9 +61,16 @@ class CosmeticUnlockDispatchResult {
 class CosmeticUnlockDispatcher {
   CosmeticUnlockDispatcher({
     CosmeticRewardTable table = const CosmeticRewardTable(),
-  }) : _table = table;
+    CosmeticUnlockSnapshotExtractor? snapshotExtractor,
+    CosmeticUnlockEvaluator? evaluator,
+  })  : _table = table,
+        _snapshotExtractor =
+            snapshotExtractor ?? CosmeticUnlockSnapshotExtractor(),
+        _evaluator = evaluator ?? CosmeticUnlockEvaluator(kCosmeticUnlockRules);
 
   final CosmeticRewardTable _table;
+  final CosmeticUnlockSnapshotExtractor _snapshotExtractor;
+  final CosmeticUnlockEvaluator _evaluator;
   CosmeticsProvider? _cosmetics;
 
   /// Wires the dispatcher to the live [CosmeticsProvider]. Until bound,
@@ -67,48 +94,20 @@ class CosmeticUnlockDispatcher {
       return CosmeticUnlockDispatchResult.empty;
     }
 
-    final prevUnlockedAchievementIds = previous == null
-        ? current.achievements.where((a) => a.unlocked).map((a) => a.id).toSet()
-        : previous.achievements
-            .where((a) => a.unlocked)
-            .map((a) => a.id)
-            .toSet();
-
-    final newlyUnlockedAchievements = current.achievements
-        .where((a) => a.unlocked && !prevUnlockedAchievementIds.contains(a.id))
-        .toList(growable: false);
-
-    final prevLevel = previous?.profile.level ?? 0;
-    final currentLevel = current.profile.level;
-    final unlockedCosmeticIds =
-        cosmetics.state?.unlocked.keys.toSet() ?? const <String>{};
-    final pendingLevelUnlocks = <MapEntry<int, String>>[];
-
-    for (var level = 1; level <= currentLevel; level++) {
-      for (final cosmeticId in _table.cosmeticsForLevel(level)) {
-        if (!unlockedCosmeticIds.contains(cosmeticId)) {
-          pendingLevelUnlocks.add(MapEntry(level, cosmeticId));
-        }
-      }
-    }
-
-    if (newlyUnlockedAchievements.isEmpty &&
-        prevLevel == currentLevel &&
-        pendingLevelUnlocks.isEmpty) {
-      _log.debug('dispatch — no progression changes since last sync');
-      return CosmeticUnlockDispatchResult.empty;
-    }
-
     _log.info(
       'dispatch — checking unlocks',
-      payload:
-          'achievements=${newlyUnlockedAchievements.length} levelDelta=$prevLevel→$currentLevel uid=${cosmetics.currentUid}',
+      payload: 'level=${current.profile.level} uid=${cosmetics.currentUid}',
     );
 
     final unlockedItems = <CosmeticUnlockDispatchItem>[];
 
-    for (final achievement in newlyUnlockedAchievements) {
+    // -- Pass 1: achievement catch-up ---------------------------------------
+    final unlockedAchievements = current.achievements
+        .where((a) => a.unlocked)
+        .toList(growable: false);
+    for (final achievement in unlockedAchievements) {
       for (final cosmeticId in _table.cosmeticsForAchievement(achievement.id)) {
+        if (_alreadyUnlocked(cosmetics, cosmeticId)) continue;
         final didUnlock = await _unlock(
           cosmetics,
           cosmeticId: cosmeticId,
@@ -127,26 +126,69 @@ class CosmeticUnlockDispatcher {
       }
     }
 
-    for (final entry in pendingLevelUnlocks) {
-      final sourceId = 'level_${entry.key}';
-      final didUnlock = await _unlock(
-        cosmetics,
-        cosmeticId: entry.value,
-        sourceType: CosmeticUnlockSource.progressionLevel.name,
-        sourceId: sourceId,
-      );
-      if (didUnlock) {
-        unlockedItems.add(
-          CosmeticUnlockDispatchItem(
-            cosmeticId: entry.value,
-            sourceType: CosmeticUnlockSource.progressionLevel.name,
-            sourceId: sourceId,
-          ),
+    // -- Pass 2: level catch-up --------------------------------------------
+    final currentLevel = current.profile.level;
+    for (var level = 1; level <= currentLevel; level++) {
+      for (final cosmeticId in _table.cosmeticsForLevel(level)) {
+        if (_alreadyUnlocked(cosmetics, cosmeticId)) continue;
+        final sourceId = 'level_$level';
+        final didUnlock = await _unlock(
+          cosmetics,
+          cosmeticId: cosmeticId,
+          sourceType: CosmeticUnlockSource.progressionLevel.name,
+          sourceId: sourceId,
         );
+        if (didUnlock) {
+          unlockedItems.add(
+            CosmeticUnlockDispatchItem(
+              cosmeticId: cosmeticId,
+              sourceType: CosmeticUnlockSource.progressionLevel.name,
+              sourceId: sourceId,
+            ),
+          );
+        }
+      }
+    }
+
+    // -- Pass 3: Tier-2 rule evaluator (bounded fixed-point) ---------------
+    for (var iteration = 0; iteration < _kMaxTier2Iterations; iteration++) {
+      final ownedIds = cosmetics.state?.unlocked.keys.toSet() ?? <String>{};
+      final snapshot = _snapshotExtractor.extract(
+        state: current,
+        ownedCosmeticIds: ownedIds,
+      );
+      final tuples = _evaluator.evaluate(snapshot, ownedIds);
+      if (tuples.isEmpty) break;
+
+      for (final tuple in tuples) {
+        final didUnlock = await _unlock(
+          cosmetics,
+          cosmeticId: tuple.cosmeticId,
+          sourceType: tuple.sourceType,
+          sourceId: tuple.sourceId,
+        );
+        if (didUnlock) {
+          unlockedItems.add(
+            CosmeticUnlockDispatchItem(
+              cosmeticId: tuple.cosmeticId,
+              sourceType: tuple.sourceType,
+              sourceId: tuple.sourceId,
+            ),
+          );
+          _log.info(
+            'tier-2 rule unlocked',
+            payload:
+                'id=${tuple.cosmeticId} via=${tuple.sourceType}/${tuple.sourceId} pass=$iteration',
+          );
+        }
       }
     }
 
     return CosmeticUnlockDispatchResult(items: unlockedItems);
+  }
+
+  bool _alreadyUnlocked(CosmeticsProvider cosmetics, String cosmeticId) {
+    return cosmetics.state?.unlocked.containsKey(cosmeticId) ?? false;
   }
 
   Future<bool> _unlock(
@@ -155,8 +197,7 @@ class CosmeticUnlockDispatcher {
     required String sourceType,
     String? sourceId,
   }) async {
-    final alreadyUnlocked =
-        cosmetics.state?.unlocked.containsKey(cosmeticId) ?? false;
+    final alreadyUnlocked = _alreadyUnlocked(cosmetics, cosmeticId);
     _log.info(
       'unlock attempt',
       payload:

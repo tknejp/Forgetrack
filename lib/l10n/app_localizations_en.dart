@@ -1947,6 +1947,399 @@ class AppLocalizationsEn extends AppLocalizations {
       'A heavy key whose lock no longer exists.';
 
   @override
+  String get cosmeticBackgroundCampName => 'Pilgrim Camp';
+
+  @override
+  String get cosmeticBackgroundCampDesc =>
+      'A circle of stones around a fading fire — the road begins here.';
+
+  @override
+  String get cosmeticBackgroundRavineName => 'Rocky Ravine';
+
+  @override
+  String get cosmeticBackgroundRavineDesc =>
+      'A narrow cut between cliffs where the wind never stops moving.';
+
+  @override
+  String get cosmeticBackgroundRuinsName => 'Ancient Ruins';
+
+  @override
+  String get cosmeticBackgroundRuinsDesc =>
+      'Broken halls weathered by centuries beyond the pass.';
+
+  @override
+  String get cosmeticBackgroundBridgeCrossingName => 'Bridge Crossing';
+
+  @override
+  String get cosmeticBackgroundBridgeCrossingDesc =>
+      'Suspended ropes span the deep gorge between old roads.';
+
+  @override
+  String get cosmeticBackgroundMinesName => 'Mining Settlement';
+
+  @override
+  String get cosmeticBackgroundMinesDesc =>
+      'Smoke and lantern light from the mountain\'s working heart.';
+
+  @override
+  String get cosmeticBackgroundFrostlandsName => 'Frostlands';
+
+  @override
+  String get cosmeticBackgroundFrostlandsDesc =>
+      'Snow-pale ground that swallows footsteps and sound.';
+
+  @override
+  String get cosmeticBackgroundFrozenLakeName => 'Frozen Lake';
+
+  @override
+  String get cosmeticBackgroundFrozenLakeDesc =>
+      'Still ice over still water — the long quiet before the climb.';
+
+  @override
+  String get cosmeticBackgroundRockyMountainsName => 'Rocky Mountains';
+
+  @override
+  String get cosmeticBackgroundRockyMountainsDesc =>
+      'Black ridges and thin air on the road to the fortress.';
+
+  @override
+  String get cosmeticBackgroundDragonrockFortressName => 'Dragonrock Fortress';
+
+  @override
+  String get cosmeticBackgroundDragonrockFortressDesc =>
+      'The obsidian keep at the end of the journey.';
+
+  @override
+  String get cosmeticEmblemPilgrimMarkName => 'Pilgrim Mark';
+
+  @override
+  String get cosmeticEmblemPilgrimMarkDesc =>
+      'A traveller\'s badge worn by those who chose the road.';
+
+  @override
+  String get cosmeticEmblemRuinSigilName => 'Ruin Sigil';
+
+  @override
+  String get cosmeticEmblemRuinSigilDesc =>
+      'A seal struck for those who walked the old halls.';
+
+  @override
+  String get cosmeticEmblemGatekeeperMarkName => 'Gatekeeper Mark';
+
+  @override
+  String get cosmeticEmblemGatekeeperMarkDesc =>
+      'A bronze badge given to those who passed the old gates.';
+
+  @override
+  String get cosmeticEmblemMineCrestName => 'Mine Crest';
+
+  @override
+  String get cosmeticEmblemMineCrestDesc =>
+      'A miner\'s emblem honouring those who reached the deep workings.';
+
+  @override
+  String get cosmeticEmblemUnderwaysMarkName => 'Underways Mark';
+
+  @override
+  String get cosmeticEmblemUnderwaysMarkDesc =>
+      'A sigil for those who learned the paths beneath the mountain.';
+
+  @override
+  String get cosmeticEmblemFrostSigilName => 'Frost Sigil';
+
+  @override
+  String get cosmeticEmblemFrostSigilDesc =>
+      'A pale-silver badge given to wanderers of the frozen north.';
+
+  @override
+  String get cosmeticEmblemIcewalkerMarkName => 'Icewalker Mark';
+
+  @override
+  String get cosmeticEmblemIcewalkerMarkDesc =>
+      'A badge worn by those who held their pace across the ice.';
+
+  @override
+  String get cosmeticEmblemMountainCrestName => 'Mountain Challenger Crest';
+
+  @override
+  String get cosmeticEmblemMountainCrestDesc =>
+      'An ironclad emblem for those who climbed toward the fortress.';
+
+  @override
+  String get cosmeticEmblemDragonMarkName => 'Dragon Mark';
+
+  @override
+  String get cosmeticEmblemDragonMarkDesc =>
+      'A scaled sigil branded into those who faced the dragon road.';
+
+  @override
+  String get cosmeticEmblemDragonrockEmblemName => 'Dragonrock Emblem';
+
+  @override
+  String get cosmeticEmblemDragonrockEmblemDesc =>
+      'The black-and-gold seal of the lord of Dragonrock.';
+
+  @override
+  String get cosmeticRelicCampfireSparkName => 'Campfire Spark';
+
+  @override
+  String get cosmeticRelicCampfireSparkDesc =>
+      'The first ember from the first night out.';
+
+  @override
+  String get cosmeticRelicPilgrimCloakName => 'Pilgrim Cloak';
+
+  @override
+  String get cosmeticRelicPilgrimCloakDesc =>
+      'Travel-worn wool that has already seen one full week of the road.';
+
+  @override
+  String get cosmeticRelicTrailCompassName => 'Trail Compass';
+
+  @override
+  String get cosmeticRelicTrailCompassDesc =>
+      'A small forest compass earned by completing seven daily quests.';
+
+  @override
+  String get cosmeticRelicAncientRootName => 'Ancient Root';
+
+  @override
+  String get cosmeticRelicAncientRootDesc =>
+      'A twisted root from the old forest, marker of seven days unbroken.';
+
+  @override
+  String get cosmeticRelicRavineStoneName => 'Ravine Stone';
+
+  @override
+  String get cosmeticRelicRavineStoneDesc =>
+      'A heavy stone carried over a hundred thousand steps.';
+
+  @override
+  String get cosmeticRelicRuinSealName => 'Ruin Seal';
+
+  @override
+  String get cosmeticRelicRuinSealDesc =>
+      'A wax seal pressed for completing the first weekly quest.';
+
+  @override
+  String get cosmeticRelicBridgeKeyName => 'Bridge Key';
+
+  @override
+  String get cosmeticRelicBridgeKeyDesc =>
+      'An iron key that turns the locks on the old bridge gates.';
+
+  @override
+  String get cosmeticRelicMinersLanternName => 'Miner\'s Lantern';
+
+  @override
+  String get cosmeticRelicMinersLanternDesc =>
+      'A brass lantern earned by completing fifty quests.';
+
+  @override
+  String get cosmeticRelicPolarLanternName => 'Polar Lantern';
+
+  @override
+  String get cosmeticRelicPolarLanternDesc =>
+      'A pale-flame lantern for those who reached the frostlands.';
+
+  @override
+  String get cosmeticRelicFrostShardName => 'Frost Shard';
+
+  @override
+  String get cosmeticRelicFrostShardDesc =>
+      'A splinter of true frost, cold to the touch under any sun.';
+
+  @override
+  String get cosmeticRelicFrozenLakeHeartName => 'Frozen Lake Heart';
+
+  @override
+  String get cosmeticRelicFrozenLakeHeartDesc =>
+      'A blue-cored stone earned at one million total steps.';
+
+  @override
+  String get cosmeticRelicDragonScaleName => 'Dragon Scale';
+
+  @override
+  String get cosmeticRelicDragonScaleDesc =>
+      'A black scale with a faint heat under its surface.';
+
+  @override
+  String get cosmeticRelicDragonCrownName => 'Dragon Crown';
+
+  @override
+  String get cosmeticRelicDragonCrownDesc =>
+      'A circlet of dragon-tooth iron earned across two hundred and fifty quests.';
+
+  @override
+  String get cosmeticRelicDragonrockCrownName => 'Dragonrock Crown';
+
+  @override
+  String get cosmeticRelicDragonrockCrownDesc =>
+      'The endgame crown of Dragonrock — proof of both quest mastery and a finished climb.';
+
+  @override
+  String get cosmeticFrameDisciplineName => 'Flame of Discipline';
+
+  @override
+  String get cosmeticFrameDisciplineDesc =>
+      'Earned by holding the line for seven days in a row.';
+
+  @override
+  String get cosmeticFrameEnduranceName => 'Endurance Frame';
+
+  @override
+  String get cosmeticFrameEnduranceDesc =>
+      'Forged for those who keep moving through a thirty-day streak.';
+
+  @override
+  String get cosmeticFrameSteelName => 'Steel Frame';
+
+  @override
+  String get cosmeticFrameSteelDesc =>
+      'Hard steel for the unbroken — fifty days unbroken.';
+
+  @override
+  String get cosmeticFrameEternalFlameName => 'Eternal Flame Frame';
+
+  @override
+  String get cosmeticFrameEternalFlameDesc =>
+      'A frame for the rare hundred-day flame that never gutters.';
+
+  @override
+  String get cosmeticFrameBalanceName => 'Balance Frame';
+
+  @override
+  String get cosmeticFrameBalanceDesc =>
+      'Earned by stringing together seven perfect days.';
+
+  @override
+  String get cosmeticFrameMasterRoutineName => 'Master Routine Frame';
+
+  @override
+  String get cosmeticFrameMasterRoutineDesc =>
+      'A gilded frame for twelve perfect weeks — the master of the rhythm.';
+
+  @override
+  String get cosmeticFrameEndlessTrailName => 'Endless Trail Frame';
+
+  @override
+  String get cosmeticFrameEndlessTrailDesc =>
+      'Awarded for walking 600,000 steps within 30 days.';
+
+  @override
+  String get cosmeticFrameWorldwalkerName => 'Worldwalker Frame';
+
+  @override
+  String get cosmeticFrameWorldwalkerDesc =>
+      'A legend\'s frame, ten million steps deep.';
+
+  @override
+  String get cosmeticCompanionEmberSpriteName => 'Ember Sprite';
+
+  @override
+  String get cosmeticCompanionEmberSpriteDesc =>
+      'A small spark that follows the steady-footed.';
+
+  @override
+  String get cosmeticCompanionForestFoxName => 'Forest Fox';
+
+  @override
+  String get cosmeticCompanionForestFoxDesc =>
+      'A quiet wildwood fox that pads alongside seasoned walkers.';
+
+  @override
+  String get cosmeticCompanionRuinRavenName => 'Ruin Raven';
+
+  @override
+  String get cosmeticCompanionRuinRavenDesc =>
+      'A black bird from the old halls, seen most often after a weekly quest is closed.';
+
+  @override
+  String get cosmeticCompanionLanternGolemName => 'Lantern Golem';
+
+  @override
+  String get cosmeticCompanionLanternGolemDesc =>
+      'A small stone golem with a flickering lantern in its chest.';
+
+  @override
+  String get cosmeticCompanionIceWispName => 'Ice Wisp';
+
+  @override
+  String get cosmeticCompanionIceWispDesc =>
+      'A pale spark drawn out of the frozen lake by those who carry both shard and heart.';
+
+  @override
+  String get cosmeticCompanionMountainGryphonName => 'Mountain Gryphon';
+
+  @override
+  String get cosmeticCompanionMountainGryphonDesc =>
+      'A grey gryphon that rides the high ridges with its chosen walker.';
+
+  @override
+  String get cosmeticCompanionDragonlingName => 'Dragonling';
+
+  @override
+  String get cosmeticCompanionDragonlingDesc =>
+      'A small dragon that recognises only the lord of Dragonrock.';
+
+  @override
+  String cosmeticUnlockHintLevel(int level) {
+    return 'Unlocked at level $level.';
+  }
+
+  @override
+  String cosmeticUnlockHintStreak(int days) {
+    return 'Unlocked by reaching a $days-day streak.';
+  }
+
+  @override
+  String cosmeticUnlockHintTotalSteps(int steps) {
+    return 'Unlocked at $steps total steps.';
+  }
+
+  @override
+  String cosmeticUnlockHintMonthlySteps(int steps) {
+    return 'Unlocked by walking $steps steps within 30 days.';
+  }
+
+  @override
+  String cosmeticUnlockHintQuestsCompleted(int count) {
+    return 'Unlocked after completing $count quests.';
+  }
+
+  @override
+  String cosmeticUnlockHintPerfectDays(int count) {
+    return 'Unlocked after $count perfect days.';
+  }
+
+  @override
+  String cosmeticUnlockHintPerfectWeeks(int count) {
+    return 'Unlocked after $count perfect weeks.';
+  }
+
+  @override
+  String cosmeticUnlockHintActiveDays(int days) {
+    return 'Unlocked after $days active days.';
+  }
+
+  @override
+  String get cosmeticUnlockHintCompound =>
+      'Unlocked by completing several milestones.';
+
+  @override
+  String get progAchievementWelcomeToJourneyTitle => 'Welcome to the Journey';
+
+  @override
+  String get progAchievementWelcomeToJourneyDesc => 'You set out on the road.';
+
+  @override
+  String get progAchievementStepsStreak50Title => 'Iron Resolve';
+
+  @override
+  String get progAchievementStepsStreak50Desc =>
+      'Hit the daily steps rule for 50 periods in a row.';
+
+  @override
   String get cosmeticEquippedBadge => 'EQUIPPED';
 
   @override

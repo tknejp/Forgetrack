@@ -184,6 +184,105 @@ class IsarCosmeticsRepository implements CosmeticsRepository {
     });
   }
 
+  @override
+  Future<void> revokeCosmetic({
+    required String uid,
+    required String cosmeticId,
+  }) async {
+    final now = _clock();
+    await _isar.writeTxn(() async {
+      // Skip seeding entirely — revoke on a fresh user is a no-op and we
+      // don't want to silently materialise default unlocks.
+      final unlock = await _isar.cosmeticsUnlockRecords
+          .filter()
+          .uidEqualTo(uid)
+          .cosmeticIdEqualTo(cosmeticId)
+          .findFirst();
+      if (unlock == null) return;
+      await _isar.cosmeticsUnlockRecords.delete(unlock.id);
+
+      // If the cosmetic is equipped in any slot, clear that slot.
+      final stateRecord = await _isar.cosmeticsUserStateRecords
+          .filter()
+          .uidEqualTo(uid)
+          .findFirst();
+      if (stateRecord != null) {
+        var dirty = false;
+        if (stateRecord.frameId == cosmeticId) {
+          stateRecord.frameId = null;
+          dirty = true;
+        }
+        if (stateRecord.relicId == cosmeticId) {
+          stateRecord.relicId = null;
+          dirty = true;
+        }
+        if (stateRecord.backgroundId == cosmeticId) {
+          stateRecord.backgroundId = null;
+          dirty = true;
+        }
+        if (stateRecord.emblemId == cosmeticId) {
+          stateRecord.emblemId = null;
+          dirty = true;
+        }
+        if (stateRecord.companionId == cosmeticId) {
+          stateRecord.companionId = null;
+          dirty = true;
+        }
+        if (stateRecord.titleFlairId == cosmeticId) {
+          stateRecord.titleFlairId = null;
+          dirty = true;
+        }
+        if (stateRecord.mapEffectId == cosmeticId) {
+          stateRecord.mapEffectId = null;
+          dirty = true;
+        }
+        if (dirty) {
+          stateRecord.updatedAt = now;
+          await _isar.cosmeticsUserStateRecords.put(stateRecord);
+        } else {
+          await _bumpUpdatedAt(uid, now);
+        }
+      }
+    });
+  }
+
+  @override
+  Future<int> clearAllUnlocks(String uid) async {
+    final now = _clock();
+    var removed = 0;
+    await _isar.writeTxn(() async {
+      final unlocks = await _isar.cosmeticsUnlockRecords
+          .filter()
+          .uidEqualTo(uid)
+          .findAll();
+      removed = unlocks.length;
+      if (unlocks.isNotEmpty) {
+        await _isar.cosmeticsUnlockRecords
+            .deleteAll(unlocks.map((r) => r.id).toList());
+      }
+
+      // Clear every equipped slot but keep the state row so loadForUser
+      // does not re-seed defaults on the next read.
+      final existing = await _isar.cosmeticsUserStateRecords
+          .filter()
+          .uidEqualTo(uid)
+          .findFirst();
+      final record = existing ?? CosmeticsUserStateRecord()
+        ..uid = uid;
+      record
+        ..frameId = null
+        ..relicId = null
+        ..backgroundId = null
+        ..emblemId = null
+        ..companionId = null
+        ..titleFlairId = null
+        ..mapEffectId = null
+        ..updatedAt = now;
+      await _isar.cosmeticsUserStateRecords.put(record);
+    });
+    return removed;
+  }
+
   // ---------- helpers ----------
 
   bool _isSlotAllowed(CosmeticType type) {

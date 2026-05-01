@@ -1943,6 +1943,398 @@ class AppLocalizationsCs extends AppLocalizations {
       'Těžký klíč, jehož zámek už dávno neexistuje.';
 
   @override
+  String get cosmeticBackgroundCampName => 'Tábor poutníků';
+
+  @override
+  String get cosmeticBackgroundCampDesc =>
+      'Kruh kamenů kolem dohasínajícího ohně — odsud se vyráží na cestu.';
+
+  @override
+  String get cosmeticBackgroundRavineName => 'Skalní rokle';
+
+  @override
+  String get cosmeticBackgroundRavineDesc =>
+      'Úzký zářez mezi stěnami, kde vítr nikdy neztichne.';
+
+  @override
+  String get cosmeticBackgroundRuinsName => 'Staré ruiny';
+
+  @override
+  String get cosmeticBackgroundRuinsDesc =>
+      'Rozpadlé síně omleté staletími za průsmykem.';
+
+  @override
+  String get cosmeticBackgroundBridgeCrossingName => 'Visuté mosty';
+
+  @override
+  String get cosmeticBackgroundBridgeCrossingDesc =>
+      'Lana napjatá nad propastí mezi starými cestami.';
+
+  @override
+  String get cosmeticBackgroundMinesName => 'Hornická osada';
+
+  @override
+  String get cosmeticBackgroundMinesDesc =>
+      'Kouř a světlo luceren ze srdce hor, kde se neustále pracuje.';
+
+  @override
+  String get cosmeticBackgroundFrostlandsName => 'Mrazivé kraje';
+
+  @override
+  String get cosmeticBackgroundFrostlandsDesc =>
+      'Sněhem zalitá pláň, která polyká kroky i zvuk.';
+
+  @override
+  String get cosmeticBackgroundFrozenLakeName => 'Zamrzlé jezero';
+
+  @override
+  String get cosmeticBackgroundFrozenLakeDesc =>
+      'Tichý led nad tichou vodou — dlouhý klid před výstupem.';
+
+  @override
+  String get cosmeticBackgroundRockyMountainsName => 'Skalnaté hory';
+
+  @override
+  String get cosmeticBackgroundRockyMountainsDesc =>
+      'Černé hřebeny a řídký vzduch na cestě k pevnosti.';
+
+  @override
+  String get cosmeticBackgroundDragonrockFortressName => 'Pevnost Dračí skály';
+
+  @override
+  String get cosmeticBackgroundDragonrockFortressDesc =>
+      'Obsidiánová pevnost na konci cesty.';
+
+  @override
+  String get cosmeticEmblemPilgrimMarkName => 'Znamení poutníka';
+
+  @override
+  String get cosmeticEmblemPilgrimMarkDesc =>
+      'Znak cestovatelů, kteří se rozhodli vyrazit na cestu.';
+
+  @override
+  String get cosmeticEmblemRuinSigilName => 'Pečeť ruin';
+
+  @override
+  String get cosmeticEmblemRuinSigilDesc =>
+      'Razítko pro ty, kdo prošli starými síněmi.';
+
+  @override
+  String get cosmeticEmblemGatekeeperMarkName => 'Znamení strážce bran';
+
+  @override
+  String get cosmeticEmblemGatekeeperMarkDesc =>
+      'Bronzové znamení pro ty, kdo prošli starými branami.';
+
+  @override
+  String get cosmeticEmblemMineCrestName => 'Hornický erb';
+
+  @override
+  String get cosmeticEmblemMineCrestDesc =>
+      'Hornické znamení, které dostávají ti, kdo dorazili do hlubokých štol.';
+
+  @override
+  String get cosmeticEmblemUnderwaysMarkName => 'Znak podzemních cest';
+
+  @override
+  String get cosmeticEmblemUnderwaysMarkDesc =>
+      'Znak pro ty, kdo se naučili stezky pod horami.';
+
+  @override
+  String get cosmeticEmblemFrostSigilName => 'Pečeť mrazu';
+
+  @override
+  String get cosmeticEmblemFrostSigilDesc =>
+      'Stříbrná pečeť pro pocestné mrazivého severu.';
+
+  @override
+  String get cosmeticEmblemIcewalkerMarkName => 'Znak ledového poutníka';
+
+  @override
+  String get cosmeticEmblemIcewalkerMarkDesc =>
+      'Znamení pro ty, kdo udrželi tempo i napříč ledem.';
+
+  @override
+  String get cosmeticEmblemMountainCrestName => 'Erb horského vyzyvatele';
+
+  @override
+  String get cosmeticEmblemMountainCrestDesc =>
+      'Železný erb pro ty, kdo vystoupali ke hradbám pevnosti.';
+
+  @override
+  String get cosmeticEmblemDragonMarkName => 'Dračí znamení';
+
+  @override
+  String get cosmeticEmblemDragonMarkDesc =>
+      'Šupinatá pečeť pro ty, kdo se vydali dračí cestou.';
+
+  @override
+  String get cosmeticEmblemDragonrockEmblemName => 'Emblém Dračí skály';
+
+  @override
+  String get cosmeticEmblemDragonrockEmblemDesc =>
+      'Černo-zlatá pečeť pána Dračí skály.';
+
+  @override
+  String get cosmeticRelicCampfireSparkName => 'Jiskra táborového ohně';
+
+  @override
+  String get cosmeticRelicCampfireSparkDesc =>
+      'První uhlík z první noci na cestě.';
+
+  @override
+  String get cosmeticRelicPilgrimCloakName => 'Plášť poutníka';
+
+  @override
+  String get cosmeticRelicPilgrimCloakDesc =>
+      'Cestou opotřebená vlna, která už za sebou má první týden putování.';
+
+  @override
+  String get cosmeticRelicTrailCompassName => 'Kompas lesní stezky';
+
+  @override
+  String get cosmeticRelicTrailCompassDesc =>
+      'Malý lesní kompas za splnění sedmi denních questů.';
+
+  @override
+  String get cosmeticRelicAncientRootName => 'Kořen starého lesa';
+
+  @override
+  String get cosmeticRelicAncientRootDesc =>
+      'Pokroucený kořen z hvozdu, znak sedmi nepřerušených dní.';
+
+  @override
+  String get cosmeticRelicRavineStoneName => 'Kámen rokle';
+
+  @override
+  String get cosmeticRelicRavineStoneDesc =>
+      'Těžký kámen donesený přes sto tisíc kroků.';
+
+  @override
+  String get cosmeticRelicRuinSealName => 'Pečeť starých ruin';
+
+  @override
+  String get cosmeticRelicRuinSealDesc =>
+      'Vosková pečeť za splnění prvního týdenního questu.';
+
+  @override
+  String get cosmeticRelicBridgeKeyName => 'Klíč visutého mostu';
+
+  @override
+  String get cosmeticRelicBridgeKeyDesc =>
+      'Železný klíč, který otevírá zámky starých mostních bran.';
+
+  @override
+  String get cosmeticRelicMinersLanternName => 'Hornická lucerna';
+
+  @override
+  String get cosmeticRelicMinersLanternDesc =>
+      'Mosazná lucerna za splnění padesáti questů.';
+
+  @override
+  String get cosmeticRelicPolarLanternName => 'Polární lucerna';
+
+  @override
+  String get cosmeticRelicPolarLanternDesc =>
+      'Lucerna s bledým plamenem pro ty, kdo dorazili do mrazivých krajů.';
+
+  @override
+  String get cosmeticRelicFrostShardName => 'Mrazový střep';
+
+  @override
+  String get cosmeticRelicFrostShardDesc =>
+      'Úlomek pravého mrazu, chladný i pod letním sluncem.';
+
+  @override
+  String get cosmeticRelicFrozenLakeHeartName => 'Srdce ledového jezera';
+
+  @override
+  String get cosmeticRelicFrozenLakeHeartDesc =>
+      'Modře zářící kámen za milion celkových kroků.';
+
+  @override
+  String get cosmeticRelicDragonScaleName => 'Dračí šupina';
+
+  @override
+  String get cosmeticRelicDragonScaleDesc =>
+      'Černá šupina, jejíž povrch sálá tichým žárem.';
+
+  @override
+  String get cosmeticRelicDragonCrownName => 'Dračí koruna';
+
+  @override
+  String get cosmeticRelicDragonCrownDesc =>
+      'Čelenka z dračích zubů a železa za 250 splněných questů.';
+
+  @override
+  String get cosmeticRelicDragonrockCrownName => 'Koruna Dračí skály';
+
+  @override
+  String get cosmeticRelicDragonrockCrownDesc =>
+      'Závěrečná koruna Dračí skály — důkaz mistrovství v questech i dokončené cesty.';
+
+  @override
+  String get cosmeticFrameDisciplineName => 'Plamen disciplíny';
+
+  @override
+  String get cosmeticFrameDisciplineDesc =>
+      'Získáno udržením linie po sedm dní v řadě.';
+
+  @override
+  String get cosmeticFrameEnduranceName => 'Rámeček vytrvalosti';
+
+  @override
+  String get cosmeticFrameEnduranceDesc =>
+      'Vykováno pro ty, kdo nezpomalí ani po třiceti dnech v řadě.';
+
+  @override
+  String get cosmeticFrameSteelName => 'Ocelový rám';
+
+  @override
+  String get cosmeticFrameSteelDesc =>
+      'Tvrdá ocel pro ty, kdo padesát dní nepřerušili tempo.';
+
+  @override
+  String get cosmeticFrameEternalFlameName => 'Věčný plamen';
+
+  @override
+  String get cosmeticFrameEternalFlameDesc =>
+      'Rám pro vzácný stodenní plamen, který nikdy nezhasne.';
+
+  @override
+  String get cosmeticFrameBalanceName => 'Rámeček rovnováhy';
+
+  @override
+  String get cosmeticFrameBalanceDesc =>
+      'Získáno za sedm perfektních dní za sebou.';
+
+  @override
+  String get cosmeticFrameMasterRoutineName => 'Zlatý rám rutiny';
+
+  @override
+  String get cosmeticFrameMasterRoutineDesc =>
+      'Pozlacený rám za dvanáct perfektních týdnů — mistr rytmu.';
+
+  @override
+  String get cosmeticFrameEndlessTrailName => 'Rámeček nekonečné stezky';
+
+  @override
+  String get cosmeticFrameEndlessTrailDesc => 'Za 600 000 kroků během 30 dní.';
+
+  @override
+  String get cosmeticFrameWorldwalkerName => 'Rám světoběžníka';
+
+  @override
+  String get cosmeticFrameWorldwalkerDesc =>
+      'Rám legend, deset milionů kroků hluboký.';
+
+  @override
+  String get cosmeticCompanionEmberSpriteName => 'Jiskřička';
+
+  @override
+  String get cosmeticCompanionEmberSpriteDesc =>
+      'Malá jiskra, která doprovází ty, kdo udrží tempo.';
+
+  @override
+  String get cosmeticCompanionForestFoxName => 'Lesní liška';
+
+  @override
+  String get cosmeticCompanionForestFoxDesc =>
+      'Tichá liška ze hvozdu, která kráčí po boku zkušených poutníků.';
+
+  @override
+  String get cosmeticCompanionRuinRavenName => 'Havran ruin';
+
+  @override
+  String get cosmeticCompanionRuinRavenDesc =>
+      'Černý pták ze starých síní, nejčastěji k vidění po splnění týdenního questu.';
+
+  @override
+  String get cosmeticCompanionLanternGolemName => 'Lucernový golem';
+
+  @override
+  String get cosmeticCompanionLanternGolemDesc =>
+      'Malý kamenný golem s lucernou poblikávající v hrudi.';
+
+  @override
+  String get cosmeticCompanionIceWispName => 'Ledový přízrak';
+
+  @override
+  String get cosmeticCompanionIceWispDesc =>
+      'Bledá jiskra vyvolaná ze zamrzlého jezera těmi, kdo nesou střep i srdce.';
+
+  @override
+  String get cosmeticCompanionMountainGryphonName => 'Horský gryf';
+
+  @override
+  String get cosmeticCompanionMountainGryphonDesc =>
+      'Šedý gryf, který letí nad hřebeny po boku svého zvoleného poutníka.';
+
+  @override
+  String get cosmeticCompanionDragonlingName => 'Dračí mládě';
+
+  @override
+  String get cosmeticCompanionDragonlingDesc =>
+      'Malý drak, který přijímá pouze pána Dračí skály.';
+
+  @override
+  String cosmeticUnlockHintLevel(int level) {
+    return 'Odemkne se na levelu $level.';
+  }
+
+  @override
+  String cosmeticUnlockHintStreak(int days) {
+    return 'Odemkne se za ${days}denní streak.';
+  }
+
+  @override
+  String cosmeticUnlockHintTotalSteps(int steps) {
+    return 'Odemkne se po $steps celkových krocích.';
+  }
+
+  @override
+  String cosmeticUnlockHintMonthlySteps(int steps) {
+    return 'Odemkne se za $steps kroků během 30 dní.';
+  }
+
+  @override
+  String cosmeticUnlockHintQuestsCompleted(int count) {
+    return 'Odemkne se po splnění $count questů.';
+  }
+
+  @override
+  String cosmeticUnlockHintPerfectDays(int count) {
+    return 'Odemkne se po $count perfektních dnech.';
+  }
+
+  @override
+  String cosmeticUnlockHintPerfectWeeks(int count) {
+    return 'Odemkne se po $count perfektních týdnech.';
+  }
+
+  @override
+  String cosmeticUnlockHintActiveDays(int days) {
+    return 'Odemkne se po $days aktivních dnech.';
+  }
+
+  @override
+  String get cosmeticUnlockHintCompound =>
+      'Odemkne se po splnění více milníků.';
+
+  @override
+  String get progAchievementWelcomeToJourneyTitle => 'Vítej na cestě';
+
+  @override
+  String get progAchievementWelcomeToJourneyDesc => 'Vyrazil jsi na cestu.';
+
+  @override
+  String get progAchievementStepsStreak50Title => 'Železná vůle';
+
+  @override
+  String get progAchievementStepsStreak50Desc =>
+      'Splň pravidlo denních kroků 50 dní v řadě.';
+
+  @override
   String get cosmeticEquippedBadge => 'VYBAVENO';
 
   @override

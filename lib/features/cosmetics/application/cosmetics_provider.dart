@@ -122,6 +122,90 @@ class CosmeticsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// DevTools: grant a single cosmetic via the manual unlock source. Idempotent.
+  Future<void> debugGrantCosmetic(String cosmeticId) {
+    return unlock(
+      cosmeticId,
+      sourceType: CosmeticUnlockSource.manual.name,
+      sourceId: 'devtools',
+    );
+  }
+
+  /// DevTools: revoke a single cosmetic. Clears the equipped slot if the
+  /// cosmetic is currently equipped so the app never sees a locked-but-equipped
+  /// state. No-op if the cosmetic isn't unlocked.
+  Future<void> debugRevokeCosmetic(String cosmeticId) async {
+    final uid = _currentUid;
+    if (uid == null) {
+      _log.warn(
+        'debug revoke skipped — no uid bound',
+        payload: 'id=$cosmeticId',
+      );
+      _errorMessage = 'no_user_bound';
+      notifyListeners();
+      return;
+    }
+    try {
+      _state = await _service.revoke(uid, cosmeticId);
+      _errorMessage = null;
+      _log.info('debug revoke OK', payload: 'id=$cosmeticId uid=$uid');
+    } on CosmeticsException catch (error) {
+      _errorMessage = error.code;
+      _log.warn(
+        'debug revoke rejected',
+        payload: 'id=$cosmeticId code=${error.code}',
+      );
+    } catch (error, st) {
+      _errorMessage = error.toString();
+      _log.error(
+        'debug revoke crashed',
+        payload: 'id=$cosmeticId',
+        err: error,
+        stackTrace: st,
+      );
+    }
+    notifyListeners();
+  }
+
+  /// DevTools: wipe every unlock + every equipped slot for the bound user.
+  /// Returns the number of unlock rows removed. Defaults are NOT re-seeded —
+  /// the dev can re-grant items individually or trigger a progression sync.
+  Future<int> devToolsClearAllUnlocks() async {
+    final uid = _currentUid;
+    if (uid == null) {
+      _log.warn('devtools clear-all skipped — no uid bound');
+      _errorMessage = 'no_user_bound';
+      notifyListeners();
+      return 0;
+    }
+
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final result = await _service.clearAllUnlocks(uid);
+      if (_currentUid != uid) return result.removedCount;
+      _state = result.state;
+      _log.info(
+        'devtools clear-all OK',
+        payload: 'uid=$uid removed=${result.removedCount}',
+      );
+      return result.removedCount;
+    } catch (error, st) {
+      _errorMessage = error.toString();
+      _log.error(
+        'devtools clear-all crashed',
+        payload: 'uid=$uid',
+        err: error,
+        stackTrace: st,
+      );
+      return 0;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<int> devToolsResetProgressionUnlocks() async {
     final uid = _currentUid;
     if (uid == null) {

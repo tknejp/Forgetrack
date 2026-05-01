@@ -49,4 +49,25 @@ abstract class CosmeticsRepository {
     required String uid,
     required CosmeticType type,
   });
+
+  /// Removes [cosmeticId] from the user's unlocked set. No-op if the
+  /// cosmetic is not currently unlocked. Clears the equipped slot if the
+  /// cosmetic is equipped, so callers never see a locked-but-equipped
+  /// inconsistency.
+  ///
+  /// This is a developer / admin operation — production code paths should
+  /// not revoke unlocks. Implementations should treat unknown cosmetic ids
+  /// as a no-op so DevTools doesn't crash on stale catalog rows.
+  Future<void> revokeCosmetic({
+    required String uid,
+    required String cosmeticId,
+  });
+
+  /// Removes every unlock for [uid] and clears every equipped slot. The
+  /// state row itself is preserved so [loadForUser] returns an empty
+  /// inventory rather than re-seeding defaults; callers (DevTools) can
+  /// re-grant individual items afterwards.
+  ///
+  /// Returns the number of unlock records removed.
+  Future<int> clearAllUnlocks(String uid);
 }

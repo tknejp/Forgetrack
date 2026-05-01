@@ -3572,6 +3572,660 @@ abstract class AppLocalizations {
   /// **'A heavy key whose lock no longer exists.'**
   String get cosmeticRelicOldGateKeyDesc;
 
+  /// No description provided for @cosmeticBackgroundCampName.
+  ///
+  /// In en, this message translates to:
+  /// **'Pilgrim Camp'**
+  String get cosmeticBackgroundCampName;
+
+  /// No description provided for @cosmeticBackgroundCampDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A circle of stones around a fading fire — the road begins here.'**
+  String get cosmeticBackgroundCampDesc;
+
+  /// No description provided for @cosmeticBackgroundRavineName.
+  ///
+  /// In en, this message translates to:
+  /// **'Rocky Ravine'**
+  String get cosmeticBackgroundRavineName;
+
+  /// No description provided for @cosmeticBackgroundRavineDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A narrow cut between cliffs where the wind never stops moving.'**
+  String get cosmeticBackgroundRavineDesc;
+
+  /// No description provided for @cosmeticBackgroundRuinsName.
+  ///
+  /// In en, this message translates to:
+  /// **'Ancient Ruins'**
+  String get cosmeticBackgroundRuinsName;
+
+  /// No description provided for @cosmeticBackgroundRuinsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Broken halls weathered by centuries beyond the pass.'**
+  String get cosmeticBackgroundRuinsDesc;
+
+  /// No description provided for @cosmeticBackgroundBridgeCrossingName.
+  ///
+  /// In en, this message translates to:
+  /// **'Bridge Crossing'**
+  String get cosmeticBackgroundBridgeCrossingName;
+
+  /// No description provided for @cosmeticBackgroundBridgeCrossingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspended ropes span the deep gorge between old roads.'**
+  String get cosmeticBackgroundBridgeCrossingDesc;
+
+  /// No description provided for @cosmeticBackgroundMinesName.
+  ///
+  /// In en, this message translates to:
+  /// **'Mining Settlement'**
+  String get cosmeticBackgroundMinesName;
+
+  /// No description provided for @cosmeticBackgroundMinesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Smoke and lantern light from the mountain\'s working heart.'**
+  String get cosmeticBackgroundMinesDesc;
+
+  /// No description provided for @cosmeticBackgroundFrostlandsName.
+  ///
+  /// In en, this message translates to:
+  /// **'Frostlands'**
+  String get cosmeticBackgroundFrostlandsName;
+
+  /// No description provided for @cosmeticBackgroundFrostlandsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Snow-pale ground that swallows footsteps and sound.'**
+  String get cosmeticBackgroundFrostlandsDesc;
+
+  /// No description provided for @cosmeticBackgroundFrozenLakeName.
+  ///
+  /// In en, this message translates to:
+  /// **'Frozen Lake'**
+  String get cosmeticBackgroundFrozenLakeName;
+
+  /// No description provided for @cosmeticBackgroundFrozenLakeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Still ice over still water — the long quiet before the climb.'**
+  String get cosmeticBackgroundFrozenLakeDesc;
+
+  /// No description provided for @cosmeticBackgroundRockyMountainsName.
+  ///
+  /// In en, this message translates to:
+  /// **'Rocky Mountains'**
+  String get cosmeticBackgroundRockyMountainsName;
+
+  /// No description provided for @cosmeticBackgroundRockyMountainsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Black ridges and thin air on the road to the fortress.'**
+  String get cosmeticBackgroundRockyMountainsDesc;
+
+  /// No description provided for @cosmeticBackgroundDragonrockFortressName.
+  ///
+  /// In en, this message translates to:
+  /// **'Dragonrock Fortress'**
+  String get cosmeticBackgroundDragonrockFortressName;
+
+  /// No description provided for @cosmeticBackgroundDragonrockFortressDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The obsidian keep at the end of the journey.'**
+  String get cosmeticBackgroundDragonrockFortressDesc;
+
+  /// No description provided for @cosmeticEmblemPilgrimMarkName.
+  ///
+  /// In en, this message translates to:
+  /// **'Pilgrim Mark'**
+  String get cosmeticEmblemPilgrimMarkName;
+
+  /// No description provided for @cosmeticEmblemPilgrimMarkDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A traveller\'s badge worn by those who chose the road.'**
+  String get cosmeticEmblemPilgrimMarkDesc;
+
+  /// No description provided for @cosmeticEmblemRuinSigilName.
+  ///
+  /// In en, this message translates to:
+  /// **'Ruin Sigil'**
+  String get cosmeticEmblemRuinSigilName;
+
+  /// No description provided for @cosmeticEmblemRuinSigilDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A seal struck for those who walked the old halls.'**
+  String get cosmeticEmblemRuinSigilDesc;
+
+  /// No description provided for @cosmeticEmblemGatekeeperMarkName.
+  ///
+  /// In en, this message translates to:
+  /// **'Gatekeeper Mark'**
+  String get cosmeticEmblemGatekeeperMarkName;
+
+  /// No description provided for @cosmeticEmblemGatekeeperMarkDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A bronze badge given to those who passed the old gates.'**
+  String get cosmeticEmblemGatekeeperMarkDesc;
+
+  /// No description provided for @cosmeticEmblemMineCrestName.
+  ///
+  /// In en, this message translates to:
+  /// **'Mine Crest'**
+  String get cosmeticEmblemMineCrestName;
+
+  /// No description provided for @cosmeticEmblemMineCrestDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A miner\'s emblem honouring those who reached the deep workings.'**
+  String get cosmeticEmblemMineCrestDesc;
+
+  /// No description provided for @cosmeticEmblemUnderwaysMarkName.
+  ///
+  /// In en, this message translates to:
+  /// **'Underways Mark'**
+  String get cosmeticEmblemUnderwaysMarkName;
+
+  /// No description provided for @cosmeticEmblemUnderwaysMarkDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A sigil for those who learned the paths beneath the mountain.'**
+  String get cosmeticEmblemUnderwaysMarkDesc;
+
+  /// No description provided for @cosmeticEmblemFrostSigilName.
+  ///
+  /// In en, this message translates to:
+  /// **'Frost Sigil'**
+  String get cosmeticEmblemFrostSigilName;
+
+  /// No description provided for @cosmeticEmblemFrostSigilDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A pale-silver badge given to wanderers of the frozen north.'**
+  String get cosmeticEmblemFrostSigilDesc;
+
+  /// No description provided for @cosmeticEmblemIcewalkerMarkName.
+  ///
+  /// In en, this message translates to:
+  /// **'Icewalker Mark'**
+  String get cosmeticEmblemIcewalkerMarkName;
+
+  /// No description provided for @cosmeticEmblemIcewalkerMarkDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A badge worn by those who held their pace across the ice.'**
+  String get cosmeticEmblemIcewalkerMarkDesc;
+
+  /// No description provided for @cosmeticEmblemMountainCrestName.
+  ///
+  /// In en, this message translates to:
+  /// **'Mountain Challenger Crest'**
+  String get cosmeticEmblemMountainCrestName;
+
+  /// No description provided for @cosmeticEmblemMountainCrestDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'An ironclad emblem for those who climbed toward the fortress.'**
+  String get cosmeticEmblemMountainCrestDesc;
+
+  /// No description provided for @cosmeticEmblemDragonMarkName.
+  ///
+  /// In en, this message translates to:
+  /// **'Dragon Mark'**
+  String get cosmeticEmblemDragonMarkName;
+
+  /// No description provided for @cosmeticEmblemDragonMarkDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A scaled sigil branded into those who faced the dragon road.'**
+  String get cosmeticEmblemDragonMarkDesc;
+
+  /// No description provided for @cosmeticEmblemDragonrockEmblemName.
+  ///
+  /// In en, this message translates to:
+  /// **'Dragonrock Emblem'**
+  String get cosmeticEmblemDragonrockEmblemName;
+
+  /// No description provided for @cosmeticEmblemDragonrockEmblemDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The black-and-gold seal of the lord of Dragonrock.'**
+  String get cosmeticEmblemDragonrockEmblemDesc;
+
+  /// No description provided for @cosmeticRelicCampfireSparkName.
+  ///
+  /// In en, this message translates to:
+  /// **'Campfire Spark'**
+  String get cosmeticRelicCampfireSparkName;
+
+  /// No description provided for @cosmeticRelicCampfireSparkDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The first ember from the first night out.'**
+  String get cosmeticRelicCampfireSparkDesc;
+
+  /// No description provided for @cosmeticRelicPilgrimCloakName.
+  ///
+  /// In en, this message translates to:
+  /// **'Pilgrim Cloak'**
+  String get cosmeticRelicPilgrimCloakName;
+
+  /// No description provided for @cosmeticRelicPilgrimCloakDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Travel-worn wool that has already seen one full week of the road.'**
+  String get cosmeticRelicPilgrimCloakDesc;
+
+  /// No description provided for @cosmeticRelicTrailCompassName.
+  ///
+  /// In en, this message translates to:
+  /// **'Trail Compass'**
+  String get cosmeticRelicTrailCompassName;
+
+  /// No description provided for @cosmeticRelicTrailCompassDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A small forest compass earned by completing seven daily quests.'**
+  String get cosmeticRelicTrailCompassDesc;
+
+  /// No description provided for @cosmeticRelicAncientRootName.
+  ///
+  /// In en, this message translates to:
+  /// **'Ancient Root'**
+  String get cosmeticRelicAncientRootName;
+
+  /// No description provided for @cosmeticRelicAncientRootDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A twisted root from the old forest, marker of seven days unbroken.'**
+  String get cosmeticRelicAncientRootDesc;
+
+  /// No description provided for @cosmeticRelicRavineStoneName.
+  ///
+  /// In en, this message translates to:
+  /// **'Ravine Stone'**
+  String get cosmeticRelicRavineStoneName;
+
+  /// No description provided for @cosmeticRelicRavineStoneDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A heavy stone carried over a hundred thousand steps.'**
+  String get cosmeticRelicRavineStoneDesc;
+
+  /// No description provided for @cosmeticRelicRuinSealName.
+  ///
+  /// In en, this message translates to:
+  /// **'Ruin Seal'**
+  String get cosmeticRelicRuinSealName;
+
+  /// No description provided for @cosmeticRelicRuinSealDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A wax seal pressed for completing the first weekly quest.'**
+  String get cosmeticRelicRuinSealDesc;
+
+  /// No description provided for @cosmeticRelicBridgeKeyName.
+  ///
+  /// In en, this message translates to:
+  /// **'Bridge Key'**
+  String get cosmeticRelicBridgeKeyName;
+
+  /// No description provided for @cosmeticRelicBridgeKeyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'An iron key that turns the locks on the old bridge gates.'**
+  String get cosmeticRelicBridgeKeyDesc;
+
+  /// No description provided for @cosmeticRelicMinersLanternName.
+  ///
+  /// In en, this message translates to:
+  /// **'Miner\'s Lantern'**
+  String get cosmeticRelicMinersLanternName;
+
+  /// No description provided for @cosmeticRelicMinersLanternDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A brass lantern earned by completing fifty quests.'**
+  String get cosmeticRelicMinersLanternDesc;
+
+  /// No description provided for @cosmeticRelicPolarLanternName.
+  ///
+  /// In en, this message translates to:
+  /// **'Polar Lantern'**
+  String get cosmeticRelicPolarLanternName;
+
+  /// No description provided for @cosmeticRelicPolarLanternDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A pale-flame lantern for those who reached the frostlands.'**
+  String get cosmeticRelicPolarLanternDesc;
+
+  /// No description provided for @cosmeticRelicFrostShardName.
+  ///
+  /// In en, this message translates to:
+  /// **'Frost Shard'**
+  String get cosmeticRelicFrostShardName;
+
+  /// No description provided for @cosmeticRelicFrostShardDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A splinter of true frost, cold to the touch under any sun.'**
+  String get cosmeticRelicFrostShardDesc;
+
+  /// No description provided for @cosmeticRelicFrozenLakeHeartName.
+  ///
+  /// In en, this message translates to:
+  /// **'Frozen Lake Heart'**
+  String get cosmeticRelicFrozenLakeHeartName;
+
+  /// No description provided for @cosmeticRelicFrozenLakeHeartDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A blue-cored stone earned at one million total steps.'**
+  String get cosmeticRelicFrozenLakeHeartDesc;
+
+  /// No description provided for @cosmeticRelicDragonScaleName.
+  ///
+  /// In en, this message translates to:
+  /// **'Dragon Scale'**
+  String get cosmeticRelicDragonScaleName;
+
+  /// No description provided for @cosmeticRelicDragonScaleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A black scale with a faint heat under its surface.'**
+  String get cosmeticRelicDragonScaleDesc;
+
+  /// No description provided for @cosmeticRelicDragonCrownName.
+  ///
+  /// In en, this message translates to:
+  /// **'Dragon Crown'**
+  String get cosmeticRelicDragonCrownName;
+
+  /// No description provided for @cosmeticRelicDragonCrownDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A circlet of dragon-tooth iron earned across two hundred and fifty quests.'**
+  String get cosmeticRelicDragonCrownDesc;
+
+  /// No description provided for @cosmeticRelicDragonrockCrownName.
+  ///
+  /// In en, this message translates to:
+  /// **'Dragonrock Crown'**
+  String get cosmeticRelicDragonrockCrownName;
+
+  /// No description provided for @cosmeticRelicDragonrockCrownDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The endgame crown of Dragonrock — proof of both quest mastery and a finished climb.'**
+  String get cosmeticRelicDragonrockCrownDesc;
+
+  /// No description provided for @cosmeticFrameDisciplineName.
+  ///
+  /// In en, this message translates to:
+  /// **'Flame of Discipline'**
+  String get cosmeticFrameDisciplineName;
+
+  /// No description provided for @cosmeticFrameDisciplineDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Earned by holding the line for seven days in a row.'**
+  String get cosmeticFrameDisciplineDesc;
+
+  /// No description provided for @cosmeticFrameEnduranceName.
+  ///
+  /// In en, this message translates to:
+  /// **'Endurance Frame'**
+  String get cosmeticFrameEnduranceName;
+
+  /// No description provided for @cosmeticFrameEnduranceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Forged for those who keep moving through a thirty-day streak.'**
+  String get cosmeticFrameEnduranceDesc;
+
+  /// No description provided for @cosmeticFrameSteelName.
+  ///
+  /// In en, this message translates to:
+  /// **'Steel Frame'**
+  String get cosmeticFrameSteelName;
+
+  /// No description provided for @cosmeticFrameSteelDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Hard steel for the unbroken — fifty days unbroken.'**
+  String get cosmeticFrameSteelDesc;
+
+  /// No description provided for @cosmeticFrameEternalFlameName.
+  ///
+  /// In en, this message translates to:
+  /// **'Eternal Flame Frame'**
+  String get cosmeticFrameEternalFlameName;
+
+  /// No description provided for @cosmeticFrameEternalFlameDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A frame for the rare hundred-day flame that never gutters.'**
+  String get cosmeticFrameEternalFlameDesc;
+
+  /// No description provided for @cosmeticFrameBalanceName.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance Frame'**
+  String get cosmeticFrameBalanceName;
+
+  /// No description provided for @cosmeticFrameBalanceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Earned by stringing together seven perfect days.'**
+  String get cosmeticFrameBalanceDesc;
+
+  /// No description provided for @cosmeticFrameMasterRoutineName.
+  ///
+  /// In en, this message translates to:
+  /// **'Master Routine Frame'**
+  String get cosmeticFrameMasterRoutineName;
+
+  /// No description provided for @cosmeticFrameMasterRoutineDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A gilded frame for twelve perfect weeks — the master of the rhythm.'**
+  String get cosmeticFrameMasterRoutineDesc;
+
+  /// No description provided for @cosmeticFrameEndlessTrailName.
+  ///
+  /// In en, this message translates to:
+  /// **'Endless Trail Frame'**
+  String get cosmeticFrameEndlessTrailName;
+
+  /// No description provided for @cosmeticFrameEndlessTrailDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Awarded for walking 600,000 steps within 30 days.'**
+  String get cosmeticFrameEndlessTrailDesc;
+
+  /// No description provided for @cosmeticFrameWorldwalkerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Worldwalker Frame'**
+  String get cosmeticFrameWorldwalkerName;
+
+  /// No description provided for @cosmeticFrameWorldwalkerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A legend\'s frame, ten million steps deep.'**
+  String get cosmeticFrameWorldwalkerDesc;
+
+  /// No description provided for @cosmeticCompanionEmberSpriteName.
+  ///
+  /// In en, this message translates to:
+  /// **'Ember Sprite'**
+  String get cosmeticCompanionEmberSpriteName;
+
+  /// No description provided for @cosmeticCompanionEmberSpriteDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A small spark that follows the steady-footed.'**
+  String get cosmeticCompanionEmberSpriteDesc;
+
+  /// No description provided for @cosmeticCompanionForestFoxName.
+  ///
+  /// In en, this message translates to:
+  /// **'Forest Fox'**
+  String get cosmeticCompanionForestFoxName;
+
+  /// No description provided for @cosmeticCompanionForestFoxDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A quiet wildwood fox that pads alongside seasoned walkers.'**
+  String get cosmeticCompanionForestFoxDesc;
+
+  /// No description provided for @cosmeticCompanionRuinRavenName.
+  ///
+  /// In en, this message translates to:
+  /// **'Ruin Raven'**
+  String get cosmeticCompanionRuinRavenName;
+
+  /// No description provided for @cosmeticCompanionRuinRavenDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A black bird from the old halls, seen most often after a weekly quest is closed.'**
+  String get cosmeticCompanionRuinRavenDesc;
+
+  /// No description provided for @cosmeticCompanionLanternGolemName.
+  ///
+  /// In en, this message translates to:
+  /// **'Lantern Golem'**
+  String get cosmeticCompanionLanternGolemName;
+
+  /// No description provided for @cosmeticCompanionLanternGolemDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A small stone golem with a flickering lantern in its chest.'**
+  String get cosmeticCompanionLanternGolemDesc;
+
+  /// No description provided for @cosmeticCompanionIceWispName.
+  ///
+  /// In en, this message translates to:
+  /// **'Ice Wisp'**
+  String get cosmeticCompanionIceWispName;
+
+  /// No description provided for @cosmeticCompanionIceWispDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A pale spark drawn out of the frozen lake by those who carry both shard and heart.'**
+  String get cosmeticCompanionIceWispDesc;
+
+  /// No description provided for @cosmeticCompanionMountainGryphonName.
+  ///
+  /// In en, this message translates to:
+  /// **'Mountain Gryphon'**
+  String get cosmeticCompanionMountainGryphonName;
+
+  /// No description provided for @cosmeticCompanionMountainGryphonDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A grey gryphon that rides the high ridges with its chosen walker.'**
+  String get cosmeticCompanionMountainGryphonDesc;
+
+  /// No description provided for @cosmeticCompanionDragonlingName.
+  ///
+  /// In en, this message translates to:
+  /// **'Dragonling'**
+  String get cosmeticCompanionDragonlingName;
+
+  /// No description provided for @cosmeticCompanionDragonlingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A small dragon that recognises only the lord of Dragonrock.'**
+  String get cosmeticCompanionDragonlingDesc;
+
+  /// No description provided for @cosmeticUnlockHintLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocked at level {level}.'**
+  String cosmeticUnlockHintLevel(int level);
+
+  /// No description provided for @cosmeticUnlockHintStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocked by reaching a {days}-day streak.'**
+  String cosmeticUnlockHintStreak(int days);
+
+  /// No description provided for @cosmeticUnlockHintTotalSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocked at {steps} total steps.'**
+  String cosmeticUnlockHintTotalSteps(int steps);
+
+  /// No description provided for @cosmeticUnlockHintMonthlySteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocked by walking {steps} steps within 30 days.'**
+  String cosmeticUnlockHintMonthlySteps(int steps);
+
+  /// No description provided for @cosmeticUnlockHintQuestsCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocked after completing {count} quests.'**
+  String cosmeticUnlockHintQuestsCompleted(int count);
+
+  /// No description provided for @cosmeticUnlockHintPerfectDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocked after {count} perfect days.'**
+  String cosmeticUnlockHintPerfectDays(int count);
+
+  /// No description provided for @cosmeticUnlockHintPerfectWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocked after {count} perfect weeks.'**
+  String cosmeticUnlockHintPerfectWeeks(int count);
+
+  /// No description provided for @cosmeticUnlockHintActiveDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocked after {days} active days.'**
+  String cosmeticUnlockHintActiveDays(int days);
+
+  /// No description provided for @cosmeticUnlockHintCompound.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocked by completing several milestones.'**
+  String get cosmeticUnlockHintCompound;
+
+  /// No description provided for @progAchievementWelcomeToJourneyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to the Journey'**
+  String get progAchievementWelcomeToJourneyTitle;
+
+  /// No description provided for @progAchievementWelcomeToJourneyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'You set out on the road.'**
+  String get progAchievementWelcomeToJourneyDesc;
+
+  /// No description provided for @progAchievementStepsStreak50Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Iron Resolve'**
+  String get progAchievementStepsStreak50Title;
+
+  /// No description provided for @progAchievementStepsStreak50Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Hit the daily steps rule for 50 periods in a row.'**
+  String get progAchievementStepsStreak50Desc;
+
   /// No description provided for @cosmeticEquippedBadge.
   ///
   /// In en, this message translates to:

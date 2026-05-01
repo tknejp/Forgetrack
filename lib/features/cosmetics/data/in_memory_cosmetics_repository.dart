@@ -133,6 +133,46 @@ class InMemoryCosmeticsRepository implements CosmeticsRepository {
     );
   }
 
+  @override
+  Future<void> revokeCosmetic({
+    required String uid,
+    required String cosmeticId,
+  }) async {
+    final state = await loadForUser(uid);
+    if (!state.unlocked.containsKey(cosmeticId)) return;
+    final unlocked = Map<String, UnlockedCosmetic>.from(state.unlocked)
+      ..remove(cosmeticId);
+    var equipped = state.equipped;
+    for (final type in CosmeticType.values) {
+      if (equipped.slotId(type) == cosmeticId) {
+        equipped = equipped.copyWithSlot(type, null);
+      }
+    }
+    final now = _clock();
+    _states[uid] = state.copyWith(
+      unlocked: unlocked,
+      equipped: equipped,
+      updatedAt: now,
+    );
+  }
+
+  @override
+  Future<int> clearAllUnlocks(String uid) async {
+    final state = await loadForUser(uid);
+    final removed = state.unlocked.length;
+    if (removed == 0 &&
+        CosmeticType.values.every((t) => state.equipped.slotId(t) == null)) {
+      return 0;
+    }
+    final now = _clock();
+    _states[uid] = state.copyWith(
+      unlocked: const <String, UnlockedCosmetic>{},
+      equipped: const EquippedCosmetics.empty(),
+      updatedAt: now,
+    );
+    return removed;
+  }
+
   bool _isSlotAllowed(CosmeticType type) {
     if (_config.allowedSlots.contains(type)) return true;
     if (type == CosmeticType.mapEffect && _config.experimentalTypesEnabled) {

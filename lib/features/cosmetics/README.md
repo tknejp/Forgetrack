@@ -203,18 +203,60 @@ For non-throwing pre-checks (e.g. greying out a tile in a grid), use
 
 ## Progression integration
 
-Wired as of step 4. `progression` owns the mapping and the dispatch; this
-feature just exposes `CosmeticsProvider.unlock(...)` and stays unaware.
+`progression` owns the dispatch loop; this feature exposes
+`CosmeticsProvider.unlock(...)` and stays unaware. Two tiers cover the unlock
+surface:
+
+### Tier 1 — Achievement → cosmetic (Map-based)
 
 * Mapping table:
   `lib/features/progression/domain/cosmetic_reward_table.dart` — two const
   maps, one keyed by achievement id, one keyed by player level. Adding a
-  reward = appending to the right map.
-* Dispatcher:
-  `lib/features/progression/application/cosmetic_unlock_dispatcher.dart` —
-  diffs `previous` vs `current` `ProgressionEngineState` after each
-  `engine.sync()` and calls `cosmeticsProvider.unlock(...)` for any newly
-  unlocked achievement or level transition.
+  reward = appending to the right map. The achievement map covers step
+  totals, streaks, monthly windows, and the `welcome_to_journey` opener;
+  the level map covers every 5th level from 5 to 100.
+* The dispatcher iterates **every** currently-unlocked achievement and
+  **every** level from 1 to current per call (catch-up semantics) — adding
+  a new mapping retroactively grants the cosmetic on the next sync without
+  a migration script. Idempotency at the repository layer keeps repeat
+  passes a no-op.
+
+### Tier 2 — Rule evaluator
+
+For conditions the achievement engine cannot express today (category-typed
+quest counts, active-day counts, perfect periods, compound conditions
+like "owns relic_X AND owns relic_Y"). Lives entirely in
+`cosmetics/domain` so progression doesn't grow rule-evaluation logic.
+
+* Rules: `lib/features/cosmetics/domain/cosmetic_unlock_rules.dart`
+  exposes `kCosmeticUnlockRules` — a declarative `List<CosmeticUnlockRule>`.
+  Each rule has 1-N named `CosmeticUnlockCondition`s joined with logical
+  AND. OR is expressed by registering two rules with the same `cosmeticId`.
+* Evaluator: `cosmetic_unlock_evaluator.dart` walks the rule list and
+  returns tuples for cosmetics whose conditions are met. Pure, no I/O.
+* Snapshot: `cosmetic_unlock_snapshot.dart` is the read-only DTO the rules
+  inspect. Built per dispatch by
+  `progression/application/cosmetic_unlock_snapshot_extractor.dart` from
+  the durable progression ledger (`questRewardGrants`, `evaluations`,
+  `profile`).
+* Perfect-period rules (`frame_balance`, `frame_master_routine`) reference
+  a placeholder evaluator in
+  `progression/domain/perfect_period_evaluator.dart` that returns 0 today.
+  Replacing it with a real implementation will fire those rules
+  automatically.
+
+### Dispatcher
+
+`lib/features/progression/application/cosmetic_unlock_dispatcher.dart` runs
+three passes per call:
+
+1. Achievement catch-up via Tier-1 reward table.
+2. Level catch-up (1..currentLevel) via Tier-1 reward table.
+3. Tier-2 rule evaluator in a bounded fixed-point loop (max 3 iterations)
+   so compound rules whose dependencies were granted by passes 1-2 fire in
+   the same dispatch — e.g. `relic_dragonrock_crown` granted in pass 1 then
+   `companion_dragonling` in pass 3.
+
 * Wiring: `ProgressionProvider.bind(..., cosmeticsProvider: ...)` plumbs
   the cosmetics provider in; `main.dart` uses
   `ChangeNotifierProxyProvider4` to inject `CosmeticsProvider` into
@@ -224,14 +266,42 @@ feature just exposes `CosmeticsProvider.unlock(...)` and stays unaware.
   via `AppLog`.
 
 Idempotence: `cosmetics.unlock` is a no-op if the cosmetic is already
-unlocked, so re-running a sync that produced no state change is harmless.
+unlocked, so the catch-up loops are safe to run on every sync.
 
-Backfill: only deltas after the first hydrate are dispatched. Pre-existing
-unlocked achievements from before this version shipped do **not**
-retroactively grant cosmetics — add a one-shot migration if that becomes
-desirable. `cosmetic_unlock_rules.dart` (in cosmetics domain) is the right
-file to grow into a richer "rule engine" if the mapping should ever live
-inside cosmetics instead.
+## How to add a new unlock condition
+
+Pick a tier:
+
+* **Tier 1 (already-tracked metric)** — extend
+  `progression/domain/cosmetic_reward_table.dart`:
+  * If the metric matches an existing `ProgressionAchievementDefinition`
+    (step totals, streak counts, rolling windows, total XP), add the
+    cosmetic id to `achievementToCosmetics[<achievement_id>]`.
+  * If it's a new threshold (e.g. a new step-streak length), add the
+    `ProgressionAchievementDefinition` to
+    `progression/domain/progression_achievement_catalog.dart` first, then
+    map it. The achievement engine will start tracking and unlocking it.
+
+* **Tier 2 (engine can't express it)** — extend `kCosmeticUnlockRules`
+  in `cosmetics/domain/cosmetic_unlock_rules.dart`:
+  1. If the condition needs a snapshot field that doesn't exist yet, add
+     it to `CosmeticUnlockSnapshot` in
+     `cosmetics/domain/cosmetic_unlock_snapshot.dart` and populate it in
+     `progression/application/cosmetic_unlock_snapshot_extractor.dart`
+     from a **durable** source (the progression ledger, not transient
+     provider state).
+  2. Add a `Cond.<name>(...)` builder to `cosmetic_unlock_rule.dart` that
+     returns a `CosmeticUnlockCondition` reading the new field. The `id`
+     of the condition should be stable across releases — future UI uses it
+     to render hints.
+  3. Append a `CosmeticUnlockRule` to `kCosmeticUnlockRules`. Compound
+     rules just list multiple `CosmeticUnlockCondition`s — they are joined
+     with logical AND. Set `isHidden: true` for prestige rewards that
+     should not surface partial-progress hints.
+
+Tier 1 is preferred whenever the metric is a simple aggregate the
+achievement engine already evaluates — the rule evaluator should not
+duplicate persistence concerns.
 
 ## Future: social / hero UI integration
 
