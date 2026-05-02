@@ -8,14 +8,19 @@ import '../../../shared/widgets/ft_back_button.dart';
 import '../../../shared/widgets/screen_header.dart';
 import '../application/cosmetics_provider.dart';
 import '../domain/cosmetic_models.dart';
+import '../domain/cosmetic_unlock_rules.dart';
 import 'cosmetic_details_sheet.dart';
 import 'cosmetics_l10n.dart';
 import 'cosmetics_screen_internals.dart';
 
 class CosmeticsScreen extends StatefulWidget {
-  const CosmeticsScreen({super.key, this.initialType});
+  const CosmeticsScreen({super.key, this.initialType, this.devToolsMode = false});
 
   final CosmeticType? initialType;
+
+  /// When true: shows every catalog item (locked + unlocked), asset-missing
+  /// indicators, and passes unlock conditions to the details sheet.
+  final bool devToolsMode;
 
   @override
   State<CosmeticsScreen> createState() => _CosmeticsScreenState();
@@ -81,20 +86,31 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
     if (state == null) return const _NotSignedIn();
 
     final config = cosmetics.service.config;
-    final unlockedDefs = cosmetics.service
-        .getUnlockedDefinitions(state)
-        .where(config.isUsable)
-        .toList(growable: false)
-      ..sort((a, b) => _compareUnlockedCosmetics(a, b, state));
+    final devTools = widget.devToolsMode;
+
+    final List<CosmeticDefinition> displayDefs;
+    if (devTools) {
+      displayDefs = cosmetics.service.catalog.all.toList()
+        ..sort(_byTypeThenSortOrder);
+    } else {
+      displayDefs = cosmetics.service
+          .getUnlockedDefinitions(state)
+          .where(config.isUsable)
+          .toList(growable: false)
+        ..sort((a, b) => _compareUnlockedCosmetics(a, b, state));
+    }
+
     final equippedDefs = cosmetics.service.getEquippedDefinitions(state);
-    final presentTypes = CosmeticType.values
-        .where((type) => unlockedDefs.any((def) => def.type == type))
-        .toList(growable: false);
+    final presentTypes = devTools
+        ? CosmeticType.values.toList()
+        : CosmeticType.values
+            .where((type) => displayDefs.any((def) => def.type == type))
+            .toList(growable: false);
     final selectedType =
         presentTypes.contains(_selectedType) ? _selectedType : null;
     final filteredDefs = selectedType == null
-        ? unlockedDefs
-        : unlockedDefs
+        ? displayDefs
+        : displayDefs
             .where((def) => def.type == selectedType)
             .toList(growable: false);
 
@@ -118,6 +134,7 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
                   state: state,
                   definition: definition,
                   l10n: l10n,
+                  devTools: devTools,
                 ),
               ),
             ),
@@ -138,10 +155,14 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
                         final definition = filteredDefs[index];
+                        final isUnlocked =
+                            state.unlocked.containsKey(definition.id);
                         return _CosmeticCard(
                           definition: definition,
                           isEquipped: state.equipped.slotId(definition.type) ==
                               definition.id,
+                          isLocked: devTools && !isUnlocked,
+                          showMissingAsset: devTools,
                           l10n: l10n,
                           onTap: () => _showDetails(
                             context,
@@ -149,6 +170,7 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
                             state: state,
                             definition: definition,
                             l10n: l10n,
+                            devTools: devTools,
                           ),
                         );
                       },
@@ -174,7 +196,14 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
     required UserCosmeticsState state,
     required CosmeticDefinition definition,
     required CosmeticsL10n l10n,
+    bool devTools = false,
   }) {
+    final isLocked = !state.unlocked.containsKey(definition.id);
+    final rules = devTools
+        ? kCosmeticUnlockRules
+            .where((r) => r.cosmeticId == definition.id)
+            .toList()
+        : null;
     showModalBottomSheet<void>(
       context: context,
       useSafeArea: true,
@@ -184,6 +213,9 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
         definition: definition,
         state: state,
         l10n: l10n,
+        isLocked: devTools && isLocked,
+        devToolsUnlockRules: rules,
+        devToolsMode: devTools,
       ),
     );
   }
@@ -354,10 +386,14 @@ class _CosmeticCard extends StatelessWidget {
     required this.isEquipped,
     required this.l10n,
     required this.onTap,
+    this.isLocked = false,
+    this.showMissingAsset = false,
   });
 
   final CosmeticDefinition definition;
   final bool isEquipped;
+  final bool isLocked;
+  final bool showMissingAsset;
   final CosmeticsL10n l10n;
   final VoidCallback onTap;
 
@@ -369,74 +405,110 @@ class _CosmeticCard extends StatelessWidget {
         .service
         .config
         .resolveAssetPath(definition.previewAssetKey ?? definition.assetKey);
+    final hasAsset = definition.assetKey != null;
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              color.withValues(alpha: 0.13),
-              color.withValues(alpha: 0.03),
+      child: Opacity(
+        opacity: isLocked ? 0.42 : 1.0,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                color.withValues(alpha: 0.13),
+                color.withValues(alpha: 0.03),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(Tokens.radiusInner),
+            border: Border.all(color: color.withValues(alpha: 0.27)),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.16),
+                blurRadius: 12,
+                offset: const Offset(0, 2),
+              ),
             ],
           ),
-          borderRadius: BorderRadius.circular(Tokens.radiusInner),
-          border: Border.all(color: color.withValues(alpha: 0.27)),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.16),
-              blurRadius: 12,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CosmeticBadge(
-                      definition: definition,
-                      assetPath: assetPath,
-                      color: color,
-                      size: _cardBadgeSize(definition.type),
-                      framed: false,
-                    ),
-                    const SizedBox(height: Tokens.spaceSm),
-                    Text(
-                      l10n.name(definition),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CosmeticBadge(
+                        definition: definition,
+                        assetPath: assetPath,
                         color: color,
-                        fontSize: Tokens.fontSizeTiny,
-                        fontWeight: FontWeight.w800,
-                        height: 1.15,
-                        letterSpacing: 0,
+                        size: _cardBadgeSize(definition.type),
+                        framed: false,
+                      ),
+                      const SizedBox(height: Tokens.spaceSm),
+                      Text(
+                        l10n.name(definition),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: color,
+                          fontSize: Tokens.fontSizeTiny,
+                          fontWeight: FontWeight.w800,
+                          height: 1.15,
+                          letterSpacing: 0,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (isEquipped)
+                Positioned(
+                  top: 7,
+                  right: 7,
+                  child: Icon(
+                    Icons.check_circle_rounded,
+                    color: color,
+                    size: 17,
+                  ),
+                ),
+              if (isLocked)
+                Positioned(
+                  top: 5,
+                  left: 5,
+                  child: Icon(
+                    Icons.lock_rounded,
+                    size: 13,
+                    color: Colors.white.withValues(alpha: 0.55),
+                  ),
+                ),
+              if (showMissingAsset && !hasAsset)
+                Positioned(
+                  bottom: 5,
+                  right: 5,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 4, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.85),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    child: const Text(
+                      'NO ASSET',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 7,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.3,
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-            if (isEquipped)
-              Positioned(
-                top: 7,
-                right: 7,
-                child: Icon(
-                  Icons.check_circle_rounded,
-                  color: color,
-                  size: 17,
-                ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -575,6 +647,13 @@ double _cardBadgeSize(CosmeticType type) {
     case CosmeticType.mapEffect:
       return 48;
   }
+}
+
+int _byTypeThenSortOrder(CosmeticDefinition a, CosmeticDefinition b) {
+  final typeRank = CosmeticType.values.indexOf(a.type)
+      .compareTo(CosmeticType.values.indexOf(b.type));
+  if (typeRank != 0) return typeRank;
+  return a.sortOrder.compareTo(b.sortOrder);
 }
 
 int _compareUnlockedCosmetics(

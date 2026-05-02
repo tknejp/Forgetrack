@@ -37,7 +37,6 @@ class _DevToolsProgressionSectionState
   bool _isRefreshing = false;
   bool _isApplyingOverride = false;
   bool _isResetting = false;
-  bool _isResettingInventory = false;
 
   @override
   Widget build(BuildContext context) {
@@ -53,8 +52,7 @@ class _DevToolsProgressionSectionState
     final isBusy = p.isRefreshing ||
         _isRefreshing ||
         _isApplyingOverride ||
-        _isResetting ||
-        _isResettingInventory;
+        _isResetting;
     return DevToolsSectionCard(
       title: 'Progression / RPG', // TODO: l10n
       children: [
@@ -148,16 +146,6 @@ class _DevToolsProgressionSectionState
           icon: Icons.delete_forever_rounded,
           onTap: isBusy ? null : _confirmAndReset,
         ),
-        const DevToolsSectionDivider(),
-        DevToolsActionTile(
-          label: 'Reset progression inventory rewards',
-          subtitle:
-              'Removes only inventory unlocks from level / achievement / quest sources; custom, manual and promo items stay.',
-          isDestructive: true,
-          isLoading: _isResettingInventory || cosmetics.isLoading,
-          icon: Icons.inventory_2_outlined,
-          onTap: isBusy ? null : _confirmAndResetProgressionInventory,
-        ),
       ],
     );
   }
@@ -215,50 +203,6 @@ class _DevToolsProgressionSectionState
     }
   }
 
-  Future<void> _confirmAndResetProgressionInventory() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Reset progression inventory rewards?'),
-        content: const Text(
-          'This removes only cosmetics unlocked by game progression '
-          '(level, achievement or quest sources). Manual, promotional, '
-          'entitlement and custom cosmetics remain unlocked. Equipped slots '
-          'using removed items will be cleared.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-            ),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Reset inventory rewards'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
-
-    setState(() => _isResettingInventory = true);
-    final provider = context.read<CosmeticsProvider>();
-    try {
-      final removed = await provider.devToolsResetProgressionUnlocks();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Devtools: removed $removed progression inventory unlocks',
-          ),
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _isResettingInventory = false);
-    }
-  }
 }
 
 bool _isProgressionCosmeticSource(String? sourceType) {

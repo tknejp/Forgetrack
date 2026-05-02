@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../../core/logging/app_log.dart';
 import '../data/cosmetic_entitlements_source.dart';
+import '../domain/cosmetic_catalog.dart';
 import '../domain/cosmetic_models.dart';
 import 'cosmetics_service.dart';
 
@@ -129,6 +130,20 @@ class CosmeticsProvider extends ChangeNotifier {
       sourceType: CosmeticUnlockSource.manual.name,
       sourceId: 'devtools',
     );
+  }
+
+  /// DevTools: grant every cosmetic in the catalog. Returns the number of
+  /// items that were newly unlocked (already-unlocked items are skipped).
+  Future<int> devToolsGrantAllCosmetics() async {
+    final ids = CosmeticCatalog.definitions.map((d) => d.id).toList();
+    var granted = 0;
+    final before = state?.unlocked.length ?? 0;
+    for (final id in ids) {
+      await debugGrantCosmetic(id);
+    }
+    final after = state?.unlocked.length ?? 0;
+    granted = after - before;
+    return granted;
   }
 
   /// DevTools: revoke a single cosmetic. Clears the equipped slot if the

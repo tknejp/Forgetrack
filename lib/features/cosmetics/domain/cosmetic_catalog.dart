@@ -293,6 +293,83 @@ class CosmeticCatalog {
     ),
 
     // -------------------------------------------------------------------------
+    // Backgrounds — Developer-only (grant via DevTools only)
+    // -------------------------------------------------------------------------
+
+    CosmeticDefinition(
+      id: 'background_dev_altar',
+      type: CosmeticType.background,
+      rarity: CosmeticRarity.legendary,
+      region: CosmeticRegion.neutral,
+      nameKey: 'cosmetics.background_dev_altar.name',
+      descriptionKey: 'cosmetics.background_dev_altar.description',
+      assetKey: 'cosmetics.backgrounds.dev_altar',
+      previewAssetKey: 'cosmetics.backgrounds.dev_altar',
+      sortOrder: 9010,
+      metadata: <String, Object?>{'devOnly': true},
+    ),
+    CosmeticDefinition(
+      id: 'background_dev_camp',
+      type: CosmeticType.background,
+      rarity: CosmeticRarity.legendary,
+      region: CosmeticRegion.neutral,
+      nameKey: 'cosmetics.background_dev_camp.name',
+      descriptionKey: 'cosmetics.background_dev_camp.description',
+      assetKey: 'cosmetics.backgrounds.dev_camp',
+      previewAssetKey: 'cosmetics.backgrounds.dev_camp',
+      sortOrder: 9020,
+      metadata: <String, Object?>{'devOnly': true},
+    ),
+    CosmeticDefinition(
+      id: 'background_dev_hacker',
+      type: CosmeticType.background,
+      rarity: CosmeticRarity.legendary,
+      region: CosmeticRegion.neutral,
+      nameKey: 'cosmetics.background_dev_hacker.name',
+      descriptionKey: 'cosmetics.background_dev_hacker.description',
+      assetKey: 'cosmetics.backgrounds.dev_hacker',
+      previewAssetKey: 'cosmetics.backgrounds.dev_hacker',
+      sortOrder: 9030,
+      metadata: <String, Object?>{'devOnly': true},
+    ),
+    CosmeticDefinition(
+      id: 'background_dev_lord',
+      type: CosmeticType.background,
+      rarity: CosmeticRarity.legendary,
+      region: CosmeticRegion.neutral,
+      nameKey: 'cosmetics.background_dev_lord.name',
+      descriptionKey: 'cosmetics.background_dev_lord.description',
+      assetKey: 'cosmetics.backgrounds.dev_lord',
+      previewAssetKey: 'cosmetics.backgrounds.dev_lord',
+      sortOrder: 9040,
+      metadata: <String, Object?>{'devOnly': true},
+    ),
+    CosmeticDefinition(
+      id: 'background_dev_mines',
+      type: CosmeticType.background,
+      rarity: CosmeticRarity.legendary,
+      region: CosmeticRegion.neutral,
+      nameKey: 'cosmetics.background_dev_mines.name',
+      descriptionKey: 'cosmetics.background_dev_mines.description',
+      assetKey: 'cosmetics.backgrounds.dev_mines',
+      previewAssetKey: 'cosmetics.backgrounds.dev_mines',
+      sortOrder: 9050,
+      metadata: <String, Object?>{'devOnly': true},
+    ),
+    CosmeticDefinition(
+      id: 'background_dev_throne',
+      type: CosmeticType.background,
+      rarity: CosmeticRarity.legendary,
+      region: CosmeticRegion.neutral,
+      nameKey: 'cosmetics.background_dev_throne.name',
+      descriptionKey: 'cosmetics.background_dev_throne.description',
+      assetKey: 'cosmetics.backgrounds.dev_throne',
+      previewAssetKey: 'cosmetics.backgrounds.dev_throne',
+      sortOrder: 9060,
+      metadata: <String, Object?>{'devOnly': true},
+    ),
+
+    // -------------------------------------------------------------------------
     // Emblems — Journey badges (insignia of crossed milestones)
     // -------------------------------------------------------------------------
 
@@ -698,7 +775,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'companion_ember_sprite',
       type: CosmeticType.companion,
-      rarity: CosmeticRarity.epic,
+      rarity: CosmeticRarity.common,
       region: CosmeticRegion.forestTrail,
       nameKey: 'cosmetics.companion_ember_sprite.name',
       descriptionKey: 'cosmetics.companion_ember_sprite.description',
@@ -710,7 +787,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'companion_forest_fox',
       type: CosmeticType.companion,
-      rarity: CosmeticRarity.epic,
+      rarity: CosmeticRarity.rare,
       region: CosmeticRegion.forestTrail,
       nameKey: 'cosmetics.companion_forest_fox.name',
       descriptionKey: 'cosmetics.companion_forest_fox.description',
@@ -722,7 +799,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'companion_ruin_raven',
       type: CosmeticType.companion,
-      rarity: CosmeticRarity.epic,
+      rarity: CosmeticRarity.rare,
       region: CosmeticRegion.ruinedPass,
       nameKey: 'cosmetics.companion_ruin_raven.name',
       descriptionKey: 'cosmetics.companion_ruin_raven.description',

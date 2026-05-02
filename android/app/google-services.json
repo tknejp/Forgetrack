@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "798278342104-ejjt8003jf8a5lg72r73fvnfqba9ckr8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.knejp.forgetrack",
+            "certificate_hash": "c2a673681a1522c7a62e5cd189dba00248d4ea00"
+          }
+        },
+        {
           "client_id": "798278342104-jvtmm2jqhnrgpg4f4c12jm2osdi3vurc.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -38,6 +46,13 @@
             {
               "client_id": "798278342104-2fbpll2cvco1d4c79mdk9t6t344fkjbp.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "798278342104-53il3va0f0j27r0duhi1s2qb9rv4fdkn.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.forgetracker"
+              }
             }
           ]
         }

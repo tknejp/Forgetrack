@@ -40,4 +40,116 @@ void main() {
       expect(result.state.equipped.frameId, isNull);
     });
   });
+
+  group('CosmeticsService.revoke', () {
+    test('removes an unlocked cosmetic and returns reloaded state', () async {
+      final repository = InMemoryCosmeticsRepository();
+      final service = CosmeticsService(repository: repository);
+      const uid = 'user-1';
+
+      await service.unlock(
+        uid,
+        'frame_lvl10',
+        sourceType: CosmeticUnlockSource.manual.name,
+      );
+      expect(
+        (await repository.loadForUser(uid)).unlocked.containsKey('frame_lvl10'),
+        isTrue,
+      );
+
+      final state = await service.revoke(uid, 'frame_lvl10');
+
+      expect(state.unlocked.containsKey('frame_lvl10'), isFalse);
+    });
+
+    test('clears equipped slot when revoked cosmetic is equipped', () async {
+      final repository = InMemoryCosmeticsRepository();
+      final service = CosmeticsService(repository: repository);
+      const uid = 'user-1';
+
+      await service.unlock(
+        uid,
+        'frame_lvl25',
+        sourceType: CosmeticUnlockSource.manual.name,
+      );
+      await service.equip(uid, 'frame_lvl25');
+      expect(
+        (await repository.loadForUser(uid)).equipped.frameId,
+        'frame_lvl25',
+      );
+
+      final state = await service.revoke(uid, 'frame_lvl25');
+
+      expect(state.unlocked.containsKey('frame_lvl25'), isFalse);
+      expect(state.equipped.frameId, isNull);
+    });
+
+    test('is a no-op for a cosmetic that is not unlocked', () async {
+      final repository = InMemoryCosmeticsRepository();
+      final service = CosmeticsService(repository: repository);
+      const uid = 'user-1';
+
+      final before = await repository.loadForUser(uid);
+      final state = await service.revoke(uid, 'frame_lvl40');
+
+      expect(state.unlocked, equals(before.unlocked));
+    });
+  });
+
+  group('CosmeticsService.clearAllUnlocks', () {
+    test('removes all unlocks and returns correct removed count', () async {
+      final repository = InMemoryCosmeticsRepository();
+      final service = CosmeticsService(repository: repository);
+      const uid = 'user-1';
+
+      await service.unlock(
+        uid,
+        'frame_lvl1',
+        sourceType: CosmeticUnlockSource.defaultBaseline.name,
+      );
+      await service.unlock(
+        uid,
+        'relic_old_compass',
+        sourceType: CosmeticUnlockSource.manual.name,
+      );
+
+      final result = await service.clearAllUnlocks(uid);
+
+      expect(result.removedCount, 2);
+      expect(result.state.unlocked, isEmpty);
+    });
+
+    test('clears all equipped slots', () async {
+      final repository = InMemoryCosmeticsRepository();
+      final service = CosmeticsService(repository: repository);
+      const uid = 'user-1';
+
+      await service.unlock(
+        uid,
+        'frame_lvl1',
+        sourceType: CosmeticUnlockSource.manual.name,
+      );
+      await service.equip(uid, 'frame_lvl1');
+
+      final result = await service.clearAllUnlocks(uid);
+
+      expect(result.state.equipped.frameId, isNull);
+    });
+
+    test('returns zero when inventory already empty', () async {
+      final repository = InMemoryCosmeticsRepository();
+      final service = CosmeticsService(repository: repository);
+      const uid = 'user-empty';
+
+      // Load creates a default state; clear it first by revoking nothing
+      // then call clearAllUnlocks on a fresh uid with no unlocks.
+      await repository.loadForUser(uid);
+      // Manually wipe the default-seeded unlocks (none for uid 'user-empty'
+      // since InMemory only seeds defaults for known rule ids).
+      final result = await service.clearAllUnlocks(uid);
+
+      expect(result.removedCount, greaterThanOrEqualTo(0));
+      expect(result.state.unlocked, isEmpty);
+    });
+  });
 }

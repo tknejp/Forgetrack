@@ -21,7 +21,7 @@ class CosmeticRewardTable {
   static const Map<String, List<String>> achievementToCosmetics =
       <String, List<String>>{
     // Visible welcome reward — fires on first sync.
-    'welcome_to_journey': ['background_camp', 'emblem_pilgrim_mark'],
+    'welcome_to_journey': ['frame_lvl1', 'background_camp', 'emblem_pilgrim_mark'],
 
     // Step total milestones.
     'steps_total_100k': ['relic_ravine_stone'],

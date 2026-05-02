@@ -19,6 +19,7 @@ import 'sections/devtools_background_section.dart';
 import 'sections/devtools_health_pipeline_section.dart';
 import 'sections/devtools_notification_section.dart';
 import 'sections/devtools_sync_section.dart';
+import 'sections/devtools_cosmetics_section.dart';
 import 'sections/devtools_ui_section.dart';
 
 class DevToolsScreen extends StatefulWidget {
@@ -99,6 +100,8 @@ class _DevToolsBody extends StatelessWidget {
             const DevToolsUiSection(),
             const SizedBox(height: Tokens.spaceLg),
             const DevToolsProgressionSection(),
+            const SizedBox(height: Tokens.spaceLg),
+            const DevToolsCosmeticsSection(),
             const SizedBox(height: Tokens.spaceLg),
             const DevToolsOverridesSection(),
           ],

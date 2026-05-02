@@ -32,6 +32,19 @@ class CosmeticsL10n {
       case 'frame_developer_tom':
         return 'Developer frame';
 
+      case 'background_dev_altar':
+        return 'Dev: Altar';
+      case 'background_dev_camp':
+        return 'Dev: Camp';
+      case 'background_dev_hacker':
+        return 'Dev: Hacker';
+      case 'background_dev_lord':
+        return 'Dev: Lord';
+      case 'background_dev_mines':
+        return 'Dev: Mines';
+      case 'background_dev_throne':
+        return 'Dev: Throne';
+
       case 'relic_old_compass':
         return _l10n.cosmeticRelicOldCompassName;
       case 'background_forest_trail':
@@ -164,6 +177,14 @@ class CosmeticsL10n {
         return _l10n.cosmeticFrameLvl100Desc;
       case 'frame_developer_tom':
         return 'Specialni ramecek odemceny pres Firebase entitlement.';
+
+      case 'background_dev_altar':
+      case 'background_dev_camp':
+      case 'background_dev_hacker':
+      case 'background_dev_lord':
+      case 'background_dev_mines':
+      case 'background_dev_throne':
+        return 'Developer-only background. Grant via DevTools.';
 
       case 'relic_old_compass':
         return _l10n.cosmeticRelicOldCompassDesc;

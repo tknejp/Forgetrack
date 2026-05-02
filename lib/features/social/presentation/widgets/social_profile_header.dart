@@ -548,7 +548,7 @@ class _HeaderFrame extends StatelessWidget {
               : DecorationImage(
                   image: AssetImage(backgroundPath),
                   fit: BoxFit.cover,
-                  opacity: 0.34,
+                  opacity: 0.62,
                 ),
           borderRadius: BorderRadius.circular(Tokens.radiusCard),
           border: Border.all(color: Tokens.accent.withValues(alpha: 0.30)),
