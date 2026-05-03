@@ -76,13 +76,21 @@ void main() {
 
   group('CosmeticRevealEvaluator — hidden items', () {
     test('compound hidden item with 0 conditions met returns hidden', () {
-      // companion_forest_fox: ownsCosmetic(emblem_forest_mark) + ownsCosmetic(relic_ancient_root)
-      // With no owned items, both conditions fail → hidden.
+      // companion_forest_fox: atLevel(10) + relic_moonlit_foxglove + relic_ancient_root.
+      // With level 0 and no owned items, all conditions fail → hidden.
       const id = 'companion_forest_fox';
       final results = _evaluate(owned: {});
       final result = results[id]!;
       expect(result.state, CosmeticRevealState.hidden);
       expect(result.satisfiedConditions, 0);
+    });
+
+    test('companion_ember_sprite returns hidden when no conditions met', () {
+      // Compound hidden rule: atLevel(5) + campfire_spark + warm_kindling.
+      // Level 0, no relics → 0/3 conditions → hidden.
+      const id = 'companion_ember_sprite';
+      final results = _evaluate(owned: {});
+      expect(results[id]?.state, CosmeticRevealState.hidden);
     });
 
     test('hidden item does not surface name, asset, or unlock hint via state', () {
@@ -124,14 +132,9 @@ void main() {
       expect(results[id]?.state, CosmeticRevealState.visibleLocked);
     });
 
-    test('companion_ember_sprite with non-hidden OR rules returns visibleLocked', () {
-      // ember_sprite has two rules, both with isHidden: false.
-      const id = 'companion_ember_sprite';
-      final results = _evaluate(owned: {});
-      expect(results[id]?.state, CosmeticRevealState.visibleLocked);
-    });
-
-    test('frame_balance (perfectPeriod, not hidden) returns visibleLocked', () {
+    test('frame_balance (no Tier-2 rule, granted by achievement) returns visibleLocked', () {
+      // frame_balance is now a Tier-1 achievement reward (perfect_days_7) with no
+      // entry in kCosmeticUnlockRules → the evaluator falls through to visibleLocked.
       const id = 'frame_balance';
       final results = _evaluate(owned: {});
       expect(results[id]?.state, CosmeticRevealState.visibleLocked);
@@ -139,76 +142,79 @@ void main() {
   });
 
   group('CosmeticRevealEvaluator — partial', () {
-    test('companion_forest_fox shows partial when one ownership condition met', () {
-      // Condition 1: owns emblem_forest_mark → satisfied
-      // Condition 2: owns relic_ancient_root → not satisfied
+    test('companion_forest_fox shows partial when level gate met but relics missing', () {
+      // Condition 1: atLevel(10) → satisfied
+      // Condition 2: ownsCosmetic(relic_moonlit_foxglove) → not satisfied
+      // Condition 3: ownsCosmetic(relic_ancient_root) → not satisfied
       const id = 'companion_forest_fox';
       final results = _evaluate(
-        owned: {'emblem_forest_mark'},
-        snapshot: _snapshot(owned: {'emblem_forest_mark'}),
-      );
-      final result = results[id]!;
-      expect(result.state, CosmeticRevealState.partial);
-      expect(result.satisfiedConditions, 1);
-      expect(result.totalConditions, 2);
-    });
-
-    test('companion_ice_wisp shows partial when frost_shard owned but not frozen_lake_heart', () {
-      const id = 'companion_ice_wisp';
-      final results = _evaluate(
-        owned: {'relic_frost_shard'},
-        snapshot: _snapshot(owned: {'relic_frost_shard'}),
-      );
-      final result = results[id]!;
-      expect(result.state, CosmeticRevealState.partial);
-      expect(result.satisfiedConditions, 1);
-      expect(result.totalConditions, 2);
-    });
-
-    test('companion_mountain_gryphon shows partial at level 80 without relic', () {
-      // Condition 1: atLevel(80) → satisfied
-      // Condition 2: ownsCosmetic(relic_frozen_lake_heart) → not satisfied
-      const id = 'companion_mountain_gryphon';
-      final results = _evaluate(
-        snapshot: _snapshot(level: 80),
+        snapshot: _snapshot(level: 10),
         owned: {},
       );
       final result = results[id]!;
       expect(result.state, CosmeticRevealState.partial);
       expect(result.satisfiedConditions, 1);
-      expect(result.totalConditions, 2);
+      expect(result.totalConditions, 3);
     });
 
-    test('relic_dragonrock_crown shows partial at level 100 with < 250 quests', () {
-      // Condition 1: atLevel(100) → satisfied
-      // Condition 2: totalQuestsCompletedAtLeast(250) → not satisfied
+    test('companion_ice_wisp shows partial at level 65 without relics', () {
+      // Condition 1: atLevel(65) → satisfied
+      // Condition 2: ownsCosmetic(relic_polar_lantern) → not satisfied
+      // Condition 3: ownsCosmetic(relic_frozen_lake_heart) → not satisfied
+      const id = 'companion_ice_wisp';
+      final results = _evaluate(
+        snapshot: _snapshot(level: 65),
+        owned: {},
+      );
+      final result = results[id]!;
+      expect(result.state, CosmeticRevealState.partial);
+      expect(result.satisfiedConditions, 1);
+      expect(result.totalConditions, 3);
+    });
+
+    test('companion_mountain_gryphon shows partial at level 85 without relics', () {
+      // Condition 1: atLevel(85) → satisfied
+      // Condition 2: ownsCosmetic(relic_summit_feather) → not satisfied
+      // Condition 3: ownsCosmetic(relic_stormcrest_plume) → not satisfied
+      const id = 'companion_mountain_gryphon';
+      final results = _evaluate(
+        snapshot: _snapshot(level: 85),
+        owned: {},
+      );
+      final result = results[id]!;
+      expect(result.state, CosmeticRevealState.partial);
+      expect(result.satisfiedConditions, 1);
+      expect(result.totalConditions, 3);
+    });
+
+    test('relic_dragonrock_crown has no Tier-2 rule and returns visibleLocked', () {
+      // Tier-2 rule for relic_dragonrock_crown was removed in Phase 5.
+      // It remains in the catalog (legacy cleanup is Phase 6) and falls to
+      // visibleLocked via the Tier-1 path.
       const id = 'relic_dragonrock_crown';
       final results = _evaluate(
         snapshot: _snapshot(level: 100, totalQuests: 100),
         owned: {},
       );
-      final result = results[id]!;
-      expect(result.state, CosmeticRevealState.partial);
-      expect(result.satisfiedConditions, 1);
-      expect(result.totalConditions, 2);
+      expect(results[id]?.state, CosmeticRevealState.visibleLocked);
     });
 
     test('partial satisfiedConditions + totalConditions are correct', () {
       // companion_lantern_golem:
-      //   cond 1: ownsCosmetic(relic_miners_lantern) → satisfied
-      //   cond 2: totalQuestsCompletedAtLeast(75) → not satisfied (60 quests)
+      //   cond 1: atLevel(45) → not satisfied (level 0)
+      //   cond 2: ownsCosmetic(relic_deep_ember_core) → not satisfied
+      //   cond 3: ownsCosmetic(relic_miners_lantern) → satisfied
       const id = 'companion_lantern_golem';
       final results = _evaluate(
         owned: {'relic_miners_lantern'},
         snapshot: _snapshot(
-          totalQuests: 60,
           owned: {'relic_miners_lantern'},
         ),
       );
       final result = results[id]!;
       expect(result.state, CosmeticRevealState.partial);
       expect(result.satisfiedConditions, 1);
-      expect(result.totalConditions, 2);
+      expect(result.totalConditions, 3);
     });
   });
 

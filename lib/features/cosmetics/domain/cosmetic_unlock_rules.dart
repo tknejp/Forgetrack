@@ -18,110 +18,39 @@ class CosmeticUnlockRules {
       defaultUnlockedIds.contains(cosmeticId);
 }
 
-/// Tier-2 unlock rules: conditions the achievement engine cannot express
-/// today (category-typed quest counts, active-day counts, perfect periods,
-/// compound conditions). The achievement reward table covers Tier-1
-/// (level milestones, step totals, streaks, monthly windows).
+/// Tier-2 unlock rules: companion unlocks gated on level + two relic ownership
+/// conditions. Relics themselves flow exclusively from Tier-1 (achievement
+/// reward table) — there are no Tier-2 relic rules.
 ///
-/// Sources:
-/// - 'quest'         — quest-based counters, including compound with quest legs
-/// - 'activeDays'    — days the player engaged with progression
-/// - 'perfectPeriod' — perfect-day / perfect-week placeholders
-/// - 'compound'      — anything mixing level + ownership / multi-cosmetic
+/// Pattern for every companion:
+///   Cond.atLevel(N) + Cond.ownsCosmetic(relic_a) + Cond.ownsCosmetic(relic_b)
 ///
-/// OR-style rules (e.g. ember_sprite: 7 active days OR 3 daily quests)
-/// are expressed by registering two rules with the same `cosmeticId`.
+/// Unlocks are idempotent and non-destructive: relics remain in inventory after
+/// a companion is granted.
+///
+/// The fixed-point dispatcher (pass 3) handles the timing: achievement unlock
+/// grants relics in pass 1, then pass 3 iteration 1 grants companions that now
+/// see the relics in ownedCosmeticIds.
 final List<CosmeticUnlockRule> kCosmeticUnlockRules = <CosmeticUnlockRule>[
-  // -- Quest-driven relics --------------------------------------------------
+  // -- Companions: relic gate + level gate, idempotent, no consumption -------
   CosmeticUnlockRule(
-    cosmeticId: 'relic_campfire_spark',
-    sourceType: 'quest',
-    sourceId: 'first_daily_quest',
-    conditions: [Cond.firstDailyQuest()],
-  ),
-  CosmeticUnlockRule(
-    cosmeticId: 'relic_pilgrim_cloak',
-    sourceType: 'activeDays',
-    sourceId: 'active_days_7',
-    conditions: [Cond.activeDaysAtLeast(7)],
-  ),
-  CosmeticUnlockRule(
-    cosmeticId: 'relic_trail_compass',
-    sourceType: 'quest',
-    sourceId: 'daily_quests_7',
-    conditions: [Cond.dailyQuestsCompletedAtLeast(7)],
-  ),
-  CosmeticUnlockRule(
-    cosmeticId: 'relic_ruin_seal',
-    sourceType: 'quest',
-    sourceId: 'first_weekly_quest',
-    conditions: [Cond.firstWeeklyQuest()],
-  ),
-  CosmeticUnlockRule(
-    cosmeticId: 'relic_bridge_key',
-    sourceType: 'quest',
-    sourceId: 'weekly_quests_3',
-    conditions: [Cond.weeklyQuestsCompletedAtLeast(3)],
-  ),
-  CosmeticUnlockRule(
-    cosmeticId: 'relic_miners_lantern',
-    sourceType: 'quest',
-    sourceId: 'total_quests_50',
-    conditions: [Cond.totalQuestsCompletedAtLeast(50)],
-  ),
-  CosmeticUnlockRule(
-    cosmeticId: 'relic_dragon_crown',
-    sourceType: 'quest',
-    sourceId: 'total_quests_250',
-    conditions: [Cond.totalQuestsCompletedAtLeast(250)],
-  ),
-  // Compound: level 100 AND 250 quests completed.
-  CosmeticUnlockRule(
-    cosmeticId: 'relic_dragonrock_crown',
+    cosmeticId: 'companion_ember_sprite',
     sourceType: 'compound',
-    sourceId: 'compound_dragonrock_crown',
+    sourceId: 'compound_jiskricka',
     conditions: [
-      Cond.atLevel(100),
-      Cond.totalQuestsCompletedAtLeast(250),
+      Cond.atLevel(5),
+      Cond.ownsCosmetic('relic_campfire_spark'),
+      Cond.ownsCosmetic('relic_warm_kindling'),
     ],
     isHidden: true,
   ),
-
-  // -- Perfect-period frames (placeholder until evaluator backed) ----------
-  CosmeticUnlockRule(
-    cosmeticId: 'frame_balance',
-    sourceType: 'perfectPeriod',
-    sourceId: 'perfect_days_7',
-    conditions: [Cond.perfectDaysAtLeast(7)],
-  ),
-  CosmeticUnlockRule(
-    cosmeticId: 'frame_master_routine',
-    sourceType: 'perfectPeriod',
-    sourceId: 'perfect_weeks_12',
-    conditions: [Cond.perfectWeeksAtLeast(12)],
-  ),
-
-  // -- Companions ----------------------------------------------------------
-  // ember_sprite is OR: 7 active days OR 3 daily quests — register twice.
-  CosmeticUnlockRule(
-    cosmeticId: 'companion_ember_sprite',
-    sourceType: 'activeDays',
-    sourceId: 'ember_sprite_active_days',
-    conditions: [Cond.activeDaysAtLeast(7)],
-  ),
-  CosmeticUnlockRule(
-    cosmeticId: 'companion_ember_sprite',
-    sourceType: 'quest',
-    sourceId: 'ember_sprite_daily_quests',
-    conditions: [Cond.dailyQuestsCompletedAtLeast(3)],
-  ),
-
   CosmeticUnlockRule(
     cosmeticId: 'companion_forest_fox',
     sourceType: 'compound',
-    sourceId: 'compound_forest_fox',
+    sourceId: 'compound_lesni_liska',
     conditions: [
-      Cond.ownsCosmetic('emblem_forest_mark'),
+      Cond.atLevel(10),
+      Cond.ownsCosmetic('relic_moonlit_foxglove'),
       Cond.ownsCosmetic('relic_ancient_root'),
     ],
     isHidden: true,
@@ -129,29 +58,32 @@ final List<CosmeticUnlockRule> kCosmeticUnlockRules = <CosmeticUnlockRule>[
   CosmeticUnlockRule(
     cosmeticId: 'companion_ruin_raven',
     sourceType: 'compound',
-    sourceId: 'compound_ruin_raven',
+    sourceId: 'compound_havran_ruin',
     conditions: [
-      Cond.ownsCosmetic('emblem_ruin_sigil'),
-      Cond.firstWeeklyQuest(),
+      Cond.atLevel(25),
+      Cond.ownsCosmetic('relic_ruin_seal'),
+      Cond.ownsCosmetic('relic_ashen_omen'),
     ],
     isHidden: true,
   ),
   CosmeticUnlockRule(
     cosmeticId: 'companion_lantern_golem',
     sourceType: 'compound',
-    sourceId: 'compound_lantern_golem',
+    sourceId: 'compound_lucernovy_golem',
     conditions: [
+      Cond.atLevel(45),
+      Cond.ownsCosmetic('relic_deep_ember_core'),
       Cond.ownsCosmetic('relic_miners_lantern'),
-      Cond.totalQuestsCompletedAtLeast(75),
     ],
     isHidden: true,
   ),
   CosmeticUnlockRule(
     cosmeticId: 'companion_ice_wisp',
     sourceType: 'compound',
-    sourceId: 'compound_ice_wisp',
+    sourceId: 'compound_ledovy_prizrak',
     conditions: [
-      Cond.ownsCosmetic('relic_frost_shard'),
+      Cond.atLevel(65),
+      Cond.ownsCosmetic('relic_polar_lantern'),
       Cond.ownsCosmetic('relic_frozen_lake_heart'),
     ],
     isHidden: true,
@@ -159,20 +91,22 @@ final List<CosmeticUnlockRule> kCosmeticUnlockRules = <CosmeticUnlockRule>[
   CosmeticUnlockRule(
     cosmeticId: 'companion_mountain_gryphon',
     sourceType: 'compound',
-    sourceId: 'compound_mountain_gryphon',
+    sourceId: 'compound_horsky_gryf',
     conditions: [
-      Cond.atLevel(80),
-      Cond.ownsCosmetic('relic_frozen_lake_heart'),
+      Cond.atLevel(85),
+      Cond.ownsCosmetic('relic_summit_feather'),
+      Cond.ownsCosmetic('relic_stormcrest_plume'),
     ],
     isHidden: true,
   ),
   CosmeticUnlockRule(
     cosmeticId: 'companion_dragonling',
     sourceType: 'compound',
-    sourceId: 'compound_dragonling',
+    sourceId: 'compound_draci_mlade',
     conditions: [
       Cond.atLevel(100),
-      Cond.ownsCosmetic('relic_dragonrock_crown'),
+      Cond.ownsCosmetic('relic_dragon_scale'),
+      Cond.ownsCosmetic('relic_dragonrock_heart'),
     ],
     isHidden: true,
   ),

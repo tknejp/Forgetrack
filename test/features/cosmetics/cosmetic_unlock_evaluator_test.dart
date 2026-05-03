@@ -3,207 +3,315 @@ import 'package:forgetrack/features/cosmetics/domain/cosmetic_unlock_evaluator.d
 import 'package:forgetrack/features/cosmetics/domain/cosmetic_unlock_rules.dart';
 import 'package:forgetrack/features/cosmetics/domain/cosmetic_unlock_snapshot.dart';
 
-CosmeticUnlockSnapshot _baseSnapshot({
+CosmeticUnlockSnapshot _snap({
   int level = 1,
-  int activeDays = 0,
-  int dailyQuests = 0,
-  int weeklyQuests = 0,
-  int totalQuests = 0,
-  int perfectDays = 0,
-  int perfectWeeks = 0,
   Set<String> owned = const <String>{},
 }) {
   return CosmeticUnlockSnapshot(
     level: level,
-    activeDaysCount: activeDays,
-    completedDailyQuests: dailyQuests,
-    completedWeeklyQuests: weeklyQuests,
-    totalCompletedQuests: totalQuests,
-    firstDailyQuestEver: dailyQuests >= 1,
-    firstWeeklyQuestEver: weeklyQuests >= 1,
-    perfectDaysCount: perfectDays,
-    perfectWeeksCount: perfectWeeks,
+    activeDaysCount: 0,
+    completedDailyQuests: 0,
+    completedWeeklyQuests: 0,
+    totalCompletedQuests: 0,
+    firstDailyQuestEver: false,
+    firstWeeklyQuestEver: false,
+    perfectDaysCount: 0,
+    perfectWeeksCount: 0,
     ownedCosmeticIds: owned,
   );
 }
 
-void main() {
+Set<String> _unlock(CosmeticUnlockSnapshot snap, [Set<String>? alreadyOwned]) {
   final evaluator = CosmeticUnlockEvaluator(kCosmeticUnlockRules);
+  return evaluator
+      .evaluate(snap, alreadyOwned ?? const <String>{})
+      .map((t) => t.cosmeticId)
+      .toSet();
+}
 
-  group('Tier-2 single-condition rules', () {
-    test('first daily quest unlocks relic_campfire_spark', () {
-      final tuples = evaluator.evaluate(
-        _baseSnapshot(dailyQuests: 1),
-        const <String>{},
-      );
+void main() {
+  group('companion_ember_sprite (level 5, campfire_spark, warm_kindling)', () {
+    const relics = {'relic_campfire_spark', 'relic_warm_kindling'};
+
+    test('unlocks with level 5 and both relics', () {
       expect(
-        tuples.map((t) => t.cosmeticId),
-        contains('relic_campfire_spark'),
+        _unlock(_snap(level: 5, owned: relics)),
+        contains('companion_ember_sprite'),
       );
     });
 
-    test('first weekly quest unlocks relic_ruin_seal', () {
-      final tuples = evaluator.evaluate(
-        _baseSnapshot(weeklyQuests: 1),
-        const <String>{},
-      );
-      expect(tuples.map((t) => t.cosmeticId), contains('relic_ruin_seal'));
-    });
-
-    test('50 total quests unlocks relic_miners_lantern', () {
-      final tuples = evaluator.evaluate(
-        _baseSnapshot(totalQuests: 50),
-        const <String>{},
-      );
+    test('does not unlock when missing relic_warm_kindling', () {
       expect(
-        tuples.map((t) => t.cosmeticId),
-        contains('relic_miners_lantern'),
+        _unlock(_snap(level: 5, owned: {'relic_campfire_spark'})),
+        isNot(contains('companion_ember_sprite')),
       );
     });
 
-    test('250 total quests unlocks relic_dragon_crown', () {
-      final tuples = evaluator.evaluate(
-        _baseSnapshot(totalQuests: 250),
-        const <String>{},
+    test('does not unlock below level 5', () {
+      expect(
+        _unlock(_snap(level: 4, owned: relics)),
+        isNot(contains('companion_ember_sprite')),
       );
-      expect(tuples.map((t) => t.cosmeticId), contains('relic_dragon_crown'));
     });
   });
 
-  group('Compound rules', () {
-    test(
-        'companion_dragonling fires only when level == 100 AND owns dragonrock_crown',
-        () {
-      final without = evaluator.evaluate(
-        _baseSnapshot(level: 100),
-        const <String>{},
-      );
-      expect(
-        without.map((t) => t.cosmeticId),
-        isNot(contains('companion_dragonling')),
-      );
+  group('companion_forest_fox (level 10, moonlit_foxglove, ancient_root)', () {
+    const relics = {'relic_moonlit_foxglove', 'relic_ancient_root'};
 
-      final withRelic = evaluator.evaluate(
-        _baseSnapshot(level: 100, owned: const {'relic_dragonrock_crown'}),
-        const {'relic_dragonrock_crown'},
-      );
+    test('unlocks with level 10 and both relics', () {
       expect(
-        withRelic.map((t) => t.cosmeticId),
-        contains('companion_dragonling'),
+        _unlock(_snap(level: 10, owned: relics)),
+        contains('companion_forest_fox'),
       );
     });
 
-    test('companion_ice_wisp requires both frost shard and frozen lake heart',
-        () {
-      final partial = evaluator.evaluate(
-        _baseSnapshot(owned: const {'relic_frost_shard'}),
-        const {'relic_frost_shard'},
-      );
+    test('does not unlock when missing relic_ancient_root', () {
       expect(
-        partial.map((t) => t.cosmeticId),
-        isNot(contains('companion_ice_wisp')),
+        _unlock(_snap(level: 10, owned: {'relic_moonlit_foxglove'})),
+        isNot(contains('companion_forest_fox')),
       );
+    });
 
-      final both = evaluator.evaluate(
-        _baseSnapshot(
-          owned: const {'relic_frost_shard', 'relic_frozen_lake_heart'},
-        ),
-        const {'relic_frost_shard', 'relic_frozen_lake_heart'},
-      );
+    test('does not unlock below level 10', () {
       expect(
-        both.map((t) => t.cosmeticId),
+        _unlock(_snap(level: 9, owned: relics)),
+        isNot(contains('companion_forest_fox')),
+      );
+    });
+  });
+
+  group('companion_ruin_raven (level 25, ruin_seal, ashen_omen)', () {
+    const relics = {'relic_ruin_seal', 'relic_ashen_omen'};
+
+    test('unlocks with level 25 and both relics', () {
+      expect(
+        _unlock(_snap(level: 25, owned: relics)),
+        contains('companion_ruin_raven'),
+      );
+    });
+
+    test('does not unlock when missing relic_ruin_seal', () {
+      expect(
+        _unlock(_snap(level: 25, owned: {'relic_ashen_omen'})),
+        isNot(contains('companion_ruin_raven')),
+      );
+    });
+
+    test('does not unlock below level 25', () {
+      expect(
+        _unlock(_snap(level: 24, owned: relics)),
+        isNot(contains('companion_ruin_raven')),
+      );
+    });
+  });
+
+  group('companion_lantern_golem (level 45, deep_ember_core, miners_lantern)',
+      () {
+    const relics = {'relic_deep_ember_core', 'relic_miners_lantern'};
+
+    test('unlocks with level 45 and both relics', () {
+      expect(
+        _unlock(_snap(level: 45, owned: relics)),
+        contains('companion_lantern_golem'),
+      );
+    });
+
+    test('does not unlock when missing relic_deep_ember_core', () {
+      expect(
+        _unlock(_snap(level: 45, owned: {'relic_miners_lantern'})),
+        isNot(contains('companion_lantern_golem')),
+      );
+    });
+
+    test('does not unlock below level 45', () {
+      expect(
+        _unlock(_snap(level: 44, owned: relics)),
+        isNot(contains('companion_lantern_golem')),
+      );
+    });
+  });
+
+  group('companion_ice_wisp (level 65, polar_lantern, frozen_lake_heart)', () {
+    const relics = {'relic_polar_lantern', 'relic_frozen_lake_heart'};
+
+    test('unlocks with level 65 and both relics', () {
+      expect(
+        _unlock(_snap(level: 65, owned: relics)),
         contains('companion_ice_wisp'),
       );
     });
 
-    test(
-        'relic_dragonrock_crown requires level 100 AND 250 quests completed',
-        () {
-      final justLevel = evaluator.evaluate(
-        _baseSnapshot(level: 100),
-        const <String>{},
-      );
+    test('does not unlock when missing relic_polar_lantern', () {
       expect(
-        justLevel.map((t) => t.cosmeticId),
-        isNot(contains('relic_dragonrock_crown')),
+        _unlock(_snap(level: 65, owned: {'relic_frozen_lake_heart'})),
+        isNot(contains('companion_ice_wisp')),
       );
+    });
 
-      final both = evaluator.evaluate(
-        _baseSnapshot(level: 100, totalQuests: 250),
-        const <String>{},
-      );
+    test('does not unlock below level 65', () {
       expect(
-        both.map((t) => t.cosmeticId),
-        contains('relic_dragonrock_crown'),
+        _unlock(_snap(level: 64, owned: relics)),
+        isNot(contains('companion_ice_wisp')),
+      );
+    });
+  });
+
+  group(
+      'companion_mountain_gryphon (level 85, summit_feather, stormcrest_plume)',
+      () {
+    const relics = {'relic_summit_feather', 'relic_stormcrest_plume'};
+
+    test('unlocks with level 85 and both relics', () {
+      expect(
+        _unlock(_snap(level: 85, owned: relics)),
+        contains('companion_mountain_gryphon'),
+      );
+    });
+
+    test('does not unlock when missing relic_stormcrest_plume', () {
+      expect(
+        _unlock(_snap(level: 85, owned: {'relic_summit_feather'})),
+        isNot(contains('companion_mountain_gryphon')),
+      );
+    });
+
+    test('does not unlock below level 85', () {
+      expect(
+        _unlock(_snap(level: 84, owned: relics)),
+        isNot(contains('companion_mountain_gryphon')),
+      );
+    });
+  });
+
+  group('companion_dragonling (level 100, dragon_scale, dragonrock_heart)', () {
+    const relics = {'relic_dragon_scale', 'relic_dragonrock_heart'};
+
+    test('unlocks with level 100 and both relics', () {
+      expect(
+        _unlock(_snap(level: 100, owned: relics)),
+        contains('companion_dragonling'),
+      );
+    });
+
+    test('does not unlock when missing relic_dragonrock_heart', () {
+      expect(
+        _unlock(_snap(level: 100, owned: {'relic_dragon_scale'})),
+        isNot(contains('companion_dragonling')),
+      );
+    });
+
+    test('does not unlock with legacy relic_dragonrock_crown instead', () {
+      expect(
+        _unlock(_snap(level: 100, owned: {'relic_dragonrock_crown'})),
+        isNot(contains('companion_dragonling')),
+      );
+    });
+
+    test('does not unlock below level 100', () {
+      expect(
+        _unlock(_snap(level: 99, owned: relics)),
+        isNot(contains('companion_dragonling')),
       );
     });
   });
 
   group('Idempotency', () {
-    test('cosmetic already in alreadyOwned is filtered out', () {
-      final first = evaluator.evaluate(
-        _baseSnapshot(dailyQuests: 1),
-        const <String>{},
-      );
-      expect(
-        first.map((t) => t.cosmeticId),
-        contains('relic_campfire_spark'),
-      );
+    test('companion already owned is not re-granted', () {
+      const relics = {'relic_dragon_scale', 'relic_dragonrock_heart'};
+      final snap = _snap(level: 100, owned: relics);
 
-      final ownedIds = first.map((t) => t.cosmeticId).toSet();
-      final second = evaluator.evaluate(
-        _baseSnapshot(dailyQuests: 1),
-        ownedIds,
-      );
+      expect(_unlock(snap), contains('companion_dragonling'));
       expect(
-        second.map((t) => t.cosmeticId),
-        isNot(contains('relic_campfire_spark')),
+        _unlock(snap, {'companion_dragonling'}),
+        isNot(contains('companion_dragonling')),
       );
     });
 
-    test(
-        'OR-style rule (companion_ember_sprite) deduplicates to one tuple per pass',
+    test('relics remain in owned set after companion unlock (non-destructive)',
         () {
-      final tuples = evaluator.evaluate(
-        _baseSnapshot(activeDays: 7, dailyQuests: 3),
-        const <String>{},
-      );
-      final emberTuples =
-          tuples.where((t) => t.cosmeticId == 'companion_ember_sprite');
-      expect(emberTuples, hasLength(1));
+      const relics = {'relic_campfire_spark', 'relic_warm_kindling'};
+      final snap = _snap(level: 5, owned: relics);
+      final granted = _unlock(snap);
+
+      expect(granted, contains('companion_ember_sprite'));
+      // Relics are still in the snapshot — not consumed.
+      expect(snap.ownedCosmeticIds, containsAll(relics));
     });
   });
 
-  group('Progress hook for future UI', () {
-    test('progressFor returns satisfied/total for compound rules', () {
+  group('Fixed-point simulation (multi-pass chain)', () {
+    // Simulates the dispatcher's Tier-2 fixed-point loop:
+    //   pass 1: relics granted via Tier-1 (mocked by pre-populating owned)
+    //   pass 2: evaluator runs with relics in owned → companion fires
+    //   pass 3: evaluator runs with companion in owned → no new unlocks
+    test('relic grant in pass 1 causes companion unlock in pass 2', () {
+      final evaluator = CosmeticUnlockEvaluator(kCosmeticUnlockRules);
+
+      // After Tier-1: player at level 5 now owns both campfire relics.
+      var owned = <String>{'relic_campfire_spark', 'relic_warm_kindling'};
+      final snap = _snap(level: 5, owned: owned);
+
+      // Pass 2 — companion fires.
+      final pass2 = evaluator.evaluate(snap, owned);
+      expect(pass2.map((t) => t.cosmeticId), contains('companion_ember_sprite'));
+
+      // Absorb the new unlock and re-run (pass 3).
+      owned = owned.union(pass2.map((t) => t.cosmeticId).toSet());
+      final snapWithCompanion = _snap(level: 5, owned: owned);
+      final pass3 = evaluator.evaluate(snapWithCompanion, owned);
+      expect(pass3, isEmpty);
+    });
+  });
+
+  group('Progress hook', () {
+    test('progressFor returns 1/3 when only level condition met', () {
+      final evaluator = CosmeticUnlockEvaluator(kCosmeticUnlockRules);
       final progress = evaluator.progressFor(
         'companion_dragonling',
-        _baseSnapshot(level: 100),
+        _snap(level: 100),
       );
       expect(progress, isNotNull);
       expect(progress!.satisfied, 1);
-      expect(progress.total, 2);
+      expect(progress.total, 3);
+    });
+
+    test('progressFor returns 3/3 when all conditions met', () {
+      final evaluator = CosmeticUnlockEvaluator(kCosmeticUnlockRules);
+      final progress = evaluator.progressFor(
+        'companion_dragonling',
+        _snap(
+          level: 100,
+          owned: {'relic_dragon_scale', 'relic_dragonrock_heart'},
+        ),
+      );
+      expect(progress!.satisfied, 3);
+      expect(progress.total, 3);
     });
   });
 
-  group('Perfect-period placeholder is wired', () {
-    test('frame_balance fires when perfectDaysCount >= 7', () {
-      final tuples = evaluator.evaluate(
-        _baseSnapshot(perfectDays: 7),
-        const <String>{},
-      );
-      expect(tuples.map((t) => t.cosmeticId), contains('frame_balance'));
-    });
+  group('Legacy ID verification', () {
+    final legacyIds = {
+      'relic_old_compass',
+      'relic_pilgrim_cloak',
+      'relic_old_gate_key',
+      'relic_dragon_crown',
+      'relic_dragonrock_crown',
+    };
 
-    test('frame_master_routine fires when perfectWeeksCount >= 12', () {
-      final tuples = evaluator.evaluate(
-        _baseSnapshot(perfectWeeks: 12),
-        const <String>{},
-      );
-      expect(
-        tuples.map((t) => t.cosmeticId),
-        contains('frame_master_routine'),
-      );
+    test('no active rule references legacy relic IDs', () {
+      for (final rule in kCosmeticUnlockRules) {
+        expect(legacyIds, isNot(contains(rule.cosmeticId)));
+        for (final cond in rule.conditions) {
+          for (final legacyId in legacyIds) {
+            expect(
+              cond.id,
+              isNot(contains(legacyId)),
+              reason:
+                  'Rule ${rule.cosmeticId} has condition referencing $legacyId',
+            );
+          }
+        }
+      }
     });
   });
 }

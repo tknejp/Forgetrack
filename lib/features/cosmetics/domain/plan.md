@@ -880,7 +880,7 @@ progression: rewire cosmetic reward table per refactor plan
 
 ## Phase 5 — Companion Unlock Refactor
 
-**Status:** ⏸️ Not Started
+**Status:** ✅ Done (2026-05-03)
 **Estimated scope:** ~1 soubor (data only), ale critical path
 **Dependencies:** Fáze 2 (relic definice), Fáze 4 (relic se musí grantovat z achievementů)
 
