@@ -775,7 +775,7 @@ future composite achievements without bespoke evaluator code.
 
 ## Phase 4 — Reward Mapping Rewire
 
-**Status:** ⏸️ Not Started
+**Status:** ✅ Done (2026-05-03)
 **Estimated scope:** ~2 soubory, ale velký dopad na user-visible behavior
 **Dependencies:** Fáze 2 (definice musí existovat), Fáze 3 (achievementy musí existovat)
 

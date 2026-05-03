@@ -20,28 +20,32 @@ class CosmeticRewardTable {
   /// `ProgressionAchievementCatalog`.
   static const Map<String, List<String>> achievementToCosmetics =
       <String, List<String>>{
-    // Visible welcome reward — fires on first sync.
-    'welcome_to_journey': [
-      'frame_lvl1',
-      'relic_old_compass',
-      'background_camp',
-      'emblem_pilgrim_mark',
-    ],
-
-    // Step total milestones.
+    'welcome_to_journey': ['background_camp', 'emblem_pilgrim_mark'],
+    'first_reward': ['relic_campfire_spark'],
+    'daily_quest_3': ['relic_warm_kindling'],
+    'active_days_7': ['relic_moonlit_foxglove'],
+    'weekly_activity_mastery': ['relic_ancient_root'],
+    'daily_quest_7': ['relic_wildwood_charm'],
     'steps_total_100k': ['relic_ravine_stone'],
-    'steps_total_1000000': ['relic_frozen_lake_heart'],
-    'steps_total_10000000': ['frame_worldwalker'],
-
-    // Step streaks. The 7-day streak grants both a relic and a frame.
-    'steps_streak_7': ['relic_ancient_root', 'frame_discipline'],
+    'steps_streak_7': ['relic_ruin_seal', 'frame_discipline'],
+    'weekly_activity_4': ['relic_ashen_omen'],
+    'combo_victory_10': ['relic_oathbound_mark'],
+    'reward_hunter_100': ['relic_bridge_key'],
+    'steps_total_1000000': ['relic_deep_ember_core'],
+    'combo_triple_victory_25': ['relic_miners_lantern'],
+    'weekly_activity_24': ['relic_polar_lantern'],
+    'quest_hunter_250': ['relic_frozen_lake_heart'],
+    'steps_total_5000000': ['relic_frost_shard'],
+    'combo_triple_victory_100': ['relic_summit_feather'],
+    'weekly_activity_52': ['relic_stormcrest_plume'],
+    'steps_total_10000000': ['relic_dragon_scale', 'frame_worldwalker'],
+    'dragonrock_trial': ['relic_dragonrock_heart'],
     'steps_streak_30': ['frame_endurance'],
     'steps_streak_50': ['frame_steel'],
     'steps_streak_100': ['frame_eternal_flame'],
-
-    // Rolling 30-day step window. Copy reads "within 30 days" — see
-    // cosmeticFrameEndlessTrailDesc.
     'steps_month_600k': ['frame_endless_trail'],
+    'perfect_days_7': ['frame_balance'],
+    'perfect_weeks_12': ['frame_master_routine'],
   };
 
   /// Player level → cosmetic ids unlocked the moment that level is reached
