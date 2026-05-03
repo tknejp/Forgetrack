@@ -869,6 +869,8 @@ String _achievementCompactSummary(
     case ProgressionAchievementCriterionType
           .tripleComboQuestsCompletedAtLeast:
       return '${achievement.targetValue} ${l10n.progAchievementSummaryTripleComboQuests}';
+    case ProgressionAchievementCriterionType.compositeAllOf:
+      return l10n.progAchievementSummaryComposite;
   }
 }
 

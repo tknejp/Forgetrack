@@ -223,6 +223,62 @@ class ProgressionAchievementEvaluator {
           questRewardGrants: questRewardGrants,
           idSet: _kTripleComboQuestIds,
         );
+      case ProgressionAchievementCriterionType.compositeAllOf:
+        final subs = definition.compositeConditions ?? const [];
+        if (subs.isEmpty) return 0;
+        for (final sub in subs) {
+          if (!_compositeSubConditionMet(
+            sub: sub,
+            profile: profile,
+            evaluations: evaluations,
+            questRewardGrants: questRewardGrants,
+          )) {
+            return 0;
+          }
+        }
+        return 1;
+    }
+  }
+
+  /// Evaluates a single composite sub-condition. Supports a deliberately
+  /// narrow set of criterion types (the ones the current catalog needs);
+  /// nesting composites is forbidden. Add new branches here as new
+  /// composite achievements demand them.
+  bool _compositeSubConditionMet({
+    required ProgressionAchievementCompositeCondition sub,
+    required ProgressionProfile profile,
+    required List<ProgressionEvaluation> evaluations,
+    required List<ProgressionQuestRewardGrant> questRewardGrants,
+  }) {
+    switch (sub.type) {
+      case ProgressionAchievementCriterionType.totalXpAtLeast:
+        return profile.totalXp >= sub.targetValue;
+      case ProgressionAchievementCriterionType.totalQuestsCompletedAtLeast:
+        return questRewardGrants.length >= sub.targetValue;
+      case ProgressionAchievementCriterionType.totalRuleValueAtLeast:
+        final total = evaluations
+            .where((e) {
+              if (sub.ruleId != null && e.ruleId != sub.ruleId) return false;
+              if (sub.domain != null && e.domain != sub.domain) return false;
+              return true;
+            })
+            .fold<double>(0, (sum, e) => sum + e.actualValue);
+        return total.round() >= sub.targetValue;
+      // Other criterion types are not supported as composite legs today —
+      // promote one here when the catalog needs it.
+      case ProgressionAchievementCriterionType.rewardCountAtLeast:
+      case ProgressionAchievementCriterionType.bestStreakAtLeast:
+      case ProgressionAchievementCriterionType.bestRollingWindowRuleValueAtLeast:
+      case ProgressionAchievementCriterionType.dailyQuestsCompletedAtLeast:
+      case ProgressionAchievementCriterionType.weeklyQuestsCompletedAtLeast:
+      case ProgressionAchievementCriterionType.activeDaysAtLeast:
+      case ProgressionAchievementCriterionType.perfectDaysAtLeast:
+      case ProgressionAchievementCriterionType.perfectWeeksAtLeast:
+      case ProgressionAchievementCriterionType.comboQuestsCompletedAtLeast:
+      case ProgressionAchievementCriterionType
+            .tripleComboQuestsCompletedAtLeast:
+      case ProgressionAchievementCriterionType.compositeAllOf:
+        return false;
     }
   }
 
@@ -351,6 +407,7 @@ class ProgressionAchievementEvaluator {
       case ProgressionAchievementCriterionType.comboQuestsCompletedAtLeast:
       case ProgressionAchievementCriterionType
             .tripleComboQuestsCompletedAtLeast:
+      case ProgressionAchievementCriterionType.compositeAllOf:
         return null;
     }
   }

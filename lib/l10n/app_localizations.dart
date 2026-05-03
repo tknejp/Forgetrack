@@ -3074,6 +3074,24 @@ abstract class AppLocalizations {
   /// **'Complete 100 triple-or-better combo quests.'**
   String get progAchievementComboTripleVictory100Desc;
 
+  /// No description provided for @progAchievementDragonrockTrialTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dragonrock Trial'**
+  String get progAchievementDragonrockTrialTitle;
+
+  /// No description provided for @progAchievementDragonrockTrialDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 100, complete 250 quests, and walk 10,000,000 steps.'**
+  String get progAchievementDragonrockTrialDesc;
+
+  /// No description provided for @progAchievementSummaryComposite.
+  ///
+  /// In en, this message translates to:
+  /// **'all conditions'**
+  String get progAchievementSummaryComposite;
+
   /// No description provided for @progAchievementSummaryDailyQuests.
   ///
   /// In en, this message translates to:

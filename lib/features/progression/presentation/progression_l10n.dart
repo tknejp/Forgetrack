@@ -292,6 +292,8 @@ class ProgressionL10n {
         return _l10n.progAchievementComboTripleVictory25Title;
       case 'combo_triple_victory_100':
         return _l10n.progAchievementComboTripleVictory100Title;
+      case 'dragonrock_trial':
+        return _l10n.progAchievementDragonrockTrialTitle;
       default:
         return achievement.title;
     }
@@ -383,6 +385,8 @@ class ProgressionL10n {
         return _l10n.progAchievementComboTripleVictory25Desc;
       case 'combo_triple_victory_100':
         return _l10n.progAchievementComboTripleVictory100Desc;
+      case 'dragonrock_trial':
+        return _l10n.progAchievementDragonrockTrialDesc;
       default:
         return achievement.description;
     }

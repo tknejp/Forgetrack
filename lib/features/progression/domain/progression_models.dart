@@ -74,6 +74,11 @@ enum ProgressionAchievementCriterionType {
   // triple-combo quest id sets in the achievement evaluator.
   comboQuestsCompletedAtLeast,
   tripleComboQuestsCompletedAtLeast,
+  // Phase 3d addition — composite (AND) over a list of
+  // ProgressionAchievementCompositeCondition. The achievement's own
+  // targetValue is conventionally 1; current value is 1 iff every
+  // sub-condition is met, else 0.
+  compositeAllOf,
 }
 
 enum ProgressionQuestType {
@@ -482,6 +487,7 @@ class ProgressionAchievementDefinition {
     this.windowSizeDays,
     this.relatedRuleIds = const [],
     this.difficultyScore,
+    this.compositeConditions,
   });
 
   final String id;
@@ -502,7 +508,35 @@ class ProgressionAchievementDefinition {
   /// for legacy entries that have not been scored yet.
   final double? difficultyScore;
 
+  /// Sub-conditions for [ProgressionAchievementCriterionType.compositeAllOf].
+  /// All conditions must be met (AND) for the achievement to unlock.
+  /// Conventionally [targetValue] is `1` for composite achievements; the
+  /// evaluator returns `1` iff every entry's `targetValue` is satisfied,
+  /// else `0`.
+  final List<ProgressionAchievementCompositeCondition>? compositeConditions;
+
   String get unlockKey => 'achievement|$id';
+}
+
+/// One leg of a [ProgressionAchievementCriterionType.compositeAllOf]
+/// achievement. The evaluator computes the metric implied by [type] (with
+/// [ruleId]/[domain] filters where applicable) and checks
+/// `value >= targetValue`.
+///
+/// Nesting composites is not allowed — `type == compositeAllOf` is rejected
+/// by the evaluator.
+class ProgressionAchievementCompositeCondition {
+  const ProgressionAchievementCompositeCondition({
+    required this.type,
+    required this.targetValue,
+    this.ruleId,
+    this.domain,
+  });
+
+  final ProgressionAchievementCriterionType type;
+  final int targetValue;
+  final String? ruleId;
+  final ProgressionDomain? domain;
 }
 
 class ProgressionAchievement {

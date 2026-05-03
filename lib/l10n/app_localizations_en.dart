@@ -1650,6 +1650,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Complete 100 triple-or-better combo quests.';
 
   @override
+  String get progAchievementDragonrockTrialTitle => 'Dragonrock Trial';
+
+  @override
+  String get progAchievementDragonrockTrialDesc =>
+      'Reach level 100, complete 250 quests, and walk 10,000,000 steps.';
+
+  @override
+  String get progAchievementSummaryComposite => 'all conditions';
+
+  @override
   String get progAchievementSummaryDailyQuests => 'daily quests';
 
   @override

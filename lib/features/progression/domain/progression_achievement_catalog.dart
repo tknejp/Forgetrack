@@ -457,6 +457,36 @@ class ProgressionAchievementCatalog {
         description: 'Complete 100 triple-or-better combo quests.',
         targetValue: 100,
       ),
+      // -- Phase 3d: composite endgame trial --------------------------------
+      // Drives the relic_dragonrock_heart unlock (mythic) and is the
+      // canonical example for compositeAllOf. All three legs must be met.
+      ProgressionAchievementDefinition(
+        id: 'dragonrock_trial',
+        type: ProgressionAchievementType.mastery,
+        difficulty: ProgressionAchievementDifficulty.extraHard,
+        difficultyScore: 10.0,
+        criterionType: ProgressionAchievementCriterionType.compositeAllOf,
+        title: 'Dragonrock Trial',
+        description:
+            'Reach level 100, complete 250 quests, and walk 10,000,000 steps.',
+        targetValue: 1,
+        compositeConditions: [
+          ProgressionAchievementCompositeCondition(
+            type: ProgressionAchievementCriterionType.totalXpAtLeast,
+            targetValue: levelPolicy.xpRequiredForLevel(100),
+          ),
+          const ProgressionAchievementCompositeCondition(
+            type: ProgressionAchievementCriterionType
+                .totalQuestsCompletedAtLeast,
+            targetValue: 250,
+          ),
+          const ProgressionAchievementCompositeCondition(
+            type: ProgressionAchievementCriterionType.totalRuleValueAtLeast,
+            ruleId: 'daily_steps',
+            targetValue: 10000000,
+          ),
+        ],
+      ),
     ];
   }
 }

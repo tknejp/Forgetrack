@@ -621,6 +621,55 @@ TODO path turned out unnecessary — full implementation chosen instead.
 
 ### Sub-fáze 3d: Composite achievement (dragonrock_trial)
 
+**Status:** ✅ Done (2026-05-03, uncommitted on feature branch)
+
+**Changes landed:**
+
+- **New struct** `ProgressionAchievementCompositeCondition` in
+  [progression_models.dart](../../progression/domain/progression_models.dart):
+  `(type, ruleId?, domain?, targetValue)` quadruple, AND-combined.
+- **New criterion type** `compositeAllOf` — definition's own `targetValue`
+  is conventionally `1`; current value is `1` iff every sub-condition is
+  satisfied, else `0`.
+- **New optional field** `compositeConditions` on
+  `ProgressionAchievementDefinition`.
+- **Evaluator** ([progression_achievement_evaluator.dart](../../progression/domain/progression_achievement_evaluator.dart))
+  gains `_compositeSubConditionMet`. Today this supports a deliberately
+  narrow set of sub-condition criterion types (`totalXpAtLeast`,
+  `totalQuestsCompletedAtLeast`, `totalRuleValueAtLeast`) — enough for
+  `dragonrock_trial`. Other types fall through to `false`; promote a
+  branch when a future composite needs it. Nested composites are
+  forbidden by design (the `compositeAllOf` case in the inner switch
+  also returns `false`).
+- **Catalog entry** `dragonrock_trial` (extraHard, score 10.0):
+  - leg 1: `totalXpAtLeast` with `levelPolicy.xpRequiredForLevel(100)`
+    (the canonical level-100 XP threshold; same source the rest of the
+    progression engine uses).
+  - leg 2: `totalQuestsCompletedAtLeast = 250`.
+  - leg 3: `totalRuleValueAtLeast` for `daily_steps`, target 10,000,000.
+- **L10n** — Title/Desc keys + 1 summary key
+  (`progAchievementSummaryComposite` = "all conditions" / "všechny
+  podmínky"); router cases each in title/description switch; both UI
+  exhaustive switches updated.
+
+**Verification (entire Phase 3 — 3-prep + 3a + 3b + 3c + 3d):**
+
+- `flutter analyze --no-fatal-infos` — clean.
+- `flutter test` — 179 passed / 3 failed (same pre-existing HC step
+  failures as Phase 1).
+
+**Out of scope:**
+
+- Reward-table mapping for `dragonrock_trial → relic_dragonrock_heart`
+  is Phase 4.
+- The `compositeAllOf` path supports only 3 leg types today. If a future
+  composite needs e.g. `bestStreakAtLeast`, add a new branch in
+  `_compositeSubConditionMet`. Keeping the supported set small means we
+  can't accidentally introduce expensive evaluation paths through the
+  composite back door.
+
+
+
 **Files affected:**
 
 1. **`lib/features/progression/domain/progression_models.dart`**
@@ -1180,9 +1229,9 @@ lib/l10n/
 | 2 — Catalog | ✅ Done (2026-05-03) | `515f216` | 9 new reliky + 5 updated rarity/region; first mythic catalog item (relic_dragonrock_heart); 54 ARB entries |
 | 3-prep — l10n audit | ✅ Done (2026-05-03) | `0d83101` | Closure refactor superseded by existing ProgressionL10n adapter; added missing switch cases for welcome_to_journey + steps_streak_50; convention noted |
 | 3a — Simple criteria | ✅ Done (2026-05-03) | `2987552` | 4 new criterion types + 4 catalog entries + ARB + router + 2 UI switches; engine builds questCategoryById once per pass |
-| 3b — Perfect periods | ✅ Done (2026-05-03) | uncommitted | RealPerfectPeriodEvaluator implemented; API refactored to take List<ProgressionEvaluation>; 2 catalog entries; shared with cosmetic snapshot extractor |
-| 3c — Combo quests | ✅ Done (2026-05-03) | uncommitted | Full impl (not TODO path) — 2 criterion types + hardcoded id sets + 3 catalog entries; landed in same commit as 3b |
-| 3d — Composite | ⏸️ Not Started | — | dragonrock_trial only |
+| 3b — Perfect periods | ✅ Done (2026-05-03) | `e839026` | RealPerfectPeriodEvaluator implemented; API refactored to take List<ProgressionEvaluation>; 2 catalog entries; shared with cosmetic snapshot extractor |
+| 3c — Combo quests | ✅ Done (2026-05-03) | `e839026` | Full impl (not TODO path) — 2 criterion types + hardcoded id sets + 3 catalog entries; landed in same commit as 3b |
+| 3d — Composite | ✅ Done (2026-05-03) | uncommitted | compositeAllOf criterion + ProgressionAchievementCompositeCondition struct; dragonrock_trial entry with 3 legs (level 100, 250 quests, 10M steps) |
 | 4 — Reward mapping | ⏸️ Not Started | — | |
 | 5 — Companion rules | ⏸️ Not Started | — | |
 | 6a — Legacy cleanup | ⏸️ Not Started | — | |

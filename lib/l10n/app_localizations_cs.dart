@@ -1646,6 +1646,16 @@ class AppLocalizationsCs extends AppLocalizations {
       'Splň 100 trojitých nebo vyšších kombo úkolů.';
 
   @override
+  String get progAchievementDragonrockTrialTitle => 'Zkouška Dračí skály';
+
+  @override
+  String get progAchievementDragonrockTrialDesc =>
+      'Dosáhni úrovně 100, splň 250 úkolů a ujdi 10 000 000 kroků.';
+
+  @override
+  String get progAchievementSummaryComposite => 'všechny podmínky';
+
+  @override
   String get progAchievementSummaryDailyQuests => 'denních úkolů';
 
   @override
