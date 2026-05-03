@@ -25,6 +25,7 @@ import '../../features/progression/presentation/progression_l10n.dart';
 import '../../firebase_options.dart';
 import '../../l10n/app_localizations.dart';
 import '../../features/health_connect/application/goals_provider.dart';
+import 'notification_preferences.dart';
 import 'notification_service.dart';
 
 const _taskTag = 'forgetrack_sync';
@@ -276,6 +277,10 @@ void backgroundSyncCallback() {
 }
 
 Future<void> _maybeShowGoalReminder(SharedPreferences prefs) async {
+  if (!await NotificationPreferences.areEnabled()) {
+    return;
+  }
+
   final now = DateTime.now();
 
   if (now.hour < 18 || now.hour >= 20) {

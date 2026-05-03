@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../config/cosmetics_config.dart';
 import '../../domain/cosmetic_models.dart';
-import '../cosmetics_l10n.dart';
 
 /// Compact tile for an equipped cosmetic — small thumbnail + two-line label
 /// (type small caps, cosmetic name on the next line). Designed to flow in
 /// a `Wrap` (cosmetics debug screen) or be wrapped in `Expanded` cells of
 /// a `Row` (hero "Vybraná výbava" row).
 ///
-/// Pass a [CosmeticsL10n] to render translated names; without it the chip
-/// falls back to the cosmetic id.
+/// Pass an [AppLocalizations] to render translated names; without it the
+/// chip falls back to the cosmetic id.
 class CosmeticEquippedChip extends StatelessWidget {
   const CosmeticEquippedChip({
     super.key,
@@ -23,7 +23,7 @@ class CosmeticEquippedChip extends StatelessWidget {
   });
 
   final CosmeticDefinition definition;
-  final CosmeticsL10n? l10n;
+  final AppLocalizations? l10n;
   final CosmeticsConfig? config;
   final String? labelOverride;
   final VoidCallback? onTap;
@@ -33,7 +33,9 @@ class CosmeticEquippedChip extends StatelessWidget {
     final theme = Theme.of(context);
     final assetPath = (config ?? CosmeticsConfig.standard())
         .resolveAssetPath(definition.previewAssetKey ?? definition.assetKey);
-    final name = labelOverride ?? l10n?.name(definition) ?? definition.id;
+    final l10n = this.l10n;
+    final name =
+        labelOverride ?? (l10n != null ? definition.name(l10n) : definition.id);
 
     return InkWell(
       onTap: onTap,

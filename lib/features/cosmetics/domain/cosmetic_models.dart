@@ -2,6 +2,14 @@
 // used by the catalog, repository and service layers. The cosmetics feature
 // is intentionally decoupled from `progression` and `social`.
 
+import '../../../l10n/app_localizations.dart';
+
+/// Resolves a localized string from the active [AppLocalizations]. Used by
+/// [CosmeticDefinition] for player-facing text (name / description / unlock
+/// hint) so the catalog itself is the single mapping from cosmetic id to
+/// generated `.arb` getter — no separate switch table to maintain.
+typedef CosmeticText = String Function(AppLocalizations l10n);
+
 enum CosmeticType {
   frame,
   relic,
@@ -44,20 +52,26 @@ enum CosmeticUnlockSource {
 
 /// Static definition of a cosmetic. Lives in [CosmeticCatalog]; never mutated
 /// at runtime.
+///
+/// Player-facing text ([name], [description], [unlockHint]) is provided as a
+/// closure that pulls the localized string from [AppLocalizations]. Each
+/// catalog entry inlines its own `(l) => l.cosmeticXxx` resolver — there is
+/// no separate id-to-key switch table. Adding a cosmetic touches the catalog
+/// and the `.arb` files, nothing else.
 class CosmeticDefinition {
   const CosmeticDefinition({
     required this.id,
     required this.type,
     required this.rarity,
     required this.region,
-    required this.nameKey,
-    required this.descriptionKey,
+    required this.name,
+    required this.description,
     this.assetKey,
     this.previewAssetKey,
     this.sortOrder = 0,
     this.isPremium = false,
     this.isEnabled = true,
-    this.unlockHintKey,
+    this.unlockHint,
     this.metadata = const <String, Object?>{},
   });
 
@@ -66,11 +80,12 @@ class CosmeticDefinition {
   final CosmeticRarity rarity;
   final CosmeticRegion region;
 
-  /// Localization key for the display name (resolved via l10n later).
-  final String nameKey;
+  /// Resolves the display name from the active [AppLocalizations]. Typical
+  /// usage in the catalog: `name: (l) => l.cosmeticFrameLvl1Name`.
+  final CosmeticText name;
 
-  /// Localization key for the description (resolved via l10n later).
-  final String descriptionKey;
+  /// Resolves the description (player-facing flavour text).
+  final CosmeticText description;
 
   /// Stable asset key in `cosmetics.<type>.<id>` form. Resolved to a path by
   /// `CosmeticsConfig.resolveAssetPath`. Nullable so a definition can ship
@@ -84,8 +99,9 @@ class CosmeticDefinition {
   final bool isPremium;
   final bool isEnabled;
 
-  /// Optional localization key for an in-UI hint about how to unlock this.
-  final String? unlockHintKey;
+  /// Resolves the player-facing unlock condition text. Null when the cosmetic
+  /// has no hint (e.g. baseline grants, dev-only items).
+  final CosmeticText? unlockHint;
 
   /// Free-form bag for feature-specific overrides (e.g. animation flags).
   final Map<String, Object?> metadata;

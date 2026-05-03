@@ -10,6 +10,7 @@ import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../logging/app_log.dart';
+import 'notification_preferences.dart';
 import 'notification_service.dart';
 import '../../features/devtools/application/devtools_sync_logger.dart';
 import '../../features/devtools/domain/devtools_sync_event.dart';
@@ -140,7 +141,11 @@ class FcmService {
 
     AppLog.app.info('$_log: initialize start');
 
-    await _requestNotificationPermission();
+    if (await NotificationPreferences.areEnabled()) {
+      await _requestNotificationPermission();
+    } else {
+      AppLog.app.info('$_log: permission request skipped, notifications off');
+    }
 
     // Foreground messages stay in-app only; Android does not display the FCM
     // notification automatically here and we intentionally do not mirror it.
@@ -216,6 +221,11 @@ class FcmService {
     });
 
     FirebaseMessaging.instance.onTokenRefresh.listen((token) async {
+      if (!await NotificationPreferences.areEnabled()) {
+        AppLog.app.info('$_log: token refresh ignored, notifications off');
+        return;
+      }
+
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         AppLog.app.warn('$_log: token refreshed but no signed-in user');
@@ -265,6 +275,12 @@ class FcmService {
     final uid = canonicalUid(user);
 
     try {
+      if (!await NotificationPreferences.areEnabled()) {
+        AppLog.app.debug('$_log: token refresh skipped, notifications off');
+        await _clearToken(uid);
+        return;
+      }
+
       AppLog.app.debug('$_log: getToken start uid=$uid');
 
       final token = await FirebaseMessaging.instance.getToken();
@@ -299,6 +315,7 @@ class FcmService {
 
       await FirebaseFirestore.instance.doc('users/$uid').set({
         'fcmToken': token,
+        'notificationsEnabled': true,
         'locale': locale,
         'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
@@ -313,6 +330,52 @@ class FcmService {
         err: e,
         stackTrace: st,
       );
+    }
+  }
+
+  Future<void> _clearToken(String uid) async {
+    try {
+      await FirebaseMessaging.instance.deleteToken();
+    } catch (e, st) {
+      AppLog.app.error(
+        '$_log: deleteToken failed for uid=$uid',
+        err: e,
+        stackTrace: st,
+      );
+    }
+
+    try {
+      await FirebaseFirestore.instance.doc('users/$uid').set({
+        'fcmToken': FieldValue.delete(),
+        'notificationsEnabled': false,
+        'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      AppLog.app.info('$_log: token cleared uid=$uid notifications off');
+    } catch (e, st) {
+      AppLog.app.error(
+        '$_log: clearToken failed for uid=$uid',
+        err: e,
+        stackTrace: st,
+      );
+    }
+  }
+
+  Future<void> setNotificationsEnabled(bool enabled) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      AppLog.app.debug(
+        '$_log: setNotificationsEnabled skipped, no signed-in user',
+      );
+      return;
+    }
+
+    final uid = canonicalUid(user);
+    if (enabled) {
+      await _requestNotificationPermission();
+      await _refreshTokenForUser(user);
+    } else {
+      await _clearToken(uid);
     }
   }
 

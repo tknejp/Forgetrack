@@ -36,19 +36,19 @@ the catalog can grow independently of gameplay, and a future feature
   per uid with equipped slot ids) and `CosmeticsUnlockRecord` (one row per
   `(uid, cosmeticId)` pair with audit fields). The in-memory implementation
   is kept for tests.
-* Catalog ships with six seed definitions: `frame_pilgrim`,
-  `relic_old_compass`, `background_forest_trail`, `emblem_forest_mark`,
-  `frame_ruined_bronze`, `relic_old_gate_key`.
-* Default unlocks for every fresh user: `frame_pilgrim`,
-  `relic_old_compass`, `background_forest_trail`. Seeded into Isar on first
-  load for a uid.
+* Catalog ships with the current journey cosmetic set across frames, relics,
+  backgrounds, emblems, and companions.
+* Default unlocks for every fresh user are defined by
+  `kDefaultCosmeticUnlockIds`. They are seeded into Isar on first load for
+  a uid.
 * No real artwork yet — widgets render rarity-coloured placeholders when an
   asset file is missing.
-* L10n entries for the six seed cosmetics live in `lib/l10n/app_*.arb`.
-  Resolve them via `CosmeticsL10n(AppLocalizations.of(context))` and pass
-  the helper into `CosmeticEquippedChip` / `CosmeticCollectionTile`.
-  Without the helper widgets fall back to `definition.id` so debug builds
-  stay readable.
+* Cosmetic player-facing text lives in `lib/l10n/app_*.arb` and is wired
+  directly in `CosmeticCatalog` through generated `AppLocalizations` getters
+  such as `name: (l10n) => l10n.cosmeticFrameLvl1Name`. There is no
+  separate id-based localization switch. Widgets receive `AppLocalizations`
+  and resolve text from the catalog definition; without l10n they fall back
+  to `definition.id` so debug builds stay readable.
 * `CosmeticsProvider` is wired via
   `ChangeNotifierProxyProvider<AuthProvider, CosmeticsProvider>` in
   `main.dart`. `bindUser(auth.user?.id)` fires on every auth notification;
@@ -75,7 +75,6 @@ lib/features/cosmetics/
 ├── config/
 │   └── cosmetics_config.dart   # asset resolver, slots, flags, validation
 ├── presentation/
-│   ├── cosmetics_l10n.dart     # id-based localiser (name / description / badge)
 │   └── widgets/
 │       ├── cosmetic_frame_preview.dart
 │       ├── cosmetic_equipped_chip.dart
@@ -91,7 +90,7 @@ lib/features/cosmetics/
 | `CosmeticRarity`     | enum — common / rare / epic / legendary               |
 | `CosmeticRegion`     | enum — narrative region (forestTrail, ruinedPass, …)  |
 | `CosmeticUnlockSource` | enum — defaultBaseline, progressionLevel, achievement, quest, manual, promotional, other (open-set; sourceType on records is a free string) |
-| `CosmeticDefinition` | static metadata for one cosmetic — id, type, rarity, region, l10n keys, asset keys, flags, `metadata` bag |
+| `CosmeticDefinition` | static metadata for one cosmetic — id, type, rarity, region, localized text resolvers, asset keys, flags, `metadata` bag |
 | `UnlockedCosmetic`   | per-user unlock record — id, timestamp, source        |
 | `EquippedCosmetics`  | snapshot of equipped slots; one nullable id per slot  |
 | `UserCosmeticsState` | uid + unlocked map + equipped + updatedAt             |
@@ -103,8 +102,8 @@ Provider listeners always see a stable snapshot.
 
 ## Catalog
 
-`CosmeticCatalog` is a stateless wrapper over a `static const` list of
-definitions. Helpers:
+`CosmeticCatalog` is a stateless wrapper over an unmodifiable `static final`
+list of definitions. Helpers:
 
 * `all` — every definition.
 * `byId(id)` — nullable lookup.
@@ -112,7 +111,8 @@ definitions. Helpers:
 * `byRegion(region)` — definitions tagged for one region.
 * `enabled` — only `isEnabled = true` definitions.
 * `validate()` — list of warning strings; empty = healthy. Checks duplicate
-  ids, empty l10n keys, malformed asset keys.
+  ids and malformed asset keys. Localization getter references are checked
+  by the Dart compiler.
 
 ## Config
 
@@ -184,8 +184,11 @@ For non-throwing pre-checks (e.g. greying out a tile in a grid), use
    `assets/cosmetics/<bucket>/<id-without-prefix>.png` (see
    `assets/cosmetics/README.md` for naming and sizing). The cosmetic will
    render a placeholder until the file ships.
-3. Add the localisation keys (`<id>.name`, `<id>.description`,
-   optional `<id>.unlock_hint`) to the `.arb` files when l10n wiring lands.
+3. Add the localization keys to `lib/l10n/app_en.arb` and every supported
+   locale, then wire the generated getters in the catalog entry:
+   `name: (l10n) => l10n.cosmeticExampleName`,
+   `description: (l10n) => l10n.cosmeticExampleDesc`,
+   and optional `unlockHint: (l10n) => l10n.cosmeticExampleUnlockHint`.
 4. Run `CosmeticCatalog().validate()` in a debug session to confirm no
    warnings.
 
@@ -386,9 +389,6 @@ loading state (spinner), and a signed-out user (helpful hint about
 * Real artwork — every asset folder is empty.
 * Hero / social UI — only placeholder widgets exist; no screen consumes
   them yet.
-* L10n for `descriptionKey` and `unlock_hint` is wired in the helper but
-  the `.arb` files only ship name + description today. Add hints when a
-  cosmetic actually needs one.
 * Premium gating UI / paywall — `isPremium` and `premiumEnabled` exist on
   the data layer but there is no purchase flow.
 * Animations — frames render statically.

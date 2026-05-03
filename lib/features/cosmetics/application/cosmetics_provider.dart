@@ -6,6 +6,10 @@ import '../../../core/logging/app_log.dart';
 import '../data/cosmetic_entitlements_source.dart';
 import '../domain/cosmetic_catalog.dart';
 import '../domain/cosmetic_models.dart';
+import '../domain/cosmetic_reveal_evaluator.dart';
+import '../domain/cosmetic_reveal_state.dart';
+import '../domain/cosmetic_unlock_rule.dart';
+import '../domain/cosmetic_unlock_snapshot.dart';
 import 'cosmetics_service.dart';
 
 const _log = AppLogger('COSMETICS', scope: 'provider');
@@ -32,6 +36,7 @@ class CosmeticsProvider extends ChangeNotifier {
   String? _currentUid;
   UserCosmeticsState? _state;
   String? _errorMessage;
+  CosmeticUnlockSnapshot? _revealSnapshot;
 
   bool get isLoading => _isLoading;
   String? get currentUid => _currentUid;
@@ -39,6 +44,52 @@ class CosmeticsProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   CosmeticsService get service => _service;
+
+  /// Called by the progression dispatcher after each sync to enable accurate
+  /// partial-reveal evaluation for level/quest/active-days conditions.
+  ///
+  /// Without a cached snapshot the reveal evaluator falls back to a minimal
+  /// snapshot derived from owned cosmetics, which still correctly evaluates
+  /// `ownsCosmetic(...)` conditions but treats level/quest counters as zero.
+  void cacheSnapshot(CosmeticUnlockSnapshot snapshot) {
+    _revealSnapshot = snapshot;
+    notifyListeners();
+  }
+
+  /// Returns a [CosmeticRevealResult] for every enabled catalog item.
+  ///
+  /// [rules] is typically [kCosmeticUnlockRules]. The method uses the last
+  /// snapshot cached via [cacheSnapshot], falling back to a minimal snapshot
+  /// built from owned cosmetics when no progression data has been loaded yet.
+  Map<String, CosmeticRevealResult> computeRevealResults(
+    List<CosmeticUnlockRule> rules,
+  ) {
+    final currentState = _state;
+    if (currentState == null) return {};
+    final ownedIds = currentState.unlocked.keys.toSet();
+    final snapshot = _revealSnapshot ?? _minimalSnapshot(ownedIds);
+    return CosmeticRevealEvaluator.evaluateAll(
+      catalog: _service.catalog,
+      rules: rules,
+      snapshot: snapshot,
+      ownedIds: ownedIds,
+    );
+  }
+
+  static CosmeticUnlockSnapshot _minimalSnapshot(Set<String> ownedIds) {
+    return CosmeticUnlockSnapshot(
+      level: 0,
+      activeDaysCount: 0,
+      completedDailyQuests: 0,
+      completedWeeklyQuests: 0,
+      totalCompletedQuests: 0,
+      firstDailyQuestEver: false,
+      firstWeeklyQuestEver: false,
+      perfectDaysCount: 0,
+      perfectWeeksCount: 0,
+      ownedCosmeticIds: ownedIds,
+    );
+  }
 
   /// Binds (or re-binds) the provider to a uid. No-op if [uid] matches the
   /// already-bound user. Pass null on sign-out to clear state.

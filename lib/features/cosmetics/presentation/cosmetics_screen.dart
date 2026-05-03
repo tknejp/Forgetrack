@@ -8,9 +8,9 @@ import '../../../shared/widgets/ft_back_button.dart';
 import '../../../shared/widgets/screen_header.dart';
 import '../application/cosmetics_provider.dart';
 import '../domain/cosmetic_models.dart';
+import '../domain/cosmetic_reveal_state.dart';
 import '../domain/cosmetic_unlock_rules.dart';
 import 'cosmetic_details_sheet.dart';
-import 'cosmetics_l10n.dart';
 import 'cosmetics_screen_internals.dart';
 
 class CosmeticsScreen extends StatefulWidget {
@@ -38,7 +38,7 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
   @override
   Widget build(BuildContext context) {
     final cosmetics = context.watch<CosmeticsProvider>();
-    final l10n = CosmeticsL10n(AppLocalizations.of(context));
+    final l10n = AppLocalizations.of(context);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light.copyWith(
@@ -74,7 +74,7 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
   Widget _buildBody(
     BuildContext context,
     CosmeticsProvider cosmetics,
-    CosmeticsL10n l10n,
+    AppLocalizations l10n,
   ) {
     if (cosmetics.isLoading && cosmetics.state == null) {
       return const Center(
@@ -85,19 +85,27 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
     final state = cosmetics.state;
     if (state == null) return const _NotSignedIn();
 
-    final config = cosmetics.service.config;
     final devTools = widget.devToolsMode;
 
     final List<CosmeticDefinition> displayDefs;
+    final Map<String, CosmeticRevealResult> revealResults;
+
     if (devTools) {
       displayDefs = cosmetics.service.catalog.all.toList()
         ..sort(_byTypeThenSortOrder);
+      revealResults = const {};
     } else {
-      displayDefs = cosmetics.service
-          .getUnlockedDefinitions(state)
-          .where(config.isUsable)
-          .toList(growable: false)
-        ..sort((a, b) => _compareUnlockedCosmetics(a, b, state));
+      revealResults = cosmetics.computeRevealResults(kCosmeticUnlockRules);
+      // Show all enabled items whose reveal state is not hidden due to
+      // premium/devOnly policy. Hidden-category items (???) are included;
+      // truly suppressed items have state == hidden in revealResults.
+      displayDefs = cosmetics.service.catalog.enabled
+          .where((def) {
+            final r = revealResults[def.id];
+            return r != null && r.state != CosmeticRevealState.hidden;
+          })
+          .toList()
+        ..sort((a, b) => _sortRevealDefs(a, b, state, revealResults));
     }
 
     final equippedDefs = cosmetics.service.getEquippedDefinitions(state);
@@ -135,6 +143,7 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
                   definition: definition,
                   l10n: l10n,
                   devTools: devTools,
+                  revealResult: revealResults[definition.id],
                 ),
               ),
             ),
@@ -157,12 +166,14 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
                         final definition = filteredDefs[index];
                         final isUnlocked =
                             state.unlocked.containsKey(definition.id);
+                        final revealResult = revealResults[definition.id];
                         return _CosmeticCard(
                           definition: definition,
                           isEquipped: state.equipped.slotId(definition.type) ==
                               definition.id,
                           isLocked: devTools && !isUnlocked,
                           showMissingAsset: devTools,
+                          revealResult: devTools ? null : revealResult,
                           l10n: l10n,
                           onTap: () => _showDetails(
                             context,
@@ -171,6 +182,7 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
                             definition: definition,
                             l10n: l10n,
                             devTools: devTools,
+                            revealResult: revealResult,
                           ),
                         );
                       },
@@ -195,8 +207,9 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
     required CosmeticsProvider cosmetics,
     required UserCosmeticsState state,
     required CosmeticDefinition definition,
-    required CosmeticsL10n l10n,
+    required AppLocalizations l10n,
     bool devTools = false,
+    CosmeticRevealResult? revealResult,
   }) {
     final isLocked = !state.unlocked.containsKey(definition.id);
     final rules = devTools
@@ -216,6 +229,7 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
         isLocked: devTools && isLocked,
         devToolsUnlockRules: rules,
         devToolsMode: devTools,
+        revealResult: devTools ? null : revealResult,
       ),
     );
   }
@@ -231,7 +245,7 @@ class _EquippedSection extends StatelessWidget {
 
   final List<CosmeticDefinition> definitions;
   final UserCosmeticsState state;
-  final CosmeticsL10n l10n;
+  final AppLocalizations l10n;
   final ValueChanged<CosmeticDefinition> onTap;
 
   @override
@@ -388,30 +402,52 @@ class _CosmeticCard extends StatelessWidget {
     required this.onTap,
     this.isLocked = false,
     this.showMissingAsset = false,
+    this.revealResult,
   });
 
   final CosmeticDefinition definition;
   final bool isEquipped;
+  // devTools-only: shows lock icon + dim
   final bool isLocked;
   final bool showMissingAsset;
-  final CosmeticsL10n l10n;
+  /// Non-null in normal (non-devTools) mode; null in devTools mode.
+  final CosmeticRevealResult? revealResult;
+  final AppLocalizations l10n;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final color = cosmeticRarityColor(definition.rarity);
-    final assetPath = context
-        .read<CosmeticsProvider>()
-        .service
-        .config
-        .resolveAssetPath(definition.previewAssetKey ?? definition.assetKey);
+    final revealState = revealResult?.state;
+    final isHiddenCard = revealState == CosmeticRevealState.hidden;
+    final isPartialCard = revealState == CosmeticRevealState.partial;
+    final isVisibleLocked = revealState == CosmeticRevealState.visibleLocked;
+    final isNormalLocked = isLocked || isVisibleLocked;
+
+    final color = isHiddenCard
+        ? Tokens.onSurfaceFaint
+        : cosmeticRarityColor(definition.rarity);
+
+    final assetPath = isHiddenCard
+        ? null
+        : context
+            .read<CosmeticsProvider>()
+            .service
+            .config
+            .resolveAssetPath(definition.previewAssetKey ?? definition.assetKey);
     final hasAsset = definition.assetKey != null;
+
+    final displayName = isHiddenCard ? l10n.cosmeticHiddenName : definition.name(l10n);
+    final cardOpacity = (isLocked || isVisibleLocked)
+        ? 0.55
+        : isHiddenCard
+            ? 0.35
+            : 1.0;
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Opacity(
-        opacity: isLocked ? 0.42 : 1.0,
+        opacity: cardOpacity,
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -440,16 +476,22 @@ class _CosmeticCard extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      CosmeticBadge(
-                        definition: definition,
-                        assetPath: assetPath,
-                        color: color,
-                        size: _cardBadgeSize(definition.type),
-                        framed: false,
-                      ),
+                      if (isHiddenCard)
+                        _HiddenBadge(
+                          color: color,
+                          size: _cardBadgeSize(definition.type),
+                        )
+                      else
+                        CosmeticBadge(
+                          definition: definition,
+                          assetPath: assetPath,
+                          color: color,
+                          size: _cardBadgeSize(definition.type),
+                          framed: false,
+                        ),
                       const SizedBox(height: Tokens.spaceSm),
                       Text(
-                        l10n.name(definition),
+                        displayName,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
@@ -475,6 +517,7 @@ class _CosmeticCard extends StatelessWidget {
                     size: 17,
                   ),
                 ),
+              // devTools lock icon
               if (isLocked)
                 Positioned(
                   top: 5,
@@ -483,6 +526,28 @@ class _CosmeticCard extends StatelessWidget {
                     Icons.lock_rounded,
                     size: 13,
                     color: Colors.white.withValues(alpha: 0.55),
+                  ),
+                ),
+              // normal-mode lock icon for visibleLocked + partial
+              if (!isLocked && (isNormalLocked || isPartialCard))
+                Positioned(
+                  top: 5,
+                  left: 5,
+                  child: Icon(
+                    Icons.lock_rounded,
+                    size: 13,
+                    color: color.withValues(alpha: 0.55),
+                  ),
+                ),
+              // partial progress chip
+              if (isPartialCard && revealResult != null)
+                Positioned(
+                  bottom: 5,
+                  right: 5,
+                  child: _ProgressChip(
+                    satisfied: revealResult!.satisfiedConditions,
+                    total: revealResult!.totalConditions,
+                    color: color,
                   ),
                 ),
               if (showMissingAsset && !hasAsset)
@@ -509,6 +574,63 @@ class _CosmeticCard extends StatelessWidget {
                 ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Lock-icon placeholder badge used for hidden (???) cosmetics.
+class _HiddenBadge extends StatelessWidget {
+  const _HiddenBadge({required this.color, required this.size});
+
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Center(
+        child: Icon(
+          Icons.lock_rounded,
+          size: size * 0.5,
+          color: color.withValues(alpha: 0.45),
+        ),
+      ),
+    );
+  }
+}
+
+/// Small "{satisfied}/{total}" chip overlaid on partial cards.
+class _ProgressChip extends StatelessWidget {
+  const _ProgressChip({
+    required this.satisfied,
+    required this.total,
+    required this.color,
+  });
+
+  final int satisfied;
+  final int total;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.22),
+        borderRadius: BorderRadius.circular(3),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Text(
+        '$satisfied/$total',
+        style: TextStyle(
+          color: color,
+          fontSize: 7,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.3,
         ),
       ),
     );
@@ -654,6 +776,42 @@ int _byTypeThenSortOrder(CosmeticDefinition a, CosmeticDefinition b) {
       .compareTo(CosmeticType.values.indexOf(b.type));
   if (typeRank != 0) return typeRank;
   return a.sortOrder.compareTo(b.sortOrder);
+}
+
+/// Sort order for normal (non-devTools) mode:
+/// 1. Unlocked items (existing sort: rarity desc → unlockedAt desc → sortOrder)
+/// 2. Partial items (by sortOrder — discovered rewards the player is progressing toward)
+/// 3. VisibleLocked items (by sortOrder)
+int _sortRevealDefs(
+  CosmeticDefinition a,
+  CosmeticDefinition b,
+  UserCosmeticsState state,
+  Map<String, CosmeticRevealResult> revealResults,
+) {
+  final stateA = revealResults[a.id]?.state ?? CosmeticRevealState.visibleLocked;
+  final stateB = revealResults[b.id]?.state ?? CosmeticRevealState.visibleLocked;
+
+  final rankA = _revealSortRank(stateA);
+  final rankB = _revealSortRank(stateB);
+  if (rankA != rankB) return rankA.compareTo(rankB);
+
+  if (stateA == CosmeticRevealState.unlocked) {
+    return _compareUnlockedCosmetics(a, b, state);
+  }
+  return a.sortOrder.compareTo(b.sortOrder);
+}
+
+int _revealSortRank(CosmeticRevealState state) {
+  switch (state) {
+    case CosmeticRevealState.unlocked:
+      return 0;
+    case CosmeticRevealState.partial:
+      return 1;
+    case CosmeticRevealState.visibleLocked:
+      return 2;
+    case CosmeticRevealState.hidden:
+      return 3;
+  }
 }
 
 int _compareUnlockedCosmetics(

@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../../shared/theme/design_tokens.dart';
 import '../application/cosmetics_provider.dart';
 import '../domain/cosmetic_models.dart';
+import '../domain/cosmetic_reveal_state.dart';
 import '../domain/cosmetic_unlock_rule.dart';
-import 'cosmetics_l10n.dart';
 import 'cosmetics_screen_internals.dart';
 
 class CosmeticDetailsSheet extends StatefulWidget {
@@ -18,14 +19,20 @@ class CosmeticDetailsSheet extends StatefulWidget {
     this.isLocked = false,
     this.devToolsUnlockRules,
     this.devToolsMode = false,
+    this.revealResult,
   });
 
   final CosmeticDefinition definition;
   final UserCosmeticsState state;
-  final CosmeticsL10n l10n;
+  final AppLocalizations l10n;
+
+  /// DevTools-only: whether to show locked-state UI (ZAMČENO pill, Grant btn).
   final bool isLocked;
   final List<CosmeticUnlockRule>? devToolsUnlockRules;
   final bool devToolsMode;
+
+  /// Normal-mode reveal result. Null in devTools mode.
+  final CosmeticRevealResult? revealResult;
 
   @override
   State<CosmeticDetailsSheet> createState() => _CosmeticDetailsSheetState();
@@ -83,13 +90,26 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
         .service
         .config
         .resolveAssetPath(definition.previewAssetKey ?? definition.assetKey);
-    final description = l10n.description(definition);
+    final description = definition.description(l10n);
     final unlock = widget.state.unlocked[definition.id];
     final bottomPad = MediaQuery.of(context).padding.bottom;
     final isLocked = widget.isLocked;
     final devTools = widget.devToolsMode;
     final rules = widget.devToolsUnlockRules;
     final anyBusy = _equipBusy || _devBusy;
+
+    // Determine effective reveal state for normal mode.
+    final revealState = devTools ? null : widget.revealResult?.state;
+    final isHidden = revealState == CosmeticRevealState.hidden;
+    final isPartial = revealState == CosmeticRevealState.partial;
+    final isVisibleLocked = revealState == CosmeticRevealState.visibleLocked;
+    final effectiveLocked = devTools ? isLocked : (isVisibleLocked || isPartial || isHidden);
+
+    // Hidden cards show a mystery header instead of the real cosmetic.
+    final displayName = isHidden ? l10n.cosmeticUnknownReward : definition.name(l10n);
+    final hiddenColor = isHidden
+        ? Tokens.onSurfaceMuted
+        : color;
 
     return ConstrainedBox(
       constraints: BoxConstraints(
@@ -125,21 +145,26 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CosmeticBadge(
-                    definition: definition,
-                    assetPath: assetPath,
-                    color: color,
-                    size: 94,
-                  ),
+                  if (isHidden)
+                    _HiddenBadgeLarge(color: hiddenColor)
+                  else
+                    CosmeticBadge(
+                      definition: definition,
+                      assetPath: assetPath,
+                      color: color,
+                      size: 94,
+                    ),
                   const SizedBox(width: Tokens.spaceLg),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          l10n.name(definition),
-                          style: const TextStyle(
-                            color: Tokens.onSurface,
+                          displayName,
+                          style: TextStyle(
+                            color: isHidden
+                                ? Tokens.onSurfaceMuted
+                                : Tokens.onSurface,
                             fontSize: 18,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 0,
@@ -150,23 +175,27 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                           spacing: 6,
                           runSpacing: 6,
                           children: [
-                            _TinyPill(
-                              label: cosmeticTypeLabel(definition.type),
-                              color: color,
-                            ),
-                            _TinyPill(
-                              label: cosmeticRarityLabel(definition.rarity),
-                              color: color,
-                            ),
-                            if (isEquipped)
+                            if (!isHidden) ...[
                               _TinyPill(
-                                label: l10n.equippedBadge,
+                                label: cosmeticTypeLabel(definition.type),
                                 color: color,
                               ),
-                            if (isLocked)
+                              _TinyPill(
+                                label: cosmeticRarityLabel(definition.rarity),
+                                color: color,
+                              ),
+                            ],
+                            if (isEquipped)
+                              _TinyPill(
+                                label: l10n.cosmeticEquippedBadge,
+                                color: color,
+                              ),
+                            if (effectiveLocked && !isHidden)
                               _TinyPill(
                                 label: 'ZAMČENO',
-                                color: Theme.of(context).colorScheme.error,
+                                color: isLocked
+                                    ? Theme.of(context).colorScheme.error
+                                    : hiddenColor.withValues(alpha: 0.85),
                               ),
                             if (devTools && definition.assetKey == null)
                               _TinyPill(
@@ -175,6 +204,15 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                               ),
                           ],
                         ),
+                        // partial progress indicator
+                        if (isPartial && widget.revealResult != null) ...[
+                          const SizedBox(height: 8),
+                          _PartialProgressRow(
+                            result: widget.revealResult!,
+                            l10n: l10n,
+                            color: color,
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -182,7 +220,7 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
               ),
 
               // description
-              if (description.isNotEmpty) ...[
+              if (!isHidden && description.isNotEmpty) ...[
                 const SizedBox(height: 18),
                 Text(
                   description,
@@ -195,7 +233,7 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                 ),
               ],
 
-              // unlock info
+              // unlock info (unlocked items)
               if (unlock != null) ...[
                 const SizedBox(height: 14),
                 Text(
@@ -209,11 +247,32 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                 ),
               ],
 
-              // unlock conditions (devtools)
-              if (rules != null && rules.isNotEmpty) ...[
-                const SizedBox(height: 18),
-                _UnlockConditionsSection(rules: rules, color: color),
-              ] else if (definition.unlockHintKey != null && isLocked) ...[
+              // hidden mystery hint
+              if (isHidden) ...[
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Icon(Icons.help_outline_rounded,
+                        size: 13,
+                        color: Tokens.onSurfaceFaint.withValues(alpha: 0.6)),
+                    const SizedBox(width: 5),
+                    Expanded(
+                      child: Text(
+                        l10n.cosmeticHiddenUnlockCondition,
+                        style: TextStyle(
+                          color: Tokens.onSurfaceFaint.withValues(alpha: 0.6),
+                          fontSize: Tokens.fontSizeCaption,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+
+              // visible-locked unlock hint
+              if ((isVisibleLocked || isPartial) &&
+                  definition.unlockHint != null) ...[
                 const SizedBox(height: 14),
                 Row(
                   children: [
@@ -222,7 +281,7 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                     const SizedBox(width: 5),
                     Expanded(
                       child: Text(
-                        definition.unlockHintKey!,
+                        definition.unlockHint!(l10n),
                         style: TextStyle(
                           color: color.withValues(alpha: 0.7),
                           fontSize: Tokens.fontSizeCaption,
@@ -232,6 +291,58 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                     ),
                   ],
                 ),
+              ],
+
+              // unlocked items: show how this was earned
+              if (!isHidden && !effectiveLocked && !devTools &&
+                  definition.unlockHint != null) ...[
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Icon(Icons.star_border_rounded,
+                        size: 13, color: color.withValues(alpha: 0.55)),
+                    const SizedBox(width: 5),
+                    Expanded(
+                      child: Text(
+                        definition.unlockHint!(l10n),
+                        style: TextStyle(
+                          color: color.withValues(alpha: 0.55),
+                          fontSize: Tokens.fontSizeCaption,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+
+              // devTools: always show the player-facing unlock hint when one
+              // exists, even if raw rule details are shown below.
+              if (devTools && definition.unlockHint != null) ...[
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Icon(Icons.info_outline_rounded,
+                        size: 13, color: color.withValues(alpha: 0.7)),
+                    const SizedBox(width: 5),
+                    Expanded(
+                      child: Text(
+                        definition.unlockHint!(l10n),
+                        style: TextStyle(
+                          color: color.withValues(alpha: 0.7),
+                          fontSize: Tokens.fontSizeCaption,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+
+              // unlock conditions (devtools)
+              if (rules != null && rules.isNotEmpty) ...[
+                const SizedBox(height: 18),
+                _UnlockConditionsSection(rules: rules, color: color),
               ],
 
               // debug details section
@@ -248,7 +359,6 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
 
               // action buttons
               if (devTools) ...[
-                // devtools mode: grant/revoke + equip row
                 if (isLocked)
                   Row(
                     children: [
@@ -295,12 +405,12 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                       ),
                     ],
                   ),
-              ] else if (isLocked)
+              ] else if (effectiveLocked)
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    style: _outlineStyle(color),
+                    style: _outlineStyle(isHidden ? Tokens.onSurfaceMuted : color),
                     child: const Text('Zavřít'),
                   ),
                 )
@@ -334,6 +444,74 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
           letterSpacing: 0,
         ),
       );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Hidden badge (94px placeholder for the details sheet)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _HiddenBadgeLarge extends StatelessWidget {
+  const _HiddenBadgeLarge({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 94,
+      height: 94,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(Tokens.radiusInner),
+        border: Border.all(color: color.withValues(alpha: 0.18)),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.lock_rounded,
+          size: 36,
+          color: color.withValues(alpha: 0.35),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Partial progress row
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _PartialProgressRow extends StatelessWidget {
+  const _PartialProgressRow({
+    required this.result,
+    required this.l10n,
+    required this.color,
+  });
+
+  final CosmeticRevealResult result;
+  final AppLocalizations l10n;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(Icons.incomplete_circle_rounded,
+            size: 13, color: color.withValues(alpha: 0.8)),
+        const SizedBox(width: 5),
+        Text(
+          l10n.cosmeticPartialProgress(
+            result.satisfiedConditions,
+            result.totalConditions,
+          ),
+          style: TextStyle(
+            color: color.withValues(alpha: 0.8),
+            fontSize: Tokens.fontSizeCaption,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -396,12 +574,6 @@ class _DebugDetailsSection extends StatelessWidget {
             if (definition.previewAssetKey != null &&
                 definition.previewAssetKey != definition.assetKey)
               _DebugRow('previewAssetKey', definition.previewAssetKey!,
-                  copyable: true),
-            _DebugRow('nameKey', definition.nameKey, copyable: true),
-            _DebugRow('descriptionKey', definition.descriptionKey,
-                copyable: true),
-            if (definition.unlockHintKey != null)
-              _DebugRow('unlockHintKey', definition.unlockHintKey!,
                   copyable: true),
             _DebugRow('sortOrder', '${definition.sortOrder}'),
             _DebugRow(

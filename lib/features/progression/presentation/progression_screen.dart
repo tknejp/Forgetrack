@@ -8,7 +8,6 @@ import '../application/progression_provider.dart';
 import '../../cosmetics/application/cosmetics_provider.dart';
 import '../../cosmetics/config/cosmetics_config.dart';
 import '../../cosmetics/domain/cosmetic_models.dart';
-import '../../cosmetics/presentation/cosmetics_l10n.dart';
 import '../../cosmetics/presentation/cosmetics_screen.dart';
 import '../../social/application/social_provider.dart';
 import '../../social/domain/social_models.dart';
@@ -907,7 +906,7 @@ class _CosmeticsInventorySection extends StatelessWidget {
   Widget build(BuildContext context) {
     final cosmetics = context.watch<CosmeticsProvider>();
     final state = cosmetics.state;
-    final l10n = CosmeticsL10n(AppLocalizations.of(context));
+    final l10n = AppLocalizations.of(context);
     final config = CosmeticsConfig.standard();
 
     return Column(
@@ -1088,7 +1087,7 @@ class _FeaturedCosmeticTile extends StatelessWidget {
 
   final CosmeticType type;
   final _FeaturedCosmetic? item;
-  final CosmeticsL10n l10n;
+  final AppLocalizations l10n;
   final CosmeticsConfig config;
   final VoidCallback onTap;
 
@@ -1144,7 +1143,7 @@ class _FeaturedCosmeticTile extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             Text(
-              definition == null ? 'Žádné' : l10n.name(definition),
+              definition == null ? 'Žádné' : definition.name(l10n),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(

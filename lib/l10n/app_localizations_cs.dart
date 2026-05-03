@@ -179,6 +179,13 @@ class AppLocalizationsCs extends AppLocalizations {
   String get settingsLanguage => 'Jazyk';
 
   @override
+  String get settingsNotifications => 'Notifikace';
+
+  @override
+  String get settingsNotificationsSubtitle =>
+      'Povolit připomínky, questy a social upozornění.';
+
+  @override
   String get languageSystemDefault => 'Výchozí systémový';
 
   @override
@@ -1908,6 +1915,35 @@ class AppLocalizationsCs extends AppLocalizations {
       'Legendární rám z obsidiánu, dračího kamene a zlatých detailů, určený pro pána dračí skály.';
 
   @override
+  String get cosmeticFrameDeveloperTomName => 'Vyvojarsky ramecek';
+
+  @override
+  String get cosmeticFrameDeveloperTomDesc =>
+      'Specialni ramecek odemceny pres Firebase entitlement.';
+
+  @override
+  String get cosmeticBackgroundDevAltarName => 'Dev: Oltar';
+
+  @override
+  String get cosmeticBackgroundDevCampName => 'Dev: Tabor';
+
+  @override
+  String get cosmeticBackgroundDevHackerName => 'Dev: Hacker';
+
+  @override
+  String get cosmeticBackgroundDevLordName => 'Dev: Lord';
+
+  @override
+  String get cosmeticBackgroundDevMinesName => 'Dev: Doly';
+
+  @override
+  String get cosmeticBackgroundDevThroneName => 'Dev: Trun';
+
+  @override
+  String get cosmeticBackgroundDevOnlyDesc =>
+      'Vyvojarske pozadi. Grant pres DevTools.';
+
+  @override
   String get cosmeticRelicOldCompassName => 'Starý kompas';
 
   @override
@@ -2139,11 +2175,11 @@ class AppLocalizationsCs extends AppLocalizations {
       'Lucerna s bledým plamenem pro ty, kdo dorazili do mrazivých krajů.';
 
   @override
-  String get cosmeticRelicFrostShardName => 'Mrazový střep';
+  String get cosmeticRelicFrostShardName => 'Ledový střep';
 
   @override
   String get cosmeticRelicFrostShardDesc =>
-      'Úlomek pravého mrazu, chladný i pod letním sluncem.';
+      'Úlomek pravého ledu, chladný i pod letním sluncem.';
 
   @override
   String get cosmeticRelicFrozenLakeHeartName => 'Srdce ledového jezera';
@@ -2339,6 +2375,21 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get cosmeticUnknown => 'Neznámá kosmetika';
+
+  @override
+  String get cosmeticHiddenName => '???';
+
+  @override
+  String get cosmeticUnknownReward => 'Neznámá odměna';
+
+  @override
+  String get cosmeticHiddenUnlockCondition =>
+      'Podmínka odemčení dosud nebyla odhalena.';
+
+  @override
+  String cosmeticPartialProgress(int completed, int total) {
+    return '$completed/$total podmínek splněno';
+  }
 
   @override
   String get cosmeticRarityCommon => 'Běžné';
@@ -2670,4 +2721,199 @@ class AppLocalizationsCs extends AppLocalizations {
   String socialRelativeDaysAgo(int count) {
     return 'před $count dny';
   }
+
+  @override
+  String get cosmeticFrameLvl1UnlockHint => 'Odměna za zahájení cesty.';
+
+  @override
+  String get cosmeticFrameLvl10UnlockHint => 'Dosáhni úrovně 10.';
+
+  @override
+  String get cosmeticFrameLvl25UnlockHint => 'Dosáhni úrovně 25.';
+
+  @override
+  String get cosmeticFrameLvl40UnlockHint => 'Dosáhni úrovně 40.';
+
+  @override
+  String get cosmeticFrameLvl60UnlockHint => 'Dosáhni úrovně 60.';
+
+  @override
+  String get cosmeticFrameLvl80UnlockHint => 'Dosáhni úrovně 80.';
+
+  @override
+  String get cosmeticFrameLvl100UnlockHint => 'Dosáhni úrovně 100.';
+
+  @override
+  String get cosmeticFrameDisciplineUnlockHint =>
+      'Udržuj 7denní krokovací sérii.';
+
+  @override
+  String get cosmeticFrameEnduranceUnlockHint =>
+      'Udržuj 30denní krokovací sérii.';
+
+  @override
+  String get cosmeticFrameSteelUnlockHint => 'Udržuj 50denní krokovací sérii.';
+
+  @override
+  String get cosmeticFrameEternalFlameUnlockHint =>
+      'Udržuj 100denní krokovací sérii.';
+
+  @override
+  String get cosmeticFrameBalanceUnlockHint =>
+      'Dosáhni 7 dokonalých dní aktivity.';
+
+  @override
+  String get cosmeticFrameMasterRoutineUnlockHint =>
+      'Dosáhni 12 dokonalých týdnů aktivity.';
+
+  @override
+  String get cosmeticFrameEndlessTrailUnlockHint =>
+      'Ujdi 600 000 kroků za 30 dní.';
+
+  @override
+  String get cosmeticFrameWorldwalkerUnlockHint =>
+      'Ujdi celkem 10 000 000 kroků.';
+
+  @override
+  String get cosmeticBackgroundForestTrailUnlockHint => 'Dosáhni úrovně 5.';
+
+  @override
+  String get cosmeticBackgroundCampUnlockHint => 'Dokonči svůj první úkol.';
+
+  @override
+  String get cosmeticBackgroundRavineUnlockHint => 'Dosáhni úrovně 15.';
+
+  @override
+  String get cosmeticBackgroundRuinsUnlockHint => 'Dosáhni úrovně 25.';
+
+  @override
+  String get cosmeticBackgroundBridgeCrossingUnlockHint => 'Dosáhni úrovně 35.';
+
+  @override
+  String get cosmeticBackgroundMinesUnlockHint => 'Dosáhni úrovně 45.';
+
+  @override
+  String get cosmeticBackgroundFrostlandsUnlockHint => 'Dosáhni úrovně 60.';
+
+  @override
+  String get cosmeticBackgroundFrozenLakeUnlockHint => 'Dosáhni úrovně 75.';
+
+  @override
+  String get cosmeticBackgroundRockyMountainsUnlockHint => 'Dosáhni úrovně 80.';
+
+  @override
+  String get cosmeticBackgroundDragonrockFortressUnlockHint =>
+      'Dosáhni úrovně 95.';
+
+  @override
+  String get cosmeticEmblemForestMarkUnlockHint => 'Dosáhni úrovně 10.';
+
+  @override
+  String get cosmeticEmblemPilgrimMarkUnlockHint => 'Vydej se na cestu.';
+
+  @override
+  String get cosmeticEmblemRuinSigilUnlockHint => 'Dosáhni úrovně 20.';
+
+  @override
+  String get cosmeticEmblemGatekeeperMarkUnlockHint => 'Dosáhni úrovně 30.';
+
+  @override
+  String get cosmeticEmblemMineCrestUnlockHint => 'Dosáhni úrovně 40.';
+
+  @override
+  String get cosmeticEmblemUnderwaysMarkUnlockHint => 'Dosáhni úrovně 50.';
+
+  @override
+  String get cosmeticEmblemFrostSigilUnlockHint => 'Dosáhni úrovně 60.';
+
+  @override
+  String get cosmeticEmblemIcewalkerMarkUnlockHint => 'Dosáhni úrovně 70.';
+
+  @override
+  String get cosmeticEmblemMountainCrestUnlockHint => 'Dosáhni úrovně 80.';
+
+  @override
+  String get cosmeticEmblemDragonMarkUnlockHint => 'Dosáhni úrovně 90.';
+
+  @override
+  String get cosmeticEmblemDragonrockEmblemUnlockHint => 'Dosáhni úrovně 100.';
+
+  @override
+  String get cosmeticRelicOldGateKeyUnlockHint => 'Dosáhni úrovně 15.';
+
+  @override
+  String get cosmeticRelicCampfireSparkUnlockHint =>
+      'Dokonči svůj první denní úkol.';
+
+  @override
+  String get cosmeticRelicPilgrimCloakUnlockHint =>
+      'Buď aktivní po dobu 7 dní.';
+
+  @override
+  String get cosmeticRelicTrailCompassUnlockHint => 'Dokonči 7 denních úkolů.';
+
+  @override
+  String get cosmeticRelicAncientRootUnlockHint =>
+      'Udržuj 7denní krokovací sérii.';
+
+  @override
+  String get cosmeticRelicRavineStoneUnlockHint => 'Ujdi celkem 100 000 kroků.';
+
+  @override
+  String get cosmeticRelicRuinSealUnlockHint =>
+      'Dokonči svůj první týdenní úkol.';
+
+  @override
+  String get cosmeticRelicBridgeKeyUnlockHint => 'Dokonči 3 týdenní úkoly.';
+
+  @override
+  String get cosmeticRelicMinersLanternUnlockHint => 'Dokonči celkem 50 úkolů.';
+
+  @override
+  String get cosmeticRelicPolarLanternUnlockHint => 'Dosáhni úrovně 55.';
+
+  @override
+  String get cosmeticRelicFrostShardUnlockHint => 'Dosáhni úrovně 65.';
+
+  @override
+  String get cosmeticRelicFrozenLakeHeartUnlockHint =>
+      'Ujdi celkem 1 000 000 kroků.';
+
+  @override
+  String get cosmeticRelicDragonScaleUnlockHint => 'Dosáhni úrovně 85.';
+
+  @override
+  String get cosmeticRelicDragonCrownUnlockHint => 'Dokonči celkem 250 úkolů.';
+
+  @override
+  String get cosmeticRelicDragonrockCrownUnlockHint =>
+      'Dosáhni úrovně 100 a dokonči 250 úkolů.';
+
+  @override
+  String get cosmeticCompanionEmberSpriteUnlockHint =>
+      'Buď aktivní 7 dní nebo dokonči 3 denní úkoly.';
+
+  @override
+  String get cosmeticCompanionForestFoxUnlockHint =>
+      'Získej Lesní znak a Pradávný kořen.';
+
+  @override
+  String get cosmeticCompanionRuinRavenUnlockHint =>
+      'Získej Ruinové pečetidlo a dokonči první týdenní úkol.';
+
+  @override
+  String get cosmeticCompanionLanternGolemUnlockHint =>
+      'Získej Hornickou lucernu a dokonči 75 úkolů.';
+
+  @override
+  String get cosmeticCompanionIceWispUnlockHint =>
+      'Získej Ledový střep a Srdce zmrzlého jezera.';
+
+  @override
+  String get cosmeticCompanionMountainGryphonUnlockHint =>
+      'Dosáhni úrovně 80 a získej Srdce zmrzlého jezera.';
+
+  @override
+  String get cosmeticCompanionDragonlingUnlockHint =>
+      'Dosáhni úrovně 100 a získej Dračí korunu pevnosti.';
 }

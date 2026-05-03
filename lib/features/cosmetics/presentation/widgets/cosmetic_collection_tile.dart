@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../config/cosmetics_config.dart';
 import '../../domain/cosmetic_models.dart';
-import '../cosmetics_l10n.dart';
 
 /// Grid tile for a cosmetic in a collection screen. Renders unlocked/locked
 /// states and an optional "equipped" badge. Designed to be safe when the
@@ -23,11 +23,12 @@ class CosmeticCollectionTile extends StatelessWidget {
   final bool isUnlocked;
   final bool isEquipped;
   final CosmeticsConfig? config;
-  final CosmeticsL10n? l10n;
+  final AppLocalizations? l10n;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = this.l10n;
     final assetPath = (config ?? CosmeticsConfig.standard())
         .resolveAssetPath(definition.previewAssetKey ?? definition.assetKey);
 
@@ -84,7 +85,7 @@ class CosmeticCollectionTile extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  l10n?.name(definition) ?? definition.id,
+                  l10n != null ? definition.name(l10n) : definition.id,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -111,7 +112,7 @@ class CosmeticCollectionTile extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    l10n?.equippedBadge ?? 'EQUIPPED',
+                    l10n?.cosmeticEquippedBadge ?? 'EQUIPPED',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: Tokens.fontSizeTiny,

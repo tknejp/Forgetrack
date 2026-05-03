@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../../l10n/app_localizations.dart';
 import '../application/cosmetics_provider.dart';
 import '../domain/cosmetic_models.dart';
-import 'cosmetics_l10n.dart';
 import 'widgets/cosmetic_collection_tile.dart';
 import 'widgets/cosmetic_equipped_chip.dart';
 
@@ -20,7 +19,7 @@ class CosmeticsDebugScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cosmetics = context.watch<CosmeticsProvider>();
-    final l10n = CosmeticsL10n(AppLocalizations.of(context));
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -35,7 +34,7 @@ class _Body extends StatelessWidget {
   const _Body({required this.cosmetics, required this.l10n});
 
   final CosmeticsProvider cosmetics;
-  final CosmeticsL10n? l10n;
+  final AppLocalizations? l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -140,7 +139,7 @@ class _EquippedRow extends StatelessWidget {
 
   final CosmeticsProvider cosmetics;
   final UserCosmeticsState state;
-  final CosmeticsL10n? l10n;
+  final AppLocalizations? l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -174,7 +173,7 @@ class _UnequipChip extends StatelessWidget {
   });
 
   final CosmeticDefinition definition;
-  final CosmeticsL10n? l10n;
+  final AppLocalizations? l10n;
   final VoidCallback onUnequip;
 
   @override
@@ -208,7 +207,7 @@ class _TypeSection extends StatelessWidget {
   final List<CosmeticDefinition> definitions;
   final UserCosmeticsState state;
   final CosmeticsProvider cosmetics;
-  final CosmeticsL10n? l10n;
+  final AppLocalizations? l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -279,7 +278,7 @@ class _Tile extends StatelessWidget {
   final CosmeticDefinition definition;
   final bool isUnlocked;
   final bool isEquipped;
-  final CosmeticsL10n? l10n;
+  final AppLocalizations? l10n;
   final CosmeticsProvider cosmetics;
 
   @override

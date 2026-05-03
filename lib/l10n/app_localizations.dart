@@ -434,6 +434,18 @@ abstract class AppLocalizations {
   /// **'Language'**
   String get settingsLanguage;
 
+  /// Label for the notifications toggle setting
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get settingsNotifications;
+
+  /// Subtitle for the notifications toggle setting
+  ///
+  /// In en, this message translates to:
+  /// **'Allow reminders, quest updates and social alerts.'**
+  String get settingsNotificationsSubtitle;
+
   /// Option to follow the device system locale
   ///
   /// In en, this message translates to:
@@ -3512,6 +3524,60 @@ abstract class AppLocalizations {
   /// **'A legendary frame of obsidian, dragonstone, and golden details, reserved for the lord of Dragonrock.'**
   String get cosmeticFrameLvl100Desc;
 
+  /// No description provided for @cosmeticFrameDeveloperTomName.
+  ///
+  /// In en, this message translates to:
+  /// **'Developer Frame'**
+  String get cosmeticFrameDeveloperTomName;
+
+  /// No description provided for @cosmeticFrameDeveloperTomDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Special frame unlocked through a Firebase entitlement.'**
+  String get cosmeticFrameDeveloperTomDesc;
+
+  /// No description provided for @cosmeticBackgroundDevAltarName.
+  ///
+  /// In en, this message translates to:
+  /// **'Dev: Altar'**
+  String get cosmeticBackgroundDevAltarName;
+
+  /// No description provided for @cosmeticBackgroundDevCampName.
+  ///
+  /// In en, this message translates to:
+  /// **'Dev: Camp'**
+  String get cosmeticBackgroundDevCampName;
+
+  /// No description provided for @cosmeticBackgroundDevHackerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Dev: Hacker'**
+  String get cosmeticBackgroundDevHackerName;
+
+  /// No description provided for @cosmeticBackgroundDevLordName.
+  ///
+  /// In en, this message translates to:
+  /// **'Dev: Lord'**
+  String get cosmeticBackgroundDevLordName;
+
+  /// No description provided for @cosmeticBackgroundDevMinesName.
+  ///
+  /// In en, this message translates to:
+  /// **'Dev: Mines'**
+  String get cosmeticBackgroundDevMinesName;
+
+  /// No description provided for @cosmeticBackgroundDevThroneName.
+  ///
+  /// In en, this message translates to:
+  /// **'Dev: Throne'**
+  String get cosmeticBackgroundDevThroneName;
+
+  /// No description provided for @cosmeticBackgroundDevOnlyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Developer-only background. Grant via DevTools.'**
+  String get cosmeticBackgroundDevOnlyDesc;
+
   /// No description provided for @cosmeticRelicOldCompassName.
   ///
   /// In en, this message translates to:
@@ -4238,6 +4304,30 @@ abstract class AppLocalizations {
   /// **'Unknown cosmetic'**
   String get cosmeticUnknown;
 
+  /// No description provided for @cosmeticHiddenName.
+  ///
+  /// In en, this message translates to:
+  /// **'???'**
+  String get cosmeticHiddenName;
+
+  /// No description provided for @cosmeticUnknownReward.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown reward'**
+  String get cosmeticUnknownReward;
+
+  /// No description provided for @cosmeticHiddenUnlockCondition.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock condition not yet revealed.'**
+  String get cosmeticHiddenUnlockCondition;
+
+  /// No description provided for @cosmeticPartialProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{completed}/{total} conditions met'**
+  String cosmeticPartialProgress(int completed, int total);
+
   /// No description provided for @cosmeticRarityCommon.
   ///
   /// In en, this message translates to:
@@ -4796,6 +4886,354 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} days ago'**
   String socialRelativeDaysAgo(int count);
+
+  /// No description provided for @cosmeticFrameLvl1UnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reward for starting your journey.'**
+  String get cosmeticFrameLvl1UnlockHint;
+
+  /// No description provided for @cosmeticFrameLvl10UnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 10.'**
+  String get cosmeticFrameLvl10UnlockHint;
+
+  /// No description provided for @cosmeticFrameLvl25UnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 25.'**
+  String get cosmeticFrameLvl25UnlockHint;
+
+  /// No description provided for @cosmeticFrameLvl40UnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 40.'**
+  String get cosmeticFrameLvl40UnlockHint;
+
+  /// No description provided for @cosmeticFrameLvl60UnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 60.'**
+  String get cosmeticFrameLvl60UnlockHint;
+
+  /// No description provided for @cosmeticFrameLvl80UnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 80.'**
+  String get cosmeticFrameLvl80UnlockHint;
+
+  /// No description provided for @cosmeticFrameLvl100UnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 100.'**
+  String get cosmeticFrameLvl100UnlockHint;
+
+  /// No description provided for @cosmeticFrameDisciplineUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintain a 7-day step streak.'**
+  String get cosmeticFrameDisciplineUnlockHint;
+
+  /// No description provided for @cosmeticFrameEnduranceUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintain a 30-day step streak.'**
+  String get cosmeticFrameEnduranceUnlockHint;
+
+  /// No description provided for @cosmeticFrameSteelUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintain a 50-day step streak.'**
+  String get cosmeticFrameSteelUnlockHint;
+
+  /// No description provided for @cosmeticFrameEternalFlameUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintain a 100-day step streak.'**
+  String get cosmeticFrameEternalFlameUnlockHint;
+
+  /// No description provided for @cosmeticFrameBalanceUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Achieve 7 perfect activity days.'**
+  String get cosmeticFrameBalanceUnlockHint;
+
+  /// No description provided for @cosmeticFrameMasterRoutineUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Achieve 12 perfect activity weeks.'**
+  String get cosmeticFrameMasterRoutineUnlockHint;
+
+  /// No description provided for @cosmeticFrameEndlessTrailUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk 600,000 steps within 30 days.'**
+  String get cosmeticFrameEndlessTrailUnlockHint;
+
+  /// No description provided for @cosmeticFrameWorldwalkerUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk 10,000,000 total steps.'**
+  String get cosmeticFrameWorldwalkerUnlockHint;
+
+  /// No description provided for @cosmeticBackgroundForestTrailUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 5.'**
+  String get cosmeticBackgroundForestTrailUnlockHint;
+
+  /// No description provided for @cosmeticBackgroundCampUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your first quest.'**
+  String get cosmeticBackgroundCampUnlockHint;
+
+  /// No description provided for @cosmeticBackgroundRavineUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 15.'**
+  String get cosmeticBackgroundRavineUnlockHint;
+
+  /// No description provided for @cosmeticBackgroundRuinsUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 25.'**
+  String get cosmeticBackgroundRuinsUnlockHint;
+
+  /// No description provided for @cosmeticBackgroundBridgeCrossingUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 35.'**
+  String get cosmeticBackgroundBridgeCrossingUnlockHint;
+
+  /// No description provided for @cosmeticBackgroundMinesUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 45.'**
+  String get cosmeticBackgroundMinesUnlockHint;
+
+  /// No description provided for @cosmeticBackgroundFrostlandsUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 60.'**
+  String get cosmeticBackgroundFrostlandsUnlockHint;
+
+  /// No description provided for @cosmeticBackgroundFrozenLakeUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 75.'**
+  String get cosmeticBackgroundFrozenLakeUnlockHint;
+
+  /// No description provided for @cosmeticBackgroundRockyMountainsUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 80.'**
+  String get cosmeticBackgroundRockyMountainsUnlockHint;
+
+  /// No description provided for @cosmeticBackgroundDragonrockFortressUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 95.'**
+  String get cosmeticBackgroundDragonrockFortressUnlockHint;
+
+  /// No description provided for @cosmeticEmblemForestMarkUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 10.'**
+  String get cosmeticEmblemForestMarkUnlockHint;
+
+  /// No description provided for @cosmeticEmblemPilgrimMarkUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Begin your journey.'**
+  String get cosmeticEmblemPilgrimMarkUnlockHint;
+
+  /// No description provided for @cosmeticEmblemRuinSigilUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 20.'**
+  String get cosmeticEmblemRuinSigilUnlockHint;
+
+  /// No description provided for @cosmeticEmblemGatekeeperMarkUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 30.'**
+  String get cosmeticEmblemGatekeeperMarkUnlockHint;
+
+  /// No description provided for @cosmeticEmblemMineCrestUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 40.'**
+  String get cosmeticEmblemMineCrestUnlockHint;
+
+  /// No description provided for @cosmeticEmblemUnderwaysMarkUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 50.'**
+  String get cosmeticEmblemUnderwaysMarkUnlockHint;
+
+  /// No description provided for @cosmeticEmblemFrostSigilUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 60.'**
+  String get cosmeticEmblemFrostSigilUnlockHint;
+
+  /// No description provided for @cosmeticEmblemIcewalkerMarkUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 70.'**
+  String get cosmeticEmblemIcewalkerMarkUnlockHint;
+
+  /// No description provided for @cosmeticEmblemMountainCrestUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 80.'**
+  String get cosmeticEmblemMountainCrestUnlockHint;
+
+  /// No description provided for @cosmeticEmblemDragonMarkUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 90.'**
+  String get cosmeticEmblemDragonMarkUnlockHint;
+
+  /// No description provided for @cosmeticEmblemDragonrockEmblemUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 100.'**
+  String get cosmeticEmblemDragonrockEmblemUnlockHint;
+
+  /// No description provided for @cosmeticRelicOldGateKeyUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 15.'**
+  String get cosmeticRelicOldGateKeyUnlockHint;
+
+  /// No description provided for @cosmeticRelicCampfireSparkUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your first daily quest.'**
+  String get cosmeticRelicCampfireSparkUnlockHint;
+
+  /// No description provided for @cosmeticRelicPilgrimCloakUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay active for 7 days.'**
+  String get cosmeticRelicPilgrimCloakUnlockHint;
+
+  /// No description provided for @cosmeticRelicTrailCompassUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 7 daily quests.'**
+  String get cosmeticRelicTrailCompassUnlockHint;
+
+  /// No description provided for @cosmeticRelicAncientRootUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintain a 7-day step streak.'**
+  String get cosmeticRelicAncientRootUnlockHint;
+
+  /// No description provided for @cosmeticRelicRavineStoneUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk 100,000 total steps.'**
+  String get cosmeticRelicRavineStoneUnlockHint;
+
+  /// No description provided for @cosmeticRelicRuinSealUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your first weekly quest.'**
+  String get cosmeticRelicRuinSealUnlockHint;
+
+  /// No description provided for @cosmeticRelicBridgeKeyUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 3 weekly quests.'**
+  String get cosmeticRelicBridgeKeyUnlockHint;
+
+  /// No description provided for @cosmeticRelicMinersLanternUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 50 quests.'**
+  String get cosmeticRelicMinersLanternUnlockHint;
+
+  /// No description provided for @cosmeticRelicPolarLanternUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 55.'**
+  String get cosmeticRelicPolarLanternUnlockHint;
+
+  /// No description provided for @cosmeticRelicFrostShardUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 65.'**
+  String get cosmeticRelicFrostShardUnlockHint;
+
+  /// No description provided for @cosmeticRelicFrozenLakeHeartUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk 1,000,000 total steps.'**
+  String get cosmeticRelicFrozenLakeHeartUnlockHint;
+
+  /// No description provided for @cosmeticRelicDragonScaleUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 85.'**
+  String get cosmeticRelicDragonScaleUnlockHint;
+
+  /// No description provided for @cosmeticRelicDragonCrownUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 250 quests.'**
+  String get cosmeticRelicDragonCrownUnlockHint;
+
+  /// No description provided for @cosmeticRelicDragonrockCrownUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 100 and complete 250 quests.'**
+  String get cosmeticRelicDragonrockCrownUnlockHint;
+
+  /// No description provided for @cosmeticCompanionEmberSpriteUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay active for 7 days or complete 3 daily quests.'**
+  String get cosmeticCompanionEmberSpriteUnlockHint;
+
+  /// No description provided for @cosmeticCompanionForestFoxUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Obtain the Forest Mark and the Ancient Root.'**
+  String get cosmeticCompanionForestFoxUnlockHint;
+
+  /// No description provided for @cosmeticCompanionRuinRavenUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Obtain the Ruin Sigil and complete your first weekly quest.'**
+  String get cosmeticCompanionRuinRavenUnlockHint;
+
+  /// No description provided for @cosmeticCompanionLanternGolemUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Obtain the Miner\'s Lantern and complete 75 quests.'**
+  String get cosmeticCompanionLanternGolemUnlockHint;
+
+  /// No description provided for @cosmeticCompanionIceWispUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Obtain the Frost Shard and the Frozen Lake Heart.'**
+  String get cosmeticCompanionIceWispUnlockHint;
+
+  /// No description provided for @cosmeticCompanionMountainGryphonUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 80 and obtain the Frozen Lake Heart.'**
+  String get cosmeticCompanionMountainGryphonUnlockHint;
+
+  /// No description provided for @cosmeticCompanionDragonlingUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 100 and obtain the Dragonrock Crown.'**
+  String get cosmeticCompanionDragonlingUnlockHint;
 }
 
 class _AppLocalizationsDelegate

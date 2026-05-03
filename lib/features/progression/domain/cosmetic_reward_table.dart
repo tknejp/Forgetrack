@@ -21,7 +21,12 @@ class CosmeticRewardTable {
   static const Map<String, List<String>> achievementToCosmetics =
       <String, List<String>>{
     // Visible welcome reward — fires on first sync.
-    'welcome_to_journey': ['frame_lvl1', 'background_camp', 'emblem_pilgrim_mark'],
+    'welcome_to_journey': [
+      'frame_lvl1',
+      'relic_old_compass',
+      'background_camp',
+      'emblem_pilgrim_mark',
+    ],
 
     // Step total milestones.
     'steps_total_100k': ['relic_ravine_stone'],
@@ -42,15 +47,13 @@ class CosmeticRewardTable {
   /// Player level → cosmetic ids unlocked the moment that level is reached
   /// (i.e. profile.level transitions from `level - 1` to `level`).
   ///
-  /// Level 1 is intentionally absent — the welcome reward
-  /// (`background_camp` + `emblem_pilgrim_mark`) is granted via the
-  /// `welcome_to_journey` achievement so the player sees a celebratory
-  /// unlock rather than a silent baseline grant. `frame_lvl1` and
-  /// `relic_old_compass` remain in `CosmeticUnlockRules.defaultUnlockedIds`.
+  /// Level 1 is intentionally absent — the welcome reward grants the starter
+  /// cosmetics via the `welcome_to_journey` achievement so the player sees a
+  /// celebratory unlock rather than a silent baseline grant.
   static const Map<int, List<String>> levelToCosmetics = <int, List<String>>{
     5: ['background_forest_trail'],
     10: ['frame_lvl10', 'emblem_forest_mark'],
-    15: ['background_ravine', 'relic_old_gate_key'],
+    15: ['background_ravine'],
     20: ['emblem_ruin_sigil'],
     25: ['frame_lvl25', 'background_ruins'],
     30: ['emblem_gatekeeper_mark'],
@@ -58,13 +61,10 @@ class CosmeticRewardTable {
     40: ['frame_lvl40', 'emblem_mine_crest'],
     45: ['background_mines'],
     50: ['emblem_underways_mark'],
-    55: ['relic_polar_lantern'],
     60: ['frame_lvl60', 'background_frostlands', 'emblem_frost_sigil'],
-    65: ['relic_frost_shard'],
     70: ['emblem_icewalker_mark'],
     75: ['background_frozen_lake'],
     80: ['frame_lvl80', 'background_rocky_mountains', 'emblem_mountain_crest'],
-    85: ['relic_dragon_scale'],
     90: ['emblem_dragon_mark'],
     95: ['background_dragonrock_fortress'],
     100: ['frame_lvl100', 'emblem_dragonrock_emblem'],

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../l10n/l10n.dart';
 import '../../../../app/locale_provider.dart';
+import '../../../../app/notification_preferences_provider.dart';
 import '../widgets/settings_widgets.dart';
 
 class SettingsPreferencesSection extends StatelessWidget {
@@ -11,6 +12,8 @@ class SettingsPreferencesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final localeProvider = context.watch<LocaleProvider>();
+    final notificationPreferences =
+        context.watch<NotificationPreferencesProvider>();
     final l10n = context.l10n;
 
     return SettingsCard(
@@ -36,6 +39,18 @@ class SettingsPreferencesSection extends StatelessWidget {
           onChanged: (code) {
             final newLocale = code == null ? null : Locale(code);
             context.read<LocaleProvider>().setLocale(newLocale);
+          },
+        ),
+        const SettingsTileDivider(),
+        SettingsSwitchTile(
+          icon: Icons.notifications_active_outlined,
+          label: l10n.settingsNotifications,
+          subtitle: l10n.settingsNotificationsSubtitle,
+          value: notificationPreferences.notificationsEnabled,
+          onChanged: (value) {
+            context
+                .read<NotificationPreferencesProvider>()
+                .setNotificationsEnabled(value);
           },
         ),
       ],

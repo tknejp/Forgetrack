@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import 'app.dart';
 import 'core/logging/app_log.dart';
+import 'app/notification_preferences_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:firebase_messaging/firebase_messaging.dart';
 
@@ -61,6 +62,8 @@ Future<void> main() async {
 
   final localeProvider = LocaleProvider();
   await localeProvider.init();
+  final notificationPreferencesProvider = NotificationPreferencesProvider();
+  await notificationPreferencesProvider.init();
 
   final healthService = HealthConnectService();
   final healthDb = HealthDatabase();
@@ -153,6 +156,7 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: localeProvider),
+        ChangeNotifierProvider.value(value: notificationPreferencesProvider),
         ChangeNotifierProvider.value(value: goalsProvider),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider.value(value: fitnessProvider),

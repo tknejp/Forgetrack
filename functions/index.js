@@ -35,10 +35,12 @@ function t(locale) {
 async function getUserData(uid) {
   const doc = await getFirestore().doc(`users/${uid}`).get();
   const data = doc.data() ?? {};
+  const notificationsEnabled = data.notificationsEnabled !== false;
   const token = data.fcmToken ?? null;
-  console.log(`getUserData: uid=${uid} hasToken=${token !== null} locale=${data.locale ?? 'cs'} displayName=${data.displayName ?? null}`);
+  console.log(`getUserData: uid=${uid} hasToken=${token !== null} notificationsEnabled=${notificationsEnabled} locale=${data.locale ?? 'cs'} displayName=${data.displayName ?? null}`);
   return {
-    token,
+    token: notificationsEnabled ? token : null,
+    notificationsEnabled,
     locale: data.locale ?? 'cs',
     displayName: data.displayName ?? null,
   };

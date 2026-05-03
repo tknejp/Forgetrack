@@ -8,7 +8,6 @@ import '../../../../l10n/l10n.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../cosmetics/application/cosmetics_provider.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
-import '../../../cosmetics/presentation/cosmetics_l10n.dart';
 import '../../../cosmetics/presentation/cosmetics_palette.dart';
 import '../../../progression/application/progression_provider.dart';
 import '../../../progression/domain/progression_level_config.dart';
@@ -122,7 +121,7 @@ class _CelebrationCard extends StatelessWidget {
     final l10n = context.l10n;
     final progressionL10n = ProgressionL10n(l10n);
     final cosmetics = context.watch<CosmeticsProvider>();
-    final cosmeticL10n = CosmeticsL10n(l10n);
+    final cosmeticL10n = l10n;
     final cosmeticDefinitions = event.cosmeticIds
         .map(cosmetics.service.catalog.byId)
         .whereType<CosmeticDefinition>()
@@ -275,7 +274,7 @@ class _CelebrationData {
   factory _CelebrationData.from(
     ProgressionCelebrationEvent event, {
     required ProgressionL10n progressionL10n,
-    required CosmeticsL10n cosmeticsL10n,
+    required AppLocalizations cosmeticsL10n,
     required List<CosmeticDefinition> cosmeticDefinitions,
     required AppLocalizations l10n,
   }) {
@@ -316,7 +315,7 @@ class _CelebrationData {
           eyebrow: l10n.celebrationCosmeticUnlockedEyebrow,
           title: definition == null
               ? l10n.cosmeticUnknown
-              : cosmeticsL10n.name(definition),
+              : definition.name(cosmeticsL10n),
           subtitle:
               definition == null ? null : _rarityLabel(definition.rarity, l10n),
           color: palette.color,
@@ -396,7 +395,7 @@ class _CosmeticUnlockStrip extends StatelessWidget {
 
   final List<CosmeticDefinition> definitions;
   final CosmeticsProvider cosmetics;
-  final CosmeticsL10n l10n;
+  final AppLocalizations l10n;
   final AppLocalizations appL10n;
 
   @override
@@ -411,7 +410,7 @@ class _CosmeticUnlockStrip extends StatelessWidget {
             assetPath: cosmetics.service.config.resolveAssetPath(
               definition.previewAssetKey ?? definition.assetKey,
             ),
-            name: l10n.name(definition),
+            name: definition.name(l10n),
             appL10n: appL10n,
           ),
       ],

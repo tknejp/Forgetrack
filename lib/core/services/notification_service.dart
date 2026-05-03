@@ -5,6 +5,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../logging/app_log.dart';
 import '../navigation/navigator_key.dart';
+import 'notification_preferences.dart';
 import '../../features/devtools/application/devtools_sync_logger.dart';
 import '../../features/devtools/domain/devtools_sync_event.dart';
 
@@ -118,6 +119,11 @@ class NotificationService {
 
   /// Call only from foreground app startup / settings screen.
   Future<void> requestNotificationPermissions() async {
+    if (!await NotificationPreferences.areEnabled()) {
+      AppLog.app.info('$_log: permission request skipped, notifications off');
+      return;
+    }
+
     try {
       final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>();
@@ -182,6 +188,7 @@ class NotificationService {
     int xp, {
     int index = 0,
   }) async {
+    if (!await NotificationPreferences.areEnabled()) return;
     await initialize();
 
     return _plugin.show(
@@ -198,6 +205,7 @@ class NotificationService {
     String description, {
     int index = 0,
   }) async {
+    if (!await NotificationPreferences.areEnabled()) return;
     await initialize();
 
     return _plugin.show(
@@ -210,6 +218,7 @@ class NotificationService {
   }
 
   Future<void> showFriendRequest(String fromName) async {
+    if (!await NotificationPreferences.areEnabled()) return;
     await initialize();
 
     return _plugin.show(
@@ -226,6 +235,7 @@ class NotificationService {
   }
 
   Future<void> showFriendRequestAccepted(String byName) async {
+    if (!await NotificationPreferences.areEnabled()) return;
     await initialize();
 
     return _plugin.show(
@@ -247,6 +257,7 @@ class NotificationService {
     String achievementTitle, {
     int index = 0,
   }) async {
+    if (!await NotificationPreferences.areEnabled()) return;
     await initialize();
 
     return _plugin.show(
@@ -279,6 +290,7 @@ class NotificationService {
     required String title,
     required String body,
   }) async {
+    if (!await NotificationPreferences.areEnabled()) return;
     await initialize();
     return _plugin.show(
       _idDebug,
@@ -304,6 +316,7 @@ class NotificationService {
       );
 
   Future<void> showGoalReminder() async {
+    if (!await NotificationPreferences.areEnabled()) return;
     await initialize();
 
     return _plugin.show(
@@ -318,6 +331,7 @@ class NotificationService {
   /// Shows FCM message received while app is in foreground.
   /// Android does not display foreground FCM notification automatically.
   Future<void> showFcmMessage(String title, String body, String? type) async {
+    if (!await NotificationPreferences.areEnabled()) return;
     await initialize();
 
     final channel = (type == 'friend_request' || type == 'reaction')

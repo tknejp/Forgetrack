@@ -138,6 +138,22 @@ class ProgressionEngine {
     return load();
   }
 
+  /// Inserts a synthetic achievement unlock for [achievementId] and reloads.
+  /// Useful for testing partial cosmetic reveal states in DevTools.
+  Future<ProgressionEngineState> devToolsGrantAchievement(
+      String achievementId) async {
+    final now = _clock();
+    await _repository.persistAchievementUnlocks(unlocks: [
+      ProgressionAchievementUnlockEvent(
+        unlockKey:
+            'devtools_achievement_${achievementId}_${now.millisecondsSinceEpoch}',
+        achievementId: achievementId,
+        unlockedAt: now,
+      ),
+    ]);
+    return load();
+  }
+
   ProgressionLocalRepository _requireLocalRepository() {
     final repo = _repository;
     if (repo is! ProgressionLocalRepository) {

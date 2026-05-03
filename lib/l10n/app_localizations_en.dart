@@ -179,6 +179,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsLanguage => 'Language';
 
   @override
+  String get settingsNotifications => 'Notifications';
+
+  @override
+  String get settingsNotificationsSubtitle =>
+      'Allow reminders, quest updates and social alerts.';
+
+  @override
   String get languageSystemDefault => 'System default';
 
   @override
@@ -1912,6 +1919,35 @@ class AppLocalizationsEn extends AppLocalizations {
       'A legendary frame of obsidian, dragonstone, and golden details, reserved for the lord of Dragonrock.';
 
   @override
+  String get cosmeticFrameDeveloperTomName => 'Developer Frame';
+
+  @override
+  String get cosmeticFrameDeveloperTomDesc =>
+      'Special frame unlocked through a Firebase entitlement.';
+
+  @override
+  String get cosmeticBackgroundDevAltarName => 'Dev: Altar';
+
+  @override
+  String get cosmeticBackgroundDevCampName => 'Dev: Camp';
+
+  @override
+  String get cosmeticBackgroundDevHackerName => 'Dev: Hacker';
+
+  @override
+  String get cosmeticBackgroundDevLordName => 'Dev: Lord';
+
+  @override
+  String get cosmeticBackgroundDevMinesName => 'Dev: Mines';
+
+  @override
+  String get cosmeticBackgroundDevThroneName => 'Dev: Throne';
+
+  @override
+  String get cosmeticBackgroundDevOnlyDesc =>
+      'Developer-only background. Grant via DevTools.';
+
+  @override
   String get cosmeticRelicOldCompassName => 'Old Compass';
 
   @override
@@ -2346,6 +2382,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cosmeticUnknown => 'Unknown cosmetic';
 
   @override
+  String get cosmeticHiddenName => '???';
+
+  @override
+  String get cosmeticUnknownReward => 'Unknown reward';
+
+  @override
+  String get cosmeticHiddenUnlockCondition =>
+      'Unlock condition not yet revealed.';
+
+  @override
+  String cosmeticPartialProgress(int completed, int total) {
+    return '$completed/$total conditions met';
+  }
+
+  @override
   String get cosmeticRarityCommon => 'Common';
 
   @override
@@ -2675,4 +2726,198 @@ class AppLocalizationsEn extends AppLocalizations {
   String socialRelativeDaysAgo(int count) {
     return '$count days ago';
   }
+
+  @override
+  String get cosmeticFrameLvl1UnlockHint => 'Reward for starting your journey.';
+
+  @override
+  String get cosmeticFrameLvl10UnlockHint => 'Reach level 10.';
+
+  @override
+  String get cosmeticFrameLvl25UnlockHint => 'Reach level 25.';
+
+  @override
+  String get cosmeticFrameLvl40UnlockHint => 'Reach level 40.';
+
+  @override
+  String get cosmeticFrameLvl60UnlockHint => 'Reach level 60.';
+
+  @override
+  String get cosmeticFrameLvl80UnlockHint => 'Reach level 80.';
+
+  @override
+  String get cosmeticFrameLvl100UnlockHint => 'Reach level 100.';
+
+  @override
+  String get cosmeticFrameDisciplineUnlockHint =>
+      'Maintain a 7-day step streak.';
+
+  @override
+  String get cosmeticFrameEnduranceUnlockHint =>
+      'Maintain a 30-day step streak.';
+
+  @override
+  String get cosmeticFrameSteelUnlockHint => 'Maintain a 50-day step streak.';
+
+  @override
+  String get cosmeticFrameEternalFlameUnlockHint =>
+      'Maintain a 100-day step streak.';
+
+  @override
+  String get cosmeticFrameBalanceUnlockHint =>
+      'Achieve 7 perfect activity days.';
+
+  @override
+  String get cosmeticFrameMasterRoutineUnlockHint =>
+      'Achieve 12 perfect activity weeks.';
+
+  @override
+  String get cosmeticFrameEndlessTrailUnlockHint =>
+      'Walk 600,000 steps within 30 days.';
+
+  @override
+  String get cosmeticFrameWorldwalkerUnlockHint =>
+      'Walk 10,000,000 total steps.';
+
+  @override
+  String get cosmeticBackgroundForestTrailUnlockHint => 'Reach level 5.';
+
+  @override
+  String get cosmeticBackgroundCampUnlockHint => 'Complete your first quest.';
+
+  @override
+  String get cosmeticBackgroundRavineUnlockHint => 'Reach level 15.';
+
+  @override
+  String get cosmeticBackgroundRuinsUnlockHint => 'Reach level 25.';
+
+  @override
+  String get cosmeticBackgroundBridgeCrossingUnlockHint => 'Reach level 35.';
+
+  @override
+  String get cosmeticBackgroundMinesUnlockHint => 'Reach level 45.';
+
+  @override
+  String get cosmeticBackgroundFrostlandsUnlockHint => 'Reach level 60.';
+
+  @override
+  String get cosmeticBackgroundFrozenLakeUnlockHint => 'Reach level 75.';
+
+  @override
+  String get cosmeticBackgroundRockyMountainsUnlockHint => 'Reach level 80.';
+
+  @override
+  String get cosmeticBackgroundDragonrockFortressUnlockHint =>
+      'Reach level 95.';
+
+  @override
+  String get cosmeticEmblemForestMarkUnlockHint => 'Reach level 10.';
+
+  @override
+  String get cosmeticEmblemPilgrimMarkUnlockHint => 'Begin your journey.';
+
+  @override
+  String get cosmeticEmblemRuinSigilUnlockHint => 'Reach level 20.';
+
+  @override
+  String get cosmeticEmblemGatekeeperMarkUnlockHint => 'Reach level 30.';
+
+  @override
+  String get cosmeticEmblemMineCrestUnlockHint => 'Reach level 40.';
+
+  @override
+  String get cosmeticEmblemUnderwaysMarkUnlockHint => 'Reach level 50.';
+
+  @override
+  String get cosmeticEmblemFrostSigilUnlockHint => 'Reach level 60.';
+
+  @override
+  String get cosmeticEmblemIcewalkerMarkUnlockHint => 'Reach level 70.';
+
+  @override
+  String get cosmeticEmblemMountainCrestUnlockHint => 'Reach level 80.';
+
+  @override
+  String get cosmeticEmblemDragonMarkUnlockHint => 'Reach level 90.';
+
+  @override
+  String get cosmeticEmblemDragonrockEmblemUnlockHint => 'Reach level 100.';
+
+  @override
+  String get cosmeticRelicOldGateKeyUnlockHint => 'Reach level 15.';
+
+  @override
+  String get cosmeticRelicCampfireSparkUnlockHint =>
+      'Complete your first daily quest.';
+
+  @override
+  String get cosmeticRelicPilgrimCloakUnlockHint => 'Stay active for 7 days.';
+
+  @override
+  String get cosmeticRelicTrailCompassUnlockHint => 'Complete 7 daily quests.';
+
+  @override
+  String get cosmeticRelicAncientRootUnlockHint =>
+      'Maintain a 7-day step streak.';
+
+  @override
+  String get cosmeticRelicRavineStoneUnlockHint => 'Walk 100,000 total steps.';
+
+  @override
+  String get cosmeticRelicRuinSealUnlockHint =>
+      'Complete your first weekly quest.';
+
+  @override
+  String get cosmeticRelicBridgeKeyUnlockHint => 'Complete 3 weekly quests.';
+
+  @override
+  String get cosmeticRelicMinersLanternUnlockHint => 'Complete 50 quests.';
+
+  @override
+  String get cosmeticRelicPolarLanternUnlockHint => 'Reach level 55.';
+
+  @override
+  String get cosmeticRelicFrostShardUnlockHint => 'Reach level 65.';
+
+  @override
+  String get cosmeticRelicFrozenLakeHeartUnlockHint =>
+      'Walk 1,000,000 total steps.';
+
+  @override
+  String get cosmeticRelicDragonScaleUnlockHint => 'Reach level 85.';
+
+  @override
+  String get cosmeticRelicDragonCrownUnlockHint => 'Complete 250 quests.';
+
+  @override
+  String get cosmeticRelicDragonrockCrownUnlockHint =>
+      'Reach level 100 and complete 250 quests.';
+
+  @override
+  String get cosmeticCompanionEmberSpriteUnlockHint =>
+      'Stay active for 7 days or complete 3 daily quests.';
+
+  @override
+  String get cosmeticCompanionForestFoxUnlockHint =>
+      'Obtain the Forest Mark and the Ancient Root.';
+
+  @override
+  String get cosmeticCompanionRuinRavenUnlockHint =>
+      'Obtain the Ruin Sigil and complete your first weekly quest.';
+
+  @override
+  String get cosmeticCompanionLanternGolemUnlockHint =>
+      'Obtain the Miner\'s Lantern and complete 75 quests.';
+
+  @override
+  String get cosmeticCompanionIceWispUnlockHint =>
+      'Obtain the Frost Shard and the Frozen Lake Heart.';
+
+  @override
+  String get cosmeticCompanionMountainGryphonUnlockHint =>
+      'Reach level 80 and obtain the Frozen Lake Heart.';
+
+  @override
+  String get cosmeticCompanionDragonlingUnlockHint =>
+      'Reach level 100 and obtain the Dragonrock Crown.';
 }

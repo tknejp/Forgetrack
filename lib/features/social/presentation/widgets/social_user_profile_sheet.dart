@@ -8,7 +8,6 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../shared/theme/ft_design_tokens.dart';
 import '../../../cosmetics/config/cosmetics_config.dart';
-import '../../../cosmetics/presentation/cosmetics_l10n.dart';
 import '../../../cosmetics/presentation/widgets/cosmetic_equipped_chip.dart';
 import '../../application/social_provider.dart';
 import '../../domain/social_models.dart';
@@ -451,7 +450,7 @@ class _ProfileCosmeticsSection extends StatelessWidget {
     final cosmetics = socialProfileExtraCosmetics(profile);
     if (cosmetics.isEmpty) return const SizedBox.shrink();
 
-    final l10n = CosmeticsL10n(AppLocalizations.of(context));
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.only(top: 16),
       child: Column(

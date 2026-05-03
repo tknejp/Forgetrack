@@ -12,7 +12,6 @@ import '../../../auth/application/auth_provider.dart';
 import '../../../cosmetics/application/cosmetics_provider.dart';
 import '../../../cosmetics/config/cosmetics_config.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
-import '../../../cosmetics/presentation/cosmetics_l10n.dart';
 import '../../../cosmetics/presentation/widgets/cosmetic_equipped_chip.dart';
 import '../../../cosmetics/presentation/widgets/cosmetic_frame_preview.dart';
 import '../../../progression/application/progression_provider.dart';
@@ -441,7 +440,7 @@ class _EquippedLoadoutRow extends StatelessWidget {
     final equippedDefs = cosmetics.service.getEquippedDefinitions(state);
     if (equippedDefs.isEmpty) return const SizedBox.shrink();
 
-    final l10n = CosmeticsL10n(AppLocalizations.of(context));
+    final l10n = AppLocalizations.of(context);
 
     return Padding(
       padding: const EdgeInsets.only(top: 14),

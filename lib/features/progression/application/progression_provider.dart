@@ -253,6 +253,33 @@ class ProgressionProvider extends ChangeNotifier {
     }
   }
 
+  /// Inserts a synthetic achievement unlock and re-dispatches cosmetics.
+  Future<void> devToolsGrantAchievement(String achievementId) async {
+    _isRefreshing = true;
+    notifyListeners();
+    try {
+      final prevState = _state;
+      _state = await _engine.devToolsGrantAchievement(achievementId);
+      _error = null;
+      _lastRequestedSignature = null;
+      final cosmeticDispatch = await _cosmeticUnlockDispatcher.dispatch(
+        previous: prevState,
+        current: _state!,
+      );
+      _queueCelebrations(
+        previous: prevState,
+        current: _state!,
+        cosmeticDispatch: cosmeticDispatch,
+      );
+    } catch (error) {
+      _error = error.toString();
+    } finally {
+      _isLoading = false;
+      _isRefreshing = false;
+      notifyListeners();
+    }
+  }
+
   void bind({
     required GoalsProvider goalsProvider,
     required FitnessProvider fitnessProvider,
