@@ -1587,6 +1587,42 @@ class AppLocalizationsCs extends AppLocalizations {
       'Nasbírej 240 hodin spánku v libovolném 30denním okně.';
 
   @override
+  String get progAchievementDailyQuest3Title => 'První kroky';
+
+  @override
+  String get progAchievementDailyQuest3Desc => 'Splň 3 denní úkoly.';
+
+  @override
+  String get progAchievementDailyQuest7Title => 'Pevná ruka';
+
+  @override
+  String get progAchievementDailyQuest7Desc => 'Splň 7 denních úkolů.';
+
+  @override
+  String get progAchievementQuestHunter250Title => 'Lovec úkolů';
+
+  @override
+  String get progAchievementQuestHunter250Desc => 'Splň celkem 250 úkolů.';
+
+  @override
+  String get progAchievementActiveDays7Title => 'Týden na cestě';
+
+  @override
+  String get progAchievementActiveDays7Desc => 'Buď aktivní 7 dní.';
+
+  @override
+  String get progAchievementSummaryDailyQuests => 'denních úkolů';
+
+  @override
+  String get progAchievementSummaryWeeklyQuests => 'týdenních úkolů';
+
+  @override
+  String get progAchievementSummaryTotalQuests => 'úkolů';
+
+  @override
+  String get progAchievementSummaryActiveDays => 'aktivních dní';
+
+  @override
   String get progAchievementDifficultyEasy => 'Lehké';
 
   @override

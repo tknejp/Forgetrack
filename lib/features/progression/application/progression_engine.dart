@@ -383,6 +383,9 @@ class ProgressionEngine {
     final streaksByRuleId = _streakPolicy.summarizeByRule(evaluations);
     final streaksByDomain = _streakPolicy.summarizeByDomain(evaluations);
     final questDefinitions = _questCatalog.build();
+    final questCategoryById = <String, ProgressionQuestCategory>{
+      for (final def in questDefinitions) def.id: def.category,
+    };
     final existingUnlocks = {
       for (final u in ledger.achievementUnlocks) u.achievementId: u.unlockedAt,
     };
@@ -395,6 +398,7 @@ class ProgressionEngine {
       streaksByRuleId: streaksByRuleId,
       streaksByDomain: streaksByDomain,
       existingUnlocks: existingUnlocks,
+      questCategoryById: questCategoryById,
     );
 
     final questResult = _questEvaluator.evaluate(

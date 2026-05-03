@@ -57,6 +57,14 @@ enum ProgressionAchievementCriterionType {
   bestStreakAtLeast,
   totalRuleValueAtLeast,
   bestRollingWindowRuleValueAtLeast,
+  // Phase 3a additions — counted from the questRewardGrants ledger via the
+  // questCategoryById index passed to the achievement evaluator.
+  dailyQuestsCompletedAtLeast,
+  weeklyQuestsCompletedAtLeast,
+  totalQuestsCompletedAtLeast,
+  // Distinct days with at least one progression evaluation period — counted
+  // from the evaluations list, mirrors CosmeticUnlockSnapshotExtractor.
+  activeDaysAtLeast,
 }
 
 enum ProgressionQuestType {

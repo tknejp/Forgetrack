@@ -350,6 +350,54 @@ class ProgressionAchievementCatalog {
         ruleId: 'daily_sleep',
         windowSizeDays: 30,
       ),
+      // -- Phase 3a: quest-count and active-day achievements -----------------
+      // Counted from the questRewardGrants ledger (ProgressionEngine builds
+      // a questCategoryById index from ProgressionQuestCatalog and passes it
+      // through to the evaluator). Title/Description English fallbacks here;
+      // localized strings live in ProgressionL10n + app_*.arb.
+      ProgressionAchievementDefinition(
+        id: 'daily_quest_3',
+        type: ProgressionAchievementType.milestone,
+        difficulty: ProgressionAchievementDifficulty.easy,
+        difficultyScore: 1.3,
+        criterionType:
+            ProgressionAchievementCriterionType.dailyQuestsCompletedAtLeast,
+        title: 'First Steps',
+        description: 'Complete 3 daily quests.',
+        targetValue: 3,
+      ),
+      ProgressionAchievementDefinition(
+        id: 'daily_quest_7',
+        type: ProgressionAchievementType.milestone,
+        difficulty: ProgressionAchievementDifficulty.easy,
+        difficultyScore: 1.8,
+        criterionType:
+            ProgressionAchievementCriterionType.dailyQuestsCompletedAtLeast,
+        title: 'Steady Hand',
+        description: 'Complete 7 daily quests.',
+        targetValue: 7,
+      ),
+      ProgressionAchievementDefinition(
+        id: 'quest_hunter_250',
+        type: ProgressionAchievementType.mastery,
+        difficulty: ProgressionAchievementDifficulty.hard,
+        difficultyScore: 6.8,
+        criterionType:
+            ProgressionAchievementCriterionType.totalQuestsCompletedAtLeast,
+        title: 'Quest Hunter',
+        description: 'Complete 250 quests in total.',
+        targetValue: 250,
+      ),
+      ProgressionAchievementDefinition(
+        id: 'active_days_7',
+        type: ProgressionAchievementType.streak,
+        difficulty: ProgressionAchievementDifficulty.easy,
+        difficultyScore: 1.5,
+        criterionType: ProgressionAchievementCriterionType.activeDaysAtLeast,
+        title: 'A Week on the Road',
+        description: 'Be active for 7 days.',
+        targetValue: 7,
+      ),
     ];
   }
 }

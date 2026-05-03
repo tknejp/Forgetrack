@@ -274,6 +274,14 @@ class ProgressionL10n {
         return _l10n.progAchievementSleepMonth225hTitle;
       case 'sleep_month_240h':
         return _l10n.progAchievementSleepMonth240hTitle;
+      case 'daily_quest_3':
+        return _l10n.progAchievementDailyQuest3Title;
+      case 'daily_quest_7':
+        return _l10n.progAchievementDailyQuest7Title;
+      case 'quest_hunter_250':
+        return _l10n.progAchievementQuestHunter250Title;
+      case 'active_days_7':
+        return _l10n.progAchievementActiveDays7Title;
       default:
         return achievement.title;
     }
@@ -347,6 +355,14 @@ class ProgressionL10n {
         return _l10n.progAchievementSleepMonth225hDesc;
       case 'sleep_month_240h':
         return _l10n.progAchievementSleepMonth240hDesc;
+      case 'daily_quest_3':
+        return _l10n.progAchievementDailyQuest3Desc;
+      case 'daily_quest_7':
+        return _l10n.progAchievementDailyQuest7Desc;
+      case 'quest_hunter_250':
+        return _l10n.progAchievementQuestHunter250Desc;
+      case 'active_days_7':
+        return _l10n.progAchievementActiveDays7Desc;
       default:
         return achievement.description;
     }

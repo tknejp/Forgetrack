@@ -2966,6 +2966,78 @@ abstract class AppLocalizations {
   /// **'Accumulate 240 hours of sleep across any 30-day window.'**
   String get progAchievementSleepMonth240hDesc;
 
+  /// No description provided for @progAchievementDailyQuest3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'First Steps'**
+  String get progAchievementDailyQuest3Title;
+
+  /// No description provided for @progAchievementDailyQuest3Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 3 daily quests.'**
+  String get progAchievementDailyQuest3Desc;
+
+  /// No description provided for @progAchievementDailyQuest7Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Steady Hand'**
+  String get progAchievementDailyQuest7Title;
+
+  /// No description provided for @progAchievementDailyQuest7Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 7 daily quests.'**
+  String get progAchievementDailyQuest7Desc;
+
+  /// No description provided for @progAchievementQuestHunter250Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Quest Hunter'**
+  String get progAchievementQuestHunter250Title;
+
+  /// No description provided for @progAchievementQuestHunter250Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 250 quests in total.'**
+  String get progAchievementQuestHunter250Desc;
+
+  /// No description provided for @progAchievementActiveDays7Title.
+  ///
+  /// In en, this message translates to:
+  /// **'A Week on the Road'**
+  String get progAchievementActiveDays7Title;
+
+  /// No description provided for @progAchievementActiveDays7Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Be active for 7 days.'**
+  String get progAchievementActiveDays7Desc;
+
+  /// No description provided for @progAchievementSummaryDailyQuests.
+  ///
+  /// In en, this message translates to:
+  /// **'daily quests'**
+  String get progAchievementSummaryDailyQuests;
+
+  /// No description provided for @progAchievementSummaryWeeklyQuests.
+  ///
+  /// In en, this message translates to:
+  /// **'weekly quests'**
+  String get progAchievementSummaryWeeklyQuests;
+
+  /// No description provided for @progAchievementSummaryTotalQuests.
+  ///
+  /// In en, this message translates to:
+  /// **'quests'**
+  String get progAchievementSummaryTotalQuests;
+
+  /// No description provided for @progAchievementSummaryActiveDays.
+  ///
+  /// In en, this message translates to:
+  /// **'active days'**
+  String get progAchievementSummaryActiveDays;
+
   /// No description provided for @progAchievementDifficultyEasy.
   ///
   /// In en, this message translates to:

@@ -410,6 +410,62 @@ Closure pattern by tedy ohrozil snapshot persistence a vytvořil paralelní l10n
 
 ### Sub-fáze 3a: Simple count achievementy (ne-composite)
 
+**Status:** ✅ Done (2026-05-03, uncommitted on feature branch)
+
+**Changes landed:**
+
+- **4 new enum values** in `ProgressionAchievementCriterionType` (progression_models.dart):
+  `dailyQuestsCompletedAtLeast`, `weeklyQuestsCompletedAtLeast`,
+  `totalQuestsCompletedAtLeast`, `activeDaysAtLeast`.
+- **Achievement evaluator** (`progression_achievement_evaluator.dart`):
+  - `evaluate()` and `_evaluateDefinition` now take an optional
+    `Map<String, ProgressionQuestCategory> questCategoryById` parameter.
+  - `_currentValue` switch extended with 4 new branches:
+    - daily/weekly counts iterate `questRewardGrants` and check
+      `questCategoryById[grant.questId]` against the target category.
+    - total count is `questRewardGrants.length`.
+    - active days = distinct `progressionDate(period.start)` from evaluations
+      (mirrors `CosmeticUnlockSnapshotExtractor`).
+  - `_resolveUnlockedAt`: 4 new criterion types fall through to `null`
+    (achievement still unlocks; precise timestamp deferred — could be
+    backfilled from quest grant ledger in a follow-up).
+- **Engine wiring** (`progression_engine.dart`): builds `questCategoryById`
+  from `_questCatalog.build()` once per evaluation pass and passes it into
+  `_achievementEvaluator.evaluate()`.
+- **Catalog entries** (`progression_achievement_catalog.dart`): 4 new
+  achievements appended after `sleep_month_240h`:
+  - `daily_quest_3` (easy, score 1.3) — 3 daily quests
+  - `daily_quest_7` (easy, score 1.8) — 7 daily quests
+  - `quest_hunter_250` (hard, score 6.8) — 250 total quests
+  - `active_days_7` (easy, score 1.5) — 7 active days
+- **ARB additions** (en + cs):
+  - 8 achievement Title/Desc keys.
+  - 4 summary suffix keys (`progAchievementSummaryDailyQuests/WeeklyQuests/
+    TotalQuests/ActiveDays`) — used by the target-summary helpers in
+    `progression_screen.dart` and `social_profile_utils.dart`.
+- **ProgressionL10n routing**: 4 new switch cases each in
+  `achievementTitle` and `achievementDescription`.
+- **Exhaustive switch fixes**: extended `_targetCriterionLabel` switches in
+  `progression_screen.dart:835` and `social_profile_utils.dart:243` for the
+  new criterion types (target summary uses the new ARB suffix keys).
+
+**Verification:**
+
+- `flutter analyze --no-fatal-infos` — clean (no new errors; pre-existing
+  Isar/test warnings unchanged).
+- `flutter test` — 179 passed / 3 failed (same pre-existing HC step
+  failures from Phase 1).
+
+**Out of scope (deferred to later sub-phases):**
+
+- Precise `unlockedAt` timestamp resolution for new criterion types
+  (currently `null`).
+- Reward-table mapping for these new achievements (Phase 4).
+- The `weeklyQuestsCompletedAtLeast` criterion type is wired but no
+  catalog entry uses it yet — reserved for future weekly-quest milestones.
+
+
+
 **Files affected:**
 
 1. **`lib/features/progression/domain/progression_models.dart`**
@@ -1045,8 +1101,8 @@ lib/l10n/
 | 0 — Discovery | ✅ Done (2026-05-03) | — | This document |
 | 1 — Foundation | ✅ Done (2026-05-03) | `44ced0b` | mythic + difficultyScore added; 179/182 tests pass (3 HC failures pre-existing) |
 | 2 — Catalog | ✅ Done (2026-05-03) | `515f216` | 9 new reliky + 5 updated rarity/region; first mythic catalog item (relic_dragonrock_heart); 54 ARB entries |
-| 3-prep — l10n audit | ✅ Done (2026-05-03) | uncommitted | Closure refactor superseded by existing ProgressionL10n adapter; added missing switch cases for welcome_to_journey + steps_streak_50; convention noted |
-| 3a — Simple criteria | ⏸️ Not Started | — | |
+| 3-prep — l10n audit | ✅ Done (2026-05-03) | `0d83101` | Closure refactor superseded by existing ProgressionL10n adapter; added missing switch cases for welcome_to_journey + steps_streak_50; convention noted |
+| 3a — Simple criteria | ✅ Done (2026-05-03) | uncommitted | 4 new criterion types + 4 catalog entries + ARB + router + 2 UI switches; engine builds questCategoryById once per pass |
 | 3b — Perfect periods | ⏸️ Not Started | — | |
 | 3c — Combo quests | ⏸️ Not Started | — | TODO path acceptable |
 | 3d — Composite | ⏸️ Not Started | — | dragonrock_trial only |

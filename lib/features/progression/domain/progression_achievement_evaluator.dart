@@ -13,6 +13,7 @@ class ProgressionAchievementEvaluator {
     required Map<String, ProgressionStreakSummary> streaksByRuleId,
     required Map<ProgressionDomain, ProgressionStreakSummary> streaksByDomain,
     Map<String, DateTime> existingUnlocks = const {},
+    Map<String, ProgressionQuestCategory> questCategoryById = const {},
   }) {
     final orderedDefinitions = [...definitions]
       ..sort((a, b) => a.id.compareTo(b.id));
@@ -27,6 +28,7 @@ class ProgressionAchievementEvaluator {
           streaksByRuleId: streaksByRuleId,
           streaksByDomain: streaksByDomain,
           existingUnlocks: existingUnlocks,
+          questCategoryById: questCategoryById,
         ),
     ];
   }
@@ -47,6 +49,7 @@ class ProgressionAchievementEvaluator {
     required Map<String, ProgressionStreakSummary> streaksByRuleId,
     required Map<ProgressionDomain, ProgressionStreakSummary> streaksByDomain,
     required Map<String, DateTime> existingUnlocks,
+    required Map<String, ProgressionQuestCategory> questCategoryById,
   }) {
     // If a persisted unlock record exists, use it as the authoritative state.
     final persistedUnlockedAt = existingUnlocks[definition.id];
@@ -59,6 +62,7 @@ class ProgressionAchievementEvaluator {
         questRewardGrants: questRewardGrants,
         streaksByRuleId: streaksByRuleId,
         streaksByDomain: streaksByDomain,
+        questCategoryById: questCategoryById,
       );
       return ProgressionAchievement(
         id: definition.id,
@@ -86,6 +90,7 @@ class ProgressionAchievementEvaluator {
       questRewardGrants: questRewardGrants,
       streaksByRuleId: streaksByRuleId,
       streaksByDomain: streaksByDomain,
+      questCategoryById: questCategoryById,
     );
     final unlocked = currentValue >= definition.targetValue;
     final unlockedAt = unlocked
@@ -124,6 +129,7 @@ class ProgressionAchievementEvaluator {
     required List<ProgressionQuestRewardGrant> questRewardGrants,
     required Map<String, ProgressionStreakSummary> streaksByRuleId,
     required Map<ProgressionDomain, ProgressionStreakSummary> streaksByDomain,
+    required Map<String, ProgressionQuestCategory> questCategoryById,
   }) {
     switch (definition.criterionType) {
       case ProgressionAchievementCriterionType.totalXpAtLeast:
@@ -162,7 +168,42 @@ class ProgressionAchievementEvaluator {
           definition: definition,
           evaluations: evaluations,
         ).round();
+      case ProgressionAchievementCriterionType.dailyQuestsCompletedAtLeast:
+        return _countQuestsByCategory(
+          questRewardGrants: questRewardGrants,
+          questCategoryById: questCategoryById,
+          category: ProgressionQuestCategory.daily,
+        );
+      case ProgressionAchievementCriterionType.weeklyQuestsCompletedAtLeast:
+        return _countQuestsByCategory(
+          questRewardGrants: questRewardGrants,
+          questCategoryById: questCategoryById,
+          category: ProgressionQuestCategory.weekly,
+        );
+      case ProgressionAchievementCriterionType.totalQuestsCompletedAtLeast:
+        return questRewardGrants.length;
+      case ProgressionAchievementCriterionType.activeDaysAtLeast:
+        return _countActiveDays(evaluations);
     }
+  }
+
+  int _countQuestsByCategory({
+    required List<ProgressionQuestRewardGrant> questRewardGrants,
+    required Map<String, ProgressionQuestCategory> questCategoryById,
+    required ProgressionQuestCategory category,
+  }) {
+    var count = 0;
+    for (final grant in questRewardGrants) {
+      if (questCategoryById[grant.questId] == category) count++;
+    }
+    return count;
+  }
+
+  int _countActiveDays(List<ProgressionEvaluation> evaluations) {
+    return <DateTime>{
+      for (final evaluation in evaluations)
+        progressionDate(evaluation.period.start),
+    }.length;
   }
 
   DateTime? _resolveUnlockedAt({
@@ -246,6 +287,16 @@ class ProgressionAchievementEvaluator {
           definition: definition,
           evaluations: evaluations,
         );
+      // Phase 3a additions: precise unlock-time resolution for these
+      // criterion types is not implemented yet. Returning null is safe — the
+      // achievement still unlocks, but the unlockedAt timestamp stays null
+      // (UI shows "recently unlocked"). Could be backfilled from the quest
+      // grant ledger / evaluation list in a follow-up.
+      case ProgressionAchievementCriterionType.dailyQuestsCompletedAtLeast:
+      case ProgressionAchievementCriterionType.weeklyQuestsCompletedAtLeast:
+      case ProgressionAchievementCriterionType.totalQuestsCompletedAtLeast:
+      case ProgressionAchievementCriterionType.activeDaysAtLeast:
+        return null;
     }
   }
 

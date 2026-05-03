@@ -1590,6 +1590,43 @@ class AppLocalizationsEn extends AppLocalizations {
       'Accumulate 240 hours of sleep across any 30-day window.';
 
   @override
+  String get progAchievementDailyQuest3Title => 'First Steps';
+
+  @override
+  String get progAchievementDailyQuest3Desc => 'Complete 3 daily quests.';
+
+  @override
+  String get progAchievementDailyQuest7Title => 'Steady Hand';
+
+  @override
+  String get progAchievementDailyQuest7Desc => 'Complete 7 daily quests.';
+
+  @override
+  String get progAchievementQuestHunter250Title => 'Quest Hunter';
+
+  @override
+  String get progAchievementQuestHunter250Desc =>
+      'Complete 250 quests in total.';
+
+  @override
+  String get progAchievementActiveDays7Title => 'A Week on the Road';
+
+  @override
+  String get progAchievementActiveDays7Desc => 'Be active for 7 days.';
+
+  @override
+  String get progAchievementSummaryDailyQuests => 'daily quests';
+
+  @override
+  String get progAchievementSummaryWeeklyQuests => 'weekly quests';
+
+  @override
+  String get progAchievementSummaryTotalQuests => 'quests';
+
+  @override
+  String get progAchievementSummaryActiveDays => 'active days';
+
+  @override
   String get progAchievementDifficultyEasy => 'Easy';
 
   @override

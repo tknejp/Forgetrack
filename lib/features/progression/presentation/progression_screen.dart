@@ -852,6 +852,14 @@ String _achievementCompactSummary(
     case ProgressionAchievementCriterionType.totalRuleValueAtLeast:
     case ProgressionAchievementCriterionType.bestRollingWindowRuleValueAtLeast:
       return _achievementTargetSummary(achievement, l10n, locale);
+    case ProgressionAchievementCriterionType.dailyQuestsCompletedAtLeast:
+      return '${achievement.targetValue} ${l10n.progAchievementSummaryDailyQuests}';
+    case ProgressionAchievementCriterionType.weeklyQuestsCompletedAtLeast:
+      return '${achievement.targetValue} ${l10n.progAchievementSummaryWeeklyQuests}';
+    case ProgressionAchievementCriterionType.totalQuestsCompletedAtLeast:
+      return '${achievement.targetValue} ${l10n.progAchievementSummaryTotalQuests}';
+    case ProgressionAchievementCriterionType.activeDaysAtLeast:
+      return '${achievement.targetValue} ${l10n.progAchievementSummaryActiveDays}';
   }
 }
 
