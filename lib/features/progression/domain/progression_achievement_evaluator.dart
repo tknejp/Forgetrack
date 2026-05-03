@@ -1,8 +1,32 @@
+import 'perfect_period_evaluator.dart';
 import 'progression_models.dart';
 import 'progression_streak_policy.dart';
 
 class ProgressionAchievementEvaluator {
-  const ProgressionAchievementEvaluator();
+  const ProgressionAchievementEvaluator({
+    PerfectPeriodEvaluator perfectPeriodEvaluator =
+        const RealPerfectPeriodEvaluator(),
+  }) : _perfectPeriodEvaluator = perfectPeriodEvaluator;
+
+  final PerfectPeriodEvaluator _perfectPeriodEvaluator;
+
+  /// Combo quests of any kind — used by `comboQuestsCompletedAtLeast`.
+  /// Mirrors the `daily_*_today` mastery quests in
+  /// `progression_quest_catalog.dart`.
+  static const Set<String> _kComboQuestIds = <String>{
+    'daily_two_goals_today',
+    'daily_triple_win_today',
+    'daily_four_pillars_today',
+    'daily_nutrition_combo_today',
+    'daily_recovery_focus_today',
+  };
+
+  /// Subset of [_kComboQuestIds] that requires three or more daily goals
+  /// in one day. Used by `tripleComboQuestsCompletedAtLeast`.
+  static const Set<String> _kTripleComboQuestIds = <String>{
+    'daily_triple_win_today',
+    'daily_four_pillars_today',
+  };
 
   List<ProgressionAchievement> evaluate({
     required List<ProgressionAchievementDefinition> definitions,
@@ -184,7 +208,33 @@ class ProgressionAchievementEvaluator {
         return questRewardGrants.length;
       case ProgressionAchievementCriterionType.activeDaysAtLeast:
         return _countActiveDays(evaluations);
+      case ProgressionAchievementCriterionType.perfectDaysAtLeast:
+        return _perfectPeriodEvaluator.countPerfectDays(evaluations);
+      case ProgressionAchievementCriterionType.perfectWeeksAtLeast:
+        return _perfectPeriodEvaluator.countPerfectWeeks(evaluations);
+      case ProgressionAchievementCriterionType.comboQuestsCompletedAtLeast:
+        return _countQuestsInIdSet(
+          questRewardGrants: questRewardGrants,
+          idSet: _kComboQuestIds,
+        );
+      case ProgressionAchievementCriterionType
+            .tripleComboQuestsCompletedAtLeast:
+        return _countQuestsInIdSet(
+          questRewardGrants: questRewardGrants,
+          idSet: _kTripleComboQuestIds,
+        );
     }
+  }
+
+  int _countQuestsInIdSet({
+    required List<ProgressionQuestRewardGrant> questRewardGrants,
+    required Set<String> idSet,
+  }) {
+    var count = 0;
+    for (final grant in questRewardGrants) {
+      if (idSet.contains(grant.questId)) count++;
+    }
+    return count;
   }
 
   int _countQuestsByCategory({
@@ -296,6 +346,11 @@ class ProgressionAchievementEvaluator {
       case ProgressionAchievementCriterionType.weeklyQuestsCompletedAtLeast:
       case ProgressionAchievementCriterionType.totalQuestsCompletedAtLeast:
       case ProgressionAchievementCriterionType.activeDaysAtLeast:
+      case ProgressionAchievementCriterionType.perfectDaysAtLeast:
+      case ProgressionAchievementCriterionType.perfectWeeksAtLeast:
+      case ProgressionAchievementCriterionType.comboQuestsCompletedAtLeast:
+      case ProgressionAchievementCriterionType
+            .tripleComboQuestsCompletedAtLeast:
         return null;
     }
   }

@@ -398,6 +398,65 @@ class ProgressionAchievementCatalog {
         description: 'Be active for 7 days.',
         targetValue: 7,
       ),
+      // -- Phase 3b: perfect-period achievements ----------------------------
+      // Counted by RealPerfectPeriodEvaluator (shared with the cosmetic
+      // snapshot — same source of truth as frame_balance/master_routine).
+      ProgressionAchievementDefinition(
+        id: 'perfect_days_7',
+        type: ProgressionAchievementType.mastery,
+        difficulty: ProgressionAchievementDifficulty.hard,
+        difficultyScore: 4.5,
+        criterionType: ProgressionAchievementCriterionType.perfectDaysAtLeast,
+        title: 'Balanced Week',
+        description: 'Complete all daily goals on 7 different days.',
+        targetValue: 7,
+      ),
+      ProgressionAchievementDefinition(
+        id: 'perfect_weeks_12',
+        type: ProgressionAchievementType.mastery,
+        difficulty: ProgressionAchievementDifficulty.extraHard,
+        difficultyScore: 7.5,
+        criterionType: ProgressionAchievementCriterionType.perfectWeeksAtLeast,
+        title: 'Master of Routine',
+        description: 'Complete a perfect week 12 times.',
+        targetValue: 12,
+      ),
+      // -- Phase 3c: combo quest achievements -------------------------------
+      // Counted from the questRewardGrants ledger filtered against
+      // _kComboQuestIds / _kTripleComboQuestIds in the achievement evaluator.
+      ProgressionAchievementDefinition(
+        id: 'combo_victory_10',
+        type: ProgressionAchievementType.mastery,
+        difficulty: ProgressionAchievementDifficulty.medium,
+        difficultyScore: 3.5,
+        criterionType:
+            ProgressionAchievementCriterionType.comboQuestsCompletedAtLeast,
+        title: 'Combo Initiate',
+        description: 'Complete 10 combo quests of any kind.',
+        targetValue: 10,
+      ),
+      ProgressionAchievementDefinition(
+        id: 'combo_triple_victory_25',
+        type: ProgressionAchievementType.mastery,
+        difficulty: ProgressionAchievementDifficulty.hard,
+        difficultyScore: 5.0,
+        criterionType: ProgressionAchievementCriterionType
+            .tripleComboQuestsCompletedAtLeast,
+        title: 'Triple Threat',
+        description: 'Complete 25 triple-or-better combo quests.',
+        targetValue: 25,
+      ),
+      ProgressionAchievementDefinition(
+        id: 'combo_triple_victory_100',
+        type: ProgressionAchievementType.mastery,
+        difficulty: ProgressionAchievementDifficulty.extraHard,
+        difficultyScore: 8.0,
+        criterionType: ProgressionAchievementCriterionType
+            .tripleComboQuestsCompletedAtLeast,
+        title: 'Combo Sovereign',
+        description: 'Complete 100 triple-or-better combo quests.',
+        targetValue: 100,
+      ),
     ];
   }
 }

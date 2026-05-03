@@ -3014,6 +3014,66 @@ abstract class AppLocalizations {
   /// **'Be active for 7 days.'**
   String get progAchievementActiveDays7Desc;
 
+  /// No description provided for @progAchievementPerfectDays7Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced Week'**
+  String get progAchievementPerfectDays7Title;
+
+  /// No description provided for @progAchievementPerfectDays7Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete all daily goals on 7 different days.'**
+  String get progAchievementPerfectDays7Desc;
+
+  /// No description provided for @progAchievementPerfectWeeks12Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Master of Routine'**
+  String get progAchievementPerfectWeeks12Title;
+
+  /// No description provided for @progAchievementPerfectWeeks12Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete a perfect week 12 times.'**
+  String get progAchievementPerfectWeeks12Desc;
+
+  /// No description provided for @progAchievementComboVictory10Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Combo Initiate'**
+  String get progAchievementComboVictory10Title;
+
+  /// No description provided for @progAchievementComboVictory10Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 10 combo quests of any kind.'**
+  String get progAchievementComboVictory10Desc;
+
+  /// No description provided for @progAchievementComboTripleVictory25Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Triple Threat'**
+  String get progAchievementComboTripleVictory25Title;
+
+  /// No description provided for @progAchievementComboTripleVictory25Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 25 triple-or-better combo quests.'**
+  String get progAchievementComboTripleVictory25Desc;
+
+  /// No description provided for @progAchievementComboTripleVictory100Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Combo Sovereign'**
+  String get progAchievementComboTripleVictory100Title;
+
+  /// No description provided for @progAchievementComboTripleVictory100Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 100 triple-or-better combo quests.'**
+  String get progAchievementComboTripleVictory100Desc;
+
   /// No description provided for @progAchievementSummaryDailyQuests.
   ///
   /// In en, this message translates to:
@@ -3037,6 +3097,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'active days'**
   String get progAchievementSummaryActiveDays;
+
+  /// No description provided for @progAchievementSummaryPerfectDays.
+  ///
+  /// In en, this message translates to:
+  /// **'perfect days'**
+  String get progAchievementSummaryPerfectDays;
+
+  /// No description provided for @progAchievementSummaryPerfectWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'perfect weeks'**
+  String get progAchievementSummaryPerfectWeeks;
+
+  /// No description provided for @progAchievementSummaryComboQuests.
+  ///
+  /// In en, this message translates to:
+  /// **'combo quests'**
+  String get progAchievementSummaryComboQuests;
+
+  /// No description provided for @progAchievementSummaryTripleComboQuests.
+  ///
+  /// In en, this message translates to:
+  /// **'triple combo quests'**
+  String get progAchievementSummaryTripleComboQuests;
 
   /// No description provided for @progAchievementDifficultyEasy.
   ///

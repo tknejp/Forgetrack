@@ -1615,6 +1615,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progAchievementActiveDays7Desc => 'Be active for 7 days.';
 
   @override
+  String get progAchievementPerfectDays7Title => 'Balanced Week';
+
+  @override
+  String get progAchievementPerfectDays7Desc =>
+      'Complete all daily goals on 7 different days.';
+
+  @override
+  String get progAchievementPerfectWeeks12Title => 'Master of Routine';
+
+  @override
+  String get progAchievementPerfectWeeks12Desc =>
+      'Complete a perfect week 12 times.';
+
+  @override
+  String get progAchievementComboVictory10Title => 'Combo Initiate';
+
+  @override
+  String get progAchievementComboVictory10Desc =>
+      'Complete 10 combo quests of any kind.';
+
+  @override
+  String get progAchievementComboTripleVictory25Title => 'Triple Threat';
+
+  @override
+  String get progAchievementComboTripleVictory25Desc =>
+      'Complete 25 triple-or-better combo quests.';
+
+  @override
+  String get progAchievementComboTripleVictory100Title => 'Combo Sovereign';
+
+  @override
+  String get progAchievementComboTripleVictory100Desc =>
+      'Complete 100 triple-or-better combo quests.';
+
+  @override
   String get progAchievementSummaryDailyQuests => 'daily quests';
 
   @override
@@ -1625,6 +1660,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get progAchievementSummaryActiveDays => 'active days';
+
+  @override
+  String get progAchievementSummaryPerfectDays => 'perfect days';
+
+  @override
+  String get progAchievementSummaryPerfectWeeks => 'perfect weeks';
+
+  @override
+  String get progAchievementSummaryComboQuests => 'combo quests';
+
+  @override
+  String get progAchievementSummaryTripleComboQuests => 'triple combo quests';
 
   @override
   String get progAchievementDifficultyEasy => 'Easy';

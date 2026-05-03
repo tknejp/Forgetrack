@@ -1611,6 +1611,41 @@ class AppLocalizationsCs extends AppLocalizations {
   String get progAchievementActiveDays7Desc => 'Buď aktivní 7 dní.';
 
   @override
+  String get progAchievementPerfectDays7Title => 'Vyvážený týden';
+
+  @override
+  String get progAchievementPerfectDays7Desc =>
+      'Splň všechny denní cíle během 7 různých dnů.';
+
+  @override
+  String get progAchievementPerfectWeeks12Title => 'Mistr rutiny';
+
+  @override
+  String get progAchievementPerfectWeeks12Desc =>
+      'Splň 12 dokonalých týdnů celkem.';
+
+  @override
+  String get progAchievementComboVictory10Title => 'Začátečník v kombech';
+
+  @override
+  String get progAchievementComboVictory10Desc =>
+      'Splň 10 kombo úkolů libovolného typu.';
+
+  @override
+  String get progAchievementComboTripleVictory25Title => 'Trojitá hrozba';
+
+  @override
+  String get progAchievementComboTripleVictory25Desc =>
+      'Splň 25 trojitých nebo vyšších kombo úkolů.';
+
+  @override
+  String get progAchievementComboTripleVictory100Title => 'Vládce komb';
+
+  @override
+  String get progAchievementComboTripleVictory100Desc =>
+      'Splň 100 trojitých nebo vyšších kombo úkolů.';
+
+  @override
   String get progAchievementSummaryDailyQuests => 'denních úkolů';
 
   @override
@@ -1621,6 +1656,18 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get progAchievementSummaryActiveDays => 'aktivních dní';
+
+  @override
+  String get progAchievementSummaryPerfectDays => 'dokonalých dní';
+
+  @override
+  String get progAchievementSummaryPerfectWeeks => 'dokonalých týdnů';
+
+  @override
+  String get progAchievementSummaryComboQuests => 'kombo úkolů';
+
+  @override
+  String get progAchievementSummaryTripleComboQuests => 'trojitých kombo úkolů';
 
   @override
   String get progAchievementDifficultyEasy => 'Lehké';

@@ -266,6 +266,15 @@ String friendAchievementCompactSummary(
       return '${achievement.targetValue} ${l10n.progAchievementSummaryTotalQuests}';
     case ProgressionAchievementCriterionType.activeDaysAtLeast:
       return '${achievement.targetValue} ${l10n.progAchievementSummaryActiveDays}';
+    case ProgressionAchievementCriterionType.perfectDaysAtLeast:
+      return '${achievement.targetValue} ${l10n.progAchievementSummaryPerfectDays}';
+    case ProgressionAchievementCriterionType.perfectWeeksAtLeast:
+      return '${achievement.targetValue} ${l10n.progAchievementSummaryPerfectWeeks}';
+    case ProgressionAchievementCriterionType.comboQuestsCompletedAtLeast:
+      return '${achievement.targetValue} ${l10n.progAchievementSummaryComboQuests}';
+    case ProgressionAchievementCriterionType
+          .tripleComboQuestsCompletedAtLeast:
+      return '${achievement.targetValue} ${l10n.progAchievementSummaryTripleComboQuests}';
   }
 }
 

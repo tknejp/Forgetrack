@@ -20,7 +20,7 @@ class CosmeticUnlockSnapshotExtractor {
   CosmeticUnlockSnapshotExtractor({
     ProgressionQuestCatalog questCatalog = const ProgressionQuestCatalog(),
     PerfectPeriodEvaluator perfectPeriodEvaluator =
-        const PlaceholderPerfectPeriodEvaluator(),
+        const RealPerfectPeriodEvaluator(),
   })  : _categoryById = _buildCategoryIndex(questCatalog),
         _perfectPeriodEvaluator = perfectPeriodEvaluator;
 
@@ -67,8 +67,10 @@ class CosmeticUnlockSnapshotExtractor {
       totalCompletedQuests: totalCount,
       firstDailyQuestEver: dailyCount >= 1,
       firstWeeklyQuestEver: weeklyCount >= 1,
-      perfectDaysCount: _perfectPeriodEvaluator.countPerfectDays(state),
-      perfectWeeksCount: _perfectPeriodEvaluator.countPerfectWeeks(state),
+      perfectDaysCount:
+          _perfectPeriodEvaluator.countPerfectDays(state.evaluations),
+      perfectWeeksCount:
+          _perfectPeriodEvaluator.countPerfectWeeks(state.evaluations),
       ownedCosmeticIds: ownedCosmeticIds,
     );
   }

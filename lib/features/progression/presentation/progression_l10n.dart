@@ -282,6 +282,16 @@ class ProgressionL10n {
         return _l10n.progAchievementQuestHunter250Title;
       case 'active_days_7':
         return _l10n.progAchievementActiveDays7Title;
+      case 'perfect_days_7':
+        return _l10n.progAchievementPerfectDays7Title;
+      case 'perfect_weeks_12':
+        return _l10n.progAchievementPerfectWeeks12Title;
+      case 'combo_victory_10':
+        return _l10n.progAchievementComboVictory10Title;
+      case 'combo_triple_victory_25':
+        return _l10n.progAchievementComboTripleVictory25Title;
+      case 'combo_triple_victory_100':
+        return _l10n.progAchievementComboTripleVictory100Title;
       default:
         return achievement.title;
     }
@@ -363,6 +373,16 @@ class ProgressionL10n {
         return _l10n.progAchievementQuestHunter250Desc;
       case 'active_days_7':
         return _l10n.progAchievementActiveDays7Desc;
+      case 'perfect_days_7':
+        return _l10n.progAchievementPerfectDays7Desc;
+      case 'perfect_weeks_12':
+        return _l10n.progAchievementPerfectWeeks12Desc;
+      case 'combo_victory_10':
+        return _l10n.progAchievementComboVictory10Desc;
+      case 'combo_triple_victory_25':
+        return _l10n.progAchievementComboTripleVictory25Desc;
+      case 'combo_triple_victory_100':
+        return _l10n.progAchievementComboTripleVictory100Desc;
       default:
         return achievement.description;
     }

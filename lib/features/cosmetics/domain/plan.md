@@ -517,6 +517,40 @@ Closure pattern by tedy ohrozil snapshot persistence a vytvořil paralelní l10n
 
 ### Sub-fáze 3b: Perfect period evaluator (real implementation)
 
+**Status:** ✅ Done (2026-05-03, uncommitted on feature branch)
+
+**Changes landed:**
+
+- **API refactor** — `PerfectPeriodEvaluator.countPerfectDays/Weeks` now
+  takes `List<ProgressionEvaluation>` instead of `ProgressionEngineState`
+  (cleaner; achievement evaluator does not have access to the full state).
+- **`RealPerfectPeriodEvaluator`** added to
+  [perfect_period_evaluator.dart](../../progression/domain/perfect_period_evaluator.dart):
+  - Const class, default required daily rule ids
+    (`daily_steps`, `daily_calories`, `daily_protein`, `daily_sleep`).
+  - Perfect day = a calendar day on which every required daily rule has at
+    least one matching `achieved` evaluation.
+  - Perfect week = a progression week (per `startOfProgressionWeek`)
+    containing 7 perfect days.
+- **`PlaceholderPerfectPeriodEvaluator`** kept for tests that want a
+  deterministic "no perfect periods" baseline.
+- **Snapshot extractor** ([cosmetic_unlock_snapshot_extractor.dart](../../progression/application/cosmetic_unlock_snapshot_extractor.dart))
+  now defaults to `RealPerfectPeriodEvaluator()` so cosmetic unlocks
+  (`frame_balance`, `frame_master_routine`) start firing automatically.
+- **2 new criterion types** — `perfectDaysAtLeast`, `perfectWeeksAtLeast`.
+- **Achievement evaluator** — accepts `PerfectPeriodEvaluator` constructor
+  parameter (default `RealPerfectPeriodEvaluator()`); shared instance
+  guarantees achievements and cosmetic snapshots can never disagree on
+  what counts as "perfect".
+- **2 catalog entries** — `perfect_days_7` (hard, score 4.5),
+  `perfect_weeks_12` (extraHard, score 7.5).
+- **L10n + router + UI switches** — 4 ARB keys (Title/Desc) + 2 summary
+  suffix keys per language; 2 router cases each in title/description; 2
+  exhaustive switch branches in `progression_screen.dart` and
+  `social_profile_utils.dart`.
+
+
+
 **Files affected:**
 
 1. **`lib/features/progression/domain/perfect_period_evaluator.dart`**
@@ -531,6 +565,49 @@ Closure pattern by tedy ohrozil snapshot persistence a vytvořil paralelní l10n
    - **Snapshot integration:** `CosmeticUnlockSnapshot.perfectDaysCount`/`perfectWeeksCount` musí být napojeno na tento evaluator (ověřit kde se snapshot buildí — pravděpodobně v `cosmetic_unlock_snapshot.dart` nebo dispatcheru).
 
 ### Sub-fáze 3c: Combo quest achievementy
+
+**Status:** ✅ Done (2026-05-03, uncommitted on feature branch — landed
+together with 3b)
+
+**Approach:** Combo quest catalog already exists
+([progression_quest_catalog.dart](../../progression/domain/progression_quest_catalog.dart))
+with 5 daily mastery quests using `currentPeriodRuleSetAtLeast`. The plan's
+TODO path turned out unnecessary — full implementation chosen instead.
+
+**Changes landed:**
+
+- **2 new criterion types** — `comboQuestsCompletedAtLeast`,
+  `tripleComboQuestsCompletedAtLeast`.
+- **Achievement evaluator** holds two hard-coded id sets:
+  - `_kComboQuestIds` = all 5 daily combo mastery quests
+    (`daily_two_goals_today`, `daily_triple_win_today`,
+    `daily_four_pillars_today`, `daily_nutrition_combo_today`,
+    `daily_recovery_focus_today`).
+  - `_kTripleComboQuestIds` = subset requiring 3+ daily goals
+    (`daily_triple_win_today`, `daily_four_pillars_today`).
+  Switch branches count `questRewardGrants` whose `questId` is in the
+  matching set.
+- **3 catalog entries** — `combo_victory_10` (medium, score 3.5),
+  `combo_triple_victory_25` (hard, score 5.0),
+  `combo_triple_victory_100` (extraHard, score 8.0).
+- **L10n + router + UI switches** — 6 ARB keys (Title/Desc) + 2 summary
+  suffix keys per language; 3 router cases each in title/description; 2
+  exhaustive switch branches in the UI summary helpers.
+
+**Verification (covers 3b + 3c — landed in one commit):**
+
+- `flutter analyze --no-fatal-infos` — clean.
+- `flutter test` — 179 passed / 3 failed (same pre-existing HC step
+  failures as Phase 1).
+
+**Out of scope:**
+
+- Reward-table mapping for these new achievements — that's Phase 4.
+- Adding a definition-level "matched quest ids" field — kept the hardcoded
+  sets in the evaluator; if a future combo set needs different ids, add a
+  new criterion type rather than expanding the schema.
+
+
 
 **Files affected:**
 
@@ -1102,9 +1179,9 @@ lib/l10n/
 | 1 — Foundation | ✅ Done (2026-05-03) | `44ced0b` | mythic + difficultyScore added; 179/182 tests pass (3 HC failures pre-existing) |
 | 2 — Catalog | ✅ Done (2026-05-03) | `515f216` | 9 new reliky + 5 updated rarity/region; first mythic catalog item (relic_dragonrock_heart); 54 ARB entries |
 | 3-prep — l10n audit | ✅ Done (2026-05-03) | `0d83101` | Closure refactor superseded by existing ProgressionL10n adapter; added missing switch cases for welcome_to_journey + steps_streak_50; convention noted |
-| 3a — Simple criteria | ✅ Done (2026-05-03) | uncommitted | 4 new criterion types + 4 catalog entries + ARB + router + 2 UI switches; engine builds questCategoryById once per pass |
-| 3b — Perfect periods | ⏸️ Not Started | — | |
-| 3c — Combo quests | ⏸️ Not Started | — | TODO path acceptable |
+| 3a — Simple criteria | ✅ Done (2026-05-03) | `2987552` | 4 new criterion types + 4 catalog entries + ARB + router + 2 UI switches; engine builds questCategoryById once per pass |
+| 3b — Perfect periods | ✅ Done (2026-05-03) | uncommitted | RealPerfectPeriodEvaluator implemented; API refactored to take List<ProgressionEvaluation>; 2 catalog entries; shared with cosmetic snapshot extractor |
+| 3c — Combo quests | ✅ Done (2026-05-03) | uncommitted | Full impl (not TODO path) — 2 criterion types + hardcoded id sets + 3 catalog entries; landed in same commit as 3b |
 | 3d — Composite | ⏸️ Not Started | — | dragonrock_trial only |
 | 4 — Reward mapping | ⏸️ Not Started | — | |
 | 5 — Companion rules | ⏸️ Not Started | — | |

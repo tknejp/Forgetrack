@@ -65,6 +65,15 @@ enum ProgressionAchievementCriterionType {
   // Distinct days with at least one progression evaluation period — counted
   // from the evaluations list, mirrors CosmeticUnlockSnapshotExtractor.
   activeDaysAtLeast,
+  // Phase 3b additions — delegate to the shared PerfectPeriodEvaluator so
+  // achievement counts and cosmetic snapshot counts can never disagree.
+  perfectDaysAtLeast,
+  perfectWeeksAtLeast,
+  // Phase 3c additions — combo quest completions, counted from the
+  // questRewardGrants ledger filtered against the hard-coded combo and
+  // triple-combo quest id sets in the achievement evaluator.
+  comboQuestsCompletedAtLeast,
+  tripleComboQuestsCompletedAtLeast,
 }
 
 enum ProgressionQuestType {
