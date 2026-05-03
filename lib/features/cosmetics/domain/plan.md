@@ -377,36 +377,34 @@ Rozšířit achievement framework, aby uměl:
 - **Active days achievement** (`active_days_7`) — nový criterion typ nebo reuse existing snapshot field.
 - **Composite achievement** (`dragonrock_trial`) — nový mechanismus pro AND-of-thresholds.
 
-### Sub-fáze 3-prep: Convert achievement catalog to l10n closures
+### Sub-fáze 3-prep: Achievement l10n routing audit
 
-**Goal:** Sjednotit `ProgressionAchievementDefinition.title/description` na closure pattern (`(l) => l.progressionAchievementXxxName`) konzistentně s `CosmeticDefinition`.
+**Status:** ✅ Done (2026-05-03, uncommitted on feature branch)
+
+**Goal (revised):** Zajistit, že **všechny achievement IDs v katalogu mají l10n routing** přes existující `ProgressionL10n` adapter, ne přes raw `achievement.title` fallback.
+
+**Architectural finding:** Plán původně volal closure refactor (`title: (l) => l.cosmeticXxxName`) konzistentně s cosmetics. Při auditu se ukázalo, že progression má **odlišný a opodstatněný pattern**:
+
+- `ProgressionL10n.achievementTitle(achievement)` / `achievementDescription(achievement)` je **dedicated l10n adapter** s switch na `achievement.id`. Pro každý known ID vrací localized string z ARB (`progAchievementXxxTitle`).
+- Definition `String title` / `String description` jsou **persistence-friendly snapshot strings** — používají se v `social_provider.dart:465-466` při share serializaci a v `social_profile_utils.dart:138-139` při hydrataci shared snapshot. Toto je intentional design (autor sdílí snapshot v jeho jazyce; reader vidí localized verzi pokud zná ID, fallback na snapshot pokud ne — robust pro app version skew).
+
+Closure pattern by tedy ohrozil snapshot persistence a vytvořil paralelní l10n cestu.
 
 **Files affected:**
 
-1. **`lib/features/progression/domain/progression_models.dart`**
-   - Přidat `typedef ProgressionAchievementText = String Function(AppLocalizations l10n);` (import `app_localizations.dart`).
-   - Změnit field type `String title` → `ProgressionAchievementText title` (a stejně pro `description`).
-   - Update i `ProgressionAchievement` (runtime instance) — buď drží resolved string (pre-resolved při construction), nebo také closure. **Doporučení:** pre-resolved string pro jednoduchost konzumace v UI.
+1. **`lib/features/progression/presentation/progression_l10n.dart`** — added 4 missing switch cases:
+   - `achievementTitle` switch: `welcome_to_journey`, `steps_streak_50`
+   - `achievementDescription` switch: `welcome_to_journey`, `steps_streak_50`
+   - ARB klíče (`progAchievementWelcomeToJourneyTitle/Desc`, `progAchievementStepsStreak50Title/Desc`) **už existovaly** v en + cs, jen nebyly napojené v routeru.
 
-2. **`lib/features/progression/domain/progression_achievement_catalog.dart`**
-   - Replace všech `title: '...'` / `description: '...'` na closures.
-   - Pro level tier achievementy (ř. 39–48) — closure deleguje na `ProgressionL10n` nebo nové `progLevelTitle{N}` keys.
+**Convention enforced going forward (klíčové pro Phase 3a-3d):**
 
-3. **`lib/l10n/app_en.arb` + `app_cs.arb`**
-   - Přidat klíče pro každý existující achievement (cca 30+).
-   - Konvence: `progressionAchievementWelcomeToJourneyName`, `...Desc`.
-   - Existující české překlady — extrahovat ze stávajících hardcoded strings (jsou anglické, takže primárně en, cs překlady doplnit).
+> Každý nový achievement entry v `progression_achievement_catalog.dart` MUSÍ mít odpovídající switch case v `ProgressionL10n.achievementTitle` + `achievementDescription` + ARB klíče v en + cs (`progAchievementXxxTitle`, `progAchievementXxxDesc`). Definition `title`/`description` strings zůstávají English fallback pro snapshot persistence.
 
-4. **Wherever `achievement.title` / `.description` se konzumuje v UI**
-   - Pokud je `ProgressionAchievement.title` pre-resolved string, žádná change.
-   - Pokud closure → call `title(l10n)` v build methods.
+**Verification:**
 
-**Acceptance criteria pro tuto sub-fázi:**
-- [ ] Žádný hardcoded `title: 'X'` / `description: 'Y'` v achievement catalog.
-- [ ] Všechny achievement IDs mají odpovídající ARB klíče v en + cs.
-- [ ] Build čistý, achievementy se zobrazují v UI ve správném jazyce při language switch.
-
-**Rationale pro umístění do Fáze 3:** Fáze 3 už bude přidávat nové achievementy (`daily_quest_3`, `dragonrock_trial`, …). Nové entries musí být závodně l10n closures (jinak vznikne dual style). Refactor existujících entries v stejném commitu = jeden velký but coherent diff, žádná přechodná inkonzistence.
+- `flutter analyze --no-fatal-infos` — 133 issues, vše pre-existing.
+- Audit: všech 31 achievement IDs v catalogu má teď routing v `ProgressionL10n` (level milestones jsou handleované přes `levelFromAchievementId` shortcut).
 
 ---
 
@@ -1046,7 +1044,8 @@ lib/l10n/
 |---|---|---|---|
 | 0 — Discovery | ✅ Done (2026-05-03) | — | This document |
 | 1 — Foundation | ✅ Done (2026-05-03) | `44ced0b` | mythic + difficultyScore added; 179/182 tests pass (3 HC failures pre-existing) |
-| 2 — Catalog | ✅ Done (2026-05-03) | uncommitted | 9 new reliky + 5 updated rarity/region; first mythic catalog item (relic_dragonrock_heart); 54 ARB entries |
+| 2 — Catalog | ✅ Done (2026-05-03) | `515f216` | 9 new reliky + 5 updated rarity/region; first mythic catalog item (relic_dragonrock_heart); 54 ARB entries |
+| 3-prep — l10n audit | ✅ Done (2026-05-03) | uncommitted | Closure refactor superseded by existing ProgressionL10n adapter; added missing switch cases for welcome_to_journey + steps_streak_50; convention noted |
 | 3a — Simple criteria | ⏸️ Not Started | — | |
 | 3b — Perfect periods | ⏸️ Not Started | — | |
 | 3c — Combo quests | ⏸️ Not Started | — | TODO path acceptable |

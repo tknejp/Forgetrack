@@ -212,6 +212,8 @@ class ProgressionL10n {
     if (levelTarget != null) return levelTitle(levelTarget);
 
     switch (achievement.id) {
+      case 'welcome_to_journey':
+        return _l10n.progAchievementWelcomeToJourneyTitle;
       case 'first_reward':
         return _l10n.progAchievementFirstRewardTitle;
       case 'reward_hunter_25':
@@ -242,6 +244,8 @@ class ProgressionL10n {
         return _l10n.progAchievementStepDisciplineTitle;
       case 'steps_streak_30':
         return _l10n.progAchievementStepSovereignTitle;
+      case 'steps_streak_50':
+        return _l10n.progAchievementStepsStreak50Title;
       case 'steps_streak_100':
         return _l10n.progAchievementStepCenturionTitle;
       case 'nutrition_streak_3':
@@ -281,6 +285,8 @@ class ProgressionL10n {
     if (levelTarget != null) return _l10n.progLevelAchievementDesc(levelTarget);
 
     switch (achievement.id) {
+      case 'welcome_to_journey':
+        return _l10n.progAchievementWelcomeToJourneyDesc;
       case 'first_reward':
         return _l10n.progAchievementFirstRewardDesc;
       case 'reward_hunter_25':
@@ -311,6 +317,8 @@ class ProgressionL10n {
         return _l10n.progAchievementStepDisciplineDesc;
       case 'steps_streak_30':
         return _l10n.progAchievementStepSovereignDesc;
+      case 'steps_streak_50':
+        return _l10n.progAchievementStepsStreak50Desc;
       case 'steps_streak_100':
         return _l10n.progAchievementStepCenturionDesc;
       case 'nutrition_streak_3':
