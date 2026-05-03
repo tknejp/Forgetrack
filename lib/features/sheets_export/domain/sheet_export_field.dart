@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../health_connect/application/fitness_provider.dart';
 import '../../nutrition/application/kaloricke_tabulky_provider.dart';
+import '../config/sheet_export_order_config.dart';
 
 /// Snapshot of providers needed to resolve a field value for a given date.
 /// Bundled so [SheetExportField.resolve] keeps a stable, testable signature.
@@ -57,10 +58,108 @@ class SheetExportField {
 /// always column A; the remaining columns are emitted in ascending [order].
 abstract final class SheetExportFields {
   static final List<SheetExportField> all = [
+    // ── Body ─────────────────────────────────────────────────────────────────
+    SheetExportField(
+      key: 'weight',
+      order: SheetExportOrderConfig.weight,
+      header: (l) => l.exportHeaderWeight,
+      label: (l) => l.exportFieldWeight,
+      description: (l) => l.exportFieldWeightDesc,
+      legacyHeaders: const ['weight_kg'],
+      category: SheetExportCategory.body,
+      resolve: (d, s) => s.fitness.weightForDate(d)?.weight,
+    ),
+    SheetExportField(
+      key: 'body_fat',
+      order: SheetExportOrderConfig.bodyFat,
+      header: (l) => l.exportHeaderBodyFat,
+      label: (l) => l.exportFieldBodyFat,
+      description: (l) => l.exportFieldBodyFatDesc,
+      legacyHeaders: const ['body_fat_pct'],
+      category: SheetExportCategory.body,
+      resolve: (d, s) => s.fitness.weightForDate(d)?.bodyFat,
+    ),
+
+    // ── Nutrition (Kalorické tabulky) ────────────────────────────────────────
+    SheetExportField(
+      key: 'kcal_in',
+      order: SheetExportOrderConfig.kcalIn,
+      header: (l) => l.exportHeaderKcalIn,
+      label: (l) => l.exportFieldKcalIn,
+      description: (l) => l.exportFieldKcalInDesc,
+      legacyHeaders: const ['calories_in_kcal'],
+      category: SheetExportCategory.nutrition,
+      resolve: (d, s) => _round(s.nutrition.nutritionForDate(d)?.calories),
+    ),
+    SheetExportField(
+      key: 'protein',
+      order: SheetExportOrderConfig.protein,
+      header: (l) => l.exportHeaderProtein,
+      label: (l) => l.exportFieldProtein,
+      legacyHeaders: const ['protein_g'],
+      category: SheetExportCategory.nutrition,
+      resolve: (d, s) => _round(s.nutrition.nutritionForDate(d)?.protein),
+    ),
+    SheetExportField(
+      key: 'carbs',
+      order: SheetExportOrderConfig.carbs,
+      header: (l) => l.exportHeaderCarbs,
+      label: (l) => l.exportFieldCarbs,
+      legacyHeaders: const ['carbs_g'],
+      category: SheetExportCategory.nutrition,
+      resolve: (d, s) => _round(s.nutrition.nutritionForDate(d)?.carbs),
+    ),
+    SheetExportField(
+      key: 'fat',
+      order: SheetExportOrderConfig.fat,
+      header: (l) => l.exportHeaderFat,
+      label: (l) => l.exportFieldFat,
+      legacyHeaders: const ['fat_g'],
+      category: SheetExportCategory.nutrition,
+      resolve: (d, s) => _round(s.nutrition.nutritionForDate(d)?.fat),
+    ),
+    SheetExportField(
+      key: 'fiber',
+      order: SheetExportOrderConfig.fiber,
+      header: (l) => l.exportHeaderFiber,
+      label: (l) => l.exportFieldFiber,
+      legacyHeaders: const ['fiber_g'],
+      category: SheetExportCategory.nutrition,
+      resolve: (d, s) => _round(s.nutrition.nutritionForDate(d)?.fiber),
+    ),
+    SheetExportField(
+      key: 'sugar',
+      order: SheetExportOrderConfig.sugar,
+      header: (l) => l.exportHeaderSugar,
+      label: (l) => l.exportFieldSugar,
+      legacyHeaders: const ['sugar_g'],
+      category: SheetExportCategory.nutrition,
+      resolve: (d, s) => _round(s.nutrition.nutritionForDate(d)?.sugar),
+    ),
+    SheetExportField(
+      key: 'salt',
+      order: SheetExportOrderConfig.salt,
+      header: (l) => l.exportHeaderSalt,
+      label: (l) => l.exportFieldSalt,
+      legacyHeaders: const ['salt_g'],
+      category: SheetExportCategory.nutrition,
+      resolve: (d, s) => _round(s.nutrition.nutritionForDate(d)?.salt),
+    ),
+    SheetExportField(
+      key: 'saturated_fat',
+      order: SheetExportOrderConfig.saturatedFat,
+      header: (l) => l.exportHeaderSaturatedFat,
+      label: (l) => l.exportFieldSaturatedFat,
+      legacyHeaders: const ['saturated_fat_g'],
+      category: SheetExportCategory.nutrition,
+      resolve: (d, s) =>
+          _round(s.nutrition.nutritionForDate(d)?.saturatedFat),
+    ),
+
     // ── Activity ─────────────────────────────────────────────────────────────
     SheetExportField(
       key: 'steps',
-      order: 10,
+      order: SheetExportOrderConfig.steps,
       header: (l) => l.exportHeaderSteps,
       label: (l) => l.exportFieldSteps,
       legacyHeaders: const ['steps'],
@@ -69,7 +168,7 @@ abstract final class SheetExportFields {
     ),
     SheetExportField(
       key: 'active_calories',
-      order: 20,
+      order: SheetExportOrderConfig.activeCalories,
       header: (l) => l.exportHeaderActiveCalories,
       label: (l) => l.exportFieldActiveCalories,
       description: (l) => l.exportFieldActiveCaloriesDesc,
@@ -81,32 +180,10 @@ abstract final class SheetExportFields {
       },
     ),
 
-    // ── Body ─────────────────────────────────────────────────────────────────
-    SheetExportField(
-      key: 'weight',
-      order: 100,
-      header: (l) => l.exportHeaderWeight,
-      label: (l) => l.exportFieldWeight,
-      description: (l) => l.exportFieldWeightDesc,
-      legacyHeaders: const ['weight_kg'],
-      category: SheetExportCategory.body,
-      resolve: (d, s) => s.fitness.weightForDate(d)?.weight,
-    ),
-    SheetExportField(
-      key: 'body_fat',
-      order: 110,
-      header: (l) => l.exportHeaderBodyFat,
-      label: (l) => l.exportFieldBodyFat,
-      description: (l) => l.exportFieldBodyFatDesc,
-      legacyHeaders: const ['body_fat_pct'],
-      category: SheetExportCategory.body,
-      resolve: (d, s) => s.fitness.weightForDate(d)?.bodyFat,
-    ),
-
     // ── Sleep ────────────────────────────────────────────────────────────────
     SheetExportField(
       key: 'sleep_minutes',
-      order: 200,
+      order: SheetExportOrderConfig.sleepMinutes,
       header: (l) => l.exportHeaderSleepDuration,
       label: (l) => l.exportFieldSleepDuration,
       description: (l) => l.exportFieldSleepDurationDesc,
@@ -116,7 +193,7 @@ abstract final class SheetExportFields {
     ),
     SheetExportField(
       key: 'sleep_bedtime',
-      order: 210,
+      order: SheetExportOrderConfig.sleepBedtime,
       header: (l) => l.exportHeaderSleepBedtime,
       label: (l) => l.exportFieldSleepBedtime,
       legacyHeaders: const ['sleep_bedtime'],
@@ -128,7 +205,7 @@ abstract final class SheetExportFields {
     ),
     SheetExportField(
       key: 'sleep_wake',
-      order: 220,
+      order: SheetExportOrderConfig.sleepWake,
       header: (l) => l.exportHeaderSleepWake,
       label: (l) => l.exportFieldSleepWake,
       legacyHeaders: const ['sleep_wake'],
@@ -137,82 +214,6 @@ abstract final class SheetExportFields {
         final r = s.fitness.sleepForDate(d);
         return r == null ? null : _hhmm(r.wakeTime);
       },
-    ),
-
-    // ── Nutrition (Kalorické tabulky) ────────────────────────────────────────
-    SheetExportField(
-      key: 'kcal_in',
-      order: 300,
-      header: (l) => l.exportHeaderKcalIn,
-      label: (l) => l.exportFieldKcalIn,
-      description: (l) => l.exportFieldKcalInDesc,
-      legacyHeaders: const ['calories_in_kcal'],
-      category: SheetExportCategory.nutrition,
-      resolve: (d, s) => _round(s.nutrition.nutritionForDate(d)?.calories),
-    ),
-    SheetExportField(
-      key: 'protein',
-      order: 310,
-      header: (l) => l.exportHeaderProtein,
-      label: (l) => l.exportFieldProtein,
-      legacyHeaders: const ['protein_g'],
-      category: SheetExportCategory.nutrition,
-      resolve: (d, s) => _round(s.nutrition.nutritionForDate(d)?.protein),
-    ),
-    SheetExportField(
-      key: 'fat',
-      order: 320,
-      header: (l) => l.exportHeaderFat,
-      label: (l) => l.exportFieldFat,
-      legacyHeaders: const ['fat_g'],
-      category: SheetExportCategory.nutrition,
-      resolve: (d, s) => _round(s.nutrition.nutritionForDate(d)?.fat),
-    ),
-    SheetExportField(
-      key: 'carbs',
-      order: 330,
-      header: (l) => l.exportHeaderCarbs,
-      label: (l) => l.exportFieldCarbs,
-      legacyHeaders: const ['carbs_g'],
-      category: SheetExportCategory.nutrition,
-      resolve: (d, s) => _round(s.nutrition.nutritionForDate(d)?.carbs),
-    ),
-    SheetExportField(
-      key: 'fiber',
-      order: 340,
-      header: (l) => l.exportHeaderFiber,
-      label: (l) => l.exportFieldFiber,
-      legacyHeaders: const ['fiber_g'],
-      category: SheetExportCategory.nutrition,
-      resolve: (d, s) => _round(s.nutrition.nutritionForDate(d)?.fiber),
-    ),
-    SheetExportField(
-      key: 'sugar',
-      order: 350,
-      header: (l) => l.exportHeaderSugar,
-      label: (l) => l.exportFieldSugar,
-      legacyHeaders: const ['sugar_g'],
-      category: SheetExportCategory.nutrition,
-      resolve: (d, s) => _round(s.nutrition.nutritionForDate(d)?.sugar),
-    ),
-    SheetExportField(
-      key: 'salt',
-      order: 360,
-      header: (l) => l.exportHeaderSalt,
-      label: (l) => l.exportFieldSalt,
-      legacyHeaders: const ['salt_g'],
-      category: SheetExportCategory.nutrition,
-      resolve: (d, s) => _round(s.nutrition.nutritionForDate(d)?.salt),
-    ),
-    SheetExportField(
-      key: 'saturated_fat',
-      order: 370,
-      header: (l) => l.exportHeaderSaturatedFat,
-      label: (l) => l.exportFieldSaturatedFat,
-      legacyHeaders: const ['saturated_fat_g'],
-      category: SheetExportCategory.nutrition,
-      resolve: (d, s) =>
-          _round(s.nutrition.nutritionForDate(d)?.saturatedFat),
     ),
   ];
 

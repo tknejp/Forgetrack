@@ -87,7 +87,7 @@ void main() {
     test('UTC boundary does not shift steps', () {
       // Assuming history dates are in local time
       final todayLocal = DateTime(2026, 4, 27);
-      final todayUtc = todayLocal.toUtc();
+      todayLocal.toUtc();
       // stepsForDate should match regardless of UTC vs local, but since history is local, and query is local
       expect(FitnessQueries.stepsForDate(history, todayLocal), 0);
       // If query was UTC, it might not match, but our fix ensures bucketing to local
