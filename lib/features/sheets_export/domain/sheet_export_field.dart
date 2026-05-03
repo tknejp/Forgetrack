@@ -67,7 +67,11 @@ abstract final class SheetExportFields {
       description: (l) => l.exportFieldWeightDesc,
       legacyHeaders: const ['weight_kg'],
       category: SheetExportCategory.body,
-      resolve: (d, s) => s.fitness.weightForDate(d)?.weight,
+      resolve: (d, s) {
+        final w = s.fitness.weightForDate(d)?.weight;
+        if (w == null) return null;
+        return double.parse(w.toStringAsFixed(1));
+      },
     ),
     SheetExportField(
       key: 'body_fat',
@@ -89,7 +93,7 @@ abstract final class SheetExportFields {
       description: (l) => l.exportFieldKcalInDesc,
       legacyHeaders: const ['calories_in_kcal'],
       category: SheetExportCategory.nutrition,
-      resolve: (d, s) => _round(s.nutrition.nutritionForDate(d)?.calories),
+      resolve: (d, s) => _roundToInt(s.nutrition.nutritionForDate(d)?.calories),
     ),
     SheetExportField(
       key: 'protein',
@@ -98,7 +102,7 @@ abstract final class SheetExportFields {
       label: (l) => l.exportFieldProtein,
       legacyHeaders: const ['protein_g'],
       category: SheetExportCategory.nutrition,
-      resolve: (d, s) => _round(s.nutrition.nutritionForDate(d)?.protein),
+      resolve: (d, s) => _roundToInt(s.nutrition.nutritionForDate(d)?.protein),
     ),
     SheetExportField(
       key: 'carbs',
@@ -107,7 +111,7 @@ abstract final class SheetExportFields {
       label: (l) => l.exportFieldCarbs,
       legacyHeaders: const ['carbs_g'],
       category: SheetExportCategory.nutrition,
-      resolve: (d, s) => _round(s.nutrition.nutritionForDate(d)?.carbs),
+      resolve: (d, s) => _roundToInt(s.nutrition.nutritionForDate(d)?.carbs),
     ),
     SheetExportField(
       key: 'fat',
@@ -116,7 +120,7 @@ abstract final class SheetExportFields {
       label: (l) => l.exportFieldFat,
       legacyHeaders: const ['fat_g'],
       category: SheetExportCategory.nutrition,
-      resolve: (d, s) => _round(s.nutrition.nutritionForDate(d)?.fat),
+      resolve: (d, s) => _roundToInt(s.nutrition.nutritionForDate(d)?.fat),
     ),
     SheetExportField(
       key: 'fiber',
@@ -125,7 +129,7 @@ abstract final class SheetExportFields {
       label: (l) => l.exportFieldFiber,
       legacyHeaders: const ['fiber_g'],
       category: SheetExportCategory.nutrition,
-      resolve: (d, s) => _round(s.nutrition.nutritionForDate(d)?.fiber),
+      resolve: (d, s) => _roundToInt(s.nutrition.nutritionForDate(d)?.fiber),
     ),
     SheetExportField(
       key: 'sugar',
@@ -134,7 +138,7 @@ abstract final class SheetExportFields {
       label: (l) => l.exportFieldSugar,
       legacyHeaders: const ['sugar_g'],
       category: SheetExportCategory.nutrition,
-      resolve: (d, s) => _round(s.nutrition.nutritionForDate(d)?.sugar),
+      resolve: (d, s) => _roundToInt(s.nutrition.nutritionForDate(d)?.sugar),
     ),
     SheetExportField(
       key: 'salt',
@@ -143,7 +147,7 @@ abstract final class SheetExportFields {
       label: (l) => l.exportFieldSalt,
       legacyHeaders: const ['salt_g'],
       category: SheetExportCategory.nutrition,
-      resolve: (d, s) => _round(s.nutrition.nutritionForDate(d)?.salt),
+      resolve: (d, s) => _roundToInt(s.nutrition.nutritionForDate(d)?.salt),
     ),
     SheetExportField(
       key: 'saturated_fat',
@@ -153,7 +157,7 @@ abstract final class SheetExportFields {
       legacyHeaders: const ['saturated_fat_g'],
       category: SheetExportCategory.nutrition,
       resolve: (d, s) =>
-          _round(s.nutrition.nutritionForDate(d)?.saturatedFat),
+          _roundToInt(s.nutrition.nutritionForDate(d)?.saturatedFat),
     ),
 
     // ── Activity ─────────────────────────────────────────────────────────────
@@ -189,7 +193,14 @@ abstract final class SheetExportFields {
       description: (l) => l.exportFieldSleepDurationDesc,
       legacyHeaders: const ['sleep_minutes'],
       category: SheetExportCategory.sleep,
-      resolve: (d, s) => s.fitness.sleepForDate(d)?.totalDuration.inMinutes,
+      resolve: (d, s) {
+        final sleep = s.fitness.sleepForDate(d);
+        if (sleep == null) return null;
+        final minutes = sleep.totalDuration.inMinutes;
+        final hours = minutes ~/ 60;
+        final mins = minutes % 60;
+        return '${hours}:${mins.toString().padLeft(2, '0')}';
+      },
     ),
     SheetExportField(
       key: 'sleep_bedtime',
@@ -240,6 +251,11 @@ abstract final class SheetExportFields {
   static double? _round(double? v) {
     if (v == null || v == 0) return null;
     return double.parse(v.toStringAsFixed(2));
+  }
+
+  static int? _roundToInt(double? v) {
+    if (v == null || v == 0) return null;
+    return v.round();
   }
 
   static String _hhmm(DateTime dt) =>

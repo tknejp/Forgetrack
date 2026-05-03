@@ -218,6 +218,13 @@ class SheetsExportService {
       values: body,
     );
 
+    AppLog.sync.info('export: applying formatting');
+    await _sheets.formatExportSheet(
+      spreadsheetId: spreadsheetId,
+      sheetName: sheetName,
+      data: body,
+    );
+
     AppLog.sync.success(
       'export: done — wrote ${merge.rows.length} data row(s)',
       payload: spreadsheetUrl(spreadsheetId),

@@ -141,6 +141,169 @@ class SheetsService {
     );
   }
 
+  /// Applies formatting to the export sheet:
+  /// - Header row: bold text + dark background + bottom border
+  /// - Data rows: alternating background colors per week with vivid colors
+  /// - Week separators: top border on Monday rows
+  /// 
+  /// [data] should be the first row as headers, followed by data rows.
+  /// Column A is expected to contain dates in 'dd.MM.yyyy' format.
+  Future<void> formatExportSheet({
+    required String spreadsheetId,
+    required String sheetName,
+    required List<List<Object?>> data,
+  }) async {
+    _assertReady();
+    if (data.isEmpty) return;
+
+    // Get the sheet ID
+    final meta = await _api!.spreadsheets.get(spreadsheetId);
+    final sheetId = (meta.sheets ?? [])
+        .firstWhere((s) => s.properties?.title == sheetName,
+            orElse: () => sheets.Sheet())
+        .properties
+        ?.sheetId;
+    if (sheetId == null) return;
+
+    final updates = <sheets.Request>[];
+    final columnCount = data.first.length;
+
+    // ── Format header row (row 0) with dark background and border ─────────
+    updates.add(sheets.Request(
+      updateCells: sheets.UpdateCellsRequest(
+        range: sheets.GridRange(
+          sheetId: sheetId,
+          startRowIndex: 0,
+          endRowIndex: 1,
+          startColumnIndex: 0,
+          endColumnIndex: columnCount,
+        ),
+        rows: [
+          sheets.RowData(
+            values: List.generate(
+              columnCount,
+              (col) => sheets.CellData(
+                userEnteredFormat: sheets.CellFormat(
+                  textFormat: sheets.TextFormat(
+                    bold: true,
+                    fontSize: 11,
+                    foregroundColor: sheets.Color(red: 1, green: 1, blue: 1),
+                  ),
+                  backgroundColor: sheets.Color(
+                    red: 0.3,
+                    green: 0.3,
+                    blue: 0.3,
+                  ),
+                  borders: sheets.Borders(
+                    bottom: sheets.Border(
+                      style: 'SOLID',
+                      width: 2,
+                      color: sheets.Color(red: 0, green: 0, blue: 0),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+        fields: 'userEnteredFormat(textFormat,backgroundColor,borders)',
+      ),
+    ));
+
+    // ── Format data rows with week-based coloring and borders ──────────────
+    if (data.length > 1) {
+      int currentWeek = 0;
+      int? lastDayOfWeek;
+      final dataRowUpdates = <sheets.RowData>[];
+
+      for (int i = 1; i < data.length; i++) {
+        final row = data[i];
+        final dateStr = row.isNotEmpty ? row.first?.toString() ?? '' : '';
+        final dayOfWeek = _getDayOfWeek(dateStr);
+
+        // Check if this is Monday and we have a previous day
+        final isMonday = dayOfWeek == DateTime.monday && lastDayOfWeek != null;
+        if (isMonday) {
+          currentWeek = 1 - currentWeek; // Toggle 0 ↔ 1
+        }
+        lastDayOfWeek = dayOfWeek;
+
+        // Vivid alternating colors per week
+        final bgColor = currentWeek == 0
+            ? sheets.Color(red: 0.68, green: 0.85, blue: 1.0) // Vivid blue
+            : sheets.Color(red: 1.0, green: 0.93, blue: 0.70); // Vivid orange
+
+        // Create row data with formatting
+        dataRowUpdates.add(
+          sheets.RowData(
+            values: List.generate(
+              row.length,
+              (col) => sheets.CellData(
+                userEnteredFormat: sheets.CellFormat(
+                  backgroundColor: bgColor,
+                  borders: isMonday
+                      ? sheets.Borders(
+                          top: sheets.Border(
+                            style: 'SOLID',
+                            width: 2,
+                            color: sheets.Color(red: 0.2, green: 0.2, blue: 0.2),
+                          ),
+                        )
+                      : null,
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      // Update data rows
+      if (dataRowUpdates.isNotEmpty) {
+        updates.add(sheets.Request(
+          updateCells: sheets.UpdateCellsRequest(
+            range: sheets.GridRange(
+              sheetId: sheetId,
+              startRowIndex: 1,
+              endRowIndex: data.length,
+              startColumnIndex: 0,
+              endColumnIndex: columnCount,
+            ),
+            rows: dataRowUpdates,
+            fields: 'userEnteredFormat(backgroundColor,borders)',
+          ),
+        ));
+      }
+    }
+
+    // Execute all formatting updates
+    if (updates.isNotEmpty) {
+      await _api!.spreadsheets.batchUpdate(
+        sheets.BatchUpdateSpreadsheetRequest(requests: updates),
+        spreadsheetId,
+      );
+    }
+  }
+
+  /// Extracts day of week (1=Monday, 7=Sunday) from date string in 'dd.MM.yyyy' format.
+  /// Returns null if parsing fails.
+  static int? _getDayOfWeek(String dateStr) {
+    final trimmed = dateStr.trim();
+    if (trimmed.isEmpty) return null;
+
+    final m = RegExp(r'^(\d{1,2})\.(\d{1,2})\.(\d{4})$').firstMatch(trimmed);
+    if (m == null) return null;
+
+    try {
+      final day = int.parse(m.group(1)!);
+      final month = int.parse(m.group(2)!);
+      final year = int.parse(m.group(3)!);
+      final dt = DateTime(year, month, day);
+      return dt.weekday; // 1=Monday, 7=Sunday
+    } catch (_) {
+      return null;
+    }
+  }
+
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
   sheets.Sheet _makeSheet(String title, List<String> headers) {
