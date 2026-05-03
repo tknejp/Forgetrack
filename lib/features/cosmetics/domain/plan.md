@@ -218,9 +218,38 @@ cosmetics: add mythic rarity tier and achievement difficultyScore
 
 ## Phase 2 — Catalog Data (additive cosmetics)
 
-**Status:** ⏸️ Not Started
+**Status:** ✅ Done (2026-05-03, uncommitted on feature branch)
 **Estimated scope:** ~3 soubory změněné, ~600 řádků ARB, ~300 řádků catalog
 **Dependencies:** Fáze 1 (potřebuje `CosmeticRarity.mythic`)
+
+**Changes landed:**
+
+- **9 new relic definitions** added to `lib/features/cosmetics/domain/cosmetic_catalog.dart`:
+  - Camp/neutral: `relic_warm_kindling` (common, sortOrder 325)
+  - Forest: `relic_moonlit_foxglove`, `relic_wildwood_charm` (rare, 355/358)
+  - Ravine/Ruins: `relic_ashen_omen`, `relic_oathbound_mark` (epic, 375/378)
+  - Mines: `relic_deep_ember_core` (epic, 385)
+  - Mountain Road: `relic_summit_feather`, `relic_stormcrest_plume` (legendary, 400/405)
+  - Dragonrock: `relic_dragonrock_heart` (**mythic**, 410) — first catalog item using mythic rarity
+- **5 existing reliky updated**:
+  - `relic_campfire_spark` — region forestTrail → **neutral** (Camp)
+  - `relic_bridge_key` — rarity rare → **epic**, region ruinedPass → **dwarvenMines** (Bridges/Mines fáze)
+  - `relic_polar_lantern` — rarity epic → **legendary**
+  - `relic_frost_shard` — rarity epic → **legendary**
+  - `relic_frozen_lake_heart` — rarity epic → **legendary**
+- **All 8 planned frames already existed** (frame_discipline, frame_endurance, frame_steel, frame_eternal_flame, frame_balance, frame_master_routine, frame_endless_trail, frame_worldwalker) — no changes needed.
+- **54 new ARB entries** (9 reliků × 3 klíče × 2 jazyky) v `app_en.arb` + `app_cs.arb`, regenerováno přes `flutter gen-l10n`.
+
+**Verification:**
+
+- `flutter analyze --no-fatal-infos` — 133 issues, vše pre-existing. Žádný nový error.
+- `flutter test` — 179 passed / 3 failed (stejné HC steps pre-existing failures jako u Phase 1, mimo scope).
+
+**Out of scope confirmed (carried to later phases):**
+
+- **Žádný unlock mapping** zatím — relicy jsou v katalogu, ale nikomu se neudělí. Wiring jde v Phase 4 (achievement reward table) a Phase 5 (companion rules).
+- **Žádné asset images** dodané. `assetKey` je nastaven (např. `cosmetics.relics.dragonrock_heart`), ale fyzické PNG assety designer dodá zvlášť. UI gracefully fallbackuje na placeholder při null asset.
+- **Difficulty score** zůstává jen na Achievement modelech (Phase 1) — není to atribut Cosmetic, je to atribut Achievement. Cosmetics rarity je proxy.
 
 ### Goal
 
@@ -1016,8 +1045,8 @@ lib/l10n/
 | Phase | Status | PR | Notes |
 |---|---|---|---|
 | 0 — Discovery | ✅ Done (2026-05-03) | — | This document |
-| 1 — Foundation | ✅ Done (2026-05-03) | uncommitted | mythic + difficultyScore added; 179/182 tests pass (3 HC failures pre-existing) |
-| 2 — Catalog | ⏸️ Not Started | — | |
+| 1 — Foundation | ✅ Done (2026-05-03) | `44ced0b` | mythic + difficultyScore added; 179/182 tests pass (3 HC failures pre-existing) |
+| 2 — Catalog | ✅ Done (2026-05-03) | uncommitted | 9 new reliky + 5 updated rarity/region; first mythic catalog item (relic_dragonrock_heart); 54 ARB entries |
 | 3a — Simple criteria | ⏸️ Not Started | — | |
 | 3b — Perfect periods | ⏸️ Not Started | — | |
 | 3c — Combo quests | ⏸️ Not Started | — | TODO path acceptable |

@@ -2214,6 +2214,69 @@ class AppLocalizationsEn extends AppLocalizations {
       'The endgame crown of Dragonrock — proof of both quest mastery and a finished climb.';
 
   @override
+  String get cosmeticRelicWarmKindlingName => 'Warm Kindling';
+
+  @override
+  String get cosmeticRelicWarmKindlingDesc =>
+      'A small bundle of dry tinder gathered before the second sunrise.';
+
+  @override
+  String get cosmeticRelicMoonlitFoxgloveName => 'Moonlit Foxglove';
+
+  @override
+  String get cosmeticRelicMoonlitFoxgloveDesc =>
+      'A pale flower that only opens for travelers who keep moving.';
+
+  @override
+  String get cosmeticRelicWildwoodCharmName => 'Wildwood Charm';
+
+  @override
+  String get cosmeticRelicWildwoodCharmDesc =>
+      'A token braided from forest grasses and small steady wins.';
+
+  @override
+  String get cosmeticRelicAshenOmenName => 'Ashen Omen';
+
+  @override
+  String get cosmeticRelicAshenOmenDesc =>
+      'A burnt mark left on the ruined stones by a steadier walker.';
+
+  @override
+  String get cosmeticRelicOathboundMarkName => 'Oathbound Mark';
+
+  @override
+  String get cosmeticRelicOathboundMarkDesc =>
+      'A sealed promise carved into bone — kept across many small victories.';
+
+  @override
+  String get cosmeticRelicDeepEmberCoreName => 'Deep Ember Core';
+
+  @override
+  String get cosmeticRelicDeepEmberCoreDesc =>
+      'A coal that still burns after a million careful steps in the deep.';
+
+  @override
+  String get cosmeticRelicSummitFeatherName => 'Summit Feather';
+
+  @override
+  String get cosmeticRelicSummitFeatherDesc =>
+      'Found on the wind only by those who cross every threshold.';
+
+  @override
+  String get cosmeticRelicStormcrestPlumeName => 'Stormcrest Plume';
+
+  @override
+  String get cosmeticRelicStormcrestPlumeDesc =>
+      'A feather marked by a year of weekly storms outwalked.';
+
+  @override
+  String get cosmeticRelicDragonrockHeartName => 'Dragonrock Heart';
+
+  @override
+  String get cosmeticRelicDragonrockHeartDesc =>
+      'The forge-warm core of the mountain itself, given only to those who finish the trial.';
+
+  @override
   String get cosmeticFrameDisciplineName => 'Flame of Discipline';
 
   @override
@@ -2895,6 +2958,40 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cosmeticRelicDragonrockCrownUnlockHint =>
       'Reach level 100 and complete 250 quests.';
+
+  @override
+  String get cosmeticRelicWarmKindlingUnlockHint => 'Complete 3 daily quests.';
+
+  @override
+  String get cosmeticRelicMoonlitFoxgloveUnlockHint =>
+      'Stay active for 7 days.';
+
+  @override
+  String get cosmeticRelicWildwoodCharmUnlockHint => 'Complete 7 daily quests.';
+
+  @override
+  String get cosmeticRelicAshenOmenUnlockHint =>
+      'Complete the weekly activity rule 4 times.';
+
+  @override
+  String get cosmeticRelicOathboundMarkUnlockHint =>
+      'Complete 10 combo quests.';
+
+  @override
+  String get cosmeticRelicDeepEmberCoreUnlockHint =>
+      'Walk 1,000,000 total steps.';
+
+  @override
+  String get cosmeticRelicSummitFeatherUnlockHint =>
+      'Complete 100 triple combo quests.';
+
+  @override
+  String get cosmeticRelicStormcrestPlumeUnlockHint =>
+      'Complete the weekly activity rule 52 times.';
+
+  @override
+  String get cosmeticRelicDragonrockHeartUnlockHint =>
+      'Complete the Dragonrock Trial.';
 
   @override
   String get cosmeticCompanionEmberSpriteUnlockHint =>

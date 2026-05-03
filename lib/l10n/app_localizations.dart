@@ -4034,6 +4034,114 @@ abstract class AppLocalizations {
   /// **'The endgame crown of Dragonrock — proof of both quest mastery and a finished climb.'**
   String get cosmeticRelicDragonrockCrownDesc;
 
+  /// No description provided for @cosmeticRelicWarmKindlingName.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm Kindling'**
+  String get cosmeticRelicWarmKindlingName;
+
+  /// No description provided for @cosmeticRelicWarmKindlingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A small bundle of dry tinder gathered before the second sunrise.'**
+  String get cosmeticRelicWarmKindlingDesc;
+
+  /// No description provided for @cosmeticRelicMoonlitFoxgloveName.
+  ///
+  /// In en, this message translates to:
+  /// **'Moonlit Foxglove'**
+  String get cosmeticRelicMoonlitFoxgloveName;
+
+  /// No description provided for @cosmeticRelicMoonlitFoxgloveDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A pale flower that only opens for travelers who keep moving.'**
+  String get cosmeticRelicMoonlitFoxgloveDesc;
+
+  /// No description provided for @cosmeticRelicWildwoodCharmName.
+  ///
+  /// In en, this message translates to:
+  /// **'Wildwood Charm'**
+  String get cosmeticRelicWildwoodCharmName;
+
+  /// No description provided for @cosmeticRelicWildwoodCharmDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A token braided from forest grasses and small steady wins.'**
+  String get cosmeticRelicWildwoodCharmDesc;
+
+  /// No description provided for @cosmeticRelicAshenOmenName.
+  ///
+  /// In en, this message translates to:
+  /// **'Ashen Omen'**
+  String get cosmeticRelicAshenOmenName;
+
+  /// No description provided for @cosmeticRelicAshenOmenDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A burnt mark left on the ruined stones by a steadier walker.'**
+  String get cosmeticRelicAshenOmenDesc;
+
+  /// No description provided for @cosmeticRelicOathboundMarkName.
+  ///
+  /// In en, this message translates to:
+  /// **'Oathbound Mark'**
+  String get cosmeticRelicOathboundMarkName;
+
+  /// No description provided for @cosmeticRelicOathboundMarkDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A sealed promise carved into bone — kept across many small victories.'**
+  String get cosmeticRelicOathboundMarkDesc;
+
+  /// No description provided for @cosmeticRelicDeepEmberCoreName.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep Ember Core'**
+  String get cosmeticRelicDeepEmberCoreName;
+
+  /// No description provided for @cosmeticRelicDeepEmberCoreDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A coal that still burns after a million careful steps in the deep.'**
+  String get cosmeticRelicDeepEmberCoreDesc;
+
+  /// No description provided for @cosmeticRelicSummitFeatherName.
+  ///
+  /// In en, this message translates to:
+  /// **'Summit Feather'**
+  String get cosmeticRelicSummitFeatherName;
+
+  /// No description provided for @cosmeticRelicSummitFeatherDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Found on the wind only by those who cross every threshold.'**
+  String get cosmeticRelicSummitFeatherDesc;
+
+  /// No description provided for @cosmeticRelicStormcrestPlumeName.
+  ///
+  /// In en, this message translates to:
+  /// **'Stormcrest Plume'**
+  String get cosmeticRelicStormcrestPlumeName;
+
+  /// No description provided for @cosmeticRelicStormcrestPlumeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A feather marked by a year of weekly storms outwalked.'**
+  String get cosmeticRelicStormcrestPlumeDesc;
+
+  /// No description provided for @cosmeticRelicDragonrockHeartName.
+  ///
+  /// In en, this message translates to:
+  /// **'Dragonrock Heart'**
+  String get cosmeticRelicDragonrockHeartName;
+
+  /// No description provided for @cosmeticRelicDragonrockHeartDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The forge-warm core of the mountain itself, given only to those who finish the trial.'**
+  String get cosmeticRelicDragonrockHeartDesc;
+
   /// No description provided for @cosmeticFrameDisciplineName.
   ///
   /// In en, this message translates to:
@@ -5198,6 +5306,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reach level 100 and complete 250 quests.'**
   String get cosmeticRelicDragonrockCrownUnlockHint;
+
+  /// No description provided for @cosmeticRelicWarmKindlingUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 3 daily quests.'**
+  String get cosmeticRelicWarmKindlingUnlockHint;
+
+  /// No description provided for @cosmeticRelicMoonlitFoxgloveUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay active for 7 days.'**
+  String get cosmeticRelicMoonlitFoxgloveUnlockHint;
+
+  /// No description provided for @cosmeticRelicWildwoodCharmUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 7 daily quests.'**
+  String get cosmeticRelicWildwoodCharmUnlockHint;
+
+  /// No description provided for @cosmeticRelicAshenOmenUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the weekly activity rule 4 times.'**
+  String get cosmeticRelicAshenOmenUnlockHint;
+
+  /// No description provided for @cosmeticRelicOathboundMarkUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 10 combo quests.'**
+  String get cosmeticRelicOathboundMarkUnlockHint;
+
+  /// No description provided for @cosmeticRelicDeepEmberCoreUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk 1,000,000 total steps.'**
+  String get cosmeticRelicDeepEmberCoreUnlockHint;
+
+  /// No description provided for @cosmeticRelicSummitFeatherUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 100 triple combo quests.'**
+  String get cosmeticRelicSummitFeatherUnlockHint;
+
+  /// No description provided for @cosmeticRelicStormcrestPlumeUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the weekly activity rule 52 times.'**
+  String get cosmeticRelicStormcrestPlumeUnlockHint;
+
+  /// No description provided for @cosmeticRelicDragonrockHeartUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the Dragonrock Trial.'**
+  String get cosmeticRelicDragonrockHeartUnlockHint;
 
   /// No description provided for @cosmeticCompanionEmberSpriteUnlockHint.
   ///

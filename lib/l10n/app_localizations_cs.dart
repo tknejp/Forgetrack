@@ -2210,6 +2210,69 @@ class AppLocalizationsCs extends AppLocalizations {
       'Závěrečná koruna Dračí skály — důkaz mistrovství v questech i dokončené cesty.';
 
   @override
+  String get cosmeticRelicWarmKindlingName => 'Hřejivé třísky';
+
+  @override
+  String get cosmeticRelicWarmKindlingDesc =>
+      'Malý svazek suchého troudu nasbíraný před druhým východem slunce.';
+
+  @override
+  String get cosmeticRelicMoonlitFoxgloveName => 'Měsíční náprstník';
+
+  @override
+  String get cosmeticRelicMoonlitFoxgloveDesc =>
+      'Bledá květina, která se otevírá jen poutníkům, co nezastavují.';
+
+  @override
+  String get cosmeticRelicWildwoodCharmName => 'Lesní amulet';
+
+  @override
+  String get cosmeticRelicWildwoodCharmDesc =>
+      'Talisman spletený z lesních trav a drobných ustálených vítězství.';
+
+  @override
+  String get cosmeticRelicAshenOmenName => 'Popelná věštba';
+
+  @override
+  String get cosmeticRelicAshenOmenDesc =>
+      'Spálená stopa v kamení rozvalin, kterou nechal ten, kdo už neselhává.';
+
+  @override
+  String get cosmeticRelicOathboundMarkName => 'Slibem stvrzená pečeť';
+
+  @override
+  String get cosmeticRelicOathboundMarkDesc =>
+      'Slib vyrytý do kosti — dodržen mnoha drobnými vítězstvími.';
+
+  @override
+  String get cosmeticRelicDeepEmberCoreName => 'Žhavé jádro';
+
+  @override
+  String get cosmeticRelicDeepEmberCoreDesc =>
+      'Uhlík, který stále hoří po milionu opatrných kroků v hlubinách.';
+
+  @override
+  String get cosmeticRelicSummitFeatherName => 'Vrcholové pero';
+
+  @override
+  String get cosmeticRelicSummitFeatherDesc =>
+      'Vítr ho přinese jen těm, co překročili každý práh.';
+
+  @override
+  String get cosmeticRelicStormcrestPlumeName => 'Bouřné péro';
+
+  @override
+  String get cosmeticRelicStormcrestPlumeDesc =>
+      'Pero značené rokem překonaných týdenních bouří.';
+
+  @override
+  String get cosmeticRelicDragonrockHeartName => 'Srdce Dračí skály';
+
+  @override
+  String get cosmeticRelicDragonrockHeartDesc =>
+      'Žhavé jádro samotné hory, dáno jen těm, kdo dokončí Dragonrock Trial.';
+
+  @override
   String get cosmeticFrameDisciplineName => 'Plamen disciplíny';
 
   @override
@@ -2891,6 +2954,37 @@ class AppLocalizationsCs extends AppLocalizations {
   @override
   String get cosmeticRelicDragonrockCrownUnlockHint =>
       'Dosáhni úrovně 100 a dokonči 250 úkolů.';
+
+  @override
+  String get cosmeticRelicWarmKindlingUnlockHint => 'Splň 3 denní úkoly.';
+
+  @override
+  String get cosmeticRelicMoonlitFoxgloveUnlockHint => 'Buď aktivní 7 dní.';
+
+  @override
+  String get cosmeticRelicWildwoodCharmUnlockHint => 'Splň 7 denních úkolů.';
+
+  @override
+  String get cosmeticRelicAshenOmenUnlockHint => 'Splň týdenní aktivitu 4×.';
+
+  @override
+  String get cosmeticRelicOathboundMarkUnlockHint => 'Splň 10 kombo úkolů.';
+
+  @override
+  String get cosmeticRelicDeepEmberCoreUnlockHint =>
+      'Naber 1 000 000 kroků celkem.';
+
+  @override
+  String get cosmeticRelicSummitFeatherUnlockHint =>
+      'Splň 100 trojitých kombo úkolů.';
+
+  @override
+  String get cosmeticRelicStormcrestPlumeUnlockHint =>
+      'Splň týdenní aktivitu 52×.';
+
+  @override
+  String get cosmeticRelicDragonrockHeartUnlockHint =>
+      'Dokonči Dragonrock Trial.';
 
   @override
   String get cosmeticCompanionEmberSpriteUnlockHint =>
