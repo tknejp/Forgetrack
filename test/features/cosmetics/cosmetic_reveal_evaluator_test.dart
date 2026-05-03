@@ -67,8 +67,8 @@ void main() {
     });
 
     test('unlocked item with compound hidden rule does not show as partial', () {
-      // relic_dragonrock_crown has isHidden:true; once owned → unlocked.
-      const id = 'relic_dragonrock_crown';
+      // companion_dragonling has isHidden:true; once owned → unlocked.
+      const id = 'companion_dragonling';
       final results = _evaluate(owned: {id});
       expect(results[id]?.state, CosmeticRevealState.unlocked);
     });
@@ -185,18 +185,6 @@ void main() {
       expect(result.state, CosmeticRevealState.partial);
       expect(result.satisfiedConditions, 1);
       expect(result.totalConditions, 3);
-    });
-
-    test('relic_dragonrock_crown has no Tier-2 rule and returns visibleLocked', () {
-      // Tier-2 rule for relic_dragonrock_crown was removed in Phase 5.
-      // It remains in the catalog (legacy cleanup is Phase 6) and falls to
-      // visibleLocked via the Tier-1 path.
-      const id = 'relic_dragonrock_crown';
-      final results = _evaluate(
-        snapshot: _snapshot(level: 100, totalQuests: 100),
-        owned: {},
-      );
-      expect(results[id]?.state, CosmeticRevealState.visibleLocked);
     });
 
     test('partial satisfiedConditions + totalConditions are correct', () {

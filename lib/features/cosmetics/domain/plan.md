@@ -1029,15 +1029,22 @@ achievement rewards (Tier-1). Existing unlocks are preserved.
 
 ## Phase 6 — Legacy Cleanup + UI
 
-**Status:** ⏸️ Not Started
+**Status:** ⏸️ Not Started (6a done)
 **Estimated scope:** Medium (UI work)
 **Dependencies:** Fáze 5 (companion rules musí být na nových IDs)
 
-### Goal
+### Sub-fáze 6a: Catalog legacy removal
 
-Vyčistit reference na legacy IDs z aktivních cest. Implementovat UI checklist pro companions ukazující required relics, achievement podmínky a level gate. Implementovat reveal policy.
+**Status:** ✅ Done (2026-05-03) — clean-code direction, no real users
 
-### Sub-fáze 6a: Catalog legacy handling
+Removed from catalog + ARB (both EN and CS) + all test references:
+`relic_old_compass`, `relic_pilgrim_cloak`, `relic_old_gate_key`,
+`relic_dragon_crown`, `relic_dragonrock_crown`, `relic_trail_compass`
+
+No backward compat logic added (no users to migrate).
+Grep `lib/` shows zero references to all removed IDs.
+
+### Sub-fáze 6a (original plan, superseded):
 
 **Files affected:**
 

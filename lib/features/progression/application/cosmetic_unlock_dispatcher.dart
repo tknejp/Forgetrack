@@ -10,7 +10,7 @@ import 'progression_engine.dart';
 const _log = AppLogger('COSMETICS', scope: 'dispatch');
 
 /// Three is more than enough for the depth of compound chains in the current
-/// catalog (the longest is two cosmetics deep — e.g. relic_dragonrock_crown
+/// catalog (the longest is two cosmetics deep — e.g. relic_dragon_scale
 /// → companion_dragonling). Bounding iteration keeps log noise + runtime in
 /// check.
 const int _kMaxTier2Iterations = 3;

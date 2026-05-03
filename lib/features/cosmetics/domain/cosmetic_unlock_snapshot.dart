@@ -8,7 +8,7 @@
 /// engine cannot express today.
 ///
 /// `level` and `ownedCosmeticIds` are present for compound rules
-/// (e.g. "level 100 AND owns relic_dragonrock_crown").
+/// (e.g. "level 100 AND owns relic_dragon_scale").
 class CosmeticUnlockSnapshot {
   const CosmeticUnlockSnapshot({
     required this.level,

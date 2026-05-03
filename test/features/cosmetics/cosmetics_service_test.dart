@@ -109,7 +109,7 @@ void main() {
       );
       await service.unlock(
         uid,
-        'relic_old_compass',
+        'relic_campfire_spark',
         sourceType: CosmeticUnlockSource.manual.name,
       );
 

@@ -129,30 +129,6 @@ class CosmeticCatalog {
     // Relics
     // -------------------------------------------------------------------------
 
-    CosmeticDefinition(
-      id: 'relic_old_compass',
-      type: CosmeticType.relic,
-      rarity: CosmeticRarity.common,
-      region: CosmeticRegion.forestTrail,
-      name: (l10n) => l10n.cosmeticRelicOldCompassName,
-      description: (l10n) => l10n.cosmeticRelicOldCompassDesc,
-      assetKey: 'cosmetics.relics.old_compass',
-      previewAssetKey: 'cosmetics.relics.old_compass',
-      sortOrder: 300,
-    ),
-
-    CosmeticDefinition(
-      id: 'relic_old_gate_key',
-      type: CosmeticType.relic,
-      rarity: CosmeticRarity.epic,
-      region: CosmeticRegion.ruinedPass,
-      name: (l10n) => l10n.cosmeticRelicOldGateKeyName,
-      description: (l10n) => l10n.cosmeticRelicOldGateKeyDesc,
-      assetKey: 'cosmetics.relics.old_gate_key',
-      previewAssetKey: 'cosmetics.relics.old_gate_key',
-      sortOrder: 310,
-    ),
-
     // -------------------------------------------------------------------------
     // Backgrounds
     // -------------------------------------------------------------------------
@@ -531,30 +507,6 @@ class CosmeticCatalog {
       sortOrder: 325,
     ),
     CosmeticDefinition(
-      id: 'relic_pilgrim_cloak',
-      type: CosmeticType.relic,
-      rarity: CosmeticRarity.common,
-      region: CosmeticRegion.forestTrail,
-      name: (l10n) => l10n.cosmeticRelicPilgrimCloakName,
-      description: (l10n) => l10n.cosmeticRelicPilgrimCloakDesc,
-      unlockHint: (l10n) => l10n.cosmeticRelicPilgrimCloakUnlockHint,
-      assetKey: 'cosmetics.relics.pilgrim_cloak',
-      previewAssetKey: 'cosmetics.relics.pilgrim_cloak',
-      sortOrder: 330,
-    ),
-    CosmeticDefinition(
-      id: 'relic_trail_compass',
-      type: CosmeticType.relic,
-      rarity: CosmeticRarity.rare,
-      region: CosmeticRegion.forestTrail,
-      name: (l10n) => l10n.cosmeticRelicTrailCompassName,
-      description: (l10n) => l10n.cosmeticRelicTrailCompassDesc,
-      unlockHint: (l10n) => l10n.cosmeticRelicTrailCompassUnlockHint,
-      assetKey: 'cosmetics.relics.trail_compass',
-      previewAssetKey: 'cosmetics.relics.trail_compass',
-      sortOrder: 340,
-    ),
-    CosmeticDefinition(
       id: 'relic_ancient_root',
       type: CosmeticType.relic,
       rarity: CosmeticRarity.rare,
@@ -718,30 +670,6 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.relics.dragon_scale',
       previewAssetKey: 'cosmetics.relics.dragon_scale',
       sortOrder: 397,
-    ),
-    CosmeticDefinition(
-      id: 'relic_dragon_crown',
-      type: CosmeticType.relic,
-      rarity: CosmeticRarity.legendary,
-      region: CosmeticRegion.dragonMountains,
-      name: (l10n) => l10n.cosmeticRelicDragonCrownName,
-      description: (l10n) => l10n.cosmeticRelicDragonCrownDesc,
-      unlockHint: (l10n) => l10n.cosmeticRelicDragonCrownUnlockHint,
-      assetKey: 'cosmetics.relics.dragon_crown',
-      previewAssetKey: 'cosmetics.relics.dragon_crown',
-      sortOrder: 398,
-    ),
-    CosmeticDefinition(
-      id: 'relic_dragonrock_crown',
-      type: CosmeticType.relic,
-      rarity: CosmeticRarity.legendary,
-      region: CosmeticRegion.dragonrockFortress,
-      name: (l10n) => l10n.cosmeticRelicDragonrockCrownName,
-      description: (l10n) => l10n.cosmeticRelicDragonrockCrownDesc,
-      unlockHint: (l10n) => l10n.cosmeticRelicDragonrockCrownUnlockHint,
-      assetKey: 'cosmetics.relics.dragonrock_crown',
-      previewAssetKey: 'cosmetics.relics.dragonrock_crown',
-      sortOrder: 399,
     ),
     CosmeticDefinition(
       id: 'relic_summit_feather',
