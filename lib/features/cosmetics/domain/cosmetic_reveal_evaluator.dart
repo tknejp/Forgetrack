@@ -21,12 +21,17 @@ import 'cosmetic_unlock_snapshot.dart';
 ///    because they have no entry in [kCosmeticUnlockRules]. The player can see
 ///    the name and the generic unlock hint.
 /// 4. **hidden (??? placeholder)** — all matching rules have `isHidden: true`
-///    AND zero conditions are currently satisfied. Prestige/compound rewards
-///    the player hasn't made any meaningful progress toward.
-/// 5. **partial** — all matching rules have `isHidden: true` AND the player
+///    AND zero conditions are satisfied AND (for companions) the player's level
+///    is more than 10 levels below the companion's level gate. Prestige/compound
+///    rewards the player hasn't made any meaningful progress toward.
+/// 5. **visibleLocked (companion teaser)** — companion with `isHidden: true`,
+///    zero conditions satisfied, but player level ≥ `minLevel − 10`. Shows the
+///    companion name and full requirements checklist so nearby players know what
+///    to work toward.
+/// 6. **partial** — all matching rules have `isHidden: true` AND the player
 ///    has satisfied at least one (but not all) conditions of the best-matching
-///    rule. Shows "{satisfied}/{total} conditions met" without revealing exact
-///    remaining conditions.
+///    rule. Shows "{satisfied}/{total} conditions met" with a requirements
+///    checklist for companion cosmetics.
 ///
 /// Partial reveal is only meaningful for compound rules with genuinely
 /// independent conditions. Rules that are NOT suitable for partial reveal
@@ -88,8 +93,7 @@ class CosmeticRevealEvaluator {
       );
     }
 
-    // 4. Any non-hidden rule → always visible locked (e.g. companion_ember_sprite
-    //    with OR-style rules, frame_balance with perfectPeriod).
+    // 4. Any non-hidden rule → always visible locked.
     if (matchingRules.any((r) => !r.isHidden)) {
       return CosmeticRevealResult(
         cosmeticId: def.id,
@@ -102,7 +106,8 @@ class CosmeticRevealEvaluator {
     //    satisfied. Break ties by preferring the rule with fewer total
     //    conditions (highest progress ratio = closest to unlock).
     int bestSatisfied = 0;
-    int bestTotal = 1;
+    int bestTotal = 999; // larger than any rule's condition count — first rule always wins first pass
+    CosmeticUnlockRule? bestRule;
     for (final rule in matchingRules) {
       final satisfied = rule.satisfiedCount(snapshot);
       final total = rule.conditions.length;
@@ -110,10 +115,23 @@ class CosmeticRevealEvaluator {
           (satisfied == bestSatisfied && total < bestTotal)) {
         bestSatisfied = satisfied;
         bestTotal = total;
+        bestRule = rule;
       }
     }
 
     if (bestSatisfied == 0) {
+      // Companion-specific teaser: reveal name + checklist once player is
+      // within 10 levels of the companion's level gate.
+      if (def.type == CosmeticType.companion && bestRule != null) {
+        final minLevel = _extractMinLevel(bestRule);
+        if (minLevel != null && snapshot.level >= minLevel - 10) {
+          return CosmeticRevealResult(
+            cosmeticId: def.id,
+            state: CosmeticRevealState.visibleLocked,
+            conditionRows: _buildConditionRows(bestRule, snapshot),
+          );
+        }
+      }
       return CosmeticRevealResult(
         cosmeticId: def.id,
         state: CosmeticRevealState.hidden,
@@ -125,6 +143,33 @@ class CosmeticRevealEvaluator {
       state: CosmeticRevealState.partial,
       satisfiedConditions: bestSatisfied,
       totalConditions: bestTotal,
+      conditionRows: def.type == CosmeticType.companion && bestRule != null
+          ? _buildConditionRows(bestRule, snapshot)
+          : null,
     );
+  }
+
+  /// Extracts the required level from a rule's `level_at_least_N` condition.
+  static int? _extractMinLevel(CosmeticUnlockRule rule) {
+    const prefix = 'level_at_least_';
+    for (final cond in rule.conditions) {
+      if (cond.id.startsWith(prefix)) {
+        return int.tryParse(cond.id.substring(prefix.length));
+      }
+    }
+    return null;
+  }
+
+  /// Builds a checklist row for every condition in [rule].
+  static List<CosmeticRevealConditionRow> _buildConditionRows(
+    CosmeticUnlockRule rule,
+    CosmeticUnlockSnapshot snapshot,
+  ) {
+    return rule.conditions
+        .map((cond) => CosmeticRevealConditionRow(
+              conditionId: cond.id,
+              met: cond.test(snapshot),
+            ))
+        .toList(growable: false);
   }
 }

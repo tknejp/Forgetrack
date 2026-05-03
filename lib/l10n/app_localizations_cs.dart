@@ -2037,13 +2037,6 @@ class AppLocalizationsCs extends AppLocalizations {
       'Vyvojarske pozadi. Grant pres DevTools.';
 
   @override
-  String get cosmeticRelicOldCompassName => 'Starý kompas';
-
-  @override
-  String get cosmeticRelicOldCompassDesc =>
-      'Mosazný kompas, jehož střelka občas ukazuje jinam, než by měla.';
-
-  @override
   String get cosmeticBackgroundForestTrailName => 'Lesní stezka';
 
   @override
@@ -2063,13 +2056,6 @@ class AppLocalizationsCs extends AppLocalizations {
   @override
   String get cosmeticFrameRuinedBronzeDesc =>
       'A patina-coated frame pulled from ancient ruins.';
-
-  @override
-  String get cosmeticRelicOldGateKeyName => 'Klíč od staré brány';
-
-  @override
-  String get cosmeticRelicOldGateKeyDesc =>
-      'Těžký klíč, jehož zámek už dávno neexistuje.';
 
   @override
   String get cosmeticBackgroundCampName => 'Tábor poutníků';
@@ -2212,20 +2198,6 @@ class AppLocalizationsCs extends AppLocalizations {
       'První uhlík z první noci na cestě.';
 
   @override
-  String get cosmeticRelicPilgrimCloakName => 'Plášť poutníka';
-
-  @override
-  String get cosmeticRelicPilgrimCloakDesc =>
-      'Cestou opotřebená vlna, která už za sebou má první týden putování.';
-
-  @override
-  String get cosmeticRelicTrailCompassName => 'Kompas lesní stezky';
-
-  @override
-  String get cosmeticRelicTrailCompassDesc =>
-      'Malý lesní kompas za splnění sedmi denních questů.';
-
-  @override
   String get cosmeticRelicAncientRootName => 'Kořen starého lesa';
 
   @override
@@ -2287,20 +2259,6 @@ class AppLocalizationsCs extends AppLocalizations {
   @override
   String get cosmeticRelicDragonScaleDesc =>
       'Černá šupina, jejíž povrch sálá tichým žárem.';
-
-  @override
-  String get cosmeticRelicDragonCrownName => 'Dračí koruna';
-
-  @override
-  String get cosmeticRelicDragonCrownDesc =>
-      'Čelenka z dračích zubů a železa za 250 splněných questů.';
-
-  @override
-  String get cosmeticRelicDragonrockCrownName => 'Koruna Dračí skály';
-
-  @override
-  String get cosmeticRelicDragonrockCrownDesc =>
-      'Závěrečná koruna Dračí skály — důkaz mistrovství v questech i dokončené cesty.';
 
   @override
   String get cosmeticRelicWarmKindlingName => 'Hřejivé třísky';
@@ -2545,6 +2503,11 @@ class AppLocalizationsCs extends AppLocalizations {
   @override
   String cosmeticPartialProgress(int completed, int total) {
     return '$completed/$total podmínek splněno';
+  }
+
+  @override
+  String cosmeticCompanionLevelGate(int level) {
+    return 'Dosáhni úrovně $level';
   }
 
   @override
@@ -2998,18 +2961,8 @@ class AppLocalizationsCs extends AppLocalizations {
   String get cosmeticEmblemDragonrockEmblemUnlockHint => 'Dosáhni úrovně 100.';
 
   @override
-  String get cosmeticRelicOldGateKeyUnlockHint => 'Dosáhni úrovně 15.';
-
-  @override
   String get cosmeticRelicCampfireSparkUnlockHint =>
       'Dokonči svůj první denní úkol.';
-
-  @override
-  String get cosmeticRelicPilgrimCloakUnlockHint =>
-      'Buď aktivní po dobu 7 dní.';
-
-  @override
-  String get cosmeticRelicTrailCompassUnlockHint => 'Dokonči 7 denních úkolů.';
 
   @override
   String get cosmeticRelicAncientRootUnlockHint =>
@@ -3040,13 +2993,6 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get cosmeticRelicDragonScaleUnlockHint => 'Dosáhni úrovně 85.';
-
-  @override
-  String get cosmeticRelicDragonCrownUnlockHint => 'Dokonči celkem 250 úkolů.';
-
-  @override
-  String get cosmeticRelicDragonrockCrownUnlockHint =>
-      'Dosáhni úrovně 100 a dokonči 250 úkolů.';
 
   @override
   String get cosmeticRelicWarmKindlingUnlockHint => 'Splň 3 denní úkoly.';

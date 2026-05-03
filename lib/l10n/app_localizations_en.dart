@@ -2042,13 +2042,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Developer-only background. Grant via DevTools.';
 
   @override
-  String get cosmeticRelicOldCompassName => 'Old Compass';
-
-  @override
-  String get cosmeticRelicOldCompassDesc =>
-      'A brass compass whose needle sometimes points the wrong way.';
-
-  @override
   String get cosmeticBackgroundForestTrailName => 'Forest Trail';
 
   @override
@@ -2068,13 +2061,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cosmeticFrameRuinedBronzeDesc =>
       'A patina-coated frame pulled from ancient ruins.';
-
-  @override
-  String get cosmeticRelicOldGateKeyName => 'Old Gate Key';
-
-  @override
-  String get cosmeticRelicOldGateKeyDesc =>
-      'A heavy key whose lock no longer exists.';
 
   @override
   String get cosmeticBackgroundCampName => 'Pilgrim Camp';
@@ -2217,20 +2203,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'The first ember from the first night out.';
 
   @override
-  String get cosmeticRelicPilgrimCloakName => 'Pilgrim Cloak';
-
-  @override
-  String get cosmeticRelicPilgrimCloakDesc =>
-      'Travel-worn wool that has already seen one full week of the road.';
-
-  @override
-  String get cosmeticRelicTrailCompassName => 'Trail Compass';
-
-  @override
-  String get cosmeticRelicTrailCompassDesc =>
-      'A small forest compass earned by completing seven daily quests.';
-
-  @override
   String get cosmeticRelicAncientRootName => 'Ancient Root';
 
   @override
@@ -2292,20 +2264,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cosmeticRelicDragonScaleDesc =>
       'A black scale with a faint heat under its surface.';
-
-  @override
-  String get cosmeticRelicDragonCrownName => 'Dragon Crown';
-
-  @override
-  String get cosmeticRelicDragonCrownDesc =>
-      'A circlet of dragon-tooth iron earned across two hundred and fifty quests.';
-
-  @override
-  String get cosmeticRelicDragonrockCrownName => 'Dragonrock Crown';
-
-  @override
-  String get cosmeticRelicDragonrockCrownDesc =>
-      'The endgame crown of Dragonrock — proof of both quest mastery and a finished climb.';
 
   @override
   String get cosmeticRelicWarmKindlingName => 'Warm Kindling';
@@ -2551,6 +2509,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String cosmeticPartialProgress(int completed, int total) {
     return '$completed/$total conditions met';
+  }
+
+  @override
+  String cosmeticCompanionLevelGate(int level) {
+    return 'Reach level $level';
   }
 
   @override
@@ -3004,17 +2967,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cosmeticEmblemDragonrockEmblemUnlockHint => 'Reach level 100.';
 
   @override
-  String get cosmeticRelicOldGateKeyUnlockHint => 'Reach level 15.';
-
-  @override
   String get cosmeticRelicCampfireSparkUnlockHint =>
       'Complete your first daily quest.';
-
-  @override
-  String get cosmeticRelicPilgrimCloakUnlockHint => 'Stay active for 7 days.';
-
-  @override
-  String get cosmeticRelicTrailCompassUnlockHint => 'Complete 7 daily quests.';
 
   @override
   String get cosmeticRelicAncientRootUnlockHint =>
@@ -3045,13 +2999,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cosmeticRelicDragonScaleUnlockHint => 'Reach level 85.';
-
-  @override
-  String get cosmeticRelicDragonCrownUnlockHint => 'Complete 250 quests.';
-
-  @override
-  String get cosmeticRelicDragonrockCrownUnlockHint =>
-      'Reach level 100 and complete 250 quests.';
 
   @override
   String get cosmeticRelicWarmKindlingUnlockHint => 'Complete 3 daily quests.';

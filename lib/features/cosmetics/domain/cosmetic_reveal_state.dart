@@ -22,16 +22,39 @@ enum CosmeticRevealState {
   partial,
 }
 
+/// A single row in a companion unlock requirements checklist.
+///
+/// [conditionId] is the stable id from [CosmeticUnlockCondition.id]:
+///   - `'level_at_least_N'` for a level gate
+///   - `'owns_<cosmeticId>'` for a relic ownership requirement
+///
+/// The UI translates [conditionId] to a localised label; the domain carries
+/// only the raw id so the evaluator stays free of Flutter/l10n imports.
+class CosmeticRevealConditionRow {
+  const CosmeticRevealConditionRow({
+    required this.conditionId,
+    required this.met,
+  });
+
+  final String conditionId;
+  final bool met;
+}
+
 /// Result returned by [CosmeticRevealEvaluator] for a single cosmetic.
 ///
 /// Only [satisfiedConditions] and [totalConditions] are meaningful when
 /// [state] is [CosmeticRevealState.partial]; they are zero otherwise.
+///
+/// [conditionRows] is populated for companion cosmetics whose state is
+/// [CosmeticRevealState.visibleLocked] or [CosmeticRevealState.partial] —
+/// it drives the requirements checklist in the details sheet.
 class CosmeticRevealResult {
   const CosmeticRevealResult({
     required this.cosmeticId,
     required this.state,
     this.satisfiedConditions = 0,
     this.totalConditions = 0,
+    this.conditionRows,
   });
 
   final String cosmeticId;
@@ -42,6 +65,10 @@ class CosmeticRevealResult {
 
   /// Total number of conditions for the best-matching rule.
   final int totalConditions;
+
+  /// Per-condition checklist rows. Non-null for companion cosmetics when
+  /// [state] is [visibleLocked] or [partial].
+  final List<CosmeticRevealConditionRow>? conditionRows;
 
   @override
   String toString() =>

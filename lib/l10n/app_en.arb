@@ -1405,6 +1405,8 @@
   "cosmeticHiddenUnlockCondition": "Unlock condition not yet revealed.",
   "cosmeticPartialProgress": "{completed}/{total} conditions met",
   "@cosmeticPartialProgress": { "placeholders": { "completed": { "type": "int" }, "total": { "type": "int" } } },
+  "cosmeticCompanionLevelGate": "Reach level {level}",
+  "@cosmeticCompanionLevelGate": { "placeholders": { "level": { "type": "int" } } },
 
   "cosmeticRarityCommon": "Common",
   "cosmeticRarityRare": "Rare",

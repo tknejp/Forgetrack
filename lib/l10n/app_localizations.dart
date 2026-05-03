@@ -3752,18 +3752,6 @@ abstract class AppLocalizations {
   /// **'Developer-only background. Grant via DevTools.'**
   String get cosmeticBackgroundDevOnlyDesc;
 
-  /// No description provided for @cosmeticRelicOldCompassName.
-  ///
-  /// In en, this message translates to:
-  /// **'Old Compass'**
-  String get cosmeticRelicOldCompassName;
-
-  /// No description provided for @cosmeticRelicOldCompassDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'A brass compass whose needle sometimes points the wrong way.'**
-  String get cosmeticRelicOldCompassDesc;
-
   /// No description provided for @cosmeticBackgroundForestTrailName.
   ///
   /// In en, this message translates to:
@@ -3799,18 +3787,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A patina-coated frame pulled from ancient ruins.'**
   String get cosmeticFrameRuinedBronzeDesc;
-
-  /// No description provided for @cosmeticRelicOldGateKeyName.
-  ///
-  /// In en, this message translates to:
-  /// **'Old Gate Key'**
-  String get cosmeticRelicOldGateKeyName;
-
-  /// No description provided for @cosmeticRelicOldGateKeyDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'A heavy key whose lock no longer exists.'**
-  String get cosmeticRelicOldGateKeyDesc;
 
   /// No description provided for @cosmeticBackgroundCampName.
   ///
@@ -4052,30 +4028,6 @@ abstract class AppLocalizations {
   /// **'The first ember from the first night out.'**
   String get cosmeticRelicCampfireSparkDesc;
 
-  /// No description provided for @cosmeticRelicPilgrimCloakName.
-  ///
-  /// In en, this message translates to:
-  /// **'Pilgrim Cloak'**
-  String get cosmeticRelicPilgrimCloakName;
-
-  /// No description provided for @cosmeticRelicPilgrimCloakDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Travel-worn wool that has already seen one full week of the road.'**
-  String get cosmeticRelicPilgrimCloakDesc;
-
-  /// No description provided for @cosmeticRelicTrailCompassName.
-  ///
-  /// In en, this message translates to:
-  /// **'Trail Compass'**
-  String get cosmeticRelicTrailCompassName;
-
-  /// No description provided for @cosmeticRelicTrailCompassDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'A small forest compass earned by completing seven daily quests.'**
-  String get cosmeticRelicTrailCompassDesc;
-
   /// No description provided for @cosmeticRelicAncientRootName.
   ///
   /// In en, this message translates to:
@@ -4183,30 +4135,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A black scale with a faint heat under its surface.'**
   String get cosmeticRelicDragonScaleDesc;
-
-  /// No description provided for @cosmeticRelicDragonCrownName.
-  ///
-  /// In en, this message translates to:
-  /// **'Dragon Crown'**
-  String get cosmeticRelicDragonCrownName;
-
-  /// No description provided for @cosmeticRelicDragonCrownDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'A circlet of dragon-tooth iron earned across two hundred and fifty quests.'**
-  String get cosmeticRelicDragonCrownDesc;
-
-  /// No description provided for @cosmeticRelicDragonrockCrownName.
-  ///
-  /// In en, this message translates to:
-  /// **'Dragonrock Crown'**
-  String get cosmeticRelicDragonrockCrownName;
-
-  /// No description provided for @cosmeticRelicDragonrockCrownDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'The endgame crown of Dragonrock — proof of both quest mastery and a finished climb.'**
-  String get cosmeticRelicDragonrockCrownDesc;
 
   /// No description provided for @cosmeticRelicWarmKindlingName.
   ///
@@ -4609,6 +4537,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{completed}/{total} conditions met'**
   String cosmeticPartialProgress(int completed, int total);
+
+  /// No description provided for @cosmeticCompanionLevelGate.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level {level}'**
+  String cosmeticCompanionLevelGate(int level);
 
   /// No description provided for @cosmeticRarityCommon.
   ///
@@ -5391,29 +5325,11 @@ abstract class AppLocalizations {
   /// **'Reach level 100.'**
   String get cosmeticEmblemDragonrockEmblemUnlockHint;
 
-  /// No description provided for @cosmeticRelicOldGateKeyUnlockHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Reach level 15.'**
-  String get cosmeticRelicOldGateKeyUnlockHint;
-
   /// No description provided for @cosmeticRelicCampfireSparkUnlockHint.
   ///
   /// In en, this message translates to:
   /// **'Complete your first daily quest.'**
   String get cosmeticRelicCampfireSparkUnlockHint;
-
-  /// No description provided for @cosmeticRelicPilgrimCloakUnlockHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Stay active for 7 days.'**
-  String get cosmeticRelicPilgrimCloakUnlockHint;
-
-  /// No description provided for @cosmeticRelicTrailCompassUnlockHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Complete 7 daily quests.'**
-  String get cosmeticRelicTrailCompassUnlockHint;
 
   /// No description provided for @cosmeticRelicAncientRootUnlockHint.
   ///
@@ -5468,18 +5384,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reach level 85.'**
   String get cosmeticRelicDragonScaleUnlockHint;
-
-  /// No description provided for @cosmeticRelicDragonCrownUnlockHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Complete 250 quests.'**
-  String get cosmeticRelicDragonCrownUnlockHint;
-
-  /// No description provided for @cosmeticRelicDragonrockCrownUnlockHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Reach level 100 and complete 250 quests.'**
-  String get cosmeticRelicDragonrockCrownUnlockHint;
 
   /// No description provided for @cosmeticRelicWarmKindlingUnlockHint.
   ///
