@@ -12,6 +12,8 @@ abstract final class CosmeticsPalette {
         return FtRarity.epic;
       case CosmeticRarity.legendary:
         return FtRarity.legendary;
+      case CosmeticRarity.mythic:
+        return FtRarity.mythic;
     }
   }
 }

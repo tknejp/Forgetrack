@@ -4352,6 +4352,12 @@ abstract class AppLocalizations {
   /// **'Legendary'**
   String get cosmeticRarityLegendary;
 
+  /// No description provided for @cosmeticRarityMythic.
+  ///
+  /// In en, this message translates to:
+  /// **'Mythic'**
+  String get cosmeticRarityMythic;
+
   /// No description provided for @celebrationCosmeticUnlockedEyebrow.
   ///
   /// In en, this message translates to:

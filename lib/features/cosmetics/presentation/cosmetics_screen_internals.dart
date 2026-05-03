@@ -140,6 +140,8 @@ String cosmeticRarityLabel(CosmeticRarity rarity) {
       return 'Epické';
     case CosmeticRarity.legendary:
       return 'Legendární';
+    case CosmeticRarity.mythic:
+      return 'Mytické';
   }
 }
 
@@ -152,6 +154,8 @@ Color cosmeticRarityColor(CosmeticRarity rarity) {
     case CosmeticRarity.epic:
       return Tokens.difficultyHard;
     case CosmeticRarity.legendary:
+      return Tokens.difficultyExtraHard;
+    case CosmeticRarity.mythic:
       return Tokens.difficultyExtraHard;
   }
 }

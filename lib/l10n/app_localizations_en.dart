@@ -2409,6 +2409,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cosmeticRarityLegendary => 'Legendary';
 
   @override
+  String get cosmeticRarityMythic => 'Mythic';
+
+  @override
   String get celebrationCosmeticUnlockedEyebrow => 'Inventory unlocked';
 
   @override

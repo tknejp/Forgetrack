@@ -25,6 +25,7 @@ enum CosmeticRarity {
   rare,
   epic,
   legendary,
+  mythic,
 }
 
 enum CosmeticRegion {

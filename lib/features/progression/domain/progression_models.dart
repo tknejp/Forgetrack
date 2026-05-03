@@ -464,6 +464,7 @@ class ProgressionAchievementDefinition {
     this.domain,
     this.windowSizeDays,
     this.relatedRuleIds = const [],
+    this.difficultyScore,
   });
 
   final String id;
@@ -477,6 +478,12 @@ class ProgressionAchievementDefinition {
   final ProgressionDomain? domain;
   final int? windowSizeDays;
   final List<String> relatedRuleIds;
+
+  /// Fine-grained difficulty (1.0–10.0) used for balancing, debug tooling,
+  /// and future UI ordering. The coarse [difficulty] enum stays as the
+  /// authoritative bucket; this is an additional dimension and may be null
+  /// for legacy entries that have not been scored yet.
+  final double? difficultyScore;
 
   String get unlockKey => 'achievement|$id';
 }

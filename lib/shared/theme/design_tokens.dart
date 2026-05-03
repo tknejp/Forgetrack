@@ -384,4 +384,8 @@ class FtRarity {
     color: Color(0xFFFFD54F),
     gradStart: Color(0xFFE0A800),
   );
+  static const mythic = FtRarity(
+    color: Color(0xFFFF6EC7),
+    gradStart: Color(0xFFB400FF),
+  );
 }

@@ -2404,6 +2404,9 @@ class AppLocalizationsCs extends AppLocalizations {
   String get cosmeticRarityLegendary => 'Legendární';
 
   @override
+  String get cosmeticRarityMythic => 'Mytické';
+
+  @override
   String get celebrationCosmeticUnlockedEyebrow => 'Odemčeno v inventáři';
 
   @override

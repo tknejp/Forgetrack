@@ -595,6 +595,8 @@ String _rarityLabel(CosmeticRarity rarity, AppLocalizations l10n) {
       return l10n.cosmeticRarityEpic;
     case CosmeticRarity.legendary:
       return l10n.cosmeticRarityLegendary;
+    case CosmeticRarity.mythic:
+      return l10n.cosmeticRarityMythic;
   }
 }
 

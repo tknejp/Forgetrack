@@ -842,5 +842,7 @@ int _rarityRank(CosmeticRarity rarity) {
       return 2;
     case CosmeticRarity.legendary:
       return 3;
+    case CosmeticRarity.mythic:
+      return 4;
   }
 }
