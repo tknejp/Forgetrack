@@ -1692,6 +1692,9 @@ class AppLocalizationsCs extends AppLocalizations {
   String get progAchievementDifficultyExtraHard => 'Extra těžké';
 
   @override
+  String get progAchievementDifficultyMythic => 'Nemožné';
+
+  @override
   String get progQuestCriterionTotalXp => 'Podle celkového XP';
 
   @override
@@ -2512,6 +2515,9 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get cosmeticRarityCommon => 'Běžné';
+
+  @override
+  String get cosmeticRarityUncommon => 'Neobvyklé';
 
   @override
   String get cosmeticRarityRare => 'Vzácné';

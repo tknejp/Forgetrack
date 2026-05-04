@@ -1696,6 +1696,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progAchievementDifficultyExtraHard => 'Extra Hard';
 
   @override
+  String get progAchievementDifficultyMythic => 'Impossible';
+
+  @override
   String get progQuestCriterionTotalXp => 'Based on total XP';
 
   @override
@@ -2518,6 +2521,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cosmeticRarityCommon => 'Common';
+
+  @override
+  String get cosmeticRarityUncommon => 'Uncommon';
 
   @override
   String get cosmeticRarityRare => 'Rare';

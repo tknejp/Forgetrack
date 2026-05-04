@@ -6,7 +6,7 @@ import '../../../../features/progression/presentation/progression_l10n.dart';
 import '../../../../features/progression/presentation/widgets/progression_level_badge.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
-import '../../../../shared/theme/ft_design_tokens.dart';
+import '../../../../shared/theme/design_tokens.dart';
 import '../../../cosmetics/config/cosmetics_config.dart';
 import '../../../cosmetics/presentation/widgets/cosmetic_equipped_chip.dart';
 import '../../application/social_provider.dart';

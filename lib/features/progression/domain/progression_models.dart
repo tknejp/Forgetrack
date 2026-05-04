@@ -49,6 +49,7 @@ enum ProgressionAchievementDifficulty {
   medium,
   hard,
   extraHard,
+  mythic,
 }
 
 enum ProgressionAchievementCriterionType {

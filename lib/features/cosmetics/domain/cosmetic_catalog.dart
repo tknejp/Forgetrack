@@ -39,7 +39,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'frame_lvl10',
       type: CosmeticType.frame,
-      rarity: CosmeticRarity.rare,
+      rarity: CosmeticRarity.uncommon,
       region: CosmeticRegion.forestTrail,
       name: (l10n) => l10n.cosmeticFrameLvl10Name,
       description: (l10n) => l10n.cosmeticFrameLvl10Desc,
@@ -51,7 +51,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'frame_lvl25',
       type: CosmeticType.frame,
-      rarity: CosmeticRarity.rare,
+      rarity: CosmeticRarity.uncommon,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticFrameLvl25Name,
       description: (l10n) => l10n.cosmeticFrameLvl25Desc,
@@ -63,7 +63,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'frame_lvl40',
       type: CosmeticType.frame,
-      rarity: CosmeticRarity.epic,
+      rarity: CosmeticRarity.rare,
       region: CosmeticRegion.dwarvenMines,
       name: (l10n) => l10n.cosmeticFrameLvl40Name,
       description: (l10n) => l10n.cosmeticFrameLvl40Desc,
@@ -99,7 +99,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'frame_lvl100',
       type: CosmeticType.frame,
-      rarity: CosmeticRarity.legendary,
+      rarity: CosmeticRarity.mythic,
       region: CosmeticRegion.dragonrockFortress,
       name: (l10n) => l10n.cosmeticFrameLvl100Name,
       description: (l10n) => l10n.cosmeticFrameLvl100Desc,
@@ -111,7 +111,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'frame_developer_tom',
       type: CosmeticType.frame,
-      rarity: CosmeticRarity.legendary,
+      rarity: CosmeticRarity.mythic,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticFrameDeveloperTomName,
       description: (l10n) => l10n.cosmeticFrameDeveloperTomDesc,
@@ -136,7 +136,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'background_forest_trail',
       type: CosmeticType.background,
-      rarity: CosmeticRarity.common,
+      rarity: CosmeticRarity.uncommon,
       region: CosmeticRegion.forestTrail,
       name: (l10n) => l10n.cosmeticBackgroundForestTrailName,
       description: (l10n) => l10n.cosmeticBackgroundForestTrailDesc,
@@ -153,7 +153,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'emblem_forest_mark',
       type: CosmeticType.emblem,
-      rarity: CosmeticRarity.rare,
+      rarity: CosmeticRarity.uncommon,
       region: CosmeticRegion.forestTrail,
       name: (l10n) => l10n.cosmeticEmblemForestMarkName,
       description: (l10n) => l10n.cosmeticEmblemForestMarkDesc,
@@ -182,7 +182,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'background_ravine',
       type: CosmeticType.background,
-      rarity: CosmeticRarity.rare,
+      rarity: CosmeticRarity.uncommon,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticBackgroundRavineName,
       description: (l10n) => l10n.cosmeticBackgroundRavineDesc,
@@ -194,7 +194,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'background_ruins',
       type: CosmeticType.background,
-      rarity: CosmeticRarity.rare,
+      rarity: CosmeticRarity.uncommon,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticBackgroundRuinsName,
       description: (l10n) => l10n.cosmeticBackgroundRuinsDesc,
@@ -206,7 +206,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'background_bridge_crossing',
       type: CosmeticType.background,
-      rarity: CosmeticRarity.epic,
+      rarity: CosmeticRarity.rare,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticBackgroundBridgeCrossingName,
       description: (l10n) => l10n.cosmeticBackgroundBridgeCrossingDesc,
@@ -218,7 +218,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'background_mines',
       type: CosmeticType.background,
-      rarity: CosmeticRarity.epic,
+      rarity: CosmeticRarity.rare,
       region: CosmeticRegion.dwarvenMines,
       name: (l10n) => l10n.cosmeticBackgroundMinesName,
       description: (l10n) => l10n.cosmeticBackgroundMinesDesc,
@@ -266,7 +266,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'background_dragonrock_fortress',
       type: CosmeticType.background,
-      rarity: CosmeticRarity.legendary,
+      rarity: CosmeticRarity.mythic,
       region: CosmeticRegion.dragonrockFortress,
       name: (l10n) => l10n.cosmeticBackgroundDragonrockFortressName,
       description: (l10n) => l10n.cosmeticBackgroundDragonrockFortressDesc,
@@ -283,7 +283,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'background_dev_altar',
       type: CosmeticType.background,
-      rarity: CosmeticRarity.legendary,
+      rarity: CosmeticRarity.mythic,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticBackgroundDevAltarName,
       description: (l10n) => l10n.cosmeticBackgroundDevOnlyDesc,
@@ -295,7 +295,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'background_dev_camp',
       type: CosmeticType.background,
-      rarity: CosmeticRarity.legendary,
+      rarity: CosmeticRarity.mythic,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticBackgroundDevCampName,
       description: (l10n) => l10n.cosmeticBackgroundDevOnlyDesc,
@@ -307,7 +307,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'background_dev_hacker',
       type: CosmeticType.background,
-      rarity: CosmeticRarity.legendary,
+      rarity: CosmeticRarity.mythic,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticBackgroundDevHackerName,
       description: (l10n) => l10n.cosmeticBackgroundDevOnlyDesc,
@@ -319,7 +319,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'background_dev_lord',
       type: CosmeticType.background,
-      rarity: CosmeticRarity.legendary,
+      rarity: CosmeticRarity.mythic,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticBackgroundDevLordName,
       description: (l10n) => l10n.cosmeticBackgroundDevOnlyDesc,
@@ -331,7 +331,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'background_dev_mines',
       type: CosmeticType.background,
-      rarity: CosmeticRarity.legendary,
+      rarity: CosmeticRarity.mythic,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticBackgroundDevMinesName,
       description: (l10n) => l10n.cosmeticBackgroundDevOnlyDesc,
@@ -343,7 +343,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'background_dev_throne',
       type: CosmeticType.background,
-      rarity: CosmeticRarity.legendary,
+      rarity: CosmeticRarity.mythic,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticBackgroundDevThroneName,
       description: (l10n) => l10n.cosmeticBackgroundDevOnlyDesc,
@@ -372,7 +372,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'emblem_ruin_sigil',
       type: CosmeticType.emblem,
-      rarity: CosmeticRarity.rare,
+      rarity: CosmeticRarity.uncommon,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticEmblemRuinSigilName,
       description: (l10n) => l10n.cosmeticEmblemRuinSigilDesc,
@@ -384,7 +384,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'emblem_gatekeeper_mark',
       type: CosmeticType.emblem,
-      rarity: CosmeticRarity.rare,
+      rarity: CosmeticRarity.uncommon,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticEmblemGatekeeperMarkName,
       description: (l10n) => l10n.cosmeticEmblemGatekeeperMarkDesc,
@@ -396,7 +396,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'emblem_mine_crest',
       type: CosmeticType.emblem,
-      rarity: CosmeticRarity.epic,
+      rarity: CosmeticRarity.rare,
       region: CosmeticRegion.dwarvenMines,
       name: (l10n) => l10n.cosmeticEmblemMineCrestName,
       description: (l10n) => l10n.cosmeticEmblemMineCrestDesc,
@@ -408,7 +408,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'emblem_underways_mark',
       type: CosmeticType.emblem,
-      rarity: CosmeticRarity.epic,
+      rarity: CosmeticRarity.rare,
       region: CosmeticRegion.dwarvenMines,
       name: (l10n) => l10n.cosmeticEmblemUnderwaysMarkName,
       description: (l10n) => l10n.cosmeticEmblemUnderwaysMarkDesc,
@@ -468,7 +468,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'emblem_dragonrock_emblem',
       type: CosmeticType.emblem,
-      rarity: CosmeticRarity.legendary,
+      rarity: CosmeticRarity.mythic,
       region: CosmeticRegion.dragonrockFortress,
       name: (l10n) => l10n.cosmeticEmblemDragonrockEmblemName,
       description: (l10n) => l10n.cosmeticEmblemDragonrockEmblemDesc,
@@ -509,7 +509,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'relic_ancient_root',
       type: CosmeticType.relic,
-      rarity: CosmeticRarity.rare,
+      rarity: CosmeticRarity.uncommon,
       region: CosmeticRegion.forestTrail,
       name: (l10n) => l10n.cosmeticRelicAncientRootName,
       description: (l10n) => l10n.cosmeticRelicAncientRootDesc,
@@ -521,7 +521,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'relic_moonlit_foxglove',
       type: CosmeticType.relic,
-      rarity: CosmeticRarity.rare,
+      rarity: CosmeticRarity.uncommon,
       region: CosmeticRegion.forestTrail,
       name: (l10n) => l10n.cosmeticRelicMoonlitFoxgloveName,
       description: (l10n) => l10n.cosmeticRelicMoonlitFoxgloveDesc,
@@ -533,7 +533,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'relic_wildwood_charm',
       type: CosmeticType.relic,
-      rarity: CosmeticRarity.rare,
+      rarity: CosmeticRarity.uncommon,
       region: CosmeticRegion.forestTrail,
       name: (l10n) => l10n.cosmeticRelicWildwoodCharmName,
       description: (l10n) => l10n.cosmeticRelicWildwoodCharmDesc,
@@ -545,7 +545,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'relic_ravine_stone',
       type: CosmeticType.relic,
-      rarity: CosmeticRarity.rare,
+      rarity: CosmeticRarity.uncommon,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticRelicRavineStoneName,
       description: (l10n) => l10n.cosmeticRelicRavineStoneDesc,
@@ -557,7 +557,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'relic_ruin_seal',
       type: CosmeticType.relic,
-      rarity: CosmeticRarity.rare,
+      rarity: CosmeticRarity.uncommon,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticRelicRuinSealName,
       description: (l10n) => l10n.cosmeticRelicRuinSealDesc,
@@ -569,7 +569,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'relic_ashen_omen',
       type: CosmeticType.relic,
-      rarity: CosmeticRarity.epic,
+      rarity: CosmeticRarity.uncommon,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticRelicAshenOmenName,
       description: (l10n) => l10n.cosmeticRelicAshenOmenDesc,
@@ -581,7 +581,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'relic_oathbound_mark',
       type: CosmeticType.relic,
-      rarity: CosmeticRarity.epic,
+      rarity: CosmeticRarity.rare,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticRelicOathboundMarkName,
       description: (l10n) => l10n.cosmeticRelicOathboundMarkDesc,
@@ -593,7 +593,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'relic_bridge_key',
       type: CosmeticType.relic,
-      rarity: CosmeticRarity.epic,
+      rarity: CosmeticRarity.rare,
       region: CosmeticRegion.dwarvenMines,
       name: (l10n) => l10n.cosmeticRelicBridgeKeyName,
       description: (l10n) => l10n.cosmeticRelicBridgeKeyDesc,
@@ -605,7 +605,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'relic_deep_ember_core',
       type: CosmeticType.relic,
-      rarity: CosmeticRarity.epic,
+      rarity: CosmeticRarity.rare,
       region: CosmeticRegion.dwarvenMines,
       name: (l10n) => l10n.cosmeticRelicDeepEmberCoreName,
       description: (l10n) => l10n.cosmeticRelicDeepEmberCoreDesc,
@@ -629,7 +629,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'relic_polar_lantern',
       type: CosmeticType.relic,
-      rarity: CosmeticRarity.legendary,
+      rarity: CosmeticRarity.epic,
       region: CosmeticRegion.frostlands,
       name: (l10n) => l10n.cosmeticRelicPolarLanternName,
       description: (l10n) => l10n.cosmeticRelicPolarLanternDesc,
@@ -640,7 +640,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'relic_frost_shard',
       type: CosmeticType.relic,
-      rarity: CosmeticRarity.legendary,
+      rarity: CosmeticRarity.epic,
       region: CosmeticRegion.frostlands,
       name: (l10n) => l10n.cosmeticRelicFrostShardName,
       description: (l10n) => l10n.cosmeticRelicFrostShardDesc,
@@ -715,7 +715,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'frame_discipline',
       type: CosmeticType.frame,
-      rarity: CosmeticRarity.epic,
+      rarity: CosmeticRarity.uncommon,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticFrameDisciplineName,
       description: (l10n) => l10n.cosmeticFrameDisciplineDesc,
@@ -727,7 +727,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'frame_endurance',
       type: CosmeticType.frame,
-      rarity: CosmeticRarity.epic,
+      rarity: CosmeticRarity.rare,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticFrameEnduranceName,
       description: (l10n) => l10n.cosmeticFrameEnduranceDesc,
@@ -763,7 +763,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'frame_balance',
       type: CosmeticType.frame,
-      rarity: CosmeticRarity.epic,
+      rarity: CosmeticRarity.rare,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticFrameBalanceName,
       description: (l10n) => l10n.cosmeticFrameBalanceDesc,
@@ -799,7 +799,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'frame_worldwalker',
       type: CosmeticType.frame,
-      rarity: CosmeticRarity.legendary,
+      rarity: CosmeticRarity.mythic,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticFrameWorldwalkerName,
       description: (l10n) => l10n.cosmeticFrameWorldwalkerDesc,
@@ -828,7 +828,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'companion_forest_fox',
       type: CosmeticType.companion,
-      rarity: CosmeticRarity.rare,
+      rarity: CosmeticRarity.uncommon,
       region: CosmeticRegion.forestTrail,
       name: (l10n) => l10n.cosmeticCompanionForestFoxName,
       description: (l10n) => l10n.cosmeticCompanionForestFoxDesc,
@@ -852,7 +852,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'companion_lantern_golem',
       type: CosmeticType.companion,
-      rarity: CosmeticRarity.epic,
+      rarity: CosmeticRarity.rare,
       region: CosmeticRegion.dwarvenMines,
       name: (l10n) => l10n.cosmeticCompanionLanternGolemName,
       description: (l10n) => l10n.cosmeticCompanionLanternGolemDesc,
@@ -888,7 +888,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'companion_dragonling',
       type: CosmeticType.companion,
-      rarity: CosmeticRarity.legendary,
+      rarity: CosmeticRarity.mythic,
       region: CosmeticRegion.dragonrockFortress,
       name: (l10n) => l10n.cosmeticCompanionDragonlingName,
       description: (l10n) => l10n.cosmeticCompanionDragonlingDesc,

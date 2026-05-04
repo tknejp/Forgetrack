@@ -836,13 +836,15 @@ int _rarityRank(CosmeticRarity rarity) {
   switch (rarity) {
     case CosmeticRarity.common:
       return 0;
-    case CosmeticRarity.rare:
+    case CosmeticRarity.uncommon:
       return 1;
-    case CosmeticRarity.epic:
+    case CosmeticRarity.rare:
       return 2;
-    case CosmeticRarity.legendary:
+    case CosmeticRarity.epic:
       return 3;
-    case CosmeticRarity.mythic:
+    case CosmeticRarity.legendary:
       return 4;
+    case CosmeticRarity.mythic:
+      return 5;
   }
 }

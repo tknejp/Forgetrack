@@ -10,6 +10,7 @@ import '../domain/cosmetic_models.dart';
 import '../domain/cosmetic_reveal_state.dart';
 import '../domain/cosmetic_unlock_rule.dart';
 import 'cosmetics_screen_internals.dart';
+import 'widgets/companion_fake_idle_preview.dart';
 
 class CosmeticDetailsSheet extends StatefulWidget {
   const CosmeticDetailsSheet({
@@ -148,12 +149,35 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                 children: [
                   if (isHidden)
                     _HiddenBadgeLarge(color: hiddenColor)
+                  else if (definition.type == CosmeticType.companion)
+                    CompanionFakeIdlePreview(
+                      width: 128,
+                      height: 128,
+                      glowColor: color,
+                      enableGlow: false,
+                      floatDistance: 2.5,
+                      minScale: 0.995,
+                      maxScale: 1.008,
+                      child: CosmeticBadge(
+                        definition: definition,
+                        assetPath: assetPath,
+                        color: color,
+                        size: 128,
+                        framed: false,
+                        glow: true,
+                        fit: BoxFit.contain,
+                        contentScale: 1.25,
+                      ),
+                    )
                   else
                     CosmeticBadge(
                       definition: definition,
                       assetPath: assetPath,
                       color: color,
                       size: 94,
+                      framed: false,
+                      glow: true,
+                      fit: BoxFit.contain,
                     ),
                   const SizedBox(width: Tokens.spaceLg),
                   Expanded(
@@ -182,7 +206,7 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                                 color: color,
                               ),
                               _TinyPill(
-                                label: cosmeticRarityLabel(definition.rarity),
+                                label: cosmeticRarityLabel(definition.rarity, l10n),
                                 color: color,
                               ),
                             ],

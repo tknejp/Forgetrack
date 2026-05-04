@@ -15,6 +15,7 @@ class ProgressionDomainTheme {
   static const Color achievementMedium = Tokens.difficultyMedium;
   static const Color achievementHard = Tokens.difficultyHard;
   static const Color achievementExtraHard = Tokens.difficultyExtraHard;
+  static const Color achievementMythic = Tokens.difficultyMythic;
 
   static Domain tokenFor(ProgressionDomain domain) {
     switch (domain) {
@@ -45,6 +46,8 @@ class ProgressionDomainTheme {
         return achievementHard;
       case ProgressionAchievementDifficulty.extraHard:
         return achievementExtraHard;
+      case ProgressionAchievementDifficulty.mythic:
+        return achievementMythic;
     }
   }
 

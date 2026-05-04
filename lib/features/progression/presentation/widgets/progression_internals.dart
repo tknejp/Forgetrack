@@ -288,5 +288,7 @@ int _difficultyRank(ProgressionAchievementDifficulty difficulty) {
       return 2;
     case ProgressionAchievementDifficulty.extraHard:
       return 3;
+    case ProgressionAchievementDifficulty.mythic:
+      return 4;
   }
 }

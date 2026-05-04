@@ -22,6 +22,7 @@ enum CosmeticType {
 
 enum CosmeticRarity {
   common,
+  uncommon,
   rare,
   epic,
   legendary,

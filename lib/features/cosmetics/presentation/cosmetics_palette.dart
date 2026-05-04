@@ -2,18 +2,20 @@ import '../../../shared/theme/design_tokens.dart';
 import '../domain/cosmetic_models.dart';
 
 abstract final class CosmeticsPalette {
-  static FtRarity forRarity(CosmeticRarity rarity) {
+  static Rarity forRarity(CosmeticRarity rarity) {
     switch (rarity) {
       case CosmeticRarity.common:
-        return FtRarity.common;
+        return Rarity.common;
+      case CosmeticRarity.uncommon:
+        return Rarity.uncommon;
       case CosmeticRarity.rare:
-        return FtRarity.rare;
+        return Rarity.rare;
       case CosmeticRarity.epic:
-        return FtRarity.epic;
+        return Rarity.epic;
       case CosmeticRarity.legendary:
-        return FtRarity.legendary;
+        return Rarity.legendary;
       case CosmeticRarity.mythic:
-        return FtRarity.mythic;
+        return Rarity.mythic;
     }
   }
 }

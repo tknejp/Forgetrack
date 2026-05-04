@@ -309,7 +309,7 @@ class _CelebrationData {
         final definition =
             cosmeticDefinitions.isEmpty ? null : cosmeticDefinitions.first;
         final palette = definition == null
-            ? FtRarity.rare
+            ? Rarity.rare
             : CosmeticsPalette.forRarity(definition.rarity);
         return _CelebrationData(
           eyebrow: l10n.celebrationCosmeticUnlockedEyebrow,
@@ -582,6 +582,8 @@ Color _difficultyColor(ProgressionAchievementDifficulty difficulty) {
       return Tokens.difficultyHard;
     case ProgressionAchievementDifficulty.extraHard:
       return Tokens.difficultyExtraHard;
+    case ProgressionAchievementDifficulty.mythic:
+      return Tokens.difficultyMythic;
   }
 }
 
@@ -589,6 +591,8 @@ String _rarityLabel(CosmeticRarity rarity, AppLocalizations l10n) {
   switch (rarity) {
     case CosmeticRarity.common:
       return l10n.cosmeticRarityCommon;
+    case CosmeticRarity.uncommon:
+      return l10n.cosmeticRarityUncommon;
     case CosmeticRarity.rare:
       return l10n.cosmeticRarityRare;
     case CosmeticRarity.epic:

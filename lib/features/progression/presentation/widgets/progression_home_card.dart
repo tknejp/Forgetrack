@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:forgetrack/shared/theme/design_tokens.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../l10n/l10n.dart';
-import '../../../../shared/theme/ft_design_tokens.dart';
 import '../../../../shared/widgets/ft_expand_chevron.dart';
 import '../../../../shared/widgets/progress_bar.dart';
 import '../../domain/progression_models.dart';

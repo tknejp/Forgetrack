@@ -1105,7 +1105,7 @@
   "progAchievementDifficultyMedium": "Medium",
   "progAchievementDifficultyHard": "Hard",
   "progAchievementDifficultyExtraHard": "Extra Hard",
-
+  "progAchievementDifficultyMythic": "Impossible",
   "progQuestCriterionTotalXp": "Based on total XP",
   "progQuestCriterionRewardCountWithRule": "Based on {rule}",
   "@progQuestCriterionRewardCountWithRule": { "placeholders": { "rule": { "type": "String" } } },
@@ -1409,6 +1409,7 @@
   "@cosmeticCompanionLevelGate": { "placeholders": { "level": { "type": "int" } } },
 
   "cosmeticRarityCommon": "Common",
+  "cosmeticRarityUncommon": "Uncommon",
   "cosmeticRarityRare": "Rare",
   "cosmeticRarityEpic": "Epic",
   "cosmeticRarityLegendary": "Legendary",

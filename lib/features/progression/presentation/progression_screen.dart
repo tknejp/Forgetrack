@@ -33,10 +33,10 @@ class ProgressionScreen extends StatefulWidget {
   final double topContentInset;
 
   @override
-  State<ProgressionScreen> createState() => _FtProgressionScreenState();
+  State<ProgressionScreen> createState() => _ProgressionScreenState();
 }
 
-class _FtProgressionScreenState extends State<ProgressionScreen> {
+class _ProgressionScreenState extends State<ProgressionScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -823,6 +823,8 @@ String _achievementDifficultyLabel(
       return l10n.progAchievementDifficultyHard;
     case ProgressionAchievementDifficulty.extraHard:
       return l10n.progAchievementDifficultyExtraHard;
+    case ProgressionAchievementDifficulty.mythic:
+      return l10n.progAchievementDifficultyMythic;
   }
 }
 
@@ -917,7 +919,7 @@ class _CosmeticsInventorySection extends StatelessWidget {
 
   static const _featuredTypes = <CosmeticType>[
     CosmeticType.frame,
-    CosmeticType.relic,
+    CosmeticType.companion,
     CosmeticType.background,
   ];
 

@@ -354,6 +354,8 @@ abstract final class JourneyAdapter {
         return l10n.progAchievementDifficultyHard;
       case ProgressionAchievementDifficulty.extraHard:
         return l10n.progAchievementDifficultyExtraHard;
+      case ProgressionAchievementDifficulty.mythic:
+        return l10n.progAchievementDifficultyMythic;
     }
   }
 

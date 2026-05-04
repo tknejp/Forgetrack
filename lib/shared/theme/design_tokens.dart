@@ -211,6 +211,7 @@ abstract final class Tokens {
   static const Color difficultyMedium = Color(0xFF60A5FA);
   static const Color difficultyHard = Color(0xFFA78BFA);
   static const Color difficultyExtraHard = Color(0xFFFBBF24);
+  static const Color difficultyMythic = Color(0xFF7A0010);
 
   // ── Domain tokens ─────────────────────────────────────────────────────────
   static const Domain steps = Domain(
@@ -362,30 +363,34 @@ class Domain {
 /// and gradStart (darker start). Defined here so widgets outside the cosmetics
 /// feature can reference rarity colors without importing cosmetics internals.
 @immutable
-class FtRarity {
+class Rarity {
   final Color color;
   final Color gradStart;
 
-  const FtRarity({required this.color, required this.gradStart});
+  const Rarity({required this.color, required this.gradStart});
 
-  static const common = FtRarity(
+  static const common = Rarity(
     color: Color(0xFF9E9E9E),
     gradStart: Color(0xFF6E6E6E),
   );
-  static const rare = FtRarity(
+  static const uncommon = Rarity(
+    color: Color(0xFF34D399),
+    gradStart: Color(0xFF10B981),
+  );
+  static const rare = Rarity(
     color: Color(0xFF58A6FF),
     gradStart: Color(0xFF1F6FEB),
   );
-  static const epic = FtRarity(
+  static const epic = Rarity(
     color: Color(0xFFB388FF),
     gradStart: Color(0xFF7B3FE4),
   );
-  static const legendary = FtRarity(
+  static const legendary = Rarity(
     color: Color(0xFFFFD54F),
     gradStart: Color(0xFFE0A800),
   );
-  static const mythic = FtRarity(
-    color: Color(0xFFFF6EC7),
-    gradStart: Color(0xFFB400FF),
+  static const mythic = Rarity(
+    color: Color(0xFFFF4B3A),
+    gradStart: Color(0xFF7A0010),
   );
 }

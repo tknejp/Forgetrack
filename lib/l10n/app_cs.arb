@@ -567,6 +567,7 @@
   "progAchievementDifficultyMedium": "Střední",
   "progAchievementDifficultyHard": "Těžké",
   "progAchievementDifficultyExtraHard": "Extra těžké",
+  "progAchievementDifficultyMythic": "Nemožné",
   "progQuestCriterionTotalRuleValueWithRule": "Podle celkového součtu: {rule}",
   "progQuestCriterionTotalRuleValueGeneric": "Podle nasbíraného součtu",
   "progQuestCriterionCurrentPeriodRuleSet": "Pro combo v aktuálním období",
@@ -845,6 +846,7 @@
   "@cosmeticCompanionLevelGate": { "placeholders": { "level": { "type": "int" } } },
 
   "cosmeticRarityCommon": "Běžné",
+  "cosmeticRarityUncommon": "Neobvyklé",
   "cosmeticRarityRare": "Vzácné",
   "cosmeticRarityEpic": "Epické",
   "cosmeticRarityLegendary": "Legendární",

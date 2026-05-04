@@ -3164,6 +3164,12 @@ abstract class AppLocalizations {
   /// **'Extra Hard'**
   String get progAchievementDifficultyExtraHard;
 
+  /// No description provided for @progAchievementDifficultyMythic.
+  ///
+  /// In en, this message translates to:
+  /// **'Impossible'**
+  String get progAchievementDifficultyMythic;
+
   /// No description provided for @progQuestCriterionTotalXp.
   ///
   /// In en, this message translates to:
@@ -4549,6 +4555,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Common'**
   String get cosmeticRarityCommon;
+
+  /// No description provided for @cosmeticRarityUncommon.
+  ///
+  /// In en, this message translates to:
+  /// **'Uncommon'**
+  String get cosmeticRarityUncommon;
 
   /// No description provided for @cosmeticRarityRare.
   ///

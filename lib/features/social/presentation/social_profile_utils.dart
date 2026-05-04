@@ -88,6 +88,8 @@ String socialDifficultyLabelForName(String diff, AppLocalizations l10n) {
       return l10n.progAchievementDifficultyHard;
     case ProgressionAchievementDifficulty.extraHard:
       return l10n.progAchievementDifficultyExtraHard;
+    case ProgressionAchievementDifficulty.mythic:
+      return l10n.progAchievementDifficultyMythic;
   }
 }
 
@@ -231,6 +233,8 @@ String friendAchievementDifficultyLabel(
       return l10n.progAchievementDifficultyHard;
     case ProgressionAchievementDifficulty.extraHard:
       return l10n.progAchievementDifficultyExtraHard;
+    case ProgressionAchievementDifficulty.mythic:
+      return l10n.progAchievementDifficultyMythic;
   }
 }
 
