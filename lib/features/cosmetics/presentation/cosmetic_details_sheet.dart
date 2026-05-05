@@ -5,10 +5,12 @@ import 'package:provider/provider.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/theme/design_tokens.dart';
 import '../application/cosmetics_provider.dart';
+import '../domain/cosmetic_catalog.dart';
 import '../domain/cosmetic_models.dart';
 import '../domain/cosmetic_reveal_state.dart';
 import '../domain/cosmetic_unlock_rule.dart';
 import 'cosmetics_screen_internals.dart';
+import 'widgets/companion_fake_idle_preview.dart';
 
 class CosmeticDetailsSheet extends StatefulWidget {
   const CosmeticDetailsSheet({
@@ -147,12 +149,35 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                 children: [
                   if (isHidden)
                     _HiddenBadgeLarge(color: hiddenColor)
+                  else if (definition.type == CosmeticType.companion)
+                    CompanionFakeIdlePreview(
+                      width: 128,
+                      height: 128,
+                      glowColor: color,
+                      enableGlow: false,
+                      floatDistance: 2.5,
+                      minScale: 0.995,
+                      maxScale: 1.008,
+                      child: CosmeticBadge(
+                        definition: definition,
+                        assetPath: assetPath,
+                        color: color,
+                        size: 128,
+                        framed: false,
+                        glow: true,
+                        fit: BoxFit.contain,
+                        contentScale: 1.25,
+                      ),
+                    )
                   else
                     CosmeticBadge(
                       definition: definition,
                       assetPath: assetPath,
                       color: color,
                       size: 94,
+                      framed: false,
+                      glow: true,
+                      fit: BoxFit.contain,
                     ),
                   const SizedBox(width: Tokens.spaceLg),
                   Expanded(
@@ -181,7 +206,7 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                                 color: color,
                               ),
                               _TinyPill(
-                                label: cosmeticRarityLabel(definition.rarity),
+                                label: cosmeticRarityLabel(definition.rarity, l10n),
                                 color: color,
                               ),
                             ],
@@ -230,6 +255,19 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                     height: 1.45,
                     fontWeight: FontWeight.w500,
                   ),
+                ),
+              ],
+
+              // companion requirements checklist
+              if (!devTools &&
+                  !isHidden &&
+                  definition.type == CosmeticType.companion &&
+                  widget.revealResult?.conditionRows != null) ...[
+                const SizedBox(height: 18),
+                _CompanionChecklist(
+                  conditionRows: widget.revealResult!.conditionRows!,
+                  color: color,
+                  l10n: l10n,
                 ),
               ],
 
@@ -510,6 +548,110 @@ class _PartialProgressRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Companion requirements checklist
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _CompanionChecklist extends StatelessWidget {
+  const _CompanionChecklist({
+    required this.conditionRows,
+    required this.color,
+    required this.l10n,
+  });
+
+  final List<CosmeticRevealConditionRow> conditionRows;
+  final Color color;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.checklist_rounded,
+                size: 13, color: color.withValues(alpha: 0.8)),
+            const SizedBox(width: 5),
+            Text(
+              'REQUIREMENTS',
+              style: TextStyle(
+                color: color.withValues(alpha: 0.8),
+                fontSize: Tokens.fontSizeCaption,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.8,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        for (final row in conditionRows)
+          _ChecklistRow(row: row, color: color, l10n: l10n),
+      ],
+    );
+  }
+}
+
+class _ChecklistRow extends StatelessWidget {
+  const _ChecklistRow({
+    required this.row,
+    required this.color,
+    required this.l10n,
+  });
+
+  final CosmeticRevealConditionRow row;
+  final Color color;
+  final AppLocalizations l10n;
+
+  static const _catalog = CosmeticCatalog();
+  static const _levelPrefix = 'level_at_least_';
+  static const _ownsPrefix = 'owns_';
+
+  String _label() {
+    final id = row.conditionId;
+    if (id.startsWith(_levelPrefix)) {
+      final level = int.tryParse(id.substring(_levelPrefix.length));
+      if (level != null) return l10n.cosmeticCompanionLevelGate(level);
+    }
+    if (id.startsWith(_ownsPrefix)) {
+      final cosmeticId = id.substring(_ownsPrefix.length);
+      final name = _catalog.byId(cosmeticId)?.name(l10n);
+      if (name != null) return name;
+    }
+    return id.replaceAll('_', ' ');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final metColor = row.met ? color : Tokens.onSurfaceMuted;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        children: [
+          Icon(
+            row.met
+                ? Icons.check_circle_rounded
+                : Icons.radio_button_unchecked_rounded,
+            size: 14,
+            color: metColor.withValues(alpha: row.met ? 0.9 : 0.45),
+          ),
+          const SizedBox(width: 7),
+          Expanded(
+            child: Text(
+              _label(),
+              style: TextStyle(
+                color: metColor.withValues(alpha: row.met ? 0.9 : 0.6),
+                fontSize: Tokens.fontSizeCaption,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

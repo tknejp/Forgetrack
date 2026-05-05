@@ -33,6 +33,7 @@ class ProgressionDatabase {
           ProgressionQuestRewardGrantRecordSchema,
           ProgressionActiveQuestRecordSchema,
           ProgressionAchievementUnlockRecordSchema,
+          ProgressionChapterStartLocalRecordSchema,
         ],
         directory: dir.path,
         name: _isarName,

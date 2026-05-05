@@ -26,6 +26,8 @@ class ProviderProgressionSource implements ProgressionSource {
         dailySteps: _goalsProvider.dailySteps,
         dailyCalories: _goalsProvider.dailyCalories,
         dailyProteinGrams: _goalsProvider.dailyProtein,
+        dailyCarbsGrams: _goalsProvider.dailyCarbs,
+        dailyFatGrams: _goalsProvider.dailyFat,
         sleepMinutes: (_goalsProvider.sleepHours * 60).round(),
         weeklyActivityMinutes: _goalsProvider.weeklyActivityMins,
         targetWeightKg: _goalsProvider.targetWeight,
@@ -38,6 +40,8 @@ class ProviderProgressionSource implements ProgressionSource {
       dailySteps: _goalsProvider.progressionDailyStepsForDate(anchor),
       dailyCalories: _goalsProvider.progressionDailyCaloriesForDate(anchor),
       dailyProteinGrams: _goalsProvider.progressionDailyProteinForDate(anchor),
+      dailyCarbsGrams: _goalsProvider.dailyCarbs,
+      dailyFatGrams: _goalsProvider.dailyFat,
       sleepMinutes:
           (_goalsProvider.progressionSleepHoursForDate(anchor) * 60).round(),
       weeklyActivityMinutes:
@@ -87,8 +91,7 @@ class ProviderProgressionSource implements ProgressionSource {
         .map((record) => '${progressionDateKey(record.date)}:${record.steps}')
         .join(',');
     final weightSignature = _fitnessProvider.weightHistory
-        .map((record) =>
-            '${progressionDateKey(record.date)}:${record.weight}')
+        .map((record) => '${progressionDateKey(record.date)}:${record.weight}')
         .join(',');
     final sleepSignature = _fitnessProvider.sleepHistory
         .map((record) =>
@@ -103,6 +106,8 @@ class ProviderProgressionSource implements ProgressionSource {
       _goalsProvider.dailySteps,
       _goalsProvider.dailyCalories,
       _goalsProvider.dailyProtein,
+      _goalsProvider.dailyCarbs,
+      _goalsProvider.dailyFat,
       _goalsProvider.sleepHours,
       _goalsProvider.weeklyActivityMins,
       _goalsProvider.progressionHistorySignature,
@@ -114,6 +119,9 @@ class ProviderProgressionSource implements ProgressionSource {
       activitySignature,
       _nutritionProvider.todayCalories,
       _nutritionProvider.todayProtein,
+      _nutritionProvider.todayCarbs,
+      _nutritionProvider.todayFat,
+      _nutritionProvider.todayFiber,
       weightSignature,
     ].join('|');
   }
@@ -146,6 +154,11 @@ class ProviderProgressionSource implements ProgressionSource {
           (isToday ? _nutritionProvider.todayCalories : 0),
       proteinGrams:
           nutrition?.protein ?? (isToday ? _nutritionProvider.todayProtein : 0),
+      carbsGrams:
+          nutrition?.carbs ?? (isToday ? _nutritionProvider.todayCarbs : 0),
+      fatGrams: nutrition?.fat ?? (isToday ? _nutritionProvider.todayFat : 0),
+      fiberGrams:
+          nutrition?.fiber ?? (isToday ? _nutritionProvider.todayFiber : 0),
       sleepMinutes:
           _fitnessProvider.sleepForDate(day)?.totalDuration.inMinutes ?? 0,
       activityMinutes: _activityMinutesForRange(day, day),

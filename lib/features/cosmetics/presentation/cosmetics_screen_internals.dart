@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:forgetrack/l10n/app_localizations.dart';
 
 import '../../../shared/theme/design_tokens.dart';
 import '../domain/cosmetic_models.dart';
@@ -13,43 +14,103 @@ class CosmeticBadge extends StatelessWidget {
     required this.color,
     this.size = 42,
     this.framed = true,
+    this.glow = false,
+    this.fit,
+    this.contentScale = 1.0,
   });
 
   final CosmeticDefinition definition;
   final String? assetPath;
   final Color color;
   final double size;
+
+  /// Draws the old badge container/border.
+  ///
+  /// Keep true for grid/list cards.
+  /// Use false in detail sheet when the raw asset should be shown.
   final bool framed;
+
+  /// Draws a soft rarity-colored glow behind the asset.
+  ///
+  /// Intended mainly for detail sheet previews.
+  final bool glow;
+
+  /// Optional override for image fit.
+  ///
+  /// Detail sheet should usually use BoxFit.contain.
+  final BoxFit? fit;
+
+  /// Scale factor for the content within the badge.
+  final double contentScale;
 
   @override
   Widget build(BuildContext context) {
     final isFrame = definition.type == CosmeticType.frame;
-    return Container(
+    final effectiveFit = fit ?? (isFrame ? BoxFit.contain : BoxFit.cover);
+
+    final content = assetPath == null
+        ? CosmeticBadgeFallback(
+            type: definition.type,
+            color: color,
+            size: size,
+            framed: framed,
+          )
+        : Image.asset(
+            assetPath!,
+            fit: effectiveFit,
+            errorBuilder: (_, __, ___) => CosmeticBadgeFallback(
+              type: definition.type,
+              color: color,
+              size: size,
+              framed: framed,
+            ),
+          );
+
+    return SizedBox(
       width: size,
       height: size,
-      decoration: framed
-          ? BoxDecoration(
-              color: color.withValues(alpha: isFrame ? 0.10 : 0.18),
-              borderRadius: BorderRadius.circular(size * 0.28),
-              border: Border.all(
-                color: color.withValues(alpha: isFrame ? 0.52 : 0.32),
-                width: isFrame ? 1.8 : 1,
-              ),
-            )
-          : null,
-      clipBehavior: framed && !isFrame ? Clip.antiAlias : Clip.none,
-      child: assetPath == null
-          ? CosmeticBadgeFallback(
-              type: definition.type, color: color, size: size)
-          : Image.asset(
-              assetPath!,
-              fit: isFrame ? BoxFit.contain : BoxFit.cover,
-              errorBuilder: (_, __, ___) => CosmeticBadgeFallback(
-                type: definition.type,
-                color: color,
-                size: size,
+      child: Stack(
+        alignment: Alignment.center,
+        clipBehavior: Clip.none,
+        children: [
+          if (glow)
+            IgnorePointer(
+              child: Container(
+                width: size * 0.68,
+                height: size * 0.68,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.32),
+                      blurRadius: size * 0.30,
+                      spreadRadius: size * 0.045,
+                    ),
+                  ],
+                ),
               ),
             ),
+          Container(
+            width: size,
+            height: size,
+            decoration: framed
+                ? BoxDecoration(
+                    color: color.withValues(alpha: isFrame ? 0.10 : 0.18),
+                    borderRadius: BorderRadius.circular(size * 0.28),
+                    border: Border.all(
+                      color: color.withValues(alpha: isFrame ? 0.52 : 0.32),
+                      width: isFrame ? 1.8 : 1,
+                    ),
+                  )
+                : null,
+            clipBehavior: framed && !isFrame ? Clip.antiAlias : Clip.none,
+            child: Transform.scale(
+              scale: contentScale,
+              child: content,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -60,14 +121,28 @@ class CosmeticBadgeFallback extends StatelessWidget {
     required this.type,
     required this.color,
     required this.size,
+    this.framed = true,
   });
 
   final CosmeticType type;
   final Color color;
   final double size;
+  final bool framed;
 
   @override
   Widget build(BuildContext context) {
+    final icon = Icon(
+      cosmeticIconForType(type),
+      color: framed
+          ? Colors.white.withValues(alpha: 0.9)
+          : color.withValues(alpha: 0.9),
+      size: size * 0.52,
+    );
+
+    if (!framed) {
+      return Center(child: icon);
+    }
+
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -79,13 +154,7 @@ class CosmeticBadgeFallback extends StatelessWidget {
           ],
         ),
       ),
-      child: Center(
-        child: Icon(
-          cosmeticIconForType(type),
-          color: Colors.white.withValues(alpha: 0.9),
-          size: size * 0.52,
-        ),
-      ),
+      child: Center(child: icon),
     );
   }
 }
@@ -130,28 +199,36 @@ String cosmeticTypeLabel(CosmeticType type) {
   }
 }
 
-String cosmeticRarityLabel(CosmeticRarity rarity) {
+String cosmeticRarityLabel(CosmeticRarity rarity, AppLocalizations l10n) {
   switch (rarity) {
     case CosmeticRarity.common:
-      return 'Běžné';
+      return l10n.cosmeticRarityCommon;
+    case CosmeticRarity.uncommon:
+      return l10n.cosmeticRarityUncommon;
     case CosmeticRarity.rare:
-      return 'Vzácné';
+      return l10n.cosmeticRarityRare;
     case CosmeticRarity.epic:
-      return 'Epické';
+      return l10n.cosmeticRarityEpic;
     case CosmeticRarity.legendary:
-      return 'Legendární';
+      return l10n.cosmeticRarityLegendary;
+    case CosmeticRarity.mythic:
+      return l10n.cosmeticRarityMythic;
   }
 }
 
 Color cosmeticRarityColor(CosmeticRarity rarity) {
   switch (rarity) {
     case CosmeticRarity.common:
-      return Tokens.difficultyEasy;
+      return Rarity.common.color;
+    case CosmeticRarity.uncommon:
+      return Rarity.uncommon.color;
     case CosmeticRarity.rare:
-      return Tokens.difficultyMedium;
+      return Rarity.rare.color;
     case CosmeticRarity.epic:
-      return Tokens.difficultyHard;
+      return Rarity.epic.color;
     case CosmeticRarity.legendary:
-      return Tokens.difficultyExtraHard;
+      return Rarity.legendary.color;
+    case CosmeticRarity.mythic:
+      return Rarity.mythic.color;
   }
 }

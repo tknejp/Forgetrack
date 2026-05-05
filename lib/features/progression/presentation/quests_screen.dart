@@ -15,7 +15,6 @@ import '../../../l10n/l10n.dart';
 import '../../../shared/theme/design_tokens.dart';
 import '../../../shared/widgets/progress_bar.dart';
 import '../../../shared/widgets/ft_expand_chevron.dart';
-import '../../../shared/widgets/tiny_pill.dart';
 import '../../../shared/widgets/xp_claim_pill.dart';
 import '../../../shared/widgets/xp_sparkle_overlay.dart';
 
@@ -130,7 +129,14 @@ class _FtQuestsScreenState extends State<QuestsScreen> {
     for (final reward in viewData.pendingRewards) {
       _pillKeyFor(_rewardPillKeys, reward.rewardKey);
     }
-    for (final quest in viewData.completedQuests) {
+    for (final quest in [
+      ...viewData.dailyGoalQuests,
+      ...viewData.dailyComboQuests,
+      ...viewData.weeklyQuests,
+      ...viewData.chapterQuests,
+      ...viewData.longTermQuests,
+      ...viewData.completedQuests,
+    ]) {
       final rewardKey = quest.rewardKey;
       if (rewardKey != null) {
         _pillKeyFor(_questPillKeys, rewardKey);
@@ -176,14 +182,12 @@ class _FtQuestsScreenState extends State<QuestsScreen> {
                   28,
                 ),
                 children: [
-                  ProgSectionHead(
-                    label: l10n.progQuestsSectionLabel,
-                    caption: l10n.progQuestsSectionCaption,
-                    accent: Tokens.steps.color,
-                  ),
-                  const SizedBox(height: Tokens.spaceSm),
                   _QuestsSection(
-                    active: viewData.activeQuests,
+                    dailyGoals: viewData.dailyGoalQuests,
+                    dailyCombo: viewData.dailyComboQuests,
+                    weekly: viewData.weeklyQuests,
+                    chapter: viewData.chapterQuests,
+                    longTerm: viewData.longTermQuests,
                     locked: viewData.lockedQuests,
                     completed: viewData.completedQuests,
                     allQuests: viewData.allQuests,
@@ -352,8 +356,7 @@ class _ClaimAllButton extends StatelessWidget {
           style: TextStyle(
             fontSize: Tokens.fontSizeCaption,
             fontWeight: FontWeight.w800,
-            color:
-                enabled ? (color ?? Tokens.accent) : Tokens.onSurfaceFaint,
+            color: enabled ? (color ?? Tokens.accent) : Tokens.onSurfaceFaint,
           ),
         ),
       ),
@@ -483,7 +486,11 @@ class _PendingRewardCard extends StatelessWidget {
 
 class _QuestsSection extends StatefulWidget {
   const _QuestsSection({
-    required this.active,
+    required this.dailyGoals,
+    required this.dailyCombo,
+    required this.weekly,
+    required this.chapter,
+    required this.longTerm,
     required this.locked,
     required this.completed,
     required this.allQuests,
@@ -497,7 +504,11 @@ class _QuestsSection extends StatefulWidget {
     required this.progL10n,
   });
 
-  final List<ProgressionQuest> active;
+  final List<ProgressionQuest> dailyGoals;
+  final List<ProgressionQuest> dailyCombo;
+  final List<ProgressionQuest> weekly;
+  final List<ProgressionQuest> chapter;
+  final List<ProgressionQuest> longTerm;
   final List<ProgressionQuest> locked;
   final List<ProgressionQuest> completed;
   final List<ProgressionQuest> allQuests;
@@ -543,42 +554,225 @@ class _QuestsSectionState extends State<_QuestsSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SubHeader(
-          label: widget.l10n.progQuestsActiveHeader,
-          color: Tokens.active.color,
+        Row(
+          children: [
+            Expanded(
+              child: _SubHeader(
+                label: widget.l10n.progQuestsDailyGoalsHeader,
+                color: Tokens.steps.color,
+                vivid: true,
+              ),
+            ),
+            Text(
+              widget.l10n.progQuestsActiveCount(widget.dailyGoals.length),
+              style: TextStyle(
+                fontSize: Tokens.fontSizeMicro,
+                fontWeight: FontWeight.w600,
+                color: Tokens.onSurfaceMuted,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 10),
-        if (widget.active.isEmpty)
+        if (widget.dailyGoals.isEmpty)
           ProgressionEmptyLine(
             title: widget.l10n.progQuestsEmptyActiveTitle,
             caption: widget.l10n.progQuestsEmptyActiveCaption,
           )
         else
-          for (int i = 0; i < widget.active.length; i++) ...[
+          for (int i = 0; i < widget.dailyGoals.length; i++) ...[
             if (i > 0) const SizedBox(height: Tokens.spaceSm),
             _ActiveQuestCard(
-              quest: widget.active[i],
+              quest: widget.dailyGoals[i],
               allQuests: widget.allQuests,
               profile: widget.profile,
               trackedDaysElapsed: widget.trackedDaysElapsed,
-              isExpanded: _expandedQuestId == widget.active[i].id,
-              onToggle: () => _toggleQuest(widget.active[i].id),
+              isExpanded: _expandedQuestId == widget.dailyGoals[i].id,
+              onToggle: () => _toggleQuest(widget.dailyGoals[i].id),
               l10n: widget.l10n,
               progL10n: widget.progL10n,
+              enabled: !widget.isRefreshing,
+              pillKey: widget.dailyGoals[i].rewardKey == null
+                  ? null
+                  : widget.questPillKeys[widget.dailyGoals[i].rewardKey!],
+              onClaimQuest: widget.onClaimQuest,
             ),
           ],
         const SizedBox(height: Tokens.spaceXl),
-        _SubHeader(
-          label: widget.l10n.progQuestsLockedHeader,
-          color: Tokens.onSurfaceMuted,
+        Row(
+          children: [
+            Expanded(
+              child: _SubHeader(
+                label: widget.l10n.progQuestsDailyComboHeader,
+                color: Tokens.active.color,
+                vivid: true,
+              ),
+            ),
+            Text(
+              widget.l10n.progQuestsActiveCount(widget.dailyCombo.length),
+              style: TextStyle(
+                fontSize: Tokens.fontSizeMicro,
+                fontWeight: FontWeight.w600,
+                color: Tokens.onSurfaceMuted,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 10),
-        if (widget.locked.isEmpty)
+        if (widget.dailyCombo.isEmpty)
           ProgressionEmptyLine(
-            title: widget.l10n.progQuestsEmptyLockedTitle,
-            caption: widget.l10n.progQuestsEmptyLockedCaption,
+            title: widget.l10n.progQuestsEmptyActiveTitle,
+            caption: widget.l10n.progQuestsEmptyActiveCaption,
           )
         else
+          for (int i = 0; i < widget.dailyCombo.length; i++) ...[
+            if (i > 0) const SizedBox(height: Tokens.spaceSm),
+            _ActiveQuestCard(
+              quest: widget.dailyCombo[i],
+              allQuests: widget.allQuests,
+              profile: widget.profile,
+              trackedDaysElapsed: widget.trackedDaysElapsed,
+              isExpanded: _expandedQuestId == widget.dailyCombo[i].id,
+              onToggle: () => _toggleQuest(widget.dailyCombo[i].id),
+              l10n: widget.l10n,
+              progL10n: widget.progL10n,
+              enabled: !widget.isRefreshing,
+              pillKey: widget.dailyCombo[i].rewardKey == null
+                  ? null
+                  : widget.questPillKeys[widget.dailyCombo[i].rewardKey!],
+              onClaimQuest: widget.onClaimQuest,
+            ),
+          ],
+        if (widget.weekly.isNotEmpty) ...[
+          const SizedBox(height: Tokens.spaceXl),
+          Row(
+            children: [
+              Expanded(
+                child: _SubHeader(
+                  label: widget.l10n.progQuestsWeeklyHeader,
+                  color: Tokens.calories.color,
+                  vivid: true,
+                ),
+              ),
+              Text(
+                widget.l10n.progQuestsActiveCount(widget.weekly.length),
+                style: TextStyle(
+                  fontSize: Tokens.fontSizeMicro,
+                  fontWeight: FontWeight.w600,
+                  color: Tokens.onSurfaceMuted,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          for (int i = 0; i < widget.weekly.length; i++) ...[
+            if (i > 0) const SizedBox(height: Tokens.spaceSm),
+            _ActiveQuestCard(
+              quest: widget.weekly[i],
+              allQuests: widget.allQuests,
+              profile: widget.profile,
+              trackedDaysElapsed: widget.trackedDaysElapsed,
+              isExpanded: _expandedQuestId == widget.weekly[i].id,
+              onToggle: () => _toggleQuest(widget.weekly[i].id),
+              l10n: widget.l10n,
+              progL10n: widget.progL10n,
+              enabled: !widget.isRefreshing,
+              pillKey: widget.weekly[i].rewardKey == null
+                  ? null
+                  : widget.questPillKeys[widget.weekly[i].rewardKey!],
+              onClaimQuest: widget.onClaimQuest,
+            ),
+          ],
+        ],
+        if (widget.chapter.isNotEmpty) ...[
+          const SizedBox(height: Tokens.spaceXl),
+          Row(
+            children: [
+              Expanded(
+                child: _SubHeader(
+                  label: widget.l10n.progQuestsChapterHeader,
+                  color: Tokens.accent,
+                  vivid: true,
+                ),
+              ),
+              Text(
+                widget.l10n.progQuestsActiveCount(widget.chapter.length),
+                style: const TextStyle(
+                  fontSize: Tokens.fontSizeMicro,
+                  fontWeight: FontWeight.w600,
+                  color: Tokens.onSurfaceMuted,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          for (int i = 0; i < widget.chapter.length; i++) ...[
+            if (i > 0) const SizedBox(height: Tokens.spaceSm),
+            _ActiveQuestCard(
+              quest: widget.chapter[i],
+              allQuests: widget.allQuests,
+              profile: widget.profile,
+              trackedDaysElapsed: widget.trackedDaysElapsed,
+              isExpanded: _expandedQuestId == widget.chapter[i].id,
+              onToggle: () => _toggleQuest(widget.chapter[i].id),
+              l10n: widget.l10n,
+              progL10n: widget.progL10n,
+              enabled: !widget.isRefreshing,
+              pillKey: widget.chapter[i].rewardKey == null
+                  ? null
+                  : widget.questPillKeys[widget.chapter[i].rewardKey!],
+              onClaimQuest: widget.onClaimQuest,
+            ),
+          ],
+        ],
+        if (widget.longTerm.isNotEmpty) ...[
+          const SizedBox(height: Tokens.spaceXl),
+          Row(
+            children: [
+              Expanded(
+                child: _SubHeader(
+                  label: widget.l10n.progQuestsLongTermHeader,
+                  color: Tokens.accent,
+                  vivid: true,
+                ),
+              ),
+              Text(
+                widget.l10n.progQuestsActiveCount(widget.longTerm.length),
+                style: TextStyle(
+                  fontSize: Tokens.fontSizeMicro,
+                  fontWeight: FontWeight.w600,
+                  color: Tokens.onSurfaceMuted,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          for (int i = 0; i < widget.longTerm.length; i++) ...[
+            if (i > 0) const SizedBox(height: Tokens.spaceSm),
+            _ActiveQuestCard(
+              quest: widget.longTerm[i],
+              allQuests: widget.allQuests,
+              profile: widget.profile,
+              trackedDaysElapsed: widget.trackedDaysElapsed,
+              isExpanded: _expandedQuestId == widget.longTerm[i].id,
+              onToggle: () => _toggleQuest(widget.longTerm[i].id),
+              l10n: widget.l10n,
+              progL10n: widget.progL10n,
+              enabled: !widget.isRefreshing,
+              pillKey: widget.longTerm[i].rewardKey == null
+                  ? null
+                  : widget.questPillKeys[widget.longTerm[i].rewardKey!],
+              onClaimQuest: widget.onClaimQuest,
+            ),
+          ],
+        ],
+        if (widget.locked.isNotEmpty) ...[
+          const SizedBox(height: Tokens.spaceXl),
+          _SubHeader(
+            label: widget.l10n.progQuestsLockedHeader,
+            color: Tokens.onSurfaceMuted,
+          ),
+          const SizedBox(height: 10),
           for (int i = 0; i < widget.locked.length; i++) ...[
             if (i > 0) const SizedBox(height: 6),
             _LockedQuestRow(
@@ -586,12 +780,11 @@ class _QuestsSectionState extends State<_QuestsSection> {
               allQuests: widget.allQuests,
               profile: widget.profile,
               trackedDaysElapsed: widget.trackedDaysElapsed,
-              isExpanded: _expandedQuestId == widget.locked[i].id,
-              onToggle: () => _toggleQuest(widget.locked[i].id),
               l10n: widget.l10n,
               progL10n: widget.progL10n,
             ),
           ],
+        ],
         const SizedBox(height: Tokens.spaceXl),
         Row(
           children: [
@@ -601,7 +794,16 @@ class _QuestsSectionState extends State<_QuestsSection> {
                 color: Tokens.onSurfaceMuted,
               ),
             ),
-            if (claimableCompleted.isNotEmpty)
+            Text(
+              widget.l10n.progQuestsCompletedCount(completedToShow.length),
+              style: TextStyle(
+                fontSize: Tokens.fontSizeMicro,
+                fontWeight: FontWeight.w600,
+                color: Tokens.onSurfaceMuted,
+              ),
+            ),
+            if (claimableCompleted.isNotEmpty) ...[
+              const SizedBox(width: 12),
               _ClaimAllButton(
                 enabled: !widget.isRefreshing,
                 label: widget.l10n.progQuestClaimAll,
@@ -611,6 +813,7 @@ class _QuestsSectionState extends State<_QuestsSection> {
                   fallbackFrom: center,
                 ),
               ),
+            ],
           ],
         ),
         const SizedBox(height: 10),
@@ -673,6 +876,9 @@ class _ActiveQuestCard extends StatelessWidget {
     required this.onToggle,
     required this.l10n,
     required this.progL10n,
+    required this.enabled,
+    required this.pillKey,
+    required this.onClaimQuest,
   });
 
   final ProgressionQuest quest;
@@ -683,108 +889,120 @@ class _ActiveQuestCard extends StatelessWidget {
   final VoidCallback onToggle;
   final AppLocalizations l10n;
   final ProgressionL10n progL10n;
+  final bool enabled;
+  final GlobalKey? pillKey;
+  final Future<void> Function(
+    ProgressionQuest quest, {
+    Offset? from,
+  }) onClaimQuest;
 
   @override
   Widget build(BuildContext context) {
     final domain = ProgressionDomainTheme.resolveForQuest(quest);
-    final token = ProgressionDomainTheme.tokenFor(domain);
-    final color = token.color;
-    final descriptor = progL10n.questCriterionDescriptor(quest);
-
+    final color = ProgressionDomainTheme.colorFor(domain);
+    final descriptor = progL10n.questSourceLabel(quest);
+    final assetSize =
+        isExpanded ? Tokens.questAssetExpanded : Tokens.questAssetCollapsed;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onToggle,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.all(13),
+        padding: const EdgeInsets.all(Tokens.questCardPadding),
         decoration: BoxDecoration(
-          gradient: token.gradient,
-          borderRadius: BorderRadius.circular(Tokens.radiusTile),
-          border: Border.all(color: color.withValues(alpha: 0.28)),
+          color: const Color(0xFF111423),
+          borderRadius: BorderRadius.circular(Tokens.questCardRadius),
+          border: Border.all(
+            color: isExpanded
+                ? Tokens.accent.withValues(alpha: 0.42)
+                : Colors.white.withValues(alpha: 0.06),
+          ),
           boxShadow: [
             BoxShadow(
-                color: token.glow, blurRadius: 16, offset: const Offset(0, 3))
+              color: Colors.black.withValues(alpha: 0.26),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+            if (isExpanded)
+              BoxShadow(
+                color: Tokens.accent.withValues(alpha: 0.18),
+                blurRadius: Tokens.glowXl,
+                offset: const Offset(0, 10),
+              ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ProgDomIco(domain: domain, size: 30),
-                const SizedBox(width: 10),
+                _QuestAsset(quest: quest, size: assetSize, color: color),
+                const SizedBox(width: Tokens.spaceMd),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         progL10n.questTitle(quest),
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: Tokens.fontSizeBody,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 15.5,
+                          fontWeight: FontWeight.w700,
                           color: Colors.white,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 3),
                       Text(
                         descriptor,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: Tokens.fontSizeCaption,
-                          fontWeight: FontWeight.w600,
-                          color: color.withValues(alpha: 0.78),
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white.withValues(alpha: 0.66),
                         ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(width: Tokens.spaceSm),
-                _QuestRewardPill(quest: quest),
+                _QuestRewardPill(
+                  key: pillKey,
+                  quest: quest,
+                  enabled: enabled,
+                  onClaimQuest: enabled && quest.isRewardClaimable
+                      ? (center) => onClaimQuest(quest, from: center)
+                      : null,
+                ),
                 const SizedBox(width: 6),
                 ExpandChevron(
                   expanded: isExpanded,
-                  color: color.withValues(alpha: 0.82),
+                  color: Tokens.onSurfaceMuted,
                   size: 20,
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-            ProgressBar(
-              value: quest.progress,
-              color: color,
-              glow: color.withValues(alpha: 0.38),
-              height: 5,
-            ),
-            const SizedBox(height: 6),
+            const SizedBox(height: Tokens.spaceSm),
             Row(
               children: [
-                Text(
-                  l10n.progProgressRatio(quest.currentValue, quest.targetValue),
-                  style: const TextStyle(
-                    fontSize: Tokens.fontSizeCaption,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  isExpanded
-                      ? l10n.progPercent(_safePercent(quest.progress))
-                      : l10n.progQuestDetailTapForDetails,
-                  style: TextStyle(
-                    fontSize: Tokens.fontSizeCaption,
-                    fontWeight: FontWeight.w700,
-                    color: isExpanded ? color : Tokens.onSurfaceFaint,
+                SizedBox(width: assetSize + Tokens.spaceMd),
+                Expanded(
+                  child: _QuestChainPreview(
+                    quest: quest,
+                    allQuests: allQuests,
+                    color: color,
+                    progL10n: progL10n,
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: Tokens.spaceSm),
+            _QuestProgressRow(quest: quest, color: color),
             if (isExpanded) ...[
-              const SizedBox(height: Tokens.spaceMd),
-              _QuestDetailPanel(
+              const SizedBox(height: Tokens.spaceSm),
+              _QuestExpandedDetails(
                 quest: quest,
                 allQuests: allQuests,
                 profile: profile,
@@ -801,128 +1019,406 @@ class _ActiveQuestCard extends StatelessWidget {
   }
 }
 
-class _LockedQuestRow extends StatelessWidget {
-  const _LockedQuestRow({
+class _QuestChainPreview extends StatelessWidget {
+  const _QuestChainPreview({
+    required this.quest,
+    required this.allQuests,
+    required this.color,
+    required this.progL10n,
+  });
+
+  final ProgressionQuest quest;
+  final List<ProgressionQuest> allQuests;
+  final Color color;
+  final ProgressionL10n progL10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final preview = _chainWindowFor(quest, allQuests, maxNodes: 4);
+    final nodes = preview.nodes;
+    if (nodes.isEmpty) return const SizedBox.shrink();
+
+    final row = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (preview.hasMoreBefore) ...[
+          _QuestChainMore(color: color),
+          _QuestChainConnector(color: color),
+        ],
+        for (int i = 0; i < nodes.length; i++) ...[
+          if (i > 0) _QuestChainConnector(color: color),
+          _QuestChainNode(
+            quest: nodes[i],
+            isCurrent: nodes[i].id == quest.id,
+            color: color,
+            progL10n: progL10n,
+          ),
+        ],
+        if (preview.hasMoreAfter) ...[
+          _QuestChainConnector(color: color),
+          _QuestChainMore(color: color),
+        ],
+      ],
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (!constraints.maxWidth.isFinite) {
+          return Align(alignment: Alignment.centerLeft, child: row);
+        }
+        return SizedBox(
+          width: constraints.maxWidth,
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: row,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+({List<ProgressionQuest> nodes, bool hasMoreBefore, bool hasMoreAfter})
+    _chainWindowFor(
+  ProgressionQuest quest,
+  List<ProgressionQuest> allQuests, {
+  int maxNodes = 3,
+}) {
+  final chainId = quest.chainId;
+  if (chainId == null || chainId.isEmpty) {
+    return (nodes: [quest], hasMoreBefore: false, hasMoreAfter: false);
+  }
+  final chain = allQuests
+      .where((candidate) => candidate.chainId == chainId)
+      .toList(growable: false)
+    ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+  if (chain.length <= maxNodes) {
+    return (nodes: chain, hasMoreBefore: false, hasMoreAfter: false);
+  }
+
+  final index = chain.indexWhere((candidate) => candidate.id == quest.id);
+  if (index == -1) {
+    return (nodes: [quest], hasMoreBefore: false, hasMoreAfter: false);
+  }
+  if (maxNodes <= 1) {
+    return (
+      nodes: [chain[index]],
+      hasMoreBefore: index > 0,
+      hasMoreAfter: index < chain.length - 1,
+    );
+  }
+
+  var start = index;
+  if (index > 0 && chain[index - 1].isCompleted) {
+    start = index - 1;
+  }
+  if (start + maxNodes > chain.length) {
+    start = chain.length - maxNodes;
+  }
+  final end = start + maxNodes;
+  return (
+    nodes: chain.sublist(start, end),
+    hasMoreBefore: start > 0,
+    hasMoreAfter: end < chain.length,
+  );
+}
+
+class _QuestChainConnector extends StatelessWidget {
+  const _QuestChainConnector({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: Tokens.questChainConnectorWidth,
+      height: 1,
+      margin: const EdgeInsets.symmetric(horizontal: 3),
+      color: color.withValues(alpha: 0.32),
+    );
+  }
+}
+
+class _QuestChainMore extends StatelessWidget {
+  const _QuestChainMore({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: Tokens.questChainNodeHeight,
+      height: Tokens.questChainNodeHeight,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.035),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+      ),
+      child: Text(
+        '…',
+        style: TextStyle(
+          height: 0.9,
+          fontSize: Tokens.fontSizeCaption,
+          fontWeight: FontWeight.w900,
+          color: color.withValues(alpha: 0.72),
+        ),
+      ),
+    );
+  }
+}
+
+class _QuestChainNode extends StatelessWidget {
+  const _QuestChainNode({
+    required this.quest,
+    required this.isCurrent,
+    required this.color,
+    required this.progL10n,
+  });
+
+  final ProgressionQuest quest;
+  final bool isCurrent;
+  final Color color;
+  final ProgressionL10n progL10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final completed = quest.isCompleted;
+    final locked = quest.isLocked;
+    final lockedAchievement = locked &&
+        quest.criterionType ==
+            ProgressionQuestCriterionType.achievementUnlocked;
+    final localizedLabel = progL10n.questChainStepLabel(quest);
+    final label =
+        localizedLabel.isEmpty ? _compactTargetLabel(quest) : localizedLabel;
+    final bg = completed
+        ? Tokens.success.withValues(alpha: 0.10)
+        : isCurrent
+            ? color.withValues(alpha: 0.16)
+            : Colors.white.withValues(alpha: 0.045);
+    final border = completed
+        ? Tokens.success.withValues(alpha: 0.30)
+        : isCurrent
+            ? color.withValues(alpha: 0.70)
+            : Colors.white.withValues(alpha: 0.08);
+    final fg = completed
+        ? Tokens.success
+        : isCurrent
+            ? Colors.white
+            : Tokens.onSurfaceMuted;
+
+    return Container(
+      alignment: Alignment.center,
+      constraints: const BoxConstraints(
+        minWidth: Tokens.questChainNodeMinWidth,
+        minHeight: Tokens.questChainNodeHeight,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(Tokens.radiusProgress),
+        border: Border.all(color: border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (completed)
+            const Icon(Icons.check_rounded, size: 12, color: Tokens.success)
+          else if (locked && !isCurrent)
+            Icon(
+              lockedAchievement
+                  ? Icons.emoji_events_rounded
+                  : Icons.lock_rounded,
+              size: 12,
+              color: lockedAchievement
+                  ? Tokens.xp.withValues(alpha: 0.72)
+                  : Tokens.onSurfaceFaint,
+            )
+          else
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: Tokens.fontSizeMicro,
+                fontWeight: FontWeight.w800,
+                color: fg,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuestProgressRow extends StatelessWidget {
+  const _QuestProgressRow({required this.quest, required this.color});
+
+  final ProgressionQuest quest;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: ProgressBar(
+            value: quest.progress,
+            color: color,
+            glow: color.withValues(alpha: 0.36),
+            height: Tokens.questProgressHeight,
+          ),
+        ),
+        const SizedBox(width: Tokens.spaceSm),
+        Text(
+          '${quest.currentValue} / ${quest.targetValue}',
+          style: const TextStyle(
+            fontSize: Tokens.fontSizeCaption,
+            fontWeight: FontWeight.w800,
+            color: Tokens.onSurface,
+            fontFamily: 'JetBrains Mono',
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _QuestAsset extends StatelessWidget {
+  const _QuestAsset({
+    required this.quest,
+    required this.size,
+    required this.color,
+  });
+
+  final ProgressionQuest quest;
+  final double size;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final asset = quest.assetKey;
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: size * 0.72,
+            height: size * 0.72,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.24),
+                  blurRadius: Tokens.glowXl,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+          ),
+          if (asset == null || asset.isEmpty)
+            ProgDomIco(
+              domain: ProgressionDomainTheme.resolveForQuest(quest),
+              size: size * 0.58,
+            )
+          else
+            Image.asset(
+              asset,
+              width: size,
+              height: size,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                debugPrint('Quest asset failed to load: $asset — $error');
+                return ProgDomIco(
+                  domain: ProgressionDomainTheme.resolveForQuest(quest),
+                  size: size * 0.58,
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuestExpandedDetails extends StatelessWidget {
+  const _QuestExpandedDetails({
     required this.quest,
     required this.allQuests,
     required this.profile,
     required this.trackedDaysElapsed,
-    required this.isExpanded,
-    required this.onToggle,
     required this.l10n,
     required this.progL10n,
+    required this.color,
   });
 
   final ProgressionQuest quest;
   final List<ProgressionQuest> allQuests;
   final ProgressionProfile profile;
   final int trackedDaysElapsed;
-  final bool isExpanded;
-  final VoidCallback onToggle;
   final AppLocalizations l10n;
   final ProgressionL10n progL10n;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
-    final domain = ProgressionDomainTheme.resolveForQuest(quest);
     final detail = QuestDetailViewModel.build(
       quest: quest,
       allQuests: allQuests,
       profile: profile,
       trackedDaysElapsed: trackedDaysElapsed,
     );
-    final color = ProgressionDomainTheme.colorFor(domain);
-    return GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onToggle,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.016),
-            borderRadius: BorderRadius.circular(Tokens.radiusInner),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
-          ),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      ProgDomIco(domain: domain, size: 26),
-                      const Positioned(
-                        right: -3,
-                        bottom: -3,
-                        child: Icon(
-                          Icons.lock_rounded,
-                          size: 12,
-                          color: Tokens.onSurfaceFaint,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          progL10n.questTitle(quest),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: Tokens.fontSizeSmall,
-                            fontWeight: FontWeight.w700,
-                            color: Tokens.onSurfaceMuted,
-                          ),
-                        ),
-                        const SizedBox(height: 1),
-                        Text(
-                          _primaryUnlockReasonText(
-                            detail,
-                            allQuests,
-                            l10n,
-                            progL10n,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: Tokens.fontSizeMicro,
-                            fontWeight: FontWeight.w600,
-                            color: Tokens.onSurfaceFaint,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: Tokens.spaceSm),
-                  _HiddenRewardPill(label: l10n.progQuestDetailHiddenReward),
-                  const SizedBox(width: 6),
-                  ExpandChevron(
-                  expanded: isExpanded,
-                  color: color.withValues(alpha: 0.82),
-                  size: 20,
-                ),
-                ],
-              ),
-              if (isExpanded) ...[
-                const SizedBox(height: 10),
-                _QuestDetailPanel(
-                  quest: quest,
-                  allQuests: allQuests,
-                  profile: profile,
-                  trackedDaysElapsed: trackedDaysElapsed,
-                  l10n: l10n,
-                  progL10n: progL10n,
-                  color: color,
-                  mysteryLocked: true,
-                ),
-              ],
-            ],
-          ),
+    final catalogNext = [
+      for (final id in quest.nextQuestIds) _questById(allQuests, id),
+    ].whereType<ProgressionQuest>().toList(growable: false);
+    final nextQuest = catalogNext.isNotEmpty
+        ? catalogNext.first
+        : (detail.unlocksNext.isEmpty ? null : detail.unlocksNext.first);
+    final next = nextQuest == null
+        ? l10n.progQuestDetailNoFollowUp
+        : progL10n.questTitle(nextQuest);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(height: 1, color: Colors.white.withValues(alpha: 0.06)),
+        const SizedBox(height: Tokens.spaceSm),
+        _QuestDetailLine(
+          label: l10n.progQuestDetailGoal,
+          value: progL10n.questDescription(quest),
+          color: color,
         ),
+        const SizedBox(height: Tokens.spaceSm),
+        _QuestDetailLine(
+          label: l10n.progQuestDetailNextInChain,
+          value: next,
+          color: color,
+        ),
+      ],
     );
   }
+}
+
+String _compactTargetLabel(ProgressionQuest q) {
+  // Prefer a compact numeric label (e.g., 100k, 1M) or small integer for combo quests.
+  final value = q.targetValue;
+  if (value >= 1000000) {
+    final d = value / 1000000;
+    return d.truncateToDouble() == d
+        ? '${d.toInt()}M'
+        : '${d.toStringAsFixed(1)}M';
+  }
+  if (value >= 1000) {
+    final d = value / 1000;
+    return d.truncateToDouble() == d
+        ? '${d.toInt()}k'
+        : '${d.toStringAsFixed(1)}k';
+  }
+  return value.toString();
 }
 
 class _CompletedQuestRow extends StatelessWidget {
@@ -960,22 +1456,54 @@ class _CompletedQuestRow extends StatelessWidget {
     final locale = Localizations.localeOf(context).toString();
     final domain = ProgressionDomainTheme.resolveForQuest(quest);
     final color = ProgressionDomainTheme.colorFor(domain);
+    final isClaimable = quest.isRewardClaimable;
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onToggle,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.03),
+          gradient: isClaimable
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    const Color(0xFFFFD35A).withValues(alpha: 0.08),
+                    const Color(0xFFF2A82E).withValues(alpha: 0.03),
+                  ],
+                )
+              : LinearGradient(
+                  colors: [
+                    Colors.white.withValues(alpha: 0.02),
+                    Colors.white.withValues(alpha: 0.01),
+                  ],
+                ),
           borderRadius: BorderRadius.circular(Tokens.radiusInner),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+          border: Border.all(
+            color: isClaimable
+                ? const Color(0xFFFFD35A).withValues(alpha: 0.25)
+                : Colors.white.withValues(alpha: 0.05),
+          ),
+          boxShadow: isClaimable
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFFFFD35A).withValues(alpha: 0.18),
+                    blurRadius: 12,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
         child: Column(
           children: [
             Row(
               children: [
-                ProgDomIco(domain: domain, size: 26),
+                _QuestAsset(
+                  quest: quest,
+                  size: Tokens.questAssetCompleted,
+                  color: color,
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
@@ -983,38 +1511,40 @@ class _CompletedQuestRow extends StatelessWidget {
                     children: [
                       Text(
                         progL10n.questTitle(quest),
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: Tokens.fontSizeSmall,
+                        style: TextStyle(
+                          fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: Tokens.onSurfaceMuted,
+                          color: isClaimable
+                              ? Colors.white
+                              : Tokens.onSurfaceMuted,
+                          letterSpacing: -0.1,
                         ),
                       ),
-                      const SizedBox(height: 1),
+                      const SizedBox(height: 2),
                       Text(
-                        quest.completedAt != null
-                            ? l10n.progQuestCompletedOn(
-                                progressionFormatDateTime(
-                                    quest.completedAt!, locale))
-                            : progL10n.questCriterionDescriptor(quest),
+                        '${quest.completedAt != null ? l10n.progQuestCompletedOn(progressionFormatDateTime(quest.completedAt!, locale)) : progL10n.questCriterionDescriptor(quest)} · +${quest.rewardXp} XP',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: Tokens.fontSizeMicro,
-                          fontWeight: FontWeight.w600,
-                          color: color.withValues(alpha: 0.78),
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w500,
+                          color: isClaimable
+                              ? Colors.white.withValues(alpha: 0.66)
+                              : color.withValues(alpha: 0.60),
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: Tokens.spaceSm),
-                _QuestRewardPill(
+                const SizedBox(width: 10),
+                _CompletedQuestStatusChip(
                   key: pillKey,
                   quest: quest,
-                  claimedLabel: l10n.progQuestStatusClaimed,
-                  onClaim: enabled
+                  l10n: l10n,
+                  enabled: enabled,
+                  onClaimQuest: enabled
                       ? (center) => onClaimQuest(quest, from: center)
                       : null,
                 ),
@@ -1028,7 +1558,7 @@ class _CompletedQuestRow extends StatelessWidget {
             ),
             if (isExpanded) ...[
               const SizedBox(height: 10),
-              _QuestDetailPanel(
+              _QuestExpandedDetails(
                 quest: quest,
                 allQuests: allQuests,
                 profile: profile,
@@ -1045,18 +1575,93 @@ class _CompletedQuestRow extends StatelessWidget {
   }
 }
 
-// ── Quest detail panel ────────────────────────────────────────────────────────
+class _CompletedQuestStatusChip extends StatelessWidget {
+  const _CompletedQuestStatusChip({
+    super.key,
+    required this.quest,
+    required this.l10n,
+    required this.enabled,
+    required this.onClaimQuest,
+  });
 
-class _QuestDetailPanel extends StatelessWidget {
-  const _QuestDetailPanel({
+  final ProgressionQuest quest;
+  final AppLocalizations l10n;
+  final bool enabled;
+  final void Function(Offset center)? onClaimQuest;
+
+  @override
+  Widget build(BuildContext context) {
+    final isClaimable = quest.isRewardClaimable;
+    final label = isClaimable
+        ? '+${quest.rewardXp} XP'
+        : quest.isRewardClaimed
+            ? l10n.progQuestStatusClaimed
+            : l10n.progQuestStatusCompleted;
+    final color = isClaimable
+        ? Tokens.xp
+        : quest.isRewardClaimed
+            ? Tokens.success.withValues(alpha: 0.78)
+            : Tokens.onSurfaceMuted;
+    final bg = isClaimable
+        ? Tokens.xp.withValues(alpha: 0.15)
+        : quest.isRewardClaimed
+            ? Tokens.success.withValues(alpha: 0.07)
+            : Colors.white.withValues(alpha: 0.04);
+    final border = isClaimable
+        ? Tokens.xp.withValues(alpha: 0.30)
+        : quest.isRewardClaimed
+            ? Tokens.success.withValues(alpha: 0.16)
+            : Colors.white.withValues(alpha: 0.08);
+    final icon = isClaimable ? Icons.bolt_rounded : Icons.check_rounded;
+
+    final chip = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(Tokens.radiusProgress),
+        border: Border.all(color: border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: Tokens.fontSizeMicro,
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (!isClaimable || !enabled || onClaimQuest == null) return chip;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        final box = context.findRenderObject() as RenderBox?;
+        final center = box == null
+            ? Offset.zero
+            : box.localToGlobal(Offset.zero) +
+                Offset(box.size.width / 2, box.size.height / 2);
+        onClaimQuest!(center);
+      },
+      child: chip,
+    );
+  }
+}
+
+class _LockedQuestRow extends StatelessWidget {
+  const _LockedQuestRow({
     required this.quest,
     required this.allQuests,
     required this.profile,
     required this.trackedDaysElapsed,
     required this.l10n,
     required this.progL10n,
-    required this.color,
-    this.mysteryLocked = false,
   });
 
   final ProgressionQuest quest;
@@ -1065,143 +1670,85 @@ class _QuestDetailPanel extends StatelessWidget {
   final int trackedDaysElapsed;
   final AppLocalizations l10n;
   final ProgressionL10n progL10n;
-  final Color color;
-  final bool mysteryLocked;
 
   @override
   Widget build(BuildContext context) {
+    final domain = ProgressionDomainTheme.resolveForQuest(quest);
+    final color = ProgressionDomainTheme.colorFor(domain);
     final detail = QuestDetailViewModel.build(
       quest: quest,
       allQuests: allQuests,
       profile: profile,
       trackedDaysElapsed: trackedDaysElapsed,
     );
+    final reason = detail.unlockReasons.isEmpty
+        ? l10n.progQuestStatusLocked
+        : _lockReasonLabel(detail.unlockReasons.first, l10n);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(height: 1, color: Colors.white.withValues(alpha: 0.06)),
-        const SizedBox(height: 10),
-        if (mysteryLocked)
-          _QuestDetailTextSection(
-            label: l10n.progQuestDetailLockedBecause,
-            color: color,
-            lines: detail.unlockReasons.isEmpty
-                ? [l10n.progQuestDetailHiddenUntilUnlocked]
-                : [
-                    for (final reason in detail.unlockReasons)
-                      _unlockReasonText(
-                        reason,
-                        allQuests,
-                        l10n,
-                        progL10n,
-                      ),
-                  ],
-          )
-        else ...[
-          Text(
-            progL10n.questDescription(quest),
-            style: const TextStyle(
-              fontSize: Tokens.fontSizeCaption,
-              height: 1.4,
-              color: Tokens.onSurfaceMuted,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.018),
+        borderRadius: BorderRadius.circular(Tokens.radiusInner),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
+      child: Row(
+        children: [
+          Opacity(
+            opacity: 0.56,
+            child: _QuestAsset(
+              quest: quest,
+              size: Tokens.questAssetCompleted,
+              color: color,
             ),
           ),
-          const SizedBox(height: 10),
-        ],
-        _QuestDetailLine(
-          label: l10n.progQuestDetailRewards,
-          value: mysteryLocked
-              ? l10n.progQuestDetailHiddenUntilUnlocked
-              : '+${quest.rewardXp} XP',
-          color: color,
-        ),
-        const SizedBox(height: Tokens.spaceSm),
-        if (mysteryLocked)
-          _QuestDetailLine(
-            label: l10n.progQuestDetailUnlocksNext,
-            value: l10n.progQuestDetailHiddenUntilUnlocked,
-            color: color,
-          )
-        else
-          _QuestDetailTextSection(
-            label: l10n.progQuestDetailUnlocksNext,
-            color: color,
-            lines: detail.unlocksNext.isEmpty
-                ? [l10n.progQuestDetailNoFollowUp]
-                : [
-                    for (final nextQuest in detail.unlocksNext)
-                      progL10n.questTitle(nextQuest),
-                  ],
-          ),
-        if (!mysteryLocked && detail.relatedRuleIds.isNotEmpty) ...[
-          const SizedBox(height: Tokens.spaceSm),
-          Text(
-            l10n.progQuestDetailRelatedGoals.toUpperCase(),
-            style: TextStyle(
-              fontSize: Tokens.fontSizeTiny,
-              fontWeight: FontWeight.w800,
-              color: color.withValues(alpha: 0.76),
-              letterSpacing: 0.8,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              for (final ruleId in detail.relatedRuleIds)
-                TinyPill(
-                  label: progL10n.ruleTitle(ruleId),
-                  color: color.withValues(alpha: 0.9),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  progL10n.questTitle(quest),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                    color: Tokens.onSurfaceMuted,
+                  ),
                 ),
-            ],
+                const SizedBox(height: 2),
+                Text(
+                  reason,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: Tokens.fontSizeMicro,
+                    fontWeight: FontWeight.w600,
+                    color: color.withValues(alpha: 0.62),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ],
-      ],
-    );
-  }
-}
-
-class _QuestDetailTextSection extends StatelessWidget {
-  const _QuestDetailTextSection({
-    required this.label,
-    required this.lines,
-    required this.color,
-  });
-
-  final String label;
-  final List<String> lines;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label.toUpperCase(),
-          style: TextStyle(
-            fontSize: Tokens.fontSizeTiny,
-            fontWeight: FontWeight.w800,
-            color: color.withValues(alpha: 0.76),
-            letterSpacing: 0.8,
-          ),
-        ),
-        const SizedBox(height: 5),
-        for (int i = 0; i < lines.length; i++) ...[
-          if (i > 0) const SizedBox(height: 3),
-          Text(
-            lines[i],
-            style: const TextStyle(
-              fontSize: Tokens.fontSizeCaption,
-              height: 1.35,
-              fontWeight: FontWeight.w600,
-              color: Tokens.onSurfaceMuted,
+          const SizedBox(width: 8),
+          Container(
+            width: Tokens.questChainNodeHeight,
+            height: Tokens.questChainNodeHeight,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.04),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            ),
+            child: const Icon(
+              Icons.lock_rounded,
+              size: 13,
+              color: Tokens.onSurfaceFaint,
             ),
           ),
         ],
-      ],
+      ),
     );
   }
 }
@@ -1219,31 +1766,27 @@ class _QuestDetailLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Text(
-            label.toUpperCase(),
-            style: TextStyle(
-              fontSize: Tokens.fontSizeTiny,
-              fontWeight: FontWeight.w800,
-              color: color.withValues(alpha: 0.76),
-              letterSpacing: 0.8,
-            ),
+        Text(
+          label.toUpperCase(),
+          style: TextStyle(
+            fontSize: Tokens.fontSizeTiny,
+            fontWeight: FontWeight.w800,
+            color: color.withValues(alpha: 0.76),
+            letterSpacing: 0.8,
           ),
         ),
-        const SizedBox(width: 10),
-        Flexible(
-          child: Text(
-            value,
-            textAlign: TextAlign.right,
-            style: const TextStyle(
-              fontSize: Tokens.fontSizeCaption,
-              height: 1.35,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          textAlign: TextAlign.left,
+          style: const TextStyle(
+            fontSize: Tokens.fontSizeCaption,
+            height: 1.35,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
           ),
         ),
       ],
@@ -1251,73 +1794,87 @@ class _QuestDetailLine extends StatelessWidget {
   }
 }
 
-
 // ── Quest reward pills ────────────────────────────────────────────────────────
-
-class _HiddenRewardPill extends StatelessWidget {
-  const _HiddenRewardPill({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(Tokens.radiusProgress),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(
-            Icons.lock_rounded,
-            size: 11,
-            color: Tokens.onSurfaceFaint,
-          ),
-          const SizedBox(width: 3),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: Tokens.fontSizeMicro,
-              fontWeight: FontWeight.w800,
-              color: Tokens.onSurfaceFaint,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _QuestRewardPill extends StatelessWidget {
   const _QuestRewardPill({
     super.key,
     required this.quest,
-    this.claimedLabel,
-    this.onClaim,
+    this.enabled = true,
+    this.onClaimQuest,
   });
 
   final ProgressionQuest quest;
-  final String? claimedLabel;
-  final void Function(Offset center)? onClaim;
+  final bool enabled;
+  final void Function(Offset center)? onClaimQuest;
 
   @override
   Widget build(BuildContext context) {
-    final data = quest.isRewardClaimed
-        ? XpClaimPillData.claimed(quest.rewardXp)
-        : quest.isRewardClaimable
-            ? XpClaimPillData.claimable(
-                quest.rewardXp,
-                onTap: onClaim ?? (_) {},
+    final appearance = quest.isRewardClaimable
+        ? (
+            color: Tokens.xp,
+            bg: Tokens.xp.withValues(alpha: 0.18),
+            border: Tokens.xp.withValues(alpha: 0.34),
+            icon: Icons.bolt_rounded,
+            label: '+${quest.rewardXp} XP',
+          )
+        : quest.isRewardClaimed
+            ? (
+                color: Tokens.success.withValues(alpha: 0.88),
+                bg: Tokens.success.withValues(alpha: 0.10),
+                border: Tokens.success.withValues(alpha: 0.18),
+                icon: Icons.check_rounded,
+                label: '+${quest.rewardXp} XP',
               )
-            : XpClaimPillData.locked(quest.rewardXp);
+            : (
+                color: Tokens.onSurfaceMuted,
+                bg: Colors.white.withValues(alpha: 0.055),
+                border: Colors.white.withValues(alpha: 0.09),
+                icon: Icons.bolt_rounded,
+                label: '${quest.rewardXp} XP',
+              );
 
-    return XpClaimPill(
-      data: data,
-      claimedLabel: claimedLabel,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    final pill = Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: Tokens.questXpPillHorizontal,
+        vertical: Tokens.questXpPillVertical,
+      ),
+      decoration: BoxDecoration(
+        color: appearance.bg,
+        borderRadius: BorderRadius.circular(Tokens.radiusProgress),
+        border: Border.all(color: appearance.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(appearance.icon, size: 10, color: appearance.color),
+          const SizedBox(width: 2),
+          Text(
+            appearance.label,
+            style: TextStyle(
+              fontSize: Tokens.fontSizeMicro,
+              fontWeight: FontWeight.w800,
+              color: appearance.color,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (!quest.isRewardClaimable || !enabled || onClaimQuest == null) {
+      return pill;
+    }
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        final box = context.findRenderObject() as RenderBox?;
+        final center = box == null
+            ? Offset.zero
+            : box.localToGlobal(Offset.zero) +
+                Offset(box.size.width / 2, box.size.height / 2);
+        onClaimQuest!(center);
+      },
+      child: pill,
     );
   }
 }
@@ -1465,20 +2022,53 @@ class _HistoryRow extends StatelessWidget {
 // ── Quest sub-header ──────────────────────────────────────────────────────────
 
 class _SubHeader extends StatelessWidget {
-  const _SubHeader({required this.label, required this.color});
+  const _SubHeader({
+    required this.label,
+    required this.color,
+    this.vivid = false,
+  });
   final String label;
   final Color color;
+  final bool vivid;
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      label.toUpperCase(),
-      style: TextStyle(
-        fontSize: Tokens.fontSizeMicro,
-        fontWeight: FontWeight.w800,
-        color: color,
-        letterSpacing: 1.0,
-      ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: TextStyle(
+            fontSize: Tokens.fontSizeMicro,
+            fontWeight: FontWeight.w800,
+            color: color,
+            letterSpacing: 1.0,
+            shadows: vivid
+                ? [
+                    Shadow(
+                      color: color.withValues(alpha: 0.5),
+                      blurRadius: 12,
+                    ),
+                  ]
+                : null,
+          ),
+        ),
+        if (vivid) ...[
+          const SizedBox(width: 8),
+          Container(
+            width: 24,
+            height: 1,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  color.withValues(alpha: 0.8),
+                  color.withValues(alpha: 0)
+                ],
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -1508,6 +2098,9 @@ String _formatRewardMetric(String ruleId, double value) {
       return safe.round().toString();
     case 'daily_calories':
     case 'daily_protein':
+    case 'daily_carbs':
+    case 'daily_fat':
+    case 'daily_fiber':
       return safe.toStringAsFixed(safe.truncateToDouble() == safe ? 0 : 1);
     default:
       return safe.toStringAsFixed(safe.truncateToDouble() == safe ? 0 : 1);
@@ -1521,6 +2114,9 @@ String _rewardUnit(String ruleId, AppLocalizations l10n) {
     case 'daily_calories':
       return l10n.goalUnitKcal;
     case 'daily_protein':
+    case 'daily_carbs':
+    case 'daily_fat':
+    case 'daily_fiber':
       return l10n.goalUnitG;
     case 'daily_sleep':
     case 'weekly_activity':
@@ -1532,44 +2128,6 @@ String _rewardUnit(String ruleId, AppLocalizations l10n) {
   }
 }
 
-String _primaryUnlockReasonText(
-  QuestDetailViewModel detail,
-  List<ProgressionQuest> allQuests,
-  AppLocalizations l10n,
-  ProgressionL10n progL10n,
-) {
-  if (detail.unlockReasons.isEmpty) {
-    return l10n.progQuestDetailHiddenUntilUnlocked;
-  }
-  return _unlockReasonText(
-    detail.unlockReasons.first,
-    allQuests,
-    l10n,
-    progL10n,
-  );
-}
-
-String _unlockReasonText(
-  QuestUnlockReason reason,
-  List<ProgressionQuest> allQuests,
-  AppLocalizations l10n,
-  ProgressionL10n progL10n,
-) {
-  switch (reason.type) {
-    case QuestUnlockReasonType.prerequisiteQuest:
-      final prerequisite = _questById(allQuests, reason.questId);
-      return l10n.progQuestDetailCompleteQuest(
-        prerequisite == null
-            ? (reason.questId ?? '')
-            : progL10n.questTitle(prerequisite),
-      );
-    case QuestUnlockReasonType.level:
-      return l10n.progQuestDetailRequiresLevel(reason.value ?? 0);
-    case QuestUnlockReasonType.trackedDays:
-      return l10n.progQuestDetailTrackDays(reason.value ?? 0);
-  }
-}
-
 ProgressionQuest? _questById(List<ProgressionQuest> quests, String? questId) {
   if (questId == null) return null;
   for (final quest in quests) {
@@ -1578,10 +2136,18 @@ ProgressionQuest? _questById(List<ProgressionQuest> quests, String? questId) {
   return null;
 }
 
-int _safePercent(double progress) {
-  final pct = progress * 100;
-  if (pct.isNaN || pct.isInfinite) return 0;
-  return pct.clamp(0, 100).round();
+String _lockReasonLabel(
+  QuestUnlockReason reason,
+  AppLocalizations l10n,
+) {
+  switch (reason.type) {
+    case QuestUnlockReasonType.level:
+      return l10n.progQuestDetailRequiresLevel(reason.value ?? 0);
+    case QuestUnlockReasonType.trackedDays:
+      return l10n.progQuestDetailTrackDays(reason.value ?? 0);
+    case QuestUnlockReasonType.prerequisiteQuest:
+      return l10n.progQuestDetailCompleteQuest(reason.questId ?? '');
+  }
 }
 
 String _formatFullInt(int value, String locale) {

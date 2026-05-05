@@ -66,8 +66,8 @@ void backgroundSyncCallback() {
       // ── Debug notification flags (SharedPreferences, read-only) ──────────
       {
         final dp = await SharedPreferences.getInstance();
-        sendDebugNotifs =
-            (dp.getBool('devtools_access_granted_last_known') ?? false) &&
+        sendDebugNotifs = (dp.getBool('devtools_access_granted_last_known') ??
+                false) &&
             (dp.getBool('devtools_debug_mode') ?? false) &&
             (dp.getBool('devtools_bg_debug_notifications_enabled') ?? false);
       }
@@ -137,9 +137,8 @@ void backgroundSyncCallback() {
 
       final stateBefore = await engine.load();
 
-      final prevGrantKeys = stateBefore.questRewardGrants
-          .map((g) => g.rewardKey)
-          .toSet();
+      final prevGrantKeys =
+          stateBefore.questRewardGrants.map((g) => g.rewardKey).toSet();
 
       final prevAchievementIds = stateBefore.achievements
           .where((a) => a.unlocked)
@@ -174,13 +173,11 @@ void backgroundSyncCallback() {
       for (var i = 0; i < newGrants.length; i++) {
         final grant = newGrants[i];
 
-        final quest = stateAfter.quests
-            .where((q) => q.id == grant.questId)
-            .firstOrNull;
+        final quest =
+            stateAfter.quests.where((q) => q.id == grant.questId).firstOrNull;
 
-        final title = quest != null
-            ? progressionL10n.questTitle(quest)
-            : 'Quest';
+        final title =
+            quest != null ? progressionL10n.questTitle(quest) : 'Quest';
 
         await NotificationService.instance.showQuestCompleted(
           title,
@@ -266,14 +263,13 @@ void backgroundSyncCallback() {
       // Do budoucna můžeš vracet false jen pro dočasné síťové chyby.
       return true;
     } finally {
-        await _closeDatabases(
-          healthDb: healthDb,
-          ktDb: ktDb,
-          progressionDb: progressionDb,
-        );
-      }
+      await _closeDatabases(
+        healthDb: healthDb,
+        ktDb: ktDb,
+        progressionDb: progressionDb,
+      );
     }
-  );
+  });
 }
 
 Future<void> _maybeShowGoalReminder(SharedPreferences prefs) async {
@@ -356,20 +352,28 @@ class BackgroundSyncService {
       return;
     }
 
-    await Workmanager().initialize(
-      backgroundSyncCallback,
-    );
+    try {
+      await Workmanager().initialize(
+        backgroundSyncCallback,
+      );
 
-    await Workmanager().registerPeriodicTask(
-      _taskTag,
-      _taskName,
-      frequency: _syncInterval,
-      constraints: Constraints(
-        networkType: NetworkType.connected,
-      ),
-      existingWorkPolicy: ExistingPeriodicWorkPolicy.keep,
-    );
+      await Workmanager().registerPeriodicTask(
+        _taskTag,
+        _taskName,
+        frequency: _syncInterval,
+        constraints: Constraints(
+          networkType: NetworkType.connected,
+        ),
+        existingWorkPolicy: ExistingPeriodicWorkPolicy.update,
+      );
 
-    AppLog.app.debug('BackgroundSyncService: registered periodic task');
+      AppLog.app.debug('BackgroundSyncService: registered periodic task');
+    } catch (e, st) {
+      AppLog.app.error(
+        'BackgroundSyncService: registration failed',
+        err: e,
+        stackTrace: st,
+      );
+    }
   }
 }

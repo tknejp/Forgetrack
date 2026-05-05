@@ -47,4 +47,8 @@ abstract class ProgressionRepository {
   Future<ProgressionLedgerSnapshot> persistAchievementUnlocks({
     required List<ProgressionAchievementUnlockEvent> unlocks,
   });
+
+  Future<ProgressionLedgerSnapshot> persistChapterStarts({
+    required List<ProgressionChapterStartRecord> starts,
+  });
 }

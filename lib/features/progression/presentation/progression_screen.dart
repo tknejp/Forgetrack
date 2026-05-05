@@ -33,10 +33,10 @@ class ProgressionScreen extends StatefulWidget {
   final double topContentInset;
 
   @override
-  State<ProgressionScreen> createState() => _FtProgressionScreenState();
+  State<ProgressionScreen> createState() => _ProgressionScreenState();
 }
 
-class _FtProgressionScreenState extends State<ProgressionScreen> {
+class _ProgressionScreenState extends State<ProgressionScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -823,6 +823,8 @@ String _achievementDifficultyLabel(
       return l10n.progAchievementDifficultyHard;
     case ProgressionAchievementDifficulty.extraHard:
       return l10n.progAchievementDifficultyExtraHard;
+    case ProgressionAchievementDifficulty.mythic:
+      return l10n.progAchievementDifficultyMythic;
   }
 }
 
@@ -852,6 +854,25 @@ String _achievementCompactSummary(
     case ProgressionAchievementCriterionType.totalRuleValueAtLeast:
     case ProgressionAchievementCriterionType.bestRollingWindowRuleValueAtLeast:
       return _achievementTargetSummary(achievement, l10n, locale);
+    case ProgressionAchievementCriterionType.dailyQuestsCompletedAtLeast:
+      return '${achievement.targetValue} ${l10n.progAchievementSummaryDailyQuests}';
+    case ProgressionAchievementCriterionType.weeklyQuestsCompletedAtLeast:
+      return '${achievement.targetValue} ${l10n.progAchievementSummaryWeeklyQuests}';
+    case ProgressionAchievementCriterionType.totalQuestsCompletedAtLeast:
+      return '${achievement.targetValue} ${l10n.progAchievementSummaryTotalQuests}';
+    case ProgressionAchievementCriterionType.activeDaysAtLeast:
+      return '${achievement.targetValue} ${l10n.progAchievementSummaryActiveDays}';
+    case ProgressionAchievementCriterionType.perfectDaysAtLeast:
+      return '${achievement.targetValue} ${l10n.progAchievementSummaryPerfectDays}';
+    case ProgressionAchievementCriterionType.perfectWeeksAtLeast:
+      return '${achievement.targetValue} ${l10n.progAchievementSummaryPerfectWeeks}';
+    case ProgressionAchievementCriterionType.comboQuestsCompletedAtLeast:
+      return '${achievement.targetValue} ${l10n.progAchievementSummaryComboQuests}';
+    case ProgressionAchievementCriterionType
+          .tripleComboQuestsCompletedAtLeast:
+      return '${achievement.targetValue} ${l10n.progAchievementSummaryTripleComboQuests}';
+    case ProgressionAchievementCriterionType.compositeAllOf:
+      return l10n.progAchievementSummaryComposite;
   }
 }
 
@@ -898,7 +919,7 @@ class _CosmeticsInventorySection extends StatelessWidget {
 
   static const _featuredTypes = <CosmeticType>[
     CosmeticType.frame,
-    CosmeticType.relic,
+    CosmeticType.companion,
     CosmeticType.background,
   ];
 

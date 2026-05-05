@@ -70,6 +70,7 @@ Future<void> main() async {
   await healthDb.open();
   final fitnessProvider = FitnessProvider(healthService, healthDb);
   await fitnessProvider.initialize();
+  unawaited(fitnessProvider.refreshOnAppOpen(force: true));
 
   final calorieApi = CalorieApiService();
   final ktService = KalorickeTabulkyService();
@@ -105,7 +106,9 @@ Future<void> main() async {
   final socialSession = SocialFirebaseSession(
     isEnabled: socialBackendState.isReady,
   );
-  await NotificationService.instance.initialize();
+  await NotificationService.instance.initialize(
+    requestPermissions: notificationPreferencesProvider.notificationsEnabled,
+  );
   unawaited(FcmService.instance.initialize());
   unawaited(BackgroundSyncService.register());
 

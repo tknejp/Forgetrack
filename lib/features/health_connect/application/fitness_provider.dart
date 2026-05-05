@@ -23,6 +23,7 @@ class FitnessProvider extends ChangeNotifier {
   static const int _defaultHistoryDays = 30;
   static const int _extendedHistoryDays = 365;
   static const int _normalRefreshDays = 7;
+  static const Duration _appOpenRefreshMinInterval = Duration(minutes: 5);
 
   final HealthConnectService _service;
   final HealthDatabase _db;
@@ -32,6 +33,7 @@ class FitnessProvider extends ChangeNotifier {
   // ─── Concurrency guard ────────────────────────────────────────────────────
   bool _inFlight = false;
   StreamSubscription<void>? _dbChangeSubscription;
+  DateTime? _lastAppOpenRefreshAttemptAt;
 
   // ─── State ────────────────────────────────────────────────────────────────
   bool _isLoading = false;
@@ -40,7 +42,9 @@ class FitnessProvider extends ChangeNotifier {
   bool _isHealthConnectAvailable = false;
   bool _hasPermissions = false;
   bool _hasHistoricalDataAccess = false;
+  bool _hasBackgroundDataAccess = false;
   bool _historyPermissionDeniedThisSession = false;
+  bool _backgroundPermissionDeniedThisSession = false;
   String? _errorMessage;
   DateTime? _lastSyncedAt;
 
@@ -77,6 +81,7 @@ class FitnessProvider extends ChangeNotifier {
   bool get isHealthConnectAvailable => _isHealthConnectAvailable;
   bool get hasPermissions => _hasPermissions;
   bool get hasHistoricalDataAccess => _hasHistoricalDataAccess;
+  bool get hasBackgroundDataAccess => _hasBackgroundDataAccess;
 
   FitnessAccessState get accessState {
     if (!_hasInitialized || _isLoading) return FitnessAccessState.checking;
@@ -255,6 +260,7 @@ class FitnessProvider extends ChangeNotifier {
       _hasPermissions = perms == true;
       if (_hasPermissions) {
         await _refreshHistoryAccess(interactive: false);
+        await _refreshBackgroundAccess(interactive: false);
         _loadFromDb();
 
         // Set up live DB watcher — when background task writes data, reload it.
@@ -267,9 +273,15 @@ class FitnessProvider extends ChangeNotifier {
         });
       } else {
         _hasHistoricalDataAccess = false;
+        _hasBackgroundDataAccess = false;
       }
-    } catch (e) {
+    } catch (e, st) {
       _errorMessage = e.toString();
+      AppLog.health.error(
+        'FitnessProvider.initialize() failed',
+        err: e,
+        stackTrace: st,
+      );
     } finally {
       _hasInitialized = true;
       _isLoading = false;
@@ -294,18 +306,59 @@ class FitnessProvider extends ChangeNotifier {
       _hasPermissions = await _service.requestPermissions();
       if (_hasPermissions) {
         await _refreshHistoryAccess(interactive: true);
+        await _refreshBackgroundAccess(interactive: true);
         await _fetchFromHC();
       } else {
         _hasHistoricalDataAccess = false;
+        _hasBackgroundDataAccess = false;
       }
-    } catch (e) {
+    } catch (e, st) {
       _errorMessage = e.toString();
+      AppLog.health.error(
+        'FitnessProvider.requestPermissions() failed',
+        err: e,
+        stackTrace: st,
+      );
     } finally {
       _hasInitialized = true;
       _isLoading = false;
       _inFlight = false;
       notifyListeners();
     }
+  }
+
+  Future<void> refreshOnAppOpen({bool force = false}) async {
+    final now = DateTime.now();
+    final lastAttempt = _lastAppOpenRefreshAttemptAt;
+
+    if (!force &&
+        lastAttempt != null &&
+        now.difference(lastAttempt) < _appOpenRefreshMinInterval) {
+      AppLog.health.debug(
+        'refreshOnAppOpen() skipped — throttled',
+        payload: 'lastAttempt=${lastAttempt.toIso8601String()}',
+      );
+      return;
+    }
+
+    _lastAppOpenRefreshAttemptAt = now;
+
+    if (!_hasInitialized || !_isHealthConnectAvailable || !_hasPermissions) {
+      await initialize();
+    }
+
+    if (!_isHealthConnectAvailable || !_hasPermissions) {
+      AppLog.health.debug(
+        'refreshOnAppOpen() skipped — Health Connect not ready',
+        payload:
+            'available=$_isHealthConnectAvailable permissions=$_hasPermissions',
+      );
+      return;
+    }
+
+    AppLog.health.info('refreshOnAppOpen() started');
+    await refreshBackground(source: 'app_open');
+    AppLog.health.info('refreshOnAppOpen() finished');
   }
 
   /// Fetches fresh data from HC and updates the DB.
@@ -347,10 +400,15 @@ class FitnessProvider extends ChangeNotifier {
     } on _QuotaExceededException {
       syncError = 'quota_exceeded';
       _debugLastRefreshError = syncError;
-    } catch (e) {
+    } catch (e, st) {
       _errorMessage = e.toString();
       syncError = e.toString();
       _debugLastRefreshError = syncError;
+      AppLog.health.error(
+        'FitnessProvider.refresh() failed',
+        err: e,
+        stackTrace: st,
+      );
     } finally {
       final completedAt = DateTime.now();
       _debugLastRefreshCompletedAt = completedAt;
@@ -388,7 +446,7 @@ class FitnessProvider extends ChangeNotifier {
 
   /// Background-safe variant of [refresh] – never shows interactive dialogs.
   /// Safe to call from a WorkManager isolate.
-  Future<void> refreshBackground() async {
+  Future<void> refreshBackground({String source = 'background'}) async {
     if (_inFlight) return;
     if (!_isHealthConnectAvailable || !_hasPermissions) {
       await initialize();
@@ -398,7 +456,7 @@ class FitnessProvider extends ChangeNotifier {
     final stepsBefore = todaySteps;
     final lastRecordBefore = _stepsHistory.lastOrNull;
 
-    _debugLastRefreshSource = 'background';
+    _debugLastRefreshSource = source;
     _debugLastRefreshStartedAt = syncStart;
     _debugLastRefreshCompletedAt = null;
     _debugTodayStepsBeforeRefresh = stepsBefore;
@@ -415,16 +473,31 @@ class FitnessProvider extends ChangeNotifier {
     String? syncError;
     try {
       await _refreshHistoryAccess(interactive: false);
-      _debugLastQueryDays = _historyLookbackDays;
-      await _fetchFromHC();
-      _loadFromDb();
-      _debugLastFetchedTodaySteps = stepsForDate(DateTime.now());
+      await _refreshBackgroundAccess(interactive: false);
+      if (source == 'background' && !_hasBackgroundDataAccess) {
+        syncError = 'background_permission_missing';
+        _debugLastRefreshError = syncError;
+        AppLog.health.warn(
+          'FitnessProvider.refreshBackground() skipped — missing Health Connect background permission',
+        );
+        _loadFromDb();
+      } else {
+        _debugLastQueryDays = _historyLookbackDays;
+        await _fetchFromHC();
+        _loadFromDb();
+        _debugLastFetchedTodaySteps = stepsForDate(DateTime.now());
+      }
     } on _QuotaExceededException {
       syncError = 'quota_exceeded';
       _debugLastRefreshError = syncError;
-    } catch (e) {
+    } catch (e, st) {
       syncError = e.toString();
       _debugLastRefreshError = syncError;
+      AppLog.health.error(
+        'FitnessProvider.refreshBackground() failed',
+        err: e,
+        stackTrace: st,
+      );
     } finally {
       final completedAt = DateTime.now();
       _debugLastRefreshCompletedAt = completedAt;
@@ -440,7 +513,7 @@ class FitnessProvider extends ChangeNotifier {
 
     unawaited(DevToolsSyncLogger.instance.record(DevToolsSyncEvent(
       timestamp: syncStart,
-      source: 'background',
+      source: source,
       feature: 'health',
       result: syncError != null ? 'failure' : 'success',
       durationMs: DateTime.now().difference(syncStart).inMilliseconds,
@@ -500,10 +573,15 @@ class FitnessProvider extends ChangeNotifier {
 
       // Preserve UI from existing DB cache.
       _loadFromDb();
-    } catch (e) {
+    } catch (e, st) {
       syncError = e.toString();
       _errorMessage = syncError;
       _debugLastRefreshError = syncError;
+      AppLog.health.error(
+        'FitnessProvider.refreshRange() failed',
+        err: e,
+        stackTrace: st,
+      );
 
       // Preserve UI from existing DB cache if fetch partially failed.
       _loadFromDb();
@@ -629,6 +707,32 @@ class FitnessProvider extends ChangeNotifier {
     _hasHistoricalDataAccess = authorized;
   }
 
+  Future<void> _refreshBackgroundAccess({required bool interactive}) async {
+    if (!_hasPermissions) {
+      _hasBackgroundDataAccess = false;
+      return;
+    }
+
+    final available = await _service.isBackgroundPermissionAvailable();
+    if (!available) {
+      _hasBackgroundDataAccess = false;
+      _backgroundPermissionDeniedThisSession = false;
+      return;
+    }
+
+    var authorized = await _service.hasBackgroundPermission();
+    if (!authorized && interactive && !_backgroundPermissionDeniedThisSession) {
+      authorized = await _service.requestBackgroundPermissionIfAvailable();
+      _backgroundPermissionDeniedThisSession = !authorized;
+    }
+
+    if (authorized) {
+      _backgroundPermissionDeniedThisSession = false;
+    }
+
+    _hasBackgroundDataAccess = authorized;
+  }
+
   /// Fetches recent data from Health Connect and safely merges successful
   /// metric groups into the local DB.
   ///
@@ -652,6 +756,12 @@ class FitnessProvider extends ChangeNotifier {
     // ─── Steps ──────────────────────────────────────────────────────────────
     try {
       fetchedSteps = await _service.getStepsHistory(days);
+      fetchedSteps = _preserveCachedStepsOnSuspiciousZeroRead(fetchedSteps);
+
+      AppLog.health.info(
+        'Health sync steps fetched',
+        payload: _stepsSummary(fetchedSteps),
+      );
 
       if (fetchedSteps.isNotEmpty) {
         await _db.saveStepsPartial(fetchedSteps);
@@ -662,9 +772,14 @@ class FitnessProvider extends ChangeNotifier {
         failedGroups.add('steps_empty_skipped');
         anyFailure = true;
       }
-    } catch (e) {
+    } catch (e, st) {
       failedGroups.add(_isQuotaError(e) ? 'steps_quota' : 'steps_error');
       anyFailure = true;
+      AppLog.health.error(
+        'Health sync steps failed',
+        err: e,
+        stackTrace: st,
+      );
     }
 
     // ─── Active calories ────────────────────────────────────────────────────
@@ -902,6 +1017,56 @@ class FitnessProvider extends ChangeNotifier {
     final endDay = DateTime(end.year, end.month, end.day);
 
     return !day.isBefore(startDay) && !day.isAfter(endDay);
+  }
+
+  List<StepsRecord> _preserveCachedStepsOnSuspiciousZeroRead(
+    List<StepsRecord> fetched,
+  ) {
+    if (fetched.isEmpty || _stepsHistory.isEmpty) return fetched;
+
+    final cachedByKey = {
+      for (final record in _stepsHistory) _fmtDateKey(record.date): record
+    };
+    var preservedCount = 0;
+
+    final merged = [
+      for (final record in fetched)
+        if (record.steps == 0 &&
+            (cachedByKey[_fmtDateKey(record.date)]?.steps ?? 0) > 0)
+          () {
+            preservedCount++;
+            return cachedByKey[_fmtDateKey(record.date)]!;
+          }()
+        else
+          record,
+    ];
+
+    if (preservedCount > 0) {
+      AppLog.health.warn(
+        'Preserved cached step rows after zero Health Connect read',
+        payload: 'preserved=$preservedCount fetched=${_stepsSummary(fetched)} '
+            'merged=${_stepsSummary(merged)}',
+      );
+    }
+
+    return merged;
+  }
+
+  String _stepsSummary(List<StepsRecord> records) {
+    if (records.isEmpty) return 'count=0';
+
+    final todayKey = _fmtDateKey(DateTime.now());
+    final today = records
+        .where((record) => _fmtDateKey(record.date) == todayKey)
+        .map((record) => record.steps)
+        .toList();
+    final total = records.fold<int>(0, (sum, record) => sum + record.steps);
+    final nonZero = records.where((record) => record.steps > 0).length;
+
+    return 'count=${records.length}, '
+        'first=${_fmtDateKey(records.first.date)}=${records.first.steps}, '
+        'last=${_fmtDateKey(records.last.date)}=${records.last.steps}, '
+        'today=$today, nonZero=$nonZero, total=$total';
   }
 
   int get _historyLookbackDays =>

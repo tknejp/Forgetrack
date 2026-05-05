@@ -88,6 +88,8 @@ String socialDifficultyLabelForName(String diff, AppLocalizations l10n) {
       return l10n.progAchievementDifficultyHard;
     case ProgressionAchievementDifficulty.extraHard:
       return l10n.progAchievementDifficultyExtraHard;
+    case ProgressionAchievementDifficulty.mythic:
+      return l10n.progAchievementDifficultyMythic;
   }
 }
 
@@ -231,6 +233,8 @@ String friendAchievementDifficultyLabel(
       return l10n.progAchievementDifficultyHard;
     case ProgressionAchievementDifficulty.extraHard:
       return l10n.progAchievementDifficultyExtraHard;
+    case ProgressionAchievementDifficulty.mythic:
+      return l10n.progAchievementDifficultyMythic;
   }
 }
 
@@ -258,6 +262,25 @@ String friendAchievementCompactSummary(
     case ProgressionAchievementCriterionType.totalRuleValueAtLeast:
     case ProgressionAchievementCriterionType.bestRollingWindowRuleValueAtLeast:
       return _friendAchievementTargetSummary(achievement, l10n, locale);
+    case ProgressionAchievementCriterionType.dailyQuestsCompletedAtLeast:
+      return '${achievement.targetValue} ${l10n.progAchievementSummaryDailyQuests}';
+    case ProgressionAchievementCriterionType.weeklyQuestsCompletedAtLeast:
+      return '${achievement.targetValue} ${l10n.progAchievementSummaryWeeklyQuests}';
+    case ProgressionAchievementCriterionType.totalQuestsCompletedAtLeast:
+      return '${achievement.targetValue} ${l10n.progAchievementSummaryTotalQuests}';
+    case ProgressionAchievementCriterionType.activeDaysAtLeast:
+      return '${achievement.targetValue} ${l10n.progAchievementSummaryActiveDays}';
+    case ProgressionAchievementCriterionType.perfectDaysAtLeast:
+      return '${achievement.targetValue} ${l10n.progAchievementSummaryPerfectDays}';
+    case ProgressionAchievementCriterionType.perfectWeeksAtLeast:
+      return '${achievement.targetValue} ${l10n.progAchievementSummaryPerfectWeeks}';
+    case ProgressionAchievementCriterionType.comboQuestsCompletedAtLeast:
+      return '${achievement.targetValue} ${l10n.progAchievementSummaryComboQuests}';
+    case ProgressionAchievementCriterionType
+          .tripleComboQuestsCompletedAtLeast:
+      return '${achievement.targetValue} ${l10n.progAchievementSummaryTripleComboQuests}';
+    case ProgressionAchievementCriterionType.compositeAllOf:
+      return l10n.progAchievementSummaryComposite;
   }
 }
 

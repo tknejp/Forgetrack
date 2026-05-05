@@ -350,6 +350,143 @@ class ProgressionAchievementCatalog {
         ruleId: 'daily_sleep',
         windowSizeDays: 30,
       ),
+      // -- Phase 3a: quest-count and active-day achievements -----------------
+      // Counted from the questRewardGrants ledger (ProgressionEngine builds
+      // a questCategoryById index from ProgressionQuestCatalog and passes it
+      // through to the evaluator). Title/Description English fallbacks here;
+      // localized strings live in ProgressionL10n + app_*.arb.
+      ProgressionAchievementDefinition(
+        id: 'daily_quest_3',
+        type: ProgressionAchievementType.milestone,
+        difficulty: ProgressionAchievementDifficulty.easy,
+        difficultyScore: 1.3,
+        criterionType:
+            ProgressionAchievementCriterionType.dailyQuestsCompletedAtLeast,
+        title: 'First Steps',
+        description: 'Complete 3 daily quests.',
+        targetValue: 3,
+      ),
+      ProgressionAchievementDefinition(
+        id: 'daily_quest_7',
+        type: ProgressionAchievementType.milestone,
+        difficulty: ProgressionAchievementDifficulty.easy,
+        difficultyScore: 1.8,
+        criterionType:
+            ProgressionAchievementCriterionType.dailyQuestsCompletedAtLeast,
+        title: 'Steady Hand',
+        description: 'Complete 7 daily quests.',
+        targetValue: 7,
+      ),
+      ProgressionAchievementDefinition(
+        id: 'quest_hunter_250',
+        type: ProgressionAchievementType.mastery,
+        difficulty: ProgressionAchievementDifficulty.hard,
+        difficultyScore: 6.8,
+        criterionType:
+            ProgressionAchievementCriterionType.totalQuestsCompletedAtLeast,
+        title: 'Quest Hunter',
+        description: 'Complete 250 quests in total.',
+        targetValue: 250,
+      ),
+      ProgressionAchievementDefinition(
+        id: 'active_days_7',
+        type: ProgressionAchievementType.streak,
+        difficulty: ProgressionAchievementDifficulty.easy,
+        difficultyScore: 1.5,
+        criterionType: ProgressionAchievementCriterionType.activeDaysAtLeast,
+        title: 'A Week on the Road',
+        description: 'Be active for 7 days.',
+        targetValue: 7,
+      ),
+      // -- Phase 3b: perfect-period achievements ----------------------------
+      // Counted by RealPerfectPeriodEvaluator (shared with the cosmetic
+      // snapshot — same source of truth as frame_balance/master_routine).
+      ProgressionAchievementDefinition(
+        id: 'perfect_days_7',
+        type: ProgressionAchievementType.mastery,
+        difficulty: ProgressionAchievementDifficulty.hard,
+        difficultyScore: 4.5,
+        criterionType: ProgressionAchievementCriterionType.perfectDaysAtLeast,
+        title: 'Balanced Week',
+        description: 'Complete all daily goals on 7 different days.',
+        targetValue: 7,
+      ),
+      ProgressionAchievementDefinition(
+        id: 'perfect_weeks_12',
+        type: ProgressionAchievementType.mastery,
+        difficulty: ProgressionAchievementDifficulty.extraHard,
+        difficultyScore: 7.5,
+        criterionType: ProgressionAchievementCriterionType.perfectWeeksAtLeast,
+        title: 'Master of Routine',
+        description: 'Complete a perfect week 12 times.',
+        targetValue: 12,
+      ),
+      // -- Phase 3c: combo quest achievements -------------------------------
+      // Counted from the questRewardGrants ledger filtered against
+      // _kComboQuestIds / _kTripleComboQuestIds in the achievement evaluator.
+      ProgressionAchievementDefinition(
+        id: 'combo_victory_10',
+        type: ProgressionAchievementType.mastery,
+        difficulty: ProgressionAchievementDifficulty.medium,
+        difficultyScore: 3.5,
+        criterionType:
+            ProgressionAchievementCriterionType.comboQuestsCompletedAtLeast,
+        title: 'Combo Initiate',
+        description: 'Complete 10 combo quests of any kind.',
+        targetValue: 10,
+      ),
+      ProgressionAchievementDefinition(
+        id: 'combo_triple_victory_25',
+        type: ProgressionAchievementType.mastery,
+        difficulty: ProgressionAchievementDifficulty.hard,
+        difficultyScore: 5.0,
+        criterionType: ProgressionAchievementCriterionType
+            .tripleComboQuestsCompletedAtLeast,
+        title: 'Triple Threat',
+        description: 'Complete 25 triple-or-better combo quests.',
+        targetValue: 25,
+      ),
+      ProgressionAchievementDefinition(
+        id: 'combo_triple_victory_100',
+        type: ProgressionAchievementType.mastery,
+        difficulty: ProgressionAchievementDifficulty.extraHard,
+        difficultyScore: 8.0,
+        criterionType: ProgressionAchievementCriterionType
+            .tripleComboQuestsCompletedAtLeast,
+        title: 'Combo Sovereign',
+        description: 'Complete 100 triple-or-better combo quests.',
+        targetValue: 100,
+      ),
+      // -- Phase 3d: composite endgame trial --------------------------------
+      // Drives the relic_dragonrock_heart unlock (mythic) and is the
+      // canonical example for compositeAllOf. All three legs must be met.
+      ProgressionAchievementDefinition(
+        id: 'dragonrock_trial',
+        type: ProgressionAchievementType.mastery,
+        difficulty: ProgressionAchievementDifficulty.extraHard,
+        difficultyScore: 10.0,
+        criterionType: ProgressionAchievementCriterionType.compositeAllOf,
+        title: 'Dragonrock Trial',
+        description:
+            'Reach level 100, complete 250 quests, and walk 10,000,000 steps.',
+        targetValue: 1,
+        compositeConditions: [
+          ProgressionAchievementCompositeCondition(
+            type: ProgressionAchievementCriterionType.totalXpAtLeast,
+            targetValue: levelPolicy.xpRequiredForLevel(100),
+          ),
+          const ProgressionAchievementCompositeCondition(
+            type: ProgressionAchievementCriterionType
+                .totalQuestsCompletedAtLeast,
+            targetValue: 250,
+          ),
+          const ProgressionAchievementCompositeCondition(
+            type: ProgressionAchievementCriterionType.totalRuleValueAtLeast,
+            ruleId: 'daily_steps',
+            targetValue: 10000000,
+          ),
+        ],
+      ),
     ];
   }
 }

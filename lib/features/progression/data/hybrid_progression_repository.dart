@@ -167,6 +167,12 @@ class HybridProgressionRepository implements ProgressionLocalRepository {
   }
 
   @override
+  Future<ProgressionLedgerSnapshot> persistChapterStarts({
+    required List<ProgressionChapterStartRecord> starts,
+  }) =>
+      _local.persistChapterStarts(starts: starts);
+
+  @override
   Future<void> insertRestoredRuleGrant(ProgressionRewardGrant grant) =>
       _local.insertRestoredRuleGrant(grant);
 

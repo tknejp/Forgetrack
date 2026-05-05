@@ -74,6 +74,12 @@ class ProgressionL10n {
         return _l10n.progRuleDailyCalories;
       case 'daily_protein':
         return _l10n.progRuleDailyProtein;
+      case 'daily_carbs':
+        return _l10n.progRuleDailyCarbs;
+      case 'daily_fat':
+        return _l10n.progRuleDailyFat;
+      case 'daily_fiber':
+        return _l10n.progRuleDailyFiber;
       case 'daily_sleep':
         return _l10n.progRuleDailySleep;
       case 'weekly_activity':
@@ -88,6 +94,9 @@ class ProgressionL10n {
   }
 
   String questTitle(ProgressionQuest quest) {
+    final title = quest.titleText;
+    if (title != null) return title(_l10n);
+
     switch (quest.id) {
       case 'earn_first_reward':
         return _l10n.progQuestEarnFirstRewardTitle;
@@ -147,6 +156,9 @@ class ProgressionL10n {
   }
 
   String questDescription(ProgressionQuest quest) {
+    final description = quest.descriptionText;
+    if (description != null) return description(_l10n);
+
     switch (quest.id) {
       case 'earn_first_reward':
         return _l10n.progQuestEarnFirstRewardDesc;
@@ -205,6 +217,18 @@ class ProgressionL10n {
     }
   }
 
+  String questSourceLabel(ProgressionQuest quest) {
+    final sourceLabel = quest.sourceLabel;
+    if (sourceLabel != null) return sourceLabel(_l10n);
+    return questCriterionDescriptor(quest);
+  }
+
+  String questChainStepLabel(ProgressionQuest quest) {
+    final label = quest.chainStepLabel;
+    if (label != null) return label(_l10n);
+    return '';
+  }
+
   String achievementTitle(ProgressionAchievement achievement) {
     // Level milestone achievements share their title with the level itself
     // (single source of truth: the level config).
@@ -212,6 +236,8 @@ class ProgressionL10n {
     if (levelTarget != null) return levelTitle(levelTarget);
 
     switch (achievement.id) {
+      case 'welcome_to_journey':
+        return _l10n.progAchievementWelcomeToJourneyTitle;
       case 'first_reward':
         return _l10n.progAchievementFirstRewardTitle;
       case 'reward_hunter_25':
@@ -242,6 +268,8 @@ class ProgressionL10n {
         return _l10n.progAchievementStepDisciplineTitle;
       case 'steps_streak_30':
         return _l10n.progAchievementStepSovereignTitle;
+      case 'steps_streak_50':
+        return _l10n.progAchievementStepsStreak50Title;
       case 'steps_streak_100':
         return _l10n.progAchievementStepCenturionTitle;
       case 'nutrition_streak_3':
@@ -270,6 +298,26 @@ class ProgressionL10n {
         return _l10n.progAchievementSleepMonth225hTitle;
       case 'sleep_month_240h':
         return _l10n.progAchievementSleepMonth240hTitle;
+      case 'daily_quest_3':
+        return _l10n.progAchievementDailyQuest3Title;
+      case 'daily_quest_7':
+        return _l10n.progAchievementDailyQuest7Title;
+      case 'quest_hunter_250':
+        return _l10n.progAchievementQuestHunter250Title;
+      case 'active_days_7':
+        return _l10n.progAchievementActiveDays7Title;
+      case 'perfect_days_7':
+        return _l10n.progAchievementPerfectDays7Title;
+      case 'perfect_weeks_12':
+        return _l10n.progAchievementPerfectWeeks12Title;
+      case 'combo_victory_10':
+        return _l10n.progAchievementComboVictory10Title;
+      case 'combo_triple_victory_25':
+        return _l10n.progAchievementComboTripleVictory25Title;
+      case 'combo_triple_victory_100':
+        return _l10n.progAchievementComboTripleVictory100Title;
+      case 'dragonrock_trial':
+        return _l10n.progAchievementDragonrockTrialTitle;
       default:
         return achievement.title;
     }
@@ -281,6 +329,8 @@ class ProgressionL10n {
     if (levelTarget != null) return _l10n.progLevelAchievementDesc(levelTarget);
 
     switch (achievement.id) {
+      case 'welcome_to_journey':
+        return _l10n.progAchievementWelcomeToJourneyDesc;
       case 'first_reward':
         return _l10n.progAchievementFirstRewardDesc;
       case 'reward_hunter_25':
@@ -311,6 +361,8 @@ class ProgressionL10n {
         return _l10n.progAchievementStepDisciplineDesc;
       case 'steps_streak_30':
         return _l10n.progAchievementStepSovereignDesc;
+      case 'steps_streak_50':
+        return _l10n.progAchievementStepsStreak50Desc;
       case 'steps_streak_100':
         return _l10n.progAchievementStepCenturionDesc;
       case 'nutrition_streak_3':
@@ -339,6 +391,26 @@ class ProgressionL10n {
         return _l10n.progAchievementSleepMonth225hDesc;
       case 'sleep_month_240h':
         return _l10n.progAchievementSleepMonth240hDesc;
+      case 'daily_quest_3':
+        return _l10n.progAchievementDailyQuest3Desc;
+      case 'daily_quest_7':
+        return _l10n.progAchievementDailyQuest7Desc;
+      case 'quest_hunter_250':
+        return _l10n.progAchievementQuestHunter250Desc;
+      case 'active_days_7':
+        return _l10n.progAchievementActiveDays7Desc;
+      case 'perfect_days_7':
+        return _l10n.progAchievementPerfectDays7Desc;
+      case 'perfect_weeks_12':
+        return _l10n.progAchievementPerfectWeeks12Desc;
+      case 'combo_victory_10':
+        return _l10n.progAchievementComboVictory10Desc;
+      case 'combo_triple_victory_25':
+        return _l10n.progAchievementComboTripleVictory25Desc;
+      case 'combo_triple_victory_100':
+        return _l10n.progAchievementComboTripleVictory100Desc;
+      case 'dragonrock_trial':
+        return _l10n.progAchievementDragonrockTrialDesc;
       default:
         return achievement.description;
     }
@@ -346,6 +418,8 @@ class ProgressionL10n {
 
   String questCriterionDescriptor(ProgressionQuest quest) {
     switch (quest.criterionType) {
+      case ProgressionQuestCriterionType.chapterStarted:
+        return quest.sourceLabel?.call(_l10n) ?? _l10n.progQuestSourceJourney;
       case ProgressionQuestCriterionType.totalXpAtLeast:
         return _l10n.progQuestCriterionTotalXp;
       case ProgressionQuestCriterionType.rewardCountAtLeast:
@@ -382,6 +456,8 @@ class ProgressionL10n {
         }
         return _l10n.progQuestCriterionCurrentPeriodGeneric;
       case ProgressionQuestCriterionType.currentPeriodRuleSetAtLeast:
+        return _l10n.progQuestCriterionCurrentPeriodRuleSet;
+      case ProgressionQuestCriterionType.ruleSetCompletionsAtLeast:
         return _l10n.progQuestCriterionCurrentPeriodRuleSet;
       case ProgressionQuestCriterionType.achievementUnlocked:
         return _l10n.progQuestCriterionAchievement;

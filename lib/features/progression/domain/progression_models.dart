@@ -1,3 +1,7 @@
+import '../../../l10n/app_localizations.dart';
+
+typedef ProgressionQuestText = String Function(AppLocalizations l10n);
+
 enum ProgressionDomain {
   steps,
   nutrition,
@@ -10,6 +14,9 @@ enum ProgressionMetric {
   steps,
   calories,
   proteinGrams,
+  carbsGrams,
+  fatGrams,
+  fiberGrams,
   sleepMinutes,
   activityMinutes,
   weightKg,
@@ -49,6 +56,7 @@ enum ProgressionAchievementDifficulty {
   medium,
   hard,
   extraHard,
+  mythic,
 }
 
 enum ProgressionAchievementCriterionType {
@@ -57,6 +65,28 @@ enum ProgressionAchievementCriterionType {
   bestStreakAtLeast,
   totalRuleValueAtLeast,
   bestRollingWindowRuleValueAtLeast,
+  // Phase 3a additions — counted from the questRewardGrants ledger via the
+  // questCategoryById index passed to the achievement evaluator.
+  dailyQuestsCompletedAtLeast,
+  weeklyQuestsCompletedAtLeast,
+  totalQuestsCompletedAtLeast,
+  // Distinct days with at least one progression evaluation period — counted
+  // from the evaluations list, mirrors CosmeticUnlockSnapshotExtractor.
+  activeDaysAtLeast,
+  // Phase 3b additions — delegate to the shared PerfectPeriodEvaluator so
+  // achievement counts and cosmetic snapshot counts can never disagree.
+  perfectDaysAtLeast,
+  perfectWeeksAtLeast,
+  // Phase 3c additions — combo quest completions, counted from the
+  // questRewardGrants ledger filtered against the hard-coded combo and
+  // triple-combo quest id sets in the achievement evaluator.
+  comboQuestsCompletedAtLeast,
+  tripleComboQuestsCompletedAtLeast,
+  // Phase 3d addition — composite (AND) over a list of
+  // ProgressionAchievementCompositeCondition. The achievement's own
+  // targetValue is conventionally 1; current value is 1 iff every
+  // sub-condition is met, else 0.
+  compositeAllOf,
 }
 
 enum ProgressionQuestType {
@@ -67,21 +97,36 @@ enum ProgressionQuestType {
 
 enum ProgressionQuestCategory {
   journey,
+  chapter,
   daily,
   weekly,
   chain,
 }
 
+enum ProgressionQuestDisplayBucket {
+  daily,
+  weekly,
+  chapter,
+  longTerm,
+}
+
 enum ProgressionQuestCriterionType {
+  chapterStarted,
   totalXpAtLeast,
   rewardCountAtLeast,
   bestStreakAtLeast,
   totalRuleValueAtLeast,
   currentPeriodRuleCompletion,
   currentPeriodRuleSetAtLeast,
+  ruleSetCompletionsAtLeast,
   achievementUnlocked,
   ruleCompletionsAtLeast,
   domainRewardCountAtLeast,
+}
+
+enum ProgressionProgressStartPolicy {
+  lifetime,
+  chapterStartedAt,
 }
 
 enum ProgressionQuestStatus {
@@ -101,6 +146,9 @@ class ProgressionGoalSet {
     required this.dailySteps,
     required this.dailyCalories,
     required this.dailyProteinGrams,
+    this.dailyCarbsGrams = 250,
+    this.dailyFatGrams = 65,
+    this.dailyFiberGrams = 30,
     required this.sleepMinutes,
     required this.weeklyActivityMinutes,
     this.targetWeightKg = 70.0,
@@ -109,6 +157,9 @@ class ProgressionGoalSet {
   final int dailySteps;
   final double dailyCalories;
   final double dailyProteinGrams;
+  final double dailyCarbsGrams;
+  final double dailyFatGrams;
+  final double dailyFiberGrams;
   final int sleepMinutes;
   final int weeklyActivityMinutes;
   final double targetWeightKg;
@@ -152,6 +203,9 @@ class ProgressionSnapshot {
     this.steps = 0,
     this.calories = 0,
     this.proteinGrams = 0,
+    this.carbsGrams = 0,
+    this.fatGrams = 0,
+    this.fiberGrams = 0,
     this.sleepMinutes = 0,
     this.activityMinutes = 0,
     this.weightKg = 0.0,
@@ -161,6 +215,9 @@ class ProgressionSnapshot {
   final int steps;
   final double calories;
   final double proteinGrams;
+  final double carbsGrams;
+  final double fatGrams;
+  final double fiberGrams;
   final int sleepMinutes;
   final int activityMinutes;
   final double weightKg;
@@ -173,6 +230,12 @@ class ProgressionSnapshot {
         return calories;
       case ProgressionMetric.proteinGrams:
         return proteinGrams;
+      case ProgressionMetric.carbsGrams:
+        return carbsGrams;
+      case ProgressionMetric.fatGrams:
+        return fatGrams;
+      case ProgressionMetric.fiberGrams:
+        return fiberGrams;
       case ProgressionMetric.sleepMinutes:
         return sleepMinutes.toDouble();
       case ProgressionMetric.activityMinutes:
@@ -400,6 +463,22 @@ class ProgressionAchievementUnlockEvent {
   final DateTime unlockedAt;
 }
 
+class ProgressionChapterStartRecord {
+  const ProgressionChapterStartRecord({
+    required this.uid,
+    required this.chapterId,
+    required this.startedAtLevel,
+    required this.startedAt,
+  });
+
+  final String uid;
+  final String chapterId;
+  final int startedAtLevel;
+  final DateTime startedAt;
+
+  String get startKey => 'chapter|$chapterId|start';
+}
+
 class ProgressionLedgerSnapshot {
   const ProgressionLedgerSnapshot({
     required this.evaluations,
@@ -407,6 +486,7 @@ class ProgressionLedgerSnapshot {
     this.questRewardGrants = const [],
     this.activeQuestIds = const <String>{},
     this.achievementUnlocks = const [],
+    this.chapterStarts = const [],
     this.lastEvaluatedAt,
   });
 
@@ -415,6 +495,7 @@ class ProgressionLedgerSnapshot {
   final List<ProgressionQuestRewardGrant> questRewardGrants;
   final Set<String> activeQuestIds;
   final List<ProgressionAchievementUnlockEvent> achievementUnlocks;
+  final List<ProgressionChapterStartRecord> chapterStarts;
   final DateTime? lastEvaluatedAt;
 }
 
@@ -464,6 +545,8 @@ class ProgressionAchievementDefinition {
     this.domain,
     this.windowSizeDays,
     this.relatedRuleIds = const [],
+    this.difficultyScore,
+    this.compositeConditions,
   });
 
   final String id;
@@ -478,7 +561,41 @@ class ProgressionAchievementDefinition {
   final int? windowSizeDays;
   final List<String> relatedRuleIds;
 
+  /// Fine-grained difficulty (1.0–10.0) used for balancing, debug tooling,
+  /// and future UI ordering. The coarse [difficulty] enum stays as the
+  /// authoritative bucket; this is an additional dimension and may be null
+  /// for legacy entries that have not been scored yet.
+  final double? difficultyScore;
+
+  /// Sub-conditions for [ProgressionAchievementCriterionType.compositeAllOf].
+  /// All conditions must be met (AND) for the achievement to unlock.
+  /// Conventionally [targetValue] is `1` for composite achievements; the
+  /// evaluator returns `1` iff every entry's `targetValue` is satisfied,
+  /// else `0`.
+  final List<ProgressionAchievementCompositeCondition>? compositeConditions;
+
   String get unlockKey => 'achievement|$id';
+}
+
+/// One leg of a [ProgressionAchievementCriterionType.compositeAllOf]
+/// achievement. The evaluator computes the metric implied by [type] (with
+/// [ruleId]/[domain] filters where applicable) and checks
+/// `value >= targetValue`.
+///
+/// Nesting composites is not allowed — `type == compositeAllOf` is rejected
+/// by the evaluator.
+class ProgressionAchievementCompositeCondition {
+  const ProgressionAchievementCompositeCondition({
+    required this.type,
+    required this.targetValue,
+    this.ruleId,
+    this.domain,
+  });
+
+  final ProgressionAchievementCriterionType type;
+  final int targetValue;
+  final String? ruleId;
+  final ProgressionDomain? domain;
 }
 
 class ProgressionAchievement {
@@ -525,6 +642,20 @@ class ProgressionQuestDefinition {
     required this.criterionType,
     required this.targetValue,
     required this.rewardXp,
+    this.assetKey,
+    this.visualDomain,
+    this.sourceLabel,
+    this.chainId,
+    this.chainStepLabel,
+    this.nextQuestIds = const [],
+    this.displayBucket,
+    this.displayGroupId,
+    this.comboPoolId,
+    this.chapterId,
+    this.progressStartPolicy = ProgressionProgressStartPolicy.lifetime,
+    this.requiredRuleCount,
+    this.dailySequenceId,
+    this.dailySequenceStep,
     this.ruleId,
     this.domain,
     this.periodKind,
@@ -538,8 +669,8 @@ class ProgressionQuestDefinition {
   });
 
   final String id;
-  final String title;
-  final String description;
+  final ProgressionQuestText title;
+  final ProgressionQuestText description;
   final ProgressionQuestType type;
   final ProgressionQuestCategory category;
   final ProgressionQuestCriterionType criterionType;
@@ -555,6 +686,21 @@ class ProgressionQuestDefinition {
   final List<String> prerequisiteQuestIds;
   final int sortOrder;
   final int priority;
+  final String? assetKey;
+  final ProgressionDomain? visualDomain;
+
+  final ProgressionQuestText? sourceLabel;
+  final String? chainId;
+  final ProgressionQuestText? chainStepLabel;
+  final List<String> nextQuestIds;
+  final ProgressionQuestDisplayBucket? displayBucket;
+  final String? displayGroupId;
+  final String? comboPoolId;
+  final String? chapterId;
+  final ProgressionProgressStartPolicy progressStartPolicy;
+  final int? requiredRuleCount;
+  final String? dailySequenceId;
+  final int? dailySequenceStep;
 
   bool get isRepeatableReward =>
       criterionType ==
@@ -598,6 +744,23 @@ class ProgressionQuest {
     this.relatedRuleIds = const [],
     this.minimumLevel,
     this.minimumTrackedDays,
+    this.assetKey,
+    this.visualDomain,
+    this.titleText,
+    this.descriptionText,
+    this.sourceLabel,
+    this.chainId,
+    this.chainStepLabel,
+    this.nextQuestIds = const [],
+    this.displayBucket,
+    this.displayGroupId,
+    this.comboPoolId,
+    this.chapterId,
+    this.chapterStartedAt,
+    this.progressStartPolicy = ProgressionProgressStartPolicy.lifetime,
+    this.requiredRuleCount,
+    this.dailySequenceId,
+    this.dailySequenceStep,
   });
 
   final String id;
@@ -627,6 +790,23 @@ class ProgressionQuest {
   final List<String> relatedRuleIds;
   final int? minimumLevel;
   final int? minimumTrackedDays;
+  final String? assetKey;
+  final ProgressionDomain? visualDomain;
+  final ProgressionQuestText? titleText;
+  final ProgressionQuestText? descriptionText;
+  final ProgressionQuestText? sourceLabel;
+  final String? chainId;
+  final ProgressionQuestText? chainStepLabel;
+  final List<String> nextQuestIds;
+  final ProgressionQuestDisplayBucket? displayBucket;
+  final String? displayGroupId;
+  final String? comboPoolId;
+  final String? chapterId;
+  final DateTime? chapterStartedAt;
+  final ProgressionProgressStartPolicy progressStartPolicy;
+  final int? requiredRuleCount;
+  final String? dailySequenceId;
+  final int? dailySequenceStep;
 
   bool get isCompleted => status == ProgressionQuestStatus.completed;
   bool get isLocked => status == ProgressionQuestStatus.locked;

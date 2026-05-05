@@ -15,7 +15,8 @@ class _FakeHcReadClient extends HcReadClient {
   List<HealthDataPoint> rawPoints = [];
 
   void setTotalSteps(DateTime start, DateTime end, int? steps) {
-    _aggregateSteps['${start.toIso8601String()}_${end.toIso8601String()}'] = steps;
+    _aggregateSteps['${start.toIso8601String()}_${end.toIso8601String()}'] =
+        steps;
   }
 
   @override
@@ -48,17 +49,18 @@ void main() {
 
   // Use a fixed "today" so tests are date-independent.
   final today = DateTime(2026, 4, 27);
+  final now = DateTime(2026, 4, 27, 12);
   final tomorrowStart = DateTime(2026, 4, 28);
 
   setUp(() {
     client = _FakeHcReadClient();
-    service = HcStepsService(client);
+    service = HcStepsService(client, now: () => now);
   });
 
   group('getStepsHistory', () {
     test('always includes a record for today even when HC returns 0', () async {
       // Aggregate returns 0 for today (no steps yet).
-      client.setTotalSteps(today, DateTime.now(), 0);
+      client.setTotalSteps(today, now, 0);
       client.setTotalSteps(today, tomorrowStart, 0);
 
       final records = await service.getStepsHistory(7);
@@ -69,7 +71,9 @@ void main() {
       expect(todayRecord!.steps, 0);
     });
 
-    test('uses full-day aggregate (todayStart->tomorrowStart) for today, not the now-capped value', () async {
+    test(
+        'uses full-day aggregate (todayStart->tomorrowStart) for today, not the now-capped value',
+        () async {
       // today->now returns 0 (Samsung Health all-day record not yet visible).
       // today->tomorrow returns 3829 (HC aggregate covers full interval).
       client.setTotalSteps(today, tomorrowStart, 3829);
@@ -78,7 +82,8 @@ void main() {
 
       final todayRecord = records.where((r) => r.date == today).firstOrNull;
       expect(todayRecord!.steps, 3829,
-          reason: 'full-day aggregate must be used, not the partial-day result');
+          reason:
+              'full-day aggregate must be used, not the partial-day result');
     });
 
     test('produces exactly `days` records sorted oldest-first', () async {
@@ -92,7 +97,8 @@ void main() {
       }
     });
 
-    test('today with 0 steps does not fall back to yesterday via raw data', () async {
+    test('today with 0 steps does not fall back to yesterday via raw data',
+        () async {
       // Yesterday has raw steps but today aggregate returns 0.
       client.setTotalSteps(today, tomorrowStart, 0);
 
@@ -103,7 +109,9 @@ void main() {
           reason: 'today must be 0, not inherited from yesterday raw data');
     });
 
-    test('today record is present after 7-day refresh regardless of raw point count', () async {
+    test(
+        'today record is present after 7-day refresh regardless of raw point count',
+        () async {
       // No raw points at all for today.
       client.rawPoints = [];
       client.setTotalSteps(today, tomorrowStart, 0);
@@ -127,7 +135,8 @@ void main() {
     });
 
     test('returns empty list when start is after end', () async {
-      final records = await service.getStepsHistoryForRange(today, today.subtract(const Duration(days: 1)));
+      final records = await service.getStepsHistoryForRange(
+          today, today.subtract(const Duration(days: 1)));
       expect(records, isEmpty);
     });
 

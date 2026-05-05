@@ -1,8 +1,32 @@
+import 'perfect_period_evaluator.dart';
 import 'progression_models.dart';
 import 'progression_streak_policy.dart';
 
 class ProgressionAchievementEvaluator {
-  const ProgressionAchievementEvaluator();
+  const ProgressionAchievementEvaluator({
+    PerfectPeriodEvaluator perfectPeriodEvaluator =
+        const RealPerfectPeriodEvaluator(),
+  }) : _perfectPeriodEvaluator = perfectPeriodEvaluator;
+
+  final PerfectPeriodEvaluator _perfectPeriodEvaluator;
+
+  /// Combo quests of any kind — used by `comboQuestsCompletedAtLeast`.
+  /// Mirrors the `daily_*_today` mastery quests in
+  /// `progression_quest_catalog.dart`.
+  static const Set<String> _kComboQuestIds = <String>{
+    'daily_two_goals_today',
+    'daily_triple_win_today',
+    'daily_four_pillars_today',
+    'daily_nutrition_combo_today',
+    'daily_recovery_focus_today',
+  };
+
+  /// Subset of [_kComboQuestIds] that requires three or more daily goals
+  /// in one day. Used by `tripleComboQuestsCompletedAtLeast`.
+  static const Set<String> _kTripleComboQuestIds = <String>{
+    'daily_triple_win_today',
+    'daily_four_pillars_today',
+  };
 
   List<ProgressionAchievement> evaluate({
     required List<ProgressionAchievementDefinition> definitions,
@@ -13,6 +37,7 @@ class ProgressionAchievementEvaluator {
     required Map<String, ProgressionStreakSummary> streaksByRuleId,
     required Map<ProgressionDomain, ProgressionStreakSummary> streaksByDomain,
     Map<String, DateTime> existingUnlocks = const {},
+    Map<String, ProgressionQuestCategory> questCategoryById = const {},
   }) {
     final orderedDefinitions = [...definitions]
       ..sort((a, b) => a.id.compareTo(b.id));
@@ -27,6 +52,7 @@ class ProgressionAchievementEvaluator {
           streaksByRuleId: streaksByRuleId,
           streaksByDomain: streaksByDomain,
           existingUnlocks: existingUnlocks,
+          questCategoryById: questCategoryById,
         ),
     ];
   }
@@ -47,6 +73,7 @@ class ProgressionAchievementEvaluator {
     required Map<String, ProgressionStreakSummary> streaksByRuleId,
     required Map<ProgressionDomain, ProgressionStreakSummary> streaksByDomain,
     required Map<String, DateTime> existingUnlocks,
+    required Map<String, ProgressionQuestCategory> questCategoryById,
   }) {
     // If a persisted unlock record exists, use it as the authoritative state.
     final persistedUnlockedAt = existingUnlocks[definition.id];
@@ -59,6 +86,7 @@ class ProgressionAchievementEvaluator {
         questRewardGrants: questRewardGrants,
         streaksByRuleId: streaksByRuleId,
         streaksByDomain: streaksByDomain,
+        questCategoryById: questCategoryById,
       );
       return ProgressionAchievement(
         id: definition.id,
@@ -86,6 +114,7 @@ class ProgressionAchievementEvaluator {
       questRewardGrants: questRewardGrants,
       streaksByRuleId: streaksByRuleId,
       streaksByDomain: streaksByDomain,
+      questCategoryById: questCategoryById,
     );
     final unlocked = currentValue >= definition.targetValue;
     final unlockedAt = unlocked
@@ -124,6 +153,7 @@ class ProgressionAchievementEvaluator {
     required List<ProgressionQuestRewardGrant> questRewardGrants,
     required Map<String, ProgressionStreakSummary> streaksByRuleId,
     required Map<ProgressionDomain, ProgressionStreakSummary> streaksByDomain,
+    required Map<String, ProgressionQuestCategory> questCategoryById,
   }) {
     switch (definition.criterionType) {
       case ProgressionAchievementCriterionType.totalXpAtLeast:
@@ -162,7 +192,124 @@ class ProgressionAchievementEvaluator {
           definition: definition,
           evaluations: evaluations,
         ).round();
+      case ProgressionAchievementCriterionType.dailyQuestsCompletedAtLeast:
+        return _countQuestsByCategory(
+          questRewardGrants: questRewardGrants,
+          questCategoryById: questCategoryById,
+          category: ProgressionQuestCategory.daily,
+        );
+      case ProgressionAchievementCriterionType.weeklyQuestsCompletedAtLeast:
+        return _countQuestsByCategory(
+          questRewardGrants: questRewardGrants,
+          questCategoryById: questCategoryById,
+          category: ProgressionQuestCategory.weekly,
+        );
+      case ProgressionAchievementCriterionType.totalQuestsCompletedAtLeast:
+        return questRewardGrants.length;
+      case ProgressionAchievementCriterionType.activeDaysAtLeast:
+        return _countActiveDays(evaluations);
+      case ProgressionAchievementCriterionType.perfectDaysAtLeast:
+        return _perfectPeriodEvaluator.countPerfectDays(evaluations);
+      case ProgressionAchievementCriterionType.perfectWeeksAtLeast:
+        return _perfectPeriodEvaluator.countPerfectWeeks(evaluations);
+      case ProgressionAchievementCriterionType.comboQuestsCompletedAtLeast:
+        return _countQuestsInIdSet(
+          questRewardGrants: questRewardGrants,
+          idSet: _kComboQuestIds,
+        );
+      case ProgressionAchievementCriterionType
+            .tripleComboQuestsCompletedAtLeast:
+        return _countQuestsInIdSet(
+          questRewardGrants: questRewardGrants,
+          idSet: _kTripleComboQuestIds,
+        );
+      case ProgressionAchievementCriterionType.compositeAllOf:
+        final subs = definition.compositeConditions ?? const [];
+        if (subs.isEmpty) return 0;
+        for (final sub in subs) {
+          if (!_compositeSubConditionMet(
+            sub: sub,
+            profile: profile,
+            evaluations: evaluations,
+            questRewardGrants: questRewardGrants,
+          )) {
+            return 0;
+          }
+        }
+        return 1;
     }
+  }
+
+  /// Evaluates a single composite sub-condition. Supports a deliberately
+  /// narrow set of criterion types (the ones the current catalog needs);
+  /// nesting composites is forbidden. Add new branches here as new
+  /// composite achievements demand them.
+  bool _compositeSubConditionMet({
+    required ProgressionAchievementCompositeCondition sub,
+    required ProgressionProfile profile,
+    required List<ProgressionEvaluation> evaluations,
+    required List<ProgressionQuestRewardGrant> questRewardGrants,
+  }) {
+    switch (sub.type) {
+      case ProgressionAchievementCriterionType.totalXpAtLeast:
+        return profile.totalXp >= sub.targetValue;
+      case ProgressionAchievementCriterionType.totalQuestsCompletedAtLeast:
+        return questRewardGrants.length >= sub.targetValue;
+      case ProgressionAchievementCriterionType.totalRuleValueAtLeast:
+        final total = evaluations
+            .where((e) {
+              if (sub.ruleId != null && e.ruleId != sub.ruleId) return false;
+              if (sub.domain != null && e.domain != sub.domain) return false;
+              return true;
+            })
+            .fold<double>(0, (sum, e) => sum + e.actualValue);
+        return total.round() >= sub.targetValue;
+      // Other criterion types are not supported as composite legs today —
+      // promote one here when the catalog needs it.
+      case ProgressionAchievementCriterionType.rewardCountAtLeast:
+      case ProgressionAchievementCriterionType.bestStreakAtLeast:
+      case ProgressionAchievementCriterionType.bestRollingWindowRuleValueAtLeast:
+      case ProgressionAchievementCriterionType.dailyQuestsCompletedAtLeast:
+      case ProgressionAchievementCriterionType.weeklyQuestsCompletedAtLeast:
+      case ProgressionAchievementCriterionType.activeDaysAtLeast:
+      case ProgressionAchievementCriterionType.perfectDaysAtLeast:
+      case ProgressionAchievementCriterionType.perfectWeeksAtLeast:
+      case ProgressionAchievementCriterionType.comboQuestsCompletedAtLeast:
+      case ProgressionAchievementCriterionType
+            .tripleComboQuestsCompletedAtLeast:
+      case ProgressionAchievementCriterionType.compositeAllOf:
+        return false;
+    }
+  }
+
+  int _countQuestsInIdSet({
+    required List<ProgressionQuestRewardGrant> questRewardGrants,
+    required Set<String> idSet,
+  }) {
+    var count = 0;
+    for (final grant in questRewardGrants) {
+      if (idSet.contains(grant.questId)) count++;
+    }
+    return count;
+  }
+
+  int _countQuestsByCategory({
+    required List<ProgressionQuestRewardGrant> questRewardGrants,
+    required Map<String, ProgressionQuestCategory> questCategoryById,
+    required ProgressionQuestCategory category,
+  }) {
+    var count = 0;
+    for (final grant in questRewardGrants) {
+      if (questCategoryById[grant.questId] == category) count++;
+    }
+    return count;
+  }
+
+  int _countActiveDays(List<ProgressionEvaluation> evaluations) {
+    return <DateTime>{
+      for (final evaluation in evaluations)
+        progressionDate(evaluation.period.start),
+    }.length;
   }
 
   DateTime? _resolveUnlockedAt({
@@ -246,6 +393,22 @@ class ProgressionAchievementEvaluator {
           definition: definition,
           evaluations: evaluations,
         );
+      // Phase 3a additions: precise unlock-time resolution for these
+      // criterion types is not implemented yet. Returning null is safe — the
+      // achievement still unlocks, but the unlockedAt timestamp stays null
+      // (UI shows "recently unlocked"). Could be backfilled from the quest
+      // grant ledger / evaluation list in a follow-up.
+      case ProgressionAchievementCriterionType.dailyQuestsCompletedAtLeast:
+      case ProgressionAchievementCriterionType.weeklyQuestsCompletedAtLeast:
+      case ProgressionAchievementCriterionType.totalQuestsCompletedAtLeast:
+      case ProgressionAchievementCriterionType.activeDaysAtLeast:
+      case ProgressionAchievementCriterionType.perfectDaysAtLeast:
+      case ProgressionAchievementCriterionType.perfectWeeksAtLeast:
+      case ProgressionAchievementCriterionType.comboQuestsCompletedAtLeast:
+      case ProgressionAchievementCriterionType
+            .tripleComboQuestsCompletedAtLeast:
+      case ProgressionAchievementCriterionType.compositeAllOf:
+        return null;
     }
   }
 

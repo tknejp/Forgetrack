@@ -132,3 +132,21 @@ class ProgressionAchievementUnlockRecord {
 
   String? userId;
 }
+
+@Collection()
+class ProgressionChapterStartLocalRecord {
+  Id id = Isar.autoIncrement;
+
+  @Index(unique: true, replace: false)
+  late String startKey;
+
+  @Index()
+  late String chapterId;
+
+  late int startedAtLevel;
+
+  @Index()
+  late DateTime startedAt;
+
+  String? userId;
+}

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:forgetrack/shared/theme/design_tokens.dart';
 
-import '../../../../shared/theme/ft_design_tokens.dart';
 import '../../domain/progression_level_config.dart';
 import '../../domain/progression_models.dart';
 
@@ -37,6 +37,8 @@ Color progressionLevelAccent(int level) {
       return Tokens.difficultyHard;
     case ProgressionAchievementDifficulty.extraHard:
       return Tokens.difficultyExtraHard;
+    case ProgressionAchievementDifficulty.mythic:
+      return Tokens.difficultyMythic;
   }
 }
 

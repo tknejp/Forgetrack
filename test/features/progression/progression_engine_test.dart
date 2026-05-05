@@ -5,6 +5,7 @@ import 'package:forgetrack/features/progression/application/progression_source.d
 import 'package:forgetrack/features/progression/domain/progression_evaluator.dart';
 import 'package:forgetrack/features/progression/domain/progression_level_policy.dart';
 import 'package:forgetrack/features/progression/domain/progression_models.dart';
+import 'package:forgetrack/features/progression/domain/progression_quest_evaluator.dart';
 import 'package:forgetrack/features/progression/domain/progression_reward_finalization_policy.dart';
 import 'package:forgetrack/features/progression/domain/progression_repository.dart';
 
@@ -644,15 +645,27 @@ void main() {
       expect(questsById['daily_steps_today']!.isCompleted, isTrue);
       expect(
         questsById['daily_triple_win_today']!.status,
-        ProgressionQuestStatus.active,
+        ProgressionQuestStatus.locked,
       );
-      expect(
+      final comboPoolStatuses = [
+        questsById['daily_two_goals_today']!.status,
+        questsById['daily_triple_win_today']!.status,
+        questsById['daily_four_pillars_today']!.status,
         questsById['daily_nutrition_combo_today']!.status,
-        ProgressionQuestStatus.active,
+        questsById['daily_nutrition_carbs_combo_today']!.status,
+        questsById['daily_nutrition_fat_combo_today']!.status,
+        questsById['daily_nutrition_fiber_combo_today']!.status,
+        questsById['daily_recovery_focus_today']!.status,
+      ];
+      expect(
+        comboPoolStatuses.where(
+          (status) => status != ProgressionQuestStatus.locked,
+        ),
+        hasLength(1),
       );
       expect(
         questsById['daily_protein_today']!.status,
-        ProgressionQuestStatus.available,
+        ProgressionQuestStatus.active,
       );
       expect(
         questsById['daily_sleep_today']!.isCompleted,
@@ -666,8 +679,8 @@ void main() {
       expect(questsById['steps_streak_3']!.currentValue, 1);
       expect(
           questsById['reach_2000_xp']!.status, ProgressionQuestStatus.locked);
-      expect(questsById['earn_25_rewards']!.status,
-          ProgressionQuestStatus.available);
+      expect(
+          questsById['earn_25_rewards']!.status, ProgressionQuestStatus.active);
       expect(questsById['reach_500_xp']!.status, ProgressionQuestStatus.active);
       expect(
         questsById['weekly_activity_once']!.status,
@@ -683,11 +696,18 @@ void main() {
           questsById['steps_streak_7']!.status, ProgressionQuestStatus.locked);
       expect(
         state.quests.where((quest) => quest.isHighlighted).length,
-        lessThanOrEqualTo(6),
+        greaterThan(6),
       );
       expect(questsById['steps_streak_3']!.isHighlighted, isTrue);
-      expect(questsById['daily_triple_win_today']!.isHighlighted, isTrue);
-      expect(questsById['daily_nutrition_combo_today']!.isHighlighted, isTrue);
+      expect(questsById['daily_triple_win_today']!.isHighlighted, isFalse);
+      expect(
+        [
+          questsById['daily_two_goals_today']!.isHighlighted,
+          questsById['daily_nutrition_combo_today']!.isHighlighted,
+          questsById['daily_recovery_focus_today']!.isHighlighted,
+        ].where((highlighted) => highlighted),
+        hasLength(lessThanOrEqualTo(1)),
+      );
     });
 
     test('unlocks chained quests only after prerequisite completion', () async {
@@ -723,6 +743,81 @@ void main() {
         questsById['steps_streak_7']!.completedAt,
         DateTime(2026, 4, 27),
       );
+    });
+
+    test('chapter quests count only evaluations after chapter start', () {
+      final evaluator = ProgressionQuestEvaluator();
+      final beforeStart = DateTime(2026, 4, 10);
+      final start = DateTime(2026, 4, 20, 9);
+      final afterStart = DateTime(2026, 4, 21);
+      final definitions = [
+        ProgressionQuestDefinition(
+          id: 'test_chapter_open',
+          title: (l10n) => 'Open',
+          description: (l10n) => 'Open',
+          type: ProgressionQuestType.milestone,
+          category: ProgressionQuestCategory.chapter,
+          criterionType: ProgressionQuestCriterionType.chapterStarted,
+          targetValue: 1,
+          rewardXp: 1,
+          minimumLevel: 10,
+          chainId: 'test_chapter',
+          chapterId: 'test_chapter',
+          progressStartPolicy: ProgressionProgressStartPolicy.chapterStartedAt,
+          nextQuestIds: const ['test_chapter_steps'],
+        ),
+        ProgressionQuestDefinition(
+          id: 'test_chapter_steps',
+          title: (l10n) => 'Steps',
+          description: (l10n) => 'Steps',
+          type: ProgressionQuestType.mastery,
+          category: ProgressionQuestCategory.chapter,
+          criterionType: ProgressionQuestCriterionType.ruleCompletionsAtLeast,
+          targetValue: 2,
+          rewardXp: 1,
+          ruleId: 'daily_steps',
+          periodKind: ProgressionPeriodKind.day,
+          prerequisiteQuestIds: const ['test_chapter_open'],
+          chainId: 'test_chapter',
+          chapterId: 'test_chapter',
+          progressStartPolicy: ProgressionProgressStartPolicy.chapterStartedAt,
+        ),
+      ];
+
+      final result = evaluator.evaluate(
+        definitions: definitions,
+        previousActiveQuestIds: const <String>{},
+        evaluationDate: DateTime(2026, 4, 22),
+        profile: const ProgressionProfile(
+          totalXp: 0,
+          level: 10,
+          levelFloorXp: 0,
+          nextLevelXp: 100,
+          xpIntoLevel: 0,
+        ),
+        evaluations: [
+          _achievedEvaluation('daily_steps', beforeStart),
+          _achievedEvaluation('daily_steps', afterStart),
+        ],
+        rewardGrants: const [],
+        questRewardGrants: const [],
+        chapterStarts: [
+          ProgressionChapterStartRecord(
+            uid: '',
+            chapterId: 'test_chapter',
+            startedAtLevel: 10,
+            startedAt: start,
+          ),
+        ],
+        achievements: const [],
+        streaksByRuleId: const {},
+        streaksByDomain: const {},
+      );
+
+      final stepQuest =
+          result.quests.firstWhere((quest) => quest.id == 'test_chapter_steps');
+      expect(stepQuest.currentValue, 1);
+      expect(stepQuest.isCompleted, isFalse);
     });
 
     test('promotes a new weekly quest into the active set after completion',
@@ -809,20 +904,36 @@ void main() {
       final questsById = {for (final quest in state.quests) quest.id: quest};
 
       expect(questsById['daily_steps_today']!.status,
-          ProgressionQuestStatus.available);
+          ProgressionQuestStatus.active);
       expect(questsById['daily_steps_today']!.currentValue, 0);
       expect(
         questsById['daily_two_goals_today']!.status,
-        ProgressionQuestStatus.active,
+        ProgressionQuestStatus.locked,
       );
       expect(questsById['daily_two_goals_today']!.currentValue, 1);
       expect(
-        questsById['daily_nutrition_combo_today']!.status,
+        questsById['daily_triple_win_today']!.status,
         ProgressionQuestStatus.active,
+      );
+      final comboPoolStatuses = [
+        questsById['daily_two_goals_today']!.status,
+        questsById['daily_triple_win_today']!.status,
+        questsById['daily_four_pillars_today']!.status,
+        questsById['daily_nutrition_combo_today']!.status,
+        questsById['daily_nutrition_carbs_combo_today']!.status,
+        questsById['daily_nutrition_fat_combo_today']!.status,
+        questsById['daily_nutrition_fiber_combo_today']!.status,
+        questsById['daily_recovery_focus_today']!.status,
+      ];
+      expect(
+        comboPoolStatuses.where(
+          (status) => status != ProgressionQuestStatus.locked,
+        ),
+        hasLength(1),
       );
       expect(
         questsById['daily_protein_today']!.status,
-        ProgressionQuestStatus.available,
+        ProgressionQuestStatus.active,
       );
       expect(questsById['daily_protein_today']!.currentValue, 0);
       expect(questsById['daily_sleep_today']!.isCompleted, isTrue);
@@ -1917,6 +2028,7 @@ class _InMemoryProgressionRepository implements ProgressionRepository {
     List<ProgressionEvaluation> evaluations = const [],
     List<ProgressionRewardGrant> rewardGrants = const [],
     List<ProgressionQuestRewardGrant> questRewardGrants = const [],
+    List<ProgressionChapterStartRecord> chapterStarts = const [],
     Set<String> activeQuestIds = const <String>{},
     DateTime? lastEvaluatedAt,
   })  : _activeQuestIds = {...activeQuestIds},
@@ -1930,12 +2042,16 @@ class _InMemoryProgressionRepository implements ProgressionRepository {
     for (final grant in questRewardGrants) {
       _questRewardGrants[grant.rewardKey] = grant;
     }
+    for (final start in chapterStarts) {
+      _chapterStarts[start.startKey] = start;
+    }
   }
 
   final Map<String, ProgressionEvaluation> _evaluations = {};
   final Map<String, ProgressionRewardGrant> _rewardGrants = {};
   final Map<String, ProgressionQuestRewardGrant> _questRewardGrants = {};
   final Map<String, ProgressionAchievementUnlockEvent> _achievementUnlocks = {};
+  final Map<String, ProgressionChapterStartRecord> _chapterStarts = {};
   Set<String> _activeQuestIds;
   DateTime? _lastEvaluatedAt;
 
@@ -1947,6 +2063,7 @@ class _InMemoryProgressionRepository implements ProgressionRepository {
       questRewardGrants: _questRewardGrants.values.toList(),
       activeQuestIds: _activeQuestIds,
       achievementUnlocks: _achievementUnlocks.values.toList(),
+      chapterStarts: _chapterStarts.values.toList(),
       lastEvaluatedAt: _lastEvaluatedAt,
     );
   }
@@ -2074,6 +2191,16 @@ class _InMemoryProgressionRepository implements ProgressionRepository {
     }
     return loadLedger();
   }
+
+  @override
+  Future<ProgressionLedgerSnapshot> persistChapterStarts({
+    required List<ProgressionChapterStartRecord> starts,
+  }) async {
+    for (final start in starts) {
+      _chapterStarts.putIfAbsent(start.startKey, () => start);
+    }
+    return loadLedger();
+  }
 }
 
 class _StaticProgressionRepository implements ProgressionRepository {
@@ -2140,6 +2267,12 @@ class _StaticProgressionRepository implements ProgressionRepository {
   @override
   Future<ProgressionLedgerSnapshot> persistAchievementUnlocks({
     required List<ProgressionAchievementUnlockEvent> unlocks,
+  }) async =>
+      loadLedger();
+
+  @override
+  Future<ProgressionLedgerSnapshot> persistChapterStarts({
+    required List<ProgressionChapterStartRecord> starts,
   }) async =>
       loadLedger();
 }
@@ -2215,5 +2348,29 @@ ProgressionQuestRewardGrant _unlockedQuestReward({
     rewardStatus: ProgressionRewardStatus.unlocked,
     unlockedAt: unlockedAt,
     completedAt: completedAt,
+  );
+}
+
+ProgressionEvaluation _achievedEvaluation(String ruleId, DateTime day) {
+  return ProgressionEvaluation(
+    evaluationKey: '$ruleId|v1|day|${progressionDateKey(day)}',
+    rewardKey: '$ruleId|v1|day|${progressionDateKey(day)}|reward',
+    ruleId: ruleId,
+    ruleVersion: 'v1',
+    domain: ProgressionDomain.steps,
+    period: ProgressionPeriod.day(day),
+    comparator: ProgressionComparator.atLeast,
+    actualValue: 1,
+    targetValue: 1,
+    upperTargetValue: null,
+    toleranceRatio: 0,
+    progress: 1,
+    achieved: true,
+    status: ProgressionEvaluationStatus.achieved,
+    missReason: null,
+    rewardXp: 0,
+    title: ruleId,
+    description: ruleId,
+    explanation: 'test',
   );
 }

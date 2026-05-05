@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../application/progression_provider.dart';
 import '../../domain/progression_models.dart';
+import '../quest_daily_selection.dart';
 import '../../../../shared/theme/design_tokens.dart';
 
 // ── Shared scaffold ───────────────────────────────────────────────────────────
@@ -23,7 +24,8 @@ class ProgressionScaffold extends StatelessWidget {
 // ── Shared empty / error / loading primitives ─────────────────────────────────
 
 class ProgressionEmptyLine extends StatelessWidget {
-  const ProgressionEmptyLine({super.key, required this.title, required this.caption});
+  const ProgressionEmptyLine(
+      {super.key, required this.title, required this.caption});
   final String title;
   final String caption;
 
@@ -131,7 +133,11 @@ class ProgressionViewData {
     required this.inProgress,
     required this.allQuests,
     required this.trackedDaysElapsed,
-    required this.activeQuests,
+    required this.dailyGoalQuests,
+    required this.dailyComboQuests,
+    required this.weeklyQuests,
+    required this.chapterQuests,
+    required this.longTermQuests,
     required this.lockedQuests,
     required this.completedQuests,
     required this.pendingRewards,
@@ -162,16 +168,56 @@ class ProgressionViewData {
         if (difficulty != 0) return difficulty;
         return b.progress.compareTo(a.progress);
       });
-    final activeQuests = [...progression.activeQuests]
-      ..sort((a, b) => b.progress.compareTo(a.progress));
-    final lockedQuests = [...progression.lockedQuests]..sort((a, b) {
+    final trackedDaysElapsed = _trackedDaysElapsed(progression);
+    final dailyGoalQuests = selectDailyGoalQuestsForDate(
+      progression.quests,
+      DateTime.now(),
+    );
+    final dailyComboQuests = selectDailyComboQuestsForDate(
+      progression.quests,
+      DateTime.now(),
+    );
+    final dailyGoalQuestIds = {
+      for (final quest in dailyGoalQuests) quest.id,
+    };
+    final dailyComboQuestIds = {
+      for (final quest in dailyComboQuests) quest.id,
+    };
+    final weeklyQuests = compactQuestChainRepresentatives(
+      progression.quests,
+      bucket: ProgressionQuestDisplayBucket.weekly,
+    );
+    final chapterQuests = compactQuestChainRepresentatives(
+      progression.quests,
+      bucket: ProgressionQuestDisplayBucket.chapter,
+    );
+    final longTermQuests = compactQuestChainRepresentatives(
+      progression.quests,
+      bucket: ProgressionQuestDisplayBucket.longTerm,
+    );
+    final lockedQuests = [
+      for (final quest in progression.lockedQuests)
+        if (_isExternallyGatedLockedQuest(
+          quest: quest,
+          allQuests: progression.quests,
+          profile: profile,
+          trackedDaysElapsed: trackedDaysElapsed,
+        ))
+          quest,
+    ]..sort((a, b) {
         final byPriority = b.priority.compareTo(a.priority);
         if (byPriority != 0) return byPriority;
         final bySortOrder = a.sortOrder.compareTo(b.sortOrder);
         if (bySortOrder != 0) return bySortOrder;
         return a.id.compareTo(b.id);
       });
-    final completedQuests = [...progression.completedQuests]..sort((a, b) {
+    final completedQuests = [
+      for (final quest in progression.completedQuests)
+        if (!dailyGoalQuestIds.contains(quest.id) &&
+            !dailyComboQuestIds.contains(quest.id) &&
+            !isCurrentPeriodQuest(quest))
+          quest,
+    ]..sort((a, b) {
         if (a.isRewardClaimable != b.isRewardClaimable) {
           return a.isRewardClaimable ? -1 : 1;
         }
@@ -193,8 +239,12 @@ class ProgressionViewData {
       unlocked: unlocked,
       inProgress: inProgress,
       allQuests: progression.quests,
-      trackedDaysElapsed: _trackedDaysElapsed(progression),
-      activeQuests: activeQuests,
+      trackedDaysElapsed: trackedDaysElapsed,
+      dailyGoalQuests: dailyGoalQuests,
+      dailyComboQuests: dailyComboQuests,
+      weeklyQuests: weeklyQuests,
+      chapterQuests: chapterQuests,
+      longTermQuests: longTermQuests,
       lockedQuests: lockedQuests,
       completedQuests: completedQuests,
       pendingRewards: pendingRewards,
@@ -210,7 +260,11 @@ class ProgressionViewData {
   final List<ProgressionAchievement> inProgress;
   final List<ProgressionQuest> allQuests;
   final int trackedDaysElapsed;
-  final List<ProgressionQuest> activeQuests;
+  final List<ProgressionQuest> dailyGoalQuests;
+  final List<ProgressionQuest> dailyComboQuests;
+  final List<ProgressionQuest> weeklyQuests;
+  final List<ProgressionQuest> chapterQuests;
+  final List<ProgressionQuest> longTermQuests;
   final List<ProgressionQuest> lockedQuests;
   final List<ProgressionQuest> completedQuests;
   final List<ProgressionRewardGrant> pendingRewards;
@@ -256,6 +310,36 @@ ProgressionDomainStreak? _topStreak(
   return winner;
 }
 
+bool _isExternallyGatedLockedQuest({
+  required ProgressionQuest quest,
+  required List<ProgressionQuest> allQuests,
+  required ProgressionProfile profile,
+  required int trackedDaysElapsed,
+}) {
+  if (quest.dailySequenceId != null) return false;
+
+  final lockedByLevel =
+      quest.minimumLevel != null && profile.level < quest.minimumLevel!;
+  final lockedByTrackedDays = quest.minimumTrackedDays != null &&
+      trackedDaysElapsed < quest.minimumTrackedDays!;
+  if (!lockedByLevel && !lockedByTrackedDays) return false;
+
+  for (final prerequisiteId in quest.prerequisiteQuestIds) {
+    final prerequisite = _questById(allQuests, prerequisiteId);
+    if (prerequisite == null || !prerequisite.isCompleted) {
+      return false;
+    }
+  }
+  return true;
+}
+
+ProgressionQuest? _questById(List<ProgressionQuest> quests, String questId) {
+  for (final quest in quests) {
+    if (quest.id == questId) return quest;
+  }
+  return null;
+}
+
 int _trackedDaysElapsed(ProgressionProvider provider) {
   DateTime? earliest;
 
@@ -288,5 +372,7 @@ int _difficultyRank(ProgressionAchievementDifficulty difficulty) {
       return 2;
     case ProgressionAchievementDifficulty.extraHard:
       return 3;
+    case ProgressionAchievementDifficulty.mythic:
+      return 4;
   }
 }

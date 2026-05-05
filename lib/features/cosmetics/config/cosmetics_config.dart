@@ -38,6 +38,7 @@ class CosmeticsConfig {
         CosmeticRarity.rare,
         CosmeticRarity.epic,
         CosmeticRarity.legendary,
+        CosmeticRarity.mythic,
       ],
       regionDisplayOrder: <CosmeticRegion>[
         CosmeticRegion.neutral,

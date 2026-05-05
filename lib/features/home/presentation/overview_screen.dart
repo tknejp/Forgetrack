@@ -43,32 +43,8 @@ class OverviewScreen extends StatefulWidget {
   State<OverviewScreen> createState() => _OverviewScreenState();
 }
 
-class _OverviewScreenState extends State<OverviewScreen>
-    with WidgetsBindingObserver {
+class _OverviewScreenState extends State<OverviewScreen> {
   SelectedPeriod _period = SelectedPeriod.today();
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    // Ensure provider is fully initialized when overview screen mounts
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => context.read<FitnessProvider>().initialize(),
-    );
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      context.read<FitnessProvider>().initialize();
-    }
-  }
 
   Future<void> _refresh() async {
     final fitness = context.read<FitnessProvider>();
@@ -396,7 +372,8 @@ class _DayContent extends StatelessWidget {
         stepsGoal > 0 ? (steps / stepsGoal).clamp(0.0, 1.0) : 0.0;
     final stepsLeft = (stepsGoal - steps).clamp(0, stepsGoal);
 
-    final isCurrentDay = period.type == PeriodType.day && period.isCurrentPeriod;
+    final isCurrentDay =
+        period.type == PeriodType.day && period.isCurrentPeriod;
 
     final dayNutrition = period.type == PeriodType.day
         ? kt.nutritionForDate(period.start)

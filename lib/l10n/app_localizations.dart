@@ -1739,7 +1739,7 @@ abstract class AppLocalizations {
   /// No description provided for @progQuestsSectionCaption.
   ///
   /// In en, this message translates to:
-  /// **'Active and locked quests first, completed ones below.'**
+  /// **'Active quests first, completed ones below.'**
   String get progQuestsSectionCaption;
 
   /// No description provided for @questsScreenEyebrow.
@@ -1760,6 +1760,42 @@ abstract class AppLocalizations {
   /// **'ACTIVE QUESTS'**
   String get progQuestsActiveHeader;
 
+  /// No description provided for @progQuestsActiveCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} active'**
+  String progQuestsActiveCount(int count);
+
+  /// No description provided for @progQuestsDailyGoalsHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'DAILY GOALS'**
+  String get progQuestsDailyGoalsHeader;
+
+  /// No description provided for @progQuestsDailyComboHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'TODAY\'S COMBO'**
+  String get progQuestsDailyComboHeader;
+
+  /// No description provided for @progQuestsWeeklyHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'THIS WEEK'**
+  String get progQuestsWeeklyHeader;
+
+  /// No description provided for @progQuestsChapterHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'JOURNEY CHAPTERS'**
+  String get progQuestsChapterHeader;
+
+  /// No description provided for @progQuestsLongTermHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'LONG-TERM GOALS'**
+  String get progQuestsLongTermHeader;
+
   /// No description provided for @progQuestsLockedHeader.
   ///
   /// In en, this message translates to:
@@ -1771,6 +1807,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'COMPLETED QUESTS'**
   String get progQuestsCompletedHeader;
+
+  /// No description provided for @progQuestsCompletedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} completed'**
+  String progQuestsCompletedCount(int count);
 
   /// No description provided for @progQuestsEmptyActiveTitle.
   ///
@@ -1915,6 +1957,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No follow-up quest yet'**
   String get progQuestDetailNoFollowUp;
+
+  /// No description provided for @progQuestDetailGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal'**
+  String get progQuestDetailGoal;
+
+  /// No description provided for @progQuestDetailNextInChain.
+  ///
+  /// In en, this message translates to:
+  /// **'Next in chain'**
+  String get progQuestDetailNextInChain;
 
   /// No description provided for @progProgressRatio.
   ///
@@ -2096,6 +2150,24 @@ abstract class AppLocalizations {
   /// **'Protein Target'**
   String get progRuleDailyProtein;
 
+  /// No description provided for @progRuleDailyCarbs.
+  ///
+  /// In en, this message translates to:
+  /// **'Carb Target'**
+  String get progRuleDailyCarbs;
+
+  /// No description provided for @progRuleDailyFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat Target'**
+  String get progRuleDailyFat;
+
+  /// No description provided for @progRuleDailyFiber.
+  ///
+  /// In en, this message translates to:
+  /// **'Fiber Target'**
+  String get progRuleDailyFiber;
+
   /// No description provided for @progRuleDailySleep.
   ///
   /// In en, this message translates to:
@@ -2174,6 +2246,18 @@ abstract class AppLocalizations {
   /// **'Complete all 4 daily goals in the current day.'**
   String get progQuestDailyFourPillarsTodayDesc;
 
+  /// No description provided for @progQuestComboInitiate10Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Combo Initiate'**
+  String get progQuestComboInitiate10Title;
+
+  /// No description provided for @progQuestComboInitiate10Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 10 combo quests of any kind.'**
+  String get progQuestComboInitiate10Desc;
+
   /// No description provided for @progQuestDailyNutritionComboTodayTitle.
   ///
   /// In en, this message translates to:
@@ -2186,6 +2270,54 @@ abstract class AppLocalizations {
   /// **'Complete both calorie and protein goals in the current day.'**
   String get progQuestDailyNutritionComboTodayDesc;
 
+  /// No description provided for @progQuestDailyNutritionCarbsComboTodayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Macro Trio'**
+  String get progQuestDailyNutritionCarbsComboTodayTitle;
+
+  /// No description provided for @progQuestDailyNutritionCarbsComboTodayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete calorie, protein, and carb goals in the current day.'**
+  String get progQuestDailyNutritionCarbsComboTodayDesc;
+
+  /// No description provided for @progQuestDailyNutritionFatComboTodayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Macro Quartet'**
+  String get progQuestDailyNutritionFatComboTodayTitle;
+
+  /// No description provided for @progQuestDailyNutritionFatComboTodayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete calorie, protein, carb, and fat goals in the current day.'**
+  String get progQuestDailyNutritionFatComboTodayDesc;
+
+  /// No description provided for @progQuestDailyNutritionFiberComboTodayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Plate Combo'**
+  String get progQuestDailyNutritionFiberComboTodayTitle;
+
+  /// No description provided for @progQuestDailyNutritionFiberComboTodayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete calorie, protein, carb, fat, and fiber goals in the current day.'**
+  String get progQuestDailyNutritionFiberComboTodayDesc;
+
+  /// No description provided for @progQuestNutritionRhythm3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced Rhythm'**
+  String get progQuestNutritionRhythm3Title;
+
+  /// No description provided for @progQuestNutritionRhythm3Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn at least one nutrition reward for 3 periods in a row.'**
+  String get progQuestNutritionRhythm3Desc;
+
   /// No description provided for @progQuestDailyRecoveryFocusTodayTitle.
   ///
   /// In en, this message translates to:
@@ -2197,6 +2329,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Complete both steps and sleep goals in the current day.'**
   String get progQuestDailyRecoveryFocusTodayDesc;
+
+  /// No description provided for @progQuestSleepTotal250hTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rested Soul'**
+  String get progQuestSleepTotal250hTitle;
+
+  /// No description provided for @progQuestSleepTotal250hDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 250 hours of tracked sleep.'**
+  String get progQuestSleepTotal250hDesc;
 
   /// No description provided for @progQuestDailyStepsTodayTitle.
   ///
@@ -2233,6 +2377,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Complete the daily protein rule in the current day.'**
   String get progQuestDailyProteinTodayDesc;
+
+  /// No description provided for @progQuestDailyCarbsTodayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Carb Goal'**
+  String get progQuestDailyCarbsTodayTitle;
+
+  /// No description provided for @progQuestDailyCarbsTodayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the daily carb rule in the current day.'**
+  String get progQuestDailyCarbsTodayDesc;
+
+  /// No description provided for @progQuestDailyFatTodayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Fat Goal'**
+  String get progQuestDailyFatTodayTitle;
+
+  /// No description provided for @progQuestDailyFatTodayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the daily fat rule in the current day.'**
+  String get progQuestDailyFatTodayDesc;
+
+  /// No description provided for @progQuestDailyFiberTodayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Fiber Goal'**
+  String get progQuestDailyFiberTodayTitle;
+
+  /// No description provided for @progQuestDailyFiberTodayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the daily fiber rule in the current day.'**
+  String get progQuestDailyFiberTodayDesc;
 
   /// No description provided for @progQuestDailySleepTodayTitle.
   ///
@@ -2282,6 +2462,42 @@ abstract class AppLocalizations {
   /// **'Accumulate at least 5,000 XP.'**
   String get progQuestReach5000XpDesc;
 
+  /// No description provided for @progQuestReach25000XpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach 25,000 XP'**
+  String get progQuestReach25000XpTitle;
+
+  /// No description provided for @progQuestReach25000XpDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate at least 25,000 XP.'**
+  String get progQuestReach25000XpDesc;
+
+  /// No description provided for @progQuestReach100000XpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach 100,000 XP'**
+  String get progQuestReach100000XpTitle;
+
+  /// No description provided for @progQuestReach100000XpDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate at least 100,000 XP.'**
+  String get progQuestReach100000XpDesc;
+
+  /// No description provided for @progQuestReach1000000XpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach 1,000,000 XP'**
+  String get progQuestReach1000000XpTitle;
+
+  /// No description provided for @progQuestReach1000000XpDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate at least 1,000,000 XP.'**
+  String get progQuestReach1000000XpDesc;
+
   /// No description provided for @progQuestEarn25RewardsTitle.
   ///
   /// In en, this message translates to:
@@ -2305,6 +2521,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Collect 100 progression rewards in total.'**
   String get progQuestEarn100RewardsDesc;
+
+  /// No description provided for @progQuestEarn250RewardsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn 250 Rewards'**
+  String get progQuestEarn250RewardsTitle;
+
+  /// No description provided for @progQuestEarn250RewardsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Collect 250 progression rewards in total.'**
+  String get progQuestEarn250RewardsDesc;
 
   /// No description provided for @progQuestStepsStreak3Title.
   ///
@@ -2342,6 +2570,18 @@ abstract class AppLocalizations {
   /// **'Earn 25 nutrition rewards.'**
   String get progQuestNutritionRewards25Desc;
 
+  /// No description provided for @progQuestNutritionRewards100Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Macro Legend'**
+  String get progQuestNutritionRewards100Title;
+
+  /// No description provided for @progQuestNutritionRewards100Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn 100 nutrition rewards.'**
+  String get progQuestNutritionRewards100Desc;
+
   /// No description provided for @progQuestTotalSteps100kTitle.
   ///
   /// In en, this message translates to:
@@ -2365,6 +2605,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Accumulate 500,000 total steps.'**
   String get progQuestTotalSteps500kDesc;
+
+  /// No description provided for @progQuestTotalSteps1mTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk 1M Steps'**
+  String get progQuestTotalSteps1mTitle;
+
+  /// No description provided for @progQuestTotalSteps1mDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 1,000,000 total steps.'**
+  String get progQuestTotalSteps1mDesc;
+
+  /// No description provided for @progQuestTotalSteps5mTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk 5M Steps'**
+  String get progQuestTotalSteps5mTitle;
+
+  /// No description provided for @progQuestTotalSteps5mDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 5,000,000 total steps.'**
+  String get progQuestTotalSteps5mDesc;
+
+  /// No description provided for @progQuestTotalSteps10mTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk 10M Steps'**
+  String get progQuestTotalSteps10mTitle;
+
+  /// No description provided for @progQuestTotalSteps10mDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 10,000,000 total steps.'**
+  String get progQuestTotalSteps10mDesc;
 
   /// No description provided for @progQuestWeeklyActivityOnceTitle.
   ///
@@ -2402,6 +2678,30 @@ abstract class AppLocalizations {
   /// **'Complete the weekly activity rule 12 times.'**
   String get progQuestWeeklyActivity12Desc;
 
+  /// No description provided for @progQuestWeeklyActivity24Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Unbroken Momentum'**
+  String get progQuestWeeklyActivity24Title;
+
+  /// No description provided for @progQuestWeeklyActivity24Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the weekly activity rule 24 times.'**
+  String get progQuestWeeklyActivity24Desc;
+
+  /// No description provided for @progQuestWeeklyActivity52Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearlong Engine'**
+  String get progQuestWeeklyActivity52Title;
+
+  /// No description provided for @progQuestWeeklyActivity52Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the weekly activity rule 52 times.'**
+  String get progQuestWeeklyActivity52Desc;
+
   /// No description provided for @progQuestUnlockStepChainTitle.
   ///
   /// In en, this message translates to:
@@ -2437,6 +2737,648 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Complete the daily steps rule 14 periods in a row.'**
   String get progQuestStepsStreak14Desc;
+
+  /// No description provided for @progQuestStepsStreak30Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Step Sovereign'**
+  String get progQuestStepsStreak30Title;
+
+  /// No description provided for @progQuestStepsStreak30Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the daily steps rule 30 periods in a row.'**
+  String get progQuestStepsStreak30Desc;
+
+  /// No description provided for @progQuestStepsStreak50Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Iron Resolve'**
+  String get progQuestStepsStreak50Title;
+
+  /// No description provided for @progQuestStepsStreak50Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the daily steps rule 50 periods in a row.'**
+  String get progQuestStepsStreak50Desc;
+
+  /// No description provided for @progQuestStepsStreak100Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Iron Chain'**
+  String get progQuestStepsStreak100Title;
+
+  /// No description provided for @progQuestStepsStreak100Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the daily steps rule 100 periods in a row.'**
+  String get progQuestStepsStreak100Desc;
+
+  /// No description provided for @progQuestSourceJourney.
+  ///
+  /// In en, this message translates to:
+  /// **'Journey'**
+  String get progQuestSourceJourney;
+
+  /// No description provided for @progQuestSourceDailyCombo.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Combo'**
+  String get progQuestSourceDailyCombo;
+
+  /// No description provided for @progQuestSourceNutrition.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition'**
+  String get progQuestSourceNutrition;
+
+  /// No description provided for @progQuestSourceRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery'**
+  String get progQuestSourceRecovery;
+
+  /// No description provided for @progQuestSourceDailyGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Goal'**
+  String get progQuestSourceDailyGoal;
+
+  /// No description provided for @progQuestSourceSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps'**
+  String get progQuestSourceSteps;
+
+  /// No description provided for @progQuestSourceStepChain.
+  ///
+  /// In en, this message translates to:
+  /// **'Step Chain'**
+  String get progQuestSourceStepChain;
+
+  /// No description provided for @progQuestSourceWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get progQuestSourceWeekly;
+
+  /// No description provided for @progQuestChainStepSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps'**
+  String get progQuestChainStepSteps;
+
+  /// No description provided for @progQuestChainStepKcal.
+  ///
+  /// In en, this message translates to:
+  /// **'Kcal'**
+  String get progQuestChainStepKcal;
+
+  /// No description provided for @progQuestChainStepProtein.
+  ///
+  /// In en, this message translates to:
+  /// **'Protein'**
+  String get progQuestChainStepProtein;
+
+  /// No description provided for @progQuestChainStepCarbs.
+  ///
+  /// In en, this message translates to:
+  /// **'Carbs'**
+  String get progQuestChainStepCarbs;
+
+  /// No description provided for @progQuestChainStepFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat'**
+  String get progQuestChainStepFat;
+
+  /// No description provided for @progQuestChainStepFiber.
+  ///
+  /// In en, this message translates to:
+  /// **'Fiber'**
+  String get progQuestChainStepFiber;
+
+  /// No description provided for @progQuestChainStepSleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep'**
+  String get progQuestChainStepSleep;
+
+  /// No description provided for @progQuestChainStepBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Badge'**
+  String get progQuestChainStepBadge;
+
+  /// No description provided for @progQuestChainStepStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get progQuestChainStepStart;
+
+  /// No description provided for @progQuestChainStepEmblem.
+  ///
+  /// In en, this message translates to:
+  /// **'Emblem'**
+  String get progQuestChainStepEmblem;
+
+  /// No description provided for @progQuestSourceForestTrial.
+  ///
+  /// In en, this message translates to:
+  /// **'Forest Trial'**
+  String get progQuestSourceForestTrial;
+
+  /// No description provided for @progQuestSourceRuinsDiscipline.
+  ///
+  /// In en, this message translates to:
+  /// **'Ruins of Discipline'**
+  String get progQuestSourceRuinsDiscipline;
+
+  /// No description provided for @progQuestSourceMineDescent.
+  ///
+  /// In en, this message translates to:
+  /// **'Mine Descent'**
+  String get progQuestSourceMineDescent;
+
+  /// No description provided for @progQuestSourceForgeMomentum.
+  ///
+  /// In en, this message translates to:
+  /// **'Forge of Momentum'**
+  String get progQuestSourceForgeMomentum;
+
+  /// No description provided for @progQuestSourceUnderwayPact.
+  ///
+  /// In en, this message translates to:
+  /// **'Underway Pact'**
+  String get progQuestSourceUnderwayPact;
+
+  /// No description provided for @progQuestSourceFrostboundOath.
+  ///
+  /// In en, this message translates to:
+  /// **'Frostbound Oath'**
+  String get progQuestSourceFrostboundOath;
+
+  /// No description provided for @progQuestSourceIcewalkerRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Icewalker’s Route'**
+  String get progQuestSourceIcewalkerRoute;
+
+  /// No description provided for @progQuestSourceMountainAscent.
+  ///
+  /// In en, this message translates to:
+  /// **'Mountain Ascent'**
+  String get progQuestSourceMountainAscent;
+
+  /// No description provided for @progQuestSourceDragonroad.
+  ///
+  /// In en, this message translates to:
+  /// **'Dragonroad'**
+  String get progQuestSourceDragonroad;
+
+  /// No description provided for @progQuestSourceDragonrockSovereign.
+  ///
+  /// In en, this message translates to:
+  /// **'Dragonrock Sovereign'**
+  String get progQuestSourceDragonrockSovereign;
+
+  /// No description provided for @progQuestForestTrialOpenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Forest Trial'**
+  String get progQuestForestTrialOpenTitle;
+
+  /// No description provided for @progQuestForestTrialOpenDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the Forest Trial after reaching level 10.'**
+  String get progQuestForestTrialOpenDesc;
+
+  /// No description provided for @progQuestForestTrialDailyWins5Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Trail Rhythm'**
+  String get progQuestForestTrialDailyWins5Title;
+
+  /// No description provided for @progQuestForestTrialDailyWins5Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'On the Forest Trail, complete at least 2 daily goals on 5 different days.'**
+  String get progQuestForestTrialDailyWins5Desc;
+
+  /// No description provided for @progQuestForestTrialSteps5Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Five Days on the Path'**
+  String get progQuestForestTrialSteps5Title;
+
+  /// No description provided for @progQuestForestTrialSteps5Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'On the Forest Trail, complete your step goal 5 times.'**
+  String get progQuestForestTrialSteps5Desc;
+
+  /// No description provided for @progQuestForestTrialRecovery3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest Beneath the Trees'**
+  String get progQuestForestTrialRecovery3Title;
+
+  /// No description provided for @progQuestForestTrialRecovery3Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'On the Forest Trail, complete your step and sleep goals on the same day 3 times.'**
+  String get progQuestForestTrialRecovery3Desc;
+
+  /// No description provided for @progQuestForestTrialFinaleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Forest Trial Complete'**
+  String get progQuestForestTrialFinaleTitle;
+
+  /// No description provided for @progQuestForestTrialFinaleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the previous Forest Trial quests.'**
+  String get progQuestForestTrialFinaleDesc;
+
+  /// No description provided for @progQuestRuinsDisciplineOpenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ruins of Discipline'**
+  String get progQuestRuinsDisciplineOpenTitle;
+
+  /// No description provided for @progQuestRuinsDisciplineOpenDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the Ruins of Discipline after reaching level 20.'**
+  String get progQuestRuinsDisciplineOpenDesc;
+
+  /// No description provided for @progQuestRuinsDisciplineNutrition7Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Ancient Ration'**
+  String get progQuestRuinsDisciplineNutrition7Title;
+
+  /// No description provided for @progQuestRuinsDisciplineNutrition7Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'In the Ruins of Discipline, complete your calorie and protein goals together 7 times.'**
+  String get progQuestRuinsDisciplineNutrition7Desc;
+
+  /// No description provided for @progQuestRuinsDisciplineWeekly2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Offering'**
+  String get progQuestRuinsDisciplineWeekly2Title;
+
+  /// No description provided for @progQuestRuinsDisciplineWeekly2Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'In the Ruins of Discipline, complete the weekly activity goal 2 times.'**
+  String get progQuestRuinsDisciplineWeekly2Desc;
+
+  /// No description provided for @progQuestRuinsDisciplineSteps10Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Ten-Day Resolve'**
+  String get progQuestRuinsDisciplineSteps10Title;
+
+  /// No description provided for @progQuestRuinsDisciplineSteps10Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'In the Ruins of Discipline, complete your step goal 10 times.'**
+  String get progQuestRuinsDisciplineSteps10Desc;
+
+  /// No description provided for @progQuestRuinsDisciplineFinaleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ruins Trial Complete'**
+  String get progQuestRuinsDisciplineFinaleTitle;
+
+  /// No description provided for @progQuestRuinsDisciplineFinaleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the previous Ruins of Discipline quests.'**
+  String get progQuestRuinsDisciplineFinaleDesc;
+
+  /// No description provided for @progQuestMineDescentOpenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mine Descent'**
+  String get progQuestMineDescentOpenTitle;
+
+  /// No description provided for @progQuestMineDescentOpenDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the Mine Descent after reaching level 30.'**
+  String get progQuestMineDescentOpenDesc;
+
+  /// No description provided for @progQuestMineDescentSteps250kTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep Roads'**
+  String get progQuestMineDescentSteps250kTitle;
+
+  /// No description provided for @progQuestMineDescentSteps250kDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'During the Mine Descent, walk 250,000 steps.'**
+  String get progQuestMineDescentSteps250kDesc;
+
+  /// No description provided for @progQuestMineDescentActivityRewards12Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Work Orders'**
+  String get progQuestMineDescentActivityRewards12Title;
+
+  /// No description provided for @progQuestMineDescentActivityRewards12Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'During the Mine Descent, claim 12 activity-related rewards.'**
+  String get progQuestMineDescentActivityRewards12Desc;
+
+  /// No description provided for @progQuestMineDescentProtein10Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Iron Rations'**
+  String get progQuestMineDescentProtein10Title;
+
+  /// No description provided for @progQuestMineDescentProtein10Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'During the Mine Descent, complete your protein goal 10 times.'**
+  String get progQuestMineDescentProtein10Desc;
+
+  /// No description provided for @progQuestMineDescentFinaleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mine Trial Complete'**
+  String get progQuestMineDescentFinaleTitle;
+
+  /// No description provided for @progQuestMineDescentFinaleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the previous Mine Descent quests.'**
+  String get progQuestMineDescentFinaleDesc;
+
+  /// No description provided for @progQuestForgeMomentumOpenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Forge of Momentum'**
+  String get progQuestForgeMomentumOpenTitle;
+
+  /// No description provided for @progQuestForgeMomentumOpenDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the Forge of Momentum after reaching level 40.'**
+  String get progQuestForgeMomentumOpenDesc;
+
+  /// No description provided for @progQuestForgeMomentumWeekly4Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Heat the Forge'**
+  String get progQuestForgeMomentumWeekly4Title;
+
+  /// No description provided for @progQuestForgeMomentumWeekly4Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'At the Forge of Momentum, complete the weekly activity goal 4 times.'**
+  String get progQuestForgeMomentumWeekly4Desc;
+
+  /// No description provided for @progQuestForgeMomentumSteps20Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Hammer Steps'**
+  String get progQuestForgeMomentumSteps20Title;
+
+  /// No description provided for @progQuestForgeMomentumSteps20Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'At the Forge of Momentum, complete the step goal 20 times.'**
+  String get progQuestForgeMomentumSteps20Desc;
+
+  /// No description provided for @progQuestForgeMomentumNutrition15Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel the Flame'**
+  String get progQuestForgeMomentumNutrition15Title;
+
+  /// No description provided for @progQuestForgeMomentumNutrition15Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'At the Forge of Momentum, complete your calorie and protein goals together 15 times.'**
+  String get progQuestForgeMomentumNutrition15Desc;
+
+  /// No description provided for @progQuestForgeMomentumFinaleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Forge Trial Complete'**
+  String get progQuestForgeMomentumFinaleTitle;
+
+  /// No description provided for @progQuestForgeMomentumFinaleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the previous Forge of Momentum quests.'**
+  String get progQuestForgeMomentumFinaleDesc;
+
+  /// No description provided for @progQuestUnderwayPactOpenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Underway Pact'**
+  String get progQuestUnderwayPactOpenTitle;
+
+  /// No description provided for @progQuestUnderwayPactOpenDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the Underway Pact after reaching level 50.'**
+  String get progQuestUnderwayPactOpenDesc;
+
+  /// No description provided for @progQuestUnderwayPactFourPillars5Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Four Pillars Below'**
+  String get progQuestUnderwayPactFourPillars5Title;
+
+  /// No description provided for @progQuestUnderwayPactFourPillars5Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'In the Underway Pact, complete all 4 daily goals 5 times.'**
+  String get progQuestUnderwayPactFourPillars5Desc;
+
+  /// No description provided for @progQuestUnderwayPactSleep14Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep Rest'**
+  String get progQuestUnderwayPactSleep14Title;
+
+  /// No description provided for @progQuestUnderwayPactSleep14Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'In the Underway Pact, complete your sleep goal 14 times.'**
+  String get progQuestUnderwayPactSleep14Desc;
+
+  /// No description provided for @progQuestUnderwayPactRecovery10Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Stonebound Recovery'**
+  String get progQuestUnderwayPactRecovery10Title;
+
+  /// No description provided for @progQuestUnderwayPactRecovery10Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'In the Underway Pact, complete your step and sleep goals on the same day 10 times.'**
+  String get progQuestUnderwayPactRecovery10Desc;
+
+  /// No description provided for @progQuestUnderwayPactFinaleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Underway Trial Complete'**
+  String get progQuestUnderwayPactFinaleTitle;
+
+  /// No description provided for @progQuestUnderwayPactFinaleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the previous Underway Pact quests.'**
+  String get progQuestUnderwayPactFinaleDesc;
+
+  /// No description provided for @progQuestFrostboundOathOpenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Frostbound Oath'**
+  String get progQuestFrostboundOathOpenTitle;
+
+  /// No description provided for @progQuestFrostboundOathOpenDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the Frostbound Oath after reaching level 60.'**
+  String get progQuestFrostboundOathOpenDesc;
+
+  /// No description provided for @progQuestFrostboundOathSteps21Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Frozen Resolve'**
+  String get progQuestFrostboundOathSteps21Title;
+
+  /// No description provided for @progQuestFrostboundOathSteps21Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Under the Frostbound Oath, complete your step goal 21 times.'**
+  String get progQuestFrostboundOathSteps21Desc;
+
+  /// No description provided for @progQuestFrostboundOathSleep21Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Shelter in the Snow'**
+  String get progQuestFrostboundOathSleep21Title;
+
+  /// No description provided for @progQuestFrostboundOathSleep21Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Under the Frostbound Oath, complete your sleep goal 21 times.'**
+  String get progQuestFrostboundOathSleep21Desc;
+
+  /// No description provided for @progQuestFrostboundOathWeekly6Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Cold March'**
+  String get progQuestFrostboundOathWeekly6Title;
+
+  /// No description provided for @progQuestFrostboundOathWeekly6Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Under the Frostbound Oath, complete the weekly activity goal 6 times.'**
+  String get progQuestFrostboundOathWeekly6Desc;
+
+  /// No description provided for @progQuestFrostboundOathFinaleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Frost Trial Complete'**
+  String get progQuestFrostboundOathFinaleTitle;
+
+  /// No description provided for @progQuestFrostboundOathFinaleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the previous Frostbound Oath quests.'**
+  String get progQuestFrostboundOathFinaleDesc;
+
+  /// No description provided for @progQuestIcewalkerRouteOpenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Icewalker’s Route'**
+  String get progQuestIcewalkerRouteOpenTitle;
+
+  /// No description provided for @progQuestIcewalkerRouteOpenDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Icewalker’s Route after reaching level 70.'**
+  String get progQuestIcewalkerRouteOpenDesc;
+
+  /// No description provided for @progQuestIcewalkerRouteSteps500kDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'On Icewalker’s Route, walk 500,000 steps.'**
+  String get progQuestIcewalkerRouteSteps500kDesc;
+
+  /// No description provided for @progQuestIcewalkerRouteRewards150Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'On Icewalker’s Route, claim 150 rewards.'**
+  String get progQuestIcewalkerRouteRewards150Desc;
+
+  /// No description provided for @progQuestIcewalkerRouteProtein30Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'On Icewalker’s Route, complete your protein goal 30 times.'**
+  String get progQuestIcewalkerRouteProtein30Desc;
+
+  /// No description provided for @progQuestIcewalkerRouteFinaleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the previous Icewalker’s Route quests.'**
+  String get progQuestIcewalkerRouteFinaleDesc;
+
+  /// No description provided for @progQuestMountainAscentSteps30Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'During the Mountain Ascent, complete your step goal 30 times.'**
+  String get progQuestMountainAscentSteps30Desc;
+
+  /// No description provided for @progQuestDragonrockSovereignOpenDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Claim Dragonrock sovereignty after reaching level 100.'**
+  String get progQuestDragonrockSovereignOpenDesc;
+
+  /// No description provided for @progQuestDragonrockSovereignFourPillars30Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Within Dragonrock Fortress, complete all 4 daily goals 30 times.'**
+  String get progQuestDragonrockSovereignFourPillars30Desc;
+
+  /// No description provided for @progQuestDragonrockSovereignWeekly16Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Within Dragonrock Fortress, complete the weekly activity goal 16 times.'**
+  String get progQuestDragonrockSovereignWeekly16Desc;
+
+  /// No description provided for @progQuestDragonrockSovereignSteps50Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Within Dragonrock Fortress, complete your step goal 50 times.'**
+  String get progQuestDragonrockSovereignSteps50Desc;
+
+  /// No description provided for @progQuestDragonrockSovereignFinaleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dragonrock Seal'**
+  String get progQuestDragonrockSovereignFinaleTitle;
+
+  /// No description provided for @progQuestDragonrockSovereignFinaleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the previous Dragonrock Sovereign quests.'**
+  String get progQuestDragonrockSovereignFinaleDesc;
 
   /// No description provided for @progAchievementFirstRewardTitle.
   ///
@@ -2966,6 +3908,180 @@ abstract class AppLocalizations {
   /// **'Accumulate 240 hours of sleep across any 30-day window.'**
   String get progAchievementSleepMonth240hDesc;
 
+  /// No description provided for @progAchievementDailyQuest3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'First Steps'**
+  String get progAchievementDailyQuest3Title;
+
+  /// No description provided for @progAchievementDailyQuest3Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 3 daily quests.'**
+  String get progAchievementDailyQuest3Desc;
+
+  /// No description provided for @progAchievementDailyQuest7Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Steady Hand'**
+  String get progAchievementDailyQuest7Title;
+
+  /// No description provided for @progAchievementDailyQuest7Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 7 daily quests.'**
+  String get progAchievementDailyQuest7Desc;
+
+  /// No description provided for @progAchievementQuestHunter250Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Quest Hunter'**
+  String get progAchievementQuestHunter250Title;
+
+  /// No description provided for @progAchievementQuestHunter250Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 250 quests in total.'**
+  String get progAchievementQuestHunter250Desc;
+
+  /// No description provided for @progAchievementActiveDays7Title.
+  ///
+  /// In en, this message translates to:
+  /// **'A Week on the Road'**
+  String get progAchievementActiveDays7Title;
+
+  /// No description provided for @progAchievementActiveDays7Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Be active for 7 days.'**
+  String get progAchievementActiveDays7Desc;
+
+  /// No description provided for @progAchievementPerfectDays7Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced Week'**
+  String get progAchievementPerfectDays7Title;
+
+  /// No description provided for @progAchievementPerfectDays7Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete all daily goals on 7 different days.'**
+  String get progAchievementPerfectDays7Desc;
+
+  /// No description provided for @progAchievementPerfectWeeks12Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Master of Routine'**
+  String get progAchievementPerfectWeeks12Title;
+
+  /// No description provided for @progAchievementPerfectWeeks12Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete a perfect week 12 times.'**
+  String get progAchievementPerfectWeeks12Desc;
+
+  /// No description provided for @progAchievementComboVictory10Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Combo Initiate'**
+  String get progAchievementComboVictory10Title;
+
+  /// No description provided for @progAchievementComboVictory10Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 10 combo quests of any kind.'**
+  String get progAchievementComboVictory10Desc;
+
+  /// No description provided for @progAchievementComboTripleVictory25Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Triple Threat'**
+  String get progAchievementComboTripleVictory25Title;
+
+  /// No description provided for @progAchievementComboTripleVictory25Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 25 triple-or-better combo quests.'**
+  String get progAchievementComboTripleVictory25Desc;
+
+  /// No description provided for @progAchievementComboTripleVictory100Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Combo Sovereign'**
+  String get progAchievementComboTripleVictory100Title;
+
+  /// No description provided for @progAchievementComboTripleVictory100Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 100 triple-or-better combo quests.'**
+  String get progAchievementComboTripleVictory100Desc;
+
+  /// No description provided for @progAchievementDragonrockTrialTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dragonrock Trial'**
+  String get progAchievementDragonrockTrialTitle;
+
+  /// No description provided for @progAchievementDragonrockTrialDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 100, complete 250 quests, and walk 10,000,000 steps.'**
+  String get progAchievementDragonrockTrialDesc;
+
+  /// No description provided for @progAchievementSummaryComposite.
+  ///
+  /// In en, this message translates to:
+  /// **'all conditions'**
+  String get progAchievementSummaryComposite;
+
+  /// No description provided for @progAchievementSummaryDailyQuests.
+  ///
+  /// In en, this message translates to:
+  /// **'daily quests'**
+  String get progAchievementSummaryDailyQuests;
+
+  /// No description provided for @progAchievementSummaryWeeklyQuests.
+  ///
+  /// In en, this message translates to:
+  /// **'weekly quests'**
+  String get progAchievementSummaryWeeklyQuests;
+
+  /// No description provided for @progAchievementSummaryTotalQuests.
+  ///
+  /// In en, this message translates to:
+  /// **'quests'**
+  String get progAchievementSummaryTotalQuests;
+
+  /// No description provided for @progAchievementSummaryActiveDays.
+  ///
+  /// In en, this message translates to:
+  /// **'active days'**
+  String get progAchievementSummaryActiveDays;
+
+  /// No description provided for @progAchievementSummaryPerfectDays.
+  ///
+  /// In en, this message translates to:
+  /// **'perfect days'**
+  String get progAchievementSummaryPerfectDays;
+
+  /// No description provided for @progAchievementSummaryPerfectWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'perfect weeks'**
+  String get progAchievementSummaryPerfectWeeks;
+
+  /// No description provided for @progAchievementSummaryComboQuests.
+  ///
+  /// In en, this message translates to:
+  /// **'combo quests'**
+  String get progAchievementSummaryComboQuests;
+
+  /// No description provided for @progAchievementSummaryTripleComboQuests.
+  ///
+  /// In en, this message translates to:
+  /// **'triple combo quests'**
+  String get progAchievementSummaryTripleComboQuests;
+
   /// No description provided for @progAchievementDifficultyEasy.
   ///
   /// In en, this message translates to:
@@ -2989,6 +4105,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Extra Hard'**
   String get progAchievementDifficultyExtraHard;
+
+  /// No description provided for @progAchievementDifficultyMythic.
+  ///
+  /// In en, this message translates to:
+  /// **'Impossible'**
+  String get progAchievementDifficultyMythic;
 
   /// No description provided for @progQuestCriterionTotalXp.
   ///
@@ -3578,18 +4700,6 @@ abstract class AppLocalizations {
   /// **'Developer-only background. Grant via DevTools.'**
   String get cosmeticBackgroundDevOnlyDesc;
 
-  /// No description provided for @cosmeticRelicOldCompassName.
-  ///
-  /// In en, this message translates to:
-  /// **'Old Compass'**
-  String get cosmeticRelicOldCompassName;
-
-  /// No description provided for @cosmeticRelicOldCompassDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'A brass compass whose needle sometimes points the wrong way.'**
-  String get cosmeticRelicOldCompassDesc;
-
   /// No description provided for @cosmeticBackgroundForestTrailName.
   ///
   /// In en, this message translates to:
@@ -3625,18 +4735,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A patina-coated frame pulled from ancient ruins.'**
   String get cosmeticFrameRuinedBronzeDesc;
-
-  /// No description provided for @cosmeticRelicOldGateKeyName.
-  ///
-  /// In en, this message translates to:
-  /// **'Old Gate Key'**
-  String get cosmeticRelicOldGateKeyName;
-
-  /// No description provided for @cosmeticRelicOldGateKeyDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'A heavy key whose lock no longer exists.'**
-  String get cosmeticRelicOldGateKeyDesc;
 
   /// No description provided for @cosmeticBackgroundCampName.
   ///
@@ -3878,30 +4976,6 @@ abstract class AppLocalizations {
   /// **'The first ember from the first night out.'**
   String get cosmeticRelicCampfireSparkDesc;
 
-  /// No description provided for @cosmeticRelicPilgrimCloakName.
-  ///
-  /// In en, this message translates to:
-  /// **'Pilgrim Cloak'**
-  String get cosmeticRelicPilgrimCloakName;
-
-  /// No description provided for @cosmeticRelicPilgrimCloakDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Travel-worn wool that has already seen one full week of the road.'**
-  String get cosmeticRelicPilgrimCloakDesc;
-
-  /// No description provided for @cosmeticRelicTrailCompassName.
-  ///
-  /// In en, this message translates to:
-  /// **'Trail Compass'**
-  String get cosmeticRelicTrailCompassName;
-
-  /// No description provided for @cosmeticRelicTrailCompassDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'A small forest compass earned by completing seven daily quests.'**
-  String get cosmeticRelicTrailCompassDesc;
-
   /// No description provided for @cosmeticRelicAncientRootName.
   ///
   /// In en, this message translates to:
@@ -4010,29 +5084,113 @@ abstract class AppLocalizations {
   /// **'A black scale with a faint heat under its surface.'**
   String get cosmeticRelicDragonScaleDesc;
 
-  /// No description provided for @cosmeticRelicDragonCrownName.
+  /// No description provided for @cosmeticRelicWarmKindlingName.
   ///
   /// In en, this message translates to:
-  /// **'Dragon Crown'**
-  String get cosmeticRelicDragonCrownName;
+  /// **'Warm Kindling'**
+  String get cosmeticRelicWarmKindlingName;
 
-  /// No description provided for @cosmeticRelicDragonCrownDesc.
+  /// No description provided for @cosmeticRelicWarmKindlingDesc.
   ///
   /// In en, this message translates to:
-  /// **'A circlet of dragon-tooth iron earned across two hundred and fifty quests.'**
-  String get cosmeticRelicDragonCrownDesc;
+  /// **'A small bundle of dry tinder gathered before the second sunrise.'**
+  String get cosmeticRelicWarmKindlingDesc;
 
-  /// No description provided for @cosmeticRelicDragonrockCrownName.
+  /// No description provided for @cosmeticRelicMoonlitFoxgloveName.
   ///
   /// In en, this message translates to:
-  /// **'Dragonrock Crown'**
-  String get cosmeticRelicDragonrockCrownName;
+  /// **'Moonlit Foxglove'**
+  String get cosmeticRelicMoonlitFoxgloveName;
 
-  /// No description provided for @cosmeticRelicDragonrockCrownDesc.
+  /// No description provided for @cosmeticRelicMoonlitFoxgloveDesc.
   ///
   /// In en, this message translates to:
-  /// **'The endgame crown of Dragonrock — proof of both quest mastery and a finished climb.'**
-  String get cosmeticRelicDragonrockCrownDesc;
+  /// **'A pale flower that only opens for travelers who keep moving.'**
+  String get cosmeticRelicMoonlitFoxgloveDesc;
+
+  /// No description provided for @cosmeticRelicWildwoodCharmName.
+  ///
+  /// In en, this message translates to:
+  /// **'Wildwood Charm'**
+  String get cosmeticRelicWildwoodCharmName;
+
+  /// No description provided for @cosmeticRelicWildwoodCharmDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A token braided from forest grasses and small steady wins.'**
+  String get cosmeticRelicWildwoodCharmDesc;
+
+  /// No description provided for @cosmeticRelicAshenOmenName.
+  ///
+  /// In en, this message translates to:
+  /// **'Ashen Omen'**
+  String get cosmeticRelicAshenOmenName;
+
+  /// No description provided for @cosmeticRelicAshenOmenDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A burnt mark left on the ruined stones by a steadier walker.'**
+  String get cosmeticRelicAshenOmenDesc;
+
+  /// No description provided for @cosmeticRelicOathboundMarkName.
+  ///
+  /// In en, this message translates to:
+  /// **'Oathbound Mark'**
+  String get cosmeticRelicOathboundMarkName;
+
+  /// No description provided for @cosmeticRelicOathboundMarkDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A sealed promise carved into bone — kept across many small victories.'**
+  String get cosmeticRelicOathboundMarkDesc;
+
+  /// No description provided for @cosmeticRelicDeepEmberCoreName.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep Ember Core'**
+  String get cosmeticRelicDeepEmberCoreName;
+
+  /// No description provided for @cosmeticRelicDeepEmberCoreDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A coal that still burns after a million careful steps in the deep.'**
+  String get cosmeticRelicDeepEmberCoreDesc;
+
+  /// No description provided for @cosmeticRelicSummitFeatherName.
+  ///
+  /// In en, this message translates to:
+  /// **'Summit Feather'**
+  String get cosmeticRelicSummitFeatherName;
+
+  /// No description provided for @cosmeticRelicSummitFeatherDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Found on the wind only by those who cross every threshold.'**
+  String get cosmeticRelicSummitFeatherDesc;
+
+  /// No description provided for @cosmeticRelicStormcrestPlumeName.
+  ///
+  /// In en, this message translates to:
+  /// **'Stormcrest Plume'**
+  String get cosmeticRelicStormcrestPlumeName;
+
+  /// No description provided for @cosmeticRelicStormcrestPlumeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A feather marked by a year of weekly storms outwalked.'**
+  String get cosmeticRelicStormcrestPlumeDesc;
+
+  /// No description provided for @cosmeticRelicDragonrockHeartName.
+  ///
+  /// In en, this message translates to:
+  /// **'Dragonrock Heart'**
+  String get cosmeticRelicDragonrockHeartName;
+
+  /// No description provided for @cosmeticRelicDragonrockHeartDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The forge-warm core of the mountain itself, given only to those who finish the trial.'**
+  String get cosmeticRelicDragonrockHeartDesc;
 
   /// No description provided for @cosmeticFrameDisciplineName.
   ///
@@ -4328,11 +5486,23 @@ abstract class AppLocalizations {
   /// **'{completed}/{total} conditions met'**
   String cosmeticPartialProgress(int completed, int total);
 
+  /// No description provided for @cosmeticCompanionLevelGate.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level {level}'**
+  String cosmeticCompanionLevelGate(int level);
+
   /// No description provided for @cosmeticRarityCommon.
   ///
   /// In en, this message translates to:
   /// **'Common'**
   String get cosmeticRarityCommon;
+
+  /// No description provided for @cosmeticRarityUncommon.
+  ///
+  /// In en, this message translates to:
+  /// **'Uncommon'**
+  String get cosmeticRarityUncommon;
 
   /// No description provided for @cosmeticRarityRare.
   ///
@@ -4351,6 +5521,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Legendary'**
   String get cosmeticRarityLegendary;
+
+  /// No description provided for @cosmeticRarityMythic.
+  ///
+  /// In en, this message translates to:
+  /// **'Mythic'**
+  String get cosmeticRarityMythic;
 
   /// No description provided for @celebrationCosmeticUnlockedEyebrow.
   ///
@@ -5103,29 +6279,11 @@ abstract class AppLocalizations {
   /// **'Reach level 100.'**
   String get cosmeticEmblemDragonrockEmblemUnlockHint;
 
-  /// No description provided for @cosmeticRelicOldGateKeyUnlockHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Reach level 15.'**
-  String get cosmeticRelicOldGateKeyUnlockHint;
-
   /// No description provided for @cosmeticRelicCampfireSparkUnlockHint.
   ///
   /// In en, this message translates to:
   /// **'Complete your first daily quest.'**
   String get cosmeticRelicCampfireSparkUnlockHint;
-
-  /// No description provided for @cosmeticRelicPilgrimCloakUnlockHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Stay active for 7 days.'**
-  String get cosmeticRelicPilgrimCloakUnlockHint;
-
-  /// No description provided for @cosmeticRelicTrailCompassUnlockHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Complete 7 daily quests.'**
-  String get cosmeticRelicTrailCompassUnlockHint;
 
   /// No description provided for @cosmeticRelicAncientRootUnlockHint.
   ///
@@ -5181,17 +6339,59 @@ abstract class AppLocalizations {
   /// **'Reach level 85.'**
   String get cosmeticRelicDragonScaleUnlockHint;
 
-  /// No description provided for @cosmeticRelicDragonCrownUnlockHint.
+  /// No description provided for @cosmeticRelicWarmKindlingUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Complete 250 quests.'**
-  String get cosmeticRelicDragonCrownUnlockHint;
+  /// **'Complete 3 daily quests.'**
+  String get cosmeticRelicWarmKindlingUnlockHint;
 
-  /// No description provided for @cosmeticRelicDragonrockCrownUnlockHint.
+  /// No description provided for @cosmeticRelicMoonlitFoxgloveUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Reach level 100 and complete 250 quests.'**
-  String get cosmeticRelicDragonrockCrownUnlockHint;
+  /// **'Stay active for 7 days.'**
+  String get cosmeticRelicMoonlitFoxgloveUnlockHint;
+
+  /// No description provided for @cosmeticRelicWildwoodCharmUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 7 daily quests.'**
+  String get cosmeticRelicWildwoodCharmUnlockHint;
+
+  /// No description provided for @cosmeticRelicAshenOmenUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the weekly activity rule 4 times.'**
+  String get cosmeticRelicAshenOmenUnlockHint;
+
+  /// No description provided for @cosmeticRelicOathboundMarkUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 10 combo quests.'**
+  String get cosmeticRelicOathboundMarkUnlockHint;
+
+  /// No description provided for @cosmeticRelicDeepEmberCoreUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk 1,000,000 total steps.'**
+  String get cosmeticRelicDeepEmberCoreUnlockHint;
+
+  /// No description provided for @cosmeticRelicSummitFeatherUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 100 triple combo quests.'**
+  String get cosmeticRelicSummitFeatherUnlockHint;
+
+  /// No description provided for @cosmeticRelicStormcrestPlumeUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the weekly activity rule 52 times.'**
+  String get cosmeticRelicStormcrestPlumeUnlockHint;
+
+  /// No description provided for @cosmeticRelicDragonrockHeartUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the Dragonrock Trial.'**
+  String get cosmeticRelicDragonrockHeartUnlockHint;
 
   /// No description provided for @cosmeticCompanionEmberSpriteUnlockHint.
   ///

@@ -31,6 +31,7 @@ AchievementBadgeSpec achievementBadgeSpec(ProgressionAchievement achievement) {
     ProgressionAchievementDifficulty.medium => Tokens.difficultyMedium,
     ProgressionAchievementDifficulty.hard => Tokens.difficultyHard,
     ProgressionAchievementDifficulty.extraHard => Tokens.difficultyExtraHard,
+    ProgressionAchievementDifficulty.mythic => Tokens.difficultyMythic,
   };
   return AchievementBadgeSpec(
     emoji: achievementEmojiForId(achievement.id),

@@ -887,7 +887,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get progQuestsSectionCaption =>
-      'Active and locked quests first, completed ones below.';
+      'Active quests first, completed ones below.';
 
   @override
   String get questsScreenEyebrow => 'QUESTS';
@@ -899,10 +899,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progQuestsActiveHeader => 'ACTIVE QUESTS';
 
   @override
+  String progQuestsActiveCount(int count) {
+    return '$count active';
+  }
+
+  @override
+  String get progQuestsDailyGoalsHeader => 'DAILY GOALS';
+
+  @override
+  String get progQuestsDailyComboHeader => 'TODAY\'S COMBO';
+
+  @override
+  String get progQuestsWeeklyHeader => 'THIS WEEK';
+
+  @override
+  String get progQuestsChapterHeader => 'JOURNEY CHAPTERS';
+
+  @override
+  String get progQuestsLongTermHeader => 'LONG-TERM GOALS';
+
+  @override
   String get progQuestsLockedHeader => 'LOCKED QUESTS';
 
   @override
   String get progQuestsCompletedHeader => 'COMPLETED QUESTS';
+
+  @override
+  String progQuestsCompletedCount(int count) {
+    return '$count completed';
+  }
 
   @override
   String get progQuestsEmptyActiveTitle => 'No active quests right now.';
@@ -986,6 +1011,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get progQuestDetailNoFollowUp => 'No follow-up quest yet';
+
+  @override
+  String get progQuestDetailGoal => 'Goal';
+
+  @override
+  String get progQuestDetailNextInChain => 'Next in chain';
 
   @override
   String progProgressRatio(int current, int target) {
@@ -1096,6 +1127,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progRuleDailyProtein => 'Protein Target';
 
   @override
+  String get progRuleDailyCarbs => 'Carb Target';
+
+  @override
+  String get progRuleDailyFat => 'Fat Target';
+
+  @override
+  String get progRuleDailyFiber => 'Fiber Target';
+
+  @override
   String get progRuleDailySleep => 'Sleep Target';
 
   @override
@@ -1141,6 +1181,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Complete all 4 daily goals in the current day.';
 
   @override
+  String get progQuestComboInitiate10Title => 'Combo Initiate';
+
+  @override
+  String get progQuestComboInitiate10Desc =>
+      'Complete 10 combo quests of any kind.';
+
+  @override
   String get progQuestDailyNutritionComboTodayTitle => 'Nutrition Combo';
 
   @override
@@ -1148,11 +1195,46 @@ class AppLocalizationsEn extends AppLocalizations {
       'Complete both calorie and protein goals in the current day.';
 
   @override
+  String get progQuestDailyNutritionCarbsComboTodayTitle => 'Macro Trio';
+
+  @override
+  String get progQuestDailyNutritionCarbsComboTodayDesc =>
+      'Complete calorie, protein, and carb goals in the current day.';
+
+  @override
+  String get progQuestDailyNutritionFatComboTodayTitle => 'Macro Quartet';
+
+  @override
+  String get progQuestDailyNutritionFatComboTodayDesc =>
+      'Complete calorie, protein, carb, and fat goals in the current day.';
+
+  @override
+  String get progQuestDailyNutritionFiberComboTodayTitle => 'Full Plate Combo';
+
+  @override
+  String get progQuestDailyNutritionFiberComboTodayDesc =>
+      'Complete calorie, protein, carb, fat, and fiber goals in the current day.';
+
+  @override
+  String get progQuestNutritionRhythm3Title => 'Balanced Rhythm';
+
+  @override
+  String get progQuestNutritionRhythm3Desc =>
+      'Earn at least one nutrition reward for 3 periods in a row.';
+
+  @override
   String get progQuestDailyRecoveryFocusTodayTitle => 'Recovery Focus';
 
   @override
   String get progQuestDailyRecoveryFocusTodayDesc =>
       'Complete both steps and sleep goals in the current day.';
+
+  @override
+  String get progQuestSleepTotal250hTitle => 'Rested Soul';
+
+  @override
+  String get progQuestSleepTotal250hDesc =>
+      'Accumulate 250 hours of tracked sleep.';
 
   @override
   String get progQuestDailyStepsTodayTitle => 'Today\'s Step Goal';
@@ -1174,6 +1256,27 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get progQuestDailyProteinTodayDesc =>
       'Complete the daily protein rule in the current day.';
+
+  @override
+  String get progQuestDailyCarbsTodayTitle => 'Today\'s Carb Goal';
+
+  @override
+  String get progQuestDailyCarbsTodayDesc =>
+      'Complete the daily carb rule in the current day.';
+
+  @override
+  String get progQuestDailyFatTodayTitle => 'Today\'s Fat Goal';
+
+  @override
+  String get progQuestDailyFatTodayDesc =>
+      'Complete the daily fat rule in the current day.';
+
+  @override
+  String get progQuestDailyFiberTodayTitle => 'Today\'s Fiber Goal';
+
+  @override
+  String get progQuestDailyFiberTodayDesc =>
+      'Complete the daily fiber rule in the current day.';
 
   @override
   String get progQuestDailySleepTodayTitle => 'Today\'s Sleep Goal';
@@ -1201,6 +1304,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progQuestReach5000XpDesc => 'Accumulate at least 5,000 XP.';
 
   @override
+  String get progQuestReach25000XpTitle => 'Reach 25,000 XP';
+
+  @override
+  String get progQuestReach25000XpDesc => 'Accumulate at least 25,000 XP.';
+
+  @override
+  String get progQuestReach100000XpTitle => 'Reach 100,000 XP';
+
+  @override
+  String get progQuestReach100000XpDesc => 'Accumulate at least 100,000 XP.';
+
+  @override
+  String get progQuestReach1000000XpTitle => 'Reach 1,000,000 XP';
+
+  @override
+  String get progQuestReach1000000XpDesc => 'Accumulate at least 1,000,000 XP.';
+
+  @override
   String get progQuestEarn25RewardsTitle => 'Earn 25 Rewards';
 
   @override
@@ -1213,6 +1334,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get progQuestEarn100RewardsDesc =>
       'Collect 100 progression rewards in total.';
+
+  @override
+  String get progQuestEarn250RewardsTitle => 'Earn 250 Rewards';
+
+  @override
+  String get progQuestEarn250RewardsDesc =>
+      'Collect 250 progression rewards in total.';
 
   @override
   String get progQuestStepsStreak3Title => 'Steps Streak';
@@ -1234,6 +1362,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progQuestNutritionRewards25Desc => 'Earn 25 nutrition rewards.';
 
   @override
+  String get progQuestNutritionRewards100Title => 'Macro Legend';
+
+  @override
+  String get progQuestNutritionRewards100Desc => 'Earn 100 nutrition rewards.';
+
+  @override
   String get progQuestTotalSteps100kTitle => 'Walk 100K Steps';
 
   @override
@@ -1244,6 +1378,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get progQuestTotalSteps500kDesc => 'Accumulate 500,000 total steps.';
+
+  @override
+  String get progQuestTotalSteps1mTitle => 'Walk 1M Steps';
+
+  @override
+  String get progQuestTotalSteps1mDesc => 'Accumulate 1,000,000 total steps.';
+
+  @override
+  String get progQuestTotalSteps5mTitle => 'Walk 5M Steps';
+
+  @override
+  String get progQuestTotalSteps5mDesc => 'Accumulate 5,000,000 total steps.';
+
+  @override
+  String get progQuestTotalSteps10mTitle => 'Walk 10M Steps';
+
+  @override
+  String get progQuestTotalSteps10mDesc => 'Accumulate 10,000,000 total steps.';
 
   @override
   String get progQuestWeeklyActivityOnceTitle => 'Weekly Activity';
@@ -1267,6 +1419,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Complete the weekly activity rule 12 times.';
 
   @override
+  String get progQuestWeeklyActivity24Title => 'Unbroken Momentum';
+
+  @override
+  String get progQuestWeeklyActivity24Desc =>
+      'Complete the weekly activity rule 24 times.';
+
+  @override
+  String get progQuestWeeklyActivity52Title => 'Yearlong Engine';
+
+  @override
+  String get progQuestWeeklyActivity52Desc =>
+      'Complete the weekly activity rule 52 times.';
+
+  @override
   String get progQuestUnlockStepChainTitle => 'Unlock Step Chain';
 
   @override
@@ -1286,6 +1452,371 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get progQuestStepsStreak14Desc =>
       'Complete the daily steps rule 14 periods in a row.';
+
+  @override
+  String get progQuestStepsStreak30Title => 'Step Sovereign';
+
+  @override
+  String get progQuestStepsStreak30Desc =>
+      'Complete the daily steps rule 30 periods in a row.';
+
+  @override
+  String get progQuestStepsStreak50Title => 'Iron Resolve';
+
+  @override
+  String get progQuestStepsStreak50Desc =>
+      'Complete the daily steps rule 50 periods in a row.';
+
+  @override
+  String get progQuestStepsStreak100Title => 'Iron Chain';
+
+  @override
+  String get progQuestStepsStreak100Desc =>
+      'Complete the daily steps rule 100 periods in a row.';
+
+  @override
+  String get progQuestSourceJourney => 'Journey';
+
+  @override
+  String get progQuestSourceDailyCombo => 'Daily Combo';
+
+  @override
+  String get progQuestSourceNutrition => 'Nutrition';
+
+  @override
+  String get progQuestSourceRecovery => 'Recovery';
+
+  @override
+  String get progQuestSourceDailyGoal => 'Daily Goal';
+
+  @override
+  String get progQuestSourceSteps => 'Steps';
+
+  @override
+  String get progQuestSourceStepChain => 'Step Chain';
+
+  @override
+  String get progQuestSourceWeekly => 'Weekly';
+
+  @override
+  String get progQuestChainStepSteps => 'Steps';
+
+  @override
+  String get progQuestChainStepKcal => 'Kcal';
+
+  @override
+  String get progQuestChainStepProtein => 'Protein';
+
+  @override
+  String get progQuestChainStepCarbs => 'Carbs';
+
+  @override
+  String get progQuestChainStepFat => 'Fat';
+
+  @override
+  String get progQuestChainStepFiber => 'Fiber';
+
+  @override
+  String get progQuestChainStepSleep => 'Sleep';
+
+  @override
+  String get progQuestChainStepBadge => 'Badge';
+
+  @override
+  String get progQuestChainStepStart => 'Start';
+
+  @override
+  String get progQuestChainStepEmblem => 'Emblem';
+
+  @override
+  String get progQuestSourceForestTrial => 'Forest Trial';
+
+  @override
+  String get progQuestSourceRuinsDiscipline => 'Ruins of Discipline';
+
+  @override
+  String get progQuestSourceMineDescent => 'Mine Descent';
+
+  @override
+  String get progQuestSourceForgeMomentum => 'Forge of Momentum';
+
+  @override
+  String get progQuestSourceUnderwayPact => 'Underway Pact';
+
+  @override
+  String get progQuestSourceFrostboundOath => 'Frostbound Oath';
+
+  @override
+  String get progQuestSourceIcewalkerRoute => 'Icewalker’s Route';
+
+  @override
+  String get progQuestSourceMountainAscent => 'Mountain Ascent';
+
+  @override
+  String get progQuestSourceDragonroad => 'Dragonroad';
+
+  @override
+  String get progQuestSourceDragonrockSovereign => 'Dragonrock Sovereign';
+
+  @override
+  String get progQuestForestTrialOpenTitle => 'Forest Trial';
+
+  @override
+  String get progQuestForestTrialOpenDesc =>
+      'Start the Forest Trial after reaching level 10.';
+
+  @override
+  String get progQuestForestTrialDailyWins5Title => 'Trail Rhythm';
+
+  @override
+  String get progQuestForestTrialDailyWins5Desc =>
+      'On the Forest Trail, complete at least 2 daily goals on 5 different days.';
+
+  @override
+  String get progQuestForestTrialSteps5Title => 'Five Days on the Path';
+
+  @override
+  String get progQuestForestTrialSteps5Desc =>
+      'On the Forest Trail, complete your step goal 5 times.';
+
+  @override
+  String get progQuestForestTrialRecovery3Title => 'Rest Beneath the Trees';
+
+  @override
+  String get progQuestForestTrialRecovery3Desc =>
+      'On the Forest Trail, complete your step and sleep goals on the same day 3 times.';
+
+  @override
+  String get progQuestForestTrialFinaleTitle => 'Forest Trial Complete';
+
+  @override
+  String get progQuestForestTrialFinaleDesc =>
+      'Complete the previous Forest Trial quests.';
+
+  @override
+  String get progQuestRuinsDisciplineOpenTitle => 'Ruins of Discipline';
+
+  @override
+  String get progQuestRuinsDisciplineOpenDesc =>
+      'Start the Ruins of Discipline after reaching level 20.';
+
+  @override
+  String get progQuestRuinsDisciplineNutrition7Title => 'Ancient Ration';
+
+  @override
+  String get progQuestRuinsDisciplineNutrition7Desc =>
+      'In the Ruins of Discipline, complete your calorie and protein goals together 7 times.';
+
+  @override
+  String get progQuestRuinsDisciplineWeekly2Title => 'Weekly Offering';
+
+  @override
+  String get progQuestRuinsDisciplineWeekly2Desc =>
+      'In the Ruins of Discipline, complete the weekly activity goal 2 times.';
+
+  @override
+  String get progQuestRuinsDisciplineSteps10Title => 'Ten-Day Resolve';
+
+  @override
+  String get progQuestRuinsDisciplineSteps10Desc =>
+      'In the Ruins of Discipline, complete your step goal 10 times.';
+
+  @override
+  String get progQuestRuinsDisciplineFinaleTitle => 'Ruins Trial Complete';
+
+  @override
+  String get progQuestRuinsDisciplineFinaleDesc =>
+      'Complete the previous Ruins of Discipline quests.';
+
+  @override
+  String get progQuestMineDescentOpenTitle => 'Mine Descent';
+
+  @override
+  String get progQuestMineDescentOpenDesc =>
+      'Start the Mine Descent after reaching level 30.';
+
+  @override
+  String get progQuestMineDescentSteps250kTitle => 'Deep Roads';
+
+  @override
+  String get progQuestMineDescentSteps250kDesc =>
+      'During the Mine Descent, walk 250,000 steps.';
+
+  @override
+  String get progQuestMineDescentActivityRewards12Title => 'Work Orders';
+
+  @override
+  String get progQuestMineDescentActivityRewards12Desc =>
+      'During the Mine Descent, claim 12 activity-related rewards.';
+
+  @override
+  String get progQuestMineDescentProtein10Title => 'Iron Rations';
+
+  @override
+  String get progQuestMineDescentProtein10Desc =>
+      'During the Mine Descent, complete your protein goal 10 times.';
+
+  @override
+  String get progQuestMineDescentFinaleTitle => 'Mine Trial Complete';
+
+  @override
+  String get progQuestMineDescentFinaleDesc =>
+      'Complete the previous Mine Descent quests.';
+
+  @override
+  String get progQuestForgeMomentumOpenTitle => 'Forge of Momentum';
+
+  @override
+  String get progQuestForgeMomentumOpenDesc =>
+      'Start the Forge of Momentum after reaching level 40.';
+
+  @override
+  String get progQuestForgeMomentumWeekly4Title => 'Heat the Forge';
+
+  @override
+  String get progQuestForgeMomentumWeekly4Desc =>
+      'At the Forge of Momentum, complete the weekly activity goal 4 times.';
+
+  @override
+  String get progQuestForgeMomentumSteps20Title => 'Hammer Steps';
+
+  @override
+  String get progQuestForgeMomentumSteps20Desc =>
+      'At the Forge of Momentum, complete the step goal 20 times.';
+
+  @override
+  String get progQuestForgeMomentumNutrition15Title => 'Fuel the Flame';
+
+  @override
+  String get progQuestForgeMomentumNutrition15Desc =>
+      'At the Forge of Momentum, complete your calorie and protein goals together 15 times.';
+
+  @override
+  String get progQuestForgeMomentumFinaleTitle => 'Forge Trial Complete';
+
+  @override
+  String get progQuestForgeMomentumFinaleDesc =>
+      'Complete the previous Forge of Momentum quests.';
+
+  @override
+  String get progQuestUnderwayPactOpenTitle => 'Underway Pact';
+
+  @override
+  String get progQuestUnderwayPactOpenDesc =>
+      'Start the Underway Pact after reaching level 50.';
+
+  @override
+  String get progQuestUnderwayPactFourPillars5Title => 'Four Pillars Below';
+
+  @override
+  String get progQuestUnderwayPactFourPillars5Desc =>
+      'In the Underway Pact, complete all 4 daily goals 5 times.';
+
+  @override
+  String get progQuestUnderwayPactSleep14Title => 'Deep Rest';
+
+  @override
+  String get progQuestUnderwayPactSleep14Desc =>
+      'In the Underway Pact, complete your sleep goal 14 times.';
+
+  @override
+  String get progQuestUnderwayPactRecovery10Title => 'Stonebound Recovery';
+
+  @override
+  String get progQuestUnderwayPactRecovery10Desc =>
+      'In the Underway Pact, complete your step and sleep goals on the same day 10 times.';
+
+  @override
+  String get progQuestUnderwayPactFinaleTitle => 'Underway Trial Complete';
+
+  @override
+  String get progQuestUnderwayPactFinaleDesc =>
+      'Complete the previous Underway Pact quests.';
+
+  @override
+  String get progQuestFrostboundOathOpenTitle => 'Frostbound Oath';
+
+  @override
+  String get progQuestFrostboundOathOpenDesc =>
+      'Start the Frostbound Oath after reaching level 60.';
+
+  @override
+  String get progQuestFrostboundOathSteps21Title => 'Frozen Resolve';
+
+  @override
+  String get progQuestFrostboundOathSteps21Desc =>
+      'Under the Frostbound Oath, complete your step goal 21 times.';
+
+  @override
+  String get progQuestFrostboundOathSleep21Title => 'Shelter in the Snow';
+
+  @override
+  String get progQuestFrostboundOathSleep21Desc =>
+      'Under the Frostbound Oath, complete your sleep goal 21 times.';
+
+  @override
+  String get progQuestFrostboundOathWeekly6Title => 'Cold March';
+
+  @override
+  String get progQuestFrostboundOathWeekly6Desc =>
+      'Under the Frostbound Oath, complete the weekly activity goal 6 times.';
+
+  @override
+  String get progQuestFrostboundOathFinaleTitle => 'Frost Trial Complete';
+
+  @override
+  String get progQuestFrostboundOathFinaleDesc =>
+      'Complete the previous Frostbound Oath quests.';
+
+  @override
+  String get progQuestIcewalkerRouteOpenTitle => 'Icewalker’s Route';
+
+  @override
+  String get progQuestIcewalkerRouteOpenDesc =>
+      'Start Icewalker’s Route after reaching level 70.';
+
+  @override
+  String get progQuestIcewalkerRouteSteps500kDesc =>
+      'On Icewalker’s Route, walk 500,000 steps.';
+
+  @override
+  String get progQuestIcewalkerRouteRewards150Desc =>
+      'On Icewalker’s Route, claim 150 rewards.';
+
+  @override
+  String get progQuestIcewalkerRouteProtein30Desc =>
+      'On Icewalker’s Route, complete your protein goal 30 times.';
+
+  @override
+  String get progQuestIcewalkerRouteFinaleDesc =>
+      'Complete the previous Icewalker’s Route quests.';
+
+  @override
+  String get progQuestMountainAscentSteps30Desc =>
+      'During the Mountain Ascent, complete your step goal 30 times.';
+
+  @override
+  String get progQuestDragonrockSovereignOpenDesc =>
+      'Claim Dragonrock sovereignty after reaching level 100.';
+
+  @override
+  String get progQuestDragonrockSovereignFourPillars30Desc =>
+      'Within Dragonrock Fortress, complete all 4 daily goals 30 times.';
+
+  @override
+  String get progQuestDragonrockSovereignWeekly16Desc =>
+      'Within Dragonrock Fortress, complete the weekly activity goal 16 times.';
+
+  @override
+  String get progQuestDragonrockSovereignSteps50Desc =>
+      'Within Dragonrock Fortress, complete your step goal 50 times.';
+
+  @override
+  String get progQuestDragonrockSovereignFinaleTitle => 'Dragonrock Seal';
+
+  @override
+  String get progQuestDragonrockSovereignFinaleDesc =>
+      'Complete the previous Dragonrock Sovereign quests.';
 
   @override
   String get progAchievementFirstRewardTitle => 'First Reward';
@@ -1590,6 +2121,100 @@ class AppLocalizationsEn extends AppLocalizations {
       'Accumulate 240 hours of sleep across any 30-day window.';
 
   @override
+  String get progAchievementDailyQuest3Title => 'First Steps';
+
+  @override
+  String get progAchievementDailyQuest3Desc => 'Complete 3 daily quests.';
+
+  @override
+  String get progAchievementDailyQuest7Title => 'Steady Hand';
+
+  @override
+  String get progAchievementDailyQuest7Desc => 'Complete 7 daily quests.';
+
+  @override
+  String get progAchievementQuestHunter250Title => 'Quest Hunter';
+
+  @override
+  String get progAchievementQuestHunter250Desc =>
+      'Complete 250 quests in total.';
+
+  @override
+  String get progAchievementActiveDays7Title => 'A Week on the Road';
+
+  @override
+  String get progAchievementActiveDays7Desc => 'Be active for 7 days.';
+
+  @override
+  String get progAchievementPerfectDays7Title => 'Balanced Week';
+
+  @override
+  String get progAchievementPerfectDays7Desc =>
+      'Complete all daily goals on 7 different days.';
+
+  @override
+  String get progAchievementPerfectWeeks12Title => 'Master of Routine';
+
+  @override
+  String get progAchievementPerfectWeeks12Desc =>
+      'Complete a perfect week 12 times.';
+
+  @override
+  String get progAchievementComboVictory10Title => 'Combo Initiate';
+
+  @override
+  String get progAchievementComboVictory10Desc =>
+      'Complete 10 combo quests of any kind.';
+
+  @override
+  String get progAchievementComboTripleVictory25Title => 'Triple Threat';
+
+  @override
+  String get progAchievementComboTripleVictory25Desc =>
+      'Complete 25 triple-or-better combo quests.';
+
+  @override
+  String get progAchievementComboTripleVictory100Title => 'Combo Sovereign';
+
+  @override
+  String get progAchievementComboTripleVictory100Desc =>
+      'Complete 100 triple-or-better combo quests.';
+
+  @override
+  String get progAchievementDragonrockTrialTitle => 'Dragonrock Trial';
+
+  @override
+  String get progAchievementDragonrockTrialDesc =>
+      'Reach level 100, complete 250 quests, and walk 10,000,000 steps.';
+
+  @override
+  String get progAchievementSummaryComposite => 'all conditions';
+
+  @override
+  String get progAchievementSummaryDailyQuests => 'daily quests';
+
+  @override
+  String get progAchievementSummaryWeeklyQuests => 'weekly quests';
+
+  @override
+  String get progAchievementSummaryTotalQuests => 'quests';
+
+  @override
+  String get progAchievementSummaryActiveDays => 'active days';
+
+  @override
+  String get progAchievementSummaryPerfectDays => 'perfect days';
+
+  @override
+  String get progAchievementSummaryPerfectWeeks => 'perfect weeks';
+
+  @override
+  String get progAchievementSummaryComboQuests => 'combo quests';
+
+  @override
+  String get progAchievementSummaryTripleComboQuests => 'triple combo quests';
+
+  @override
   String get progAchievementDifficultyEasy => 'Easy';
 
   @override
@@ -1600,6 +2225,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get progAchievementDifficultyExtraHard => 'Extra Hard';
+
+  @override
+  String get progAchievementDifficultyMythic => 'Impossible';
 
   @override
   String get progQuestCriterionTotalXp => 'Based on total XP';
@@ -1948,13 +2576,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Developer-only background. Grant via DevTools.';
 
   @override
-  String get cosmeticRelicOldCompassName => 'Old Compass';
-
-  @override
-  String get cosmeticRelicOldCompassDesc =>
-      'A brass compass whose needle sometimes points the wrong way.';
-
-  @override
   String get cosmeticBackgroundForestTrailName => 'Forest Trail';
 
   @override
@@ -1974,13 +2595,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cosmeticFrameRuinedBronzeDesc =>
       'A patina-coated frame pulled from ancient ruins.';
-
-  @override
-  String get cosmeticRelicOldGateKeyName => 'Old Gate Key';
-
-  @override
-  String get cosmeticRelicOldGateKeyDesc =>
-      'A heavy key whose lock no longer exists.';
 
   @override
   String get cosmeticBackgroundCampName => 'Pilgrim Camp';
@@ -2123,20 +2737,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'The first ember from the first night out.';
 
   @override
-  String get cosmeticRelicPilgrimCloakName => 'Pilgrim Cloak';
-
-  @override
-  String get cosmeticRelicPilgrimCloakDesc =>
-      'Travel-worn wool that has already seen one full week of the road.';
-
-  @override
-  String get cosmeticRelicTrailCompassName => 'Trail Compass';
-
-  @override
-  String get cosmeticRelicTrailCompassDesc =>
-      'A small forest compass earned by completing seven daily quests.';
-
-  @override
   String get cosmeticRelicAncientRootName => 'Ancient Root';
 
   @override
@@ -2200,18 +2800,67 @@ class AppLocalizationsEn extends AppLocalizations {
       'A black scale with a faint heat under its surface.';
 
   @override
-  String get cosmeticRelicDragonCrownName => 'Dragon Crown';
+  String get cosmeticRelicWarmKindlingName => 'Warm Kindling';
 
   @override
-  String get cosmeticRelicDragonCrownDesc =>
-      'A circlet of dragon-tooth iron earned across two hundred and fifty quests.';
+  String get cosmeticRelicWarmKindlingDesc =>
+      'A small bundle of dry tinder gathered before the second sunrise.';
 
   @override
-  String get cosmeticRelicDragonrockCrownName => 'Dragonrock Crown';
+  String get cosmeticRelicMoonlitFoxgloveName => 'Moonlit Foxglove';
 
   @override
-  String get cosmeticRelicDragonrockCrownDesc =>
-      'The endgame crown of Dragonrock — proof of both quest mastery and a finished climb.';
+  String get cosmeticRelicMoonlitFoxgloveDesc =>
+      'A pale flower that only opens for travelers who keep moving.';
+
+  @override
+  String get cosmeticRelicWildwoodCharmName => 'Wildwood Charm';
+
+  @override
+  String get cosmeticRelicWildwoodCharmDesc =>
+      'A token braided from forest grasses and small steady wins.';
+
+  @override
+  String get cosmeticRelicAshenOmenName => 'Ashen Omen';
+
+  @override
+  String get cosmeticRelicAshenOmenDesc =>
+      'A burnt mark left on the ruined stones by a steadier walker.';
+
+  @override
+  String get cosmeticRelicOathboundMarkName => 'Oathbound Mark';
+
+  @override
+  String get cosmeticRelicOathboundMarkDesc =>
+      'A sealed promise carved into bone — kept across many small victories.';
+
+  @override
+  String get cosmeticRelicDeepEmberCoreName => 'Deep Ember Core';
+
+  @override
+  String get cosmeticRelicDeepEmberCoreDesc =>
+      'A coal that still burns after a million careful steps in the deep.';
+
+  @override
+  String get cosmeticRelicSummitFeatherName => 'Summit Feather';
+
+  @override
+  String get cosmeticRelicSummitFeatherDesc =>
+      'Found on the wind only by those who cross every threshold.';
+
+  @override
+  String get cosmeticRelicStormcrestPlumeName => 'Stormcrest Plume';
+
+  @override
+  String get cosmeticRelicStormcrestPlumeDesc =>
+      'A feather marked by a year of weekly storms outwalked.';
+
+  @override
+  String get cosmeticRelicDragonrockHeartName => 'Dragonrock Heart';
+
+  @override
+  String get cosmeticRelicDragonrockHeartDesc =>
+      'The forge-warm core of the mountain itself, given only to those who finish the trial.';
 
   @override
   String get cosmeticFrameDisciplineName => 'Flame of Discipline';
@@ -2397,7 +3046,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String cosmeticCompanionLevelGate(int level) {
+    return 'Reach level $level';
+  }
+
+  @override
   String get cosmeticRarityCommon => 'Common';
+
+  @override
+  String get cosmeticRarityUncommon => 'Uncommon';
 
   @override
   String get cosmeticRarityRare => 'Rare';
@@ -2407,6 +3064,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cosmeticRarityLegendary => 'Legendary';
+
+  @override
+  String get cosmeticRarityMythic => 'Mythic';
 
   @override
   String get celebrationCosmeticUnlockedEyebrow => 'Inventory unlocked';
@@ -2844,17 +3504,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cosmeticEmblemDragonrockEmblemUnlockHint => 'Reach level 100.';
 
   @override
-  String get cosmeticRelicOldGateKeyUnlockHint => 'Reach level 15.';
-
-  @override
   String get cosmeticRelicCampfireSparkUnlockHint =>
       'Complete your first daily quest.';
-
-  @override
-  String get cosmeticRelicPilgrimCloakUnlockHint => 'Stay active for 7 days.';
-
-  @override
-  String get cosmeticRelicTrailCompassUnlockHint => 'Complete 7 daily quests.';
 
   @override
   String get cosmeticRelicAncientRootUnlockHint =>
@@ -2887,11 +3538,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cosmeticRelicDragonScaleUnlockHint => 'Reach level 85.';
 
   @override
-  String get cosmeticRelicDragonCrownUnlockHint => 'Complete 250 quests.';
+  String get cosmeticRelicWarmKindlingUnlockHint => 'Complete 3 daily quests.';
 
   @override
-  String get cosmeticRelicDragonrockCrownUnlockHint =>
-      'Reach level 100 and complete 250 quests.';
+  String get cosmeticRelicMoonlitFoxgloveUnlockHint =>
+      'Stay active for 7 days.';
+
+  @override
+  String get cosmeticRelicWildwoodCharmUnlockHint => 'Complete 7 daily quests.';
+
+  @override
+  String get cosmeticRelicAshenOmenUnlockHint =>
+      'Complete the weekly activity rule 4 times.';
+
+  @override
+  String get cosmeticRelicOathboundMarkUnlockHint =>
+      'Complete 10 combo quests.';
+
+  @override
+  String get cosmeticRelicDeepEmberCoreUnlockHint =>
+      'Walk 1,000,000 total steps.';
+
+  @override
+  String get cosmeticRelicSummitFeatherUnlockHint =>
+      'Complete 100 triple combo quests.';
+
+  @override
+  String get cosmeticRelicStormcrestPlumeUnlockHint =>
+      'Complete the weekly activity rule 52 times.';
+
+  @override
+  String get cosmeticRelicDragonrockHeartUnlockHint =>
+      'Complete the Dragonrock Trial.';
 
   @override
   String get cosmeticCompanionEmberSpriteUnlockHint =>

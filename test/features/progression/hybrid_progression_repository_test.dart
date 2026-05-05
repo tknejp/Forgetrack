@@ -29,7 +29,8 @@ void main() {
   // ── Logged-out behaviour ────────────────────────────────────────────────────
 
   group('logged-out', () {
-    test('loadLedger returns local snapshot without touching gateway', () async {
+    test('loadLedger returns local snapshot without touching gateway',
+        () async {
       final repo = buildRepo(() => null);
       await repo.loadLedger();
       expect(local.loadLedgerCalls, 1);
@@ -75,9 +76,12 @@ void main() {
       expect(gateway.pushUnlockCalls, 0);
     });
 
-    test('persistEvaluations, persistQuestRewardGrants, persistActiveQuestSet delegate to local', () async {
+    test(
+        'persistEvaluations, persistQuestRewardGrants, persistActiveQuestSet delegate to local',
+        () async {
       final repo = buildRepo(() => null);
-      await repo.persistEvaluations(evaluations: [], evaluatedAt: DateTime(2026, 4, 27));
+      await repo.persistEvaluations(
+          evaluations: [], evaluatedAt: DateTime(2026, 4, 27));
       await repo.persistQuestRewardGrants(grants: []);
       await repo.persistActiveQuestSet(activeQuestIds: {});
       expect(local.persistEvaluationsCalls, 1);
@@ -122,7 +126,8 @@ void main() {
       expect(gateway.lastPushQuestUid, 'uid-abc');
     });
 
-    test('persistAchievementUnlocks: local first, then gateway push per unlock', () async {
+    test('persistAchievementUnlocks: local first, then gateway push per unlock',
+        () async {
       final repo = buildRepo(() => 'uid-abc');
       await repo.persistAchievementUnlocks(unlocks: [
         _unlock('achievement|a1', 'a1'),
@@ -169,7 +174,8 @@ void main() {
       expect(gateway.pullClaimsCalls, 1);
     });
 
-    test('triggers background pull when cached timestamp is stale (> 5 min)', () async {
+    test('triggers background pull when cached timestamp is stale (> 5 min)',
+        () async {
       await prefs.setString(
         'progressionLastFirestorePullAt',
         DateTime.now().subtract(const Duration(minutes: 10)).toIso8601String(),
@@ -180,7 +186,8 @@ void main() {
       expect(gateway.pullClaimsCalls, 1);
     });
 
-    test('returns Isar snapshot immediately even when pull is triggered', () async {
+    test('returns Isar snapshot immediately even when pull is triggered',
+        () async {
       gateway.pullDelay = const Duration(milliseconds: 50);
       final repo = buildRepo(() => 'uid-abc');
       final ledger = await repo.loadLedger(); // must not wait for pull
@@ -289,7 +296,8 @@ void main() {
       expect(gateway.migrationCalls, 1);
     });
 
-    test('SharedPreferences key format is progression_migrated_\$uid', () async {
+    test('SharedPreferences key format is progression_migrated_\$uid',
+        () async {
       local.rewardGrants = [_claimedRuleGrant('key1')];
       local.achievementUnlocks = [];
       final repo = buildRepo(() => 'uid-test123');
@@ -350,7 +358,7 @@ void main() {
     test('different uids can have independent migration states', () async {
       local.rewardGrants = [_claimedRuleGrant('key1')];
       local.achievementUnlocks = [];
-      
+
       final repo1 = buildRepo(() => 'uid-user1');
       await repo1.loadLedger();
       await Future.delayed(Duration.zero);
@@ -462,7 +470,6 @@ void main() {
   });
 }
 
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 ProgressionRewardGrant _unlockedRuleGrant(String rewardKey) =>
@@ -537,7 +544,8 @@ ProgressionQuestRewardGrant _claimedQuestGrant(
       multiplierAtClaim: 1.0,
     );
 
-ProgressionAchievementUnlockEvent _unlock(String unlockKey, String achievementId) =>
+ProgressionAchievementUnlockEvent _unlock(
+        String unlockKey, String achievementId) =>
     ProgressionAchievementUnlockEvent(
       unlockKey: unlockKey,
       achievementId: achievementId,
@@ -550,6 +558,7 @@ class _FakeLocalRepository implements ProgressionLocalRepository {
   List<ProgressionRewardGrant> rewardGrants = [];
   List<ProgressionQuestRewardGrant> questRewardGrants = [];
   List<ProgressionAchievementUnlockEvent> achievementUnlocks = [];
+  List<ProgressionChapterStartRecord> chapterStarts = [];
 
   int loadLedgerCalls = 0;
   int claimRewardCalls = 0;
@@ -558,6 +567,7 @@ class _FakeLocalRepository implements ProgressionLocalRepository {
   int persistEvaluationsCalls = 0;
   int persistQuestGrantsCalls = 0;
   int persistActiveQuestSetCalls = 0;
+  int persistChapterStartsCalls = 0;
   int insertRestoredRuleGrantCalls = 0;
   int insertRestoredQuestGrantCalls = 0;
 
@@ -567,6 +577,7 @@ class _FakeLocalRepository implements ProgressionLocalRepository {
         questRewardGrants: questRewardGrants,
         activeQuestIds: {},
         achievementUnlocks: achievementUnlocks,
+        chapterStarts: chapterStarts,
         lastEvaluatedAt: null,
       );
 
@@ -673,13 +684,23 @@ class _FakeLocalRepository implements ProgressionLocalRepository {
   }
 
   @override
+  Future<ProgressionLedgerSnapshot> persistChapterStarts({
+    required List<ProgressionChapterStartRecord> starts,
+  }) async {
+    persistChapterStartsCalls++;
+    chapterStarts = [...chapterStarts, ...starts];
+    return _snapshot();
+  }
+
+  @override
   Future<void> insertRestoredRuleGrant(ProgressionRewardGrant grant) async {
     insertRestoredRuleGrantCalls++;
     rewardGrants = [...rewardGrants, grant];
   }
 
   @override
-  Future<void> insertRestoredQuestGrant(ProgressionQuestRewardGrant grant) async {
+  Future<void> insertRestoredQuestGrant(
+      ProgressionQuestRewardGrant grant) async {
     insertRestoredQuestGrantCalls++;
     questRewardGrants = [...questRewardGrants, grant];
   }
@@ -692,11 +713,11 @@ class _FakeLocalRepository implements ProgressionLocalRepository {
     rewardGrants = [];
     questRewardGrants = [];
     achievementUnlocks = [];
+    chapterStarts = [];
   }
 }
 
 class _FakeGateway implements ProgressionCloudGateway {
-
   int pushRuleCalls = 0;
   int pushQuestCalls = 0;
   int pushUnlockCalls = 0;
@@ -748,10 +769,11 @@ class _FakeGateway implements ProgressionCloudGateway {
   }
 
   @override
-  Future<({
-    List<ProgressionRewardGrant> ruleGrants,
-    List<ProgressionQuestRewardGrant> questGrants,
-  })> pullClaims(String uid) async {
+  Future<
+      ({
+        List<ProgressionRewardGrant> ruleGrants,
+        List<ProgressionQuestRewardGrant> questGrants,
+      })> pullClaims(String uid) async {
     pullClaimsCalls++;
     if (pullDelay > Duration.zero) await Future.delayed(pullDelay);
     return remoteClaims;

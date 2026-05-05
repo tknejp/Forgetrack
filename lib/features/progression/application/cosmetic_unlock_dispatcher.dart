@@ -10,7 +10,7 @@ import 'progression_engine.dart';
 const _log = AppLogger('COSMETICS', scope: 'dispatch');
 
 /// Three is more than enough for the depth of compound chains in the current
-/// catalog (the longest is two cosmetics deep — e.g. relic_dragonrock_crown
+/// catalog (the longest is two cosmetics deep — e.g. relic_dragon_scale
 /// → companion_dragonling). Bounding iteration keeps log noise + runtime in
 /// check.
 const int _kMaxTier2Iterations = 3;
@@ -102,9 +102,8 @@ class CosmeticUnlockDispatcher {
     final unlockedItems = <CosmeticUnlockDispatchItem>[];
 
     // -- Pass 1: achievement catch-up ---------------------------------------
-    final unlockedAchievements = current.achievements
-        .where((a) => a.unlocked)
-        .toList(growable: false);
+    final unlockedAchievements =
+        current.achievements.where((a) => a.unlocked).toList(growable: false);
     for (final achievement in unlockedAchievements) {
       for (final cosmeticId in _table.cosmeticsForAchievement(achievement.id)) {
         if (_alreadyUnlocked(cosmetics, cosmeticId)) continue;
@@ -150,7 +149,33 @@ class CosmeticUnlockDispatcher {
       }
     }
 
-    // -- Pass 3: Tier-2 rule evaluator (bounded fixed-point) ---------------
+    // -- Pass 3: quest catch-up --------------------------------------------
+    final claimedQuestIds = current.questRewardGrants
+        .where((grant) => grant.isClaimed)
+        .map((grant) => grant.questId)
+        .toSet();
+    for (final questId in claimedQuestIds) {
+      for (final cosmeticId in _table.cosmeticsForQuest(questId)) {
+        if (_alreadyUnlocked(cosmetics, cosmeticId)) continue;
+        final didUnlock = await _unlock(
+          cosmetics,
+          cosmeticId: cosmeticId,
+          sourceType: CosmeticUnlockSource.quest.name,
+          sourceId: questId,
+        );
+        if (didUnlock) {
+          unlockedItems.add(
+            CosmeticUnlockDispatchItem(
+              cosmeticId: cosmeticId,
+              sourceType: CosmeticUnlockSource.quest.name,
+              sourceId: questId,
+            ),
+          );
+        }
+      }
+    }
+
+    // -- Pass 4: Tier-2 rule evaluator (bounded fixed-point) ---------------
     for (var iteration = 0; iteration < _kMaxTier2Iterations; iteration++) {
       final ownedIds = cosmetics.state?.unlocked.keys.toSet() ?? <String>{};
       final snapshot = _snapshotExtractor.extract(
