@@ -1,3 +1,7 @@
+import '../../../l10n/app_localizations.dart';
+
+typedef ProgressionQuestText = String Function(AppLocalizations l10n);
+
 enum ProgressionDomain {
   steps,
   nutrition,
@@ -10,6 +14,9 @@ enum ProgressionMetric {
   steps,
   calories,
   proteinGrams,
+  carbsGrams,
+  fatGrams,
+  fiberGrams,
   sleepMinutes,
   activityMinutes,
   weightKg,
@@ -124,6 +131,9 @@ class ProgressionGoalSet {
     required this.dailySteps,
     required this.dailyCalories,
     required this.dailyProteinGrams,
+    this.dailyCarbsGrams = 250,
+    this.dailyFatGrams = 65,
+    this.dailyFiberGrams = 30,
     required this.sleepMinutes,
     required this.weeklyActivityMinutes,
     this.targetWeightKg = 70.0,
@@ -132,6 +142,9 @@ class ProgressionGoalSet {
   final int dailySteps;
   final double dailyCalories;
   final double dailyProteinGrams;
+  final double dailyCarbsGrams;
+  final double dailyFatGrams;
+  final double dailyFiberGrams;
   final int sleepMinutes;
   final int weeklyActivityMinutes;
   final double targetWeightKg;
@@ -175,6 +188,9 @@ class ProgressionSnapshot {
     this.steps = 0,
     this.calories = 0,
     this.proteinGrams = 0,
+    this.carbsGrams = 0,
+    this.fatGrams = 0,
+    this.fiberGrams = 0,
     this.sleepMinutes = 0,
     this.activityMinutes = 0,
     this.weightKg = 0.0,
@@ -184,6 +200,9 @@ class ProgressionSnapshot {
   final int steps;
   final double calories;
   final double proteinGrams;
+  final double carbsGrams;
+  final double fatGrams;
+  final double fiberGrams;
   final int sleepMinutes;
   final int activityMinutes;
   final double weightKg;
@@ -196,6 +215,12 @@ class ProgressionSnapshot {
         return calories;
       case ProgressionMetric.proteinGrams:
         return proteinGrams;
+      case ProgressionMetric.carbsGrams:
+        return carbsGrams;
+      case ProgressionMetric.fatGrams:
+        return fatGrams;
+      case ProgressionMetric.fiberGrams:
+        return fiberGrams;
       case ProgressionMetric.sleepMinutes:
         return sleepMinutes.toDouble();
       case ProgressionMetric.activityMinutes:
@@ -584,6 +609,14 @@ class ProgressionQuestDefinition {
     required this.criterionType,
     required this.targetValue,
     required this.rewardXp,
+    this.assetKey,
+    this.visualDomain,
+    this.sourceLabel,
+    this.chainId,
+    this.chainStepLabel,
+    this.nextQuestIds = const [],
+    this.dailySequenceId,
+    this.dailySequenceStep,
     this.ruleId,
     this.domain,
     this.periodKind,
@@ -597,8 +630,8 @@ class ProgressionQuestDefinition {
   });
 
   final String id;
-  final String title;
-  final String description;
+  final ProgressionQuestText title;
+  final ProgressionQuestText description;
   final ProgressionQuestType type;
   final ProgressionQuestCategory category;
   final ProgressionQuestCriterionType criterionType;
@@ -614,6 +647,15 @@ class ProgressionQuestDefinition {
   final List<String> prerequisiteQuestIds;
   final int sortOrder;
   final int priority;
+  final String? assetKey;
+  final ProgressionDomain? visualDomain;
+
+  final ProgressionQuestText? sourceLabel;
+  final String? chainId;
+  final ProgressionQuestText? chainStepLabel;
+  final List<String> nextQuestIds;
+  final String? dailySequenceId;
+  final int? dailySequenceStep;
 
   bool get isRepeatableReward =>
       criterionType ==
@@ -657,6 +699,16 @@ class ProgressionQuest {
     this.relatedRuleIds = const [],
     this.minimumLevel,
     this.minimumTrackedDays,
+    this.assetKey,
+    this.visualDomain,
+    this.titleText,
+    this.descriptionText,
+    this.sourceLabel,
+    this.chainId,
+    this.chainStepLabel,
+    this.nextQuestIds = const [],
+    this.dailySequenceId,
+    this.dailySequenceStep,
   });
 
   final String id;
@@ -686,6 +738,16 @@ class ProgressionQuest {
   final List<String> relatedRuleIds;
   final int? minimumLevel;
   final int? minimumTrackedDays;
+  final String? assetKey;
+  final ProgressionDomain? visualDomain;
+  final ProgressionQuestText? titleText;
+  final ProgressionQuestText? descriptionText;
+  final ProgressionQuestText? sourceLabel;
+  final String? chainId;
+  final ProgressionQuestText? chainStepLabel;
+  final List<String> nextQuestIds;
+  final String? dailySequenceId;
+  final int? dailySequenceStep;
 
   bool get isCompleted => status == ProgressionQuestStatus.completed;
   bool get isLocked => status == ProgressionQuestStatus.locked;

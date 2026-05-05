@@ -74,6 +74,12 @@ class ProgressionL10n {
         return _l10n.progRuleDailyCalories;
       case 'daily_protein':
         return _l10n.progRuleDailyProtein;
+      case 'daily_carbs':
+        return _l10n.progRuleDailyCarbs;
+      case 'daily_fat':
+        return _l10n.progRuleDailyFat;
+      case 'daily_fiber':
+        return _l10n.progRuleDailyFiber;
       case 'daily_sleep':
         return _l10n.progRuleDailySleep;
       case 'weekly_activity':
@@ -88,6 +94,9 @@ class ProgressionL10n {
   }
 
   String questTitle(ProgressionQuest quest) {
+    final title = quest.titleText;
+    if (title != null) return title(_l10n);
+
     switch (quest.id) {
       case 'earn_first_reward':
         return _l10n.progQuestEarnFirstRewardTitle;
@@ -147,6 +156,9 @@ class ProgressionL10n {
   }
 
   String questDescription(ProgressionQuest quest) {
+    final description = quest.descriptionText;
+    if (description != null) return description(_l10n);
+
     switch (quest.id) {
       case 'earn_first_reward':
         return _l10n.progQuestEarnFirstRewardDesc;
@@ -203,6 +215,18 @@ class ProgressionL10n {
       default:
         return quest.description;
     }
+  }
+
+  String questSourceLabel(ProgressionQuest quest) {
+    final sourceLabel = quest.sourceLabel;
+    if (sourceLabel != null) return sourceLabel(_l10n);
+    return questCriterionDescriptor(quest);
+  }
+
+  String questChainStepLabel(ProgressionQuest quest) {
+    final label = quest.chainStepLabel;
+    if (label != null) return label(_l10n);
+    return '';
   }
 
   String achievementTitle(ProgressionAchievement achievement) {

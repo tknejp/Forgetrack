@@ -184,7 +184,8 @@ class ProgressionDomainTheme {
   }
 
   static ProgressionDomain resolveForQuest(ProgressionQuest quest) {
-    return quest.domain ??
+    return quest.visualDomain ??
+        quest.domain ??
         domainForRuleId(quest.ruleId) ??
         ProgressionDomain.steps;
   }

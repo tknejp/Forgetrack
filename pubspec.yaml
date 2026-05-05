@@ -76,6 +76,7 @@ flutter:
     - assets/branding/
     - assets/icons/google/
     - assets/ui/
+    - assets/ui/quests/
     - assets/map/
     - assets/cosmetics/frames/
     - assets/cosmetics/relics/

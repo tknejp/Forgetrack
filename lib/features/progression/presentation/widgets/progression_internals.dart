@@ -23,7 +23,8 @@ class ProgressionScaffold extends StatelessWidget {
 // ── Shared empty / error / loading primitives ─────────────────────────────────
 
 class ProgressionEmptyLine extends StatelessWidget {
-  const ProgressionEmptyLine({super.key, required this.title, required this.caption});
+  const ProgressionEmptyLine(
+      {super.key, required this.title, required this.caption});
   final String title;
   final String caption;
 
@@ -162,16 +163,38 @@ class ProgressionViewData {
         if (difficulty != 0) return difficulty;
         return b.progress.compareTo(a.progress);
       });
-    final activeQuests = [...progression.activeQuests]
-      ..sort((a, b) => b.progress.compareTo(a.progress));
-    final lockedQuests = [...progression.lockedQuests]..sort((a, b) {
+    final trackedDaysElapsed = _trackedDaysElapsed(progression);
+    final activeQuests = [
+      for (final quest in progression.quests)
+        if (quest.isActive ||
+            (quest.isCompleted && _isCurrentPeriodQuest(quest)))
+          quest,
+    ]..sort((a, b) {
+        if (a.isRewardClaimable != b.isRewardClaimable) {
+          return a.isRewardClaimable ? -1 : 1;
+        }
+        return b.progress.compareTo(a.progress);
+      });
+    final lockedQuests = [
+      for (final quest in progression.lockedQuests)
+        if (_isExternallyGatedLockedQuest(
+          quest: quest,
+          allQuests: progression.quests,
+          profile: profile,
+          trackedDaysElapsed: trackedDaysElapsed,
+        ))
+          quest,
+    ]..sort((a, b) {
         final byPriority = b.priority.compareTo(a.priority);
         if (byPriority != 0) return byPriority;
         final bySortOrder = a.sortOrder.compareTo(b.sortOrder);
         if (bySortOrder != 0) return bySortOrder;
         return a.id.compareTo(b.id);
       });
-    final completedQuests = [...progression.completedQuests]..sort((a, b) {
+    final completedQuests = [
+      for (final quest in progression.completedQuests)
+        if (!_isCurrentPeriodQuest(quest)) quest,
+    ]..sort((a, b) {
         if (a.isRewardClaimable != b.isRewardClaimable) {
           return a.isRewardClaimable ? -1 : 1;
         }
@@ -193,7 +216,7 @@ class ProgressionViewData {
       unlocked: unlocked,
       inProgress: inProgress,
       allQuests: progression.quests,
-      trackedDaysElapsed: _trackedDaysElapsed(progression),
+      trackedDaysElapsed: trackedDaysElapsed,
       activeQuests: activeQuests,
       lockedQuests: lockedQuests,
       completedQuests: completedQuests,
@@ -254,6 +277,43 @@ ProgressionDomainStreak? _topStreak(
     if (metric > winning) winner = candidate;
   }
   return winner;
+}
+
+bool _isCurrentPeriodQuest(ProgressionQuest quest) {
+  return quest.criterionType ==
+          ProgressionQuestCriterionType.currentPeriodRuleCompletion ||
+      quest.criterionType ==
+          ProgressionQuestCriterionType.currentPeriodRuleSetAtLeast;
+}
+
+bool _isExternallyGatedLockedQuest({
+  required ProgressionQuest quest,
+  required List<ProgressionQuest> allQuests,
+  required ProgressionProfile profile,
+  required int trackedDaysElapsed,
+}) {
+  if (quest.dailySequenceId != null) return false;
+
+  final lockedByLevel =
+      quest.minimumLevel != null && profile.level < quest.minimumLevel!;
+  final lockedByTrackedDays = quest.minimumTrackedDays != null &&
+      trackedDaysElapsed < quest.minimumTrackedDays!;
+  if (!lockedByLevel && !lockedByTrackedDays) return false;
+
+  for (final prerequisiteId in quest.prerequisiteQuestIds) {
+    final prerequisite = _questById(allQuests, prerequisiteId);
+    if (prerequisite == null || !prerequisite.isCompleted) {
+      return false;
+    }
+  }
+  return true;
+}
+
+ProgressionQuest? _questById(List<ProgressionQuest> quests, String questId) {
+  for (final quest in quests) {
+    if (quest.id == questId) return quest;
+  }
+  return null;
 }
 
 int _trackedDaysElapsed(ProgressionProvider provider) {

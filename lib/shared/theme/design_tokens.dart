@@ -297,10 +297,24 @@ abstract final class Tokens {
   static const double fontSizeTiny = 9.0;
 
   // ── Glow blur radii ───────────────────────────────────────────────────────
-  static const double glowSm = 8.0;   // progress fills, tight accents
-  static const double glowMd = 12.0;  // tab pills, small containers
-  static const double glowLg = 16.0;  // cards, section headers
-  static const double glowXl = 22.0;  // hero / prominent elements
+  static const double glowSm = 8.0; // progress fills, tight accents
+  static const double glowMd = 12.0; // tab pills, small containers
+  static const double glowLg = 16.0; // cards, section headers
+  static const double glowXl = 22.0; // hero / prominent elements
+
+  // Quest cards
+  static const double questCardRadius = radiusTile;
+  static const double questCardPadding = 12.0;
+  static const double questCardGap = spaceSm;
+  static const double questAssetCollapsed = 64.0;
+  static const double questAssetExpanded = 76.0;
+  static const double questAssetCompleted = 46.0;
+  static const double questChainNodeHeight = 22.0;
+  static const double questChainNodeMinWidth = 24.0;
+  static const double questChainConnectorWidth = 10.0;
+  static const double questProgressHeight = 8.0;
+  static const double questXpPillHorizontal = 8.0;
+  static const double questXpPillVertical = 4.0;
 }
 
 @immutable

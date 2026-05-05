@@ -644,6 +644,16 @@ class ProgressionEngine {
       relatedRuleIds: quest.relatedRuleIds,
       minimumLevel: quest.minimumLevel,
       minimumTrackedDays: quest.minimumTrackedDays,
+      assetKey: quest.assetKey,
+      visualDomain: quest.visualDomain,
+      titleText: quest.titleText,
+      descriptionText: quest.descriptionText,
+      sourceLabel: quest.sourceLabel,
+      chainId: quest.chainId,
+      chainStepLabel: quest.chainStepLabel,
+      nextQuestIds: quest.nextQuestIds,
+      dailySequenceId: quest.dailySequenceId,
+      dailySequenceStep: quest.dailySequenceStep,
     );
   }
 }

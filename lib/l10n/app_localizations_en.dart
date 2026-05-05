@@ -887,7 +887,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get progQuestsSectionCaption =>
-      'Active and locked quests first, completed ones below.';
+      'Active quests first, completed ones below.';
 
   @override
   String get questsScreenEyebrow => 'QUESTS';
@@ -899,10 +899,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progQuestsActiveHeader => 'ACTIVE QUESTS';
 
   @override
+  String progQuestsActiveCount(int count) {
+    return '$count active';
+  }
+
+  @override
   String get progQuestsLockedHeader => 'LOCKED QUESTS';
 
   @override
   String get progQuestsCompletedHeader => 'COMPLETED QUESTS';
+
+  @override
+  String progQuestsCompletedCount(int count) {
+    return '$count completed';
+  }
 
   @override
   String get progQuestsEmptyActiveTitle => 'No active quests right now.';
@@ -986,6 +996,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get progQuestDetailNoFollowUp => 'No follow-up quest yet';
+
+  @override
+  String get progQuestDetailGoal => 'Goal';
+
+  @override
+  String get progQuestDetailNextInChain => 'Next in chain';
 
   @override
   String progProgressRatio(int current, int target) {
@@ -1096,6 +1112,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progRuleDailyProtein => 'Protein Target';
 
   @override
+  String get progRuleDailyCarbs => 'Carb Target';
+
+  @override
+  String get progRuleDailyFat => 'Fat Target';
+
+  @override
+  String get progRuleDailyFiber => 'Fiber Target';
+
+  @override
   String get progRuleDailySleep => 'Sleep Target';
 
   @override
@@ -1141,6 +1166,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Complete all 4 daily goals in the current day.';
 
   @override
+  String get progQuestComboInitiate10Title => 'Combo Initiate';
+
+  @override
+  String get progQuestComboInitiate10Desc =>
+      'Complete 10 combo quests of any kind.';
+
+  @override
   String get progQuestDailyNutritionComboTodayTitle => 'Nutrition Combo';
 
   @override
@@ -1148,11 +1180,46 @@ class AppLocalizationsEn extends AppLocalizations {
       'Complete both calorie and protein goals in the current day.';
 
   @override
+  String get progQuestDailyNutritionCarbsComboTodayTitle => 'Macro Trio';
+
+  @override
+  String get progQuestDailyNutritionCarbsComboTodayDesc =>
+      'Complete calorie, protein, and carb goals in the current day.';
+
+  @override
+  String get progQuestDailyNutritionFatComboTodayTitle => 'Macro Quartet';
+
+  @override
+  String get progQuestDailyNutritionFatComboTodayDesc =>
+      'Complete calorie, protein, carb, and fat goals in the current day.';
+
+  @override
+  String get progQuestDailyNutritionFiberComboTodayTitle => 'Full Plate Combo';
+
+  @override
+  String get progQuestDailyNutritionFiberComboTodayDesc =>
+      'Complete calorie, protein, carb, fat, and fiber goals in the current day.';
+
+  @override
+  String get progQuestNutritionRhythm3Title => 'Balanced Rhythm';
+
+  @override
+  String get progQuestNutritionRhythm3Desc =>
+      'Earn at least one nutrition reward for 3 periods in a row.';
+
+  @override
   String get progQuestDailyRecoveryFocusTodayTitle => 'Recovery Focus';
 
   @override
   String get progQuestDailyRecoveryFocusTodayDesc =>
       'Complete both steps and sleep goals in the current day.';
+
+  @override
+  String get progQuestSleepTotal250hTitle => 'Rested Soul';
+
+  @override
+  String get progQuestSleepTotal250hDesc =>
+      'Accumulate 250 hours of tracked sleep.';
 
   @override
   String get progQuestDailyStepsTodayTitle => 'Today\'s Step Goal';
@@ -1174,6 +1241,27 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get progQuestDailyProteinTodayDesc =>
       'Complete the daily protein rule in the current day.';
+
+  @override
+  String get progQuestDailyCarbsTodayTitle => 'Today\'s Carb Goal';
+
+  @override
+  String get progQuestDailyCarbsTodayDesc =>
+      'Complete the daily carb rule in the current day.';
+
+  @override
+  String get progQuestDailyFatTodayTitle => 'Today\'s Fat Goal';
+
+  @override
+  String get progQuestDailyFatTodayDesc =>
+      'Complete the daily fat rule in the current day.';
+
+  @override
+  String get progQuestDailyFiberTodayTitle => 'Today\'s Fiber Goal';
+
+  @override
+  String get progQuestDailyFiberTodayDesc =>
+      'Complete the daily fiber rule in the current day.';
 
   @override
   String get progQuestDailySleepTodayTitle => 'Today\'s Sleep Goal';
@@ -1201,6 +1289,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progQuestReach5000XpDesc => 'Accumulate at least 5,000 XP.';
 
   @override
+  String get progQuestReach25000XpTitle => 'Reach 25,000 XP';
+
+  @override
+  String get progQuestReach25000XpDesc => 'Accumulate at least 25,000 XP.';
+
+  @override
+  String get progQuestReach100000XpTitle => 'Reach 100,000 XP';
+
+  @override
+  String get progQuestReach100000XpDesc => 'Accumulate at least 100,000 XP.';
+
+  @override
+  String get progQuestReach1000000XpTitle => 'Reach 1,000,000 XP';
+
+  @override
+  String get progQuestReach1000000XpDesc => 'Accumulate at least 1,000,000 XP.';
+
+  @override
   String get progQuestEarn25RewardsTitle => 'Earn 25 Rewards';
 
   @override
@@ -1213,6 +1319,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get progQuestEarn100RewardsDesc =>
       'Collect 100 progression rewards in total.';
+
+  @override
+  String get progQuestEarn250RewardsTitle => 'Earn 250 Rewards';
+
+  @override
+  String get progQuestEarn250RewardsDesc =>
+      'Collect 250 progression rewards in total.';
 
   @override
   String get progQuestStepsStreak3Title => 'Steps Streak';
@@ -1234,6 +1347,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progQuestNutritionRewards25Desc => 'Earn 25 nutrition rewards.';
 
   @override
+  String get progQuestNutritionRewards100Title => 'Macro Legend';
+
+  @override
+  String get progQuestNutritionRewards100Desc => 'Earn 100 nutrition rewards.';
+
+  @override
   String get progQuestTotalSteps100kTitle => 'Walk 100K Steps';
 
   @override
@@ -1244,6 +1363,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get progQuestTotalSteps500kDesc => 'Accumulate 500,000 total steps.';
+
+  @override
+  String get progQuestTotalSteps1mTitle => 'Walk 1M Steps';
+
+  @override
+  String get progQuestTotalSteps1mDesc => 'Accumulate 1,000,000 total steps.';
+
+  @override
+  String get progQuestTotalSteps5mTitle => 'Walk 5M Steps';
+
+  @override
+  String get progQuestTotalSteps5mDesc => 'Accumulate 5,000,000 total steps.';
+
+  @override
+  String get progQuestTotalSteps10mTitle => 'Walk 10M Steps';
+
+  @override
+  String get progQuestTotalSteps10mDesc => 'Accumulate 10,000,000 total steps.';
 
   @override
   String get progQuestWeeklyActivityOnceTitle => 'Weekly Activity';
@@ -1267,6 +1404,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Complete the weekly activity rule 12 times.';
 
   @override
+  String get progQuestWeeklyActivity24Title => 'Unbroken Momentum';
+
+  @override
+  String get progQuestWeeklyActivity24Desc =>
+      'Complete the weekly activity rule 24 times.';
+
+  @override
+  String get progQuestWeeklyActivity52Title => 'Yearlong Engine';
+
+  @override
+  String get progQuestWeeklyActivity52Desc =>
+      'Complete the weekly activity rule 52 times.';
+
+  @override
   String get progQuestUnlockStepChainTitle => 'Unlock Step Chain';
 
   @override
@@ -1286,6 +1437,75 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get progQuestStepsStreak14Desc =>
       'Complete the daily steps rule 14 periods in a row.';
+
+  @override
+  String get progQuestStepsStreak30Title => 'Step Sovereign';
+
+  @override
+  String get progQuestStepsStreak30Desc =>
+      'Complete the daily steps rule 30 periods in a row.';
+
+  @override
+  String get progQuestStepsStreak50Title => 'Iron Resolve';
+
+  @override
+  String get progQuestStepsStreak50Desc =>
+      'Complete the daily steps rule 50 periods in a row.';
+
+  @override
+  String get progQuestStepsStreak100Title => 'Iron Chain';
+
+  @override
+  String get progQuestStepsStreak100Desc =>
+      'Complete the daily steps rule 100 periods in a row.';
+
+  @override
+  String get progQuestSourceJourney => 'Journey';
+
+  @override
+  String get progQuestSourceDailyCombo => 'Daily Combo';
+
+  @override
+  String get progQuestSourceNutrition => 'Nutrition';
+
+  @override
+  String get progQuestSourceRecovery => 'Recovery';
+
+  @override
+  String get progQuestSourceDailyGoal => 'Daily Goal';
+
+  @override
+  String get progQuestSourceSteps => 'Steps';
+
+  @override
+  String get progQuestSourceStepChain => 'Step Chain';
+
+  @override
+  String get progQuestSourceWeekly => 'Weekly';
+
+  @override
+  String get progQuestChainStepSteps => 'Steps';
+
+  @override
+  String get progQuestChainStepKcal => 'Kcal';
+
+  @override
+  String get progQuestChainStepProtein => 'Protein';
+
+  @override
+  String get progQuestChainStepCarbs => 'Carbs';
+
+  @override
+  String get progQuestChainStepFat => 'Fat';
+
+  @override
+  String get progQuestChainStepFiber => 'Fiber';
+
+  @override
+  String get progQuestChainStepSleep => 'Sleep';
+
+  @override
+  String get progQuestChainStepBadge => 'Badge';
 
   @override
   String get progAchievementFirstRewardTitle => 'First Reward';

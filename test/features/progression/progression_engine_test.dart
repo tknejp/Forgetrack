@@ -644,7 +644,7 @@ void main() {
       expect(questsById['daily_steps_today']!.isCompleted, isTrue);
       expect(
         questsById['daily_triple_win_today']!.status,
-        ProgressionQuestStatus.active,
+        ProgressionQuestStatus.locked,
       );
       expect(
         questsById['daily_nutrition_combo_today']!.status,
@@ -652,7 +652,7 @@ void main() {
       );
       expect(
         questsById['daily_protein_today']!.status,
-        ProgressionQuestStatus.available,
+        ProgressionQuestStatus.active,
       );
       expect(
         questsById['daily_sleep_today']!.isCompleted,
@@ -666,8 +666,8 @@ void main() {
       expect(questsById['steps_streak_3']!.currentValue, 1);
       expect(
           questsById['reach_2000_xp']!.status, ProgressionQuestStatus.locked);
-      expect(questsById['earn_25_rewards']!.status,
-          ProgressionQuestStatus.available);
+      expect(
+          questsById['earn_25_rewards']!.status, ProgressionQuestStatus.active);
       expect(questsById['reach_500_xp']!.status, ProgressionQuestStatus.active);
       expect(
         questsById['weekly_activity_once']!.status,
@@ -683,10 +683,10 @@ void main() {
           questsById['steps_streak_7']!.status, ProgressionQuestStatus.locked);
       expect(
         state.quests.where((quest) => quest.isHighlighted).length,
-        lessThanOrEqualTo(6),
+        greaterThan(6),
       );
       expect(questsById['steps_streak_3']!.isHighlighted, isTrue);
-      expect(questsById['daily_triple_win_today']!.isHighlighted, isTrue);
+      expect(questsById['daily_triple_win_today']!.isHighlighted, isFalse);
       expect(questsById['daily_nutrition_combo_today']!.isHighlighted, isTrue);
     });
 
@@ -809,20 +809,24 @@ void main() {
       final questsById = {for (final quest in state.quests) quest.id: quest};
 
       expect(questsById['daily_steps_today']!.status,
-          ProgressionQuestStatus.available);
+          ProgressionQuestStatus.active);
       expect(questsById['daily_steps_today']!.currentValue, 0);
       expect(
         questsById['daily_two_goals_today']!.status,
-        ProgressionQuestStatus.active,
+        ProgressionQuestStatus.locked,
       );
       expect(questsById['daily_two_goals_today']!.currentValue, 1);
+      expect(
+        questsById['daily_triple_win_today']!.status,
+        ProgressionQuestStatus.active,
+      );
       expect(
         questsById['daily_nutrition_combo_today']!.status,
         ProgressionQuestStatus.active,
       );
       expect(
         questsById['daily_protein_today']!.status,
-        ProgressionQuestStatus.available,
+        ProgressionQuestStatus.active,
       );
       expect(questsById['daily_protein_today']!.currentValue, 0);
       expect(questsById['daily_sleep_today']!.isCompleted, isTrue);

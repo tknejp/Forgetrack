@@ -31,10 +31,17 @@ class ProgressionQuestEvaluator {
   }) {
     final orderedDefinitions = [...definitions]..sort(_sortDefinitions);
     final availableById = <String, ProgressionQuest>{};
+    final dailySequenceStepById = _activeDailySequenceSteps(
+      definitions: orderedDefinitions,
+      evaluationDate: evaluationDate,
+      evaluations: evaluations,
+      questRewardGrants: questRewardGrants,
+    );
 
     for (final definition in orderedDefinitions) {
       final quest = _evaluateDefinition(
         definition: definition,
+        activeDailySequenceStep: dailySequenceStepById[definition.id],
         questsById: availableById,
         evaluationDate: evaluationDate,
         profile: profile,
@@ -50,7 +57,6 @@ class ProgressionQuestEvaluator {
 
     final activeQuestIds = _resolveActiveQuestIds(
       quests: availableById.values,
-      previousActiveQuestIds: previousActiveQuestIds,
     );
 
     final quests = [
@@ -74,8 +80,141 @@ class ProgressionQuestEvaluator {
     return ratio.clamp(0, 1).toDouble();
   }
 
+  Map<String, int> _activeDailySequenceSteps({
+    required List<ProgressionQuestDefinition> definitions,
+    required DateTime evaluationDate,
+    required List<ProgressionEvaluation> evaluations,
+    required List<ProgressionQuestRewardGrant> questRewardGrants,
+  }) {
+    final bySequence = <String, List<ProgressionQuestDefinition>>{};
+    for (final definition in definitions) {
+      final sequenceId = definition.dailySequenceId;
+      final step = definition.dailySequenceStep;
+      if (sequenceId == null || sequenceId.isEmpty || step == null) {
+        continue;
+      }
+      bySequence.putIfAbsent(sequenceId, () => []).add(definition);
+    }
+
+    if (bySequence.isEmpty) return const {};
+
+    final today = progressionDate(evaluationDate);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final result = <String, int>{};
+
+    for (final entry in bySequence.entries) {
+      final sequence = entry.value
+        ..sort((a, b) => a.dailySequenceStep!.compareTo(b.dailySequenceStep!));
+      final stepByQuestId = {
+        for (final definition in sequence)
+          definition.id: definition.dailySequenceStep!,
+      };
+      final maxStep = sequence.last.dailySequenceStep!;
+      var activeStep = 1;
+      DateTime? previousDay;
+
+      final replayDays = <DateTime>{};
+      for (final evaluation in evaluations) {
+        if (evaluation.period.kind != ProgressionPeriodKind.day) continue;
+        if (!_sequenceReferencesRule(sequence, evaluation.ruleId)) continue;
+        final day = progressionDate(evaluation.period.start);
+        if (day.isBefore(today)) replayDays.add(day);
+      }
+      for (final grant in questRewardGrants) {
+        final step = stepByQuestId[grant.questId];
+        if (step == null) continue;
+        final day = progressionDate(grant.completedAt);
+        if (day.isBefore(today)) replayDays.add(day);
+      }
+
+      final orderedReplayDays = replayDays.toList()..sort();
+      for (final day in orderedReplayDays) {
+        if (previousDay != null && day.difference(previousDay).inDays > 1) {
+          activeStep = 1;
+        }
+        final activeDefinition = sequence.firstWhere(
+          (definition) => definition.dailySequenceStep == activeStep,
+        );
+        final completedByGrant = questRewardGrants.any((grant) {
+          return grant.questId == activeDefinition.id &&
+              progressionDate(grant.completedAt) == day;
+        });
+        final completedByEvaluation =
+            _currentPeriodValueForDay(activeDefinition, evaluations, day) >=
+                activeDefinition.targetValue;
+        if (completedByGrant || completedByEvaluation) {
+          activeStep = activeStep < maxStep ? activeStep + 1 : 1;
+        } else {
+          activeStep = 1;
+        }
+        previousDay = day;
+      }
+
+      if (previousDay == null || previousDay != yesterday) {
+        activeStep = 1;
+      }
+      for (final definition in sequence) {
+        result[definition.id] = activeStep;
+      }
+    }
+
+    return result;
+  }
+
+  bool _sequenceReferencesRule(
+    List<ProgressionQuestDefinition> sequence,
+    String ruleId,
+  ) {
+    for (final definition in sequence) {
+      if (definition.ruleId == ruleId ||
+          definition.relatedRuleIds.contains(ruleId)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  int _currentPeriodValueForDay(
+    ProgressionQuestDefinition definition,
+    List<ProgressionEvaluation> evaluations,
+    DateTime day,
+  ) {
+    final matching = evaluations.where((evaluation) {
+      if (evaluation.period.kind != ProgressionPeriodKind.day) return false;
+      if (progressionDate(evaluation.period.start) != day) return false;
+      if (definition.ruleId != null && evaluation.ruleId != definition.ruleId) {
+        return false;
+      }
+      if (definition.relatedRuleIds.isNotEmpty &&
+          !definition.relatedRuleIds.contains(evaluation.ruleId)) {
+        return false;
+      }
+      return true;
+    });
+
+    switch (definition.criterionType) {
+      case ProgressionQuestCriterionType.currentPeriodRuleCompletion:
+        return matching.any((evaluation) => evaluation.achieved) ? 1 : 0;
+      case ProgressionQuestCriterionType.currentPeriodRuleSetAtLeast:
+        return matching
+            .where((evaluation) => evaluation.achieved)
+            .map((evaluation) => evaluation.ruleId)
+            .toSet()
+            .length;
+      case ProgressionQuestCriterionType.totalXpAtLeast:
+      case ProgressionQuestCriterionType.rewardCountAtLeast:
+      case ProgressionQuestCriterionType.bestStreakAtLeast:
+      case ProgressionQuestCriterionType.totalRuleValueAtLeast:
+      case ProgressionQuestCriterionType.achievementUnlocked:
+      case ProgressionQuestCriterionType.ruleCompletionsAtLeast:
+      case ProgressionQuestCriterionType.domainRewardCountAtLeast:
+        return 0;
+    }
+  }
+
   ProgressionQuest _evaluateDefinition({
     required ProgressionQuestDefinition definition,
+    required int? activeDailySequenceStep,
     required Map<String, ProgressionQuest> questsById,
     required DateTime evaluationDate,
     required ProgressionProfile profile,
@@ -108,35 +247,41 @@ class ProgressionQuestEvaluator {
       evaluations: evaluations,
       rewardGrants: rewardGrants,
     );
+    final sequenceConditionsMet = activeDailySequenceStep == null ||
+        definition.dailySequenceStep == activeDailySequenceStep;
     final completedByCriterion = currentValue >= definition.targetValue;
-    final completedAt =
-        prerequisitesMet && unlockConditionsMet && completedByCriterion
-            ? _resolveEffectiveCompletedAt(
-                definition: definition,
-                prerequisiteCompletedAt: _latestPrerequisiteCompletedAt(
-                  definition: definition,
-                  questsById: questsById,
-                ),
-                profile: profile,
-                evaluations: evaluations,
-                rewardGrants: rewardGrants,
-                questRewardGrants: questRewardGrants,
-                achievements: achievements,
-              )
-            : null;
+    final completedAt = prerequisitesMet &&
+            unlockConditionsMet &&
+            sequenceConditionsMet &&
+            completedByCriterion
+        ? _resolveEffectiveCompletedAt(
+            definition: definition,
+            prerequisiteCompletedAt: _latestPrerequisiteCompletedAt(
+              definition: definition,
+              questsById: questsById,
+            ),
+            profile: profile,
+            evaluations: evaluations,
+            rewardGrants: rewardGrants,
+            questRewardGrants: questRewardGrants,
+            achievements: achievements,
+          )
+        : null;
 
     return ProgressionQuest(
       id: definition.id,
-      title: definition.title,
-      description: definition.description,
+      title: definition.id,
+      description: definition.id,
       type: definition.type,
       category: definition.category,
       criterionType: definition.criterionType,
       status: !prerequisitesMet || !unlockConditionsMet
           ? ProgressionQuestStatus.locked
-          : completedByCriterion
-              ? ProgressionQuestStatus.completed
-              : ProgressionQuestStatus.available,
+          : !sequenceConditionsMet
+              ? ProgressionQuestStatus.locked
+              : completedByCriterion
+                  ? ProgressionQuestStatus.completed
+                  : ProgressionQuestStatus.available,
       targetValue: definition.targetValue,
       currentValue: currentValue,
       progress: _safeProgress(currentValue, definition.targetValue),
@@ -153,6 +298,16 @@ class ProgressionQuestEvaluator {
       relatedRuleIds: definition.relatedRuleIds,
       minimumLevel: definition.minimumLevel,
       minimumTrackedDays: definition.minimumTrackedDays,
+      assetKey: definition.assetKey,
+      visualDomain: definition.visualDomain,
+      titleText: definition.title,
+      descriptionText: definition.description,
+      sourceLabel: definition.sourceLabel,
+      chainId: definition.chainId,
+      chainStepLabel: definition.chainStepLabel,
+      nextQuestIds: definition.nextQuestIds,
+      dailySequenceId: definition.dailySequenceId,
+      dailySequenceStep: definition.dailySequenceStep,
     );
   }
 
@@ -199,86 +354,28 @@ class ProgressionQuestEvaluator {
       relatedRuleIds: quest.relatedRuleIds,
       minimumLevel: quest.minimumLevel,
       minimumTrackedDays: quest.minimumTrackedDays,
+      assetKey: quest.assetKey,
+      visualDomain: quest.visualDomain,
+      titleText: quest.titleText,
+      descriptionText: quest.descriptionText,
+      sourceLabel: quest.sourceLabel,
+      chainId: quest.chainId,
+      chainStepLabel: quest.chainStepLabel,
+      nextQuestIds: quest.nextQuestIds,
+      dailySequenceId: quest.dailySequenceId,
+      dailySequenceStep: quest.dailySequenceStep,
     );
   }
 
   Set<String> _resolveActiveQuestIds({
     required Iterable<ProgressionQuest> quests,
-    required Set<String> previousActiveQuestIds,
   }) {
     final availableQuests = quests
         .where((quest) => quest.status == ProgressionQuestStatus.available)
-        .toList();
-
-    final activeIds = <String>{};
-    final categoryCounts = <ProgressionQuestCategory, int>{};
-
-    final persistedCandidates = availableQuests
-        .where((quest) => previousActiveQuestIds.contains(quest.id))
         .toList()
       ..sort(_sortQuestSelection);
-
-    for (final quest in persistedCandidates) {
-      if (_tryAssignQuest(
-        quest: quest,
-        activeIds: activeIds,
-        categoryCounts: categoryCounts,
-      )) {
-        continue;
-      }
-    }
-
-    final newCandidates = availableQuests
-        .where((quest) => !previousActiveQuestIds.contains(quest.id))
-        .toList()
-      ..sort(_sortQuestSelection);
-
-    for (final quest in newCandidates) {
-      if (_tryAssignQuest(
-        quest: quest,
-        activeIds: activeIds,
-        categoryCounts: categoryCounts,
-      )) {
-        continue;
-      }
-      if (activeIds.length >= _maxActiveQuestCount) {
-        break;
-      }
-    }
-
-    return activeIds;
+    return {for (final quest in availableQuests) quest.id};
   }
-
-  bool _tryAssignQuest({
-    required ProgressionQuest quest,
-    required Set<String> activeIds,
-    required Map<ProgressionQuestCategory, int> categoryCounts,
-  }) {
-    if (activeIds.length >= _maxActiveQuestCount) return false;
-
-    final cap = _categoryCap(quest.category);
-    final current = categoryCounts[quest.category] ?? 0;
-    if (current >= cap) return false;
-
-    activeIds.add(quest.id);
-    categoryCounts[quest.category] = current + 1;
-    return true;
-  }
-
-  int _categoryCap(ProgressionQuestCategory category) {
-    switch (category) {
-      case ProgressionQuestCategory.chain:
-        return 1;
-      case ProgressionQuestCategory.weekly:
-        return 1;
-      case ProgressionQuestCategory.daily:
-        return 2;
-      case ProgressionQuestCategory.journey:
-        return 2;
-    }
-  }
-
-  static const int _maxActiveQuestCount = 6;
 
   int _sortQuestSelection(ProgressionQuest left, ProgressionQuest right) {
     final byCategory = _categorySelectionOrder(left.category)

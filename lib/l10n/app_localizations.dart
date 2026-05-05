@@ -1739,7 +1739,7 @@ abstract class AppLocalizations {
   /// No description provided for @progQuestsSectionCaption.
   ///
   /// In en, this message translates to:
-  /// **'Active and locked quests first, completed ones below.'**
+  /// **'Active quests first, completed ones below.'**
   String get progQuestsSectionCaption;
 
   /// No description provided for @questsScreenEyebrow.
@@ -1760,6 +1760,12 @@ abstract class AppLocalizations {
   /// **'ACTIVE QUESTS'**
   String get progQuestsActiveHeader;
 
+  /// No description provided for @progQuestsActiveCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} active'**
+  String progQuestsActiveCount(int count);
+
   /// No description provided for @progQuestsLockedHeader.
   ///
   /// In en, this message translates to:
@@ -1771,6 +1777,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'COMPLETED QUESTS'**
   String get progQuestsCompletedHeader;
+
+  /// No description provided for @progQuestsCompletedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} completed'**
+  String progQuestsCompletedCount(int count);
 
   /// No description provided for @progQuestsEmptyActiveTitle.
   ///
@@ -1915,6 +1927,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No follow-up quest yet'**
   String get progQuestDetailNoFollowUp;
+
+  /// No description provided for @progQuestDetailGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal'**
+  String get progQuestDetailGoal;
+
+  /// No description provided for @progQuestDetailNextInChain.
+  ///
+  /// In en, this message translates to:
+  /// **'Next in chain'**
+  String get progQuestDetailNextInChain;
 
   /// No description provided for @progProgressRatio.
   ///
@@ -2096,6 +2120,24 @@ abstract class AppLocalizations {
   /// **'Protein Target'**
   String get progRuleDailyProtein;
 
+  /// No description provided for @progRuleDailyCarbs.
+  ///
+  /// In en, this message translates to:
+  /// **'Carb Target'**
+  String get progRuleDailyCarbs;
+
+  /// No description provided for @progRuleDailyFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat Target'**
+  String get progRuleDailyFat;
+
+  /// No description provided for @progRuleDailyFiber.
+  ///
+  /// In en, this message translates to:
+  /// **'Fiber Target'**
+  String get progRuleDailyFiber;
+
   /// No description provided for @progRuleDailySleep.
   ///
   /// In en, this message translates to:
@@ -2174,6 +2216,18 @@ abstract class AppLocalizations {
   /// **'Complete all 4 daily goals in the current day.'**
   String get progQuestDailyFourPillarsTodayDesc;
 
+  /// No description provided for @progQuestComboInitiate10Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Combo Initiate'**
+  String get progQuestComboInitiate10Title;
+
+  /// No description provided for @progQuestComboInitiate10Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 10 combo quests of any kind.'**
+  String get progQuestComboInitiate10Desc;
+
   /// No description provided for @progQuestDailyNutritionComboTodayTitle.
   ///
   /// In en, this message translates to:
@@ -2186,6 +2240,54 @@ abstract class AppLocalizations {
   /// **'Complete both calorie and protein goals in the current day.'**
   String get progQuestDailyNutritionComboTodayDesc;
 
+  /// No description provided for @progQuestDailyNutritionCarbsComboTodayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Macro Trio'**
+  String get progQuestDailyNutritionCarbsComboTodayTitle;
+
+  /// No description provided for @progQuestDailyNutritionCarbsComboTodayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete calorie, protein, and carb goals in the current day.'**
+  String get progQuestDailyNutritionCarbsComboTodayDesc;
+
+  /// No description provided for @progQuestDailyNutritionFatComboTodayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Macro Quartet'**
+  String get progQuestDailyNutritionFatComboTodayTitle;
+
+  /// No description provided for @progQuestDailyNutritionFatComboTodayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete calorie, protein, carb, and fat goals in the current day.'**
+  String get progQuestDailyNutritionFatComboTodayDesc;
+
+  /// No description provided for @progQuestDailyNutritionFiberComboTodayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Plate Combo'**
+  String get progQuestDailyNutritionFiberComboTodayTitle;
+
+  /// No description provided for @progQuestDailyNutritionFiberComboTodayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete calorie, protein, carb, fat, and fiber goals in the current day.'**
+  String get progQuestDailyNutritionFiberComboTodayDesc;
+
+  /// No description provided for @progQuestNutritionRhythm3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced Rhythm'**
+  String get progQuestNutritionRhythm3Title;
+
+  /// No description provided for @progQuestNutritionRhythm3Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn at least one nutrition reward for 3 periods in a row.'**
+  String get progQuestNutritionRhythm3Desc;
+
   /// No description provided for @progQuestDailyRecoveryFocusTodayTitle.
   ///
   /// In en, this message translates to:
@@ -2197,6 +2299,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Complete both steps and sleep goals in the current day.'**
   String get progQuestDailyRecoveryFocusTodayDesc;
+
+  /// No description provided for @progQuestSleepTotal250hTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rested Soul'**
+  String get progQuestSleepTotal250hTitle;
+
+  /// No description provided for @progQuestSleepTotal250hDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 250 hours of tracked sleep.'**
+  String get progQuestSleepTotal250hDesc;
 
   /// No description provided for @progQuestDailyStepsTodayTitle.
   ///
@@ -2233,6 +2347,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Complete the daily protein rule in the current day.'**
   String get progQuestDailyProteinTodayDesc;
+
+  /// No description provided for @progQuestDailyCarbsTodayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Carb Goal'**
+  String get progQuestDailyCarbsTodayTitle;
+
+  /// No description provided for @progQuestDailyCarbsTodayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the daily carb rule in the current day.'**
+  String get progQuestDailyCarbsTodayDesc;
+
+  /// No description provided for @progQuestDailyFatTodayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Fat Goal'**
+  String get progQuestDailyFatTodayTitle;
+
+  /// No description provided for @progQuestDailyFatTodayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the daily fat rule in the current day.'**
+  String get progQuestDailyFatTodayDesc;
+
+  /// No description provided for @progQuestDailyFiberTodayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Fiber Goal'**
+  String get progQuestDailyFiberTodayTitle;
+
+  /// No description provided for @progQuestDailyFiberTodayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the daily fiber rule in the current day.'**
+  String get progQuestDailyFiberTodayDesc;
 
   /// No description provided for @progQuestDailySleepTodayTitle.
   ///
@@ -2282,6 +2432,42 @@ abstract class AppLocalizations {
   /// **'Accumulate at least 5,000 XP.'**
   String get progQuestReach5000XpDesc;
 
+  /// No description provided for @progQuestReach25000XpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach 25,000 XP'**
+  String get progQuestReach25000XpTitle;
+
+  /// No description provided for @progQuestReach25000XpDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate at least 25,000 XP.'**
+  String get progQuestReach25000XpDesc;
+
+  /// No description provided for @progQuestReach100000XpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach 100,000 XP'**
+  String get progQuestReach100000XpTitle;
+
+  /// No description provided for @progQuestReach100000XpDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate at least 100,000 XP.'**
+  String get progQuestReach100000XpDesc;
+
+  /// No description provided for @progQuestReach1000000XpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach 1,000,000 XP'**
+  String get progQuestReach1000000XpTitle;
+
+  /// No description provided for @progQuestReach1000000XpDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate at least 1,000,000 XP.'**
+  String get progQuestReach1000000XpDesc;
+
   /// No description provided for @progQuestEarn25RewardsTitle.
   ///
   /// In en, this message translates to:
@@ -2305,6 +2491,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Collect 100 progression rewards in total.'**
   String get progQuestEarn100RewardsDesc;
+
+  /// No description provided for @progQuestEarn250RewardsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn 250 Rewards'**
+  String get progQuestEarn250RewardsTitle;
+
+  /// No description provided for @progQuestEarn250RewardsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Collect 250 progression rewards in total.'**
+  String get progQuestEarn250RewardsDesc;
 
   /// No description provided for @progQuestStepsStreak3Title.
   ///
@@ -2342,6 +2540,18 @@ abstract class AppLocalizations {
   /// **'Earn 25 nutrition rewards.'**
   String get progQuestNutritionRewards25Desc;
 
+  /// No description provided for @progQuestNutritionRewards100Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Macro Legend'**
+  String get progQuestNutritionRewards100Title;
+
+  /// No description provided for @progQuestNutritionRewards100Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn 100 nutrition rewards.'**
+  String get progQuestNutritionRewards100Desc;
+
   /// No description provided for @progQuestTotalSteps100kTitle.
   ///
   /// In en, this message translates to:
@@ -2365,6 +2575,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Accumulate 500,000 total steps.'**
   String get progQuestTotalSteps500kDesc;
+
+  /// No description provided for @progQuestTotalSteps1mTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk 1M Steps'**
+  String get progQuestTotalSteps1mTitle;
+
+  /// No description provided for @progQuestTotalSteps1mDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 1,000,000 total steps.'**
+  String get progQuestTotalSteps1mDesc;
+
+  /// No description provided for @progQuestTotalSteps5mTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk 5M Steps'**
+  String get progQuestTotalSteps5mTitle;
+
+  /// No description provided for @progQuestTotalSteps5mDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 5,000,000 total steps.'**
+  String get progQuestTotalSteps5mDesc;
+
+  /// No description provided for @progQuestTotalSteps10mTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk 10M Steps'**
+  String get progQuestTotalSteps10mTitle;
+
+  /// No description provided for @progQuestTotalSteps10mDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 10,000,000 total steps.'**
+  String get progQuestTotalSteps10mDesc;
 
   /// No description provided for @progQuestWeeklyActivityOnceTitle.
   ///
@@ -2402,6 +2648,30 @@ abstract class AppLocalizations {
   /// **'Complete the weekly activity rule 12 times.'**
   String get progQuestWeeklyActivity12Desc;
 
+  /// No description provided for @progQuestWeeklyActivity24Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Unbroken Momentum'**
+  String get progQuestWeeklyActivity24Title;
+
+  /// No description provided for @progQuestWeeklyActivity24Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the weekly activity rule 24 times.'**
+  String get progQuestWeeklyActivity24Desc;
+
+  /// No description provided for @progQuestWeeklyActivity52Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearlong Engine'**
+  String get progQuestWeeklyActivity52Title;
+
+  /// No description provided for @progQuestWeeklyActivity52Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the weekly activity rule 52 times.'**
+  String get progQuestWeeklyActivity52Desc;
+
   /// No description provided for @progQuestUnlockStepChainTitle.
   ///
   /// In en, this message translates to:
@@ -2437,6 +2707,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Complete the daily steps rule 14 periods in a row.'**
   String get progQuestStepsStreak14Desc;
+
+  /// No description provided for @progQuestStepsStreak30Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Step Sovereign'**
+  String get progQuestStepsStreak30Title;
+
+  /// No description provided for @progQuestStepsStreak30Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the daily steps rule 30 periods in a row.'**
+  String get progQuestStepsStreak30Desc;
+
+  /// No description provided for @progQuestStepsStreak50Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Iron Resolve'**
+  String get progQuestStepsStreak50Title;
+
+  /// No description provided for @progQuestStepsStreak50Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the daily steps rule 50 periods in a row.'**
+  String get progQuestStepsStreak50Desc;
+
+  /// No description provided for @progQuestStepsStreak100Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Iron Chain'**
+  String get progQuestStepsStreak100Title;
+
+  /// No description provided for @progQuestStepsStreak100Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the daily steps rule 100 periods in a row.'**
+  String get progQuestStepsStreak100Desc;
+
+  /// No description provided for @progQuestSourceJourney.
+  ///
+  /// In en, this message translates to:
+  /// **'Journey'**
+  String get progQuestSourceJourney;
+
+  /// No description provided for @progQuestSourceDailyCombo.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Combo'**
+  String get progQuestSourceDailyCombo;
+
+  /// No description provided for @progQuestSourceNutrition.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition'**
+  String get progQuestSourceNutrition;
+
+  /// No description provided for @progQuestSourceRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery'**
+  String get progQuestSourceRecovery;
+
+  /// No description provided for @progQuestSourceDailyGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Goal'**
+  String get progQuestSourceDailyGoal;
+
+  /// No description provided for @progQuestSourceSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps'**
+  String get progQuestSourceSteps;
+
+  /// No description provided for @progQuestSourceStepChain.
+  ///
+  /// In en, this message translates to:
+  /// **'Step Chain'**
+  String get progQuestSourceStepChain;
+
+  /// No description provided for @progQuestSourceWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get progQuestSourceWeekly;
+
+  /// No description provided for @progQuestChainStepSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps'**
+  String get progQuestChainStepSteps;
+
+  /// No description provided for @progQuestChainStepKcal.
+  ///
+  /// In en, this message translates to:
+  /// **'Kcal'**
+  String get progQuestChainStepKcal;
+
+  /// No description provided for @progQuestChainStepProtein.
+  ///
+  /// In en, this message translates to:
+  /// **'Protein'**
+  String get progQuestChainStepProtein;
+
+  /// No description provided for @progQuestChainStepCarbs.
+  ///
+  /// In en, this message translates to:
+  /// **'Carbs'**
+  String get progQuestChainStepCarbs;
+
+  /// No description provided for @progQuestChainStepFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat'**
+  String get progQuestChainStepFat;
+
+  /// No description provided for @progQuestChainStepFiber.
+  ///
+  /// In en, this message translates to:
+  /// **'Fiber'**
+  String get progQuestChainStepFiber;
+
+  /// No description provided for @progQuestChainStepSleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep'**
+  String get progQuestChainStepSleep;
+
+  /// No description provided for @progQuestChainStepBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Badge'**
+  String get progQuestChainStepBadge;
 
   /// No description provided for @progAchievementFirstRewardTitle.
   ///
