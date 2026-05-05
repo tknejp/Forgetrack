@@ -904,6 +904,21 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get progQuestsDailyGoalsHeader => 'DAILY GOALS';
+
+  @override
+  String get progQuestsDailyComboHeader => 'TODAY\'S COMBO';
+
+  @override
+  String get progQuestsWeeklyHeader => 'THIS WEEK';
+
+  @override
+  String get progQuestsChapterHeader => 'JOURNEY CHAPTERS';
+
+  @override
+  String get progQuestsLongTermHeader => 'LONG-TERM GOALS';
+
+  @override
   String get progQuestsLockedHeader => 'LOCKED QUESTS';
 
   @override
@@ -1506,6 +1521,302 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get progQuestChainStepBadge => 'Badge';
+
+  @override
+  String get progQuestChainStepStart => 'Start';
+
+  @override
+  String get progQuestChainStepEmblem => 'Emblem';
+
+  @override
+  String get progQuestSourceForestTrial => 'Forest Trial';
+
+  @override
+  String get progQuestSourceRuinsDiscipline => 'Ruins of Discipline';
+
+  @override
+  String get progQuestSourceMineDescent => 'Mine Descent';
+
+  @override
+  String get progQuestSourceForgeMomentum => 'Forge of Momentum';
+
+  @override
+  String get progQuestSourceUnderwayPact => 'Underway Pact';
+
+  @override
+  String get progQuestSourceFrostboundOath => 'Frostbound Oath';
+
+  @override
+  String get progQuestSourceIcewalkerRoute => 'Icewalker’s Route';
+
+  @override
+  String get progQuestSourceMountainAscent => 'Mountain Ascent';
+
+  @override
+  String get progQuestSourceDragonroad => 'Dragonroad';
+
+  @override
+  String get progQuestSourceDragonrockSovereign => 'Dragonrock Sovereign';
+
+  @override
+  String get progQuestForestTrialOpenTitle => 'Forest Trial';
+
+  @override
+  String get progQuestForestTrialOpenDesc =>
+      'Start the Forest Trial after reaching level 10.';
+
+  @override
+  String get progQuestForestTrialDailyWins5Title => 'Trail Rhythm';
+
+  @override
+  String get progQuestForestTrialDailyWins5Desc =>
+      'On the Forest Trail, complete at least 2 daily goals on 5 different days.';
+
+  @override
+  String get progQuestForestTrialSteps5Title => 'Five Days on the Path';
+
+  @override
+  String get progQuestForestTrialSteps5Desc =>
+      'On the Forest Trail, complete your step goal 5 times.';
+
+  @override
+  String get progQuestForestTrialRecovery3Title => 'Rest Beneath the Trees';
+
+  @override
+  String get progQuestForestTrialRecovery3Desc =>
+      'On the Forest Trail, complete your step and sleep goals on the same day 3 times.';
+
+  @override
+  String get progQuestForestTrialFinaleTitle => 'Forest Trial Complete';
+
+  @override
+  String get progQuestForestTrialFinaleDesc =>
+      'Complete the previous Forest Trial quests.';
+
+  @override
+  String get progQuestRuinsDisciplineOpenTitle => 'Ruins of Discipline';
+
+  @override
+  String get progQuestRuinsDisciplineOpenDesc =>
+      'Start the Ruins of Discipline after reaching level 20.';
+
+  @override
+  String get progQuestRuinsDisciplineNutrition7Title => 'Ancient Ration';
+
+  @override
+  String get progQuestRuinsDisciplineNutrition7Desc =>
+      'In the Ruins of Discipline, complete your calorie and protein goals together 7 times.';
+
+  @override
+  String get progQuestRuinsDisciplineWeekly2Title => 'Weekly Offering';
+
+  @override
+  String get progQuestRuinsDisciplineWeekly2Desc =>
+      'In the Ruins of Discipline, complete the weekly activity goal 2 times.';
+
+  @override
+  String get progQuestRuinsDisciplineSteps10Title => 'Ten-Day Resolve';
+
+  @override
+  String get progQuestRuinsDisciplineSteps10Desc =>
+      'In the Ruins of Discipline, complete your step goal 10 times.';
+
+  @override
+  String get progQuestRuinsDisciplineFinaleTitle => 'Ruins Trial Complete';
+
+  @override
+  String get progQuestRuinsDisciplineFinaleDesc =>
+      'Complete the previous Ruins of Discipline quests.';
+
+  @override
+  String get progQuestMineDescentOpenTitle => 'Mine Descent';
+
+  @override
+  String get progQuestMineDescentOpenDesc =>
+      'Start the Mine Descent after reaching level 30.';
+
+  @override
+  String get progQuestMineDescentSteps250kTitle => 'Deep Roads';
+
+  @override
+  String get progQuestMineDescentSteps250kDesc =>
+      'During the Mine Descent, walk 250,000 steps.';
+
+  @override
+  String get progQuestMineDescentActivityRewards12Title => 'Work Orders';
+
+  @override
+  String get progQuestMineDescentActivityRewards12Desc =>
+      'During the Mine Descent, claim 12 activity-related rewards.';
+
+  @override
+  String get progQuestMineDescentProtein10Title => 'Iron Rations';
+
+  @override
+  String get progQuestMineDescentProtein10Desc =>
+      'During the Mine Descent, complete your protein goal 10 times.';
+
+  @override
+  String get progQuestMineDescentFinaleTitle => 'Mine Trial Complete';
+
+  @override
+  String get progQuestMineDescentFinaleDesc =>
+      'Complete the previous Mine Descent quests.';
+
+  @override
+  String get progQuestForgeMomentumOpenTitle => 'Forge of Momentum';
+
+  @override
+  String get progQuestForgeMomentumOpenDesc =>
+      'Start the Forge of Momentum after reaching level 40.';
+
+  @override
+  String get progQuestForgeMomentumWeekly4Title => 'Heat the Forge';
+
+  @override
+  String get progQuestForgeMomentumWeekly4Desc =>
+      'At the Forge of Momentum, complete the weekly activity goal 4 times.';
+
+  @override
+  String get progQuestForgeMomentumSteps20Title => 'Hammer Steps';
+
+  @override
+  String get progQuestForgeMomentumSteps20Desc =>
+      'At the Forge of Momentum, complete the step goal 20 times.';
+
+  @override
+  String get progQuestForgeMomentumNutrition15Title => 'Fuel the Flame';
+
+  @override
+  String get progQuestForgeMomentumNutrition15Desc =>
+      'At the Forge of Momentum, complete your calorie and protein goals together 15 times.';
+
+  @override
+  String get progQuestForgeMomentumFinaleTitle => 'Forge Trial Complete';
+
+  @override
+  String get progQuestForgeMomentumFinaleDesc =>
+      'Complete the previous Forge of Momentum quests.';
+
+  @override
+  String get progQuestUnderwayPactOpenTitle => 'Underway Pact';
+
+  @override
+  String get progQuestUnderwayPactOpenDesc =>
+      'Start the Underway Pact after reaching level 50.';
+
+  @override
+  String get progQuestUnderwayPactFourPillars5Title => 'Four Pillars Below';
+
+  @override
+  String get progQuestUnderwayPactFourPillars5Desc =>
+      'In the Underway Pact, complete all 4 daily goals 5 times.';
+
+  @override
+  String get progQuestUnderwayPactSleep14Title => 'Deep Rest';
+
+  @override
+  String get progQuestUnderwayPactSleep14Desc =>
+      'In the Underway Pact, complete your sleep goal 14 times.';
+
+  @override
+  String get progQuestUnderwayPactRecovery10Title => 'Stonebound Recovery';
+
+  @override
+  String get progQuestUnderwayPactRecovery10Desc =>
+      'In the Underway Pact, complete your step and sleep goals on the same day 10 times.';
+
+  @override
+  String get progQuestUnderwayPactFinaleTitle => 'Underway Trial Complete';
+
+  @override
+  String get progQuestUnderwayPactFinaleDesc =>
+      'Complete the previous Underway Pact quests.';
+
+  @override
+  String get progQuestFrostboundOathOpenTitle => 'Frostbound Oath';
+
+  @override
+  String get progQuestFrostboundOathOpenDesc =>
+      'Start the Frostbound Oath after reaching level 60.';
+
+  @override
+  String get progQuestFrostboundOathSteps21Title => 'Frozen Resolve';
+
+  @override
+  String get progQuestFrostboundOathSteps21Desc =>
+      'Under the Frostbound Oath, complete your step goal 21 times.';
+
+  @override
+  String get progQuestFrostboundOathSleep21Title => 'Shelter in the Snow';
+
+  @override
+  String get progQuestFrostboundOathSleep21Desc =>
+      'Under the Frostbound Oath, complete your sleep goal 21 times.';
+
+  @override
+  String get progQuestFrostboundOathWeekly6Title => 'Cold March';
+
+  @override
+  String get progQuestFrostboundOathWeekly6Desc =>
+      'Under the Frostbound Oath, complete the weekly activity goal 6 times.';
+
+  @override
+  String get progQuestFrostboundOathFinaleTitle => 'Frost Trial Complete';
+
+  @override
+  String get progQuestFrostboundOathFinaleDesc =>
+      'Complete the previous Frostbound Oath quests.';
+
+  @override
+  String get progQuestIcewalkerRouteOpenTitle => 'Icewalker’s Route';
+
+  @override
+  String get progQuestIcewalkerRouteOpenDesc =>
+      'Start Icewalker’s Route after reaching level 70.';
+
+  @override
+  String get progQuestIcewalkerRouteSteps500kDesc =>
+      'On Icewalker’s Route, walk 500,000 steps.';
+
+  @override
+  String get progQuestIcewalkerRouteRewards150Desc =>
+      'On Icewalker’s Route, claim 150 rewards.';
+
+  @override
+  String get progQuestIcewalkerRouteProtein30Desc =>
+      'On Icewalker’s Route, complete your protein goal 30 times.';
+
+  @override
+  String get progQuestIcewalkerRouteFinaleDesc =>
+      'Complete the previous Icewalker’s Route quests.';
+
+  @override
+  String get progQuestMountainAscentSteps30Desc =>
+      'During the Mountain Ascent, complete your step goal 30 times.';
+
+  @override
+  String get progQuestDragonrockSovereignOpenDesc =>
+      'Claim Dragonrock sovereignty after reaching level 100.';
+
+  @override
+  String get progQuestDragonrockSovereignFourPillars30Desc =>
+      'Within Dragonrock Fortress, complete all 4 daily goals 30 times.';
+
+  @override
+  String get progQuestDragonrockSovereignWeekly16Desc =>
+      'Within Dragonrock Fortress, complete the weekly activity goal 16 times.';
+
+  @override
+  String get progQuestDragonrockSovereignSteps50Desc =>
+      'Within Dragonrock Fortress, complete your step goal 50 times.';
+
+  @override
+  String get progQuestDragonrockSovereignFinaleTitle => 'Dragonrock Seal';
+
+  @override
+  String get progQuestDragonrockSovereignFinaleDesc =>
+      'Complete the previous Dragonrock Sovereign quests.';
 
   @override
   String get progAchievementFirstRewardTitle => 'First Reward';

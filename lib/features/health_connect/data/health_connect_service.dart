@@ -55,6 +55,15 @@ class HealthConnectService {
   Future<bool> requestHistoryPermissionIfAvailable() =>
       _permissions.requestHistoryPermissionIfAvailable();
 
+  Future<bool> isBackgroundPermissionAvailable() =>
+      _permissions.isBackgroundPermissionAvailable();
+
+  Future<bool> hasBackgroundPermission() =>
+      _permissions.hasBackgroundPermission();
+
+  Future<bool> requestBackgroundPermissionIfAvailable() =>
+      _permissions.requestBackgroundPermissionIfAvailable();
+
   Future<bool?> hasWorkoutPermission() => _permissions.hasWorkoutPermission();
 
   Future<bool> requestWorkoutPermission() =>

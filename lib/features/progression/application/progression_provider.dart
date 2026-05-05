@@ -158,6 +158,9 @@ class ProgressionProvider extends ChangeNotifier {
   List<ProgressionQuest> get journeyQuests => quests
       .where((quest) => quest.category == ProgressionQuestCategory.journey)
       .toList();
+  List<ProgressionQuest> get chapterQuests => quests
+      .where((quest) => quest.category == ProgressionQuestCategory.chapter)
+      .toList();
   List<ProgressionQuest> get dailyQuests => quests
       .where((quest) => quest.category == ProgressionQuestCategory.daily)
       .toList();

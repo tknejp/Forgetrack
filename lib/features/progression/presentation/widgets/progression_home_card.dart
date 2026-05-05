@@ -9,6 +9,7 @@ import '../../../../shared/widgets/progress_bar.dart';
 import '../../domain/progression_models.dart';
 import '../progression_l10n.dart';
 import '../../application/progression_provider.dart';
+import '../quest_daily_selection.dart';
 import 'progression_domain_theme.dart';
 import 'progression_level_badge.dart';
 import 'progression_primitives.dart';
@@ -76,10 +77,10 @@ class _ProgressionCardState extends State<ProgressionCard> {
         .length;
 
     final previewQuests = isExpanded
-        ? ([...progression.activeQuests]
-              ..sort((a, b) => b.progress.compareTo(a.progress)))
-            .take(2)
-            .toList(growable: false)
+        ? selectDailyGoalQuestsForDate(
+            progression.quests,
+            DateTime.now(),
+          )
         : const <ProgressionQuest>[];
 
     return GestureDetector(
@@ -237,7 +238,7 @@ class _ExpandedProgressionBody extends StatelessWidget {
           const SizedBox(height: Tokens.spaceMd),
           _ActiveQuestsPreview(
             quests: previewQuests,
-            label: l10n.progActiveQuestsLabel,
+            label: l10n.progQuestsDailyGoalsHeader,
             progL10n: progL10n,
           ),
         ],

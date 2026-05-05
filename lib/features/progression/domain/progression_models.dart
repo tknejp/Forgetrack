@@ -97,21 +97,36 @@ enum ProgressionQuestType {
 
 enum ProgressionQuestCategory {
   journey,
+  chapter,
   daily,
   weekly,
   chain,
 }
 
+enum ProgressionQuestDisplayBucket {
+  daily,
+  weekly,
+  chapter,
+  longTerm,
+}
+
 enum ProgressionQuestCriterionType {
+  chapterStarted,
   totalXpAtLeast,
   rewardCountAtLeast,
   bestStreakAtLeast,
   totalRuleValueAtLeast,
   currentPeriodRuleCompletion,
   currentPeriodRuleSetAtLeast,
+  ruleSetCompletionsAtLeast,
   achievementUnlocked,
   ruleCompletionsAtLeast,
   domainRewardCountAtLeast,
+}
+
+enum ProgressionProgressStartPolicy {
+  lifetime,
+  chapterStartedAt,
 }
 
 enum ProgressionQuestStatus {
@@ -448,6 +463,22 @@ class ProgressionAchievementUnlockEvent {
   final DateTime unlockedAt;
 }
 
+class ProgressionChapterStartRecord {
+  const ProgressionChapterStartRecord({
+    required this.uid,
+    required this.chapterId,
+    required this.startedAtLevel,
+    required this.startedAt,
+  });
+
+  final String uid;
+  final String chapterId;
+  final int startedAtLevel;
+  final DateTime startedAt;
+
+  String get startKey => 'chapter|$chapterId|start';
+}
+
 class ProgressionLedgerSnapshot {
   const ProgressionLedgerSnapshot({
     required this.evaluations,
@@ -455,6 +486,7 @@ class ProgressionLedgerSnapshot {
     this.questRewardGrants = const [],
     this.activeQuestIds = const <String>{},
     this.achievementUnlocks = const [],
+    this.chapterStarts = const [],
     this.lastEvaluatedAt,
   });
 
@@ -463,6 +495,7 @@ class ProgressionLedgerSnapshot {
   final List<ProgressionQuestRewardGrant> questRewardGrants;
   final Set<String> activeQuestIds;
   final List<ProgressionAchievementUnlockEvent> achievementUnlocks;
+  final List<ProgressionChapterStartRecord> chapterStarts;
   final DateTime? lastEvaluatedAt;
 }
 
@@ -615,6 +648,12 @@ class ProgressionQuestDefinition {
     this.chainId,
     this.chainStepLabel,
     this.nextQuestIds = const [],
+    this.displayBucket,
+    this.displayGroupId,
+    this.comboPoolId,
+    this.chapterId,
+    this.progressStartPolicy = ProgressionProgressStartPolicy.lifetime,
+    this.requiredRuleCount,
     this.dailySequenceId,
     this.dailySequenceStep,
     this.ruleId,
@@ -654,6 +693,12 @@ class ProgressionQuestDefinition {
   final String? chainId;
   final ProgressionQuestText? chainStepLabel;
   final List<String> nextQuestIds;
+  final ProgressionQuestDisplayBucket? displayBucket;
+  final String? displayGroupId;
+  final String? comboPoolId;
+  final String? chapterId;
+  final ProgressionProgressStartPolicy progressStartPolicy;
+  final int? requiredRuleCount;
   final String? dailySequenceId;
   final int? dailySequenceStep;
 
@@ -707,6 +752,13 @@ class ProgressionQuest {
     this.chainId,
     this.chainStepLabel,
     this.nextQuestIds = const [],
+    this.displayBucket,
+    this.displayGroupId,
+    this.comboPoolId,
+    this.chapterId,
+    this.chapterStartedAt,
+    this.progressStartPolicy = ProgressionProgressStartPolicy.lifetime,
+    this.requiredRuleCount,
     this.dailySequenceId,
     this.dailySequenceStep,
   });
@@ -746,6 +798,13 @@ class ProgressionQuest {
   final String? chainId;
   final ProgressionQuestText? chainStepLabel;
   final List<String> nextQuestIds;
+  final ProgressionQuestDisplayBucket? displayBucket;
+  final String? displayGroupId;
+  final String? comboPoolId;
+  final String? chapterId;
+  final DateTime? chapterStartedAt;
+  final ProgressionProgressStartPolicy progressStartPolicy;
+  final int? requiredRuleCount;
   final String? dailySequenceId;
   final int? dailySequenceStep;
 

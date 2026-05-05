@@ -74,9 +74,26 @@ class CosmeticRewardTable {
     100: ['frame_lvl100', 'emblem_dragonrock_emblem'],
   };
 
+  static const Map<String, List<String>> questToCosmetics =
+      <String, List<String>>{
+    'forest_trial_finale': ['emblem_forest_mark'],
+    'ruins_discipline_finale': ['emblem_ruin_sigil'],
+    'mine_descent_finale': ['emblem_gatekeeper_mark'],
+    'forge_momentum_finale': ['emblem_mine_crest'],
+    'underway_pact_finale': ['emblem_underways_mark'],
+    'frostbound_oath_finale': ['emblem_frost_sigil'],
+    'icewalker_route_finale': ['emblem_icewalker_mark'],
+    'mountain_ascent_finale': ['emblem_mountain_crest'],
+    'dragonroad_finale': ['emblem_dragon_mark'],
+    'dragonrock_sovereign_finale': ['emblem_dragonrock_emblem'],
+  };
+
   List<String> cosmeticsForAchievement(String achievementId) =>
       achievementToCosmetics[achievementId] ?? const <String>[];
 
   List<String> cosmeticsForLevel(int level) =>
       levelToCosmetics[level] ?? const <String>[];
+
+  List<String> cosmeticsForQuest(String questId) =>
+      questToCosmetics[questId] ?? const <String>[];
 }

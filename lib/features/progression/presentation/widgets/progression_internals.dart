@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../application/progression_provider.dart';
 import '../../domain/progression_models.dart';
+import '../quest_daily_selection.dart';
 import '../../../../shared/theme/design_tokens.dart';
 
 // ── Shared scaffold ───────────────────────────────────────────────────────────
@@ -132,7 +133,11 @@ class ProgressionViewData {
     required this.inProgress,
     required this.allQuests,
     required this.trackedDaysElapsed,
-    required this.activeQuests,
+    required this.dailyGoalQuests,
+    required this.dailyComboQuests,
+    required this.weeklyQuests,
+    required this.chapterQuests,
+    required this.longTermQuests,
     required this.lockedQuests,
     required this.completedQuests,
     required this.pendingRewards,
@@ -164,17 +169,32 @@ class ProgressionViewData {
         return b.progress.compareTo(a.progress);
       });
     final trackedDaysElapsed = _trackedDaysElapsed(progression);
-    final activeQuests = [
-      for (final quest in progression.quests)
-        if (quest.isActive ||
-            (quest.isCompleted && _isCurrentPeriodQuest(quest)))
-          quest,
-    ]..sort((a, b) {
-        if (a.isRewardClaimable != b.isRewardClaimable) {
-          return a.isRewardClaimable ? -1 : 1;
-        }
-        return b.progress.compareTo(a.progress);
-      });
+    final dailyGoalQuests = selectDailyGoalQuestsForDate(
+      progression.quests,
+      DateTime.now(),
+    );
+    final dailyComboQuests = selectDailyComboQuestsForDate(
+      progression.quests,
+      DateTime.now(),
+    );
+    final dailyGoalQuestIds = {
+      for (final quest in dailyGoalQuests) quest.id,
+    };
+    final dailyComboQuestIds = {
+      for (final quest in dailyComboQuests) quest.id,
+    };
+    final weeklyQuests = compactQuestChainRepresentatives(
+      progression.quests,
+      bucket: ProgressionQuestDisplayBucket.weekly,
+    );
+    final chapterQuests = compactQuestChainRepresentatives(
+      progression.quests,
+      bucket: ProgressionQuestDisplayBucket.chapter,
+    );
+    final longTermQuests = compactQuestChainRepresentatives(
+      progression.quests,
+      bucket: ProgressionQuestDisplayBucket.longTerm,
+    );
     final lockedQuests = [
       for (final quest in progression.lockedQuests)
         if (_isExternallyGatedLockedQuest(
@@ -193,7 +213,10 @@ class ProgressionViewData {
       });
     final completedQuests = [
       for (final quest in progression.completedQuests)
-        if (!_isCurrentPeriodQuest(quest)) quest,
+        if (!dailyGoalQuestIds.contains(quest.id) &&
+            !dailyComboQuestIds.contains(quest.id) &&
+            !isCurrentPeriodQuest(quest))
+          quest,
     ]..sort((a, b) {
         if (a.isRewardClaimable != b.isRewardClaimable) {
           return a.isRewardClaimable ? -1 : 1;
@@ -217,7 +240,11 @@ class ProgressionViewData {
       inProgress: inProgress,
       allQuests: progression.quests,
       trackedDaysElapsed: trackedDaysElapsed,
-      activeQuests: activeQuests,
+      dailyGoalQuests: dailyGoalQuests,
+      dailyComboQuests: dailyComboQuests,
+      weeklyQuests: weeklyQuests,
+      chapterQuests: chapterQuests,
+      longTermQuests: longTermQuests,
       lockedQuests: lockedQuests,
       completedQuests: completedQuests,
       pendingRewards: pendingRewards,
@@ -233,7 +260,11 @@ class ProgressionViewData {
   final List<ProgressionAchievement> inProgress;
   final List<ProgressionQuest> allQuests;
   final int trackedDaysElapsed;
-  final List<ProgressionQuest> activeQuests;
+  final List<ProgressionQuest> dailyGoalQuests;
+  final List<ProgressionQuest> dailyComboQuests;
+  final List<ProgressionQuest> weeklyQuests;
+  final List<ProgressionQuest> chapterQuests;
+  final List<ProgressionQuest> longTermQuests;
   final List<ProgressionQuest> lockedQuests;
   final List<ProgressionQuest> completedQuests;
   final List<ProgressionRewardGrant> pendingRewards;
@@ -277,13 +308,6 @@ ProgressionDomainStreak? _topStreak(
     if (metric > winning) winner = candidate;
   }
   return winner;
-}
-
-bool _isCurrentPeriodQuest(ProgressionQuest quest) {
-  return quest.criterionType ==
-          ProgressionQuestCriterionType.currentPeriodRuleCompletion ||
-      quest.criterionType ==
-          ProgressionQuestCriterionType.currentPeriodRuleSetAtLeast;
 }
 
 bool _isExternallyGatedLockedQuest({

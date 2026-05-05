@@ -241,6 +241,78 @@ class HcPermissionService {
     }
   }
 
+  Future<bool> isBackgroundPermissionAvailable() async {
+    await _client.ensureConfigured();
+    await _client.assertAvailable();
+
+    try {
+      final result = await _client.pluginIsHealthDataInBackgroundAvailable();
+      _client.logInfo('isBackgroundPermissionAvailable() => $result');
+      return result;
+    } catch (e, st) {
+      _client.logError('isBackgroundPermissionAvailable() failed', e, st);
+      return false;
+    }
+  }
+
+  Future<bool> hasBackgroundPermission() async {
+    await _client.ensureConfigured();
+    await _client.assertAvailable();
+
+    try {
+      final available = await _client.pluginIsHealthDataInBackgroundAvailable();
+      if (!available) {
+        _client.logInfo(
+          'hasBackgroundPermission() => false (feature unavailable)',
+        );
+        return false;
+      }
+
+      final result = await _client.pluginIsHealthDataInBackgroundAuthorized();
+      _client.logInfo('hasBackgroundPermission() => $result');
+      return result;
+    } catch (e, st) {
+      _client.logError('hasBackgroundPermission() failed', e, st);
+      return false;
+    }
+  }
+
+  Future<bool> requestBackgroundPermissionIfAvailable() async {
+    await _client.ensureConfigured();
+    await _client.assertAvailable();
+
+    try {
+      final available = await _client.pluginIsHealthDataInBackgroundAvailable();
+      if (!available) {
+        _client.logInfo(
+          'requestBackgroundPermissionIfAvailable() skipped: feature unavailable',
+        );
+        return false;
+      }
+
+      final before = await _client.pluginIsHealthDataInBackgroundAuthorized();
+      _client.logInfo('Background permission before request => $before');
+      if (before) return true;
+
+      final granted =
+          await _client.pluginRequestHealthDataInBackgroundAuthorization();
+      _client.logInfo(
+        'requestHealthDataInBackgroundAuthorization() => $granted',
+      );
+
+      final after = await _client.pluginIsHealthDataInBackgroundAuthorized();
+      _client.logInfo('Background permission after request => $after');
+      return after;
+    } catch (e, st) {
+      _client.logError(
+        'requestBackgroundPermissionIfAvailable() failed',
+        e,
+        st,
+      );
+      return false;
+    }
+  }
+
   Future<void> debugWorkoutPermissionFlow() async {
     await _client.ensureConfigured();
     await _client.assertAvailable();

@@ -114,6 +114,15 @@ class HcReadClient {
   Future<bool> pluginRequestHealthDataHistoryAuthorization() =>
       _health.requestHealthDataHistoryAuthorization();
 
+  Future<bool> pluginIsHealthDataInBackgroundAvailable() =>
+      _health.isHealthDataInBackgroundAvailable();
+
+  Future<bool> pluginIsHealthDataInBackgroundAuthorized() =>
+      _health.isHealthDataInBackgroundAuthorized();
+
+  Future<bool> pluginRequestHealthDataInBackgroundAuthorization() =>
+      _health.requestHealthDataInBackgroundAuthorization();
+
   // ─── Query helpers ─────────────────────────────────────────────────────────
 
   Future<List<HealthDataPoint>> fetchData({

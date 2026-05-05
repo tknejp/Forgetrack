@@ -905,6 +905,21 @@ class AppLocalizationsCs extends AppLocalizations {
   }
 
   @override
+  String get progQuestsDailyGoalsHeader => 'DENNÍ CÍLE';
+
+  @override
+  String get progQuestsDailyComboHeader => 'DNEŠNÍ KOMBO';
+
+  @override
+  String get progQuestsWeeklyHeader => 'TENTO TÝDEN';
+
+  @override
+  String get progQuestsChapterHeader => 'KAPITOLY CESTY';
+
+  @override
+  String get progQuestsLongTermHeader => 'DLOUHODOBÉ CÍLE';
+
+  @override
   String get progQuestsLockedHeader => 'ZAMČENÉ QUESTY';
 
   @override
@@ -1504,6 +1519,302 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get progQuestChainStepBadge => 'Odznak';
+
+  @override
+  String get progQuestChainStepStart => 'Start';
+
+  @override
+  String get progQuestChainStepEmblem => 'Emblém';
+
+  @override
+  String get progQuestSourceForestTrial => 'Lesní zkouška';
+
+  @override
+  String get progQuestSourceRuinsDiscipline => 'Ruiny disciplíny';
+
+  @override
+  String get progQuestSourceMineDescent => 'Sestup do dolu';
+
+  @override
+  String get progQuestSourceForgeMomentum => 'Výheň tempa';
+
+  @override
+  String get progQuestSourceUnderwayPact => 'Podzemní pakt';
+
+  @override
+  String get progQuestSourceFrostboundOath => 'Mrazivá přísaha';
+
+  @override
+  String get progQuestSourceIcewalkerRoute => 'Cesta ledoběžce';
+
+  @override
+  String get progQuestSourceMountainAscent => 'Výstup na horu';
+
+  @override
+  String get progQuestSourceDragonroad => 'Dračí cesta';
+
+  @override
+  String get progQuestSourceDragonrockSovereign => 'Vládce Dračí skály';
+
+  @override
+  String get progQuestForestTrialOpenTitle => 'Lesní zkouška';
+
+  @override
+  String get progQuestForestTrialOpenDesc =>
+      'Odemkni Lesní zkoušku dosažením 10. úrovně.';
+
+  @override
+  String get progQuestForestTrialDailyWins5Title => 'Rytmus stezky';
+
+  @override
+  String get progQuestForestTrialDailyWins5Desc =>
+      'Na Lesní stezce splň alespoň 2 denní cíle v 5 různých dnech.';
+
+  @override
+  String get progQuestForestTrialSteps5Title => 'Pět dní na cestě';
+
+  @override
+  String get progQuestForestTrialSteps5Desc =>
+      'Na Lesní stezce splň krokový cíl 5krát.';
+
+  @override
+  String get progQuestForestTrialRecovery3Title => 'Odpočinek pod stromy';
+
+  @override
+  String get progQuestForestTrialRecovery3Desc =>
+      'Pod korunami stromů splň cíl kroků i spánku ve stejný den 3krát.';
+
+  @override
+  String get progQuestForestTrialFinaleTitle => 'Pečeť lesa';
+
+  @override
+  String get progQuestForestTrialFinaleDesc =>
+      'Dokonči všechny předchozí úkoly Lesní zkoušky.';
+
+  @override
+  String get progQuestRuinsDisciplineOpenTitle => 'Ruiny disciplíny';
+
+  @override
+  String get progQuestRuinsDisciplineOpenDesc =>
+      'Odemkni Ruiny disciplíny dosažením 20. úrovně.';
+
+  @override
+  String get progQuestRuinsDisciplineNutrition7Title => 'Starobylá dávka';
+
+  @override
+  String get progQuestRuinsDisciplineNutrition7Desc =>
+      'Mezi ruinami splň cíl kalorií i bílkovin 7krát.';
+
+  @override
+  String get progQuestRuinsDisciplineWeekly2Title => 'Týdenní obětina';
+
+  @override
+  String get progQuestRuinsDisciplineWeekly2Desc =>
+      'V Ruinách disciplíny splň týdenní cíl aktivity 2krát.';
+
+  @override
+  String get progQuestRuinsDisciplineSteps10Title => 'Deset dní odhodlání';
+
+  @override
+  String get progQuestRuinsDisciplineSteps10Desc =>
+      'Mezi ruinami splň krokový cíl 10krát.';
+
+  @override
+  String get progQuestRuinsDisciplineFinaleTitle => 'Pečeť ruin';
+
+  @override
+  String get progQuestRuinsDisciplineFinaleDesc =>
+      'Dokonči všechny předchozí úkoly Ruin disciplíny.';
+
+  @override
+  String get progQuestMineDescentOpenTitle => 'Sestup do dolů';
+
+  @override
+  String get progQuestMineDescentOpenDesc =>
+      'Odemkni Sestup do dolů dosažením 30. úrovně.';
+
+  @override
+  String get progQuestMineDescentSteps250kTitle => 'Hluboké cesty';
+
+  @override
+  String get progQuestMineDescentSteps250kDesc =>
+      'V hlubinách dolů ujdi 250 000 kroků.';
+
+  @override
+  String get progQuestMineDescentActivityRewards12Title => 'Pracovní příkazy';
+
+  @override
+  String get progQuestMineDescentActivityRewards12Desc =>
+      'V hlubinách dolů získej 12 odměn za aktivitu.';
+
+  @override
+  String get progQuestMineDescentProtein10Title => 'Železné příděly';
+
+  @override
+  String get progQuestMineDescentProtein10Desc =>
+      'V hlubinách dolů splň cíl bílkovin 10krát.';
+
+  @override
+  String get progQuestMineDescentFinaleTitle => 'Pečeť dolů';
+
+  @override
+  String get progQuestMineDescentFinaleDesc =>
+      'Dokonči všechny předchozí úkoly Sestupu do dolů.';
+
+  @override
+  String get progQuestForgeMomentumOpenTitle => 'Výheň tempa';
+
+  @override
+  String get progQuestForgeMomentumOpenDesc =>
+      'Odemkni Výheň tempa dosažením 40. úrovně.';
+
+  @override
+  String get progQuestForgeMomentumWeekly4Title => 'Rozpal výheň';
+
+  @override
+  String get progQuestForgeMomentumWeekly4Desc =>
+      'Ve Výhni tempa splň týdenní cíl aktivity 4krát.';
+
+  @override
+  String get progQuestForgeMomentumSteps20Title => 'Kladivové kroky';
+
+  @override
+  String get progQuestForgeMomentumSteps20Desc =>
+      'Ve Výhni tempa splň krokový cíl 20krát.';
+
+  @override
+  String get progQuestForgeMomentumNutrition15Title => 'Palivo pro plamen';
+
+  @override
+  String get progQuestForgeMomentumNutrition15Desc =>
+      'Ve Výhni tempa splň cíl kalorií i bílkovin 15krát.';
+
+  @override
+  String get progQuestForgeMomentumFinaleTitle => 'Pečeť výhně';
+
+  @override
+  String get progQuestForgeMomentumFinaleDesc =>
+      'Dokonči všechny předchozí úkoly Výhně tempa.';
+
+  @override
+  String get progQuestUnderwayPactOpenTitle => 'Podzemní pakt';
+
+  @override
+  String get progQuestUnderwayPactOpenDesc =>
+      'Odemkni Podzemní pakt dosažením 50. úrovně.';
+
+  @override
+  String get progQuestUnderwayPactFourPillars5Title => 'Čtyři pilíře v hlubině';
+
+  @override
+  String get progQuestUnderwayPactFourPillars5Desc =>
+      'V Podzemním paktu splň všechny 4 denní cíle 5krát.';
+
+  @override
+  String get progQuestUnderwayPactSleep14Title => 'Hluboký odpočinek';
+
+  @override
+  String get progQuestUnderwayPactSleep14Desc =>
+      'V podzemí splň cíl spánku 14krát.';
+
+  @override
+  String get progQuestUnderwayPactRecovery10Title => 'Kamenná obnova';
+
+  @override
+  String get progQuestUnderwayPactRecovery10Desc =>
+      'V podzemí splň cíl kroků i spánku ve stejný den 10krát.';
+
+  @override
+  String get progQuestUnderwayPactFinaleTitle => 'Pečeť podzemí';
+
+  @override
+  String get progQuestUnderwayPactFinaleDesc =>
+      'Dokonči všechny předchozí úkoly Podzemního paktu.';
+
+  @override
+  String get progQuestFrostboundOathOpenTitle => 'Mrazivá přísaha';
+
+  @override
+  String get progQuestFrostboundOathOpenDesc =>
+      'Odemkni Mrazivou přísahu dosažením 60. úrovně.';
+
+  @override
+  String get progQuestFrostboundOathSteps21Title => 'Zmrzlé odhodlání';
+
+  @override
+  String get progQuestFrostboundOathSteps21Desc =>
+      'V mrazivých zemích splň krokový cíl 21krát.';
+
+  @override
+  String get progQuestFrostboundOathSleep21Title => 'Úkryt ve sněhu';
+
+  @override
+  String get progQuestFrostboundOathSleep21Desc =>
+      'V mrazivých zemích splň cíl spánku 21krát.';
+
+  @override
+  String get progQuestFrostboundOathWeekly6Title => 'Studený pochod';
+
+  @override
+  String get progQuestFrostboundOathWeekly6Desc =>
+      'V Mrazivé přísaze splň týdenní cíl aktivity 6krát.';
+
+  @override
+  String get progQuestFrostboundOathFinaleTitle => 'Pečeť mrazu';
+
+  @override
+  String get progQuestFrostboundOathFinaleDesc =>
+      'Dokonči všechny předchozí úkoly Mrazivé přísahy.';
+
+  @override
+  String get progQuestIcewalkerRouteOpenTitle => 'Cesta ledoběžce';
+
+  @override
+  String get progQuestIcewalkerRouteOpenDesc =>
+      'Odemkni Cestu ledoběžce dosažením 70. úrovně.';
+
+  @override
+  String get progQuestIcewalkerRouteSteps500kDesc =>
+      'Přes ledové pláně ujdi 500 000 kroků.';
+
+  @override
+  String get progQuestIcewalkerRouteRewards150Desc =>
+      'Na Cestě ledoběžce získej 150 odměn.';
+
+  @override
+  String get progQuestIcewalkerRouteProtein30Desc =>
+      'Na Cestě ledoběžce splň cíl bílkovin 30krát.';
+
+  @override
+  String get progQuestIcewalkerRouteFinaleDesc =>
+      'Dokonči všechny předchozí úkoly Cesty ledoběžce.';
+
+  @override
+  String get progQuestMountainAscentSteps30Desc =>
+      'Během Výstupu na horu splň krokový cíl 30krát.';
+
+  @override
+  String get progQuestDragonrockSovereignOpenDesc =>
+      'Odemkni vládu nad Dragonrockem dosažením 100. úrovně.';
+
+  @override
+  String get progQuestDragonrockSovereignFourPillars30Desc =>
+      'V Pevnosti Dragonrock splň všechny 4 denní cíle 30krát.';
+
+  @override
+  String get progQuestDragonrockSovereignWeekly16Desc =>
+      'V Pevnosti Dragonrock splň týdenní cíl aktivity 16krát.';
+
+  @override
+  String get progQuestDragonrockSovereignSteps50Desc =>
+      'V Pevnosti Dragonrock splň krokový cíl 50krát.';
+
+  @override
+  String get progQuestDragonrockSovereignFinaleTitle => 'Pečeť Dragonrocku';
+
+  @override
+  String get progQuestDragonrockSovereignFinaleDesc =>
+      'Dokonči všechny předchozí úkoly vlády nad Dragonrockem.';
 
   @override
   String get progAchievementFirstRewardTitle => 'První odměna';

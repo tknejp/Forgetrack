@@ -39,6 +39,8 @@ class KtNutritionRangeSummary {
 }
 
 class KalorickeTabulkyProvider extends ChangeNotifier {
+  static const Duration _appOpenRefreshMinInterval = Duration(minutes: 5);
+
   final KalorickeTabulkyService _service;
   final KtNutritionDatabase _db;
   late final KtSyncCoordinator _sync;
@@ -57,6 +59,7 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
   String? _syncError;
   String? _loggedInEmail;
   DateTime? _lastSyncedAt;
+  DateTime? _lastAppOpenRefreshAttemptAt;
 
   KtDayNutrition? _today;
 
@@ -332,7 +335,41 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
 
   // ─── Data ──────────────────────────────────────────────────────────────────
 
-  Future<void> refresh() async {
+  Future<void> refreshOnAppOpen({bool force = false}) async {
+    final now = DateTime.now();
+    final lastAttempt = _lastAppOpenRefreshAttemptAt;
+
+    if (!force &&
+        lastAttempt != null &&
+        now.difference(lastAttempt) < _appOpenRefreshMinInterval) {
+      AppLog.ktProvider.debug(
+        'refreshOnAppOpen() skipped — throttled',
+        payload: 'lastAttempt=${lastAttempt.toIso8601String()}',
+      );
+      return;
+    }
+
+    _lastAppOpenRefreshAttemptAt = now;
+
+    if (_isInitializing) {
+      AppLog.ktProvider.debug(
+        'refreshOnAppOpen() skipped — initialize already running',
+      );
+      return;
+    }
+
+    if (!isLoggedIn) {
+      AppLog.ktProvider.info(
+        'refreshOnAppOpen() restoring session before refresh',
+      );
+      await initialize();
+      return;
+    }
+
+    await refresh(source: 'app_open');
+  }
+
+  Future<void> refresh({String source = 'manual'}) async {
     if (!isLoggedIn) {
       AppLog.ktProvider.debug('refresh() skipped — not logged in');
       return;
@@ -379,7 +416,7 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
       DevToolsSyncLogger.instance.record(
         DevToolsSyncEvent(
           timestamp: syncStart,
-          source: 'manual',
+          source: source,
           feature: 'nutrition',
           result: syncError != null ? 'failure' : 'success',
           durationMs: DateTime.now().difference(syncStart).inMilliseconds,

@@ -23,6 +23,8 @@ class ProgressionRepositoryImpl implements ProgressionLocalRepository {
         await isar.progressionActiveQuestRecords.where().findAll();
     final achievementUnlockRecords =
         await isar.progressionAchievementUnlockRecords.where().findAll();
+    final chapterStartRecords =
+        await isar.progressionChapterStartLocalRecords.where().findAll();
 
     final lastEvaluatedAt = evaluationRecords.isEmpty
         ? null
@@ -38,6 +40,7 @@ class ProgressionRepositoryImpl implements ProgressionLocalRepository {
           activeQuestRecords.map((record) => record.questId).toSet(),
       achievementUnlocks:
           achievementUnlockRecords.map(_mapAchievementUnlock).toList(),
+      chapterStarts: chapterStartRecords.map(_mapChapterStart).toList(),
       lastEvaluatedAt: lastEvaluatedAt,
     );
   }
@@ -184,6 +187,32 @@ class ProgressionRepositoryImpl implements ProgressionLocalRepository {
 
       if (newRecords.isNotEmpty) {
         await isar.progressionAchievementUnlockRecords.putAll(newRecords);
+      }
+    });
+
+    return loadLedger();
+  }
+
+  @override
+  Future<ProgressionLedgerSnapshot> persistChapterStarts({
+    required List<ProgressionChapterStartRecord> starts,
+  }) async {
+    final isar = _database.isar;
+    if (starts.isEmpty) return loadLedger();
+
+    await isar.writeTxn(() async {
+      final existingKeys =
+          (await isar.progressionChapterStartLocalRecords.where().findAll())
+              .map((record) => record.startKey)
+              .toSet();
+
+      final newRecords = starts
+          .where((start) => !existingKeys.contains(start.startKey))
+          .map(_toChapterStartRecord)
+          .toList();
+
+      if (newRecords.isNotEmpty) {
+        await isar.progressionChapterStartLocalRecords.putAll(newRecords);
       }
     });
 
@@ -425,13 +454,15 @@ class ProgressionRepositoryImpl implements ProgressionLocalRepository {
       await isar.progressionQuestRewardGrantRecords.clear();
       await isar.progressionActiveQuestRecords.clear();
       await isar.progressionAchievementUnlockRecords.clear();
+      await isar.progressionChapterStartLocalRecords.clear();
     });
   }
 
   /// Inserts a claimed quest grant restored from Firestore into Isar.
   /// Skips silently if the [rewardKey] already exists (replace: false).
   @override
-  Future<void> insertRestoredQuestGrant(ProgressionQuestRewardGrant grant) async {
+  Future<void> insertRestoredQuestGrant(
+      ProgressionQuestRewardGrant grant) async {
     final isar = _database.isar;
     await isar.writeTxn(() async {
       final existing = await isar.progressionQuestRewardGrantRecords
@@ -473,6 +504,28 @@ class ProgressionRepositoryImpl implements ProgressionLocalRepository {
       ..unlockKey = unlock.unlockKey
       ..achievementId = unlock.achievementId
       ..unlockedAt = unlock.unlockedAt;
+  }
+
+  ProgressionChapterStartRecord _mapChapterStart(
+    ProgressionChapterStartLocalRecord record,
+  ) {
+    return ProgressionChapterStartRecord(
+      uid: record.userId ?? '',
+      chapterId: record.chapterId,
+      startedAtLevel: record.startedAtLevel,
+      startedAt: record.startedAt,
+    );
+  }
+
+  ProgressionChapterStartLocalRecord _toChapterStartRecord(
+    ProgressionChapterStartRecord start,
+  ) {
+    return ProgressionChapterStartLocalRecord()
+      ..startKey = start.startKey
+      ..chapterId = start.chapterId
+      ..startedAtLevel = start.startedAtLevel
+      ..startedAt = start.startedAt
+      ..userId = start.uid.isEmpty ? null : start.uid;
   }
 }
 

@@ -17,6 +17,7 @@ class ProgressionEngineState {
     required this.evaluations,
     required this.rewardGrants,
     required this.questRewardGrants,
+    required this.chapterStarts,
     required this.achievements,
     required this.quests,
     required this.streaksByRuleId,
@@ -28,6 +29,7 @@ class ProgressionEngineState {
   final List<ProgressionEvaluation> evaluations;
   final List<ProgressionRewardGrant> rewardGrants;
   final List<ProgressionQuestRewardGrant> questRewardGrants;
+  final List<ProgressionChapterStartRecord> chapterStarts;
   final List<ProgressionAchievement> achievements;
   final List<ProgressionQuest> quests;
   final Map<String, ProgressionStreakSummary> streaksByRuleId;
@@ -75,7 +77,7 @@ class ProgressionEngine {
   Future<ProgressionEngineState> load() async {
     final now = _clock();
     final ledger = await _repository.loadLedger();
-    return _stateWithPersistedAchievementUnlocks(
+    return _stateWithPersistedChapterStartsAndAchievementUnlocks(
       ledger,
       evaluationDate: now,
     );
@@ -177,7 +179,7 @@ class ProgressionEngine {
       evaluations: evaluations,
       evaluatedAt: now,
     );
-    var state = await _stateWithPersistedAchievementUnlocks(
+    var state = await _stateWithPersistedChapterStartsAndAchievementUnlocks(
       ledger,
       evaluationDate: now,
     );
@@ -229,7 +231,7 @@ class ProgressionEngine {
       levelAtClaim: level,
       multiplierAtClaim: _levelPolicy.rewardMultiplierForLevel(level),
     );
-    return _stateWithPersistedAchievementUnlocks(
+    return _stateWithPersistedChapterStartsAndAchievementUnlocks(
       ledger,
       evaluationDate: now,
     );
@@ -260,7 +262,7 @@ class ProgressionEngine {
       runningClaimedXp += finalXp;
     }
 
-    return _stateWithPersistedAchievementUnlocks(
+    return _stateWithPersistedChapterStartsAndAchievementUnlocks(
       ledger,
       evaluationDate: now,
     );
@@ -285,7 +287,7 @@ class ProgressionEngine {
       levelAtClaim: level,
       multiplierAtClaim: _levelPolicy.rewardMultiplierForLevel(level),
     );
-    return _stateWithPersistedAchievementUnlocks(
+    return _stateWithPersistedChapterStartsAndAchievementUnlocks(
       ledger,
       evaluationDate: now,
     );
@@ -316,7 +318,7 @@ class ProgressionEngine {
       runningClaimedXp += finalXp;
     }
 
-    return _stateWithPersistedAchievementUnlocks(
+    return _stateWithPersistedChapterStartsAndAchievementUnlocks(
       ledger,
       evaluationDate: now,
     );
@@ -333,10 +335,19 @@ class ProgressionEngine {
     return grant.xpGranted;
   }
 
-  Future<ProgressionEngineState> _stateWithPersistedAchievementUnlocks(
+  Future<ProgressionEngineState>
+      _stateWithPersistedChapterStartsAndAchievementUnlocks(
     ProgressionLedgerSnapshot ledger, {
     required DateTime evaluationDate,
   }) async {
+    final chapterStarts = _newChapterStarts(
+      ledger,
+      evaluationDate: evaluationDate,
+    );
+    if (chapterStarts.isNotEmpty) {
+      ledger = await _repository.persistChapterStarts(starts: chapterStarts);
+    }
+
     var state = _toState(ledger, evaluationDate: evaluationDate);
     final newUnlocks = _newAchievementUnlocks(
       state.achievements,
@@ -409,6 +420,7 @@ class ProgressionEngine {
       evaluations: evaluations,
       rewardGrants: rewardGrants,
       questRewardGrants: questRewardGrants,
+      chapterStarts: ledger.chapterStarts,
       achievements: achievements,
       streaksByRuleId: streaksByRuleId,
       streaksByDomain: streaksByDomain,
@@ -425,12 +437,47 @@ class ProgressionEngine {
       evaluations: evaluations,
       rewardGrants: rewardGrants,
       questRewardGrants: questRewardGrants,
+      chapterStarts: ledger.chapterStarts,
       achievements: achievements,
       quests: quests,
       streaksByRuleId: streaksByRuleId,
       streaksByDomain: streaksByDomain,
       lastEvaluatedAt: ledger.lastEvaluatedAt,
     );
+  }
+
+  List<ProgressionChapterStartRecord> _newChapterStarts(
+    ProgressionLedgerSnapshot ledger, {
+    required DateTime evaluationDate,
+  }) {
+    final existingChapterIds = {
+      for (final start in ledger.chapterStarts) start.chapterId,
+    };
+    final totalXp = _totalClaimedXp(ledger);
+    final profile = _levelPolicy.resolve(totalXp);
+    final starts = <ProgressionChapterStartRecord>[];
+    final definitions = _questCatalog.build();
+    final seenChapterIds = <String>{};
+
+    for (final definition in definitions) {
+      final chapterId = definition.chapterId;
+      if (chapterId == null || !seenChapterIds.add(chapterId)) continue;
+      if (existingChapterIds.contains(chapterId)) continue;
+
+      final minimumLevel = definition.minimumLevel;
+      if (minimumLevel == null || profile.level < minimumLevel) continue;
+
+      starts.add(
+        ProgressionChapterStartRecord(
+          uid: '',
+          chapterId: chapterId,
+          startedAtLevel: profile.level,
+          startedAt: evaluationDate,
+        ),
+      );
+    }
+
+    return starts;
   }
 
   List<ProgressionEvaluation> _evaluateAll(
@@ -642,6 +689,7 @@ class ProgressionEngine {
       periodKind: quest.periodKind,
       achievementId: quest.achievementId,
       relatedRuleIds: quest.relatedRuleIds,
+      requiredRuleCount: quest.requiredRuleCount,
       minimumLevel: quest.minimumLevel,
       minimumTrackedDays: quest.minimumTrackedDays,
       assetKey: quest.assetKey,
@@ -652,6 +700,12 @@ class ProgressionEngine {
       chainId: quest.chainId,
       chainStepLabel: quest.chainStepLabel,
       nextQuestIds: quest.nextQuestIds,
+      displayBucket: quest.displayBucket,
+      displayGroupId: quest.displayGroupId,
+      comboPoolId: quest.comboPoolId,
+      chapterId: quest.chapterId,
+      chapterStartedAt: quest.chapterStartedAt,
+      progressStartPolicy: quest.progressStartPolicy,
       dailySequenceId: quest.dailySequenceId,
       dailySequenceStep: quest.dailySequenceStep,
     );

@@ -130,7 +130,11 @@ class _FtQuestsScreenState extends State<QuestsScreen> {
       _pillKeyFor(_rewardPillKeys, reward.rewardKey);
     }
     for (final quest in [
-      ...viewData.activeQuests,
+      ...viewData.dailyGoalQuests,
+      ...viewData.dailyComboQuests,
+      ...viewData.weeklyQuests,
+      ...viewData.chapterQuests,
+      ...viewData.longTermQuests,
       ...viewData.completedQuests,
     ]) {
       final rewardKey = quest.rewardKey;
@@ -179,7 +183,11 @@ class _FtQuestsScreenState extends State<QuestsScreen> {
                 ),
                 children: [
                   _QuestsSection(
-                    active: viewData.activeQuests,
+                    dailyGoals: viewData.dailyGoalQuests,
+                    dailyCombo: viewData.dailyComboQuests,
+                    weekly: viewData.weeklyQuests,
+                    chapter: viewData.chapterQuests,
+                    longTerm: viewData.longTermQuests,
                     locked: viewData.lockedQuests,
                     completed: viewData.completedQuests,
                     allQuests: viewData.allQuests,
@@ -478,7 +486,11 @@ class _PendingRewardCard extends StatelessWidget {
 
 class _QuestsSection extends StatefulWidget {
   const _QuestsSection({
-    required this.active,
+    required this.dailyGoals,
+    required this.dailyCombo,
+    required this.weekly,
+    required this.chapter,
+    required this.longTerm,
     required this.locked,
     required this.completed,
     required this.allQuests,
@@ -492,7 +504,11 @@ class _QuestsSection extends StatefulWidget {
     required this.progL10n,
   });
 
-  final List<ProgressionQuest> active;
+  final List<ProgressionQuest> dailyGoals;
+  final List<ProgressionQuest> dailyCombo;
+  final List<ProgressionQuest> weekly;
+  final List<ProgressionQuest> chapter;
+  final List<ProgressionQuest> longTerm;
   final List<ProgressionQuest> locked;
   final List<ProgressionQuest> completed;
   final List<ProgressionQuest> allQuests;
@@ -542,13 +558,13 @@ class _QuestsSectionState extends State<_QuestsSection> {
           children: [
             Expanded(
               child: _SubHeader(
-                label: widget.l10n.progQuestsActiveHeader,
-                color: Tokens.active.color,
+                label: widget.l10n.progQuestsDailyGoalsHeader,
+                color: Tokens.steps.color,
                 vivid: true,
               ),
             ),
             Text(
-              widget.l10n.progQuestsActiveCount(widget.active.length),
+              widget.l10n.progQuestsActiveCount(widget.dailyGoals.length),
               style: TextStyle(
                 fontSize: Tokens.fontSizeMicro,
                 fontWeight: FontWeight.w600,
@@ -558,30 +574,198 @@ class _QuestsSectionState extends State<_QuestsSection> {
           ],
         ),
         const SizedBox(height: 10),
-        if (widget.active.isEmpty)
+        if (widget.dailyGoals.isEmpty)
           ProgressionEmptyLine(
             title: widget.l10n.progQuestsEmptyActiveTitle,
             caption: widget.l10n.progQuestsEmptyActiveCaption,
           )
         else
-          for (int i = 0; i < widget.active.length; i++) ...[
+          for (int i = 0; i < widget.dailyGoals.length; i++) ...[
             if (i > 0) const SizedBox(height: Tokens.spaceSm),
             _ActiveQuestCard(
-              quest: widget.active[i],
+              quest: widget.dailyGoals[i],
               allQuests: widget.allQuests,
               profile: widget.profile,
               trackedDaysElapsed: widget.trackedDaysElapsed,
-              isExpanded: _expandedQuestId == widget.active[i].id,
-              onToggle: () => _toggleQuest(widget.active[i].id),
+              isExpanded: _expandedQuestId == widget.dailyGoals[i].id,
+              onToggle: () => _toggleQuest(widget.dailyGoals[i].id),
               l10n: widget.l10n,
               progL10n: widget.progL10n,
               enabled: !widget.isRefreshing,
-              pillKey: widget.active[i].rewardKey == null
+              pillKey: widget.dailyGoals[i].rewardKey == null
                   ? null
-                  : widget.questPillKeys[widget.active[i].rewardKey!],
+                  : widget.questPillKeys[widget.dailyGoals[i].rewardKey!],
               onClaimQuest: widget.onClaimQuest,
             ),
           ],
+        const SizedBox(height: Tokens.spaceXl),
+        Row(
+          children: [
+            Expanded(
+              child: _SubHeader(
+                label: widget.l10n.progQuestsDailyComboHeader,
+                color: Tokens.active.color,
+                vivid: true,
+              ),
+            ),
+            Text(
+              widget.l10n.progQuestsActiveCount(widget.dailyCombo.length),
+              style: TextStyle(
+                fontSize: Tokens.fontSizeMicro,
+                fontWeight: FontWeight.w600,
+                color: Tokens.onSurfaceMuted,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        if (widget.dailyCombo.isEmpty)
+          ProgressionEmptyLine(
+            title: widget.l10n.progQuestsEmptyActiveTitle,
+            caption: widget.l10n.progQuestsEmptyActiveCaption,
+          )
+        else
+          for (int i = 0; i < widget.dailyCombo.length; i++) ...[
+            if (i > 0) const SizedBox(height: Tokens.spaceSm),
+            _ActiveQuestCard(
+              quest: widget.dailyCombo[i],
+              allQuests: widget.allQuests,
+              profile: widget.profile,
+              trackedDaysElapsed: widget.trackedDaysElapsed,
+              isExpanded: _expandedQuestId == widget.dailyCombo[i].id,
+              onToggle: () => _toggleQuest(widget.dailyCombo[i].id),
+              l10n: widget.l10n,
+              progL10n: widget.progL10n,
+              enabled: !widget.isRefreshing,
+              pillKey: widget.dailyCombo[i].rewardKey == null
+                  ? null
+                  : widget.questPillKeys[widget.dailyCombo[i].rewardKey!],
+              onClaimQuest: widget.onClaimQuest,
+            ),
+          ],
+        if (widget.weekly.isNotEmpty) ...[
+          const SizedBox(height: Tokens.spaceXl),
+          Row(
+            children: [
+              Expanded(
+                child: _SubHeader(
+                  label: widget.l10n.progQuestsWeeklyHeader,
+                  color: Tokens.calories.color,
+                  vivid: true,
+                ),
+              ),
+              Text(
+                widget.l10n.progQuestsActiveCount(widget.weekly.length),
+                style: TextStyle(
+                  fontSize: Tokens.fontSizeMicro,
+                  fontWeight: FontWeight.w600,
+                  color: Tokens.onSurfaceMuted,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          for (int i = 0; i < widget.weekly.length; i++) ...[
+            if (i > 0) const SizedBox(height: Tokens.spaceSm),
+            _ActiveQuestCard(
+              quest: widget.weekly[i],
+              allQuests: widget.allQuests,
+              profile: widget.profile,
+              trackedDaysElapsed: widget.trackedDaysElapsed,
+              isExpanded: _expandedQuestId == widget.weekly[i].id,
+              onToggle: () => _toggleQuest(widget.weekly[i].id),
+              l10n: widget.l10n,
+              progL10n: widget.progL10n,
+              enabled: !widget.isRefreshing,
+              pillKey: widget.weekly[i].rewardKey == null
+                  ? null
+                  : widget.questPillKeys[widget.weekly[i].rewardKey!],
+              onClaimQuest: widget.onClaimQuest,
+            ),
+          ],
+        ],
+        if (widget.chapter.isNotEmpty) ...[
+          const SizedBox(height: Tokens.spaceXl),
+          Row(
+            children: [
+              Expanded(
+                child: _SubHeader(
+                  label: widget.l10n.progQuestsChapterHeader,
+                  color: Tokens.accent,
+                  vivid: true,
+                ),
+              ),
+              Text(
+                widget.l10n.progQuestsActiveCount(widget.chapter.length),
+                style: const TextStyle(
+                  fontSize: Tokens.fontSizeMicro,
+                  fontWeight: FontWeight.w600,
+                  color: Tokens.onSurfaceMuted,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          for (int i = 0; i < widget.chapter.length; i++) ...[
+            if (i > 0) const SizedBox(height: Tokens.spaceSm),
+            _ActiveQuestCard(
+              quest: widget.chapter[i],
+              allQuests: widget.allQuests,
+              profile: widget.profile,
+              trackedDaysElapsed: widget.trackedDaysElapsed,
+              isExpanded: _expandedQuestId == widget.chapter[i].id,
+              onToggle: () => _toggleQuest(widget.chapter[i].id),
+              l10n: widget.l10n,
+              progL10n: widget.progL10n,
+              enabled: !widget.isRefreshing,
+              pillKey: widget.chapter[i].rewardKey == null
+                  ? null
+                  : widget.questPillKeys[widget.chapter[i].rewardKey!],
+              onClaimQuest: widget.onClaimQuest,
+            ),
+          ],
+        ],
+        if (widget.longTerm.isNotEmpty) ...[
+          const SizedBox(height: Tokens.spaceXl),
+          Row(
+            children: [
+              Expanded(
+                child: _SubHeader(
+                  label: widget.l10n.progQuestsLongTermHeader,
+                  color: Tokens.accent,
+                  vivid: true,
+                ),
+              ),
+              Text(
+                widget.l10n.progQuestsActiveCount(widget.longTerm.length),
+                style: TextStyle(
+                  fontSize: Tokens.fontSizeMicro,
+                  fontWeight: FontWeight.w600,
+                  color: Tokens.onSurfaceMuted,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          for (int i = 0; i < widget.longTerm.length; i++) ...[
+            if (i > 0) const SizedBox(height: Tokens.spaceSm),
+            _ActiveQuestCard(
+              quest: widget.longTerm[i],
+              allQuests: widget.allQuests,
+              profile: widget.profile,
+              trackedDaysElapsed: widget.trackedDaysElapsed,
+              isExpanded: _expandedQuestId == widget.longTerm[i].id,
+              onToggle: () => _toggleQuest(widget.longTerm[i].id),
+              l10n: widget.l10n,
+              progL10n: widget.progL10n,
+              enabled: !widget.isRefreshing,
+              pillKey: widget.longTerm[i].rewardKey == null
+                  ? null
+                  : widget.questPillKeys[widget.longTerm[i].rewardKey!],
+              onClaimQuest: widget.onClaimQuest,
+            ),
+          ],
+        ],
         if (widget.locked.isNotEmpty) ...[
           const SizedBox(height: Tokens.spaceXl),
           _SubHeader(

@@ -4,9 +4,11 @@ import '../../domain/activity_record.dart';
 import 'hc_read_client.dart';
 
 class HcStepsService {
-  HcStepsService(this._client);
+  HcStepsService(this._client, {DateTime Function()? now})
+      : _now = now ?? DateTime.now;
 
   final HcReadClient _client;
+  final DateTime Function() _now;
 
   Future<int> getStepsForDate(DateTime date) async {
     await _client.ensureConfigured();
@@ -40,7 +42,7 @@ class HcStepsService {
   Future<List<StepsRecord>> getStepsHistory(int days) async {
     _client.logDebug('getStepsHistory(days=$days)');
 
-    final now = DateTime.now();
+    final now = _now();
     final today = _client.dayOnly(now);
     final tomorrowStart = today.add(const Duration(days: 1));
     final start = today.subtract(Duration(days: days - 1));
@@ -48,8 +50,10 @@ class HcStepsService {
     // Diagnostic: compare today's steps via aggregate with two different query
     // ends. Samsung Health writes an all-day record (dateTo=23:59) that HC only
     // returns when the query end covers the full interval.
-    final todayStepsToNow = await _client.getTotalStepsInInterval(today, now) ?? 0;
-    final todayStepsFullDay = await _client.getTotalStepsInInterval(today, tomorrowStart) ?? 0;
+    final todayStepsToNow =
+        await _client.getTotalStepsInInterval(today, now) ?? 0;
+    final todayStepsFullDay =
+        await _client.getTotalStepsInInterval(today, tomorrowStart) ?? 0;
     _client.logInfo(
       'getStepsHistory(): today aggregate: '
       'todayStart->now=$todayStepsToNow  '
@@ -97,7 +101,8 @@ class HcStepsService {
     stepsByDay[today] = todayStepsFullDay;
 
     for (final entry in stepsByDay.entries) {
-      _client.logDebug('daily bucket ${_client.fmt(entry.key)}: ${entry.value} steps');
+      _client.logDebug(
+          'daily bucket ${_client.fmt(entry.key)}: ${entry.value} steps');
     }
 
     final records = <StepsRecord>[
@@ -149,12 +154,14 @@ class HcStepsService {
     }
 
     // Override today with the full-day aggregate if today falls in the range.
-    final today = _client.dayOnly(DateTime.now());
+    final today = _client.dayOnly(_now());
     if (!today.isBefore(startDay) && !today.isAfter(endDay)) {
       final tomorrowStart = today.add(const Duration(days: 1));
-      final todaySteps = await _client.getTotalStepsInInterval(today, tomorrowStart) ?? 0;
+      final todaySteps =
+          await _client.getTotalStepsInInterval(today, tomorrowStart) ?? 0;
       stepsByDay[today] = todaySteps;
-      _client.logDebug('getStepsHistoryForRange(): today aggregate override=$todaySteps');
+      _client.logDebug(
+          'getStepsHistoryForRange(): today aggregate override=$todaySteps');
     }
 
     final totalDays = endDay.difference(startDay).inDays + 1;

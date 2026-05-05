@@ -418,6 +418,8 @@ class ProgressionL10n {
 
   String questCriterionDescriptor(ProgressionQuest quest) {
     switch (quest.criterionType) {
+      case ProgressionQuestCriterionType.chapterStarted:
+        return quest.sourceLabel?.call(_l10n) ?? _l10n.progQuestSourceJourney;
       case ProgressionQuestCriterionType.totalXpAtLeast:
         return _l10n.progQuestCriterionTotalXp;
       case ProgressionQuestCriterionType.rewardCountAtLeast:
@@ -454,6 +456,8 @@ class ProgressionL10n {
         }
         return _l10n.progQuestCriterionCurrentPeriodGeneric;
       case ProgressionQuestCriterionType.currentPeriodRuleSetAtLeast:
+        return _l10n.progQuestCriterionCurrentPeriodRuleSet;
+      case ProgressionQuestCriterionType.ruleSetCompletionsAtLeast:
         return _l10n.progQuestCriterionCurrentPeriodRuleSet;
       case ProgressionQuestCriterionType.achievementUnlocked:
         return _l10n.progQuestCriterionAchievement;

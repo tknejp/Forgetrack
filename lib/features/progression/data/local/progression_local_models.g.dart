@@ -13065,3 +13065,1477 @@ extension ProgressionAchievementUnlockRecordQueryProperty on QueryBuilder<
     });
   }
 }
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+extension GetProgressionChapterStartLocalRecordCollection on Isar {
+  IsarCollection<ProgressionChapterStartLocalRecord>
+      get progressionChapterStartLocalRecords => this.collection();
+}
+
+const ProgressionChapterStartLocalRecordSchema = CollectionSchema(
+  name: r'ProgressionChapterStartLocalRecord',
+  id: 7799182600705150475,
+  properties: {
+    r'chapterId': PropertySchema(
+      id: 0,
+      name: r'chapterId',
+      type: IsarType.string,
+    ),
+    r'startKey': PropertySchema(
+      id: 1,
+      name: r'startKey',
+      type: IsarType.string,
+    ),
+    r'startedAt': PropertySchema(
+      id: 2,
+      name: r'startedAt',
+      type: IsarType.dateTime,
+    ),
+    r'startedAtLevel': PropertySchema(
+      id: 3,
+      name: r'startedAtLevel',
+      type: IsarType.long,
+    ),
+    r'userId': PropertySchema(
+      id: 4,
+      name: r'userId',
+      type: IsarType.string,
+    )
+  },
+  estimateSize: _progressionChapterStartLocalRecordEstimateSize,
+  serialize: _progressionChapterStartLocalRecordSerialize,
+  deserialize: _progressionChapterStartLocalRecordDeserialize,
+  deserializeProp: _progressionChapterStartLocalRecordDeserializeProp,
+  idName: r'id',
+  indexes: {
+    r'startKey': IndexSchema(
+      id: -3902753695646321485,
+      name: r'startKey',
+      unique: true,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'startKey',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'chapterId': IndexSchema(
+      id: -1917949875430644359,
+      name: r'chapterId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'chapterId',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'startedAt': IndexSchema(
+      id: 8114395319341636597,
+      name: r'startedAt',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'startedAt',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    )
+  },
+  links: {},
+  embeddedSchemas: {},
+  getId: _progressionChapterStartLocalRecordGetId,
+  getLinks: _progressionChapterStartLocalRecordGetLinks,
+  attach: _progressionChapterStartLocalRecordAttach,
+  version: '3.1.0+1',
+);
+
+int _progressionChapterStartLocalRecordEstimateSize(
+  ProgressionChapterStartLocalRecord object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  bytesCount += 3 + object.chapterId.length * 3;
+  bytesCount += 3 + object.startKey.length * 3;
+  {
+    final value = object.userId;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  return bytesCount;
+}
+
+void _progressionChapterStartLocalRecordSerialize(
+  ProgressionChapterStartLocalRecord object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeString(offsets[0], object.chapterId);
+  writer.writeString(offsets[1], object.startKey);
+  writer.writeDateTime(offsets[2], object.startedAt);
+  writer.writeLong(offsets[3], object.startedAtLevel);
+  writer.writeString(offsets[4], object.userId);
+}
+
+ProgressionChapterStartLocalRecord
+    _progressionChapterStartLocalRecordDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = ProgressionChapterStartLocalRecord();
+  object.chapterId = reader.readString(offsets[0]);
+  object.id = id;
+  object.startKey = reader.readString(offsets[1]);
+  object.startedAt = reader.readDateTime(offsets[2]);
+  object.startedAtLevel = reader.readLong(offsets[3]);
+  object.userId = reader.readStringOrNull(offsets[4]);
+  return object;
+}
+
+P _progressionChapterStartLocalRecordDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readString(offset)) as P;
+    case 1:
+      return (reader.readString(offset)) as P;
+    case 2:
+      return (reader.readDateTime(offset)) as P;
+    case 3:
+      return (reader.readLong(offset)) as P;
+    case 4:
+      return (reader.readStringOrNull(offset)) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+Id _progressionChapterStartLocalRecordGetId(
+    ProgressionChapterStartLocalRecord object) {
+  return object.id;
+}
+
+List<IsarLinkBase<dynamic>> _progressionChapterStartLocalRecordGetLinks(
+    ProgressionChapterStartLocalRecord object) {
+  return [];
+}
+
+void _progressionChapterStartLocalRecordAttach(IsarCollection<dynamic> col,
+    Id id, ProgressionChapterStartLocalRecord object) {
+  object.id = id;
+}
+
+extension ProgressionChapterStartLocalRecordByIndex
+    on IsarCollection<ProgressionChapterStartLocalRecord> {
+  Future<ProgressionChapterStartLocalRecord?> getByStartKey(String startKey) {
+    return getByIndex(r'startKey', [startKey]);
+  }
+
+  ProgressionChapterStartLocalRecord? getByStartKeySync(String startKey) {
+    return getByIndexSync(r'startKey', [startKey]);
+  }
+
+  Future<bool> deleteByStartKey(String startKey) {
+    return deleteByIndex(r'startKey', [startKey]);
+  }
+
+  bool deleteByStartKeySync(String startKey) {
+    return deleteByIndexSync(r'startKey', [startKey]);
+  }
+
+  Future<List<ProgressionChapterStartLocalRecord?>> getAllByStartKey(
+      List<String> startKeyValues) {
+    final values = startKeyValues.map((e) => [e]).toList();
+    return getAllByIndex(r'startKey', values);
+  }
+
+  List<ProgressionChapterStartLocalRecord?> getAllByStartKeySync(
+      List<String> startKeyValues) {
+    final values = startKeyValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'startKey', values);
+  }
+
+  Future<int> deleteAllByStartKey(List<String> startKeyValues) {
+    final values = startKeyValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'startKey', values);
+  }
+
+  int deleteAllByStartKeySync(List<String> startKeyValues) {
+    final values = startKeyValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'startKey', values);
+  }
+
+  Future<Id> putByStartKey(ProgressionChapterStartLocalRecord object) {
+    return putByIndex(r'startKey', object);
+  }
+
+  Id putByStartKeySync(ProgressionChapterStartLocalRecord object,
+      {bool saveLinks = true}) {
+    return putByIndexSync(r'startKey', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllByStartKey(
+      List<ProgressionChapterStartLocalRecord> objects) {
+    return putAllByIndex(r'startKey', objects);
+  }
+
+  List<Id> putAllByStartKeySync(
+      List<ProgressionChapterStartLocalRecord> objects,
+      {bool saveLinks = true}) {
+    return putAllByIndexSync(r'startKey', objects, saveLinks: saveLinks);
+  }
+}
+
+extension ProgressionChapterStartLocalRecordQueryWhereSort on QueryBuilder<
+    ProgressionChapterStartLocalRecord,
+    ProgressionChapterStartLocalRecord,
+    QWhere> {
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterWhere> anyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterWhere> anyStartedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'startedAt'),
+      );
+    });
+  }
+}
+
+extension ProgressionChapterStartLocalRecordQueryWhere on QueryBuilder<
+    ProgressionChapterStartLocalRecord,
+    ProgressionChapterStartLocalRecord,
+    QWhereClause> {
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterWhereClause> idEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterWhereClause> idNotEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            )
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            )
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterWhereClause> idGreaterThan(Id id, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.greaterThan(lower: id, includeLower: include),
+      );
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterWhereClause> idLessThan(Id id, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.lessThan(upper: id, includeUpper: include),
+      );
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterWhereClause> idBetween(
+    Id lowerId,
+    Id upperId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterWhereClause> startKeyEqualTo(String startKey) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'startKey',
+        value: [startKey],
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterWhereClause> startKeyNotEqualTo(String startKey) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'startKey',
+              lower: [],
+              upper: [startKey],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'startKey',
+              lower: [startKey],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'startKey',
+              lower: [startKey],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'startKey',
+              lower: [],
+              upper: [startKey],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterWhereClause> chapterIdEqualTo(String chapterId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'chapterId',
+        value: [chapterId],
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterWhereClause> chapterIdNotEqualTo(String chapterId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'chapterId',
+              lower: [],
+              upper: [chapterId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'chapterId',
+              lower: [chapterId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'chapterId',
+              lower: [chapterId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'chapterId',
+              lower: [],
+              upper: [chapterId],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterWhereClause> startedAtEqualTo(DateTime startedAt) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'startedAt',
+        value: [startedAt],
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterWhereClause> startedAtNotEqualTo(DateTime startedAt) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'startedAt',
+              lower: [],
+              upper: [startedAt],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'startedAt',
+              lower: [startedAt],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'startedAt',
+              lower: [startedAt],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'startedAt',
+              lower: [],
+              upper: [startedAt],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterWhereClause> startedAtGreaterThan(
+    DateTime startedAt, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'startedAt',
+        lower: [startedAt],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterWhereClause> startedAtLessThan(
+    DateTime startedAt, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'startedAt',
+        lower: [],
+        upper: [startedAt],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterWhereClause> startedAtBetween(
+    DateTime lowerStartedAt,
+    DateTime upperStartedAt, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'startedAt',
+        lower: [lowerStartedAt],
+        includeLower: includeLower,
+        upper: [upperStartedAt],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+}
+
+extension ProgressionChapterStartLocalRecordQueryFilter on QueryBuilder<
+    ProgressionChapterStartLocalRecord,
+    ProgressionChapterStartLocalRecord,
+    QFilterCondition> {
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> chapterIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'chapterId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> chapterIdGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'chapterId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> chapterIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'chapterId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> chapterIdBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'chapterId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> chapterIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'chapterId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> chapterIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'chapterId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+          ProgressionChapterStartLocalRecord, QAfterFilterCondition>
+      chapterIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'chapterId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+          ProgressionChapterStartLocalRecord, QAfterFilterCondition>
+      chapterIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'chapterId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> chapterIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'chapterId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> chapterIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'chapterId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> idEqualTo(Id value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterFilterCondition> idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterFilterCondition> idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterFilterCondition> idBetween(
+    Id lower,
+    Id upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> startKeyEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'startKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> startKeyGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'startKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> startKeyLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'startKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> startKeyBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'startKey',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> startKeyStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'startKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> startKeyEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'startKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+          ProgressionChapterStartLocalRecord, QAfterFilterCondition>
+      startKeyContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'startKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+          ProgressionChapterStartLocalRecord, QAfterFilterCondition>
+      startKeyMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'startKey',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> startKeyIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'startKey',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> startKeyIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'startKey',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> startedAtEqualTo(DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'startedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> startedAtGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'startedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> startedAtLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'startedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> startedAtBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'startedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> startedAtLevelEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'startedAtLevel',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> startedAtLevelGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'startedAtLevel',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> startedAtLevelLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'startedAtLevel',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> startedAtLevelBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'startedAtLevel',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> userIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'userId',
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> userIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'userId',
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterFilterCondition> userIdEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'userId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> userIdGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'userId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterFilterCondition> userIdLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'userId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterFilterCondition> userIdBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'userId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> userIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'userId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterFilterCondition> userIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'userId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+          ProgressionChapterStartLocalRecord, QAfterFilterCondition>
+      userIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'userId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+          ProgressionChapterStartLocalRecord, QAfterFilterCondition>
+      userIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'userId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> userIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'userId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterFilterCondition> userIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'userId',
+        value: '',
+      ));
+    });
+  }
+}
+
+extension ProgressionChapterStartLocalRecordQueryObject on QueryBuilder<
+    ProgressionChapterStartLocalRecord,
+    ProgressionChapterStartLocalRecord,
+    QFilterCondition> {}
+
+extension ProgressionChapterStartLocalRecordQueryLinks on QueryBuilder<
+    ProgressionChapterStartLocalRecord,
+    ProgressionChapterStartLocalRecord,
+    QFilterCondition> {}
+
+extension ProgressionChapterStartLocalRecordQuerySortBy on QueryBuilder<
+    ProgressionChapterStartLocalRecord,
+    ProgressionChapterStartLocalRecord,
+    QSortBy> {
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterSortBy> sortByChapterId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chapterId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterSortBy> sortByChapterIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chapterId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterSortBy> sortByStartKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'startKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterSortBy> sortByStartKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'startKey', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterSortBy> sortByStartedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'startedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterSortBy> sortByStartedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'startedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterSortBy> sortByStartedAtLevel() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'startedAtLevel', Sort.asc);
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterSortBy> sortByStartedAtLevelDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'startedAtLevel', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterSortBy> sortByUserId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'userId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterSortBy> sortByUserIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'userId', Sort.desc);
+    });
+  }
+}
+
+extension ProgressionChapterStartLocalRecordQuerySortThenBy on QueryBuilder<
+    ProgressionChapterStartLocalRecord,
+    ProgressionChapterStartLocalRecord,
+    QSortThenBy> {
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterSortBy> thenByChapterId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chapterId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterSortBy> thenByChapterIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chapterId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterSortBy> thenById() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterSortBy> thenByIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterSortBy> thenByStartKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'startKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterSortBy> thenByStartKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'startKey', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterSortBy> thenByStartedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'startedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterSortBy> thenByStartedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'startedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterSortBy> thenByStartedAtLevel() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'startedAtLevel', Sort.asc);
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QAfterSortBy> thenByStartedAtLevelDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'startedAtLevel', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterSortBy> thenByUserId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'userId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QAfterSortBy> thenByUserIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'userId', Sort.desc);
+    });
+  }
+}
+
+extension ProgressionChapterStartLocalRecordQueryWhereDistinct on QueryBuilder<
+    ProgressionChapterStartLocalRecord,
+    ProgressionChapterStartLocalRecord,
+    QDistinct> {
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QDistinct> distinctByChapterId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'chapterId', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QDistinct> distinctByStartKey({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'startKey', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord, QDistinct> distinctByStartedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'startedAt');
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QDistinct> distinctByStartedAtLevel() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'startedAtLevel');
+    });
+  }
+
+  QueryBuilder<
+      ProgressionChapterStartLocalRecord,
+      ProgressionChapterStartLocalRecord,
+      QDistinct> distinctByUserId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'userId', caseSensitive: caseSensitive);
+    });
+  }
+}
+
+extension ProgressionChapterStartLocalRecordQueryProperty on QueryBuilder<
+    ProgressionChapterStartLocalRecord,
+    ProgressionChapterStartLocalRecord,
+    QQueryProperty> {
+  QueryBuilder<ProgressionChapterStartLocalRecord, int, QQueryOperations>
+      idProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord, String, QQueryOperations>
+      chapterIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'chapterId');
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord, String, QQueryOperations>
+      startKeyProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'startKey');
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord, DateTime, QQueryOperations>
+      startedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'startedAt');
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord, int, QQueryOperations>
+      startedAtLevelProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'startedAtLevel');
+    });
+  }
+
+  QueryBuilder<ProgressionChapterStartLocalRecord, String?, QQueryOperations>
+      userIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'userId');
+    });
+  }
+}
