@@ -1,10 +1,88 @@
 import '../progression_models.dart';
 
+// Assets
 const _questAssetActivity = 'assets/ui/quests/activity.png';
 const _questAssetDoubleWin = 'assets/ui/quests/double_win.png';
 const _questAssetNutrition = 'assets/ui/quests/nutri_combo.png';
 const _questAssetSteps = 'assets/ui/quests/steps.png';
 const _questAssetStreak = 'assets/ui/quests/streak.png';
+
+// Chapter assets
+const _questAssetForestTrial = 'assets/ui/quests/chapter/icon/forest_trial.png';
+const _questAssetRuinsDiscipline = 'assets/ui/quests/chapter/icon/ruins_discipline.png';
+const _questAssetMineDescent = 'assets/ui/quests/chapter/icon/mine_descent.png';
+const _questAssetForgeMomentum = 'assets/ui/quests/chapter/icon/forge_momentum.png';
+const _questAssetUnderwayPact = 'assets/ui/quests/chapter/icon/underway_pact.png';
+const _questAssetFrostboundOath = 'assets/ui/quests/chapter/icon/frostbound_oath.png';
+const _questAssetIcewalkerRoute = 'assets/ui/quests/chapter/icon/icewalker_route.png';
+const _questAssetMountainAscent = 'assets/ui/quests/chapter/icon/mountain_ascent.png';
+const _questAssetDragonroad = 'assets/ui/quests/chapter/icon/dragonroad.png';
+const _questAssetDragonrockSovereign = 'assets/ui/quests/chapter/icon/dragonrock_sovereign.png';
+
+const _questBgForestTrial = 'assets/ui/quests/chapter/bg/forest_trial_bg.png';
+const _questBgRuinsDiscipline = 'assets/ui/quests/chapter/bg/ruins_discipline_bg.png';
+const _questBgMineDescent = 'assets/ui/quests/chapter/bg/mine_descent_bg.png';
+const _questBgForgeMomentum = 'assets/ui/quests/chapter/bg/forge_momentum_bg.png';
+const _questBgUnderwayPact = 'assets/ui/quests/chapter/bg/underway_pact_bg.png';
+const _questBgFrostboundOath = 'assets/ui/quests/chapter/bg/frostbound_oath_bg.png';
+const _questBgIcewalkerRoute = 'assets/ui/quests/chapter/bg/icewalker_route_bg.png';
+const _questBgMountainAscent = 'assets/ui/quests/chapter/bg/mountain_ascent_bg.png';
+const _questBgDragonroad = 'assets/ui/quests/chapter/bg/dragonroad_bg.png';
+const _questBgDragonrockSovereign = 'assets/ui/quests/chapter/bg/dragonrock_sovereign_bg.png';
+
+String chapterBgKey(String id) {
+  switch (id) {
+    case 'forest_trial':
+      return _questBgForestTrial;
+    case 'ruins_discipline':
+      return _questBgRuinsDiscipline;
+    case 'mine_descent':
+      return _questBgMineDescent;
+    case 'forge_momentum':
+      return _questBgForgeMomentum;
+    case 'underway_pact':
+      return _questBgUnderwayPact;
+    case 'frostbound_oath':
+      return _questBgFrostboundOath;
+    case 'icewalker_route':
+      return _questBgIcewalkerRoute;
+    case 'mountain_ascent':
+      return _questBgMountainAscent;
+    case 'dragonroad':
+      return _questBgDragonroad;
+    case 'dragonrock_sovereign':
+      return _questBgDragonrockSovereign;
+    default:
+      return '';
+  }
+}
+
+String _chapterAssetKey(String id) {
+  switch (id) {
+    case 'forest_trial':
+      return _questAssetForestTrial;
+    case 'ruins_discipline':
+      return _questAssetRuinsDiscipline;
+    case 'mine_descent':
+      return _questAssetMineDescent;
+    case 'forge_momentum':
+      return _questAssetForgeMomentum;
+    case 'underway_pact':
+      return _questAssetUnderwayPact;
+    case 'frostbound_oath':
+      return _questAssetFrostboundOath;
+    case 'icewalker_route':
+      return _questAssetIcewalkerRoute;
+    case 'mountain_ascent':
+      return _questAssetMountainAscent;
+    case 'dragonroad':
+      return _questAssetDragonroad;
+    case 'dragonrock_sovereign':
+      return _questAssetDragonrockSovereign;
+    default:
+      return _questAssetActivity;
+  }
+}
 
 class ProgressionQuestCatalog {
   const ProgressionQuestCatalog();
@@ -1098,8 +1176,7 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           id: 'forest_trial_daily_wins_5',
           title: (l10n) => l10n.progQuestForestTrialDailyWins5Title,
           description: (l10n) => l10n.progQuestForestTrialDailyWins5Desc,
-          criterionType:
-              ProgressionQuestCriterionType.ruleSetCompletionsAtLeast,
+          criterionType: ProgressionQuestCriterionType.ruleSetCompletionsAtLeast,
           targetValue: 5,
           requiredRuleCount: 2,
           periodKind: ProgressionPeriodKind.day,
@@ -1109,7 +1186,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
             'daily_protein',
             'daily_sleep',
           ],
-          assetKey: _questAssetDoubleWin,
           visualDomain: ProgressionDomain.activity,
           chainStepLabel: (l10n) => '5',
         ),
@@ -1121,7 +1197,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           targetValue: 5,
           ruleId: 'daily_steps',
           periodKind: ProgressionPeriodKind.day,
-          assetKey: _questAssetSteps,
           visualDomain: ProgressionDomain.steps,
           chainStepLabel: (l10n) => '5',
         ),
@@ -1129,13 +1204,11 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           id: 'forest_trial_recovery_3',
           title: (l10n) => l10n.progQuestForestTrialRecovery3Title,
           description: (l10n) => l10n.progQuestForestTrialRecovery3Desc,
-          criterionType:
-              ProgressionQuestCriterionType.ruleSetCompletionsAtLeast,
+          criterionType: ProgressionQuestCriterionType.ruleSetCompletionsAtLeast,
           targetValue: 3,
           requiredRuleCount: 2,
           periodKind: ProgressionPeriodKind.day,
           relatedRuleIds: const ['daily_steps', 'daily_sleep'],
-          assetKey: _questAssetStreak,
           visualDomain: ProgressionDomain.sleep,
           chainStepLabel: (l10n) => '3',
         ),
@@ -1156,13 +1229,11 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           id: 'ruins_discipline_nutrition_7',
           title: (l10n) => l10n.progQuestRuinsDisciplineNutrition7Title,
           description: (l10n) => l10n.progQuestRuinsDisciplineNutrition7Desc,
-          criterionType:
-              ProgressionQuestCriterionType.ruleSetCompletionsAtLeast,
+          criterionType: ProgressionQuestCriterionType.ruleSetCompletionsAtLeast,
           targetValue: 7,
           requiredRuleCount: 2,
           periodKind: ProgressionPeriodKind.day,
           relatedRuleIds: const ['daily_calories', 'daily_protein'],
-          assetKey: _questAssetNutrition,
           visualDomain: ProgressionDomain.nutrition,
           chainStepLabel: (l10n) => '7',
         ),
@@ -1174,7 +1245,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           targetValue: 2,
           ruleId: 'weekly_activity',
           periodKind: ProgressionPeriodKind.week,
-          assetKey: _questAssetActivity,
           visualDomain: ProgressionDomain.activity,
           chainStepLabel: (l10n) => '2',
         ),
@@ -1186,7 +1256,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           targetValue: 10,
           ruleId: 'daily_steps',
           periodKind: ProgressionPeriodKind.day,
-          assetKey: _questAssetSteps,
           visualDomain: ProgressionDomain.steps,
           chainStepLabel: (l10n) => '10',
         ),
@@ -1211,7 +1280,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           targetValue: 250000,
           ruleId: 'daily_steps',
           periodKind: ProgressionPeriodKind.day,
-          assetKey: _questAssetSteps,
           visualDomain: ProgressionDomain.steps,
           chainStepLabel: (l10n) => '250K',
         ),
@@ -1222,7 +1290,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           criterionType: ProgressionQuestCriterionType.domainRewardCountAtLeast,
           targetValue: 12,
           domain: ProgressionDomain.activity,
-          assetKey: _questAssetActivity,
           visualDomain: ProgressionDomain.activity,
           chainStepLabel: (l10n) => '12',
         ),
@@ -1234,7 +1301,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           targetValue: 10,
           ruleId: 'daily_protein',
           periodKind: ProgressionPeriodKind.day,
-          assetKey: _questAssetNutrition,
           visualDomain: ProgressionDomain.nutrition,
           chainStepLabel: (l10n) => '10',
         ),
@@ -1259,7 +1325,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           targetValue: 4,
           ruleId: 'weekly_activity',
           periodKind: ProgressionPeriodKind.week,
-          assetKey: _questAssetActivity,
           visualDomain: ProgressionDomain.activity,
           chainStepLabel: (l10n) => '4',
         ),
@@ -1271,7 +1336,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           targetValue: 20,
           ruleId: 'daily_steps',
           periodKind: ProgressionPeriodKind.day,
-          assetKey: _questAssetSteps,
           visualDomain: ProgressionDomain.steps,
           chainStepLabel: (l10n) => '20',
         ),
@@ -1285,7 +1349,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           requiredRuleCount: 2,
           periodKind: ProgressionPeriodKind.day,
           relatedRuleIds: const ['daily_calories', 'daily_protein'],
-          assetKey: _questAssetNutrition,
           visualDomain: ProgressionDomain.nutrition,
           chainStepLabel: (l10n) => '15',
         ),
@@ -1317,7 +1380,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
             'daily_protein',
             'daily_sleep',
           ],
-          assetKey: _questAssetDoubleWin,
           visualDomain: ProgressionDomain.activity,
           chainStepLabel: (l10n) => '5',
         ),
@@ -1329,7 +1391,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           targetValue: 14,
           ruleId: 'daily_sleep',
           periodKind: ProgressionPeriodKind.day,
-          assetKey: _questAssetStreak,
           visualDomain: ProgressionDomain.sleep,
           chainStepLabel: (l10n) => '14',
         ),
@@ -1343,7 +1404,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           requiredRuleCount: 2,
           periodKind: ProgressionPeriodKind.day,
           relatedRuleIds: const ['daily_steps', 'daily_sleep'],
-          assetKey: _questAssetStreak,
           visualDomain: ProgressionDomain.sleep,
           chainStepLabel: (l10n) => '10',
         ),
@@ -1368,7 +1428,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           targetValue: 21,
           ruleId: 'daily_steps',
           periodKind: ProgressionPeriodKind.day,
-          assetKey: _questAssetSteps,
           visualDomain: ProgressionDomain.steps,
           chainStepLabel: (l10n) => '21',
         ),
@@ -1380,7 +1439,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           targetValue: 21,
           ruleId: 'daily_sleep',
           periodKind: ProgressionPeriodKind.day,
-          assetKey: _questAssetStreak,
           visualDomain: ProgressionDomain.sleep,
           chainStepLabel: (l10n) => '21',
         ),
@@ -1392,7 +1450,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           targetValue: 6,
           ruleId: 'weekly_activity',
           periodKind: ProgressionPeriodKind.week,
-          assetKey: _questAssetActivity,
           visualDomain: ProgressionDomain.activity,
           chainStepLabel: (l10n) => '6',
         ),
@@ -1417,7 +1474,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           targetValue: 500000,
           ruleId: 'daily_steps',
           periodKind: ProgressionPeriodKind.day,
-          assetKey: _questAssetSteps,
           visualDomain: ProgressionDomain.steps,
           chainStepLabel: (l10n) => '500K',
         ),
@@ -1427,7 +1483,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           description: (l10n) => l10n.progQuestIcewalkerRouteRewards150Desc,
           criterionType: ProgressionQuestCriterionType.rewardCountAtLeast,
           targetValue: 150,
-          assetKey: _questAssetActivity,
           visualDomain: ProgressionDomain.activity,
           chainStepLabel: (l10n) => '150',
         ),
@@ -1439,7 +1494,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           targetValue: 30,
           ruleId: 'daily_protein',
           periodKind: ProgressionPeriodKind.day,
-          assetKey: _questAssetNutrition,
           visualDomain: ProgressionDomain.nutrition,
           chainStepLabel: (l10n) => '30',
         ),
@@ -1471,7 +1525,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
             'daily_protein',
             'daily_sleep',
           ],
-          assetKey: _questAssetDoubleWin,
           visualDomain: ProgressionDomain.activity,
           chainStepLabel: (l10n) => '15',
         ),
@@ -1483,7 +1536,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           targetValue: 30,
           ruleId: 'daily_steps',
           periodKind: ProgressionPeriodKind.day,
-          assetKey: _questAssetSteps,
           visualDomain: ProgressionDomain.steps,
           chainStepLabel: (l10n) => '30',
         ),
@@ -1495,7 +1547,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           targetValue: 10,
           ruleId: 'weekly_activity',
           periodKind: ProgressionPeriodKind.week,
-          assetKey: _questAssetActivity,
           visualDomain: ProgressionDomain.activity,
           chainStepLabel: (l10n) => '10',
         ),
@@ -1518,7 +1569,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           description: (l10n) => l10n.progQuestDragonroadRewards250Desc,
           criterionType: ProgressionQuestCriterionType.rewardCountAtLeast,
           targetValue: 250,
-          assetKey: _questAssetActivity,
           visualDomain: ProgressionDomain.activity,
           chainStepLabel: (l10n) => '250',
         ),
@@ -1537,7 +1587,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
             'daily_protein',
             'daily_sleep',
           ],
-          assetKey: _questAssetDoubleWin,
           visualDomain: ProgressionDomain.activity,
           chainStepLabel: (l10n) => '25',
         ),
@@ -1549,7 +1598,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           targetValue: 12,
           ruleId: 'weekly_activity',
           periodKind: ProgressionPeriodKind.week,
-          assetKey: _questAssetActivity,
           visualDomain: ProgressionDomain.activity,
           chainStepLabel: (l10n) => '12',
         ),
@@ -1582,7 +1630,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
             'daily_protein',
             'daily_sleep',
           ],
-          assetKey: _questAssetDoubleWin,
           visualDomain: ProgressionDomain.activity,
           chainStepLabel: (l10n) => '30',
         ),
@@ -1594,7 +1641,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           targetValue: 16,
           ruleId: 'weekly_activity',
           periodKind: ProgressionPeriodKind.week,
-          assetKey: _questAssetActivity,
           visualDomain: ProgressionDomain.activity,
           chainStepLabel: (l10n) => '16',
         ),
@@ -1606,7 +1652,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           targetValue: 50,
           ruleId: 'daily_steps',
           periodKind: ProgressionPeriodKind.day,
-          assetKey: _questAssetSteps,
           visualDomain: ProgressionDomain.steps,
           chainStepLabel: (l10n) => '50',
         ),
@@ -1618,7 +1663,6 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
     for (final spec in specs) ...spec.build(),
   ];
 }
-
 class _JourneyChapterSpec {
   const _JourneyChapterSpec({
     required this.id,
@@ -1648,6 +1692,7 @@ class _JourneyChapterSpec {
     final openId = '${id}_open';
     final finaleId = '${id}_finale';
     final stepIds = [for (final step in steps) step.id];
+    final chapterAssetKey = _chapterAssetKey(id);
 
     return [
       ProgressionQuestDefinition(
@@ -1662,7 +1707,7 @@ class _JourneyChapterSpec {
         minimumLevel: level,
         sortOrder: sortOrder,
         priority: 86,
-        assetKey: _questAssetActivity,
+        assetKey: chapterAssetKey,
         visualDomain: ProgressionDomain.activity,
         sourceLabel: sourceLabel,
         chainId: id,
@@ -1682,6 +1727,7 @@ class _JourneyChapterSpec {
           prerequisiteQuestId: index == 0 ? openId : steps[index - 1].id,
           nextQuestId:
               index == steps.length - 1 ? finaleId : steps[index + 1].id,
+          chapterAssetKey: chapterAssetKey,
         ),
       ProgressionQuestDefinition(
         id: finaleId,
@@ -1695,7 +1741,7 @@ class _JourneyChapterSpec {
         prerequisiteQuestIds: stepIds,
         sortOrder: sortOrder + 4,
         priority: 82,
-        assetKey: _questAssetActivity,
+        assetKey: chapterAssetKey,
         visualDomain: ProgressionDomain.activity,
         sourceLabel: sourceLabel,
         chainId: id,
@@ -1716,7 +1762,6 @@ class _JourneyChapterStepSpec {
     required this.description,
     required this.criterionType,
     required this.targetValue,
-    required this.assetKey,
     required this.visualDomain,
     required this.chainStepLabel,
     this.ruleId,
@@ -1731,7 +1776,6 @@ class _JourneyChapterStepSpec {
   final ProgressionLocalizedText description;
   final ProgressionQuestCriterionType criterionType;
   final int targetValue;
-  final String assetKey;
   final ProgressionDomain visualDomain;
   final ProgressionLocalizedText chainStepLabel;
   final String? ruleId;
@@ -1747,6 +1791,7 @@ class _JourneyChapterStepSpec {
     required int sortOrder,
     required String prerequisiteQuestId,
     required String nextQuestId,
+    required String chapterAssetKey,
   }) {
     return ProgressionQuestDefinition(
       id: id,
@@ -1765,7 +1810,7 @@ class _JourneyChapterStepSpec {
       prerequisiteQuestIds: [prerequisiteQuestId],
       sortOrder: sortOrder,
       priority: 84,
-      assetKey: assetKey,
+      assetKey: chapterAssetKey,
       visualDomain: visualDomain,
       sourceLabel: sourceLabel,
       chainId: chapterId,
