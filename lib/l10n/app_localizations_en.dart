@@ -1121,36 +1121,78 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progRuleDailySteps => 'Daily Steps';
 
   @override
+  String get progRuleDailyStepsDesc =>
+      'Reach the configured daily steps target.';
+
+  @override
   String get progRuleDailyCalories => 'Calorie Target';
+
+  @override
+  String get progRuleDailyCaloriesDesc =>
+      'Stay within the default 10% calorie target window.';
 
   @override
   String get progRuleDailyProtein => 'Protein Target';
 
   @override
+  String get progRuleDailyProteinDesc =>
+      'Reach the configured daily protein target.';
+
+  @override
   String get progRuleDailyCarbs => 'Carb Target';
+
+  @override
+  String get progRuleDailyCarbsDesc =>
+      'Reach the configured daily carbohydrate target.';
 
   @override
   String get progRuleDailyFat => 'Fat Target';
 
   @override
+  String get progRuleDailyFatDesc => 'Reach the configured daily fat target.';
+
+  @override
   String get progRuleDailyFiber => 'Fiber Target';
+
+  @override
+  String get progRuleDailyFiberDesc =>
+      'Reach the configured daily fiber target.';
 
   @override
   String get progRuleDailySleep => 'Sleep Target';
 
   @override
+  String get progRuleDailySleepDesc =>
+      'Reach the configured nightly sleep duration target.';
+
+  @override
   String get progRuleWeeklyActivity => 'Weekly Activity';
+
+  @override
+  String get progRuleWeeklyActivityDesc =>
+      'Accumulate the configured weekly activity minutes.';
 
   @override
   String get progRuleDailyWeightLog => 'Weight Log';
 
   @override
+  String get progRuleDailyWeightLogDesc =>
+      'Log your weight at least once today.';
+
+  @override
   String get progRuleDailyWeightGoal => 'Weight Goal';
+
+  @override
+  String get progRuleDailyWeightGoalDesc =>
+      'Log a weight within 3% of your target weight.';
 
   @override
   String progRewardDetailWeightLogged(String actual) {
     return 'Logged: $actual kg';
   }
+
+  @override
+  String get progQuestFallbackTitle => 'Quest';
 
   @override
   String get progQuestEarnFirstRewardTitle => 'Earn First Reward';
@@ -1776,36 +1818,127 @@ class AppLocalizationsEn extends AppLocalizations {
       'Start Icewalker’s Route after reaching level 70.';
 
   @override
+  String get progQuestIcewalkerRouteSteps500kTitle => 'Across White Plains';
+
+  @override
   String get progQuestIcewalkerRouteSteps500kDesc =>
       'On Icewalker’s Route, walk 500,000 steps.';
+
+  @override
+  String get progQuestIcewalkerRouteRewards150Title => 'Traces in Ice';
 
   @override
   String get progQuestIcewalkerRouteRewards150Desc =>
       'On Icewalker’s Route, claim 150 rewards.';
 
   @override
+  String get progQuestIcewalkerRouteProtein30Title => 'Winter Rations';
+
+  @override
   String get progQuestIcewalkerRouteProtein30Desc =>
       'On Icewalker’s Route, complete your protein goal 30 times.';
+
+  @override
+  String get progQuestIcewalkerRouteFinaleTitle => 'Ice Seal';
 
   @override
   String get progQuestIcewalkerRouteFinaleDesc =>
       'Complete the previous Icewalker’s Route quests.';
 
   @override
+  String get progQuestMountainAscentOpenTitle => 'Mountain Ascent';
+
+  @override
+  String get progQuestMountainAscentOpenDesc =>
+      'Start the Mountain Ascent after reaching level 80.';
+
+  @override
+  String get progQuestMountainAscentFourPillars15Title =>
+      'Camp Above the Clouds';
+
+  @override
+  String get progQuestMountainAscentFourPillars15Desc =>
+      'Above the clouds, complete all 4 daily goals 15 times.';
+
+  @override
+  String get progQuestMountainAscentSteps30Title => 'Unbroken Ascent';
+
+  @override
   String get progQuestMountainAscentSteps30Desc =>
       'During the Mountain Ascent, complete your step goal 30 times.';
+
+  @override
+  String get progQuestMountainAscentWeekly10Title => 'Summit Routine';
+
+  @override
+  String get progQuestMountainAscentWeekly10Desc =>
+      'During the Mountain Ascent, complete the weekly activity goal 10 times.';
+
+  @override
+  String get progQuestMountainAscentFinaleTitle => 'Summit Seal';
+
+  @override
+  String get progQuestMountainAscentFinaleDesc =>
+      'Complete the previous Mountain Ascent quests.';
+
+  @override
+  String get progQuestDragonroadOpenTitle => 'Dragonroad';
+
+  @override
+  String get progQuestDragonroadOpenDesc =>
+      'Unlock the Dragonroad by reaching level 90.';
+
+  @override
+  String get progQuestDragonroadRewards250Title => 'Scales of Effort';
+
+  @override
+  String get progQuestDragonroadRewards250Desc =>
+      'During the Dragonroad, earn 250 rewards.';
+
+  @override
+  String get progQuestDragonroadFourPillars25Title => 'Dragon Discipline';
+
+  @override
+  String get progQuestDragonroadFourPillars25Desc =>
+      'During the Dragonroad, complete all 4 daily goals 25 times.';
+
+  @override
+  String get progQuestDragonroadWeekly12Title => 'Path to the Fortress';
+
+  @override
+  String get progQuestDragonroadWeekly12Desc =>
+      'During the Dragonroad, complete the weekly activity goal 12 times.';
+
+  @override
+  String get progQuestDragonroadFinaleTitle => 'Dragon Seal';
+
+  @override
+  String get progQuestDragonroadFinaleDesc =>
+      'Complete the previous Dragonroad quests.';
+
+  @override
+  String get progQuestDragonrockSovereignOpenTitle => 'Dragonrock Sovereign';
 
   @override
   String get progQuestDragonrockSovereignOpenDesc =>
       'Claim Dragonrock sovereignty after reaching level 100.';
 
   @override
+  String get progQuestDragonrockSovereignFourPillars30Title => 'Rule of Four';
+
+  @override
   String get progQuestDragonrockSovereignFourPillars30Desc =>
       'Within Dragonrock Fortress, complete all 4 daily goals 30 times.';
 
   @override
+  String get progQuestDragonrockSovereignWeekly16Title => 'Fortress Routine';
+
+  @override
   String get progQuestDragonrockSovereignWeekly16Desc =>
       'Within Dragonrock Fortress, complete the weekly activity goal 16 times.';
+
+  @override
+  String get progQuestDragonrockSovereignSteps50Title => 'Royal March';
 
   @override
   String get progQuestDragonrockSovereignSteps50Desc =>
@@ -2574,6 +2707,93 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cosmeticBackgroundDevOnlyDesc =>
       'Developer-only background. Grant via DevTools.';
+
+  @override
+  String get dialogClose => 'Close';
+
+  @override
+  String get devGrant => 'Grant';
+
+  @override
+  String get devRevoke => 'Revoke';
+
+  @override
+  String get cosmeticEquip => 'Equip';
+
+  @override
+  String get cosmeticUnequip => 'Unequip';
+
+  @override
+  String get cosmeticNoAsset => 'NO ASSET';
+
+  @override
+  String get cosmeticRequirementsHeader => 'REQUIREMENTS';
+
+  @override
+  String get listOrSeparator => '— or —';
+
+  @override
+  String get debugDetailsHeader => 'DEBUG DETAILS';
+
+  @override
+  String get debugRowId => 'id';
+
+  @override
+  String get debugRowType => 'type';
+
+  @override
+  String get debugRowRarity => 'rarity';
+
+  @override
+  String get debugRowRegion => 'region';
+
+  @override
+  String get debugRowAssetKey => 'assetKey';
+
+  @override
+  String get debugRowPreviewAssetKey => 'previewAssetKey';
+
+  @override
+  String get debugRowSortOrder => 'sortOrder';
+
+  @override
+  String get debugRowIsPremium => 'isPremium';
+
+  @override
+  String get debugRowIsEnabled => 'isEnabled';
+
+  @override
+  String get debugRowMetadata => 'metadata';
+
+  @override
+  String get debugRowUnlockedAt => 'unlockedAt';
+
+  @override
+  String get debugRowSourceType => 'sourceType';
+
+  @override
+  String get debugRowSourceId => 'sourceId';
+
+  @override
+  String get debugMissing => '— missing';
+
+  @override
+  String ruleSource(String type, String id) {
+    return 'source: $type / $id';
+  }
+
+  @override
+  String get cosmeticUnlockConditionsHeader => 'UNLOCK CONDITIONS';
+
+  @override
+  String copiedToClipboard(String value) {
+    return 'Copied: $value';
+  }
+
+  @override
+  String cosmeticUnlockedAt(String date) {
+    return 'Unlocked $date';
+  }
 
   @override
   String get cosmeticBackgroundForestTrailName => 'Forest Trail';

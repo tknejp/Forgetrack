@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:forgetrack/shared/theme/design_tokens.dart';
 
-import '../../domain/progression_level_config.dart';
-import '../../domain/progression_models.dart';
+import '../../domain/policy/level_config.dart';
 
 @immutable
 class ProgressionLevelBadgeStyle {
@@ -27,20 +25,8 @@ ProgressionLevelBadgeStyle progressionLevelBadgeStyle(int level) {
   );
 }
 
-Color progressionLevelAccent(int level) {
-  switch (tierForLevel(level).difficulty) {
-    case ProgressionAchievementDifficulty.easy:
-      return Tokens.difficultyEasy;
-    case ProgressionAchievementDifficulty.medium:
-      return Tokens.difficultyMedium;
-    case ProgressionAchievementDifficulty.hard:
-      return Tokens.difficultyHard;
-    case ProgressionAchievementDifficulty.extraHard:
-      return Tokens.difficultyExtraHard;
-    case ProgressionAchievementDifficulty.mythic:
-      return Tokens.difficultyMythic;
-  }
-}
+Color progressionLevelAccent(int level) =>
+    tierForLevel(level).difficulty.color;
 
 class ProgressionLevelBadge extends StatelessWidget {
   const ProgressionLevelBadge({

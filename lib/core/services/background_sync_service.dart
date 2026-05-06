@@ -21,7 +21,6 @@ import '../../features/progression/application/progression_engine.dart';
 import '../../features/progression/data/local/progression_database.dart';
 import '../../features/progression/data/progression_repository_impl.dart';
 import '../../features/progression/data/provider_progression_source.dart';
-import '../../features/progression/presentation/progression_l10n.dart';
 import '../../firebase_options.dart';
 import '../../l10n/app_localizations.dart';
 import '../../features/health_connect/application/goals_provider.dart';
@@ -161,9 +160,6 @@ void backgroundSyncCallback() {
       final l10n = await AppLocalizations.delegate.load(
         Locale(langCode),
       );
-
-      final progressionL10n = ProgressionL10n(l10n);
-
       // ── Notifikace: nové questy ───────────────────────────────────────────
       final newGrants = stateAfter.questRewardGrants
           .where((g) => !prevGrantKeys.contains(g.rewardKey))
@@ -176,8 +172,9 @@ void backgroundSyncCallback() {
         final quest =
             stateAfter.quests.where((q) => q.id == grant.questId).firstOrNull;
 
-        final title =
-            quest != null ? progressionL10n.questTitle(quest) : 'Quest';
+        final title = quest != null
+            ? quest.title(l10n)
+            : l10n.progQuestFallbackTitle;
 
         await NotificationService.instance.showQuestCompleted(
           title,
@@ -196,8 +193,8 @@ void backgroundSyncCallback() {
         final achievement = newAchievements[i];
 
         await NotificationService.instance.showAchievementUnlocked(
-          progressionL10n.achievementTitle(achievement),
-          progressionL10n.achievementDescription(achievement),
+          achievement.title(l10n),
+          achievement.description(l10n),
           index: i,
         );
       }

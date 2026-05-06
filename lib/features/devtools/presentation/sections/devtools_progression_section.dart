@@ -5,9 +5,8 @@ import 'package:provider/provider.dart';
 import '../../../../features/cosmetics/application/cosmetics_provider.dart';
 import '../../../../features/cosmetics/domain/cosmetic_models.dart';
 import '../../../../features/progression/application/progression_provider.dart';
-import '../../../../features/progression/domain/progression_level_config.dart';
-import '../../../../features/progression/domain/progression_level_policy.dart';
-import '../../../../features/progression/presentation/progression_l10n.dart';
+import '../../../progression/domain/policy/level_config.dart';
+import '../../../progression/domain/policy/level_policy.dart';
 import '../../../../l10n/l10n.dart';
 import '../widgets/devtools_action_tile.dart';
 import '../widgets/devtools_section_card.dart';
@@ -44,22 +43,19 @@ class _DevToolsProgressionSectionState
     final cosmetics = context.watch<CosmeticsProvider>();
     final cs = Theme.of(context).colorScheme;
 
-    final progL10n = ProgressionL10n(context.l10n);
     final progressionInventoryCount = cosmetics.state?.unlocked.values
             .where((unlock) => _isProgressionCosmeticSource(unlock.sourceType))
             .length ??
         0;
-    final isBusy = p.isRefreshing ||
-        _isRefreshing ||
-        _isApplyingOverride ||
-        _isResetting;
+    final isBusy =
+        p.isRefreshing || _isRefreshing || _isApplyingOverride || _isResetting;
     return DevToolsSectionCard(
       title: 'Progression / RPG', // TODO: l10n
       children: [
         DevToolsStatusTile(
           label: 'Level',
           value:
-              '${p.profile.level}  (${progL10n.levelTitle(p.profile.level)})',
+              '${p.profile.level}  (${tierForLevel(p.profile.level).title(context.l10n)})',
         ),
         const DevToolsSectionDivider(),
         DevToolsStatusTile(
@@ -202,7 +198,6 @@ class _DevToolsProgressionSectionState
       if (mounted) setState(() => _isResetting = false);
     }
   }
-
 }
 
 bool _isProgressionCosmeticSource(String? sourceType) {

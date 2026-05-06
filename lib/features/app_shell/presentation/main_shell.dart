@@ -24,8 +24,8 @@ import '../../../l10n/l10n.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../../../shared/theme/design_tokens.dart';
 import '../../home/presentation/overview_screen.dart';
-import '../../progression/presentation/progression_screen.dart';
-import '../../progression/presentation/quests_screen.dart';
+import '../../progression/presentation/hero/hero_screen.dart';
+import '../../progression/presentation/quests/quests_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -166,7 +166,7 @@ class _FtMainShellState extends State<MainShell> {
         outerController: _pageController,
         topContentInset: _topChromeHeight,
       ),
-      ProgressionScreen(
+      HeroScreen(
         barKey: _progressionBarKey,
         outerController: _pageController,
         topContentInset: _topChromeHeight,

@@ -5,7 +5,7 @@ import '../../../../features/health_connect/application/fitness_provider.dart';
 import '../../../../features/health_connect/application/goals_provider.dart';
 import '../../../../features/nutrition/application/kaloricke_tabulky_provider.dart';
 import '../../../../features/progression/application/progression_provider.dart';
-import '../../../../features/progression/presentation/progression_l10n.dart';
+import '../../../progression/domain/policy/level_config.dart';
 import '../../../../features/social/application/social_provider.dart';
 import '../../../../l10n/l10n.dart';
 import '../widgets/devtools_section_card.dart';
@@ -61,23 +61,34 @@ class _FitnessCard extends StatelessWidget {
     return DevToolsSectionCard(
       title: 'Health Connect', // TODO: l10n
       children: [
-        DevToolsStatusTile(label: 'Access state', value: accessLabel, valueColor: accessColor),
+        DevToolsStatusTile(
+            label: 'Access state', value: accessLabel, valueColor: accessColor),
         const DevToolsSectionDivider(),
-        DevToolsStatusTile(label: 'HC available', value: f.isHealthConnectAvailable ? 'yes' : 'no'),
+        DevToolsStatusTile(
+            label: 'HC available',
+            value: f.isHealthConnectAvailable ? 'yes' : 'no'),
         const DevToolsSectionDivider(),
-        DevToolsStatusTile(label: 'Permissions', value: f.hasPermissions ? 'granted' : 'no'),
+        DevToolsStatusTile(
+            label: 'Permissions', value: f.hasPermissions ? 'granted' : 'no'),
         const DevToolsSectionDivider(),
-        DevToolsStatusTile(label: 'Initialized', value: f.hasInitialized ? 'yes' : 'no'),
+        DevToolsStatusTile(
+            label: 'Initialized', value: f.hasInitialized ? 'yes' : 'no'),
         const DevToolsSectionDivider(),
-        DevToolsStatusTile(label: 'Loading / refreshing', value: '${f.isLoading} / ${f.isRefreshing}'),
+        DevToolsStatusTile(
+            label: 'Loading / refreshing',
+            value: '${f.isLoading} / ${f.isRefreshing}'),
         const DevToolsSectionDivider(),
         DevToolsStatusTile(label: 'Last synced', value: _fmt(f.lastSyncedAt)),
         const DevToolsSectionDivider(),
-        DevToolsStatusTile(label: 'Today steps', value: '${f.todaySteps}',
-            valueColor: f.todaySteps == 0 ? cs.error.withValues(alpha: 0.7) : null),
+        DevToolsStatusTile(
+            label: 'Today steps',
+            value: '${f.todaySteps}',
+            valueColor:
+                f.todaySteps == 0 ? cs.error.withValues(alpha: 0.7) : null),
         if (f.errorMessage != null) ...[
           const DevToolsSectionDivider(),
-          DevToolsStatusTile(label: 'Error', value: f.errorMessage!, valueColor: cs.error),
+          DevToolsStatusTile(
+              label: 'Error', value: f.errorMessage!, valueColor: cs.error),
         ],
       ],
     );
@@ -98,26 +109,38 @@ class _KtCard extends StatelessWidget {
         DevToolsStatusTile(
           label: 'Logged in',
           value: kt.isLoggedIn ? (kt.loggedInEmail ?? 'yes') : 'no',
-          valueColor: kt.isLoggedIn ? Colors.greenAccent.shade400 : cs.error.withValues(alpha: 0.7),
+          valueColor: kt.isLoggedIn
+              ? Colors.greenAccent.shade400
+              : cs.error.withValues(alpha: 0.7),
         ),
         const DevToolsSectionDivider(),
-        DevToolsStatusTile(label: 'Initializing / loading / refreshing',
-            value: '${kt.isInitializing} / ${kt.isLoading} / ${kt.isRefreshing}'),
+        DevToolsStatusTile(
+            label: 'Initializing / loading / refreshing',
+            value:
+                '${kt.isInitializing} / ${kt.isLoading} / ${kt.isRefreshing}'),
         const DevToolsSectionDivider(),
         DevToolsStatusTile(label: 'Last synced', value: _fmt(kt.lastSyncedAt)),
         const DevToolsSectionDivider(),
-        DevToolsStatusTile(label: 'Has today data', value: kt.hasTodayData ? 'yes' : 'no',
-            valueColor: kt.hasTodayData ? Colors.greenAccent.shade400 : cs.error.withValues(alpha: 0.7)),
+        DevToolsStatusTile(
+            label: 'Has today data',
+            value: kt.hasTodayData ? 'yes' : 'no',
+            valueColor: kt.hasTodayData
+                ? Colors.greenAccent.shade400
+                : cs.error.withValues(alpha: 0.7)),
         const DevToolsSectionDivider(),
-        DevToolsStatusTile(label: 'Today kcal / protein',
-            value: '${kt.todayCalories.toStringAsFixed(0)} kcal / ${kt.todayProtein.toStringAsFixed(0)} g'),
+        DevToolsStatusTile(
+            label: 'Today kcal / protein',
+            value:
+                '${kt.todayCalories.toStringAsFixed(0)} kcal / ${kt.todayProtein.toStringAsFixed(0)} g'),
         if (kt.authError != null) ...[
           const DevToolsSectionDivider(),
-          DevToolsStatusTile(label: 'Auth error', value: kt.authError!, valueColor: cs.error),
+          DevToolsStatusTile(
+              label: 'Auth error', value: kt.authError!, valueColor: cs.error),
         ],
         if (kt.syncError != null) ...[
           const DevToolsSectionDivider(),
-          DevToolsStatusTile(label: 'Sync error', value: kt.syncError!, valueColor: cs.error),
+          DevToolsStatusTile(
+              label: 'Sync error', value: kt.syncError!, valueColor: cs.error),
         ],
       ],
     );
@@ -135,25 +158,34 @@ class _ProgressionCard extends StatelessWidget {
     return DevToolsSectionCard(
       title: 'Progression', // TODO: l10n
       children: [
-        DevToolsStatusTile(label: 'Loading / refreshing', value: '${p.isLoading} / ${p.isRefreshing}'),
+        DevToolsStatusTile(
+            label: 'Loading / refreshing',
+            value: '${p.isLoading} / ${p.isRefreshing}'),
         const DevToolsSectionDivider(),
-        DevToolsStatusTile(label: 'Last evaluated', value: _fmt(p.lastEvaluatedAt)),
+        DevToolsStatusTile(
+            label: 'Last evaluated', value: _fmt(p.lastEvaluatedAt)),
         const DevToolsSectionDivider(),
-        DevToolsStatusTile(label: 'Level / total XP',
+        DevToolsStatusTile(
+            label: 'Level / total XP',
             value: '${p.profile.level} / ${p.profile.totalXp} XP'),
         const DevToolsSectionDivider(),
         DevToolsStatusTile(
             label: 'Level title',
-            value: ProgressionL10n(context.l10n).levelTitle(p.profile.level)),
+            value: tierForLevel(p.profile.level).title(context.l10n)),
         const DevToolsSectionDivider(),
-        DevToolsStatusTile(label: 'Quests (total / completed)',
+        DevToolsStatusTile(
+            label: 'Quests (total / completed)',
             value: '${p.quests.length} / ${p.completedQuests.length}'),
         const DevToolsSectionDivider(),
-        DevToolsStatusTile(label: 'Pending rewards', value: '${p.pendingRewards.length}',
-            valueColor: p.pendingRewards.isNotEmpty ? Colors.orangeAccent : null),
+        DevToolsStatusTile(
+            label: 'Pending rewards',
+            value: '${p.pendingRewards.length}',
+            valueColor:
+                p.pendingRewards.isNotEmpty ? Colors.orangeAccent : null),
         if (p.error != null) ...[
           const DevToolsSectionDivider(),
-          DevToolsStatusTile(label: 'Error', value: p.error!, valueColor: cs.error),
+          DevToolsStatusTile(
+              label: 'Error', value: p.error!, valueColor: cs.error),
         ],
       ],
     );
@@ -171,22 +203,30 @@ class _SocialCard extends StatelessWidget {
     return DevToolsSectionCard(
       title: 'Social', // TODO: l10n
       children: [
-        DevToolsStatusTile(label: 'Ready', value: s.isReady ? 'yes' : 'no',
+        DevToolsStatusTile(
+            label: 'Ready',
+            value: s.isReady ? 'yes' : 'no',
             valueColor: s.isReady ? Colors.greenAccent.shade400 : null),
         const DevToolsSectionDivider(),
-        DevToolsStatusTile(label: 'Backend ready', value: s.backendReady ? 'yes' : 'no'),
+        DevToolsStatusTile(
+            label: 'Backend ready', value: s.backendReady ? 'yes' : 'no'),
         const DevToolsSectionDivider(),
-        DevToolsStatusTile(label: 'Unread notifications', value: '${s.unreadNotificationCount}'),
+        DevToolsStatusTile(
+            label: 'Unread notifications',
+            value: '${s.unreadNotificationCount}'),
         const DevToolsSectionDivider(),
         DevToolsStatusTile(label: 'Friends', value: '${s.friends.length}'),
         if (s.backendMessage.isNotEmpty) ...[
           const DevToolsSectionDivider(),
-          DevToolsStatusTile(label: 'Backend message', value: s.backendMessage,
+          DevToolsStatusTile(
+              label: 'Backend message',
+              value: s.backendMessage,
               valueColor: cs.onSurfaceVariant),
         ],
         if (s.error != null) ...[
           const DevToolsSectionDivider(),
-          DevToolsStatusTile(label: 'Error', value: s.error!, valueColor: cs.error),
+          DevToolsStatusTile(
+              label: 'Error', value: s.error!, valueColor: cs.error),
         ],
       ],
     );
@@ -205,15 +245,19 @@ class _GoalsCard extends StatelessWidget {
       children: [
         DevToolsStatusTile(label: 'Daily steps', value: '${g.dailySteps}'),
         const DevToolsSectionDivider(),
-        DevToolsStatusTile(label: 'Daily calories', value: '${g.dailyCalories} kcal'),
+        DevToolsStatusTile(
+            label: 'Daily calories', value: '${g.dailyCalories} kcal'),
         const DevToolsSectionDivider(),
-        DevToolsStatusTile(label: 'Daily protein', value: '${g.dailyProtein} g'),
+        DevToolsStatusTile(
+            label: 'Daily protein', value: '${g.dailyProtein} g'),
         const DevToolsSectionDivider(),
-        DevToolsStatusTile(label: 'Target weight', value: '${g.targetWeight} kg'),
+        DevToolsStatusTile(
+            label: 'Target weight', value: '${g.targetWeight} kg'),
         const DevToolsSectionDivider(),
         DevToolsStatusTile(label: 'Sleep goal', value: '${g.sleepHours} h'),
         const DevToolsSectionDivider(),
-        DevToolsStatusTile(label: 'Weekly activity', value: '${g.weeklyActivityMins} min'),
+        DevToolsStatusTile(
+            label: 'Weekly activity', value: '${g.weeklyActivityMins} min'),
       ],
     );
   }

@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../application/progression_provider.dart';
 import '../../domain/progression_models.dart';
-import '../quest_daily_selection.dart';
+import '../quests/quest_daily_selection.dart';
 import '../../../../shared/theme/design_tokens.dart';
 
 // ── Shared scaffold ───────────────────────────────────────────────────────────

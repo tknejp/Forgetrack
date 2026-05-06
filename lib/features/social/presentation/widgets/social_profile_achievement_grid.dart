@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forgetrack/shared/presentation/achievement_badge_specs.dart';
 
 import '../../../../features/progression/domain/progression_models.dart';
-import '../../../../features/progression/presentation/progression_l10n.dart';
+import '../../../progression/domain/catalog/rule_catalog.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../../shared/widgets/tiny_pill.dart';
@@ -15,12 +15,10 @@ class FriendAchievementsGrid extends StatelessWidget {
     super.key,
     required this.achievements,
     required this.l10n,
-    required this.progL10n,
   });
 
   final List<ProgressionAchievement> achievements;
   final AppLocalizations l10n;
-  final ProgressionL10n progL10n;
 
   static const _difficultyOrder = {
     'extraHard': 0,
@@ -59,7 +57,6 @@ class FriendAchievementsGrid extends StatelessWidget {
             return _FriendAchievementTile(
               achievement: sorted[index],
               l10n: l10n,
-              progL10n: progL10n,
             );
           },
         );
@@ -72,12 +69,10 @@ class _FriendAchievementTile extends StatelessWidget {
   const _FriendAchievementTile({
     required this.achievement,
     required this.l10n,
-    required this.progL10n,
   });
 
   final ProgressionAchievement achievement;
   final AppLocalizations l10n;
-  final ProgressionL10n progL10n;
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +85,6 @@ class _FriendAchievementTile extends StatelessWidget {
         context,
         achievement: achievement,
         l10n: l10n,
-        progL10n: progL10n,
       ),
       child: Container(
         decoration: BoxDecoration(
@@ -162,7 +156,8 @@ class _FriendAchievementEmojiBadge extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.32)),
       ),
       child: Center(
-        child: Text(emoji, style: const TextStyle(fontSize: Tokens.fontSizeTitle)),
+        child:
+            Text(emoji, style: const TextStyle(fontSize: Tokens.fontSizeTitle)),
       ),
     );
   }
@@ -172,12 +167,10 @@ class _FriendAchievementDetailsSheet extends StatelessWidget {
   const _FriendAchievementDetailsSheet({
     required this.achievement,
     required this.l10n,
-    required this.progL10n,
   });
 
   final ProgressionAchievement achievement;
   final AppLocalizations l10n;
-  final ProgressionL10n progL10n;
 
   @override
   Widget build(BuildContext context) {
@@ -187,7 +180,6 @@ class _FriendAchievementDetailsSheet extends StatelessWidget {
     final summary = friendAchievementCompactSummary(
       achievement,
       l10n,
-      progL10n,
       locale,
     );
     final bottomPad = MediaQuery.of(context).padding.bottom;
@@ -230,7 +222,7 @@ class _FriendAchievementDetailsSheet extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        progL10n.achievementTitle(achievement),
+                        achievement.title(l10n),
                         style: const TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w900,
@@ -259,7 +251,7 @@ class _FriendAchievementDetailsSheet extends StatelessWidget {
             ),
             const SizedBox(height: Tokens.spaceLg),
             Text(
-              progL10n.achievementDescription(achievement),
+              achievement.description(l10n),
               style: const TextStyle(
                 fontSize: Tokens.fontSizeSmall,
                 height: 1.45,
@@ -277,12 +269,15 @@ class _FriendAchievementDetailsSheet extends StatelessWidget {
                 ),
                 if (achievement.ruleId != null)
                   TinyPill(
-                    label: progL10n.ruleTitle(achievement.ruleId!),
+                    label: ProgressionRuleCatalog.titleForId(
+                      achievement.ruleId!,
+                      l10n,
+                    ),
                     color: color.withValues(alpha: 0.88),
                   )
                 else if (achievement.domain != null)
                   TinyPill(
-                    label: progL10n.domainLabel(achievement.domain!),
+                    label: achievement.domain!.label(l10n),
                     color: color.withValues(alpha: 0.88),
                   ),
               ],
@@ -321,7 +316,6 @@ void _showFriendAchievementDetailsSheet(
   BuildContext context, {
   required ProgressionAchievement achievement,
   required AppLocalizations l10n,
-  required ProgressionL10n progL10n,
 }) {
   showModalBottomSheet<void>(
     context: context,
@@ -330,7 +324,6 @@ void _showFriendAchievementDetailsSheet(
     builder: (context) => _FriendAchievementDetailsSheet(
       achievement: achievement,
       l10n: l10n,
-      progL10n: progL10n,
     ),
   );
 }

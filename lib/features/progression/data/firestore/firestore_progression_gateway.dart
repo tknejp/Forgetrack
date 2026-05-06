@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../../domain/progression_level_policy.dart';
+import '../../domain/policy/level_policy.dart';
 import '../../domain/progression_models.dart';
 import 'progression_cloud_gateway.dart';
 import 'progression_firestore_mapper.dart';

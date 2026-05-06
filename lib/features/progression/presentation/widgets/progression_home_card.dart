@@ -7,9 +7,9 @@ import '../../../../l10n/l10n.dart';
 import '../../../../shared/widgets/ft_expand_chevron.dart';
 import '../../../../shared/widgets/progress_bar.dart';
 import '../../domain/progression_models.dart';
-import '../progression_l10n.dart';
+import '../../domain/policy/level_config.dart';
 import '../../application/progression_provider.dart';
-import '../quest_daily_selection.dart';
+import '../quests/quest_daily_selection.dart';
 import 'progression_domain_theme.dart';
 import 'progression_level_badge.dart';
 import 'progression_primitives.dart';
@@ -59,7 +59,6 @@ class _ProgressionCardState extends State<ProgressionCard> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final progL10n = ProgressionL10n(l10n);
     final progression = context.watch<ProgressionProvider>();
     final profile = progression.profile;
     final isExpanded = _isExpanded;
@@ -123,7 +122,7 @@ class _ProgressionCardState extends State<ProgressionCard> {
               children: [
                 _CompactHeader(
                   level: profile.level,
-                  levelTitle: progL10n.levelTitle(profile.level),
+                  levelTitle: tierForLevel(profile.level).title(l10n),
                   xpInto: profile.xpIntoLevel,
                   xpMax: xpSpan,
                   xpProgress: xpProgress,
@@ -161,7 +160,6 @@ class _ProgressionCardState extends State<ProgressionCard> {
                           best: best,
                           previewQuests: previewQuests,
                           l10n: l10n,
-                          progL10n: progL10n,
                           onOpen: widget.onOpen,
                         )
                       : Padding(
@@ -170,7 +168,6 @@ class _ProgressionCardState extends State<ProgressionCard> {
                           child: _HighlightPills(
                             currentStreak: current,
                             unlockedCount: unlockedCount,
-                            progL10n: progL10n,
                             achievementsLabel: l10n.progBadgeAchievements,
                           ),
                         ),
@@ -195,7 +192,6 @@ class _ExpandedProgressionBody extends StatelessWidget {
     required this.best,
     required this.previewQuests,
     required this.l10n,
-    required this.progL10n,
     required this.onOpen,
   });
 
@@ -207,7 +203,6 @@ class _ExpandedProgressionBody extends StatelessWidget {
   final _DomainStreak? best;
   final List<ProgressionQuest> previewQuests;
   final dynamic l10n;
-  final ProgressionL10n progL10n;
   final VoidCallback? onOpen;
 
   @override
@@ -229,7 +224,6 @@ class _ExpandedProgressionBody extends StatelessWidget {
         _DomainSummary(
           current: current,
           best: best,
-          progL10n: progL10n,
           currentLabel: l10n.progStreakCurrentLabel,
           bestLabel: l10n.progStreakBestLabel,
           daysSuffix: l10n.progStreakDaysSuffix,
@@ -239,7 +233,6 @@ class _ExpandedProgressionBody extends StatelessWidget {
           _ActiveQuestsPreview(
             quests: previewQuests,
             label: l10n.progQuestsDailyGoalsHeader,
-            progL10n: progL10n,
           ),
         ],
         if (onOpen != null) ...[
@@ -413,13 +406,11 @@ class _HighlightPills extends StatelessWidget {
   const _HighlightPills({
     required this.currentStreak,
     required this.unlockedCount,
-    required this.progL10n,
     required this.achievementsLabel,
   });
 
   final _DomainStreak? currentStreak;
   final int unlockedCount;
-  final ProgressionL10n progL10n;
   final String achievementsLabel;
 
   @override
@@ -432,7 +423,7 @@ class _HighlightPills extends StatelessWidget {
             value: '${currentStreak?.currentStreak ?? 0}',
             caption: currentStreak == null
                 ? context.l10n.progBadgeStreakHint
-                : progL10n.domainLabel(currentStreak!.domain),
+                : currentStreak!.domain.label(context.l10n),
             color: Tokens.active.color,
             dim: Tokens.active.dim,
           ),
@@ -665,7 +656,6 @@ class _DomainSummary extends StatelessWidget {
   const _DomainSummary({
     required this.current,
     required this.best,
-    required this.progL10n,
     required this.currentLabel,
     required this.bestLabel,
     required this.daysSuffix,
@@ -673,7 +663,6 @@ class _DomainSummary extends StatelessWidget {
 
   final _DomainStreak? current;
   final _DomainStreak? best;
-  final ProgressionL10n progL10n;
   final String currentLabel;
   final String bestLabel;
   final String daysSuffix;
@@ -691,7 +680,7 @@ class _DomainSummary extends StatelessWidget {
                 : '${current!.currentStreak} $daysSuffix',
             caption: current == null
                 ? context.l10n.progBadgeStreakEmpty
-                : progL10n.domainLabel(current!.domain),
+                : current!.domain.label(context.l10n),
             domain: current?.domain,
             fallbackColor: Tokens.active.color,
           ),
@@ -706,7 +695,7 @@ class _DomainSummary extends StatelessWidget {
                 : '${best!.bestStreak} $daysSuffix',
             caption: best == null
                 ? context.l10n.progBadgeStreakHint
-                : progL10n.domainLabel(best!.domain),
+                : best!.domain.label(context.l10n),
             domain: best?.domain,
             fallbackColor: Tokens.calories.color,
           ),
@@ -803,12 +792,10 @@ class _ActiveQuestsPreview extends StatelessWidget {
   const _ActiveQuestsPreview({
     required this.quests,
     required this.label,
-    required this.progL10n,
   });
 
   final List<ProgressionQuest> quests;
   final String label;
-  final ProgressionL10n progL10n;
 
   @override
   Widget build(BuildContext context) {
@@ -838,7 +825,7 @@ class _ActiveQuestsPreview extends StatelessWidget {
                 height: 1,
                 color: Colors.white.withValues(alpha: 0.045),
               ),
-            _MiniQuestRow(quest: quests[i], progL10n: progL10n),
+            _MiniQuestRow(quest: quests[i]),
           ],
         ],
       ),
@@ -849,11 +836,9 @@ class _ActiveQuestsPreview extends StatelessWidget {
 class _MiniQuestRow extends StatelessWidget {
   const _MiniQuestRow({
     required this.quest,
-    required this.progL10n,
   });
 
   final ProgressionQuest quest;
-  final ProgressionL10n progL10n;
 
   @override
   Widget build(BuildContext context) {
@@ -875,7 +860,7 @@ class _MiniQuestRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  progL10n.questTitle(quest),
+                  quest.title(context.l10n),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(

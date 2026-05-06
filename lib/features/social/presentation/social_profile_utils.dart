@@ -3,9 +3,9 @@ import 'package:intl/intl.dart';
 
 import 'widgets/social_user_profile_sheet.dart';
 
-import '../../../features/progression/domain/progression_achievement_catalog.dart';
+import '../../progression/domain/catalog/achievement_catalog.dart';
 import '../../../features/progression/domain/progression_models.dart';
-import '../../../features/progression/presentation/progression_l10n.dart';
+import '../../progression/domain/catalog/rule_catalog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/l10n.dart';
 import '../../../shared/theme/design_tokens.dart';
@@ -13,39 +13,11 @@ import '../domain/social_models.dart';
 
 // ── Level / domain helpers ────────────────────────────────────────────────────
 
-Domain socialDomainFor(String? domain) {
-  switch (domain) {
-    case 'steps':
-      return Tokens.steps;
-    case 'nutrition':
-      return Tokens.calories;
-    case 'sleep':
-      return Tokens.sleep;
-    case 'activity':
-      return Tokens.active;
-    case 'body':
-      return Tokens.weight;
-    default:
-      return Tokens.active;
-  }
-}
+Domain socialDomainFor(String? domain) =>
+    (progressionDomainFromName(domain) ?? ProgressionDomain.activity).token;
 
-IconData socialIconFor(String? domain) {
-  switch (domain) {
-    case 'steps':
-      return Icons.directions_walk_rounded;
-    case 'nutrition':
-      return Icons.restaurant_rounded;
-    case 'sleep':
-      return Icons.nightlight_round;
-    case 'activity':
-      return Icons.bolt_rounded;
-    case 'body':
-      return Icons.monitor_weight_outlined;
-    default:
-      return Icons.workspace_premium_rounded;
-  }
-}
+IconData socialIconFor(String? domain) =>
+    progressionDomainFromName(domain)?.icon ?? Icons.workspace_premium_rounded;
 
 String socialRelativeTime(DateTime t, AppLocalizations l10n) {
   final d = DateTime.now().difference(t);
@@ -64,51 +36,26 @@ String socialFmtXp(int xp) {
 }
 
 Color colorForDifficultyString(String diff) {
-  switch (diff) {
-    case 'easy':
-      return Tokens.difficultyEasy;
-    case 'medium':
-      return Tokens.difficultyMedium;
-    case 'hard':
-      return Tokens.difficultyHard;
-    case 'extraHard':
-      return Tokens.difficultyExtraHard;
-    default:
-      return Tokens.accent;
+  for (final d in ProgressionAchievementDifficulty.values) {
+    if (d.name == diff) return d.color;
   }
+  return Tokens.accent;
 }
 
-String socialDifficultyLabelForName(String diff, AppLocalizations l10n) {
-  switch (progressionAchievementDifficultyFromName(diff)) {
-    case ProgressionAchievementDifficulty.easy:
-      return l10n.progAchievementDifficultyEasy;
-    case ProgressionAchievementDifficulty.medium:
-      return l10n.progAchievementDifficultyMedium;
-    case ProgressionAchievementDifficulty.hard:
-      return l10n.progAchievementDifficultyHard;
-    case ProgressionAchievementDifficulty.extraHard:
-      return l10n.progAchievementDifficultyExtraHard;
-    case ProgressionAchievementDifficulty.mythic:
-      return l10n.progAchievementDifficultyMythic;
-  }
-}
+String socialDifficultyLabelForName(String diff, AppLocalizations l10n) =>
+    progressionAchievementDifficultyFromName(diff).label(l10n);
 
 // ── Achievement catalog lookup ────────────────────────────────────────────────
-
-final Map<String, ProgressionAchievementDefinition>
-    progressionAchievementDefinitionsById = {
-  for (final definition in const ProgressionAchievementCatalog().build())
-    definition.id: definition,
-};
 
 // ── Achievement mapping helpers ───────────────────────────────────────────────
 
 List<ProgressionAchievement> mapSocialAchievementsToProgression(
   List<SocialUnlockedAchievement> achievements,
+  AppLocalizations l10n,
 ) {
   final mapped = achievements.map((achievement) {
-    final definition =
-        progressionAchievementDefinitionsById[achievement.achievementId];
+    final definition = ProgressionAchievementCatalog.definitionForId(
+        achievement.achievementId);
     if (definition != null) {
       return ProgressionAchievement(
         id: definition.id,
@@ -117,6 +64,7 @@ List<ProgressionAchievement> mapSocialAchievementsToProgression(
         criterionType: definition.criterionType,
         title: definition.title,
         description: definition.description,
+        badgeEmoji: definition.badgeEmoji,
         targetValue: definition.targetValue,
         currentValue: definition.targetValue,
         progress: 1,
@@ -137,8 +85,9 @@ List<ProgressionAchievement> mapSocialAchievementsToProgression(
       type: progressionAchievementTypeFromName(achievement.type),
       difficulty: fallbackDifficulty,
       criterionType: ProgressionAchievementCriterionType.rewardCountAtLeast,
-      title: achievement.title,
-      description: achievement.description,
+      title: (_) => achievement.title,
+      description: (_) => achievement.description,
+      badgeEmoji: '\u{1F3C5}',
       targetValue: 1,
       currentValue: 1,
       progress: 1,
@@ -160,49 +109,29 @@ List<ProgressionAchievement> mapSocialAchievementsToProgression(
 }
 
 ProgressionDomain? progressionDomainFromName(String? value) {
-  switch (value) {
-    case 'steps':
-      return ProgressionDomain.steps;
-    case 'nutrition':
-      return ProgressionDomain.nutrition;
-    case 'sleep':
-      return ProgressionDomain.sleep;
-    case 'activity':
-      return ProgressionDomain.activity;
-    case 'body':
-      return ProgressionDomain.body;
-    default:
-      return null;
+  if (value == null) return null;
+  for (final domain in ProgressionDomain.values) {
+    if (domain.name == value) return domain;
   }
+  return null;
 }
 
 ProgressionAchievementDifficulty progressionAchievementDifficultyFromName(
   String? value,
 ) {
-  switch (value) {
-    case 'easy':
-      return ProgressionAchievementDifficulty.easy;
-    case 'medium':
-      return ProgressionAchievementDifficulty.medium;
-    case 'hard':
-      return ProgressionAchievementDifficulty.hard;
-    case 'extraHard':
-      return ProgressionAchievementDifficulty.extraHard;
-    default:
-      return ProgressionAchievementDifficulty.easy;
+  if (value == null) return ProgressionAchievementDifficulty.easy;
+  for (final d in ProgressionAchievementDifficulty.values) {
+    if (d.name == value) return d;
   }
+  return ProgressionAchievementDifficulty.easy;
 }
 
 ProgressionAchievementType progressionAchievementTypeFromName(String? value) {
-  switch (value) {
-    case 'streak':
-      return ProgressionAchievementType.streak;
-    case 'mastery':
-      return ProgressionAchievementType.mastery;
-    case 'milestone':
-    default:
-      return ProgressionAchievementType.milestone;
+  if (value == null) return ProgressionAchievementType.milestone;
+  for (final t in ProgressionAchievementType.values) {
+    if (t.name == value) return t;
   }
+  return ProgressionAchievementType.milestone;
 }
 
 // ── Achievement display helpers ───────────────────────────────────────────────
@@ -215,33 +144,18 @@ String friendAchievementDisplayLabel(
   if (levelTarget != null) {
     return context.l10n.socialLevelLabel(levelTarget).toUpperCase();
   }
-  return ProgressionL10n(context.l10n)
-      .achievementTitle(achievement)
-      .toUpperCase();
+  return achievement.title(context.l10n).toUpperCase();
 }
 
 String friendAchievementDifficultyLabel(
   ProgressionAchievement achievement,
   AppLocalizations l10n,
-) {
-  switch (achievement.difficulty) {
-    case ProgressionAchievementDifficulty.easy:
-      return l10n.progAchievementDifficultyEasy;
-    case ProgressionAchievementDifficulty.medium:
-      return l10n.progAchievementDifficultyMedium;
-    case ProgressionAchievementDifficulty.hard:
-      return l10n.progAchievementDifficultyHard;
-    case ProgressionAchievementDifficulty.extraHard:
-      return l10n.progAchievementDifficultyExtraHard;
-    case ProgressionAchievementDifficulty.mythic:
-      return l10n.progAchievementDifficultyMythic;
-  }
-}
+) =>
+    achievement.difficulty.label(l10n);
 
 String friendAchievementCompactSummary(
   ProgressionAchievement achievement,
   AppLocalizations l10n,
-  ProgressionL10n progL10n,
   String locale,
 ) {
   switch (achievement.criterionType) {
@@ -251,10 +165,10 @@ String friendAchievementCompactSummary(
       return '${_formatCompactInt(achievement.targetValue, locale)} ${l10n.socialXpLabel}';
     case ProgressionAchievementCriterionType.rewardCountAtLeast:
       if (achievement.ruleId != null) {
-        return '${achievement.targetValue}x ${progL10n.ruleTitle(achievement.ruleId!)}';
+        return '${achievement.targetValue}x ${ProgressionRuleCatalog.titleForId(achievement.ruleId!, l10n)}';
       }
       if (achievement.domain != null) {
-        return '${achievement.targetValue}x ${progL10n.domainLabel(achievement.domain!)}';
+        return '${achievement.targetValue}x ${achievement.domain!.label(l10n)}';
       }
       return '${achievement.targetValue} ${l10n.progRewardsSectionLabel}';
     case ProgressionAchievementCriterionType.bestStreakAtLeast:
@@ -276,8 +190,7 @@ String friendAchievementCompactSummary(
       return '${achievement.targetValue} ${l10n.progAchievementSummaryPerfectWeeks}';
     case ProgressionAchievementCriterionType.comboQuestsCompletedAtLeast:
       return '${achievement.targetValue} ${l10n.progAchievementSummaryComboQuests}';
-    case ProgressionAchievementCriterionType
-          .tripleComboQuestsCompletedAtLeast:
+    case ProgressionAchievementCriterionType.tripleComboQuestsCompletedAtLeast:
       return '${achievement.targetValue} ${l10n.progAchievementSummaryTripleComboQuests}';
     case ProgressionAchievementCriterionType.compositeAllOf:
       return l10n.progAchievementSummaryComposite;
@@ -293,25 +206,8 @@ String _friendAchievementTargetSummary(
     final hours = (achievement.targetValue / 60).round();
     return '$hours ${l10n.goalUnitHours}';
   }
-  final unit = _friendAchievementUnitForRule(achievement.ruleId, l10n);
+  final unit = ProgressionRuleCatalog.unitForId(achievement.ruleId, l10n);
   return '${_formatCompactInt(achievement.targetValue, locale)} $unit';
-}
-
-String _friendAchievementUnitForRule(String? ruleId, AppLocalizations l10n) {
-  switch (ruleId) {
-    case 'daily_steps':
-      return l10n.goalUnitSteps;
-    case 'daily_calories':
-      return l10n.goalUnitKcal;
-    case 'daily_protein':
-      return l10n.goalUnitG;
-    case 'daily_sleep':
-      return l10n.goalUnitHours;
-    case 'weekly_activity':
-      return l10n.goalUnitMins;
-    default:
-      return '';
-  }
 }
 
 String formatAchievementDateTime(DateTime value, String locale) {

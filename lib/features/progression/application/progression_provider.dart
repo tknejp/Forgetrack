@@ -16,9 +16,8 @@ import '../application/cosmetic_unlock_dispatcher.dart';
 import '../application/progression_engine.dart';
 import '../data/provider_progression_source.dart';
 import '../domain/cosmetic_reward_table.dart';
-import '../domain/progression_level_config.dart';
+import '../domain/policy/level_config.dart';
 import '../domain/progression_models.dart';
-import '../presentation/progression_l10n.dart';
 
 class ProgressionDomainRangeSummary {
   const ProgressionDomainRangeSummary({
@@ -494,7 +493,6 @@ class ProgressionProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     final langCode = prefs.getString('selected_language_code') ?? 'cs';
     final l10n = await AppLocalizations.delegate.load(Locale(langCode));
-    final progressionL10n = ProgressionL10n(l10n);
 
     final newGrants = state.questRewardGrants
         .where((g) => !prevGrantKeys.contains(g.rewardKey))
@@ -503,7 +501,9 @@ class ProgressionProvider extends ChangeNotifier {
       final grant = newGrants[i];
       final quest =
           state.quests.where((q) => q.id == grant.questId).firstOrNull;
-      final title = quest != null ? progressionL10n.questTitle(quest) : 'Quest';
+      final title = quest != null
+          ? quest.title(l10n)
+          : l10n.progQuestFallbackTitle;
       unawaited(NotificationService.instance
           .showQuestCompleted(title, grant.xpGranted, index: i));
     }
@@ -514,8 +514,8 @@ class ProgressionProvider extends ChangeNotifier {
     for (var i = 0; i < newAchievements.length; i++) {
       final a = newAchievements[i];
       unawaited(NotificationService.instance.showAchievementUnlocked(
-        progressionL10n.achievementTitle(a),
-        progressionL10n.achievementDescription(a),
+        a.title(l10n),
+        a.description(l10n),
         index: i,
       ));
     }

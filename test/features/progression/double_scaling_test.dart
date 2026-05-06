@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:forgetrack/features/progression/domain/progression_level_policy.dart';
+import 'package:forgetrack/features/progression/domain/policy/level_policy.dart';
 import 'package:forgetrack/features/progression/domain/progression_models.dart';
 
 void main() {

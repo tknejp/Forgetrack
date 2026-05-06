@@ -1122,36 +1122,74 @@ class AppLocalizationsCs extends AppLocalizations {
   String get progRuleDailySteps => 'Denní kroky';
 
   @override
+  String get progRuleDailyStepsDesc => 'Splň nastavený denní cíl kroků.';
+
+  @override
   String get progRuleDailyCalories => 'Kalorický cíl';
+
+  @override
+  String get progRuleDailyCaloriesDesc =>
+      'Zůstaň ve výchozím 10% rozmezí kalorického cíle.';
 
   @override
   String get progRuleDailyProtein => 'Cíl bílkovin';
 
   @override
+  String get progRuleDailyProteinDesc => 'Splň nastavený denní cíl bílkovin.';
+
+  @override
   String get progRuleDailyCarbs => 'Cíl sacharidů';
+
+  @override
+  String get progRuleDailyCarbsDesc => 'Splň nastavený denní cíl sacharidů.';
 
   @override
   String get progRuleDailyFat => 'Cíl tuků';
 
   @override
+  String get progRuleDailyFatDesc => 'Splň nastavený denní cíl tuků.';
+
+  @override
   String get progRuleDailyFiber => 'Cíl vlákniny';
+
+  @override
+  String get progRuleDailyFiberDesc => 'Splň nastavený denní cíl vlákniny.';
 
   @override
   String get progRuleDailySleep => 'Cíl spánku';
 
   @override
+  String get progRuleDailySleepDesc =>
+      'Splň nastavený cíl délky nočního spánku.';
+
+  @override
   String get progRuleWeeklyActivity => 'Týdenní aktivita';
+
+  @override
+  String get progRuleWeeklyActivityDesc =>
+      'Nasbírej nastavené týdenní minuty aktivity.';
 
   @override
   String get progRuleDailyWeightLog => 'Záznam váhy';
 
   @override
+  String get progRuleDailyWeightLogDesc =>
+      'Zaznamenej dnes váhu alespoň jednou.';
+
+  @override
   String get progRuleDailyWeightGoal => 'Cílová váha';
+
+  @override
+  String get progRuleDailyWeightGoalDesc =>
+      'Zaznamenej váhu v rozmezí 3 % od cílové váhy.';
 
   @override
   String progRewardDetailWeightLogged(String actual) {
     return 'Zaznamenáno: $actual kg';
   }
+
+  @override
+  String get progQuestFallbackTitle => 'Quest';
 
   @override
   String get progQuestEarnFirstRewardTitle => 'Získej první odměnu';
@@ -1774,36 +1812,126 @@ class AppLocalizationsCs extends AppLocalizations {
       'Odemkni Cestu ledoběžce dosažením 70. úrovně.';
 
   @override
+  String get progQuestIcewalkerRouteSteps500kTitle => 'Přes bílé pláně';
+
+  @override
   String get progQuestIcewalkerRouteSteps500kDesc =>
       'Přes ledové pláně ujdi 500 000 kroků.';
+
+  @override
+  String get progQuestIcewalkerRouteRewards150Title => 'Stopy v ledu';
 
   @override
   String get progQuestIcewalkerRouteRewards150Desc =>
       'Na Cestě ledoběžce získej 150 odměn.';
 
   @override
+  String get progQuestIcewalkerRouteProtein30Title => 'Zimní příděly';
+
+  @override
   String get progQuestIcewalkerRouteProtein30Desc =>
       'Na Cestě ledoběžce splň cíl bílkovin 30krát.';
+
+  @override
+  String get progQuestIcewalkerRouteFinaleTitle => 'Pečeť ledu';
 
   @override
   String get progQuestIcewalkerRouteFinaleDesc =>
       'Dokonči všechny předchozí úkoly Cesty ledoběžce.';
 
   @override
+  String get progQuestMountainAscentOpenTitle => 'Výstup na horu';
+
+  @override
+  String get progQuestMountainAscentOpenDesc =>
+      'Odemkni Výstup na horu dosažením 80. úrovně.';
+
+  @override
+  String get progQuestMountainAscentFourPillars15Title => 'Tábor nad mraky';
+
+  @override
+  String get progQuestMountainAscentFourPillars15Desc =>
+      'Nad oblaky splň všechny 4 denní cíle 15krát.';
+
+  @override
+  String get progQuestMountainAscentSteps30Title => 'Nepřerušený výstup';
+
+  @override
   String get progQuestMountainAscentSteps30Desc =>
       'Během Výstupu na horu splň krokový cíl 30krát.';
+
+  @override
+  String get progQuestMountainAscentWeekly10Title => 'Vrcholová rutina';
+
+  @override
+  String get progQuestMountainAscentWeekly10Desc =>
+      'Během Výstupu na horu splň týdenní cíl aktivity 10krát.';
+
+  @override
+  String get progQuestMountainAscentFinaleTitle => 'Pečeť vrcholu';
+
+  @override
+  String get progQuestMountainAscentFinaleDesc =>
+      'Dokonči všechny předchozí úkoly Výstupu na horu.';
+
+  @override
+  String get progQuestDragonroadOpenTitle => 'Dračí cesta';
+
+  @override
+  String get progQuestDragonroadOpenDesc =>
+      'Odemkni Dračí cestu dosažením 90. úrovně.';
+
+  @override
+  String get progQuestDragonroadRewards250Title => 'Šupiny úsilí';
+
+  @override
+  String get progQuestDragonroadRewards250Desc =>
+      'Na Dračí cestě získej 250 odměn.';
+
+  @override
+  String get progQuestDragonroadFourPillars25Title => 'Dračí disciplína';
+
+  @override
+  String get progQuestDragonroadFourPillars25Desc =>
+      'Na Dračí cestě splň všechny 4 denní cíle 25krát.';
+
+  @override
+  String get progQuestDragonroadWeekly12Title => 'Cesta k pevnosti';
+
+  @override
+  String get progQuestDragonroadWeekly12Desc =>
+      'Na Dračí cestě splň týdenní cíl aktivity 12krát.';
+
+  @override
+  String get progQuestDragonroadFinaleTitle => 'Pečeť draka';
+
+  @override
+  String get progQuestDragonroadFinaleDesc =>
+      'Dokonči všechny předchozí úkoly Dračí cesty.';
+
+  @override
+  String get progQuestDragonrockSovereignOpenTitle => 'Vládce Dragonrocku';
 
   @override
   String get progQuestDragonrockSovereignOpenDesc =>
       'Odemkni vládu nad Dragonrockem dosažením 100. úrovně.';
 
   @override
+  String get progQuestDragonrockSovereignFourPillars30Title => 'Vláda čtyř';
+
+  @override
   String get progQuestDragonrockSovereignFourPillars30Desc =>
       'V Pevnosti Dragonrock splň všechny 4 denní cíle 30krát.';
 
   @override
+  String get progQuestDragonrockSovereignWeekly16Title => 'Rutina pevnosti';
+
+  @override
   String get progQuestDragonrockSovereignWeekly16Desc =>
       'V Pevnosti Dragonrock splň týdenní cíl aktivity 16krát.';
+
+  @override
+  String get progQuestDragonrockSovereignSteps50Title => 'Královský pochod';
 
   @override
   String get progQuestDragonrockSovereignSteps50Desc =>
@@ -2569,6 +2697,93 @@ class AppLocalizationsCs extends AppLocalizations {
   @override
   String get cosmeticBackgroundDevOnlyDesc =>
       'Vyvojarske pozadi. Grant pres DevTools.';
+
+  @override
+  String get dialogClose => 'Zavřít';
+
+  @override
+  String get devGrant => 'Grant';
+
+  @override
+  String get devRevoke => 'Revoke';
+
+  @override
+  String get cosmeticEquip => 'Vybavit';
+
+  @override
+  String get cosmeticUnequip => 'Odebrat z výbavy';
+
+  @override
+  String get cosmeticNoAsset => 'NO ASSET';
+
+  @override
+  String get cosmeticRequirementsHeader => 'PODMÍNKY';
+
+  @override
+  String get listOrSeparator => '— nebo —';
+
+  @override
+  String get debugDetailsHeader => 'DETAILY LADĚNÍ';
+
+  @override
+  String get debugRowId => 'id';
+
+  @override
+  String get debugRowType => 'typ';
+
+  @override
+  String get debugRowRarity => 'rarita';
+
+  @override
+  String get debugRowRegion => 'region';
+
+  @override
+  String get debugRowAssetKey => 'assetKey';
+
+  @override
+  String get debugRowPreviewAssetKey => 'previewAssetKey';
+
+  @override
+  String get debugRowSortOrder => 'sortOrder';
+
+  @override
+  String get debugRowIsPremium => 'isPremium';
+
+  @override
+  String get debugRowIsEnabled => 'isEnabled';
+
+  @override
+  String get debugRowMetadata => 'metadata';
+
+  @override
+  String get debugRowUnlockedAt => 'unlockedAt';
+
+  @override
+  String get debugRowSourceType => 'sourceType';
+
+  @override
+  String get debugRowSourceId => 'sourceId';
+
+  @override
+  String get debugMissing => '— chybí';
+
+  @override
+  String ruleSource(String type, String id) {
+    return 'source: $type / $id';
+  }
+
+  @override
+  String get cosmeticUnlockConditionsHeader => 'PODMÍNKY ODEMČENÍ';
+
+  @override
+  String copiedToClipboard(String value) {
+    return 'Zkopírováno: $value';
+  }
+
+  @override
+  String cosmeticUnlockedAt(String date) {
+    return 'Odemčeno $date';
+  }
 
   @override
   String get cosmeticBackgroundForestTrailName => 'Lesní stezka';
