@@ -2709,6 +2709,93 @@ class AppLocalizationsEn extends AppLocalizations {
       'Developer-only background. Grant via DevTools.';
 
   @override
+  String get dialogClose => 'Close';
+
+  @override
+  String get devGrant => 'Grant';
+
+  @override
+  String get devRevoke => 'Revoke';
+
+  @override
+  String get cosmeticEquip => 'Equip';
+
+  @override
+  String get cosmeticUnequip => 'Unequip';
+
+  @override
+  String get cosmeticNoAsset => 'NO ASSET';
+
+  @override
+  String get cosmeticRequirementsHeader => 'REQUIREMENTS';
+
+  @override
+  String get listOrSeparator => '— or —';
+
+  @override
+  String get debugDetailsHeader => 'DEBUG DETAILS';
+
+  @override
+  String get debugRowId => 'id';
+
+  @override
+  String get debugRowType => 'type';
+
+  @override
+  String get debugRowRarity => 'rarity';
+
+  @override
+  String get debugRowRegion => 'region';
+
+  @override
+  String get debugRowAssetKey => 'assetKey';
+
+  @override
+  String get debugRowPreviewAssetKey => 'previewAssetKey';
+
+  @override
+  String get debugRowSortOrder => 'sortOrder';
+
+  @override
+  String get debugRowIsPremium => 'isPremium';
+
+  @override
+  String get debugRowIsEnabled => 'isEnabled';
+
+  @override
+  String get debugRowMetadata => 'metadata';
+
+  @override
+  String get debugRowUnlockedAt => 'unlockedAt';
+
+  @override
+  String get debugRowSourceType => 'sourceType';
+
+  @override
+  String get debugRowSourceId => 'sourceId';
+
+  @override
+  String get debugMissing => '— missing';
+
+  @override
+  String ruleSource(String type, String id) {
+    return 'source: $type / $id';
+  }
+
+  @override
+  String get cosmeticUnlockConditionsHeader => 'UNLOCK CONDITIONS';
+
+  @override
+  String copiedToClipboard(String value) {
+    return 'Copied: $value';
+  }
+
+  @override
+  String cosmeticUnlockedAt(String date) {
+    return 'Unlocked $date';
+  }
+
+  @override
   String get cosmeticBackgroundForestTrailName => 'Forest Trail';
 
   @override

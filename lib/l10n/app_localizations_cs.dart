@@ -2699,6 +2699,93 @@ class AppLocalizationsCs extends AppLocalizations {
       'Vyvojarske pozadi. Grant pres DevTools.';
 
   @override
+  String get dialogClose => 'Zavřít';
+
+  @override
+  String get devGrant => 'Grant';
+
+  @override
+  String get devRevoke => 'Revoke';
+
+  @override
+  String get cosmeticEquip => 'Vybavit';
+
+  @override
+  String get cosmeticUnequip => 'Odebrat z výbavy';
+
+  @override
+  String get cosmeticNoAsset => 'NO ASSET';
+
+  @override
+  String get cosmeticRequirementsHeader => 'PODMÍNKY';
+
+  @override
+  String get listOrSeparator => '— nebo —';
+
+  @override
+  String get debugDetailsHeader => 'DETAILY LADĚNÍ';
+
+  @override
+  String get debugRowId => 'id';
+
+  @override
+  String get debugRowType => 'typ';
+
+  @override
+  String get debugRowRarity => 'rarita';
+
+  @override
+  String get debugRowRegion => 'region';
+
+  @override
+  String get debugRowAssetKey => 'assetKey';
+
+  @override
+  String get debugRowPreviewAssetKey => 'previewAssetKey';
+
+  @override
+  String get debugRowSortOrder => 'sortOrder';
+
+  @override
+  String get debugRowIsPremium => 'isPremium';
+
+  @override
+  String get debugRowIsEnabled => 'isEnabled';
+
+  @override
+  String get debugRowMetadata => 'metadata';
+
+  @override
+  String get debugRowUnlockedAt => 'unlockedAt';
+
+  @override
+  String get debugRowSourceType => 'sourceType';
+
+  @override
+  String get debugRowSourceId => 'sourceId';
+
+  @override
+  String get debugMissing => '— chybí';
+
+  @override
+  String ruleSource(String type, String id) {
+    return 'source: $type / $id';
+  }
+
+  @override
+  String get cosmeticUnlockConditionsHeader => 'PODMÍNKY ODEMČENÍ';
+
+  @override
+  String copiedToClipboard(String value) {
+    return 'Zkopírováno: $value';
+  }
+
+  @override
+  String cosmeticUnlockedAt(String date) {
+    return 'Odemčeno $date';
+  }
+
+  @override
   String get cosmeticBackgroundForestTrailName => 'Lesní stezka';
 
   @override

@@ -905,6 +905,87 @@
   "cosmeticBackgroundDevThroneName": "Dev: Trun",
   "cosmeticBackgroundDevOnlyDesc": "Vyvojarske pozadi. Grant pres DevTools.",
 
+  "dialogClose": "Zavřít",
+  "@dialogClose": { "description": "Generic close button label" },
+
+  "devGrant": "Grant",
+  "@devGrant": { "description": "Developer tools: grant cosmetic button label" },
+
+  "devRevoke": "Revoke",
+  "@devRevoke": { "description": "Developer tools: revoke cosmetic button label" },
+
+  "cosmeticEquip": "Vybavit",
+  "@cosmeticEquip": { "description": "Button to equip a cosmetic" },
+
+  "cosmeticUnequip": "Odebrat z výbavy",
+  "@cosmeticUnequip": { "description": "Button to unequip a cosmetic" },
+
+  "cosmeticNoAsset": "NO ASSET",
+  "@cosmeticNoAsset": { "description": "DevTools pill shown when cosmetic asset is missing" },
+
+  "cosmeticRequirementsHeader": "PODMÍNKY",
+  "@cosmeticRequirementsHeader": { "description": "Header for companion requirements checklist" },
+
+  "listOrSeparator": "— nebo —",
+  "@listOrSeparator": { "description": "Separator text between alternative unlock rules" },
+
+  "debugDetailsHeader": "DETAILY LADĚNÍ",
+  "@debugDetailsHeader": { "description": "Header for debug details expansion tile" },
+
+  "debugRowId": "id",
+  "@debugRowId": { "description": "Label for debug row: id" },
+
+  "debugRowType": "typ",
+  "@debugRowType": { "description": "Label for debug row: type" },
+
+  "debugRowRarity": "rarita",
+  "@debugRowRarity": { "description": "Label for debug row: rarity" },
+
+  "debugRowRegion": "region",
+  "@debugRowRegion": { "description": "Label for debug row: region" },
+
+  "debugRowAssetKey": "assetKey",
+  "@debugRowAssetKey": { "description": "Label for debug row: asset key" },
+
+  "debugRowPreviewAssetKey": "previewAssetKey",
+  "@debugRowPreviewAssetKey": { "description": "Label for debug row: preview asset key" },
+
+  "debugRowSortOrder": "sortOrder",
+  "@debugRowSortOrder": { "description": "Label for debug row: sort order" },
+
+  "debugRowIsPremium": "isPremium",
+  "@debugRowIsPremium": { "description": "Label for debug row: is premium" },
+
+  "debugRowIsEnabled": "isEnabled",
+  "@debugRowIsEnabled": { "description": "Label for debug row: is enabled" },
+
+  "debugRowMetadata": "metadata",
+  "@debugRowMetadata": { "description": "Label for debug row: metadata" },
+
+  "debugRowUnlockedAt": "unlockedAt",
+  "@debugRowUnlockedAt": { "description": "Label for debug row: unlocked at" },
+
+  "debugRowSourceType": "sourceType",
+  "@debugRowSourceType": { "description": "Label for debug row: source type" },
+
+  "debugRowSourceId": "sourceId",
+  "@debugRowSourceId": { "description": "Label for debug row: source id" },
+
+  "debugMissing": "— chybí",
+  "@debugMissing": { "description": "Placeholder when a debug value is missing" },
+
+  "ruleSource": "source: {type} / {id}",
+  "@ruleSource": { "description": "Formatted rule source", "placeholders": { "type": { "type": "String" }, "id": { "type": "String" } } },
+
+  "cosmeticUnlockConditionsHeader": "PODMÍNKY ODEMČENÍ",
+  "@cosmeticUnlockConditionsHeader": { "description": "Header for unlock conditions section" },
+
+  "copiedToClipboard": "Zkopírováno: {value}",
+  "@copiedToClipboard": { "description": "Snackbar shown after copying a value to clipboard", "placeholders": { "value": { "type": "String" } } },
+
+  "cosmeticUnlockedAt": "Odemčeno {date}",
+  "@cosmeticUnlockedAt": { "description": "Label showing when a cosmetic was unlocked", "placeholders": { "date": { "type": "String" } } },
+
   "cosmeticBackgroundForestTrailName": "Lesní stezka",
   "cosmeticBackgroundForestTrailDesc": "Mlžná pěšina vedoucí pod koruny vysokých stromů.",
   "cosmeticEmblemForestMarkName": "Znak lesa",

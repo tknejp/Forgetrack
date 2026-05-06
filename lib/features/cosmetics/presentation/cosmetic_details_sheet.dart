@@ -217,14 +217,14 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                               ),
                             if (effectiveLocked && !isHidden)
                               _TinyPill(
-                                label: 'ZAMČENO',
+                                label: l10n.journeyBadgeLocked,
                                 color: isLocked
                                     ? Theme.of(context).colorScheme.error
                                     : hiddenColor.withValues(alpha: 0.85),
                               ),
                             if (devTools && definition.assetKey == null)
                               _TinyPill(
-                                label: 'NO ASSET',
+                                label: l10n.cosmeticNoAsset,
                                 color: Colors.orange,
                               ),
                           ],
@@ -275,7 +275,9 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
               if (unlock != null) ...[
                 const SizedBox(height: 14),
                 Text(
-                  'Odemčeno ${MaterialLocalizations.of(context).formatMediumDate(unlock.unlockedAt)}',
+                  l10n.cosmeticUnlockedAt(
+                    MaterialLocalizations.of(context).formatMediumDate(unlock.unlockedAt),
+                  ),
                   style: TextStyle(
                     color: color.withValues(alpha: 0.78),
                     fontSize: Tokens.fontSizeCaption,
@@ -406,13 +408,13 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                               ? null
                               : () => Navigator.of(context).pop(),
                           style: _outlineStyle(color),
-                          child: const Text('Zavřít'),
+                          child: Text(l10n.dialogClose),
                         ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: _DevButton(
-                          label: 'Grant',
+                          label: l10n.devGrant,
                           icon: Icons.lock_open_rounded,
                           color: Colors.greenAccent,
                           busy: _devBusy,
@@ -425,7 +427,7 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                   Column(
                     children: [
                       _ActionButton(
-                        label: isEquipped ? 'Odebrat z výbavy' : 'Vybavit',
+                        label: isEquipped ? l10n.cosmeticUnequip : l10n.cosmeticEquip,
                         icon: isEquipped
                             ? Icons.remove_circle_outline_rounded
                             : Icons.check_circle_rounded,
@@ -435,7 +437,7 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                       ),
                       const SizedBox(height: 8),
                       _DevButton(
-                        label: 'Revoke',
+                        label: l10n.devRevoke,
                         icon: Icons.lock_rounded,
                         color: Theme.of(context).colorScheme.error,
                         busy: _devBusy,
@@ -449,12 +451,12 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.of(context).pop(),
                     style: _outlineStyle(isHidden ? Tokens.onSurfaceMuted : color),
-                    child: const Text('Zavřít'),
+                    child: Text(l10n.dialogClose),
                   ),
                 )
               else
                 _ActionButton(
-                  label: isEquipped ? 'Odebrat z výbavy' : 'Vybavit',
+                  label: isEquipped ? l10n.cosmeticUnequip : l10n.cosmeticEquip,
                   icon: isEquipped
                       ? Icons.remove_circle_outline_rounded
                       : Icons.check_circle_rounded,
@@ -578,7 +580,7 @@ class _CompanionChecklist extends StatelessWidget {
                 size: 13, color: color.withValues(alpha: 0.8)),
             const SizedBox(width: 5),
             Text(
-              'REQUIREMENTS',
+              l10n.cosmeticRequirementsHeader,
               style: TextStyle(
                 color: color.withValues(alpha: 0.8),
                 fontSize: Tokens.fontSizeCaption,
@@ -692,7 +694,7 @@ class _DebugDetailsSection extends StatelessWidget {
                   size: 13, color: color.withValues(alpha: 0.7)),
               const SizedBox(width: 6),
               Text(
-                'DEBUG DETAILS',
+                AppLocalizations.of(context).debugDetailsHeader,
                 style: TextStyle(
                   color: color.withValues(alpha: 0.7),
                   fontSize: Tokens.fontSizeCaption,
@@ -703,43 +705,42 @@ class _DebugDetailsSection extends StatelessWidget {
             ],
           ),
           children: [
-            _DebugRow('id', definition.id, copyable: true),
-            _DebugRow('type', definition.type.name),
-            _DebugRow('rarity', definition.rarity.name),
-            _DebugRow('region', definition.region.name),
+            _DebugRow(AppLocalizations.of(context).debugRowId, definition.id, copyable: true),
+            _DebugRow(AppLocalizations.of(context).debugRowType, definition.type.name),
+            _DebugRow(AppLocalizations.of(context).debugRowRarity, definition.rarity.name),
+            _DebugRow(AppLocalizations.of(context).debugRowRegion, definition.region.name),
             _DebugRow(
-              'assetKey',
-              definition.assetKey ?? '— missing',
+              AppLocalizations.of(context).debugRowAssetKey,
+              definition.assetKey ?? AppLocalizations.of(context).debugMissing,
               warn: definition.assetKey == null,
               copyable: definition.assetKey != null,
             ),
             if (definition.previewAssetKey != null &&
                 definition.previewAssetKey != definition.assetKey)
-              _DebugRow('previewAssetKey', definition.previewAssetKey!,
-                  copyable: true),
-            _DebugRow('sortOrder', '${definition.sortOrder}'),
+              _DebugRow(AppLocalizations.of(context).debugRowPreviewAssetKey, definition.previewAssetKey!, copyable: true),
+            _DebugRow(AppLocalizations.of(context).debugRowSortOrder, '${definition.sortOrder}'),
             _DebugRow(
-              'isPremium',
+              AppLocalizations.of(context).debugRowIsPremium,
               '${definition.isPremium}',
               warn: definition.isPremium,
             ),
             _DebugRow(
-              'isEnabled',
+              AppLocalizations.of(context).debugRowIsEnabled,
               '${definition.isEnabled}',
               warn: !definition.isEnabled,
             ),
             if (definition.metadata.isNotEmpty)
-              _DebugRow('metadata', _fmtMap(definition.metadata)),
+              _DebugRow(AppLocalizations.of(context).debugRowMetadata, _fmtMap(definition.metadata)),
             if (unlock != null) ...[
               const Divider(height: 14, thickness: 1),
               _DebugRow(
-                'unlockedAt',
+                AppLocalizations.of(context).debugRowUnlockedAt,
                 unlock!.unlockedAt.toIso8601String(),
               ),
               if (unlock!.sourceType != null)
-                _DebugRow('sourceType', unlock!.sourceType!),
+                _DebugRow(AppLocalizations.of(context).debugRowSourceType, unlock!.sourceType!),
               if (unlock!.sourceId != null)
-                _DebugRow('sourceId', unlock!.sourceId!),
+                _DebugRow(AppLocalizations.of(context).debugRowSourceId, unlock!.sourceId!),
             ],
           ],
         ),
@@ -793,13 +794,13 @@ class _DebugRow extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: GestureDetector(
+              child: GestureDetector(
               onLongPress: copyable
                   ? () {
                       Clipboard.setData(ClipboardData(text: value));
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Zkopírováno: $value'),
+                          content: Text(AppLocalizations.of(context).copiedToClipboard(value)),
                           duration: const Duration(seconds: 1),
                         ),
                       );
@@ -822,7 +823,7 @@ class _DebugRow extends StatelessWidget {
                 Clipboard.setData(ClipboardData(text: value));
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Zkopírováno: $value'),
+                    content: Text(AppLocalizations.of(context).copiedToClipboard(value)),
                     duration: const Duration(seconds: 1),
                   ),
                 );
@@ -858,6 +859,7 @@ class _UnlockConditionsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -867,7 +869,7 @@ class _UnlockConditionsSection extends StatelessWidget {
                 size: 13, color: color.withValues(alpha: 0.8)),
             const SizedBox(width: 5),
             Text(
-              'PODMÍNKY ODEMČENÍ',
+              l10n.cosmeticUnlockConditionsHeader,
               style: TextStyle(
                 color: color.withValues(alpha: 0.8),
                 fontSize: Tokens.fontSizeCaption,
@@ -883,7 +885,7 @@ class _UnlockConditionsSection extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Text(
-                '— nebo —',
+                l10n.listOrSeparator,
                 style: tt.bodySmall?.copyWith(
                   color: color.withValues(alpha: 0.4),
                   fontSize: Tokens.fontSizeMicro,
@@ -918,7 +920,7 @@ class _RuleBlock extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'source: ${rule.sourceType} / ${rule.sourceId}',
+            AppLocalizations.of(context).ruleSource(rule.sourceType, rule.sourceId),
             style: tt.bodySmall?.copyWith(
               color: color.withValues(alpha: 0.6),
               fontSize: 10,

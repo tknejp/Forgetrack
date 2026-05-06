@@ -4928,6 +4928,168 @@ abstract class AppLocalizations {
   /// **'Developer-only background. Grant via DevTools.'**
   String get cosmeticBackgroundDevOnlyDesc;
 
+  /// Generic close button label
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get dialogClose;
+
+  /// Developer tools: grant cosmetic button label
+  ///
+  /// In en, this message translates to:
+  /// **'Grant'**
+  String get devGrant;
+
+  /// Developer tools: revoke cosmetic button label
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke'**
+  String get devRevoke;
+
+  /// Button to equip a cosmetic
+  ///
+  /// In en, this message translates to:
+  /// **'Equip'**
+  String get cosmeticEquip;
+
+  /// Button to unequip a cosmetic
+  ///
+  /// In en, this message translates to:
+  /// **'Unequip'**
+  String get cosmeticUnequip;
+
+  /// DevTools pill shown when cosmetic asset is missing
+  ///
+  /// In en, this message translates to:
+  /// **'NO ASSET'**
+  String get cosmeticNoAsset;
+
+  /// Header for companion requirements checklist
+  ///
+  /// In en, this message translates to:
+  /// **'REQUIREMENTS'**
+  String get cosmeticRequirementsHeader;
+
+  /// Separator text between alternative unlock rules
+  ///
+  /// In en, this message translates to:
+  /// **'— or —'**
+  String get listOrSeparator;
+
+  /// Header for debug details expansion tile
+  ///
+  /// In en, this message translates to:
+  /// **'DEBUG DETAILS'**
+  String get debugDetailsHeader;
+
+  /// Label for debug row: id
+  ///
+  /// In en, this message translates to:
+  /// **'id'**
+  String get debugRowId;
+
+  /// Label for debug row: type
+  ///
+  /// In en, this message translates to:
+  /// **'type'**
+  String get debugRowType;
+
+  /// Label for debug row: rarity
+  ///
+  /// In en, this message translates to:
+  /// **'rarity'**
+  String get debugRowRarity;
+
+  /// Label for debug row: region
+  ///
+  /// In en, this message translates to:
+  /// **'region'**
+  String get debugRowRegion;
+
+  /// Label for debug row: asset key
+  ///
+  /// In en, this message translates to:
+  /// **'assetKey'**
+  String get debugRowAssetKey;
+
+  /// Label for debug row: preview asset key
+  ///
+  /// In en, this message translates to:
+  /// **'previewAssetKey'**
+  String get debugRowPreviewAssetKey;
+
+  /// Label for debug row: sort order
+  ///
+  /// In en, this message translates to:
+  /// **'sortOrder'**
+  String get debugRowSortOrder;
+
+  /// Label for debug row: is premium
+  ///
+  /// In en, this message translates to:
+  /// **'isPremium'**
+  String get debugRowIsPremium;
+
+  /// Label for debug row: is enabled
+  ///
+  /// In en, this message translates to:
+  /// **'isEnabled'**
+  String get debugRowIsEnabled;
+
+  /// Label for debug row: metadata
+  ///
+  /// In en, this message translates to:
+  /// **'metadata'**
+  String get debugRowMetadata;
+
+  /// Label for debug row: unlocked at
+  ///
+  /// In en, this message translates to:
+  /// **'unlockedAt'**
+  String get debugRowUnlockedAt;
+
+  /// Label for debug row: source type
+  ///
+  /// In en, this message translates to:
+  /// **'sourceType'**
+  String get debugRowSourceType;
+
+  /// Label for debug row: source id
+  ///
+  /// In en, this message translates to:
+  /// **'sourceId'**
+  String get debugRowSourceId;
+
+  /// Placeholder when a debug value is missing
+  ///
+  /// In en, this message translates to:
+  /// **'— missing'**
+  String get debugMissing;
+
+  /// Formatted rule source
+  ///
+  /// In en, this message translates to:
+  /// **'source: {type} / {id}'**
+  String ruleSource(String type, String id);
+
+  /// Header for unlock conditions section
+  ///
+  /// In en, this message translates to:
+  /// **'UNLOCK CONDITIONS'**
+  String get cosmeticUnlockConditionsHeader;
+
+  /// Snackbar shown after copying a value to clipboard
+  ///
+  /// In en, this message translates to:
+  /// **'Copied: {value}'**
+  String copiedToClipboard(String value);
+
+  /// Label showing when a cosmetic was unlocked
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocked {date}'**
+  String cosmeticUnlockedAt(String date);
+
   /// No description provided for @cosmeticBackgroundForestTrailName.
   ///
   /// In en, this message translates to:
