@@ -2,11 +2,11 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:forgetrack/features/progression/application/progression_engine.dart';
 import 'package:forgetrack/features/progression/application/progression_source.dart';
-import 'package:forgetrack/features/progression/domain/progression_evaluator.dart';
-import 'package:forgetrack/features/progression/domain/progression_level_policy.dart';
+import 'package:forgetrack/features/progression/domain/evaluator/progression_evaluator.dart';
+import 'package:forgetrack/features/progression/domain/policy/level_policy.dart';
 import 'package:forgetrack/features/progression/domain/progression_models.dart';
-import 'package:forgetrack/features/progression/domain/progression_quest_evaluator.dart';
-import 'package:forgetrack/features/progression/domain/progression_reward_finalization_policy.dart';
+import 'package:forgetrack/features/progression/domain/evaluator/quest_evaluator.dart';
+import 'package:forgetrack/features/progression/domain/policy/reward_finalization_policy.dart';
 import 'package:forgetrack/features/progression/domain/progression_repository.dart';
 
 void main() {
@@ -1877,7 +1877,7 @@ void main() {
   group('ProgressionEvaluator', () {
     test('treats tolerance boundaries as achieved', () {
       const evaluator = ProgressionEvaluator();
-      const rule = ProgressionRuleDefinition(
+      final rule = ProgressionRuleDefinition(
         id: 'daily_calories',
         version: 'v1',
         domain: ProgressionDomain.nutrition,
@@ -1887,8 +1887,9 @@ void main() {
         targetValue: 2000,
         toleranceRatio: 0.10,
         rewardXp: 60,
-        title: 'Daily Calories',
-        description: 'Stay within tolerance',
+        title: (l10n) => 'Daily Calories',
+        description: (l10n) => 'Stay within tolerance',
+        unit: (l10n) => 'kcal',
       );
 
       final lowerBoundary = evaluator.evaluate(
@@ -1926,7 +1927,7 @@ void main() {
 
     test('supports atMost comparator with aboveMaximum miss reason', () {
       const evaluator = ProgressionEvaluator();
-      const rule = ProgressionRuleDefinition(
+      final rule = ProgressionRuleDefinition(
         id: 'daily_sugar_cap',
         version: 'v1',
         domain: ProgressionDomain.nutrition,
@@ -1935,8 +1936,9 @@ void main() {
         comparator: ProgressionComparator.atMost,
         targetValue: 2000,
         rewardXp: 20,
-        title: 'Daily Cap',
-        description: 'Stay under the cap',
+        title: (l10n) => 'Daily Cap',
+        description: (l10n) => 'Stay under the cap',
+        unit: (l10n) => 'kcal',
       );
 
       final evaluation = evaluator.evaluate(
@@ -1956,7 +1958,7 @@ void main() {
 
     test('supports betweenInclusive comparator and stores upper target', () {
       const evaluator = ProgressionEvaluator();
-      const rule = ProgressionRuleDefinition(
+      final rule = ProgressionRuleDefinition(
         id: 'daily_zone',
         version: 'v1',
         domain: ProgressionDomain.sleep,
@@ -1966,8 +1968,9 @@ void main() {
         targetValue: 420,
         upperTargetValue: 540,
         rewardXp: 20,
-        title: 'Sleep Zone',
-        description: 'Stay inside target zone',
+        title: (l10n) => 'Sleep Zone',
+        description: (l10n) => 'Stay inside target zone',
+        unit: (l10n) => 'min',
       );
 
       final inside = evaluator.evaluate(

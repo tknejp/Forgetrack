@@ -1,7 +1,7 @@
 import '../../cosmetics/domain/cosmetic_unlock_snapshot.dart';
-import '../domain/perfect_period_evaluator.dart';
+import '../domain/evaluator/perfect_period_evaluator.dart';
 import '../domain/progression_models.dart';
-import '../domain/progression_quest_catalog.dart';
+import '../domain/catalog/quest_catalog.dart';
 import 'progression_engine.dart';
 
 /// Builds a [CosmeticUnlockSnapshot] from a [ProgressionEngineState] plus the

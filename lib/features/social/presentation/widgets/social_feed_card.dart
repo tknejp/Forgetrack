@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:forgetrack/shared/presentation/achievement_badge_specs.dart';
 import 'package:provider/provider.dart';
+import '../../../progression/domain/catalog/achievement_catalog.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../application/social_provider.dart';
@@ -59,7 +59,10 @@ class SocialFeedCard extends StatelessWidget {
 
     final color =
         colorForDifficultyString(share.achievementSnapshot.difficulty);
-    final emoji = achievementEmojiForId(share.achievementId);
+    final emoji =
+        ProgressionAchievementCatalog.definitionForId(share.achievementId)
+                ?.badgeEmoji ??
+            '\u{1F3C5}';
     final diffLabel = socialDifficultyLabelForName(
         share.achievementSnapshot.difficulty, l10n);
 

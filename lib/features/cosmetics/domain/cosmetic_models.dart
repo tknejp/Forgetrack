@@ -3,6 +3,7 @@
 // is intentionally decoupled from `progression` and `social`.
 
 import '../../../l10n/app_localizations.dart';
+import '../../../shared/theme/design_tokens.dart';
 
 /// Resolves a localized string from the active [AppLocalizations]. Used by
 /// [CosmeticDefinition] for player-facing text (name / description / unlock
@@ -21,13 +22,26 @@ enum CosmeticType {
 }
 
 enum CosmeticRarity {
-  common,
-  uncommon,
-  rare,
-  epic,
-  legendary,
-  mythic,
+  common(token: Rarity.common, label: _rarityCommonLabel),
+  uncommon(token: Rarity.uncommon, label: _rarityUncommonLabel),
+  rare(token: Rarity.rare, label: _rarityRareLabel),
+  epic(token: Rarity.epic, label: _rarityEpicLabel),
+  legendary(token: Rarity.legendary, label: _rarityLegendaryLabel),
+  mythic(token: Rarity.mythic, label: _rarityMythicLabel);
+
+  const CosmeticRarity({required this.token, required CosmeticText label})
+      : _label = label;
+  final Rarity token;
+  final CosmeticText _label;
+  String label(AppLocalizations l10n) => _label(l10n);
 }
+
+String _rarityCommonLabel(AppLocalizations l10n) => l10n.cosmeticRarityCommon;
+String _rarityUncommonLabel(AppLocalizations l10n) => l10n.cosmeticRarityUncommon;
+String _rarityRareLabel(AppLocalizations l10n) => l10n.cosmeticRarityRare;
+String _rarityEpicLabel(AppLocalizations l10n) => l10n.cosmeticRarityEpic;
+String _rarityLegendaryLabel(AppLocalizations l10n) => l10n.cosmeticRarityLegendary;
+String _rarityMythicLabel(AppLocalizations l10n) => l10n.cosmeticRarityMythic;
 
 enum CosmeticRegion {
   forestTrail,

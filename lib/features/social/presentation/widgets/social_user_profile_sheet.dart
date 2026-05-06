@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../progression/domain/policy/level_config.dart';
 import '../../../../features/progression/domain/progression_models.dart';
-import '../../../../features/progression/presentation/progression_l10n.dart';
 import '../../../../features/progression/presentation/widgets/progression_level_badge.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
@@ -56,7 +56,6 @@ class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
     final social = context.watch<SocialProvider>();
     final bottomPad = MediaQuery.of(context).padding.bottom;
     final l10n = context.l10n;
-    final progL10n = ProgressionL10n(l10n);
 
     final isMe = social.currentUid == widget.uid;
 
@@ -150,8 +149,8 @@ class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
                                       if (stats != null) ...[
                                         const SizedBox(height: 6),
                                         Text(
-                                          ProgressionL10n(context.l10n)
-                                              .levelTitle(stats.level)
+                                          tierForLevel(stats.level)
+                                              .title(context.l10n)
                                               .toUpperCase(),
                                           style: TextStyle(
                                               fontSize: 7,
@@ -222,7 +221,6 @@ class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
                         isMe: isMe,
                         stream: _achievementsStream,
                         l10n: l10n,
-                        progL10n: progL10n,
                       ),
                       const SizedBox(height: 18),
                       _SectionTitle(
@@ -352,14 +350,12 @@ class _PinnedAchievementsSection extends StatelessWidget {
     required this.isMe,
     required this.stream,
     required this.l10n,
-    required this.progL10n,
   });
 
   final SocialUserProfile? profile;
   final bool isMe;
   final Stream<List<SocialUnlockedAchievement>> stream;
   final AppLocalizations l10n;
-  final ProgressionL10n progL10n;
 
   @override
   Widget build(BuildContext context) {
@@ -379,6 +375,7 @@ class _PinnedAchievementsSection extends StatelessWidget {
 
         final achievements = mapSocialAchievementsToProgression(
           snap.data ?? const [],
+          context.l10n,
         );
         final byId = {
           for (final achievement in achievements) achievement.id: achievement,
@@ -398,7 +395,6 @@ class _PinnedAchievementsSection extends StatelessWidget {
         return FriendAchievementsGrid(
           achievements: pinned,
           l10n: l10n,
-          progL10n: progL10n,
         );
       },
     );

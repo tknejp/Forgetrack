@@ -15,7 +15,7 @@ import '../../../cosmetics/domain/cosmetic_models.dart';
 import '../../../cosmetics/presentation/widgets/cosmetic_equipped_chip.dart';
 import '../../../cosmetics/presentation/widgets/cosmetic_frame_preview.dart';
 import '../../../progression/application/progression_provider.dart';
-import '../../../progression/presentation/progression_l10n.dart';
+import '../../../progression/domain/policy/level_config.dart';
 import '../../../progression/presentation/widgets/progression_level_badge.dart';
 import '../../application/social_provider.dart';
 import '../../domain/social_models.dart';
@@ -288,7 +288,7 @@ class _HeaderContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final progression = context.watch<ProgressionProvider>();
     final profile = progression.profile;
-    final levelTitle = ProgressionL10n(context.l10n).levelTitle(profile.level);
+    final levelTitle = tierForLevel(profile.level).title(context.l10n);
     final levelAccent = progressionLevelAccent(profile.level);
     final xpSpan =
         (profile.nextLevelXp - profile.levelFloorXp).clamp(1, 1 << 30);

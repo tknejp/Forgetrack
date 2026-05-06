@@ -8,11 +8,8 @@ import '../../../../l10n/l10n.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../cosmetics/application/cosmetics_provider.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
-import '../../../cosmetics/presentation/cosmetics_palette.dart';
 import '../../../progression/application/progression_provider.dart';
-import '../../../progression/domain/progression_level_config.dart';
-import '../../../progression/domain/progression_models.dart';
-import '../../../progression/presentation/progression_l10n.dart';
+import '../../../progression/domain/policy/level_config.dart';
 
 class ProgressionCelebrationOverlay extends StatefulWidget {
   const ProgressionCelebrationOverlay({
@@ -119,7 +116,6 @@ class _CelebrationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final ft = context.ft;
     final l10n = context.l10n;
-    final progressionL10n = ProgressionL10n(l10n);
     final cosmetics = context.watch<CosmeticsProvider>();
     final cosmeticL10n = l10n;
     final cosmeticDefinitions = event.cosmeticIds
@@ -128,7 +124,6 @@ class _CelebrationCard extends StatelessWidget {
         .toList(growable: false);
     final data = _CelebrationData.from(
       event,
-      progressionL10n: progressionL10n,
       cosmeticsL10n: cosmeticL10n,
       cosmeticDefinitions: cosmeticDefinitions,
       l10n: l10n,
@@ -273,7 +268,6 @@ class _CelebrationData {
 
   factory _CelebrationData.from(
     ProgressionCelebrationEvent event, {
-    required ProgressionL10n progressionL10n,
     required AppLocalizations cosmeticsL10n,
     required List<CosmeticDefinition> cosmeticDefinitions,
     required AppLocalizations l10n,
@@ -281,43 +275,38 @@ class _CelebrationData {
     switch (event.kind) {
       case ProgressionCelebrationKind.levelMilestone:
         final level = event.level ?? 1;
-        final title = progressionL10n.levelTitle(level);
+        final title = tierForLevel(level).title(l10n);
         return _CelebrationData(
           eyebrow: l10n.journeyEventTitleUnlocked,
           title: l10n.journeyLevelWithTitle(level, title),
           subtitle: l10n.progLevelAchievementDesc(level),
-          color: _difficultyColor(tierForLevel(level).difficulty),
+          color: tierForLevel(level).difficulty.color,
           icon: Icons.military_tech_rounded,
         );
       case ProgressionCelebrationKind.achievementUnlocked:
         final achievement = event.achievement;
-        final color = achievement == null
-            ? Tokens.xp
-            : _difficultyColor(achievement.difficulty);
+        final color =
+            achievement == null ? Tokens.xp : achievement.difficulty.color;
         return _CelebrationData(
           eyebrow: l10n.journeyEventAchievementUnlocked,
           title: achievement == null
               ? l10n.journeyEventAchievementUnlocked
-              : progressionL10n.achievementTitle(achievement),
-          subtitle: achievement == null
-              ? null
-              : progressionL10n.achievementDescription(achievement),
+              : achievement.title(l10n),
+          subtitle: achievement?.description(l10n),
           color: color,
           icon: Icons.workspace_premium_rounded,
         );
       case ProgressionCelebrationKind.cosmeticUnlocked:
         final definition =
             cosmeticDefinitions.isEmpty ? null : cosmeticDefinitions.first;
-        final palette = definition == null
-            ? Rarity.rare
-            : CosmeticsPalette.forRarity(definition.rarity);
+        final palette =
+            definition == null ? Rarity.rare : definition.rarity.token;
         return _CelebrationData(
           eyebrow: l10n.celebrationCosmeticUnlockedEyebrow,
           title: definition == null
               ? l10n.cosmeticUnknown
               : definition.name(cosmeticsL10n),
-          subtitle:
-              definition == null ? null : _rarityLabel(definition.rarity, l10n),
+          subtitle: definition?.rarity.label(l10n),
           color: palette.color,
           icon: Icons.auto_awesome_rounded,
         );
@@ -434,7 +423,7 @@ class _CosmeticUnlockChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ft = context.ft;
-    final palette = CosmeticsPalette.forRarity(definition.rarity);
+    final palette = definition.rarity.token;
     return Container(
       constraints: const BoxConstraints(maxWidth: 190),
       padding: const EdgeInsets.all(Tokens.spaceSm),
@@ -469,7 +458,7 @@ class _CosmeticUnlockChip extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  _rarityLabel(definition.rarity, appL10n).toUpperCase(),
+                  definition.rarity.label(appL10n).toUpperCase(),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -570,38 +559,6 @@ class _CelebrationSparkPainter extends CustomPainter {
   @override
   bool shouldRepaint(_CelebrationSparkPainter oldDelegate) =>
       oldDelegate.t != t || oldDelegate.color != color;
-}
-
-Color _difficultyColor(ProgressionAchievementDifficulty difficulty) {
-  switch (difficulty) {
-    case ProgressionAchievementDifficulty.easy:
-      return Tokens.difficultyEasy;
-    case ProgressionAchievementDifficulty.medium:
-      return Tokens.difficultyMedium;
-    case ProgressionAchievementDifficulty.hard:
-      return Tokens.difficultyHard;
-    case ProgressionAchievementDifficulty.extraHard:
-      return Tokens.difficultyExtraHard;
-    case ProgressionAchievementDifficulty.mythic:
-      return Tokens.difficultyMythic;
-  }
-}
-
-String _rarityLabel(CosmeticRarity rarity, AppLocalizations l10n) {
-  switch (rarity) {
-    case CosmeticRarity.common:
-      return l10n.cosmeticRarityCommon;
-    case CosmeticRarity.uncommon:
-      return l10n.cosmeticRarityUncommon;
-    case CosmeticRarity.rare:
-      return l10n.cosmeticRarityRare;
-    case CosmeticRarity.epic:
-      return l10n.cosmeticRarityEpic;
-    case CosmeticRarity.legendary:
-      return l10n.cosmeticRarityLegendary;
-    case CosmeticRarity.mythic:
-      return l10n.cosmeticRarityMythic;
-  }
 }
 
 IconData _iconForType(CosmeticType type) {

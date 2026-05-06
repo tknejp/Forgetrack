@@ -1,14 +1,14 @@
-import '../domain/progression_achievement_catalog.dart';
-import '../domain/progression_achievement_evaluator.dart';
-import '../domain/progression_evaluator.dart';
-import '../domain/progression_level_policy.dart';
+import '../domain/catalog/achievement_catalog.dart';
+import '../domain/evaluator/achievement_evaluator.dart';
+import '../domain/evaluator/progression_evaluator.dart';
+import '../domain/policy/level_policy.dart';
 import '../domain/progression_local_repository.dart';
 import '../domain/progression_models.dart';
-import '../domain/progression_quest_catalog.dart';
-import '../domain/progression_quest_evaluator.dart';
+import '../domain/catalog/quest_catalog.dart';
+import '../domain/evaluator/quest_evaluator.dart';
 import '../domain/progression_repository.dart';
-import '../domain/progression_rule_catalog.dart';
-import '../domain/progression_streak_policy.dart';
+import '../domain/catalog/rule_catalog.dart';
+import '../domain/policy/streak_policy.dart';
 import 'progression_source.dart';
 
 class ProgressionEngineState {
@@ -694,8 +694,6 @@ class ProgressionEngine {
       minimumTrackedDays: quest.minimumTrackedDays,
       assetKey: quest.assetKey,
       visualDomain: quest.visualDomain,
-      titleText: quest.titleText,
-      descriptionText: quest.descriptionText,
       sourceLabel: quest.sourceLabel,
       chainId: quest.chainId,
       chainStepLabel: quest.chainStepLabel,

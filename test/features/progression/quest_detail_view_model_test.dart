@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forgetrack/features/progression/domain/progression_models.dart';
-import 'package:forgetrack/features/progression/presentation/quest_detail_view_model.dart';
+import 'package:forgetrack/features/progression/presentation/quests/quest_detail_view_model.dart';
 
 void main() {
   group('QuestDetailViewModel', () {
@@ -127,8 +127,8 @@ ProgressionQuest _quest({
 }) {
   return ProgressionQuest(
     id: id,
-    title: id,
-    description: id,
+    title: (l10n) => id,
+    description: (l10n) => id,
     type: ProgressionQuestType.milestone,
     category: ProgressionQuestCategory.journey,
     criterionType: ProgressionQuestCriterionType.rewardCountAtLeast,

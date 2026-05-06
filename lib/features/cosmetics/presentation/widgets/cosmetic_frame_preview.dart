@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../config/cosmetics_config.dart';
 import '../../domain/cosmetic_models.dart';
-import '../cosmetics_palette.dart';
 
 /// Wraps an avatar [child] with a cosmetic frame.
 ///
@@ -101,7 +100,7 @@ class _PlaceholderRing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = CosmeticsPalette.forRarity(rarity);
+    final palette = rarity.token;
     final shape = borderRadius == null ? BoxShape.circle : BoxShape.rectangle;
     return Container(
       decoration: BoxDecoration(

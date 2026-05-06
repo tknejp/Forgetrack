@@ -415,6 +415,8 @@ class SocialProvider extends ChangeNotifier {
   Future<void> shareAchievement(
     String achievementId, {
     String? message,
+    String? resolvedTitle,
+    String? resolvedDescription,
   }) async {
     final uid = _activeUid;
     final authProvider = _authProvider;
@@ -462,8 +464,8 @@ class SocialProvider extends ChangeNotifier {
         photoUrl: actorSnapshot.photoUrl,
       ),
       achievementSnapshot: SocialAchievementSnapshot(
-        title: achievement.title,
-        description: achievement.description,
+        title: resolvedTitle ?? achievement.id,
+        description: resolvedDescription ?? '',
         difficulty: achievement.difficulty.name,
         type: achievement.type.name,
         domain: achievement.domain?.name,
@@ -668,8 +670,8 @@ class SocialProvider extends ChangeNotifier {
         .map(
           (a) => SocialUnlockedAchievement(
             achievementId: a.id,
-            title: a.title,
-            description: a.description,
+            title: a.id,
+            description: '',
             difficulty: a.difficulty.name,
             type: a.type.name,
             domain: a.domain?.name,
