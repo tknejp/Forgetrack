@@ -3968,4 +3968,28 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cosmeticCompanionDragonlingUnlockHint =>
       'Reach level 100 and obtain the Dragonrock Crown.';
+
+  @override
+  String get coachLogExportTitle => 'Coach Log Export';
+
+  @override
+  String get coachLogExportCurrentWeekButton => 'Export current week';
+
+  @override
+  String get coachLogExportRangeButton => 'Export range';
+
+  @override
+  String get coachLogExportRunning => 'Exporting…';
+
+  @override
+  String coachLogExportSuccessWeeks(int count) {
+    return 'Exported $count week(s)';
+  }
+
+  @override
+  String get coachLogExportOpenSheets => 'Open in Sheets';
+
+  @override
+  String get coachLogExportDescription =>
+      'Writes a weekly coach-log block — weight, steps, calories, macros — into the Coach Log tab of your Forgetrack spreadsheet.';
 }

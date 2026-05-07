@@ -3955,4 +3955,28 @@ class AppLocalizationsCs extends AppLocalizations {
   @override
   String get cosmeticCompanionDragonlingUnlockHint =>
       'Dosáhni úrovně 100 a získej Dračí korunu pevnosti.';
+
+  @override
+  String get coachLogExportTitle => 'Coach Log Export';
+
+  @override
+  String get coachLogExportCurrentWeekButton => 'Exportovat aktuální týden';
+
+  @override
+  String get coachLogExportRangeButton => 'Exportovat rozsah';
+
+  @override
+  String get coachLogExportRunning => 'Exportuje se…';
+
+  @override
+  String coachLogExportSuccessWeeks(int count) {
+    return 'Exportováno $count týdnů';
+  }
+
+  @override
+  String get coachLogExportOpenSheets => 'Otevřít v Sheets';
+
+  @override
+  String get coachLogExportDescription =>
+      'Zapíše týdenní blok coach logu — váhu, kroky, kalorie, makra — do záložky Coach Log ve vaší Forgetrack tabulce.';
 }

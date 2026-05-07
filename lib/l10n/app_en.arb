@@ -2022,5 +2022,31 @@
   "cosmeticCompanionLanternGolemUnlockHint": "Obtain the Miner's Lantern and complete 75 quests.",
   "cosmeticCompanionIceWispUnlockHint": "Obtain the Frost Shard and the Frozen Lake Heart.",
   "cosmeticCompanionMountainGryphonUnlockHint": "Reach level 80 and obtain the Frozen Lake Heart.",
-  "cosmeticCompanionDragonlingUnlockHint": "Reach level 100 and obtain the Dragonrock Crown."
+  "cosmeticCompanionDragonlingUnlockHint": "Reach level 100 and obtain the Dragonrock Crown.",
+
+  "coachLogExportTitle": "Coach Log Export",
+  "@coachLogExportTitle": { "description": "Screen title and settings tile for the Bushido coach-log export screen" },
+
+  "coachLogExportCurrentWeekButton": "Export current week",
+  "@coachLogExportCurrentWeekButton": { "description": "Button that exports the current ISO week up to today" },
+
+  "coachLogExportRangeButton": "Export range",
+  "@coachLogExportRangeButton": { "description": "Button that exports the selected date range" },
+
+  "coachLogExportRunning": "Exporting…",
+  "@coachLogExportRunning": { "description": "Label shown while the coach-log export is in progress" },
+
+  "coachLogExportSuccessWeeks": "Exported {count} week(s)",
+  "@coachLogExportSuccessWeeks": {
+    "description": "Success message after a successful export",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "coachLogExportOpenSheets": "Open in Sheets",
+  "@coachLogExportOpenSheets": { "description": "Button that opens the exported spreadsheet in Google Sheets" },
+
+  "coachLogExportDescription": "Writes a weekly coach-log block — weight, steps, calories, macros — into the Coach Log tab of your Forgetrack spreadsheet.",
+  "@coachLogExportDescription": { "description": "Short description shown on the coach-log export screen" }
 }

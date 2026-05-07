@@ -29,6 +29,11 @@ import 'features/progression/data/hybrid_progression_repository.dart';
 import 'features/progression/data/local/progression_database.dart';
 import 'features/progression/data/progression_repository_impl.dart';
 import 'features/progression/application/progression_provider.dart';
+import 'features/coach_log_export/application/bushido_export_provider.dart';
+import 'features/coach_log_export/data/bushido_export_data_builder.dart';
+import 'features/coach_log_export/data/bushido_fitness_source_adapter.dart';
+import 'features/coach_log_export/data/bushido_nutrition_source_adapter.dart';
+import 'features/coach_log_export/data/bushido_sheets_service.dart';
 import 'features/sheets_export/application/sheets_export_provider.dart';
 import 'features/social/application/social_provider.dart';
 import 'features/social/data/social_firebase_bootstrap.dart';
@@ -132,6 +137,16 @@ Future<void> main() async {
   AppLog.app.info('Providers ready, launching KT initialize()');
   unawaited(ktProvider.initialize());
 
+  final bushidoExportProvider = BushidoExportProvider(
+    sheets: BushidoSheetsService(),
+    dataBuilder: BushidoExportDataBuilder(
+      fitness: BushidoFitnessSourceAdapter(fitnessProvider),
+      nutrition: BushidoNutritionSourceAdapter(ktProvider),
+    ),
+    refreshFitness: fitnessProvider.refreshRange,
+    refreshNutrition: ktProvider.refreshRange,
+  );
+
   final goalsProvider = GoalsProvider();
   await goalsProvider.init();
 
@@ -166,6 +181,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => CalorieProvider(calorieApi)),
         ChangeNotifierProvider.value(value: ktProvider),
         ChangeNotifierProvider(create: (_) => SheetsExportProvider()),
+        ChangeNotifierProvider.value(value: bushidoExportProvider),
         ChangeNotifierProvider.value(value: devToolsProvider),
         ChangeNotifierProxyProvider<AuthProvider, CosmeticsProvider>(
           create: (_) => CosmeticsProvider(

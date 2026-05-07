@@ -7100,6 +7100,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reach level 100 and obtain the Dragonrock Crown.'**
   String get cosmeticCompanionDragonlingUnlockHint;
+
+  /// Screen title and settings tile for the Bushido coach-log export screen
+  ///
+  /// In en, this message translates to:
+  /// **'Coach Log Export'**
+  String get coachLogExportTitle;
+
+  /// Button that exports the current ISO week up to today
+  ///
+  /// In en, this message translates to:
+  /// **'Export current week'**
+  String get coachLogExportCurrentWeekButton;
+
+  /// Button that exports the selected date range
+  ///
+  /// In en, this message translates to:
+  /// **'Export range'**
+  String get coachLogExportRangeButton;
+
+  /// Label shown while the coach-log export is in progress
+  ///
+  /// In en, this message translates to:
+  /// **'Exporting…'**
+  String get coachLogExportRunning;
+
+  /// Success message after a successful export
+  ///
+  /// In en, this message translates to:
+  /// **'Exported {count} week(s)'**
+  String coachLogExportSuccessWeeks(int count);
+
+  /// Button that opens the exported spreadsheet in Google Sheets
+  ///
+  /// In en, this message translates to:
+  /// **'Open in Sheets'**
+  String get coachLogExportOpenSheets;
+
+  /// Short description shown on the coach-log export screen
+  ///
+  /// In en, this message translates to:
+  /// **'Writes a weekly coach-log block — weight, steps, calories, macros — into the Coach Log tab of your Forgetrack spreadsheet.'**
+  String get coachLogExportDescription;
 }
 
 class _AppLocalizationsDelegate

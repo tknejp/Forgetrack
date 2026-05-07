@@ -1372,5 +1372,13 @@
   "cosmeticCompanionLanternGolemUnlockHint": "Získej Hornickou lucernu a dokonči 75 úkolů.",
   "cosmeticCompanionIceWispUnlockHint": "Získej Ledový střep a Srdce zmrzlého jezera.",
   "cosmeticCompanionMountainGryphonUnlockHint": "Dosáhni úrovně 80 a získej Srdce zmrzlého jezera.",
-  "cosmeticCompanionDragonlingUnlockHint": "Dosáhni úrovně 100 a získej Dračí korunu pevnosti."
+  "cosmeticCompanionDragonlingUnlockHint": "Dosáhni úrovně 100 a získej Dračí korunu pevnosti.",
+
+  "coachLogExportTitle": "Coach Log Export",
+  "coachLogExportCurrentWeekButton": "Exportovat aktuální týden",
+  "coachLogExportRangeButton": "Exportovat rozsah",
+  "coachLogExportRunning": "Exportuje se…",
+  "coachLogExportSuccessWeeks": "Exportováno {count} týdnů",
+  "coachLogExportOpenSheets": "Otevřít v Sheets",
+  "coachLogExportDescription": "Zapíše týdenní blok coach logu — váhu, kroky, kalorie, makra — do záložky Coach Log ve vaší Forgetrack tabulce."
 }

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/config/constants.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../auth/application/auth_provider.dart';
+import '../../../coach_log_export/presentation/bushido_export_screen.dart';
 import '../../../../shared/widgets/app_logo.dart';
 import '../../../sheets_export/presentation/sheets_export_screen.dart';
 import '../dialogs/settings_dialogs.dart';
@@ -25,6 +26,16 @@ class SettingsDataSection extends StatelessWidget {
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const SheetsExportScreen()),
+          ),
+        ),
+        const SettingsTileDivider(),
+        SettingsTile(
+          icon: Icons.sports_score_outlined,
+          label: l10n.coachLogExportTitle,
+          showChevron: true,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const BushidoExportScreen()),
           ),
         ),
         const SettingsTileDivider(),
