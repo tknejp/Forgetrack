@@ -334,12 +334,15 @@ class _NutritionScreenState extends State<NutritionScreen> {
     // Balance card data
     final basal = isDayMode
         ? _finite(fitness.basalCaloriesBurnedForDate(_period.start))
-        : 0.0;
+        : _finite(fitness.basalCaloriesBurnedAvgForRange(_period.start, _period.end));
+    // Active = max(HC active-energy series, summed workout calories) so we
+    // get a non-zero value whichever channel the user's HC source writes.
     final activeKcal = isDayMode
-        ? _finite(fitness.activeCaloriesBurnedForDate(_period.start))
-        : 0.0;
+        ? _finite(fitness.bestActiveKcalForDate(_period.start))
+        : _finite(
+            fitness.bestActiveKcalAvgForRange(_period.start, _period.end));
     final output = basal + activeKcal;
-    final intake = isDayMode ? _finite(periodNutrition?.calories ?? 0) : 0.0;
+    final intake = periodKcal;
     final balanceDelta = intake - output;
 
     final chart = _buildEnergyBars(context, kt, _period);
@@ -470,22 +473,25 @@ class _NutritionScreenState extends State<NutritionScreen> {
 
           const SizedBox(height: 10),
 
+          _BalanceCard(
+            basal: basal,
+            active: activeKcal,
+            output: output,
+            intake: intake,
+            delta: balanceDelta,
+            isAverage: !isDayMode,
+          ),
+
           if (isDayMode) ...[
+            const SizedBox(height: 10),
             _MealsCard(
               meals: meals,
               expanded: _expandedMeals,
               onToggleMeal: _toggleMeal,
               emojiFor: _mealEmoji,
             ),
-            const SizedBox(height: 10),
-            _BalanceCard(
-              basal: basal,
-              active: activeKcal,
-              output: output,
-              intake: intake,
-              delta: balanceDelta,
-            ),
           ] else ...[
+            const SizedBox(height: 10),
             _DayModeOnlyHint(),
           ],
         ],
@@ -1231,6 +1237,7 @@ class _BalanceCard extends StatelessWidget {
     required this.output,
     required this.intake,
     required this.delta,
+    this.isAverage = false,
   });
 
   final double basal;
@@ -1238,6 +1245,7 @@ class _BalanceCard extends StatelessWidget {
   final double output;
   final double intake;
   final double delta;
+  final bool isAverage;
 
   @override
   Widget build(BuildContext context) {
@@ -1298,7 +1306,7 @@ class _BalanceCard extends StatelessWidget {
                   border: Border.all(color: badgeColor.withValues(alpha: 0.35)),
                 ),
                 child: Text(
-                  '${safeDelta >= 0 ? '+' : ''}${safeDelta.round()} kcal · $badgeLabel',
+                  '${safeDelta >= 0 ? '+' : ''}${isAverage ? safeDelta.toStringAsFixed(1) : safeDelta.round()} kcal · $badgeLabel',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
@@ -1309,13 +1317,22 @@ class _BalanceCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: Tokens.spaceMd),
-          _BalanceRow(label: l10n.nutritionBalanceBasal, value: safeBasal),
-          _BalanceRow(label: l10n.nutritionBalanceActive, value: safeActive),
+          _BalanceRow(
+            label: l10n.nutritionBalanceBasal,
+            value: safeBasal,
+            isAverage: isAverage,
+          ),
+          _BalanceRow(
+            label: l10n.nutritionBalanceActive,
+            value: safeActive,
+            isAverage: isAverage,
+          ),
           const Divider(color: Color(0x14FFFFFF), height: 18),
           _BalanceRow(
             label: l10n.nutritionBalanceOutput,
             value: safeOutput,
             isStrong: true,
+            isAverage: isAverage,
           ),
           _BalanceRow(
             label: l10n.nutritionBalanceIntake,
@@ -1323,6 +1340,7 @@ class _BalanceCard extends StatelessWidget {
             isStrong: true,
             valueColor: Tokens.calories.color,
             isLast: true,
+            isAverage: isAverage,
           ),
         ],
       ),
@@ -1337,6 +1355,7 @@ class _BalanceRow extends StatelessWidget {
     this.isStrong = false,
     this.valueColor,
     this.isLast = false,
+    this.isAverage = false,
   });
 
   final String label;
@@ -1344,6 +1363,7 @@ class _BalanceRow extends StatelessWidget {
   final bool isStrong;
   final Color? valueColor;
   final bool isLast;
+  final bool isAverage;
 
   @override
   Widget build(BuildContext context) {
@@ -1364,7 +1384,7 @@ class _BalanceRow extends StatelessWidget {
           const Spacer(),
           Text.rich(
             TextSpan(
-              text: safeValue.round().toString(),
+              text: isAverage ? safeValue.toStringAsFixed(1) : safeValue.round().toString(),
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w800,

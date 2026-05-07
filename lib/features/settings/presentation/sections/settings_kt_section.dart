@@ -156,13 +156,13 @@ class _KtConnectedStatusTile extends StatelessWidget {
     final l10n = context.l10n;
 
     return SettingsTile(
-      icon: Icons.sync_rounded,
-      iconWidget: Padding(
-        padding: const EdgeInsets.all(7),
-        child: Image.asset('assets/icons/kt/kaloricke_tabulky.png'),
+      icon: Icons.restaurant_rounded,
+      iconWidget: Image.asset(
+        'assets/icons/kt/kaloricke_tabulky.png',
+        fit: BoxFit.contain,
       ),
-      iconColor: cs.primary,
-      iconBackgroundColor: cs.primaryContainer.withValues(alpha: 0.58),
+      iconBorderless: true,
+      iconBackgroundColor: Colors.transparent,
       label: l10n.ktConnectedBadge,
       subtitle: subtitle,
       trailing: TextButton(
@@ -210,14 +210,21 @@ class _KtLoginCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Tokens.calories.color.withValues(alpha: 0.11),
-            Colors.white.withValues(alpha: 0.025),
+            Tokens.calories.gradStart.withValues(alpha: 0.16),
+            Tokens.calories.gradEnd.withValues(alpha: 0.08),
           ],
         ),
         borderRadius: BorderRadius.circular(Tokens.radiusCard),
         border: Border.all(
-          color: Tokens.calories.color.withValues(alpha: 0.22),
+          color: Tokens.calories.color.withValues(alpha: 0.24),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Tokens.calories.glow.withValues(alpha: 0.20),
+            blurRadius: 20,
+            offset: const Offset(0, 12),
+          ),
+        ],
       ),
       clipBehavior: Clip.antiAlias,
       child: Padding(

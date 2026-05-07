@@ -7,12 +7,20 @@ class GoogleSignInButton extends StatelessWidget {
   final bool isLoading;
   final VoidCallback? onPressed;
   final String? label;
+  final Color? backgroundColor;
+  final Color? borderColor;
+  final Color? iconColor;
+  final Color? textColor;
 
   const GoogleSignInButton({
     super.key,
     required this.isLoading,
     this.onPressed,
     this.label,
+    this.backgroundColor,
+    this.borderColor,
+    this.iconColor,
+    this.textColor,
   });
 
   @override
@@ -21,22 +29,26 @@ class GoogleSignInButton extends StatelessWidget {
     final cs = theme.colorScheme;
     final l10n = context.l10n;
     final resolvedLabel = label ?? l10n.profileContinueWithGoogle;
-    final backgroundColor = theme.brightness == Brightness.dark
-        ? cs.surfaceContainerLow
-        : cs.surface;
-    final borderColor = theme.brightness == Brightness.dark
-        ? cs.outlineVariant.withValues(alpha: 0.9)
-        : cs.outlineVariant.withValues(alpha: 0.72);
+    final resolvedBackgroundColor = backgroundColor ??
+        (theme.brightness == Brightness.dark
+            ? cs.surfaceContainerLow
+            : cs.surface);
+    final resolvedBorderColor = borderColor ??
+        (theme.brightness == Brightness.dark
+            ? cs.outlineVariant.withValues(alpha: 0.9)
+            : cs.outlineVariant.withValues(alpha: 0.72));
+    final resolvedIconColor = iconColor ?? cs.onSurfaceVariant;
+    final resolvedTextColor = textColor ?? cs.onSurface;
 
     return SizedBox(
       width: double.infinity,
       height: 52,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
-          backgroundColor: backgroundColor,
-          foregroundColor: cs.onSurface,
-          disabledBackgroundColor: backgroundColor,
-          side: BorderSide(color: borderColor),
+          backgroundColor: resolvedBackgroundColor,
+          foregroundColor: resolvedTextColor,
+          disabledBackgroundColor: resolvedBackgroundColor,
+          side: BorderSide(color: resolvedBorderColor),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -66,7 +78,7 @@ class GoogleSignInButton extends StatelessWidget {
                       fallback: Icon(
                         Icons.login_rounded,
                         size: 19,
-                        color: cs.onSurfaceVariant,
+                        color: resolvedIconColor,
                       ),
                     ),
                   ),

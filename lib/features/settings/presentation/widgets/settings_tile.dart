@@ -11,6 +11,7 @@ class SettingsTile extends StatelessWidget {
   final VoidCallback? onTap;
   final Color? iconColor;
   final Color? iconBackgroundColor;
+  final bool iconBorderless;
   final TextStyle? labelStyle;
   final bool compact;
 
@@ -26,6 +27,7 @@ class SettingsTile extends StatelessWidget {
     this.onTap,
     this.iconColor,
     this.iconBackgroundColor,
+    this.iconBorderless = false,
     this.labelStyle,
     this.compact = false,
   });
@@ -51,6 +53,7 @@ class SettingsTile extends StatelessWidget {
                 icon: icon,
                 iconColor: iconColor,
                 backgroundColor: iconBackgroundColor,
+                iconBorderless: iconBorderless,
                 compact: compact,
                 child: iconWidget,
               ),

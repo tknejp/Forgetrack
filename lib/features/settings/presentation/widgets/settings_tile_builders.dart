@@ -59,6 +59,7 @@ class _SettingsIconBadge extends StatelessWidget {
   final Widget? child;
   final Color? iconColor;
   final Color? backgroundColor;
+  final bool iconBorderless;
   final bool compact;
 
   const _SettingsIconBadge({
@@ -66,6 +67,7 @@ class _SettingsIconBadge extends StatelessWidget {
     this.child,
     this.iconColor,
     this.backgroundColor,
+    this.iconBorderless = false,
     this.compact = false,
   });
 
@@ -82,9 +84,11 @@ class _SettingsIconBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(compact ? 10 : 12),
-        border: Border.all(
-          color: resolvedIconColor.withValues(alpha: compact ? 0.20 : 0.24),
-        ),
+        border: iconBorderless
+            ? null
+            : Border.all(
+                color: resolvedIconColor.withValues(alpha: compact ? 0.20 : 0.24),
+              ),
       ),
       child: child ??
           Icon(

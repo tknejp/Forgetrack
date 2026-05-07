@@ -86,70 +86,65 @@ class _SignedInHeaderContent extends StatelessWidget {
         : user.email;
     final showEmail = user.email.isNotEmpty && primaryLine != user.email;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            CircleAvatar(
-              radius: 32,
-              backgroundImage: hasPhoto ? NetworkImage(photoUrl) : null,
-              backgroundColor: Tokens.accent.withValues(alpha: 0.22),
-              child: hasPhoto
-                  ? null
-                  : Icon(
-                      Icons.person,
-                      size: 28,
-                      color: Tokens.onSurface,
-                    ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    primaryLine,
-                    style: tt.titleMedium?.copyWith(
-                      color: Tokens.onSurface,
-                      fontWeight: FontWeight.w700,
-                    ),
+        CircleAvatar(
+          radius: 32,
+          backgroundImage: hasPhoto ? NetworkImage(photoUrl) : null,
+          backgroundColor: Tokens.accent.withValues(alpha: 0.22),
+          child: hasPhoto
+              ? null
+              : Icon(
+                  Icons.person,
+                  size: 28,
+                  color: Tokens.onSurface,
+                ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                primaryLine,
+                style: tt.titleMedium?.copyWith(
+                  color: Tokens.onSurface,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              if (showEmail) ...[
+                const SizedBox(height: 2),
+                Text(
+                  user.email,
+                  style: tt.bodySmall?.copyWith(
+                    color: Tokens.onSurfaceMuted,
                   ),
-                  if (showEmail) ...[
-                    const SizedBox(height: 3),
+                ),
+              ],
+              const SizedBox(height: 8),
+              _HeaderBadge(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GoogleLogoIcon(
+                      size: 13,
+                      fallback: Icon(
+                        Icons.link_rounded,
+                        size: 13,
+                        color: cs.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 5),
                     Text(
-                      user.email,
-                      style: tt.bodySmall?.copyWith(
-                        color: Tokens.onSurfaceMuted,
+                      l10n.profileConnectedGoogle,
+                      style: tt.labelSmall?.copyWith(
+                        color: cs.primary,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 14),
-        _HeaderBadge(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              GoogleLogoIcon(
-                size: 14,
-                fallback: Icon(
-                  Icons.link_rounded,
-                  size: 14,
-                  color: cs.primary,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                l10n.profileConnectedGoogle,
-                style: tt.labelSmall?.copyWith(
-                  color: cs.primary,
-                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
@@ -225,6 +220,10 @@ class _SignedOutHeaderContent extends StatelessWidget {
           isLoading: auth.isBusy,
           onPressed:
               auth.isBusy ? null : () => context.read<AuthProvider>().signIn(),
+          backgroundColor: cs.primaryContainer.withValues(alpha: 0.18),
+          borderColor: cs.primary.withValues(alpha: 0.28),
+          iconColor: cs.primary,
+          textColor: cs.onSurface,
         ),
       ],
     );

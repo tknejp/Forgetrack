@@ -233,6 +233,60 @@ class FitnessProvider extends ChangeNotifier {
       FitnessQueries.activeCaloriesBurnedAvgForRange(
           _stepsHistory, _basalCaloriesHistory, start, end);
 
+  // Active calories from logged workouts (sum of ActivityRecord.caloriesBurned).
+  //
+  // Health Connect's ACTIVE_ENERGY_BURNED channel is unreliable across data
+  // sources — some only write workout calories on the workout records and
+  // leave the per-day series empty. These helpers walk [_activities] directly
+  // so the "Aktivita" line on the energy-balance card always reflects what
+  // the activities screen displays.
+
+  /// Sum of [ActivityRecord.caloriesBurned] for workouts whose [startTime]
+  /// falls on [date] (calendar day). Returns 0 when no workouts are logged.
+  double workoutCaloriesForDate(DateTime date) {
+    final day = DateTime(date.year, date.month, date.day);
+    var total = 0.0;
+    for (final a in _activities) {
+      final d = DateTime(a.startTime.year, a.startTime.month, a.startTime.day);
+      if (d == day) total += (a.caloriesBurned ?? 0).toDouble();
+    }
+    return total;
+  }
+
+  /// Average daily workout calories across [start..end] inclusive — total
+  /// kcal logged in workouts within the range divided by the number of days.
+  double workoutCaloriesAvgForRange(DateTime start, DateTime end) {
+    final s = DateTime(start.year, start.month, start.day);
+    final e = DateTime(end.year, end.month, end.day);
+    final days = e.difference(s).inDays + 1;
+    if (days <= 0) return 0;
+    var total = 0.0;
+    for (final a in _activities) {
+      final d = DateTime(a.startTime.year, a.startTime.month, a.startTime.day);
+      if (!d.isBefore(s) && !d.isAfter(e)) {
+        total += (a.caloriesBurned ?? 0).toDouble();
+      }
+    }
+    return total / days;
+  }
+
+  /// Best-effort active kcal for a date: prefers the per-day HC series when
+  /// it has data, falls back to the workout sum (and never undercounts —
+  /// returns the larger of the two so users with only workout data still see
+  /// a non-zero value).
+  double bestActiveKcalForDate(DateTime date) {
+    final hcSeries = activeCaloriesBurnedForDate(date);
+    final workouts = workoutCaloriesForDate(date);
+    return hcSeries > workouts ? hcSeries : workouts;
+  }
+
+  /// Same merge as [bestActiveKcalForDate] but for a range, averaged per-day.
+  double bestActiveKcalAvgForRange(DateTime start, DateTime end) {
+    final hcSeries = activeCaloriesBurnedAvgForRange(start, end);
+    final workouts = workoutCaloriesAvgForRange(start, end);
+    return hcSeries > workouts ? hcSeries : workouts;
+  }
+
   List<WeightRecord> weightHistoryForRange(DateTime start, DateTime end) =>
       FitnessQueries.weightHistoryForRange(_weightHistory, start, end);
 
