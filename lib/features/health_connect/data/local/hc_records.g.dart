@@ -1357,13 +1357,18 @@ const HcWeightRecordSchema = CollectionSchema(
       name: r'bodyFat',
       type: IsarType.double,
     ),
-    r'date': PropertySchema(
+    r'bodyWater': PropertySchema(
       id: 1,
+      name: r'bodyWater',
+      type: IsarType.double,
+    ),
+    r'date': PropertySchema(
+      id: 2,
       name: r'date',
       type: IsarType.dateTime,
     ),
     r'weight': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'weight',
       type: IsarType.double,
     )
@@ -1412,8 +1417,9 @@ void _hcWeightRecordSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeDouble(offsets[0], object.bodyFat);
-  writer.writeDateTime(offsets[1], object.date);
-  writer.writeDouble(offsets[2], object.weight);
+  writer.writeDouble(offsets[1], object.bodyWater);
+  writer.writeDateTime(offsets[2], object.date);
+  writer.writeDouble(offsets[3], object.weight);
 }
 
 HcWeightRecord _hcWeightRecordDeserialize(
@@ -1424,9 +1430,10 @@ HcWeightRecord _hcWeightRecordDeserialize(
 ) {
   final object = HcWeightRecord();
   object.bodyFat = reader.readDoubleOrNull(offsets[0]);
-  object.date = reader.readDateTime(offsets[1]);
+  object.bodyWater = reader.readDoubleOrNull(offsets[1]);
+  object.date = reader.readDateTime(offsets[2]);
   object.id = id;
-  object.weight = reader.readDouble(offsets[2]);
+  object.weight = reader.readDouble(offsets[3]);
   return object;
 }
 
@@ -1440,8 +1447,10 @@ P _hcWeightRecordDeserializeProp<P>(
     case 0:
       return (reader.readDoubleOrNull(offset)) as P;
     case 1:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readDoubleOrNull(offset)) as P;
     case 2:
+      return (reader.readDateTime(offset)) as P;
+    case 3:
       return (reader.readDouble(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1728,6 +1737,90 @@ extension HcWeightRecordQueryFilter
   }
 
   QueryBuilder<HcWeightRecord, HcWeightRecord, QAfterFilterCondition>
+      bodyWaterIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'bodyWater',
+      ));
+    });
+  }
+
+  QueryBuilder<HcWeightRecord, HcWeightRecord, QAfterFilterCondition>
+      bodyWaterIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'bodyWater',
+      ));
+    });
+  }
+
+  QueryBuilder<HcWeightRecord, HcWeightRecord, QAfterFilterCondition>
+      bodyWaterEqualTo(
+    double? value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'bodyWater',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<HcWeightRecord, HcWeightRecord, QAfterFilterCondition>
+      bodyWaterGreaterThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'bodyWater',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<HcWeightRecord, HcWeightRecord, QAfterFilterCondition>
+      bodyWaterLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'bodyWater',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<HcWeightRecord, HcWeightRecord, QAfterFilterCondition>
+      bodyWaterBetween(
+    double? lower,
+    double? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'bodyWater',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<HcWeightRecord, HcWeightRecord, QAfterFilterCondition>
       dateEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -1926,6 +2019,19 @@ extension HcWeightRecordQuerySortBy
     });
   }
 
+  QueryBuilder<HcWeightRecord, HcWeightRecord, QAfterSortBy> sortByBodyWater() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'bodyWater', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HcWeightRecord, HcWeightRecord, QAfterSortBy>
+      sortByBodyWaterDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'bodyWater', Sort.desc);
+    });
+  }
+
   QueryBuilder<HcWeightRecord, HcWeightRecord, QAfterSortBy> sortByDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'date', Sort.asc);
@@ -1964,6 +2070,19 @@ extension HcWeightRecordQuerySortThenBy
       thenByBodyFatDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'bodyFat', Sort.desc);
+    });
+  }
+
+  QueryBuilder<HcWeightRecord, HcWeightRecord, QAfterSortBy> thenByBodyWater() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'bodyWater', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HcWeightRecord, HcWeightRecord, QAfterSortBy>
+      thenByBodyWaterDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'bodyWater', Sort.desc);
     });
   }
 
@@ -2013,6 +2132,13 @@ extension HcWeightRecordQueryWhereDistinct
     });
   }
 
+  QueryBuilder<HcWeightRecord, HcWeightRecord, QDistinct>
+      distinctByBodyWater() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'bodyWater');
+    });
+  }
+
   QueryBuilder<HcWeightRecord, HcWeightRecord, QDistinct> distinctByDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'date');
@@ -2040,6 +2166,12 @@ extension HcWeightRecordQueryProperty
     });
   }
 
+  QueryBuilder<HcWeightRecord, double?, QQueryOperations> bodyWaterProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'bodyWater');
+    });
+  }
+
   QueryBuilder<HcWeightRecord, DateTime, QQueryOperations> dateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'date');
@@ -2064,23 +2196,48 @@ const HcSleepRecordSchema = CollectionSchema(
   name: r'HcSleepRecord',
   id: 7929985905465638414,
   properties: {
-    r'dateKey': PropertySchema(
+    r'awakeDurationSeconds': PropertySchema(
       id: 0,
+      name: r'awakeDurationSeconds',
+      type: IsarType.long,
+    ),
+    r'dateKey': PropertySchema(
+      id: 1,
       name: r'dateKey',
       type: IsarType.string,
     ),
+    r'deepDurationSeconds': PropertySchema(
+      id: 2,
+      name: r'deepDurationSeconds',
+      type: IsarType.long,
+    ),
+    r'lightDurationSeconds': PropertySchema(
+      id: 3,
+      name: r'lightDurationSeconds',
+      type: IsarType.long,
+    ),
+    r'remDurationSeconds': PropertySchema(
+      id: 4,
+      name: r'remDurationSeconds',
+      type: IsarType.long,
+    ),
+    r'segmentsEncoded': PropertySchema(
+      id: 5,
+      name: r'segmentsEncoded',
+      type: IsarType.string,
+    ),
     r'sleepStart': PropertySchema(
-      id: 1,
+      id: 6,
       name: r'sleepStart',
       type: IsarType.dateTime,
     ),
     r'totalDurationSeconds': PropertySchema(
-      id: 2,
+      id: 7,
       name: r'totalDurationSeconds',
       type: IsarType.long,
     ),
     r'wakeTime': PropertySchema(
-      id: 3,
+      id: 8,
       name: r'wakeTime',
       type: IsarType.dateTime,
     )
@@ -2120,6 +2277,7 @@ int _hcSleepRecordEstimateSize(
 ) {
   var bytesCount = offsets.last;
   bytesCount += 3 + object.dateKey.length * 3;
+  bytesCount += 3 + object.segmentsEncoded.length * 3;
   return bytesCount;
 }
 
@@ -2129,10 +2287,15 @@ void _hcSleepRecordSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeString(offsets[0], object.dateKey);
-  writer.writeDateTime(offsets[1], object.sleepStart);
-  writer.writeLong(offsets[2], object.totalDurationSeconds);
-  writer.writeDateTime(offsets[3], object.wakeTime);
+  writer.writeLong(offsets[0], object.awakeDurationSeconds);
+  writer.writeString(offsets[1], object.dateKey);
+  writer.writeLong(offsets[2], object.deepDurationSeconds);
+  writer.writeLong(offsets[3], object.lightDurationSeconds);
+  writer.writeLong(offsets[4], object.remDurationSeconds);
+  writer.writeString(offsets[5], object.segmentsEncoded);
+  writer.writeDateTime(offsets[6], object.sleepStart);
+  writer.writeLong(offsets[7], object.totalDurationSeconds);
+  writer.writeDateTime(offsets[8], object.wakeTime);
 }
 
 HcSleepRecord _hcSleepRecordDeserialize(
@@ -2142,11 +2305,16 @@ HcSleepRecord _hcSleepRecordDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = HcSleepRecord();
-  object.dateKey = reader.readString(offsets[0]);
+  object.awakeDurationSeconds = reader.readLong(offsets[0]);
+  object.dateKey = reader.readString(offsets[1]);
+  object.deepDurationSeconds = reader.readLong(offsets[2]);
   object.id = id;
-  object.sleepStart = reader.readDateTime(offsets[1]);
-  object.totalDurationSeconds = reader.readLong(offsets[2]);
-  object.wakeTime = reader.readDateTime(offsets[3]);
+  object.lightDurationSeconds = reader.readLong(offsets[3]);
+  object.remDurationSeconds = reader.readLong(offsets[4]);
+  object.segmentsEncoded = reader.readString(offsets[5]);
+  object.sleepStart = reader.readDateTime(offsets[6]);
+  object.totalDurationSeconds = reader.readLong(offsets[7]);
+  object.wakeTime = reader.readDateTime(offsets[8]);
   return object;
 }
 
@@ -2158,12 +2326,22 @@ P _hcSleepRecordDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readString(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 1:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 2:
       return (reader.readLong(offset)) as P;
     case 3:
+      return (reader.readLong(offset)) as P;
+    case 4:
+      return (reader.readLong(offset)) as P;
+    case 5:
+      return (reader.readString(offset)) as P;
+    case 6:
+      return (reader.readDateTime(offset)) as P;
+    case 7:
+      return (reader.readLong(offset)) as P;
+    case 8:
       return (reader.readDateTime(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -2367,6 +2545,62 @@ extension HcSleepRecordQueryWhere
 extension HcSleepRecordQueryFilter
     on QueryBuilder<HcSleepRecord, HcSleepRecord, QFilterCondition> {
   QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
+      awakeDurationSecondsEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'awakeDurationSeconds',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
+      awakeDurationSecondsGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'awakeDurationSeconds',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
+      awakeDurationSecondsLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'awakeDurationSeconds',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
+      awakeDurationSecondsBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'awakeDurationSeconds',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
       dateKeyEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -2502,6 +2736,62 @@ extension HcSleepRecordQueryFilter
     });
   }
 
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
+      deepDurationSecondsEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'deepDurationSeconds',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
+      deepDurationSecondsGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'deepDurationSeconds',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
+      deepDurationSecondsLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'deepDurationSeconds',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
+      deepDurationSecondsBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'deepDurationSeconds',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition> idEqualTo(
       Id value) {
     return QueryBuilder.apply(this, (query) {
@@ -2552,6 +2842,254 @@ extension HcSleepRecordQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
+      lightDurationSecondsEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lightDurationSeconds',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
+      lightDurationSecondsGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lightDurationSeconds',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
+      lightDurationSecondsLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lightDurationSeconds',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
+      lightDurationSecondsBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lightDurationSeconds',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
+      remDurationSecondsEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'remDurationSeconds',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
+      remDurationSecondsGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'remDurationSeconds',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
+      remDurationSecondsLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'remDurationSeconds',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
+      remDurationSecondsBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'remDurationSeconds',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
+      segmentsEncodedEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'segmentsEncoded',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
+      segmentsEncodedGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'segmentsEncoded',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
+      segmentsEncodedLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'segmentsEncoded',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
+      segmentsEncodedBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'segmentsEncoded',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
+      segmentsEncodedStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'segmentsEncoded',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
+      segmentsEncodedEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'segmentsEncoded',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
+      segmentsEncodedContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'segmentsEncoded',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
+      segmentsEncodedMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'segmentsEncoded',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
+      segmentsEncodedIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'segmentsEncoded',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterFilterCondition>
+      segmentsEncodedIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'segmentsEncoded',
+        value: '',
       ));
     });
   }
@@ -2733,6 +3271,20 @@ extension HcSleepRecordQueryLinks
 
 extension HcSleepRecordQuerySortBy
     on QueryBuilder<HcSleepRecord, HcSleepRecord, QSortBy> {
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterSortBy>
+      sortByAwakeDurationSeconds() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'awakeDurationSeconds', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterSortBy>
+      sortByAwakeDurationSecondsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'awakeDurationSeconds', Sort.desc);
+    });
+  }
+
   QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterSortBy> sortByDateKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dateKey', Sort.asc);
@@ -2742,6 +3294,62 @@ extension HcSleepRecordQuerySortBy
   QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterSortBy> sortByDateKeyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dateKey', Sort.desc);
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterSortBy>
+      sortByDeepDurationSeconds() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deepDurationSeconds', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterSortBy>
+      sortByDeepDurationSecondsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deepDurationSeconds', Sort.desc);
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterSortBy>
+      sortByLightDurationSeconds() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lightDurationSeconds', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterSortBy>
+      sortByLightDurationSecondsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lightDurationSeconds', Sort.desc);
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterSortBy>
+      sortByRemDurationSeconds() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'remDurationSeconds', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterSortBy>
+      sortByRemDurationSecondsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'remDurationSeconds', Sort.desc);
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterSortBy>
+      sortBySegmentsEncoded() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'segmentsEncoded', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterSortBy>
+      sortBySegmentsEncodedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'segmentsEncoded', Sort.desc);
     });
   }
 
@@ -2788,6 +3396,20 @@ extension HcSleepRecordQuerySortBy
 
 extension HcSleepRecordQuerySortThenBy
     on QueryBuilder<HcSleepRecord, HcSleepRecord, QSortThenBy> {
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterSortBy>
+      thenByAwakeDurationSeconds() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'awakeDurationSeconds', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterSortBy>
+      thenByAwakeDurationSecondsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'awakeDurationSeconds', Sort.desc);
+    });
+  }
+
   QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterSortBy> thenByDateKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dateKey', Sort.asc);
@@ -2800,6 +3422,20 @@ extension HcSleepRecordQuerySortThenBy
     });
   }
 
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterSortBy>
+      thenByDeepDurationSeconds() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deepDurationSeconds', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterSortBy>
+      thenByDeepDurationSecondsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deepDurationSeconds', Sort.desc);
+    });
+  }
+
   QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -2809,6 +3445,48 @@ extension HcSleepRecordQuerySortThenBy
   QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterSortBy> thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterSortBy>
+      thenByLightDurationSeconds() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lightDurationSeconds', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterSortBy>
+      thenByLightDurationSecondsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lightDurationSeconds', Sort.desc);
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterSortBy>
+      thenByRemDurationSeconds() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'remDurationSeconds', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterSortBy>
+      thenByRemDurationSecondsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'remDurationSeconds', Sort.desc);
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterSortBy>
+      thenBySegmentsEncoded() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'segmentsEncoded', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QAfterSortBy>
+      thenBySegmentsEncodedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'segmentsEncoded', Sort.desc);
     });
   }
 
@@ -2855,10 +3533,46 @@ extension HcSleepRecordQuerySortThenBy
 
 extension HcSleepRecordQueryWhereDistinct
     on QueryBuilder<HcSleepRecord, HcSleepRecord, QDistinct> {
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QDistinct>
+      distinctByAwakeDurationSeconds() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'awakeDurationSeconds');
+    });
+  }
+
   QueryBuilder<HcSleepRecord, HcSleepRecord, QDistinct> distinctByDateKey(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'dateKey', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QDistinct>
+      distinctByDeepDurationSeconds() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'deepDurationSeconds');
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QDistinct>
+      distinctByLightDurationSeconds() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lightDurationSeconds');
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QDistinct>
+      distinctByRemDurationSeconds() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'remDurationSeconds');
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, HcSleepRecord, QDistinct>
+      distinctBySegmentsEncoded({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'segmentsEncoded',
+          caseSensitive: caseSensitive);
     });
   }
 
@@ -2890,9 +3604,44 @@ extension HcSleepRecordQueryProperty
     });
   }
 
+  QueryBuilder<HcSleepRecord, int, QQueryOperations>
+      awakeDurationSecondsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'awakeDurationSeconds');
+    });
+  }
+
   QueryBuilder<HcSleepRecord, String, QQueryOperations> dateKeyProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'dateKey');
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, int, QQueryOperations>
+      deepDurationSecondsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'deepDurationSeconds');
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, int, QQueryOperations>
+      lightDurationSecondsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lightDurationSeconds');
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, int, QQueryOperations>
+      remDurationSecondsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'remDurationSeconds');
+    });
+  }
+
+  QueryBuilder<HcSleepRecord, String, QQueryOperations>
+      segmentsEncodedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'segmentsEncoded');
     });
   }
 

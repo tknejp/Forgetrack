@@ -222,11 +222,11 @@ abstract final class Tokens {
     gradEnd: Color(0x1410B981),
   );
   static const Domain calories = Domain(
-    color: Color(0xFFFBBF24),
-    dim: Color(0x2EFBBF24),
-    glow: Color(0x40FBBF24),
-    gradStart: Color(0x38FBBF24),
-    gradEnd: Color(0x0FF59B0B),
+    color: Color(0xFFFF8A1F),
+    dim: Color(0x2EFF8A1F),
+    glow: Color(0x40FF8A1F),
+    gradStart: Color(0x38FF8A1F),
+    gradEnd: Color(0x0FEA580C),
   );
   static const Domain weight = Domain(
     color: Color(0xFF60A5FA),

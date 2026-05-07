@@ -13,6 +13,7 @@ import '../../devtools/presentation/sections/devtools_unlock_inventory_section.d
 import '../../health_connect/presentation/activities_screen.dart';
 import '../../health_connect/presentation/body_screen.dart';
 import '../../health_connect/presentation/sleep_screen.dart';
+import '../../health_connect/presentation/steps_screen.dart';
 import '../../nutrition/presentation/nutrition_screen.dart';
 import '../../progression/application/progression_provider.dart';
 import '../../progression/presentation/widgets/progression_home_card.dart';
@@ -135,6 +136,9 @@ class _FtMainShellState extends State<MainShell> {
   Future<void> _openActivitiesScreen() => Navigator.of(context)
       .push(MaterialPageRoute(builder: (_) => const ActivitiesScreen()));
 
+  Future<void> _openStepsScreen() => Navigator.of(context)
+      .push(MaterialPageRoute(builder: (_) => const StepsScreen()));
+
   Future<void> _openNutritionScreen() => Navigator.of(context)
       .push(MaterialPageRoute(builder: (_) => const NutritionScreen()));
 
@@ -157,6 +161,7 @@ class _FtMainShellState extends State<MainShell> {
         barKey: _progressionBarKey,
         topContentInset: _topChromeHeight,
         onOpenActivities: _openActivitiesScreen,
+        onOpenSteps: _openStepsScreen,
         onOpenNutrition: _openNutritionScreen,
         onOpenBody: _openBodyScreen,
         onOpenSleep: _openSleepScreen,

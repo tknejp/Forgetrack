@@ -131,6 +131,16 @@ class ProviderProgressionSource implements ProgressionSource {
       return progressionDate(record.date);
     }).toSet();
 
+    days.addAll(_fitnessProvider.activities.map((record) {
+      return progressionDate(record.startTime);
+    }));
+    days.addAll(_fitnessProvider.weightHistory.map((record) {
+      return progressionDate(record.date);
+    }));
+    days.addAll(_fitnessProvider.sleepHistory.map((record) {
+      return progressionDate(record.wakeTime);
+    }));
+
     if (days.isEmpty) {
       days.add(progressionDate(_clock()));
     }

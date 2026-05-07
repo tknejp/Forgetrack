@@ -76,6 +76,7 @@ flutter:
     - assets/branding/
     - assets/icons/google/
     - assets/ui/
+    - assets/ui/dashboard/cards/
     - assets/ui/quests/
     - assets/ui/quests/chapter/icon/
     - assets/ui/quests/chapter/bg/

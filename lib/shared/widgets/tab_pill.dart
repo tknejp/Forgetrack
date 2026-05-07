@@ -6,16 +6,24 @@ class TabPill extends StatelessWidget {
   final String active;
   final ValueChanged<String> onChange;
 
+  /// When provided, the active tab uses the domain's color + glow instead of
+  /// the global accent. Lets the pill match the surrounding screen palette
+  /// (e.g. sleep / steps / nutrition headers).
+  final Domain? domain;
+
   const TabPill({
     super.key,
     required this.tabs,
     required this.active,
     required this.onChange,
+    this.domain,
   });
 
   @override
   Widget build(BuildContext context) {
     final ft = context.ft;
+    final activeColor = domain?.color ?? ft.accent;
+    final glowColor = domain?.glow ?? ft.accentGlow;
 
     return Container(
       height: 42,
@@ -38,14 +46,14 @@ class TabPill extends StatelessWidget {
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              ft.accent.withValues(alpha: 0.8),
-                              ft.accent.withValues(alpha: 0.6),
+                              activeColor.withValues(alpha: 0.8),
+                              activeColor.withValues(alpha: 0.6),
                             ],
                           )
                         : null,
                     borderRadius: BorderRadius.circular(11),
                     boxShadow: tab == active
-                        ? [BoxShadow(color: ft.accentGlow, blurRadius: Tokens.glowMd)]
+                        ? [BoxShadow(color: glowColor, blurRadius: Tokens.glowMd)]
                         : null,
                   ),
                   child: Center(

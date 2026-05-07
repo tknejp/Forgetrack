@@ -36,7 +36,12 @@ class HcPermissionService {
   static const List<HealthDataType> _optionalReadTypes = [
     ..._workoutReadTypes,
     HealthDataType.BODY_FAT_PERCENTAGE,
+    HealthDataType.BODY_WATER_MASS,
     HealthDataType.SLEEP_SESSION,
+    HealthDataType.SLEEP_DEEP,
+    HealthDataType.SLEEP_LIGHT,
+    HealthDataType.SLEEP_REM,
+    HealthDataType.SLEEP_AWAKE,
   ];
 
   static const List<HealthDataAccess> _requiredReadPermissions = [
@@ -46,6 +51,11 @@ class HcPermissionService {
   ];
 
   static const List<HealthDataAccess> _optionalReadPermissions = [
+    HealthDataAccess.READ,
+    HealthDataAccess.READ,
+    HealthDataAccess.READ,
+    HealthDataAccess.READ,
+    HealthDataAccess.READ,
     HealthDataAccess.READ,
     HealthDataAccess.READ,
     HealthDataAccess.READ,

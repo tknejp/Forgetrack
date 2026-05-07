@@ -8,6 +8,63 @@ class HcBodyService {
 
   final HcReadClient _client;
 
+  static String _dateKey(DateTime dt) =>
+      '${dt.year.toString().padLeft(4, '0')}-'
+      '${dt.month.toString().padLeft(2, '0')}-'
+      '${dt.day.toString().padLeft(2, '0')}';
+
+  /// Fetches body fat measurements for the given window.
+  /// Returns a map of date-key → fat percentage.
+  /// Never throws — returns empty map on any error.
+  Future<Map<String, double>> _bodyFatByDate(
+    DateTime start,
+    DateTime end,
+  ) async {
+    try {
+      final points = await _client.fetchData(
+        label: 'BODY_FAT_PERCENTAGE',
+        start: start,
+        end: end,
+        types: const [HealthDataType.BODY_FAT_PERCENTAGE],
+      );
+      final map = <String, double>{};
+      for (final p in points) {
+        map[_dateKey(p.dateFrom)] = _client.numericValue(p);
+      }
+      _client.logInfo('_bodyFatByDate(): ${map.length} entries');
+      return map;
+    } catch (e) {
+      _client.logInfo('_bodyFatByDate(): failed, returning empty — $e');
+      return {};
+    }
+  }
+
+  /// Fetches body water mass (kg) for the given window.
+  /// Returns a map of date-key → water mass in kg.
+  /// Never throws — returns empty map on any error.
+  Future<Map<String, double>> _bodyWaterByDate(
+    DateTime start,
+    DateTime end,
+  ) async {
+    try {
+      final points = await _client.fetchData(
+        label: 'BODY_WATER_MASS',
+        start: start,
+        end: end,
+        types: const [HealthDataType.BODY_WATER_MASS],
+      );
+      final map = <String, double>{};
+      for (final p in points) {
+        map[_dateKey(p.dateFrom)] = _client.numericValue(p);
+      }
+      _client.logInfo('_bodyWaterByDate(): ${map.length} entries');
+      return map;
+    } catch (e) {
+      _client.logInfo('_bodyWaterByDate(): failed, returning empty — $e');
+      return {};
+    }
+  }
+
   Future<List<WeightRecord>> getWeightHistory(int days) async {
     final end = DateTime.now();
     final start = DateTime(end.year, end.month, end.day)
@@ -25,6 +82,9 @@ class HcBodyService {
       return [];
     }
 
+    final fatByDate = await _bodyFatByDate(start, end);
+    final waterByDate = await _bodyWaterByDate(start, end);
+
     points.sort((a, b) => a.dateFrom.compareTo(b.dateFrom));
 
     final result = points
@@ -32,11 +92,15 @@ class HcBodyService {
           (p) => WeightRecord(
             date: p.dateFrom,
             weight: _client.numericValue(p),
+            bodyFat: fatByDate[_dateKey(p.dateFrom)],
+            bodyWater: waterByDate[_dateKey(p.dateFrom)],
           ),
         )
         .toList();
 
-    _client.logInfo('getWeightHistory(): ${result.length} weight entries');
+    _client.logInfo(
+      'getWeightHistory(): ${result.length} weight, ${fatByDate.length} fat, ${waterByDate.length} water entries',
+    );
     return result;
   }
 
@@ -67,6 +131,9 @@ class HcBodyService {
       return [];
     }
 
+    final fatByDate = await _bodyFatByDate(startDay, queryEnd);
+    final waterByDate = await _bodyWaterByDate(startDay, queryEnd);
+
     points.sort((a, b) => a.dateFrom.compareTo(b.dateFrom));
 
     final result = points
@@ -74,12 +141,14 @@ class HcBodyService {
           (p) => WeightRecord(
             date: p.dateFrom,
             weight: _client.numericValue(p),
+            bodyFat: fatByDate[_dateKey(p.dateFrom)],
+            bodyWater: waterByDate[_dateKey(p.dateFrom)],
           ),
         )
         .toList();
 
     _client.logInfo(
-      'getWeightHistoryForRange(): ${result.length} weight entries',
+      'getWeightHistoryForRange(): ${result.length} weight, ${fatByDate.length} fat, ${waterByDate.length} water entries',
     );
     return result;
   }

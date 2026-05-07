@@ -39,10 +39,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get screenActivities => 'Activities';
 
   @override
+  String get screenSteps => 'Steps';
+
+  @override
   String get screenNutrition => 'Nutrition';
 
   @override
   String get screenBody => 'Body';
+
+  @override
+  String get stepsCurrentStreak => 'Streak';
+
+  @override
+  String get stepsLinkSubtitle => 'Daily steps & goal';
+
+  @override
+  String get activitiesByType => 'By type';
+
+  @override
+  String get activitiesLinkSubtitle => 'Workouts, calories, time';
 
   @override
   String get periodDay => 'Day';
@@ -52,6 +67,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get periodMonth => 'Month';
+
+  @override
+  String get periodToday => 'Today';
 
   @override
   String get periodCustomRangeSoon => 'Custom range coming soon';
@@ -144,6 +162,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get weightLeanMass => 'Lean mass';
+
+  @override
+  String get weightBodyWater => 'Body water';
 
   @override
   String get weightFatMass => 'Fat mass';
@@ -353,6 +374,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sleepNoData => 'No sleep data recorded';
 
   @override
+  String get sleepStageDeep => 'Deep';
+
+  @override
+  String get sleepStageLight => 'Light';
+
+  @override
+  String get sleepStageRem => 'REM';
+
+  @override
+  String get sleepStageAwake => 'Awake';
+
+  @override
+  String get sleepStagesTitle => 'Sleep stages';
+
+  @override
+  String get sleepStagesBreakdown => 'Stage breakdown';
+
+  @override
+  String get sleepDurationTrend => 'Sleep duration trend';
+
+  @override
+  String get sleepDeepTrend => 'Deep sleep';
+
+  @override
+  String get sleepRemTrend => 'REM sleep';
+
+  @override
+  String get sleepNoStageData => 'Stage data is unavailable';
+
+  @override
   String get homeOpenDetailCta => 'Open details';
 
   @override
@@ -387,6 +438,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get activitiesAvgDuration => 'Avg. duration';
+
+  @override
+  String get activityDetailTitle => 'Activity detail';
+
+  @override
+  String get activityDetailStart => 'Start';
+
+  @override
+  String get activityDetailEnd => 'End';
+
+  @override
+  String get activityDetailPace => 'Pace';
+
+  @override
+  String get activityDetailDistance => 'Distance';
+
+  @override
+  String get activityDetailComparison => 'Comparison';
+
+  @override
+  String get activityDetailNoMap => 'GPS data unavailable';
 
   @override
   String get activitiesWorkoutPermissionTitle => 'Workout access needed';

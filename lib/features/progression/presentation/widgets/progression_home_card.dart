@@ -349,10 +349,10 @@ class _PendingRewardBadge extends StatelessWidget {
         vertical: 3,
       ),
       decoration: BoxDecoration(
-        color: Tokens.calories.color.withValues(alpha: 0.18),
+        color: Tokens.xp.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(Tokens.radiusProgress),
         border: Border.all(
-          color: Tokens.calories.color.withValues(alpha: 0.28),
+          color: Tokens.xp.withValues(alpha: 0.28),
         ),
       ),
       child: Text(
@@ -360,7 +360,7 @@ class _PendingRewardBadge extends StatelessWidget {
         style: TextStyle(
           fontSize: Tokens.fontSizeTiny,
           fontWeight: FontWeight.w900,
-          color: Tokens.calories.color,
+          color: Tokens.xp,
           letterSpacing: 0.2,
         ),
       ),

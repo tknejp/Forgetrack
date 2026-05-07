@@ -7,14 +7,13 @@ import '../../../shared/selected_period.dart';
 import '../../../features/health_connect/application/goals_provider.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../../../shared/theme/design_tokens.dart';
-import '../../../shared/widgets/date_nav.dart';
-import '../../../shared/widgets/drag_reveal_pager.dart';
+import '../../../shared/widgets/dashboard_card_assets.dart';
+import '../../../shared/widgets/period_navigator.dart';
 import '../../../shared/widgets/macro_row.dart';
-import '../../../shared/widgets/plain_card.dart';
 import '../../../shared/widgets/ft_back_button.dart';
 import '../../../shared/widgets/screen_header.dart';
 import '../../../shared/widgets/stat_card.dart';
-import '../../../shared/widgets/tab_pill.dart';
+import '../../../shared/widgets/swipe_period_gesture.dart';
 import '../application/kaloricke_tabulky_provider.dart';
 
 class NutritionScreen extends StatefulWidget {
@@ -27,26 +26,23 @@ class NutritionScreen extends StatefulWidget {
 class _NutritionScreenState extends State<NutritionScreen> {
   SelectedPeriod _period = SelectedPeriod.today();
 
-  static const _meals = [
-    (name: 'BREAKFAST', time: '08:14', kcal: 642, emoji: '\uD83C\uDF73'),
-    (name: 'LUNCH', time: '12:48', kcal: 1124, emoji: '\uD83C\uDF5C'),
-    (name: 'SNACK', time: '15:30', kcal: 312, emoji: '\uD83C\uDF6A'),
-    (name: 'DINNER', time: '19:22', kcal: 1243, emoji: '\uD83C\uDF72'),
-  ];
-
-  String? _dateNavOverride(BuildContext context, SelectedPeriod period) {
+  String _periodDateLabel(BuildContext context, SelectedPeriod period) {
     final locale = Localizations.localeOf(context).toString();
     switch (period.type) {
       case PeriodType.day:
-        return null;
+        return DateFormat('EEE d MMM', locale).format(period.referenceDate);
       case PeriodType.week:
         final start = period.start;
         final end = period.end;
-        return '${start.day} ${DateFormat.MMM(locale).format(start)} - ${end.day} ${DateFormat.MMM(locale).format(end)}';
+        return '${start.day} ${DateFormat.MMM(locale).format(start)} – '
+            '${end.day} ${DateFormat.MMM(locale).format(end)}';
       case PeriodType.month:
         return DateFormat.yMMM(locale).format(period.referenceDate);
       case PeriodType.custom:
-        return null;
+        final start = period.start;
+        final end = period.end;
+        return '${start.day} ${DateFormat.MMM(locale).format(start)} – '
+            '${end.day} ${DateFormat.MMM(locale).format(end)}';
     }
   }
 
@@ -67,134 +63,209 @@ class _NutritionScreenState extends State<NutritionScreen> {
               ? context.l10n.periodMonth
               : context.l10n.periodDay;
 
-  Widget _buildPeriodContent(
+  Widget _buildContent(
     BuildContext context,
-    SelectedPeriod period,
     KalorickeTabulkyProvider kt,
     GoalsProvider goals,
   ) {
     final l10n = context.l10n;
-    final double kcal;
-    final double protein;
-    final double fat;
-    final double carbs;
-    if (period.type == PeriodType.day) {
-      final day = kt.nutritionForDate(period.start);
-      kcal = day?.calories ?? kt.todayCalories;
-      protein = day?.protein ?? kt.todayProtein;
-      fat = day?.fat ?? kt.todayFat;
-      carbs = day?.carbs ?? kt.todayCarbs;
-    } else {
-      kcal = kt.avgCaloriesForRange(period.start, period.end) ?? 0;
-      protein = kt.avgProteinForRange(period.start, period.end) ?? 0;
-      fat = kt.avgFatForRange(period.start, period.end) ?? 0;
-      carbs = kt.avgCarbsForRange(period.start, period.end) ?? 0;
-    }
 
+    // ── Today (always-today data) ────────────────────────────────────────
+    final todayKcal = kt.todayCalories;
+    final todayProtein = kt.todayProtein;
+    final todayFat = kt.todayFat;
+    final todayCarbs = kt.todayCarbs;
     final kcalGoal = goals.dailyCalories;
-    final kcalDiff = kcal - kcalGoal;
-    final kcalProgress = kcalGoal > 0 ? (kcal / kcalGoal).clamp(0.0, 1.0) : 0.0;
-    final kcalPct = kcalGoal > 0 ? ((kcal / kcalGoal) * 100).round() : 0;
+    final todayDiff = todayKcal - kcalGoal;
+    final todayProgress =
+        kcalGoal > 0 ? (todayKcal / kcalGoal).clamp(0.0, 1.0) : 0.0;
+    final todayPct = kcalGoal > 0 ? ((todayKcal / kcalGoal) * 100).round() : 0;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (kt.syncError != null) ...[
-          const SizedBox(height: 2),
-          _SyncErrorBanner(
-            message: kt.syncError!,
-            onRetry: () => kt.refreshRange(period.start, period.end),
-          ),
-          const SizedBox(height: 10),
-        ],
-        StatCard(
-          icon: '\uD83D\uDD25',
-          label: period.type == PeriodType.day
-              ? l10n.caloriesTodayTitle
-              : l10n.caloriesAvgPerDay,
-          domain: Tokens.calories,
-          initiallyExpanded: true,
-          collapsible: false,
-          stats: [
-            StatStat(
-              value: kcal.round().toString(),
-              label: l10n.caloriesConsumed,
-              unit: 'kcal',
+    // ── Period-driven values ─────────────────────────────────────────────
+    final double periodKcal;
+    final double periodProtein;
+    final double periodFat;
+    final double periodCarbs;
+    if (_period.type == PeriodType.day) {
+      final day = kt.nutritionForDate(_period.start);
+      periodKcal = day?.calories ?? 0;
+      periodProtein = day?.protein ?? 0;
+      periodFat = day?.fat ?? 0;
+      periodCarbs = day?.carbs ?? 0;
+    } else {
+      periodKcal = kt.avgCaloriesForRange(_period.start, _period.end) ?? 0;
+      periodProtein = kt.avgProteinForRange(_period.start, _period.end) ?? 0;
+      periodFat = kt.avgFatForRange(_period.start, _period.end) ?? 0;
+      periodCarbs = kt.avgCarbsForRange(_period.start, _period.end) ?? 0;
+    }
+    final periodDiff = periodKcal - kcalGoal;
+    final periodProgress =
+        kcalGoal > 0 ? (periodKcal / kcalGoal).clamp(0.0, 1.0) : 0.0;
+    final periodPct =
+        kcalGoal > 0 ? ((periodKcal / kcalGoal) * 100).round() : 0;
+
+    return SwipePeriodGesture(
+      onPrev: () => setState(() => _period = _period.backward()),
+      onNext: _period.canGoForward
+          ? () => setState(() => _period = _period.forward())
+          : null,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (kt.syncError != null) ...[
+            _SyncErrorBanner(
+              message: kt.syncError!,
+              onRetry: () => kt.refreshRange(_period.start, _period.end),
             ),
-            StatStat(
-              value: kcalGoal.round().toString(),
-              label: l10n.weightGoal,
-              unit: 'kcal',
-            ),
-            StatStat(
-              value: '${kcalDiff >= 0 ? '+' : ''}${kcalDiff.round()}',
-              label:
-                  kcalDiff >= 0 ? l10n.caloriesBurned : l10n.caloriesRemaining,
-              unit: 'kcal',
-            ),
-          ],
-          progress: kcalProgress,
-          badge: '$kcalPct%',
-          children: [
             const SizedBox(height: 10),
-            const Divider(color: Color(0x12FFFFFF), thickness: 1, height: 1),
-            const SizedBox(height: Tokens.spaceSm),
-            MacroRow(
-              label: l10n.macroProtein,
-              value: protein,
-              goal: goals.dailyProtein,
-              unit: 'g',
-              domain: Tokens.protein,
-            ),
-            MacroRow(
-              label: l10n.macroFat,
-              value: fat,
-              goal: goals.dailyFat,
-              unit: 'g',
-              domain: Tokens.fat,
-            ),
-            MacroRow(
-              label: l10n.macroCarbs,
-              value: carbs,
-              goal: goals.dailyCarbs,
-              unit: 'g',
-              domain: Tokens.carbs,
-              isLast: true,
-            ),
           ],
-        ),
-        const SizedBox(height: 10),
-        PlainCard(
-          padding: const EdgeInsets.fromLTRB(14, 12, 14, 4),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    l10n.ktNutritionTitle.toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: Tokens.fontSizeCaption,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0x80FFFFFF),
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ],
+
+          // ── Today header — always today's totals + macros ──────────────
+          StatCard(
+            icon: '🔥',
+            label: l10n.caloriesTodayTitle,
+            domain: Tokens.calories,
+            visualAssets: DashboardCardAssetResolver.forKind(
+              DashboardCardKind.nutrition,
+            ),
+            initiallyExpanded: true,
+            collapsible: false,
+            stats: [
+              StatStat(
+                value: todayKcal.round().toString(),
+                label: l10n.caloriesConsumed,
+                unit: 'kcal',
               ),
+              StatStat(
+                value: kcalGoal.round().toString(),
+                label: l10n.weightGoal,
+                unit: 'kcal',
+              ),
+              StatStat(
+                value: '${todayDiff >= 0 ? '+' : ''}${todayDiff.round()}',
+                label: todayDiff >= 0
+                    ? l10n.caloriesBurned
+                    : l10n.caloriesRemaining,
+                unit: 'kcal',
+              ),
+            ],
+            progress: todayProgress,
+            badge: '$todayPct%',
+            children: [
+              const SizedBox(height: 10),
+              const Divider(color: Color(0x12FFFFFF), thickness: 1, height: 1),
               const SizedBox(height: Tokens.spaceSm),
-              for (int i = 0; i < _meals.length; i++)
-                _MealRow(
-                  name: _meals[i].name,
-                  time: _meals[i].time,
-                  kcal: _meals[i].kcal,
-                  emoji: _meals[i].emoji,
-                  isLast: i == _meals.length - 1,
-                ),
+              MacroRow(
+                label: l10n.macroProtein,
+                value: todayProtein,
+                goal: goals.dailyProtein,
+                unit: 'g',
+                domain: Tokens.protein,
+              ),
+              MacroRow(
+                label: l10n.macroFat,
+                value: todayFat,
+                goal: goals.dailyFat,
+                unit: 'g',
+                domain: Tokens.fat,
+              ),
+              MacroRow(
+                label: l10n.macroCarbs,
+                value: todayCarbs,
+                goal: goals.dailyCarbs,
+                unit: 'g',
+                domain: Tokens.carbs,
+                isLast: true,
+              ),
             ],
           ),
-        ),
-      ],
+
+          const SizedBox(height: 10),
+
+          // ── Period navigator + range tabs ──────────────────────────────
+          PeriodNavigator(
+            domain: Tokens.calories,
+            tabs: [l10n.periodDay, l10n.periodWeek, l10n.periodMonth],
+            activeTab: _tab(context, _period),
+            onTabChange: _changeTab,
+            dateLabel: _periodDateLabel(context, _period),
+            canGoForward: _period.canGoForward,
+            isCurrentPeriod: _period.isCurrentPeriod,
+            onPrev: () => setState(() => _period = _period.backward()),
+            onNext: _period.canGoForward
+                ? () => setState(() => _period = _period.forward())
+                : null,
+            onToday: _period.isCurrentPeriod
+                ? null
+                : () => setState(
+                    () => _period = _period.withType(_period.type)),
+          ),
+
+          const SizedBox(height: 10),
+
+          // ── Period card — calories + macros for the active selection ──
+          StatCard(
+            icon: '📊',
+            label: _period.type == PeriodType.day
+                ? l10n.caloriesTodayTitle
+                : l10n.caloriesAvgPerDay,
+            domain: Tokens.calories,
+            visualAssets: DashboardCardAssetResolver.forKind(
+              DashboardCardKind.nutrition,
+            ),
+            initiallyExpanded: true,
+            collapsible: false,
+            stats: [
+              StatStat(
+                value: periodKcal.round().toString(),
+                label: l10n.caloriesConsumed,
+                unit: 'kcal',
+              ),
+              StatStat(
+                value: kcalGoal.round().toString(),
+                label: l10n.weightGoal,
+                unit: 'kcal',
+              ),
+              StatStat(
+                value: '${periodDiff >= 0 ? '+' : ''}${periodDiff.round()}',
+                label: periodDiff >= 0
+                    ? l10n.caloriesBurned
+                    : l10n.caloriesRemaining,
+                unit: 'kcal',
+              ),
+            ],
+            progress: periodProgress,
+            badge: '$periodPct%',
+            children: [
+              const SizedBox(height: 10),
+              const Divider(color: Color(0x12FFFFFF), thickness: 1, height: 1),
+              const SizedBox(height: Tokens.spaceSm),
+              MacroRow(
+                label: l10n.macroProtein,
+                value: periodProtein,
+                goal: goals.dailyProtein,
+                unit: 'g',
+                domain: Tokens.protein,
+              ),
+              MacroRow(
+                label: l10n.macroFat,
+                value: periodFat,
+                goal: goals.dailyFat,
+                unit: 'g',
+                domain: Tokens.fat,
+              ),
+              MacroRow(
+                label: l10n.macroCarbs,
+                value: periodCarbs,
+                goal: goals.dailyCarbs,
+                unit: 'g',
+                domain: Tokens.carbs,
+                isLast: true,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -236,29 +307,6 @@ class _NutritionScreenState extends State<NutritionScreen> {
                             : null,
                       ),
                       const SizedBox(height: 10),
-                      TabPill(
-                        tabs: [
-                          context.l10n.periodDay,
-                          context.l10n.periodWeek,
-                          context.l10n.periodMonth,
-                        ],
-                        active: _tab(context, _period),
-                        onChange: _changeTab,
-                      ),
-                      const SizedBox(height: 10),
-                      DateNav(
-                        date: _period.referenceDate,
-                        onPrev: () =>
-                            setState(() => _period = _period.backward()),
-                        onNext: _period.canGoForward
-                            ? () => setState(() => _period = _period.forward())
-                            : null,
-                        labelOverride: _dateNavOverride(context, _period),
-                        showTodayButton: !_period.isCurrentPeriod,
-                        onTodayTap: () => setState(
-                            () => _period = _period.withType(_period.type)),
-                      ),
-                      const SizedBox(height: 10),
                     ],
                   ),
                 ),
@@ -266,16 +314,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(14, 0, 14, 24),
-                  child: DragRevealPager<SelectedPeriod>(
-                    item: _period,
-                    hasPrevious: (_) => true,
-                    hasNext: (period) => period.canGoForward,
-                    previousOf: (period) => period.backward(),
-                    nextOf: (period) => period.forward(),
-                    onCommit: (period) => setState(() => _period = period),
-                    builder: (context, period) =>
-                        _buildPeriodContent(context, period, kt, goals),
-                  ),
+                  child: _buildContent(context, kt, goals),
                 ),
               ),
             ],
@@ -354,7 +393,7 @@ class _NotConnectedState extends StatelessWidget {
             Center(
               child: Column(
                 children: [
-                  const Text('\uD83C\uDF7D', style: TextStyle(fontSize: 48)),
+                  const Text('🍽', style: TextStyle(fontSize: 48)),
                   const SizedBox(height: Tokens.spaceLg),
                   Text(
                     l10n.ktLoginPrompt,
@@ -392,99 +431,6 @@ class _NotConnectedState extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _MealRow extends StatelessWidget {
-  final String name;
-  final String time;
-  final int kcal;
-  final String emoji;
-  final bool isLast;
-
-  const _MealRow({
-    required this.name,
-    required this.time,
-    required this.kcal,
-    required this.emoji,
-    required this.isLast,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 11),
-      decoration: BoxDecoration(
-        border: isLast
-            ? null
-            : const Border(bottom: BorderSide(color: Tokens.divider)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: Tokens.calories.dim,
-              borderRadius: BorderRadius.circular(Tokens.radiusIcon),
-              border: Border.all(
-                color: Tokens.calories.color.withValues(alpha: 0.27),
-              ),
-            ),
-            child: Center(
-              child: Text(emoji, style: const TextStyle(fontSize: 16)),
-            ),
-          ),
-          const SizedBox(width: Tokens.spaceMd),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xEBFFFFFF),
-                    letterSpacing: 0.3,
-                  ),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  time,
-                  style: const TextStyle(
-                    fontSize: Tokens.fontSizeMicro,
-                    color: Tokens.onSurfaceMuted,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Text.rich(
-            TextSpan(
-              text: '$kcal',
-              style: TextStyle(
-                fontSize: Tokens.fontSizeBody,
-                fontWeight: FontWeight.w800,
-                color: Tokens.calories.color,
-              ),
-              children: [
-                TextSpan(
-                  text: ' kcal',
-                  style: TextStyle(
-                    fontSize: Tokens.fontSizeMicro,
-                    fontWeight: FontWeight.w600,
-                    color: Tokens.calories.color.withValues(alpha: 0.7),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

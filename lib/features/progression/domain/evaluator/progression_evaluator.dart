@@ -36,6 +36,8 @@ class ProgressionEvaluator {
         ),
       ProgressionComparator.withinRelativeTolerance =>
         _toleranceProgress(actualValue, targetValue, rule.toleranceRatio),
+      ProgressionComparator.atLeastRelativeTolerance =>
+        _thresholdProgress(actualValue, rule.minimumAcceptedValue),
     };
 
     return ProgressionEvaluation(
@@ -151,6 +153,11 @@ class ProgressionEvaluator {
         return 'actual=$actualValue target=$targetValue comparator=withinRelativeTolerance '
             'acceptedMin=${rule.minimumAcceptedValue} acceptedMax=${rule.maximumAcceptedValue} '
             'toleranceRatio=$toleranceRatio delta=$delta '
+            'status=$statusName missReason=$missReasonName';
+      case ProgressionComparator.atLeastRelativeTolerance:
+        return 'actual=$actualValue target=$targetValue comparator=atLeastRelativeTolerance '
+            'acceptedMin=${rule.minimumAcceptedValue} delta=$delta '
+            'toleranceRatio=$toleranceRatio '
             'status=$statusName missReason=$missReasonName';
     }
   }

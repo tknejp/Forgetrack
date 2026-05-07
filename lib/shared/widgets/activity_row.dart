@@ -14,6 +14,10 @@ class ActivityRow extends StatelessWidget {
   final int xp;
   final bool isLast;
 
+  /// When non-null, the row becomes tappable (e.g. to open an activity detail
+  /// screen). Hit-test stays opaque across the whole row.
+  final VoidCallback? onTap;
+
   const ActivityRow({
     super.key,
     required this.type,
@@ -24,6 +28,7 @@ class ActivityRow extends StatelessWidget {
     required this.kcal,
     required this.xp,
     this.isLast = false,
+    this.onTap,
   });
 
   String get _displayEmoji =>
@@ -37,7 +42,7 @@ class ActivityRow extends StatelessWidget {
     final ft = context.ft;
     final domain = type == ActivityType.walking ? ft.steps : ft.active;
 
-    return Container(
+    final row = Container(
       padding: const EdgeInsets.symmetric(vertical: 11),
       decoration: BoxDecoration(
         border: isLast ? null : Border(bottom: BorderSide(color: ft.divider)),
@@ -116,6 +121,13 @@ class ActivityRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+
+    if (onTap == null) return row;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: row,
     );
   }
 }

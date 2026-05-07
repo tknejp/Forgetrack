@@ -43,6 +43,8 @@ class TrendCard extends StatefulWidget {
   final bool initiallyExpanded;
   final double chartHeight;
   final double expandedChartHeight;
+  final ValueChanged<int>? onBarTap;
+  final bool showTrendLine;
 
   const TrendCard({
     super.key,
@@ -61,6 +63,8 @@ class TrendCard extends StatefulWidget {
     this.initiallyExpanded = false,
     this.chartHeight = 132,
     this.expandedChartHeight = 176,
+    this.onBarTap,
+    this.showTrendLine = false,
   });
 
   @override
@@ -106,8 +110,7 @@ class _TrendCardState extends State<TrendCard> {
                       height: 36,
                       decoration: BoxDecoration(
                         color: domain.dim,
-                        borderRadius:
-                            BorderRadius.circular(Tokens.radiusIcon),
+                        borderRadius: BorderRadius.circular(Tokens.radiusIcon),
                         border: Border.all(
                           color: domain.color.withValues(alpha: 0.27),
                         ),
@@ -184,6 +187,8 @@ class _TrendCardState extends State<TrendCard> {
                       height: effectiveHeight,
                       relativeScale: widget.relativeScale,
                       referenceValue: widget.referenceValue,
+                      onBarTap: widget.onBarTap,
+                      showTrendLine: widget.showTrendLine,
                     ),
                   ),
                   if (widget.referenceValue != null &&
@@ -218,6 +223,8 @@ class TrendChart extends StatelessWidget {
   final double height;
   final bool relativeScale;
   final double? referenceValue;
+  final ValueChanged<int>? onBarTap;
+  final bool showTrendLine;
 
   const TrendChart({
     super.key,
@@ -226,6 +233,8 @@ class TrendChart extends StatelessWidget {
     this.height = 96,
     this.relativeScale = false,
     this.referenceValue,
+    this.onBarTap,
+    this.showTrendLine = false,
   });
 
   @override
@@ -242,6 +251,18 @@ class TrendChart extends StatelessWidget {
     if ((maxVal - minVal).abs() < 0.001) {
       maxVal += relativeScale ? 0.5 : 1;
       minVal -= relativeScale ? 0.5 : 0;
+    }
+    if (relativeScale) {
+      final padding = ((maxVal - minVal).abs() * 0.08).clamp(0.15, 2.0);
+      maxVal += padding;
+      minVal -= padding;
+      // Keep reference line at least 18 % above the chart floor so it stays visible.
+      if (referenceValue != null) {
+        final refPct = (referenceValue! - minVal) / (maxVal - minVal);
+        if (refPct < 0.18) {
+          minVal = (referenceValue! - 0.18 * maxVal) / 0.82;
+        }
+      }
     }
     final range = (maxVal - minVal).clamp(0.001, double.infinity).toDouble();
 
@@ -307,8 +328,17 @@ class TrendChart extends StatelessWidget {
                         bottom: (referencePct * chartAreaH)
                             .clamp(0.0, chartAreaH - 1),
                         child: Container(
-                          height: 1,
-                          color: domain.color.withValues(alpha: 0.28),
+                          height: 2,
+                          decoration: BoxDecoration(
+                            color: domain.color.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(999),
+                            boxShadow: [
+                              BoxShadow(
+                                color: domain.glow.withValues(alpha: 0.35),
+                                blurRadius: 8,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     Row(
@@ -323,11 +353,28 @@ class TrendChart extends StatelessWidget {
                               range: range,
                               domain: domain,
                               barAreaH: chartAreaH,
+                              onTap:
+                                  onBarTap == null ? null : () => onBarTap!(i),
                             ),
                           ),
                         ],
                       ],
                     ),
+                    if (showTrendLine && bars.length >= 2)
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: CustomPaint(
+                            painter: _TrendLinePainter(
+                              bars: bars,
+                              minVal: minVal,
+                              range: range,
+                              gap: gap,
+                              color: domain.color,
+                              glow: domain.glow,
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -382,6 +429,7 @@ class _Bar extends StatelessWidget {
   final double range;
   final Domain domain;
   final double barAreaH;
+  final VoidCallback? onTap;
 
   const _Bar({
     required this.bar,
@@ -389,6 +437,7 @@ class _Bar extends StatelessWidget {
     required this.range,
     required this.domain,
     required this.barAreaH,
+    this.onTap,
   });
 
   @override
@@ -396,31 +445,106 @@ class _Bar extends StatelessWidget {
     final pct = ((bar.value - minVal) / range).clamp(0.0, 1.0);
     final barH = (pct * barAreaH).clamp(4.0, barAreaH).toDouble();
 
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeOut,
-        height: barH,
-        decoration: BoxDecoration(
-          gradient: bar.isToday
-              ? LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    domain.color,
-                    domain.color.withValues(alpha: 0.8),
-                  ],
-                )
-              : null,
-          color: bar.isToday ? null : domain.color.withValues(alpha: 0.25),
-          borderRadius: BorderRadius.circular(5),
-          boxShadow: bar.isToday
-              ? [BoxShadow(color: domain.glow, blurRadius: 10)]
-              : null,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeOut,
+          height: barH,
+          decoration: BoxDecoration(
+            gradient: bar.isToday
+                ? LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      domain.color,
+                      domain.color.withValues(alpha: 0.8),
+                    ],
+                  )
+                : null,
+            color: bar.isToday ? null : domain.color.withValues(alpha: 0.25),
+            borderRadius: BorderRadius.circular(5),
+            boxShadow: bar.isToday
+                ? [BoxShadow(color: domain.glow, blurRadius: 10)]
+                : null,
+          ),
         ),
       ),
     );
+  }
+}
+
+class _TrendLinePainter extends CustomPainter {
+  const _TrendLinePainter({
+    required this.bars,
+    required this.minVal,
+    required this.range,
+    required this.gap,
+    required this.color,
+    required this.glow,
+  });
+
+  final List<ChartBar> bars;
+  final double minVal;
+  final double range;
+  final double gap;
+  final Color color;
+  final Color glow;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (bars.length < 2 || size.width <= 0 || size.height <= 0) return;
+
+    // Least-squares linear regression over bar indices vs values.
+    final n = bars.length;
+    double sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+    for (int i = 0; i < n; i++) {
+      sumX += i;
+      sumY += bars[i].value;
+      sumXY += i * bars[i].value;
+      sumXX += i * i.toDouble();
+    }
+    final denom = n * sumXX - sumX * sumX;
+    if (denom.abs() < 0.001) return;
+    final slope = (n * sumXY - sumX * sumY) / denom;
+    final intercept = (sumY - slope * sumX) / n;
+
+    final barWidth = (size.width - gap * (n - 1)) / n;
+
+    double xOf(int i) => i * (barWidth + gap) + barWidth / 2;
+    double yOf(double val) =>
+        size.height - ((val - minVal) / range).clamp(0.0, 1.0) * size.height;
+
+    final p1 = Offset(xOf(0), yOf(intercept));
+    final p2 = Offset(xOf(n - 1), yOf(intercept + slope * (n - 1)));
+
+    final glowPaint = Paint()
+      ..color = glow.withValues(alpha: 0.65)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 7
+      ..strokeCap = StrokeCap.round
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
+    canvas.drawLine(p1, p2, glowPaint);
+
+    final linePaint = Paint()
+      ..color = color.withValues(alpha: 0.95)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(p1, p2, linePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _TrendLinePainter oldDelegate) {
+    return oldDelegate.bars != bars ||
+        oldDelegate.minVal != minVal ||
+        oldDelegate.range != range ||
+        oldDelegate.gap != gap ||
+        oldDelegate.color != color ||
+        oldDelegate.glow != glow;
   }
 }
 

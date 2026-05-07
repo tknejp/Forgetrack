@@ -71,6 +71,7 @@ class HealthDatabase {
         name: _isarName,
       );
 
+      await _deduplicateWeightRecords();
       await _loadCache();
 
       AppLog.app.info(
@@ -125,6 +126,37 @@ class HealthDatabase {
     _lastSyncedAt = null;
     _workoutPermission = false;
     _latestBodyFat = null;
+  }
+
+  /// Removes duplicate weight records that share the same UTC millisecond
+  /// timestamp. Merges bodyFat / bodyWater from duplicates into the surviving
+  /// record so no measurement data is lost.  Runs once at open() time.
+  Future<void> _deduplicateWeightRecords() async {
+    final isar = _isar!;
+    final all = await isar.hcWeightRecords.where().findAll();
+
+    final byMs = <int, HcWeightRecord>{};
+    for (final r in all) {
+      final ms = r.date.toUtc().millisecondsSinceEpoch;
+      final existing = byMs[ms];
+      if (existing == null) {
+        byMs[ms] = r;
+      } else {
+        existing.bodyFat ??= r.bodyFat;
+        existing.bodyWater ??= r.bodyWater;
+      }
+    }
+
+    if (byMs.length == all.length) return;
+
+    AppLog.app.info(
+      '$_logName: deduplicating weight records — ${all.length} → ${byMs.length}',
+    );
+
+    await isar.writeTxn(() async {
+      await isar.hcWeightRecords.clear();
+      await isar.hcWeightRecords.putAll(byMs.values.toList());
+    });
   }
 
   Future<void> _loadCache() async {
@@ -208,6 +240,7 @@ class HealthDatabase {
           date: r.date,
           weight: r.weight,
           bodyFat: r.bodyFat,
+          bodyWater: r.bodyWater,
         ),
     ];
 
@@ -215,29 +248,15 @@ class HealthDatabase {
     final sleepRows = await isar.hcSleepRecords.where().findAll();
     sleepRows.sort((a, b) => b.dateKey.compareTo(a.dateKey));
 
-    _sleepHistory = [
-      for (final r in sleepRows)
-        SleepRecord(
-          sleepStart: r.sleepStart,
-          wakeTime: r.wakeTime,
-          totalDuration: Duration(seconds: r.totalDurationSeconds),
-        ),
-    ];
+    _sleepHistory = [for (final r in sleepRows) _sleepFromRow(r)];
 
     // Activities — sorted newest first.
     final actRows = await isar.hcActivityRecords.where().findAll();
     actRows.sort((a, b) => b.startTime.compareTo(a.startTime));
 
-    _activities = [
-      for (final r in actRows)
-        ActivityRecord(
-          startTime: r.startTime,
-          endTime: r.endTime,
-          type: r.type,
-          caloriesBurned: r.caloriesBurned,
-          distanceKm: r.distanceKm,
-        ),
-    ];
+    _activities = _dedupeActivities([
+      for (final r in actRows) _activityFromRow(r),
+    ]);
 
     // Metadata singleton.
     final meta = await isar.hcMetaRecords.get(1);
@@ -287,26 +306,16 @@ class HealthDatabase {
           HcWeightRecord()
             ..date = r.date
             ..weight = r.weight
-            ..bodyFat = r.bodyFat,
+            ..bodyFat = r.bodyFat
+            ..bodyWater = r.bodyWater,
       ]);
 
       await isar.hcSleepRecords.putAll([
-        for (final r in sleep)
-          HcSleepRecord()
-            ..dateKey = _toKey(r.wakeTime)
-            ..sleepStart = r.sleepStart
-            ..wakeTime = r.wakeTime
-            ..totalDurationSeconds = r.totalDuration.inSeconds,
+        for (final r in sleep) _sleepToRow(r),
       ]);
 
       await isar.hcActivityRecords.putAll([
-        for (final r in activities)
-          HcActivityRecord()
-            ..startTime = r.startTime
-            ..endTime = r.endTime
-            ..type = r.type
-            ..caloriesBurned = r.caloriesBurned
-            ..distanceKm = r.distanceKm,
+        for (final r in _dedupeActivities(activities)) _activityToRow(r),
       ]);
 
       await isar.hcMetaRecords.put(
@@ -322,7 +331,7 @@ class HealthDatabase {
     _caloriesHistory = calories;
     _weightHistory = weight;
     _sleepHistory = sleep;
-    _activities = activities;
+    _activities = _dedupeActivities(activities);
     _workoutPermission = workoutPermission;
     _latestBodyFat = latestBodyFat;
     _lastSyncedAt = lastSyncedAt;
@@ -347,13 +356,7 @@ class HealthDatabase {
     await isar.writeTxn(() async {
       await isar.hcActivityRecords.clear();
       await isar.hcActivityRecords.putAll([
-        for (final r in activities)
-          HcActivityRecord()
-            ..startTime = r.startTime
-            ..endTime = r.endTime
-            ..type = r.type
-            ..caloriesBurned = r.caloriesBurned
-            ..distanceKm = r.distanceKm,
+        for (final r in _dedupeActivities(activities)) _activityToRow(r),
       ]);
 
       final meta = (await isar.hcMetaRecords.get(1)) ?? HcMetaRecord();
@@ -362,7 +365,7 @@ class HealthDatabase {
       );
     });
 
-    _activities = activities;
+    _activities = _dedupeActivities(activities);
     _workoutPermission = workoutPermission;
   }
 
@@ -396,16 +399,12 @@ class HealthDatabase {
           HcWeightRecord()
             ..date = r.date
             ..weight = r.weight
-            ..bodyFat = r.bodyFat,
+            ..bodyFat = r.bodyFat
+            ..bodyWater = r.bodyWater,
       ]);
 
       await isar.hcSleepRecords.putAll([
-        for (final r in sleep)
-          HcSleepRecord()
-            ..dateKey = _toKey(r.wakeTime)
-            ..sleepStart = r.sleepStart
-            ..wakeTime = r.wakeTime
-            ..totalDurationSeconds = r.totalDuration.inSeconds,
+        for (final r in sleep) _sleepToRow(r),
       ]);
 
       final meta = (await isar.hcMetaRecords.get(1)) ?? HcMetaRecord();
@@ -425,7 +424,7 @@ class HealthDatabase {
     );
   }
 
-    /// Partial update: upserts step records only.
+  /// Partial update: upserts step records only.
   ///
   /// Does not clear existing steps. Safe for normal refresh.
   Future<void> saveStepsPartial(List<StepsRecord> steps) async {
@@ -489,6 +488,10 @@ class HealthDatabase {
   }
 
   /// Partial update: upserts weight records only.
+  ///
+  /// Matches incoming records to existing rows by UTC millisecond timestamp so
+  /// repeated syncs update in-place rather than creating duplicates. Preserves
+  /// an existing bodyFat value when the incoming record has null.
   Future<void> saveWeightPartial(List<WeightRecord> weight) async {
     if (weight.isEmpty) {
       AppLog.app.debug('$_logName: saveWeightPartial() skipped — empty input');
@@ -498,13 +501,22 @@ class HealthDatabase {
     final isar = _isar!;
 
     await isar.writeTxn(() async {
-      await isar.hcWeightRecords.putAll([
-        for (final r in weight)
-          HcWeightRecord()
-            ..date = r.date
-            ..weight = r.weight
-            ..bodyFat = r.bodyFat,
-      ]);
+      final existing = await isar.hcWeightRecords.where().findAll();
+      final byMs = <int, HcWeightRecord>{
+        for (final r in existing) r.date.toUtc().millisecondsSinceEpoch: r,
+      };
+
+      final toSave = weight.map((r) {
+        final ms = r.date.toUtc().millisecondsSinceEpoch;
+        final rec = byMs[ms] ?? HcWeightRecord();
+        rec.date = r.date;
+        rec.weight = r.weight;
+        rec.bodyFat = r.bodyFat ?? rec.bodyFat;
+        rec.bodyWater = r.bodyWater ?? rec.bodyWater;
+        return rec;
+      }).toList();
+
+      await isar.hcWeightRecords.putAll(toSave);
     });
 
     await _loadCache();
@@ -527,12 +539,7 @@ class HealthDatabase {
 
     await isar.writeTxn(() async {
       await isar.hcSleepRecords.putAll([
-        for (final r in sleep)
-          HcSleepRecord()
-            ..dateKey = _toKey(r.wakeTime)
-            ..sleepStart = r.sleepStart
-            ..wakeTime = r.wakeTime
-            ..totalDurationSeconds = r.totalDuration.inSeconds,
+        for (final r in sleep) _sleepToRow(r),
       ]);
     });
 
@@ -543,9 +550,12 @@ class HealthDatabase {
     );
   }
 
-  /// Partial update: upserts activities only.
+  /// Partial update: replaces the refreshed activity window.
   ///
-  /// Does not clear existing activities.
+  /// Workout records do not have a stable persisted id from the plugin, so
+  /// appending partial sync results would duplicate the same session on every
+  /// refresh. Preserve activities outside the refreshed window and rewrite the
+  /// merged, deduped collection.
   Future<void> saveActivitiesPartial(List<ActivityRecord> activities) async {
     if (activities.isEmpty) {
       AppLog.app.debug(
@@ -555,16 +565,26 @@ class HealthDatabase {
     }
 
     final isar = _isar!;
+    final incoming = _dedupeActivities(activities);
+    final rangeStart = incoming
+        .map((r) => r.startTime)
+        .reduce((a, b) => a.isBefore(b) ? a : b);
+    final rangeEnd =
+        incoming.map((r) => r.startTime).reduce((a, b) => a.isAfter(b) ? a : b);
 
     await isar.writeTxn(() async {
+      final existingRows = await isar.hcActivityRecords.where().findAll();
+      final preserved = [
+        for (final row in existingRows)
+          if (row.startTime.isBefore(rangeStart) ||
+              row.startTime.isAfter(rangeEnd))
+            _activityFromRow(row),
+      ];
+      final merged = _dedupeActivities([...preserved, ...incoming]);
+
+      await isar.hcActivityRecords.clear();
       await isar.hcActivityRecords.putAll([
-        for (final r in activities)
-          HcActivityRecord()
-            ..startTime = r.startTime
-            ..endTime = r.endTime
-            ..type = r.type
-            ..caloriesBurned = r.caloriesBurned
-            ..distanceKm = r.distanceKm,
+        for (final r in merged) _activityToRow(r),
       ]);
     });
 
@@ -572,7 +592,7 @@ class HealthDatabase {
 
     AppLog.app.info(
       '$_logName: saveActivitiesPartial() done — '
-      'activities=${activities.length}',
+      'activities=${incoming.length}',
     );
   }
 
@@ -623,6 +643,117 @@ class HealthDatabase {
   static DateTime _today() {
     final now = DateTime.now();
     return DateTime(now.year, now.month, now.day);
+  }
+
+  // ─── Sleep stage encoding ────────────────────────────────────────────────
+  // Stage segments are persisted as one segment per line, fields separated by
+  // '|'. Compact, append-only, and trivial to parse without pulling in JSON.
+  static String _encodeSegments(List<SleepSegment> segments) {
+    if (segments.isEmpty) return '';
+    final buf = StringBuffer();
+    for (var i = 0; i < segments.length; i++) {
+      if (i > 0) buf.write('\n');
+      final s = segments[i];
+      buf
+        ..write(s.start.millisecondsSinceEpoch)
+        ..write('|')
+        ..write(s.end.millisecondsSinceEpoch)
+        ..write('|')
+        ..write(s.stage.index);
+    }
+    return buf.toString();
+  }
+
+  static List<SleepSegment> _decodeSegments(String encoded) {
+    if (encoded.isEmpty) return const [];
+    final lines = encoded.split('\n');
+    final out = <SleepSegment>[];
+    for (final line in lines) {
+      final parts = line.split('|');
+      if (parts.length != 3) continue;
+      final startMs = int.tryParse(parts[0]);
+      final endMs = int.tryParse(parts[1]);
+      final stageIdx = int.tryParse(parts[2]);
+      if (startMs == null || endMs == null || stageIdx == null) continue;
+      if (stageIdx < 0 || stageIdx >= SleepStage.values.length) continue;
+      out.add(SleepSegment(
+        start: DateTime.fromMillisecondsSinceEpoch(startMs),
+        end: DateTime.fromMillisecondsSinceEpoch(endMs),
+        stage: SleepStage.values[stageIdx],
+      ));
+    }
+    return out;
+  }
+
+  static SleepRecord _sleepFromRow(HcSleepRecord r) {
+    return SleepRecord(
+      sleepStart: r.sleepStart,
+      wakeTime: r.wakeTime,
+      totalDuration: Duration(seconds: r.totalDurationSeconds),
+      deepDuration: Duration(seconds: r.deepDurationSeconds),
+      lightDuration: Duration(seconds: r.lightDurationSeconds),
+      remDuration: Duration(seconds: r.remDurationSeconds),
+      awakeDuration: Duration(seconds: r.awakeDurationSeconds),
+      segments: _decodeSegments(r.segmentsEncoded),
+    );
+  }
+
+  HcSleepRecord _sleepToRow(SleepRecord r) {
+    return HcSleepRecord()
+      ..dateKey = _toKey(r.wakeTime)
+      ..sleepStart = r.sleepStart
+      ..wakeTime = r.wakeTime
+      ..totalDurationSeconds = r.totalDuration.inSeconds
+      ..deepDurationSeconds = r.deepDuration.inSeconds
+      ..lightDurationSeconds = r.lightDuration.inSeconds
+      ..remDurationSeconds = r.remDuration.inSeconds
+      ..awakeDurationSeconds = r.awakeDuration.inSeconds
+      ..segmentsEncoded = _encodeSegments(r.segments);
+  }
+
+  static ActivityRecord _activityFromRow(HcActivityRecord row) {
+    return ActivityRecord(
+      startTime: row.startTime,
+      endTime: row.endTime,
+      type: row.type,
+      caloriesBurned: row.caloriesBurned,
+      distanceKm: row.distanceKm,
+    );
+  }
+
+  static HcActivityRecord _activityToRow(ActivityRecord activity) {
+    return HcActivityRecord()
+      ..startTime = activity.startTime
+      ..endTime = activity.endTime
+      ..type = activity.type
+      ..caloriesBurned = activity.caloriesBurned
+      ..distanceKm = activity.distanceKm;
+  }
+
+  static List<ActivityRecord> _dedupeActivities(
+    Iterable<ActivityRecord> activities,
+  ) {
+    final byKey = <String, ActivityRecord>{};
+    for (final activity in activities) {
+      byKey[_activityKey(activity)] = activity;
+    }
+
+    return byKey.values.toList()
+      ..sort((a, b) => b.startTime.compareTo(a.startTime));
+  }
+
+  static String _activityKey(ActivityRecord activity) {
+    return [
+      _secondsSinceEpoch(activity.startTime),
+      _secondsSinceEpoch(activity.endTime),
+      activity.type.trim().toUpperCase(),
+      activity.caloriesBurned ?? '',
+      activity.distanceKm?.toStringAsFixed(3) ?? '',
+    ].join('|');
+  }
+
+  static int _secondsSinceEpoch(DateTime value) {
+    return value.toUtc().millisecondsSinceEpoch ~/ 1000;
   }
 
   /// Streams notifications when any health data changes in the DB.

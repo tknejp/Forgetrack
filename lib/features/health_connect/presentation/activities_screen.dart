@@ -7,17 +7,23 @@ import '../../../shared/selected_period.dart';
 import '../../../features/health_connect/application/goals_provider.dart';
 import '../../../shared/theme/design_tokens.dart';
 import '../../../shared/widgets/activity_row.dart';
-import '../../../shared/widgets/date_nav.dart';
-import '../../../shared/widgets/drag_reveal_pager.dart';
+import '../../../shared/widgets/dashboard_card_assets.dart';
+import '../../../shared/widgets/period_navigator.dart';
 import '../../../shared/widgets/plain_card.dart';
 import '../../../shared/widgets/ft_back_button.dart';
 import '../../../shared/widgets/screen_header.dart';
+import '../../../shared/widgets/screen_link_card.dart';
 import '../../../shared/widgets/stat_card.dart';
-import '../../../shared/widgets/tab_pill.dart';
+import '../../../shared/widgets/swipe_period_gesture.dart';
 import '../../../shared/widgets/trend_chart.dart';
 import '../application/fitness_provider.dart';
 import '../domain/activity_record.dart';
+import 'activity_detail_screen.dart';
+import 'steps_screen.dart';
 
+/// Workout-focused detail screen. Today header → period navigator with tabs →
+/// period stats → activity-type breakdown chart → recent activities list.
+/// Cross-links to the Steps screen at the bottom.
 class ActivitiesScreen extends StatefulWidget {
   const ActivitiesScreen({super.key});
 
@@ -28,19 +34,23 @@ class ActivitiesScreen extends StatefulWidget {
 class _ActivitiesScreenState extends State<ActivitiesScreen> {
   SelectedPeriod _period = SelectedPeriod.currentWeek();
 
-  String? _dateNavOverride(BuildContext context, SelectedPeriod period) {
+  String _periodDateLabel(BuildContext context, SelectedPeriod period) {
     final locale = Localizations.localeOf(context).toString();
     switch (period.type) {
       case PeriodType.day:
-        return null;
+        return DateFormat('EEE d MMM', locale).format(period.referenceDate);
       case PeriodType.week:
         final start = period.start;
         final end = period.end;
-        return '${start.day} ${DateFormat.MMM(locale).format(start)} - ${end.day} ${DateFormat.MMM(locale).format(end)}';
+        return '${start.day} ${DateFormat.MMM(locale).format(start)} – '
+            '${end.day} ${DateFormat.MMM(locale).format(end)}';
       case PeriodType.month:
         return DateFormat.yMMM(locale).format(period.referenceDate);
       case PeriodType.custom:
-        return null;
+        final start = period.start;
+        final end = period.end;
+        return '${start.day} ${DateFormat.MMM(locale).format(start)} – '
+            '${end.day} ${DateFormat.MMM(locale).format(end)}';
     }
   }
 
@@ -64,24 +74,24 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
   ({ActivityType type, String emoji}) _mapActivity(String hcType) {
     final type = hcType.toUpperCase();
     if (type.contains('WALK')) {
-      return (type: ActivityType.walking, emoji: '\uD83D\uDEB6');
+      return (type: ActivityType.walking, emoji: '🚶');
     }
     if (type.contains('RUN') || type.contains('JOG')) {
-      return (type: ActivityType.walking, emoji: '\uD83C\uDFC3');
+      return (type: ActivityType.walking, emoji: '🏃');
     }
     if (type.contains('CYCL') || type.contains('BIKE')) {
-      return (type: ActivityType.walking, emoji: '\uD83D\uDEB4');
+      return (type: ActivityType.walking, emoji: '🚴');
     }
     if (type.contains('SWIM')) {
-      return (type: ActivityType.walking, emoji: '\uD83C\uDFCA');
+      return (type: ActivityType.walking, emoji: '🏊');
     }
     if (type.contains('HIKE') || type.contains('TRAIL')) {
-      return (type: ActivityType.walking, emoji: '\uD83E\uDD7E');
+      return (type: ActivityType.walking, emoji: '🥾');
     }
     if (type.contains('YOGA') || type.contains('MEDIT')) {
-      return (type: ActivityType.strength, emoji: '\uD83E\uDDD8');
+      return (type: ActivityType.strength, emoji: '🧘');
     }
-    return (type: ActivityType.strength, emoji: '\u2694');
+    return (type: ActivityType.strength, emoji: '⚔');
   }
 
   String _formatActivityType(String hcType) => hcType
@@ -112,22 +122,25 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
     return '${DateFormat.E(locale).format(dateTime)} ${dateTime.day} | $time';
   }
 
-  List<ChartBar> _buildStepsChart(List<StepsRecord> history) {
-    if (history.isEmpty) return [];
-    final slice =
-        history.length > 7 ? history.sublist(history.length - 7) : history;
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-    return slice
-        .map(
-          (record) => ChartBar(
-            label: days[record.date.weekday - 1],
-            value: record.steps.toDouble(),
-            isToday: record.date == today,
-          ),
-        )
-        .toList();
+  /// Aggregates a list of activities into one ChartBar per HC type, value =
+  /// total minutes. Sorted by minutes descending so the dominant type sits
+  /// at the left of the chart.
+  List<ChartBar> _buildTypeBreakdownBars(List<ActivityRecord> activities) {
+    if (activities.isEmpty) return const [];
+    final byType = <String, int>{};
+    for (final a in activities) {
+      final key = a.type.toUpperCase();
+      byType[key] = (byType[key] ?? 0) + a.duration.inMinutes;
+    }
+    final entries = byType.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    return [
+      for (final e in entries)
+        ChartBar(
+          label: _formatActivityType(e.key),
+          value: e.value.toDouble(),
+        ),
+    ];
   }
 
   Widget _buildActivityRow(
@@ -147,198 +160,246 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
           : '-- kcal',
       xp: (activity.duration.inMinutes * 2).clamp(10, 200),
       isLast: isLast,
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ActivityDetailScreen(activity: activity),
+        ),
+      ),
     );
   }
 
-  Widget _buildPeriodContent(
+  Widget _buildContent(
     BuildContext context,
-    SelectedPeriod period,
     FitnessProvider fitness,
     GoalsProvider goals,
   ) {
     final l10n = context.l10n;
-    final locale = Localizations.localeOf(context).toString();
-    final tab = _tab(context, period);
-    final stepsFmt = NumberFormat('#,##0', locale);
+    final tab = _tab(context, _period);
 
-    final chartBars = _buildStepsChart(fitness.stepsHistory);
-    final chartAvg = chartBars.isNotEmpty
-        ? chartBars.map((bar) => bar.value).reduce((a, b) => a + b) /
-            chartBars.length
-        : 0.0;
-    final periodSteps = period.type == PeriodType.day
-        ? fitness.stepsForDate(period.start)
-        : fitness.stepsAvgForRange(period.start, period.end);
-    final stepsGoal = goals.dailySteps;
-    final stepsProgress =
-        stepsGoal > 0 ? (periodSteps / stepsGoal).clamp(0.0, 1.0) : 0.0;
-    final stepsLeft = (stepsGoal - periodSteps).clamp(0, stepsGoal);
-
-    final periodActivities = fitness.activities.where((activity) {
-      final day = DateTime(
-        activity.startTime.year,
-        activity.startTime.month,
-        activity.startTime.day,
-      );
-      return !day.isBefore(period.start) && !day.isAfter(period.end);
+    // ── Today (period-independent) ──────────────────────────────────────
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final todayActivities = fitness.activities.where((a) {
+      final day =
+          DateTime(a.startTime.year, a.startTime.month, a.startTime.day);
+      return day == today;
     }).toList();
-    final activeMinutes = periodActivities.fold<int>(
+    final todayActiveMinutes =
+        todayActivities.fold<int>(0, (sum, a) => sum + a.duration.inMinutes);
+    final todayKcal = todayActivities.fold<int>(
       0,
-      (sum, activity) => sum + activity.duration.inMinutes,
+      (sum, a) => sum + (a.caloriesBurned ?? 0),
+    );
+
+    // ── Period-driven aggregates ────────────────────────────────────────
+    final periodActivities = fitness.activities.where((a) {
+      final day =
+          DateTime(a.startTime.year, a.startTime.month, a.startTime.day);
+      return !day.isBefore(_period.start) && !day.isAfter(_period.end);
+    }).toList();
+    final periodActiveMinutes = periodActivities.fold<int>(
+      0,
+      (sum, a) => sum + a.duration.inMinutes,
+    );
+    final periodKcal = periodActivities.fold<int>(
+      0,
+      (sum, a) => sum + (a.caloriesBurned ?? 0),
     );
     final goalMinutes = goals.weeklyActivityMins;
-    final progress =
-        goalMinutes > 0 ? (activeMinutes / goalMinutes).clamp(0.0, 1.0) : 0.0;
+    final activeMinsProgress = goalMinutes > 0
+        ? (periodActiveMinutes / goalMinutes).clamp(0.0, 1.0)
+        : 0.0;
+    final typeBars = _buildTypeBreakdownBars(periodActivities);
 
-    final recentActivities = [...fitness.activities]
+    final recentActivities = [...periodActivities]
       ..sort((a, b) => b.startTime.compareTo(a.startTime));
-    final displayActivities = recentActivities.take(20).toList();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (!fitness.workoutPermissionGranted &&
-            fitness.accessState == FitnessAccessState.ready) ...[
-          const SizedBox(height: 2),
-          _WorkoutPermissionBanner(
-            onTap: () => fitness.requestWorkoutPermission(),
-          ),
-          const SizedBox(height: 10),
-        ],
-        StatCard(
-          icon: '\uD83E\uDD7E',
-          label: l10n.stepsTitle,
-          domain: Tokens.steps,
-          initiallyExpanded: true,
-          collapsible: false,
-          stats: [
-            StatStat(
-              value: stepsFmt.format(periodSteps),
-              label: l10n.stepsTitle,
+    return SwipePeriodGesture(
+      onPrev: () => setState(() => _period = _period.backward()),
+      onNext: _period.canGoForward
+          ? () => setState(() => _period = _period.forward())
+          : null,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (!fitness.workoutPermissionGranted &&
+              fitness.accessState == FitnessAccessState.ready) ...[
+            _WorkoutPermissionBanner(
+              onTap: () => fitness.requestWorkoutPermission(),
             ),
-            StatStat(
-              value: stepsFmt.format(stepsGoal),
-              label: l10n.stepsGoal,
-            ),
-            StatStat(
-              value: period.type == PeriodType.day
-                  ? stepsFmt.format(stepsLeft)
-                  : '--',
-              label: period.type == PeriodType.day ? l10n.stepsRemaining : '',
-            ),
+            const SizedBox(height: 10),
           ],
-          progress: stepsProgress,
-          badge: '${(stepsProgress * 100).round()}%',
-        ),
-        const SizedBox(height: 10),
-        TrendCard(
-          domain: Tokens.steps,
-          icon: Icons.bar_chart,
-          title: l10n.activitiesWeeklyTrend,
-          subtitle: l10n.activitiesWeekTotal,
-          collapsible: false,
-          metrics: [
-            TrendMetric(
-              label: l10n.headerToday,
-              value: NumberFormat.decimalPattern().format(fitness.todaySteps),
+
+          // ── Today header ────────────────────────────────────────────
+          StatCard(
+            icon: '⚡',
+            label: '${l10n.activitiesActiveMins} · ${l10n.headerToday}',
+            domain: Tokens.active,
+            visualAssets: DashboardCardAssetResolver.forKind(
+              DashboardCardKind.activity,
             ),
-            TrendMetric(
-              label: l10n.stepsAverage,
-              value: NumberFormat.decimalPattern().format(chartAvg.round()),
-            ),
-            TrendMetric(
-              label: l10n.stepsGoal,
-              value: NumberFormat.decimalPattern().format(goals.dailySteps),
-            ),
-          ],
-          bars: chartBars,
-          referenceValue: goals.dailySteps.toDouble(),
-          referenceLabel: l10n.stepsGoal,
-          emptyLabel: l10n.activitiesNoWorkouts,
-          expandable: chartBars.length > 4,
-        ),
-        const SizedBox(height: 10),
-        StatCard(
-          icon: '\u26A1',
-          label: '${l10n.activitiesActiveMins} · ${tab.toLowerCase()}',
-          domain: Tokens.active,
-          initiallyExpanded: true,
-          collapsible: false,
-          stats: [
-            StatStat(
-              value: '$activeMinutes',
-              label: l10n.activitiesActiveMins,
-              unit: 'min',
-            ),
-            StatStat(
-              value: '$goalMinutes',
-              label: l10n.stepsGoal,
-              unit: 'min',
-            ),
-            StatStat(
-              value: '${periodActivities.length}',
-              label: l10n.activitiesWorkouts,
-            ),
-          ],
-          progress: progress,
-          badge: '${(progress * 100).round()}%',
-          xp: '+${periodActivities.length * 60} XP',
-        ),
-        const SizedBox(height: 10),
-        PlainCard(
-          padding: const EdgeInsets.fromLTRB(14, 12, 14, 4),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    l10n.activitiesRecentActivity.toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: Tokens.fontSizeCaption,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0x80FFFFFF),
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  const Spacer(),
-                  if (displayActivities.isNotEmpty)
-                    Text(
-                      '${displayActivities.length} total →',
-                      style: TextStyle(
-                        fontSize: Tokens.fontSizeCaption,
-                        fontWeight: FontWeight.w600,
-                        color: Tokens.accent,
-                      ),
-                    ),
-                ],
+            initiallyExpanded: true,
+            collapsible: false,
+            stats: [
+              StatStat(
+                value: '$todayActiveMinutes',
+                label: l10n.activitiesActiveMins,
+                unit: 'min',
               ),
-              const SizedBox(height: Tokens.spaceXs),
-              if (displayActivities.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: Text(
-                    fitness.workoutPermissionGranted
-                        ? l10n.activitiesNoWorkouts
-                        : l10n.activitiesWorkoutPermissionBody,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Tokens.onSurfaceMuted,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                )
-              else
-                for (int i = 0; i < displayActivities.length; i++)
-                  _buildActivityRow(
-                    context,
-                    displayActivities[i],
-                    i == displayActivities.length - 1,
-                  ),
+              StatStat(
+                value: '${todayActivities.length}',
+                label: l10n.activitiesWorkouts,
+              ),
+              StatStat(
+                value: todayKcal > 0 ? '$todayKcal' : '--',
+                label: l10n.activitiesActiveCalories,
+                unit: 'kcal',
+              ),
             ],
           ),
-        ),
-      ],
+
+          const SizedBox(height: 10),
+
+          // ── Period navigator + tabs ─────────────────────────────────
+          PeriodNavigator(
+            domain: Tokens.active,
+            tabs: [l10n.periodDay, l10n.periodWeek, l10n.periodMonth],
+            activeTab: tab,
+            onTabChange: _changeTab,
+            dateLabel: _periodDateLabel(context, _period),
+            canGoForward: _period.canGoForward,
+            isCurrentPeriod: _period.isCurrentPeriod,
+            onPrev: () => setState(() => _period = _period.backward()),
+            onNext: _period.canGoForward
+                ? () => setState(() => _period = _period.forward())
+                : null,
+            onToday: _period.isCurrentPeriod
+                ? null
+                : () => setState(
+                    () => _period = _period.withType(_period.type)),
+          ),
+
+          const SizedBox(height: 10),
+
+          // ── Period stats ───────────────────────────────────────────
+          StatCard(
+            icon: '🏋',
+            label: '${l10n.activitiesActiveMins} · ${tab.toLowerCase()}',
+            domain: Tokens.active,
+            visualAssets: DashboardCardAssetResolver.forKind(
+              DashboardCardKind.activity,
+            ),
+            initiallyExpanded: true,
+            collapsible: false,
+            stats: [
+              StatStat(
+                value: '$periodActiveMinutes',
+                label: l10n.activitiesActiveMins,
+                unit: 'min',
+              ),
+              StatStat(
+                value: '${periodActivities.length}',
+                label: l10n.activitiesWorkouts,
+              ),
+              StatStat(
+                value: periodKcal > 0 ? '$periodKcal' : '--',
+                label: l10n.activitiesActiveCalories,
+                unit: 'kcal',
+              ),
+            ],
+            progress: activeMinsProgress,
+            badge: '${(activeMinsProgress * 100).round()}%',
+            xp: '+${periodActivities.length * 60} XP',
+          ),
+
+          const SizedBox(height: 10),
+
+          // ── Activity-type breakdown ────────────────────────────────
+          if (typeBars.length >= 2) ...[
+            TrendCard(
+              domain: Tokens.active,
+              icon: Icons.donut_small_rounded,
+              title: l10n.activitiesByType,
+              subtitle: _periodDateLabel(context, _period),
+              collapsible: false,
+              metrics: const [],
+              bars: typeBars,
+              relativeScale: false,
+              emptyLabel: l10n.activitiesNoWorkouts,
+              expandable: typeBars.length > 4,
+            ),
+            const SizedBox(height: 10),
+          ],
+
+          // ── Recent activities (period-filtered) ────────────────────
+          PlainCard(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 4),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      l10n.activitiesRecentActivity.toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: Tokens.fontSizeCaption,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0x80FFFFFF),
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const Spacer(),
+                    if (recentActivities.isNotEmpty)
+                      Text(
+                        '${recentActivities.length} →',
+                        style: TextStyle(
+                          fontSize: Tokens.fontSizeCaption,
+                          fontWeight: FontWeight.w600,
+                          color: Tokens.accent,
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: Tokens.spaceXs),
+                if (recentActivities.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Text(
+                      fitness.workoutPermissionGranted
+                          ? l10n.activitiesNoWorkouts
+                          : l10n.activitiesWorkoutPermissionBody,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Tokens.onSurfaceMuted,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  )
+                else
+                  for (int i = 0; i < recentActivities.length; i++)
+                    _buildActivityRow(
+                      context,
+                      recentActivities[i],
+                      i == recentActivities.length - 1,
+                    ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          // ── Cross-link: jump to Steps ──────────────────────────────
+          ScreenLinkCard(
+            title: l10n.screenSteps,
+            subtitle: l10n.stepsLinkSubtitle,
+            icon: Icons.directions_walk_rounded,
+            domain: Tokens.steps,
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const StepsScreen()),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -371,29 +432,6 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                             : null,
                       ),
                       const SizedBox(height: 10),
-                      TabPill(
-                        tabs: [
-                          context.l10n.periodDay,
-                          context.l10n.periodWeek,
-                          context.l10n.periodMonth,
-                        ],
-                        active: _tab(context, _period),
-                        onChange: _changeTab,
-                      ),
-                      const SizedBox(height: 10),
-                      DateNav(
-                        date: _period.referenceDate,
-                        onPrev: () =>
-                            setState(() => _period = _period.backward()),
-                        onNext: _period.canGoForward
-                            ? () => setState(() => _period = _period.forward())
-                            : null,
-                        labelOverride: _dateNavOverride(context, _period),
-                        showTodayButton: !_period.isCurrentPeriod,
-                        onTodayTap: () => setState(
-                            () => _period = _period.withType(_period.type)),
-                      ),
-                      const SizedBox(height: 10),
                     ],
                   ),
                 ),
@@ -401,16 +439,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(14, 0, 14, 24),
-                  child: DragRevealPager<SelectedPeriod>(
-                    item: _period,
-                    hasPrevious: (_) => true,
-                    hasNext: (period) => period.canGoForward,
-                    previousOf: (period) => period.backward(),
-                    nextOf: (period) => period.forward(),
-                    onCommit: (period) => setState(() => _period = period),
-                    builder: (context, period) =>
-                        _buildPeriodContent(context, period, fitness, goals),
-                  ),
+                  child: _buildContent(context, fitness, goals),
                 ),
               ),
             ],
@@ -442,7 +471,7 @@ class _WorkoutPermissionBanner extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Text('\u26A1', style: TextStyle(fontSize: 16)),
+            const Text('⚡', style: TextStyle(fontSize: 16)),
             const SizedBox(width: 10),
             Expanded(
               child: Text(

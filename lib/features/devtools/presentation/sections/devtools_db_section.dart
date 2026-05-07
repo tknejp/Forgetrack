@@ -130,9 +130,42 @@ class _DevToolsDbSectionState extends State<DevToolsDbSection> {
         ),
         const DevToolsSectionDivider(),
         DevToolsStatusTile(
-          label: 'Weight / Sleep / Activities',
-          value:
-              '${f.debugWeightRecordCount} / ${f.debugSleepRecordCount} / ${f.debugActivitiesCount}',
+          label: 'Weight records',
+          value: '${f.debugWeightRecordCount}  '
+              '(${f.debugWeightFirstDate != null ? _dateKey(f.debugWeightFirstDate!) : "—"}'
+              ' → '
+              '${f.debugWeightLastDate != null ? _dateKey(f.debugWeightLastDate!) : "—"})',
+          valueColor: f.debugWeightRecordCount == 0
+              ? cs.error.withValues(alpha: 0.7)
+              : null,
+        ),
+        const DevToolsSectionDivider(),
+        DevToolsStatusTile(
+          label: 'Weight w/ bodyFat in-record',
+          value: '${f.debugWeightWithBodyFatCount} / ${f.debugWeightRecordCount}',
+          valueColor: f.debugWeightWithBodyFatCount == 0 &&
+                  f.debugWeightRecordCount > 0
+              ? Colors.orangeAccent
+              : f.debugWeightWithBodyFatCount > 0
+                  ? Colors.greenAccent.shade400
+                  : null,
+        ),
+        const DevToolsSectionDivider(),
+        DevToolsStatusTile(
+          label: 'Latest bodyFat (meta)',
+          value: f.latestBodyFat != null
+              ? '${f.latestBodyFat!.toStringAsFixed(1)} %'
+              : '—',
+          valueColor: f.latestBodyFat != null
+              ? Colors.greenAccent.shade400
+              : cs.error.withValues(alpha: 0.7),
+        ),
+        const DevToolsSectionDivider(),
+        _WeightRecordsPreview(records: f.debugWeightRecordsPreview),
+        const DevToolsSectionDivider(),
+        DevToolsStatusTile(
+          label: 'Sleep / Activities',
+          value: '${f.debugSleepRecordCount} / ${f.debugActivitiesCount}',
         ),
         const DevToolsSectionDivider(),
         DevToolsStatusTile(
@@ -323,6 +356,81 @@ class _WarningTile extends StatelessWidget {
           fontSize: 12,
           fontWeight: FontWeight.w500,
         ),
+      ),
+    );
+  }
+}
+
+class _WeightRecordsPreview extends StatelessWidget {
+  const _WeightRecordsPreview({required this.records});
+
+  final List<({String dateKey, double kg, double? fatPct})> records;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    if (records.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(14, 4, 14, 4),
+        child: Text(
+          'Weight records preview  —  (none)',
+          style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+        ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 4, 14, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'LAST ${records.length} WEIGHT RECORDS',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: cs.onSurfaceVariant.withValues(alpha: 0.6),
+              letterSpacing: 0.8,
+            ),
+          ),
+          const SizedBox(height: 4),
+          for (final r in records)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 1),
+              child: Row(
+                children: [
+                  Text(
+                    r.dateKey,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontFamily: 'monospace',
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${r.kg.toStringAsFixed(1)} kg',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: cs.onSurface,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    r.fatPct != null
+                        ? '${r.fatPct!.toStringAsFixed(1)} % fat'
+                        : 'no fat',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: r.fatPct != null
+                          ? Colors.greenAccent.shade400
+                          : Colors.orangeAccent,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

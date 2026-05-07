@@ -97,6 +97,8 @@ class FitnessProvider extends ChangeNotifier {
   bool get workoutPermissionGranted => _workoutPermissionGranted;
   List<WeightRecord> get weightHistory => _weightHistory;
   double? get latestBodyFat => _latestBodyFat;
+  double? get latestBodyWater =>
+      _weightHistory.where((r) => r.bodyWater != null).lastOrNull?.bodyWater;
   SleepRecord? get todaySleep => _todaySleep;
   List<SleepRecord> get sleepHistory => _sleepHistory;
 
@@ -109,6 +111,29 @@ class FitnessProvider extends ChangeNotifier {
       _stepsHistory.isNotEmpty ? _stepsHistory.first.date : null;
   DateTime? get debugStepsLastDate =>
       _stepsHistory.isNotEmpty ? _stepsHistory.last.date : null;
+
+  /// How many weight records have a non-null bodyFat value stored in-record.
+  int get debugWeightWithBodyFatCount =>
+      _weightHistory.where((r) => r.bodyFat != null).length;
+
+  /// Weight first / last date (or null when empty).
+  DateTime? get debugWeightFirstDate =>
+      _weightHistory.isNotEmpty ? _weightHistory.first.date : null;
+  DateTime? get debugWeightLastDate =>
+      _weightHistory.isNotEmpty ? _weightHistory.last.date : null;
+
+  /// Last ≤5 weight records: date, kg, bodyFat%. Cheap slice — no DB access.
+  List<({String dateKey, double kg, double? fatPct})>
+      get debugWeightRecordsPreview {
+    const limit = 5;
+    final src = _weightHistory.length > limit
+        ? _weightHistory.sublist(_weightHistory.length - limit)
+        : _weightHistory;
+    return [
+      for (final r in src)
+        (dateKey: _fmtDateKey(r.date), kg: r.weight, fatPct: r.bodyFat)
+    ];
+  }
 
   // Pipeline debug getters — all cheap in-memory reads.
   String? get debugLastRefreshSource => _debugLastRefreshSource;

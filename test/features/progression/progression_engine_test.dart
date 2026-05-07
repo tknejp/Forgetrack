@@ -75,7 +75,7 @@ void main() {
           ProgressionSnapshot(
             period: ProgressionPeriod.day(DateTime(2026, 4, 21)),
             steps: 8500,
-            calories: 2400,
+            calories: 1700,
             proteinGrams: 80,
             sleepMinutes: 420,
           ),
@@ -205,7 +205,7 @@ void main() {
           ProgressionSnapshot(
             period: ProgressionPeriod.day(DateTime(2026, 4, 23)),
             steps: 9000,
-            calories: 2500,
+            calories: 1700,
             proteinGrams: 90,
             sleepMinutes: 500,
           ),
@@ -628,7 +628,7 @@ void main() {
           ProgressionSnapshot(
             period: ProgressionPeriod.day(DateTime(2026, 4, 21)),
             steps: 12000,
-            calories: 2500,
+            calories: 1700,
             proteinGrams: 100,
             sleepMinutes: 500,
           ),
@@ -1923,6 +1923,57 @@ void main() {
       expect(outsideBoundary.missReason, ProgressionMissReason.belowMinimum);
       expect(lowerBoundary.explanation, contains('acceptedMin=1800.0'));
       expect(lowerBoundary.explanation, contains('acceptedMax=2200.0'));
+    });
+
+    test('supports one-sided relative tolerance minimum', () {
+      const evaluator = ProgressionEvaluator();
+      final rule = ProgressionRuleDefinition(
+        id: 'daily_protein',
+        version: 'v1',
+        domain: ProgressionDomain.nutrition,
+        metric: ProgressionMetric.proteinGrams,
+        periodKind: ProgressionPeriodKind.day,
+        comparator: ProgressionComparator.atLeastRelativeTolerance,
+        targetValue: 150,
+        toleranceRatio: 0.10,
+        rewardXp: 40,
+        title: (l10n) => 'Daily Protein',
+        description: (l10n) => 'Reach most of the goal',
+        unit: (l10n) => 'g',
+      );
+
+      final lowerBoundary = evaluator.evaluate(
+        rule: rule,
+        snapshot: ProgressionSnapshot(
+          period: ProgressionPeriod.day(DateTime(2026, 4, 21)),
+          proteinGrams: 135,
+        ),
+      );
+      final aboveTarget = evaluator.evaluate(
+        rule: rule,
+        snapshot: ProgressionSnapshot(
+          period: ProgressionPeriod.day(DateTime(2026, 4, 21)),
+          proteinGrams: 180,
+        ),
+      );
+      final belowBoundary = evaluator.evaluate(
+        rule: rule,
+        snapshot: ProgressionSnapshot(
+          period: ProgressionPeriod.day(DateTime(2026, 4, 21)),
+          proteinGrams: 134,
+        ),
+      );
+
+      expect(lowerBoundary.achieved, isTrue);
+      expect(aboveTarget.achieved, isTrue);
+      expect(belowBoundary.achieved, isFalse);
+      expect(belowBoundary.missReason, ProgressionMissReason.belowMinimum);
+      expect(lowerBoundary.targetValue, 150);
+      expect(lowerBoundary.explanation, contains('acceptedMin=135.0'));
+      expect(
+        lowerBoundary.explanation,
+        contains('comparator=atLeastRelativeTolerance'),
+      );
     });
 
     test('supports atMost comparator with aboveMaximum miss reason', () {

@@ -39,10 +39,25 @@ class AppLocalizationsCs extends AppLocalizations {
   String get screenActivities => 'Aktivity';
 
   @override
+  String get screenSteps => 'Kroky';
+
+  @override
   String get screenNutrition => 'Výživa';
 
   @override
   String get screenBody => 'Tělo';
+
+  @override
+  String get stepsCurrentStreak => 'Série';
+
+  @override
+  String get stepsLinkSubtitle => 'Denní kroky a cíl';
+
+  @override
+  String get activitiesByType => 'Podle typu';
+
+  @override
+  String get activitiesLinkSubtitle => 'Tréninky, kalorie, čas';
 
   @override
   String get periodDay => 'Den';
@@ -52,6 +67,9 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get periodMonth => 'Měsíc';
+
+  @override
+  String get periodToday => 'Dnes';
 
   @override
   String get periodCustomRangeSoon => 'Vlastní rozsah bude brzy k dispozici';
@@ -144,6 +162,9 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get weightLeanMass => 'Svalová hmota';
+
+  @override
+  String get weightBodyWater => 'Tělesná voda';
 
   @override
   String get weightFatMass => 'Tuková hmota';
@@ -353,6 +374,36 @@ class AppLocalizationsCs extends AppLocalizations {
   String get sleepNoData => 'Žádná data o spánku';
 
   @override
+  String get sleepStageDeep => 'Hluboký';
+
+  @override
+  String get sleepStageLight => 'Lehký';
+
+  @override
+  String get sleepStageRem => 'REM';
+
+  @override
+  String get sleepStageAwake => 'Vzhůru';
+
+  @override
+  String get sleepStagesTitle => 'Stádia spánku';
+
+  @override
+  String get sleepStagesBreakdown => 'Rozdělení stádií';
+
+  @override
+  String get sleepDurationTrend => 'Vývoj délky spánku';
+
+  @override
+  String get sleepDeepTrend => 'Hluboký spánek';
+
+  @override
+  String get sleepRemTrend => 'REM spánek';
+
+  @override
+  String get sleepNoStageData => 'Stádia spánku nejsou k dispozici';
+
+  @override
   String get homeOpenDetailCta => 'Otevřít detail';
 
   @override
@@ -387,6 +438,27 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get activitiesAvgDuration => 'Prům. délka';
+
+  @override
+  String get activityDetailTitle => 'Detail tréninku';
+
+  @override
+  String get activityDetailStart => 'Začátek';
+
+  @override
+  String get activityDetailEnd => 'Konec';
+
+  @override
+  String get activityDetailPace => 'Tempo';
+
+  @override
+  String get activityDetailDistance => 'Vzdálenost';
+
+  @override
+  String get activityDetailComparison => 'Srovnání';
+
+  @override
+  String get activityDetailNoMap => 'GPS data nejsou k dispozici';
 
   @override
   String get activitiesWorkoutPermissionTitle => 'Potřebný přístup k tréninkům';
@@ -959,7 +1031,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get progQuestStatusLocked => 'Zamčeno';
 
   @override
-  String get progQuestStatusClaimed => 'Vyzvednuto';
+  String get progQuestStatusClaimed => 'Splněno';
 
   @override
   String get progQuestStatusCompleted => 'Dokončeno';

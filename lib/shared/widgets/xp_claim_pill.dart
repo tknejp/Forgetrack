@@ -55,9 +55,9 @@ class XpClaimPill extends StatelessWidget {
           label: '${data.xp} XP',
         ),
       XpClaimPillState.claimed => (
-          color: ft.sleep.color,
-          bg: ft.accent.withValues(alpha: 0.18),
-          border: ft.accent.withValues(alpha: 0.35),
+          color: ft.onSurfaceMuted,
+          bg: ft.onSurface.withValues(alpha: 0.09),
+          border: ft.onSurface.withValues(alpha: 0.16),
           icon: Icons.check_rounded,
           label: claimedLabel ?? '+${data.xp} XP',
         ),

@@ -39,6 +39,7 @@ class HcWeightRecord {
 
   double weight = 0;
   double? bodyFat;
+  double? bodyWater;
 }
 
 // ─── Sleep ────────────────────────────────────────────────────────────────────
@@ -56,6 +57,20 @@ class HcSleepRecord {
 
   /// Sum of all sleep session durations (not wall-clock span).
   int totalDurationSeconds = 0;
+
+  // ── Sleep-stage breakdown (Health Connect, optional) ─────────────────────
+  // Aggregated time spent in each stage during the night, in seconds.
+  // Zero when the device / sync did not report stage data.
+  int deepDurationSeconds = 0;
+  int lightDurationSeconds = 0;
+  int remDurationSeconds = 0;
+  int awakeDurationSeconds = 0;
+
+  /// Encoded list of stage segments for the timeline view.
+  ///
+  /// Format: lines of `<startMs>|<endMs>|<stageIndex>` where stageIndex
+  /// matches [SleepStage.index]. Empty when no stage data is present.
+  String segmentsEncoded = '';
 }
 
 // ─── Activities ───────────────────────────────────────────────────────────────

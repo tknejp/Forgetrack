@@ -88,6 +88,7 @@ enum ProgressionComparator {
   atMost,
   betweenInclusive,
   withinRelativeTolerance,
+  atLeastRelativeTolerance,
 }
 
 enum ProgressionEvaluationStatus {

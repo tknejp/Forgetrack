@@ -4,17 +4,18 @@ import 'package:provider/provider.dart';
 
 import '../../health_connect/application/fitness_provider.dart';
 import '../../nutrition/application/kaloricke_tabulky_provider.dart';
+import '../../progression/domain/catalog/rule_catalog.dart';
 import '../../progression/domain/progression_models.dart';
 import '../../progression/application/progression_provider.dart';
 import '../../../l10n/l10n.dart';
 import '../../../shared/selected_period.dart';
 import '../../../features/health_connect/application/goals_provider.dart';
 import '../../../shared/theme/design_tokens.dart';
-import '../../../shared/widgets/date_nav.dart';
+import '../../../shared/widgets/period_navigator.dart';
+import '../../../shared/widgets/dashboard_card_assets.dart';
 import '../../../shared/widgets/detail_shortcut_button.dart';
 import '../../../shared/widgets/macro_row.dart';
 import '../../../shared/widgets/stat_card.dart';
-import '../../../shared/widgets/tab_pill.dart';
 import '../../../shared/widgets/drag_reveal_pager.dart';
 import '../../../shared/widgets/xp_claim_pill.dart';
 import '../../../shared/widgets/xp_sparkle_overlay.dart';
@@ -24,6 +25,7 @@ class OverviewScreen extends StatefulWidget {
   final GlobalKey barKey;
   final double topContentInset;
   final VoidCallback onOpenActivities;
+  final VoidCallback onOpenSteps;
   final VoidCallback onOpenNutrition;
   final VoidCallback onOpenBody;
   final VoidCallback onOpenSleep;
@@ -34,6 +36,7 @@ class OverviewScreen extends StatefulWidget {
     required this.barKey,
     this.topContentInset = 0,
     required this.onOpenActivities,
+    required this.onOpenSteps,
     required this.onOpenNutrition,
     required this.onOpenBody,
     required this.onOpenSleep,
@@ -93,19 +96,23 @@ class _OverviewScreenState extends State<OverviewScreen> {
     }
   }
 
-  String? _dateNavOverride(BuildContext context, SelectedPeriod period) {
+  String _periodDateLabel(BuildContext context, SelectedPeriod period) {
     final locale = Localizations.localeOf(context).toString();
     switch (period.type) {
       case PeriodType.day:
-        return null;
+        return DateFormat('EEE d MMM', locale).format(period.referenceDate);
       case PeriodType.week:
         final start = period.start;
         final end = period.end;
-        return '${start.day} ${DateFormat.MMM(locale).format(start)} - ${end.day} ${DateFormat.MMM(locale).format(end)}';
+        return '${start.day} ${DateFormat.MMM(locale).format(start)} – '
+            '${end.day} ${DateFormat.MMM(locale).format(end)}';
       case PeriodType.month:
         return DateFormat.yMMM(locale).format(period.referenceDate);
       case PeriodType.custom:
-        return null;
+        final start = period.start;
+        final end = period.end;
+        return '${start.day} ${DateFormat.MMM(locale).format(start)} – '
+            '${end.day} ${DateFormat.MMM(locale).format(end)}';
     }
   }
 
@@ -155,6 +162,20 @@ class _OverviewScreenState extends State<OverviewScreen> {
       );
     }
 
+    final claimed = progression.claimedRewards
+        .where(
+          (g) => g.domain == domain && progressionDate(g.period.start) == today,
+        )
+        .toList();
+
+    if (claimed.isNotEmpty) {
+      final totalXp = claimed.fold<int>(
+        0,
+        (sum, g) => sum + g.effectiveXpGranted,
+      );
+      return XpClaimPillData.claimed(totalXp);
+    }
+
     final locked = progression.evaluations
         .where(
           (e) =>
@@ -167,6 +188,87 @@ class _OverviewScreenState extends State<OverviewScreen> {
     if (locked.isNotEmpty) {
       final totalXp = locked.fold<int>(0, (sum, e) => sum + e.rewardXp);
       return XpClaimPillData.locked(totalXp);
+    }
+
+    return null;
+  }
+
+  XpClaimPillData? _xpPillDataForRule(
+    BuildContext context,
+    ProgressionProvider progression,
+    String ruleId,
+    SelectedPeriod period,
+  ) {
+    if (!period.isCurrentPeriod) return null;
+
+    final periodStart = progressionDate(
+      ruleId == 'weekly_activity'
+          ? SelectedPeriod.currentWeek().start
+          : period.start,
+    );
+    final pending = progression.pendingRewards
+        .where(
+          (g) =>
+              g.ruleId == ruleId &&
+              progressionDate(g.period.start) == periodStart,
+        )
+        .toList();
+
+    if (pending.isNotEmpty) {
+      final totalXp = pending.fold<int>(0, (sum, g) => sum + g.xpGranted);
+      return XpClaimPillData.claimable(
+        totalXp,
+        onTap: (center) {
+          _onXpClaimed(center);
+          for (final g in pending) {
+            progression.claimReward(g.rewardKey);
+          }
+        },
+      );
+    }
+
+    final claimed = progression.claimedRewards
+        .where(
+          (g) =>
+              g.ruleId == ruleId &&
+              progressionDate(g.period.start) == periodStart,
+        )
+        .toList();
+
+    if (claimed.isNotEmpty) {
+      final totalXp = claimed.fold<int>(
+        0,
+        (sum, g) => sum + g.effectiveXpGranted,
+      );
+      return XpClaimPillData.claimed(totalXp);
+    }
+
+    final locked = progression.evaluations
+        .where(
+          (e) =>
+              e.ruleId == ruleId &&
+              !e.achieved &&
+              progressionDate(e.period.start) == periodStart,
+        )
+        .toList();
+
+    if (locked.isNotEmpty) {
+      final totalXp = locked.fold<int>(0, (sum, e) => sum + e.rewardXp);
+      return XpClaimPillData.locked(totalXp);
+    }
+
+    if (_shouldShowRuleFallbackPill(ruleId, period)) {
+      final hasGrantForPeriod = progression.rewardGrants.any(
+        (g) =>
+            g.ruleId == ruleId &&
+            progressionDate(g.period.start) == periodStart,
+      );
+      if (!hasGrantForPeriod) {
+        final rewardXp = _fallbackRuleXp(ruleId);
+        if (rewardXp != null) {
+          return XpClaimPillData.locked(rewardXp);
+        }
+      }
     }
 
     return null;
@@ -251,27 +353,28 @@ class _OverviewScreenState extends State<OverviewScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    TabPill(
+                    PeriodNavigator(
+                      domain: Tokens.steps,
                       tabs: [l10n.periodDay, l10n.periodWeek, l10n.periodMonth],
-                      active: tab,
-                      onChange: _changeTab,
-                    ),
-                    const SizedBox(height: 10),
-                    DateNav(
-                      date: _period.referenceDate,
+                      activeTab: tab,
+                      onTabChange: _changeTab,
+                      dateLabel: _periodDateLabel(context, _period),
+                      syncedAt:
+                          syncedAt != null ? 'Synced $syncedAt' : null,
+                      canGoForward: _period.canGoForward,
+                      isCurrentPeriod: _period.isCurrentPeriod,
                       onPrev: () =>
                           setState(() => _period = _period.backward()),
                       onNext: _period.canGoForward
                           ? () => setState(() => _period = _period.forward())
                           : null,
-                      syncedAt: syncedAt,
-                      labelOverride: _dateNavOverride(context, _period),
+                      onToday: _period.isCurrentPeriod
+                          ? null
+                          : () => setState(() =>
+                              _period = _period.withType(_period.type)),
                       onDateTap: _period.type == PeriodType.day
                           ? _openDatePicker
                           : null,
-                      showTodayButton: !_period.isCurrentPeriod,
-                      onTodayTap: () => setState(
-                          () => _period = _period.withType(_period.type)),
                     ),
                     if (fitness.accessState ==
                         FitnessAccessState.permissionRequired) ...[
@@ -305,10 +408,18 @@ class _OverviewScreenState extends State<OverviewScreen> {
                     fmtSleep: _fmtSleep,
                     xpPillData: (context, progression, domain) =>
                         _xpPillData(context, progression, domain, period),
+                    ruleXpPillData: (context, progression, ruleId) =>
+                        _xpPillDataForRule(
+                      context,
+                      progression,
+                      ruleId,
+                      period,
+                    ),
                     progression: progression,
                     weightForPeriod: _weightForPeriod(fitness, period),
                     prevWeight: _previousWeightForPeriod(fitness, period),
                     onOpenActivities: widget.onOpenActivities,
+                    onOpenSteps: widget.onOpenSteps,
                     onOpenNutrition: widget.onOpenNutrition,
                     onOpenBody: widget.onOpenBody,
                     onOpenSleep: widget.onOpenSleep,
@@ -336,10 +447,12 @@ class _DayContent extends StatelessWidget {
     required this.l10n,
     required this.fmtSleep,
     required this.xpPillData,
+    required this.ruleXpPillData,
     required this.progression,
     required this.weightForPeriod,
     required this.prevWeight,
     required this.onOpenActivities,
+    required this.onOpenSteps,
     required this.onOpenNutrition,
     required this.onOpenBody,
     required this.onOpenSleep,
@@ -354,10 +467,16 @@ class _DayContent extends StatelessWidget {
   final String Function(Duration?) fmtSleep;
   final XpClaimPillData? Function(
       BuildContext, ProgressionProvider, ProgressionDomain) xpPillData;
+  final XpClaimPillData? Function(
+    BuildContext,
+    ProgressionProvider,
+    String,
+  ) ruleXpPillData;
   final ProgressionProvider progression;
   final double? weightForPeriod;
   final double? prevWeight;
   final VoidCallback onOpenActivities;
+  final VoidCallback onOpenSteps;
   final VoidCallback onOpenNutrition;
   final VoidCallback onOpenBody;
   final VoidCallback onOpenSleep;
@@ -414,17 +533,6 @@ class _DayContent extends StatelessWidget {
     final weightChange = (weightForPeriod != null && prevWeight != null)
         ? weightForPeriod! - prevWeight!
         : null;
-    final targetWeight = goals.targetWeight;
-    final weightHistory = fitness.weightHistory;
-    final maxWeight = weightHistory.isNotEmpty
-        ? weightHistory.map((e) => e.weight).reduce((a, b) => a > b ? a : b)
-        : null;
-    final weightProgress = (weightForPeriod != null &&
-            maxWeight != null &&
-            maxWeight > targetWeight)
-        ? ((maxWeight - weightForPeriod!) / (maxWeight - targetWeight))
-            .clamp(0.0, 1.0)
-        : 0.0;
 
     final sleep = period.type == PeriodType.day
         ? fitness.sleepForDate(period.start)
@@ -438,6 +546,18 @@ class _DayContent extends StatelessWidget {
         ? (sleepDuration.inMinutes / sleepGoalMinutes).clamp(0.0, 1.0)
         : 0.0;
 
+    final periodActivities = fitness.activities.where((activity) {
+      final day = progressionDate(activity.startTime);
+      return !day.isBefore(period.start) && !day.isAfter(period.end);
+    }).toList(growable: false);
+    final activeMinutes = periodActivities.fold<int>(
+      0,
+      (sum, activity) => sum + activity.duration.inMinutes,
+    );
+    final activityGoal = _activityGoalForPeriod(goals, period);
+    final activityProgress =
+        activityGoal > 0 ? (activeMinutes / activityGoal).clamp(0.0, 1.0) : 0.0;
+
     final locale = Localizations.localeOf(context).toString();
 
     return Column(
@@ -447,6 +567,9 @@ class _DayContent extends StatelessWidget {
           icon: '\uD83E\uDD7E',
           label: l10n.stepsTitle,
           domain: Tokens.steps,
+          visualAssets: DashboardCardAssetResolver.forKind(
+            DashboardCardKind.steps,
+          ),
           stats: [
             StatStat(value: fmt.format(steps), label: l10n.stepsTitle),
             StatStat(
@@ -462,9 +585,10 @@ class _DayContent extends StatelessWidget {
           progress: stepsProgress,
           badge: '${(stepsProgress * 100).round()}%',
           xpData: xpPillData(context, progression, ProgressionDomain.steps),
+          claimedXpLabel: l10n.progQuestStatusClaimed,
           children: [
             DetailShortcutButton(
-              onTap: onOpenActivities,
+              onTap: onOpenSteps,
               domain: Tokens.steps,
             ),
           ],
@@ -476,6 +600,9 @@ class _DayContent extends StatelessWidget {
               ? l10n.caloriesTodayTitle
               : l10n.caloriesAvgPerDay,
           domain: Tokens.calories,
+          visualAssets: DashboardCardAssetResolver.forKind(
+            DashboardCardKind.nutrition,
+          ),
           stats: [
             StatStat(
               value: fmt.format(kcal.round()),
@@ -498,6 +625,7 @@ class _DayContent extends StatelessWidget {
           progress: kcalProgress,
           badge: '$kcalPct%',
           xpData: xpPillData(context, progression, ProgressionDomain.nutrition),
+          claimedXpLabel: l10n.progQuestStatusClaimed,
           children: [
             const SizedBox(height: Tokens.spaceMd),
             if (nutritionHasDetails) ...[
@@ -557,6 +685,9 @@ class _DayContent extends StatelessWidget {
           icon: '\u2696',
           label: l10n.weightTitle,
           domain: Tokens.weight,
+          visualAssets: DashboardCardAssetResolver.forKind(
+            DashboardCardKind.weight,
+          ),
           stats: [
             StatStat(
               value: weightForPeriod?.toStringAsFixed(1) ?? '--',
@@ -573,18 +704,17 @@ class _DayContent extends StatelessWidget {
                   ? l10n.weightVsPrevWeek
                   : period.type == PeriodType.month
                       ? l10n.weightVsPrevMonth
-                      : l10n.weightAverage,
-              unit: 'kg',
-            ),
-            StatStat(
-              value: targetWeight.toStringAsFixed(1),
-              label: l10n.weightGoal,
+                      : l10n.weightVsPrevMeasure,
               unit: 'kg',
             ),
           ],
-          progress: weightProgress,
-          trophy: true,
-          xpData: xpPillData(context, progression, ProgressionDomain.body),
+          showProgress: false,
+          xpData: ruleXpPillData(
+            context,
+            progression,
+            'daily_weight_log',
+          ),
+          claimedXpLabel: l10n.progQuestStatusClaimed,
           children: [
             DetailShortcutButton(
               onTap: onOpenBody,
@@ -594,9 +724,51 @@ class _DayContent extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         StatCard(
+          icon: '\u26A1',
+          label: l10n.activitiesActiveMins,
+          domain: Tokens.active,
+          visualAssets: DashboardCardAssetResolver.forKind(
+            DashboardCardKind.activity,
+          ),
+          stats: [
+            StatStat(
+              value: fmt.format(activeMinutes),
+              label: l10n.activitiesActiveMins,
+              unit: 'min',
+            ),
+            StatStat(
+              value: fmt.format(activityGoal),
+              label: l10n.stepsGoal,
+              unit: 'min',
+            ),
+            StatStat(
+              value: fmt.format(periodActivities.length),
+              label: l10n.activitiesWorkouts,
+            ),
+          ],
+          progress: activityProgress,
+          badge: '${(activityProgress * 100).round()}%',
+          xpData: ruleXpPillData(
+            context,
+            progression,
+            'daily_activity',
+          ),
+          claimedXpLabel: l10n.progQuestStatusClaimed,
+          children: [
+            DetailShortcutButton(
+              onTap: onOpenActivities,
+              domain: Tokens.active,
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        StatCard(
           icon: '\uD83C\uDF19',
           label: l10n.sleepTitle,
           domain: Tokens.sleep,
+          visualAssets: DashboardCardAssetResolver.forKind(
+            DashboardCardKind.sleep,
+          ),
           stats: [
             StatStat(
               value: fmtSleep(sleepDuration),
@@ -620,6 +792,7 @@ class _DayContent extends StatelessWidget {
               ? '${(sleepProgress * 100).round()}%'
               : null,
           xpData: xpPillData(context, progression, ProgressionDomain.sleep),
+          claimedXpLabel: l10n.progQuestStatusClaimed,
           children: [
             DetailShortcutButton(
               onTap: onOpenSleep,
@@ -680,6 +853,36 @@ class _NutritionDetailTile extends StatelessWidget {
 }
 
 // ── Permission banner ───────────────────────────────────────────────────────
+
+int _activityGoalForPeriod(GoalsProvider goals, SelectedPeriod period) {
+  final weekly = goals.weeklyActivityMins;
+
+  switch (period.type) {
+    case PeriodType.day:
+      return ProgressionRuleCatalog.dailyActivityTargetMinutes;
+    case PeriodType.week:
+      if (weekly <= 0) return 0;
+      return weekly;
+    case PeriodType.month:
+    case PeriodType.custom:
+      if (weekly <= 0) return 0;
+      return weekly * 4;
+  }
+}
+
+bool _shouldShowRuleFallbackPill(String ruleId, SelectedPeriod period) {
+  return period.type == PeriodType.day &&
+      period.isCurrentPeriod &&
+      (ruleId == 'daily_weight_log' || ruleId == 'daily_activity');
+}
+
+int? _fallbackRuleXp(String ruleId) {
+  return switch (ruleId) {
+    'daily_weight_log' => 20,
+    'daily_activity' => 50,
+    _ => null,
+  };
+}
 
 class _PermissionBanner extends StatelessWidget {
   final VoidCallback onTap;

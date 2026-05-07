@@ -14,9 +14,7 @@ class ProgressionRuleCatalog {
       definition != null || fallback != null,
       'Unknown progression rule id: $id',
     );
-    return definition?.title(l10n) ??
-        fallback ??
-        id.replaceAll('_', ' ');
+    return definition?.title(l10n) ?? fallback ?? id.replaceAll('_', ' ');
   }
 
   static String unitForId(String? id, AppLocalizations l10n) =>
@@ -40,7 +38,8 @@ class ProgressionRuleCatalog {
   };
 
   static const _version = '2026-04-defaults-v1';
-  static const _calorieToleranceRatio = 0.10;
+  static const _nutritionToleranceRatio = 0.10;
+  static const dailyActivityTargetMinutes = 30;
 
   List<ProgressionRuleDefinition> build(ProgressionGoalSet goals) {
     return [
@@ -63,9 +62,9 @@ class ProgressionRuleCatalog {
         domain: ProgressionDomain.nutrition,
         metric: ProgressionMetric.calories,
         periodKind: ProgressionPeriodKind.day,
-        comparator: ProgressionComparator.withinRelativeTolerance,
+        comparator: ProgressionComparator.atLeastRelativeTolerance,
         targetValue: goals.dailyCalories,
-        toleranceRatio: _calorieToleranceRatio,
+        toleranceRatio: _nutritionToleranceRatio,
         rewardXp: 60,
         title: (l10n) => l10n.progRuleDailyCalories,
         description: (l10n) => l10n.progRuleDailyCaloriesDesc,
@@ -77,8 +76,9 @@ class ProgressionRuleCatalog {
         domain: ProgressionDomain.nutrition,
         metric: ProgressionMetric.proteinGrams,
         periodKind: ProgressionPeriodKind.day,
-        comparator: ProgressionComparator.atLeast,
+        comparator: ProgressionComparator.atLeastRelativeTolerance,
         targetValue: goals.dailyProteinGrams,
+        toleranceRatio: _nutritionToleranceRatio,
         rewardXp: 40,
         title: (l10n) => l10n.progRuleDailyProtein,
         description: (l10n) => l10n.progRuleDailyProteinDesc,
@@ -90,8 +90,9 @@ class ProgressionRuleCatalog {
         domain: ProgressionDomain.nutrition,
         metric: ProgressionMetric.carbsGrams,
         periodKind: ProgressionPeriodKind.day,
-        comparator: ProgressionComparator.atLeast,
+        comparator: ProgressionComparator.withinRelativeTolerance,
         targetValue: goals.dailyCarbsGrams,
+        toleranceRatio: _nutritionToleranceRatio,
         rewardXp: 35,
         title: (l10n) => l10n.progRuleDailyCarbs,
         description: (l10n) => l10n.progRuleDailyCarbsDesc,
@@ -103,8 +104,9 @@ class ProgressionRuleCatalog {
         domain: ProgressionDomain.nutrition,
         metric: ProgressionMetric.fatGrams,
         periodKind: ProgressionPeriodKind.day,
-        comparator: ProgressionComparator.atLeast,
+        comparator: ProgressionComparator.withinRelativeTolerance,
         targetValue: goals.dailyFatGrams,
+        toleranceRatio: _nutritionToleranceRatio,
         rewardXp: 35,
         title: (l10n) => l10n.progRuleDailyFat,
         description: (l10n) => l10n.progRuleDailyFatDesc,
@@ -134,6 +136,19 @@ class ProgressionRuleCatalog {
         rewardXp: 50,
         title: (l10n) => l10n.progRuleDailySleep,
         description: (l10n) => l10n.progRuleDailySleepDesc,
+        unit: (l10n) => l10n.goalUnitMins,
+      ),
+      ProgressionRuleDefinition(
+        id: 'daily_activity',
+        version: _version,
+        domain: ProgressionDomain.activity,
+        metric: ProgressionMetric.activityMinutes,
+        periodKind: ProgressionPeriodKind.day,
+        comparator: ProgressionComparator.atLeast,
+        targetValue: dailyActivityTargetMinutes.toDouble(),
+        rewardXp: 50,
+        title: (l10n) => l10n.activitiesActiveMins,
+        description: (l10n) => l10n.activitiesActiveMins,
         unit: (l10n) => l10n.goalUnitMins,
       ),
       ProgressionRuleDefinition(

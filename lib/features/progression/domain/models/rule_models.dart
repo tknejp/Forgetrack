@@ -44,6 +44,8 @@ class ProgressionRuleDefinition {
         return targetValue;
       case ProgressionComparator.withinRelativeTolerance:
         return targetValue - (targetValue * toleranceRatio);
+      case ProgressionComparator.atLeastRelativeTolerance:
+        return targetValue - (targetValue * toleranceRatio);
     }
   }
 
@@ -57,6 +59,8 @@ class ProgressionRuleDefinition {
         return upperTargetValue ?? targetValue;
       case ProgressionComparator.withinRelativeTolerance:
         return targetValue + (targetValue * toleranceRatio);
+      case ProgressionComparator.atLeastRelativeTolerance:
+        return double.infinity;
     }
   }
 
@@ -72,6 +76,8 @@ class ProgressionRuleDefinition {
       case ProgressionComparator.withinRelativeTolerance:
         return actualValue >= minimumAcceptedValue &&
             actualValue <= maximumAcceptedValue;
+      case ProgressionComparator.atLeastRelativeTolerance:
+        return actualValue >= minimumAcceptedValue;
     }
   }
 

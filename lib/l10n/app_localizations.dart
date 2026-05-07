@@ -158,6 +158,12 @@ abstract class AppLocalizations {
   /// **'Activities'**
   String get screenActivities;
 
+  /// AppBar title for the Steps screen
+  ///
+  /// In en, this message translates to:
+  /// **'Steps'**
+  String get screenSteps;
+
   /// AppBar title for the Nutrition screen
   ///
   /// In en, this message translates to:
@@ -169,6 +175,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Body'**
   String get screenBody;
+
+  /// Label for consecutive-days-at-goal streak count on the Steps screen
+  ///
+  /// In en, this message translates to:
+  /// **'Streak'**
+  String get stepsCurrentStreak;
+
+  /// Subtitle on the Steps shortcut card shown on the Activities screen
+  ///
+  /// In en, this message translates to:
+  /// **'Daily steps & goal'**
+  String get stepsLinkSubtitle;
+
+  /// Section header for the activity-type breakdown bar chart on the Activities screen
+  ///
+  /// In en, this message translates to:
+  /// **'By type'**
+  String get activitiesByType;
+
+  /// Subtitle on the Activities shortcut card shown on the Steps screen
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts, calories, time'**
+  String get activitiesLinkSubtitle;
 
   /// Segmented button label for 'day' period
   ///
@@ -187,6 +217,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Month'**
   String get periodMonth;
+
+  /// Pill button that resets the period navigator back to the current day / week / month
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get periodToday;
 
   /// Snackbar shown when user taps the custom range placeholder button
   ///
@@ -367,6 +403,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Lean mass'**
   String get weightLeanMass;
+
+  /// Label for body water mass
+  ///
+  /// In en, this message translates to:
+  /// **'Body water'**
+  String get weightBodyWater;
 
   /// Label for fat mass
   ///
@@ -758,6 +800,66 @@ abstract class AppLocalizations {
   /// **'No sleep data recorded'**
   String get sleepNoData;
 
+  /// Sleep stage: deep sleep
+  ///
+  /// In en, this message translates to:
+  /// **'Deep'**
+  String get sleepStageDeep;
+
+  /// Sleep stage: light sleep
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get sleepStageLight;
+
+  /// Sleep stage: REM sleep
+  ///
+  /// In en, this message translates to:
+  /// **'REM'**
+  String get sleepStageRem;
+
+  /// Sleep stage: awake during the night
+  ///
+  /// In en, this message translates to:
+  /// **'Awake'**
+  String get sleepStageAwake;
+
+  /// Title of the sleep-stage timeline card
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep stages'**
+  String get sleepStagesTitle;
+
+  /// Title of the stage percentage / duration breakdown card
+  ///
+  /// In en, this message translates to:
+  /// **'Stage breakdown'**
+  String get sleepStagesBreakdown;
+
+  /// Title of the trend card showing total sleep over time
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep duration trend'**
+  String get sleepDurationTrend;
+
+  /// Title of the trend card showing deep sleep over time
+  ///
+  /// In en, this message translates to:
+  /// **'Deep sleep'**
+  String get sleepDeepTrend;
+
+  /// Title of the trend card showing REM sleep over time
+  ///
+  /// In en, this message translates to:
+  /// **'REM sleep'**
+  String get sleepRemTrend;
+
+  /// Empty state shown on the stage timeline when no stage data is recorded
+  ///
+  /// In en, this message translates to:
+  /// **'Stage data is unavailable'**
+  String get sleepNoStageData;
+
   /// Shortcut button on an expanded overview card that opens the corresponding detail screen
   ///
   /// In en, this message translates to:
@@ -829,6 +931,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Avg. duration'**
   String get activitiesAvgDuration;
+
+  /// Header title on the single-activity detail screen
+  ///
+  /// In en, this message translates to:
+  /// **'Activity detail'**
+  String get activityDetailTitle;
+
+  /// Label for activity start time
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get activityDetailStart;
+
+  /// Label for activity end time
+  ///
+  /// In en, this message translates to:
+  /// **'End'**
+  String get activityDetailEnd;
+
+  /// Label for pace (time per km)
+  ///
+  /// In en, this message translates to:
+  /// **'Pace'**
+  String get activityDetailPace;
+
+  /// Label for activity distance
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
+  String get activityDetailDistance;
+
+  /// Header for the activity comparison chart
+  ///
+  /// In en, this message translates to:
+  /// **'Comparison'**
+  String get activityDetailComparison;
+
+  /// Placeholder shown when an activity has no GPS route to render on a map
+  ///
+  /// In en, this message translates to:
+  /// **'GPS data unavailable'**
+  String get activityDetailNoMap;
 
   /// Title in the workout permission card when WORKOUT permission is not granted
   ///

@@ -31,11 +31,26 @@
   "screenActivities": "Activities",
   "@screenActivities": { "description": "AppBar title for the Activities screen" },
 
+  "screenSteps": "Steps",
+  "@screenSteps": { "description": "AppBar title for the Steps screen" },
+
   "screenNutrition": "Nutrition",
   "@screenNutrition": { "description": "AppBar title for the Nutrition screen" },
 
   "screenBody": "Body",
   "@screenBody": { "description": "AppBar title for the Body screen" },
+
+  "stepsCurrentStreak": "Streak",
+  "@stepsCurrentStreak": { "description": "Label for consecutive-days-at-goal streak count on the Steps screen" },
+
+  "stepsLinkSubtitle": "Daily steps & goal",
+  "@stepsLinkSubtitle": { "description": "Subtitle on the Steps shortcut card shown on the Activities screen" },
+
+  "activitiesByType": "By type",
+  "@activitiesByType": { "description": "Section header for the activity-type breakdown bar chart on the Activities screen" },
+
+  "activitiesLinkSubtitle": "Workouts, calories, time",
+  "@activitiesLinkSubtitle": { "description": "Subtitle on the Activities shortcut card shown on the Steps screen" },
 
   "periodDay": "Day",
   "@periodDay": { "description": "Segmented button label for 'day' period" },
@@ -45,6 +60,9 @@
 
   "periodMonth": "Month",
   "@periodMonth": { "description": "Segmented button label for 'month' period" },
+
+  "periodToday": "Today",
+  "@periodToday": { "description": "Pill button that resets the period navigator back to the current day / week / month" },
 
   "periodCustomRangeSoon": "Custom range coming soon",
   "@periodCustomRangeSoon": { "description": "Snackbar shown when user taps the custom range placeholder button" },
@@ -140,6 +158,9 @@
 
   "weightLeanMass": "Lean mass",
   "@weightLeanMass": { "description": "Label for lean body mass" },
+
+  "weightBodyWater": "Body water",
+  "@weightBodyWater": { "description": "Label for body water mass" },
 
   "weightFatMass": "Fat mass",
   "@weightFatMass": { "description": "Label for fat mass" },
@@ -346,6 +367,27 @@
   "sleepNoData": "No sleep data recorded",
   "@sleepNoData": { "description": "Empty state text when no sleep data is available" },
 
+  "sleepStageDeep": "Deep",
+  "@sleepStageDeep": { "description": "Sleep stage: deep sleep" },
+  "sleepStageLight": "Light",
+  "@sleepStageLight": { "description": "Sleep stage: light sleep" },
+  "sleepStageRem": "REM",
+  "@sleepStageRem": { "description": "Sleep stage: REM sleep" },
+  "sleepStageAwake": "Awake",
+  "@sleepStageAwake": { "description": "Sleep stage: awake during the night" },
+  "sleepStagesTitle": "Sleep stages",
+  "@sleepStagesTitle": { "description": "Title of the sleep-stage timeline card" },
+  "sleepStagesBreakdown": "Stage breakdown",
+  "@sleepStagesBreakdown": { "description": "Title of the stage percentage / duration breakdown card" },
+  "sleepDurationTrend": "Sleep duration trend",
+  "@sleepDurationTrend": { "description": "Title of the trend card showing total sleep over time" },
+  "sleepDeepTrend": "Deep sleep",
+  "@sleepDeepTrend": { "description": "Title of the trend card showing deep sleep over time" },
+  "sleepRemTrend": "REM sleep",
+  "@sleepRemTrend": { "description": "Title of the trend card showing REM sleep over time" },
+  "sleepNoStageData": "Stage data is unavailable",
+  "@sleepNoStageData": { "description": "Empty state shown on the stage timeline when no stage data is recorded" },
+
   "homeOpenDetailCta": "Open details",
   "@homeOpenDetailCta": { "description": "Shortcut button on an expanded overview card that opens the corresponding detail screen" },
 
@@ -381,6 +423,27 @@
 
   "activitiesAvgDuration": "Avg. duration",
   "@activitiesAvgDuration": { "description": "Label for average workout duration in workout stats card" },
+
+  "activityDetailTitle": "Activity detail",
+  "@activityDetailTitle": { "description": "Header title on the single-activity detail screen" },
+
+  "activityDetailStart": "Start",
+  "@activityDetailStart": { "description": "Label for activity start time" },
+
+  "activityDetailEnd": "End",
+  "@activityDetailEnd": { "description": "Label for activity end time" },
+
+  "activityDetailPace": "Pace",
+  "@activityDetailPace": { "description": "Label for pace (time per km)" },
+
+  "activityDetailDistance": "Distance",
+  "@activityDetailDistance": { "description": "Label for activity distance" },
+
+  "activityDetailComparison": "Comparison",
+  "@activityDetailComparison": { "description": "Header for the activity comparison chart" },
+
+  "activityDetailNoMap": "GPS data unavailable",
+  "@activityDetailNoMap": { "description": "Placeholder shown when an activity has no GPS route to render on a map" },
 
   "activitiesWorkoutPermissionTitle": "Workout access needed",
   "@activitiesWorkoutPermissionTitle": { "description": "Title in the workout permission card when WORKOUT permission is not granted" },
