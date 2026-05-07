@@ -25,6 +25,7 @@ class HealthDatabase {
 
   List<StepsRecord> _stepsHistory = [];
   List<double> _caloriesHistory = [];
+  List<double> _basalCaloriesHistory = [];
   List<WeightRecord> _weightHistory = [];
   List<SleepRecord> _sleepHistory = [];
   List<ActivityRecord> _activities = [];
@@ -36,6 +37,7 @@ class HealthDatabase {
 
   List<StepsRecord> get stepsHistory => _stepsHistory;
   List<double> get caloriesHistory => _caloriesHistory;
+  List<double> get basalCaloriesHistory => _basalCaloriesHistory;
   List<WeightRecord> get weightHistory => _weightHistory;
   List<SleepRecord> get sleepHistory => _sleepHistory;
   List<ActivityRecord> get activities => _activities;
@@ -120,6 +122,7 @@ class HealthDatabase {
   void _clearMemoryCache() {
     _stepsHistory = [];
     _caloriesHistory = [];
+    _basalCaloriesHistory = [];
     _weightHistory = [];
     _sleepHistory = [];
     _activities = [];
@@ -220,14 +223,19 @@ class HealthDatabase {
     // Ignore future calorie rows for the same reason as steps.
     final rawCalRows = await isar.hcCalorieDayRecords.where().findAll();
     final calByKey = <String, double>{};
+    final basalCalByKey = <String, double>{};
     for (final r in rawCalRows) {
       if (r.dateKey.compareTo(todayKey) <= 0) {
         calByKey[r.dateKey] = r.kcal;
+        basalCalByKey[r.dateKey] = r.basalKcal;
       }
     }
 
     _caloriesHistory = [
       for (final s in _stepsHistory) calByKey[_toKey(s.date)] ?? 0.0,
+    ];
+    _basalCaloriesHistory = [
+      for (final s in _stepsHistory) basalCalByKey[_toKey(s.date)] ?? 0.0,
     ];
 
     // Weight — sorted oldest first.
@@ -271,6 +279,7 @@ class HealthDatabase {
   Future<void> saveAll({
     required List<StepsRecord> steps,
     required List<double> calories,
+    required List<double> basalCalories,
     required List<WeightRecord> weight,
     required List<SleepRecord> sleep,
     required List<ActivityRecord> activities,
@@ -295,10 +304,14 @@ class HealthDatabase {
       ]);
 
       await isar.hcCalorieDayRecords.putAll([
-        for (var i = 0; i < calories.length && i < steps.length; i++)
+        for (var i = 0;
+            i < steps.length &&
+                (i < calories.length || i < basalCalories.length);
+            i++)
           HcCalorieDayRecord()
             ..dateKey = _toKey(steps[i].date)
-            ..kcal = calories[i],
+            ..kcal = i < calories.length ? calories[i] : 0.0
+            ..basalKcal = i < basalCalories.length ? basalCalories[i] : 0.0,
       ]);
 
       await isar.hcWeightRecords.putAll([
@@ -329,6 +342,7 @@ class HealthDatabase {
     // Mirror to in-memory cache.
     _stepsHistory = steps;
     _caloriesHistory = calories;
+    _basalCaloriesHistory = basalCalories;
     _weightHistory = weight;
     _sleepHistory = sleep;
     _activities = _dedupeActivities(activities);
@@ -372,6 +386,7 @@ class HealthDatabase {
   Future<void> saveOverviewRange({
     required List<StepsRecord> steps,
     required List<double> calories,
+    required List<double> basalCalories,
     required List<WeightRecord> weight,
     required List<SleepRecord> sleep,
     required double? latestBodyFat,
@@ -387,11 +402,24 @@ class HealthDatabase {
             ..steps = r.steps,
       ]);
 
+      final existingCalories = await isar.hcCalorieDayRecords.where().findAll();
+      final existingCaloriesByKey = {
+        for (final r in existingCalories) r.dateKey: r
+      };
       await isar.hcCalorieDayRecords.putAll([
-        for (var i = 0; i < calories.length && i < steps.length; i++)
+        for (var i = 0;
+            i < steps.length &&
+                (i < calories.length || i < basalCalories.length);
+            i++)
           HcCalorieDayRecord()
             ..dateKey = _toKey(steps[i].date)
-            ..kcal = calories[i],
+            ..kcal = i < calories.length
+                ? calories[i]
+                : (existingCaloriesByKey[_toKey(steps[i].date)]?.kcal ?? 0.0)
+            ..basalKcal = i < basalCalories.length
+                ? basalCalories[i]
+                : (existingCaloriesByKey[_toKey(steps[i].date)]?.basalKcal ??
+                    0.0),
       ]);
 
       await isar.hcWeightRecords.putAll([
@@ -461,8 +489,9 @@ class HealthDatabase {
   Future<void> saveCaloriesPartial({
     required List<StepsRecord> dateReference,
     required List<double> calories,
+    List<double> basalCalories = const [],
   }) async {
-    if (dateReference.isEmpty || calories.isEmpty) {
+    if (dateReference.isEmpty || (calories.isEmpty && basalCalories.isEmpty)) {
       AppLog.app.debug(
         '$_logName: saveCaloriesPartial() skipped — empty input',
       );
@@ -472,11 +501,22 @@ class HealthDatabase {
     final isar = _isar!;
 
     await isar.writeTxn(() async {
+      final existing = await isar.hcCalorieDayRecords.where().findAll();
+      final existingByKey = {for (final r in existing) r.dateKey: r};
       await isar.hcCalorieDayRecords.putAll([
-        for (var i = 0; i < calories.length && i < dateReference.length; i++)
+        for (var i = 0;
+            i < dateReference.length &&
+                (i < calories.length || i < basalCalories.length);
+            i++)
           HcCalorieDayRecord()
             ..dateKey = _toKey(dateReference[i].date)
-            ..kcal = calories[i],
+            ..kcal = i < calories.length
+                ? calories[i]
+                : (existingByKey[_toKey(dateReference[i].date)]?.kcal ?? 0.0)
+            ..basalKcal = i < basalCalories.length
+                ? basalCalories[i]
+                : (existingByKey[_toKey(dateReference[i].date)]?.basalKcal ??
+                    0.0),
       ]);
     });
 

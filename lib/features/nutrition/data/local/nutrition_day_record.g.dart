@@ -18,68 +18,78 @@ const NutritionDayRecordSchema = CollectionSchema(
   name: r'NutritionDayRecord',
   id: -1327205271083915521,
   properties: {
-    r'calories': PropertySchema(
+    r'basal': PropertySchema(
       id: 0,
+      name: r'basal',
+      type: IsarType.double,
+    ),
+    r'calories': PropertySchema(
+      id: 1,
       name: r'calories',
       type: IsarType.double,
     ),
     r'carbs': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'carbs',
       type: IsarType.double,
     ),
     r'dateKey': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'dateKey',
       type: IsarType.string,
     ),
     r'fat': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'fat',
       type: IsarType.double,
     ),
     r'fiber': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'fiber',
       type: IsarType.double,
     ),
     r'foodCount': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'foodCount',
       type: IsarType.long,
     ),
     r'hydration': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'hydration',
       type: IsarType.double,
     ),
     r'inferredComplete': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'inferredComplete',
       type: IsarType.bool,
     ),
+    r'mealsJson': PropertySchema(
+      id: 9,
+      name: r'mealsJson',
+      type: IsarType.string,
+    ),
     r'protein': PropertySchema(
-      id: 8,
+      id: 10,
       name: r'protein',
       type: IsarType.double,
     ),
     r'salt': PropertySchema(
-      id: 9,
+      id: 11,
       name: r'salt',
       type: IsarType.double,
     ),
     r'saturatedFat': PropertySchema(
-      id: 10,
+      id: 12,
       name: r'saturatedFat',
       type: IsarType.double,
     ),
     r'sugar': PropertySchema(
-      id: 11,
+      id: 13,
       name: r'sugar',
       type: IsarType.double,
     ),
     r'syncedAt': PropertySchema(
-      id: 12,
+      id: 14,
       name: r'syncedAt',
       type: IsarType.dateTime,
     )
@@ -132,6 +142,7 @@ int _nutritionDayRecordEstimateSize(
 ) {
   var bytesCount = offsets.last;
   bytesCount += 3 + object.dateKey.length * 3;
+  bytesCount += 3 + object.mealsJson.length * 3;
   return bytesCount;
 }
 
@@ -141,19 +152,21 @@ void _nutritionDayRecordSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeDouble(offsets[0], object.calories);
-  writer.writeDouble(offsets[1], object.carbs);
-  writer.writeString(offsets[2], object.dateKey);
-  writer.writeDouble(offsets[3], object.fat);
-  writer.writeDouble(offsets[4], object.fiber);
-  writer.writeLong(offsets[5], object.foodCount);
-  writer.writeDouble(offsets[6], object.hydration);
-  writer.writeBool(offsets[7], object.inferredComplete);
-  writer.writeDouble(offsets[8], object.protein);
-  writer.writeDouble(offsets[9], object.salt);
-  writer.writeDouble(offsets[10], object.saturatedFat);
-  writer.writeDouble(offsets[11], object.sugar);
-  writer.writeDateTime(offsets[12], object.syncedAt);
+  writer.writeDouble(offsets[0], object.basal);
+  writer.writeDouble(offsets[1], object.calories);
+  writer.writeDouble(offsets[2], object.carbs);
+  writer.writeString(offsets[3], object.dateKey);
+  writer.writeDouble(offsets[4], object.fat);
+  writer.writeDouble(offsets[5], object.fiber);
+  writer.writeLong(offsets[6], object.foodCount);
+  writer.writeDouble(offsets[7], object.hydration);
+  writer.writeBool(offsets[8], object.inferredComplete);
+  writer.writeString(offsets[9], object.mealsJson);
+  writer.writeDouble(offsets[10], object.protein);
+  writer.writeDouble(offsets[11], object.salt);
+  writer.writeDouble(offsets[12], object.saturatedFat);
+  writer.writeDouble(offsets[13], object.sugar);
+  writer.writeDateTime(offsets[14], object.syncedAt);
 }
 
 NutritionDayRecord _nutritionDayRecordDeserialize(
@@ -163,20 +176,22 @@ NutritionDayRecord _nutritionDayRecordDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = NutritionDayRecord();
-  object.calories = reader.readDouble(offsets[0]);
-  object.carbs = reader.readDouble(offsets[1]);
-  object.dateKey = reader.readString(offsets[2]);
-  object.fat = reader.readDouble(offsets[3]);
-  object.fiber = reader.readDouble(offsets[4]);
-  object.foodCount = reader.readLong(offsets[5]);
-  object.hydration = reader.readDouble(offsets[6]);
+  object.basal = reader.readDouble(offsets[0]);
+  object.calories = reader.readDouble(offsets[1]);
+  object.carbs = reader.readDouble(offsets[2]);
+  object.dateKey = reader.readString(offsets[3]);
+  object.fat = reader.readDouble(offsets[4]);
+  object.fiber = reader.readDouble(offsets[5]);
+  object.foodCount = reader.readLong(offsets[6]);
+  object.hydration = reader.readDouble(offsets[7]);
   object.id = id;
-  object.inferredComplete = reader.readBool(offsets[7]);
-  object.protein = reader.readDouble(offsets[8]);
-  object.salt = reader.readDouble(offsets[9]);
-  object.saturatedFat = reader.readDouble(offsets[10]);
-  object.sugar = reader.readDouble(offsets[11]);
-  object.syncedAt = reader.readDateTime(offsets[12]);
+  object.inferredComplete = reader.readBool(offsets[8]);
+  object.mealsJson = reader.readString(offsets[9]);
+  object.protein = reader.readDouble(offsets[10]);
+  object.salt = reader.readDouble(offsets[11]);
+  object.saturatedFat = reader.readDouble(offsets[12]);
+  object.sugar = reader.readDouble(offsets[13]);
+  object.syncedAt = reader.readDateTime(offsets[14]);
   return object;
 }
 
@@ -192,26 +207,30 @@ P _nutritionDayRecordDeserializeProp<P>(
     case 1:
       return (reader.readDouble(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
-    case 3:
       return (reader.readDouble(offset)) as P;
+    case 3:
+      return (reader.readString(offset)) as P;
     case 4:
       return (reader.readDouble(offset)) as P;
     case 5:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 6:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 7:
-      return (reader.readBool(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 8:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 9:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 10:
       return (reader.readDouble(offset)) as P;
     case 11:
       return (reader.readDouble(offset)) as P;
     case 12:
+      return (reader.readDouble(offset)) as P;
+    case 13:
+      return (reader.readDouble(offset)) as P;
+    case 14:
       return (reader.readDateTime(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -517,6 +536,72 @@ extension NutritionDayRecordQueryWhere
 
 extension NutritionDayRecordQueryFilter
     on QueryBuilder<NutritionDayRecord, NutritionDayRecord, QFilterCondition> {
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      basalEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'basal',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      basalGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'basal',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      basalLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'basal',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      basalBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'basal',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
   QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
       caloriesEqualTo(
     double value, {
@@ -1106,6 +1191,142 @@ extension NutritionDayRecordQueryFilter
   }
 
   QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      mealsJsonEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'mealsJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      mealsJsonGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'mealsJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      mealsJsonLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'mealsJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      mealsJsonBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'mealsJson',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      mealsJsonStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'mealsJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      mealsJsonEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'mealsJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      mealsJsonContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'mealsJson',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      mealsJsonMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'mealsJson',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      mealsJsonIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'mealsJson',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      mealsJsonIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'mealsJson',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
       proteinEqualTo(
     double value, {
     double epsilon = Query.epsilon,
@@ -1435,6 +1656,20 @@ extension NutritionDayRecordQueryLinks
 extension NutritionDayRecordQuerySortBy
     on QueryBuilder<NutritionDayRecord, NutritionDayRecord, QSortBy> {
   QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      sortByBasal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'basal', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      sortByBasalDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'basal', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
       sortByCalories() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'calories', Sort.asc);
@@ -1547,6 +1782,20 @@ extension NutritionDayRecordQuerySortBy
   }
 
   QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      sortByMealsJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mealsJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      sortByMealsJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mealsJson', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
       sortByProtein() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'protein', Sort.asc);
@@ -1619,6 +1868,20 @@ extension NutritionDayRecordQuerySortBy
 
 extension NutritionDayRecordQuerySortThenBy
     on QueryBuilder<NutritionDayRecord, NutritionDayRecord, QSortThenBy> {
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      thenByBasal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'basal', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      thenByBasalDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'basal', Sort.desc);
+    });
+  }
+
   QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
       thenByCalories() {
     return QueryBuilder.apply(this, (query) {
@@ -1746,6 +2009,20 @@ extension NutritionDayRecordQuerySortThenBy
   }
 
   QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      thenByMealsJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mealsJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      thenByMealsJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mealsJson', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
       thenByProtein() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'protein', Sort.asc);
@@ -1819,6 +2096,13 @@ extension NutritionDayRecordQuerySortThenBy
 extension NutritionDayRecordQueryWhereDistinct
     on QueryBuilder<NutritionDayRecord, NutritionDayRecord, QDistinct> {
   QueryBuilder<NutritionDayRecord, NutritionDayRecord, QDistinct>
+      distinctByBasal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'basal');
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QDistinct>
       distinctByCalories() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'calories');
@@ -1875,6 +2159,13 @@ extension NutritionDayRecordQueryWhereDistinct
   }
 
   QueryBuilder<NutritionDayRecord, NutritionDayRecord, QDistinct>
+      distinctByMealsJson({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'mealsJson', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QDistinct>
       distinctByProtein() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'protein');
@@ -1915,6 +2206,12 @@ extension NutritionDayRecordQueryProperty
   QueryBuilder<NutritionDayRecord, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, double, QQueryOperations> basalProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'basal');
     });
   }
 
@@ -1966,6 +2263,13 @@ extension NutritionDayRecordQueryProperty
       inferredCompleteProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'inferredComplete');
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, String, QQueryOperations>
+      mealsJsonProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'mealsJson');
     });
   }
 

@@ -37,6 +37,56 @@
   "screenNutrition": "Nutrition",
   "@screenNutrition": { "description": "AppBar title for the Nutrition screen" },
 
+  "nutritionEnergyTrend": "Calorie trend",
+  "@nutritionEnergyTrend": { "description": "Title of the per-day calorie trend chart on the Nutrition screen" },
+
+  "nutritionMacroTrend": "Macro trend",
+  "@nutritionMacroTrend": { "description": "Title of the per-day macro trend chart with a Protein/Fat/Carbs toggle" },
+
+  "nutritionHydrationTitle": "Hydration",
+  "@nutritionHydrationTitle": { "description": "Header for the hydration card showing water intake vs goal" },
+
+  "nutritionMacrosDetailTitle": "Macronutrients",
+  "@nutritionMacrosDetailTitle": { "description": "Header for the per-period macro detail card" },
+
+  "nutritionMealsTitle": "Meals",
+  "@nutritionMealsTitle": { "description": "Header for the per-meal breakdown card on the Nutrition screen" },
+
+  "nutritionMealsEmpty": "No meals logged",
+  "@nutritionMealsEmpty": { "description": "Empty-state copy when the selected day has no logged meals" },
+
+  "nutritionFoodItems": "{count, plural, =0{no items} one{1 item} other{{count} items}}",
+  "@nutritionFoodItems": {
+    "description": "Plural item count shown in meal headers, e.g. '4 items'",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "nutritionBalanceTitle": "Energy balance",
+  "@nutritionBalanceTitle": { "description": "Header for the daily energy balance card (basal + active vs intake)" },
+
+  "nutritionBalanceBasal": "Basal",
+  "@nutritionBalanceBasal": { "description": "BMR label inside the energy balance card" },
+
+  "nutritionBalanceActive": "Active",
+  "@nutritionBalanceActive": { "description": "Active calories label inside the energy balance card" },
+
+  "nutritionBalanceOutput": "Output",
+  "@nutritionBalanceOutput": { "description": "Total output (basal + active) label inside the energy balance card" },
+
+  "nutritionBalanceIntake": "Intake",
+  "@nutritionBalanceIntake": { "description": "Calorie intake label inside the energy balance card" },
+
+  "nutritionBalanceDeficit": "Deficit",
+  "@nutritionBalanceDeficit": { "description": "Badge label when intake < output" },
+
+  "nutritionBalanceSurplus": "Surplus",
+  "@nutritionBalanceSurplus": { "description": "Badge label when intake > output" },
+
+  "nutritionMealsOnlyDayMode": "Meal & balance details only available in day mode",
+  "@nutritionMealsOnlyDayMode": { "description": "Hint shown in week/month modes explaining that meal & balance cards live in day mode" },
+
   "screenBody": "Body",
   "@screenBody": { "description": "AppBar title for the Body screen" },
 
@@ -245,6 +295,21 @@
 
   "sectionAccount": "Account",
   "@sectionAccount": { "description": "Settings section header: account / danger zone" },
+
+  "settingsHealthConnectSection": "Health Connect",
+  "@settingsHealthConnectSection": { "description": "Settings section header for Health Connect integration" },
+  "settingsHealthConnectOpen": "Open Health Connect",
+  "@settingsHealthConnectOpen": { "description": "Settings row label that opens Health Connect settings" },
+  "settingsHealthConnectOpenBody": "Review connected apps, data sources and Health Connect settings.",
+  "@settingsHealthConnectOpenBody": { "description": "Settings row subtitle for opening Health Connect" },
+  "settingsHealthConnectPermissions": "Manage permissions",
+  "@settingsHealthConnectPermissions": { "description": "Settings row label to request/manage Health Connect permissions" },
+  "settingsHealthConnectPermissionsBody": "Grant access to steps, calories, weight, sleep and activity data.",
+  "@settingsHealthConnectPermissionsBody": { "description": "Settings row subtitle for Health Connect permissions" },
+  "settingsHealthConnectConnected": "Connected",
+  "@settingsHealthConnectConnected": { "description": "Status label when Health Connect permissions are granted" },
+  "settingsHealthConnectNeedsAccess": "Needs access",
+  "@settingsHealthConnectNeedsAccess": { "description": "Status label when Health Connect permissions are missing" },
 
   "settingsAppVersion": "App version",
   "@settingsAppVersion": { "description": "Label for the app version row" },

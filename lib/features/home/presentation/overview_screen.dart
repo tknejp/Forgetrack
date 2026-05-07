@@ -359,8 +359,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
                       activeTab: tab,
                       onTabChange: _changeTab,
                       dateLabel: _periodDateLabel(context, _period),
-                      syncedAt:
-                          syncedAt != null ? 'Synced $syncedAt' : null,
+                      syncedAt: syncedAt != null ? 'Synced $syncedAt' : null,
                       canGoForward: _period.canGoForward,
                       isCurrentPeriod: _period.isCurrentPeriod,
                       onPrev: () =>
@@ -370,8 +369,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
                           : null,
                       onToday: _period.isCurrentPeriod
                           ? null
-                          : () => setState(() =>
-                              _period = _period.withType(_period.type)),
+                          : () => setState(
+                              () => _period = _period.withType(_period.type)),
                       onDateTap: _period.type == PeriodType.day
                           ? _openDatePicker
                           : null,
@@ -380,7 +379,13 @@ class _OverviewScreenState extends State<OverviewScreen> {
                         FitnessAccessState.permissionRequired) ...[
                       const SizedBox(height: 10),
                       _PermissionBanner(
-                          onTap: () => fitness.requestPermissions()),
+                        onTap: () async {
+                          await fitness.requestPermissions();
+                          if (mounted) {
+                            await fitness.initialize();
+                          }
+                        },
+                      ),
                     ],
                   ],
                 ),

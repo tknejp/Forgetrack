@@ -90,14 +90,26 @@ class HealthConnectService {
   Future<double> getActiveCaloriesBurned(DateTime start, DateTime end) =>
       _calories.getActiveCaloriesBurned(start, end);
 
+  Future<double> getBasalCaloriesBurned(DateTime start, DateTime end) =>
+      _calories.getBasalCaloriesBurned(start, end);
+
   Future<List<double>> getActiveCaloriesHistory(int days) =>
       _calories.getActiveCaloriesHistory(days);
+
+  Future<List<double>> getBasalCaloriesHistory(int days) =>
+      _calories.getBasalCaloriesHistory(days);
 
   Future<List<double>> getActiveCaloriesHistoryForRange(
     DateTime start,
     DateTime end,
   ) =>
       _calories.getActiveCaloriesHistoryForRange(start, end);
+
+  Future<List<double>> getBasalCaloriesHistoryForRange(
+    DateTime start,
+    DateTime end,
+  ) =>
+      _calories.getBasalCaloriesHistoryForRange(start, end);
 
   // ─── Weight / body ─────────────────────────────────────────────────────────
 

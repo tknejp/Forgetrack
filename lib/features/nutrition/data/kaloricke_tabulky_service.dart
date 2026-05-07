@@ -32,6 +32,89 @@ class KtApiException implements Exception {
   String toString() => 'KtApiException: $message';
 }
 
+class KtFoodstuff {
+  final String title;
+  final String unit;
+  final double energy;
+  final double protein;
+  final double fat;
+  final double carbs;
+  final double fiber;
+  final double sugar;
+  final double salt;
+
+  const KtFoodstuff({
+    required this.title,
+    required this.unit,
+    required this.energy,
+    this.protein = 0,
+    this.fat = 0,
+    this.carbs = 0,
+    this.fiber = 0,
+    this.sugar = 0,
+    this.salt = 0,
+  });
+
+  Map<String, dynamic> toJson() => {
+        't': title,
+        'u': unit,
+        'e': energy,
+        'p': protein,
+        'f': fat,
+        'c': carbs,
+        'fb': fiber,
+        's': sugar,
+        'sl': salt,
+      };
+
+  factory KtFoodstuff.fromJson(Map<String, dynamic> json) => KtFoodstuff(
+        title: (json['t'] ?? '') as String,
+        unit: (json['u'] ?? '') as String,
+        energy: (json['e'] as num?)?.toDouble() ?? 0,
+        protein: (json['p'] as num?)?.toDouble() ?? 0,
+        fat: (json['f'] as num?)?.toDouble() ?? 0,
+        carbs: (json['c'] as num?)?.toDouble() ?? 0,
+        fiber: (json['fb'] as num?)?.toDouble() ?? 0,
+        sugar: (json['s'] as num?)?.toDouble() ?? 0,
+        salt: (json['sl'] as num?)?.toDouble() ?? 0,
+      );
+}
+
+class KtMeal {
+  /// Time-of-day id from KT, "1".."6". Stable across nights so we can map to
+  /// an emoji (breakfast/lunch/dinner/etc.) without brittle title matching.
+  final String id;
+  final String title;
+  final double energyTotal;
+  final List<KtFoodstuff> foodstuff;
+
+  const KtMeal({
+    required this.id,
+    required this.title,
+    required this.energyTotal,
+    required this.foodstuff,
+  });
+
+  bool get hasFood => foodstuff.isNotEmpty;
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        't': title,
+        'e': energyTotal,
+        'f': [for (final f in foodstuff) f.toJson()],
+      };
+
+  factory KtMeal.fromJson(Map<String, dynamic> json) => KtMeal(
+        id: (json['id'] ?? '') as String,
+        title: (json['t'] ?? '') as String,
+        energyTotal: (json['e'] as num?)?.toDouble() ?? 0,
+        foodstuff: [
+          for (final raw in (json['f'] as List? ?? const []))
+            if (raw is Map<String, dynamic>) KtFoodstuff.fromJson(raw),
+        ],
+      );
+}
+
 class KtDayNutrition {
   final double calories;
   final double protein;
@@ -43,6 +126,15 @@ class KtDayNutrition {
   final double saturatedFat;
   final double drinkRegime;
   final int foodCount;
+
+  /// Basal metabolic rate (kcal) reported by KT for this day. Zero when KT
+  /// didn't return a balance block (older days, missing settings).
+  final double basal;
+
+  /// Per-meal breakdown extracted from the daily diary `times[]` array.
+  /// Empty when the diary endpoint wasn't fetched (e.g. summary-only sync).
+  final List<KtMeal> meals;
+
   final DateTime lastSyncedAt;
 
   KtDayNutrition({
@@ -56,6 +148,8 @@ class KtDayNutrition {
     this.saturatedFat = 0,
     this.drinkRegime = 0,
     this.foodCount = 0,
+    this.basal = 0,
+    this.meals = const [],
     DateTime? lastSyncedAt,
   }) : lastSyncedAt = lastSyncedAt ?? DateTime(0);
 
@@ -72,6 +166,8 @@ class KtDayNutrition {
         'saturatedFat': saturatedFat,
         'drinkRegime': drinkRegime,
         'foodCount': foodCount,
+        'basal': basal,
+        'meals': [for (final m in meals) m.toJson()],
         'lastSyncedAt': lastSyncedAt.millisecondsSinceEpoch,
       };
 
@@ -86,6 +182,11 @@ class KtDayNutrition {
         saturatedFat: (json['saturatedFat'] as num?)?.toDouble() ?? 0,
         drinkRegime: (json['drinkRegime'] as num?)?.toDouble() ?? 0,
         foodCount: (json['foodCount'] as num?)?.toInt() ?? 0,
+        basal: (json['basal'] as num?)?.toDouble() ?? 0,
+        meals: [
+          for (final raw in (json['meals'] as List? ?? const []))
+            if (raw is Map<String, dynamic>) KtMeal.fromJson(raw),
+        ],
         lastSyncedAt: json['lastSyncedAt'] != null
             ? DateTime.fromMillisecondsSinceEpoch(json['lastSyncedAt'] as int)
             : null,

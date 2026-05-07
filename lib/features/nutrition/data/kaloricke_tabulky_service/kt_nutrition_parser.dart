@@ -9,6 +9,11 @@ class _KtNutritionParser {
       calories = summaryMetrics['total'] ?? 0;
     }
 
+    final balance = data['balance'];
+    final basal = balance is Map
+        ? _parseDouble(balance['basal'])
+        : 0.0;
+
     final parsed = KtDayNutrition(
       calories: calories,
       protein: summaryMetrics['protein'] ?? 0,
@@ -17,15 +22,54 @@ class _KtNutritionParser {
       fiber: summaryMetrics['fiber'] ?? 0,
       sugar: summaryMetrics['sugar'] ?? 0,
       saturatedFat: summaryMetrics['saturatedFattyAcid'] ?? 0,
+      basal: basal,
     );
     AppLog.ktParse.debug(
       '_parseDaySummary() → ${_describeNutrition(parsed)}',
       payload: _describeFields(
         data,
-        ['foodstuffEnergyTotal', 'items', 'itemsDynamic'],
+        ['foodstuffEnergyTotal', 'items', 'itemsDynamic', 'balance'],
       ),
     );
     return parsed;
+  }
+
+  List<KtMeal> parseMeals(Map<String, dynamic> data) {
+    final times = data['times'];
+    if (times is! List) return const [];
+
+    final result = <KtMeal>[];
+    for (final raw in times) {
+      if (raw is! Map) continue;
+      final id = (raw['id'] ?? '').toString();
+      final title = (raw['title'] ?? '').toString();
+      final energyTotal = _parseDouble(raw['energyTotal']);
+      final foodList = raw['foodstuff'];
+      final foodstuffs = <KtFoodstuff>[];
+      if (foodList is List) {
+        for (final f in foodList) {
+          if (f is! Map) continue;
+          foodstuffs.add(KtFoodstuff(
+            title: (f['title'] ?? '').toString(),
+            unit: (f['unit'] ?? '').toString(),
+            energy: _parseDouble(f['energy']),
+            protein: _parseDouble(f['protein']),
+            fat: _parseDouble(f['fat']),
+            carbs: _parseDouble(f['carbohydrate']),
+            fiber: _parseDouble(f['fiber']),
+            sugar: _parseDouble(f['sugar']),
+            salt: _parseDouble(f['salt']),
+          ));
+        }
+      }
+      result.add(KtMeal(
+        id: id,
+        title: title,
+        energyTotal: energyTotal,
+        foodstuff: foodstuffs,
+      ));
+    }
+    return result;
   }
 
   KtDayNutrition parseDayDiary(Map<String, dynamic> data) {
@@ -124,6 +168,7 @@ class _KtNutritionParser {
       saturatedFat: saturatedFat,
       drinkRegime: _parseDouble(data['drinkRegime']),
       foodCount: _parseInt(data['foodstuffCount']),
+      meals: parseMeals(data),
       lastSyncedAt: DateTime.now(),
     );
     AppLog.ktParse.debug(

@@ -45,6 +45,61 @@ class AppLocalizationsEn extends AppLocalizations {
   String get screenNutrition => 'Nutrition';
 
   @override
+  String get nutritionEnergyTrend => 'Calorie trend';
+
+  @override
+  String get nutritionMacroTrend => 'Macro trend';
+
+  @override
+  String get nutritionHydrationTitle => 'Hydration';
+
+  @override
+  String get nutritionMacrosDetailTitle => 'Macronutrients';
+
+  @override
+  String get nutritionMealsTitle => 'Meals';
+
+  @override
+  String get nutritionMealsEmpty => 'No meals logged';
+
+  @override
+  String nutritionFoodItems(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '1 item',
+      zero: 'no items',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get nutritionBalanceTitle => 'Energy balance';
+
+  @override
+  String get nutritionBalanceBasal => 'Basal';
+
+  @override
+  String get nutritionBalanceActive => 'Active';
+
+  @override
+  String get nutritionBalanceOutput => 'Output';
+
+  @override
+  String get nutritionBalanceIntake => 'Intake';
+
+  @override
+  String get nutritionBalanceDeficit => 'Deficit';
+
+  @override
+  String get nutritionBalanceSurplus => 'Surplus';
+
+  @override
+  String get nutritionMealsOnlyDayMode =>
+      'Meal & balance details only available in day mode';
+
+  @override
   String get screenBody => 'Body';
 
   @override
@@ -252,6 +307,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sectionAccount => 'Account';
+
+  @override
+  String get settingsHealthConnectSection => 'Health Connect';
+
+  @override
+  String get settingsHealthConnectOpen => 'Open Health Connect';
+
+  @override
+  String get settingsHealthConnectOpenBody =>
+      'Review connected apps, data sources and Health Connect settings.';
+
+  @override
+  String get settingsHealthConnectPermissions => 'Manage permissions';
+
+  @override
+  String get settingsHealthConnectPermissionsBody =>
+      'Grant access to steps, calories, weight, sleep and activity data.';
+
+  @override
+  String get settingsHealthConnectConnected => 'Connected';
+
+  @override
+  String get settingsHealthConnectNeedsAccess => 'Needs access';
 
   @override
   String get settingsAppVersion => 'App version';

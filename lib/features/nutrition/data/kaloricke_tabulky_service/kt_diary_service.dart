@@ -97,6 +97,8 @@ class _KtDiaryService {
       salt: diary.salt,
       drinkRegime: diary.drinkRegime,
       foodCount: diary.foodCount,
+      basal: summary.basal,
+      meals: diary.meals,
       lastSyncedAt: DateTime.now(),
     );
     AppLog.ktApi.success(

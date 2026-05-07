@@ -17,6 +17,7 @@ class HcPermissionService {
   static const List<HealthDataType> _requiredReadTypes = [
     HealthDataType.STEPS,
     HealthDataType.ACTIVE_ENERGY_BURNED,
+    HealthDataType.BASAL_ENERGY_BURNED,
     HealthDataType.WEIGHT,
   ];
 
@@ -45,6 +46,7 @@ class HcPermissionService {
   ];
 
   static const List<HealthDataAccess> _requiredReadPermissions = [
+    HealthDataAccess.READ,
     HealthDataAccess.READ,
     HealthDataAccess.READ,
     HealthDataAccess.READ,

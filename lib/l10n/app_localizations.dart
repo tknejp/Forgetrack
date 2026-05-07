@@ -170,6 +170,96 @@ abstract class AppLocalizations {
   /// **'Nutrition'**
   String get screenNutrition;
 
+  /// Title of the per-day calorie trend chart on the Nutrition screen
+  ///
+  /// In en, this message translates to:
+  /// **'Calorie trend'**
+  String get nutritionEnergyTrend;
+
+  /// Title of the per-day macro trend chart with a Protein/Fat/Carbs toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Macro trend'**
+  String get nutritionMacroTrend;
+
+  /// Header for the hydration card showing water intake vs goal
+  ///
+  /// In en, this message translates to:
+  /// **'Hydration'**
+  String get nutritionHydrationTitle;
+
+  /// Header for the per-period macro detail card
+  ///
+  /// In en, this message translates to:
+  /// **'Macronutrients'**
+  String get nutritionMacrosDetailTitle;
+
+  /// Header for the per-meal breakdown card on the Nutrition screen
+  ///
+  /// In en, this message translates to:
+  /// **'Meals'**
+  String get nutritionMealsTitle;
+
+  /// Empty-state copy when the selected day has no logged meals
+  ///
+  /// In en, this message translates to:
+  /// **'No meals logged'**
+  String get nutritionMealsEmpty;
+
+  /// Plural item count shown in meal headers, e.g. '4 items'
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{no items} one{1 item} other{{count} items}}'**
+  String nutritionFoodItems(int count);
+
+  /// Header for the daily energy balance card (basal + active vs intake)
+  ///
+  /// In en, this message translates to:
+  /// **'Energy balance'**
+  String get nutritionBalanceTitle;
+
+  /// BMR label inside the energy balance card
+  ///
+  /// In en, this message translates to:
+  /// **'Basal'**
+  String get nutritionBalanceBasal;
+
+  /// Active calories label inside the energy balance card
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get nutritionBalanceActive;
+
+  /// Total output (basal + active) label inside the energy balance card
+  ///
+  /// In en, this message translates to:
+  /// **'Output'**
+  String get nutritionBalanceOutput;
+
+  /// Calorie intake label inside the energy balance card
+  ///
+  /// In en, this message translates to:
+  /// **'Intake'**
+  String get nutritionBalanceIntake;
+
+  /// Badge label when intake < output
+  ///
+  /// In en, this message translates to:
+  /// **'Deficit'**
+  String get nutritionBalanceDeficit;
+
+  /// Badge label when intake > output
+  ///
+  /// In en, this message translates to:
+  /// **'Surplus'**
+  String get nutritionBalanceSurplus;
+
+  /// Hint shown in week/month modes explaining that meal & balance cards live in day mode
+  ///
+  /// In en, this message translates to:
+  /// **'Meal & balance details only available in day mode'**
+  String get nutritionMealsOnlyDayMode;
+
   /// AppBar title for the Body screen
   ///
   /// In en, this message translates to:
@@ -577,6 +667,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Account'**
   String get sectionAccount;
+
+  /// Settings section header for Health Connect integration
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect'**
+  String get settingsHealthConnectSection;
+
+  /// Settings row label that opens Health Connect settings
+  ///
+  /// In en, this message translates to:
+  /// **'Open Health Connect'**
+  String get settingsHealthConnectOpen;
+
+  /// Settings row subtitle for opening Health Connect
+  ///
+  /// In en, this message translates to:
+  /// **'Review connected apps, data sources and Health Connect settings.'**
+  String get settingsHealthConnectOpenBody;
+
+  /// Settings row label to request/manage Health Connect permissions
+  ///
+  /// In en, this message translates to:
+  /// **'Manage permissions'**
+  String get settingsHealthConnectPermissions;
+
+  /// Settings row subtitle for Health Connect permissions
+  ///
+  /// In en, this message translates to:
+  /// **'Grant access to steps, calories, weight, sleep and activity data.'**
+  String get settingsHealthConnectPermissionsBody;
+
+  /// Status label when Health Connect permissions are granted
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get settingsHealthConnectConnected;
+
+  /// Status label when Health Connect permissions are missing
+  ///
+  /// In en, this message translates to:
+  /// **'Needs access'**
+  String get settingsHealthConnectNeedsAccess;
 
   /// Label for the app version row
   ///

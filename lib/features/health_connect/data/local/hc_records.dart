@@ -26,6 +26,7 @@ class HcCalorieDayRecord {
   late String dateKey;
 
   double kcal = 0;
+  double basalKcal = 0;
 }
 
 // ─── Weight ───────────────────────────────────────────────────────────────────

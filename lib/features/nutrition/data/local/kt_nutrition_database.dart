@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -206,6 +208,8 @@ class KtNutritionDatabase {
         saturatedFat: r.saturatedFat,
         drinkRegime: r.hydration,
         foodCount: r.foodCount,
+        basal: r.basal,
+        meals: _decodeMeals(r.mealsJson),
         lastSyncedAt: r.syncedAt,
       );
 
@@ -223,8 +227,30 @@ class KtNutritionDatabase {
       ..saturatedFat = n.saturatedFat
       ..hydration = n.drinkRegime
       ..foodCount = n.foodCount
+      ..basal = n.basal
+      ..mealsJson = _encodeMeals(n.meals)
       ..inferredComplete = key != todayKey
       ..syncedAt = n.lastSyncedAt;
+  }
+
+  static String _encodeMeals(List<KtMeal> meals) {
+    if (meals.isEmpty) return '';
+    return jsonEncode([for (final m in meals) m.toJson()]);
+  }
+
+  static List<KtMeal> _decodeMeals(String raw) {
+    if (raw.isEmpty) return const [];
+    try {
+      final list = jsonDecode(raw);
+      if (list is! List) return const [];
+      return [
+        for (final item in list)
+          if (item is Map<String, dynamic>) KtMeal.fromJson(item),
+      ];
+    } catch (e) {
+      AppLog.ktDb.warn('Failed to decode mealsJson — $e');
+      return const [];
+    }
   }
 
   static String _toKey(DateTime dt) => '${dt.year.toString().padLeft(4, '0')}-'

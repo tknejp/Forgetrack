@@ -199,7 +199,7 @@ abstract final class SheetExportFields {
         final minutes = sleep.totalDuration.inMinutes;
         final hours = minutes ~/ 60;
         final mins = minutes % 60;
-        return '${hours}:${mins.toString().padLeft(2, '0')}';
+        return '$hours:${mins.toString().padLeft(2, '0')}';
       },
     ),
     SheetExportField(

@@ -45,6 +45,62 @@ class AppLocalizationsCs extends AppLocalizations {
   String get screenNutrition => 'Výživa';
 
   @override
+  String get nutritionEnergyTrend => 'Vývoj kalorií';
+
+  @override
+  String get nutritionMacroTrend => 'Vývoj makroživin';
+
+  @override
+  String get nutritionHydrationTitle => 'Pitný režim';
+
+  @override
+  String get nutritionMacrosDetailTitle => 'Makroživiny';
+
+  @override
+  String get nutritionMealsTitle => 'Jídla';
+
+  @override
+  String get nutritionMealsEmpty => 'Žádná zaznamenaná jídla';
+
+  @override
+  String nutritionFoodItems(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count položek',
+      few: '$count položky',
+      one: '1 položka',
+      zero: 'žádné položky',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get nutritionBalanceTitle => 'Energetická bilance';
+
+  @override
+  String get nutritionBalanceBasal => 'Bazál';
+
+  @override
+  String get nutritionBalanceActive => 'Aktivita';
+
+  @override
+  String get nutritionBalanceOutput => 'Výdej';
+
+  @override
+  String get nutritionBalanceIntake => 'Příjem';
+
+  @override
+  String get nutritionBalanceDeficit => 'Deficit';
+
+  @override
+  String get nutritionBalanceSurplus => 'Přebytek';
+
+  @override
+  String get nutritionMealsOnlyDayMode =>
+      'Detail jídel a bilance jen v denním přehledu';
+
+  @override
   String get screenBody => 'Tělo';
 
   @override
@@ -252,6 +308,29 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get sectionAccount => 'Účet';
+
+  @override
+  String get settingsHealthConnectSection => 'Health Connect';
+
+  @override
+  String get settingsHealthConnectOpen => 'Otevřít Health Connect';
+
+  @override
+  String get settingsHealthConnectOpenBody =>
+      'Zkontrolujte propojené aplikace, zdroje dat a nastavení Health Connect.';
+
+  @override
+  String get settingsHealthConnectPermissions => 'Spravovat oprávnění';
+
+  @override
+  String get settingsHealthConnectPermissionsBody =>
+      'Povolte přístup ke krokům, kaloriím, váze, spánku a aktivitám.';
+
+  @override
+  String get settingsHealthConnectConnected => 'Připojeno';
+
+  @override
+  String get settingsHealthConnectNeedsAccess => 'Chybí přístup';
 
   @override
   String get settingsAppVersion => 'Verze aplikace';

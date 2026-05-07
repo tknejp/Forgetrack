@@ -28,8 +28,16 @@ class SelectedPeriod {
   factory SelectedPeriod.currentWeek() =>
       SelectedPeriod._(type: PeriodType.week, referenceDate: _today());
 
+  factory SelectedPeriod.forWeek(DateTime date) => SelectedPeriod._(
+      type: PeriodType.week,
+      referenceDate: DateTime(date.year, date.month, date.day));
+
   factory SelectedPeriod.currentMonth() =>
       SelectedPeriod._(type: PeriodType.month, referenceDate: _today());
+
+  factory SelectedPeriod.forMonth(DateTime date) => SelectedPeriod._(
+      type: PeriodType.month,
+      referenceDate: DateTime(date.year, date.month, 1));
 
   static DateTime _today() {
     final n = DateTime.now();
@@ -42,7 +50,8 @@ class SelectedPeriod {
       case PeriodType.day:
         return referenceDate;
       case PeriodType.week:
-        return referenceDate.subtract(Duration(days: referenceDate.weekday - 1));
+        return referenceDate
+            .subtract(Duration(days: referenceDate.weekday - 1));
       case PeriodType.month:
         return DateTime(referenceDate.year, referenceDate.month, 1);
       case PeriodType.custom:
@@ -152,6 +161,5 @@ class SelectedPeriod {
           customEnd == other.customEnd;
 
   @override
-  int get hashCode =>
-      Object.hash(type, referenceDate, customStart, customEnd);
+  int get hashCode => Object.hash(type, referenceDate, customStart, customEnd);
 }

@@ -157,6 +157,10 @@ class _KtConnectedStatusTile extends StatelessWidget {
 
     return SettingsTile(
       icon: Icons.sync_rounded,
+      iconWidget: Padding(
+        padding: const EdgeInsets.all(7),
+        child: Image.asset('assets/icons/kt/kaloricke_tabulky.png'),
+      ),
       iconColor: cs.primary,
       iconBackgroundColor: cs.primaryContainer.withValues(alpha: 0.58),
       label: l10n.ktConnectedBadge,
@@ -281,10 +285,12 @@ class _KtLoginHeader extends StatelessWidget {
               color: Tokens.calories.color.withValues(alpha: 0.24),
             ),
           ),
-          child: Icon(
-            Icons.restaurant_menu_rounded,
-            size: 18,
-            color: Tokens.calories.color,
+          child: Padding(
+            padding: const EdgeInsets.all(7),
+            child: Image.asset(
+              'assets/icons/kt/kaloricke_tabulky.png',
+              fit: BoxFit.contain,
+            ),
           ),
         ),
         const SizedBox(width: Tokens.spaceMd),

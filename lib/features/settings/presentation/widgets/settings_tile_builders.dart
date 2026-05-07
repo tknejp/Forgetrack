@@ -56,12 +56,14 @@ class _SettingsTileTrailing extends StatelessWidget {
 
 class _SettingsIconBadge extends StatelessWidget {
   final IconData icon;
+  final Widget? child;
   final Color? iconColor;
   final Color? backgroundColor;
   final bool compact;
 
   const _SettingsIconBadge({
     required this.icon,
+    this.child,
     this.iconColor,
     this.backgroundColor,
     this.compact = false,
@@ -84,11 +86,12 @@ class _SettingsIconBadge extends StatelessWidget {
           color: resolvedIconColor.withValues(alpha: compact ? 0.20 : 0.24),
         ),
       ),
-      child: Icon(
-        icon,
-        size: compact ? 17 : 18,
-        color: resolvedIconColor,
-      ),
+      child: child ??
+          Icon(
+            icon,
+            size: compact ? 17 : 18,
+            color: resolvedIconColor,
+          ),
     );
   }
 }

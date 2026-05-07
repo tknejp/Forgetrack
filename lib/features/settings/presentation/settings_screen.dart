@@ -11,6 +11,7 @@ import '../../../shared/widgets/screen_header.dart';
 import 'sections/settings_devtools_section.dart';
 import 'sections/settings_goals_section.dart';
 import 'sections/settings_header_section.dart';
+import 'sections/settings_health_connect_section.dart';
 import 'sections/settings_kt_section.dart';
 import 'sections/settings_preferences_section.dart';
 import 'sections/settings_static_sections.dart';
@@ -43,24 +44,26 @@ class SettingsScreen extends StatelessWidget {
             ScreenHeader(
               greeting: l10n.settingsSection,
               title: l10n.screenProfile,
-              leading: canPop
-                  ? const FtBackButton()
-                  : null,
+              leading: canPop ? const FtBackButton() : null,
             ),
             const SizedBox(height: 18),
             SettingsHeaderCard(auth: auth),
             const SizedBox(height: 18),
             SettingsSection(
-              title: l10n.sectionGoals,
-              child: const SettingsGoalsSection(),
+              title: l10n.ktSectionTitle,
+              child: const SettingsKtSection(),
+            ),
+            SettingsSection(
+              title: l10n.settingsHealthConnectSection,
+              child: const SettingsHealthConnectSection(),
             ),
             SettingsSection(
               title: l10n.sectionPreferences,
               child: const SettingsPreferencesSection(),
             ),
             SettingsSection(
-              title: l10n.ktSectionTitle,
-              child: const SettingsKtSection(),
+              title: l10n.sectionGoals,
+              child: const SettingsGoalsSection(),
             ),
             SettingsSection(
               title: l10n.sectionData,

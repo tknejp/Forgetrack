@@ -92,6 +92,17 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
   double get todaySugar => _today?.sugar ?? 0;
   double get todaySalt => _today?.salt ?? 0;
   double get todaySaturatedFat => _today?.saturatedFat ?? 0;
+  double get todayDrinkRegime => _today?.drinkRegime ?? 0;
+  double get todayBasal => _today?.basal ?? 0;
+  List<KtMeal> get todayMeals => _today?.meals ?? const [];
+
+  List<KtMeal> mealsForDate(DateTime date) =>
+      _db.getDay(date)?.meals ?? const [];
+
+  double basalForDate(DateTime date) => _db.getDay(date)?.basal ?? 0;
+
+  double drinkRegimeForDate(DateTime date) =>
+      _db.getDay(date)?.drinkRegime ?? 0;
 
   // ─── History getters ───────────────────────────────────────────────────────
 

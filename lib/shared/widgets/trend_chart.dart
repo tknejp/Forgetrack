@@ -46,6 +46,13 @@ class TrendCard extends StatefulWidget {
   final ValueChanged<int>? onBarTap;
   final bool showTrendLine;
 
+  /// When non-null, the chart is rendered inside a horizontally-scrollable
+  /// view with each bar getting at least this much width. Useful when the
+  /// number of bars makes the auto-fit chart cramped (e.g. month-mode bars).
+  /// On bar count changes the scroller jumps to the right edge so the most
+  /// recent bar is visible.
+  final double? scrollableMinBarWidth;
+
   const TrendCard({
     super.key,
     required this.domain,
@@ -65,6 +72,7 @@ class TrendCard extends StatefulWidget {
     this.expandedChartHeight = 176,
     this.onBarTap,
     this.showTrendLine = false,
+    this.scrollableMinBarWidth,
   });
 
   @override
@@ -73,11 +81,36 @@ class TrendCard extends StatefulWidget {
 
 class _TrendCardState extends State<TrendCard> {
   late bool _expanded;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _expanded = widget.collapsible ? widget.initiallyExpanded : true;
+    _scheduleScrollToEnd();
+  }
+
+  @override
+  void didUpdateWidget(covariant TrendCard old) {
+    super.didUpdateWidget(old);
+    if (old.bars.length != widget.bars.length) _scheduleScrollToEnd();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scheduleScrollToEnd() {
+    if (widget.scrollableMinBarWidth == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_scrollController.hasClients &&
+          _scrollController.position.maxScrollExtent > 0) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
+    });
   }
 
   @override
@@ -181,15 +214,44 @@ class _TrendCardState extends State<TrendCard> {
                   AnimatedSize(
                     duration: const Duration(milliseconds: 240),
                     curve: Curves.easeInOut,
-                    child: TrendChart(
-                      bars: widget.bars,
-                      domain: domain,
-                      height: effectiveHeight,
-                      relativeScale: widget.relativeScale,
-                      referenceValue: widget.referenceValue,
-                      onBarTap: widget.onBarTap,
-                      showTrendLine: widget.showTrendLine,
-                    ),
+                    child: widget.scrollableMinBarWidth == null
+                        ? TrendChart(
+                            bars: widget.bars,
+                            domain: domain,
+                            height: effectiveHeight,
+                            relativeScale: widget.relativeScale,
+                            referenceValue: widget.referenceValue,
+                            onBarTap: widget.onBarTap,
+                            showTrendLine: widget.showTrendLine,
+                          )
+                        : LayoutBuilder(
+                            builder: (ctx, constraints) {
+                              const gapW = 5.0;
+                              final n = widget.bars.length;
+                              final naturalW =
+                                  n * widget.scrollableMinBarWidth! +
+                                      (n - 1) * gapW;
+                              final chartW = naturalW > constraints.maxWidth
+                                  ? naturalW
+                                  : constraints.maxWidth;
+                              return SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                controller: _scrollController,
+                                child: SizedBox(
+                                  width: chartW,
+                                  child: TrendChart(
+                                    bars: widget.bars,
+                                    domain: domain,
+                                    height: effectiveHeight,
+                                    relativeScale: widget.relativeScale,
+                                    referenceValue: widget.referenceValue,
+                                    onBarTap: widget.onBarTap,
+                                    showTrendLine: widget.showTrendLine,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                   ),
                   if (widget.referenceValue != null &&
                       widget.referenceLabel != null) ...[
@@ -210,6 +272,7 @@ class _TrendCardState extends State<TrendCard> {
   }
 
   String _formatMetricValue(double value) {
+    if (!value.isFinite) return '0';
     if (value == value.truncateToDouble()) {
       return value.toInt().toString();
     }
@@ -242,8 +305,8 @@ class TrendChart extends StatelessWidget {
     if (bars.isEmpty) return SizedBox(height: height);
 
     final values = [
-      ...bars.map((bar) => bar.value),
-      if (referenceValue != null) referenceValue!,
+      ...bars.map((bar) => bar.value.isFinite ? bar.value : 0.0),
+      if (referenceValue != null && referenceValue!.isFinite) referenceValue!,
     ];
 
     var maxVal = values.reduce((a, b) => a > b ? a : b);
@@ -257,7 +320,7 @@ class TrendChart extends StatelessWidget {
       maxVal += padding;
       minVal -= padding;
       // Keep reference line at least 18 % above the chart floor so it stays visible.
-      if (referenceValue != null) {
+      if (referenceValue != null && referenceValue!.isFinite) {
         final refPct = (referenceValue! - minVal) / (maxVal - minVal);
         if (refPct < 0.18) {
           minVal = (referenceValue! - 0.18 * maxVal) / 0.82;
@@ -279,9 +342,10 @@ class TrendChart extends StatelessWidget {
               (constraints.maxHeight - valueAreaH - labelAreaH - 4)
                   .clamp(28.0, constraints.maxHeight)
                   .toDouble();
-          final referencePct = referenceValue == null
-              ? null
-              : ((referenceValue! - minVal) / range).clamp(0.0, 1.0);
+          final referencePct =
+              referenceValue == null || !referenceValue!.isFinite
+                  ? null
+                  : ((referenceValue! - minVal) / range).clamp(0.0, 1.0);
 
           return Column(
             mainAxisSize: MainAxisSize.min,
@@ -416,6 +480,7 @@ class TrendChart extends StatelessWidget {
   }
 
   String _formatValue(double value) {
+    if (!value.isFinite) return '0';
     if (value >= 10000) return '${(value / 1000).toStringAsFixed(0)}k';
     if (value >= 1000) return '${(value / 1000).toStringAsFixed(1)}k';
     if (value == value.truncateToDouble()) return value.toInt().toString();
@@ -442,7 +507,8 @@ class _Bar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pct = ((bar.value - minVal) / range).clamp(0.0, 1.0);
+    final safeValue = bar.value.isFinite ? bar.value : 0.0;
+    final pct = ((safeValue - minVal) / range).clamp(0.0, 1.0);
     final barH = (pct * barAreaH).clamp(4.0, barAreaH).toDouble();
 
     return GestureDetector(
@@ -502,9 +568,10 @@ class _TrendLinePainter extends CustomPainter {
     final n = bars.length;
     double sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
     for (int i = 0; i < n; i++) {
+      final y = bars[i].value.isFinite ? bars[i].value : 0.0;
       sumX += i;
-      sumY += bars[i].value;
-      sumXY += i * bars[i].value;
+      sumY += y;
+      sumXY += i * y;
       sumXX += i * i.toDouble();
     }
     final denom = n * sumXX - sumX * sumX;

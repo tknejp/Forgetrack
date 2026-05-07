@@ -677,13 +677,18 @@ const HcCalorieDayRecordSchema = CollectionSchema(
   name: r'HcCalorieDayRecord',
   id: -3003807817574361106,
   properties: {
-    r'dateKey': PropertySchema(
+    r'basalKcal': PropertySchema(
       id: 0,
+      name: r'basalKcal',
+      type: IsarType.double,
+    ),
+    r'dateKey': PropertySchema(
+      id: 1,
       name: r'dateKey',
       type: IsarType.string,
     ),
     r'kcal': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'kcal',
       type: IsarType.double,
     )
@@ -732,8 +737,9 @@ void _hcCalorieDayRecordSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeString(offsets[0], object.dateKey);
-  writer.writeDouble(offsets[1], object.kcal);
+  writer.writeDouble(offsets[0], object.basalKcal);
+  writer.writeString(offsets[1], object.dateKey);
+  writer.writeDouble(offsets[2], object.kcal);
 }
 
 HcCalorieDayRecord _hcCalorieDayRecordDeserialize(
@@ -743,9 +749,10 @@ HcCalorieDayRecord _hcCalorieDayRecordDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = HcCalorieDayRecord();
-  object.dateKey = reader.readString(offsets[0]);
+  object.basalKcal = reader.readDouble(offsets[0]);
+  object.dateKey = reader.readString(offsets[1]);
   object.id = id;
-  object.kcal = reader.readDouble(offsets[1]);
+  object.kcal = reader.readDouble(offsets[2]);
   return object;
 }
 
@@ -757,8 +764,10 @@ P _hcCalorieDayRecordDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readString(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 1:
+      return (reader.readString(offset)) as P;
+    case 2:
       return (reader.readDouble(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -962,6 +971,72 @@ extension HcCalorieDayRecordQueryWhere
 
 extension HcCalorieDayRecordQueryFilter
     on QueryBuilder<HcCalorieDayRecord, HcCalorieDayRecord, QFilterCondition> {
+  QueryBuilder<HcCalorieDayRecord, HcCalorieDayRecord, QAfterFilterCondition>
+      basalKcalEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'basalKcal',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<HcCalorieDayRecord, HcCalorieDayRecord, QAfterFilterCondition>
+      basalKcalGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'basalKcal',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<HcCalorieDayRecord, HcCalorieDayRecord, QAfterFilterCondition>
+      basalKcalLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'basalKcal',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<HcCalorieDayRecord, HcCalorieDayRecord, QAfterFilterCondition>
+      basalKcalBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'basalKcal',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
   QueryBuilder<HcCalorieDayRecord, HcCalorieDayRecord, QAfterFilterCondition>
       dateKeyEqualTo(
     String value, {
@@ -1230,6 +1305,20 @@ extension HcCalorieDayRecordQueryLinks
 extension HcCalorieDayRecordQuerySortBy
     on QueryBuilder<HcCalorieDayRecord, HcCalorieDayRecord, QSortBy> {
   QueryBuilder<HcCalorieDayRecord, HcCalorieDayRecord, QAfterSortBy>
+      sortByBasalKcal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'basalKcal', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HcCalorieDayRecord, HcCalorieDayRecord, QAfterSortBy>
+      sortByBasalKcalDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'basalKcal', Sort.desc);
+    });
+  }
+
+  QueryBuilder<HcCalorieDayRecord, HcCalorieDayRecord, QAfterSortBy>
       sortByDateKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dateKey', Sort.asc);
@@ -1260,6 +1349,20 @@ extension HcCalorieDayRecordQuerySortBy
 
 extension HcCalorieDayRecordQuerySortThenBy
     on QueryBuilder<HcCalorieDayRecord, HcCalorieDayRecord, QSortThenBy> {
+  QueryBuilder<HcCalorieDayRecord, HcCalorieDayRecord, QAfterSortBy>
+      thenByBasalKcal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'basalKcal', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HcCalorieDayRecord, HcCalorieDayRecord, QAfterSortBy>
+      thenByBasalKcalDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'basalKcal', Sort.desc);
+    });
+  }
+
   QueryBuilder<HcCalorieDayRecord, HcCalorieDayRecord, QAfterSortBy>
       thenByDateKey() {
     return QueryBuilder.apply(this, (query) {
@@ -1306,6 +1409,13 @@ extension HcCalorieDayRecordQuerySortThenBy
 extension HcCalorieDayRecordQueryWhereDistinct
     on QueryBuilder<HcCalorieDayRecord, HcCalorieDayRecord, QDistinct> {
   QueryBuilder<HcCalorieDayRecord, HcCalorieDayRecord, QDistinct>
+      distinctByBasalKcal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'basalKcal');
+    });
+  }
+
+  QueryBuilder<HcCalorieDayRecord, HcCalorieDayRecord, QDistinct>
       distinctByDateKey({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'dateKey', caseSensitive: caseSensitive);
@@ -1325,6 +1435,13 @@ extension HcCalorieDayRecordQueryProperty
   QueryBuilder<HcCalorieDayRecord, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<HcCalorieDayRecord, double, QQueryOperations>
+      basalKcalProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'basalKcal');
     });
   }
 

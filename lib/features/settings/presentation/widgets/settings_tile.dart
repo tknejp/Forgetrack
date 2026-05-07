@@ -2,6 +2,7 @@ part of 'settings_widgets.dart';
 
 class SettingsTile extends StatelessWidget {
   final IconData icon;
+  final Widget? iconWidget;
   final String label;
   final String? subtitle;
   final Widget? trailing;
@@ -16,6 +17,7 @@ class SettingsTile extends StatelessWidget {
   const SettingsTile({
     super.key,
     required this.icon,
+    this.iconWidget,
     required this.label,
     this.subtitle,
     this.trailing,
@@ -50,6 +52,7 @@ class SettingsTile extends StatelessWidget {
                 iconColor: iconColor,
                 backgroundColor: iconBackgroundColor,
                 compact: compact,
+                child: iconWidget,
               ),
               SizedBox(width: compact ? 10 : 12),
               Expanded(

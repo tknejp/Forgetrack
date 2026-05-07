@@ -30,12 +30,12 @@ class FitnessProvider extends ChangeNotifier {
 
   FitnessProvider(this._service, this._db);
 
-  // ─── Concurrency guard ────────────────────────────────────────────────────
+  // --- Concurrency guard ----------------------------------------------------
   bool _inFlight = false;
   StreamSubscription<void>? _dbChangeSubscription;
   DateTime? _lastAppOpenRefreshAttemptAt;
 
-  // ─── State ────────────────────────────────────────────────────────────────
+  // --- State ----------------------------------------------------------------
   bool _isLoading = false;
   bool _hasInitialized = false;
   bool _isRefreshing = false;
@@ -50,6 +50,7 @@ class FitnessProvider extends ChangeNotifier {
 
   List<StepsRecord> _stepsHistory = [];
   List<double> _activeCaloriesHistory = [];
+  List<double> _basalCaloriesHistory = [];
   List<WeightRecord> _weightHistory = [];
   double? _latestBodyFat;
   List<ActivityRecord> _activities = [];
@@ -57,7 +58,7 @@ class FitnessProvider extends ChangeNotifier {
   SleepRecord? _todaySleep;
   List<SleepRecord> _sleepHistory = [];
 
-  // ─── Debug / pipeline diagnostics (diagnostic-only, no production effect) ─
+  // --- Debug / pipeline diagnostics (diagnostic-only, no production effect) -
   String? _debugLastRefreshSource;
   DateTime? _debugLastRefreshStartedAt;
   DateTime? _debugLastRefreshCompletedAt;
@@ -74,7 +75,7 @@ class FitnessProvider extends ChangeNotifier {
   DateTime? _debugLastDbWatcherFiredAt;
   int? _debugDbWatcherTodaySteps;
 
-  // ─── Public getters ───────────────────────────────────────────────────────
+  // --- Public getters -------------------------------------------------------
   bool get isLoading => _isLoading;
   bool get hasInitialized => _hasInitialized;
   bool get isRefreshing => _isRefreshing;
@@ -102,7 +103,7 @@ class FitnessProvider extends ChangeNotifier {
   SleepRecord? get todaySleep => _todaySleep;
   List<SleepRecord> get sleepHistory => _sleepHistory;
 
-  // ─── Debug/diagnostic getters (read-only, no side effects) ──────────────
+  // --- Debug/diagnostic getters (read-only, no side effects) --------------
   int get debugStepsRecordCount => _stepsHistory.length;
   int get debugWeightRecordCount => _weightHistory.length;
   int get debugSleepRecordCount => _sleepHistory.length;
@@ -122,7 +123,7 @@ class FitnessProvider extends ChangeNotifier {
   DateTime? get debugWeightLastDate =>
       _weightHistory.isNotEmpty ? _weightHistory.last.date : null;
 
-  /// Last ≤5 weight records: date, kg, bodyFat%. Cheap slice — no DB access.
+  /// Last <=5 weight records: date, kg, bodyFat%. Cheap slice - no DB access.
   List<({String dateKey, double kg, double? fatPct})>
       get debugWeightRecordsPreview {
     const limit = 5;
@@ -135,7 +136,7 @@ class FitnessProvider extends ChangeNotifier {
     ];
   }
 
-  // Pipeline debug getters — all cheap in-memory reads.
+  // Pipeline debug getters - all cheap in-memory reads.
   String? get debugLastRefreshSource => _debugLastRefreshSource;
   DateTime? get debugLastRefreshStartedAt => _debugLastRefreshStartedAt;
   DateTime? get debugLastRefreshCompletedAt => _debugLastRefreshCompletedAt;
@@ -155,7 +156,7 @@ class FitnessProvider extends ChangeNotifier {
   /// Today's steps by date matching (vs todaySteps which uses .last position).
   int get debugTodayStepsDateMatch => stepsForDate(DateTime.now());
 
-  /// Last ≤5 step records: (dateKey, steps). Cheap slice — no DB access.
+  /// Last <=5 step records: (dateKey, steps). Cheap slice - no DB access.
   List<({String dateKey, int steps})> get debugStepRecordsPreview {
     const limit = 5;
     final src = _stepsHistory.length > limit
@@ -180,7 +181,7 @@ class FitnessProvider extends ChangeNotifier {
   int get stepsMonthTotal => _recentStepsHistory(_defaultHistoryDays)
       .fold(0, (sum, r) => sum + r.steps);
 
-  // ─── Computed calorie totals ──────────────────────────────────────────────
+  // --- Computed calorie totals ----------------------------------------------
 
   double get activeCaloriesBurnedToday =>
       _activeCaloriesHistory.isNotEmpty ? _activeCaloriesHistory.last : 0;
@@ -197,12 +198,15 @@ class FitnessProvider extends ChangeNotifier {
       _recentCaloriesHistory(_defaultHistoryDays)
           .fold<double>(0.0, (sum, v) => sum + v);
 
-  // ─── Latest weight ────────────────────────────────────────────────────────
+  double get basalCaloriesBurnedToday =>
+      _basalCaloriesHistory.isNotEmpty ? _basalCaloriesHistory.last : 0;
+
+  // --- Latest weight --------------------------------------------------------
 
   double? get latestWeight =>
       _weightHistory.isNotEmpty ? _weightHistory.last.weight : null;
 
-  // ─── Date-range queries (delegated to FitnessQueries) ─────────────────────
+  // --- Date-range queries (delegated to FitnessQueries) ---------------------
 
   int stepsForDate(DateTime date) =>
       FitnessQueries.stepsForDate(_stepsHistory, date);
@@ -217,9 +221,17 @@ class FitnessProvider extends ChangeNotifier {
       FitnessQueries.activeCaloriesBurnedForDate(
           _stepsHistory, _activeCaloriesHistory, date);
 
+  double basalCaloriesBurnedForDate(DateTime date) =>
+      FitnessQueries.activeCaloriesBurnedForDate(
+          _stepsHistory, _basalCaloriesHistory, date);
+
   double activeCaloriesBurnedAvgForRange(DateTime start, DateTime end) =>
       FitnessQueries.activeCaloriesBurnedAvgForRange(
           _stepsHistory, _activeCaloriesHistory, start, end);
+
+  double basalCaloriesBurnedAvgForRange(DateTime start, DateTime end) =>
+      FitnessQueries.activeCaloriesBurnedAvgForRange(
+          _stepsHistory, _basalCaloriesHistory, start, end);
 
   List<WeightRecord> weightHistoryForRange(DateTime start, DateTime end) =>
       FitnessQueries.weightHistoryForRange(_weightHistory, start, end);
@@ -235,7 +247,7 @@ class FitnessProvider extends ChangeNotifier {
   SleepRecord? sleepForDate(DateTime date) =>
       FitnessQueries.sleepForDate(_sleepHistory, date);
 
-  // ─── Weight aggregation (delegated to FitnessQueries) ─────────────────────
+  // --- Weight aggregation (delegated to FitnessQueries) ---------------------
 
   double? previousWeightBefore(DateTime date) =>
       FitnessQueries.previousWeightBefore(_weightHistory, date);
@@ -258,15 +270,15 @@ class FitnessProvider extends ChangeNotifier {
   List<WeightChartPoint> monthlyWeightChart(int months) =>
       FitnessQueries.monthlyWeightChart(_weightHistory, months);
 
-  // ─── Sleep history ────────────────────────────────────────────────────────
+  // --- Sleep history --------------------------------------------------------
 
   Duration? avgSleepForRange(DateTime start, DateTime end) =>
       FitnessQueries.avgSleepForRange(_sleepHistory, start, end);
 
-  // ─── Public methods ───────────────────────────────────────────────────────
+  // --- Public methods -------------------------------------------------------
 
   /// Checks HC availability and permissions, then loads data from the local
-  /// DB cache. No Health Connect data reads — safe on every app start/resume.
+  /// DB cache. No Health Connect data reads - safe on every app start/resume.
   /// Also sets up live DB watchers so UI updates when background task writes data.
   Future<void> initialize() async {
     if (_inFlight) return;
@@ -288,7 +300,7 @@ class FitnessProvider extends ChangeNotifier {
         await _refreshBackgroundAccess(interactive: false);
         _loadFromDb();
 
-        // Set up live DB watcher — when background task writes data, reload it.
+        // Set up live DB watcher - when background task writes data, reload it.
         _dbChangeSubscription?.cancel();
         _dbChangeSubscription = _db.watchForChanges().listen((_) {
           _debugLastDbWatcherFiredAt = DateTime.now();
@@ -360,7 +372,7 @@ class FitnessProvider extends ChangeNotifier {
         lastAttempt != null &&
         now.difference(lastAttempt) < _appOpenRefreshMinInterval) {
       AppLog.health.debug(
-        'refreshOnAppOpen() skipped — throttled',
+        'refreshOnAppOpen() skipped - throttled',
         payload: 'lastAttempt=${lastAttempt.toIso8601String()}',
       );
       return;
@@ -374,7 +386,7 @@ class FitnessProvider extends ChangeNotifier {
 
     if (!_isHealthConnectAvailable || !_hasPermissions) {
       AppLog.health.debug(
-        'refreshOnAppOpen() skipped — Health Connect not ready',
+        'refreshOnAppOpen() skipped - Health Connect not ready',
         payload:
             'available=$_isHealthConnectAvailable permissions=$_hasPermissions',
       );
@@ -388,8 +400,8 @@ class FitnessProvider extends ChangeNotifier {
 
   /// Fetches fresh data from HC and updates the DB.
   ///
-  /// Quota error → silent failure: DB data preserved, [lastSyncedAt] unchanged.
-  /// Other errors → [errorMessage] set as usual.
+  /// Quota error -> silent failure: DB data preserved, [lastSyncedAt] unchanged.
+  /// Other errors -> [errorMessage] set as usual.
   Future<void> refresh() async {
     if (_inFlight) return;
     if (!_isHealthConnectAvailable || !_hasPermissions) {
@@ -469,7 +481,7 @@ class FitnessProvider extends ChangeNotifier {
     )));
   }
 
-  /// Background-safe variant of [refresh] – never shows interactive dialogs.
+  /// Background-safe variant of [refresh] - never shows interactive dialogs.
   /// Safe to call from a WorkManager isolate.
   Future<void> refreshBackground({String source = 'background'}) async {
     if (_inFlight) return;
@@ -503,7 +515,7 @@ class FitnessProvider extends ChangeNotifier {
         syncError = 'background_permission_missing';
         _debugLastRefreshError = syncError;
         AppLog.health.warn(
-          'FitnessProvider.refreshBackground() skipped — missing Health Connect background permission',
+          'FitnessProvider.refreshBackground() skipped - missing Health Connect background permission',
         );
         _loadFromDb();
       } else {
@@ -681,12 +693,13 @@ class FitnessProvider extends ChangeNotifier {
     }
   }
 
-  // ─── Private ──────────────────────────────────────────────────────────────
+  // --- Private --------------------------------------------------------------
 
-  /// Synchronous — HealthDatabase pre-loads everything from Isar in open().
+  /// Synchronous - HealthDatabase pre-loads everything from Isar in open().
   void _loadFromDb() {
     _stepsHistory = _db.stepsHistory;
     _activeCaloriesHistory = _db.caloriesHistory;
+    _basalCaloriesHistory = _db.basalCaloriesHistory;
     _weightHistory = _db.weightHistory;
     _latestBodyFat = _db.latestBodyFat;
     _workoutPermissionGranted = _db.workoutPermission;
@@ -696,7 +709,7 @@ class FitnessProvider extends ChangeNotifier {
     _lastSyncedAt = _db.lastSyncedAt;
     AppLog.app.warn(
       'FitnessProvider(${identityHashCode(this)}): _loadFromDb from '
-      'HealthDatabase(${identityHashCode(_db)}) — '
+      'HealthDatabase(${identityHashCode(_db)}) - '
       'dbSteps=${_db.stepsHistory.length}, '
       'dbLast=${_db.stepsHistory.isEmpty ? "none" : "${_fmtDateKey(_db.stepsHistory.last.date)}=${_db.stepsHistory.last.steps}"}, '
       'dbToday=${_db.stepsHistory.where((r) => _fmtDateKey(r.date) == _fmtDateKey(DateTime.now())).map((r) => r.steps).toList()}, '
@@ -778,7 +791,7 @@ class FitnessProvider extends ChangeNotifier {
 
     List<StepsRecord>? fetchedSteps;
 
-    // ─── Steps ──────────────────────────────────────────────────────────────
+    // --- Steps --------------------------------------------------------------
     try {
       fetchedSteps = await _service.getStepsHistory(days);
       fetchedSteps = _preserveCachedStepsOnSuspiciousZeroRead(fetchedSteps);
@@ -807,18 +820,26 @@ class FitnessProvider extends ChangeNotifier {
       );
     }
 
-    // ─── Active calories ────────────────────────────────────────────────────
+    // --- Active calories ----------------------------------------------------
     try {
       final calories = await _service.getActiveCaloriesHistory(days);
+      var basalCalories = <double>[];
+      try {
+        basalCalories = await _service.getBasalCaloriesHistory(days);
+      } catch (e) {
+        failedGroups.add(
+            _isQuotaError(e) ? 'basalCalories_quota' : 'basalCalories_error');
+      }
 
       // Current calorie model is index-aligned to step dates.
       // If steps failed, do not guess date keys for calories in this refactor.
-      if (calories.isNotEmpty &&
+      if ((calories.isNotEmpty || basalCalories.isNotEmpty) &&
           fetchedSteps != null &&
           fetchedSteps.isNotEmpty) {
         await _db.saveCaloriesPartial(
           dateReference: fetchedSteps,
           calories: calories,
+          basalCalories: basalCalories,
         );
         succeededGroups.add('calories');
         anySuccess = true;
@@ -831,7 +852,7 @@ class FitnessProvider extends ChangeNotifier {
       anyFailure = true;
     }
 
-    // ─── Weight ─────────────────────────────────────────────────────────────
+    // --- Weight -------------------------------------------------------------
     try {
       final weight = await _service.getWeightHistory(days);
 
@@ -848,7 +869,7 @@ class FitnessProvider extends ChangeNotifier {
       anyFailure = true;
     }
 
-    // ─── Latest body fat ────────────────────────────────────────────────────
+    // --- Latest body fat ----------------------------------------------------
     try {
       final latestBodyFat = await _service.getLatestBodyFat();
 
@@ -863,7 +884,7 @@ class FitnessProvider extends ChangeNotifier {
       anyFailure = true;
     }
 
-    // ─── Workout permission + activities ────────────────────────────────────
+    // --- Workout permission + activities ------------------------------------
     try {
       final workoutPermission = await _service.hasWorkoutPermission() == true;
       _workoutPermissionGranted = workoutPermission;
@@ -901,7 +922,7 @@ class FitnessProvider extends ChangeNotifier {
       anyFailure = true;
     }
 
-    // ─── Sleep ──────────────────────────────────────────────────────────────
+    // --- Sleep --------------------------------------------------------------
     try {
       final sleep = await _service.getSleepHistory(days);
 
@@ -949,6 +970,7 @@ class FitnessProvider extends ChangeNotifier {
 
     List<StepsRecord> steps;
     List<double> calories;
+    List<double> basalCalories;
     List<WeightRecord> weight;
     List<SleepRecord> sleep;
     double? latestBodyFat;
@@ -971,6 +993,16 @@ class FitnessProvider extends ChangeNotifier {
     } catch (e) {
       if (_isQuotaError(e)) throw const _QuotaExceededException();
       rethrow;
+    }
+
+    try {
+      basalCalories = await _service.getBasalCaloriesHistoryForRange(
+        rangeStart,
+        rangeEndExclusive,
+      );
+    } catch (e) {
+      if (_isQuotaError(e)) throw const _QuotaExceededException();
+      basalCalories = const [];
     }
 
     try {
@@ -1017,12 +1049,16 @@ class FitnessProvider extends ChangeNotifier {
     if (calories.length > steps.length) {
       calories = calories.sublist(0, steps.length);
     }
+    if (basalCalories.length > steps.length) {
+      basalCalories = basalCalories.sublist(0, steps.length);
+    }
 
     _lastSyncedAt = DateTime.now();
 
     await _db.saveOverviewRange(
       steps: steps,
       calories: calories,
+      basalCalories: basalCalories,
       weight: weight,
       sleep: sleep,
       latestBodyFat: latestBodyFat,
