@@ -1,14 +1,13 @@
 import 'package:flutter/foundation.dart';
 
+import 'bushido_sheet_layout.dart';
+
 @immutable
 class IsoWeek {
   final int year;
   final int weekNumber;
   final DateTime monday;
   final DateTime sunday;
-
-  // TODO: move to BushidoSheetLayout config (Phase 1)
-  static const _layoutVersion = 'v1';
 
   const IsoWeek._({
     required this.year,
@@ -38,7 +37,7 @@ class IsoWeek {
   }
 
   String get marker =>
-      'BUSHIDO_WEEK:$year-W${weekNumber.toString().padLeft(2, '0')}:$_layoutVersion';
+      'BUSHIDO_WEEK:$year-W${weekNumber.toString().padLeft(2, '0')}:${BushidoSheetLayout.layoutVersion}';
 
   @override
   bool operator ==(Object other) =>

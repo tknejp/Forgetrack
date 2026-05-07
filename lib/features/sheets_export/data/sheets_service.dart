@@ -141,6 +141,39 @@ class SheetsService {
     );
   }
 
+  /// Returns the numeric `sheetId` for the named tab, or `null` when the tab
+  /// is missing. Required by batch-update operations that target a specific
+  /// sheet via `GridRange` (e.g. data validations, cell formatting).
+  Future<int?> getSheetId({
+    required String spreadsheetId,
+    required String sheetName,
+  }) async {
+    _assertReady();
+    final meta = await _api!.spreadsheets.get(spreadsheetId);
+    return (meta.sheets ?? [])
+        .firstWhere(
+          (s) => s.properties?.title == sheetName,
+          orElse: () => sheets.Sheet(),
+        )
+        .properties
+        ?.sheetId;
+  }
+
+  /// Generic wrapper around `spreadsheets.batchUpdate`. Use for operations
+  /// that don't fit the `values.{get,update,clear}` API (data validations,
+  /// formatting, sheet structure changes).
+  Future<void> batchUpdate({
+    required String spreadsheetId,
+    required List<sheets.Request> requests,
+  }) async {
+    _assertReady();
+    if (requests.isEmpty) return;
+    await _api!.spreadsheets.batchUpdate(
+      sheets.BatchUpdateSpreadsheetRequest(requests: requests),
+      spreadsheetId,
+    );
+  }
+
   /// Applies formatting to the export sheet:
   /// - Header row: bold text + dark background + bottom border
   /// - Data rows: alternating background colors per week with vivid colors

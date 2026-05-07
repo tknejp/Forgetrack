@@ -13,6 +13,10 @@ class AppConstants {
   /// Single canonical sheet/tab used by the unified export-by-date pipeline.
   static const String exportSheetName = 'Forgetrack';
 
+  /// Tab dedicated to the Bushido coach-log weekly report. Lives in the same
+  /// spreadsheet as [exportSheetName] but never overlaps with the raw export.
+  static const String coachLogSheetName = 'Coach Log';
+
   /// Header for the merge-key column. Always column A.
   static const String exportDateColumn = 'date';
 
@@ -31,6 +35,6 @@ class AppConstants {
   static const int dailyStepGoal = 10000;
   static const int weeklyStepGoal = 70000;
   static const int monthlyStepGoal = 300000;
-  static const double defaultCalorieGoal = 2000;
-  static const double defaultWeightGoal = 75.0;
+  static const double defaultCalorieGoal = 2650;
+  static const double defaultWeightGoal = 100;
 }
