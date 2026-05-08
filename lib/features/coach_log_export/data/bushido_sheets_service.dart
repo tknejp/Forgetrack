@@ -316,9 +316,12 @@ class BushidoSheetsService {
   }
 
   /// Inserts [BushidoSheetLayout.weekBlockHeight + spacerRowsBetweenWeeks]
-  /// empty rows at [insertAtRow] (1-indexed), shifts cached row positions for
-  /// every block at or below that row, then writes the new block content into
-  /// the freshly-inserted slot.
+  /// empty rows at [insertAtRow] (1-indexed) and writes the new block content
+  /// into the freshly-inserted slot. The whole operation runs in a single
+  /// atomic `batchUpdate` so Google processes the row insertion, content
+  /// writes, and table/format requests together — splitting them across
+  /// separate API calls intermittently produced 500 Internal errors when
+  /// AddTableRequest fired immediately after a row insertion.
   Future<int> _insertWeekBlock({
     required String spreadsheetId,
     required int sheetId,
@@ -329,44 +332,110 @@ class BushidoSheetsService {
   }) async {
     final rowsToInsert = BushidoSheetLayout.weekBlockHeight +
         BushidoSheetLayout.spacerRowsBetweenWeeks;
+    final block = _buildBlockGrid(week: week, startRow: insertAtRow);
+    final blockStart0 = insertAtRow - 1;
+    final markerRow0 = blockStart0 + BushidoSheetLayout.headerRowOffset;
+    final markerCol0 = BushidoSheetLayout.hiddenMarkerColumn - 1;
+
+    final requests = <sheets.Request>[
+      // 1) Insert empty rows. Inherit from the row after so the inserted rows
+      //    don't pick up any header-section quirks.
+      sheets.Request(
+        insertDimension: sheets.InsertDimensionRequest(
+          inheritFromBefore: false,
+          range: sheets.DimensionRange(
+            sheetId: sheetId,
+            dimension: 'ROWS',
+            startIndex: blockStart0,
+            endIndex: blockStart0 + rowsToInsert,
+          ),
+        ),
+      ),
+      // 2) Block content (A..O across weekBlockHeight rows).
+      sheets.Request(
+        updateCells: sheets.UpdateCellsRequest(
+          range: sheets.GridRange(
+            sheetId: sheetId,
+            startRowIndex: blockStart0,
+            endRowIndex: blockStart0 + BushidoSheetLayout.weekBlockHeight,
+            startColumnIndex: 0,
+            endColumnIndex: 15,
+          ),
+          rows: block
+              .map((row) => sheets.RowData(
+                    values: row.map(_toCellData).toList(),
+                  ))
+              .toList(),
+          fields: 'userEnteredValue',
+        ),
+      ),
+      // 3) Hidden marker in column Z on the header row.
+      sheets.Request(
+        updateCells: sheets.UpdateCellsRequest(
+          range: sheets.GridRange(
+            sheetId: sheetId,
+            startRowIndex: markerRow0,
+            endRowIndex: markerRow0 + 1,
+            startColumnIndex: markerCol0,
+            endColumnIndex: markerCol0 + 1,
+          ),
+          rows: [
+            sheets.RowData(values: [_toCellData(_markerFor(week))]),
+          ],
+          fields: 'userEnteredValue',
+        ),
+      ),
+      // 4) Validations + table/format requests.
+      ..._buildValidationRequests(sheetId: sheetId, startRow: insertAtRow),
+      ..._buildFormatRequests(sheetId: sheetId, startRow: insertAtRow, week: week),
+    ];
 
     await _sheets.batchUpdate(
       spreadsheetId: spreadsheetId,
-      requests: [
-        sheets.Request(
-          insertDimension: sheets.InsertDimensionRequest(
-            // Inherit from the row above (header / spacer) so inserted rows
-            // never become members of the existing table being shifted down.
-            inheritFromBefore: true,
-            range: sheets.DimensionRange(
-              sheetId: sheetId,
-              dimension: 'ROWS',
-              startIndex: insertAtRow - 1,
-              endIndex: insertAtRow - 1 + rowsToInsert,
-            ),
-          ),
-        ),
-      ],
+      requests: requests,
     );
 
-    // Shift every cached row at or below the insertion point.
+    // Shift every cached row at or below the insertion point. Done after the
+    // batchUpdate succeeds so a server-side failure leaves the cache
+    // consistent with the actual sheet.
     for (final key in startRowCache.keys.toList()) {
       if (startRowCache[key]! >= insertAtRow) {
         startRowCache[key] = startRowCache[key]! + rowsToInsert;
       }
     }
 
-    await _writeBlockAt(
-      spreadsheetId: spreadsheetId,
-      sheetId: sheetId,
-      sheetName: sheetName,
-      week: week,
-      startRow: insertAtRow,
-    );
     AppLog.sync.success(
       'bushido.insertWeekBlock: ${week.toString()} at row $insertAtRow',
     );
     return insertAtRow;
+  }
+
+  static sheets.CellData _toCellData(Object? value) {
+    if (value == null) return sheets.CellData();
+    if (value is String) {
+      if (value.startsWith('=')) {
+        return sheets.CellData(
+          userEnteredValue: sheets.ExtendedValue(formulaValue: value),
+        );
+      }
+      return sheets.CellData(
+        userEnteredValue: sheets.ExtendedValue(stringValue: value),
+      );
+    }
+    if (value is num) {
+      return sheets.CellData(
+        userEnteredValue:
+            sheets.ExtendedValue(numberValue: value.toDouble()),
+      );
+    }
+    if (value is bool) {
+      return sheets.CellData(
+        userEnteredValue: sheets.ExtendedValue(boolValue: value),
+      );
+    }
+    return sheets.CellData(
+      userEnteredValue: sheets.ExtendedValue(stringValue: value.toString()),
+    );
   }
 
   /// Writes block content + marker + validations/formatting at [startRow].
@@ -501,52 +570,55 @@ class BushidoSheetsService {
     ];
   }
 
-  /// Per-week formatting: AddTableRequests for filterable structure +
-  /// RepeatCellRequests that paint Datum/data/Trénink/Poznámka column zones,
-  /// the light-red-berry footer, and apply center alignment + rounding.
+  /// Per-week formatting:
+  ///   - Two AddTableRequests with `rowsProperties` carrying header/footer
+  ///     colors plus banded row colors. Empty `rowsProperties` (or column-
+  ///     scoped RepeatCellRequest with `backgroundColorStyle` on table
+  ///     cells) reliably triggered server-side 500s, so we drive the entire
+  ///     row palette through the table itself.
+  ///   - RepeatCellRequest for white bold 12pt text on the header/footer.
+  ///   - RepeatCellRequest for centered alignment over the table area.
   List<sheets.Request> _buildFormatRequests({
     required int sheetId,
     required int startRow,
     required IsoWeek week,
   }) {
-    // 0-indexed row positions (GridRange uses 0-based half-open ranges).
     final wHdr0 = startRow - 1 + BushidoSheetLayout.dailyHeaderRowOffset;
-    final wDataStart0 = startRow - 1 + BushidoSheetLayout.firstDayRowOffset;
-    final wDataEnd0 = wDataStart0 + BushidoSheetLayout.daysPerWeek;
     final wFtr0 = startRow - 1 + BushidoSheetLayout.averageRowOffset;
 
     final tHdr0 = startRow - 1 + BushidoSheetLayout.targetHeaderRowOffset;
-    final tDataStart0 =
-        startRow - 1 + BushidoSheetLayout.firstTargetMetricRowOffset;
-    final tDataEnd0 =
-        tDataStart0 + BushidoExportConfig.targetMetrics.length;
+    final tDataEnd0 = startRow -
+        1 +
+        BushidoSheetLayout.firstTargetMetricRowOffset +
+        BushidoExportConfig.targetMetrics.length;
 
-    // Google-Sheets-palette approximations.
-    final csRedBerry = _cs(204, 0, 0);          // #CC0000
-    final csLightRedBerry1 = _cs(221, 126, 107); // #DD7E6B
-    final csLightGray3 = _cs(243, 243, 243);     // #F3F3F3
-    final csGray = _cs(217, 217, 217);           // #D9D9D9
-    final csLightYellow3 = _cs(255, 242, 204);   // #FFF2CC
-    final csTargetHdr = _cs(204, 204, 204);      // #CCCCCC
+    final csRedBerry = _cs(204, 0, 0);            // #CC0000
+    final csLightRedBerry1 = _cs(221, 126, 107);  // #DD7E6B
+    final csLightGray3 = _cs(243, 243, 243);      // #F3F3F3
+    final csGray = _cs(217, 217, 217);            // #D9D9D9
+    final csTargetHdr = _cs(204, 204, 204);       // #CCCCCC
     final csWhite = _cs(255, 255, 255);
-    final csBlack = _cs(0, 0, 0);
 
-    // Table names must be valid identifiers (letters/digits/underscore).
     final wk = '${week.year}_W${week.weekNumber.toString().padLeft(2, '0')}';
 
     return [
-      // Weekly data table (A:L, header + 7 days + avg footer). Banded
-      // colors are intentionally omitted — column-zone backgrounds below.
+      // Weekly data table (A:L, header + 7 days + avg footer).
       sheets.Request(
         addTable: sheets.AddTableRequest(
           table: sheets.Table(
-            name: 'Tyden_$wk',
+            name: 'Týden_$wk',
             range: sheets.GridRange(
               sheetId: sheetId,
               startRowIndex: wHdr0,
               endRowIndex: wFtr0 + 1,
               startColumnIndex: 0,
               endColumnIndex: 12,
+            ),
+            rowsProperties: sheets.TableRowsProperties(
+              headerColorStyle: csRedBerry,
+              footerColorStyle: csLightRedBerry1,
+              firstBandColorStyle: csLightGray3,
+              secondBandColorStyle: csGray,
             ),
           ),
         ),
@@ -555,7 +627,7 @@ class BushidoSheetsService {
       sheets.Request(
         addTable: sheets.AddTableRequest(
           table: sheets.Table(
-            name: 'Cile_$wk',
+            name: 'Cíle_$wk',
             range: sheets.GridRange(
               sheetId: sheetId,
               startRowIndex: tHdr0,
@@ -563,101 +635,63 @@ class BushidoSheetsService {
               startColumnIndex: 12,
               endColumnIndex: 15,
             ),
+            rowsProperties: sheets.TableRowsProperties(
+              headerColorStyle: csTargetHdr,
+              firstBandColorStyle: csLightGray3,
+              secondBandColorStyle: csLightGray3,
+            ),
           ),
         ),
       ),
-      // Weekly table header row — red berry, white bold 12pt, centered.
+      // Weekly table header — white bold 12pt.
       _formatCells(
         sheetId: sheetId,
         startRow0: wHdr0,
         endRow0: wHdr0 + 1,
         startCol: 0,
         endCol: 12,
-        backgroundColor: csRedBerry,
         textColor: csWhite,
         bold: true,
         fontSize: 12,
-        center: true,
       ),
-      // Datum column (A) — light gray 3.
-      _formatCells(
-        sheetId: sheetId,
-        startRow0: wDataStart0,
-        endRow0: wDataEnd0,
-        startCol: 0,
-        endCol: 1,
-        backgroundColor: csLightGray3,
-        textColor: csBlack,
-        center: true,
-      ),
-      // Auto-data columns (B..H = Váha..Kroky) — gray.
-      _formatCells(
-        sheetId: sheetId,
-        startRow0: wDataStart0,
-        endRow0: wDataEnd0,
-        startCol: 1,
-        endCol: 8,
-        backgroundColor: csGray,
-        textColor: csBlack,
-        center: true,
-      ),
-      // Trénink, Hlad, Hydratace (I..K) — light gray 3.
-      _formatCells(
-        sheetId: sheetId,
-        startRow0: wDataStart0,
-        endRow0: wDataEnd0,
-        startCol: 8,
-        endCol: 11,
-        backgroundColor: csLightGray3,
-        textColor: csBlack,
-        center: true,
-      ),
-      // Poznámka (L) — light yellow 3.
-      _formatCells(
-        sheetId: sheetId,
-        startRow0: wDataStart0,
-        endRow0: wDataEnd0,
-        startCol: 11,
-        endCol: 12,
-        backgroundColor: csLightYellow3,
-        textColor: csBlack,
-        center: true,
-      ),
-      // Footer (avg) row — light red berry 1, white bold 12pt, centered.
+      // Weekly table footer (avg row) — white bold 12pt.
       _formatCells(
         sheetId: sheetId,
         startRow0: wFtr0,
         endRow0: wFtr0 + 1,
         startCol: 0,
         endCol: 12,
-        backgroundColor: csLightRedBerry1,
         textColor: csWhite,
         bold: true,
         fontSize: 12,
-        center: true,
       ),
-      // Target table header — gray, white bold 12pt, centered.
+      // Target table header — white bold 12pt.
       _formatCells(
         sheetId: sheetId,
         startRow0: tHdr0,
         endRow0: tHdr0 + 1,
         startCol: 12,
         endCol: 15,
-        backgroundColor: csTargetHdr,
         textColor: csWhite,
         bold: true,
         fontSize: 12,
-        center: true,
       ),
-      // Target table data rows — light gray 3, dark text, centered.
+      // Center alignment across the whole weekly table area.
       _formatCells(
         sheetId: sheetId,
-        startRow0: tDataStart0,
+        startRow0: wHdr0,
+        endRow0: wFtr0 + 1,
+        startCol: 0,
+        endCol: 12,
+        center: true,
+      ),
+      // Center alignment across the whole target table area.
+      _formatCells(
+        sheetId: sheetId,
+        startRow0: tHdr0,
         endRow0: tDataEnd0,
         startCol: 12,
         endCol: 15,
-        backgroundColor: csLightGray3,
-        textColor: csBlack,
         center: true,
       ),
     ];

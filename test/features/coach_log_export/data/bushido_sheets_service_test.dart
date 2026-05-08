@@ -286,9 +286,21 @@ void main() {
             BushidoSheetLayout.spacerRowsBetweenWeeks,
       );
 
-      // Marker for the new block landed at Z9.
-      final markerWrite = _findWrite(fake, '!Z9');
-      expect(markerWrite.values.first.first,
+      // Marker for the new block landed at Z9 (issued as an UpdateCellsRequest
+      // inside the atomic insert batchUpdate).
+      final markerCellRequests = fake.batchRequests
+          .where((r) => r.updateCells != null)
+          .where((r) {
+        final range = r.updateCells!.range;
+        return range != null &&
+            range.startColumnIndex == BushidoSheetLayout.hiddenMarkerColumn - 1 &&
+            range.endColumnIndex == BushidoSheetLayout.hiddenMarkerColumn &&
+            range.startRowIndex == 8;
+      }).toList();
+      expect(markerCellRequests.length, 1);
+      final markerCell =
+          markerCellRequests.single.updateCells!.rows!.first.values!.first;
+      expect(markerCell.userEnteredValue?.stringValue,
           'BUSHIDO_WEEK:${older.year}-W${older.weekNumber.toString().padLeft(2, '0')}:v1');
     });
 
