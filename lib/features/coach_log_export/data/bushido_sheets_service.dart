@@ -133,7 +133,8 @@ class BushidoSheetsService {
   }
 
   /// Returns the `startRow` for [week]. Reads from [startRowCache]; if missing,
-  /// appends a new empty block to the end of the sheet and updates the cache.
+  /// either appends (newer than all existing) or inserts (older / between
+  /// existing weeks) a new block, keeping the sheet in chronological order.
   Future<int> ensureWeekBlock({
     required String spreadsheetId,
     required int sheetId,
@@ -144,13 +145,33 @@ class BushidoSheetsService {
     final cached = startRowCache[week];
     if (cached != null) return cached;
 
-    final startRow = await _appendWeekBlock(
-      spreadsheetId: spreadsheetId,
-      sheetId: sheetId,
-      sheetName: sheetName,
-      week: week,
-      startRowCache: startRowCache,
-    );
+    // Find the existing week that should come *after* the new one, if any.
+    IsoWeek? successor;
+    int? successorRow;
+    for (final entry in startRowCache.entries) {
+      if (!entry.key.monday.isAfter(week.monday)) continue;
+      if (successor == null || entry.key.monday.isBefore(successor.monday)) {
+        successor = entry.key;
+        successorRow = entry.value;
+      }
+    }
+
+    final startRow = successor == null
+        ? await _appendWeekBlock(
+            spreadsheetId: spreadsheetId,
+            sheetId: sheetId,
+            sheetName: sheetName,
+            week: week,
+            startRowCache: startRowCache,
+          )
+        : await _insertWeekBlock(
+            spreadsheetId: spreadsheetId,
+            sheetId: sheetId,
+            sheetName: sheetName,
+            week: week,
+            insertAtRow: successorRow!,
+            startRowCache: startRowCache,
+          );
     startRowCache[week] = startRow;
     return startRow;
   }
@@ -281,8 +302,82 @@ class BushidoSheetsService {
       sheetName: sheetName,
       startRowCache: startRowCache,
     );
+    await _writeBlockAt(
+      spreadsheetId: spreadsheetId,
+      sheetId: sheetId,
+      sheetName: sheetName,
+      week: week,
+      startRow: startRow,
+    );
+    AppLog.sync.success(
+      'bushido.appendWeekBlock: ${week.toString()} at row $startRow',
+    );
+    return startRow;
+  }
 
-    // 1) Block content (A:O across weekBlockHeight rows).
+  /// Inserts [BushidoSheetLayout.weekBlockHeight + spacerRowsBetweenWeeks]
+  /// empty rows at [insertAtRow] (1-indexed), shifts cached row positions for
+  /// every block at or below that row, then writes the new block content into
+  /// the freshly-inserted slot.
+  Future<int> _insertWeekBlock({
+    required String spreadsheetId,
+    required int sheetId,
+    required String sheetName,
+    required IsoWeek week,
+    required int insertAtRow,
+    required Map<IsoWeek, int> startRowCache,
+  }) async {
+    final rowsToInsert = BushidoSheetLayout.weekBlockHeight +
+        BushidoSheetLayout.spacerRowsBetweenWeeks;
+
+    await _sheets.batchUpdate(
+      spreadsheetId: spreadsheetId,
+      requests: [
+        sheets.Request(
+          insertDimension: sheets.InsertDimensionRequest(
+            // Inherit from the row above (header / spacer) so inserted rows
+            // never become members of the existing table being shifted down.
+            inheritFromBefore: true,
+            range: sheets.DimensionRange(
+              sheetId: sheetId,
+              dimension: 'ROWS',
+              startIndex: insertAtRow - 1,
+              endIndex: insertAtRow - 1 + rowsToInsert,
+            ),
+          ),
+        ),
+      ],
+    );
+
+    // Shift every cached row at or below the insertion point.
+    for (final key in startRowCache.keys.toList()) {
+      if (startRowCache[key]! >= insertAtRow) {
+        startRowCache[key] = startRowCache[key]! + rowsToInsert;
+      }
+    }
+
+    await _writeBlockAt(
+      spreadsheetId: spreadsheetId,
+      sheetId: sheetId,
+      sheetName: sheetName,
+      week: week,
+      startRow: insertAtRow,
+    );
+    AppLog.sync.success(
+      'bushido.insertWeekBlock: ${week.toString()} at row $insertAtRow',
+    );
+    return insertAtRow;
+  }
+
+  /// Writes block content + marker + validations/formatting at [startRow].
+  /// Shared by both append and insert paths.
+  Future<void> _writeBlockAt({
+    required String spreadsheetId,
+    required int sheetId,
+    required String sheetName,
+    required IsoWeek week,
+    required int startRow,
+  }) async {
     final block = _buildBlockGrid(week: week, startRow: startRow);
     final endRow = startRow + BushidoSheetLayout.weekBlockHeight - 1;
     await _sheets.writeRange(
@@ -291,7 +386,6 @@ class BushidoSheetsService {
       values: block,
     );
 
-    // 2) Hidden marker in column Z on the header row.
     final markerRow = startRow + BushidoSheetLayout.headerRowOffset;
     await _sheets.writeRange(
       spreadsheetId: spreadsheetId,
@@ -301,20 +395,13 @@ class BushidoSheetsService {
       ],
     );
 
-    // 3) Data validations + table formatting.
-    final requests = [
-      ..._buildValidationRequests(sheetId: sheetId, startRow: startRow),
-      ..._buildFormatRequests(sheetId: sheetId, startRow: startRow, week: week),
-    ];
     await _sheets.batchUpdate(
       spreadsheetId: spreadsheetId,
-      requests: requests,
+      requests: [
+        ..._buildValidationRequests(sheetId: sheetId, startRow: startRow),
+        ..._buildFormatRequests(sheetId: sheetId, startRow: startRow, week: week),
+      ],
     );
-
-    AppLog.sync.success(
-      'bushido.appendWeekBlock: ${week.toString()} at row $startRow',
-    );
-    return startRow;
   }
 
   Future<int> _resolveAppendStartRow({
@@ -414,44 +501,52 @@ class BushidoSheetsService {
     ];
   }
 
-  /// Per-week formatting: two AddTableRequests (daily data + target box) and
-  /// RepeatCellRequests for white bold 12pt on header/footer rows.
+  /// Per-week formatting: AddTableRequests for filterable structure +
+  /// RepeatCellRequests that paint Datum/data/Trénink/Poznámka column zones,
+  /// the light-red-berry footer, and apply center alignment + rounding.
   List<sheets.Request> _buildFormatRequests({
     required int sheetId,
     required int startRow,
     required IsoWeek week,
   }) {
-    // GridRange uses 0-based indices. startRow is 1-based.
-    // Weekly data table: dailyHeaderRow (offset 1) → avgRow (offset 9).
+    // 0-indexed row positions (GridRange uses 0-based half-open ranges).
     final wHdr0 = startRow - 1 + BushidoSheetLayout.dailyHeaderRowOffset;
+    final wDataStart0 = startRow - 1 + BushidoSheetLayout.firstDayRowOffset;
+    final wDataEnd0 = wDataStart0 + BushidoSheetLayout.daysPerWeek;
     final wFtr0 = startRow - 1 + BushidoSheetLayout.averageRowOffset;
 
-    // Target table: targetHeaderRow (offset 1) → last metric row.
     final tHdr0 = startRow - 1 + BushidoSheetLayout.targetHeaderRowOffset;
-    final tEnd0 = startRow - 1 +
-        BushidoSheetLayout.firstTargetMetricRowOffset +
-        BushidoExportConfig.targetMetrics.length;
+    final tDataStart0 =
+        startRow - 1 + BushidoSheetLayout.firstTargetMetricRowOffset;
+    final tDataEnd0 =
+        tDataStart0 + BushidoExportConfig.targetMetrics.length;
 
-    final wk = '${week.year}-W${week.weekNumber.toString().padLeft(2, '0')}';
+    // Google-Sheets-palette approximations.
+    final csRedBerry = _cs(204, 0, 0);          // #CC0000
+    final csLightRedBerry1 = _cs(221, 126, 107); // #DD7E6B
+    final csLightGray3 = _cs(243, 243, 243);     // #F3F3F3
+    final csGray = _cs(217, 217, 217);           // #D9D9D9
+    final csLightYellow3 = _cs(255, 242, 204);   // #FFF2CC
+    final csTargetHdr = _cs(204, 204, 204);      // #CCCCCC
+    final csWhite = _cs(255, 255, 255);
+    final csBlack = _cs(0, 0, 0);
+
+    // Table names must be valid identifiers (letters/digits/underscore).
+    final wk = '${week.year}_W${week.weekNumber.toString().padLeft(2, '0')}';
 
     return [
-      // Weekly data table (A:L, header + 7 days + avg footer).
+      // Weekly data table (A:L, header + 7 days + avg footer). Banded
+      // colors are intentionally omitted — column-zone backgrounds below.
       sheets.Request(
         addTable: sheets.AddTableRequest(
           table: sheets.Table(
-            name: 'Týden $wk',
+            name: 'Tyden_$wk',
             range: sheets.GridRange(
               sheetId: sheetId,
               startRowIndex: wHdr0,
               endRowIndex: wFtr0 + 1,
               startColumnIndex: 0,
               endColumnIndex: 12,
-            ),
-            rowsProperties: sheets.TableRowsProperties(
-              headerColorStyle: _cs(204, 0, 0),     // Red Berry #CC0000
-              footerColorStyle: _cs(204, 0, 0),
-              firstBandColorStyle: _cs(10, 10, 10),  // #0A0A0A
-              secondBandColorStyle: _cs(20, 20, 20), // #141414
             ),
           ),
         ),
@@ -460,45 +555,110 @@ class BushidoSheetsService {
       sheets.Request(
         addTable: sheets.AddTableRequest(
           table: sheets.Table(
-            name: 'Cíle $wk',
+            name: 'Cile_$wk',
             range: sheets.GridRange(
               sheetId: sheetId,
               startRowIndex: tHdr0,
-              endRowIndex: tEnd0,
+              endRowIndex: tDataEnd0,
               startColumnIndex: 12,
               endColumnIndex: 15,
-            ),
-            rowsProperties: sheets.TableRowsProperties(
-              headerColorStyle: _cs(67, 67, 67),    // #434343 dark grey
-              firstBandColorStyle: _cs(30, 30, 30), // #1E1E1E
-              secondBandColorStyle: _cs(40, 40, 40),// #282828
             ),
           ),
         ),
       ),
-      // White bold 12pt on weekly table header row.
-      _textFormatRequest(
+      // Weekly table header row — red berry, white bold 12pt, centered.
+      _formatCells(
         sheetId: sheetId,
         startRow0: wHdr0,
         endRow0: wHdr0 + 1,
         startCol: 0,
         endCol: 12,
+        backgroundColor: csRedBerry,
+        textColor: csWhite,
+        bold: true,
+        fontSize: 12,
+        center: true,
       ),
-      // White bold 12pt on weekly table footer (avg) row.
-      _textFormatRequest(
+      // Datum column (A) — light gray 3.
+      _formatCells(
+        sheetId: sheetId,
+        startRow0: wDataStart0,
+        endRow0: wDataEnd0,
+        startCol: 0,
+        endCol: 1,
+        backgroundColor: csLightGray3,
+        textColor: csBlack,
+        center: true,
+      ),
+      // Auto-data columns (B..H = Váha..Kroky) — gray.
+      _formatCells(
+        sheetId: sheetId,
+        startRow0: wDataStart0,
+        endRow0: wDataEnd0,
+        startCol: 1,
+        endCol: 8,
+        backgroundColor: csGray,
+        textColor: csBlack,
+        center: true,
+      ),
+      // Trénink, Hlad, Hydratace (I..K) — light gray 3.
+      _formatCells(
+        sheetId: sheetId,
+        startRow0: wDataStart0,
+        endRow0: wDataEnd0,
+        startCol: 8,
+        endCol: 11,
+        backgroundColor: csLightGray3,
+        textColor: csBlack,
+        center: true,
+      ),
+      // Poznámka (L) — light yellow 3.
+      _formatCells(
+        sheetId: sheetId,
+        startRow0: wDataStart0,
+        endRow0: wDataEnd0,
+        startCol: 11,
+        endCol: 12,
+        backgroundColor: csLightYellow3,
+        textColor: csBlack,
+        center: true,
+      ),
+      // Footer (avg) row — light red berry 1, white bold 12pt, centered.
+      _formatCells(
         sheetId: sheetId,
         startRow0: wFtr0,
         endRow0: wFtr0 + 1,
         startCol: 0,
         endCol: 12,
+        backgroundColor: csLightRedBerry1,
+        textColor: csWhite,
+        bold: true,
+        fontSize: 12,
+        center: true,
       ),
-      // White bold 12pt on target table header row.
-      _textFormatRequest(
+      // Target table header — gray, white bold 12pt, centered.
+      _formatCells(
         sheetId: sheetId,
         startRow0: tHdr0,
         endRow0: tHdr0 + 1,
         startCol: 12,
         endCol: 15,
+        backgroundColor: csTargetHdr,
+        textColor: csWhite,
+        bold: true,
+        fontSize: 12,
+        center: true,
+      ),
+      // Target table data rows — light gray 3, dark text, centered.
+      _formatCells(
+        sheetId: sheetId,
+        startRow0: tDataStart0,
+        endRow0: tDataEnd0,
+        startCol: 12,
+        endCol: 15,
+        backgroundColor: csLightGray3,
+        textColor: csBlack,
+        center: true,
       ),
     ];
   }
@@ -511,34 +671,62 @@ class BushidoSheetsService {
   static sheets.ColorStyle _cs(int r, int g, int b) =>
       sheets.ColorStyle(rgbColor: _rgb(r, g, b));
 
-  static sheets.Request _textFormatRequest({
+  /// Builds a RepeatCellRequest covering a single rectangle. `fields` is
+  /// constructed to update only the properties whose arguments are non-null,
+  /// so existing format on unrelated properties is preserved.
+  static sheets.Request _formatCells({
     required int sheetId,
     required int startRow0,
     required int endRow0,
     required int startCol,
     required int endCol,
-  }) =>
-      sheets.Request(
-        repeatCell: sheets.RepeatCellRequest(
-          range: sheets.GridRange(
-            sheetId: sheetId,
-            startRowIndex: startRow0,
-            endRowIndex: endRow0,
-            startColumnIndex: startCol,
-            endColumnIndex: endCol,
-          ),
-          cell: sheets.CellData(
-            userEnteredFormat: sheets.CellFormat(
-              textFormat: sheets.TextFormat(
-                bold: true,
-                fontSize: 12,
-                foregroundColorStyle: _cs(255, 255, 255),
-              ),
-            ),
-          ),
-          fields: 'userEnteredFormat.textFormat',
+    sheets.ColorStyle? backgroundColor,
+    sheets.ColorStyle? textColor,
+    bool? bold,
+    int? fontSize,
+    bool center = false,
+  }) {
+    final fields = <String>[];
+    if (backgroundColor != null) {
+      fields.add('userEnteredFormat.backgroundColorStyle');
+    }
+    if (textColor != null) fields.add('userEnteredFormat.textFormat.foregroundColorStyle');
+    if (bold != null) fields.add('userEnteredFormat.textFormat.bold');
+    if (fontSize != null) fields.add('userEnteredFormat.textFormat.fontSize');
+    if (center) {
+      fields.add('userEnteredFormat.horizontalAlignment');
+      fields.add('userEnteredFormat.verticalAlignment');
+    }
+
+    final hasText = textColor != null || bold != null || fontSize != null;
+
+    return sheets.Request(
+      repeatCell: sheets.RepeatCellRequest(
+        range: sheets.GridRange(
+          sheetId: sheetId,
+          startRowIndex: startRow0,
+          endRowIndex: endRow0,
+          startColumnIndex: startCol,
+          endColumnIndex: endCol,
         ),
-      );
+        cell: sheets.CellData(
+          userEnteredFormat: sheets.CellFormat(
+            backgroundColorStyle: backgroundColor,
+            textFormat: hasText
+                ? sheets.TextFormat(
+                    foregroundColorStyle: textColor,
+                    bold: bold,
+                    fontSize: fontSize,
+                  )
+                : null,
+            horizontalAlignment: center ? 'CENTER' : null,
+            verticalAlignment: center ? 'MIDDLE' : null,
+          ),
+        ),
+        fields: fields.join(','),
+      ),
+    );
+  }
 
   // ─── Block grid construction ───────────────────────────────────────────────
 
@@ -594,8 +782,9 @@ class BushidoSheetsService {
       rowGrid[mIndex] = metric.label;
       rowGrid[mIndex + 1] = null; // coach fills the target manually
       final col = columnLetter(metric.sourceColumn.columnOffset);
+      final decimals = metric.sourceColumn == BushidoColumn.weightKg ? 1 : 0;
       rowGrid[mIndex + 2] =
-          '=IFERROR(AVERAGE($col$firstDayAbsRow:$col$lastDayAbsRow), "")';
+          '=IFERROR(ROUND(AVERAGE($col$firstDayAbsRow:$col$lastDayAbsRow), $decimals), "")';
     }
 
     // Row 9 — average row for daily auto columns.
@@ -604,8 +793,9 @@ class BushidoSheetsService {
     for (final col in BushidoExportConfig.dailyAutoColumns) {
       if (col == BushidoColumn.date) continue;
       final letter = columnLetter(col.columnOffset);
+      final decimals = col == BushidoColumn.weightKg ? 1 : 0;
       avgRow[col.columnOffset] =
-          '=IFERROR(AVERAGE($letter$firstDayAbsRow:$letter$lastDayAbsRow), "")';
+          '=IFERROR(ROUND(AVERAGE($letter$firstDayAbsRow:$letter$lastDayAbsRow), $decimals), "")';
     }
 
     // Rows 10..11 — reserve, intentionally blank.

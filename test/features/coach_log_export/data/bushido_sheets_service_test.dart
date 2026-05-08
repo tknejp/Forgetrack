@@ -245,6 +245,53 @@ void main() {
       expect(cache[w19], row);
     });
 
+    test('older week vs cached newer week → inserts via insertDimension and shifts cache', () async {
+      final fake = _FakeSheetsService();
+      // W18/2026 already in the sheet at row 9 (after the sticky header).
+      final newer = IsoWeek.fromDate(DateTime(2026, 5, 1)); // 2026-W18
+      final older = IsoWeek.fromDate(DateTime(2026, 4, 24)); // 2026-W17
+      final cache = <IsoWeek, int>{newer: 9};
+
+      final row = await _service(fake).ensureWeekBlock(
+        spreadsheetId: _spreadsheetId,
+        sheetId: 100,
+        sheetName: _sheetName,
+        week: older,
+        startRowCache: cache,
+      );
+
+      // Older block lands at the row previously occupied by the newer one,
+      // and the newer one shifted down by weekBlockHeight + spacer.
+      expect(row, 9);
+      expect(cache[older], 9);
+      expect(
+        cache[newer],
+        9 +
+            BushidoSheetLayout.weekBlockHeight +
+            BushidoSheetLayout.spacerRowsBetweenWeeks,
+      );
+
+      // An insertDimension request was issued before the new content was
+      // written.
+      final inserts = fake.batchRequests
+          .where((r) => r.insertDimension != null)
+          .toList();
+      expect(inserts.length, 1);
+      final dim = inserts.single.insertDimension!.range!;
+      expect(dim.dimension, 'ROWS');
+      expect(dim.startIndex, 8); // 0-indexed = row 9
+      expect(
+        dim.endIndex! - dim.startIndex!,
+        BushidoSheetLayout.weekBlockHeight +
+            BushidoSheetLayout.spacerRowsBetweenWeeks,
+      );
+
+      // Marker for the new block landed at Z9.
+      final markerWrite = _findWrite(fake, '!Z9');
+      expect(markerWrite.values.first.first,
+          'BUSHIDO_WEEK:${older.year}-W${older.weekNumber.toString().padLeft(2, '0')}:v1');
+    });
+
     test('two consecutive calls for the same week → only one append', () async {
       final fake = _FakeSheetsService();
       final week = IsoWeek.fromDate(DateTime(2026, 1, 1));
@@ -313,7 +360,7 @@ void main() {
         if (col == BushidoColumn.date) continue;
         final cell = avgRow[col.columnOffset];
         expect(cell, isA<String>());
-        expect((cell as String).startsWith('=IFERROR(AVERAGE('), isTrue,
+        expect((cell as String).startsWith('=IFERROR(ROUND(AVERAGE('), isTrue,
             reason: 'avg formula for ${col.name}');
       }
 
@@ -327,7 +374,7 @@ void main() {
         expect(row[mIndex], metric.label);
         expect(row[mIndex + 1], isNull, reason: 'goal cell stays blank');
         expect(row[mIndex + 2], isA<String>());
-        expect((row[mIndex + 2] as String).startsWith('=IFERROR(AVERAGE('),
+        expect((row[mIndex + 2] as String).startsWith('=IFERROR(ROUND(AVERAGE('),
             isTrue);
       }
 
