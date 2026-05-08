@@ -184,7 +184,7 @@ void main() {
       expect(fake.batchRequests, isEmpty);
     });
 
-    test('empty cache + empty sheet → appends at row 1, marker at Z1', () async {
+    test('empty cache + empty sheet → appends at row headerRows+1, marker at Z(headerRows+1)', () async {
       final fake = _FakeSheetsService();
       final week = IsoWeek.fromDate(DateTime(2026, 1, 1)); // 2026-W01
       final cache = <IsoWeek, int>{};
@@ -197,10 +197,11 @@ void main() {
         startRowCache: cache,
       );
 
-      expect(row, 1);
-      expect(cache[week], 1);
+      final expectedRow = BushidoSheetLayout.headerRows + 1;
+      expect(row, expectedRow);
+      expect(cache[week], expectedRow);
 
-      final markerWrite = _findWrite(fake, '!Z1');
+      final markerWrite = _findWrite(fake, '!Z$expectedRow');
       expect(markerWrite.values.first.first, 'BUSHIDO_WEEK:2026-W01:v1');
     });
 

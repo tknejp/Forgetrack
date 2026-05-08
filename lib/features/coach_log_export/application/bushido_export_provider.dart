@@ -90,6 +90,13 @@ class BushidoExportProvider extends ChangeNotifier {
       final weeks = isoWeeksOverlapping(start, end);
       final prep = await _sheets.prepare(l10n);
 
+      // 2b) Write the sticky profile header on the first export (idempotent).
+      await _sheets.ensureSheetHeader(
+        spreadsheetId: prep.spreadsheetId,
+        sheetId: prep.sheetId,
+        sheetName: prep.sheetName,
+      );
+
       // 3) Load existing-week index once and reuse the cache for all
       //    ensureWeekBlock calls in this run.
       final cache = await _sheets.loadExistingWeekIndex(

@@ -75,6 +75,12 @@ class _FakeSheetsService extends SheetsService {
             : const <Object?>[];
       });
     }
+    // Single Z-cell read (e.g. !Z1) — used by ensureSheetHeader.
+    final zCellMatch = _zCellRange.firstMatch(range);
+    if (zCellMatch != null) {
+      final row = int.parse(zCellMatch.group(1)!);
+      return zColumn.containsKey(row) ? [[zColumn[row]!]] : const [];
+    }
     // !A:A and other reads — empty by default.
     return const [];
   }
@@ -255,7 +261,11 @@ void main() {
         'BUSHIDO_WEEK:${wC.year}-W${wC.weekNumber.toString().padLeft(2, '0')}:v1',
         'BUSHIDO_WEEK:${nextW.year}-W${nextW.weekNumber.toString().padLeft(2, '0')}:v1',
       };
-      expect(w.fakeSheets.zColumn.values.toSet(), expectedMarkers);
+      // Filter out the sheet header marker written by ensureSheetHeader.
+      final weekMarkers = w.fakeSheets.zColumn.values
+          .where((v) => v.startsWith('BUSHIDO_WEEK:'))
+          .toSet();
+      expect(weekMarkers, expectedMarkers);
 
       // Each input week (not the seed) got a writeAutoCells call → 3 such writes.
       final autoCellsWrites = w.fakeSheets.writes

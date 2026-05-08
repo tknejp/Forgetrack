@@ -6,6 +6,13 @@ class BushidoSheetLayout {
   // rozpoznal nekompatibilní starý blok.
   static const String layoutVersion = 'v1';
 
+  // Marker pro záhlaví sheetu (zapsaný do Z1 po prvním vytvoření).
+  static const String headerMarker = 'BUSHIDO_HEADER:v1';
+
+  // Počet řádků vyhrazených pro stickovaný záhlaví (profil + Aktuální týden).
+  // Týdenní bloky začínají od řádku headerRows + 1.
+  static const int headerRows = 8;
+
   // Sloupec Z (1-indexed) obsahuje marker týdenního bloku v řádku headeru.
   static const int hiddenMarkerColumn = 26;
 

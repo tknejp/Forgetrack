@@ -211,6 +211,62 @@ class BushidoSheetsService {
     );
   }
 
+  // ─── Sheet header (Phase 6) ────────────────────────────────────────────────
+
+  /// Writes the sticky profile header (rows 1–[headerRows]) on the first call
+  /// and is a no-op on every subsequent call. Also applies sheet-wide
+  /// formatting (black background, frozen rows).
+  ///
+  /// Skipped silently if A1 is non-empty so that legacy sheets (blocks at
+  /// row 1) are never overwritten.
+  Future<void> ensureSheetHeader({
+    required String spreadsheetId,
+    required int sheetId,
+    required String sheetName,
+  }) async {
+    // Already set up?
+    final markerCell = await _sheets.readRange(
+      spreadsheetId: spreadsheetId,
+      range: '$sheetName!Z1',
+    );
+    if (markerCell.isNotEmpty &&
+        markerCell.first.isNotEmpty &&
+        markerCell.first.first?.toString() == BushidoSheetLayout.headerMarker) {
+      return;
+    }
+
+    // Legacy sheet guard: if A1 has content, leave it alone.
+    final a1 = await _sheets.readRange(
+      spreadsheetId: spreadsheetId,
+      range: '$sheetName!A1',
+    );
+    if (a1.isNotEmpty && a1.first.isNotEmpty && a1.first.first != null) {
+      AppLog.sync.warn(
+        'bushido.ensureSheetHeader: A1 non-empty — skipping (legacy sheet)',
+      );
+      return;
+    }
+
+    await _sheets.writeRange(
+      spreadsheetId: spreadsheetId,
+      range: '$sheetName!A1:L${BushidoSheetLayout.headerRows}',
+      values: _buildHeaderGrid(),
+    );
+
+    await _sheets.writeRange(
+      spreadsheetId: spreadsheetId,
+      range: '$sheetName!Z1',
+      values: [[BushidoSheetLayout.headerMarker]],
+    );
+
+    await _sheets.batchUpdate(
+      spreadsheetId: spreadsheetId,
+      requests: _buildHeaderFormatRequests(sheetId),
+    );
+
+    AppLog.sync.success('bushido.ensureSheetHeader: header written');
+  }
+
   // ─── Append ────────────────────────────────────────────────────────────────
 
   Future<int> _appendWeekBlock({
@@ -245,8 +301,11 @@ class BushidoSheetsService {
       ],
     );
 
-    // 3) Data validations (checkbox + dropdowns) on the day rows.
-    final requests = _buildValidationRequests(sheetId: sheetId, startRow: startRow);
+    // 3) Data validations + table formatting.
+    final requests = [
+      ..._buildValidationRequests(sheetId: sheetId, startRow: startRow),
+      ..._buildFormatRequests(sheetId: sheetId, startRow: startRow, week: week),
+    ];
     await _sheets.batchUpdate(
       spreadsheetId: spreadsheetId,
       requests: requests,
@@ -273,9 +332,213 @@ class BushidoSheetsService {
       spreadsheetId: spreadsheetId,
       range: '$sheetName!A:A',
     );
-    if (aColumn.isEmpty) return 1;
-    return aColumn.length + BushidoSheetLayout.spacerRowsBetweenWeeks + 1;
+    if (aColumn.isEmpty) return BushidoSheetLayout.headerRows + 1;
+    return math.max(
+      aColumn.length + BushidoSheetLayout.spacerRowsBetweenWeeks + 1,
+      BushidoSheetLayout.headerRows + 1,
+    );
   }
+
+  // ─── Header grid & format helpers (Phase 6) ──────────────────────────────
+
+  /// Static profile placeholder for rows 1–[headerRows]. The coach fills in
+  /// column B values; cell B6 is reserved for an =IMAGE() formula.
+  List<List<Object?>> _buildHeaderGrid() {
+    return [
+      ['BUSHIDO COACH LOG'],
+      ['Jméno:'],
+      ['Věk:'],
+      ['Váhová kategorie:'],
+      ['Příští závod:'],
+      [],
+      [],
+      ['Aktuální týden →'],
+    ];
+  }
+
+  /// Freeze top [headerRows] rows + black sheet background + white bold title.
+  List<sheets.Request> _buildHeaderFormatRequests(int sheetId) {
+    return [
+      // Freeze header rows.
+      sheets.Request(
+        updateSheetProperties: sheets.UpdateSheetPropertiesRequest(
+          fields: 'gridProperties.frozenRowCount',
+          properties: sheets.SheetProperties(
+            sheetId: sheetId,
+            gridProperties: sheets.GridProperties(
+              frozenRowCount: BushidoSheetLayout.headerRows,
+            ),
+          ),
+        ),
+      ),
+      // Black background for entire sheet (covers header + future week blocks).
+      sheets.Request(
+        repeatCell: sheets.RepeatCellRequest(
+          range: sheets.GridRange(
+            sheetId: sheetId,
+            startRowIndex: 0,
+            endRowIndex: 1000,
+            startColumnIndex: 0,
+            endColumnIndex: 26,
+          ),
+          cell: sheets.CellData(
+            userEnteredFormat: sheets.CellFormat(
+              backgroundColorStyle: _cs(0, 0, 0),
+            ),
+          ),
+          fields: 'userEnteredFormat.backgroundColorStyle',
+        ),
+      ),
+      // White bold 14pt title in A1.
+      sheets.Request(
+        repeatCell: sheets.RepeatCellRequest(
+          range: sheets.GridRange(
+            sheetId: sheetId,
+            startRowIndex: 0,
+            endRowIndex: 1,
+            startColumnIndex: 0,
+            endColumnIndex: 1,
+          ),
+          cell: sheets.CellData(
+            userEnteredFormat: sheets.CellFormat(
+              textFormat: sheets.TextFormat(
+                bold: true,
+                fontSize: 14,
+                foregroundColorStyle: _cs(255, 255, 255),
+              ),
+            ),
+          ),
+          fields: 'userEnteredFormat.textFormat',
+        ),
+      ),
+    ];
+  }
+
+  /// Per-week formatting: two AddTableRequests (daily data + target box) and
+  /// RepeatCellRequests for white bold 12pt on header/footer rows.
+  List<sheets.Request> _buildFormatRequests({
+    required int sheetId,
+    required int startRow,
+    required IsoWeek week,
+  }) {
+    // GridRange uses 0-based indices. startRow is 1-based.
+    // Weekly data table: dailyHeaderRow (offset 1) → avgRow (offset 9).
+    final wHdr0 = startRow - 1 + BushidoSheetLayout.dailyHeaderRowOffset;
+    final wFtr0 = startRow - 1 + BushidoSheetLayout.averageRowOffset;
+
+    // Target table: targetHeaderRow (offset 1) → last metric row.
+    final tHdr0 = startRow - 1 + BushidoSheetLayout.targetHeaderRowOffset;
+    final tEnd0 = startRow - 1 +
+        BushidoSheetLayout.firstTargetMetricRowOffset +
+        BushidoExportConfig.targetMetrics.length;
+
+    final wk = '${week.year}-W${week.weekNumber.toString().padLeft(2, '0')}';
+
+    return [
+      // Weekly data table (A:L, header + 7 days + avg footer).
+      sheets.Request(
+        addTable: sheets.AddTableRequest(
+          table: sheets.Table(
+            name: 'Týden $wk',
+            range: sheets.GridRange(
+              sheetId: sheetId,
+              startRowIndex: wHdr0,
+              endRowIndex: wFtr0 + 1,
+              startColumnIndex: 0,
+              endColumnIndex: 12,
+            ),
+            rowsProperties: sheets.TableRowsProperties(
+              headerColorStyle: _cs(204, 0, 0),     // Red Berry #CC0000
+              footerColorStyle: _cs(204, 0, 0),
+              firstBandColorStyle: _cs(10, 10, 10),  // #0A0A0A
+              secondBandColorStyle: _cs(20, 20, 20), // #141414
+            ),
+          ),
+        ),
+      ),
+      // Target box table (M:O, header + 7 metric rows).
+      sheets.Request(
+        addTable: sheets.AddTableRequest(
+          table: sheets.Table(
+            name: 'Cíle $wk',
+            range: sheets.GridRange(
+              sheetId: sheetId,
+              startRowIndex: tHdr0,
+              endRowIndex: tEnd0,
+              startColumnIndex: 12,
+              endColumnIndex: 15,
+            ),
+            rowsProperties: sheets.TableRowsProperties(
+              headerColorStyle: _cs(67, 67, 67),    // #434343 dark grey
+              firstBandColorStyle: _cs(30, 30, 30), // #1E1E1E
+              secondBandColorStyle: _cs(40, 40, 40),// #282828
+            ),
+          ),
+        ),
+      ),
+      // White bold 12pt on weekly table header row.
+      _textFormatRequest(
+        sheetId: sheetId,
+        startRow0: wHdr0,
+        endRow0: wHdr0 + 1,
+        startCol: 0,
+        endCol: 12,
+      ),
+      // White bold 12pt on weekly table footer (avg) row.
+      _textFormatRequest(
+        sheetId: sheetId,
+        startRow0: wFtr0,
+        endRow0: wFtr0 + 1,
+        startCol: 0,
+        endCol: 12,
+      ),
+      // White bold 12pt on target table header row.
+      _textFormatRequest(
+        sheetId: sheetId,
+        startRow0: tHdr0,
+        endRow0: tHdr0 + 1,
+        startCol: 12,
+        endCol: 15,
+      ),
+    ];
+  }
+
+  // ─── Color & format helpers ────────────────────────────────────────────────
+
+  static sheets.Color _rgb(int r, int g, int b) =>
+      sheets.Color(red: r / 255.0, green: g / 255.0, blue: b / 255.0);
+
+  static sheets.ColorStyle _cs(int r, int g, int b) =>
+      sheets.ColorStyle(rgbColor: _rgb(r, g, b));
+
+  static sheets.Request _textFormatRequest({
+    required int sheetId,
+    required int startRow0,
+    required int endRow0,
+    required int startCol,
+    required int endCol,
+  }) =>
+      sheets.Request(
+        repeatCell: sheets.RepeatCellRequest(
+          range: sheets.GridRange(
+            sheetId: sheetId,
+            startRowIndex: startRow0,
+            endRowIndex: endRow0,
+            startColumnIndex: startCol,
+            endColumnIndex: endCol,
+          ),
+          cell: sheets.CellData(
+            userEnteredFormat: sheets.CellFormat(
+              textFormat: sheets.TextFormat(
+                bold: true,
+                fontSize: 12,
+                foregroundColorStyle: _cs(255, 255, 255),
+              ),
+            ),
+          ),
+          fields: 'userEnteredFormat.textFormat',
+        ),
+      );
 
   // ─── Block grid construction ───────────────────────────────────────────────
 
@@ -306,11 +569,14 @@ class BushidoSheetsService {
     final mIndex = BushidoSheetLayout.targetBoxStartColumn - 1;
     grid[BushidoSheetLayout.headerRowOffset][mIndex] = 'CÍLE / VÝSLEDEK';
 
-    // Row 1 — daily column headers (A..L).
+    // Row 1 — daily column headers (A..L) + target table headers (M..O).
     final dailyHeaderRow = grid[BushidoSheetLayout.dailyHeaderRowOffset];
     for (final col in BushidoColumn.values) {
       dailyHeaderRow[col.columnOffset] = col.label;
     }
+    dailyHeaderRow[mIndex] = 'Metrika';
+    dailyHeaderRow[mIndex + 1] = 'Cíl';
+    dailyHeaderRow[mIndex + 2] = 'Výsledek';
 
     // Rows 2..8 — day dates (A) and target metrics (M..O).
     final firstDayAbsRow = startRow + BushidoSheetLayout.firstDayRowOffset;
