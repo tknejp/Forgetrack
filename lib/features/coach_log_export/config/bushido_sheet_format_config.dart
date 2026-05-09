@@ -20,7 +20,8 @@ class BushidoSheetFormatConfig {
   static const int logoHeightPx = 128;
   static const int logoWidthPx = 128;
 
-  static const String fontFamily = 'Montserrat';
+  static const String fontMostserrat = 'Montserrat';
+  static const String fontOswald = 'Oswald';
   static const int tableHeaderFontSize = 12;
   static const int tableRowHeightPx = 30;
   static const String coachFillHeaderLabel = 'Vyplní kouč';
@@ -31,16 +32,22 @@ class BushidoSheetFormatConfig {
   static const BushidoSheetColor white = BushidoSheetColor(255, 255, 255);
   static const BushidoSheetColor black = BushidoSheetColor(0, 0, 0);
 
-  static const BushidoSheetColor weeklyHeader = BushidoSheetColor(204, 0, 0);
-  static const BushidoSheetColor weeklyFooter = BushidoSheetColor(204, 0, 0);
+  static const BushidoSheetColor weeklyHeader = BushidoSheetColor(221, 126, 107);
+  static const BushidoSheetColor weeklyFooter = BushidoSheetColor(230, 184, 175);
   static const BushidoSheetColor bodyGray = BushidoSheetColor(217, 217, 217);
+  static const BushidoSheetColor bodyGrayDark = BushidoSheetColor(183, 183, 183);
   static const BushidoSheetColor noteBody = BushidoSheetColor(255, 242, 204);
   static const BushidoSheetColor targetHeader = BushidoSheetColor(67, 67, 67);
+  static const BushidoSheetColor darkBerry = BushidoSheetColor(133, 32, 12);
 
-  static const BushidoSheetColor profileLabel =
-      BushidoSheetColor(255, 217, 102);
-  static const BushidoSheetColor profileValue =
-      BushidoSheetColor(255, 229, 153);
+  // Light tints used by per-metric conditional formatting on the result cell,
+  // weekly average row, and daily input cells.
+  static const BushidoSheetColor condGood = BushidoSheetColor(234, 244, 226);
+  static const BushidoSheetColor condWarn = BushidoSheetColor(255, 246, 214);
+  static const BushidoSheetColor condBad = BushidoSheetColor(252, 228, 228);
+
+  static const BushidoSheetColor profileLabel = BushidoSheetColor(255, 217, 102);
+  static const BushidoSheetColor profileValue = BushidoSheetColor(255, 229, 153);
 
   static const List<String> profileLabels = [
     'Jméno',

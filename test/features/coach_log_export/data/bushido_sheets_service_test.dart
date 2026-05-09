@@ -561,9 +561,14 @@ void main() {
         reason: 'note column should get the yellow fill',
       );
       expect(
-        hasRepeatFillRange(12, 15),
+        hasRepeatFillRange(12, 13),
         isTrue,
-        reason: 'target box body should get the gray fill',
+        reason: 'target box label column (M) should get the dark gray fill',
+      );
+      expect(
+        hasRepeatFillRange(13, 15),
+        isTrue,
+        reason: 'target box value columns (N..O) should get the regular gray fill',
       );
 
       final footerRepeatBackgrounds = fake.batchRequests
@@ -585,6 +590,8 @@ void main() {
 
       final rowHeightRequests = fake.batchRequests
           .where((r) => r.updateDimensionProperties != null)
+          .where((r) =>
+              r.updateDimensionProperties!.range?.dimension == 'ROWS')
           .toList();
       expect(rowHeightRequests.length, 1);
       expect(
@@ -604,7 +611,7 @@ void main() {
       expect(
         fontRequests
             .first.repeatCell!.cell!.userEnteredFormat!.textFormat!.fontFamily,
-        BushidoSheetFormatConfig.fontFamily,
+        BushidoSheetFormatConfig.fontMostserrat,
       );
     });
 

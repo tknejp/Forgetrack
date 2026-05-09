@@ -13,8 +13,11 @@ class GoogleSheetsAuthService {
   })  : _googleAuth = googleAuth ?? GoogleAuthService.instance,
         _signIn = signIn ?? GoogleSignIn.instance;
 
+  static const String _driveFileScope =
+    'https://www.googleapis.com/auth/drive.file';
+
   static const List<String> _scopes = <String>[
-    SheetsApi.spreadsheetsScope,
+    _driveFileScope,
   ];
 
   final GoogleAuthService _googleAuth;
