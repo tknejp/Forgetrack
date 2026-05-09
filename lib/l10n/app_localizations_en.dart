@@ -1077,6 +1077,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progQuestsLongTermHeader => 'LONG-TERM GOALS';
 
   @override
+  String get progQuestsChapterWaitingHeader => 'UPCOMING CHAPTERS';
+
+  @override
+  String get progQuestsChapterWaitingTitle => 'Chapter unlocked';
+
+  @override
+  String get progQuestsChapterWaitingCaption =>
+      'Complete the previous chapter to begin.';
+
+  @override
   String get progQuestsLockedHeader => 'LOCKED QUESTS';
 
   @override
@@ -3773,7 +3783,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get cosmeticFramePilgrimUnlockHint => 'Reward for starting your journey.';
+  String get cosmeticFramePilgrimUnlockHint =>
+      'Reward for starting your journey.';
 
   @override
   String get cosmeticFrameWildwoodUnlockHint => 'Reach level 10.';

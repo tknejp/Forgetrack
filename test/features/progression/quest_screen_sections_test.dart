@@ -103,6 +103,38 @@ void main() {
           locked.quests.map((card) => card.quest.id), ['non_chapter_locked']);
     });
 
+    test('renders waiting chapter chains in the upcoming chapters section', () {
+      final waiting = _chapterQuest(
+        'next_chapter',
+        status: ProgressionQuestStatus.available,
+        sortOrder: 20,
+      );
+      final sections = _buildSections(
+        chapterQuests: [_chapterQuest('current_chapter', sortOrder: 10)],
+        waitingChapterQuests: [waiting],
+        lockedQuests: [
+          _chapterQuest(
+            'far_future_chapter',
+            status: ProgressionQuestStatus.locked,
+            sortOrder: 30,
+          ),
+        ],
+      ).sections;
+
+      final upcoming = sections.singleWhere(
+        (section) => section.type == QuestSectionType.upcomingChapters,
+      );
+      expect(upcoming.quests.map((card) => card.quest.id), ['next_chapter']);
+
+      // Active section still shows the active chapter; locked section is
+      // hidden because the next-locked-chapter preview is suppressed when a
+      // waiting chapter exists.
+      expect(
+        sections.any((section) => section.type == QuestSectionType.locked),
+        isFalse,
+      );
+    });
+
     test('shows only next locked chapter preview when no chapter is active',
         () {
       final sections = _buildSections(
@@ -165,6 +197,7 @@ QuestScreenSections _buildSections({
   List<ProgressionQuest> dailyComboQuests = const [],
   List<ProgressionQuest> weeklyQuests = const [],
   List<ProgressionQuest> longTermQuests = const [],
+  List<ProgressionQuest> waitingChapterQuests = const [],
   List<ProgressionQuest> lockedQuests = const [],
   List<ProgressionQuest> completedQuests = const [],
   int completedCompactLimit = 3,
@@ -175,6 +208,7 @@ QuestScreenSections _buildSections({
     ...dailyComboQuests,
     ...weeklyQuests,
     ...longTermQuests,
+    ...waitingChapterQuests,
     ...lockedQuests,
     ...completedQuests,
   ];
@@ -191,6 +225,7 @@ QuestScreenSections _buildSections({
       dailyComboQuests: dailyComboQuests,
       weeklyQuests: weeklyQuests,
       chapterQuests: chapterQuests,
+      waitingChapterQuests: waitingChapterQuests,
       longTermQuests: longTermQuests,
       lockedQuests: lockedQuests,
       completedQuests: completedQuests,

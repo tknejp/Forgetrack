@@ -10,6 +10,7 @@ enum QuestSectionType {
   dailyCombo,
   weekly,
   longTerm,
+  upcomingChapters,
   locked,
   completed,
 }
@@ -121,6 +122,21 @@ class QuestScreenSectionsBuilder {
           title: l10n.progQuestsLongTermHeader,
           quests: viewData.longTermQuests,
         ),
+      if (viewData.waitingChapterQuests.isNotEmpty)
+        QuestSectionViewModel(
+          type: QuestSectionType.upcomingChapters,
+          title: l10n.progQuestsChapterWaitingHeader,
+          subtitle: l10n.progQuestsChapterWaitingCaption,
+          quests: [
+            for (final quest in viewData.waitingChapterQuests)
+              QuestCardViewModel(
+                quest: quest,
+                type: QuestCardType.locked,
+                showChainPreview:
+                    QuestDisplayPolicy.shouldShowChainPreview(quest),
+              ),
+          ],
+        ),
       if (visibleLockedQuests.isNotEmpty)
         QuestSectionViewModel(
           type: QuestSectionType.locked,
@@ -199,6 +215,9 @@ class QuestScreenSectionsBuilder {
       (quest) => QuestDisplayPolicy.isChapterQuest(quest) && !quest.isCompleted,
     );
     if (hasActiveChapter) {
+      return null;
+    }
+    if (viewData.waitingChapterQuests.isNotEmpty) {
       return null;
     }
 

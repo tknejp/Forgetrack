@@ -39,7 +39,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'frame_wildwood',
       type: CosmeticType.frame,
-      rarity: CosmeticRarity.uncommon,
+      rarity: CosmeticRarity.common,
       region: CosmeticRegion.forestTrail,
       name: (l10n) => l10n.cosmeticFrameWildwoodName,
       description: (l10n) => l10n.cosmeticFrameWildwoodDesc,
@@ -138,44 +138,6 @@ class CosmeticCatalog {
     ),
 
     // -------------------------------------------------------------------------
-    // Relics
-    // -------------------------------------------------------------------------
-
-    // -------------------------------------------------------------------------
-    // Backgrounds
-    // -------------------------------------------------------------------------
-
-    CosmeticDefinition(
-      id: 'background_forest_trail',
-      type: CosmeticType.background,
-      rarity: CosmeticRarity.uncommon,
-      region: CosmeticRegion.forestTrail,
-      name: (l10n) => l10n.cosmeticBackgroundForestTrailName,
-      description: (l10n) => l10n.cosmeticBackgroundForestTrailDesc,
-      unlockHint: (l10n) => l10n.cosmeticBackgroundForestTrailUnlockHint,
-      assetKey: 'cosmetics.backgrounds.forest_trail',
-      previewAssetKey: 'cosmetics.backgrounds.forest_trail',
-      sortOrder: 400,
-    ),
-
-    // -------------------------------------------------------------------------
-    // Emblems
-    // -------------------------------------------------------------------------
-
-    CosmeticDefinition(
-      id: 'emblem_forest_mark',
-      type: CosmeticType.emblem,
-      rarity: CosmeticRarity.uncommon,
-      region: CosmeticRegion.forestTrail,
-      name: (l10n) => l10n.cosmeticEmblemForestMarkName,
-      description: (l10n) => l10n.cosmeticEmblemForestMarkDesc,
-      unlockHint: (l10n) => l10n.cosmeticEmblemForestMarkUnlockHint,
-      assetKey: 'cosmetics.emblems.forest_mark',
-      previewAssetKey: 'cosmetics.emblems.forest_mark',
-      sortOrder: 500,
-    ),
-
-    // -------------------------------------------------------------------------
     // Backgrounds — Journey map regions (camp → dragonrock fortress)
     // -------------------------------------------------------------------------
 
@@ -189,6 +151,18 @@ class CosmeticCatalog {
       unlockHint: (l10n) => l10n.cosmeticBackgroundCampUnlockHint,
       assetKey: 'cosmetics.backgrounds.camp',
       previewAssetKey: 'cosmetics.backgrounds.camp',
+      sortOrder: 400,
+    ),
+    CosmeticDefinition(
+      id: 'background_forest_trail',
+      type: CosmeticType.background,
+      rarity: CosmeticRarity.uncommon,
+      region: CosmeticRegion.forestTrail,
+      name: (l10n) => l10n.cosmeticBackgroundForestTrailName,
+      description: (l10n) => l10n.cosmeticBackgroundForestTrailDesc,
+      unlockHint: (l10n) => l10n.cosmeticBackgroundForestTrailUnlockHint,
+      assetKey: 'cosmetics.backgrounds.forest_trail',
+      previewAssetKey: 'cosmetics.backgrounds.forest_trail',
       sortOrder: 410,
     ),
     CosmeticDefinition(
@@ -379,6 +353,18 @@ class CosmeticCatalog {
       unlockHint: (l10n) => l10n.cosmeticEmblemPilgrimMarkUnlockHint,
       assetKey: 'cosmetics.emblems.pilgrim_mark',
       previewAssetKey: 'cosmetics.emblems.pilgrim_mark',
+      sortOrder: 500,
+    ),
+    CosmeticDefinition(
+      id: 'emblem_forest_mark',
+      type: CosmeticType.emblem,
+      rarity: CosmeticRarity.uncommon,
+      region: CosmeticRegion.forestTrail,
+      name: (l10n) => l10n.cosmeticEmblemForestMarkName,
+      description: (l10n) => l10n.cosmeticEmblemForestMarkDesc,
+      unlockHint: (l10n) => l10n.cosmeticEmblemForestMarkUnlockHint,
+      assetKey: 'cosmetics.emblems.forest_mark',
+      previewAssetKey: 'cosmetics.emblems.forest_mark',
       sortOrder: 510,
     ),
     CosmeticDefinition(
@@ -396,7 +382,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'emblem_gatekeeper_mark',
       type: CosmeticType.emblem,
-      rarity: CosmeticRarity.uncommon,
+      rarity: CosmeticRarity.rare,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticEmblemGatekeeperMarkName,
       description: (l10n) => l10n.cosmeticEmblemGatekeeperMarkDesc,
@@ -420,7 +406,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'emblem_underways_mark',
       type: CosmeticType.emblem,
-      rarity: CosmeticRarity.rare,
+      rarity: CosmeticRarity.epic,
       region: CosmeticRegion.dwarvenMines,
       name: (l10n) => l10n.cosmeticEmblemUnderwaysMarkName,
       description: (l10n) => l10n.cosmeticEmblemUnderwaysMarkDesc,
@@ -864,7 +850,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'companion_lantern_golem',
       type: CosmeticType.companion,
-      rarity: CosmeticRarity.rare,
+      rarity: CosmeticRarity.epic,
       region: CosmeticRegion.dwarvenMines,
       name: (l10n) => l10n.cosmeticCompanionLanternGolemName,
       description: (l10n) => l10n.cosmeticCompanionLanternGolemDesc,

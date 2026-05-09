@@ -166,8 +166,10 @@ class _DevToolsProgressionSectionState
         title: const Text('Reset progression?'),
         content: const Text(
           'This wipes ALL progression data — evaluations, grants, '
-          'achievement unlocks — both locally (Isar) and in Firestore '
-          'for the signed-in user. Cannot be undone.',
+          'achievement unlocks — and the progression-sourced cosmetics '
+          'inventory, both locally (Isar) and in Firestore for the '
+          'signed-in user. The welcome reward screen will re-appear. '
+          'Cannot be undone.',
         ),
         actions: [
           TextButton(
@@ -188,7 +190,12 @@ class _DevToolsProgressionSectionState
 
     setState(() => _isResetting = true);
     final provider = context.read<ProgressionProvider>();
+    final cosmetics = context.read<CosmeticsProvider>();
     try {
+      // Wipe progression-source cosmetics first so the post-reset dispatch
+      // sees an empty inventory and re-grants the welcome cosmetics — this
+      // is what makes the welcome celebration screen appear again.
+      await cosmetics.devToolsResetProgressionUnlocks();
       await provider.devToolsResetProgression();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

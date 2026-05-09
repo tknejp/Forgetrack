@@ -102,6 +102,37 @@ List<ProgressionQuest> selectDailyComboQuestsForDate(
   return selected.take(1).toList(growable: false);
 }
 
+/// Selects one representative quest per waiting chapter chain (level
+/// requirement met but an earlier chapter is still incomplete). Prefers the
+/// chapter open quest so UI can show "Chapter unlocked" hints.
+List<ProgressionQuest> waitingChapterChainRepresentatives(
+  Iterable<ProgressionQuest> quests,
+) {
+  final byChapter = <String, List<ProgressionQuest>>{};
+  for (final quest in quests) {
+    if (quest.category != ProgressionQuestCategory.chapter) continue;
+    if (quest.status != ProgressionQuestStatus.available) continue;
+    final chapterId = quest.chapterId;
+    if (chapterId == null) continue;
+    byChapter.putIfAbsent(chapterId, () => []).add(quest);
+  }
+
+  final representatives = <ProgressionQuest>[];
+  for (final group in byChapter.values) {
+    final opener = group.firstWhere(
+      (quest) =>
+          quest.criterionType == ProgressionQuestCriterionType.chapterStarted &&
+          quest.prerequisiteQuestIds.isEmpty,
+      orElse: () =>
+          (group..sort((a, b) => a.sortOrder.compareTo(b.sortOrder))).first,
+    );
+    representatives.add(opener);
+  }
+
+  representatives.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+  return representatives;
+}
+
 List<ProgressionQuest> compactQuestChainRepresentatives(
   Iterable<ProgressionQuest> quests, {
   required ProgressionQuestDisplayBucket bucket,

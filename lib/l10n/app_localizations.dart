@@ -2084,6 +2084,24 @@ abstract class AppLocalizations {
   /// **'LONG-TERM GOALS'**
   String get progQuestsLongTermHeader;
 
+  /// No description provided for @progQuestsChapterWaitingHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'UPCOMING CHAPTERS'**
+  String get progQuestsChapterWaitingHeader;
+
+  /// No description provided for @progQuestsChapterWaitingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chapter unlocked'**
+  String get progQuestsChapterWaitingTitle;
+
+  /// No description provided for @progQuestsChapterWaitingCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the previous chapter to begin.'**
+  String get progQuestsChapterWaitingCaption;
+
   /// No description provided for @progQuestsLockedHeader.
   ///
   /// In en, this message translates to:

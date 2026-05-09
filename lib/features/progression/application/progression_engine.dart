@@ -457,15 +457,55 @@ class ProgressionEngine {
     final profile = _levelPolicy.resolve(totalXp);
     final starts = <ProgressionChapterStartRecord>[];
     final definitions = _questCatalog.build();
-    final seenChapterIds = <String>{};
 
-    for (final definition in definitions) {
-      final chapterId = definition.chapterId;
-      if (chapterId == null || !seenChapterIds.add(chapterId)) continue;
-      if (existingChapterIds.contains(chapterId)) continue;
+    // Build per-chapter (open, finale) pairs in catalog order. Only the open
+    // quest carries the minimumLevel; the finale's reward grant indicates
+    // whether the chapter has been completed.
+    final chapterOrder = <String>[];
+    final chapterOpens = <String, ProgressionQuestDefinition>{};
+    final chapterFinales = <String, ProgressionQuestDefinition>{};
+    for (final def in definitions) {
+      final chapterId = def.chapterId;
+      if (chapterId == null) continue;
+      if (def.criterionType != ProgressionQuestCriterionType.chapterStarted) {
+        continue;
+      }
+      if (def.prerequisiteQuestIds.isEmpty) {
+        if (!chapterOpens.containsKey(chapterId)) {
+          chapterOrder.add(chapterId);
+          chapterOpens[chapterId] = def;
+        }
+      } else {
+        chapterFinales[chapterId] = def;
+      }
+    }
 
-      final minimumLevel = definition.minimumLevel;
-      if (minimumLevel == null || profile.level < minimumLevel) continue;
+    final completedQuestIds = {
+      for (final grant in ledger.questRewardGrants) grant.questId,
+    };
+
+    var startedThisRun = false;
+    for (final chapterId in chapterOrder) {
+      final openDef = chapterOpens[chapterId]!;
+      final finaleDef = chapterFinales[chapterId];
+      final chapterCompleted =
+          finaleDef != null && completedQuestIds.contains(finaleDef.id);
+      if (chapterCompleted) continue;
+
+      if (existingChapterIds.contains(chapterId)) {
+        // Earlier chapter already started but not yet completed — block
+        // any later chapter from auto-starting.
+        return starts;
+      }
+
+      // We will only auto-start at most one new chapter per evaluation, and
+      // only if all earlier chapters are completed.
+      if (startedThisRun) return starts;
+
+      final minimumLevel = openDef.minimumLevel;
+      if (minimumLevel == null || profile.level < minimumLevel) {
+        return starts;
+      }
 
       starts.add(
         ProgressionChapterStartRecord(
@@ -475,6 +515,7 @@ class ProgressionEngine {
           startedAt: evaluationDate,
         ),
       );
+      startedThisRun = true;
     }
 
     return starts;

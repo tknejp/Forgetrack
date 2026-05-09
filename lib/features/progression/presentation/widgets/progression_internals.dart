@@ -137,6 +137,7 @@ class ProgressionViewData {
     required this.dailyComboQuests,
     required this.weeklyQuests,
     required this.chapterQuests,
+    required this.waitingChapterQuests,
     required this.longTermQuests,
     required this.lockedQuests,
     required this.completedQuests,
@@ -191,6 +192,9 @@ class ProgressionViewData {
       progression.quests,
       bucket: ProgressionQuestDisplayBucket.chapter,
     );
+    final waitingChapterQuests = waitingChapterChainRepresentatives(
+      progression.quests,
+    );
     final longTermQuests = compactQuestChainRepresentatives(
       progression.quests,
       bucket: ProgressionQuestDisplayBucket.longTerm,
@@ -244,6 +248,7 @@ class ProgressionViewData {
       dailyComboQuests: dailyComboQuests,
       weeklyQuests: weeklyQuests,
       chapterQuests: chapterQuests,
+      waitingChapterQuests: waitingChapterQuests,
       longTermQuests: longTermQuests,
       lockedQuests: lockedQuests,
       completedQuests: completedQuests,
@@ -264,6 +269,7 @@ class ProgressionViewData {
   final List<ProgressionQuest> dailyComboQuests;
   final List<ProgressionQuest> weeklyQuests;
   final List<ProgressionQuest> chapterQuests;
+  final List<ProgressionQuest> waitingChapterQuests;
   final List<ProgressionQuest> longTermQuests;
   final List<ProgressionQuest> lockedQuests;
   final List<ProgressionQuest> completedQuests;

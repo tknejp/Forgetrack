@@ -1079,6 +1079,16 @@ class AppLocalizationsCs extends AppLocalizations {
   String get progQuestsLongTermHeader => 'DLOUHODOBÉ CÍLE';
 
   @override
+  String get progQuestsChapterWaitingHeader => 'PŘIPRAVENÉ KAPITOLY';
+
+  @override
+  String get progQuestsChapterWaitingTitle => 'Kapitola odemčena';
+
+  @override
+  String get progQuestsChapterWaitingCaption =>
+      'Dokonči předchozí kapitolu, abys mohl začít.';
+
+  @override
   String get progQuestsLockedHeader => 'ZAMČENÉ QUESTY';
 
   @override

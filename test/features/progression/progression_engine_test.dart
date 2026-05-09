@@ -820,6 +820,294 @@ void main() {
       expect(stepQuest.isCompleted, isFalse);
     });
 
+    group('chapter chain activation', () {
+      List<ProgressionQuestDefinition> chapterDefs(
+        String id, {
+        required int level,
+        required int sortOrder,
+        String stepRuleId = 'daily_steps',
+      }) {
+        return [
+          ProgressionQuestDefinition(
+            id: '${id}_open',
+            title: (l10n) => '${id}_open',
+            description: (l10n) => '${id}_open',
+            type: ProgressionQuestType.milestone,
+            category: ProgressionQuestCategory.chapter,
+            criterionType: ProgressionQuestCriterionType.chapterStarted,
+            targetValue: 1,
+            rewardXp: 1,
+            minimumLevel: level,
+            sortOrder: sortOrder,
+            chainId: id,
+            chapterId: id,
+            progressStartPolicy:
+                ProgressionProgressStartPolicy.chapterStartedAt,
+            nextQuestIds: ['${id}_step'],
+          ),
+          ProgressionQuestDefinition(
+            id: '${id}_step',
+            title: (l10n) => '${id}_step',
+            description: (l10n) => '${id}_step',
+            type: ProgressionQuestType.mastery,
+            category: ProgressionQuestCategory.chapter,
+            criterionType: ProgressionQuestCriterionType.ruleCompletionsAtLeast,
+            targetValue: 1,
+            rewardXp: 1,
+            ruleId: stepRuleId,
+            periodKind: ProgressionPeriodKind.day,
+            prerequisiteQuestIds: ['${id}_open'],
+            sortOrder: sortOrder + 1,
+            chainId: id,
+            chapterId: id,
+            progressStartPolicy:
+                ProgressionProgressStartPolicy.chapterStartedAt,
+            nextQuestIds: ['${id}_finale'],
+          ),
+          ProgressionQuestDefinition(
+            id: '${id}_finale',
+            title: (l10n) => '${id}_finale',
+            description: (l10n) => '${id}_finale',
+            type: ProgressionQuestType.milestone,
+            category: ProgressionQuestCategory.chapter,
+            criterionType: ProgressionQuestCriterionType.chapterStarted,
+            targetValue: 1,
+            rewardXp: 1,
+            prerequisiteQuestIds: ['${id}_step'],
+            sortOrder: sortOrder + 2,
+            chainId: id,
+            chapterId: id,
+            progressStartPolicy:
+                ProgressionProgressStartPolicy.chapterStartedAt,
+          ),
+        ];
+      }
+
+      ProgressionProfile profileAtLevel(int level) {
+        return ProgressionProfile(
+          totalXp: 0,
+          level: level,
+          levelFloorXp: 0,
+          nextLevelXp: 100,
+          xpIntoLevel: 0,
+        );
+      }
+
+      ProgressionQuestEvaluationResult run({
+        required ProgressionProfile profile,
+        required List<ProgressionChapterStartRecord> chapterStarts,
+        required List<ProgressionQuestRewardGrant> questRewardGrants,
+        required List<ProgressionEvaluation> evaluations,
+      }) {
+        return ProgressionQuestEvaluator().evaluate(
+          definitions: [
+            ...chapterDefs('ch1', level: 10, sortOrder: 100),
+            ...chapterDefs('ch2', level: 20, sortOrder: 200),
+            ...chapterDefs('ch3', level: 30, sortOrder: 300),
+          ],
+          previousActiveQuestIds: const <String>{},
+          evaluationDate: DateTime(2026, 4, 22),
+          profile: profile,
+          evaluations: evaluations,
+          rewardGrants: const [],
+          questRewardGrants: questRewardGrants,
+          chapterStarts: chapterStarts,
+          achievements: const [],
+          streaksByRuleId: const {},
+          streaksByDomain: const {},
+        );
+      }
+
+      test('locks all chapters when player below first chapter level', () {
+        final result = run(
+          profile: profileAtLevel(5),
+          chapterStarts: const [],
+          questRewardGrants: const [],
+          evaluations: const [],
+        );
+        for (final id in ['ch1_open', 'ch2_open', 'ch3_open']) {
+          expect(
+            result.quests.firstWhere((q) => q.id == id).status,
+            ProgressionQuestStatus.locked,
+            reason: id,
+          );
+        }
+        expect(result.activeQuestIds, isEmpty);
+      });
+
+      test('activates chapter 1 only at level 10', () {
+        final start = DateTime(2026, 4, 21);
+        final result = run(
+          profile: profileAtLevel(10),
+          chapterStarts: [
+            ProgressionChapterStartRecord(
+              uid: '',
+              chapterId: 'ch1',
+              startedAtLevel: 10,
+              startedAt: start,
+            ),
+          ],
+          questRewardGrants: const [],
+          evaluations: const [],
+        );
+        // ch1_open is completed by chapterStarted; ch1_step is the active
+        // step that drives progress.
+        expect(result.activeQuestIds, contains('ch1_step'));
+        expect(
+          result.quests.firstWhere((q) => q.id == 'ch2_open').status,
+          ProgressionQuestStatus.locked,
+        );
+      });
+
+      test('marks later chapters as waiting when chapter 1 is incomplete', () {
+        final start = DateTime(2026, 4, 21);
+        // Both ch1 and ch2 have start records (e.g. legacy bad data) and
+        // player is level 30 so ch3 also qualifies on level. Only ch1 should
+        // be active; ch2 and ch3 should be waiting/available.
+        final result = run(
+          profile: profileAtLevel(30),
+          chapterStarts: [
+            ProgressionChapterStartRecord(
+              uid: '',
+              chapterId: 'ch1',
+              startedAtLevel: 10,
+              startedAt: start,
+            ),
+            ProgressionChapterStartRecord(
+              uid: '',
+              chapterId: 'ch2',
+              startedAtLevel: 20,
+              startedAt: start,
+            ),
+          ],
+          questRewardGrants: const [],
+          evaluations: const [],
+        );
+
+        expect(result.activeQuestIds, contains('ch1_step'));
+        expect(result.activeQuestIds, isNot(contains('ch2_open')));
+        expect(result.activeQuestIds, isNot(contains('ch2_step')));
+        expect(result.activeQuestIds, isNot(contains('ch3_open')));
+
+        final ch2Open = result.quests.firstWhere((q) => q.id == 'ch2_open');
+        expect(ch2Open.status, ProgressionQuestStatus.available);
+        expect(ch2Open.currentValue, 0);
+        expect(ch2Open.completedAt, isNull);
+
+        final ch3Open = result.quests.firstWhere((q) => q.id == 'ch3_open');
+        expect(ch3Open.status, ProgressionQuestStatus.available);
+        expect(ch3Open.currentValue, 0);
+      });
+
+      test('promotes chapter 2 to active once chapter 1 finale is rewarded',
+          () {
+        final start = DateTime(2026, 4, 21);
+        final completedAt = DateTime(2026, 4, 22);
+        // ch1 finale has been granted (i.e. truly completed); ch2 still has
+        // no start record yet. ch2_open should now be the next active quest.
+        final result = run(
+          profile: profileAtLevel(20),
+          chapterStarts: [
+            ProgressionChapterStartRecord(
+              uid: '',
+              chapterId: 'ch1',
+              startedAtLevel: 10,
+              startedAt: start,
+            ),
+          ],
+          questRewardGrants: [
+            _claimedQuestReward(
+              rewardKey: 'quest|ch1_finale|reward',
+              questId: 'ch1_finale',
+              xpGranted: 1,
+              completedAt: completedAt,
+              claimedAt: completedAt,
+            ),
+          ],
+          evaluations: const [],
+        );
+
+        expect(result.activeQuestIds, contains('ch2_open'));
+      });
+
+      test('completed chapters stay completed', () {
+        final start = DateTime(2026, 4, 21);
+        final result = run(
+          profile: profileAtLevel(30),
+          chapterStarts: [
+            ProgressionChapterStartRecord(
+              uid: '',
+              chapterId: 'ch1',
+              startedAtLevel: 10,
+              startedAt: start,
+            ),
+          ],
+          questRewardGrants: const [],
+          evaluations: [
+            _achievedEvaluation('daily_steps', DateTime(2026, 4, 22)),
+          ],
+        );
+        expect(
+          result.quests.firstWhere((q) => q.id == 'ch1_finale').status,
+          ProgressionQuestStatus.completed,
+        );
+      });
+
+      test('waiting chapter quests do not become claimable', () {
+        final start = DateTime(2026, 4, 21);
+        // Distinct rules: ch1 step needs daily_calories (none supplied) so
+        // ch1 stays incomplete; ch2 step would normally complete via
+        // daily_steps, but the gating must zero it out.
+        final result = ProgressionQuestEvaluator().evaluate(
+          definitions: [
+            ...chapterDefs(
+              'ch1',
+              level: 10,
+              sortOrder: 100,
+              stepRuleId: 'daily_calories',
+            ),
+            ...chapterDefs(
+              'ch2',
+              level: 20,
+              sortOrder: 200,
+              stepRuleId: 'daily_steps',
+            ),
+          ],
+          previousActiveQuestIds: const <String>{},
+          evaluationDate: DateTime(2026, 4, 22),
+          profile: profileAtLevel(20),
+          evaluations: [
+            _achievedEvaluation('daily_steps', DateTime(2026, 4, 22)),
+          ],
+          rewardGrants: const [],
+          questRewardGrants: const [],
+          chapterStarts: [
+            ProgressionChapterStartRecord(
+              uid: '',
+              chapterId: 'ch1',
+              startedAtLevel: 10,
+              startedAt: start,
+            ),
+            ProgressionChapterStartRecord(
+              uid: '',
+              chapterId: 'ch2',
+              startedAtLevel: 20,
+              startedAt: start,
+            ),
+          ],
+          achievements: const [],
+          streaksByRuleId: const {},
+          streaksByDomain: const {},
+        );
+        final ch1Finale = result.quests.firstWhere((q) => q.id == 'ch1_finale');
+        expect(ch1Finale.status, isNot(ProgressionQuestStatus.completed));
+        final ch2Step = result.quests.firstWhere((q) => q.id == 'ch2_step');
+        expect(ch2Step.status, ProgressionQuestStatus.available);
+        expect(ch2Step.currentValue, 0);
+        expect(ch2Step.completedAt, isNull);
+      });
+    });
+
     test('promotes a new weekly quest into the active set after completion',
         () async {
       final repository = _InMemoryProgressionRepository();

@@ -160,6 +160,15 @@ class ProgressionProvider extends ChangeNotifier {
   List<ProgressionQuest> get chapterQuests => quests
       .where((quest) => quest.category == ProgressionQuestCategory.chapter)
       .toList();
+
+  /// Chapter quests in chains whose level is met but cannot start yet because
+  /// an earlier chapter is still incomplete. Each is in `available` status,
+  /// not in the active set, and does not progress.
+  List<ProgressionQuest> get waitingChapterQuests => quests
+      .where((quest) =>
+          quest.category == ProgressionQuestCategory.chapter &&
+          quest.status == ProgressionQuestStatus.available)
+      .toList();
   List<ProgressionQuest> get dailyQuests => quests
       .where((quest) => quest.category == ProgressionQuestCategory.daily)
       .toList();
@@ -217,6 +226,25 @@ class ProgressionProvider extends ChangeNotifier {
       // Force the next bind() to re-trigger a real evaluation rather than
       // dedupe by signature.
       _lastRequestedSignature = null;
+      // Drop any pending celebrations from the prior session so they don't
+      // pop on top of the freshly-queued welcome event.
+      _celebrationQueue.clear();
+      // Treat the post-reset state as a brand-new journey: synthesise an
+      // empty previous so achievements that auto-unlock at level 1 (notably
+      // welcome_to_journey, target=0) and their cosmetics surface as new
+      // celebrations again. The cosmetics inventory should be reset
+      // separately by the caller for the dispatcher to actually re-grant
+      // already-owned items.
+      final freshPrevious = _virginEngineState();
+      final cosmeticDispatch = await _cosmeticUnlockDispatcher.dispatch(
+        previous: freshPrevious,
+        current: _state!,
+      );
+      _queueCelebrations(
+        previous: freshPrevious,
+        current: _state!,
+        cosmeticDispatch: cosmeticDispatch,
+      );
     } catch (error) {
       _error = error.toString();
     } finally {
@@ -224,6 +252,28 @@ class ProgressionProvider extends ChangeNotifier {
       _isRefreshing = false;
       notifyListeners();
     }
+  }
+
+  /// Synthetic "before journey began" state used to make the post-reset
+  /// celebration diff treat every current unlock as new.
+  ProgressionEngineState _virginEngineState() {
+    return const ProgressionEngineState(
+      profile: ProgressionProfile(
+        totalXp: 0,
+        level: 0,
+        levelFloorXp: 0,
+        nextLevelXp: 0,
+        xpIntoLevel: 0,
+      ),
+      evaluations: [],
+      rewardGrants: [],
+      questRewardGrants: [],
+      chapterStarts: [],
+      achievements: [],
+      quests: [],
+      streaksByRuleId: {},
+      streaksByDomain: {},
+    );
   }
 
   /// Wipes the ledger and inserts a synthetic claimed grant equal to [xp],
@@ -501,9 +551,8 @@ class ProgressionProvider extends ChangeNotifier {
       final grant = newGrants[i];
       final quest =
           state.quests.where((q) => q.id == grant.questId).firstOrNull;
-      final title = quest != null
-          ? quest.title(l10n)
-          : l10n.progQuestFallbackTitle;
+      final title =
+          quest != null ? quest.title(l10n) : l10n.progQuestFallbackTitle;
       unawaited(NotificationService.instance
           .showQuestCompleted(title, grant.xpGranted, index: i));
     }

@@ -74,8 +74,21 @@ class ProgressionQuestEvaluator {
       availableById[quest.id] = quest;
     }
 
+    final activeChapterId = _resolveActiveChapterId(
+      definitions: orderedDefinitions,
+      questsById: availableById,
+      questRewardGrants: questRewardGrants,
+    );
+    _gateWaitingChapterChains(
+      definitions: orderedDefinitions,
+      questsById: availableById,
+      activeChapterId: activeChapterId,
+      questRewardGrants: questRewardGrants,
+    );
+
     final activeQuestIds = _resolveActiveQuestIds(
       quests: availableById.values,
+      activeChapterId: activeChapterId,
     );
 
     final quests = [
@@ -619,12 +632,148 @@ class ProgressionQuestEvaluator {
 
   Set<String> _resolveActiveQuestIds({
     required Iterable<ProgressionQuest> quests,
+    required String? activeChapterId,
   }) {
     final availableQuests = quests
         .where((quest) => quest.status == ProgressionQuestStatus.available)
+        .where((quest) =>
+            quest.category != ProgressionQuestCategory.chapter ||
+            quest.chapterId == activeChapterId)
         .toList()
       ..sort(_sortQuestSelection);
     return {for (final quest in availableQuests) quest.id};
+  }
+
+  String? _resolveActiveChapterId({
+    required List<ProgressionQuestDefinition> definitions,
+    required Map<String, ProgressionQuest> questsById,
+    required List<ProgressionQuestRewardGrant> questRewardGrants,
+  }) {
+    final grantedQuestIds = {
+      for (final grant in questRewardGrants) grant.questId,
+    };
+    final chapterOpenDefs = <String, ProgressionQuestDefinition>{};
+    final chapterFinaleDefs = <String, ProgressionQuestDefinition>{};
+    for (final def in definitions) {
+      if (def.category != ProgressionQuestCategory.chapter) continue;
+      final chapterId = def.chapterId;
+      if (chapterId == null) continue;
+      final isOpen =
+          def.criterionType == ProgressionQuestCriterionType.chapterStarted &&
+              def.prerequisiteQuestIds.isEmpty;
+      final isFinale =
+          def.criterionType == ProgressionQuestCriterionType.chapterStarted &&
+              def.prerequisiteQuestIds.isNotEmpty;
+      if (isOpen) chapterOpenDefs[chapterId] = def;
+      if (isFinale) chapterFinaleDefs[chapterId] = def;
+    }
+
+    final orderedChapterIds = chapterOpenDefs.keys.toList()
+      ..sort((left, right) {
+        final leftDef = chapterOpenDefs[left]!;
+        final rightDef = chapterOpenDefs[right]!;
+        final bySortOrder = leftDef.sortOrder.compareTo(rightDef.sortOrder);
+        if (bySortOrder != 0) return bySortOrder;
+        return left.compareTo(right);
+      });
+
+    for (final chapterId in orderedChapterIds) {
+      final openQuest = questsById[chapterOpenDefs[chapterId]!.id];
+      if (openQuest == null) continue;
+      // Level requirement not met — chapter and all later chapters are locked.
+      if (openQuest.status == ProgressionQuestStatus.locked) {
+        return null;
+      }
+      final finaleDef = chapterFinaleDefs[chapterId];
+      // A chapter is "completed" only once its finale has a reward grant.
+      // Criterion-only completion still keeps the chapter active so the
+      // engine can issue the finale grant on this evaluation; the next
+      // chapter only starts on the following evaluation cycle.
+      final isCompleted =
+          finaleDef != null && grantedQuestIds.contains(finaleDef.id);
+      if (!isCompleted) return chapterId;
+    }
+    return null;
+  }
+
+  void _gateWaitingChapterChains({
+    required List<ProgressionQuestDefinition> definitions,
+    required Map<String, ProgressionQuest> questsById,
+    required String? activeChapterId,
+    required List<ProgressionQuestRewardGrant> questRewardGrants,
+  }) {
+    final grantedQuestIds = {
+      for (final grant in questRewardGrants) grant.questId,
+    };
+    // A chapter is preserved as completed only once its finale has been
+    // rewarded. Criterion-only completion keeps the chapter active so the
+    // engine can issue the finale grant this cycle.
+    final completedChapterIds = <String>{};
+    for (final def in definitions) {
+      if (def.category != ProgressionQuestCategory.chapter) continue;
+      if (def.criterionType != ProgressionQuestCriterionType.chapterStarted) {
+        continue;
+      }
+      if (def.prerequisiteQuestIds.isEmpty) continue;
+      final chapterId = def.chapterId;
+      if (chapterId == null) continue;
+      if (grantedQuestIds.contains(def.id)) {
+        completedChapterIds.add(chapterId);
+      }
+    }
+    for (final def in definitions) {
+      if (def.category != ProgressionQuestCategory.chapter) continue;
+      final chapterId = def.chapterId;
+      if (chapterId == null) continue;
+      if (chapterId == activeChapterId) continue;
+      if (completedChapterIds.contains(chapterId)) continue;
+      final quest = questsById[def.id];
+      if (quest == null) continue;
+      // Preserve locked status (level requirement not met) and any quest
+      // already historically rewarded — those stay completed/claimed.
+      if (quest.status == ProgressionQuestStatus.locked) continue;
+      if (grantedQuestIds.contains(def.id)) continue;
+      questsById[def.id] = ProgressionQuest(
+        id: quest.id,
+        title: quest.title,
+        description: quest.description,
+        type: quest.type,
+        category: quest.category,
+        criterionType: quest.criterionType,
+        status: ProgressionQuestStatus.available,
+        targetValue: quest.targetValue,
+        currentValue: 0,
+        progress: 0,
+        prerequisiteQuestIds: quest.prerequisiteQuestIds,
+        sortOrder: quest.sortOrder,
+        priority: quest.priority,
+        isHighlighted: false,
+        rewardXp: quest.rewardXp,
+        completedAt: null,
+        ruleId: quest.ruleId,
+        domain: quest.domain,
+        periodKind: quest.periodKind,
+        achievementId: quest.achievementId,
+        relatedRuleIds: quest.relatedRuleIds,
+        requiredRuleCount: quest.requiredRuleCount,
+        minimumLevel: quest.minimumLevel,
+        minimumTrackedDays: quest.minimumTrackedDays,
+        assetKey: quest.assetKey,
+        visualDomain: quest.visualDomain,
+        sourceLabel: quest.sourceLabel,
+        chainId: quest.chainId,
+        chainStepLabel: quest.chainStepLabel,
+        nextQuestIds: quest.nextQuestIds,
+        displayBucket: quest.displayBucket,
+        displayGroupId: quest.displayGroupId,
+        comboPoolId: quest.comboPoolId,
+        chapterId: quest.chapterId,
+        chapterStartedAt: quest.chapterStartedAt,
+        progressStartPolicy: quest.progressStartPolicy,
+        dailySequenceId: quest.dailySequenceId,
+        dailySequenceStep: quest.dailySequenceStep,
+      );
+    }
   }
 
   int _sortQuestSelection(ProgressionQuest left, ProgressionQuest right) {

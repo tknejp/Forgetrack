@@ -540,6 +540,7 @@ class _QuestsSectionState extends State<_QuestsSection> {
       case QuestSectionType.weekly:
       case QuestSectionType.longTerm:
         return _buildActiveQuestSection(section);
+      case QuestSectionType.upcomingChapters:
       case QuestSectionType.locked:
         return _buildLockedSection(section);
       case QuestSectionType.completed:
@@ -698,6 +699,7 @@ class _QuestsSectionState extends State<_QuestsSection> {
         return Tokens.active.color;
       case QuestSectionType.weekly:
         return Tokens.calories.color;
+      case QuestSectionType.upcomingChapters:
       case QuestSectionType.locked:
       case QuestSectionType.completed:
         return Tokens.onSurfaceMuted;
