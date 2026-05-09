@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import 'package:forgetrack/core/config/constants.dart';
 import 'package:forgetrack/core/logging/app_log.dart';
+import 'package:forgetrack/features/coach_log_export/config/bushido_sheet_format_config.dart';
 import 'package:forgetrack/features/coach_log_export/data/bushido_a1_notation.dart';
 import 'package:forgetrack/features/coach_log_export/domain/bushido_day_row.dart';
 import 'package:forgetrack/features/coach_log_export/domain/bushido_export_config.dart';
@@ -81,15 +82,21 @@ class BushidoSheetsService {
       sheetName: sheetName,
     );
 
-    final sheetId =
-        await _sheets.getSheetId(spreadsheetId: spreadsheetId, sheetName: sheetName);
+    final sheetId = await _sheets.getSheetId(
+      spreadsheetId: spreadsheetId,
+      sheetName: sheetName,
+    );
     if (sheetId == null) {
       throw BushidoExportException(
         'Coach Log tab "$sheetName" was not found after ensureSheetExists',
       );
     }
 
-    return (spreadsheetId: spreadsheetId, sheetId: sheetId, sheetName: sheetName);
+    return (
+      spreadsheetId: spreadsheetId,
+      sheetId: sheetId,
+      sheetName: sheetName,
+    );
   }
 
   // ─── Lookup ────────────────────────────────────────────────────────────────
@@ -143,7 +150,15 @@ class BushidoSheetsService {
     required Map<IsoWeek, int> startRowCache,
   }) async {
     final cached = startRowCache[week];
-    if (cached != null) return cached;
+    if (cached != null) {
+      await _formatBlockAt(
+        spreadsheetId: spreadsheetId,
+        sheetId: sheetId,
+        startRow: cached,
+        week: week,
+      );
+      return cached;
+    }
 
     // Find the existing week that should come *after* the new one, if any.
     IsoWeek? successor;
@@ -240,7 +255,7 @@ class BushidoSheetsService {
   ///
   /// Skipped silently if A1 is non-empty so that legacy sheets (blocks at
   /// row 1) are never overwritten.
-  Future<void> ensureSheetHeader({
+  Future<bool> ensureSheetHeader({
     required String spreadsheetId,
     required int sheetId,
     required String sheetName,
@@ -250,29 +265,51 @@ class BushidoSheetsService {
       spreadsheetId: spreadsheetId,
       range: '$sheetName!Z1',
     );
-    if (markerCell.isNotEmpty &&
+    final hasHeaderMarker = markerCell.isNotEmpty &&
         markerCell.first.isNotEmpty &&
-        markerCell.first.first?.toString() == BushidoSheetLayout.headerMarker) {
-      return;
-    }
+        markerCell.first.first?.toString() == BushidoSheetLayout.headerMarker;
 
-    // Legacy sheet guard: if A1 has content, leave it alone.
-    final a1 = await _sheets.readRange(
-      spreadsheetId: spreadsheetId,
-      range: '$sheetName!A1',
-    );
-    if (a1.isNotEmpty && a1.first.isNotEmpty && a1.first.first != null) {
-      AppLog.sync.warn(
-        'bushido.ensureSheetHeader: A1 non-empty — skipping (legacy sheet)',
+    if (!hasHeaderMarker) {
+      // Legacy sheet guard: if A1 has content, leave it alone.
+      final a1 = await _sheets.readRange(
+        spreadsheetId: spreadsheetId,
+        range: '$sheetName!A1',
       );
-      return;
+      if (a1.isNotEmpty && a1.first.isNotEmpty && a1.first.first != null) {
+        AppLog.sync.warn(
+          'bushido.ensureSheetHeader: A1 non-empty — skipping (legacy sheet)',
+        );
+        return false;
+      }
     }
 
     await _sheets.writeRange(
       spreadsheetId: spreadsheetId,
-      range: '$sheetName!A1:L${BushidoSheetLayout.headerRows}',
-      values: _buildHeaderGrid(),
+      range: '$sheetName!A1:B${BushidoSheetLayout.headerRows}',
+      values: List.generate(
+        BushidoSheetLayout.headerRows,
+        (_) => ['', ''],
+        growable: false,
+      ),
     );
+
+    await _sheets.writeRange(
+      spreadsheetId: spreadsheetId,
+      range:
+          '$sheetName!C3:C${2 + BushidoSheetFormatConfig.profileLabels.length}',
+      values: BushidoSheetFormatConfig.profileLabels
+          .map((label) => [label])
+          .toList(growable: false),
+    );
+
+    final logoFormula = _logoImageFormula();
+    if (logoFormula != null) {
+      await _sheets.writeRange(
+        spreadsheetId: spreadsheetId,
+        range: '$sheetName!A2',
+        values: [[logoFormula]],
+      );
+    }
 
     await _sheets.writeRange(
       spreadsheetId: spreadsheetId,
@@ -286,6 +323,27 @@ class BushidoSheetsService {
     );
 
     AppLog.sync.success('bushido.ensureSheetHeader: header written');
+    return true;
+  }
+
+  Future<void> updateCurrentWeekHeaderLink({
+    required String spreadsheetId,
+    required int sheetId,
+    required String sheetName,
+    required int startRow,
+  }) async {
+    final url =
+        'https://docs.google.com/spreadsheets/d/$spreadsheetId/edit#gid=$sheetId&range=A$startRow';
+    final escapedUrl = url.replaceAll('"', '""');
+    final escapedLabel =
+        BushidoSheetFormatConfig.currentWeekLinkText.replaceAll('"', '""');
+    final formula = '=HYPERLINK("$escapedUrl", "$escapedLabel")';
+
+    await _sheets.writeRange(
+      spreadsheetId: spreadsheetId,
+      range: '$sheetName!D7',
+      values: [[formula]],
+    );
   }
 
   // ─── Append ────────────────────────────────────────────────────────────────
@@ -319,9 +377,8 @@ class BushidoSheetsService {
   /// empty rows at [insertAtRow] (1-indexed) and writes the new block content
   /// into the freshly-inserted slot. The whole operation runs in a single
   /// atomic `batchUpdate` so Google processes the row insertion, content
-  /// writes, and table/format requests together — splitting them across
-  /// separate API calls intermittently produced 500 Internal errors when
-  /// AddTableRequest fired immediately after a row insertion.
+  /// writes, validations, and format requests together — splitting them across
+  /// separate API calls intermittently produced 500 Internal errors.
   Future<int> _insertWeekBlock({
     required String spreadsheetId,
     required int sheetId,
@@ -385,9 +442,13 @@ class BushidoSheetsService {
           fields: 'userEnteredValue',
         ),
       ),
-      // 4) Validations + table/format requests.
+      // 4) Validations + format requests.
       ..._buildValidationRequests(sheetId: sheetId, startRow: insertAtRow),
-      ..._buildFormatRequests(sheetId: sheetId, startRow: insertAtRow, week: week),
+      ..._buildFormatRequests(
+        sheetId: sheetId,
+        startRow: insertAtRow,
+        week: week,
+      ),
     ];
 
     await _sheets.batchUpdate(
@@ -424,8 +485,7 @@ class BushidoSheetsService {
     }
     if (value is num) {
       return sheets.CellData(
-        userEnteredValue:
-            sheets.ExtendedValue(numberValue: value.toDouble()),
+        userEnteredValue: sheets.ExtendedValue(numberValue: value.toDouble()),
       );
     }
     if (value is bool) {
@@ -455,6 +515,13 @@ class BushidoSheetsService {
       values: block,
     );
 
+    await _formatBlockAt(
+      spreadsheetId: spreadsheetId,
+      sheetId: sheetId,
+      startRow: startRow,
+      week: week,
+    );
+
     final markerRow = startRow + BushidoSheetLayout.headerRowOffset;
     await _sheets.writeRange(
       spreadsheetId: spreadsheetId,
@@ -463,12 +530,23 @@ class BushidoSheetsService {
         [_markerFor(week)],
       ],
     );
+  }
 
+  Future<void> _formatBlockAt({
+    required String spreadsheetId,
+    required int sheetId,
+    required int startRow,
+    required IsoWeek week,
+  }) async {
     await _sheets.batchUpdate(
       spreadsheetId: spreadsheetId,
       requests: [
         ..._buildValidationRequests(sheetId: sheetId, startRow: startRow),
-        ..._buildFormatRequests(sheetId: sheetId, startRow: startRow, week: week),
+        ..._buildFormatRequests(
+          sheetId: sheetId,
+          startRow: startRow,
+          week: week,
+        ),
       ],
     );
   }
@@ -497,32 +575,30 @@ class BushidoSheetsService {
 
   // ─── Header grid & format helpers (Phase 6) ──────────────────────────────
 
-  /// Static profile placeholder for rows 1–[headerRows]. The coach fills in
-  /// column B values; cell B6 is reserved for an =IMAGE() formula.
-  List<List<Object?>> _buildHeaderGrid() {
-    return [
-      ['BUSHIDO COACH LOG'],
-      ['Jméno:'],
-      ['Věk:'],
-      ['Váhová kategorie:'],
-      ['Příští závod:'],
-      [],
-      [],
-      ['Aktuální týden →'],
-    ];
+  /// Builds the optional in-cell logo formula. The URL must be reachable by
+  /// Google Sheets; local bundled assets cannot be rendered directly.
+  String? _logoImageFormula() {
+    final imageUrl = BushidoSheetFormatConfig.logoImageUrl;
+    if (imageUrl == null || imageUrl.isEmpty) return null;
+
+    final escapedUrl = imageUrl.replaceAll('"', '""');
+    return '=IMAGE("$escapedUrl", 4, '
+        '${BushidoSheetFormatConfig.logoHeightPx}, '
+        '${BushidoSheetFormatConfig.logoWidthPx})';
   }
 
   /// Freeze top [headerRows] rows + black sheet background + white bold title.
   List<sheets.Request> _buildHeaderFormatRequests(int sheetId) {
     return [
-      // Freeze header rows.
+      // Freeze header rows and hide native gridlines.
       sheets.Request(
         updateSheetProperties: sheets.UpdateSheetPropertiesRequest(
-          fields: 'gridProperties.frozenRowCount',
+          fields: 'gridProperties.frozenRowCount,gridProperties.hideGridlines',
           properties: sheets.SheetProperties(
             sheetId: sheetId,
             gridProperties: sheets.GridProperties(
               frozenRowCount: BushidoSheetLayout.headerRows,
+              hideGridlines: true,
             ),
           ),
         ),
@@ -539,45 +615,81 @@ class BushidoSheetsService {
           ),
           cell: sheets.CellData(
             userEnteredFormat: sheets.CellFormat(
-              backgroundColorStyle: _cs(0, 0, 0),
-            ),
-          ),
-          fields: 'userEnteredFormat.backgroundColorStyle',
-        ),
-      ),
-      // White bold 14pt title in A1.
-      sheets.Request(
-        repeatCell: sheets.RepeatCellRequest(
-          range: sheets.GridRange(
-            sheetId: sheetId,
-            startRowIndex: 0,
-            endRowIndex: 1,
-            startColumnIndex: 0,
-            endColumnIndex: 1,
-          ),
-          cell: sheets.CellData(
-            userEnteredFormat: sheets.CellFormat(
+              backgroundColorStyle:
+                  _styleColor(BushidoSheetFormatConfig.sheetBackground),
               textFormat: sheets.TextFormat(
-                bold: true,
-                fontSize: 14,
-                foregroundColorStyle: _cs(255, 255, 255),
+                fontFamily: BushidoSheetFormatConfig.fontFamily,
               ),
             ),
           ),
-          fields: 'userEnteredFormat.textFormat',
+          fields:
+              'userEnteredFormat.backgroundColorStyle,userEnteredFormat.textFormat.fontFamily',
         ),
+      ),
+      // Logo slot.
+      sheets.Request(
+        unmergeCells: sheets.UnmergeCellsRequest(
+          range: sheets.GridRange(
+            sheetId: sheetId,
+            startRowIndex: 1,
+            endRowIndex: 7,
+            startColumnIndex: 0,
+            endColumnIndex: 2,
+          ),
+        ),
+      ),
+      sheets.Request(
+        mergeCells: sheets.MergeCellsRequest(
+          mergeType: 'MERGE_ALL',
+          range: sheets.GridRange(
+            sheetId: sheetId,
+            startRowIndex: 1,
+            endRowIndex: 7,
+            startColumnIndex: 0,
+            endColumnIndex: 2,
+          ),
+        ),
+      ),
+      _formatCells(
+        sheetId: sheetId,
+        startRow0: 1,
+        endRow0: 7,
+        startCol: 0,
+        endCol: 2,
+        center: true,
+      ),
+      // Profile info table C3:D7.
+      _formatCells(
+        sheetId: sheetId,
+        startRow0: 2,
+        endRow0: 2 + BushidoSheetFormatConfig.profileLabels.length,
+        startCol: 2,
+        endCol: 3,
+        backgroundColor: _styleColor(BushidoSheetFormatConfig.profileLabel),
+        textColor: _styleColor(BushidoSheetFormatConfig.black),
+        fontFamily: BushidoSheetFormatConfig.fontFamily,
+        center: true,
+        borders: _solidBorders(BushidoSheetFormatConfig.black),
+      ),
+      _formatCells(
+        sheetId: sheetId,
+        startRow0: 2,
+        endRow0: 2 + BushidoSheetFormatConfig.profileLabels.length,
+        startCol: 3,
+        endCol: 4,
+        backgroundColor: _styleColor(BushidoSheetFormatConfig.profileValue),
+        textColor: _styleColor(BushidoSheetFormatConfig.black),
+        fontFamily: BushidoSheetFormatConfig.fontFamily,
+        center: true,
+        borders: _solidBorders(BushidoSheetFormatConfig.black),
       ),
     ];
   }
 
-  /// Per-week formatting:
-  ///   - Two AddTableRequests with `rowsProperties` carrying header/footer
-  ///     colors plus banded row colors. Empty `rowsProperties` (or column-
-  ///     scoped RepeatCellRequest with `backgroundColorStyle` on table
-  ///     cells) reliably triggered server-side 500s, so we drive the entire
-  ///     row palette through the table itself.
-  ///   - RepeatCellRequest for white bold 12pt text on the header/footer.
-  ///   - RepeatCellRequest for centered alignment over the table area.
+  /// Per-week formatting. We intentionally avoid the Sheets `Table` object:
+  /// repeated AddTableRequest + per-zone formatting has been the source of
+  /// intermittent API 500s. Normal cell formatting is less fancy but reliable
+  /// and still preserves dropdown/checkbox validations.
   List<sheets.Request> _buildFormatRequests({
     required int sheetId,
     required int startRow,
@@ -592,78 +704,102 @@ class BushidoSheetsService {
         BushidoSheetLayout.firstTargetMetricRowOffset +
         BushidoExportConfig.targetMetrics.length;
 
-    final csRedBerry = _cs(204, 0, 0);            // #CC0000
-    final csLightRedBerry1 = _cs(221, 126, 107);  // #DD7E6B
-    final csLightGray3 = _cs(243, 243, 243);      // #F3F3F3
-    final csGray = _cs(217, 217, 217);            // #D9D9D9
-    final csTargetHdr = _cs(204, 204, 204);       // #CCCCCC
-    final csWhite = _cs(255, 255, 255);
-
-    final wk = '${week.year}_W${week.weekNumber.toString().padLeft(2, '0')}';
+    final csRedBerry = _styleColor(BushidoSheetFormatConfig.weeklyHeader);
+    final csFooter = _styleColor(BushidoSheetFormatConfig.weeklyFooter);
+    final csGray = _styleColor(BushidoSheetFormatConfig.bodyGray);
+    final csTargetHdr = _styleColor(BushidoSheetFormatConfig.targetHeader);
+    final csWhite = _styleColor(BushidoSheetFormatConfig.white);
+    final csNote = _styleColor(BushidoSheetFormatConfig.noteBody);
 
     return [
-      // Weekly data table (A:L, header + 7 days + avg footer).
       sheets.Request(
-        addTable: sheets.AddTableRequest(
-          table: sheets.Table(
-            name: 'Týden_$wk',
-            range: sheets.GridRange(
-              sheetId: sheetId,
-              startRowIndex: wHdr0,
-              endRowIndex: wFtr0 + 1,
-              startColumnIndex: 0,
-              endColumnIndex: 12,
-            ),
-            rowsProperties: sheets.TableRowsProperties(
-              headerColorStyle: csRedBerry,
-              footerColorStyle: csLightRedBerry1,
-              firstBandColorStyle: csLightGray3,
-              secondBandColorStyle: csGray,
-            ),
+        updateDimensionProperties: sheets.UpdateDimensionPropertiesRequest(
+          range: sheets.DimensionRange(
+            sheetId: sheetId,
+            dimension: 'ROWS',
+            startIndex: wHdr0,
+            endIndex: wFtr0 + 1,
           ),
+          properties: sheets.DimensionProperties(
+            pixelSize: BushidoSheetFormatConfig.tableRowHeightPx,
+          ),
+          fields: 'pixelSize',
         ),
       ),
-      // Target box table (M:O, header + 7 metric rows).
-      sheets.Request(
-        addTable: sheets.AddTableRequest(
-          table: sheets.Table(
-            name: 'Cíle_$wk',
-            range: sheets.GridRange(
-              sheetId: sheetId,
-              startRowIndex: tHdr0,
-              endRowIndex: tDataEnd0,
-              startColumnIndex: 12,
-              endColumnIndex: 15,
-            ),
-            rowsProperties: sheets.TableRowsProperties(
-              headerColorStyle: csTargetHdr,
-              firstBandColorStyle: csLightGray3,
-              secondBandColorStyle: csLightGray3,
-            ),
-          ),
-        ),
-      ),
-      // Weekly table header — white bold 12pt.
       _formatCells(
         sheetId: sheetId,
         startRow0: wHdr0,
         endRow0: wHdr0 + 1,
         startCol: 0,
         endCol: 12,
+        backgroundColor: csRedBerry,
         textColor: csWhite,
         bold: true,
-        fontSize: 12,
+        fontFamily: BushidoSheetFormatConfig.fontFamily,
+        fontSize: BushidoSheetFormatConfig.tableHeaderFontSize,
+        center: true,
       ),
-      // Weekly table footer (avg row) — white bold 12pt.
+      _formatCells(
+        sheetId: sheetId,
+        startRow0: wHdr0 + 1,
+        endRow0: wFtr0,
+        startCol: BushidoColumn.date.columnOffset,
+        endCol: BushidoColumn.date.columnOffset + 1,
+        backgroundColor: csWhite,
+        fontFamily: BushidoSheetFormatConfig.fontFamily,
+        center: true,
+      ),
+      _formatCells(
+        sheetId: sheetId,
+        startRow0: wHdr0 + 1,
+        endRow0: wFtr0,
+        startCol: BushidoColumn.weightKg.columnOffset,
+        endCol: BushidoColumn.steps.columnOffset + 1,
+        backgroundColor: csGray,
+        fontFamily: BushidoSheetFormatConfig.fontFamily,
+        center: true,
+      ),
+      _formatCells(
+        sheetId: sheetId,
+        startRow0: wHdr0 + 1,
+        endRow0: wFtr0,
+        startCol: BushidoColumn.training.columnOffset,
+        endCol: BushidoColumn.hydration.columnOffset + 1,
+        backgroundColor: csWhite,
+        fontFamily: BushidoSheetFormatConfig.fontFamily,
+        center: true,
+      ),
+      _formatCells(
+        sheetId: sheetId,
+        startRow0: wHdr0 + 1,
+        endRow0: wFtr0,
+        startCol: BushidoColumn.note.columnOffset,
+        endCol: BushidoColumn.note.columnOffset + 1,
+        backgroundColor: csNote,
+        fontFamily: BushidoSheetFormatConfig.fontFamily,
+      ),
+      _formatCells(
+        sheetId: sheetId,
+        startRow0: tHdr0 + 1,
+        endRow0: tDataEnd0,
+        startCol: 12,
+        endCol: 15,
+        backgroundColor: csGray,
+        fontFamily: BushidoSheetFormatConfig.fontFamily,
+        center: true,
+      ),
+      // Weekly table footer (avg row).
       _formatCells(
         sheetId: sheetId,
         startRow0: wFtr0,
         endRow0: wFtr0 + 1,
         startCol: 0,
         endCol: 12,
+        backgroundColor: csFooter,
         textColor: csWhite,
-        bold: true,
-        fontSize: 12,
+        fontFamily: BushidoSheetFormatConfig.fontFamily,
+        fontSize: BushidoSheetFormatConfig.tableHeaderFontSize,
+        center: true,
       ),
       // Target table header — white bold 12pt.
       _formatCells(
@@ -672,9 +808,25 @@ class BushidoSheetsService {
         endRow0: tHdr0 + 1,
         startCol: 12,
         endCol: 15,
+        backgroundColor: csTargetHdr,
         textColor: csWhite,
         bold: true,
-        fontSize: 12,
+        fontFamily: BushidoSheetFormatConfig.fontFamily,
+        fontSize: BushidoSheetFormatConfig.tableHeaderFontSize,
+        center: true,
+      ),
+      // Target table footer.
+      _formatCells(
+        sheetId: sheetId,
+        startRow0: wFtr0,
+        endRow0: wFtr0 + 1,
+        startCol: 12,
+        endCol: 15,
+        backgroundColor: csTargetHdr,
+        textColor: csWhite,
+        fontFamily: BushidoSheetFormatConfig.fontFamily,
+        fontSize: BushidoSheetFormatConfig.tableHeaderFontSize,
+        center: true,
       ),
       // Center alignment across the whole weekly table area.
       _formatCells(
@@ -705,6 +857,22 @@ class BushidoSheetsService {
   static sheets.ColorStyle _cs(int r, int g, int b) =>
       sheets.ColorStyle(rgbColor: _rgb(r, g, b));
 
+  static sheets.ColorStyle _styleColor(BushidoSheetColor color) =>
+      _cs(color.r, color.g, color.b);
+
+  static sheets.Borders _solidBorders(BushidoSheetColor color) {
+    final border = sheets.Border(
+      style: 'SOLID',
+      colorStyle: _styleColor(color),
+    );
+    return sheets.Borders(
+      top: border,
+      bottom: border,
+      left: border,
+      right: border,
+    );
+  }
+
   /// Builds a RepeatCellRequest covering a single rectangle. `fields` is
   /// constructed to update only the properties whose arguments are non-null,
   /// so existing format on unrelated properties is preserved.
@@ -717,22 +885,35 @@ class BushidoSheetsService {
     sheets.ColorStyle? backgroundColor,
     sheets.ColorStyle? textColor,
     bool? bold,
+    String? fontFamily,
     int? fontSize,
     bool center = false,
+    sheets.Borders? borders,
   }) {
     final fields = <String>[];
     if (backgroundColor != null) {
       fields.add('userEnteredFormat.backgroundColorStyle');
     }
-    if (textColor != null) fields.add('userEnteredFormat.textFormat.foregroundColorStyle');
+    if (textColor != null) {
+      fields.add('userEnteredFormat.textFormat.foregroundColorStyle');
+    }
     if (bold != null) fields.add('userEnteredFormat.textFormat.bold');
+    if (fontFamily != null) {
+      fields.add('userEnteredFormat.textFormat.fontFamily');
+    }
     if (fontSize != null) fields.add('userEnteredFormat.textFormat.fontSize');
     if (center) {
       fields.add('userEnteredFormat.horizontalAlignment');
       fields.add('userEnteredFormat.verticalAlignment');
     }
+    if (borders != null) {
+      fields.add('userEnteredFormat.borders');
+    }
 
-    final hasText = textColor != null || bold != null || fontSize != null;
+    final hasText = textColor != null ||
+        bold != null ||
+        fontFamily != null ||
+        fontSize != null;
 
     return sheets.Request(
       repeatCell: sheets.RepeatCellRequest(
@@ -750,11 +931,13 @@ class BushidoSheetsService {
                 ? sheets.TextFormat(
                     foregroundColorStyle: textColor,
                     bold: bold,
+                    fontFamily: fontFamily,
                     fontSize: fontSize,
                   )
                 : null,
             horizontalAlignment: center ? 'CENTER' : null,
             verticalAlignment: center ? 'MIDDLE' : null,
+            borders: borders,
           ),
         ),
         fields: fields.join(','),
@@ -782,21 +965,20 @@ class BushidoSheetsService {
     );
 
     final dateFmt = DateFormat('dd.MM.yyyy');
-    final shortFmt = DateFormat('dd.MM');
+    final weekTitle = _weekTitle(week);
 
     // Row 0 — week header (A) + target box title (M).
-    grid[BushidoSheetLayout.headerRowOffset][0] =
-        'Týden ${week.weekNumber.toString().padLeft(2, '0')}: '
-        '${shortFmt.format(week.monday)} – ${dateFmt.format(week.sunday)}';
+    grid[BushidoSheetLayout.headerRowOffset][0] = weekTitle;
     final mIndex = BushidoSheetLayout.targetBoxStartColumn - 1;
     grid[BushidoSheetLayout.headerRowOffset][mIndex] = 'CÍLE / VÝSLEDEK';
 
     // Row 1 — daily column headers (A..L) + target table headers (M..O).
     final dailyHeaderRow = grid[BushidoSheetLayout.dailyHeaderRowOffset];
     for (final col in BushidoColumn.values) {
-      dailyHeaderRow[col.columnOffset] = col.label;
+      dailyHeaderRow[col.columnOffset] =
+          col == BushidoColumn.date ? weekTitle : col.label;
     }
-    dailyHeaderRow[mIndex] = 'Metrika';
+    dailyHeaderRow[mIndex] = BushidoSheetFormatConfig.coachFillHeaderLabel;
     dailyHeaderRow[mIndex + 1] = 'Cíl';
     dailyHeaderRow[mIndex + 2] = 'Výsledek';
 
@@ -810,8 +992,7 @@ class BushidoSheetsService {
     }
     for (var i = 0; i < BushidoExportConfig.targetMetrics.length; i++) {
       final metric = BushidoExportConfig.targetMetrics[i];
-      final rowGrid =
-          grid[BushidoSheetLayout.firstTargetMetricRowOffset + i];
+      final rowGrid = grid[BushidoSheetLayout.firstTargetMetricRowOffset + i];
       // M = label, N = goal (manual, blank), O = AVERAGE formula
       rowGrid[mIndex] = metric.label;
       rowGrid[mIndex + 1] = null; // coach fills the target manually
@@ -903,6 +1084,8 @@ class BushidoSheetsService {
       '${week.weekNumber.toString().padLeft(2, '0')}'
       ':${BushidoSheetLayout.layoutVersion}';
 
+  String _weekTitle(IsoWeek week) => 'Týden ${week.weekNumber}';
+
   static final RegExp _markerRegex =
       RegExp(r'^BUSHIDO_WEEK:(\d{4})-W(\d{2}):v(\d+)$');
 
@@ -916,8 +1099,7 @@ class BushidoSheetsService {
     // ISO Thursday determines the year, so this round-trips correctly.
     final jan4 = DateTime.utc(year, 1, 4);
     final mondayOfWeek1 = jan4.subtract(Duration(days: jan4.weekday - 1));
-    final monday =
-        mondayOfWeek1.add(Duration(days: 7 * (weekNum - 1)));
+    final monday = mondayOfWeek1.add(Duration(days: 7 * (weekNum - 1)));
     final week = IsoWeek.fromDate(monday);
     return (week: week, version: version);
   }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import 'package:forgetrack/core/logging/app_log.dart';
@@ -34,16 +36,19 @@ class BushidoExportProvider extends ChangeNotifier {
   final BushidoExportDataBuilder _dataBuilder;
   final BushidoRefreshFn _refreshFitness;
   final BushidoRefreshFn _refreshNutrition;
+  final DateTime Function() _now;
 
   BushidoExportProvider({
     required BushidoSheetsService sheets,
     required BushidoExportDataBuilder dataBuilder,
     required BushidoRefreshFn refreshFitness,
     required BushidoRefreshFn refreshNutrition,
+    DateTime Function()? now,
   })  : _sheets = sheets,
         _dataBuilder = dataBuilder,
         _refreshFitness = refreshFitness,
-        _refreshNutrition = refreshNutrition;
+        _refreshNutrition = refreshNutrition,
+        _now = now ?? DateTime.now;
 
   // ─── Observable state ──────────────────────────────────────────────────────
 
@@ -91,7 +96,7 @@ class BushidoExportProvider extends ChangeNotifier {
       final prep = await _sheets.prepare(l10n);
 
       // 2b) Write the sticky profile header on the first export (idempotent).
-      await _sheets.ensureSheetHeader(
+      final hasSheetHeader = await _sheets.ensureSheetHeader(
         spreadsheetId: prep.spreadsheetId,
         sheetId: prep.sheetId,
         sheetName: prep.sheetName,
@@ -105,6 +110,7 @@ class BushidoExportProvider extends ChangeNotifier {
       );
 
       // 4) Per week: ensure block + write auto cells.
+      final currentWeek = IsoWeek.fromDate(_now());
       for (final week in weeks) {
         final startRow = await _sheets.ensureWeekBlock(
           spreadsheetId: prep.spreadsheetId,
@@ -133,6 +139,16 @@ class BushidoExportProvider extends ChangeNotifier {
         week: nextWeek,
         startRowCache: cache,
       );
+
+      final currentWeekStartRow = cache[currentWeek];
+      if (hasSheetHeader && currentWeekStartRow != null) {
+        await _sheets.updateCurrentWeekHeaderLink(
+          spreadsheetId: prep.spreadsheetId,
+          sheetId: prep.sheetId,
+          sheetName: prep.sheetName,
+          startRow: currentWeekStartRow,
+        );
+      }
 
       final result = BushidoExportResult(
         spreadsheetId: prep.spreadsheetId,
@@ -167,7 +183,7 @@ class BushidoExportProvider extends ChangeNotifier {
   Future<BushidoExportResult> exportCurrentWeek({
     required AppLocalizations l10n,
   }) {
-    final today = DateTime.now();
+    final today = _now();
     return exportRange(
       from: startOfIsoWeek(today),
       to: today,

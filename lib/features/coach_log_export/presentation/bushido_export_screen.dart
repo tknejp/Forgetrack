@@ -286,7 +286,8 @@ class _RangeCard extends StatelessWidget {
                       color: const Color(0xFFF2A35A).withValues(alpha: 0.14),
                       borderRadius: BorderRadius.circular(Tokens.radiusIcon),
                       border: Border.all(
-                          color: const Color(0xFFF2A35A).withValues(alpha: 0.22)),
+                          color:
+                              const Color(0xFFF2A35A).withValues(alpha: 0.22)),
                     ),
                     child: const Icon(
                       Icons.date_range_rounded,
@@ -376,72 +377,82 @@ class _ActionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(Tokens.radiusCard),
         border: Border.all(color: Tokens.cardBorder),
       ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-        child: Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(13),
-                border:
-                    Border.all(color: iconColor.withValues(alpha: 0.22)),
-              ),
-              child: Icon(icon, color: iconColor, size: 20),
-            ),
-            const SizedBox(width: Tokens.spaceMd),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: Tokens.fontSizeBody,
-                      fontWeight: FontWeight.w700,
-                      color: Tokens.onSurface,
-                    ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: iconColor.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(13),
+                    border:
+                        Border.all(color: iconColor.withValues(alpha: 0.22)),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      fontSize: Tokens.fontSizeSmall,
-                      color: Tokens.onSurfaceMuted,
-                    ),
+                  child: Icon(icon, color: iconColor, size: 20),
+                ),
+                const SizedBox(width: Tokens.spaceMd),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: Tokens.fontSizeBody,
+                          fontWeight: FontWeight.w700,
+                          color: Tokens.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(
+                          fontSize: Tokens.fontSizeSmall,
+                          color: Tokens.onSurfaceMuted,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const SizedBox(width: Tokens.spaceMd),
-            _ExportButton(
+          ),
+          Divider(
+            height: 1,
+            color: Tokens.divider,
+            indent: 14,
+            endIndent: 14,
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+            child: _ExportButton(
               label: l10n.coachLogExportCurrentWeekButton,
               isExporting: isExporting,
-              compact: true,
               onPressed: onExport,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-// ─── Reusable export button ─────────────────────────────────────────────────
+// ─── Reusable export button ────────────────────────────────────────────────
 
 class _ExportButton extends StatelessWidget {
   final String label;
   final bool isExporting;
-  final bool compact;
   final VoidCallback onPressed;
 
   const _ExportButton({
     required this.label,
     required this.isExporting,
     required this.onPressed,
-    this.compact = false,
   });
 
   @override
@@ -466,27 +477,6 @@ class _ExportButton extends StatelessWidget {
           )
         : Text(label);
 
-    if (compact) {
-      return ElevatedButton(
-        onPressed: isExporting ? null : onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Tokens.accent,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(Tokens.radiusButton),
-          ),
-          textStyle: const TextStyle(
-            fontSize: Tokens.fontSizeSmall,
-            fontWeight: FontWeight.w700,
-          ),
-          minimumSize: Size.zero,
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        ),
-        child: child,
-      );
-    }
-
     return SizedBox(
       width: double.infinity,
       height: 48,
@@ -500,7 +490,7 @@ class _ExportButton extends StatelessWidget {
           ),
           textStyle: const TextStyle(
             fontSize: Tokens.fontSizeBody,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w800,
           ),
         ),
         child: child,
@@ -630,13 +620,12 @@ class _SuccessCard extends StatelessWidget {
           GestureDetector(
             onTap: () => _copyLink(context),
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: Tokens.success.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(Tokens.radiusButton),
-                border: Border.all(
-                    color: Tokens.success.withValues(alpha: 0.24)),
+                border:
+                    Border.all(color: Tokens.success.withValues(alpha: 0.24)),
               ),
               child: Text(
                 openSheetsLabel,

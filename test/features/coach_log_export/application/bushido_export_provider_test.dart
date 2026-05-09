@@ -79,7 +79,11 @@ class _FakeSheetsService extends SheetsService {
     final zCellMatch = _zCellRange.firstMatch(range);
     if (zCellMatch != null) {
       final row = int.parse(zCellMatch.group(1)!);
-      return zColumn.containsKey(row) ? [[zColumn[row]!]] : const [];
+      return zColumn.containsKey(row)
+          ? [
+              [zColumn[row]!]
+            ]
+          : const [];
     }
     // !A:A and other reads — empty by default.
     return const [];
@@ -118,7 +122,8 @@ class _FakeFitness implements BushidoFitnessSource {
   _FakeFitness({this.stepsMap = const {}, this.weightMap = const {}});
 
   @override
-  Future<List<StepsRecord>> stepsHistoryForRange(DateTime from, DateTime to) async {
+  Future<List<StepsRecord>> stepsHistoryForRange(
+      DateTime from, DateTime to) async {
     final out = <StepsRecord>[];
     var d = from;
     while (!d.isAfter(to)) {
@@ -143,7 +148,8 @@ class _FakeNutrition implements BushidoNutritionSource {
   _FakeNutrition(this.map);
 
   @override
-  Future<KtDayNutrition?> nutritionForDate(DateTime date) async => map[_key(date)];
+  Future<KtDayNutrition?> nutritionForDate(DateTime date) async =>
+      map[_key(date)];
 }
 
 String _key(DateTime d) => '${d.year}-${d.month}-${d.day}';
@@ -161,6 +167,7 @@ const _expectedSpreadsheetId = 'spreadsheet-xyz';
   Map<String, int> steps = const {},
   Map<String, double> weight = const {},
   Map<String, KtDayNutrition> nutrition = const {},
+  DateTime? now,
 }) {
   final fakeSheets = _FakeSheetsService();
   final builder = BushidoExportDataBuilder(
@@ -189,6 +196,7 @@ const _expectedSpreadsheetId = 'spreadsheet-xyz';
     refreshNutrition: (from, to) async {
       nutritionCalls++;
     },
+    now: () => now ?? DateTime(2030, 1, 1),
   );
 
   return (
@@ -231,7 +239,8 @@ void main() {
   final l10n = AppLocalizationsEn();
 
   group('BushidoExportProvider.exportRange', () {
-    test('three weeks, middle empty → all 3 blocks + next-week block exist; '
+    test(
+        'three weeks, middle empty → all 3 blocks + next-week block exist; '
         'middle week\'s auto cells are blank', () async {
       // Pick three consecutive ISO weeks.
       final wA = IsoWeek.fromDate(DateTime(2026, 1, 5)); // 2026-W02
@@ -319,17 +328,70 @@ void main() {
       // Z column unchanged: no duplicate blocks appended.
       expect(w.fakeSheets.zColumn, markersAfterFirst);
 
-      // No new validation requests (ensureWeekBlock cache-hit on every week).
-      expect(w.fakeSheets.batchRequests.length, batchAfterFirst);
+      // Existing blocks are not duplicated, but their formatting is refreshed.
+      expect(w.fakeSheets.batchRequests.length, greaterThan(batchAfterFirst));
 
-      // Second pass writes only the auto-cell ranges (one per input week,
-      // here just 1) — no new block-grid (A:O) or marker (Z) writes.
-      final secondPassWrites = w.fakeSheets.writes.skip(writesAfterFirst).toList();
-      expect(secondPassWrites.length, 1);
+      // Second pass includes exactly one auto-cell write for the input week,
+      // with no new block-grid (A:O) or marker (Z) writes.
+      final secondPassWrites =
+          w.fakeSheets.writes.skip(writesAfterFirst).toList();
+      final autoWrites = secondPassWrites
+          .where((write) => RegExp(r'!A\d+:H\d+$').hasMatch(write.range))
+          .toList();
+      expect(autoWrites.length, 1);
       expect(
-        RegExp(r'!A\d+:H\d+$').hasMatch(secondPassWrites.single.range),
-        isTrue,
+        secondPassWrites
+            .where((write) => RegExp(r'!A\d+:O\d+$').hasMatch(write.range))
+            .toList(),
+        isEmpty,
       );
+      expect(
+        secondPassWrites.where((write) =>
+            write.range.contains('!Z') &&
+            write.values.first.first.toString().startsWith('BUSHIDO_WEEK:')),
+        isEmpty,
+      );
+    });
+
+    test('updates header link when the current-week block exists', () async {
+      final week = IsoWeek.fromDate(DateTime(2026, 1, 5));
+      final w = _wire(now: week.monday);
+
+      await w.provider.exportRange(
+        from: week.monday,
+        to: week.sunday,
+        l10n: l10n,
+      );
+
+      final linkWrites =
+          w.fakeSheets.writes.where((write) => write.range.endsWith('!D7'));
+      expect(linkWrites.length, 1);
+      final formula = linkWrites.single.values.single.single as String;
+      expect(formula, contains('gid=${w.fakeSheets.sheetIdToReturn}'));
+      expect(formula, contains('range=A9'));
+    });
+
+    test('exportCurrentWeek exports the same current ISO week path', () async {
+      final today = DateTime(2026, 1, 7);
+      final week = IsoWeek.fromDate(today);
+      final w = _wire(now: today);
+
+      await w.provider.exportCurrentWeek(l10n: l10n);
+
+      final marker =
+          'BUSHIDO_WEEK:${week.year}-W${week.weekNumber.toString().padLeft(2, '0')}:v1';
+      expect(w.fakeSheets.zColumn.values, contains(marker));
+
+      final autoCellsWrites = w.fakeSheets.writes
+          .where((wr) => RegExp(r'!A\d+:H\d+$').hasMatch(wr.range))
+          .toList();
+      expect(autoCellsWrites.length, 1);
+      expect((autoCellsWrites.single.values.first.first as String),
+          startsWith('05.01'));
+
+      final linkWrites =
+          w.fakeSheets.writes.where((write) => write.range.endsWith('!D7'));
+      expect(linkWrites.length, 1);
     });
 
     test('after exportRange(from, to) the next-week block exists', () async {

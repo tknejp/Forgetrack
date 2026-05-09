@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forgetrack/features/coach_log_export/data/bushido_sheets_service.dart';
 import 'package:forgetrack/features/coach_log_export/domain/bushido_day_row.dart';
 import 'package:forgetrack/features/coach_log_export/domain/bushido_export_config.dart';
+import 'package:forgetrack/features/coach_log_export/config/bushido_sheet_format_config.dart';
 import 'package:forgetrack/features/coach_log_export/domain/bushido_sheet_layout.dart';
 import 'package:forgetrack/features/coach_log_export/domain/iso_week.dart';
 import 'package:forgetrack/features/sheets_export/data/sheets_service.dart';
@@ -97,8 +98,8 @@ BushidoSheetsService _service(_FakeSheetsService fake) =>
 
 _Write _findWrite(_FakeSheetsService fake, String suffix) =>
     fake.writes.firstWhere((w) => w.range.endsWith(suffix),
-        orElse: () =>
-            throw StateError('No write matching "$suffix"; got ${fake.writes.map((w) => w.range).toList()}'));
+        orElse: () => throw StateError(
+            'No write matching "$suffix"; got ${fake.writes.map((w) => w.range).toList()}'));
 
 void main() {
   group('BushidoSheetsService.loadExistingWeekIndex', () {
@@ -165,10 +166,82 @@ void main() {
     });
   });
 
-  group('BushidoSheetsService.ensureWeekBlock', () {
-    test('week already in cache → returns cached row, no writes', () async {
+  group('BushidoSheetsService.ensureSheetHeader', () {
+    test('existing header marker still receives current header formatting',
+        () async {
       final fake = _FakeSheetsService();
-      final week = IsoWeek.fromDate(DateTime(2026, 5, 4)); // 2026-W18 starts 2026-04-27, but easier: any week
+      fake.readMap['$_sheetName!Z1'] = [
+        [BushidoSheetLayout.headerMarker],
+      ];
+
+      await _service(fake).ensureSheetHeader(
+        spreadsheetId: _spreadsheetId,
+        sheetId: 100,
+        sheetName: _sheetName,
+      );
+
+      expect(_findWrite(fake, '!A1:B${BushidoSheetLayout.headerRows}').values,
+          hasLength(BushidoSheetLayout.headerRows));
+
+      final labels = _findWrite(
+              fake, '!C3:C${2 + BushidoSheetFormatConfig.profileLabels.length}')
+          .values;
+      expect(labels.map((row) => row.single).toList(),
+          BushidoSheetFormatConfig.profileLabels);
+
+      final merges =
+          fake.batchRequests.where((r) => r.mergeCells != null).toList();
+      expect(merges.length, 1);
+      expect(merges.single.mergeCells!.range!.startColumnIndex, 0);
+      expect(merges.single.mergeCells!.range!.endColumnIndex, 2);
+      expect(merges.single.mergeCells!.range!.startRowIndex, 1);
+      expect(merges.single.mergeCells!.range!.endRowIndex, 7);
+
+      final profileFormats = fake.batchRequests
+          .where((r) => r.repeatCell != null)
+          .where((r) =>
+              r.repeatCell!.fields?.contains('userEnteredFormat.borders') ??
+              false)
+          .toList();
+      expect(profileFormats.length, 2);
+    });
+
+    test('logo formula follows the public image url config', () async {
+      final fake = _FakeSheetsService();
+      fake.readMap['$_sheetName!Z1'] = [
+        [BushidoSheetLayout.headerMarker],
+      ];
+
+      await _service(fake).ensureSheetHeader(
+        spreadsheetId: _spreadsheetId,
+        sheetId: 100,
+        sheetName: _sheetName,
+      );
+
+      final logoWrites =
+          fake.writes.where((write) => write.range.endsWith('!A2')).toList();
+      final configuredUrl = BushidoSheetFormatConfig.logoImageUrl;
+      if (configuredUrl == null || configuredUrl.isEmpty) {
+        expect(
+          logoWrites,
+          isEmpty,
+          reason: 'local assets cannot be inserted into Sheets without a URL',
+        );
+      } else {
+        expect(logoWrites.length, 1);
+        final formula = logoWrites.single.values.single.single as String;
+        expect(formula, startsWith('=IMAGE("'));
+        expect(formula, contains(configuredUrl.replaceAll('"', '""')));
+      }
+    });
+  });
+
+  group('BushidoSheetsService.ensureWeekBlock', () {
+    test('week already in cache → returns cached row and reapplies formatting',
+        () async {
+      final fake = _FakeSheetsService();
+      final week = IsoWeek.fromDate(DateTime(
+          2026, 5, 4)); // 2026-W18 starts 2026-04-27, but easier: any week
       final cache = <IsoWeek, int>{week: 5};
 
       final row = await _service(fake).ensureWeekBlock(
@@ -181,10 +254,16 @@ void main() {
 
       expect(row, 5);
       expect(fake.writes, isEmpty);
-      expect(fake.batchRequests, isEmpty);
+      expect(fake.batchRequests, isNotEmpty);
+      expect(
+        fake.batchRequests.where((r) => r.setDataValidation != null),
+        hasLength(3),
+      );
     });
 
-    test('empty cache + empty sheet → appends at row headerRows+1, marker at Z(headerRows+1)', () async {
+    test(
+        'empty cache + empty sheet → appends at row headerRows+1, marker at Z(headerRows+1)',
+        () async {
       final fake = _FakeSheetsService();
       final week = IsoWeek.fromDate(DateTime(2026, 1, 1)); // 2026-W01
       final cache = <IsoWeek, int>{};
@@ -205,7 +284,9 @@ void main() {
       expect(markerWrite.values.first.first, 'BUSHIDO_WEEK:2026-W01:v1');
     });
 
-    test('empty cache + non-empty A:A → startRow follows lastFilledRow + spacer', () async {
+    test(
+        'empty cache + non-empty A:A → startRow follows lastFilledRow + spacer',
+        () async {
       final fake = _FakeSheetsService();
       // 7 rows of arbitrary content already in column A.
       fake.readMap['$_sheetName!A:A'] = List.generate(7, (i) => ['x']);
@@ -224,7 +305,8 @@ void main() {
       expect(row, 7 + BushidoSheetLayout.spacerRowsBetweenWeeks + 1);
     });
 
-    test('cache has existing block → next block lands strictly past it', () async {
+    test('cache has existing block → next block lands strictly past it',
+        () async {
       final fake = _FakeSheetsService();
       final w18 = IsoWeek.fromDate(DateTime(2026, 4, 30)); // some week
       final cache = <IsoWeek, int>{w18: 5};
@@ -245,7 +327,9 @@ void main() {
       expect(cache[w19], row);
     });
 
-    test('older week vs cached newer week → inserts via insertDimension and shifts cache', () async {
+    test(
+        'older week vs cached newer week → inserts via insertDimension and shifts cache',
+        () async {
       final fake = _FakeSheetsService();
       // W18/2026 already in the sheet at row 9 (after the sticky header).
       final newer = IsoWeek.fromDate(DateTime(2026, 5, 1)); // 2026-W18
@@ -273,9 +357,8 @@ void main() {
 
       // An insertDimension request was issued before the new content was
       // written.
-      final inserts = fake.batchRequests
-          .where((r) => r.insertDimension != null)
-          .toList();
+      final inserts =
+          fake.batchRequests.where((r) => r.insertDimension != null).toList();
       expect(inserts.length, 1);
       final dim = inserts.single.insertDimension!.range!;
       expect(dim.dimension, 'ROWS');
@@ -288,12 +371,12 @@ void main() {
 
       // Marker for the new block landed at Z9 (issued as an UpdateCellsRequest
       // inside the atomic insert batchUpdate).
-      final markerCellRequests = fake.batchRequests
-          .where((r) => r.updateCells != null)
-          .where((r) {
+      final markerCellRequests =
+          fake.batchRequests.where((r) => r.updateCells != null).where((r) {
         final range = r.updateCells!.range;
         return range != null &&
-            range.startColumnIndex == BushidoSheetLayout.hiddenMarkerColumn - 1 &&
+            range.startColumnIndex ==
+                BushidoSheetLayout.hiddenMarkerColumn - 1 &&
             range.endColumnIndex == BushidoSheetLayout.hiddenMarkerColumn &&
             range.startRowIndex == 8;
       }).toList();
@@ -330,10 +413,11 @@ void main() {
 
       expect(row1, row2);
       expect(fake.writes.length, writesAfterFirst);
-      expect(fake.batchRequests.length, batchAfterFirst);
+      expect(fake.batchRequests.length, greaterThan(batchAfterFirst));
     });
 
-    test('append writes marker, headers, dates, AVERAGE formulas, target box', () async {
+    test('append writes marker, headers, dates, AVERAGE formulas, target box',
+        () async {
       final fake = _FakeSheetsService();
       final week = IsoWeek.fromDate(DateTime(2026, 1, 1));
       final cache = <IsoWeek, int>{};
@@ -350,12 +434,17 @@ void main() {
       final blockWrite = _findWrite(fake, '!A$startRow:O$endRow');
       final block = blockWrite.values;
 
-      // Daily column header row contains all BushidoColumn labels in order.
+      // Daily column header row: date column shows week title, others show label.
       final headerRow = block[BushidoSheetLayout.dailyHeaderRowOffset];
       for (final col in BushidoColumn.values) {
-        expect(headerRow[col.columnOffset], col.label,
+        final expected = col == BushidoColumn.date ? 'Týden 1' : col.label;
+        expect(headerRow[col.columnOffset], expected,
             reason: 'header for ${col.name}');
       }
+      final mIndex = BushidoSheetLayout.targetBoxStartColumn - 1;
+      expect(headerRow[mIndex], BushidoSheetFormatConfig.coachFillHeaderLabel);
+      expect(headerRow[mIndex + 1], 'Cíl');
+      expect(headerRow[mIndex + 2], 'Výsledek');
 
       // 7 day dates in column A on the day rows.
       for (var d = 0; d < 7; d++) {
@@ -377,16 +466,16 @@ void main() {
       }
 
       // Target box: 'CÍLE / VÝSLEDEK' header + label + AVERAGE formula per metric.
-      final mIndex = BushidoSheetLayout.targetBoxStartColumn - 1;
-      expect(block[BushidoSheetLayout.headerRowOffset][mIndex],
-          'CÍLE / VÝSLEDEK');
+      expect(
+          block[BushidoSheetLayout.headerRowOffset][mIndex], 'CÍLE / VÝSLEDEK');
       for (var i = 0; i < BushidoExportConfig.targetMetrics.length; i++) {
         final metric = BushidoExportConfig.targetMetrics[i];
         final row = block[BushidoSheetLayout.firstTargetMetricRowOffset + i];
         expect(row[mIndex], metric.label);
         expect(row[mIndex + 1], isNull, reason: 'goal cell stays blank');
         expect(row[mIndex + 2], isA<String>());
-        expect((row[mIndex + 2] as String).startsWith('=IFERROR(ROUND(AVERAGE('),
+        expect(
+            (row[mIndex + 2] as String).startsWith('=IFERROR(ROUND(AVERAGE('),
             isTrue);
       }
 
@@ -395,16 +484,135 @@ void main() {
       expect(markerWrite.values.first.first, 'BUSHIDO_WEEK:2026-W01:v1');
 
       // Three data validations submitted.
-      final validations = fake.batchRequests
-          .where((r) => r.setDataValidation != null)
-          .toList();
+      final validations =
+          fake.batchRequests.where((r) => r.setDataValidation != null).toList();
       expect(validations.length, 3);
+    });
+
+    test('append applies all body colors without Sheets table objects',
+        () async {
+      final fake = _FakeSheetsService();
+      final week = IsoWeek.fromDate(DateTime(2026, 1, 1));
+      final cache = <IsoWeek, int>{};
+
+      final startRow = await _service(fake).ensureWeekBlock(
+        spreadsheetId: _spreadsheetId,
+        sheetId: 100,
+        sheetName: _sheetName,
+        week: week,
+        startRowCache: cache,
+      );
+
+      final tables =
+          fake.batchRequests.where((r) => r.addTable != null).toList();
+      expect(tables, isEmpty);
+
+      final expectedBodyStart0 =
+          startRow + BushidoSheetLayout.firstDayRowOffset - 1;
+      final expectedBodyEnd0 =
+          expectedBodyStart0 + BushidoSheetLayout.daysPerWeek;
+
+      bool hasRepeatFillRange(int startCol, int endCol) {
+        return fake.batchRequests
+            .where((r) => r.repeatCell != null)
+            .where((r) =>
+                r.repeatCell!.fields
+                    ?.contains('userEnteredFormat.backgroundColorStyle') ??
+                false)
+            .any((r) {
+          final range = r.repeatCell!.range!;
+          return range.startRowIndex == expectedBodyStart0 &&
+              range.endRowIndex == expectedBodyEnd0 &&
+              range.startColumnIndex == startCol &&
+              range.endColumnIndex == endCol;
+        });
+      }
+
+      expect(
+        hasRepeatFillRange(
+          BushidoColumn.date.columnOffset,
+          BushidoColumn.date.columnOffset + 1,
+        ),
+        isTrue,
+        reason: 'date column should get its own fill',
+      );
+      expect(
+        hasRepeatFillRange(
+          BushidoColumn.weightKg.columnOffset,
+          BushidoColumn.steps.columnOffset + 1,
+        ),
+        isTrue,
+        reason: 'automatic metric columns should share one fill',
+      );
+      expect(
+        hasRepeatFillRange(
+          BushidoColumn.training.columnOffset,
+          BushidoColumn.hydration.columnOffset + 1,
+        ),
+        isTrue,
+        reason: 'manual checkbox/dropdown columns should share one fill',
+      );
+      expect(
+        hasRepeatFillRange(
+          BushidoColumn.note.columnOffset,
+          BushidoColumn.note.columnOffset + 1,
+        ),
+        isTrue,
+        reason: 'note column should get the yellow fill',
+      );
+      expect(
+        hasRepeatFillRange(12, 15),
+        isTrue,
+        reason: 'target box body should get the gray fill',
+      );
+
+      final footerRepeatBackgrounds = fake.batchRequests
+          .where((r) => r.repeatCell != null)
+          .where((r) =>
+              r.repeatCell!.fields
+                  ?.contains('userEnteredFormat.backgroundColorStyle') ??
+              false)
+          .where((r) {
+        final range = r.repeatCell!.range;
+        return range?.startRowIndex ==
+                startRow + BushidoSheetLayout.averageRowOffset - 1 &&
+            range?.endRowIndex ==
+                startRow + BushidoSheetLayout.averageRowOffset &&
+            range?.startColumnIndex == 0 &&
+            range?.endColumnIndex == 12;
+      }).toList();
+      expect(footerRepeatBackgrounds.length, 1);
+
+      final rowHeightRequests = fake.batchRequests
+          .where((r) => r.updateDimensionProperties != null)
+          .toList();
+      expect(rowHeightRequests.length, 1);
+      expect(
+        rowHeightRequests
+            .single.updateDimensionProperties!.properties!.pixelSize,
+        BushidoSheetFormatConfig.tableRowHeightPx,
+      );
+
+      final fontRequests = fake.batchRequests
+          .where((r) => r.repeatCell != null)
+          .where((r) =>
+              r.repeatCell!.fields
+                  ?.contains('userEnteredFormat.textFormat.fontFamily') ??
+              false)
+          .toList();
+      expect(fontRequests, isNotEmpty);
+      expect(
+        fontRequests
+            .first.repeatCell!.cell!.userEnteredFormat!.textFormat!.fontFamily,
+        BushidoSheetFormatConfig.fontFamily,
+      );
     });
 
     test('marker format is exactly BUSHIDO_WEEK:{year}-W{ww}:v{layoutVersion}',
         () async {
       final fake = _FakeSheetsService();
-      final week = IsoWeek.fromDate(DateTime(2026, 5, 1)); // 2026-W18 (Friday May 1)
+      final week =
+          IsoWeek.fromDate(DateTime(2026, 5, 1)); // 2026-W18 (Friday May 1)
       final cache = <IsoWeek, int>{};
 
       await _service(fake).ensureWeekBlock(
@@ -446,7 +654,8 @@ void main() {
       expect(fake.writes.length, 1);
       final w = fake.writes.single;
       // Range must end at column H — never reach I, J, K, or L.
-      expect(w.range.endsWith(':H${1 + BushidoSheetLayout.firstDayRowOffset + 6}'),
+      expect(
+          w.range.endsWith(':H${1 + BushidoSheetLayout.firstDayRowOffset + 6}'),
           isTrue,
           reason: 'expected range to stop at H, got ${w.range}');
       // Each row payload has exactly 8 cells (A..H), no manual columns.
@@ -516,7 +725,8 @@ void main() {
       expect(mondayRow[BushidoColumn.steps.columnOffset], 0);
     });
 
-    test('re-export of same range is idempotent: no duplicate block, '
+    test(
+        're-export of same range is idempotent: no duplicate block, '
         'manual columns never re-written', () async {
       final fake = _FakeSheetsService();
       final cache = <IsoWeek, int>{};
@@ -569,8 +779,8 @@ void main() {
       // Same row → no duplicate block.
       expect(row1, row2);
 
-      // ensureWeekBlock returned from cache → no new batch validations.
-      expect(fake.batchRequests.length, firstPassBatchCount);
+      // ensureWeekBlock returned from cache — formatting is refreshed, no new block.
+      expect(fake.batchRequests.length, greaterThan(firstPassBatchCount));
 
       // Second pass produced exactly one new write (writeAutoCells), into A:H.
       final secondPass = fake.writes.skip(firstPassWriteCount).toList();
