@@ -13,7 +13,7 @@ void main() {
 
       await service.unlock(
         uid,
-        'frame_lvl10',
+        'frame_wildwood',
         sourceType: CosmeticUnlockSource.progressionLevel.name,
         sourceId: 'level_10',
       );
@@ -29,12 +29,12 @@ void main() {
         sourceType: CosmeticUnlockSource.manual.name,
         sourceId: 'custom_grant',
       );
-      await service.equip(uid, 'frame_lvl10');
+      await service.equip(uid, 'frame_wildwood');
 
       final result = await service.resetProgressionUnlocks(uid);
 
       expect(result.removedCount, 2);
-      expect(result.state.unlocked.containsKey('frame_lvl10'), isFalse);
+      expect(result.state.unlocked.containsKey('frame_wildwood'), isFalse);
       expect(result.state.unlocked.containsKey('emblem_forest_mark'), isFalse);
       expect(result.state.unlocked.containsKey('frame_developer_tom'), isTrue);
       expect(result.state.equipped.frameId, isNull);
@@ -49,17 +49,17 @@ void main() {
 
       await service.unlock(
         uid,
-        'frame_lvl10',
+        'frame_wildwood',
         sourceType: CosmeticUnlockSource.manual.name,
       );
       expect(
-        (await repository.loadForUser(uid)).unlocked.containsKey('frame_lvl10'),
+        (await repository.loadForUser(uid)).unlocked.containsKey('frame_wildwood'),
         isTrue,
       );
 
-      final state = await service.revoke(uid, 'frame_lvl10');
+      final state = await service.revoke(uid, 'frame_wildwood');
 
-      expect(state.unlocked.containsKey('frame_lvl10'), isFalse);
+      expect(state.unlocked.containsKey('frame_wildwood'), isFalse);
     });
 
     test('clears equipped slot when revoked cosmetic is equipped', () async {
@@ -69,18 +69,18 @@ void main() {
 
       await service.unlock(
         uid,
-        'frame_lvl25',
+        'frame_dwarven',
         sourceType: CosmeticUnlockSource.manual.name,
       );
-      await service.equip(uid, 'frame_lvl25');
+      await service.equip(uid, 'frame_dwarven');
       expect(
         (await repository.loadForUser(uid)).equipped.frameId,
-        'frame_lvl25',
+        'frame_dwarven',
       );
 
-      final state = await service.revoke(uid, 'frame_lvl25');
+      final state = await service.revoke(uid, 'frame_dwarven');
 
-      expect(state.unlocked.containsKey('frame_lvl25'), isFalse);
+      expect(state.unlocked.containsKey('frame_dwarven'), isFalse);
       expect(state.equipped.frameId, isNull);
     });
 
@@ -90,7 +90,7 @@ void main() {
       const uid = 'user-1';
 
       final before = await repository.loadForUser(uid);
-      final state = await service.revoke(uid, 'frame_lvl40');
+      final state = await service.revoke(uid, 'frame_underways');
 
       expect(state.unlocked, equals(before.unlocked));
     });
@@ -104,7 +104,7 @@ void main() {
 
       await service.unlock(
         uid,
-        'frame_lvl1',
+        'frame_pilgrim',
         sourceType: CosmeticUnlockSource.defaultBaseline.name,
       );
       await service.unlock(
@@ -126,10 +126,10 @@ void main() {
 
       await service.unlock(
         uid,
-        'frame_lvl1',
+        'frame_pilgrim',
         sourceType: CosmeticUnlockSource.manual.name,
       );
-      await service.equip(uid, 'frame_lvl1');
+      await service.equip(uid, 'frame_pilgrim');
 
       final result = await service.clearAllUnlocks(uid);
 

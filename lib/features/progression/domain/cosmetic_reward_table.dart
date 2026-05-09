@@ -56,22 +56,21 @@ class CosmeticRewardTable {
   /// celebratory unlock rather than a silent baseline grant.
   static const Map<int, List<String>> levelToCosmetics = <int, List<String>>{
     5: ['background_forest_trail'],
-    10: ['frame_lvl10', 'emblem_forest_mark'],
+    10: ['frame_wildwood'],
     15: ['background_ravine'],
-    20: ['emblem_ruin_sigil'],
-    25: ['frame_lvl25', 'background_ruins'],
-    30: ['emblem_gatekeeper_mark'],
+    20: ['frame_ruins'],
+    25: ['background_ruins'],
     35: ['background_bridge_crossing'],
-    40: ['frame_lvl40', 'emblem_mine_crest'],
+    40: ['frame_dwarven'],
     45: ['background_mines'],
-    50: ['emblem_underways_mark'],
-    60: ['frame_lvl60', 'background_frostlands', 'emblem_frost_sigil'],
-    70: ['emblem_icewalker_mark'],
+    50: ['frame_underways'],
+    60: ['background_frostlands'],
+    70: ['frame_frost'],
     75: ['background_frozen_lake'],
-    80: ['frame_lvl80', 'background_rocky_mountains', 'emblem_mountain_crest'],
-    90: ['emblem_dragon_mark'],
+    80: ['frame_mountain'],
+    90: ['background_rocky_mountains'],
     95: ['background_dragonrock_fortress'],
-    100: ['frame_lvl100', 'emblem_dragonrock_emblem'],
+    100: ['frame_dragonrock'],
   };
 
   static const Map<String, List<String>> questToCosmetics =

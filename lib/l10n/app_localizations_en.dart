@@ -2789,52 +2789,59 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get cosmeticFrameLvl1Name => 'Pilgrim\'s Frame';
+  String get cosmeticFramePilgrimName => 'Pilgrim\'s Frame';
 
   @override
-  String get cosmeticFrameLvl1Desc =>
+  String get cosmeticFramePilgrimDesc =>
       'A plain wooden frame for anyone who set out on the road.';
 
   @override
-  String get cosmeticFrameLvl10Name => 'Wildwood Frame';
+  String get cosmeticFrameWildwoodName => 'Wildwood Frame';
 
   @override
-  String get cosmeticFrameLvl10Desc =>
+  String get cosmeticFrameWildwoodDesc =>
       'Dark wood and subtle forest carvings for those who learned to read the paths of the wildwood.';
 
   @override
-  String get cosmeticFrameLvl25Name => 'Old Gates Frame';
+  String get cosmeticFrameRuinsName => 'Ruins Frame';
 
   @override
-  String get cosmeticFrameLvl25Desc =>
+  String get cosmeticFrameRuinsDesc =>
+      'Cracked stonework and creeping moss recall the silent ruins on the edge of the pass.';
+
+  @override
+  String get cosmeticFrameDwarvenName => 'Old Gates Frame';
+
+  @override
+  String get cosmeticFrameDwarvenDesc =>
       'Weathered stone and aged bronze from the pass where the trail gives way to ruins.';
 
   @override
-  String get cosmeticFrameLvl40Name => 'Dwarven Frame';
+  String get cosmeticFrameUnderwaysName => 'Dwarven Frame';
 
   @override
-  String get cosmeticFrameLvl40Desc =>
+  String get cosmeticFrameUnderwaysDesc =>
       'A sturdy frame of forged metal and mine stone, crafted in the depths of dwarven halls.';
 
   @override
-  String get cosmeticFrameLvl60Name => 'Frost Frame';
+  String get cosmeticFrameFrostName => 'Frost Frame';
 
   @override
-  String get cosmeticFrameLvl60Desc =>
+  String get cosmeticFrameFrostDesc =>
       'A cold silver frame with an icy sheen, born in the silence of the frozen lands.';
 
   @override
-  String get cosmeticFrameLvl80Name => 'Mountain Challenger\'s Frame';
+  String get cosmeticFrameMountainName => 'Mountain Challenger\'s Frame';
 
   @override
-  String get cosmeticFrameLvl80Desc =>
+  String get cosmeticFrameMountainDesc =>
       'Dark mountain stone and blackened steel for those who climbed toward the fortress path.';
 
   @override
-  String get cosmeticFrameLvl100Name => 'Dragonrock Frame';
+  String get cosmeticFrameDragonrockName => 'Dragonrock Frame';
 
   @override
-  String get cosmeticFrameLvl100Desc =>
+  String get cosmeticFrameDragonrockDesc =>
       'A legendary frame of obsidian, dragonstone, and golden details, reserved for the lord of Dragonrock.';
 
   @override
@@ -3766,25 +3773,28 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get cosmeticFrameLvl1UnlockHint => 'Reward for starting your journey.';
+  String get cosmeticFramePilgrimUnlockHint => 'Reward for starting your journey.';
 
   @override
-  String get cosmeticFrameLvl10UnlockHint => 'Reach level 10.';
+  String get cosmeticFrameWildwoodUnlockHint => 'Reach level 10.';
 
   @override
-  String get cosmeticFrameLvl25UnlockHint => 'Reach level 25.';
+  String get cosmeticFrameRuinsUnlockHint => 'Reach level 20.';
 
   @override
-  String get cosmeticFrameLvl40UnlockHint => 'Reach level 40.';
+  String get cosmeticFrameDwarvenUnlockHint => 'Reach level 25.';
 
   @override
-  String get cosmeticFrameLvl60UnlockHint => 'Reach level 60.';
+  String get cosmeticFrameUnderwaysUnlockHint => 'Reach level 40.';
 
   @override
-  String get cosmeticFrameLvl80UnlockHint => 'Reach level 80.';
+  String get cosmeticFrameFrostUnlockHint => 'Reach level 60.';
 
   @override
-  String get cosmeticFrameLvl100UnlockHint => 'Reach level 100.';
+  String get cosmeticFrameMountainUnlockHint => 'Reach level 80.';
+
+  @override
+  String get cosmeticFrameDragonrockUnlockHint => 'Reach level 100.';
 
   @override
   String get cosmeticFrameDisciplineUnlockHint =>

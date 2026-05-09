@@ -5078,89 +5078,101 @@ abstract class AppLocalizations {
   /// **'Reach level {level} through earned XP.'**
   String progLevelAchievementDesc(int level);
 
-  /// No description provided for @cosmeticFrameLvl1Name.
+  /// No description provided for @cosmeticFramePilgrimName.
   ///
   /// In en, this message translates to:
   /// **'Pilgrim\'s Frame'**
-  String get cosmeticFrameLvl1Name;
+  String get cosmeticFramePilgrimName;
 
-  /// No description provided for @cosmeticFrameLvl1Desc.
+  /// No description provided for @cosmeticFramePilgrimDesc.
   ///
   /// In en, this message translates to:
   /// **'A plain wooden frame for anyone who set out on the road.'**
-  String get cosmeticFrameLvl1Desc;
+  String get cosmeticFramePilgrimDesc;
 
-  /// No description provided for @cosmeticFrameLvl10Name.
+  /// No description provided for @cosmeticFrameWildwoodName.
   ///
   /// In en, this message translates to:
   /// **'Wildwood Frame'**
-  String get cosmeticFrameLvl10Name;
+  String get cosmeticFrameWildwoodName;
 
-  /// No description provided for @cosmeticFrameLvl10Desc.
+  /// No description provided for @cosmeticFrameWildwoodDesc.
   ///
   /// In en, this message translates to:
   /// **'Dark wood and subtle forest carvings for those who learned to read the paths of the wildwood.'**
-  String get cosmeticFrameLvl10Desc;
+  String get cosmeticFrameWildwoodDesc;
 
-  /// No description provided for @cosmeticFrameLvl25Name.
+  /// No description provided for @cosmeticFrameRuinsName.
+  ///
+  /// In en, this message translates to:
+  /// **'Ruins Frame'**
+  String get cosmeticFrameRuinsName;
+
+  /// No description provided for @cosmeticFrameRuinsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Cracked stonework and creeping moss recall the silent ruins on the edge of the pass.'**
+  String get cosmeticFrameRuinsDesc;
+
+  /// No description provided for @cosmeticFrameDwarvenName.
   ///
   /// In en, this message translates to:
   /// **'Old Gates Frame'**
-  String get cosmeticFrameLvl25Name;
+  String get cosmeticFrameDwarvenName;
 
-  /// No description provided for @cosmeticFrameLvl25Desc.
+  /// No description provided for @cosmeticFrameDwarvenDesc.
   ///
   /// In en, this message translates to:
   /// **'Weathered stone and aged bronze from the pass where the trail gives way to ruins.'**
-  String get cosmeticFrameLvl25Desc;
+  String get cosmeticFrameDwarvenDesc;
 
-  /// No description provided for @cosmeticFrameLvl40Name.
+  /// No description provided for @cosmeticFrameUnderwaysName.
   ///
   /// In en, this message translates to:
   /// **'Dwarven Frame'**
-  String get cosmeticFrameLvl40Name;
+  String get cosmeticFrameUnderwaysName;
 
-  /// No description provided for @cosmeticFrameLvl40Desc.
+  /// No description provided for @cosmeticFrameUnderwaysDesc.
   ///
   /// In en, this message translates to:
   /// **'A sturdy frame of forged metal and mine stone, crafted in the depths of dwarven halls.'**
-  String get cosmeticFrameLvl40Desc;
+  String get cosmeticFrameUnderwaysDesc;
 
-  /// No description provided for @cosmeticFrameLvl60Name.
+  /// No description provided for @cosmeticFrameFrostName.
   ///
   /// In en, this message translates to:
   /// **'Frost Frame'**
-  String get cosmeticFrameLvl60Name;
+  String get cosmeticFrameFrostName;
 
-  /// No description provided for @cosmeticFrameLvl60Desc.
+  /// No description provided for @cosmeticFrameFrostDesc.
   ///
   /// In en, this message translates to:
   /// **'A cold silver frame with an icy sheen, born in the silence of the frozen lands.'**
-  String get cosmeticFrameLvl60Desc;
+  String get cosmeticFrameFrostDesc;
 
-  /// No description provided for @cosmeticFrameLvl80Name.
+  /// No description provided for @cosmeticFrameMountainName.
   ///
   /// In en, this message translates to:
   /// **'Mountain Challenger\'s Frame'**
-  String get cosmeticFrameLvl80Name;
+  String get cosmeticFrameMountainName;
 
-  /// No description provided for @cosmeticFrameLvl80Desc.
+  /// No description provided for @cosmeticFrameMountainDesc.
   ///
   /// In en, this message translates to:
   /// **'Dark mountain stone and blackened steel for those who climbed toward the fortress path.'**
-  String get cosmeticFrameLvl80Desc;
+  String get cosmeticFrameMountainDesc;
 
-  /// No description provided for @cosmeticFrameLvl100Name.
+  /// No description provided for @cosmeticFrameDragonrockName.
   ///
   /// In en, this message translates to:
   /// **'Dragonrock Frame'**
-  String get cosmeticFrameLvl100Name;
+  String get cosmeticFrameDragonrockName;
 
-  /// No description provided for @cosmeticFrameLvl100Desc.
+  /// No description provided for @cosmeticFrameDragonrockDesc.
   ///
   /// In en, this message translates to:
   /// **'A legendary frame of obsidian, dragonstone, and golden details, reserved for the lord of Dragonrock.'**
-  String get cosmeticFrameLvl100Desc;
+  String get cosmeticFrameDragonrockDesc;
 
   /// No description provided for @cosmeticFrameDeveloperTomName.
   ///
@@ -6741,47 +6753,53 @@ abstract class AppLocalizations {
   /// **'{count} days ago'**
   String socialRelativeDaysAgo(int count);
 
-  /// No description provided for @cosmeticFrameLvl1UnlockHint.
+  /// No description provided for @cosmeticFramePilgrimUnlockHint.
   ///
   /// In en, this message translates to:
   /// **'Reward for starting your journey.'**
-  String get cosmeticFrameLvl1UnlockHint;
+  String get cosmeticFramePilgrimUnlockHint;
 
-  /// No description provided for @cosmeticFrameLvl10UnlockHint.
+  /// No description provided for @cosmeticFrameWildwoodUnlockHint.
   ///
   /// In en, this message translates to:
   /// **'Reach level 10.'**
-  String get cosmeticFrameLvl10UnlockHint;
+  String get cosmeticFrameWildwoodUnlockHint;
 
-  /// No description provided for @cosmeticFrameLvl25UnlockHint.
+  /// No description provided for @cosmeticFrameRuinsUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 20.'**
+  String get cosmeticFrameRuinsUnlockHint;
+
+  /// No description provided for @cosmeticFrameDwarvenUnlockHint.
   ///
   /// In en, this message translates to:
   /// **'Reach level 25.'**
-  String get cosmeticFrameLvl25UnlockHint;
+  String get cosmeticFrameDwarvenUnlockHint;
 
-  /// No description provided for @cosmeticFrameLvl40UnlockHint.
+  /// No description provided for @cosmeticFrameUnderwaysUnlockHint.
   ///
   /// In en, this message translates to:
   /// **'Reach level 40.'**
-  String get cosmeticFrameLvl40UnlockHint;
+  String get cosmeticFrameUnderwaysUnlockHint;
 
-  /// No description provided for @cosmeticFrameLvl60UnlockHint.
+  /// No description provided for @cosmeticFrameFrostUnlockHint.
   ///
   /// In en, this message translates to:
   /// **'Reach level 60.'**
-  String get cosmeticFrameLvl60UnlockHint;
+  String get cosmeticFrameFrostUnlockHint;
 
-  /// No description provided for @cosmeticFrameLvl80UnlockHint.
+  /// No description provided for @cosmeticFrameMountainUnlockHint.
   ///
   /// In en, this message translates to:
   /// **'Reach level 80.'**
-  String get cosmeticFrameLvl80UnlockHint;
+  String get cosmeticFrameMountainUnlockHint;
 
-  /// No description provided for @cosmeticFrameLvl100UnlockHint.
+  /// No description provided for @cosmeticFrameDragonrockUnlockHint.
   ///
   /// In en, this message translates to:
   /// **'Reach level 100.'**
-  String get cosmeticFrameLvl100UnlockHint;
+  String get cosmeticFrameDragonrockUnlockHint;
 
   /// No description provided for @cosmeticFrameDisciplineUnlockHint.
   ///

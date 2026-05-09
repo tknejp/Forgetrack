@@ -60,8 +60,8 @@ placeholders until the file ships.
 `dragonrock_crown.png`.
 
 **Frames** (`frames/`):
-`lvl1.png`, `lvl10.png`, `lvl25.png`, `lvl40.png`, `lvl60.png`,
-`lvl80.png`, `lvl100.png` (the `lvl100.png` doubles as the Dragonrock
+`pilgrim.png`, `wildwood.png`, `dwarven.png`, `underways.png`, `frost.png`,
+`mountain.png`, `dragonrock.png` (the `dragonrock.png` doubles as the Dragonrock
 endgame frame — there is no separate `dragonrock_frame.png`),
 `frame_developer_tom.png`, `discipline.png`, `endurance.png`,
 `steel.png`, `eternal_flame.png`, `balance.png`, `master_routine.png`,

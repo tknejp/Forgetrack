@@ -7,7 +7,7 @@ import '../../domain/social_models.dart';
 import 'social_avatar.dart';
 
 const _catalog = CosmeticCatalog();
-const _defaultFrameId = 'frame_lvl1';
+const _defaultFrameId = 'frame_pilgrim';
 const _defaultBackgroundId = 'background_forest_trail';
 
 class SocialCosmeticAvatar extends StatelessWidget {

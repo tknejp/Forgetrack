@@ -927,26 +927,29 @@
     }
   },
 
-  "cosmeticFrameLvl1Name": "Poutnický rámeček",
-  "cosmeticFrameLvl1Desc": "Prostý dřevěný rámeček pro každého, kdo se vydal na cestu.",
+  "cosmeticFramePilgrimName": "Poutnický rámeček",
+  "cosmeticFramePilgrimDesc": "Prostý dřevěný rámeček pro každého, kdo se vydal na cestu.",
 
-  "cosmeticFrameLvl10Name": "Rámeček hvozdu",
-  "cosmeticFrameLvl10Desc": "Tmavé dřevo a jemné lesní rytiny pro ty, kteří se naučili číst stezky hvozdu.",
+  "cosmeticFrameWildwoodName": "Rámeček hvozdu",
+  "cosmeticFrameWildwoodDesc": "Tmavé dřevo a jemné lesní rytiny pro ty, kteří se naučili číst stezky hvozdu.",
 
-  "cosmeticFrameLvl25Name": "Rámeček starých bran",
-  "cosmeticFrameLvl25Desc": "Zvětralý kámen a zašlý bronz z průsmyku, kde se stezka mění v ruiny.",
+  "cosmeticFrameRuinsName": "Rámeček ruin",
+  "cosmeticFrameRuinsDesc": "Popraskané zdivo a plíživý mech připomínají tiché ruiny na okraji průsmyku.",
 
-  "cosmeticFrameLvl40Name": "Trpasličí rám",
-  "cosmeticFrameLvl40Desc": "Pevný rám z kovaného kovu a důlního kamene, vyrobený v hlubinách trpasličích síní.",
+  "cosmeticFrameDwarvenName": "Rámeček starých bran",
+  "cosmeticFrameDwarvenDesc": "Zvětralý kámen a zašlý bronz z průsmyku, kde se stezka mění v ruiny.",
 
-  "cosmeticFrameLvl60Name": "Mrazový rám",
-  "cosmeticFrameLvl60Desc": "Chladný stříbrný rám s ledovým leskem, zrozený v tichu zamrzlé země.",
+  "cosmeticFrameUnderwaysName": "Trpasličí rám",
+  "cosmeticFrameUnderwaysDesc": "Pevný rám z kovaného kovu a důlního kamene, vyrobený v hlubinách trpasličích síní.",
 
-  "cosmeticFrameLvl80Name": "Rám horského vyzyvatele",
-  "cosmeticFrameLvl80Desc": "Temný horský kámen a černěná ocel pro ty, kteří vystoupali k cestě na pevnost.",
+  "cosmeticFrameFrostName": "Mrazový rám",
+  "cosmeticFrameFrostDesc": "Chladný stříbrný rám s ledovým leskem, zrozený v tichu zamrzlé země.",
 
-  "cosmeticFrameLvl100Name": "Rám dračí skály",
-  "cosmeticFrameLvl100Desc": "Legendární rám z obsidiánu, dračího kamene a zlatých detailů, určený pro pána dračí skály.",
+  "cosmeticFrameMountainName": "Rám horského vyzyvatele",
+  "cosmeticFrameMountainDesc": "Temný horský kámen a černěná ocel pro ty, kteří vystoupali k cestě na pevnost.",
+
+  "cosmeticFrameDragonrockName": "Rám dračí skály",
+  "cosmeticFrameDragonrockDesc": "Legendární rám z obsidiánu, dračího kamene a zlatých detailů, určený pro pána dračí skály.",
 
   "cosmeticFrameDeveloperTomName": "Vyvojarsky ramecek",
   "cosmeticFrameDeveloperTomDesc": "Specialni ramecek odemceny pres Firebase entitlement.",
@@ -1313,13 +1316,14 @@
   "socialRelativeDaysAgo": "před {count} dny",
   "@socialRelativeDaysAgo": { "placeholders": { "count": { "type": "int" } } },
 
-  "cosmeticFrameLvl1UnlockHint": "Odměna za zahájení cesty.",
-  "cosmeticFrameLvl10UnlockHint": "Dosáhni úrovně 10.",
-  "cosmeticFrameLvl25UnlockHint": "Dosáhni úrovně 25.",
-  "cosmeticFrameLvl40UnlockHint": "Dosáhni úrovně 40.",
-  "cosmeticFrameLvl60UnlockHint": "Dosáhni úrovně 60.",
-  "cosmeticFrameLvl80UnlockHint": "Dosáhni úrovně 80.",
-  "cosmeticFrameLvl100UnlockHint": "Dosáhni úrovně 100.",
+  "cosmeticFramePilgrimUnlockHint": "Odměna za zahájení cesty.",
+  "cosmeticFrameWildwoodUnlockHint": "Dosáhni úrovně 10.",
+  "cosmeticFrameRuinsUnlockHint": "Dosáhni úrovně 20.",
+  "cosmeticFrameDwarvenUnlockHint": "Dosáhni úrovně 25.",
+  "cosmeticFrameUnderwaysUnlockHint": "Dosáhni úrovně 40.",
+  "cosmeticFrameFrostUnlockHint": "Dosáhni úrovně 60.",
+  "cosmeticFrameMountainUnlockHint": "Dosáhni úrovně 80.",
+  "cosmeticFrameDragonrockUnlockHint": "Dosáhni úrovně 100.",
   "cosmeticFrameDisciplineUnlockHint": "Udržuj 7denní krokovací sérii.",
   "cosmeticFrameEnduranceUnlockHint": "Udržuj 30denní krokovací sérii.",
   "cosmeticFrameSteelUnlockHint": "Udržuj 50denní krokovací sérii.",

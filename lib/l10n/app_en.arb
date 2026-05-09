@@ -1579,26 +1579,29 @@
     }
   },
 
-  "cosmeticFrameLvl1Name": "Pilgrim's Frame",
-  "cosmeticFrameLvl1Desc": "A plain wooden frame for anyone who set out on the road.",
+  "cosmeticFramePilgrimName": "Pilgrim's Frame",
+  "cosmeticFramePilgrimDesc": "A plain wooden frame for anyone who set out on the road.",
 
-  "cosmeticFrameLvl10Name": "Wildwood Frame",
-  "cosmeticFrameLvl10Desc": "Dark wood and subtle forest carvings for those who learned to read the paths of the wildwood.",
+  "cosmeticFrameWildwoodName": "Wildwood Frame",
+  "cosmeticFrameWildwoodDesc": "Dark wood and subtle forest carvings for those who learned to read the paths of the wildwood.",
 
-  "cosmeticFrameLvl25Name": "Old Gates Frame",
-  "cosmeticFrameLvl25Desc": "Weathered stone and aged bronze from the pass where the trail gives way to ruins.",
+  "cosmeticFrameRuinsName": "Ruins Frame",
+  "cosmeticFrameRuinsDesc": "Cracked stonework and creeping moss recall the silent ruins on the edge of the pass.",
 
-  "cosmeticFrameLvl40Name": "Dwarven Frame",
-  "cosmeticFrameLvl40Desc": "A sturdy frame of forged metal and mine stone, crafted in the depths of dwarven halls.",
+  "cosmeticFrameDwarvenName": "Old Gates Frame",
+  "cosmeticFrameDwarvenDesc": "Weathered stone and aged bronze from the pass where the trail gives way to ruins.",
 
-  "cosmeticFrameLvl60Name": "Frost Frame",
-  "cosmeticFrameLvl60Desc": "A cold silver frame with an icy sheen, born in the silence of the frozen lands.",
+  "cosmeticFrameUnderwaysName": "Dwarven Frame",
+  "cosmeticFrameUnderwaysDesc": "A sturdy frame of forged metal and mine stone, crafted in the depths of dwarven halls.",
 
-  "cosmeticFrameLvl80Name": "Mountain Challenger's Frame",
-  "cosmeticFrameLvl80Desc": "Dark mountain stone and blackened steel for those who climbed toward the fortress path.",
+  "cosmeticFrameFrostName": "Frost Frame",
+  "cosmeticFrameFrostDesc": "A cold silver frame with an icy sheen, born in the silence of the frozen lands.",
 
-  "cosmeticFrameLvl100Name": "Dragonrock Frame",
-  "cosmeticFrameLvl100Desc": "A legendary frame of obsidian, dragonstone, and golden details, reserved for the lord of Dragonrock.",
+  "cosmeticFrameMountainName": "Mountain Challenger's Frame",
+  "cosmeticFrameMountainDesc": "Dark mountain stone and blackened steel for those who climbed toward the fortress path.",
+
+  "cosmeticFrameDragonrockName": "Dragonrock Frame",
+  "cosmeticFrameDragonrockDesc": "A legendary frame of obsidian, dragonstone, and golden details, reserved for the lord of Dragonrock.",
 
   "cosmeticFrameDeveloperTomName": "Developer Frame",
   "cosmeticFrameDeveloperTomDesc": "Special frame unlocked through a Firebase entitlement.",
@@ -1967,13 +1970,14 @@
   "socialRelativeDaysAgo": "{count} days ago",
   "@socialRelativeDaysAgo": { "placeholders": { "count": { "type": "int" } } },
 
-  "cosmeticFrameLvl1UnlockHint": "Reward for starting your journey.",
-  "cosmeticFrameLvl10UnlockHint": "Reach level 10.",
-  "cosmeticFrameLvl25UnlockHint": "Reach level 25.",
-  "cosmeticFrameLvl40UnlockHint": "Reach level 40.",
-  "cosmeticFrameLvl60UnlockHint": "Reach level 60.",
-  "cosmeticFrameLvl80UnlockHint": "Reach level 80.",
-  "cosmeticFrameLvl100UnlockHint": "Reach level 100.",
+  "cosmeticFramePilgrimUnlockHint": "Reward for starting your journey.",
+  "cosmeticFrameWildwoodUnlockHint": "Reach level 10.",
+  "cosmeticFrameRuinsUnlockHint": "Reach level 20.",
+  "cosmeticFrameDwarvenUnlockHint": "Reach level 25.",
+  "cosmeticFrameUnderwaysUnlockHint": "Reach level 40.",
+  "cosmeticFrameFrostUnlockHint": "Reach level 60.",
+  "cosmeticFrameMountainUnlockHint": "Reach level 80.",
+  "cosmeticFrameDragonrockUnlockHint": "Reach level 100.",
   "cosmeticFrameDisciplineUnlockHint": "Maintain a 7-day step streak.",
   "cosmeticFrameEnduranceUnlockHint": "Maintain a 30-day step streak.",
   "cosmeticFrameSteelUnlockHint": "Maintain a 50-day step streak.",

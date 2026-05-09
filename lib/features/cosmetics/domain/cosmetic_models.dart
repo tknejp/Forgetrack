@@ -97,7 +97,7 @@ class CosmeticDefinition {
   final CosmeticRegion region;
 
   /// Resolves the display name from the active [AppLocalizations]. Typical
-  /// usage in the catalog: `name: (l) => l.cosmeticFrameLvl1Name`.
+  /// usage in the catalog: `name: (l) => l.cosmeticFramePilgrimName`.
   final CosmeticText name;
 
   /// Resolves the description (player-facing flavour text).

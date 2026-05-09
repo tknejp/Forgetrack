@@ -45,7 +45,7 @@ the catalog can grow independently of gameplay, and a future feature
   asset file is missing.
 * Cosmetic player-facing text lives in `lib/l10n/app_*.arb` and is wired
   directly in `CosmeticCatalog` through generated `AppLocalizations` getters
-  such as `name: (l10n) => l10n.cosmeticFrameLvl1Name`. There is no
+  such as `name: (l10n) => l10n.cosmeticFramePilgrimName`. There is no
   separate id-based localization switch. Widgets receive `AppLocalizations`
   and resolve text from the catalog definition; without l10n they fall back
   to `definition.id` so debug builds stay readable.

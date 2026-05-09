@@ -2780,52 +2780,59 @@ class AppLocalizationsCs extends AppLocalizations {
   }
 
   @override
-  String get cosmeticFrameLvl1Name => 'Poutnický rámeček';
+  String get cosmeticFramePilgrimName => 'Poutnický rámeček';
 
   @override
-  String get cosmeticFrameLvl1Desc =>
+  String get cosmeticFramePilgrimDesc =>
       'Prostý dřevěný rámeček pro každého, kdo se vydal na cestu.';
 
   @override
-  String get cosmeticFrameLvl10Name => 'Rámeček hvozdu';
+  String get cosmeticFrameWildwoodName => 'Rámeček hvozdu';
 
   @override
-  String get cosmeticFrameLvl10Desc =>
+  String get cosmeticFrameWildwoodDesc =>
       'Tmavé dřevo a jemné lesní rytiny pro ty, kteří se naučili číst stezky hvozdu.';
 
   @override
-  String get cosmeticFrameLvl25Name => 'Rámeček starých bran';
+  String get cosmeticFrameRuinsName => 'Rámeček ruin';
 
   @override
-  String get cosmeticFrameLvl25Desc =>
+  String get cosmeticFrameRuinsDesc =>
+      'Popraskané zdivo a plíživý mech připomínají tiché ruiny na okraji průsmyku.';
+
+  @override
+  String get cosmeticFrameDwarvenName => 'Rámeček starých bran';
+
+  @override
+  String get cosmeticFrameDwarvenDesc =>
       'Zvětralý kámen a zašlý bronz z průsmyku, kde se stezka mění v ruiny.';
 
   @override
-  String get cosmeticFrameLvl40Name => 'Trpasličí rám';
+  String get cosmeticFrameUnderwaysName => 'Trpasličí rám';
 
   @override
-  String get cosmeticFrameLvl40Desc =>
+  String get cosmeticFrameUnderwaysDesc =>
       'Pevný rám z kovaného kovu a důlního kamene, vyrobený v hlubinách trpasličích síní.';
 
   @override
-  String get cosmeticFrameLvl60Name => 'Mrazový rám';
+  String get cosmeticFrameFrostName => 'Mrazový rám';
 
   @override
-  String get cosmeticFrameLvl60Desc =>
+  String get cosmeticFrameFrostDesc =>
       'Chladný stříbrný rám s ledovým leskem, zrozený v tichu zamrzlé země.';
 
   @override
-  String get cosmeticFrameLvl80Name => 'Rám horského vyzyvatele';
+  String get cosmeticFrameMountainName => 'Rám horského vyzyvatele';
 
   @override
-  String get cosmeticFrameLvl80Desc =>
+  String get cosmeticFrameMountainDesc =>
       'Temný horský kámen a černěná ocel pro ty, kteří vystoupali k cestě na pevnost.';
 
   @override
-  String get cosmeticFrameLvl100Name => 'Rám dračí skály';
+  String get cosmeticFrameDragonrockName => 'Rám dračí skály';
 
   @override
-  String get cosmeticFrameLvl100Desc =>
+  String get cosmeticFrameDragonrockDesc =>
       'Legendární rám z obsidiánu, dračího kamene a zlatých detailů, určený pro pána dračí skály.';
 
   @override
@@ -3756,25 +3763,28 @@ class AppLocalizationsCs extends AppLocalizations {
   }
 
   @override
-  String get cosmeticFrameLvl1UnlockHint => 'Odměna za zahájení cesty.';
+  String get cosmeticFramePilgrimUnlockHint => 'Odměna za zahájení cesty.';
 
   @override
-  String get cosmeticFrameLvl10UnlockHint => 'Dosáhni úrovně 10.';
+  String get cosmeticFrameWildwoodUnlockHint => 'Dosáhni úrovně 10.';
 
   @override
-  String get cosmeticFrameLvl25UnlockHint => 'Dosáhni úrovně 25.';
+  String get cosmeticFrameRuinsUnlockHint => 'Dosáhni úrovně 20.';
 
   @override
-  String get cosmeticFrameLvl40UnlockHint => 'Dosáhni úrovně 40.';
+  String get cosmeticFrameDwarvenUnlockHint => 'Dosáhni úrovně 25.';
 
   @override
-  String get cosmeticFrameLvl60UnlockHint => 'Dosáhni úrovně 60.';
+  String get cosmeticFrameUnderwaysUnlockHint => 'Dosáhni úrovně 40.';
 
   @override
-  String get cosmeticFrameLvl80UnlockHint => 'Dosáhni úrovně 80.';
+  String get cosmeticFrameFrostUnlockHint => 'Dosáhni úrovně 60.';
 
   @override
-  String get cosmeticFrameLvl100UnlockHint => 'Dosáhni úrovně 100.';
+  String get cosmeticFrameMountainUnlockHint => 'Dosáhni úrovně 80.';
+
+  @override
+  String get cosmeticFrameDragonrockUnlockHint => 'Dosáhni úrovně 100.';
 
   @override
   String get cosmeticFrameDisciplineUnlockHint =>

@@ -793,7 +793,7 @@ Aktualizovat `CosmeticRewardTable.achievementToCosmetics` mapping podle plán ta
    static const Map<String, List<String>> achievementToCosmetics = {
      // Camp / onboarding
      'welcome_to_journey': ['background_camp', 'emblem_pilgrim_mark'],
-     // ⚠️ Removed: 'frame_lvl1' (duplicitní s default frame), 'relic_old_compass' (legacy)
+     // ⚠️ Removed: 'frame_pilgrim' (duplicitní s default frame), 'relic_old_compass' (legacy)
      'first_reward': ['relic_campfire_spark'],
      'daily_quest_3': ['relic_warm_kindling'],
 
@@ -871,7 +871,7 @@ Aktualizovat `CosmeticRewardTable.achievementToCosmetics` mapping podle plán ta
 ```
 progression: rewire cosmetic reward table per refactor plan
 
-- Welcome reward drops legacy frame_lvl1 + relic_old_compass
+- Welcome reward drops legacy frame_pilgrim + relic_old_compass
 - 17 achievements gain relic/frame rewards aligned to region progression
 - Existing unlocks preserved (legacy items remain in user inventory)
 ```

@@ -207,7 +207,7 @@ class _SocialProfileHeaderState extends State<SocialProfileHeader> {
 ///
 /// Priority:
 ///   1. The frame the user actually equipped.
-///   2. UI-only fallback: if nothing is equipped but `frame_lvl1` is
+///   2. UI-only fallback: if nothing is equipped but `frame_pilgrim` is
 ///      unlocked (every default user has it), preview it. Lets the user
 ///      see the cosmetics pipeline working before they touch a collection
 ///      screen — does NOT mutate persisted state.
@@ -223,7 +223,7 @@ CosmeticDefinition? _resolveEquippedFrame(CosmeticsProvider cosmetics) {
     if (def != null && def.isEnabled) return def;
   }
 
-  const fallbackId = 'frame_lvl1';
+  const fallbackId = 'frame_pilgrim';
   if (state.unlocked.containsKey(fallbackId)) {
     final def = catalog.byId(fallbackId);
     if (def != null && def.isEnabled) return def;

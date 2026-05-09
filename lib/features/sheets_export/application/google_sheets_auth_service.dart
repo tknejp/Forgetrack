@@ -1,6 +1,5 @@
 import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:googleapis/sheets/v4.dart';
 import 'package:http/http.dart' as http;
 
 import '../../../core/logging/app_log.dart';

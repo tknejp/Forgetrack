@@ -121,8 +121,8 @@ void main() {
 
   group('CosmeticRevealEvaluator — visibleLocked', () {
     test('tier-1 level reward (no Tier-2 rule) returns visibleLocked', () {
-      // frame_lvl10 is a level-10 reward with no entry in kCosmeticUnlockRules.
-      const id = 'frame_lvl10';
+      // frame_wildwood is a level-10 reward with no entry in kCosmeticUnlockRules.
+      const id = 'frame_wildwood';
       final results = _evaluate(owned: {});
       expect(results[id]?.state, CosmeticRevealState.visibleLocked);
     });
