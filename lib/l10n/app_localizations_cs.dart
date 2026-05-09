@@ -803,6 +803,14 @@ class AppLocalizationsCs extends AppLocalizations {
   }
 
   @override
+  String get exportErrorSignInCancelled =>
+      'Přihlášení do Googlu bylo zrušeno. Pro export se prosím přihlaste.';
+
+  @override
+  String get exportErrorNetwork =>
+      'Bez připojení k internetu. Zkontrolujte síť a zkuste to znovu.';
+
+  @override
   String get exportFieldSteps => 'Kroky';
 
   @override

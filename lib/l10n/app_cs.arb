@@ -282,6 +282,8 @@
   "exportErrorNoFields": "Vyberte alespoň jedno pole k exportu.",
   "exportErrorInvalidRange": "Neplatný rozsah: koncové datum je před počátečním.",
   "exportErrorPrefix": "Export selhal: {message}",
+  "exportErrorSignInCancelled": "Přihlášení do Googlu bylo zrušeno. Pro export se prosím přihlaste.",
+  "exportErrorNetwork": "Bez připojení k internetu. Zkontrolujte síť a zkuste to znovu.",
 
   "exportFieldSteps": "Kroky",
   "exportFieldActiveCalories": "Aktivní kalorie",

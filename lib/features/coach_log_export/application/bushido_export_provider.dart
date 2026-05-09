@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io' show SocketException;
 
 import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import 'package:forgetrack/core/logging/app_log.dart';
 import 'package:forgetrack/features/coach_log_export/data/bushido_export_data_builder.dart';
@@ -166,7 +168,7 @@ class BushidoExportProvider extends ChangeNotifier {
       );
       return result;
     } catch (e, st) {
-      _lastError = e.toString();
+      _lastError = _friendlyErrorMessage(e, l10n);
       AppLog.sync.error(
         'bushido.exportRange: failed',
         err: e,
@@ -177,6 +179,31 @@ class BushidoExportProvider extends ChangeNotifier {
       _isExporting = false;
       notifyListeners();
     }
+  }
+
+  /// Maps caught exceptions to a localized, user-facing message. Anything not
+  /// recognized falls back to a generic "Export failed" wrapper instead of the
+  /// raw `toString()` (which leaks SDK internals like
+  /// `GoogleSignInException(code …, SDK reported an exception: 16: …)`).
+  String _friendlyErrorMessage(Object error, AppLocalizations l10n) {
+    if (error is BushidoExportException) {
+      // Already user-facing — built from l10n at the throw site.
+      return error.message;
+    }
+    if (error is GoogleSignInException) {
+      final description = error.description?.toLowerCase() ?? '';
+      final isCancelled =
+          error.code == GoogleSignInExceptionCode.canceled ||
+              description.contains('cancel');
+      if (isCancelled) {
+        return l10n.exportErrorSignInCancelled;
+      }
+      return l10n.exportErrorNotSignedIn;
+    }
+    if (error is SocketException) {
+      return l10n.exportErrorNetwork;
+    }
+    return l10n.exportErrorPrefix(l10n.exportErrorGeneric);
   }
 
   /// Exports the current ISO week up to (and including) today.

@@ -781,6 +781,12 @@
     }
   },
 
+  "exportErrorSignInCancelled": "Google sign-in was cancelled. Please sign in to export.",
+  "@exportErrorSignInCancelled": { "description": "Shown when the user cancels the Google sign-in / authorization sheet" },
+
+  "exportErrorNetwork": "No internet connection. Check your network and try again.",
+  "@exportErrorNetwork": { "description": "Shown when the export fails due to a network/connectivity error" },
+
   "exportFieldSteps": "Steps",
   "@exportFieldSteps": { "description": "Field label: step count for the day" },
 

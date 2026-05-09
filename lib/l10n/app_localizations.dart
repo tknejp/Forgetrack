@@ -1586,6 +1586,18 @@ abstract class AppLocalizations {
   /// **'Export failed: {message}'**
   String exportErrorPrefix(String message);
 
+  /// Shown when the user cancels the Google sign-in / authorization sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in was cancelled. Please sign in to export.'**
+  String get exportErrorSignInCancelled;
+
+  /// Shown when the export fails due to a network/connectivity error
+  ///
+  /// In en, this message translates to:
+  /// **'No internet connection. Check your network and try again.'**
+  String get exportErrorNetwork;
+
   /// Field label: step count for the day
   ///
   /// In en, this message translates to:

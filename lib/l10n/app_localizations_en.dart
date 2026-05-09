@@ -802,6 +802,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get exportErrorSignInCancelled =>
+      'Google sign-in was cancelled. Please sign in to export.';
+
+  @override
+  String get exportErrorNetwork =>
+      'No internet connection. Check your network and try again.';
+
+  @override
   String get exportFieldSteps => 'Steps';
 
   @override
