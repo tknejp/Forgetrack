@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../progression/domain/policy/level_config.dart';
-import '../../../../features/progression/domain/progression_models.dart';
-import '../../../../features/progression/presentation/widgets/progression_level_badge.dart';
+import '../../../progression_engine/domain/display/progression_display_models.dart';
+import '../../../progression_engine/domain/display/progression_display_resolver.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../shared/theme/design_tokens.dart';
@@ -148,18 +147,21 @@ class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
                                                 color: Tokens.onSurfaceFaint)),
                                       if (stats != null) ...[
                                         const SizedBox(height: 6),
-                                        Text(
-                                          tierForLevel(stats.level)
-                                              .title(context.l10n)
-                                              .toUpperCase(),
-                                          style: TextStyle(
-                                              fontSize: 7,
-                                              fontWeight: FontWeight.w800,
-                                              color: progressionLevelAccent(
-                                                stats.level,
-                                              ),
-                                              letterSpacing: 1.0),
-                                        ),
+                                        Builder(builder: (context) {
+                                          final levelDisplay =
+                                              const ProgressionDisplayResolver()
+                                                  .levelDisplay(stats.level);
+                                          return Text(
+                                            levelDisplay
+                                                .title(context.l10n)
+                                                .toUpperCase(),
+                                            style: TextStyle(
+                                                fontSize: 7,
+                                                fontWeight: FontWeight.w800,
+                                                color: levelDisplay.accentColor,
+                                                letterSpacing: 1.0),
+                                          );
+                                        }),
                                       ],
                                     ],
                                   ),
@@ -373,17 +375,17 @@ class _PinnedAchievementsSection extends StatelessWidget {
           return const _ProfileSectionLoader();
         }
 
-        final achievements = mapSocialAchievementsToProgression(
+        final displays = mapSocialAchievementsToDisplays(
           snap.data ?? const [],
           context.l10n,
         );
         final byId = {
-          for (final achievement in achievements) achievement.id: achievement,
+          for (final display in displays) display.nodeId: display,
         };
-        final pinned = <ProgressionAchievement>[];
+        final pinned = <NodeDisplay>[];
         for (final id in pinnedIds) {
-          final achievement = byId[id];
-          if (achievement != null) pinned.add(achievement);
+          final display = byId[id];
+          if (display != null) pinned.add(display);
         }
 
         if (pinned.isEmpty) {

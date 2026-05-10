@@ -15,8 +15,8 @@ import '../../../cosmetics/domain/cosmetic_models.dart';
 import '../../../cosmetics/presentation/widgets/cosmetic_equipped_chip.dart';
 import '../../../cosmetics/presentation/widgets/cosmetic_frame_preview.dart';
 import '../../../progression/application/progression_provider.dart';
-import '../../../progression/domain/policy/level_config.dart';
-import '../../../progression/presentation/widgets/progression_level_badge.dart';
+import '../../../progression_engine/domain/display/progression_display_resolver.dart';
+import '../../../progression_engine/presentation/widgets/level_badge.dart';
 import '../../application/social_provider.dart';
 import '../../domain/social_models.dart';
 import '../social_profile_utils.dart';
@@ -288,8 +288,10 @@ class _HeaderContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final progression = context.watch<ProgressionProvider>();
     final profile = progression.profile;
-    final levelTitle = tierForLevel(profile.level).title(context.l10n);
-    final levelAccent = progressionLevelAccent(profile.level);
+    final levelDisplay =
+        const ProgressionDisplayResolver().levelDisplay(profile.level);
+    final levelTitle = levelDisplay.title(context.l10n);
+    final levelAccent = levelDisplay.accentColor;
     final xpSpan =
         (profile.nextLevelXp - profile.levelFloorXp).clamp(1, 1 << 30);
     final xpProgress = (profile.xpIntoLevel / xpSpan).clamp(0.0, 1.0);
@@ -658,7 +660,9 @@ class _LevelBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ProgressionLevelBadge(level: level, size: 44);
+    final accent =
+        const ProgressionDisplayResolver().levelDisplay(level).accentColor;
+    return LevelBadge(level: level, accentColor: accent, size: 44);
   }
 }
 

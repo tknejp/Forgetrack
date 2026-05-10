@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:forgetrack/shared/presentation/achievement_badge_specs.dart';
 
-import '../../../../features/progression/domain/progression_models.dart';
-import '../../../progression/domain/catalog/rule_catalog.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../../shared/widgets/tiny_pill.dart';
+import '../../../progression_engine/domain/display/progression_display_models.dart';
 import '../social_profile_utils.dart';
 
 // ── Achievement grid ──────────────────────────────────────────────────────────
@@ -17,25 +15,19 @@ class FriendAchievementsGrid extends StatelessWidget {
     required this.l10n,
   });
 
-  final List<ProgressionAchievement> achievements;
+  /// Pre-resolved displays (one per friend achievement). Build via
+  /// [mapSocialAchievementsToDisplays].
+  final List<NodeDisplay> achievements;
   final AppLocalizations l10n;
-
-  static const _difficultyOrder = {
-    'extraHard': 0,
-    'hard': 1,
-    'medium': 2,
-    'easy': 3,
-  };
 
   @override
   Widget build(BuildContext context) {
-    final sorted = List<ProgressionAchievement>.from(achievements)
+    // Sort harder rarities first; ties broken by node id for stability.
+    final sorted = List<NodeDisplay>.from(achievements)
       ..sort((a, b) {
-        final aOrder =
-            _difficultyOrder[a.difficulty.toString().split('.').last] ?? 99;
-        final bOrder =
-            _difficultyOrder[b.difficulty.toString().split('.').last] ?? 99;
-        return aOrder.compareTo(bOrder);
+        final byRarity = b.rarity.index.compareTo(a.rarity.index);
+        if (byRarity != 0) return byRarity;
+        return a.nodeId.compareTo(b.nodeId);
       });
 
     return LayoutBuilder(
@@ -55,7 +47,7 @@ class FriendAchievementsGrid extends StatelessWidget {
           ),
           itemBuilder: (context, index) {
             return _FriendAchievementTile(
-              achievement: sorted[index],
+              display: sorted[index],
               l10n: l10n,
             );
           },
@@ -67,23 +59,23 @@ class FriendAchievementsGrid extends StatelessWidget {
 
 class _FriendAchievementTile extends StatelessWidget {
   const _FriendAchievementTile({
-    required this.achievement,
+    required this.display,
     required this.l10n,
   });
 
-  final ProgressionAchievement achievement;
+  final NodeDisplay display;
   final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
-    final badge = achievementBadgeSpec(achievement);
-    final color = badge.color;
+    final color = display.accentColor;
+    final emoji = display.badgeEmoji ?? '\u{1F3C5}';
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () => _showFriendAchievementDetailsSheet(
         context,
-        achievement: achievement,
+        display: display,
         l10n: l10n,
       ),
       child: Container(
@@ -109,14 +101,14 @@ class _FriendAchievementTile extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              badge.emoji,
+              emoji,
               style: const TextStyle(fontSize: 22),
             ),
             const SizedBox(height: 6),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Text(
-                friendAchievementDisplayLabel(achievement, context),
+                friendAchievementDisplayLabel(display, context),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
@@ -165,23 +157,19 @@ class _FriendAchievementEmojiBadge extends StatelessWidget {
 
 class _FriendAchievementDetailsSheet extends StatelessWidget {
   const _FriendAchievementDetailsSheet({
-    required this.achievement,
+    required this.display,
     required this.l10n,
   });
 
-  final ProgressionAchievement achievement;
+  final NodeDisplay display;
   final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
-    final badge = achievementBadgeSpec(achievement);
-    final color = badge.color;
+    final color = display.accentColor;
+    final emoji = display.badgeEmoji ?? '\u{1F3C5}';
     final locale = Localizations.localeOf(context).toString();
-    final summary = friendAchievementCompactSummary(
-      achievement,
-      l10n,
-      locale,
-    );
+    final summary = friendAchievementCompactSummary(display, l10n, locale);
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return SafeArea(
@@ -213,7 +201,7 @@ class _FriendAchievementDetailsSheet extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _FriendAchievementEmojiBadge(
-                  emoji: badge.emoji,
+                  emoji: emoji,
                   color: color,
                 ),
                 const SizedBox(width: Tokens.spaceMd),
@@ -222,7 +210,7 @@ class _FriendAchievementDetailsSheet extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        achievement.title(l10n),
+                        display.title(l10n),
                         style: const TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w900,
@@ -251,7 +239,7 @@ class _FriendAchievementDetailsSheet extends StatelessWidget {
             ),
             const SizedBox(height: Tokens.spaceLg),
             Text(
-              achievement.description(l10n),
+              display.description(l10n),
               style: const TextStyle(
                 fontSize: Tokens.fontSizeSmall,
                 height: 1.45,
@@ -264,25 +252,17 @@ class _FriendAchievementDetailsSheet extends StatelessWidget {
               runSpacing: 8,
               children: [
                 TinyPill(
-                  label: friendAchievementDifficultyLabel(achievement, l10n),
+                  label: friendAchievementRarityLabel(display, l10n),
                   color: color,
                 ),
-                if (achievement.ruleId != null)
+                if (display.subjectLabel != null)
                   TinyPill(
-                    label: ProgressionRuleCatalog.titleForId(
-                      achievement.ruleId!,
-                      l10n,
-                    ),
-                    color: color.withValues(alpha: 0.88),
-                  )
-                else if (achievement.domain != null)
-                  TinyPill(
-                    label: achievement.domain!.label(l10n),
+                    label: display.subjectLabel!(l10n),
                     color: color.withValues(alpha: 0.88),
                   ),
               ],
             ),
-            if (achievement.unlockedAt != null) ...[
+            if (display.unlockedAt != null) ...[
               const SizedBox(height: 14),
               Container(
                 width: double.infinity,
@@ -295,7 +275,7 @@ class _FriendAchievementDetailsSheet extends StatelessWidget {
                 ),
                 child: Text(
                   l10n.progQuestCompletedOn(
-                    formatAchievementDateTime(achievement.unlockedAt!, locale),
+                    formatAchievementDateTime(display.unlockedAt!, locale),
                   ),
                   style: TextStyle(
                     fontSize: Tokens.fontSizeSmall,
@@ -314,7 +294,7 @@ class _FriendAchievementDetailsSheet extends StatelessWidget {
 
 void _showFriendAchievementDetailsSheet(
   BuildContext context, {
-  required ProgressionAchievement achievement,
+  required NodeDisplay display,
   required AppLocalizations l10n,
 }) {
   showModalBottomSheet<void>(
@@ -322,7 +302,7 @@ void _showFriendAchievementDetailsSheet(
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
     builder: (context) => _FriendAchievementDetailsSheet(
-      achievement: achievement,
+      display: display,
       l10n: l10n,
     ),
   );

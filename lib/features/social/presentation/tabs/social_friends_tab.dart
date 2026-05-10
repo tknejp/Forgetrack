@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../progression/domain/policy/level_config.dart';
+import '../../../progression_engine/domain/display/progression_display_resolver.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../application/social_provider.dart';
@@ -171,7 +171,9 @@ class _FriendCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = tierForLevel(friend.stats.level).title(context.l10n);
+    final title = const ProgressionDisplayResolver()
+        .levelDisplay(friend.stats.level)
+        .title(context.l10n);
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
