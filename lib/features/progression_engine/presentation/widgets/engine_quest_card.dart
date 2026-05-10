@@ -8,6 +8,7 @@ import '../../../../shared/widgets/xp_claim_pill.dart';
 import '../../../progression/domain/models/core_models.dart';
 import '../../../progression/presentation/widgets/progression_primitives.dart';
 import '../../application/progression_engine_provider.dart';
+import '../../domain/models/progression_node_definition.dart';
 
 /// One quest card in the V2 quests screen.
 ///
@@ -69,7 +70,7 @@ class EngineQuestCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ProgDomIco(domain: domain, size: 32),
+              _QuestLeading(node: quest.node, domain: domain, size: 32),
               const SizedBox(width: Tokens.spaceMd),
               Expanded(
                 child: Column(
@@ -190,5 +191,41 @@ class _ProgressRow extends StatelessWidget {
       return NumberFormat.decimalPattern(locale).format(safe.toInt());
     }
     return safe.toStringAsFixed(1);
+  }
+}
+
+/// Leading visual on a quest card. Renders [QuestNode.assetKey] when set,
+/// falling back to [ProgDomIco] (the domain icon tile) when the node
+/// doesn't carry one. Asset failure (missing PNG, decode error) also
+/// degrades to the icon — the screen never goes blank because of a
+/// stale asset path.
+class _QuestLeading extends StatelessWidget {
+  const _QuestLeading({
+    required this.node,
+    required this.domain,
+    required this.size,
+  });
+
+  final QuestNode node;
+  final ProgressionDomain domain;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final asset = node.assetKey;
+    if (asset == null || asset.isEmpty) {
+      return ProgDomIco(domain: domain, size: size);
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(size * 0.3),
+      child: Image.asset(
+        asset,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) =>
+            ProgDomIco(domain: domain, size: size),
+      ),
+    );
   }
 }

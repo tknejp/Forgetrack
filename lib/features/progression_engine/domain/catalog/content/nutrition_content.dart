@@ -9,6 +9,7 @@ import '../../models/progression_node_definition.dart';
 import '../../models/quest_display_bucket.dart';
 import '../../models/reward_definition.dart';
 import '../engine_catalog_context.dart';
+import 'quest_assets.dart';
 
 /// Nutrition domain — daily macro rules + streak/grant achievements.
 ///
@@ -88,6 +89,7 @@ List<ProgressionNode> nutritionNodes() {
       rewards: const [XpReward(amount: 60)],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.common,
+      assetKey: questAssetNutrition,
     ),
     QuestNode(
       id: 'daily_protein_today',
@@ -100,6 +102,7 @@ List<ProgressionNode> nutritionNodes() {
       rewards: const [XpReward(amount: 40)],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.common,
+      assetKey: questAssetNutrition,
     ),
     // Nutrition streak + reward-count achievements.
     AchievementNode(

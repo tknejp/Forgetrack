@@ -9,6 +9,7 @@ import '../../models/progression_node_definition.dart';
 import '../../models/quest_display_bucket.dart';
 import '../../models/reward_definition.dart';
 import '../engine_catalog_context.dart';
+import 'quest_assets.dart';
 
 /// Sleep domain — daily sleep quest + lifetime mastery + rolling-window
 /// mastery achievements. Mirrors V1: rule `daily_sleep`,
@@ -74,6 +75,7 @@ List<ProgressionNode> sleepNodes() {
       rewards: const [XpReward(amount: 50)],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.common,
+      assetKey: questAssetStreak,
     ),
     AchievementNode(
       id: 'sleep_total_250h',

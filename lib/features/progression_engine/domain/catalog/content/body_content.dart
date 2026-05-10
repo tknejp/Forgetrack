@@ -9,6 +9,7 @@ import '../../models/progression_node_definition.dart';
 import '../../models/quest_display_bucket.dart';
 import '../../models/reward_definition.dart';
 import '../engine_catalog_context.dart';
+import 'quest_assets.dart';
 
 /// Body / weight domain — daily weight-log + daily weight-goal quests.
 ///
@@ -51,6 +52,7 @@ List<ProgressionNode> bodyNodes() {
       rewards: const [XpReward(amount: 20)],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.common,
+      assetKey: questAssetActivity,
     ),
   ];
 }

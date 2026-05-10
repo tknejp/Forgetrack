@@ -9,6 +9,7 @@ import '../../models/progression_node_definition.dart';
 import '../../models/quest_display_bucket.dart';
 import '../../models/reward_definition.dart';
 import '../engine_catalog_context.dart';
+import 'quest_assets.dart';
 
 /// Activity domain — daily 30-minute quest, weekly minutes quest, and
 /// the per-rule "weekly warrior" reward-count achievements. Mirrors
@@ -92,6 +93,7 @@ List<ProgressionNode> activityNodes() {
       rewards: const [XpReward(amount: 50)],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.common,
+      assetKey: questAssetActivity,
     ),
     QuestNode(
       id: 'weekly_activity',
@@ -104,6 +106,7 @@ List<ProgressionNode> activityNodes() {
       rewards: const [XpReward(amount: 120)],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.uncommon,
+      assetKey: questAssetActivity,
     ),
     AchievementNode(
       id: 'weekly_activity_mastery',
