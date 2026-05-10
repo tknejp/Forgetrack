@@ -275,6 +275,33 @@ class ProgressionEngineProvider extends ChangeNotifier {
   List<ProgressionResolutionResult> get pendingCelebrations =>
       List.unmodifiable(_pendingCelebrations);
 
+  /// Latest [EngineEvaluationInput] derived from the bound source
+  /// providers, with ledger totals (totalXp, level) filled in. Returns
+  /// null when no source has been bound yet (headless tests, devtools
+  /// before init).
+  ///
+  /// UI claim handlers read this so they don't have to assemble an
+  /// input themselves — `provider.currentInput` then
+  /// `provider.claimNode(nodeId: ..., input: input)`.
+  EngineEvaluationInput? get currentInput {
+    final source = _source;
+    if (source == null) return null;
+    return source.buildInput(
+      totalXpFromLedger: totalXp,
+      levelFromLedger: level,
+    );
+  }
+
+  /// Latest [EngineCatalogContext] from the bound source. Null when no
+  /// source is bound. UI callers should pair this with [currentInput]
+  /// when calling [claimNode] so the engine sees the player's actual
+  /// goals.
+  EngineCatalogContext? get currentCatalogContext {
+    final source = _source;
+    if (source == null) return null;
+    return source.currentContext();
+  }
+
   ProgressionResolutionResult? takePendingCelebration() {
     if (_pendingCelebrations.isEmpty) return null;
     return _pendingCelebrations.removeAt(0);

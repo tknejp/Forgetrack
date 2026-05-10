@@ -17,8 +17,9 @@ import '../../health_connect/presentation/body_screen.dart';
 import '../../health_connect/presentation/sleep_screen.dart';
 import '../../health_connect/presentation/steps_screen.dart';
 import '../../nutrition/presentation/nutrition_screen.dart';
-import '../../progression/application/progression_provider.dart';
 import '../../progression/presentation/widgets/progression_home_card.dart';
+import '../../progression_engine/application/progression_engine_provider.dart';
+import '../../progression_engine/presentation/quests_screen.dart';
 import '../../social/application/social_provider.dart';
 import '../../social/presentation/ft_social_screen.dart';
 import '../../social/presentation/widgets/social_profile_header.dart';
@@ -27,7 +28,6 @@ import '../../settings/presentation/settings_screen.dart';
 import '../../../shared/theme/design_tokens.dart';
 import '../../home/presentation/overview_screen.dart';
 import '../../progression/presentation/hero/hero_screen.dart';
-import '../../progression/presentation/quests/quests_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -146,7 +146,7 @@ class _FtMainShellState extends State<MainShell> {
         onOpenBody: _openBodyScreen,
         onOpenSleep: _openSleepScreen,
       ),
-      QuestsScreen(
+      QuestsScreenV2(
         barKey: _progressionBarKey,
         outerController: _pageController,
         topContentInset: _topChromeHeight,
@@ -298,8 +298,10 @@ class _FtMainShellState extends State<MainShell> {
               return _FtBottomNav(
                 index: currentIndex,
                 onTap: _goToPage,
-                questBadge:
-                    context.watch<ProgressionProvider>().pendingRewards.length,
+                questBadge: context
+                    .watch<ProgressionEngineProvider>()
+                    .pendingClaimNodeIds
+                    .length,
                 socialBadge:
                     context.watch<SocialProvider>().incomingRequests.length +
                         context.watch<SocialProvider>().unreadNotificationCount,
