@@ -349,6 +349,27 @@ class ProgressionEngineProvider extends ChangeNotifier {
     return ProgressionNodeCatalog.definitionForId(id);
   }
 
+  /// Resolves the visual domain a ledger entry should render under.
+  /// Walks node → objective → domain so the history feed and completed
+  /// rollup can colour each row by its source domain. Falls back to
+  /// `ProgressionDomain.steps` when the node or its objective is not
+  /// in the catalog (catalog drift, devtools synthetic grants).
+  ProgressionDomain domainForNodeId(String id) {
+    final node = ProgressionNodeCatalog.definitionForId(id);
+    if (node == null) return ProgressionDomain.steps;
+    final objectiveId = switch (node) {
+      QuestNode() => node.objectiveId,
+      AchievementNode() => node.objectiveId,
+      MilestoneNode() => node.objectiveId,
+      _ => null,
+    };
+    if (objectiveId == null) return ProgressionDomain.steps;
+    for (final o in _objectiveCatalog.build()) {
+      if (o.id == objectiveId) return o.domain ?? ProgressionDomain.steps;
+    }
+    return ProgressionDomain.steps;
+  }
+
   ProgressionResolutionResult? takePendingCelebration() {
     if (_pendingCelebrations.isEmpty) return null;
     return _pendingCelebrations.removeAt(0);

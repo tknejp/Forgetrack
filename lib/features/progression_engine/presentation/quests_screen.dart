@@ -7,8 +7,11 @@ import '../../../shared/theme/design_tokens.dart';
 import '../../../shared/widgets/xp_sparkle_overlay.dart';
 import '../application/progression_engine_provider.dart';
 import '../domain/catalog/engine_catalog_context.dart';
+import 'widgets/engine_completed_quests_section.dart';
 import 'widgets/engine_quest_card.dart';
 import 'widgets/engine_quest_section.dart';
+import 'widgets/engine_reward_history_feed.dart';
+import '../../../shared/widgets/section_head.dart';
 
 /// V2 quests screen.
 ///
@@ -230,6 +233,25 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                           provider.streakForObjective(q.node.objectiveId),
                       expandedNodeId: _expandedNodeId,
                       onToggleExpanded: _toggleExpanded,
+                    ),
+                    const SizedBox(height: Tokens.spaceXl),
+                    EngineCompletedQuestsSection(
+                      completed: provider.completedQuests,
+                      l10n: l10n,
+                      resolveDomain: provider.domainForNodeId,
+                    ),
+                    const SizedBox(height: Tokens.spaceXl),
+                    SectionHead(
+                      label: l10n.progRewardsSectionLabel,
+                      caption: l10n.progRewardsSectionCaption,
+                      accent: Tokens.calories.color,
+                    ),
+                    const SizedBox(height: Tokens.spaceSm),
+                    EngineRewardHistoryFeed(
+                      grants: provider.rewardHistory,
+                      l10n: l10n,
+                      resolveNode: provider.nodeById,
+                      resolveDomain: provider.domainForNodeId,
                     ),
                   ],
                 ),
