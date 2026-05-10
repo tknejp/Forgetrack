@@ -9,6 +9,7 @@ import '../domain/models/engine_evaluation_input.dart';
 import '../domain/models/ledger_event.dart';
 import '../domain/models/progression_node_definition.dart';
 import '../domain/models/progression_resolution_reason.dart';
+import '../domain/models/unlock_condition.dart';
 import '../domain/models/progression_resolution_result.dart';
 import '../domain/repository/ledger_snapshot.dart';
 import '../domain/repository/progression_engine_repository.dart';
@@ -141,7 +142,7 @@ class ProgressionEngine {
     final resolutions = <NodeResolution>[];
     for (final node in nodes) {
       final eligible = _unlockConditionResolver.isEligible(
-        conditions: node.unlockConditions,
+        conditions: _conditionsFor(node),
         completedObjectiveIds: completedObjectiveIds,
         completedNodeIds: priorCompletedNodeIds,
         claimedNodeIds: priorClaimedNodeIds,
@@ -318,6 +319,21 @@ class ProgressionEngine {
       }
     }
     return sum;
+  }
+
+  /// Combines [ProgressionNode.unlockConditions] with derived
+  /// [NodeCompleted] conditions for [QuestNode.prerequisiteNodeIds].
+  /// Catalog authors keep `prerequisiteNodeIds` ergonomic; the engine
+  /// expands it into the same UnlockCondition vocabulary the resolver
+  /// already understands.
+  List<UnlockCondition> _conditionsFor(ProgressionNode node) {
+    if (node is QuestNode && node.prerequisiteNodeIds.isNotEmpty) {
+      return [
+        ...node.unlockConditions,
+        for (final pid in node.prerequisiteNodeIds) NodeCompleted(pid),
+      ];
+    }
+    return node.unlockConditions;
   }
 }
 

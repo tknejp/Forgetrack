@@ -71,6 +71,9 @@ class QuestNode extends ProgressionNode {
     this.dailyTierGroupId,
     this.dailyTier,
     this.progressStartPolicy = ProgressStartPolicy.lifetime,
+    this.prerequisiteNodeIds = const [],
+    this.nextNodeIds = const [],
+    this.chainStepLabelKey,
     super.unlockConditions,
     super.claimPolicy,
     super.activationPolicy,
@@ -91,6 +94,21 @@ class QuestNode extends ProgressionNode {
   final String? dailyTierGroupId;
   final int? dailyTier;
   final ProgressStartPolicy progressStartPolicy;
+
+  /// Quest ids whose completion gates this quest. The engine
+  /// auto-extends [unlockConditions] with one [NodeCompleted] per id —
+  /// authors keep the list ergonomic without learning the
+  /// UnlockCondition vocabulary.
+  final List<String> prerequisiteNodeIds;
+
+  /// Quest ids that follow this one in the same chain. UI-only — the
+  /// chain preview walks `nextNodeIds` to render the "open → step →
+  /// step → finale" row beneath the active card.
+  final List<String> nextNodeIds;
+
+  /// Optional one-character / short chain step label. Mirrors V1's
+  /// `chainStepLabel` used by the chain preview row ("1", "2", "🛡").
+  final LocalizedText? chainStepLabelKey;
 }
 
 class AchievementNode extends ProgressionNode {
