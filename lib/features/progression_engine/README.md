@@ -8,9 +8,10 @@ module per the phased plan in
 
 | Phase | Description | Status |
 |---|---|---|
-| 0.5 | Display Resolver bridge over legacy catalog | in progress |
-| 0.6 | Journey extraction (consumer of resolver) | not started |
-| 1 | Domain skeleton (objectives, sealed nodes, rewards) | not started |
+| 0.5 | Display Resolver bridge over legacy catalog | done |
+| 0.6 | Journey extraction (consumer of resolver) | done |
+| 1 | Domain skeleton (objectives, sealed nodes, rewards) | done |
+| 2 | Evaluation skeleton | not started |
 | 2 | Evaluation skeleton | not started |
 | 3 | Catalog port | not started |
 | 4 | Persistence (Isar) | not started |
@@ -25,6 +26,22 @@ module per the phased plan in
 - `domain/display/` — public, feature-neutral display facade. Other features
   (social, journey, future feed publishers) consume progression metadata
   exclusively through this surface.
+- `domain/models/` — V2 core domain types: `ObjectiveDefinition`,
+  sealed `ProgressionNode` hierarchy (Quest / Achievement / Milestone /
+  LevelMilestone / ChapterCompletion / CompanionAvailability / Relic /
+  ContentUnlock), sealed `RewardDefinition` (XP / Cosmetic / Chapter /
+  Companion / Title / Emblem / Relic), sealed `UnlockCondition` (with
+  AllOf / AnyOf composition), `ContentTag`, `ActivationPolicy`,
+  `ClaimPolicy`, `NodeState`, sealed `ObjectiveMetric`, sealed
+  `ObjectiveScope`, `ObjectiveOperator`.
+- `domain/catalog/` — empty `ObjectiveCatalog` and `ProgressionNodeCatalog`
+  with two sample entries each (one shared `sample_steps_today` objective
+  proves the "one objective, many nodes" design end-to-end). Real
+  catalog port lands in Phase 3. `CatalogValidator` checks duplicate
+  ids, missing objective references, missing node references on
+  `NodeCompleted` conditions, manual-claim missing `lockedHintKey`,
+  and RPG-activation-without-RPG-tag drift.
+- `presentation/widgets/level_badge.dart` — generic level badge.
 
 ## What does not live here yet
 
