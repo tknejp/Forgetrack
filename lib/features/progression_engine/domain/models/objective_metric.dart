@@ -42,11 +42,28 @@ class TotalXpMetric extends ObjectiveMetric {
 }
 
 /// Number of reward grants matching an optional rule / domain filter.
+/// Mirrors the legacy `rewardCountAtLeast` criterion which counts grants
+/// either globally, or for a specific rule, or for a specific domain.
 class RewardCountMetric extends ObjectiveMetric {
-  const RewardCountMetric({this.objectiveId});
+  const RewardCountMetric({this.ruleId, this.domain});
 
-  /// When set, counts only grants from this specific objective.
-  final String? objectiveId;
+  /// When set, counts only grants from this specific rule (e.g.
+  /// `daily_steps`).
+  final String? ruleId;
+
+  /// When set, counts only grants from this domain (e.g. `nutrition`).
+  /// Mutually exclusive with [ruleId].
+  final String? domain;
+}
+
+/// Best (longest) consecutive-day streak for a specific rule or domain.
+/// Mirrors the legacy `bestStreakAtLeast` criterion.
+class StreakDaysMetric extends ObjectiveMetric {
+  const StreakDaysMetric.byRule(this.ruleId) : domain = null;
+  const StreakDaysMetric.byDomain(this.domain) : ruleId = null;
+
+  final String? ruleId;
+  final String? domain;
 }
 
 /// Number of completions of a specific node (e.g. quest completions).

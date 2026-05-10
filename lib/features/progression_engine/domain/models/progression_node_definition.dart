@@ -99,7 +99,7 @@ class AchievementNode extends ProgressionNode {
     required super.titleKey,
     required super.descriptionKey,
     required super.rewards,
-    required this.objectiveId,
+    this.objectiveId,
     this.badgeEmoji = '\u{1F3C5}',
     super.unlockConditions,
     super.activationPolicy,
@@ -109,7 +109,11 @@ class AchievementNode extends ProgressionNode {
     super.sortOrder,
   }) : super(claimPolicy: ClaimPolicy.automatic);
 
-  final String objectiveId;
+  /// When null, the achievement is condition-driven only (welcome
+  /// achievements, level milestones, anything satisfied by unlock
+  /// conditions alone). When set, references an [ObjectiveDefinition]
+  /// in [ObjectiveCatalog].
+  final String? objectiveId;
   final String badgeEmoji;
 }
 

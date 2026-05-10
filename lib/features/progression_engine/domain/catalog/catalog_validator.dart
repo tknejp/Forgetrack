@@ -85,6 +85,7 @@ class CatalogValidator {
     issues.addAll(_checkNodeReferences(nodes, knownObjectiveIds));
     issues.addAll(_checkClaimPolicyCoherence(nodes));
     issues.addAll(_checkActivationContentTagCoherence(nodes));
+    issues.addAll(_checkLevelMilestoneCoherence(nodes));
 
     return issues;
   }
@@ -214,6 +215,53 @@ class CatalogValidator {
         );
       }
     }
+  }
+
+  Iterable<CatalogValidationIssue> _checkLevelMilestoneCoherence(
+    List<ProgressionNode> nodes,
+  ) sync* {
+    for (final n in nodes) {
+      if (n is! LevelMilestoneNode) continue;
+      final levels = _flattenLevelAtLeast(n.unlockConditions);
+      if (levels.isEmpty) {
+        yield CatalogValidationIssue(
+          severity: CatalogValidationSeverity.error,
+          path: 'nodes[${n.id}].unlockConditions',
+          message:
+              'LevelMilestoneNode level=${n.level} has no LevelAtLeast unlock condition.',
+        );
+        continue;
+      }
+      if (!levels.contains(n.level)) {
+        yield CatalogValidationIssue(
+          severity: CatalogValidationSeverity.error,
+          path: 'nodes[${n.id}].unlockConditions',
+          message:
+              'LevelMilestoneNode level=${n.level} unlock conditions reference $levels — none match.',
+        );
+      }
+    }
+  }
+
+  /// Recursively walks AllOf/AnyOf to collect every `LevelAtLeast.level`.
+  List<int> _flattenLevelAtLeast(List<UnlockCondition> conditions) {
+    final out = <int>[];
+    for (final c in conditions) {
+      switch (c) {
+        case LevelAtLeast(:final level):
+          out.add(level);
+        case AllOf(:final conditions):
+        case AnyOf(:final conditions):
+          out.addAll(_flattenLevelAtLeast(conditions));
+        case ObjectiveCompleted():
+        case NodeCompleted():
+        case ChapterUnlocked():
+        case CompanionAvailable():
+        case RpgModeEnabled():
+          break;
+      }
+    }
+    return out;
   }
 
   Iterable<CatalogValidationIssue> _checkActivationContentTagCoherence(

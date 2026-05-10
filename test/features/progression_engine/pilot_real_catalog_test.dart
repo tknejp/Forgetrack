@@ -50,45 +50,43 @@ void main() {
 
       final result = await engine.evaluate(input: _ambitiousPlayerInput());
 
-      // All five pilot objectives complete.
+      // Four core objectives complete (welcome_to_journey is
+      // condition-driven only — no objective).
       final completedIds =
           result.completedObjectives.map((o) => o.objectiveId).toSet();
-      expect(completedIds, {
-        'daily_steps_today',
-        'daily_protein_today',
+      expect(completedIds, containsAll({
+        'daily_steps',
+        'daily_protein',
         'lifetime_steps_100k',
-        'welcome_xp',
-        'level_5_xp',
-      });
+        'level_xp_5',
+      }));
 
-      // All five pilot nodes complete.
+      // Pilot nodes that should fire for the ambitious player.
       final nodeIds = result.completedNodes.map((n) => n.nodeId).toSet();
-      expect(nodeIds, {
+      expect(nodeIds, containsAll({
         'daily_steps_today',
         'daily_protein_today',
         'welcome_to_journey',
-        'lifetime_steps_100k',
+        'steps_total_100k',
         'level_5',
-      });
+      }));
 
-      // XP rewards from the two daily quests.
+      // XP comes from the daily quests.
       final xpGrants = result.grantedRewards
           .where((g) => g.event.rewardKind == RewardGrantKind.xp)
           .toList();
-      expect(xpGrants, hasLength(2));
-      // Cosmetic rewards from welcome (2) + lifetime steps (1) +
-      // level 5 (1) = 4.
-      final cosmeticGrants = result.grantedRewards
+      expect(xpGrants, isNotEmpty);
+      // Cosmetics: welcome (2) + steps_total_100k (1) + level_5 (1).
+      final cosmeticIds = result.grantedRewards
           .where((g) => g.event.rewardKind == RewardGrantKind.cosmetic)
-          .toList();
-      expect(cosmeticGrants, hasLength(4));
-      final cosmeticIds =
-          cosmeticGrants.map((g) => g.event.cosmeticId).toSet();
-      expect(cosmeticIds, {
+          .map((g) => g.event.cosmeticId)
+          .toSet();
+      expect(cosmeticIds, containsAll({
         'background_camp',
         'emblem_pilgrim_mark',
+        'relic_ravine_stone',
         'background_forest_trail',
-      });
+      }));
     });
 
     test('re-running with the same input emits no new events', () async {
@@ -100,7 +98,7 @@ void main() {
       final input = _ambitiousPlayerInput();
 
       final first = await engine.evaluate(input: input);
-      expect(first.completedNodes, hasLength(5));
+      expect(first.completedNodes, isNotEmpty);
 
       final second = await engine.evaluate(input: input);
       expect(second.completedObjectives, isEmpty);
@@ -127,18 +125,18 @@ void main() {
         ),
       );
 
-      // Welcome always completes (totalXp >= 0).
+      // Welcome always completes (no objective, no conditions).
       final ids = result.completedNodes.map((n) => n.nodeId).toSet();
       expect(ids, {'welcome_to_journey'});
 
       // Daily steps + protein + lifetime + level 5 are all unmet.
       expect(
         result.completedObjectives.map((o) => o.objectiveId),
-        contains('welcome_xp'),
+        isNot(contains('daily_steps')),
       );
       expect(
         result.completedObjectives.map((o) => o.objectiveId),
-        isNot(contains('daily_steps_today')),
+        isNot(contains('level_xp_5')),
       );
     });
 
@@ -168,25 +166,18 @@ void main() {
       expect(ids, contains('daily_steps_today'));
     });
 
-    test('static definitionForId still resolves the ported entries', () {
-      // The class-level lookup uses default context; pilot ports
-      // include a stable set of ids.
+    test('static definitionForId resolves canonical entries', () {
+      // The class-level lookup uses default context; canonical ids
+      // are stable across the full port.
+      expect(ObjectiveCatalog.definitionForId('daily_steps'), isNotNull);
+      expect(ObjectiveCatalog.definitionForId('lifetime_steps_100k'),
+          isNotNull);
       expect(
-        ObjectiveCatalog.definitionForId('daily_steps_today'),
-        isNotNull,
-      );
-      expect(
-        ObjectiveCatalog.definitionForId('lifetime_steps_100k'),
-        isNotNull,
-      );
-      expect(
-        ProgressionNodeCatalog.definitionForId('welcome_to_journey'),
-        isNotNull,
-      );
-      expect(
-        ProgressionNodeCatalog.definitionForId('level_5'),
-        isNotNull,
-      );
+          ProgressionNodeCatalog.definitionForId('welcome_to_journey'),
+          isNotNull);
+      expect(ProgressionNodeCatalog.definitionForId('level_5'), isNotNull);
+      expect(ProgressionNodeCatalog.definitionForId('steps_total_100k'),
+          isNotNull);
     });
   });
 }

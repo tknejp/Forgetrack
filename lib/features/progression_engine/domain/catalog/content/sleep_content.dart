@@ -1,0 +1,111 @@
+import '../../../../../shared/domain/rarity.dart';
+import '../../models/content_tag.dart';
+import '../../models/objective_definition.dart';
+import '../../models/objective_metric.dart';
+import '../../models/objective_operator.dart';
+import '../../models/objective_scope.dart';
+import '../../models/progression_node_definition.dart';
+import '../../models/quest_display_bucket.dart';
+import '../../models/reward_definition.dart';
+import '../engine_catalog_context.dart';
+
+/// Sleep domain — daily sleep quest + lifetime mastery + rolling-window
+/// mastery achievements. Mirrors V1: rule `daily_sleep`,
+/// `sleep_total_250h`/`1000h`, `sleep_month_225h`/`240h`.
+
+List<ObjectiveDefinition> sleepObjectives(EngineCatalogContext context) {
+  final goals = context.goals;
+  return [
+    ObjectiveDefinition(
+      id: 'daily_sleep',
+      metric: const SleepMinutesMetric(),
+      scope: const TodayScope(),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: goals.sleepMinutes.toDouble(),
+    ),
+    const ObjectiveDefinition(
+      id: 'lifetime_sleep_250h',
+      metric: SleepMinutesMetric(),
+      scope: LifetimeScope(),
+      operator: ObjectiveOperator.atLeast,
+      // V1 stores sleep in minutes; 250h = 15000 minutes.
+      targetValue: 15000,
+    ),
+    const ObjectiveDefinition(
+      id: 'lifetime_sleep_1000h',
+      metric: SleepMinutesMetric(),
+      scope: LifetimeScope(),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: 60000,
+    ),
+    const ObjectiveDefinition(
+      id: 'rolling_sleep_30d_225h',
+      metric: SleepMinutesMetric(),
+      scope: RollingWindowScope(days: 30),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: 13500,
+    ),
+    const ObjectiveDefinition(
+      id: 'rolling_sleep_30d_240h',
+      metric: SleepMinutesMetric(),
+      scope: RollingWindowScope(days: 30),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: 14400,
+    ),
+  ];
+}
+
+List<ProgressionNode> sleepNodes() {
+  return [
+    QuestNode(
+      id: 'daily_sleep_today',
+      objectiveId: 'daily_sleep',
+      displayBucket: QuestDisplayBucket.daily,
+      titleKey: (l) => l.progRuleDailySleep,
+      descriptionKey: (l) => l.progRuleDailySleepDesc,
+      rewards: const [XpReward(amount: 50)],
+      contentTags: const [ContentTag.core, ContentTag.fitness],
+      rarity: Rarity.common,
+    ),
+    AchievementNode(
+      id: 'sleep_total_250h',
+      objectiveId: 'lifetime_sleep_250h',
+      badgeEmoji: '\u{1F6CC}',
+      titleKey: (l) => l.progAchievementSleep250hTitle,
+      descriptionKey: (l) => l.progAchievementSleep250hDesc,
+      rewards: const [],
+      contentTags: const [ContentTag.core, ContentTag.fitness],
+      rarity: Rarity.common,
+    ),
+    AchievementNode(
+      id: 'sleep_total_1000h',
+      objectiveId: 'lifetime_sleep_1000h',
+      badgeEmoji: '\u{1F48E}',
+      titleKey: (l) => l.progAchievementSleep1000hTitle,
+      descriptionKey: (l) => l.progAchievementSleep1000hDesc,
+      rewards: const [],
+      contentTags: const [ContentTag.core, ContentTag.fitness],
+      rarity: Rarity.uncommon,
+    ),
+    AchievementNode(
+      id: 'sleep_month_225h',
+      objectiveId: 'rolling_sleep_30d_225h',
+      badgeEmoji: '\u{1F31C}',
+      titleKey: (l) => l.progAchievementSleepMonth225hTitle,
+      descriptionKey: (l) => l.progAchievementSleepMonth225hDesc,
+      rewards: const [],
+      contentTags: const [ContentTag.core, ContentTag.fitness],
+      rarity: Rarity.epic,
+    ),
+    AchievementNode(
+      id: 'sleep_month_240h',
+      objectiveId: 'rolling_sleep_30d_240h',
+      badgeEmoji: '\u{1F451}',
+      titleKey: (l) => l.progAchievementSleepMonth240hTitle,
+      descriptionKey: (l) => l.progAchievementSleepMonth240hDesc,
+      rewards: const [],
+      contentTags: const [ContentTag.core, ContentTag.fitness],
+      rarity: Rarity.legendary,
+    ),
+  ];
+}

@@ -70,11 +70,8 @@ class ObjectiveEvaluator {
           TodayScope() => input.stepsToday.toDouble(),
           ThisWeekScope() => input.stepsThisWeek.toDouble(),
           LifetimeScope() => input.stepsLifetime.toDouble(),
-          // Rolling window / current chapter for steps land with the
-          // catalog port; for now they read 0 so the objective never
-          // completes (instead of throwing — the validator will warn
-          // about catalog entries that hit this path).
-          RollingWindowScope() => 0,
+          RollingWindowScope(:final days) =>
+            (input.bestRollingStepsByDays[days] ?? 0).toDouble(),
           CurrentChapterScope() => 0,
         },
       CaloriesMetric() => switch (scope) {
@@ -87,6 +84,8 @@ class ObjectiveEvaluator {
         },
       SleepMinutesMetric() => switch (scope) {
           TodayScope() => input.sleepMinutesToday.toDouble(),
+          RollingWindowScope(:final days) =>
+            (input.bestRollingSleepMinutesByDays[days] ?? 0).toDouble(),
           _ => 0,
         },
       ActivityMinutesMetric() => switch (scope) {
@@ -95,7 +94,24 @@ class ObjectiveEvaluator {
         },
       LevelMetric() => input.level.toDouble(),
       TotalXpMetric() => input.totalXp.toDouble(),
-      RewardCountMetric() => input.totalRewardCount.toDouble(),
+      RewardCountMetric(:final ruleId, :final domain) => () {
+          if (ruleId != null) {
+            return (input.rewardCountByRule[ruleId] ?? 0).toDouble();
+          }
+          if (domain != null) {
+            return (input.rewardCountByDomain[domain] ?? 0).toDouble();
+          }
+          return input.totalRewardCount.toDouble();
+        }(),
+      StreakDaysMetric(:final ruleId, :final domain) => () {
+          if (ruleId != null) {
+            return (input.bestStreakByRule[ruleId] ?? 0).toDouble();
+          }
+          if (domain != null) {
+            return (input.bestStreakByDomain[domain] ?? 0).toDouble();
+          }
+          return 0.0;
+        }(),
       NodeCompletionsMetric(:final nodeId) =>
         (input.nodeCompletionCounts[nodeId] ?? 0).toDouble(),
       ComboPoolCompletionsMetric(:final poolId) =>

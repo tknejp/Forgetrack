@@ -23,6 +23,12 @@ class EngineEvaluationInput {
     this.sleepMinutesToday = 0,
     this.activityMinutesToday = 0,
     this.totalRewardCount = 0,
+    this.rewardCountByRule = const {},
+    this.rewardCountByDomain = const {},
+    this.bestStreakByRule = const {},
+    this.bestStreakByDomain = const {},
+    this.bestRollingStepsByDays = const {},
+    this.bestRollingSleepMinutesByDays = const {},
     this.nodeCompletionCounts = const {},
     this.comboPoolCompletionCounts = const {},
     this.rpgModeEnabled = true,
@@ -46,6 +52,31 @@ class EngineEvaluationInput {
   // not the source — but for Phase 2 the test passes them in
   // alongside other metrics so the evaluator has one input shape.
   final int totalRewardCount;
+
+  /// `ruleId → reward grant count` for [RewardCountMetric] filtered
+  /// by rule (e.g. counts of `weekly_activity` rewards for the
+  /// "weekly warrior" achievement).
+  final Map<String, int> rewardCountByRule;
+
+  /// `domain → reward grant count` for [RewardCountMetric] filtered
+  /// by domain (e.g. nutrition grants for "nutrition_rewards_25").
+  final Map<String, int> rewardCountByDomain;
+
+  /// `ruleId → best (longest) streak in days` for
+  /// [StreakDaysMetric.byRule] — mirrors the legacy
+  /// `bestStreakAtLeast` criterion on a rule.
+  final Map<String, int> bestStreakByRule;
+
+  /// `domain → best streak in days` for [StreakDaysMetric.byDomain].
+  final Map<String, int> bestStreakByDomain;
+
+  /// `windowDays → best lifetime steps in any rolling window of that
+  /// many days` — for steps achievements scoped on
+  /// [RollingWindowScope] (e.g. "best 30-day window >= 300k steps").
+  final Map<int, int> bestRollingStepsByDays;
+
+  /// Same shape, for sleep minutes.
+  final Map<int, int> bestRollingSleepMinutesByDays;
 
   /// `nodeId → number of completions in scope` — for
   /// `NodeCompletionsMetric` evaluation. Empty by default; tests fill
