@@ -22,6 +22,7 @@ import '../domain/models/progression_node_definition.dart';
 import '../domain/models/progression_resolution_reason.dart';
 import '../domain/models/progression_resolution_result.dart';
 import '../domain/models/quest_display_bucket.dart';
+import '../domain/models/reward_definition.dart';
 import '../domain/repository/ledger_snapshot.dart';
 import '../domain/repository/progression_engine_repository.dart';
 import 'cosmetic_unlock_bridge.dart';
@@ -41,6 +42,9 @@ class EngineQuestProgress {
     required this.progress,
     required this.isCompleted,
     required this.isAvailableForClaim,
+    required this.baseXp,
+    required this.previewXp,
+    this.domain,
   });
 
   final QuestNode node;
@@ -59,6 +63,21 @@ class EngineQuestProgress {
   /// manual-claim AND no claim event has fired yet — the "Vyzvednout"
   /// pill should be active.
   final bool isAvailableForClaim;
+
+  /// Domain inherited from the quest's bound objective. Null only
+  /// when the objective has no domain (cross-domain quests).
+  final ProgressionDomain? domain;
+
+  /// Base XP authored on the QuestNode's first XpReward (0 when the
+  /// quest has no XP reward — e.g. cosmetic-only quests).
+  final int baseXp;
+
+  /// XP the player would receive if they claimed *now*, scaled by the
+  /// current level via [ProgressionLevelPolicy.scaledRewardXp]. UI
+  /// "locked +96 XP" pills read this — as the player levels up the
+  /// preview value updates so the displayed XP and the actually-granted
+  /// XP always match.
+  final int previewXp;
 
   String get nodeId => node.id;
 }
@@ -552,6 +571,21 @@ class ProgressionEngineProvider extends ChangeNotifier {
         progress = (actual / target).clamp(0.0, 1.0).toDouble();
       }
 
+      // Pull the first XP reward off the node (V1 questy nevedou
+      // víc XP rewardů, V2 to teoreticky umožňuje — bereme první
+      // a sumarizujeme zbytek). Žádný XP reward → previewXp 0.
+      var baseXp = 0;
+      for (final r in node.rewards) {
+        if (r is XpReward) {
+          baseXp += r.amount;
+        }
+      }
+      final scaledXp = baseXp == 0
+          ? 0
+          : _levelPolicy
+              .scaledRewardXp(baseXp: baseXp, level: profile.level)
+              .round();
+
       out.add(EngineQuestProgress(
         node: node,
         actualValue: actual,
@@ -559,6 +593,9 @@ class ProgressionEngineProvider extends ChangeNotifier {
         progress: progress,
         isCompleted: isCompleted,
         isAvailableForClaim: isAvailable,
+        domain: objective.domain,
+        baseXp: baseXp,
+        previewXp: scaledXp,
       ));
     }
     return out;
