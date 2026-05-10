@@ -247,10 +247,29 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// `allObjectiveOutcomes` from the latest result so progress bars
   /// show in-progress state, not just completed.
   ///
-  /// Order matches catalog declaration order.
+  /// Returns a deterministic per-date pick of [dailyQuestPickCount]
+  /// quests so the player sees a stable rotation each day (V1 parity
+  /// — `selectDailyGoalQuestsForDate`). On the same calendar day the
+  /// same quests come back regardless of which daily quests have
+  /// already been completed; once a quest is in the rotation, it stays
+  /// there even if the player completes it (so the card persists with
+  /// a check / claimed pill).
   List<EngineQuestProgress> get currentDailyQuests {
+    final all = _questsForBucket(QuestDisplayBucket.daily);
+    return _pickDailyQuests(all, DateTime.now());
+  }
+
+  /// Returns the full daily quest pool (all daily-bucket quests in
+  /// the catalog). Used by the long-term goals section and tests that
+  /// need the un-narrowed list.
+  List<EngineQuestProgress> get allDailyQuests {
     return _questsForBucket(QuestDisplayBucket.daily);
   }
+
+  /// How many daily quests the rotation surfaces per day. V1 parity:
+  /// 2. Devtools / tests can override by reading [allDailyQuests]
+  /// directly.
+  static const int dailyQuestPickCount = 2;
 
   /// Same shape, but for the weekly bucket.
   List<EngineQuestProgress> get currentWeeklyQuests {
@@ -644,6 +663,42 @@ class ProgressionEngineProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  /// Deterministic per-date selection of daily quests. Uses the same
+  /// FNV-1a hash V1 used so the rotation lines up across engines until
+  /// V1 is removed. Stable for a given (date, questId) pair so a
+  /// quest doesn't shuffle out mid-day after the player completes it.
+  List<EngineQuestProgress> _pickDailyQuests(
+    List<EngineQuestProgress> all,
+    DateTime date, {
+    int count = dailyQuestPickCount,
+  }) {
+    if (all.length <= count) return all;
+    final dayKey = _dateKey(date);
+    final ranked = [...all]..sort((a, b) {
+        final byScore = _dailyScore(dayKey, a.nodeId)
+            .compareTo(_dailyScore(dayKey, b.nodeId));
+        if (byScore != 0) return byScore;
+        return a.nodeId.compareTo(b.nodeId);
+      });
+    return ranked.take(count).toList(growable: false);
+  }
+
+  String _dateKey(DateTime value) {
+    final year = value.year.toString().padLeft(4, '0');
+    final month = value.month.toString().padLeft(2, '0');
+    final day = value.day.toString().padLeft(2, '0');
+    return '$year-$month-$day';
+  }
+
+  int _dailyScore(String dayKey, String questId) {
+    var hash = 0x811c9dc5;
+    for (final unit in '$dayKey|$questId'.codeUnits) {
+      hash ^= unit;
+      hash = (hash * 0x01000193) & 0x7fffffff;
+    }
+    return hash;
   }
 
   int _totalClaimedXp(LedgerSnapshot ledger) {
