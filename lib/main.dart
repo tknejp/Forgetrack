@@ -215,23 +215,6 @@ Future<void> main() async {
         ChangeNotifierProvider.value(value: bushidoExportProvider),
         ChangeNotifierProvider.value(value: devToolsProvider),
         ChangeNotifierProvider.value(value: onboardingProvider),
-        ChangeNotifierProxyProvider4<GoalsProvider, FitnessProvider,
-            KalorickeTabulkyProvider, CosmeticsProvider,
-            ProgressionEngineProvider>(
-          create: (_) => ProgressionEngineProvider(
-            engine: progressionEngineV2,
-            repository: progressionEngineRepo,
-          ),
-          update: (_, goals, fitness, kt, cosmetics, provider) {
-            provider!.bind(
-              goalsProvider: goals,
-              fitnessProvider: fitness,
-              nutritionProvider: kt,
-              cosmeticsProvider: cosmetics,
-            );
-            return provider;
-          },
-        ),
         ChangeNotifierProxyProvider<AuthProvider, CosmeticsProvider>(
           create: (_) => CosmeticsProvider(
             service: cosmeticsService,
@@ -245,6 +228,27 @@ Future<void> main() async {
         ChangeNotifierProxyProvider4<GoalsProvider, FitnessProvider,
             KalorickeTabulkyProvider, CosmeticsProvider, ProgressionProvider>(
           create: (_) => ProgressionProvider(engine: progressionEngine),
+          update: (_, goals, fitness, kt, cosmetics, provider) {
+            provider!.bind(
+              goalsProvider: goals,
+              fitnessProvider: fitness,
+              nutritionProvider: kt,
+              cosmeticsProvider: cosmetics,
+            );
+            return provider;
+          },
+        ),
+        // V2 progression engine — declared after CosmeticsProvider +
+        // legacy ProgressionProvider so its bind() update sees both
+        // in scope. Same source dependencies as legacy progression
+        // (goals + fitness + nutrition + cosmetics).
+        ChangeNotifierProxyProvider4<GoalsProvider, FitnessProvider,
+            KalorickeTabulkyProvider, CosmeticsProvider,
+            ProgressionEngineProvider>(
+          create: (_) => ProgressionEngineProvider(
+            engine: progressionEngineV2,
+            repository: progressionEngineRepo,
+          ),
           update: (_, goals, fitness, kt, cosmetics, provider) {
             provider!.bind(
               goalsProvider: goals,
