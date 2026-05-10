@@ -164,6 +164,9 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
     final dailyActive = daily.where((q) => !q.isCompleted).toList();
     final weeklyActive = weekly.where((q) => !q.isCompleted).toList();
     final chapters = provider.currentChapterQuests;
+    final longTerm = provider.currentLongTermQuests;
+    final longTermClaimable =
+        longTerm.where((q) => q.isAvailableForClaim).toList();
 
     return Scaffold(
       backgroundColor: Tokens.bg,
@@ -249,6 +252,27 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                       expandedNodeId: _expandedNodeId,
                       onToggleExpanded: _toggleExpanded,
                     ),
+                    if (longTerm.isNotEmpty) ...[
+                      const SizedBox(height: Tokens.spaceXl),
+                      QuestSectionPanel(
+                        header: l10n.progQuestsLongTermHeader,
+                        color: Tokens.accent,
+                        countLabel:
+                            l10n.progQuestsActiveCount(longTerm.length),
+                        emptyTitle: l10n.progQuestsEmptyActiveTitle,
+                        emptyCaption: l10n.progQuestsEmptyActiveCaption,
+                        claimAllLabel: l10n.progQuestClaimAll,
+                        l10n: l10n,
+                        quests: longTerm,
+                        claimable: longTermClaimable,
+                        enabled: !provider.isEvaluating,
+                        pillKeyFor: _pillKeyFor,
+                        onClaim: _claimQuest,
+                        onClaimAll: _claimAll,
+                        expandedNodeId: _expandedNodeId,
+                        onToggleExpanded: _toggleExpanded,
+                      ),
+                    ],
                     const SizedBox(height: Tokens.spaceXl),
                     EngineCompletedQuestsSection(
                       completed: provider.completedQuests,

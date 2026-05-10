@@ -3,6 +3,7 @@ import 'content/activity_content.dart';
 import 'content/body_content.dart';
 import 'content/chapter_forest_trial_content.dart';
 import 'content/level_milestones.dart';
+import 'content/long_term_content.dart';
 import 'content/meta_content.dart';
 import 'content/nutrition_content.dart';
 import 'content/rpg_placeholders.dart';
@@ -42,6 +43,7 @@ class ProgressionNodeCatalog {
       ...levelMilestoneNodes(),
       ...rpgNodes(),
       ...forestTrialNodes(),
+      ...longTermNodes(),
     ];
   }
 }

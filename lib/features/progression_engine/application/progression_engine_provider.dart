@@ -276,6 +276,46 @@ class ProgressionEngineProvider extends ChangeNotifier {
     return _questsForBucket(QuestDisplayBucket.weekly);
   }
 
+  /// Long-term goals — manual-claim journey + chain quests that span
+  /// multiple days. Returns one representative per chain (the lowest
+  /// chainOrder step that is still in progress / waiting for claim);
+  /// stand-alone quests come back as themselves. Mirrors V1's
+  /// `compactQuestChainRepresentatives(longTerm)`.
+  List<EngineQuestProgress> get currentLongTermQuests {
+    final all = _questsForBucket(QuestDisplayBucket.longTerm);
+    if (all.isEmpty) return const [];
+
+    final chainGroups = <String, List<EngineQuestProgress>>{};
+    final standalone = <EngineQuestProgress>[];
+    for (final q in all) {
+      final chainId = q.node.chainId;
+      if (chainId == null || chainId.isEmpty) {
+        standalone.add(q);
+      } else {
+        chainGroups.putIfAbsent(chainId, () => []).add(q);
+      }
+    }
+
+    final out = <EngineQuestProgress>[...standalone];
+    for (final group in chainGroups.values) {
+      group.sort((a, b) =>
+          (a.node.chainOrder ?? 0).compareTo(b.node.chainOrder ?? 0));
+      EngineQuestProgress? active;
+      for (final q in group) {
+        if (!q.isCompleted) {
+          active = q;
+          break;
+        }
+      }
+      // Whole chain done → surface the last one as a "claimed" card so
+      // the player still sees they cleared it. Hidden once the player
+      // collapses the section in a future session via filters.
+      out.add(active ?? group.last);
+    }
+    out.sort((a, b) => a.node.sortOrder.compareTo(b.node.sortOrder));
+    return out;
+  }
+
   /// One representative [EngineQuestProgress] per active chapter.
   ///
   /// "Active" means at least one step in the chain is still in
