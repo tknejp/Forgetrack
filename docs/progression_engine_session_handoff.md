@@ -7,9 +7,10 @@ this doc is the working state.
 ## Branch + commits
 
 `refactor/progression-engine-v2` — 19 commits previous session + Phase 6.5
-this turn.
+foundation + Phase 6.5b parity (assets, expandable cards, history feed,
+completed rollup, chain mechanics, forest_trial chapter, chapter UI).
 `flutter analyze` clean (only pre-existing `sheets_export _round` warning).
-`flutter test` 367/367 passing.
+`flutter test` 370/370 passing.
 
 ## Phase status
 
@@ -28,6 +29,7 @@ this turn.
 | 6.3 Manual claim + StreakSource + derived state | ✅ done |
 | 6.4 Home card migration + dynamic XP scaling + claim-all devtools | ✅ done |
 | 6.5 quests_screen migration (parallel V2 screen, V1 evicted from route) | ✅ done |
+| 6.5b V1-parity quest screen (assets, expand, streak, history feed, completed rollup, chain mechanics, forest_trial chapter, chapter UI) | ✅ done |
 | 6.6 social_provider state migration | ⏳ next |
 | 6.7 hero_screen + journey adapter | ⏳ |
 | 6.8 overview_screen, onboarding_steps (main_shell already on V2) | ⏳ |
@@ -228,7 +230,49 @@ commit `d3026b2`.
 - Modified: `lib/features/devtools/presentation/devtools_screen.dart` + new section
 - Tests: `test/features/progression_engine/*` (51 tests, all green)
 
-## Phase 6.5 — files added/modified this turn
+## Phase 6.5b — files added/modified
+
+V1-parity polish on top of Phase 6.5. Eight commits:
+
+- `0262a2d` PNG assets on V2 quest cards (quest_assets.dart + assetKey
+  on every existing daily/weekly QuestNode + Image.asset render with
+  ProgDomIco fallback)
+- `8f5f46d` rewardHistory + completedQuests getters +
+  EngineCompletedQuest model on the provider; nodeById exposes catalog
+  lookup so UI can resolve titles for ledger-only ids
+- `f782813` expandable EngineQuestCard with one-at-a-time expansion
+  (V1 pattern), 🔥 streak chip, expanded XP-scaling / streak-best /
+  locked-hint detail panel + 3 new l10n keys
+  (`progXpFlatDetail`, `progXpScalingDetail`, `progStreakBestDetail`)
+- `c3c21d1` EngineRewardHistoryFeed (chronological from
+  ledger.rewardGrants) + EngineCompletedQuestsSection (compact list
+  with "Show all (N)" reveal); domainForNodeId resolves
+  node→objective→domain on the provider
+- `44dbe57` Chain mechanics on QuestNode: prerequisiteNodeIds /
+  nextNodeIds / chainStepLabelKey. Engine expands prereqs into
+  NodeCompleted unlock conditions
+- `dd278e1` forest_trial chapter content port — pilot chapter with
+  open + 3 steps + finale; auto-claim open at level 10, manual-claim
+  steps gated by NodeCompletionsMetric on existing daily quests,
+  finale drops emblem_forest_mark cosmetic. 3 new tests
+- `8db603d` Chapter section + chain preview in QuestsScreenV2;
+  EngineChapterCard renders parallax bg image + chain preview row
+  (current step glows, completed steps show check). New provider
+  getters `currentChapterQuests` + `chainQuestsFor(chainId)`
+
+## Outstanding for full V1 chapter parity (deferred)
+
+- Other 9 chapters (ruins_discipline, mine_descent, forge_momentum,
+  underway_pact, frostbound_oath, icewalker_route, mountain_ascent,
+  dragonroad, dragonrock_sovereign) still V1-only. Pattern is
+  established — each is one new content file +
+  `forestTrial*` aggregator entry.
+- "Upcoming chapters" sub-section (V1 has it for chapters whose
+  prereq chapter isn't complete yet)
+- ComboPoolDefinition + tiered daily — needed before daily-combo
+  section can light up
+
+## Phase 6.5 — original-foundation files (Phase 6.5 commit `510a5d4`)
 
 - New: `lib/features/progression_engine/presentation/quests_screen.dart`
   (`QuestsScreenV2` + public `QuestSectionPanel`)
