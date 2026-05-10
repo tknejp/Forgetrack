@@ -93,18 +93,14 @@ Future<void> main() async {
   final progressionDb = ProgressionDatabase();
   await progressionDb.open();
 
-  // Phase 4 + 6 foundation: the new engine's Isar store + repository
-  // + engine + provider. Coexists with the legacy stack until UI
-  // consumers move over (Phase 6 finish).
+  // Phase 4 + 6: the new engine's Isar store + repository + engine.
+  // The provider is constructed inside MultiProvider so it can bind
+  // to live source providers via ChangeNotifierProxyProvider4.
   final progressionEngineDb = ProgressionEngineDatabase();
   await progressionEngineDb.open();
   final progressionEngineRepo =
       IsarProgressionEngineRepository(progressionEngineDb);
   final progressionEngineV2 = v2_engine.ProgressionEngine(
-    repository: progressionEngineRepo,
-  );
-  final progressionEngineProvider = ProgressionEngineProvider(
-    engine: progressionEngineV2,
     repository: progressionEngineRepo,
   );
 
@@ -219,7 +215,23 @@ Future<void> main() async {
         ChangeNotifierProvider.value(value: bushidoExportProvider),
         ChangeNotifierProvider.value(value: devToolsProvider),
         ChangeNotifierProvider.value(value: onboardingProvider),
-        ChangeNotifierProvider.value(value: progressionEngineProvider),
+        ChangeNotifierProxyProvider4<GoalsProvider, FitnessProvider,
+            KalorickeTabulkyProvider, CosmeticsProvider,
+            ProgressionEngineProvider>(
+          create: (_) => ProgressionEngineProvider(
+            engine: progressionEngineV2,
+            repository: progressionEngineRepo,
+          ),
+          update: (_, goals, fitness, kt, cosmetics, provider) {
+            provider!.bind(
+              goalsProvider: goals,
+              fitnessProvider: fitness,
+              nutritionProvider: kt,
+              cosmeticsProvider: cosmetics,
+            );
+            return provider;
+          },
+        ),
         ChangeNotifierProxyProvider<AuthProvider, CosmeticsProvider>(
           create: (_) => CosmeticsProvider(
             service: cosmeticsService,
