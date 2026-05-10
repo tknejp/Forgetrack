@@ -1053,6 +1053,25 @@
   },
   "progRewardsEmptyTitle": "No rewards granted yet.",
   "progRewardsEmptyCaption": "Completed goals will start filling your journal.",
+  "progXpFlatDetail": "Reward: +{xp} XP",
+  "@progXpFlatDetail": {
+    "placeholders": {
+      "xp": { "type": "int" }
+    }
+  },
+  "progXpScalingDetail": "Reward: +{baseXp} XP base · scaled to +{previewXp} XP at your level",
+  "@progXpScalingDetail": {
+    "placeholders": {
+      "baseXp": { "type": "int" },
+      "previewXp": { "type": "int" }
+    }
+  },
+  "progStreakBestDetail": "Best streak: {days} days",
+  "@progStreakBestDetail": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
   "progRewardSubtitle": "{domain} · +{xp} XP",
   "@progRewardSubtitle": {
     "placeholders": {

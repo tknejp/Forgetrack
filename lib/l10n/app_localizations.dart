@@ -2408,6 +2408,24 @@ abstract class AppLocalizations {
   /// **'Completed goals will start filling your journal.'**
   String get progRewardsEmptyCaption;
 
+  /// No description provided for @progXpFlatDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Reward: +{xp} XP'**
+  String progXpFlatDetail(int xp);
+
+  /// No description provided for @progXpScalingDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Reward: +{baseXp} XP base · scaled to +{previewXp} XP at your level'**
+  String progXpScalingDetail(int baseXp, int previewXp);
+
+  /// No description provided for @progStreakBestDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Best streak: {days} days'**
+  String progStreakBestDetail(int days);
+
   /// No description provided for @progRewardSubtitle.
   ///
   /// In en, this message translates to:

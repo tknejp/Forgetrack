@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
+import '../../../../shared/widgets/ft_expand_chevron.dart';
 import '../../../../shared/widgets/progress_bar.dart';
 import '../../../../shared/widgets/xp_claim_pill.dart';
 import '../../../progression/domain/models/core_models.dart';
@@ -12,15 +13,15 @@ import '../../domain/models/progression_node_definition.dart';
 
 /// One quest card in the V2 quests screen.
 ///
-/// Layout: domain icon · title + description · XP pill (locked /
-/// claimable / claimed) · progress bar with actual/target text. The
-/// XP pill switches state via [EngineQuestProgress.isCompleted] /
-/// [EngineQuestProgress.isAvailableForClaim] and triggers the [onClaim]
-/// callback (with the pill centre offset so the parent can launch a
-/// sparkle).
+/// Layout (collapsed): leading asset · title + description (+ optional
+/// streak chip) · XP pill · expand chevron, then the progress row. When
+/// [isExpanded] is true an extra panel reveals the full description, an
+/// XP-scaling line, and the locked hint when the node has one.
 ///
-/// Stateless — the parent owns the claim flow and the pill key for the
-/// sparkle target.
+/// Stateless — the parent owns the claim flow, the pill key for the
+/// sparkle target, *and* the one-at-a-time expansion state (V1
+/// pattern). The card surfaces taps via [onToggle] but never mutates
+/// state on its own.
 class EngineQuestCard extends StatelessWidget {
   const EngineQuestCard({
     super.key,
@@ -29,6 +30,9 @@ class EngineQuestCard extends StatelessWidget {
     required this.enabled,
     required this.pillKey,
     required this.onClaim,
+    this.streak,
+    this.isExpanded = false,
+    this.onToggle,
   });
 
   final EngineQuestProgress quest;
@@ -45,71 +49,118 @@ class EngineQuestCard extends StatelessWidget {
   final Future<void> Function(EngineQuestProgress quest, {Offset? from})
       onClaim;
 
+  /// Streak summary for this quest's objective. Null when the objective
+  /// has no streak (lifetime / weekly scopes); a chip shows only when
+  /// [EngineStreakSummary.currentStreak] > 0.
+  final EngineStreakSummary? streak;
+
+  /// True when the player has tapped this card open. Owned by the
+  /// parent so only one card is expanded at a time (V1 parity).
+  final bool isExpanded;
+
+  /// Tap handler for the entire card. Null disables expansion (e.g.
+  /// completed quests in the rollup row).
+  final VoidCallback? onToggle;
+
   @override
   Widget build(BuildContext context) {
     final domain = quest.domain ?? ProgressionDomain.steps;
     final accent = domain.color;
+    final streakValue = streak?.currentStreak ?? 0;
 
-    return Container(
-      padding: const EdgeInsets.all(Tokens.questCardPadding),
-      decoration: BoxDecoration(
-        color: const Color(0xFF111423),
-        borderRadius: BorderRadius.circular(Tokens.questCardRadius),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.26),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+    return GestureDetector(
+      onTap: onToggle,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(Tokens.questCardPadding),
+        decoration: BoxDecoration(
+          color: const Color(0xFF111423),
+          borderRadius: BorderRadius.circular(Tokens.questCardRadius),
+          border: Border.all(
+            color: isExpanded
+                ? Tokens.accent.withValues(alpha: 0.42)
+                : Colors.white.withValues(alpha: 0.06),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _QuestLeading(node: quest.node, domain: domain, size: 32),
-              const SizedBox(width: Tokens.spaceMd),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      quest.node.titleKey(l10n),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 15.5,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      quest.node.descriptionKey(l10n),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white.withValues(alpha: 0.66),
-                      ),
-                    ),
-                  ],
-                ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.26),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+            if (isExpanded)
+              BoxShadow(
+                color: Tokens.accent.withValues(alpha: 0.18),
+                blurRadius: Tokens.glowXl,
+                offset: const Offset(0, 10),
               ),
-              const SizedBox(width: Tokens.spaceSm),
-              XpClaimPill(
-                key: pillKey,
-                data: _pillData(),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _QuestLeading(node: quest.node, domain: domain, size: 32),
+                const SizedBox(width: Tokens.spaceMd),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        quest.node.titleKey(l10n),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 15.5,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        quest.node.descriptionKey(l10n),
+                        maxLines: isExpanded ? 3 : 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white.withValues(alpha: 0.66),
+                        ),
+                      ),
+                      if (streakValue > 0) ...[
+                        const SizedBox(height: 6),
+                        _StreakChip(days: streakValue, accent: accent),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: Tokens.spaceSm),
+                XpClaimPill(key: pillKey, data: _pillData()),
+                if (onToggle != null) ...[
+                  const SizedBox(width: 6),
+                  ExpandChevron(
+                    expanded: isExpanded,
+                    color: Tokens.onSurfaceMuted,
+                    size: 20,
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: Tokens.spaceSm),
+            _ProgressRow(quest: quest, accent: accent),
+            if (isExpanded) ...[
+              const SizedBox(height: Tokens.spaceSm),
+              _ExpandedDetails(
+                quest: quest,
+                streak: streak,
+                accent: accent,
+                l10n: l10n,
               ),
             ],
-          ),
-          const SizedBox(height: Tokens.spaceSm),
-          _ProgressRow(quest: quest, accent: accent),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -129,6 +180,139 @@ class EngineQuestCard extends StatelessWidget {
     // Either the objective isn't satisfied yet, or a refresh/claim is
     // in flight — show the locked pill with the would-be XP.
     return XpClaimPillData.locked(quest.previewXp);
+  }
+}
+
+/// Compact streak chip rendered inside the title column when the
+/// quest's objective has an active streak. Mirrors V1's fire chip.
+class _StreakChip extends StatelessWidget {
+  const _StreakChip({required this.days, required this.accent});
+
+  final int days;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.13),
+        borderRadius: BorderRadius.circular(Tokens.radiusProgress),
+        border: Border.all(color: accent.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('🔥', style: TextStyle(fontSize: 11)),
+          const SizedBox(width: 3),
+          Text(
+            '$days',
+            style: TextStyle(
+              fontSize: Tokens.fontSizeMicro,
+              fontWeight: FontWeight.w800,
+              color: accent,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Detail panel revealed when the player expands a quest card.
+/// Shows the XP-scaling info (base × level multiplier → preview),
+/// the locked hint when set, and the streak record when present.
+class _ExpandedDetails extends StatelessWidget {
+  const _ExpandedDetails({
+    required this.quest,
+    required this.streak,
+    required this.accent,
+    required this.l10n,
+  });
+
+  final EngineQuestProgress quest;
+  final EngineStreakSummary? streak;
+  final Color accent;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final lockedHint = quest.node.lockedHintKey?.call(l10n);
+    final hasScaling = quest.baseXp > 0 && quest.previewXp != quest.baseXp;
+    final bestStreak = streak?.bestStreak ?? 0;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(Tokens.radiusInner),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (quest.baseXp > 0)
+            _DetailLine(
+              icon: Icons.bolt_rounded,
+              color: accent,
+              text: hasScaling
+                  ? l10n.progXpScalingDetail(quest.baseXp, quest.previewXp)
+                  : l10n.progXpFlatDetail(quest.baseXp),
+            ),
+          if (bestStreak > 0) ...[
+            const SizedBox(height: 6),
+            _DetailLine(
+              icon: Icons.local_fire_department_rounded,
+              color: accent,
+              text: l10n.progStreakBestDetail(bestStreak),
+            ),
+          ],
+          if (lockedHint != null && lockedHint.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            _DetailLine(
+              icon: Icons.lock_outline_rounded,
+              color: Tokens.onSurfaceMuted,
+              text: lockedHint,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _DetailLine extends StatelessWidget {
+  const _DetailLine({
+    required this.icon,
+    required this.color,
+    required this.text,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 13, color: color),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontSize: Tokens.fontSizeMicro,
+              fontWeight: FontWeight.w600,
+              color: Tokens.onSurfaceMuted,
+              height: 1.4,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 

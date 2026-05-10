@@ -1269,6 +1269,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'Completed goals will start filling your journal.';
 
   @override
+  String progXpFlatDetail(int xp) {
+    return 'Reward: +$xp XP';
+  }
+
+  @override
+  String progXpScalingDetail(int baseXp, int previewXp) {
+    return 'Reward: +$baseXp XP base · scaled to +$previewXp XP at your level';
+  }
+
+  @override
+  String progStreakBestDetail(int days) {
+    return 'Best streak: $days days';
+  }
+
+  @override
   String progRewardSubtitle(String domain, int xp) {
     return '$domain · +$xp XP';
   }

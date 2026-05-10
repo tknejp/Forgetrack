@@ -1271,6 +1271,21 @@ class AppLocalizationsCs extends AppLocalizations {
   String get progRewardsEmptyCaption => 'Dokončené cíle naplní tvůj deník.';
 
   @override
+  String progXpFlatDetail(int xp) {
+    return 'Odměna: +$xp XP';
+  }
+
+  @override
+  String progXpScalingDetail(int baseXp, int previewXp) {
+    return 'Odměna: +$baseXp XP základ · po přepočtu na tvůj level +$previewXp XP';
+  }
+
+  @override
+  String progStreakBestDetail(int days) {
+    return 'Nejlepší série: $days dní';
+  }
+
+  @override
   String progRewardSubtitle(String domain, int xp) {
     return '$domain · +$xp XP';
   }

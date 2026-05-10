@@ -51,8 +51,18 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
   /// pill the player tapped.
   final Map<String, GlobalKey> _pillKeys = {};
 
+  /// One-at-a-time card expansion (V1 parity). Null when no card is
+  /// open. Tapping the same id collapses; tapping another switches.
+  String? _expandedNodeId;
+
   GlobalKey _pillKeyFor(String nodeId) =>
       _pillKeys.putIfAbsent(nodeId, () => GlobalKey(debugLabel: nodeId));
+
+  void _toggleExpanded(String nodeId) {
+    setState(() {
+      _expandedNodeId = _expandedNodeId == nodeId ? null : nodeId;
+    });
+  }
 
   Offset? _centerOfKey(GlobalKey key) {
     final box = key.currentContext?.findRenderObject() as RenderBox?;
@@ -194,6 +204,10 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                       pillKeyFor: _pillKeyFor,
                       onClaim: _claimQuest,
                       onClaimAll: _claimAll,
+                      streakFor: (q) =>
+                          provider.streakForObjective(q.node.objectiveId),
+                      expandedNodeId: _expandedNodeId,
+                      onToggleExpanded: _toggleExpanded,
                     ),
                     const SizedBox(height: Tokens.spaceXl),
                     QuestSectionPanel(
@@ -212,6 +226,10 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                       pillKeyFor: _pillKeyFor,
                       onClaim: _claimQuest,
                       onClaimAll: _claimAll,
+                      streakFor: (q) =>
+                          provider.streakForObjective(q.node.objectiveId),
+                      expandedNodeId: _expandedNodeId,
+                      onToggleExpanded: _toggleExpanded,
                     ),
                   ],
                 ),
@@ -243,6 +261,9 @@ class QuestSectionPanel extends StatelessWidget {
     required this.pillKeyFor,
     required this.onClaim,
     required this.onClaimAll,
+    this.streakFor,
+    this.expandedNodeId,
+    this.onToggleExpanded,
   });
 
   final String header;
@@ -259,6 +280,19 @@ class QuestSectionPanel extends StatelessWidget {
   final Future<void> Function(EngineQuestProgress quest, {Offset? from})
       onClaim;
   final Future<void> Function(List<EngineQuestProgress> quests) onClaimAll;
+
+  /// Resolves the streak summary for a given quest. Used by the card
+  /// to render a 🔥 chip and the best-streak detail line. Optional —
+  /// tests can pass null to skip the streak path.
+  final EngineStreakSummary Function(EngineQuestProgress quest)? streakFor;
+
+  /// Id of the currently expanded card (one-at-a-time). Owned by the
+  /// screen; the panel just forwards it to each card.
+  final String? expandedNodeId;
+
+  /// Tap handler for card expansion. When null, cards render without
+  /// the expand chevron and ignore taps.
+  final void Function(String nodeId)? onToggleExpanded;
 
   @override
   Widget build(BuildContext context) {
@@ -301,6 +335,11 @@ class QuestSectionPanel extends StatelessWidget {
                   enabled: enabled,
                   pillKey: pillKeyFor(quests[i].nodeId),
                   onClaim: onClaim,
+                  streak: streakFor?.call(quests[i]),
+                  isExpanded: expandedNodeId == quests[i].nodeId,
+                  onToggle: onToggleExpanded == null
+                      ? null
+                      : () => onToggleExpanded!(quests[i].nodeId),
                 ),
               ],
             ],
