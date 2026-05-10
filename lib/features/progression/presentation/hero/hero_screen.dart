@@ -13,7 +13,7 @@ import '../../../cosmetics/presentation/cosmetics_screen.dart';
 import '../../../social/application/social_provider.dart';
 import '../../../social/domain/social_models.dart';
 import '../widgets/progression_primitives.dart';
-import '../journey/widgets/journey_preview_card.dart';
+import '../../../journey/presentation/widgets/journey_preview_card.dart';
 import '../widgets/progression_internals.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';

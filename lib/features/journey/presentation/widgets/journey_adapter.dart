@@ -1,9 +1,9 @@
-import '../../../../../l10n/app_localizations.dart';
-import '../../../application/progression_provider.dart';
-import '../../../domain/journey_models.dart';
-import '../../../domain/policy/level_config.dart' as level_config;
-import '../../../domain/progression_models.dart';
-import '../../../../../shared/presentation/achievement_badge_specs.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/presentation/achievement_badge_specs.dart';
+import '../../../progression/application/progression_provider.dart';
+import '../../../progression/domain/policy/level_config.dart' as level_config;
+import '../../../progression/domain/progression_models.dart';
+import '../../domain/journey_models.dart';
 
 /// Builds the [JourneyCheckpoint] lists used by the Hero preview, the detail
 /// map and the milestone feed. All three views read from the same provider

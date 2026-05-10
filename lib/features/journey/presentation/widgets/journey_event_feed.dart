@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../../l10n/app_localizations.dart';
-import '../../../../../l10n/l10n.dart';
-import '../../../../../shared/theme/design_tokens.dart';
-import '../../../domain/journey_models.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../l10n/l10n.dart';
+import '../../../../shared/theme/design_tokens.dart';
+import '../../domain/journey_models.dart';
 import 'journey_primitives.dart';
 
 /// Feed of milestone events shown under the big map on `HeroJourneyMapScreen`.

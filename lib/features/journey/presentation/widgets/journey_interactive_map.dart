@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../../l10n/app_localizations.dart';
-import '../../../../../l10n/l10n.dart';
-import '../../../../../shared/theme/design_tokens.dart';
-import '../../../domain/journey_models.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../l10n/l10n.dart';
+import '../../../../shared/theme/design_tokens.dart';
+import '../../domain/journey_models.dart';
 import 'journey_map_route.dart';
 import 'journey_primitives.dart';
 

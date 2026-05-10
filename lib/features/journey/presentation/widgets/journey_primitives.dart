@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../shared/theme/design_tokens.dart';
-import '../../../domain/journey_models.dart';
+import '../../../../shared/theme/design_tokens.dart';
+import '../../domain/journey_models.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Type → colour / icon / label helpers (shared by preview and full map)

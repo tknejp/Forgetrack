@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../domain/journey_models.dart';
+import '../../domain/journey_models.dart';
 
 class JourneyMapPoint {
   const JourneyMapPoint({

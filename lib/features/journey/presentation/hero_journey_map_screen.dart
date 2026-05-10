@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../l10n/l10n.dart';
-import '../../../../shared/theme/design_tokens.dart';
-import '../../../../shared/widgets/ft_back_button.dart';
-import '../../../../shared/widgets/screen_header.dart';
-import '../../application/progression_provider.dart';
-import '../../domain/journey_models.dart';
+import '../../../l10n/l10n.dart';
+import '../../../shared/theme/design_tokens.dart';
+import '../../../shared/widgets/ft_back_button.dart';
+import '../../../shared/widgets/screen_header.dart';
+import '../../progression/application/progression_provider.dart';
+import '../domain/journey_models.dart';
 import 'widgets/journey_adapter.dart';
 import 'widgets/journey_event_feed.dart';
 import 'widgets/journey_interactive_map.dart';

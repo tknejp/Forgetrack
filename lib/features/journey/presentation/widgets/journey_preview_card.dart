@@ -3,12 +3,12 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../../l10n/l10n.dart';
-import '../../../../../shared/theme/design_tokens.dart';
-import '../../../application/progression_provider.dart';
-import '../../../domain/journey_models.dart';
+import '../../../../l10n/l10n.dart';
+import '../../../../shared/theme/design_tokens.dart';
+import '../../../progression/application/progression_provider.dart';
+import '../../../progression/presentation/widgets/progression_primitives.dart';
+import '../../domain/journey_models.dart';
 import '../hero_journey_map_screen.dart';
-import '../../widgets/progression_primitives.dart';
 import 'journey_adapter.dart';
 import 'journey_primitives.dart';
 
