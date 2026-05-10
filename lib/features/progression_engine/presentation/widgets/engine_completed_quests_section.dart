@@ -164,11 +164,29 @@ class _CompletedRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
-          const Icon(
-            Icons.check_circle_outline_rounded,
-            size: 16,
-            color: Tokens.onSurfaceMuted,
-          ),
+          if (entry.xpGranted > 0)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(Tokens.radiusProgress),
+                border: Border.all(color: accent.withValues(alpha: 0.32)),
+              ),
+              child: Text(
+                '+${entry.xpGranted} XP',
+                style: TextStyle(
+                  fontSize: Tokens.fontSizeMicro,
+                  fontWeight: FontWeight.w800,
+                  color: accent,
+                ),
+              ),
+            )
+          else
+            const Icon(
+              Icons.check_circle_outline_rounded,
+              size: 16,
+              color: Tokens.onSurfaceMuted,
+            ),
         ],
       ),
     );

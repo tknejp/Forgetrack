@@ -287,7 +287,7 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                     ),
                     const SizedBox(height: Tokens.spaceSm),
                     EngineRewardHistoryFeed(
-                      grants: provider.rewardHistory,
+                      grants: provider.recentRewardHistory,
                       l10n: l10n,
                       resolveNode: provider.nodeById,
                       resolveDomain: provider.domainForNodeId,
