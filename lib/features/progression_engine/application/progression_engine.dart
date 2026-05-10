@@ -1,0 +1,321 @@
+import '../domain/catalog/objective_catalog.dart';
+import '../domain/catalog/progression_node_catalog.dart';
+import '../domain/evaluator/objective_evaluator.dart';
+import '../domain/evaluator/progression_node_resolver.dart';
+import '../domain/evaluator/reward_grant_planner.dart';
+import '../domain/evaluator/unlock_condition_resolver.dart';
+import '../domain/models/engine_evaluation_input.dart';
+import '../domain/models/ledger_event.dart';
+import '../domain/models/progression_node_definition.dart';
+import '../domain/models/progression_resolution_reason.dart';
+import '../domain/models/progression_resolution_result.dart';
+import '../domain/repository/ledger_snapshot.dart';
+import '../domain/repository/progression_engine_repository.dart';
+import 'reward_grant_service.dart';
+
+/// Phase 2 engine orchestrator.
+///
+/// Composes the four evaluators (objective, unlock, node, reward
+/// planner) plus the [RewardGrantService] over a
+/// [ProgressionEngineRepository]. One canonical method —
+/// [evaluate] — produces a [ProgressionResolutionResult] for one
+/// run. The result is the only thing downstream consumers consume;
+/// nobody else looks at the ledger directly.
+///
+/// Idempotency: re-running with the same input + ledger produces a
+/// result whose `completedNodes`, `availableNodes`, `grantedRewards`
+/// match the same sets but where any redundant ledger appends become
+/// `skippedEvents`. Tests assert this.
+class ProgressionEngine {
+  ProgressionEngine({
+    required ProgressionEngineRepository repository,
+    ObjectiveCatalog objectiveCatalog = const ObjectiveCatalog(),
+    ProgressionNodeCatalog nodeCatalog = const ProgressionNodeCatalog(),
+    ObjectiveEvaluator objectiveEvaluator = const ObjectiveEvaluator(),
+    UnlockConditionResolver unlockConditionResolver =
+        const UnlockConditionResolver(),
+    ProgressionNodeResolver nodeResolver = const ProgressionNodeResolver(),
+    RewardGrantPlanner rewardGrantPlanner = const RewardGrantPlanner(),
+    RewardGrantService rewardGrantService = const RewardGrantService(),
+    String Function()? runIdGenerator,
+  })  : _repository = repository,
+        _objectiveCatalog = objectiveCatalog,
+        _nodeCatalog = nodeCatalog,
+        _objectiveEvaluator = objectiveEvaluator,
+        _unlockConditionResolver = unlockConditionResolver,
+        _nodeResolver = nodeResolver,
+        _rewardGrantPlanner = rewardGrantPlanner,
+        _rewardGrantService = rewardGrantService,
+        _runIdGenerator = runIdGenerator ?? _defaultRunId;
+
+  final ProgressionEngineRepository _repository;
+  final ObjectiveCatalog _objectiveCatalog;
+  final ProgressionNodeCatalog _nodeCatalog;
+  final ObjectiveEvaluator _objectiveEvaluator;
+  final UnlockConditionResolver _unlockConditionResolver;
+  final ProgressionNodeResolver _nodeResolver;
+  final RewardGrantPlanner _rewardGrantPlanner;
+  final RewardGrantService _rewardGrantService;
+  final String Function() _runIdGenerator;
+
+  /// Run one full evaluation pass.
+  ///
+  /// Order:
+  ///   1. Load ledger.
+  ///   2. Evaluate every objective once.
+  ///   3. Resolve every node (unlock conditions, claim policy,
+  ///      already-completed lookup).
+  ///   4. Plan reward grants for newly-completed nodes.
+  ///   5. Build reward events with XP scaling.
+  ///   6. Append all new events.
+  ///   7. Return canonical result.
+  Future<ProgressionResolutionResult> evaluate({
+    required EngineEvaluationInput input,
+    ProgressionResolutionReason reason =
+        ProgressionResolutionReason.liveUpdate,
+  }) async {
+    final runId = _runIdGenerator();
+    final ledger = await _repository.loadLedger();
+    final objectives = _objectiveCatalog.build();
+    final nodes = _nodeCatalog.build();
+    final timestamp = input.evaluatedAt;
+
+    // Step 2: evaluate objectives.
+    final outcomes = <String, ObjectiveOutcome>{};
+    final newObjectiveEvents = <ObjectiveCompletionEvent>[];
+    final completedObjectives = <ObjectiveCompletion>[];
+    for (final o in objectives) {
+      final outcome = _objectiveEvaluator.evaluate(o, input);
+      outcomes[o.id] = outcome;
+      if (!outcome.completed) continue;
+      final key = ProgressionNodeResolver.objectiveCompletionEventKey(
+        o.id,
+        outcome.periodKey,
+      );
+      if (ledger.hasEventKey(key)) continue;
+      final event = ObjectiveCompletionEvent(
+        eventKey: key,
+        timestamp: timestamp,
+        objectiveId: o.id,
+        actualValue: outcome.actualValue,
+        periodKey: outcome.periodKey,
+      );
+      newObjectiveEvents.add(event);
+      completedObjectives.add(ObjectiveCompletion(
+        objectiveId: o.id,
+        actualValue: outcome.actualValue,
+        event: event,
+      ));
+    }
+
+    // Step 3: resolve nodes.
+    final completedObjectiveIds = {
+      ...ledger.objectiveCompletions.map((e) => e.objectiveId),
+      ...newObjectiveEvents.map((e) => e.objectiveId),
+    };
+    final priorCompletedNodeIds = {
+      for (final e in ledger.nodeCompletions) e.nodeId,
+    };
+    final priorClaimedNodeIds = {
+      for (final e in ledger.nodeClaims) e.nodeId,
+    };
+
+    // Phase 2: chapter / companion eligibility sources are empty.
+    // Phase 3+ wires real chapter unlocks (from RewardGrantEvent of
+    // kind chapterUnlock) and companion availability (from
+    // RewardGrantEvent of kind companionAvailability).
+    final unlockedChapterIds = {
+      for (final e in ledger.rewardGrants)
+        if (e.rewardKind == RewardGrantKind.chapterUnlock && e.chapterId != null)
+          e.chapterId!,
+    };
+    final availableCompanionIds = {
+      for (final e in ledger.rewardGrants)
+        if (e.rewardKind == RewardGrantKind.companionAvailability &&
+            e.companionId != null)
+          e.companionId!,
+    };
+
+    final resolutions = <NodeResolution>[];
+    for (final node in nodes) {
+      final eligible = _unlockConditionResolver.isEligible(
+        conditions: node.unlockConditions,
+        completedObjectiveIds: completedObjectiveIds,
+        completedNodeIds: priorCompletedNodeIds,
+        claimedNodeIds: priorClaimedNodeIds,
+        unlockedChapterIds: unlockedChapterIds,
+        availableCompanionIds: availableCompanionIds,
+        input: input,
+        ledger: ledger,
+      );
+      final resolution = _nodeResolver.resolve(
+        node: node,
+        objectiveOutcome: _outcomeForNode(node, outcomes),
+        eligibleByConditions: eligible,
+        input: input,
+        ledger: ledger,
+      );
+      resolutions.add(resolution);
+    }
+
+    // Step 4: collect *newly* completed / available nodes (delta vs
+    // ledger). Pre-existing completions from the ledger never re-emit.
+    final newCompletions = <NodeCompletion>[];
+    final newCompletionEvents = <NodeCompletionEvent>[];
+    final availability = <NodeAvailability>[];
+    final periodKeyByNodeId = <String, String?>{};
+    for (final r in resolutions) {
+      periodKeyByNodeId[r.node.id] = r.periodKey;
+      switch (r.state) {
+        case _ when r.state.name == 'completed' &&
+              !priorCompletedNodeIds.contains(r.node.id):
+          final key = ProgressionNodeResolver.completionEventKey(
+            r.node.id,
+            r.periodKey,
+          );
+          final event = NodeCompletionEvent(
+            eventKey: key,
+            timestamp: timestamp,
+            nodeId: r.node.id,
+            periodKey: r.periodKey,
+          );
+          newCompletionEvents.add(event);
+          newCompletions.add(NodeCompletion(nodeId: r.node.id, event: event));
+        case _ when r.state.name == 'available' &&
+              r.objectiveCompleted == true &&
+              r.node.claimPolicy.name == 'manual':
+          // Manual-claim node whose objective just satisfied. Surface
+          // as available; the player's claim action will trigger a
+          // second evaluation that produces the completion.
+          availability.add(NodeAvailability(nodeId: r.node.id));
+        default:
+          // Locked or in-progress; nothing to emit.
+          break;
+      }
+    }
+
+    // Step 5: plan + build reward events for the newly-completed set.
+    final newlyCompletedNodes = [
+      for (final c in newCompletions)
+        nodes.firstWhere((n) => n.id == c.nodeId)
+    ];
+    final planned = _rewardGrantPlanner.plan(
+      completedNodes: newlyCompletedNodes,
+      ledger: ledger,
+      periodKeyByNodeId: periodKeyByNodeId,
+    );
+
+    final runningXp = _runningClaimedXp(ledger);
+    final built = _rewardGrantService.build(
+      planned: planned,
+      runningClaimedXp: runningXp,
+      timestamp: timestamp,
+    );
+
+    // Step 6: append.
+    final allNewEvents = [
+      ...newObjectiveEvents,
+      ...newCompletionEvents,
+      ...built.events,
+    ];
+    if (allNewEvents.isNotEmpty) {
+      await _repository.appendEvents(allNewEvents);
+    }
+
+    // Step 7: assemble result.
+    return ProgressionResolutionResult(
+      runId: runId,
+      reason: reason,
+      completedObjectives: completedObjectives,
+      completedNodes: newCompletions,
+      availableNodes: availability,
+      grantedRewards: [for (final e in built.events) RewardGrant(event: e)],
+      skippedEvents: const [],
+      warnings: const [],
+      inputSnapshot: input,
+    );
+  }
+
+  /// Player-initiated claim on a manual-claim node. Appends a
+  /// [NodeClaimEvent], then re-runs `evaluate` so the resolver sees
+  /// the claim and emits the completion + rewards.
+  ///
+  /// Returns the resolution result of the post-claim evaluation.
+  Future<ProgressionResolutionResult> claim({
+    required String nodeId,
+    required EngineEvaluationInput input,
+  }) async {
+    final ledger = await _repository.loadLedger();
+    final node = _nodeCatalog.build().firstWhere((n) => n.id == nodeId);
+
+    // Period key tracks the scope of the bound objective. Nodes
+    // without an objectiveId (companions, content unlocks) claim at
+    // lifetime scope (periodKey == null).
+    final boundObjectiveId = _objectiveIdOf(node);
+    String? periodKey;
+    if (boundObjectiveId != null) {
+      final objective = _objectiveCatalog
+          .build()
+          .firstWhere((o) => o.id == boundObjectiveId);
+      periodKey = _objectiveEvaluator.evaluate(objective, input).periodKey;
+    }
+
+    final claimKey = ProgressionNodeResolver.claimEventKey(nodeId, periodKey);
+    if (!ledger.hasEventKey(claimKey)) {
+      await _repository.appendEvents([
+        NodeClaimEvent(
+          eventKey: claimKey,
+          timestamp: input.evaluatedAt,
+          nodeId: nodeId,
+          periodKey: periodKey,
+        ),
+      ]);
+    }
+    return evaluate(
+      input: input,
+      reason: ProgressionResolutionReason.claim,
+    );
+  }
+
+  String? _objectiveIdOf(ProgressionNode node) {
+    return switch (node) {
+      QuestNode(:final objectiveId) => objectiveId,
+      AchievementNode(:final objectiveId) => objectiveId,
+      MilestoneNode(:final objectiveId) => objectiveId,
+      LevelMilestoneNode() => null,
+      ChapterCompletionNode() => null,
+      CompanionAvailabilityNode() => null,
+      RelicNode() => null,
+      ContentUnlockNode() => null,
+    };
+  }
+
+  // ── Helpers ─────────────────────────────────────────────────────
+
+  ObjectiveOutcome? _outcomeForNode(
+    ProgressionNode node,
+    Map<String, ObjectiveOutcome> outcomes,
+  ) {
+    return switch (node) {
+      QuestNode(:final objectiveId) => outcomes[objectiveId],
+      AchievementNode(:final objectiveId) => outcomes[objectiveId],
+      MilestoneNode(:final objectiveId) => outcomes[objectiveId],
+      _ => null,
+    };
+  }
+
+  int _runningClaimedXp(LedgerSnapshot ledger) {
+    var sum = 0;
+    for (final e in ledger.rewardGrants) {
+      if (e.rewardKind == RewardGrantKind.xp) {
+        sum += e.xpAmount ?? 0;
+      }
+    }
+    return sum;
+  }
+}
+
+String _defaultRunId() {
+  final ts = DateTime.now().microsecondsSinceEpoch;
+  return 'run-$ts';
+}

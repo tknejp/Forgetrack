@@ -11,7 +11,8 @@ module per the phased plan in
 | 0.5 | Display Resolver bridge over legacy catalog | done |
 | 0.6 | Journey extraction (consumer of resolver) | done |
 | 1 | Domain skeleton (objectives, sealed nodes, rewards) | done |
-| 2 | Evaluation skeleton | not started |
+| 2 | Evaluation skeleton | done |
+| 3 | Catalog port | not started |
 | 2 | Evaluation skeleton | not started |
 | 3 | Catalog port | not started |
 | 4 | Persistence (Isar) | not started |
@@ -42,6 +43,23 @@ module per the phased plan in
   `NodeCompleted` conditions, manual-claim missing `lockedHintKey`,
   and RPG-activation-without-RPG-tag drift.
 - `presentation/widgets/level_badge.dart` — generic level badge.
+- `domain/evaluator/` — pure evaluators: `ObjectiveEvaluator` (metric ×
+  scope × operator → outcome with period key), `UnlockConditionResolver`
+  (recursive AllOf/AnyOf), `ProgressionNodeResolver` (objective + unlock
+  + claim policy + ledger → `NodeState`), `RewardGrantPlanner` (newly
+  completed nodes → planned grants, idempotent skip on existing keys).
+- `domain/repository/` — `LedgerSnapshot` value object and the
+  `ProgressionEngineRepository` interface.
+- `data/in_memory_progression_engine_repository.dart` — Phase 2 backing.
+  Phase 4 swaps in an Isar implementation behind the same interface.
+- `application/progression_engine.dart` — orchestrator. Composes
+  evaluators + reward grant service + repository over a single
+  `evaluate(input, reason)` entry point that produces a
+  `ProgressionResolutionResult`. Manual-claim nodes flow through
+  `claim(nodeId, input)` → re-evaluate.
+- `application/reward_grant_service.dart` — builds reward events and
+  applies XP scaling via the legacy `ProgressionLevelPolicy`
+  (reused as the canonical XP↔level table).
 
 ## What does not live here yet
 
