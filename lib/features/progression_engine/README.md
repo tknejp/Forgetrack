@@ -12,7 +12,7 @@ module per the phased plan in
 | 0.6 | Journey extraction (consumer of resolver) | done |
 | 1 | Domain skeleton (objectives, sealed nodes, rewards) | done |
 | 2 | Evaluation skeleton | done |
-| 3 | Catalog port | not started |
+| 3 | Catalog port | pilot done — full port pending |
 | 2 | Evaluation skeleton | not started |
 | 3 | Catalog port | not started |
 | 4 | Persistence (Isar) | not started |

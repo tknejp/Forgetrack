@@ -5,6 +5,7 @@ import '../models/objective_definition.dart';
 import '../models/progression_node_definition.dart';
 import '../models/reward_definition.dart';
 import '../models/unlock_condition.dart';
+import 'engine_catalog_context.dart';
 import 'objective_catalog.dart';
 import 'progression_node_catalog.dart';
 
@@ -65,10 +66,17 @@ class CatalogValidator {
   /// Returns every issue found, errors and warnings mixed. Order is
   /// stable: objectives first, then nodes in catalog order, with
   /// per-entry checks in declaration order.
-  List<CatalogValidationIssue> validate() {
+  ///
+  /// `context` parameterises the catalog with player-specific goals;
+  /// validator output is identical across contexts unless an
+  /// objective references a goal in a structurally invalid way (none
+  /// today). Default context is sufficient for almost every caller.
+  List<CatalogValidationIssue> validate([
+    EngineCatalogContext context = const EngineCatalogContext(),
+  ]) {
     final issues = <CatalogValidationIssue>[];
-    final objectives = objectiveCatalog.build();
-    final nodes = nodeCatalog.build();
+    final objectives = objectiveCatalog.build(context);
+    final nodes = nodeCatalog.build(context);
 
     issues.addAll(_checkObjectiveIdentity(objectives));
     final knownObjectiveIds = {for (final o in objectives) o.id};
@@ -85,8 +93,10 @@ class CatalogValidator {
   /// any error-severity issues are present. Warnings are returned via
   /// [CatalogValidationException.issues] alongside errors so callers
   /// can log them.
-  void validateOrThrow() {
-    final issues = validate();
+  void validateOrThrow([
+    EngineCatalogContext context = const EngineCatalogContext(),
+  ]) {
+    final issues = validate(context);
     final hasError = issues.any((i) => i.severity == CatalogValidationSeverity.error);
     if (hasError) throw CatalogValidationException(issues);
   }

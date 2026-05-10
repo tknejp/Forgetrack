@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:forgetrack/features/progression_engine/domain/catalog/catalog_validator.dart';
+import 'package:forgetrack/features/progression_engine/domain/catalog/engine_catalog_context.dart';
 import 'package:forgetrack/features/progression_engine/domain/catalog/objective_catalog.dart';
 import 'package:forgetrack/features/progression_engine/domain/catalog/progression_node_catalog.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/activation_policy.dart';
@@ -21,7 +22,10 @@ class _FakeObjectiveCatalog extends ObjectiveCatalog {
   final List<ObjectiveDefinition> _defs;
 
   @override
-  List<ObjectiveDefinition> build() => _defs;
+  List<ObjectiveDefinition> build([
+    EngineCatalogContext context = const EngineCatalogContext(),
+  ]) =>
+      _defs;
 }
 
 class _FakeNodeCatalog extends ProgressionNodeCatalog {
@@ -29,7 +33,10 @@ class _FakeNodeCatalog extends ProgressionNodeCatalog {
   final List<ProgressionNode> _nodes;
 
   @override
-  List<ProgressionNode> build() => _nodes;
+  List<ProgressionNode> build([
+    EngineCatalogContext context = const EngineCatalogContext(),
+  ]) =>
+      _nodes;
 }
 
 ObjectiveDefinition _objective(String id) => ObjectiveDefinition(

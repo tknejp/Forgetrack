@@ -141,6 +141,7 @@ class LevelMilestoneNode extends ProgressionNode {
     required super.rewards,
     required this.level,
     required this.emoji,
+    super.unlockConditions = const [],
     this.isTitleBreakpoint = false,
     this.isJourneyMapAnchor = true,
     super.contentTags,

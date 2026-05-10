@@ -1,3 +1,4 @@
+import '../domain/catalog/engine_catalog_context.dart';
 import '../domain/catalog/objective_catalog.dart';
 import '../domain/catalog/progression_node_catalog.dart';
 import '../domain/evaluator/objective_evaluator.dart';
@@ -71,13 +72,14 @@ class ProgressionEngine {
   ///   7. Return canonical result.
   Future<ProgressionResolutionResult> evaluate({
     required EngineEvaluationInput input,
+    EngineCatalogContext catalogContext = const EngineCatalogContext(),
     ProgressionResolutionReason reason =
         ProgressionResolutionReason.liveUpdate,
   }) async {
     final runId = _runIdGenerator();
     final ledger = await _repository.loadLedger();
-    final objectives = _objectiveCatalog.build();
-    final nodes = _nodeCatalog.build();
+    final objectives = _objectiveCatalog.build(catalogContext);
+    final nodes = _nodeCatalog.build(catalogContext);
     final timestamp = input.evaluatedAt;
 
     // Step 2: evaluate objectives.
@@ -244,9 +246,11 @@ class ProgressionEngine {
   Future<ProgressionResolutionResult> claim({
     required String nodeId,
     required EngineEvaluationInput input,
+    EngineCatalogContext catalogContext = const EngineCatalogContext(),
   }) async {
     final ledger = await _repository.loadLedger();
-    final node = _nodeCatalog.build().firstWhere((n) => n.id == nodeId);
+    final node =
+        _nodeCatalog.build(catalogContext).firstWhere((n) => n.id == nodeId);
 
     // Period key tracks the scope of the bound objective. Nodes
     // without an objectiveId (companions, content unlocks) claim at
@@ -255,7 +259,7 @@ class ProgressionEngine {
     String? periodKey;
     if (boundObjectiveId != null) {
       final objective = _objectiveCatalog
-          .build()
+          .build(catalogContext)
           .firstWhere((o) => o.id == boundObjectiveId);
       periodKey = _objectiveEvaluator.evaluate(objective, input).periodKey;
     }
@@ -273,6 +277,7 @@ class ProgressionEngine {
     }
     return evaluate(
       input: input,
+      catalogContext: catalogContext,
       reason: ProgressionResolutionReason.claim,
     );
   }

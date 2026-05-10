@@ -2,9 +2,10 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:forgetrack/features/progression_engine/application/progression_engine.dart';
 import 'package:forgetrack/features/progression_engine/data/in_memory_progression_engine_repository.dart';
+import 'package:forgetrack/features/progression_engine/domain/catalog/engine_catalog_context.dart';
 import 'package:forgetrack/features/progression_engine/domain/catalog/objective_catalog.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/claim_policy.dart';
 import 'package:forgetrack/features/progression_engine/domain/catalog/progression_node_catalog.dart';
+import 'package:forgetrack/features/progression_engine/domain/models/claim_policy.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/engine_evaluation_input.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/ledger_event.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/objective_definition.dart';
@@ -21,7 +22,10 @@ class _FakeObjectiveCatalog extends ObjectiveCatalog {
   final List<ObjectiveDefinition> _defs;
 
   @override
-  List<ObjectiveDefinition> build() => _defs;
+  List<ObjectiveDefinition> build([
+    EngineCatalogContext context = const EngineCatalogContext(),
+  ]) =>
+      _defs;
 }
 
 class _FakeNodeCatalog extends ProgressionNodeCatalog {
@@ -29,7 +33,10 @@ class _FakeNodeCatalog extends ProgressionNodeCatalog {
   final List<ProgressionNode> _nodes;
 
   @override
-  List<ProgressionNode> build() => _nodes;
+  List<ProgressionNode> build([
+    EngineCatalogContext context = const EngineCatalogContext(),
+  ]) =>
+      _nodes;
 }
 
 ObjectiveDefinition _stepsTodayObjective({double target = 1000}) =>
