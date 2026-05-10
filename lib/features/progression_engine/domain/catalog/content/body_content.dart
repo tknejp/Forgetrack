@@ -1,4 +1,5 @@
 import '../../../../../shared/domain/rarity.dart';
+import '../../models/claim_policy.dart';
 import '../../models/content_tag.dart';
 import '../../models/objective_definition.dart';
 import '../../models/objective_metric.dart';
@@ -25,6 +26,7 @@ List<ObjectiveDefinition> bodyObjectives(EngineCatalogContext context) {
     // Logged a weight today (presence-only check).
     ObjectiveDefinition(
       id: 'daily_weight_log',
+      domain: ProgressionDomain.body,
       // Reuse RewardCountMetric as a placeholder presence-check until
       // a WeightLoggedTodayMetric lands — the engine will simply not
       // complete this objective until Phase 6 wires the source.
@@ -42,6 +44,8 @@ List<ProgressionNode> bodyNodes() {
       id: 'daily_weight_log_today',
       objectiveId: 'daily_weight_log',
       displayBucket: QuestDisplayBucket.daily,
+      claimPolicy: ClaimPolicy.manual,
+      lockedHintKey: (l) => l.progRuleDailyWeightLogDesc,
       titleKey: (l) => l.progRuleDailyWeightLog,
       descriptionKey: (l) => l.progRuleDailyWeightLogDesc,
       rewards: const [XpReward(amount: 20)],

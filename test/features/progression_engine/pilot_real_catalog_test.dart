@@ -61,21 +61,27 @@ void main() {
         'level_xp_5',
       }));
 
-      // Pilot nodes that should fire for the ambitious player.
-      final nodeIds = result.completedNodes.map((n) => n.nodeId).toSet();
-      expect(nodeIds, containsAll({
-        'daily_steps_today',
-        'daily_protein_today',
+      // Auto-claim nodes complete on first run.
+      final autoCompletedIds = result.completedNodes.map((n) => n.nodeId).toSet();
+      expect(autoCompletedIds, containsAll({
         'welcome_to_journey',
         'steps_total_100k',
         'level_5',
       }));
 
-      // XP comes from the daily quests.
+      // Manual-claim quest nodes go to availability, not completion.
+      final availableIds =
+          result.availableNodes.map((a) => a.nodeId).toSet();
+      expect(availableIds, containsAll({
+        'daily_steps_today',
+        'daily_protein_today',
+      }));
+
+      // No XP yet — quest XP arrives only after the player claims.
       final xpGrants = result.grantedRewards
           .where((g) => g.event.rewardKind == RewardGrantKind.xp)
           .toList();
-      expect(xpGrants, isNotEmpty);
+      expect(xpGrants, isEmpty);
       // Cosmetics: welcome (2) + steps_total_100k (1) + level_5 (1).
       final cosmeticIds = result.grantedRewards
           .where((g) => g.event.rewardKind == RewardGrantKind.cosmetic)
@@ -87,6 +93,36 @@ void main() {
         'relic_ravine_stone',
         'background_forest_trail',
       }));
+    });
+
+    test('claiming a manual quest grants XP and moves it to completed',
+        () async {
+      final repo = InMemoryProgressionEngineRepository();
+      final engine = ProgressionEngine(
+        repository: repo,
+        runIdGenerator: () => 'pilot-claim',
+      );
+      final input = _ambitiousPlayerInput();
+
+      // Initial eval: quest available but not granted.
+      final pre = await engine.evaluate(input: input);
+      expect(
+        pre.availableNodes.map((a) => a.nodeId),
+        contains('daily_steps_today'),
+      );
+
+      // Player claims.
+      final post =
+          await engine.claim(nodeId: 'daily_steps_today', input: input);
+      expect(
+        post.completedNodes.map((n) => n.nodeId),
+        contains('daily_steps_today'),
+      );
+      final xp = post.grantedRewards
+          .where((g) => g.event.nodeId == 'daily_steps_today' &&
+              g.event.rewardKind == RewardGrantKind.xp)
+          .single;
+      expect(xp.event.xpAmount, isPositive);
     });
 
     test('re-running with the same input emits no new events', () async {
@@ -142,7 +178,8 @@ void main() {
 
     test('custom dailySteps goal is reflected in the evaluation', () async {
       // With dailySteps lowered to 3000, a player at 4500 steps now
-      // satisfies the daily steps quest.
+      // satisfies the daily steps objective. Quest is manual-claim
+      // so it appears in availableNodes, not completedNodes.
       final repo = InMemoryProgressionEngineRepository();
       final engine = ProgressionEngine(
         repository: repo,
@@ -162,8 +199,9 @@ void main() {
         ),
       );
 
-      final ids = result.completedNodes.map((n) => n.nodeId).toSet();
-      expect(ids, contains('daily_steps_today'));
+      final availableIds =
+          result.availableNodes.map((a) => a.nodeId).toSet();
+      expect(availableIds, contains('daily_steps_today'));
     });
 
     test('static definitionForId resolves canonical entries', () {

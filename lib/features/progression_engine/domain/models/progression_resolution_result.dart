@@ -1,8 +1,11 @@
 import 'package:flutter/foundation.dart';
 
+import '../evaluator/objective_evaluator.dart' show ObjectiveOutcome;
 import 'engine_evaluation_input.dart';
 import 'ledger_event.dart';
 import 'progression_resolution_reason.dart';
+
+export '../evaluator/objective_evaluator.dart' show ObjectiveOutcome;
 
 /// Canonical engine output. Every consumer downstream of the engine
 /// (celebration adapter, social publisher, devtools logger, future
@@ -20,6 +23,7 @@ class ProgressionResolutionResult {
     required this.skippedEvents,
     required this.warnings,
     required this.inputSnapshot,
+    this.allObjectiveOutcomes = const [],
   });
 
   final String runId;
@@ -28,6 +32,12 @@ class ProgressionResolutionResult {
   /// Objectives that newly completed during this run. Pre-existing
   /// completions are not re-emitted.
   final List<ObjectiveCompletion> completedObjectives;
+
+  /// Every objective's outcome from this run, regardless of whether
+  /// it newly completed. UI consumers (home card progress bars,
+  /// quest progress %) read from this so they can show in-progress
+  /// state without invoking the engine themselves.
+  final List<ObjectiveOutcome> allObjectiveOutcomes;
 
   /// Nodes that newly entered `completed` state during this run.
   final List<NodeCompletion> completedNodes;

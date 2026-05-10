@@ -1,4 +1,5 @@
 import '../../../../../shared/domain/rarity.dart';
+import '../../models/claim_policy.dart';
 import '../../models/content_tag.dart';
 import '../../models/objective_definition.dart';
 import '../../models/objective_metric.dart';
@@ -21,6 +22,7 @@ List<ObjectiveDefinition> activityObjectives(EngineCatalogContext context) {
   return [
     const ObjectiveDefinition(
       id: 'daily_activity',
+      domain: ProgressionDomain.activity,
       metric: ActivityMinutesMetric(),
       scope: TodayScope(),
       operator: ObjectiveOperator.atLeast,
@@ -28,6 +30,7 @@ List<ObjectiveDefinition> activityObjectives(EngineCatalogContext context) {
     ),
     ObjectiveDefinition(
       id: 'weekly_activity',
+      domain: ProgressionDomain.activity,
       metric: const ActivityMinutesMetric(),
       scope: const ThisWeekScope(),
       operator: ObjectiveOperator.atLeast,
@@ -35,6 +38,7 @@ List<ObjectiveDefinition> activityObjectives(EngineCatalogContext context) {
     ),
     const ObjectiveDefinition(
       id: 'reward_count_weekly_activity_1',
+      domain: ProgressionDomain.activity,
       metric: RewardCountMetric(ruleId: 'weekly_activity'),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -42,6 +46,7 @@ List<ObjectiveDefinition> activityObjectives(EngineCatalogContext context) {
     ),
     const ObjectiveDefinition(
       id: 'reward_count_weekly_activity_4',
+      domain: ProgressionDomain.activity,
       metric: RewardCountMetric(ruleId: 'weekly_activity'),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -49,6 +54,7 @@ List<ObjectiveDefinition> activityObjectives(EngineCatalogContext context) {
     ),
     const ObjectiveDefinition(
       id: 'reward_count_weekly_activity_12',
+      domain: ProgressionDomain.activity,
       metric: RewardCountMetric(ruleId: 'weekly_activity'),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -56,6 +62,7 @@ List<ObjectiveDefinition> activityObjectives(EngineCatalogContext context) {
     ),
     const ObjectiveDefinition(
       id: 'reward_count_weekly_activity_24',
+      domain: ProgressionDomain.activity,
       metric: RewardCountMetric(ruleId: 'weekly_activity'),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -63,6 +70,7 @@ List<ObjectiveDefinition> activityObjectives(EngineCatalogContext context) {
     ),
     const ObjectiveDefinition(
       id: 'reward_count_weekly_activity_52',
+      domain: ProgressionDomain.activity,
       metric: RewardCountMetric(ruleId: 'weekly_activity'),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -77,6 +85,8 @@ List<ProgressionNode> activityNodes() {
       id: 'daily_activity_today',
       objectiveId: 'daily_activity',
       displayBucket: QuestDisplayBucket.daily,
+      claimPolicy: ClaimPolicy.manual,
+      lockedHintKey: (l) => l.activitiesActiveMins,
       titleKey: (l) => l.activitiesActiveMins,
       descriptionKey: (l) => l.activitiesActiveMins,
       rewards: const [XpReward(amount: 50)],
@@ -87,6 +97,8 @@ List<ProgressionNode> activityNodes() {
       id: 'weekly_activity',
       objectiveId: 'weekly_activity',
       displayBucket: QuestDisplayBucket.weekly,
+      claimPolicy: ClaimPolicy.manual,
+      lockedHintKey: (l) => l.progRuleWeeklyActivityDesc,
       titleKey: (l) => l.progRuleWeeklyActivity,
       descriptionKey: (l) => l.progRuleWeeklyActivityDesc,
       rewards: const [XpReward(amount: 120)],

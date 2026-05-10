@@ -235,6 +235,7 @@ class ProgressionEngine {
       skippedEvents: const [],
       warnings: const [],
       inputSnapshot: input,
+      allObjectiveOutcomes: outcomes.values.toList(growable: false),
     );
   }
 

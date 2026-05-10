@@ -1,4 +1,5 @@
 import '../../../../../shared/domain/rarity.dart';
+import '../../models/claim_policy.dart';
 import '../../models/content_tag.dart';
 import '../../models/objective_definition.dart';
 import '../../models/objective_metric.dart';
@@ -22,6 +23,7 @@ List<ObjectiveDefinition> nutritionObjectives(EngineCatalogContext context) {
   return [
     ObjectiveDefinition(
       id: 'daily_calories',
+      domain: ProgressionDomain.nutrition,
       metric: const CaloriesMetric(),
       scope: const TodayScope(),
       operator: ObjectiveOperator.atLeastWithTolerance,
@@ -30,6 +32,7 @@ List<ObjectiveDefinition> nutritionObjectives(EngineCatalogContext context) {
     ),
     ObjectiveDefinition(
       id: 'daily_protein',
+      domain: ProgressionDomain.nutrition,
       metric: const ProteinGramsMetric(),
       scope: const TodayScope(),
       operator: ObjectiveOperator.atLeastWithTolerance,
@@ -38,6 +41,7 @@ List<ObjectiveDefinition> nutritionObjectives(EngineCatalogContext context) {
     ),
     const ObjectiveDefinition(
       id: 'streak_nutrition_3',
+      domain: ProgressionDomain.nutrition,
       metric: StreakDaysMetric.byDomain('nutrition'),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -45,6 +49,7 @@ List<ObjectiveDefinition> nutritionObjectives(EngineCatalogContext context) {
     ),
     const ObjectiveDefinition(
       id: 'streak_nutrition_30',
+      domain: ProgressionDomain.nutrition,
       metric: StreakDaysMetric.byDomain('nutrition'),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -52,6 +57,7 @@ List<ObjectiveDefinition> nutritionObjectives(EngineCatalogContext context) {
     ),
     const ObjectiveDefinition(
       id: 'streak_nutrition_100',
+      domain: ProgressionDomain.nutrition,
       metric: StreakDaysMetric.byDomain('nutrition'),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -59,6 +65,7 @@ List<ObjectiveDefinition> nutritionObjectives(EngineCatalogContext context) {
     ),
     const ObjectiveDefinition(
       id: 'reward_count_nutrition_25',
+      domain: ProgressionDomain.nutrition,
       metric: RewardCountMetric(domain: 'nutrition'),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -74,6 +81,8 @@ List<ProgressionNode> nutritionNodes() {
       id: 'daily_calories_today',
       objectiveId: 'daily_calories',
       displayBucket: QuestDisplayBucket.daily,
+      claimPolicy: ClaimPolicy.manual,
+      lockedHintKey: (l) => l.progRuleDailyCaloriesDesc,
       titleKey: (l) => l.progRuleDailyCalories,
       descriptionKey: (l) => l.progRuleDailyCaloriesDesc,
       rewards: const [XpReward(amount: 60)],
@@ -84,6 +93,8 @@ List<ProgressionNode> nutritionNodes() {
       id: 'daily_protein_today',
       objectiveId: 'daily_protein',
       displayBucket: QuestDisplayBucket.daily,
+      claimPolicy: ClaimPolicy.manual,
+      lockedHintKey: (l) => l.progRuleDailyProteinDesc,
       titleKey: (l) => l.progRuleDailyProtein,
       descriptionKey: (l) => l.progRuleDailyProteinDesc,
       rewards: const [XpReward(amount: 40)],

@@ -1,8 +1,11 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../progression/domain/progression_models.dart' show ProgressionDomain;
 import 'objective_metric.dart';
 import 'objective_operator.dart';
 import 'objective_scope.dart';
+
+export '../../../progression/domain/progression_models.dart' show ProgressionDomain;
 
 /// Pure machine-readable condition. **No UI, no rewards, no rarity, no
 /// display strings.** Display lives on [ProgressionNode], rewards live
@@ -20,6 +23,7 @@ class ObjectiveDefinition {
     required this.scope,
     required this.operator,
     required this.targetValue,
+    this.domain,
     this.upperTargetValue,
     this.toleranceRatio = 0,
     this.debugLabel,
@@ -30,6 +34,12 @@ class ObjectiveDefinition {
   final ObjectiveScope scope;
   final ObjectiveOperator operator;
   final double targetValue;
+
+  /// Optional domain tag (steps / nutrition / sleep / activity /
+  /// body). Used by streak-by-domain aggregation and by display
+  /// helpers that want to colour or icon objectives consistently.
+  /// Cross-domain objectives (totalXp, rewardCount) leave this null.
+  final ProgressionDomain? domain;
 
   /// Required for [ObjectiveOperator.betweenInclusive], otherwise null.
   final double? upperTargetValue;

@@ -1,4 +1,5 @@
 import '../../../../../shared/domain/rarity.dart';
+import '../../models/claim_policy.dart';
 import '../../models/content_tag.dart';
 import '../../models/objective_definition.dart';
 import '../../models/objective_metric.dart';
@@ -21,6 +22,7 @@ List<ObjectiveDefinition> stepsObjectives(EngineCatalogContext context) {
   return [
     ObjectiveDefinition(
       id: 'daily_steps',
+      domain: ProgressionDomain.steps,
       metric: const StepsMetric(),
       scope: const TodayScope(),
       operator: ObjectiveOperator.atLeast,
@@ -29,6 +31,7 @@ List<ObjectiveDefinition> stepsObjectives(EngineCatalogContext context) {
     ),
     const ObjectiveDefinition(
       id: 'lifetime_steps_100k',
+      domain: ProgressionDomain.steps,
       metric: StepsMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -36,6 +39,7 @@ List<ObjectiveDefinition> stepsObjectives(EngineCatalogContext context) {
     ),
     const ObjectiveDefinition(
       id: 'lifetime_steps_500k',
+      domain: ProgressionDomain.steps,
       metric: StepsMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -43,6 +47,7 @@ List<ObjectiveDefinition> stepsObjectives(EngineCatalogContext context) {
     ),
     const ObjectiveDefinition(
       id: 'lifetime_steps_1m',
+      domain: ProgressionDomain.steps,
       metric: StepsMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -50,6 +55,7 @@ List<ObjectiveDefinition> stepsObjectives(EngineCatalogContext context) {
     ),
     const ObjectiveDefinition(
       id: 'lifetime_steps_5m',
+      domain: ProgressionDomain.steps,
       metric: StepsMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -57,6 +63,7 @@ List<ObjectiveDefinition> stepsObjectives(EngineCatalogContext context) {
     ),
     const ObjectiveDefinition(
       id: 'lifetime_steps_10m',
+      domain: ProgressionDomain.steps,
       metric: StepsMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -64,6 +71,7 @@ List<ObjectiveDefinition> stepsObjectives(EngineCatalogContext context) {
     ),
     const ObjectiveDefinition(
       id: 'rolling_steps_30d_300k',
+      domain: ProgressionDomain.steps,
       metric: StepsMetric(),
       scope: RollingWindowScope(days: 30),
       operator: ObjectiveOperator.atLeast,
@@ -71,6 +79,7 @@ List<ObjectiveDefinition> stepsObjectives(EngineCatalogContext context) {
     ),
     const ObjectiveDefinition(
       id: 'rolling_steps_30d_600k',
+      domain: ProgressionDomain.steps,
       metric: StepsMetric(),
       scope: RollingWindowScope(days: 30),
       operator: ObjectiveOperator.atLeast,
@@ -78,6 +87,7 @@ List<ObjectiveDefinition> stepsObjectives(EngineCatalogContext context) {
     ),
     const ObjectiveDefinition(
       id: 'streak_steps_3',
+      domain: ProgressionDomain.steps,
       metric: StreakDaysMetric.byRule('daily_steps'),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -85,6 +95,7 @@ List<ObjectiveDefinition> stepsObjectives(EngineCatalogContext context) {
     ),
     const ObjectiveDefinition(
       id: 'streak_steps_7',
+      domain: ProgressionDomain.steps,
       metric: StreakDaysMetric.byRule('daily_steps'),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -92,6 +103,7 @@ List<ObjectiveDefinition> stepsObjectives(EngineCatalogContext context) {
     ),
     const ObjectiveDefinition(
       id: 'streak_steps_30',
+      domain: ProgressionDomain.steps,
       metric: StreakDaysMetric.byRule('daily_steps'),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -99,6 +111,7 @@ List<ObjectiveDefinition> stepsObjectives(EngineCatalogContext context) {
     ),
     const ObjectiveDefinition(
       id: 'streak_steps_50',
+      domain: ProgressionDomain.steps,
       metric: StreakDaysMetric.byRule('daily_steps'),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -106,6 +119,7 @@ List<ObjectiveDefinition> stepsObjectives(EngineCatalogContext context) {
     ),
     const ObjectiveDefinition(
       id: 'streak_steps_100',
+      domain: ProgressionDomain.steps,
       metric: StreakDaysMetric.byRule('daily_steps'),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -116,11 +130,14 @@ List<ObjectiveDefinition> stepsObjectives(EngineCatalogContext context) {
 
 List<ProgressionNode> stepsNodes() {
   return [
-    // Daily quest.
+    // Daily quest — manual claim so the player taps "Vyzvednout"
+    // to grant XP, matching V1 UX.
     QuestNode(
       id: 'daily_steps_today',
       objectiveId: 'daily_steps',
       displayBucket: QuestDisplayBucket.daily,
+      claimPolicy: ClaimPolicy.manual,
+      lockedHintKey: (l) => l.progRuleDailyStepsDesc,
       titleKey: (l) => l.progRuleDailySteps,
       descriptionKey: (l) => l.progRuleDailyStepsDesc,
       rewards: const [XpReward(amount: 80)],

@@ -9,14 +9,59 @@ import '../../nutrition/application/kaloricke_tabulky_provider.dart';
 import '../../progression/domain/policy/level_policy.dart';
 import '../data/provider_engine_input_source.dart';
 import '../domain/catalog/engine_catalog_context.dart';
+import '../domain/catalog/objective_catalog.dart';
+import '../domain/catalog/progression_node_catalog.dart';
+import '../domain/evaluator/engine_streak_source.dart';
 import '../domain/models/engine_evaluation_input.dart';
 import '../domain/models/ledger_event.dart';
+import '../domain/models/objective_definition.dart';
+import '../domain/models/objective_metric.dart';
+import '../domain/models/objective_operator.dart';
+import '../domain/models/objective_scope.dart';
+import '../domain/models/progression_node_definition.dart';
 import '../domain/models/progression_resolution_reason.dart';
 import '../domain/models/progression_resolution_result.dart';
+import '../domain/models/quest_display_bucket.dart';
 import '../domain/repository/ledger_snapshot.dart';
 import '../domain/repository/progression_engine_repository.dart';
 import 'cosmetic_unlock_bridge.dart';
 import 'progression_engine.dart';
+
+export '../domain/evaluator/engine_streak_source.dart' show EngineStreakSummary;
+
+/// Runtime quest with progress info. Built per-build of the
+/// resolution result so progress bars reflect the latest evaluation
+/// without UI consumers re-running the engine.
+@immutable
+class EngineQuestProgress {
+  const EngineQuestProgress({
+    required this.node,
+    required this.actualValue,
+    required this.targetValue,
+    required this.progress,
+    required this.isCompleted,
+    required this.isAvailableForClaim,
+  });
+
+  final QuestNode node;
+
+  /// Current measured value for the quest's objective.
+  final double actualValue;
+  final double targetValue;
+
+  /// 0..1 progress, clamped. 1.0 once the objective has fired.
+  final double progress;
+
+  /// True when a node-completion event exists in the ledger.
+  final bool isCompleted;
+
+  /// True when the objective is satisfied AND the quest is
+  /// manual-claim AND no claim event has fired yet — the "Vyzvednout"
+  /// pill should be active.
+  final bool isAvailableForClaim;
+
+  String get nodeId => node.id;
+}
 
 /// Player profile derived from the ledger — total XP plus the
 /// level-policy resolved level / xpIntoLevel / nextLevelXp /
@@ -82,6 +127,9 @@ class ProgressionEngineProvider extends ChangeNotifier {
   final ProgressionEngineRepository _repository;
   final CosmeticUnlockBridge _cosmeticBridge;
   final ProgressionLevelPolicy _levelPolicy;
+  final EngineStreakSource _streakSource = const EngineStreakSource();
+  final ObjectiveCatalog _objectiveCatalog = const ObjectiveCatalog();
+  final ProgressionNodeCatalog _nodeCatalog = const ProgressionNodeCatalog();
 
   ProviderEngineInputSource? _source;
   String? _lastEvaluatedSignature;
@@ -92,6 +140,21 @@ class ProgressionEngineProvider extends ChangeNotifier {
   bool _isLoading = true;
   bool _isEvaluating = false;
   String? _error;
+
+  // Streak caches — recomputed after every ledger refresh.
+  Map<String, EngineStreakSummary> _objectiveStreaks = const {};
+  Map<ProgressionDomain, EngineStreakSummary> _domainStreaks = const {};
+
+  // Static node-type id caches. Catalog is const so these are
+  // computed once on first access.
+  static final Set<String> _achievementNodeIds = {
+    for (final n in const ProgressionNodeCatalog().build())
+      if (n is AchievementNode) n.id,
+  };
+  static final Set<String> _questNodeIds = {
+    for (final n in const ProgressionNodeCatalog().build())
+      if (n is QuestNode) n.id,
+  };
 
   final List<ProgressionResolutionResult> _pendingCelebrations = [];
 
@@ -132,11 +195,60 @@ class ProgressionEngineProvider extends ChangeNotifier {
   }
 
   /// Set of manual-claim node ids currently in `available` state per
-  /// the most recent resolution.
+  /// the most recent resolution. These have the gold "Vyzvednout"
+  /// pill on quest cards and home-card pending badges count from this.
   Set<String> get availableNodeIds {
     final r = _lastResult;
     if (r == null) return const {};
     return {for (final a in r.availableNodes) a.nodeId};
+  }
+
+  /// Quick alias used by home-card / quests UI for the pending-claim
+  /// badge ("3 nevyzvednutých" → `pendingClaimNodeIds.length`).
+  Set<String> get pendingClaimNodeIds => availableNodeIds;
+
+  /// Count of unlocked achievements — node completions whose node
+  /// type is [AchievementNode]. Cached per-build of the catalog
+  /// since the catalog is static.
+  int get unlockedAchievementCount {
+    final completed = completedNodeIds;
+    if (completed.isEmpty) return 0;
+    return completed.where(_achievementNodeIds.contains).length;
+  }
+
+  /// Count of completed quest nodes — analog of V1's
+  /// `completedQuests.length`.
+  int get completedQuestCount {
+    final completed = completedNodeIds;
+    if (completed.isEmpty) return 0;
+    return completed.where(_questNodeIds.contains).length;
+  }
+
+  /// Runtime quest+progress info for daily-bucket quests. Reads
+  /// `allObjectiveOutcomes` from the latest result so progress bars
+  /// show in-progress state, not just completed.
+  ///
+  /// Order matches catalog declaration order.
+  List<EngineQuestProgress> get currentDailyQuests {
+    return _questsForBucket(QuestDisplayBucket.daily);
+  }
+
+  /// Same shape, but for the weekly bucket.
+  List<EngineQuestProgress> get currentWeeklyQuests {
+    return _questsForBucket(QuestDisplayBucket.weekly);
+  }
+
+  /// Streak by objective id (only daily-scoped objectives have a
+  /// meaningful streak). Returns an empty summary when the
+  /// objective is unknown or has no completions yet.
+  EngineStreakSummary streakForObjective(String objectiveId) {
+    return _objectiveStreaks[objectiveId] ?? const EngineStreakSummary.empty();
+  }
+
+  /// Streak by domain — counts consecutive days where any
+  /// daily-scoped objective tagged with that domain completed.
+  EngineStreakSummary streakForDomain(ProgressionDomain domain) {
+    return _domainStreaks[domain] ?? const EngineStreakSummary.empty();
   }
 
   /// Resolution results that have not yet been consumed by the
@@ -235,6 +347,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
       );
       _lastResult = result;
       _ledger = await _repository.loadLedger();
+      _recomputeStreaks();
       if (!result.isEmpty) _pendingCelebrations.add(result);
       // Cosmetic dispatch happens after ledger refresh so the
       // bridge sees a consistent picture.
@@ -268,6 +381,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
       );
       _lastResult = result;
       _ledger = await _repository.loadLedger();
+      _recomputeStreaks();
       if (!result.isEmpty) _pendingCelebrations.add(result);
       await _cosmeticBridge.dispatch(result);
       return result;
@@ -320,6 +434,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
       }
 
       _ledger = await _repository.loadLedger();
+      _recomputeStreaks();
       _error = null;
     } catch (e) {
       _error = e.toString();
@@ -341,6 +456,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
       _lastResult = null;
       _pendingCelebrations.clear();
       _ledger = await _repository.loadLedger();
+      _recomputeStreaks();
       _lastEvaluatedSignature = null;
       _error = null;
     } catch (e) {
@@ -356,6 +472,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
   Future<void> _hydrate() async {
     try {
       _ledger = await _repository.loadLedger();
+      _recomputeStreaks();
       _error = null;
     } catch (e) {
       _error = e.toString();
@@ -374,4 +491,89 @@ class ProgressionEngineProvider extends ChangeNotifier {
     }
     return sum;
   }
+
+  /// Recomputes streak summaries against the current ledger. Called
+  /// from [_hydrate] and after every successful evaluation pass.
+  void _recomputeStreaks() {
+    final l = _ledger;
+    if (l == null) {
+      _objectiveStreaks = const {};
+      _domainStreaks = const {};
+      return;
+    }
+    final objectives = _objectiveCatalog.build();
+    _objectiveStreaks = _streakSource.summarizeByObjective(
+      ledger: l,
+      objectives: objectives,
+    );
+    _domainStreaks = _streakSource.summarizeByDomain(
+      ledger: l,
+      objectives: objectives,
+    );
+  }
+
+  /// Builds [EngineQuestProgress] entries for every QuestNode in the
+  /// requested display bucket. Reads the latest objective outcomes
+  /// for in-progress %, the ledger for completion state, and the
+  /// last-result availability set for the claim pill.
+  List<EngineQuestProgress> _questsForBucket(QuestDisplayBucket bucket) {
+    final r = _lastResult;
+    final outcomesById = <String, ObjectiveOutcome>{
+      for (final o in r?.allObjectiveOutcomes ?? const <ObjectiveOutcome>[])
+        o.objectiveId: o,
+    };
+    final completed = completedNodeIds;
+    final available = availableNodeIds;
+
+    final out = <EngineQuestProgress>[];
+    for (final node in _nodeCatalog.build()) {
+      if (node is! QuestNode) continue;
+      if (node.displayBucket != bucket) continue;
+
+      final outcome = outcomesById[node.objectiveId];
+      // Look up the objective to get its target — actualValue alone
+      // is not enough for a progress bar.
+      final objective = _objectiveCatalog.build().firstWhere(
+            (o) => o.id == node.objectiveId,
+            orElse: () => objectiveCatalogFallback(node.objectiveId),
+          );
+
+      final actual = outcome?.actualValue ?? 0;
+      final target = objective.targetValue;
+      final isCompleted = completed.contains(node.id);
+      final isAvailable = available.contains(node.id);
+
+      double progress;
+      if (isCompleted) {
+        progress = 1.0;
+      } else if (target <= 0) {
+        progress = 0.0;
+      } else {
+        progress = (actual / target).clamp(0.0, 1.0).toDouble();
+      }
+
+      out.add(EngineQuestProgress(
+        node: node,
+        actualValue: actual,
+        targetValue: target,
+        progress: progress,
+        isCompleted: isCompleted,
+        isAvailableForClaim: isAvailable,
+      ));
+    }
+    return out;
+  }
 }
+
+/// Synthetic fallback used when a quest references an objective that
+/// is no longer in the catalog (catalog drift / stale build). Returns
+/// a zero-target objective so progress falls back to 0 instead of
+/// throwing.
+ObjectiveDefinition objectiveCatalogFallback(String id) => ObjectiveDefinition(
+      id: id,
+      metric: const StepsMetric(),
+      scope: const TodayScope(),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: 0,
+      debugLabel: 'fallback for missing objective',
+    );

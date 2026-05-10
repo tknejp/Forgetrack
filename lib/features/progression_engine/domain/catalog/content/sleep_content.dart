@@ -1,4 +1,5 @@
 import '../../../../../shared/domain/rarity.dart';
+import '../../models/claim_policy.dart';
 import '../../models/content_tag.dart';
 import '../../models/objective_definition.dart';
 import '../../models/objective_metric.dart';
@@ -18,6 +19,7 @@ List<ObjectiveDefinition> sleepObjectives(EngineCatalogContext context) {
   return [
     ObjectiveDefinition(
       id: 'daily_sleep',
+      domain: ProgressionDomain.sleep,
       metric: const SleepMinutesMetric(),
       scope: const TodayScope(),
       operator: ObjectiveOperator.atLeast,
@@ -25,6 +27,7 @@ List<ObjectiveDefinition> sleepObjectives(EngineCatalogContext context) {
     ),
     const ObjectiveDefinition(
       id: 'lifetime_sleep_250h',
+      domain: ProgressionDomain.sleep,
       metric: SleepMinutesMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -33,6 +36,7 @@ List<ObjectiveDefinition> sleepObjectives(EngineCatalogContext context) {
     ),
     const ObjectiveDefinition(
       id: 'lifetime_sleep_1000h',
+      domain: ProgressionDomain.sleep,
       metric: SleepMinutesMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -40,6 +44,7 @@ List<ObjectiveDefinition> sleepObjectives(EngineCatalogContext context) {
     ),
     const ObjectiveDefinition(
       id: 'rolling_sleep_30d_225h',
+      domain: ProgressionDomain.sleep,
       metric: SleepMinutesMetric(),
       scope: RollingWindowScope(days: 30),
       operator: ObjectiveOperator.atLeast,
@@ -47,6 +52,7 @@ List<ObjectiveDefinition> sleepObjectives(EngineCatalogContext context) {
     ),
     const ObjectiveDefinition(
       id: 'rolling_sleep_30d_240h',
+      domain: ProgressionDomain.sleep,
       metric: SleepMinutesMetric(),
       scope: RollingWindowScope(days: 30),
       operator: ObjectiveOperator.atLeast,
@@ -61,6 +67,8 @@ List<ProgressionNode> sleepNodes() {
       id: 'daily_sleep_today',
       objectiveId: 'daily_sleep',
       displayBucket: QuestDisplayBucket.daily,
+      claimPolicy: ClaimPolicy.manual,
+      lockedHintKey: (l) => l.progRuleDailySleepDesc,
       titleKey: (l) => l.progRuleDailySleep,
       descriptionKey: (l) => l.progRuleDailySleepDesc,
       rewards: const [XpReward(amount: 50)],
