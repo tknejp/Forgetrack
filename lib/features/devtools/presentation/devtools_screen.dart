@@ -20,6 +20,7 @@ import 'sections/devtools_health_pipeline_section.dart';
 import 'sections/devtools_notification_section.dart';
 import 'sections/devtools_sync_section.dart';
 import 'sections/devtools_cosmetics_section.dart';
+import 'sections/devtools_factory_reset_section.dart';
 import 'sections/devtools_ui_section.dart';
 import 'sections/devtools_unlock_inventory_section.dart';
 
@@ -139,6 +140,12 @@ class _DevToolsBodyState extends State<_DevToolsBody> {
       key: GlobalKey(),
       builder: () => const DevToolsOverridesSection(),
     ),
+    _DevToolsSectionLink(
+      label: 'Factory Reset',
+      icon: Icons.delete_sweep_rounded,
+      key: GlobalKey(),
+      builder: () => const DevToolsFactoryResetSection(),
+    ),
   ];
 
   @override
@@ -254,8 +261,8 @@ class _DevToolsBottomJumpBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final ft = context.ft;
     final priority = sections
-        .where((s) => const {'Progression', 'Unlocks', 'Cosmetics'}
-            .contains(s.label))
+        .where((s) =>
+            const {'Progression', 'Unlocks', 'Cosmetics'}.contains(s.label))
         .toList(growable: false);
 
     return Container(

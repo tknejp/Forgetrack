@@ -12,6 +12,8 @@ import '../widgets/devtools_action_tile.dart';
 import '../widgets/devtools_section_card.dart';
 import '../widgets/devtools_status_tile.dart';
 
+enum _ResetKind { progression, cosmetics, everything }
+
 String _fmt(DateTime? dt) {
   if (dt == null) return '—';
   final now = DateTime.now();
@@ -37,6 +39,8 @@ class _DevToolsProgressionSectionState
   bool _isApplyingOverride = false;
   bool _isResetting = false;
 
+  _ResetKind? _activeReset;
+
   @override
   Widget build(BuildContext context) {
     final p = context.watch<ProgressionProvider>();
@@ -49,6 +53,11 @@ class _DevToolsProgressionSectionState
         0;
     final isBusy =
         p.isRefreshing || _isRefreshing || _isApplyingOverride || _isResetting;
+    final progressionInventoryHasItems = progressionInventoryCount > 0;
+    final hasProgressionData = p.profile.totalXp > 0 ||
+        p.achievements.any((a) => a.unlocked) ||
+        p.completedQuests.isNotEmpty ||
+        p.questRewardGrants.isNotEmpty;
     return DevToolsSectionCard(
       title: 'Progression / RPG', // TODO: l10n
       children: [
@@ -133,14 +142,49 @@ class _DevToolsProgressionSectionState
           onApply: (xp) => _applyXpOverride(xp),
         ),
         const DevToolsSectionDivider(),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 4),
+          child: Text(
+            'Resets',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+        ),
         DevToolsActionTile(
           label: 'Reset progression',
           subtitle:
-              'Wipes local Isar + Firestore claims/unlocks/state for the signed-in user',
+              'Wipes XP, achievement unlocks, quests, chapter starts. Cosmetics inventory untouched.',
           isDestructive: true,
-          isLoading: _isResetting,
-          icon: Icons.delete_forever_rounded,
-          onTap: isBusy ? null : _confirmAndReset,
+          isLoading: _activeReset == _ResetKind.progression,
+          isDisabled: (isBusy && _activeReset != _ResetKind.progression) ||
+              !hasProgressionData,
+          icon: Icons.history_toggle_off_rounded,
+          onTap: isBusy ? null : () => _confirmAndReset(_ResetKind.progression),
+        ),
+        const DevToolsSectionDivider(),
+        DevToolsActionTile(
+          label: 'Reset cosmetics inventory',
+          subtitle:
+              'Wipes progression-sourced cosmetics. Owed cosmetics are silently re-granted from the current state.',
+          isDestructive: true,
+          isLoading: _activeReset == _ResetKind.cosmetics,
+          isDisabled: (isBusy && _activeReset != _ResetKind.cosmetics) ||
+              !progressionInventoryHasItems,
+          icon: Icons.checkroom_rounded,
+          onTap: isBusy ? null : () => _confirmAndReset(_ResetKind.cosmetics),
+        ),
+        const DevToolsSectionDivider(),
+        DevToolsActionTile(
+          label: 'Reset everything (fresh start)',
+          subtitle:
+              'Wipes progression AND cosmetics inventory. Welcome reward screen reappears.',
+          isDestructive: true,
+          isLoading: _activeReset == _ResetKind.everything,
+          isDisabled: (isBusy && _activeReset != _ResetKind.everything) ||
+              (!hasProgressionData && !progressionInventoryHasItems),
+          icon: Icons.restart_alt_rounded,
+          onTap: isBusy ? null : () => _confirmAndReset(_ResetKind.everything),
         ),
       ],
     );
@@ -159,18 +203,13 @@ class _DevToolsProgressionSectionState
     }
   }
 
-  Future<void> _confirmAndReset() async {
+  Future<void> _confirmAndReset(_ResetKind kind) async {
+    final copy = _resetCopy(kind);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Reset progression?'),
-        content: const Text(
-          'This wipes ALL progression data — evaluations, grants, '
-          'achievement unlocks — and the progression-sourced cosmetics '
-          'inventory, both locally (Isar) and in Firestore for the '
-          'signed-in user. The welcome reward screen will re-appear. '
-          'Cannot be undone.',
-        ),
+        title: Text(copy.dialogTitle),
+        content: Text(copy.dialogBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -188,23 +227,86 @@ class _DevToolsProgressionSectionState
     );
     if (confirmed != true || !mounted) return;
 
-    setState(() => _isResetting = true);
-    final provider = context.read<ProgressionProvider>();
+    setState(() {
+      _isResetting = true;
+      _activeReset = kind;
+    });
+    final progression = context.read<ProgressionProvider>();
     final cosmetics = context.read<CosmeticsProvider>();
     try {
-      // Wipe progression-source cosmetics first so the post-reset dispatch
-      // sees an empty inventory and re-grants the welcome cosmetics — this
-      // is what makes the welcome celebration screen appear again.
-      await cosmetics.devToolsResetProgressionUnlocks();
-      await provider.devToolsResetProgression();
+      switch (kind) {
+        case _ResetKind.progression:
+          await progression.devToolsResetProgression();
+          break;
+        case _ResetKind.cosmetics:
+          await progression.devToolsResetCosmetics(
+            resetCosmeticsInventory: cosmetics.devToolsResetProgressionUnlocks,
+          );
+          break;
+        case _ResetKind.everything:
+          await progression.devToolsResetEverything(
+            resetCosmeticsInventory: cosmetics.devToolsResetProgressionUnlocks,
+          );
+          break;
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Devtools: progression reset')),
+        SnackBar(content: Text(copy.toast)),
       );
     } finally {
-      if (mounted) setState(() => _isResetting = false);
+      if (mounted) {
+        setState(() {
+          _isResetting = false;
+          _activeReset = null;
+        });
+      }
     }
   }
+
+  _ResetCopy _resetCopy(_ResetKind kind) {
+    switch (kind) {
+      case _ResetKind.progression:
+        return const _ResetCopy(
+          dialogTitle: 'Reset progression?',
+          dialogBody: 'Wipes XP, achievement unlocks, quest reward grants and '
+              'chapter starts — locally (Isar) and in Firestore for the '
+              'signed-in user. Cosmetics inventory is preserved. '
+              'Cannot be undone.',
+          toast: 'Devtools: progression reset',
+        );
+      case _ResetKind.cosmetics:
+        return const _ResetCopy(
+          dialogTitle: 'Reset cosmetics inventory?',
+          dialogBody:
+              'Wipes the progression-sourced cosmetics inventory for the '
+              'signed-in user. Owed cosmetics are silently re-granted from '
+              'the current progression state — no welcome celebration. '
+              'Cannot be undone.',
+          toast: 'Devtools: cosmetics inventory reset',
+        );
+      case _ResetKind.everything:
+        return const _ResetCopy(
+          dialogTitle: 'Reset everything?',
+          dialogBody: 'Wipes ALL progression data AND the progression-sourced '
+              'cosmetics inventory, locally and in Firestore for the '
+              'signed-in user. The welcome reward screen will re-appear. '
+              'Cannot be undone.',
+          toast: 'Devtools: full reset complete',
+        );
+    }
+  }
+}
+
+class _ResetCopy {
+  const _ResetCopy({
+    required this.dialogTitle,
+    required this.dialogBody,
+    required this.toast,
+  });
+
+  final String dialogTitle;
+  final String dialogBody;
+  final String toast;
 }
 
 bool _isProgressionCosmeticSource(String? sourceType) {

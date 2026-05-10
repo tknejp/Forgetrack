@@ -161,4 +161,6 @@ abstract final class AppLog {
   static const ktProvider = AppLogger('KT', scope: 'PROVIDER');
   static const ktAvg = AppLogger('KT', scope: 'AVG');
   static const ktUi = AppLogger('KT', scope: 'UI');
+
+  static const reset = AppLogger('RESET');
 }

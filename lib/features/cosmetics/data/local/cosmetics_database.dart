@@ -56,6 +56,16 @@ class CosmeticsDatabase {
     return value;
   }
 
+  /// Wipes every cosmetics collection. Used by DevTools factory reset.
+  Future<void> clearAll() async {
+    final value = _isar;
+    if (value == null) return;
+    await value.writeTxn(() async {
+      await value.cosmeticsUserStateRecords.clear();
+      await value.cosmeticsUnlockRecords.clear();
+    });
+  }
+
   Future<void> close() async {
     final value = _isar;
     if (value == null) {
