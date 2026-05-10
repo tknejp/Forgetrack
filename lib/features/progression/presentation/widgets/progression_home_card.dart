@@ -6,12 +6,11 @@ import 'package:provider/provider.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../shared/widgets/ft_expand_chevron.dart';
 import '../../../../shared/widgets/progress_bar.dart';
-import '../../domain/progression_models.dart';
-import '../../domain/policy/level_config.dart';
-import '../../application/progression_provider.dart';
-import '../quests/quest_daily_selection.dart';
+import '../../../progression_engine/application/progression_engine_provider.dart';
+import '../../../progression_engine/domain/display/progression_display_resolver.dart';
+import '../../../progression_engine/presentation/widgets/level_badge.dart';
+import '../../domain/progression_models.dart' show ProgressionDomain;
 import 'progression_domain_theme.dart';
-import 'progression_level_badge.dart';
 import 'progression_primitives.dart';
 
 /// Progression card for the Overview / Dashboard screen.
@@ -59,9 +58,11 @@ class _ProgressionCardState extends State<ProgressionCard> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final progression = context.watch<ProgressionProvider>();
+    final progression = context.watch<ProgressionEngineProvider>();
     final profile = progression.profile;
     final isExpanded = _isExpanded;
+    final levelDisplay =
+        const ProgressionDisplayResolver().levelDisplay(profile.level);
 
     final xpSpan =
         (profile.nextLevelXp - profile.levelFloorXp).clamp(1, 1 << 30);
@@ -70,17 +71,15 @@ class _ProgressionCardState extends State<ProgressionCard> {
     final current = _topStreak(progression, best: false);
     final best = isExpanded ? _topStreak(progression, best: true) : null;
 
-    final pendingRewardCount = progression.pendingRewards.length;
-    final unlockedCount = progression.achievements
-        .where((achievement) => achievement.unlocked)
-        .length;
+    final pendingRewardCount = progression.pendingClaimNodeIds.length;
+    final unlockedCount = progression.unlockedAchievementCount;
 
+    // V2 doesn't have V1's selectDailyGoalQuestsForDate picker yet —
+    // show all current daily quests, capped to keep the compact card
+    // readable. Three is what V1 typically surfaced.
     final previewQuests = isExpanded
-        ? selectDailyGoalQuestsForDate(
-            progression.quests,
-            DateTime.now(),
-          )
-        : const <ProgressionQuest>[];
+        ? progression.currentDailyQuests.take(3).toList()
+        : const <EngineQuestProgress>[];
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -122,7 +121,8 @@ class _ProgressionCardState extends State<ProgressionCard> {
               children: [
                 _CompactHeader(
                   level: profile.level,
-                  levelTitle: tierForLevel(profile.level).title(l10n),
+                  levelTitle: levelDisplay.title(l10n),
+                  levelAccent: levelDisplay.accentColor,
                   xpInto: profile.xpIntoLevel,
                   xpMax: xpSpan,
                   xpProgress: xpProgress,
@@ -155,7 +155,7 @@ class _ProgressionCardState extends State<ProgressionCard> {
                               ? 0
                               : profile.xpToNextLevel,
                           achievements: unlockedCount,
-                          questsDone: progression.completedQuests.length,
+                          questsDone: progression.completedQuestCount,
                           current: current,
                           best: best,
                           previewQuests: previewQuests,
@@ -201,7 +201,7 @@ class _ExpandedProgressionBody extends StatelessWidget {
   final int questsDone;
   final _DomainStreak? current;
   final _DomainStreak? best;
-  final List<ProgressionQuest> previewQuests;
+  final List<EngineQuestProgress> previewQuests;
   final dynamic l10n;
   final VoidCallback? onOpen;
 
@@ -251,6 +251,7 @@ class _CompactHeader extends StatelessWidget {
   const _CompactHeader({
     required this.level,
     required this.levelTitle,
+    required this.levelAccent,
     required this.xpInto,
     required this.xpMax,
     required this.xpProgress,
@@ -262,6 +263,7 @@ class _CompactHeader extends StatelessWidget {
 
   final int level;
   final String levelTitle;
+  final Color levelAccent;
   final int xpInto;
   final int xpMax;
   final double xpProgress;
@@ -272,11 +274,10 @@ class _CompactHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final levelAccent = progressionLevelAccent(level);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        ProgressionLevelBadge(level: level, size: 44),
+        LevelBadge(level: level, accentColor: levelAccent, size: 44),
         const SizedBox(width: Tokens.spaceMd),
         Expanded(
           child: Column(
@@ -794,7 +795,7 @@ class _ActiveQuestsPreview extends StatelessWidget {
     required this.label,
   });
 
-  final List<ProgressionQuest> quests;
+  final List<EngineQuestProgress> quests;
   final String label;
 
   @override
@@ -838,11 +839,11 @@ class _MiniQuestRow extends StatelessWidget {
     required this.quest,
   });
 
-  final ProgressionQuest quest;
+  final EngineQuestProgress quest;
 
   @override
   Widget build(BuildContext context) {
-    final domain = ProgressionDomainTheme.resolveForQuest(quest);
+    final domain = quest.domain ?? ProgressionDomain.activity;
     final color = ProgressionDomainTheme.colorFor(domain);
     final rawPct = quest.progress * 100;
     final pct =
@@ -860,7 +861,7 @@ class _MiniQuestRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  quest.title(context.l10n),
+                  quest.node.titleKey(context.l10n),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -882,7 +883,7 @@ class _MiniQuestRow extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Text(
-            '$pct%',
+            quest.isAvailableForClaim ? '✓' : '$pct%',
             style: TextStyle(
               fontSize: Tokens.fontSizeCaption,
               fontWeight: FontWeight.w900,
@@ -967,7 +968,7 @@ class _DomainStreak {
 }
 
 _DomainStreak? _topStreak(
-  ProgressionProvider provider, {
+  ProgressionEngineProvider provider, {
   required bool best,
 }) {
   _DomainStreak? winner;
