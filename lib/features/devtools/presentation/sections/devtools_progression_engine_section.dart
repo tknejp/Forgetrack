@@ -23,6 +23,7 @@ class _DevToolsProgressionEngineSectionState
     extends State<DevToolsProgressionEngineSection> {
   bool _isEvaluating = false;
   bool _isWiping = false;
+  bool _isClaiming = false;
 
   @override
   Widget build(BuildContext context) {
@@ -102,6 +103,19 @@ class _DevToolsProgressionEngineSectionState
                 },
         ),
         const DevToolsSectionDivider(),
+        DevToolsActionTile(
+          label: 'Claim all available quests',
+          subtitle:
+              'Iterates pendingClaimNodeIds and calls engine.claim on each. '
+              'XP for every available quest lands in the ledger immediately.',
+          icon: Icons.redeem_rounded,
+          isLoading: _isClaiming,
+          isDisabled: _isEvaluating ||
+              _isWiping ||
+              p.pendingClaimNodeIds.isEmpty,
+          onTap: () => _claimAll(context),
+        ),
+        const DevToolsSectionDivider(),
         _SetXpPanel(isBusy: _isEvaluating || _isWiping || p.isEvaluating),
         const DevToolsSectionDivider(),
         DevToolsActionTile(
@@ -158,6 +172,31 @@ class _DevToolsProgressionEngineSectionState
       );
     } finally {
       if (mounted) setState(() => _isWiping = false);
+    }
+  }
+
+  Future<void> _claimAll(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = context.read<ProgressionEngineProvider>();
+    final pending = provider.pendingClaimNodeIds.toList();
+    if (pending.isEmpty) return;
+
+    setState(() => _isClaiming = true);
+    var claimed = 0;
+    try {
+      for (final nodeId in pending) {
+        await provider.claimNode(
+          nodeId: nodeId,
+          input: _ambitiousInput(),
+        );
+        claimed += 1;
+      }
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text('Claimed $claimed quests')),
+      );
+    } finally {
+      if (mounted) setState(() => _isClaiming = false);
     }
   }
 
