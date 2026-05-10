@@ -1,0 +1,199 @@
+import '../../../../../shared/domain/rarity.dart';
+import '../../models/claim_policy.dart';
+import '../../models/content_tag.dart';
+import '../../models/objective_definition.dart';
+import '../../models/objective_metric.dart';
+import '../../models/objective_operator.dart';
+import '../../models/objective_scope.dart';
+import '../../models/progression_node_definition.dart';
+import '../../models/quest_display_bucket.dart';
+import '../../models/reward_definition.dart';
+import '../../models/unlock_condition.dart';
+import 'quest_assets.dart';
+
+// Chapter id used by both the catalog and the screen to look up the
+// background image. Keep in sync with [chapterBgAssetFor].
+const _chapterId = 'forest_trial';
+
+/// Forest Trial chapter — pilot port of a V1 journey chapter.
+///
+/// Shape mirrors the V1 monolith: one auto-claim "open" quest gated by
+/// player level, three manual-claim "step" quests that share the
+/// chapter chain via [QuestNode.prerequisiteNodeIds] /
+/// [QuestNode.nextNodeIds], and a manual-claim finale that drops the
+/// chapter emblem (cosmetic reward).
+///
+/// Other V1 chapters (ruins_discipline, mine_descent, …) are deferred
+/// until this pattern proves itself end-to-end in the V2 quests
+/// screen.
+List<ObjectiveDefinition> forestTrialObjectives() {
+  return const [
+    // Open: satisfied automatically once the player reaches level 10.
+    ObjectiveDefinition(
+      id: 'forest_trial_open_objective',
+      domain: ProgressionDomain.activity,
+      metric: LevelMetric(),
+      scope: LifetimeScope(),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: 10,
+      debugLabel: 'Forest Trial open — level >= 10',
+    ),
+    // Step 1: 5 daily-steps completions across days.
+    ObjectiveDefinition(
+      id: 'forest_trial_daily_wins_5_objective',
+      domain: ProgressionDomain.activity,
+      metric: NodeCompletionsMetric(nodeId: 'daily_steps_today'),
+      scope: LifetimeScope(),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: 5,
+      debugLabel: 'Forest Trial step 1 — 5 daily steps completions',
+    ),
+    // Step 2: 5 daily-protein completions across days. Different
+    // domain than step 1 so the chain forces the player to broaden
+    // their habits.
+    ObjectiveDefinition(
+      id: 'forest_trial_steps_5_objective',
+      domain: ProgressionDomain.nutrition,
+      metric: NodeCompletionsMetric(nodeId: 'daily_protein_today'),
+      scope: LifetimeScope(),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: 5,
+      debugLabel: 'Forest Trial step 2 — 5 daily protein completions',
+    ),
+    // Step 3: 3 daily-sleep completions across days.
+    ObjectiveDefinition(
+      id: 'forest_trial_recovery_3_objective',
+      domain: ProgressionDomain.sleep,
+      metric: NodeCompletionsMetric(nodeId: 'daily_sleep_today'),
+      scope: LifetimeScope(),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: 3,
+      debugLabel: 'Forest Trial step 3 — 3 daily sleep completions',
+    ),
+    // Finale: cheap auto-true objective. Real gating lives in
+    // [QuestNode.prerequisiteNodeIds] which forces all 3 steps to
+    // complete first.
+    ObjectiveDefinition(
+      id: 'forest_trial_finale_objective',
+      domain: ProgressionDomain.activity,
+      metric: LevelMetric(),
+      scope: LifetimeScope(),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: 10,
+      debugLabel: 'Forest Trial finale — level >= 10 (prereqs gate the chain)',
+    ),
+  ];
+}
+
+List<ProgressionNode> forestTrialNodes() {
+  return [
+    QuestNode(
+      id: 'forest_trial_open',
+      objectiveId: 'forest_trial_open_objective',
+      displayBucket: QuestDisplayBucket.chapter,
+      claimPolicy: ClaimPolicy.automatic,
+      titleKey: (l) => l.progQuestForestTrialOpenTitle,
+      descriptionKey: (l) => l.progQuestForestTrialOpenDesc,
+      rewards: const [XpReward(amount: 120)],
+      contentTags: const [ContentTag.core, ContentTag.fitness],
+      rarity: Rarity.rare,
+      assetKey: questAssetForestTrialIcon,
+      chapterId: _chapterId,
+      chainId: _chapterId,
+      chainOrder: 0,
+      displayGroupId: _chapterId,
+      nextNodeIds: const ['forest_trial_daily_wins_5'],
+      chainStepLabelKey: (l) => l.progQuestChainStepStart,
+      sortOrder: 300,
+    ),
+    QuestNode(
+      id: 'forest_trial_daily_wins_5',
+      objectiveId: 'forest_trial_daily_wins_5_objective',
+      displayBucket: QuestDisplayBucket.chapter,
+      claimPolicy: ClaimPolicy.manual,
+      titleKey: (l) => l.progQuestForestTrialDailyWins5Title,
+      descriptionKey: (l) => l.progQuestForestTrialDailyWins5Desc,
+      rewards: const [XpReward(amount: 180)],
+      contentTags: const [ContentTag.core, ContentTag.fitness],
+      rarity: Rarity.rare,
+      assetKey: questAssetForestTrialIcon,
+      chapterId: _chapterId,
+      chainId: _chapterId,
+      chainOrder: 1,
+      displayGroupId: _chapterId,
+      prerequisiteNodeIds: const ['forest_trial_open'],
+      nextNodeIds: const ['forest_trial_steps_5'],
+      chainStepLabelKey: (_) => '5',
+      sortOrder: 301,
+    ),
+    QuestNode(
+      id: 'forest_trial_steps_5',
+      objectiveId: 'forest_trial_steps_5_objective',
+      displayBucket: QuestDisplayBucket.chapter,
+      claimPolicy: ClaimPolicy.manual,
+      titleKey: (l) => l.progQuestForestTrialSteps5Title,
+      descriptionKey: (l) => l.progQuestForestTrialSteps5Desc,
+      rewards: const [XpReward(amount: 180)],
+      contentTags: const [ContentTag.core, ContentTag.fitness],
+      rarity: Rarity.rare,
+      assetKey: questAssetForestTrialIcon,
+      chapterId: _chapterId,
+      chainId: _chapterId,
+      chainOrder: 2,
+      displayGroupId: _chapterId,
+      prerequisiteNodeIds: const ['forest_trial_daily_wins_5'],
+      nextNodeIds: const ['forest_trial_recovery_3'],
+      chainStepLabelKey: (_) => '5',
+      sortOrder: 302,
+    ),
+    QuestNode(
+      id: 'forest_trial_recovery_3',
+      objectiveId: 'forest_trial_recovery_3_objective',
+      displayBucket: QuestDisplayBucket.chapter,
+      claimPolicy: ClaimPolicy.manual,
+      titleKey: (l) => l.progQuestForestTrialRecovery3Title,
+      descriptionKey: (l) => l.progQuestForestTrialRecovery3Desc,
+      rewards: const [XpReward(amount: 220)],
+      contentTags: const [ContentTag.core, ContentTag.fitness],
+      rarity: Rarity.rare,
+      assetKey: questAssetForestTrialIcon,
+      chapterId: _chapterId,
+      chainId: _chapterId,
+      chainOrder: 3,
+      displayGroupId: _chapterId,
+      prerequisiteNodeIds: const ['forest_trial_steps_5'],
+      nextNodeIds: const ['forest_trial_finale'],
+      chainStepLabelKey: (_) => '3',
+      sortOrder: 303,
+    ),
+    QuestNode(
+      id: 'forest_trial_finale',
+      objectiveId: 'forest_trial_finale_objective',
+      displayBucket: QuestDisplayBucket.chapter,
+      claimPolicy: ClaimPolicy.manual,
+      titleKey: (l) => l.progQuestForestTrialFinaleTitle,
+      descriptionKey: (l) => l.progQuestForestTrialFinaleDesc,
+      rewards: const [
+        XpReward(amount: 300),
+        // Drops the V1 emblem cosmetic. CosmeticUnlockBridge dispatches
+        // it to CosmeticsProvider just like every other engine grant.
+        CosmeticReward(cosmeticId: 'emblem_forest_mark'),
+      ],
+      contentTags: const [ContentTag.core, ContentTag.fitness],
+      rarity: Rarity.epic,
+      assetKey: questAssetForestTrialIcon,
+      chapterId: _chapterId,
+      chainId: _chapterId,
+      chainOrder: 4,
+      displayGroupId: _chapterId,
+      prerequisiteNodeIds: const ['forest_trial_recovery_3'],
+      chainStepLabelKey: (l) => l.progQuestChainStepEmblem,
+      // The chapter is gated by player level; the open auto-fires at
+      // level 10 so its prereq does the heavy lifting. We add an
+      // explicit LevelAtLeast on the finale too so a stale ledger
+      // can never grant it before the player actually qualifies.
+      unlockConditions: const [LevelAtLeast(10)],
+      sortOrder: 304,
+    ),
+  ];
+}

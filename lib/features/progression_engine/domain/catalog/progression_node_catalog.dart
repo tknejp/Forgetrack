@@ -1,6 +1,7 @@
 import '../models/progression_node_definition.dart';
 import 'content/activity_content.dart';
 import 'content/body_content.dart';
+import 'content/chapter_forest_trial_content.dart';
 import 'content/level_milestones.dart';
 import 'content/meta_content.dart';
 import 'content/nutrition_content.dart';
@@ -40,6 +41,7 @@ class ProgressionNodeCatalog {
       ...welcomeNodes(),
       ...levelMilestoneNodes(),
       ...rpgNodes(),
+      ...forestTrialNodes(),
     ];
   }
 }
