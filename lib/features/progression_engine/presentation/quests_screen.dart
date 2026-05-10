@@ -7,6 +7,7 @@ import '../../../shared/theme/design_tokens.dart';
 import '../../../shared/widgets/xp_sparkle_overlay.dart';
 import '../application/progression_engine_provider.dart';
 import '../domain/catalog/engine_catalog_context.dart';
+import 'widgets/engine_chapter_card.dart';
 import 'widgets/engine_completed_quests_section.dart';
 import 'widgets/engine_quest_card.dart';
 import 'widgets/engine_quest_section.dart';
@@ -162,6 +163,7 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
         weekly.where((q) => q.isAvailableForClaim).toList();
     final dailyActive = daily.where((q) => !q.isCompleted).toList();
     final weeklyActive = weekly.where((q) => !q.isCompleted).toList();
+    final chapters = provider.currentChapterQuests;
 
     return Scaffold(
       backgroundColor: Tokens.bg,
@@ -191,6 +193,19 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                     28,
                   ),
                   children: [
+                    if (chapters.isNotEmpty) ...[
+                      _ChapterSection(
+                        chapters: chapters,
+                        chainResolver: provider.chainQuestsFor,
+                        l10n: l10n,
+                        enabled: !provider.isEvaluating,
+                        pillKeyFor: _pillKeyFor,
+                        onClaim: _claimQuest,
+                        expandedNodeId: _expandedNodeId,
+                        onToggleExpanded: _toggleExpanded,
+                      ),
+                      const SizedBox(height: Tokens.spaceXl),
+                    ],
                     QuestSectionPanel(
                       header: l10n.progQuestsDailyGoalsHeader,
                       color: Tokens.steps.color,
@@ -366,6 +381,65 @@ class QuestSectionPanel extends StatelessWidget {
               ],
             ],
           ),
+      ],
+    );
+  }
+}
+
+/// Top-of-screen "Journey Chapters" section. Renders one
+/// [EngineChapterCard] per active chapter, each with the chain
+/// preview pulled via [chainResolver]. Chapter quests are auto-claim
+/// (open + finale) or manual-claim (steps); the screen routes claim
+/// taps through the same handler the daily/weekly cards use.
+class _ChapterSection extends StatelessWidget {
+  const _ChapterSection({
+    required this.chapters,
+    required this.chainResolver,
+    required this.l10n,
+    required this.enabled,
+    required this.pillKeyFor,
+    required this.onClaim,
+    required this.expandedNodeId,
+    required this.onToggleExpanded,
+  });
+
+  final List<EngineQuestProgress> chapters;
+  final List<EngineQuestProgress> Function(String chainId) chainResolver;
+  final AppLocalizations l10n;
+  final bool enabled;
+  final GlobalKey Function(String nodeId) pillKeyFor;
+  final Future<void> Function(EngineQuestProgress quest, {Offset? from})
+      onClaim;
+  final String? expandedNodeId;
+  final void Function(String nodeId) onToggleExpanded;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        EngineQuestSection(
+          label: l10n.progQuestsChapterHeader,
+          color: Tokens.accent,
+          countLabel: chapters.length == 1
+              ? null
+              : l10n.progQuestsActiveCount(chapters.length),
+          isEmpty: true,
+          children: const [],
+        ),
+        for (var i = 0; i < chapters.length; i++) ...[
+          if (i > 0) const SizedBox(height: Tokens.spaceSm),
+          EngineChapterCard(
+            quest: chapters[i],
+            chain: chainResolver(chapters[i].node.chainId ?? ''),
+            l10n: l10n,
+            enabled: enabled,
+            pillKey: pillKeyFor(chapters[i].nodeId),
+            onClaim: onClaim,
+            isExpanded: expandedNodeId == chapters[i].nodeId,
+            onToggle: () => onToggleExpanded(chapters[i].nodeId),
+          ),
+        ],
       ],
     );
   }

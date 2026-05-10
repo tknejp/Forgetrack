@@ -257,6 +257,56 @@ class ProgressionEngineProvider extends ChangeNotifier {
     return _questsForBucket(QuestDisplayBucket.weekly);
   }
 
+  /// One representative [EngineQuestProgress] per active chapter.
+  ///
+  /// "Active" means at least one step in the chain is still in
+  /// progress or waiting for a claim. We pick the lowest-chainOrder
+  /// step that is not yet completed; that's what the player should be
+  /// working on right now. Returns an empty list when all chapters are
+  /// either fully completed or not yet unlocked.
+  List<EngineQuestProgress> get currentChapterQuests {
+    final all = _questsForBucket(QuestDisplayBucket.chapter);
+    if (all.isEmpty) return const [];
+
+    final byChain = <String, List<EngineQuestProgress>>{};
+    for (final q in all) {
+      final chainId = q.node.chainId;
+      if (chainId == null) continue;
+      byChain.putIfAbsent(chainId, () => []).add(q);
+    }
+
+    final out = <EngineQuestProgress>[];
+    for (final entry in byChain.entries) {
+      final chain = [...entry.value]
+        ..sort((a, b) => (a.node.chainOrder ?? 0)
+            .compareTo(b.node.chainOrder ?? 0));
+      EngineQuestProgress? active;
+      for (final q in chain) {
+        if (!q.isCompleted) {
+          active = q;
+          break;
+        }
+      }
+      if (active != null) out.add(active);
+    }
+    out.sort((a, b) =>
+        (a.node.sortOrder).compareTo(b.node.sortOrder));
+    return out;
+  }
+
+  /// Resolves the chain (in chainOrder) for a given chain id. Used by
+  /// the screen's chapter chain preview to render the open → step →
+  /// step → finale dots beneath the active card.
+  List<EngineQuestProgress> chainQuestsFor(String chainId) {
+    final out = <EngineQuestProgress>[];
+    for (final q in _questsForBucket(QuestDisplayBucket.chapter)) {
+      if (q.node.chainId == chainId) out.add(q);
+    }
+    out.sort((a, b) =>
+        (a.node.chainOrder ?? 0).compareTo(b.node.chainOrder ?? 0));
+    return out;
+  }
+
   /// Streak by objective id (only daily-scoped objectives have a
   /// meaningful streak). Returns an empty summary when the
   /// objective is unknown or has no completions yet.
