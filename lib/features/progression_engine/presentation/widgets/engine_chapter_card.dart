@@ -90,7 +90,12 @@ class EngineChapterCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _ChapterIcon(node: quest.node, size: 44),
+                _ChapterIcon(
+                  node: quest.node,
+                  size: isExpanded
+                      ? Tokens.questAssetExpanded
+                      : Tokens.questAssetCollapsed,
+                ),
                 const SizedBox(width: Tokens.spaceMd),
                 Expanded(
                   child: Column(
@@ -132,13 +137,33 @@ class EngineChapterCard extends StatelessWidget {
                 ],
               ],
             ),
-            const SizedBox(height: Tokens.spaceSm),
-            _ProgressRow(quest: quest, accent: accent),
+            // Chain preview between the title row and the progress bar
+            // (V1 layout) so the player sees their position in the
+            // chain at a glance — the progress bar still belongs
+            // immediately above the next visual primitive.
             if (chain.length > 1) ...[
               const SizedBox(height: Tokens.spaceSm),
-              EngineChapterChainPreview(
-                chain: chain,
-                currentNodeId: quest.node.id,
+              Padding(
+                padding: EdgeInsets.only(
+                  left: (isExpanded
+                          ? Tokens.questAssetExpanded
+                          : Tokens.questAssetCollapsed) +
+                      Tokens.spaceMd,
+                ),
+                child: EngineChapterChainPreview(
+                  chain: chain,
+                  currentNodeId: quest.node.id,
+                  accent: accent,
+                  l10n: l10n,
+                ),
+              ),
+            ],
+            const SizedBox(height: Tokens.spaceSm),
+            _ProgressRow(quest: quest, accent: accent),
+            if (isExpanded) ...[
+              const SizedBox(height: Tokens.spaceSm),
+              _ChapterExpandedDetails(
+                quest: quest,
                 accent: accent,
                 l10n: l10n,
               ),
@@ -386,6 +411,105 @@ class _Connector extends StatelessWidget {
       height: 1,
       margin: const EdgeInsets.symmetric(horizontal: 3),
       color: color.withValues(alpha: 0.32),
+    );
+  }
+}
+
+/// Details panel revealed when the player expands a chapter card.
+/// Mirrors the daily/weekly card's [_ExpandedDetails] but adds the
+/// chain step label as a header line.
+class _ChapterExpandedDetails extends StatelessWidget {
+  const _ChapterExpandedDetails({
+    required this.quest,
+    required this.accent,
+    required this.l10n,
+  });
+
+  final EngineQuestProgress quest;
+  final Color accent;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final lockedHint = quest.node.lockedHintKey?.call(l10n);
+    final hasScaling = quest.baseXp > 0 && quest.previewXp != quest.baseXp;
+    final stepLabel = quest.node.chainStepLabelKey?.call(l10n);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(Tokens.radiusInner),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (stepLabel != null && stepLabel.isNotEmpty) ...[
+            Text(
+              stepLabel,
+              style: TextStyle(
+                fontSize: Tokens.fontSizeMicro,
+                fontWeight: FontWeight.w800,
+                color: accent,
+                letterSpacing: 0.6,
+              ),
+            ),
+            const SizedBox(height: 6),
+          ],
+          if (quest.baseXp > 0)
+            _DetailLine(
+              icon: Icons.bolt_rounded,
+              color: accent,
+              text: hasScaling
+                  ? l10n.progXpScalingDetail(quest.baseXp, quest.previewXp)
+                  : l10n.progXpFlatDetail(quest.baseXp),
+            ),
+          if (lockedHint != null && lockedHint.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            _DetailLine(
+              icon: Icons.lock_outline_rounded,
+              color: Colors.white.withValues(alpha: 0.78),
+              text: lockedHint,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _DetailLine extends StatelessWidget {
+  const _DetailLine({
+    required this.icon,
+    required this.color,
+    required this.text,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 13, color: color),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: Tokens.fontSizeMicro,
+              fontWeight: FontWeight.w600,
+              color: Colors.white.withValues(alpha: 0.82),
+              height: 1.4,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

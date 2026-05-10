@@ -102,7 +102,13 @@ class EngineQuestCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _QuestLeading(node: quest.node, domain: domain, size: 32),
+                _QuestLeading(
+                  node: quest.node,
+                  domain: domain,
+                  size: isExpanded
+                      ? Tokens.questAssetExpanded
+                      : Tokens.questAssetCollapsed,
+                ),
                 const SizedBox(width: Tokens.spaceMd),
                 Expanded(
                   child: Column(
