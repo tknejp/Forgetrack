@@ -14,7 +14,7 @@ import '../../../cosmetics/config/cosmetics_config.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
 import '../../../cosmetics/presentation/widgets/cosmetic_equipped_chip.dart';
 import '../../../cosmetics/presentation/widgets/cosmetic_frame_preview.dart';
-import '../../../progression/application/progression_provider.dart';
+import '../../../progression_engine/application/progression_engine_provider.dart';
 import '../../../progression_engine/domain/display/progression_display_resolver.dart';
 import '../../../progression_engine/presentation/widgets/level_badge.dart';
 import '../../application/social_provider.dart';
@@ -286,7 +286,7 @@ class _HeaderContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progression = context.watch<ProgressionProvider>();
+    final progression = context.watch<ProgressionEngineProvider>();
     final profile = progression.profile;
     final levelDisplay =
         const ProgressionDisplayResolver().levelDisplay(profile.level);

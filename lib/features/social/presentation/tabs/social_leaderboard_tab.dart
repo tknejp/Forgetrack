@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../features/auth/application/auth_provider.dart';
-import '../../../../features/progression/application/progression_provider.dart';
+import '../../../../features/progression_engine/application/progression_engine_provider.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../application/social_provider.dart';
@@ -29,7 +29,7 @@ class _SocialLeaderboardTabState extends State<SocialLeaderboardTab> {
 
   List<_LbEntry> _buildEntries(
     AuthProvider auth,
-    ProgressionProvider prog,
+    ProgressionEngineProvider prog,
     List<SocialUserProfile> friends,
   ) {
     final list = <_LbEntry>[];
@@ -66,7 +66,7 @@ class _SocialLeaderboardTabState extends State<SocialLeaderboardTab> {
   Widget build(BuildContext context) {
     final social = context.watch<SocialProvider>();
     final auth = context.watch<AuthProvider>();
-    final prog = context.watch<ProgressionProvider>();
+    final prog = context.watch<ProgressionEngineProvider>();
     final entries = _buildEntries(auth, prog, social.friends);
     final l10n = context.l10n;
 
