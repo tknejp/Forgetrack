@@ -30,6 +30,7 @@ import 'features/progression/data/hybrid_progression_repository.dart';
 import 'features/progression/data/local/progression_database.dart';
 import 'features/progression/data/progression_repository_impl.dart';
 import 'features/progression/application/progression_provider.dart';
+import 'features/progression_engine/data/local/progression_engine_database.dart';
 import 'features/coach_log_export/application/bushido_export_provider.dart';
 import 'features/coach_log_export/data/bushido_export_data_builder.dart';
 import 'features/coach_log_export/data/bushido_fitness_source_adapter.dart';
@@ -87,6 +88,12 @@ Future<void> main() async {
 
   final progressionDb = ProgressionDatabase();
   await progressionDb.open();
+
+  // Phase 4: open the new engine's Isar store alongside the legacy
+  // one. Provider wiring lands in Phase 6 — for now the database
+  // just needs to be open so devtools can wipe it.
+  final progressionEngineDb = ProgressionEngineDatabase();
+  await progressionEngineDb.open();
 
   final ktProvider = KalorickeTabulkyProvider(ktService, ktDb);
   final socialBackendState = await SocialFirebaseBootstrap.ensureInitialized();
