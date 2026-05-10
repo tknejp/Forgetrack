@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../shared/theme/design_tokens.dart';
 import '../../config/cosmetics_config.dart';
 import '../../domain/cosmetic_models.dart';
 
@@ -95,12 +96,12 @@ class _PlaceholderRing extends StatelessWidget {
     required this.borderRadius,
   });
 
-  final CosmeticRarity rarity;
+  final Rarity rarity;
   final BorderRadius? borderRadius;
 
   @override
   Widget build(BuildContext context) {
-    final palette = rarity.token;
+    final palette = RarityPalette.forRarity(rarity);
     final shape = borderRadius == null ? BoxShape.circle : BoxShape.rectangle;
     return Container(
       decoration: BoxDecoration(

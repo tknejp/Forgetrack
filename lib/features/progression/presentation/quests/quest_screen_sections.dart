@@ -1,4 +1,3 @@
-import '../../domain/cosmetic_reward_table.dart';
 import '../../domain/progression_models.dart';
 import '../widgets/progression_internals.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -260,7 +259,7 @@ class QuestDisplayPolicy {
     List<ProgressionQuest> allQuests,
   ) {
     if (!isChapterQuest(quest)) return false;
-    if (CosmeticRewardTable.questToCosmetics.containsKey(quest.id)) {
+    if (quest.cosmeticRewards.isNotEmpty) {
       return true;
     }
 

@@ -422,7 +422,7 @@ void main() {
       expect(achievementsById['level_100']!.unlocked, isTrue);
       expect(
         achievementsById['level_100']!.difficulty,
-        ProgressionAchievementDifficulty.extraHard,
+        ProgressionAchievementDifficulty.mythic,
       );
       expect(
         achievementsById['level_100']!.unlockedAt,
@@ -757,6 +757,7 @@ void main() {
           description: (l10n) => 'Open',
           type: ProgressionQuestType.milestone,
           category: ProgressionQuestCategory.chapter,
+          rarity: Rarity.common,
           criterionType: ProgressionQuestCriterionType.chapterStarted,
           targetValue: 1,
           rewardXp: 1,
@@ -772,6 +773,7 @@ void main() {
           description: (l10n) => 'Steps',
           type: ProgressionQuestType.mastery,
           category: ProgressionQuestCategory.chapter,
+          rarity: Rarity.common,
           criterionType: ProgressionQuestCriterionType.ruleCompletionsAtLeast,
           targetValue: 2,
           rewardXp: 1,
@@ -834,6 +836,7 @@ void main() {
             description: (l10n) => '${id}_open',
             type: ProgressionQuestType.milestone,
             category: ProgressionQuestCategory.chapter,
+          rarity: Rarity.common,
             criterionType: ProgressionQuestCriterionType.chapterStarted,
             targetValue: 1,
             rewardXp: 1,
@@ -851,6 +854,7 @@ void main() {
             description: (l10n) => '${id}_step',
             type: ProgressionQuestType.mastery,
             category: ProgressionQuestCategory.chapter,
+          rarity: Rarity.common,
             criterionType: ProgressionQuestCriterionType.ruleCompletionsAtLeast,
             targetValue: 1,
             rewardXp: 1,
@@ -870,6 +874,7 @@ void main() {
             description: (l10n) => '${id}_finale',
             type: ProgressionQuestType.milestone,
             category: ProgressionQuestCategory.chapter,
+          rarity: Rarity.common,
             criterionType: ProgressionQuestCriterionType.chapterStarted,
             targetValue: 1,
             rewardXp: 1,

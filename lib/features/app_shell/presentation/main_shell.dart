@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 
 import '../../../core/navigation/navigator_key.dart';
 import '../../auth/application/auth_provider.dart';
+import '../../celebration/presentation/celebration_overlay_host.dart';
+import '../../cosmetics/presentation/cosmetics_screen.dart';
 import '../../devtools/application/devtools_permission_service.dart';
 import '../../devtools/application/devtools_provider.dart';
 import '../../devtools/presentation/devtools_screen.dart';
@@ -20,7 +22,6 @@ import '../../progression/presentation/widgets/progression_home_card.dart';
 import '../../social/application/social_provider.dart';
 import '../../social/presentation/ft_social_screen.dart';
 import '../../social/presentation/widgets/social_profile_header.dart';
-import 'widgets/progression_celebration_overlay.dart';
 import '../../../l10n/l10n.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../../../shared/theme/design_tokens.dart';
@@ -40,8 +41,6 @@ class _FtMainShellState extends State<MainShell> {
   final GlobalKey _progressionBarKey = GlobalKey();
   final GlobalKey _topChromeKey = GlobalKey();
   final ValueNotifier<int> _currentIndex = ValueNotifier<int>(0);
-  ProgressionProvider? _progressionProvider;
-  ProgressionCelebrationEvent? _celebrationEvent;
   int _chromeMeasureEpoch = 0;
   double _topChromeHeight = 148;
 
@@ -57,19 +56,8 @@ class _FtMainShellState extends State<MainShell> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final progression = context.read<ProgressionProvider>();
-    if (_progressionProvider == progression) return;
-    _progressionProvider?.removeListener(_onProgressionChanged);
-    _progressionProvider = progression..addListener(_onProgressionChanged);
-    _drainCelebrationQueue();
-  }
-
-  @override
   void dispose() {
     pendingTabSwitch.removeListener(_onPendingTabSwitch);
-    _progressionProvider?.removeListener(_onProgressionChanged);
     _currentIndex.dispose();
     _pageController.dispose();
     super.dispose();
@@ -114,23 +102,15 @@ class _FtMainShellState extends State<MainShell> {
     });
   }
 
-  void _onProgressionChanged() {
-    _drainCelebrationQueue();
-  }
-
-  void _drainCelebrationQueue() {
-    if (_celebrationEvent != null) return;
-    final next = _progressionProvider?.takeNextCelebration();
-    if (next == null || !mounted) return;
-    setState(() => _celebrationEvent = next);
-  }
-
-  void _dismissCelebration() {
-    if (_celebrationEvent == null) return;
-    setState(() => _celebrationEvent = null);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _drainCelebrationQueue();
-    });
+  void _onOpenInventory() {
+    // The "Otevřít inventář →" CTA on the fullscreen celebration takes
+    // the user straight to the cosmetics inventory rather than the Hero
+    // overview. The fullscreen route has already been popped by the
+    // celebration before this fires, so this push lands on the main
+    // shell's navigator on top of the active tab.
+    Navigator.of(context).push<void>(
+      MaterialPageRoute(builder: (_) => const CosmeticsScreen()),
+    );
   }
 
   Future<void> _openActivitiesScreen() => Navigator.of(context)
@@ -295,12 +275,11 @@ class _FtMainShellState extends State<MainShell> {
                   ),
                 ),
               ),
-              if (_celebrationEvent != null)
-                ProgressionCelebrationOverlay(
-                  key: ValueKey(_celebrationEvent!.id),
-                  event: _celebrationEvent!,
-                  onDismiss: _dismissCelebration,
+              Positioned.fill(
+                child: CelebrationOverlayHost(
+                  onOpenInventory: _onOpenInventory,
                 ),
+              ),
               if (_showDebugLauncher(context))
                 Positioned(
                   right: 14,

@@ -16,6 +16,7 @@ import 'core/services/background_sync_service.dart';
 import 'core/services/fcm_service.dart';
 import 'core/services/notification_service.dart';
 import 'features/auth/application/auth_provider.dart';
+import 'features/celebration/application/celebration_controller.dart';
 import 'features/cosmetics/application/cosmetics_provider.dart';
 import 'features/cosmetics/application/cosmetics_service.dart';
 import 'features/cosmetics/config/cosmetics_config.dart';
@@ -234,6 +235,14 @@ Future<void> main() async {
               cosmeticsProvider: cosmetics,
             );
             return provider;
+          },
+        ),
+        ChangeNotifierProxyProvider2<ProgressionProvider, CosmeticsProvider,
+            CelebrationController>(
+          create: (_) => CelebrationController(),
+          update: (_, progression, cosmetics, controller) {
+            controller!.bind(progression: progression, cosmetics: cosmetics);
+            return controller;
           },
         ),
       ],

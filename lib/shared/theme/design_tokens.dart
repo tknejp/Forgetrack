@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../domain/rarity.dart';
+
 @immutable
 class ThemeTokens extends ThemeExtension<ThemeTokens> {
   final Color bg;
@@ -211,7 +213,7 @@ abstract final class Tokens {
   static const Color difficultyMedium = Color(0xFF60A5FA);
   static const Color difficultyHard = Color(0xFFA78BFA);
   static const Color difficultyExtraHard = Color(0xFFFBBF24);
-  static const Color difficultyMythic = Color(0xFF7A0010);
+  static const Color difficultyMythic = Color.fromARGB(255, 206, 0, 27);
 
   // ── Domain tokens ─────────────────────────────────────────────────────────
   static const Domain steps = Domain(
@@ -377,34 +379,209 @@ class Domain {
 /// and gradStart (darker start). Defined here so widgets outside the cosmetics
 /// feature can reference rarity colors without importing cosmetics internals.
 @immutable
-class Rarity {
+class RarityPalette {
   final Color color;
   final Color gradStart;
 
-  const Rarity({required this.color, required this.gradStart});
+  const RarityPalette({required this.color, required this.gradStart});
 
-  static const common = Rarity(
+  static const common = RarityPalette(
     color: Color(0xFF9E9E9E),
     gradStart: Color(0xFF6E6E6E),
   );
-  static const uncommon = Rarity(
+  static const uncommon = RarityPalette(
     color: Color(0xFF34D399),
     gradStart: Color(0xFF10B981),
   );
-  static const rare = Rarity(
+  static const rare = RarityPalette(
     color: Color(0xFF58A6FF),
     gradStart: Color(0xFF1F6FEB),
   );
-  static const epic = Rarity(
+  static const epic = RarityPalette(
     color: Color(0xFFB388FF),
     gradStart: Color(0xFF7B3FE4),
   );
-  static const legendary = Rarity(
+  static const legendary = RarityPalette(
     color: Color(0xFFFFD54F),
     gradStart: Color(0xFFE0A800),
   );
-  static const mythic = Rarity(
+  static const mythic = RarityPalette(
     color: Color(0xFFFF4B3A),
     gradStart: Color(0xFF7A0010),
   );
+
+  /// Lookup the visual palette for a [Rarity] tier. Single source of truth
+  /// for "what colour does Common look like in the inventory".
+  static RarityPalette forRarity(Rarity rarity) {
+    switch (rarity) {
+      case Rarity.common:
+        return common;
+      case Rarity.uncommon:
+        return uncommon;
+      case Rarity.rare:
+        return rare;
+      case Rarity.epic:
+        return epic;
+      case Rarity.legendary:
+        return legendary;
+      case Rarity.mythic:
+        return mythic;
+    }
+  }
+}
+
+/// Visual recipe used by the celebration feature. Decouples *rarity* (drives
+/// aura, glow, particles, rim of reward thumbs) from *type* (drives only the
+/// header icon-square). The base [color] is intentionally kept in sync with
+/// the existing [Rarity] palette so cosmetic cards in the inventory match the
+/// celebration UI; the additional fields layer the visual "fanfare" specified
+/// in the celebration design handoff.
+@immutable
+class CelebrationRarityToken {
+  const CelebrationRarityToken({
+    required this.color,
+    required this.color2,
+    required this.glow,
+    required this.aura,
+    required this.rim,
+    required this.particles,
+    required this.raysMultiplier,
+  });
+
+  /// Primary accent (matches inventory rarity color).
+  final Color color;
+
+  /// Highlight / lighter tint used for reward-disc gradient stop, sheen.
+  final Color color2;
+
+  /// Solid color whose alpha drives shadow / glow rings around discs and
+  /// claim buttons. Bake the alpha at the call site; this is the *full*
+  /// color so callers can compose their own opacity.
+  final Color glow;
+
+  /// Background radial-aura fill (used at low alpha behind content).
+  final Color aura;
+
+  /// Border around 108-px reward discs.
+  final Color rim;
+
+  /// 2–4 swatches sampled by the particle painter. Keep ordered light → mid
+  /// → dark so the painter can pick by index without re-sorting.
+  final List<Color> particles;
+
+  /// Sun-rays opacity multiplier (0 = invisible, 1 = at full intensity).
+  /// Common rarities barely emit rays; mythic is dazzling.
+  final double raysMultiplier;
+
+  /// Lookup by [Rarity]-compatible index.
+  static const _table = <CelebrationRarityToken>[
+    // common
+    CelebrationRarityToken(
+      color: Color(0xFF9E9E9E),
+      color2: Color(0xFFBFBFBF),
+      glow: Color(0xFF9E9E9E),
+      aura: Color(0xFF9E9E9E),
+      rim: Color(0xFFBFBFBF),
+      particles: [Color(0xFFD1D5DB), Color(0xFF9CA3AF), Color(0xFFE5E7EB)],
+      raysMultiplier: 0.10,
+    ),
+    // uncommon
+    CelebrationRarityToken(
+      color: Color(0xFF34D399),
+      color2: Color(0xFF6EE7B7),
+      glow: Color(0xFF34D399),
+      aura: Color(0xFF34D399),
+      rim: Color(0xFF6EE7B7),
+      particles: [Color(0xFF6EE7B7), Color(0xFF34D399), Color(0xFFA7F3D0)],
+      raysMultiplier: 0.18,
+    ),
+    // rare
+    CelebrationRarityToken(
+      color: Color(0xFF58A6FF),
+      color2: Color(0xFF93C5FD),
+      glow: Color(0xFF58A6FF),
+      aura: Color(0xFF58A6FF),
+      rim: Color(0xFF93C5FD),
+      particles: [Color(0xFFBFDBFE), Color(0xFF58A6FF), Color(0xFF1F6FEB)],
+      raysMultiplier: 0.28,
+    ),
+    // epic
+    CelebrationRarityToken(
+      color: Color(0xFFB388FF),
+      color2: Color(0xFFD4BFFF),
+      glow: Color(0xFFB388FF),
+      aura: Color(0xFFB388FF),
+      rim: Color(0xFFD4BFFF),
+      particles: [Color(0xFFDDD6FE), Color(0xFFB388FF), Color(0xFF7B3FE4)],
+      raysMultiplier: 0.42,
+    ),
+    // legendary
+    CelebrationRarityToken(
+      color: Color(0xFFFFD54F),
+      color2: Color(0xFFFFE38A),
+      glow: Color(0xFFFFD54F),
+      aura: Color(0xFFFFD54F),
+      rim: Color(0xFFFFE38A),
+      particles: [Color(0xFFFFE9A8), Color(0xFFFFD54F), Color(0xFFE0A800)],
+      raysMultiplier: 0.62,
+    ),
+    // mythic
+    CelebrationRarityToken(
+      color: Color(0xFFFF4B3A),
+      color2: Color(0xFFFF8B7A),
+      glow: Color(0xFFFF4B3A),
+      aura: Color(0xFFFF4B3A),
+      rim: Color(0xFFFF8B7A),
+      particles: [
+        Color(0xFFFFB4A8),
+        Color(0xFFFF4B3A),
+        Color(0xFF7A0010),
+        Color(0xFFFF8B7A),
+      ],
+      raysMultiplier: 0.85,
+    ),
+  ];
+
+  /// Get the token for a rarity index in the canonical
+  /// `common..mythic` order.
+  static CelebrationRarityToken forIndex(int index) =>
+      _table[index.clamp(0, _table.length - 1)];
+}
+
+/// Type accent for the small header icon-square of a celebration. Decoupled
+/// from rarity so an "achievement of legendary rarity" doesn't fight the
+/// achievement-type teal — type lives only in the 64-px badge while rarity
+/// runs the rest of the scene.
+@immutable
+class CelebrationTypeAccent {
+  const CelebrationTypeAccent(this.color);
+  final Color color;
+
+  /// Achievements use the same teal as `difficultyEasy` / streak success —
+  /// the "task complete" color family in this app.
+  static const achievement = CelebrationTypeAccent(Tokens.difficultyEasy);
+
+  /// Quests share the achievement teal; both signal "you finished
+  /// something" rather than "you reached a number".
+  static const quest = CelebrationTypeAccent(Tokens.difficultyEasy);
+
+  /// Levels use the XP gold — a level-up *is* an XP threshold crossing.
+  static const level = CelebrationTypeAccent(Tokens.xp);
+
+  /// Title unlocks adopt the app accent violet (same family as the bottom-nav
+  /// active tab). Differentiates them from generic level milestones when both
+  /// fire on the same level breakpoint.
+  static const title = CelebrationTypeAccent(Tokens.accent);
+
+  /// Streaks borrow a warm orange that does not collide with the existing
+  /// difficulty palette. Distinct from XP gold so a streak fanfare reads
+  /// differently from a level-up.
+  static const streak = CelebrationTypeAccent(Color(0xFFFB923C));
+
+  /// Locations / map regions use the cool difficulty-medium blue.
+  static const location = CelebrationTypeAccent(Tokens.difficultyMedium);
+
+  /// Cosmetic-only celebrations (frame, background, etc.) tint the badge
+  /// with the epic violet so they read as "wardrobe" content.
+  static const cosmetic = CelebrationTypeAccent(Color(0xFFB388FF));
 }

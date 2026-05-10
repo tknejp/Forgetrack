@@ -131,6 +131,7 @@ ProgressionQuest _quest({
     description: (l10n) => id,
     type: ProgressionQuestType.milestone,
     category: ProgressionQuestCategory.journey,
+    rarity: Rarity.common,
     criterionType: ProgressionQuestCriterionType.rewardCountAtLeast,
     status: status,
     targetValue: 1,

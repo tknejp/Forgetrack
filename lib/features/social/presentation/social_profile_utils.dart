@@ -61,6 +61,7 @@ List<ProgressionAchievement> mapSocialAchievementsToProgression(
         id: definition.id,
         type: definition.type,
         difficulty: definition.difficulty,
+        rarity: definition.rarity,
         criterionType: definition.criterionType,
         title: definition.title,
         description: definition.description,
@@ -74,6 +75,7 @@ List<ProgressionAchievement> mapSocialAchievementsToProgression(
         domain:
             definition.domain ?? progressionDomainFromName(achievement.domain),
         relatedRuleIds: definition.relatedRuleIds,
+        cosmeticRewards: definition.cosmeticRewards,
       );
     }
 
@@ -84,6 +86,7 @@ List<ProgressionAchievement> mapSocialAchievementsToProgression(
       id: achievement.achievementId,
       type: progressionAchievementTypeFromName(achievement.type),
       difficulty: fallbackDifficulty,
+      rarity: Rarity.common,
       criterionType: ProgressionAchievementCriterionType.rewardCountAtLeast,
       title: (_) => achievement.title,
       description: (_) => achievement.description,

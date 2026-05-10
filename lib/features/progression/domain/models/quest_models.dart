@@ -1,4 +1,7 @@
+import '../../../../shared/domain/rarity.dart';
 import 'core_models.dart';
+
+export '../../../../shared/domain/rarity.dart' show Rarity;
 
 enum ProgressionQuestType {
   milestone,
@@ -106,6 +109,8 @@ class ProgressionQuestDefinition {
     required this.criterionType,
     required this.targetValue,
     required this.rewardXp,
+    required this.rarity,
+    this.cosmeticRewards = const [],
     this.assetKey,
     this.visualDomain,
     this.sourceLabel,
@@ -140,6 +145,19 @@ class ProgressionQuestDefinition {
   final ProgressionQuestCriterionType criterionType;
   final int targetValue;
   final int rewardXp;
+
+  /// Rarity of the moment when this quest is completed. Drives the
+  /// celebration's accent color, glow, particles, and routes to the
+  /// fullscreen variant when high enough. Authored on the catalog entry,
+  /// not derived downstream.
+  final Rarity rarity;
+
+  /// Cosmetic ids unlocked when this quest's reward grant transitions to
+  /// `unlocked` (and via the dispatcher's catch-up pass on cold load).
+  /// Authored next to the quest itself so adding a new quest with a
+  /// cosmetic drop is one catalog edit, not a parallel-table edit.
+  final List<String> cosmeticRewards;
+
   final String? ruleId;
   final ProgressionDomain? domain;
   final ProgressionPeriodKind? periodKind;
@@ -195,6 +213,8 @@ class ProgressionQuest {
     required this.sortOrder,
     required this.priority,
     required this.isHighlighted,
+    required this.rarity,
+    this.cosmeticRewards = const [],
     this.rewardXp = 0,
     this.rewardKey,
     this.rewardStatus,
@@ -239,6 +259,16 @@ class ProgressionQuest {
   final int sortOrder;
   final int priority;
   final bool isHighlighted;
+
+  /// Mirrored from [ProgressionQuestDefinition.rarity] when the runtime
+  /// instance is constructed by the evaluator. Lets consumers (celebration
+  /// adapter, quest cards) read the rarity off the runtime quest without
+  /// looking the definition back up.
+  final Rarity rarity;
+
+  /// Mirrored from [ProgressionQuestDefinition.cosmeticRewards].
+  final List<String> cosmeticRewards;
+
   final int rewardXp;
   final String? rewardKey;
   final ProgressionRewardStatus? rewardStatus;

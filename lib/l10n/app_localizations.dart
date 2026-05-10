@@ -6242,6 +6242,234 @@ abstract class AppLocalizations {
   /// **'Inventory unlocked'**
   String get celebrationCosmeticUnlockedEyebrow;
 
+  /// No description provided for @celebrationAchievementEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievement unlocked'**
+  String get celebrationAchievementEyebrow;
+
+  /// No description provided for @celebrationLevelEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Level reached'**
+  String get celebrationLevelEyebrow;
+
+  /// No description provided for @celebrationTitleEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Title unlocked'**
+  String get celebrationTitleEyebrow;
+
+  /// No description provided for @celebrationQuestEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Quest completed'**
+  String get celebrationQuestEyebrow;
+
+  /// No description provided for @celebrationStreakEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak extended'**
+  String get celebrationStreakEyebrow;
+
+  /// No description provided for @celebrationLocationEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Region discovered'**
+  String get celebrationLocationEyebrow;
+
+  /// No description provided for @celebrationGreatRewardEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Great reward'**
+  String get celebrationGreatRewardEyebrow;
+
+  /// No description provided for @celebrationGotRewards.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{You got {count} reward} other{You got {count} rewards}}'**
+  String celebrationGotRewards(int count);
+
+  /// No description provided for @celebrationClaimXp.
+  ///
+  /// In en, this message translates to:
+  /// **'Claim +{xp} XP'**
+  String celebrationClaimXp(int xp);
+
+  /// No description provided for @celebrationClaimedXp.
+  ///
+  /// In en, this message translates to:
+  /// **'Claimed · +{xp} XP'**
+  String celebrationClaimedXp(int xp);
+
+  /// No description provided for @celebrationNextReward.
+  ///
+  /// In en, this message translates to:
+  /// **'Next reward'**
+  String get celebrationNextReward;
+
+  /// No description provided for @celebrationContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get celebrationContinue;
+
+  /// No description provided for @celebrationOpenInventory.
+  ///
+  /// In en, this message translates to:
+  /// **'Open inventory →'**
+  String get celebrationOpenInventory;
+
+  /// No description provided for @celebrationTapOrSwipe.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap or swipe →'**
+  String get celebrationTapOrSwipe;
+
+  /// No description provided for @celebrationDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get celebrationDone;
+
+  /// No description provided for @celebrationLevelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {level} · {title}'**
+  String celebrationLevelTitle(int level, String title);
+
+  /// No description provided for @celebrationLevelTitleNoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {level}'**
+  String celebrationLevelTitleNoTitle(int level);
+
+  /// No description provided for @celebrationXpRewardName.
+  ///
+  /// In en, this message translates to:
+  /// **'+{xp} XP'**
+  String celebrationXpRewardName(int xp);
+
+  /// No description provided for @celebrationLevelRewardName.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {level}'**
+  String celebrationLevelRewardName(int level);
+
+  /// No description provided for @celebrationCloseSemantic.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get celebrationCloseSemantic;
+
+  /// No description provided for @celebrationTypeAchievement.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievement'**
+  String get celebrationTypeAchievement;
+
+  /// No description provided for @celebrationTypeQuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Quest'**
+  String get celebrationTypeQuest;
+
+  /// No description provided for @celebrationTypeLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Level'**
+  String get celebrationTypeLevel;
+
+  /// No description provided for @celebrationTypeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get celebrationTypeTitle;
+
+  /// No description provided for @celebrationTypeStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak'**
+  String get celebrationTypeStreak;
+
+  /// No description provided for @celebrationTypeLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Region'**
+  String get celebrationTypeLocation;
+
+  /// No description provided for @celebrationTypeCosmetic.
+  ///
+  /// In en, this message translates to:
+  /// **'Cosmetic'**
+  String get celebrationTypeCosmetic;
+
+  /// No description provided for @celebrationKindTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get celebrationKindTitle;
+
+  /// No description provided for @celebrationKindFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'Frame'**
+  String get celebrationKindFrame;
+
+  /// No description provided for @celebrationKindBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Background'**
+  String get celebrationKindBackground;
+
+  /// No description provided for @celebrationKindCompanion.
+  ///
+  /// In en, this message translates to:
+  /// **'Companion'**
+  String get celebrationKindCompanion;
+
+  /// No description provided for @celebrationKindBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Badge'**
+  String get celebrationKindBadge;
+
+  /// No description provided for @celebrationKindGem.
+  ///
+  /// In en, this message translates to:
+  /// **'Relic'**
+  String get celebrationKindGem;
+
+  /// No description provided for @celebrationKindLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Region'**
+  String get celebrationKindLocation;
+
+  /// No description provided for @celebrationKindXp.
+  ///
+  /// In en, this message translates to:
+  /// **'XP reward'**
+  String get celebrationKindXp;
+
+  /// No description provided for @celebrationKindFlame.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak'**
+  String get celebrationKindFlame;
+
+  /// No description provided for @celebrationKindFlag.
+  ///
+  /// In en, this message translates to:
+  /// **'Quest'**
+  String get celebrationKindFlag;
+
+  /// No description provided for @celebrationKindSparkle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reward'**
+  String get celebrationKindSparkle;
+
   /// No description provided for @socialTabFeed.
   ///
   /// In en, this message translates to:

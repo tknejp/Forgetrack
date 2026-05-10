@@ -9,39 +9,26 @@ const _questAssetStreak = 'assets/ui/quests/streak.png';
 
 // Chapter assets
 const _questAssetForestTrial = 'assets/ui/quests/chapter/icon/forest_trial.png';
-const _questAssetRuinsDiscipline =
-    'assets/ui/quests/chapter/icon/ruins_discipline.png';
+const _questAssetRuinsDiscipline = 'assets/ui/quests/chapter/icon/ruins_discipline.png';
 const _questAssetMineDescent = 'assets/ui/quests/chapter/icon/mine_descent.png';
-const _questAssetForgeMomentum =
-    'assets/ui/quests/chapter/icon/forge_momentum.png';
-const _questAssetUnderwayPact =
-    'assets/ui/quests/chapter/icon/underway_pact.png';
-const _questAssetFrostboundOath =
-    'assets/ui/quests/chapter/icon/frostbound_oath.png';
-const _questAssetIcewalkerRoute =
-    'assets/ui/quests/chapter/icon/icewalker_route.png';
-const _questAssetMountainAscent =
-    'assets/ui/quests/chapter/icon/mountain_ascent.png';
+const _questAssetForgeMomentum = 'assets/ui/quests/chapter/icon/forge_momentum.png';
+const _questAssetUnderwayPact = 'assets/ui/quests/chapter/icon/underway_pact.png';
+const _questAssetFrostboundOath = 'assets/ui/quests/chapter/icon/frostbound_oath.png';
+const _questAssetIcewalkerRoute = 'assets/ui/quests/chapter/icon/icewalker_route.png';
+const _questAssetMountainAscent = 'assets/ui/quests/chapter/icon/mountain_ascent.png';
 const _questAssetDragonroad = 'assets/ui/quests/chapter/icon/dragonroad.png';
-const _questAssetDragonrockSovereign =
-    'assets/ui/quests/chapter/icon/dragonrock_sovereign.png';
+const _questAssetDragonrockSovereign = 'assets/ui/quests/chapter/icon/dragonrock_sovereign.png';
 
 const _questBgForestTrial = 'assets/ui/quests/chapter/bg/forest_trial_bg.png';
-const _questBgRuinsDiscipline =
-    'assets/ui/quests/chapter/bg/ruins_discipline_bg.png';
+const _questBgRuinsDiscipline = 'assets/ui/quests/chapter/bg/ruins_discipline_bg.png';
 const _questBgMineDescent = 'assets/ui/quests/chapter/bg/mine_descent_bg.png';
-const _questBgForgeMomentum =
-    'assets/ui/quests/chapter/bg/forge_momentum_bg.png';
+const _questBgForgeMomentum = 'assets/ui/quests/chapter/bg/forge_momentum_bg.png';
 const _questBgUnderwayPact = 'assets/ui/quests/chapter/bg/underway_pact_bg.png';
-const _questBgFrostboundOath =
-    'assets/ui/quests/chapter/bg/frostbound_oath_bg.png';
-const _questBgIcewalkerRoute =
-    'assets/ui/quests/chapter/bg/icewalker_route_bg.png';
-const _questBgMountainAscent =
-    'assets/ui/quests/chapter/bg/mountain_ascent_bg.png';
+const _questBgFrostboundOath = 'assets/ui/quests/chapter/bg/frostbound_oath_bg.png';
+const _questBgIcewalkerRoute = 'assets/ui/quests/chapter/bg/icewalker_route_bg.png';
+const _questBgMountainAscent = 'assets/ui/quests/chapter/bg/mountain_ascent_bg.png';
 const _questBgDragonroad = 'assets/ui/quests/chapter/bg/dragonroad_bg.png';
-const _questBgDragonrockSovereign =
-    'assets/ui/quests/chapter/bg/dragonrock_sovereign_bg.png';
+const _questBgDragonrockSovereign = 'assets/ui/quests/chapter/bg/dragonrock_sovereign_bg.png';
 
 String chapterBgKey(String id) {
   switch (id) {
@@ -127,6 +114,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestEarnFirstRewardDesc,
         type: ProgressionQuestType.milestone,
         category: ProgressionQuestCategory.journey,
+        rarity: Rarity.epic,
         criterionType: ProgressionQuestCriterionType.rewardCountAtLeast,
         targetValue: 1,
         rewardXp: 80,
@@ -145,6 +133,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestDailyTwoGoalsTodayDesc,
         type: ProgressionQuestType.mastery,
         category: ProgressionQuestCategory.daily,
+        rarity: Rarity.common,
         criterionType:
             ProgressionQuestCriterionType.currentPeriodRuleSetAtLeast,
         targetValue: 2,
@@ -176,6 +165,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestDailyTripleWinTodayDesc,
         type: ProgressionQuestType.mastery,
         category: ProgressionQuestCategory.daily,
+        rarity: Rarity.common,
         criterionType:
             ProgressionQuestCriterionType.currentPeriodRuleSetAtLeast,
         targetValue: 3,
@@ -207,6 +197,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestDailyFourPillarsTodayDesc,
         type: ProgressionQuestType.mastery,
         category: ProgressionQuestCategory.daily,
+        rarity: Rarity.common,
         criterionType:
             ProgressionQuestCriterionType.currentPeriodRuleSetAtLeast,
         targetValue: 4,
@@ -239,6 +230,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestDailyNutritionComboTodayDesc,
         type: ProgressionQuestType.mastery,
         category: ProgressionQuestCategory.daily,
+        rarity: Rarity.common,
         criterionType:
             ProgressionQuestCriterionType.currentPeriodRuleSetAtLeast,
         targetValue: 2,
@@ -268,6 +260,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestDailyNutritionCarbsComboTodayDesc,
         type: ProgressionQuestType.mastery,
         category: ProgressionQuestCategory.daily,
+        rarity: Rarity.common,
         criterionType:
             ProgressionQuestCriterionType.currentPeriodRuleSetAtLeast,
         targetValue: 3,
@@ -298,6 +291,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestDailyNutritionFatComboTodayDesc,
         type: ProgressionQuestType.mastery,
         category: ProgressionQuestCategory.daily,
+        rarity: Rarity.common,
         criterionType:
             ProgressionQuestCriterionType.currentPeriodRuleSetAtLeast,
         targetValue: 4,
@@ -329,6 +323,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestDailyNutritionFiberComboTodayDesc,
         type: ProgressionQuestType.mastery,
         category: ProgressionQuestCategory.daily,
+        rarity: Rarity.common,
         criterionType:
             ProgressionQuestCriterionType.currentPeriodRuleSetAtLeast,
         targetValue: 5,
@@ -362,6 +357,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestNutritionRhythm3Desc,
         type: ProgressionQuestType.streak,
         category: ProgressionQuestCategory.chain,
+        rarity: Rarity.common,
         criterionType: ProgressionQuestCriterionType.achievementUnlocked,
         targetValue: 1,
         rewardXp: 160,
@@ -383,6 +379,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestDailyRecoveryFocusTodayDesc,
         type: ProgressionQuestType.mastery,
         category: ProgressionQuestCategory.daily,
+        rarity: Rarity.common,
         criterionType:
             ProgressionQuestCriterionType.currentPeriodRuleSetAtLeast,
         targetValue: 2,
@@ -412,6 +409,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestSleepTotal250hDesc,
         type: ProgressionQuestType.mastery,
         category: ProgressionQuestCategory.journey,
+        rarity: Rarity.epic,
         criterionType: ProgressionQuestCriterionType.totalRuleValueAtLeast,
         targetValue: 15000,
         rewardXp: 240,
@@ -435,6 +433,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestDailyStepsTodayDesc,
         type: ProgressionQuestType.milestone,
         category: ProgressionQuestCategory.daily,
+        rarity: Rarity.common,
         criterionType:
             ProgressionQuestCriterionType.currentPeriodRuleCompletion,
         targetValue: 1,
@@ -456,6 +455,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestDailyCaloriesTodayDesc,
         type: ProgressionQuestType.milestone,
         category: ProgressionQuestCategory.daily,
+        rarity: Rarity.common,
         criterionType:
             ProgressionQuestCriterionType.currentPeriodRuleCompletion,
         targetValue: 1,
@@ -477,6 +477,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestDailyProteinTodayDesc,
         type: ProgressionQuestType.milestone,
         category: ProgressionQuestCategory.daily,
+        rarity: Rarity.common,
         criterionType:
             ProgressionQuestCriterionType.currentPeriodRuleCompletion,
         targetValue: 1,
@@ -498,6 +499,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestDailyCarbsTodayDesc,
         type: ProgressionQuestType.milestone,
         category: ProgressionQuestCategory.daily,
+        rarity: Rarity.common,
         criterionType:
             ProgressionQuestCriterionType.currentPeriodRuleCompletion,
         targetValue: 1,
@@ -519,6 +521,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestDailyFatTodayDesc,
         type: ProgressionQuestType.milestone,
         category: ProgressionQuestCategory.daily,
+        rarity: Rarity.common,
         criterionType:
             ProgressionQuestCriterionType.currentPeriodRuleCompletion,
         targetValue: 1,
@@ -540,6 +543,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestDailyFiberTodayDesc,
         type: ProgressionQuestType.milestone,
         category: ProgressionQuestCategory.daily,
+        rarity: Rarity.common,
         criterionType:
             ProgressionQuestCriterionType.currentPeriodRuleCompletion,
         targetValue: 1,
@@ -561,6 +565,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestDailySleepTodayDesc,
         type: ProgressionQuestType.milestone,
         category: ProgressionQuestCategory.daily,
+        rarity: Rarity.common,
         criterionType:
             ProgressionQuestCriterionType.currentPeriodRuleCompletion,
         targetValue: 1,
@@ -581,6 +586,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestReach500XpDesc,
         type: ProgressionQuestType.milestone,
         category: ProgressionQuestCategory.journey,
+        rarity: Rarity.epic,
         criterionType: ProgressionQuestCriterionType.totalXpAtLeast,
         targetValue: 500,
         rewardXp: 120,
@@ -599,6 +605,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestReach2000XpDesc,
         type: ProgressionQuestType.milestone,
         category: ProgressionQuestCategory.journey,
+        rarity: Rarity.epic,
         criterionType: ProgressionQuestCriterionType.totalXpAtLeast,
         targetValue: 2000,
         rewardXp: 180,
@@ -618,6 +625,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestReach5000XpDesc,
         type: ProgressionQuestType.milestone,
         category: ProgressionQuestCategory.journey,
+        rarity: Rarity.epic,
         criterionType: ProgressionQuestCriterionType.totalXpAtLeast,
         targetValue: 5000,
         rewardXp: 260,
@@ -639,6 +647,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestReach25000XpDesc,
         type: ProgressionQuestType.milestone,
         category: ProgressionQuestCategory.journey,
+        rarity: Rarity.epic,
         criterionType: ProgressionQuestCriterionType.totalXpAtLeast,
         targetValue: 25000,
         rewardXp: 420,
@@ -660,6 +669,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestReach100000XpDesc,
         type: ProgressionQuestType.milestone,
         category: ProgressionQuestCategory.journey,
+        rarity: Rarity.epic,
         criterionType: ProgressionQuestCriterionType.totalXpAtLeast,
         targetValue: 100000,
         rewardXp: 640,
@@ -681,6 +691,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestReach1000000XpDesc,
         type: ProgressionQuestType.milestone,
         category: ProgressionQuestCategory.journey,
+        rarity: Rarity.epic,
         criterionType: ProgressionQuestCriterionType.totalXpAtLeast,
         targetValue: 1000000,
         rewardXp: 1000,
@@ -701,6 +712,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestEarn25RewardsDesc,
         type: ProgressionQuestType.mastery,
         category: ProgressionQuestCategory.journey,
+        rarity: Rarity.epic,
         criterionType: ProgressionQuestCriterionType.rewardCountAtLeast,
         targetValue: 25,
         rewardXp: 180,
@@ -720,6 +732,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestEarn100RewardsDesc,
         type: ProgressionQuestType.mastery,
         category: ProgressionQuestCategory.journey,
+        rarity: Rarity.epic,
         criterionType: ProgressionQuestCriterionType.rewardCountAtLeast,
         targetValue: 100,
         rewardXp: 320,
@@ -741,6 +754,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestEarn250RewardsDesc,
         type: ProgressionQuestType.mastery,
         category: ProgressionQuestCategory.journey,
+        rarity: Rarity.epic,
         criterionType: ProgressionQuestCriterionType.rewardCountAtLeast,
         targetValue: 250,
         rewardXp: 520,
@@ -761,6 +775,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestNutritionRewards5Desc,
         type: ProgressionQuestType.mastery,
         category: ProgressionQuestCategory.journey,
+        rarity: Rarity.epic,
         criterionType: ProgressionQuestCriterionType.domainRewardCountAtLeast,
         targetValue: 5,
         rewardXp: 140,
@@ -780,6 +795,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestNutritionRewards25Desc,
         type: ProgressionQuestType.mastery,
         category: ProgressionQuestCategory.journey,
+        rarity: Rarity.epic,
         criterionType: ProgressionQuestCriterionType.domainRewardCountAtLeast,
         targetValue: 25,
         rewardXp: 260,
@@ -802,6 +818,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestNutritionRewards100Desc,
         type: ProgressionQuestType.mastery,
         category: ProgressionQuestCategory.journey,
+        rarity: Rarity.epic,
         criterionType: ProgressionQuestCriterionType.domainRewardCountAtLeast,
         targetValue: 100,
         rewardXp: 460,
@@ -823,6 +840,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestTotalSteps100kDesc,
         type: ProgressionQuestType.mastery,
         category: ProgressionQuestCategory.journey,
+        rarity: Rarity.epic,
         criterionType: ProgressionQuestCriterionType.totalRuleValueAtLeast,
         targetValue: 100000,
         rewardXp: 160,
@@ -844,6 +862,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestTotalSteps500kDesc,
         type: ProgressionQuestType.mastery,
         category: ProgressionQuestCategory.journey,
+        rarity: Rarity.epic,
         criterionType: ProgressionQuestCriterionType.totalRuleValueAtLeast,
         targetValue: 500000,
         rewardXp: 260,
@@ -865,6 +884,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestTotalSteps1mDesc,
         type: ProgressionQuestType.mastery,
         category: ProgressionQuestCategory.journey,
+        rarity: Rarity.epic,
         criterionType: ProgressionQuestCriterionType.totalRuleValueAtLeast,
         targetValue: 1000000,
         rewardXp: 420,
@@ -886,6 +906,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestTotalSteps5mDesc,
         type: ProgressionQuestType.mastery,
         category: ProgressionQuestCategory.journey,
+        rarity: Rarity.epic,
         criterionType: ProgressionQuestCriterionType.totalRuleValueAtLeast,
         targetValue: 5000000,
         rewardXp: 760,
@@ -909,6 +930,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestTotalSteps10mDesc,
         type: ProgressionQuestType.mastery,
         category: ProgressionQuestCategory.journey,
+        rarity: Rarity.epic,
         criterionType: ProgressionQuestCriterionType.totalRuleValueAtLeast,
         targetValue: 10000000,
         rewardXp: 1100,
@@ -931,6 +953,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestStepsStreak3Desc,
         type: ProgressionQuestType.streak,
         category: ProgressionQuestCategory.chain,
+        rarity: Rarity.common,
         criterionType: ProgressionQuestCriterionType.bestStreakAtLeast,
         targetValue: 3,
         rewardXp: 120,
@@ -951,6 +974,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestUnlockStepChainDesc,
         type: ProgressionQuestType.milestone,
         category: ProgressionQuestCategory.chain,
+        rarity: Rarity.common,
         criterionType: ProgressionQuestCriterionType.achievementUnlocked,
         targetValue: 1,
         rewardXp: 160,
@@ -971,6 +995,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestStepsStreak7Desc,
         type: ProgressionQuestType.streak,
         category: ProgressionQuestCategory.chain,
+        rarity: Rarity.common,
         criterionType: ProgressionQuestCriterionType.bestStreakAtLeast,
         targetValue: 7,
         rewardXp: 180,
@@ -992,6 +1017,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestStepsStreak14Desc,
         type: ProgressionQuestType.streak,
         category: ProgressionQuestCategory.chain,
+        rarity: Rarity.common,
         criterionType: ProgressionQuestCriterionType.bestStreakAtLeast,
         targetValue: 14,
         rewardXp: 260,
@@ -1015,6 +1041,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestStepsStreak30Desc,
         type: ProgressionQuestType.streak,
         category: ProgressionQuestCategory.chain,
+        rarity: Rarity.common,
         criterionType: ProgressionQuestCriterionType.bestStreakAtLeast,
         targetValue: 30,
         rewardXp: 420,
@@ -1038,6 +1065,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestStepsStreak50Desc,
         type: ProgressionQuestType.streak,
         category: ProgressionQuestCategory.chain,
+        rarity: Rarity.common,
         criterionType: ProgressionQuestCriterionType.bestStreakAtLeast,
         targetValue: 50,
         rewardXp: 620,
@@ -1061,6 +1089,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestStepsStreak100Desc,
         type: ProgressionQuestType.streak,
         category: ProgressionQuestCategory.chain,
+        rarity: Rarity.common,
         criterionType: ProgressionQuestCriterionType.bestStreakAtLeast,
         targetValue: 100,
         rewardXp: 1000,
@@ -1083,6 +1112,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestWeeklyActivityOnceDesc,
         type: ProgressionQuestType.mastery,
         category: ProgressionQuestCategory.weekly,
+        rarity: Rarity.uncommon,
         criterionType: ProgressionQuestCriterionType.rewardCountAtLeast,
         targetValue: 1,
         rewardXp: 120,
@@ -1103,6 +1133,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestWeeklyActivity4Desc,
         type: ProgressionQuestType.mastery,
         category: ProgressionQuestCategory.weekly,
+        rarity: Rarity.uncommon,
         criterionType: ProgressionQuestCriterionType.rewardCountAtLeast,
         targetValue: 4,
         rewardXp: 180,
@@ -1124,6 +1155,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestWeeklyActivity12Desc,
         type: ProgressionQuestType.mastery,
         category: ProgressionQuestCategory.weekly,
+        rarity: Rarity.uncommon,
         criterionType: ProgressionQuestCriterionType.rewardCountAtLeast,
         targetValue: 12,
         rewardXp: 280,
@@ -1147,6 +1179,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestWeeklyActivity24Desc,
         type: ProgressionQuestType.mastery,
         category: ProgressionQuestCategory.weekly,
+        rarity: Rarity.uncommon,
         criterionType: ProgressionQuestCriterionType.rewardCountAtLeast,
         targetValue: 24,
         rewardXp: 460,
@@ -1170,6 +1203,7 @@ class ProgressionQuestCatalog {
         description: (l10n) => l10n.progQuestWeeklyActivity52Desc,
         type: ProgressionQuestType.mastery,
         category: ProgressionQuestCategory.weekly,
+        rarity: Rarity.uncommon,
         criterionType: ProgressionQuestCriterionType.rewardCountAtLeast,
         targetValue: 52,
         rewardXp: 900,
@@ -1203,6 +1237,7 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
       finaleTitle: (l10n) => l10n.progQuestForestTrialFinaleTitle,
       finaleDescription: (l10n) => l10n.progQuestForestTrialFinaleDesc,
       rewards: const [120, 180, 180, 220, 300],
+      finaleCosmetic: 'emblem_forest_mark',
       steps: [
         _JourneyChapterStepSpec(
           id: 'forest_trial_daily_wins_5',
@@ -1258,6 +1293,7 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
       finaleTitle: (l10n) => l10n.progQuestRuinsDisciplineFinaleTitle,
       finaleDescription: (l10n) => l10n.progQuestRuinsDisciplineFinaleDesc,
       rewards: const [180, 260, 280, 320, 450],
+      finaleCosmetic: 'emblem_ruin_sigil',
       steps: [
         _JourneyChapterStepSpec(
           id: 'ruins_discipline_nutrition_7',
@@ -1306,6 +1342,7 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
       finaleTitle: (l10n) => l10n.progQuestMineDescentFinaleTitle,
       finaleDescription: (l10n) => l10n.progQuestMineDescentFinaleDesc,
       rewards: const [240, 380, 420, 420, 600],
+      finaleCosmetic: 'emblem_gatekeeper_mark',
       steps: [
         _JourneyChapterStepSpec(
           id: 'mine_descent_steps_250k',
@@ -1351,6 +1388,7 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
       finaleTitle: (l10n) => l10n.progQuestForgeMomentumFinaleTitle,
       finaleDescription: (l10n) => l10n.progQuestForgeMomentumFinaleDesc,
       rewards: const [300, 480, 520, 560, 750],
+      finaleCosmetic: 'emblem_mine_crest',
       steps: [
         _JourneyChapterStepSpec(
           id: 'forge_momentum_weekly_4',
@@ -1399,6 +1437,7 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
       finaleTitle: (l10n) => l10n.progQuestUnderwayPactFinaleTitle,
       finaleDescription: (l10n) => l10n.progQuestUnderwayPactFinaleDesc,
       rewards: const [360, 600, 620, 680, 900],
+      finaleCosmetic: 'emblem_underways_mark',
       steps: [
         _JourneyChapterStepSpec(
           id: 'underway_pact_four_pillars_5',
@@ -1454,6 +1493,7 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
       finaleTitle: (l10n) => l10n.progQuestFrostboundOathFinaleTitle,
       finaleDescription: (l10n) => l10n.progQuestFrostboundOathFinaleDesc,
       rewards: const [420, 720, 760, 800, 1100],
+      finaleCosmetic: 'emblem_frost_sigil',
       steps: [
         _JourneyChapterStepSpec(
           id: 'frostbound_oath_steps_21',
@@ -1500,6 +1540,7 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
       finaleTitle: (l10n) => l10n.progQuestIcewalkerRouteFinaleTitle,
       finaleDescription: (l10n) => l10n.progQuestIcewalkerRouteFinaleDesc,
       rewards: const [500, 850, 900, 950, 1300],
+      finaleCosmetic: 'emblem_icewalker_mark',
       steps: [
         _JourneyChapterStepSpec(
           id: 'icewalker_route_steps_500k',
@@ -1544,6 +1585,7 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
       finaleTitle: (l10n) => l10n.progQuestMountainAscentFinaleTitle,
       finaleDescription: (l10n) => l10n.progQuestMountainAscentFinaleDesc,
       rewards: const [600, 1000, 1100, 1150, 1600],
+      finaleCosmetic: 'emblem_mountain_crest',
       steps: [
         _JourneyChapterStepSpec(
           id: 'mountain_ascent_four_pillars_15',
@@ -1597,6 +1639,7 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
       finaleTitle: (l10n) => l10n.progQuestDragonroadFinaleTitle,
       finaleDescription: (l10n) => l10n.progQuestDragonroadFinaleDesc,
       rewards: const [750, 1250, 1350, 1400, 2000],
+      finaleCosmetic: 'emblem_dragon_mark',
       steps: [
         _JourneyChapterStepSpec(
           id: 'dragonroad_rewards_250',
@@ -1648,6 +1691,7 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
       finaleTitle: (l10n) => l10n.progQuestDragonrockSovereignFinaleTitle,
       finaleDescription: (l10n) => l10n.progQuestDragonrockSovereignFinaleDesc,
       rewards: const [900, 1500, 1600, 1800, 2600],
+      finaleCosmetic: 'emblem_dragonrock_emblem',
       steps: [
         _JourneyChapterStepSpec(
           id: 'dragonrock_sovereign_four_pillars_30',
@@ -1711,6 +1755,7 @@ class _JourneyChapterSpec {
     required this.finaleDescription,
     required this.rewards,
     required this.steps,
+    this.finaleCosmetic,
   });
 
   final String id;
@@ -1723,6 +1768,10 @@ class _JourneyChapterSpec {
   final ProgressionLocalizedText finaleDescription;
   final List<int> rewards;
   final List<_JourneyChapterStepSpec> steps;
+
+  /// Cosmetic id awarded when the finale quest completes. Null for
+  /// chapters that don't drop a chapter emblem.
+  final String? finaleCosmetic;
 
   List<ProgressionQuestDefinition> build() {
     final openId = '${id}_open';
@@ -1737,6 +1786,7 @@ class _JourneyChapterSpec {
         description: openDescription,
         type: ProgressionQuestType.milestone,
         category: ProgressionQuestCategory.chapter,
+        rarity: Rarity.rare,
         criterionType: ProgressionQuestCriterionType.chapterStarted,
         targetValue: 1,
         rewardXp: rewards[0],
@@ -1771,9 +1821,15 @@ class _JourneyChapterSpec {
         description: finaleDescription,
         type: ProgressionQuestType.milestone,
         category: ProgressionQuestCategory.chapter,
+        // Chapter finales bump to epic — they drop the chapter emblem and
+        // close out a multi-step arc, more meaningful than the routine
+        // chapter open / step quests.
+        rarity: Rarity.epic,
         criterionType: ProgressionQuestCriterionType.chapterStarted,
         targetValue: 1,
         rewardXp: rewards.last,
+        cosmeticRewards:
+            finaleCosmetic == null ? const [] : [finaleCosmetic!],
         prerequisiteQuestIds: stepIds,
         sortOrder: sortOrder + 4,
         priority: 82,
@@ -1835,6 +1891,7 @@ class _JourneyChapterStepSpec {
       description: description,
       type: ProgressionQuestType.mastery,
       category: ProgressionQuestCategory.chapter,
+        rarity: Rarity.rare,
       criterionType: criterionType,
       targetValue: targetValue,
       rewardXp: rewardXp,

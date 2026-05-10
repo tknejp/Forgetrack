@@ -199,36 +199,22 @@ String cosmeticTypeLabel(CosmeticType type) {
   }
 }
 
-String cosmeticRarityLabel(CosmeticRarity rarity, AppLocalizations l10n) {
+String cosmeticRarityLabel(Rarity rarity, AppLocalizations l10n) {
   switch (rarity) {
-    case CosmeticRarity.common:
+    case Rarity.common:
       return l10n.cosmeticRarityCommon;
-    case CosmeticRarity.uncommon:
+    case Rarity.uncommon:
       return l10n.cosmeticRarityUncommon;
-    case CosmeticRarity.rare:
+    case Rarity.rare:
       return l10n.cosmeticRarityRare;
-    case CosmeticRarity.epic:
+    case Rarity.epic:
       return l10n.cosmeticRarityEpic;
-    case CosmeticRarity.legendary:
+    case Rarity.legendary:
       return l10n.cosmeticRarityLegendary;
-    case CosmeticRarity.mythic:
+    case Rarity.mythic:
       return l10n.cosmeticRarityMythic;
   }
 }
 
-Color cosmeticRarityColor(CosmeticRarity rarity) {
-  switch (rarity) {
-    case CosmeticRarity.common:
-      return Rarity.common.color;
-    case CosmeticRarity.uncommon:
-      return Rarity.uncommon.color;
-    case CosmeticRarity.rare:
-      return Rarity.rare.color;
-    case CosmeticRarity.epic:
-      return Rarity.epic.color;
-    case CosmeticRarity.legendary:
-      return Rarity.legendary.color;
-    case CosmeticRarity.mythic:
-      return Rarity.mythic.color;
-  }
-}
+Color cosmeticRarityColor(Rarity rarity) =>
+    RarityPalette.forRarity(rarity).color;

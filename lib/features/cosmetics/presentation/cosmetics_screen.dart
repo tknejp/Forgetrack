@@ -832,19 +832,19 @@ int _compareUnlockedCosmetics(
   return a.id.compareTo(b.id);
 }
 
-int _rarityRank(CosmeticRarity rarity) {
+int _rarityRank(Rarity rarity) {
   switch (rarity) {
-    case CosmeticRarity.common:
+    case Rarity.common:
       return 0;
-    case CosmeticRarity.uncommon:
+    case Rarity.uncommon:
       return 1;
-    case CosmeticRarity.rare:
+    case Rarity.rare:
       return 2;
-    case CosmeticRarity.epic:
+    case Rarity.epic:
       return 3;
-    case CosmeticRarity.legendary:
+    case Rarity.legendary:
       return 4;
-    case CosmeticRarity.mythic:
+    case Rarity.mythic:
       return 5;
   }
 }

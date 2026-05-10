@@ -33,12 +33,12 @@ class CosmeticsConfig {
         CosmeticType.titleFlair,
         // mapEffect intentionally omitted — gated behind experimentalTypesEnabled.
       },
-      rarityDisplayOrder: <CosmeticRarity>[
-        CosmeticRarity.common,
-        CosmeticRarity.rare,
-        CosmeticRarity.epic,
-        CosmeticRarity.legendary,
-        CosmeticRarity.mythic,
+      rarityDisplayOrder: <Rarity>[
+        Rarity.common,
+        Rarity.rare,
+        Rarity.epic,
+        Rarity.legendary,
+        Rarity.mythic,
       ],
       regionDisplayOrder: <CosmeticRegion>[
         CosmeticRegion.neutral,
@@ -54,7 +54,7 @@ class CosmeticsConfig {
 
   final EquippedCosmetics defaultEquipped;
   final Set<CosmeticType> allowedSlots;
-  final List<CosmeticRarity> rarityDisplayOrder;
+  final List<Rarity> rarityDisplayOrder;
   final List<CosmeticRegion> regionDisplayOrder;
   final bool premiumEnabled;
   final bool experimentalTypesEnabled;

@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../../features/cosmetics/application/cosmetics_provider.dart';
 import '../../../../features/cosmetics/domain/cosmetic_unlock_snapshot.dart';
 import '../../../../features/progression/application/progression_provider.dart';
-import '../../../../features/progression/domain/cosmetic_reward_table.dart';
+import '../../../../features/progression/domain/catalog/achievement_catalog.dart';
 import '../widgets/devtools_section_card.dart';
 
 class DevToolsUnlockInventorySection extends StatefulWidget {
@@ -60,7 +60,14 @@ class _DevToolsUnlockInventorySectionState
     final cs = Theme.of(context).colorScheme;
 
     final achievements = p.achievements;
-    final cosmeticAchievements = CosmeticRewardTable.achievementToCosmetics;
+    // Pull cosmetic-bearing achievements straight from the catalog so the
+    // dev-tools list always reflects the canonical definitions (no
+    // parallel side-table to keep in sync).
+    final cosmeticAchievements = <String, List<String>>{
+      for (final def
+          in const ProgressionAchievementCatalog().build())
+        if (def.cosmeticRewards.isNotEmpty) def.id: def.cosmeticRewards,
+    };
 
     return DevToolsSectionCard(
       title: 'Unlock Inventory',

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/domain/rarity.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import 'core_models.dart';
+
+export '../../../../shared/domain/rarity.dart' show Rarity;
 
 enum ProgressionAchievementType {
   milestone,
@@ -22,10 +25,7 @@ enum ProgressionAchievementDifficulty {
   easy(color: Tokens.difficultyEasy, label: _difficultyEasyLabel),
   medium(color: Tokens.difficultyMedium, label: _difficultyMediumLabel),
   hard(color: Tokens.difficultyHard, label: _difficultyHardLabel),
-  extraHard(
-    color: Tokens.difficultyExtraHard,
-    label: _difficultyExtraHardLabel,
-  ),
+  extraHard(color: Tokens.difficultyExtraHard, label: _difficultyExtraHardLabel),
   mythic(color: Tokens.difficultyMythic, label: _difficultyMythicLabel);
 
   const ProgressionAchievementDifficulty({
@@ -88,11 +88,13 @@ class ProgressionAchievementDefinition {
     required this.id,
     required this.type,
     required this.difficulty,
+    required this.rarity,
     required this.criterionType,
     required this.title,
     required this.description,
     this.badgeEmoji = '\u{1F3C5}',
     required this.targetValue,
+    this.cosmeticRewards = const [],
     this.ruleId,
     this.domain,
     this.windowSizeDays,
@@ -104,11 +106,22 @@ class ProgressionAchievementDefinition {
   final String id;
   final ProgressionAchievementType type;
   final ProgressionAchievementDifficulty difficulty;
+
+  /// Rarity of the unlock moment. Distinct from [difficulty] (which is the
+  /// "Lehké/Těžké" badge label/colour shown on the achievement card) — the
+  /// celebration system uses [rarity] to drive its accent and aura.
+  /// Authored on the catalog entry; the celebration adapter reads it
+  /// directly with no translation.
+  final Rarity rarity;
   final ProgressionAchievementCriterionType criterionType;
   final ProgressionLocalizedText title;
   final ProgressionLocalizedText description;
   final String badgeEmoji;
   final int targetValue;
+
+  /// Cosmetic ids granted when this achievement unlocks. Replaces the
+  /// previous side-table mapping; one source of truth per achievement.
+  final List<String> cosmeticRewards;
   final String? ruleId;
   final ProgressionDomain? domain;
   final int? windowSizeDays;
@@ -156,6 +169,7 @@ class ProgressionAchievement {
     required this.id,
     required this.type,
     required this.difficulty,
+    required this.rarity,
     required this.criterionType,
     required this.title,
     required this.description,
@@ -164,6 +178,7 @@ class ProgressionAchievement {
     required this.currentValue,
     required this.progress,
     required this.unlocked,
+    this.cosmeticRewards = const [],
     this.unlockedAt,
     this.ruleId,
     this.domain,
@@ -173,6 +188,9 @@ class ProgressionAchievement {
   final String id;
   final ProgressionAchievementType type;
   final ProgressionAchievementDifficulty difficulty;
+
+  /// Mirrored from [ProgressionAchievementDefinition.rarity].
+  final Rarity rarity;
   final ProgressionAchievementCriterionType criterionType;
   final ProgressionLocalizedText title;
   final ProgressionLocalizedText description;
@@ -185,6 +203,9 @@ class ProgressionAchievement {
   final String? ruleId;
   final ProgressionDomain? domain;
   final List<String> relatedRuleIds;
+
+  /// Mirrored from [ProgressionAchievementDefinition.cosmeticRewards].
+  final List<String> cosmeticRewards;
 }
 
 class ProgressionAchievementUnlockEvent {

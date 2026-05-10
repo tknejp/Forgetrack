@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../progression_models.dart';
 
+export '../../../../shared/domain/rarity.dart' show Rarity;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Single source of truth for progression level metadata.
 //
@@ -23,9 +25,11 @@ class ProgressionLevelTier {
     required this.achievementId,
     required this.emoji,
     required this.difficulty,
+    required this.rarity,
     required this.isJourneyMapAnchor,
     required this.isTitleBreakpoint,
     required this.title,
+    this.cosmeticRewards = const [],
   });
 
   /// The level at which this tier is reached.
@@ -47,6 +51,15 @@ class ProgressionLevelTier {
   /// `ProgressionAchievementCatalog` when generating the achievement
   /// definition list.
   final ProgressionAchievementDifficulty difficulty;
+
+  /// Rarity used by the celebration system when this level is reached.
+  /// Distinct from [difficulty] (which controls the achievement card
+  /// label/badge); rarity drives the celebration accent and aura.
+  final Rarity rarity;
+
+  /// Cosmetic ids unlocked the moment the player crosses into this
+  /// level. Empty for non-rewarding tiers (e.g. level 1 origin).
+  final List<String> cosmeticRewards;
 
   /// Whether this tier appears as an anchor node on the static journey map.
   /// Currently every tier is an anchor; the flag exists so future tiers
@@ -80,60 +93,74 @@ const List<ProgressionLevelTier> kProgressionLevelTiers = [
     achievementId: 'level_1',
     emoji: '🧌',
     difficulty: ProgressionAchievementDifficulty.easy,
+    rarity: Rarity.common,
     isJourneyMapAnchor: true,
     isTitleBreakpoint: true,
     title: _title1,
+    // Level 1 is the journey origin — starter cosmetics flow from the
+    // welcome_to_journey achievement, not from this tier.
   ),
   ProgressionLevelTier(
     level: 5,
     achievementId: 'level_5',
     emoji: '🥾',
     difficulty: ProgressionAchievementDifficulty.easy,
+    rarity: Rarity.common,
     isJourneyMapAnchor: true,
     isTitleBreakpoint: true,
     title: _title5,
+    cosmeticRewards: ['background_forest_trail'],
   ),
   ProgressionLevelTier(
     level: 10,
     achievementId: 'level_10',
     emoji: '🧭',
     difficulty: ProgressionAchievementDifficulty.easy,
+    rarity: Rarity.common,
     isJourneyMapAnchor: true,
     isTitleBreakpoint: true,
     title: _title10,
+    cosmeticRewards: ['frame_wildwood'],
   ),
   ProgressionLevelTier(
     level: 15,
     achievementId: 'level_15',
     emoji: '⚒️',
     difficulty: ProgressionAchievementDifficulty.easy,
+    rarity: Rarity.uncommon,
     isJourneyMapAnchor: true,
     isTitleBreakpoint: true,
     title: _title15,
+    cosmeticRewards: ['background_ravine'],
   ),
   ProgressionLevelTier(
     level: 20,
     achievementId: 'level_20',
     emoji: '🛡️',
     difficulty: ProgressionAchievementDifficulty.medium,
+    rarity: Rarity.uncommon,
     isJourneyMapAnchor: true,
     isTitleBreakpoint: true,
     title: _title20,
+    cosmeticRewards: ['frame_ruins'],
   ),
   ProgressionLevelTier(
     level: 25,
     achievementId: 'level_25',
     emoji: '🌩️',
     difficulty: ProgressionAchievementDifficulty.medium,
+    rarity: Rarity.uncommon,
     isJourneyMapAnchor: true,
     isTitleBreakpoint: true,
     title: _title25,
+    cosmeticRewards: ['background_ruins'],
   ),
   ProgressionLevelTier(
     level: 30,
     achievementId: 'level_30',
     emoji: '🏰',
     difficulty: ProgressionAchievementDifficulty.medium,
+    rarity: Rarity.uncommon,
     isJourneyMapAnchor: true,
     isTitleBreakpoint: true,
     title: _title30,
@@ -143,65 +170,102 @@ const List<ProgressionLevelTier> kProgressionLevelTiers = [
     achievementId: 'level_40',
     emoji: '🐉',
     difficulty: ProgressionAchievementDifficulty.medium,
+    rarity: Rarity.rare,
     isJourneyMapAnchor: true,
     isTitleBreakpoint: true,
     title: _title40,
+    cosmeticRewards: ['frame_dwarven'],
   ),
   ProgressionLevelTier(
     level: 50,
     achievementId: 'level_50',
     emoji: '🏹',
     difficulty: ProgressionAchievementDifficulty.hard,
+    rarity: Rarity.epic,
     isJourneyMapAnchor: true,
     isTitleBreakpoint: true,
     title: _title50,
+    cosmeticRewards: ['frame_underways'],
   ),
   ProgressionLevelTier(
     level: 60,
     achievementId: 'level_60',
     emoji: '🔱',
     difficulty: ProgressionAchievementDifficulty.hard,
+    rarity: Rarity.epic,
     isJourneyMapAnchor: true,
     isTitleBreakpoint: true,
     title: _title60,
+    cosmeticRewards: ['background_frostlands'],
   ),
   ProgressionLevelTier(
     level: 70,
     achievementId: 'level_70',
     emoji: '🌌',
     difficulty: ProgressionAchievementDifficulty.hard,
+    rarity: Rarity.epic,
     isJourneyMapAnchor: true,
     isTitleBreakpoint: true,
     title: _title70,
+    cosmeticRewards: ['frame_frost'],
   ),
   ProgressionLevelTier(
     level: 80,
     achievementId: 'level_80',
     emoji: '♾️',
     difficulty: ProgressionAchievementDifficulty.extraHard,
+    rarity: Rarity.legendary,
     isJourneyMapAnchor: true,
     isTitleBreakpoint: true,
     title: _title80,
+    cosmeticRewards: ['frame_mountain'],
   ),
   ProgressionLevelTier(
     level: 90,
     achievementId: 'level_90',
     emoji: '👑',
     difficulty: ProgressionAchievementDifficulty.extraHard,
+    rarity: Rarity.legendary,
     isJourneyMapAnchor: true,
     isTitleBreakpoint: true,
     title: _title90,
+    cosmeticRewards: ['background_rocky_mountains'],
   ),
   ProgressionLevelTier(
     level: 100,
     achievementId: 'level_100',
     emoji: '🐦‍🔥',
-    difficulty: ProgressionAchievementDifficulty.extraHard,
+    difficulty: ProgressionAchievementDifficulty.mythic,
+    rarity: Rarity.mythic,
     isJourneyMapAnchor: true,
     isTitleBreakpoint: true,
     title: _title100,
+    cosmeticRewards: ['frame_dragonrock'],
   ),
 ];
+
+/// Cosmetic ids unlocked at *decorative* levels (those between title
+/// breakpoints — 35, 45, 75, 95). Title-breakpoint tiers carry their
+/// cosmetics on [ProgressionLevelTier.cosmeticRewards] directly; this map
+/// covers the in-between bands so [cosmeticsForLevel] is the single
+/// source of truth.
+const Map<int, List<String>> kProgressionDecorativeLevelCosmetics =
+    <int, List<String>>{
+  35: ['background_bridge_crossing'],
+  45: ['background_mines'],
+  75: ['background_frozen_lake'],
+  95: ['background_dragonrock_fortress'],
+};
+
+/// All cosmetic ids unlocked the moment the player crosses into [level].
+/// Title-breakpoint tiers and decorative levels both flow through here, so
+/// callers (the cosmetic dispatcher, the celebration adapter) don't need
+/// to know which kind of level it is.
+List<String> cosmeticsForLevel(int level) {
+  final tier = exactTierForLevel(level);
+  if (tier != null) return tier.cosmeticRewards;
+  return kProgressionDecorativeLevelCosmetics[level] ?? const [];
+}
 
 // Top-level functions (rather than inline lambdas) so [kProgressionLevelTiers]
 // stays a `const` list. `const` constructors can reference top-level function

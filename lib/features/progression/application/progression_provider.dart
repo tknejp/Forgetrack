@@ -15,7 +15,6 @@ import '../../nutrition/application/kaloricke_tabulky_provider.dart';
 import '../application/cosmetic_unlock_dispatcher.dart';
 import '../application/progression_engine.dart';
 import '../data/provider_progression_source.dart';
-import '../domain/cosmetic_reward_table.dart';
 import '../domain/policy/level_config.dart';
 import '../domain/progression_models.dart';
 
@@ -53,6 +52,7 @@ enum ProgressionCelebrationKind {
   levelMilestone,
   achievementUnlocked,
   cosmeticUnlocked,
+  questCompleted,
 }
 
 class ProgressionCelebrationEvent {
@@ -63,6 +63,8 @@ class ProgressionCelebrationEvent {
     this.level,
     this.achievement,
     this.cosmeticIds = const [],
+    this.questGrant,
+    this.quest,
   });
 
   final String id;
@@ -71,23 +73,31 @@ class ProgressionCelebrationEvent {
   final int? level;
   final ProgressionAchievement? achievement;
   final List<String> cosmeticIds;
+
+  /// Set when [kind] is [ProgressionCelebrationKind.questCompleted].
+  /// Carries the freshly-unlocked grant whose XP the user can claim from
+  /// the celebration topsheet (or from the quest card, idempotently).
+  final ProgressionQuestRewardGrant? questGrant;
+
+  /// Optional quest snapshot at the time of completion — used for the
+  /// celebration title / description. Null if the quest could not be
+  /// resolved (e.g. catalog mismatch); the adapter falls back to a
+  /// generic title in that case.
+  final ProgressionQuest? quest;
 }
 
 class ProgressionProvider extends ChangeNotifier {
   ProgressionProvider({
     required ProgressionEngine engine,
     CosmeticUnlockDispatcher? cosmeticUnlockDispatcher,
-    CosmeticRewardTable cosmeticRewardTable = const CosmeticRewardTable(),
   })  : _engine = engine,
         _cosmeticUnlockDispatcher =
-            cosmeticUnlockDispatcher ?? CosmeticUnlockDispatcher(),
-        _cosmeticRewardTable = cosmeticRewardTable {
+            cosmeticUnlockDispatcher ?? CosmeticUnlockDispatcher() {
     unawaited(_hydrate());
   }
 
   final ProgressionEngine _engine;
   final CosmeticUnlockDispatcher _cosmeticUnlockDispatcher;
-  final CosmeticRewardTable _cosmeticRewardTable;
 
   ProgressionEngineState? _state;
   ProviderProgressionSource? _source;
@@ -657,7 +667,7 @@ class ProgressionProvider extends ChangeNotifier {
         sourceId: 'level_$level',
       );
       final rewardCosmetics = _mergedCosmeticIds(
-        _cosmeticRewardTable.cosmeticsForLevel(level),
+        cosmeticsForLevel(level),
         levelCosmetics,
       );
       final isMilestone =
@@ -680,7 +690,50 @@ class ProgressionProvider extends ChangeNotifier {
         previous.achievements.where((a) => a.unlocked).map((a) => a.id).toSet();
     final newlyUnlockedAchievements = current.achievements
         .where((a) => a.unlocked && !previousAchievementIds.contains(a.id))
-        .where((a) => levelFromAchievementId(a.id) == null);
+        .where((a) => levelFromAchievementId(a.id) == null)
+        .toList(growable: false);
+
+    // First scan quest grants so we can pair quest+achievement events when
+    // a quest declares `quest.achievementId` pointing at one of the
+    // newly-unlocked achievements (shared criteria like "1M steps"). The
+    // paired grant is consumed here; the standalone-quest pass below
+    // skips it.
+    final previousGrantKeys = previous.questRewardGrants
+        .map((g) => g.rewardKey)
+        .toSet();
+    final newlyUnlockedGrants = current.questRewardGrants
+        .where((g) =>
+            g.isUnlocked && !previousGrantKeys.contains(g.rewardKey))
+        .toList(growable: false);
+
+    ProgressionQuest? questForId(String questId) {
+      for (final q in current.quests) {
+        if (q.id == questId) return q;
+      }
+      return null;
+    }
+
+    final pairedGrantKeys = <String>{};
+    final pairedGrantsByAchievement =
+        <String, ProgressionQuestRewardGrant>{};
+    final pairedQuestsByAchievement = <String, ProgressionQuest>{};
+    final newAchievementIdSet =
+        newlyUnlockedAchievements.map((a) => a.id).toSet();
+    for (final grant in newlyUnlockedGrants) {
+      final quest = questForId(grant.questId);
+      final achievementId = quest?.achievementId;
+      if (achievementId == null ||
+          !newAchievementIdSet.contains(achievementId)) {
+        continue;
+      }
+      // Only one grant pairs per achievement. If multiple quests declare
+      // the same achievementId (rare), the first wins; the rest fall
+      // through to standalone quest celebrations.
+      if (pairedGrantsByAchievement.containsKey(achievementId)) continue;
+      pairedGrantsByAchievement[achievementId] = grant;
+      if (quest != null) pairedQuestsByAchievement[achievementId] = quest;
+      pairedGrantKeys.add(grant.rewardKey);
+    }
 
     for (final achievement in newlyUnlockedAchievements) {
       final achievementCosmetics = _itemsForSource(
@@ -689,10 +742,12 @@ class ProgressionProvider extends ChangeNotifier {
         sourceId: achievement.id,
       );
       final rewardCosmetics = _mergedCosmeticIds(
-        _cosmeticRewardTable.cosmeticsForAchievement(achievement.id),
+        achievement.cosmeticRewards,
         achievementCosmetics,
       );
       attachedCosmeticIds.addAll(rewardCosmetics);
+      final pairedGrant = pairedGrantsByAchievement[achievement.id];
+      final pairedQuest = pairedQuestsByAchievement[achievement.id];
       events.add(
         ProgressionCelebrationEvent(
           id: 'achievement|${achievement.id}|${createdAt.microsecondsSinceEpoch}',
@@ -700,6 +755,8 @@ class ProgressionProvider extends ChangeNotifier {
           createdAt: createdAt,
           achievement: achievement,
           cosmeticIds: rewardCosmetics,
+          questGrant: pairedGrant,
+          quest: pairedQuest,
         ),
       );
     }
@@ -712,6 +769,23 @@ class ProgressionProvider extends ChangeNotifier {
           kind: ProgressionCelebrationKind.cosmeticUnlocked,
           createdAt: createdAt,
           cosmeticIds: [item.cosmeticId],
+        ),
+      );
+    }
+
+    // Standalone quest celebrations — grants that aren't already paired
+    // into an achievement event above. The topsheet renders the gold
+    // claim pill; the quest card on the Quests tab remains a parallel
+    // entry point because `claimQuestReward` is idempotent.
+    for (final grant in newlyUnlockedGrants) {
+      if (pairedGrantKeys.contains(grant.rewardKey)) continue;
+      events.add(
+        ProgressionCelebrationEvent(
+          id: 'quest|${grant.rewardKey}|${createdAt.microsecondsSinceEpoch}',
+          kind: ProgressionCelebrationKind.questCompleted,
+          createdAt: createdAt,
+          questGrant: grant,
+          quest: questForId(grant.questId),
         ),
       );
     }

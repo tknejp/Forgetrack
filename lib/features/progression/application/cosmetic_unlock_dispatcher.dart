@@ -3,7 +3,8 @@ import '../../cosmetics/application/cosmetics_provider.dart';
 import '../../cosmetics/domain/cosmetic_models.dart';
 import '../../cosmetics/domain/cosmetic_unlock_evaluator.dart';
 import '../../cosmetics/domain/cosmetic_unlock_rules.dart';
-import '../domain/cosmetic_reward_table.dart';
+import '../domain/models/quest_models.dart';
+import '../domain/policy/level_config.dart';
 import 'cosmetic_unlock_snapshot_extractor.dart';
 import 'progression_engine.dart';
 
@@ -39,17 +40,20 @@ class CosmeticUnlockDispatchResult {
 }
 
 /// Diffs two [ProgressionEngineState] snapshots and dispatches cosmetic
-/// unlocks. There are three passes per call:
+/// unlocks. There are four passes per call:
 ///
 /// 1. **Tier-1 achievement catch-up** — every currently-unlocked achievement
-///    is checked against [CosmeticRewardTable]; any cosmetic not yet in the
-///    player's `unlocked` map is granted. This catches up users whose
+///    is checked against its own `cosmeticRewards`; any cosmetic not yet in
+///    the player's `unlocked` map is granted. This catches up users whose
 ///    achievement was unlocked before a new mapping was added (or for whom
 ///    `previous == null` on cold start).
-/// 2. **Tier-1 level catch-up** — same idea for `cosmeticsForLevel(...)`
-///    iterated 1..currentLevel.
-/// 3. **Tier-2 rule evaluator** — runs in a bounded fixed-point loop so
-///    compound rules whose dependencies were just granted by passes 1–2
+/// 2. **Tier-1 level catch-up** — same idea using
+///    [cosmeticsForLevel] (which reads off [ProgressionLevelTier]
+///    or the decorative-level map) iterated 1..currentLevel.
+/// 3. **Tier-1 quest catch-up** — same idea using
+///    `quest.cosmeticRewards` for every claimed quest grant.
+/// 4. **Tier-2 rule evaluator** — runs in a bounded fixed-point loop so
+///    compound rules whose dependencies were just granted by passes 1–3
 ///    fire in the same dispatch.
 ///
 /// Dependency direction: `progression` → `cosmetics`. The cosmetics feature
@@ -60,15 +64,12 @@ class CosmeticUnlockDispatchResult {
 /// is harmless.
 class CosmeticUnlockDispatcher {
   CosmeticUnlockDispatcher({
-    CosmeticRewardTable table = const CosmeticRewardTable(),
     CosmeticUnlockSnapshotExtractor? snapshotExtractor,
     CosmeticUnlockEvaluator? evaluator,
-  })  : _table = table,
-        _snapshotExtractor =
+  })  : _snapshotExtractor =
             snapshotExtractor ?? CosmeticUnlockSnapshotExtractor(),
         _evaluator = evaluator ?? CosmeticUnlockEvaluator(kCosmeticUnlockRules);
 
-  final CosmeticRewardTable _table;
   final CosmeticUnlockSnapshotExtractor _snapshotExtractor;
   final CosmeticUnlockEvaluator _evaluator;
   CosmeticsProvider? _cosmetics;
@@ -102,10 +103,13 @@ class CosmeticUnlockDispatcher {
     final unlockedItems = <CosmeticUnlockDispatchItem>[];
 
     // -- Pass 1: achievement catch-up ---------------------------------------
+    // Reads `cosmeticRewards` directly off the runtime achievement (which is
+    // mirrored from the catalog definition). One source of truth: adding a
+    // cosmetic drop to an achievement is one catalog edit.
     final unlockedAchievements =
         current.achievements.where((a) => a.unlocked).toList(growable: false);
     for (final achievement in unlockedAchievements) {
-      for (final cosmeticId in _table.cosmeticsForAchievement(achievement.id)) {
+      for (final cosmeticId in achievement.cosmeticRewards) {
         if (_alreadyUnlocked(cosmetics, cosmeticId)) continue;
         final didUnlock = await _unlock(
           cosmetics,
@@ -126,9 +130,12 @@ class CosmeticUnlockDispatcher {
     }
 
     // -- Pass 2: level catch-up --------------------------------------------
+    // Level cosmetics live on the level tier (anchor levels) or the
+    // decorative-level map; [cosmeticsForLevel] hides that distinction so
+    // the dispatcher just iterates 1..currentLevel.
     final currentLevel = current.profile.level;
     for (var level = 1; level <= currentLevel; level++) {
-      for (final cosmeticId in _table.cosmeticsForLevel(level)) {
+      for (final cosmeticId in cosmeticsForLevel(level)) {
         if (_alreadyUnlocked(cosmetics, cosmeticId)) continue;
         final sourceId = 'level_$level';
         final didUnlock = await _unlock(
@@ -150,12 +157,20 @@ class CosmeticUnlockDispatcher {
     }
 
     // -- Pass 3: quest catch-up --------------------------------------------
+    // Reads `cosmeticRewards` from the runtime quest (mirrored from the
+    // catalog). Index quests by id so we can resolve from claimed grants
+    // without iterating the whole list per grant.
+    final questsById = <String, ProgressionQuest>{
+      for (final quest in current.quests) quest.id: quest,
+    };
     final claimedQuestIds = current.questRewardGrants
         .where((grant) => grant.isClaimed)
         .map((grant) => grant.questId)
         .toSet();
     for (final questId in claimedQuestIds) {
-      for (final cosmeticId in _table.cosmeticsForQuest(questId)) {
+      final quest = questsById[questId];
+      if (quest == null) continue;
+      for (final cosmeticId in quest.cosmeticRewards) {
         if (_alreadyUnlocked(cosmetics, cosmeticId)) continue;
         final didUnlock = await _unlock(
           cosmetics,

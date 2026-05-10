@@ -3467,6 +3467,140 @@ class AppLocalizationsEn extends AppLocalizations {
   String get celebrationCosmeticUnlockedEyebrow => 'Inventory unlocked';
 
   @override
+  String get celebrationAchievementEyebrow => 'Achievement unlocked';
+
+  @override
+  String get celebrationLevelEyebrow => 'Level reached';
+
+  @override
+  String get celebrationTitleEyebrow => 'Title unlocked';
+
+  @override
+  String get celebrationQuestEyebrow => 'Quest completed';
+
+  @override
+  String get celebrationStreakEyebrow => 'Streak extended';
+
+  @override
+  String get celebrationLocationEyebrow => 'Region discovered';
+
+  @override
+  String get celebrationGreatRewardEyebrow => 'Great reward';
+
+  @override
+  String celebrationGotRewards(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'You got $count rewards',
+      one: 'You got $count reward',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String celebrationClaimXp(int xp) {
+    return 'Claim +$xp XP';
+  }
+
+  @override
+  String celebrationClaimedXp(int xp) {
+    return 'Claimed · +$xp XP';
+  }
+
+  @override
+  String get celebrationNextReward => 'Next reward';
+
+  @override
+  String get celebrationContinue => 'Continue';
+
+  @override
+  String get celebrationOpenInventory => 'Open inventory →';
+
+  @override
+  String get celebrationTapOrSwipe => 'Tap or swipe →';
+
+  @override
+  String get celebrationDone => 'Done';
+
+  @override
+  String celebrationLevelTitle(int level, String title) {
+    return 'Level $level · $title';
+  }
+
+  @override
+  String celebrationLevelTitleNoTitle(int level) {
+    return 'Level $level';
+  }
+
+  @override
+  String celebrationXpRewardName(int xp) {
+    return '+$xp XP';
+  }
+
+  @override
+  String celebrationLevelRewardName(int level) {
+    return 'Level $level';
+  }
+
+  @override
+  String get celebrationCloseSemantic => 'Close';
+
+  @override
+  String get celebrationTypeAchievement => 'Achievement';
+
+  @override
+  String get celebrationTypeQuest => 'Quest';
+
+  @override
+  String get celebrationTypeLevel => 'Level';
+
+  @override
+  String get celebrationTypeTitle => 'Title';
+
+  @override
+  String get celebrationTypeStreak => 'Streak';
+
+  @override
+  String get celebrationTypeLocation => 'Region';
+
+  @override
+  String get celebrationTypeCosmetic => 'Cosmetic';
+
+  @override
+  String get celebrationKindTitle => 'Title';
+
+  @override
+  String get celebrationKindFrame => 'Frame';
+
+  @override
+  String get celebrationKindBackground => 'Background';
+
+  @override
+  String get celebrationKindCompanion => 'Companion';
+
+  @override
+  String get celebrationKindBadge => 'Badge';
+
+  @override
+  String get celebrationKindGem => 'Relic';
+
+  @override
+  String get celebrationKindLocation => 'Region';
+
+  @override
+  String get celebrationKindXp => 'XP reward';
+
+  @override
+  String get celebrationKindFlame => 'Streak';
+
+  @override
+  String get celebrationKindFlag => 'Quest';
+
+  @override
+  String get celebrationKindSparkle => 'Reward';
+
+  @override
   String get socialTabFeed => 'Feed';
 
   @override

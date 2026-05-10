@@ -92,6 +92,7 @@ class ProgressionAchievementEvaluator {
         id: definition.id,
         type: definition.type,
         difficulty: definition.difficulty,
+        rarity: definition.rarity,
         criterionType: definition.criterionType,
         title: definition.title,
         description: definition.description,
@@ -104,6 +105,7 @@ class ProgressionAchievementEvaluator {
         ruleId: definition.ruleId,
         domain: definition.domain,
         relatedRuleIds: definition.relatedRuleIds,
+        cosmeticRewards: definition.cosmeticRewards,
       );
     }
 
@@ -132,6 +134,7 @@ class ProgressionAchievementEvaluator {
       id: definition.id,
       type: definition.type,
       difficulty: definition.difficulty,
+      rarity: definition.rarity,
       criterionType: definition.criterionType,
       title: definition.title,
       description: definition.description,
@@ -144,6 +147,7 @@ class ProgressionAchievementEvaluator {
       ruleId: definition.ruleId,
       domain: definition.domain,
       relatedRuleIds: definition.relatedRuleIds,
+      cosmeticRewards: definition.cosmeticRewards,
     );
   }
 

@@ -1,0 +1,425 @@
+import 'dart:ui';
+
+import 'package:flutter/material.dart';
+
+import '../../../../../l10n/l10n.dart';
+import '../../../../../shared/theme/design_tokens.dart';
+import '../../../domain/models/celebration_event.dart';
+import '../../../domain/models/celebration_reward.dart';
+import '../shared/aura_layer.dart';
+import '../shared/particles_layer.dart';
+import '../shared/rays_layer.dart';
+import 'pagination_dots.dart';
+import 'reward_card_stack.dart';
+
+/// Variant C — fullscreen multi-reward celebration with a fanned card stack.
+/// Pushed via [openCelebrationFullscreen] which wraps the standard
+/// PageRoute machinery. The widget itself is intentionally agnostic about
+/// how it was pushed; it only knows how to dismiss itself via [onDismiss].
+class CelebrationFullscreen extends StatefulWidget {
+  const CelebrationFullscreen({
+    super.key,
+    required this.event,
+    required this.onDismiss,
+    required this.onOpenInventory,
+  });
+
+  final CelebrationEvent event;
+  final VoidCallback onDismiss;
+
+  /// Optional. When non-null *and* the event has at least one wearable
+  /// reward, the secondary CTA "Otevřít inventář →" is shown. The callback
+  /// is responsible for navigating after the fullscreen has dismissed.
+  final VoidCallback? onOpenInventory;
+
+  @override
+  State<CelebrationFullscreen> createState() => _CelebrationFullscreenState();
+}
+
+class _CelebrationFullscreenState extends State<CelebrationFullscreen>
+    with SingleTickerProviderStateMixin {
+  late final RewardStackController _stack = RewardStackController(
+    rewardCount: widget.event.rewards.isEmpty ? 1 : widget.event.rewards.length,
+  );
+
+  // Drives the staged entry: backdrop / FX → header → cards → CTA. The
+  // route already does a quick presence fade (≈250 ms); this controller
+  // continues the reveal so the heavier compositing layers (BackdropFilter,
+  // particles) get a frame to warm up before the cards appear.
+  late final AnimationController _entry = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  );
+
+  Animation<double> _stagedOpacity(Interval interval) =>
+      CurvedAnimation(parent: _entry, curve: interval);
+
+  @override
+  void initState() {
+    super.initState();
+    _stack.addListener(_onStackChanged);
+    _entry.forward();
+  }
+
+  @override
+  void dispose() {
+    _stack.removeListener(_onStackChanged);
+    _stack.dispose();
+    _entry.dispose();
+    super.dispose();
+  }
+
+  void _onStackChanged() {
+    if (mounted) setState(() {});
+  }
+
+  bool get _hasWearable => widget.event.rewards.any(_isWearable);
+
+  static bool _isWearable(CelebrationReward r) =>
+      r.kind == CelebrationRewardKind.frame ||
+      r.kind == CelebrationRewardKind.background ||
+      r.kind == CelebrationRewardKind.companion;
+
+  bool _claimFired = false;
+
+  /// Idempotent claim trigger. The combined quest+achievement event is
+  /// rendered fullscreen, but there's no separate claim button on this
+  /// variant — instead we fire the claim once when the celebration is
+  /// dismissed (close button or final "Pokračovat"), so the user gets
+  /// their XP automatically. The provider claim is itself idempotent, so
+  /// pairing with a card-based claim path stays safe.
+  Future<void> _maybeClaim() async {
+    if (_claimFired) return;
+    final claim = widget.event.claim;
+    if (claim == null) return;
+    _claimFired = true;
+    await claim.onClaim(claim.rewardKey);
+  }
+
+  void _dismiss() {
+    _maybeClaim();
+    widget.onDismiss();
+  }
+
+  void _handlePrimary() {
+    if (_stack.atLast) {
+      _dismiss();
+    } else {
+      _stack.advance();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final ft = context.ft;
+    final event = widget.event;
+    final token = CelebrationRarityToken.forIndex(event.headRarity.index);
+
+    // Stage intervals: each section reveals in its own band so the
+    // backdrop and FX have time to settle before the cards arrive.
+    final backdropFade =
+        _stagedOpacity(const Interval(0.0, 0.45, curve: Curves.easeOut));
+    final fxFade =
+        _stagedOpacity(const Interval(0.10, 0.65, curve: Curves.easeOut));
+    final headerFade =
+        _stagedOpacity(const Interval(0.25, 0.65, curve: Curves.easeOut));
+    final cardsFade = _stagedOpacity(
+        const Interval(0.45, 1.0, curve: Cubic(0.16, 1.0, 0.30, 1.0)));
+    final ctaFade =
+        _stagedOpacity(const Interval(0.55, 1.0, curve: Curves.easeOut));
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          FadeTransition(
+            opacity: backdropFade,
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: const Alignment(0, -0.5),
+                    radius: 1.0,
+                    colors: [
+                      token.color.withValues(alpha: 0.18),
+                      const Color(0xCC0B0F1E),
+                      const Color(0xF202030B),
+                    ],
+                    stops: const [0.0, 0.55, 1.0],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: IgnorePointer(
+              child: FadeTransition(
+                opacity: fxFade,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    AuraLayer(
+                      rarity: event.headRarity,
+                      intensity: 0.7,
+                      alignment: const Alignment(0, -0.5),
+                    ),
+                    RaysLayer(rarity: event.headRarity, intensity: 0.5),
+                    ParticlesLayer(
+                      rarity: event.headRarity,
+                      count: 14,
+                      intensity: 0.7,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                children: [
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: FadeTransition(
+                      opacity: headerFade,
+                      child: _CloseButton(onTap: _dismiss),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  FadeTransition(
+                    opacity: headerFade,
+                    child: Text(
+                      l10n.celebrationGreatRewardEyebrow.toUpperCase(),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: token.color,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 2.4,
+                        shadows: [
+                          Shadow(
+                            color: token.glow.withValues(alpha: 0.55),
+                            blurRadius: 16,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  FadeTransition(
+                    opacity: headerFade,
+                    child: Text(
+                      l10n.celebrationGotRewards(
+                        event.rewards.isEmpty ? 1 : event.rewards.length,
+                      ),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Color(0xFFF5F3FF),
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        height: 1.15,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  if (event.rewards.isNotEmpty)
+                    AnimatedBuilder(
+                      animation: cardsFade,
+                      builder: (context, child) {
+                        final t = cardsFade.value;
+                        return Opacity(
+                          opacity: t,
+                          child: Transform.translate(
+                            offset: Offset(0, (1 - t) * 24),
+                            child: Transform.scale(
+                              scale: 0.92 + 0.08 * t,
+                              child: child,
+                            ),
+                          ),
+                        );
+                      },
+                      child: RewardCardStack(
+                        event: event,
+                        controller: _stack,
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+                  FadeTransition(
+                    opacity: cardsFade,
+                    child: PaginationDots(
+                      count: event.rewards.length,
+                      activeIndex: _stack.activeIndex,
+                      headRarity: event.headRarity,
+                      onTap: _stack.setActive,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  FadeTransition(
+                    opacity: cardsFade,
+                    child: Text(
+                      _stack.atLast
+                          ? l10n.celebrationDone
+                          : l10n.celebrationTapOrSwipe,
+                      style: TextStyle(
+                        color: ft.onSurfaceMuted,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  FadeTransition(
+                    opacity: ctaFade,
+                    child: _PrimaryCta(
+                      label: _stack.atLast
+                          ? l10n.celebrationContinue
+                          : l10n.celebrationNextReward,
+                      color: token.color,
+                      glow: token.glow,
+                      onTap: _handlePrimary,
+                    ),
+                  ),
+                  if (widget.onOpenInventory != null && _hasWearable) ...[
+                    const SizedBox(height: 8),
+                    FadeTransition(
+                      opacity: ctaFade,
+                      child: TextButton(
+                        onPressed: () {
+                          _dismiss();
+                          widget.onOpenInventory!();
+                        },
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(0xFFC7C2E0),
+                        ),
+                        child: Text(
+                          l10n.celebrationOpenInventory,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PrimaryCta extends StatelessWidget {
+  const _PrimaryCta({
+    required this.label,
+    required this.color,
+    required this.glow,
+    required this.onTap,
+  });
+
+  final String label;
+  final Color color;
+  final Color glow;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: ElevatedButton(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: const Color(0xFF0B0F1E),
+          elevation: 0,
+          shadowColor: glow,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(99)),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.4,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CloseButton extends StatelessWidget {
+  const _CloseButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Semantics(
+      button: true,
+      label: l10n.celebrationCloseSemantic,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: const Color(0xCC0B0F1E),
+            borderRadius: BorderRadius.circular(99),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+          ),
+          child: const Icon(
+            Icons.close_rounded,
+            color: Color(0xFFC7C2E0),
+            size: 20,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Pushes the fullscreen celebration as a non-opaque PageRoute. Returns when
+/// the user dismisses (or when [event] is exhausted).
+Future<void> openCelebrationFullscreen({
+  required BuildContext context,
+  required CelebrationEvent event,
+  VoidCallback? onOpenInventory,
+}) {
+  return Navigator.of(context, rootNavigator: true).push(
+    PageRouteBuilder<void>(
+      opaque: false,
+      barrierDismissible: false,
+      // Short presence fade for the route itself; the staged reveal
+      // (backdrop → FX → header → cards → CTA) is driven by the
+      // CelebrationFullscreen's internal controller so the heavier
+      // compositing layers settle before the cards appear.
+      transitionDuration: const Duration(milliseconds: 250),
+      reverseTransitionDuration: const Duration(milliseconds: 220),
+      pageBuilder: (context, animation, secondary) {
+        return FadeTransition(
+          opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+          child: CelebrationFullscreen(
+            event: event,
+            onDismiss: () {
+              if (Navigator.of(context, rootNavigator: true).canPop()) {
+                Navigator.of(context, rootNavigator: true).pop();
+              }
+            },
+            onOpenInventory: onOpenInventory,
+          ),
+        );
+      },
+    ),
+  );
+}

@@ -3457,6 +3457,141 @@ class AppLocalizationsCs extends AppLocalizations {
   String get celebrationCosmeticUnlockedEyebrow => 'Odemčeno v inventáři';
 
   @override
+  String get celebrationAchievementEyebrow => 'Úspěch odemčen';
+
+  @override
+  String get celebrationLevelEyebrow => 'Level dosažen';
+
+  @override
+  String get celebrationTitleEyebrow => 'Titul odemčen';
+
+  @override
+  String get celebrationQuestEyebrow => 'Quest dokončen';
+
+  @override
+  String get celebrationStreakEyebrow => 'Streak prodloužen';
+
+  @override
+  String get celebrationLocationEyebrow => 'Oblast objevena';
+
+  @override
+  String get celebrationGreatRewardEyebrow => 'Velká odměna';
+
+  @override
+  String celebrationGotRewards(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Získal jsi $count odměn',
+      few: 'Získal jsi $count odměny',
+      one: 'Získal jsi $count odměnu',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String celebrationClaimXp(int xp) {
+    return 'Vyzvednout +$xp XP';
+  }
+
+  @override
+  String celebrationClaimedXp(int xp) {
+    return 'Vyzvednuto · +$xp XP';
+  }
+
+  @override
+  String get celebrationNextReward => 'Další odměna';
+
+  @override
+  String get celebrationContinue => 'Pokračovat';
+
+  @override
+  String get celebrationOpenInventory => 'Otevřít inventář →';
+
+  @override
+  String get celebrationTapOrSwipe => 'Tapni nebo přejeď →';
+
+  @override
+  String get celebrationDone => 'Hotovo';
+
+  @override
+  String celebrationLevelTitle(int level, String title) {
+    return 'Level $level · $title';
+  }
+
+  @override
+  String celebrationLevelTitleNoTitle(int level) {
+    return 'Level $level';
+  }
+
+  @override
+  String celebrationXpRewardName(int xp) {
+    return '+$xp XP';
+  }
+
+  @override
+  String celebrationLevelRewardName(int level) {
+    return 'Level $level';
+  }
+
+  @override
+  String get celebrationCloseSemantic => 'Zavřít';
+
+  @override
+  String get celebrationTypeAchievement => 'Úspěch';
+
+  @override
+  String get celebrationTypeQuest => 'Quest';
+
+  @override
+  String get celebrationTypeLevel => 'Level';
+
+  @override
+  String get celebrationTypeTitle => 'Titul';
+
+  @override
+  String get celebrationTypeStreak => 'Streak';
+
+  @override
+  String get celebrationTypeLocation => 'Oblast';
+
+  @override
+  String get celebrationTypeCosmetic => 'Kosmetika';
+
+  @override
+  String get celebrationKindTitle => 'Titul';
+
+  @override
+  String get celebrationKindFrame => 'Rámeček';
+
+  @override
+  String get celebrationKindBackground => 'Pozadí';
+
+  @override
+  String get celebrationKindCompanion => 'Společník';
+
+  @override
+  String get celebrationKindBadge => 'Odznak';
+
+  @override
+  String get celebrationKindGem => 'Relikvie';
+
+  @override
+  String get celebrationKindLocation => 'Oblast';
+
+  @override
+  String get celebrationKindXp => 'XP odměna';
+
+  @override
+  String get celebrationKindFlame => 'Streak';
+
+  @override
+  String get celebrationKindFlag => 'Quest';
+
+  @override
+  String get celebrationKindSparkle => 'Odměna';
+
+  @override
   String get socialTabFeed => 'Feed';
 
   @override

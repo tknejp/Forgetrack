@@ -719,6 +719,8 @@ class ProgressionEngine {
       sortOrder: quest.sortOrder,
       priority: quest.priority,
       isHighlighted: quest.isHighlighted,
+      rarity: quest.rarity,
+      cosmeticRewards: quest.cosmeticRewards,
       rewardXp: displayXp,
       rewardKey: rewardKey,
       rewardStatus: rewardGrant?.rewardStatus,
