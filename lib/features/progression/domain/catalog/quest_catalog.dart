@@ -9,26 +9,39 @@ const _questAssetStreak = 'assets/ui/quests/streak.png';
 
 // Chapter assets
 const _questAssetForestTrial = 'assets/ui/quests/chapter/icon/forest_trial.png';
-const _questAssetRuinsDiscipline = 'assets/ui/quests/chapter/icon/ruins_discipline.png';
+const _questAssetRuinsDiscipline =
+    'assets/ui/quests/chapter/icon/ruins_discipline.png';
 const _questAssetMineDescent = 'assets/ui/quests/chapter/icon/mine_descent.png';
-const _questAssetForgeMomentum = 'assets/ui/quests/chapter/icon/forge_momentum.png';
-const _questAssetUnderwayPact = 'assets/ui/quests/chapter/icon/underway_pact.png';
-const _questAssetFrostboundOath = 'assets/ui/quests/chapter/icon/frostbound_oath.png';
-const _questAssetIcewalkerRoute = 'assets/ui/quests/chapter/icon/icewalker_route.png';
-const _questAssetMountainAscent = 'assets/ui/quests/chapter/icon/mountain_ascent.png';
+const _questAssetForgeMomentum =
+    'assets/ui/quests/chapter/icon/forge_momentum.png';
+const _questAssetUnderwayPact =
+    'assets/ui/quests/chapter/icon/underway_pact.png';
+const _questAssetFrostboundOath =
+    'assets/ui/quests/chapter/icon/frostbound_oath.png';
+const _questAssetIcewalkerRoute =
+    'assets/ui/quests/chapter/icon/icewalker_route.png';
+const _questAssetMountainAscent =
+    'assets/ui/quests/chapter/icon/mountain_ascent.png';
 const _questAssetDragonroad = 'assets/ui/quests/chapter/icon/dragonroad.png';
-const _questAssetDragonrockSovereign = 'assets/ui/quests/chapter/icon/dragonrock_sovereign.png';
+const _questAssetDragonrockSovereign =
+    'assets/ui/quests/chapter/icon/dragonrock_sovereign.png';
 
 const _questBgForestTrial = 'assets/ui/quests/chapter/bg/forest_trial_bg.png';
-const _questBgRuinsDiscipline = 'assets/ui/quests/chapter/bg/ruins_discipline_bg.png';
+const _questBgRuinsDiscipline =
+    'assets/ui/quests/chapter/bg/ruins_discipline_bg.png';
 const _questBgMineDescent = 'assets/ui/quests/chapter/bg/mine_descent_bg.png';
-const _questBgForgeMomentum = 'assets/ui/quests/chapter/bg/forge_momentum_bg.png';
+const _questBgForgeMomentum =
+    'assets/ui/quests/chapter/bg/forge_momentum_bg.png';
 const _questBgUnderwayPact = 'assets/ui/quests/chapter/bg/underway_pact_bg.png';
-const _questBgFrostboundOath = 'assets/ui/quests/chapter/bg/frostbound_oath_bg.png';
-const _questBgIcewalkerRoute = 'assets/ui/quests/chapter/bg/icewalker_route_bg.png';
-const _questBgMountainAscent = 'assets/ui/quests/chapter/bg/mountain_ascent_bg.png';
+const _questBgFrostboundOath =
+    'assets/ui/quests/chapter/bg/frostbound_oath_bg.png';
+const _questBgIcewalkerRoute =
+    'assets/ui/quests/chapter/bg/icewalker_route_bg.png';
+const _questBgMountainAscent =
+    'assets/ui/quests/chapter/bg/mountain_ascent_bg.png';
 const _questBgDragonroad = 'assets/ui/quests/chapter/bg/dragonroad_bg.png';
-const _questBgDragonrockSovereign = 'assets/ui/quests/chapter/bg/dragonrock_sovereign_bg.png';
+const _questBgDragonrockSovereign =
+    'assets/ui/quests/chapter/bg/dragonrock_sovereign_bg.png';
 
 String chapterBgKey(String id) {
   switch (id) {
@@ -83,6 +96,25 @@ String _chapterAssetKey(String id) {
       return _questAssetActivity;
   }
 }
+
+/// Curated list of "starter" quest ids surfaced on the first-launch
+/// welcome screen as a teaser of what a new player will see on day 1.
+///
+/// Selection criteria:
+///   * No `prerequisiteQuestIds` (immediately unlocked).
+///   * No `minimumLevel` / `minimumTrackedDays` gating (level 1, day 1).
+///   * Achievable within a single day of normal use.
+///   * Variety: one journey milestone, two daily-goal quests covering
+///     activity (steps) + recovery (sleep).
+///
+/// Order matches the order rendered in the welcome screen's "first
+/// quests" preview card. Edit this list rather than the welcome screen
+/// when the curated set should change.
+const List<String> kProgressionStarterQuestIds = [
+  'daily_steps_today',
+  'daily_sleep_today',
+  'earn_first_reward',
+];
 
 class ProgressionQuestCatalog {
   const ProgressionQuestCatalog();
@@ -1176,7 +1208,8 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           id: 'forest_trial_daily_wins_5',
           title: (l10n) => l10n.progQuestForestTrialDailyWins5Title,
           description: (l10n) => l10n.progQuestForestTrialDailyWins5Desc,
-          criterionType: ProgressionQuestCriterionType.ruleSetCompletionsAtLeast,
+          criterionType:
+              ProgressionQuestCriterionType.ruleSetCompletionsAtLeast,
           targetValue: 5,
           requiredRuleCount: 2,
           periodKind: ProgressionPeriodKind.day,
@@ -1204,7 +1237,8 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           id: 'forest_trial_recovery_3',
           title: (l10n) => l10n.progQuestForestTrialRecovery3Title,
           description: (l10n) => l10n.progQuestForestTrialRecovery3Desc,
-          criterionType: ProgressionQuestCriterionType.ruleSetCompletionsAtLeast,
+          criterionType:
+              ProgressionQuestCriterionType.ruleSetCompletionsAtLeast,
           targetValue: 3,
           requiredRuleCount: 2,
           periodKind: ProgressionPeriodKind.day,
@@ -1229,7 +1263,8 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
           id: 'ruins_discipline_nutrition_7',
           title: (l10n) => l10n.progQuestRuinsDisciplineNutrition7Title,
           description: (l10n) => l10n.progQuestRuinsDisciplineNutrition7Desc,
-          criterionType: ProgressionQuestCriterionType.ruleSetCompletionsAtLeast,
+          criterionType:
+              ProgressionQuestCriterionType.ruleSetCompletionsAtLeast,
           targetValue: 7,
           requiredRuleCount: 2,
           periodKind: ProgressionPeriodKind.day,
@@ -1663,6 +1698,7 @@ List<ProgressionQuestDefinition> _journeyChapterDefinitions() {
     for (final spec in specs) ...spec.build(),
   ];
 }
+
 class _JourneyChapterSpec {
   const _JourneyChapterSpec({
     required this.id,

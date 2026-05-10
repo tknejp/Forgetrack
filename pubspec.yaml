@@ -55,6 +55,9 @@ dependencies:
   workmanager: ^0.9.0
   flutter_local_notifications: ^18.0.0
 
+  # --- DevTools factory reset: open Android Health Connect / app settings ---
+  app_settings: ^6.1.1
+
   # --- Firebase Cloud Messaging (push notifikace) ---
   firebase_messaging: ^16.2.0
   image_picker: ^1.2.2
@@ -78,6 +81,7 @@ flutter:
     - assets/icons/kt/
     - assets/ui/
     - assets/ui/dashboard/cards/
+    - assets/ui/welcome/
     - assets/ui/quests/
     - assets/ui/quests/chapter/icon/
     - assets/ui/quests/chapter/bg/

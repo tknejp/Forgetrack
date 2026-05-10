@@ -217,31 +217,85 @@ class ProgressionProvider extends ChangeNotifier {
   /// Wipes the local + cloud progression ledger and refreshes the provider
   /// state. Resets the user back to level 1 / 0 XP. Used by the in-app
   /// devtools panel only.
+  /// Wipes the progression ledger only (XP, achievement unlocks, quest
+  /// reward grants, chapter starts). Cosmetics inventory is left untouched.
+  /// Quiet: no celebrations are queued — auto-unlocks like
+  /// `welcome_to_journey` simply re-fire silently because their cosmetics
+  /// are still owned.
   Future<void> devToolsResetProgression() async {
     _isRefreshing = true;
     notifyListeners();
     try {
       _state = await _engine.devToolsResetLedger();
       _error = null;
-      // Force the next bind() to re-trigger a real evaluation rather than
-      // dedupe by signature.
       _lastRequestedSignature = null;
-      // Drop any pending celebrations from the prior session so they don't
-      // pop on top of the freshly-queued welcome event.
       _celebrationQueue.clear();
-      // Treat the post-reset state as a brand-new journey: synthesise an
-      // empty previous so achievements that auto-unlock at level 1 (notably
-      // welcome_to_journey, target=0) and their cosmetics surface as new
-      // celebrations again. The cosmetics inventory should be reset
-      // separately by the caller for the dispatcher to actually re-grant
-      // already-owned items.
-      final freshPrevious = _virginEngineState();
+    } catch (error) {
+      _error = error.toString();
+    } finally {
+      _isLoading = false;
+      _isRefreshing = false;
+      notifyListeners();
+    }
+  }
+
+  /// Wipes the cosmetics inventory (progression-sourced items) only.
+  /// Dispatches once afterwards to re-grant any cosmetics still owed by the
+  /// current progression state, so the player isn't left with unlocked
+  /// achievements but no matching cosmetics. Quiet: no celebrations queued.
+  Future<void> devToolsResetCosmetics({
+    required Future<int> Function() resetCosmeticsInventory,
+  }) async {
+    _isRefreshing = true;
+    notifyListeners();
+    try {
+      await resetCosmeticsInventory();
+      _celebrationQueue.clear();
+      final state = _state;
+      if (state != null) {
+        // Pass current as both previous and current so dispatch only does
+        // the catch-up grant work. _queueCelebrations is intentionally not
+        // called — we don't want orphan cosmetic celebration popups.
+        await _cosmeticUnlockDispatcher.dispatch(
+          previous: state,
+          current: state,
+        );
+      }
+    } catch (error) {
+      _error = error.toString();
+    } finally {
+      _isLoading = false;
+      _isRefreshing = false;
+      notifyListeners();
+    }
+  }
+
+  /// Wipes both the progression ledger AND the cosmetics inventory and
+  /// surfaces the new-player onboarding celebrations (welcome_to_journey
+  /// achievement + its cosmetics). Use this for "fresh app" testing.
+  Future<void> devToolsResetEverything({
+    required Future<int> Function() resetCosmeticsInventory,
+  }) async {
+    _isRefreshing = true;
+    notifyListeners();
+    try {
+      // Order matters: wipe cosmetics first so the post-reset dispatch sees
+      // an empty inventory and re-grants the welcome cosmetics.
+      await resetCosmeticsInventory();
+      _state = await _engine.devToolsResetLedger();
+      _error = null;
+      _lastRequestedSignature = null;
+      _celebrationQueue.clear();
+
+      // Synthetic "before journey began" previous so every current unlock
+      // is treated as new in the celebration diff.
+      final virginPrevious = _virginEngineState();
       final cosmeticDispatch = await _cosmeticUnlockDispatcher.dispatch(
-        previous: freshPrevious,
+        previous: virginPrevious,
         current: _state!,
       );
       _queueCelebrations(
-        previous: freshPrevious,
+        previous: virginPrevious,
         current: _state!,
         cosmeticDispatch: cosmeticDispatch,
       );
@@ -254,8 +308,6 @@ class ProgressionProvider extends ChangeNotifier {
     }
   }
 
-  /// Synthetic "before journey began" state used to make the post-reset
-  /// celebration diff treat every current unlock as new.
   ProgressionEngineState _virginEngineState() {
     return const ProgressionEngineState(
       profile: ProgressionProfile(

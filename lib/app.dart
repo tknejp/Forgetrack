@@ -10,6 +10,8 @@ import 'core/navigation/navigator_key.dart';
 import 'features/app_shell/presentation/main_shell.dart';
 import 'features/health_connect/application/fitness_provider.dart';
 import 'features/nutrition/application/kaloricke_tabulky_provider.dart';
+import 'features/onboarding/application/onboarding_provider.dart';
+import 'features/onboarding/presentation/welcome_screen.dart';
 import 'l10n/app_localizations.dart';
 import 'shared/theme/app_theme.dart';
 
@@ -49,6 +51,11 @@ class _ForgetrackAppState extends State<ForgetrackApp>
   @override
   Widget build(BuildContext context) {
     final selectedLocale = context.watch<LocaleProvider>().locale;
+    // Watch onboarding so flipping the flag (e.g. tapping "Continue" on
+    // the welcome screen, or running a DevTools factory reset) rebuilds
+    // the routing decision without an app restart.
+    final onboarding = context.watch<OnboardingProvider>();
+    final showWelcome = onboarding.isHydrated && !onboarding.isCompleted;
 
     return MaterialApp(
       navigatorKey: navigatorKey,
@@ -57,7 +64,7 @@ class _ForgetrackAppState extends State<ForgetrackApp>
       theme: AppTheme.dark(),
       darkTheme: AppTheme.dark(),
       themeMode: ThemeMode.dark,
-      home: const MainShell(),
+      home: showWelcome ? const WelcomeScreen() : const MainShell(),
       locale: selectedLocale,
       localizationsDelegates: const [
         AppLocalizations.delegate,

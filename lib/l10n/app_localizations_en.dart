@@ -4021,4 +4021,248 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get coachLogExportDescription =>
       'Writes a weekly coach-log block — weight, steps, calories, macros — into the Coach Log tab of your Forgetrack spreadsheet.';
+
+  @override
+  String get onboardingTitle => 'Welcome to Forgetrack';
+
+  @override
+  String get onboardingSubtitle =>
+      'Track your health, hit goals, and turn the work into XP.';
+
+  @override
+  String get onboardingAboutTitle => 'What it does';
+
+  @override
+  String get onboardingAboutBody =>
+      'Forgetrack pulls steps, sleep, and activity from Health Connect, syncs nutrition from Kaloričke Tabulky, and turns daily/weekly goals into a journey of quests, levels and rewards.';
+
+  @override
+  String get onboardingStepsTitle => 'Set up your integrations';
+
+  @override
+  String get onboardingStepsHint =>
+      'All of these are optional. You can skip any and connect or change them later in Settings.';
+
+  @override
+  String get onboardingGoogleTitle => 'Sign in with Google';
+
+  @override
+  String get onboardingGoogleBody =>
+      'Saves your progression to the cloud and syncs across devices.';
+
+  @override
+  String get onboardingGoogleAction => 'Sign in';
+
+  @override
+  String onboardingGoogleConnected(String email) {
+    return 'Signed in as $email';
+  }
+
+  @override
+  String get onboardingKtTitle => 'Connect Kaloričke Tabulky';
+
+  @override
+  String get onboardingKtBody =>
+      'Imports nutrition and weight from your KT diary.';
+
+  @override
+  String onboardingKtConnected(String email) {
+    return 'Connected as $email';
+  }
+
+  @override
+  String get onboardingKtEmailHint => 'KT email';
+
+  @override
+  String get onboardingKtPasswordHint => 'Password';
+
+  @override
+  String get onboardingKtAction => 'Log in';
+
+  @override
+  String get onboardingHealthTitle => 'Health Connect';
+
+  @override
+  String get onboardingHealthBody =>
+      'Allow Forgetrack to read steps, calories, sleep and activity from Health Connect. Your records stay in Health Connect — they are never copied or modified.';
+
+  @override
+  String get onboardingHealthAction => 'Grant access';
+
+  @override
+  String get onboardingHealthConnected => 'Health Connect access granted';
+
+  @override
+  String get onboardingSheetsTitle => 'Google Sheets export';
+
+  @override
+  String get onboardingSheetsBody =>
+      'Optional: export weekly summaries to a Google Sheet. Forgetrack only writes to spreadsheets it creates for you.';
+
+  @override
+  String get onboardingSheetsAction => 'Allow Sheets access';
+
+  @override
+  String get onboardingSheetsConnected => 'Sheets access granted';
+
+  @override
+  String get onboardingNotificationsTitle => 'Notifications';
+
+  @override
+  String get onboardingNotificationsBody =>
+      'Daily reminders, quest progress, and reward unlocks.';
+
+  @override
+  String get onboardingNotificationsAction => 'Enable';
+
+  @override
+  String get onboardingNotificationsConnected => 'Notifications enabled';
+
+  @override
+  String get onboardingFooterNote =>
+      'You can change all of this later under Settings.';
+
+  @override
+  String get onboardingContinue => 'Continue to app';
+
+  @override
+  String get onboardingSkip => 'Skip for now';
+
+  @override
+  String get welcomeSkip => 'Skip';
+
+  @override
+  String get welcomeCtaStart => 'Begin your journey';
+
+  @override
+  String get welcomeCtaContinue => 'Continue';
+
+  @override
+  String get welcomeCtaFinish => 'Enter the game';
+
+  @override
+  String get welcomeStep1Title => 'Welcome, hero.';
+
+  @override
+  String get welcomeStep1Subtitle =>
+      'Forgetrack turns your health into a journey of quests — steps, sleep and food become XP, levels and titles.';
+
+  @override
+  String get welcomeStep1SubtitleAccent => 'a journey of quests';
+
+  @override
+  String get welcomeStep1HeroLabel => 'YOUR START';
+
+  @override
+  String welcomeStep1HeroXpProgress(int into, int toNext) {
+    return '$into / $toNext XP to the next level';
+  }
+
+  @override
+  String get welcomeStep1HeroPill => '+50 XP';
+
+  @override
+  String get welcomeStep2Title => 'Save your progress';
+
+  @override
+  String get welcomeStep2Subtitle =>
+      'Sign in with Google and your levels, streaks and achievements stay safely in the cloud — even when you switch phones.';
+
+  @override
+  String get welcomeStep2GoogleSignIn => 'Sign in with Google';
+
+  @override
+  String get welcomeStep2GoogleSignedIn => 'Signed in';
+
+  @override
+  String welcomeStep2GoogleSignedInAs(String email) {
+    return 'Signed in as $email';
+  }
+
+  @override
+  String get welcomeStep2Benefit1 => 'Sync between your devices';
+
+  @override
+  String get welcomeStep2Benefit2 => 'Backed-up progress and achievements';
+
+  @override
+  String get welcomeStep2Benefit3 => 'Works offline too';
+
+  @override
+  String get welcomeStep2Footnote =>
+      'You don\'t have to decide right now — it works without an account too.';
+
+  @override
+  String get welcomeStep3Title => 'Connect your data';
+
+  @override
+  String get welcomeStep3Subtitle =>
+      'Forgetrack reads steps, sleep and activity from Health Connect and turns them into XP. Your records never leave Health Connect — only read.';
+
+  @override
+  String get welcomeStep3DataSteps => 'Steps';
+
+  @override
+  String get welcomeStep3DataCalories => 'Calories';
+
+  @override
+  String get welcomeStep3DataSleep => 'Sleep';
+
+  @override
+  String get welcomeStep3DataActivity => 'Activity';
+
+  @override
+  String get welcomeStep3Cta => 'Allow Health Connect';
+
+  @override
+  String get welcomeStep3CtaConnected => 'Health Connect is connected';
+
+  @override
+  String get welcomeStep3Privacy =>
+      'Your data stays inside Health Connect — Forgetrack never copies or modifies it.';
+
+  @override
+  String get welcomeStep4Title => 'Final touches';
+
+  @override
+  String get welcomeStep4Subtitle =>
+      'Optional — you can set everything up later in the app.';
+
+  @override
+  String get welcomeStep4KtTitle => 'Kaloričke Tabulky';
+
+  @override
+  String get welcomeStep4KtSubtitle =>
+      'Import nutrition and weight from your KT diary';
+
+  @override
+  String get welcomeStep4KtConnected => 'Connected';
+
+  @override
+  String get welcomeStep4NotifTitle => 'Notifications';
+
+  @override
+  String get welcomeStep4NotifSubtitle => 'Quest reminders and reward alerts';
+
+  @override
+  String get welcomeStep4QuestsLabel => 'FIRST QUESTS';
+
+  @override
+  String get welcomeKtSheetTitle => 'Kaloričke Tabulky';
+
+  @override
+  String get welcomeKtSheetSubtitle => 'Sign in to your KT account';
+
+  @override
+  String get welcomeKtSheetEmailHint => 'KT email';
+
+  @override
+  String get welcomeKtSheetPasswordHint => 'Password';
+
+  @override
+  String get welcomeKtSheetSubmit => 'Sign in and connect';
+
+  @override
+  String get welcomeKtSheetFootnote =>
+      'Forgetrack uses your sign-in only to read the KT diary.';
 }

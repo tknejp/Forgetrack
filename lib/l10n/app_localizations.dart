@@ -7190,6 +7190,444 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Writes a weekly coach-log block — weight, steps, calories, macros — into the Coach Log tab of your Forgetrack spreadsheet.'**
   String get coachLogExportDescription;
+
+  /// No description provided for @onboardingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Forgetrack'**
+  String get onboardingTitle;
+
+  /// No description provided for @onboardingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your health, hit goals, and turn the work into XP.'**
+  String get onboardingSubtitle;
+
+  /// No description provided for @onboardingAboutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What it does'**
+  String get onboardingAboutTitle;
+
+  /// No description provided for @onboardingAboutBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgetrack pulls steps, sleep, and activity from Health Connect, syncs nutrition from Kaloričke Tabulky, and turns daily/weekly goals into a journey of quests, levels and rewards.'**
+  String get onboardingAboutBody;
+
+  /// No description provided for @onboardingStepsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up your integrations'**
+  String get onboardingStepsTitle;
+
+  /// No description provided for @onboardingStepsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'All of these are optional. You can skip any and connect or change them later in Settings.'**
+  String get onboardingStepsHint;
+
+  /// No description provided for @onboardingGoogleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Google'**
+  String get onboardingGoogleTitle;
+
+  /// No description provided for @onboardingGoogleBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Saves your progression to the cloud and syncs across devices.'**
+  String get onboardingGoogleBody;
+
+  /// No description provided for @onboardingGoogleAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get onboardingGoogleAction;
+
+  /// No description provided for @onboardingGoogleConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in as {email}'**
+  String onboardingGoogleConnected(String email);
+
+  /// No description provided for @onboardingKtTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Kaloričke Tabulky'**
+  String get onboardingKtTitle;
+
+  /// No description provided for @onboardingKtBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Imports nutrition and weight from your KT diary.'**
+  String get onboardingKtBody;
+
+  /// No description provided for @onboardingKtConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected as {email}'**
+  String onboardingKtConnected(String email);
+
+  /// No description provided for @onboardingKtEmailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'KT email'**
+  String get onboardingKtEmailHint;
+
+  /// No description provided for @onboardingKtPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get onboardingKtPasswordHint;
+
+  /// No description provided for @onboardingKtAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in'**
+  String get onboardingKtAction;
+
+  /// No description provided for @onboardingHealthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect'**
+  String get onboardingHealthTitle;
+
+  /// No description provided for @onboardingHealthBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow Forgetrack to read steps, calories, sleep and activity from Health Connect. Your records stay in Health Connect — they are never copied or modified.'**
+  String get onboardingHealthBody;
+
+  /// No description provided for @onboardingHealthAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant access'**
+  String get onboardingHealthAction;
+
+  /// No description provided for @onboardingHealthConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect access granted'**
+  String get onboardingHealthConnected;
+
+  /// No description provided for @onboardingSheetsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Sheets export'**
+  String get onboardingSheetsTitle;
+
+  /// No description provided for @onboardingSheetsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional: export weekly summaries to a Google Sheet. Forgetrack only writes to spreadsheets it creates for you.'**
+  String get onboardingSheetsBody;
+
+  /// No description provided for @onboardingSheetsAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow Sheets access'**
+  String get onboardingSheetsAction;
+
+  /// No description provided for @onboardingSheetsConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Sheets access granted'**
+  String get onboardingSheetsConnected;
+
+  /// No description provided for @onboardingNotificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get onboardingNotificationsTitle;
+
+  /// No description provided for @onboardingNotificationsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily reminders, quest progress, and reward unlocks.'**
+  String get onboardingNotificationsBody;
+
+  /// No description provided for @onboardingNotificationsAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable'**
+  String get onboardingNotificationsAction;
+
+  /// No description provided for @onboardingNotificationsConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications enabled'**
+  String get onboardingNotificationsConnected;
+
+  /// No description provided for @onboardingFooterNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You can change all of this later under Settings.'**
+  String get onboardingFooterNote;
+
+  /// No description provided for @onboardingContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to app'**
+  String get onboardingContinue;
+
+  /// No description provided for @onboardingSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now'**
+  String get onboardingSkip;
+
+  /// No description provided for @welcomeSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get welcomeSkip;
+
+  /// No description provided for @welcomeCtaStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Begin your journey'**
+  String get welcomeCtaStart;
+
+  /// No description provided for @welcomeCtaContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get welcomeCtaContinue;
+
+  /// No description provided for @welcomeCtaFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the game'**
+  String get welcomeCtaFinish;
+
+  /// No description provided for @welcomeStep1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome, hero.'**
+  String get welcomeStep1Title;
+
+  /// No description provided for @welcomeStep1Subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgetrack turns your health into a journey of quests — steps, sleep and food become XP, levels and titles.'**
+  String get welcomeStep1Subtitle;
+
+  /// Highlighted phrase inside welcomeStep1Subtitle. Must appear verbatim within the subtitle string for the in-text colouring to find it.
+  ///
+  /// In en, this message translates to:
+  /// **'a journey of quests'**
+  String get welcomeStep1SubtitleAccent;
+
+  /// No description provided for @welcomeStep1HeroLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'YOUR START'**
+  String get welcomeStep1HeroLabel;
+
+  /// No description provided for @welcomeStep1HeroXpProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{into} / {toNext} XP to the next level'**
+  String welcomeStep1HeroXpProgress(int into, int toNext);
+
+  /// No description provided for @welcomeStep1HeroPill.
+  ///
+  /// In en, this message translates to:
+  /// **'+50 XP'**
+  String get welcomeStep1HeroPill;
+
+  /// No description provided for @welcomeStep2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Save your progress'**
+  String get welcomeStep2Title;
+
+  /// No description provided for @welcomeStep2Subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Google and your levels, streaks and achievements stay safely in the cloud — even when you switch phones.'**
+  String get welcomeStep2Subtitle;
+
+  /// No description provided for @welcomeStep2GoogleSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Google'**
+  String get welcomeStep2GoogleSignIn;
+
+  /// No description provided for @welcomeStep2GoogleSignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in'**
+  String get welcomeStep2GoogleSignedIn;
+
+  /// No description provided for @welcomeStep2GoogleSignedInAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in as {email}'**
+  String welcomeStep2GoogleSignedInAs(String email);
+
+  /// No description provided for @welcomeStep2Benefit1.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync between your devices'**
+  String get welcomeStep2Benefit1;
+
+  /// No description provided for @welcomeStep2Benefit2.
+  ///
+  /// In en, this message translates to:
+  /// **'Backed-up progress and achievements'**
+  String get welcomeStep2Benefit2;
+
+  /// No description provided for @welcomeStep2Benefit3.
+  ///
+  /// In en, this message translates to:
+  /// **'Works offline too'**
+  String get welcomeStep2Benefit3;
+
+  /// No description provided for @welcomeStep2Footnote.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have to decide right now — it works without an account too.'**
+  String get welcomeStep2Footnote;
+
+  /// No description provided for @welcomeStep3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect your data'**
+  String get welcomeStep3Title;
+
+  /// No description provided for @welcomeStep3Subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgetrack reads steps, sleep and activity from Health Connect and turns them into XP. Your records never leave Health Connect — only read.'**
+  String get welcomeStep3Subtitle;
+
+  /// No description provided for @welcomeStep3DataSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps'**
+  String get welcomeStep3DataSteps;
+
+  /// No description provided for @welcomeStep3DataCalories.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories'**
+  String get welcomeStep3DataCalories;
+
+  /// No description provided for @welcomeStep3DataSleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep'**
+  String get welcomeStep3DataSleep;
+
+  /// No description provided for @welcomeStep3DataActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get welcomeStep3DataActivity;
+
+  /// No description provided for @welcomeStep3Cta.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow Health Connect'**
+  String get welcomeStep3Cta;
+
+  /// No description provided for @welcomeStep3CtaConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect is connected'**
+  String get welcomeStep3CtaConnected;
+
+  /// No description provided for @welcomeStep3Privacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data stays inside Health Connect — Forgetrack never copies or modifies it.'**
+  String get welcomeStep3Privacy;
+
+  /// No description provided for @welcomeStep4Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Final touches'**
+  String get welcomeStep4Title;
+
+  /// No description provided for @welcomeStep4Subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional — you can set everything up later in the app.'**
+  String get welcomeStep4Subtitle;
+
+  /// No description provided for @welcomeStep4KtTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Kaloričke Tabulky'**
+  String get welcomeStep4KtTitle;
+
+  /// No description provided for @welcomeStep4KtSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import nutrition and weight from your KT diary'**
+  String get welcomeStep4KtSubtitle;
+
+  /// No description provided for @welcomeStep4KtConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get welcomeStep4KtConnected;
+
+  /// No description provided for @welcomeStep4NotifTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get welcomeStep4NotifTitle;
+
+  /// No description provided for @welcomeStep4NotifSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quest reminders and reward alerts'**
+  String get welcomeStep4NotifSubtitle;
+
+  /// No description provided for @welcomeStep4QuestsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'FIRST QUESTS'**
+  String get welcomeStep4QuestsLabel;
+
+  /// No description provided for @welcomeKtSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Kaloričke Tabulky'**
+  String get welcomeKtSheetTitle;
+
+  /// No description provided for @welcomeKtSheetSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to your KT account'**
+  String get welcomeKtSheetSubtitle;
+
+  /// No description provided for @welcomeKtSheetEmailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'KT email'**
+  String get welcomeKtSheetEmailHint;
+
+  /// No description provided for @welcomeKtSheetPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get welcomeKtSheetPasswordHint;
+
+  /// No description provided for @welcomeKtSheetSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in and connect'**
+  String get welcomeKtSheetSubmit;
+
+  /// No description provided for @welcomeKtSheetFootnote.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgetrack uses your sign-in only to read the KT diary.'**
+  String get welcomeKtSheetFootnote;
 }
 
 class _AppLocalizationsDelegate

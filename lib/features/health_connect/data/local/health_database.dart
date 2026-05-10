@@ -131,6 +131,26 @@ class HealthDatabase {
     _latestBodyFat = null;
   }
 
+  /// Wipes every collection in the Isar store and the in-memory cache.
+  /// Used by DevTools factory reset; callers should follow up by invoking
+  /// `FitnessProvider.initialize()` so the provider re-evaluates state.
+  Future<void> clearAll() async {
+    final value = _isar;
+    if (value == null) {
+      _clearMemoryCache();
+      return;
+    }
+    await value.writeTxn(() async {
+      await value.hcStepsDayRecords.clear();
+      await value.hcCalorieDayRecords.clear();
+      await value.hcWeightRecords.clear();
+      await value.hcSleepRecords.clear();
+      await value.hcActivityRecords.clear();
+      await value.hcMetaRecords.clear();
+    });
+    _clearMemoryCache();
+  }
+
   /// Removes duplicate weight records that share the same UTC millisecond
   /// timestamp. Merges bodyFat / bodyWater from duplicates into the surviving
   /// record so no measurement data is lost.  Runs once at open() time.

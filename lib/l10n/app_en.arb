@@ -2061,5 +2061,100 @@
   "@coachLogExportOpenSheets": { "description": "Button that opens the exported spreadsheet in Google Sheets" },
 
   "coachLogExportDescription": "Writes a weekly coach-log block — weight, steps, calories, macros — into the Coach Log tab of your Forgetrack spreadsheet.",
-  "@coachLogExportDescription": { "description": "Short description shown on the coach-log export screen" }
+  "@coachLogExportDescription": { "description": "Short description shown on the coach-log export screen" },
+
+  "onboardingTitle": "Welcome to Forgetrack",
+  "onboardingSubtitle": "Track your health, hit goals, and turn the work into XP.",
+  "onboardingAboutTitle": "What it does",
+  "onboardingAboutBody": "Forgetrack pulls steps, sleep, and activity from Health Connect, syncs nutrition from Kaloričke Tabulky, and turns daily/weekly goals into a journey of quests, levels and rewards.",
+  "onboardingStepsTitle": "Set up your integrations",
+  "onboardingStepsHint": "All of these are optional. You can skip any and connect or change them later in Settings.",
+
+  "onboardingGoogleTitle": "Sign in with Google",
+  "onboardingGoogleBody": "Saves your progression to the cloud and syncs across devices.",
+  "onboardingGoogleAction": "Sign in",
+  "onboardingGoogleConnected": "Signed in as {email}",
+  "@onboardingGoogleConnected": { "placeholders": { "email": { "type": "String" } } },
+
+  "onboardingKtTitle": "Connect Kaloričke Tabulky",
+  "onboardingKtBody": "Imports nutrition and weight from your KT diary.",
+  "onboardingKtConnected": "Connected as {email}",
+  "@onboardingKtConnected": { "placeholders": { "email": { "type": "String" } } },
+  "onboardingKtEmailHint": "KT email",
+  "onboardingKtPasswordHint": "Password",
+  "onboardingKtAction": "Log in",
+
+  "onboardingHealthTitle": "Health Connect",
+  "onboardingHealthBody": "Allow Forgetrack to read steps, calories, sleep and activity from Health Connect. Your records stay in Health Connect — they are never copied or modified.",
+  "onboardingHealthAction": "Grant access",
+  "onboardingHealthConnected": "Health Connect access granted",
+
+  "onboardingSheetsTitle": "Google Sheets export",
+  "onboardingSheetsBody": "Optional: export weekly summaries to a Google Sheet. Forgetrack only writes to spreadsheets it creates for you.",
+  "onboardingSheetsAction": "Allow Sheets access",
+  "onboardingSheetsConnected": "Sheets access granted",
+
+  "onboardingNotificationsTitle": "Notifications",
+  "onboardingNotificationsBody": "Daily reminders, quest progress, and reward unlocks.",
+  "onboardingNotificationsAction": "Enable",
+  "onboardingNotificationsConnected": "Notifications enabled",
+
+  "onboardingFooterNote": "You can change all of this later under Settings.",
+  "onboardingContinue": "Continue to app",
+  "onboardingSkip": "Skip for now",
+
+  "welcomeSkip": "Skip",
+  "welcomeCtaStart": "Begin your journey",
+  "welcomeCtaContinue": "Continue",
+  "welcomeCtaFinish": "Enter the game",
+
+  "welcomeStep1Title": "Welcome, hero.",
+  "welcomeStep1Subtitle": "Forgetrack turns your health into a journey of quests — steps, sleep and food become XP, levels and titles.",
+  "welcomeStep1SubtitleAccent": "a journey of quests",
+  "@welcomeStep1SubtitleAccent": { "description": "Highlighted phrase inside welcomeStep1Subtitle. Must appear verbatim within the subtitle string for the in-text colouring to find it." },
+  "welcomeStep1HeroLabel": "YOUR START",
+  "welcomeStep1HeroXpProgress": "{into} / {toNext} XP to the next level",
+  "@welcomeStep1HeroXpProgress": {
+    "placeholders": {
+      "into": { "type": "int" },
+      "toNext": { "type": "int" }
+    }
+  },
+  "welcomeStep1HeroPill": "+50 XP",
+
+  "welcomeStep2Title": "Save your progress",
+  "welcomeStep2Subtitle": "Sign in with Google and your levels, streaks and achievements stay safely in the cloud — even when you switch phones.",
+  "welcomeStep2GoogleSignIn": "Sign in with Google",
+  "welcomeStep2GoogleSignedIn": "Signed in",
+  "welcomeStep2GoogleSignedInAs": "Signed in as {email}",
+  "@welcomeStep2GoogleSignedInAs": { "placeholders": { "email": { "type": "String" } } },
+  "welcomeStep2Benefit1": "Sync between your devices",
+  "welcomeStep2Benefit2": "Backed-up progress and achievements",
+  "welcomeStep2Benefit3": "Works offline too",
+  "welcomeStep2Footnote": "You don't have to decide right now — it works without an account too.",
+
+  "welcomeStep3Title": "Connect your data",
+  "welcomeStep3Subtitle": "Forgetrack reads steps, sleep and activity from Health Connect and turns them into XP. Your records never leave Health Connect — only read.",
+  "welcomeStep3DataSteps": "Steps",
+  "welcomeStep3DataCalories": "Calories",
+  "welcomeStep3DataSleep": "Sleep",
+  "welcomeStep3DataActivity": "Activity",
+  "welcomeStep3Cta": "Allow Health Connect",
+  "welcomeStep3CtaConnected": "Health Connect is connected",
+  "welcomeStep3Privacy": "Your data stays inside Health Connect — Forgetrack never copies or modifies it.",
+
+  "welcomeStep4Title": "Final touches",
+  "welcomeStep4Subtitle": "Optional — you can set everything up later in the app.",
+  "welcomeStep4KtTitle": "Kaloričke Tabulky",
+  "welcomeStep4KtSubtitle": "Import nutrition and weight from your KT diary",
+  "welcomeStep4KtConnected": "Connected",
+  "welcomeStep4NotifTitle": "Notifications",
+  "welcomeStep4NotifSubtitle": "Quest reminders and reward alerts",
+  "welcomeStep4QuestsLabel": "FIRST QUESTS",
+  "welcomeKtSheetTitle": "Kaloričke Tabulky",
+  "welcomeKtSheetSubtitle": "Sign in to your KT account",
+  "welcomeKtSheetEmailHint": "KT email",
+  "welcomeKtSheetPasswordHint": "Password",
+  "welcomeKtSheetSubmit": "Sign in and connect",
+  "welcomeKtSheetFootnote": "Forgetrack uses your sign-in only to read the KT diary."
 }

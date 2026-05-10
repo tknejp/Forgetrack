@@ -4007,4 +4007,247 @@ class AppLocalizationsCs extends AppLocalizations {
   @override
   String get coachLogExportDescription =>
       'Zapíše týdenní blok coach logu — váhu, kroky, kalorie, makra — do záložky Coach Log ve vaší Forgetrack tabulce.';
+
+  @override
+  String get onboardingTitle => 'Vítej v Forgetracku';
+
+  @override
+  String get onboardingSubtitle =>
+      'Měř své zdraví, plň cíle a proměň úsilí v XP.';
+
+  @override
+  String get onboardingAboutTitle => 'O čem to je';
+
+  @override
+  String get onboardingAboutBody =>
+      'Forgetrack stahuje kroky, spánek a aktivitu z Health Connectu, synchronizuje výživu z Kalorických Tabulek a denní i týdenní cíle proměňuje v cestu plnou questů, levelů a odměn.';
+
+  @override
+  String get onboardingStepsTitle => 'Nastav integrace';
+
+  @override
+  String get onboardingStepsHint =>
+      'Všechno je volitelné. Cokoli můžeš přeskočit a později připojit nebo změnit v Nastavení.';
+
+  @override
+  String get onboardingGoogleTitle => 'Přihlásit přes Google';
+
+  @override
+  String get onboardingGoogleBody =>
+      'Uloží tvůj progres do cloudu a synchronizuje napříč zařízeními.';
+
+  @override
+  String get onboardingGoogleAction => 'Přihlásit';
+
+  @override
+  String onboardingGoogleConnected(String email) {
+    return 'Přihlášen jako $email';
+  }
+
+  @override
+  String get onboardingKtTitle => 'Připojit Kalorické Tabulky';
+
+  @override
+  String get onboardingKtBody => 'Importuje výživu a váhu z tvého KT deníku.';
+
+  @override
+  String onboardingKtConnected(String email) {
+    return 'Připojeno jako $email';
+  }
+
+  @override
+  String get onboardingKtEmailHint => 'E-mail KT';
+
+  @override
+  String get onboardingKtPasswordHint => 'Heslo';
+
+  @override
+  String get onboardingKtAction => 'Přihlásit';
+
+  @override
+  String get onboardingHealthTitle => 'Health Connect';
+
+  @override
+  String get onboardingHealthBody =>
+      'Povol Forgetracku číst kroky, kalorie, spánek a aktivitu z Health Connectu. Tvoje záznamy zůstávají v Health Connectu — nikdy je nekopírujeme ani neupravujeme.';
+
+  @override
+  String get onboardingHealthAction => 'Udělit přístup';
+
+  @override
+  String get onboardingHealthConnected => 'Přístup k Health Connectu udělen';
+
+  @override
+  String get onboardingSheetsTitle => 'Export do Google Sheets';
+
+  @override
+  String get onboardingSheetsBody =>
+      'Volitelné: exportuj týdenní souhrny do Google Sheets. Forgetrack zapisuje pouze do tabulek, které sám vytvořil.';
+
+  @override
+  String get onboardingSheetsAction => 'Povolit přístup k Sheets';
+
+  @override
+  String get onboardingSheetsConnected => 'Přístup k Sheets udělen';
+
+  @override
+  String get onboardingNotificationsTitle => 'Notifikace';
+
+  @override
+  String get onboardingNotificationsBody =>
+      'Denní připomenutí, postup questů a oznámení o odměnách.';
+
+  @override
+  String get onboardingNotificationsAction => 'Zapnout';
+
+  @override
+  String get onboardingNotificationsConnected => 'Notifikace zapnuté';
+
+  @override
+  String get onboardingFooterNote =>
+      'Vše můžeš později měnit v Nastavení aplikace.';
+
+  @override
+  String get onboardingContinue => 'Pokračovat do aplikace';
+
+  @override
+  String get onboardingSkip => 'Přeskočit';
+
+  @override
+  String get welcomeSkip => 'Přeskočit';
+
+  @override
+  String get welcomeCtaStart => 'Začít cestu';
+
+  @override
+  String get welcomeCtaContinue => 'Pokračovat';
+
+  @override
+  String get welcomeCtaFinish => 'Vstoupit do hry';
+
+  @override
+  String get welcomeStep1Title => 'Vítej, hrdino.';
+
+  @override
+  String get welcomeStep1Subtitle =>
+      'Forgetrack udělá ze tvého zdraví cestu plnou questů — kroky, spánek a jídlo se mění v XP, levely a tituly.';
+
+  @override
+  String get welcomeStep1SubtitleAccent => 'cestu plnou questů';
+
+  @override
+  String get welcomeStep1HeroLabel => 'TVŮJ START';
+
+  @override
+  String welcomeStep1HeroXpProgress(int into, int toNext) {
+    return '$into / $toNext XP do dalšího levelu';
+  }
+
+  @override
+  String get welcomeStep1HeroPill => '+50 XP';
+
+  @override
+  String get welcomeStep2Title => 'Ulož si svůj postup';
+
+  @override
+  String get welcomeStep2Subtitle =>
+      'Přihlas se přes Google a tvé levely, série a achievementy zůstanou bezpečně v cloudu — i když přejdeš na nový telefon.';
+
+  @override
+  String get welcomeStep2GoogleSignIn => 'Přihlásit se přes Google';
+
+  @override
+  String get welcomeStep2GoogleSignedIn => 'Přihlášen';
+
+  @override
+  String welcomeStep2GoogleSignedInAs(String email) {
+    return 'Přihlášen jako $email';
+  }
+
+  @override
+  String get welcomeStep2Benefit1 => 'Synchronizace mezi tvými zařízeními';
+
+  @override
+  String get welcomeStep2Benefit2 => 'Zálohovaný postup a achievementy';
+
+  @override
+  String get welcomeStep2Benefit3 => 'Funguje i offline';
+
+  @override
+  String get welcomeStep2Footnote =>
+      'Nemusíš se rozhodovat hned — funguje to i bez účtu.';
+
+  @override
+  String get welcomeStep3Title => 'Připoj svoje data';
+
+  @override
+  String get welcomeStep3Subtitle =>
+      'Forgetrack čte z Health Connectu kroky, spánek a aktivitu — a proměňuje je v XP. Tvoje záznamy z toho ven nejdou; jen se z nich čte.';
+
+  @override
+  String get welcomeStep3DataSteps => 'Kroky';
+
+  @override
+  String get welcomeStep3DataCalories => 'Kalorie';
+
+  @override
+  String get welcomeStep3DataSleep => 'Spánek';
+
+  @override
+  String get welcomeStep3DataActivity => 'Aktivita';
+
+  @override
+  String get welcomeStep3Cta => 'Povolit Health Connect';
+
+  @override
+  String get welcomeStep3CtaConnected => 'Health Connect je propojený';
+
+  @override
+  String get welcomeStep3Privacy =>
+      'Tvá data zůstávají v Health Connectu — Forgetrack je nikdy nekopíruje ani neupravuje.';
+
+  @override
+  String get welcomeStep4Title => 'Poslední doladění';
+
+  @override
+  String get welcomeStep4Subtitle =>
+      'Volitelné — všechno můžeš nastavit i později v aplikaci.';
+
+  @override
+  String get welcomeStep4KtTitle => 'Kalorické Tabulky';
+
+  @override
+  String get welcomeStep4KtSubtitle => 'Importovat výživu a váhu z KT deníku';
+
+  @override
+  String get welcomeStep4KtConnected => 'Připojeno';
+
+  @override
+  String get welcomeStep4NotifTitle => 'Notifikace';
+
+  @override
+  String get welcomeStep4NotifSubtitle =>
+      'Připomenutí questů a oznámení o odměnách';
+
+  @override
+  String get welcomeStep4QuestsLabel => 'PRVNÍ QUESTY';
+
+  @override
+  String get welcomeKtSheetTitle => 'Kalorické Tabulky';
+
+  @override
+  String get welcomeKtSheetSubtitle => 'Přihlas se ke svému KT účtu';
+
+  @override
+  String get welcomeKtSheetEmailHint => 'E-mail KT';
+
+  @override
+  String get welcomeKtSheetPasswordHint => 'Heslo';
+
+  @override
+  String get welcomeKtSheetSubmit => 'Přihlásit a propojit';
+
+  @override
+  String get welcomeKtSheetFootnote =>
+      'Forgetrack používá tvé přihlášení jen ke čtení deníku z KT.';
 }

@@ -50,6 +50,8 @@ import 'features/health_connect/data/health_connect_service.dart';
 import 'features/health_connect/data/local/health_database.dart';
 import 'features/health_connect/application/goals_provider.dart';
 import 'features/devtools/application/devtools_provider.dart';
+import 'features/devtools/application/factory_reset/factory_reset_service.dart';
+import 'features/onboarding/application/onboarding_provider.dart';
 import 'app/locale_provider.dart';
 
 Future<void> main() async {
@@ -153,6 +155,9 @@ Future<void> main() async {
   final devToolsProvider = DevToolsProvider();
   await devToolsProvider.init();
 
+  final onboardingProvider = OnboardingProvider();
+  await onboardingProvider.init();
+
   // Cosmetics: Isar-backed local persistence. Firestore sync lands in a
   // later phase (mirror progression's hybrid pattern when it does).
   final cosmeticsDatabase = CosmeticsDatabase();
@@ -173,6 +178,14 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
+        // Plain (non-ChangeNotifier) singletons used by DevTools factory
+        // reset. Exposed via Provider.value so they can be read from
+        // BuildContext alongside the existing notifier providers.
+        Provider<HealthDatabase>.value(value: healthDb),
+        Provider<KtNutritionDatabase>.value(value: ktDb),
+        Provider<ProgressionDatabase>.value(value: progressionDb),
+        Provider<CosmeticsDatabase>.value(value: cosmeticsDatabase),
+        Provider<FactoryResetService>(create: (_) => FactoryResetService()),
         ChangeNotifierProvider.value(value: localeProvider),
         ChangeNotifierProvider.value(value: notificationPreferencesProvider),
         ChangeNotifierProvider.value(value: goalsProvider),
@@ -183,6 +196,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => SheetsExportProvider()),
         ChangeNotifierProvider.value(value: bushidoExportProvider),
         ChangeNotifierProvider.value(value: devToolsProvider),
+        ChangeNotifierProvider.value(value: onboardingProvider),
         ChangeNotifierProxyProvider<AuthProvider, CosmeticsProvider>(
           create: (_) => CosmeticsProvider(
             service: cosmeticsService,
