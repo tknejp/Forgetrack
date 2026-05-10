@@ -13,6 +13,7 @@ import '../application/devtools_provider.dart';
 import 'sections/devtools_app_section.dart';
 import 'sections/devtools_db_section.dart';
 import 'sections/devtools_overrides_section.dart';
+import 'sections/devtools_progression_engine_section.dart';
 import 'sections/devtools_progression_section.dart';
 import 'sections/devtools_provider_section.dart';
 import 'sections/devtools_background_section.dart';
@@ -121,6 +122,12 @@ class _DevToolsBodyState extends State<_DevToolsBody> {
       icon: Icons.military_tech_rounded,
       key: GlobalKey(),
       builder: () => const DevToolsProgressionSection(),
+    ),
+    _DevToolsSectionLink(
+      label: 'Engine V2',
+      icon: Icons.bolt_rounded,
+      key: GlobalKey(),
+      builder: () => const DevToolsProgressionEngineSection(),
     ),
     _DevToolsSectionLink(
       label: 'Unlocks',

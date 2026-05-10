@@ -30,6 +30,10 @@ import 'features/progression/data/hybrid_progression_repository.dart';
 import 'features/progression/data/local/progression_database.dart';
 import 'features/progression/data/progression_repository_impl.dart';
 import 'features/progression/application/progression_provider.dart';
+import 'features/progression_engine/application/progression_engine.dart'
+    as v2_engine;
+import 'features/progression_engine/application/progression_engine_provider.dart';
+import 'features/progression_engine/data/isar_progression_engine_repository.dart';
 import 'features/progression_engine/data/local/progression_engine_database.dart';
 import 'features/coach_log_export/application/bushido_export_provider.dart';
 import 'features/coach_log_export/data/bushido_export_data_builder.dart';
@@ -89,11 +93,20 @@ Future<void> main() async {
   final progressionDb = ProgressionDatabase();
   await progressionDb.open();
 
-  // Phase 4: open the new engine's Isar store alongside the legacy
-  // one. Provider wiring lands in Phase 6 — for now the database
-  // just needs to be open so devtools can wipe it.
+  // Phase 4 + 6 foundation: the new engine's Isar store + repository
+  // + engine + provider. Coexists with the legacy stack until UI
+  // consumers move over (Phase 6 finish).
   final progressionEngineDb = ProgressionEngineDatabase();
   await progressionEngineDb.open();
+  final progressionEngineRepo =
+      IsarProgressionEngineRepository(progressionEngineDb);
+  final progressionEngineV2 = v2_engine.ProgressionEngine(
+    repository: progressionEngineRepo,
+  );
+  final progressionEngineProvider = ProgressionEngineProvider(
+    engine: progressionEngineV2,
+    repository: progressionEngineRepo,
+  );
 
   final ktProvider = KalorickeTabulkyProvider(ktService, ktDb);
   final socialBackendState = await SocialFirebaseBootstrap.ensureInitialized();
@@ -192,6 +205,7 @@ Future<void> main() async {
         Provider<HealthDatabase>.value(value: healthDb),
         Provider<KtNutritionDatabase>.value(value: ktDb),
         Provider<ProgressionDatabase>.value(value: progressionDb),
+        Provider<ProgressionEngineDatabase>.value(value: progressionEngineDb),
         Provider<CosmeticsDatabase>.value(value: cosmeticsDatabase),
         Provider<FactoryResetService>(create: (_) => FactoryResetService()),
         ChangeNotifierProvider.value(value: localeProvider),
@@ -205,6 +219,7 @@ Future<void> main() async {
         ChangeNotifierProvider.value(value: bushidoExportProvider),
         ChangeNotifierProvider.value(value: devToolsProvider),
         ChangeNotifierProvider.value(value: onboardingProvider),
+        ChangeNotifierProvider.value(value: progressionEngineProvider),
         ChangeNotifierProxyProvider<AuthProvider, CosmeticsProvider>(
           create: (_) => CosmeticsProvider(
             service: cosmeticsService,
