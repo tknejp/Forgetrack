@@ -302,6 +302,53 @@ class ProgressionEngineProvider extends ChangeNotifier {
     return source.currentContext();
   }
 
+  /// Reward grants from the ledger, newest first. The quests-screen
+  /// "Recent rewards" feed reads this to render a chronological list of
+  /// XP / cosmetic / chapter unlocks the player has earned.
+  List<RewardGrantEvent> get rewardHistory {
+    final l = _ledger;
+    if (l == null) return const [];
+    final list = [...l.rewardGrants];
+    list.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    return List.unmodifiable(list);
+  }
+
+  /// Completed quest nodes paired with their (most recent) completion
+  /// timestamp, newest first. Used by the quests-screen "Completed"
+  /// rollup. Filters [LedgerSnapshot.nodeCompletions] down to nodes
+  /// the catalog still classifies as a [QuestNode] — stale ledger
+  /// entries (catalog drift) are skipped silently.
+  List<EngineCompletedQuest> get completedQuests {
+    final l = _ledger;
+    if (l == null) return const [];
+
+    final latestByNode = <String, NodeCompletionEvent>{};
+    for (final e in l.nodeCompletions) {
+      final existing = latestByNode[e.nodeId];
+      if (existing == null || e.timestamp.isAfter(existing.timestamp)) {
+        latestByNode[e.nodeId] = e;
+      }
+    }
+
+    final out = <EngineCompletedQuest>[];
+    for (final node in _nodeCatalog.build()) {
+      if (node is! QuestNode) continue;
+      final event = latestByNode[node.id];
+      if (event == null) continue;
+      out.add(EngineCompletedQuest(node: node, completedAt: event.timestamp));
+    }
+    out.sort((a, b) => b.completedAt.compareTo(a.completedAt));
+    return List.unmodifiable(out);
+  }
+
+  /// Resolves a node id to its catalog definition, or null when the
+  /// catalog no longer knows that id. UI consumers (history feed,
+  /// completed rollup) call this to look up titles / asset keys for
+  /// ledger entries.
+  ProgressionNode? nodeById(String id) {
+    return ProgressionNodeCatalog.definitionForId(id);
+  }
+
   ProgressionResolutionResult? takePendingCelebration() {
     if (_pendingCelebrations.isEmpty) return null;
     return _pendingCelebrations.removeAt(0);
@@ -627,6 +674,19 @@ class ProgressionEngineProvider extends ChangeNotifier {
     }
     return out;
   }
+}
+
+/// A completed quest node paired with the timestamp of its most
+/// recent completion event. Built by
+/// [ProgressionEngineProvider.completedQuests] from the ledger.
+@immutable
+class EngineCompletedQuest {
+  const EngineCompletedQuest({required this.node, required this.completedAt});
+
+  final QuestNode node;
+  final DateTime completedAt;
+
+  String get nodeId => node.id;
 }
 
 /// Synthetic fallback used when a quest references an objective that
