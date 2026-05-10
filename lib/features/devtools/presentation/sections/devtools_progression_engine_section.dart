@@ -102,6 +102,8 @@ class _DevToolsProgressionEngineSectionState
                 },
         ),
         const DevToolsSectionDivider(),
+        _SetXpPanel(isBusy: _isEvaluating || _isWiping || p.isEvaluating),
+        const DevToolsSectionDivider(),
         DevToolsActionTile(
           label: 'Wipe V2 ledger',
           subtitle:
@@ -167,4 +169,121 @@ class _DevToolsProgressionEngineSectionState
         level: 5,
         totalXp: 5000,
       );
+}
+
+/// Inline panel for seeding the ledger with a synthetic XP grant.
+/// Equivalent to V1's `_DevToolsXpOverridePanel` — wipes the V2
+/// ledger and inserts one synthetic grant so `profile.totalXp`
+/// becomes exactly the requested value. Use to test high-level
+/// flows (level milestones, XP-threshold achievements) without
+/// completing dozens of real quests.
+class _SetXpPanel extends StatefulWidget {
+  const _SetXpPanel({required this.isBusy});
+
+  final bool isBusy;
+
+  @override
+  State<_SetXpPanel> createState() => _SetXpPanelState();
+}
+
+class _SetXpPanelState extends State<_SetXpPanel> {
+  late final TextEditingController _controller;
+  bool _applying = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final canApply =
+        !widget.isBusy && !_applying && _resolveXp() != null;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Set total XP',
+            style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Wipes the V2 ledger and inserts a synthetic XP grant so '
+            "profile.totalXp becomes exactly the chosen value.",
+            style: tt.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _controller,
+                  enabled: !widget.isBusy && !_applying,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    labelText: 'Total XP',
+                    hintText: 'e.g. 25000',
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+              const SizedBox(width: 10),
+              FilledButton(
+                onPressed: canApply ? _apply : null,
+                child: _applying
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Apply'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  int? _resolveXp() {
+    final raw = _controller.text.trim();
+    if (raw.isEmpty) return null;
+    final parsed = int.tryParse(raw);
+    if (parsed == null || parsed < 0) return null;
+    return parsed;
+  }
+
+  Future<void> _apply() async {
+    final xp = _resolveXp();
+    if (xp == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = context.read<ProgressionEngineProvider>();
+    setState(() => _applying = true);
+    try {
+      await provider.devToolsSetTotalXp(xp);
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text('V2 totalXp set to $xp')),
+      );
+      _controller.clear();
+    } finally {
+      if (mounted) setState(() => _applying = false);
+    }
+  }
 }

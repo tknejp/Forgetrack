@@ -280,6 +280,55 @@ class ProgressionEngineProvider extends ChangeNotifier {
     }
   }
 
+  /// Devtools — seed the ledger with a synthetic XP grant so the
+  /// profile reflects the chosen total. Wipes existing grants first
+  /// so `totalXp` matches [xp] exactly. Mirrors V1's
+  /// `devToolsSetTotalXp` so devtools testing of high-level flows
+  /// (level milestones, XP thresholds) does not require completing
+  /// dozens of real quests.
+  ///
+  /// The synthetic grant is recorded with eventKey
+  /// `reward|devtools_xp_override|0|grant`, levelAtGrant=1,
+  /// multiplierAtGrant=1.0 so it is distinguishable in the ledger
+  /// dump.
+  Future<void> devToolsSetTotalXp(int xp) async {
+    final clamped = xp < 0 ? 0 : xp;
+    final repo = _repository;
+    if (repo is! ProgressionEngineLocalRepository) return;
+
+    _isEvaluating = true;
+    notifyListeners();
+    try {
+      await repo.wipeAll();
+      _lastResult = null;
+      _pendingCelebrations.clear();
+      _lastEvaluatedSignature = null;
+
+      if (clamped > 0) {
+        await repo.appendEvents([
+          RewardGrantEvent(
+            eventKey: 'reward|devtools_xp_override|0|grant',
+            timestamp: DateTime.now(),
+            nodeId: 'devtools_xp_override',
+            rewardOrdinal: 0,
+            rewardKind: RewardGrantKind.xp,
+            xpAmount: clamped,
+            levelAtGrant: 1,
+            multiplierAtGrant: 1.0,
+          ),
+        ]);
+      }
+
+      _ledger = await _repository.loadLedger();
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isEvaluating = false;
+      notifyListeners();
+    }
+  }
+
   /// Devtools — wipe the local ledger. No-op when the bound
   /// repository is not the local Isar variant.
   Future<void> devToolsWipeLedger() async {
