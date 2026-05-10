@@ -7,10 +7,12 @@ this doc is the working state.
 ## Branch + commits
 
 `refactor/progression-engine-v2` — 19 commits previous session + Phase 6.5
-foundation + Phase 6.5b parity (assets, expandable cards, history feed,
-completed rollup, chain mechanics, forest_trial chapter, chapter UI).
+foundation + Phase 6.5b/c parity passes (assets, expandable cards, history
+feed, completed rollup, chain mechanics, forest_trial chapter, chapter UI;
+then asset sizing, chain position, chapter expand, daily 2-of-N rotation,
+long-term goals section, history-vs-completed split).
 `flutter analyze` clean (only pre-existing `sheets_export _round` warning).
-`flutter test` 370/370 passing.
+`flutter test` 373/373 passing.
 
 ## Phase status
 
@@ -30,6 +32,7 @@ completed rollup, chain mechanics, forest_trial chapter, chapter UI).
 | 6.4 Home card migration + dynamic XP scaling + claim-all devtools | ✅ done |
 | 6.5 quests_screen migration (parallel V2 screen, V1 evicted from route) | ✅ done |
 | 6.5b V1-parity quest screen (assets, expand, streak, history feed, completed rollup, chain mechanics, forest_trial chapter, chapter UI) | ✅ done |
+| 6.5c V1 visual + UX parity (asset sizing, chain position, chapter expand, daily 2-of-N, long-term goals, history vs completed split) | ✅ done |
 | 6.6 social_provider state migration | ⏳ next |
 | 6.7 hero_screen + journey adapter | ⏳ |
 | 6.8 overview_screen, onboarding_steps (main_shell already on V2) | ⏳ |
@@ -260,6 +263,31 @@ V1-parity polish on top of Phase 6.5. Eight commits:
   (current step glows, completed steps show check). New provider
   getters `currentChapterQuests` + `chainQuestsFor(chainId)`
 
+## Phase 6.5c — files added/modified (V1 visual + UX parity)
+
+Four commits on top of 6.5b:
+
+- `18d66bb` Card visuals — assets bumped to `Tokens.questAssetCollapsed`
+  (64) / `questAssetExpanded` (76) instead of cramped 32/44; chapter
+  card chain preview moved between title row and progress (V1 layout);
+  chapter cards gained the expanded-details panel (XP scaling, chain
+  step label, locked hint) the daily/weekly cards already had.
+- `b190893` Daily 2-of-N rotation — `currentDailyQuests` now picks two
+  quests per day deterministically (FNV-1a per (dayKey, questId), V1
+  parity). `allDailyQuests` exposes the un-narrowed list. New test
+  `daily_pick_test.dart`.
+- `7016f1b` Long-term goals — new `long_term_content.dart` with five
+  representative quests (`earn_first_reward`, steps_streak 7→30 chain,
+  reach_500_xp → reach_2000_xp chain). Provider getter
+  `currentLongTermQuests` does V1's `compactQuestChainRepresentatives`
+  (one entry per chain). Screen renders the new section between weekly
+  and the completed rollup.
+- `52c6018` Sections split — `recentRewardHistory` filters out quest
+  XP grants so the "Recent rewards" feed is just cosmetics, emblems,
+  achievement-driven rewards. `EngineCompletedQuest.xpGranted` is
+  summed from the ledger so the rollup row keeps a "+96 XP" badge
+  instead of just a check icon.
+
 ## Outstanding for full V1 chapter parity (deferred)
 
 - Other 9 chapters (ruins_discipline, mine_descent, forge_momentum,
@@ -271,6 +299,10 @@ V1-parity polish on top of Phase 6.5. Eight commits:
   prereq chapter isn't complete yet)
 - ComboPoolDefinition + tiered daily — needed before daily-combo
   section can light up
+- Long-term content port is *partial* — V1 has more journey/chain
+  quests (sleep totals, weekly mastery, lifetime steps, recovery
+  combo finale, more XP milestones). Pattern in `long_term_content.dart`
+  is the template; add as appetite allows.
 
 ## Phase 6.5 — original-foundation files (Phase 6.5 commit `510a5d4`)
 
