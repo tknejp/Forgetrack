@@ -51,6 +51,7 @@ class EngineChapterCard extends StatelessWidget {
     final accent = domain.color;
     final chapterId = quest.node.chapterId ?? quest.node.chainId ?? '';
     final bgAsset = chapterBgAssetFor(chapterId);
+    final isLocked = quest.levelGate != null;
 
     return GestureDetector(
       onTap: onToggle,
@@ -66,7 +67,7 @@ class EngineChapterCard extends StatelessWidget {
                   image: AssetImage(bgAsset),
                   fit: BoxFit.cover,
                   colorFilter: ColorFilter.mode(
-                    Colors.black.withValues(alpha: 0.42),
+                    Colors.black.withValues(alpha: isLocked ? 0.62 : 0.42),
                     BlendMode.darken,
                   ),
                 ),
@@ -126,7 +127,10 @@ class EngineChapterCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: Tokens.spaceSm),
-                XpClaimPill(key: pillKey, data: _pillData()),
+                if (isLocked)
+                  _LockChip(level: quest.levelGate!, l10n: l10n)
+                else
+                  XpClaimPill(key: pillKey, data: _pillData()),
                 if (onToggle != null) ...[
                   const SizedBox(width: 6),
                   ExpandChevron(
@@ -159,7 +163,7 @@ class EngineChapterCard extends StatelessWidget {
               ),
             ],
             const SizedBox(height: Tokens.spaceSm),
-            _ProgressRow(quest: quest, accent: accent),
+            if (!isLocked) _ProgressRow(quest: quest, accent: accent),
             if (isExpanded) ...[
               const SizedBox(height: Tokens.spaceSm),
               _ChapterExpandedDetails(
@@ -185,6 +189,48 @@ class EngineChapterCard extends StatelessWidget {
       );
     }
     return XpClaimPillData.locked(quest.previewXp);
+  }
+}
+
+/// Replacement for the XP claim pill when the chapter card is gated
+/// by a [LevelAtLeast] unlock condition the player hasn't reached.
+/// Shows a lock glyph + "Lv 10" so the player knows what to aim for
+/// without expanding the card.
+class _LockChip extends StatelessWidget {
+  const _LockChip({required this.level, required this.l10n});
+
+  final int level;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.09),
+        borderRadius: BorderRadius.circular(Tokens.radiusProgress),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.20)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.lock_outline_rounded,
+            size: 11,
+            color: Colors.white.withValues(alpha: 0.78),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            l10n.progChapterLockedLabel(level),
+            style: TextStyle(
+              fontSize: Tokens.fontSizeMicro,
+              fontWeight: FontWeight.w800,
+              color: Colors.white.withValues(alpha: 0.78),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -370,7 +416,37 @@ class _ChainNode extends StatelessWidget {
             ? accent.withValues(alpha: 0.16)
             : Colors.white.withValues(alpha: 0.05);
 
-    final label = quest.node.chainStepLabelKey?.call(l10n) ?? '·';
+    final iconForStep = quest.node.chainStepIcon;
+    final label = quest.node.chainStepLabelKey?.call(l10n);
+    final glyphColor =
+        isCurrent ? Colors.white : Colors.white.withValues(alpha: 0.72);
+
+    Widget glyph;
+    if (completed) {
+      glyph = Icon(Icons.check_rounded, size: 12, color: accent);
+    } else if (iconForStep != null) {
+      glyph = Icon(iconForStep, size: 12, color: glyphColor);
+    } else if (label != null && label.isNotEmpty) {
+      glyph = Text(
+        label,
+        style: TextStyle(
+          fontSize: 9.5,
+          fontWeight: FontWeight.w900,
+          color: glyphColor,
+          height: 1,
+        ),
+      );
+    } else {
+      glyph = Text(
+        '·',
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w900,
+          color: glyphColor,
+          height: 1,
+        ),
+      );
+    }
 
     return Container(
       width: 22,
@@ -384,17 +460,7 @@ class _ChainNode extends StatelessWidget {
             ? [BoxShadow(color: accent.withValues(alpha: 0.55), blurRadius: 8)]
             : null,
       ),
-      child: completed
-          ? Icon(Icons.check_rounded, size: 12, color: accent)
-          : Text(
-              label,
-              style: TextStyle(
-                fontSize: 9.5,
-                fontWeight: FontWeight.w900,
-                color: isCurrent ? Colors.white : Colors.white.withValues(alpha: 0.72),
-                height: 1,
-              ),
-            ),
+      child: glyph,
     );
   }
 }

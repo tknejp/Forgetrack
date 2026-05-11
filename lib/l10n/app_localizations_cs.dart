@@ -1286,6 +1286,11 @@ class AppLocalizationsCs extends AppLocalizations {
   }
 
   @override
+  String progChapterLockedLabel(int level) {
+    return 'Lv $level';
+  }
+
+  @override
   String progRewardSubtitle(String domain, int xp) {
     return '$domain · +$xp XP';
   }

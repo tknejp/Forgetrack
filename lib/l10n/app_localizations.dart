@@ -2426,6 +2426,12 @@ abstract class AppLocalizations {
   /// **'Best streak: {days} days'**
   String progStreakBestDetail(int days);
 
+  /// No description provided for @progChapterLockedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Lv {level}'**
+  String progChapterLockedLabel(int level);
+
   /// No description provided for @progRewardSubtitle.
   ///
   /// In en, this message translates to:

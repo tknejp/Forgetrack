@@ -433,6 +433,7 @@
   "progXpFlatDetail": "Odměna: +{xp} XP",
   "progXpScalingDetail": "Odměna: +{baseXp} XP základ · po přepočtu na tvůj level +{previewXp} XP",
   "progStreakBestDetail": "Nejlepší série: {days} dní",
+  "progChapterLockedLabel": "Lv {level}",
   "progRewardSubtitle": "{domain} · +{xp} XP",
 
   "progDomainSteps": "Kroky",

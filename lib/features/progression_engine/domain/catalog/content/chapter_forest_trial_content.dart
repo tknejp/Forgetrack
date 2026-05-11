@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart' show Icons;
+
 import '../../../../../shared/domain/rarity.dart';
 import '../../models/claim_policy.dart';
 import '../../models/content_tag.dart';
@@ -92,6 +94,12 @@ List<ProgressionNode> forestTrialNodes() {
       objectiveId: 'forest_trial_open_objective',
       displayBucket: QuestDisplayBucket.chapter,
       claimPolicy: ClaimPolicy.automatic,
+      // Explicit level gate so the resolver marks the chapter
+      // ineligible (and the chapter card renders a locked overlay)
+      // until the player reaches the chapter's start level. The
+      // objective also encodes the gate for backwards compatibility
+      // with consumers that only look at objective outcomes.
+      unlockConditions: const [LevelAtLeast(10)],
       titleKey: (l) => l.progQuestForestTrialOpenTitle,
       descriptionKey: (l) => l.progQuestForestTrialOpenDesc,
       rewards: const [XpReward(amount: 120)],
@@ -103,7 +111,7 @@ List<ProgressionNode> forestTrialNodes() {
       chainOrder: 0,
       displayGroupId: _chapterId,
       nextNodeIds: const ['forest_trial_daily_wins_5'],
-      chainStepLabelKey: (l) => l.progQuestChainStepStart,
+      chainStepIcon: Icons.play_arrow_rounded,
       sortOrder: 300,
     ),
     QuestNode(
@@ -187,7 +195,7 @@ List<ProgressionNode> forestTrialNodes() {
       chainOrder: 4,
       displayGroupId: _chapterId,
       prerequisiteNodeIds: const ['forest_trial_recovery_3'],
-      chainStepLabelKey: (l) => l.progQuestChainStepEmblem,
+      chainStepIcon: Icons.shield_rounded,
       // The chapter is gated by player level; the open auto-fires at
       // level 10 so its prereq does the heavy lifting. We add an
       // explicit LevelAtLeast on the finale too so a stale ledger

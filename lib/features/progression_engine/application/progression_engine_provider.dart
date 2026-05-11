@@ -19,6 +19,7 @@ import '../domain/models/objective_metric.dart';
 import '../domain/models/objective_operator.dart';
 import '../domain/models/objective_scope.dart';
 import '../domain/models/progression_node_definition.dart';
+import '../domain/models/unlock_condition.dart';
 import '../domain/models/progression_resolution_reason.dart';
 import '../domain/models/progression_resolution_result.dart';
 import '../domain/models/quest_display_bucket.dart';
@@ -45,6 +46,7 @@ class EngineQuestProgress {
     required this.baseXp,
     required this.previewXp,
     this.domain,
+    this.levelGate,
   });
 
   final QuestNode node;
@@ -78,6 +80,12 @@ class EngineQuestProgress {
   /// preview value updates so the displayed XP and the actually-granted
   /// XP always match.
   final int previewXp;
+
+  /// Level the player must reach for this node's [LevelAtLeast]
+  /// unlock condition to pass. Null when the node has no level gate
+  /// (or the gate has already been cleared). Chapter cards render a
+  /// "Reach level X" lock overlay when this is set.
+  final int? levelGate;
 
   String get nodeId => node.id;
 }
@@ -815,6 +823,16 @@ class ProgressionEngineProvider extends ChangeNotifier {
               .scaledRewardXp(baseXp: baseXp, level: profile.level)
               .round();
 
+      // Surface any LevelAtLeast unlock condition that the player
+      // hasn't yet cleared — chapter cards render a "Reach level X"
+      // lock overlay when this is set.
+      int? levelGate;
+      for (final c in node.unlockConditions) {
+        if (c is LevelAtLeast && profile.level < c.level) {
+          if (levelGate == null || c.level > levelGate) levelGate = c.level;
+        }
+      }
+
       out.add(EngineQuestProgress(
         node: node,
         actualValue: actual,
@@ -824,6 +842,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
         isAvailableForClaim: isAvailable,
         domain: objective.domain,
         baseXp: baseXp,
+        levelGate: levelGate,
         previewXp: scaledXp,
       ));
     }

@@ -1072,6 +1072,12 @@
       "days": { "type": "int" }
     }
   },
+  "progChapterLockedLabel": "Lv {level}",
+  "@progChapterLockedLabel": {
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
   "progRewardSubtitle": "{domain} · +{xp} XP",
   "@progRewardSubtitle": {
     "placeholders": {

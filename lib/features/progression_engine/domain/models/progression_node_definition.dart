@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart' show IconData;
 
 import '../../../../shared/domain/rarity.dart';
 import '../localized_text.dart';
@@ -74,6 +75,7 @@ class QuestNode extends ProgressionNode {
     this.prerequisiteNodeIds = const [],
     this.nextNodeIds = const [],
     this.chainStepLabelKey,
+    this.chainStepIcon,
     super.unlockConditions,
     super.claimPolicy,
     super.activationPolicy,
@@ -109,6 +111,13 @@ class QuestNode extends ProgressionNode {
   /// Optional one-character / short chain step label. Mirrors V1's
   /// `chainStepLabel` used by the chain preview row ("1", "2", "🛡").
   final LocalizedText? chainStepLabelKey;
+
+  /// Optional Material icon for the chain preview dot. When set, the
+  /// chapter card chain row renders this glyph instead of the
+  /// [chainStepLabelKey] text — used for "open" (play arrow) and
+  /// "finale" (shield) markers where a word would be noisier than an
+  /// icon.
+  final IconData? chainStepIcon;
 }
 
 class AchievementNode extends ProgressionNode {
