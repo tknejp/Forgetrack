@@ -8,17 +8,24 @@ import '../../../progression/presentation/widgets/progression_primitives.dart';
 import '../../application/progression_engine_provider.dart';
 import 'engine_quest_section.dart';
 
-/// "Completed quests" rollup at the bottom of the V2 quests screen.
+/// Completed-quests rollup section, used twice on the V2 quests
+/// screen: once for permanent completions ("Splněné cíle" — chapter,
+/// weekly, long-term) and once for today's daily-goal claims
+/// ("Nedávné odměny"). Header / empty-state strings are configurable
+/// so the same widget serves both surfaces with V1-matching copy.
 ///
 /// Default-shows the most recent [compactLimit] entries; reveals the
-/// full list when the player taps "Show all (N)". Mirrors the V1
-/// pattern from the legacy quests screen.
+/// full list when the player taps "Show all (N)".
 class EngineCompletedQuestsSection extends StatefulWidget {
   const EngineCompletedQuestsSection({
     super.key,
     required this.completed,
     required this.l10n,
     required this.resolveDomain,
+    required this.header,
+    required this.headerColor,
+    required this.emptyTitle,
+    required this.emptyCaption,
     this.compactLimit = 3,
   });
 
@@ -29,6 +36,18 @@ class EngineCompletedQuestsSection extends StatefulWidget {
   /// `provider.domainForNodeId` so each row's icon matches its source
   /// objective.
   final ProgressionDomain Function(String nodeId) resolveDomain;
+
+  /// Section header label (e.g. "Splněné cíle" or "Nedávné odměny").
+  final String header;
+
+  /// Accent color for the header row.
+  final Color headerColor;
+
+  /// Empty-state title shown when [completed] is empty.
+  final String emptyTitle;
+
+  /// Empty-state caption shown beneath the title.
+  final String emptyCaption;
 
   /// Number of rows shown before the "Show all" affordance kicks in.
   final int compactLimit;
@@ -56,8 +75,8 @@ class _EngineCompletedQuestsSectionState
           children: [
             Expanded(
               child: EngineQuestSection(
-                label: widget.l10n.progQuestsCompletedHeader,
-                color: Tokens.onSurfaceMuted,
+                label: widget.header,
+                color: widget.headerColor,
                 countLabel: total == 0
                     ? null
                     : widget.l10n.progQuestsCompletedCount(total),
@@ -69,8 +88,8 @@ class _EngineCompletedQuestsSectionState
         ),
         if (total == 0)
           EngineQuestEmptyLine(
-            title: widget.l10n.progQuestsEmptyCompletedTitle,
-            caption: widget.l10n.progQuestsEmptyCompletedCaption,
+            title: widget.emptyTitle,
+            caption: widget.emptyCaption,
           )
         else
           Column(
@@ -164,29 +183,24 @@ class _CompletedRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
-          if (entry.xpGranted > 0)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-              decoration: BoxDecoration(
-                color: accent.withValues(alpha: 0.16),
-                borderRadius: BorderRadius.circular(Tokens.radiusProgress),
-                border: Border.all(color: accent.withValues(alpha: 0.32)),
+          // Per V1 parity: claimed quests show a soft success-toned
+          // check, not the gold "+XP" pill. The pill is reserved for
+          // active claimable rows.
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Tokens.success.withValues(alpha: 0.07),
+              borderRadius: BorderRadius.circular(Tokens.radiusProgress),
+              border: Border.all(
+                color: Tokens.success.withValues(alpha: 0.16),
               ),
-              child: Text(
-                '+${entry.xpGranted} XP',
-                style: TextStyle(
-                  fontSize: Tokens.fontSizeMicro,
-                  fontWeight: FontWeight.w800,
-                  color: accent,
-                ),
-              ),
-            )
-          else
-            const Icon(
-              Icons.check_circle_outline_rounded,
-              size: 16,
-              color: Tokens.onSurfaceMuted,
             ),
+            child: Icon(
+              Icons.check_rounded,
+              size: 14,
+              color: Tokens.success.withValues(alpha: 0.78),
+            ),
+          ),
         ],
       ),
     );

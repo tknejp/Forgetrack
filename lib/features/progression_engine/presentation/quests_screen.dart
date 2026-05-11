@@ -11,8 +11,6 @@ import 'widgets/engine_chapter_card.dart';
 import 'widgets/engine_completed_quests_section.dart';
 import 'widgets/engine_quest_card.dart';
 import 'widgets/engine_quest_section.dart';
-import 'widgets/engine_reward_history_feed.dart';
-import '../../../shared/widgets/section_head.dart';
 
 /// V2 quests screen.
 ///
@@ -254,19 +252,20 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                       completed: provider.completedQuests,
                       l10n: l10n,
                       resolveDomain: provider.domainForNodeId,
+                      header: l10n.progQuestsCompletedHeader,
+                      headerColor: Tokens.onSurfaceMuted,
+                      emptyTitle: l10n.progQuestsEmptyCompletedTitle,
+                      emptyCaption: l10n.progQuestsEmptyCompletedCaption,
                     ),
                     const SizedBox(height: Tokens.spaceXl),
-                    SectionHead(
-                      label: l10n.progRewardsSectionLabel,
-                      caption: l10n.progRewardsSectionCaption,
-                      accent: Tokens.calories.color,
-                    ),
-                    const SizedBox(height: Tokens.spaceSm),
-                    EngineRewardHistoryFeed(
-                      grants: provider.recentRewardHistory,
+                    EngineCompletedQuestsSection(
+                      completed: provider.recentDailyCompletions,
                       l10n: l10n,
-                      resolveNode: provider.nodeById,
                       resolveDomain: provider.domainForNodeId,
+                      header: l10n.progRewardsSectionLabel,
+                      headerColor: Tokens.calories.color,
+                      emptyTitle: l10n.progRewardsEmptyTitle,
+                      emptyCaption: l10n.progRewardsEmptyCaption,
                     ),
                   ],
                 ),

@@ -373,36 +373,14 @@ class ProgressionEngineProvider extends ChangeNotifier {
   }
 
   /// Reward grants from the ledger, newest first. Includes every
-  /// grant kind — useful for devtools, exports, audit trails. UI
-  /// consumers usually want [recentRewardHistory] which already
-  /// filters out quest XP grants (those land in
-  /// [completedQuests] instead).
+  /// grant kind — useful for devtools, exports, audit trails. The
+  /// quests screen does not render this directly anymore: completed
+  /// quests, achievements, and milestones are unified under
+  /// [completedNodes] and each row already shows its rewards inline.
   List<RewardGrantEvent> get rewardHistory {
     final l = _ledger;
     if (l == null) return const [];
     final list = [...l.rewardGrants];
-    list.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-    return List.unmodifiable(list);
-  }
-
-  /// Recent reward grants for the quests-screen "Recent rewards" feed.
-  /// Excludes XP grants that originated from a [QuestNode] — those are
-  /// already shown in the completed-quests rollup as their own entry,
-  /// so duplicating them in the feed conflates "quest done" with
-  /// "milestone unlocked". Cosmetic / emblem / relic / chapter-unlock
-  /// grants and XP from non-quest nodes (achievements, milestones) all
-  /// stay.
-  List<RewardGrantEvent> get recentRewardHistory {
-    final l = _ledger;
-    if (l == null) return const [];
-    final list = <RewardGrantEvent>[];
-    for (final e in l.rewardGrants) {
-      if (e.rewardKind == RewardGrantKind.xp) {
-        final node = ProgressionNodeCatalog.definitionForId(e.nodeId);
-        if (node is QuestNode) continue;
-      }
-      list.add(e);
-    }
     list.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     return List.unmodifiable(list);
   }
@@ -413,6 +391,24 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// the catalog still classifies as a [QuestNode] — stale ledger
   /// entries (catalog drift) are skipped silently.
   List<EngineCompletedQuest> get completedQuests {
+    return _completedQuestsForBuckets(
+      excludeBuckets: const {QuestDisplayBucket.daily},
+    );
+  }
+
+  /// Daily-bucket quest completions only — the "Recent rewards"
+  /// section on the quests screen surfaces these so the player sees
+  /// what they wrapped up today / this week. Sorted newest first.
+  List<EngineCompletedQuest> get recentDailyCompletions {
+    return _completedQuestsForBuckets(
+      includeBuckets: const {QuestDisplayBucket.daily},
+    );
+  }
+
+  List<EngineCompletedQuest> _completedQuestsForBuckets({
+    Set<QuestDisplayBucket>? includeBuckets,
+    Set<QuestDisplayBucket> excludeBuckets = const {},
+  }) {
     final l = _ledger;
     if (l == null) return const [];
 
@@ -424,26 +420,19 @@ class ProgressionEngineProvider extends ChangeNotifier {
       }
     }
 
-    // Sum XP granted per node so the rollup row can show "+96 XP".
-    final xpByNode = <String, int>{};
-    for (final e in l.rewardGrants) {
-      if (e.rewardKind != RewardGrantKind.xp) continue;
-      xpByNode.update(
-        e.nodeId,
-        (prev) => prev + (e.xpAmount ?? 0),
-        ifAbsent: () => e.xpAmount ?? 0,
-      );
-    }
-
     final out = <EngineCompletedQuest>[];
     for (final node in _nodeCatalog.build()) {
       if (node is! QuestNode) continue;
+      if (includeBuckets != null &&
+          !includeBuckets.contains(node.displayBucket)) {
+        continue;
+      }
+      if (excludeBuckets.contains(node.displayBucket)) continue;
       final event = latestByNode[node.id];
       if (event == null) continue;
       out.add(EngineCompletedQuest(
         node: node,
         completedAt: event.timestamp,
-        xpGranted: xpByNode[node.id] ?? 0,
       ));
     }
     out.sort((a, b) => b.completedAt.compareTo(a.completedAt));
@@ -843,23 +832,22 @@ class ProgressionEngineProvider extends ChangeNotifier {
 }
 
 /// A completed quest node paired with the timestamp of its most
-/// recent completion event and the actual XP granted. Built by
-/// [ProgressionEngineProvider.completedQuests] from the ledger.
+/// recent completion event. Built by
+/// [ProgressionEngineProvider.completedQuests] +
+/// [ProgressionEngineProvider.recentDailyCompletions] from the ledger.
+///
+/// Display surfaces show a neutral check chip — they do not surface
+/// XP value (V1 parity: claimed quests get a soft check, not the
+/// gold "+XP" pill).
 @immutable
 class EngineCompletedQuest {
   const EngineCompletedQuest({
     required this.node,
     required this.completedAt,
-    required this.xpGranted,
   });
 
   final QuestNode node;
   final DateTime completedAt;
-
-  /// Total XP granted by this quest (sum of all matching XP reward
-  /// grants in the ledger). Lets the rollup row show "+96 XP" even
-  /// after we filter quest XP out of the recent rewards feed.
-  final int xpGranted;
 
   String get nodeId => node.id;
 }
