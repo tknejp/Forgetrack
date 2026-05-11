@@ -6,11 +6,11 @@ this doc is the working state.
 
 ## Branch + commits
 
-`refactor/progression-engine-v2` — 19 commits previous session + Phase 6.5
-foundation + Phase 6.5b/c parity passes (assets, expandable cards, history
-feed, completed rollup, chain mechanics, forest_trial chapter, chapter UI;
-then asset sizing, chain position, chapter expand, daily 2-of-N rotation,
-long-term goals section, history-vs-completed split).
+`refactor/progression-engine-v2` — 19 commits previous session + Phases
+6.5 → 6.5d (parity / cleanup passes). 6.5d reverted a plan violation
+from 6.5c (the duplicate `long_term_content.dart`) and finished the
+V1-parity polish: completed-quests vs daily-completions split, neutral
+check chip on claimed rows, chapter chain step icons + level-gate lock.
 `flutter analyze` clean (only pre-existing `sheets_export _round` warning).
 `flutter test` 373/373 passing.
 
@@ -33,6 +33,7 @@ long-term goals section, history-vs-completed split).
 | 6.5 quests_screen migration (parallel V2 screen, V1 evicted from route) | ✅ done |
 | 6.5b V1-parity quest screen (assets, expand, streak, history feed, completed rollup, chain mechanics, forest_trial chapter, chapter UI) | ✅ done |
 | 6.5c V1 visual + UX parity (asset sizing, chain position, chapter expand, daily 2-of-N, long-term goals, history vs completed split) | ✅ done |
+| 6.5d Plan-aligned cleanup (revert long-term duplicate, split completed vs daily, chapter chain icons + level lock) | ✅ done |
 | 6.6 social_provider state migration | ⏳ next |
 | 6.7 hero_screen + journey adapter | ⏳ |
 | 6.8 overview_screen, onboarding_steps (main_shell already on V2) | ⏳ |
@@ -287,6 +288,41 @@ Four commits on top of 6.5b:
   achievement-driven rewards. `EngineCompletedQuest.xpGranted` is
   summed from the ledger so the rollup row keeps a "+96 XP" badge
   instead of just a check icon.
+
+## Phase 6.5d — files added/modified (plan-aligned cleanup)
+
+Three commits after the user flagged 6.5c drift back toward V1
+patterns:
+
+- `dd5e41e` Reverted `long_term_content.dart` — those five "long-term
+  quests" violated the V2 plan's "Quest and Achievement With Same
+  Goal — both should reference the same ObjectiveDefinition" rule.
+  They created new QuestNodes whose objectives (RewardCountMetric,
+  StreakDaysMetric.byRule, TotalXpMetric) were already covered by
+  existing AchievementNodes in `steps_content`, `welcome_content`,
+  and `meta_content`. Long-term display in V2 should surface those
+  same nodes (achievements / milestones) through a shared resolver
+  rather than re-authoring duplicate quests.
+- `a5ca7f8` Split completed quests vs daily completions. V2 now
+  mirrors V1's bottom layout: "Splněné cíle" (non-daily completed
+  quests — chapter / weekly / future long-term) and "Nedávné odměny"
+  (today's daily-goal claims). Provider getters `completedQuests`
+  (excludes daily bucket) and `recentDailyCompletions` (daily-bucket
+  only) drive the two sections; both use the same
+  `EngineCompletedQuestsSection` widget with configurable header /
+  empty copy. Claimed rows now show a soft success-toned check chip
+  (V1 parity, no gold "+XP" pill once claimed). The achievement
+  reward feed (`EngineRewardHistoryFeed`) is gone — achievements
+  surface on their own screen, not the quests tab.
+- `6918ad2` Chapter chain icons + level lock. `QuestNode` gains
+  `chainStepIcon: IconData?` so chapter open / finale can render
+  play / shield glyphs instead of "Start" / "Emblem" text. The
+  forest_trial open node also picks up an explicit
+  `LevelAtLeast(10)` unlock condition; the provider extracts the
+  first unmet `LevelAtLeast` onto `EngineQuestProgress.levelGate`
+  and the chapter card swaps its XP pill for a "Lv 10" lock chip,
+  hides the progress bar, and darkens the background image while
+  the gate stands.
 
 ## Outstanding for full V1 chapter parity (deferred)
 
