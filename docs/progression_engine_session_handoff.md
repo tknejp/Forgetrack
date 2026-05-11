@@ -6,13 +6,13 @@ this doc is the working state.
 
 ## Branch + commits
 
-`refactor/progression-engine-v2` — 19 commits previous session + Phases
-6.5 → 6.5d (parity / cleanup passes). 6.5d reverted a plan violation
-from 6.5c (the duplicate `long_term_content.dart`) and finished the
-V1-parity polish: completed-quests vs daily-completions split, neutral
-check chip on claimed rows, chapter chain step icons + level-gate lock.
-`flutter analyze` clean (only pre-existing `sheets_export _round` warning).
-`flutter test` 373/373 passing.
+`refactor/progression-engine-v2` — through Phase 6.5e
+(quest screen refactor + full chapter content port). The screen reached
+feature parity with V1 across all sections (chapter / daily / weekly /
+long-term / locked / DOKONČENÉ / nedávné odměny), and the V2 catalog
+now ships all 11 chapters (Pilgrim Path → Dragonrock Sovereign) chained
+end-to-end. `flutter analyze` clean (only pre-existing
+`sheets_export _round` warning). `flutter test` 373/373 passing.
 
 ## Phase status
 
@@ -34,6 +34,7 @@ check chip on claimed rows, chapter chain step icons + level-gate lock.
 | 6.5b V1-parity quest screen (assets, expand, streak, history feed, completed rollup, chain mechanics, forest_trial chapter, chapter UI) | ✅ done |
 | 6.5c V1 visual + UX parity (asset sizing, chain position, chapter expand, daily 2-of-N, long-term goals, history vs completed split) | ✅ done |
 | 6.5d Plan-aligned cleanup (revert long-term duplicate, split completed vs daily, chapter chain icons + level lock) | ✅ done |
+| 6.5e Quest screen refactor + chapter content port (long-term + DOKONČENÉ + locked next-up + 11 chapters chained) | ✅ done |
 | 6.6 social_provider state migration | ⏳ next |
 | 6.7 hero_screen + journey adapter | ⏳ |
 | 6.8 overview_screen, onboarding_steps (main_shell already on V2) | ⏳ |
@@ -289,6 +290,88 @@ Four commits on top of 6.5b:
   summed from the ledger so the rollup row keeps a "+96 XP" badge
   instead of just a check icon.
 
+## Phase 6.5e — files added/modified (quest screen refactor + chapter port)
+
+One large commit (`7f50847`) landing the full quest-screen V2 surface
+and porting every remaining chapter from V1. Highlights:
+
+### Quest screen sections
+
+- DLOUHODOBÉ CÍLE — `EngineLongTermCard` aggregates a long-term quest
+  with companion achievement nodes that share its objective. Renders
+  the quest's XP pill + a chip strip + chain dots; expanded panel
+  shows next-step hint, "Také odemkne" companion list, and the chain's
+  finale rewards as rich rows.
+- DOKONČENÉ — `EngineCompletedQuestCard` collapses each chain into a
+  single row (representative = highest-chainOrder touched step). Gold
+  glow + claim pill only while a step is claimable; greyed once fully
+  claimed. "Vyzvednout vše" drains the pending claims with a cascade
+  loop (up to 8 passes) so derived unlocks land in the same tap.
+- ZAMČENÉ — `_LockedSection` shows at most one chapter chain at a time
+  (next-up by sortOrder); hint preference is prereq chapter name
+  ("Dokonči Stezku poutníka") over level ("Reach level 10"). Non-chapter
+  level-gated quests still surface individually.
+- Daily section surfaces claimable quests outside today's 2-of-N
+  rotation so `pendingClaimNodeIds` is never invisible.
+
+### Engine + provider (6.5e)
+
+- `ObjectiveDefinition.baselineFromNodeId` — chapter step objectives
+  count progress *since the prereq node completed*, not lifetime.
+  Provider precomputes per-objective overrides via
+  `EngineEvaluationInput.objectiveActualOverrides`; evaluator just
+  reads from the map when present. Today supports
+  `NodeCompletionsMetric` + `RewardCountMetric`; `StepsMetric` falls
+  back to lifetime (no per-event history yet — chain prereqs still
+  enforce ordering).
+- `EngineQuestProgress.prereqGateNodeId` exposes the first unmet
+  prereq node id so the locked-row hint can name the blocker.
+- `claimNode` rebuilds input from the latest ledger on every call;
+  the old stale-input bug where sequential claim-all left a counter
+  unsatisfied is gone.
+- `bind()` guards against duplicate `addListener` via instance
+  tracking; `dispose()` detaches.
+
+### Catalog port — all 11 chapters now in V2
+
+- Pilgrim Path (level 1 starter, ships its own
+  `chapter_pilgrim_path_content.dart`). Drops
+  `emblem_pilgrim_mark` from the welcome achievement; the finale
+  awards it instead.
+- Forest Trail (level 10, pilot — keeps its own file as the canonical
+  hand-authored chapter the V2 tests reference).
+- Nine remaining chapters (Ruins of Discipline → Dragonrock Sovereign)
+  in shared `chapter_content.dart` via a spec / builder pattern. Cross-
+  chapter chain wired via `prerequisiteNodeIds`: each chapter's open
+  depends on the previous chapter's finale being in the ledger.
+- All 10 emblem unlock hints rewritten from "Reach level X" to
+  "Dokonči X" / "Complete the X" (CS + EN regenerated).
+- Chapter step criterion mapping V1 → V2 documented in the chapter
+  content file header. Known limitations preserved:
+  - `ruleSetCompletionsAtLeast` ("four pillars" etc.) collapses to the
+    first listed daily rule's `NodeCompletionsMetric` proxy.
+  - `totalRuleValueAtLeast` (250k/500k steps) maps to `StepsMetric`
+    lifetime — no baseline-at-unlock until step history per timestamp
+    exists.
+
+### Cosmetic preview integration
+
+- Reward preview tap on a chain finale reuses the canonical
+  `CosmeticDetailsSheet` from the inventory via
+  `showEngineRewardPreviewSheet` shim. Locked emblems read the same as
+  in the cosmetics screen with the chapter-specific unlock hint.
+- `CosmeticAssetThumb` widget resolves a cosmetic by id via
+  `CosmeticCatalog` + `CosmeticsConfig.resolveAssetPath`; falls back
+  to typed icon when the id isn't in the catalog.
+
+### Other UI primitives (6.5e)
+
+- `EngineCompanionPill` (badge + animated chevron, doubles as expand
+  affordance under the XP pill).
+- `EngineRewardChip` (icon-only chips for compact reward strips).
+- `AnimatedSize` on all expandable card types.
+- Palette icon swapped for `card_giftcard` glyph everywhere.
+
 ## Phase 6.5d — files added/modified (plan-aligned cleanup)
 
 Three commits after the user flagged 6.5c drift back toward V1
@@ -324,21 +407,35 @@ patterns:
   hides the progress bar, and darkens the background image while
   the gate stands.
 
-## Outstanding for full V1 chapter parity (deferred)
+## Outstanding catalog work (deferred)
 
-- Other 9 chapters (ruins_discipline, mine_descent, forge_momentum,
-  underway_pact, frostbound_oath, icewalker_route, mountain_ascent,
-  dragonroad, dragonrock_sovereign) still V1-only. Pattern is
-  established — each is one new content file +
-  `forestTrial*` aggregator entry.
-- "Upcoming chapters" sub-section (V1 has it for chapters whose
-  prereq chapter isn't complete yet)
-- ComboPoolDefinition + tiered daily — needed before daily-combo
-  section can light up
-- Long-term content port is *partial* — V1 has more journey/chain
-  quests (sleep totals, weekly mastery, lifetime steps, recovery
-  combo finale, more XP milestones). Pattern in `long_term_content.dart`
-  is the template; add as appetite allows.
+All chapters now in V2. Remaining content gaps:
+
+- ComboPoolDefinition + tiered daily configs — needed before the
+  daily-combo section can light up. Plan decisions are locked
+  (§4.6, §4.7 of the phase plan); not yet ported.
+- Step-based chapter steps (`mine_descent_steps_250k`,
+  `icewalker_route_steps_500k`) fall back to lifetime semantics
+  because the baseline-at-unlock override only handles
+  `NodeCompletionsMetric` + `RewardCountMetric` today. Chain prereqs
+  still enforce ordering; the player who's already past the threshold
+  just instantly satisfies the step. Fix needs per-event step history
+  scoped to a timestamp.
+- "Four pillars" / `ruleSetCompletionsAtLeast` chapter steps are
+  proxied to the first listed daily rule's `NodeCompletionsMetric`.
+  Full semantics ("K of M rules per day") need a new metric
+  (`DailyRuleSetCompletionsMetric` or similar).
+- Long-term content port is intentionally narrow — covers the three
+  threshold chains (lifetime_steps, xp_milestones, reward_hunter).
+  More V1 long-term content (sleep totals, weekly mastery,
+  recovery combo finale) can land later in the same shape.
+
+## Follow-up cleanup not blocking next phase
+
+- `engine_companion_pill.dart` is 858 lines and bundles five distinct
+  concerns (pill widget, badge helpers, companion detail sheet, reward
+  preview sheet, public reward detail row). Splitting into focused
+  files would be cleaner but not urgent — leave for a polish pass.
 
 ## Phase 6.5 — original-foundation files (Phase 6.5 commit `510a5d4`)
 
