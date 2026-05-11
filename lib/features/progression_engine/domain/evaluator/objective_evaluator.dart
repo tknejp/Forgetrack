@@ -42,7 +42,11 @@ class ObjectiveEvaluator {
     ObjectiveDefinition objective,
     EngineEvaluationInput input,
   ) {
-    final actual = _readMetric(objective.metric, objective.scope, input);
+    // Provider-supplied override wins — used for objectives whose
+    // actual value depends on ledger history (e.g. chapter step
+    // `baselineFromNodeId` counters "since this chain step unlocked").
+    final override = input.objectiveActualOverrides[objective.id];
+    final actual = override ?? _readMetric(objective.metric, objective.scope, input);
     final completed = _matches(
       operator: objective.operator,
       value: actual,

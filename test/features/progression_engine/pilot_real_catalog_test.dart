@@ -62,9 +62,12 @@ void main() {
       }));
 
       // Auto-claim nodes complete on first run.
+      // `pilgrim_path_open` is the starter chapter's auto-claim open
+      // step — fires once the player reaches level 1.
       final autoCompletedIds = result.completedNodes.map((n) => n.nodeId).toSet();
       expect(autoCompletedIds, containsAll({
         'welcome_to_journey',
+        'pilgrim_path_open',
         'steps_total_100k',
         'level_5',
       }));
@@ -77,22 +80,30 @@ void main() {
         'daily_protein_today',
       }));
 
-      // No XP yet — quest XP arrives only after the player claims.
-      final xpGrants = result.grantedRewards
-          .where((g) => g.event.rewardKind == RewardGrantKind.xp)
+      // Manual-claim quest XP only arrives after the player claims —
+      // confirm none of the manual-claim daily quests have been paid
+      // out yet. The auto-claim Pilgrim Path opener does ship its XP
+      // (40) immediately, so we filter that node out before asserting.
+      final manualClaimXpGrants = result.grantedRewards
+          .where((g) =>
+              g.event.rewardKind == RewardGrantKind.xp &&
+              g.event.nodeId != 'pilgrim_path_open')
           .toList();
-      expect(xpGrants, isEmpty);
-      // Cosmetics: welcome (2) + steps_total_100k (1) + level_5 (1).
+      expect(manualClaimXpGrants, isEmpty);
+      // Cosmetics: welcome's camp background + relic from
+      // steps_total_100k + background from level_5. emblem_pilgrim_mark
+      // moved to the Pilgrim Path finale (manual claim) so it no
+      // longer fires on the first evaluation.
       final cosmeticIds = result.grantedRewards
           .where((g) => g.event.rewardKind == RewardGrantKind.cosmetic)
           .map((g) => g.event.cosmeticId)
           .toSet();
       expect(cosmeticIds, containsAll({
         'background_camp',
-        'emblem_pilgrim_mark',
         'relic_ravine_stone',
         'background_forest_trail',
       }));
+      expect(cosmeticIds, isNot(contains('emblem_pilgrim_mark')));
     });
 
     test('claiming a manual quest grants XP and moves it to completed',
@@ -162,8 +173,10 @@ void main() {
       );
 
       // Welcome always completes (no objective, no conditions).
+      // The Pilgrim Path open also auto-claims at level 1 — it's the
+      // level-1 starter chapter, gated only by `LevelAtLeast(1)`.
       final ids = result.completedNodes.map((n) => n.nodeId).toSet();
-      expect(ids, {'welcome_to_journey'});
+      expect(ids, {'welcome_to_journey', 'pilgrim_path_open'});
 
       // Daily steps + protein + lifetime + level 5 are all unmet.
       expect(

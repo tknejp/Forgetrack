@@ -2084,6 +2084,72 @@ abstract class AppLocalizations {
   /// **'LONG-TERM GOALS'**
   String get progQuestsLongTermHeader;
 
+  /// No description provided for @progQuestsLongTermAlsoUnlocks.
+  ///
+  /// In en, this message translates to:
+  /// **'Also unlocks'**
+  String get progQuestsLongTermAlsoUnlocks;
+
+  /// No description provided for @progQuestNextStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Next step'**
+  String get progQuestNextStep;
+
+  /// No description provided for @progQuestNextStepLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the previous step to unlock the next one'**
+  String get progQuestNextStepLocked;
+
+  /// No description provided for @progQuestChainFinaleReward.
+  ///
+  /// In en, this message translates to:
+  /// **'Chapter finale reward'**
+  String get progQuestChainFinaleReward;
+
+  /// No description provided for @cosmeticTypeFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'Frame'**
+  String get cosmeticTypeFrame;
+
+  /// No description provided for @cosmeticTypeRelic.
+  ///
+  /// In en, this message translates to:
+  /// **'Relic'**
+  String get cosmeticTypeRelic;
+
+  /// No description provided for @cosmeticTypeBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Background'**
+  String get cosmeticTypeBackground;
+
+  /// No description provided for @cosmeticTypeEmblem.
+  ///
+  /// In en, this message translates to:
+  /// **'Emblem'**
+  String get cosmeticTypeEmblem;
+
+  /// No description provided for @cosmeticTypeCompanion.
+  ///
+  /// In en, this message translates to:
+  /// **'Companion'**
+  String get cosmeticTypeCompanion;
+
+  /// No description provided for @cosmeticTypeTitleFlair.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get cosmeticTypeTitleFlair;
+
+  /// No description provided for @cosmeticTypeMapEffect.
+  ///
+  /// In en, this message translates to:
+  /// **'Map effect'**
+  String get cosmeticTypeMapEffect;
+
   /// No description provided for @progQuestsChapterWaitingHeader.
   ///
   /// In en, this message translates to:
@@ -3337,6 +3403,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Dragonrock Sovereign'**
   String get progQuestSourceDragonrockSovereign;
+
+  /// No description provided for @progQuestPilgrimPathOpenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pilgrim\'s Path'**
+  String get progQuestPilgrimPathOpenTitle;
+
+  /// No description provided for @progQuestPilgrimPathOpenDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Set out on your journey — your first chapter begins here.'**
+  String get progQuestPilgrimPathOpenDesc;
+
+  /// No description provided for @progQuestPilgrimPathFirstStepsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'First steps'**
+  String get progQuestPilgrimPathFirstStepsTitle;
+
+  /// No description provided for @progQuestPilgrimPathFirstStepsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the daily steps goal and start walking the path.'**
+  String get progQuestPilgrimPathFirstStepsDesc;
+
+  /// No description provided for @progQuestPilgrimPathFirstSleepTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'First rest'**
+  String get progQuestPilgrimPathFirstSleepTitle;
+
+  /// No description provided for @progQuestPilgrimPathFirstSleepDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the daily sleep goal and recover for the road ahead.'**
+  String get progQuestPilgrimPathFirstSleepDesc;
+
+  /// No description provided for @progQuestPilgrimPathFirstRewardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'First reward'**
+  String get progQuestPilgrimPathFirstRewardTitle;
+
+  /// No description provided for @progQuestPilgrimPathFirstRewardDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn your first reward on the pilgrim\'s path.'**
+  String get progQuestPilgrimPathFirstRewardDesc;
+
+  /// No description provided for @progQuestPilgrimPathFinaleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pilgrim\'s Mark'**
+  String get progQuestPilgrimPathFinaleTitle;
+
+  /// No description provided for @progQuestPilgrimPathFinaleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk, rest, earn — then claim the Pilgrim\'s Mark.'**
+  String get progQuestPilgrimPathFinaleDesc;
 
   /// No description provided for @progQuestForestTrialOpenTitle.
   ///
@@ -7182,67 +7308,67 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticEmblemForestMarkUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Reach level 10.'**
+  /// **'Complete the Forest Trial.'**
   String get cosmeticEmblemForestMarkUnlockHint;
 
   /// No description provided for @cosmeticEmblemPilgrimMarkUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Begin your journey.'**
+  /// **'Complete the Pilgrim\'s Path.'**
   String get cosmeticEmblemPilgrimMarkUnlockHint;
 
   /// No description provided for @cosmeticEmblemRuinSigilUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Reach level 20.'**
+  /// **'Complete the Ruins of Discipline.'**
   String get cosmeticEmblemRuinSigilUnlockHint;
 
   /// No description provided for @cosmeticEmblemGatekeeperMarkUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Reach level 30.'**
+  /// **'Complete the Mine Descent.'**
   String get cosmeticEmblemGatekeeperMarkUnlockHint;
 
   /// No description provided for @cosmeticEmblemMineCrestUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Reach level 40.'**
+  /// **'Complete the Forge of Momentum.'**
   String get cosmeticEmblemMineCrestUnlockHint;
 
   /// No description provided for @cosmeticEmblemUnderwaysMarkUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Reach level 50.'**
+  /// **'Complete the Underway Pact.'**
   String get cosmeticEmblemUnderwaysMarkUnlockHint;
 
   /// No description provided for @cosmeticEmblemFrostSigilUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Reach level 60.'**
+  /// **'Complete the Frostbound Oath.'**
   String get cosmeticEmblemFrostSigilUnlockHint;
 
   /// No description provided for @cosmeticEmblemIcewalkerMarkUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Reach level 70.'**
+  /// **'Complete the Icewalker Route.'**
   String get cosmeticEmblemIcewalkerMarkUnlockHint;
 
   /// No description provided for @cosmeticEmblemMountainCrestUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Reach level 80.'**
+  /// **'Complete the Mountain Ascent.'**
   String get cosmeticEmblemMountainCrestUnlockHint;
 
   /// No description provided for @cosmeticEmblemDragonMarkUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Reach level 90.'**
+  /// **'Complete the Dragonroad.'**
   String get cosmeticEmblemDragonMarkUnlockHint;
 
   /// No description provided for @cosmeticEmblemDragonrockEmblemUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Reach level 100.'**
+  /// **'Complete the Dragonrock Sovereign.'**
   String get cosmeticEmblemDragonrockEmblemUnlockHint;
 
   /// No description provided for @cosmeticRelicCampfireSparkUnlockHint.

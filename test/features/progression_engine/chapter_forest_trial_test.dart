@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forgetrack/features/progression_engine/application/progression_engine.dart';
 import 'package:forgetrack/features/progression_engine/data/in_memory_progression_engine_repository.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/engine_evaluation_input.dart';
+import 'package:forgetrack/features/progression_engine/domain/models/ledger_event.dart';
 
 EngineEvaluationInput _input({
   int level = 10,
@@ -18,11 +19,27 @@ EngineEvaluationInput _input({
       nodeCompletionCounts: nodeCompletionCounts,
     );
 
+/// Seed the ledger with a pilgrim_path_finale completion so the
+/// Forest Trail chain's open clears its cross-chapter prereq without
+/// us having to walk the whole starter chapter step by step.
+Future<void> _seedPilgrimComplete(
+  InMemoryProgressionEngineRepository repo,
+) async {
+  await repo.appendEvents([
+    NodeCompletionEvent(
+      eventKey: 'node|pilgrim_path_finale|lifetime|complete',
+      timestamp: DateTime(2026, 5, 10, 12),
+      nodeId: 'pilgrim_path_finale',
+    ),
+  ]);
+}
+
 void main() {
   group('Forest Trial chain', () {
     test('open auto-fires at level 10; subsequent steps remain locked',
         () async {
       final repo = InMemoryProgressionEngineRepository();
+      await _seedPilgrimComplete(repo);
       final engine = ProgressionEngine(
         repository: repo,
         runIdGenerator: () => 'forest-trial-1',
@@ -51,6 +68,7 @@ void main() {
     test('step 1 becomes available once daily_steps_today has 5 completions',
         () async {
       final repo = InMemoryProgressionEngineRepository();
+      await _seedPilgrimComplete(repo);
       final engine = ProgressionEngine(
         repository: repo,
         runIdGenerator: () => 'forest-trial-2',
@@ -79,6 +97,7 @@ void main() {
 
     test('finale stays locked until all three steps complete', () async {
       final repo = InMemoryProgressionEngineRepository();
+      await _seedPilgrimComplete(repo);
       final engine = ProgressionEngine(
         repository: repo,
         runIdGenerator: () => 'forest-trial-3',

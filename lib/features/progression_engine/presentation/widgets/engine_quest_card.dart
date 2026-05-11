@@ -3,13 +3,14 @@ import 'package:intl/intl.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
-import '../../../../shared/widgets/ft_expand_chevron.dart';
 import '../../../../shared/widgets/progress_bar.dart';
 import '../../../../shared/widgets/xp_claim_pill.dart';
 import '../../../progression/domain/models/core_models.dart';
 import '../../../progression/presentation/widgets/progression_primitives.dart';
 import '../../application/progression_engine_provider.dart';
 import '../../domain/models/progression_node_definition.dart';
+import '../../domain/models/reward_definition.dart';
+import 'engine_companion_pill.dart';
 
 /// One quest card in the V2 quests screen.
 ///
@@ -62,14 +63,32 @@ class EngineQuestCard extends StatelessWidget {
   /// completed quests in the rollup row).
   final VoidCallback? onToggle;
 
+  /// Non-XP rewards on this quest. Surface as chips so future quests
+  /// carrying cosmetic/title/emblem/relic/chapter/companion payloads
+  /// render without a screen change; today's catalog still ships
+  /// XP-only quests so this is normally empty.
+  List<RewardDefinition> get _nonXpRewards => [
+        for (final r in quest.node.rewards)
+          if (r is! XpReward) r,
+      ];
+
+  bool get _hasNonXpReward => _nonXpRewards.isNotEmpty;
+
   @override
   Widget build(BuildContext context) {
     final domain = quest.domain ?? ProgressionDomain.steps;
     final accent = domain.color;
     final streakValue = streak?.currentStreak ?? 0;
 
+    // V1 quest cards expanded for any meta info; V2 cards only expand
+    // when there's an actual extra reward to surface (rule from the
+    // user: "Quest cards nepůjdou expandovat pokud neobsahují odměnu
+    // navíc mimo XP"). Today's daily/weekly quests in the catalog ship
+    // XP-only — no companion / no item — so they're collapsed-only.
+    final canExpand = _hasNonXpReward && onToggle != null;
+
     return GestureDetector(
-      onTap: onToggle,
+      onTap: canExpand ? onToggle : null,
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
@@ -127,7 +146,7 @@ class EngineQuestCard extends StatelessWidget {
                       const SizedBox(height: 3),
                       Text(
                         quest.node.descriptionKey(l10n),
-                        maxLines: isExpanded ? 3 : 2,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 12.5,
@@ -143,28 +162,49 @@ class EngineQuestCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: Tokens.spaceSm),
-                XpClaimPill(key: pillKey, data: _pillData()),
-                if (onToggle != null) ...[
-                  const SizedBox(width: 6),
-                  ExpandChevron(
-                    expanded: isExpanded,
-                    color: Tokens.onSurfaceMuted,
-                    size: 20,
-                  ),
-                ],
+                // Right column: XP pill on top, optional companion
+                // pill below when the quest carries a non-XP reward.
+                // No standalone chevron — the pill itself doubles as
+                // the expand affordance.
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    XpClaimPill(key: pillKey, data: _pillData()),
+                    if (canExpand) ...[
+                      const SizedBox(height: 4),
+                      EngineCompanionPill(
+                        badge: badgeForReward(_nonXpRewards.first),
+                        expanded: isExpanded,
+                        onTap: onToggle!,
+                        accent: accent,
+                      ),
+                    ],
+                  ],
+                ),
               ],
             ),
             const SizedBox(height: Tokens.spaceSm),
             _ProgressRow(quest: quest, accent: accent),
-            if (isExpanded) ...[
-              const SizedBox(height: Tokens.spaceSm),
-              _ExpandedDetails(
-                quest: quest,
-                streak: streak,
-                accent: accent,
-                l10n: l10n,
-              ),
-            ],
+            // Animate the expand block — `AnimatedSize` smooths the
+            // height transition; the conditional child collapses to
+            // an empty box so cards without anything in the expanded
+            // panel don't reserve space.
+            AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: isExpanded
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: Tokens.spaceSm),
+                      child: _ExpandedDetails(
+                        quest: quest,
+                        streak: streak,
+                        accent: accent,
+                        l10n: l10n,
+                      ),
+                    )
+                  : const SizedBox(width: double.infinity),
+            ),
           ],
         ),
       ),
@@ -244,8 +284,28 @@ class _ExpandedDetails extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lockedHint = quest.node.lockedHintKey?.call(l10n);
-    final hasScaling = quest.baseXp > 0 && quest.previewXp != quest.baseXp;
     final bestStreak = streak?.bestStreak ?? 0;
+
+    // The XP value already lives on the pill in the title row — repeating
+    // it inside the expanded panel only adds noise. The panel keeps just
+    // the streak record and any locked hint authored on the node.
+    final rows = <Widget>[];
+    if (bestStreak > 0) {
+      rows.add(_DetailLine(
+        icon: Icons.local_fire_department_rounded,
+        color: accent,
+        text: l10n.progStreakBestDetail(bestStreak),
+      ));
+    }
+    if (lockedHint != null && lockedHint.isNotEmpty) {
+      if (rows.isNotEmpty) rows.add(const SizedBox(height: 6));
+      rows.add(_DetailLine(
+        icon: Icons.lock_outline_rounded,
+        color: Tokens.onSurfaceMuted,
+        text: lockedHint,
+      ));
+    }
+    if (rows.isEmpty) return const SizedBox.shrink();
 
     return Container(
       width: double.infinity,
@@ -257,32 +317,7 @@ class _ExpandedDetails extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (quest.baseXp > 0)
-            _DetailLine(
-              icon: Icons.bolt_rounded,
-              color: accent,
-              text: hasScaling
-                  ? l10n.progXpScalingDetail(quest.baseXp, quest.previewXp)
-                  : l10n.progXpFlatDetail(quest.baseXp),
-            ),
-          if (bestStreak > 0) ...[
-            const SizedBox(height: 6),
-            _DetailLine(
-              icon: Icons.local_fire_department_rounded,
-              color: accent,
-              text: l10n.progStreakBestDetail(bestStreak),
-            ),
-          ],
-          if (lockedHint != null && lockedHint.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            _DetailLine(
-              icon: Icons.lock_outline_rounded,
-              color: Tokens.onSurfaceMuted,
-              text: lockedHint,
-            ),
-          ],
-        ],
+        children: rows,
       ),
     );
   }
@@ -331,38 +366,26 @@ class _ProgressRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final locale = Localizations.localeOf(context).toString();
-    final pct = (quest.progress * 100).clamp(0, 100).round();
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                _progressLabel(locale),
-                style: const TextStyle(
-                  fontSize: Tokens.fontSizeMicro,
-                  fontWeight: FontWeight.w600,
-                  color: Tokens.onSurfaceMuted,
-                ),
-              ),
-            ),
-            Text(
-              '$pct%',
-              style: TextStyle(
-                fontSize: Tokens.fontSizeMicro,
-                fontWeight: FontWeight.w800,
-                color: accent.withValues(alpha: 0.92),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
         ProgressBar(
           value: quest.progress,
           color: accent,
           glow: accent.withValues(alpha: 0.34),
+        ),
+        const SizedBox(height: 6),
+        Align(
+          alignment: Alignment.centerRight,
+          child: Text(
+            _progressLabel(locale),
+            style: TextStyle(
+              fontSize: Tokens.fontSizeMicro,
+              fontWeight: FontWeight.w700,
+              color: accent.withValues(alpha: 0.92),
+            ),
+          ),
         ),
       ],
     );

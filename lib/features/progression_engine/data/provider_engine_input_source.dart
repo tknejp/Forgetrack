@@ -44,6 +44,13 @@ class ProviderEngineInputSource {
   EngineEvaluationInput buildInput({
     required int totalXpFromLedger,
     required int levelFromLedger,
+    int totalRewardCount = 0,
+    Map<String, int> rewardCountByRule = const {},
+    Map<String, int> rewardCountByDomain = const {},
+    Map<String, int> bestStreakByRule = const {},
+    Map<String, int> bestStreakByDomain = const {},
+    Map<String, int> nodeCompletionCounts = const {},
+    Map<String, double> objectiveActualOverrides = const {},
   }) {
     final today = _today();
     return EngineEvaluationInput(
@@ -51,16 +58,28 @@ class ProviderEngineInputSource {
       totalXp: totalXpFromLedger,
       level: levelFromLedger,
       stepsToday: fitness.stepsForDate(today),
+      stepsThisWeek: _stepsThisWeek(today),
+      stepsLifetime: _stepsLifetime(),
       caloriesToday: nutrition.todayCalories.toDouble(),
       proteinGramsToday: nutrition.todayProtein.toDouble(),
       sleepMinutesToday:
           fitness.sleepForDate(today)?.totalDuration.inMinutes ?? 0,
       activityMinutesToday: _activityMinutesForDay(today),
+      totalRewardCount: totalRewardCount,
+      rewardCountByRule: rewardCountByRule,
+      rewardCountByDomain: rewardCountByDomain,
+      bestStreakByRule: bestStreakByRule,
+      bestStreakByDomain: bestStreakByDomain,
+      nodeCompletionCounts: nodeCompletionCounts,
+      objectiveActualOverrides: objectiveActualOverrides,
     );
   }
 
   /// Stable signature for change detection. Matches V1's pattern —
-  /// when this string changes, the engine re-evaluates.
+  /// when this string changes, the engine re-evaluates. Includes the
+  /// lifetime / week-rolling step totals so long-term objectives bound
+  /// to LifetimeScope progress bars refresh as the player walks, not
+  /// just on app restart.
   String auditSignature() {
     final today = _today();
     return [
@@ -70,11 +89,33 @@ class ProviderEngineInputSource {
       goals.sleepHours,
       goals.weeklyActivityMins,
       fitness.stepsForDate(today),
+      _stepsThisWeek(today),
+      _stepsLifetime(),
       nutrition.todayCalories,
       nutrition.todayProtein,
       fitness.sleepForDate(today)?.totalDuration.inMinutes ?? 0,
       _activityMinutesForDay(today),
     ].join('|');
+  }
+
+  /// Sum of all step records the FitnessProvider has loaded. Acts as a
+  /// pragmatic lifetime total — bounded by the user's Health Connect
+  /// history retention. Pre-tracking days simply do not contribute.
+  int _stepsLifetime() {
+    return fitness.stepsHistory.fold<int>(0, (sum, r) => sum + r.steps);
+  }
+
+  /// Sum of steps from Monday (start of ISO week) up to and including
+  /// `today`. Drives weekly-scoped step objectives.
+  int _stepsThisWeek(DateTime today) {
+    final monday = DateTime(today.year, today.month, today.day)
+        .subtract(Duration(days: today.weekday - 1));
+    var sum = 0;
+    for (final r in fitness.stepsHistory) {
+      final d = DateTime(r.date.year, r.date.month, r.date.day);
+      if (!d.isBefore(monday) && !d.isAfter(today)) sum += r.steps;
+    }
+    return sum;
   }
 
   int _activityMinutesForDay(DateTime day) {

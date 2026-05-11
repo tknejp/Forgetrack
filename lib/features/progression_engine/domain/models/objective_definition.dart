@@ -27,6 +27,7 @@ class ObjectiveDefinition {
     this.upperTargetValue,
     this.toleranceRatio = 0,
     this.debugLabel,
+    this.baselineFromNodeId,
   });
 
   final String id;
@@ -51,4 +52,14 @@ class ObjectiveDefinition {
   /// shown to the player — that is what `ProgressionNode.titleKey` is
   /// for. Optional; falls back to [id] when null.
   final String? debugLabel;
+
+  /// When set, the objective's measured value is "since the named
+  /// node's first completion" rather than lifetime. Today only
+  /// [NodeCompletionsMetric] supports this baseline — chapter step
+  /// objectives use it so e.g. `daily_steps_today` completions counted
+  /// before a chapter step unlocked don't auto-satisfy the new step.
+  /// The provider precomputes the override and pipes it into
+  /// `EngineEvaluationInput.objectiveActualOverrides`; the evaluator
+  /// just reads the override when present.
+  final String? baselineFromNodeId;
 }

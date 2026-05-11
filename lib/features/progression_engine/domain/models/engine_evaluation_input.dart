@@ -31,6 +31,7 @@ class EngineEvaluationInput {
     this.bestRollingSleepMinutesByDays = const {},
     this.nodeCompletionCounts = const {},
     this.comboPoolCompletionCounts = const {},
+    this.objectiveActualOverrides = const {},
     this.rpgModeEnabled = true,
   });
 
@@ -86,6 +87,14 @@ class EngineEvaluationInput {
   /// `comboPoolId → completions in scope` — for
   /// `ComboPoolCompletionsMetric`.
   final Map<String, int> comboPoolCompletionCounts;
+
+  /// `objectiveId → measured value override` — bypasses the metric
+  /// switch in [ObjectiveEvaluator] for objectives whose actual value
+  /// is computed elsewhere from the ledger. Used today by
+  /// `ObjectiveDefinition.baselineFromNodeId` — chapter step
+  /// objectives whose counter must start from the moment the chain
+  /// step unlocked instead of all-time.
+  final Map<String, double> objectiveActualOverrides;
 
   /// Whether RPG mode is currently on. Drives [ActivationPolicy]
   /// gating in the resolver.

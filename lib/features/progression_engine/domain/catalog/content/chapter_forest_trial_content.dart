@@ -40,7 +40,13 @@ List<ObjectiveDefinition> forestTrialObjectives() {
       targetValue: 10,
       debugLabel: 'Forest Trial open — level >= 10',
     ),
-    // Step 1: 5 daily-steps completions across days.
+    // Step 1: 5 daily-steps completions *after* the chapter opens.
+    // The `baselineFromNodeId` makes the engine count only daily
+    // completions banked after `forest_trial_open` cleared (player
+    // hit level 10 and the auto-claim fired). Without this, a
+    // late-arriving level-10 player would auto-finish step 1 the
+    // moment the chapter unlocked just because they already had 5+
+    // daily step completions on the books.
     ObjectiveDefinition(
       id: 'forest_trial_daily_wins_5_objective',
       domain: ProgressionDomain.activity,
@@ -48,11 +54,10 @@ List<ObjectiveDefinition> forestTrialObjectives() {
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 5,
-      debugLabel: 'Forest Trial step 1 — 5 daily steps completions',
+      baselineFromNodeId: 'forest_trial_open',
+      debugLabel: 'Forest Trial step 1 — 5 daily steps since open',
     ),
-    // Step 2: 5 daily-protein completions across days. Different
-    // domain than step 1 so the chain forces the player to broaden
-    // their habits.
+    // Step 2: 5 daily-protein completions after step 1 cleared.
     ObjectiveDefinition(
       id: 'forest_trial_steps_5_objective',
       domain: ProgressionDomain.nutrition,
@@ -60,9 +65,10 @@ List<ObjectiveDefinition> forestTrialObjectives() {
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 5,
-      debugLabel: 'Forest Trial step 2 — 5 daily protein completions',
+      baselineFromNodeId: 'forest_trial_daily_wins_5',
+      debugLabel: 'Forest Trial step 2 — 5 daily protein since step 1',
     ),
-    // Step 3: 3 daily-sleep completions across days.
+    // Step 3: 3 daily-sleep completions after step 2 cleared.
     ObjectiveDefinition(
       id: 'forest_trial_recovery_3_objective',
       domain: ProgressionDomain.sleep,
@@ -70,7 +76,8 @@ List<ObjectiveDefinition> forestTrialObjectives() {
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 3,
-      debugLabel: 'Forest Trial step 3 — 3 daily sleep completions',
+      baselineFromNodeId: 'forest_trial_steps_5',
+      debugLabel: 'Forest Trial step 3 — 3 daily sleep since step 2',
     ),
     // Finale: cheap auto-true objective. Real gating lives in
     // [QuestNode.prerequisiteNodeIds] which forces all 3 steps to
@@ -110,6 +117,9 @@ List<ProgressionNode> forestTrialNodes() {
       chainId: _chapterId,
       chainOrder: 0,
       displayGroupId: _chapterId,
+      // Chapters chain across the whole game: Forest Trial can't
+      // auto-open until the player finishes the starter chapter.
+      prerequisiteNodeIds: const ['pilgrim_path_finale'],
       nextNodeIds: const ['forest_trial_daily_wins_5'],
       chainStepIcon: Icons.play_arrow_rounded,
       sortOrder: 300,

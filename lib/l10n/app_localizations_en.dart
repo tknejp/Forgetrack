@@ -1077,6 +1077,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progQuestsLongTermHeader => 'LONG-TERM GOALS';
 
   @override
+  String get progQuestsLongTermAlsoUnlocks => 'Also unlocks';
+
+  @override
+  String get progQuestNextStep => 'Next step';
+
+  @override
+  String get progQuestNextStepLocked =>
+      'Complete the previous step to unlock the next one';
+
+  @override
+  String get progQuestChainFinaleReward => 'Chapter finale reward';
+
+  @override
+  String get cosmeticTypeFrame => 'Frame';
+
+  @override
+  String get cosmeticTypeRelic => 'Relic';
+
+  @override
+  String get cosmeticTypeBackground => 'Background';
+
+  @override
+  String get cosmeticTypeEmblem => 'Emblem';
+
+  @override
+  String get cosmeticTypeCompanion => 'Companion';
+
+  @override
+  String get cosmeticTypeTitleFlair => 'Title';
+
+  @override
+  String get cosmeticTypeMapEffect => 'Map effect';
+
+  @override
   String get progQuestsChapterWaitingHeader => 'UPCOMING CHAPTERS';
 
   @override
@@ -1787,6 +1821,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get progQuestSourceDragonrockSovereign => 'Dragonrock Sovereign';
+
+  @override
+  String get progQuestPilgrimPathOpenTitle => 'Pilgrim\'s Path';
+
+  @override
+  String get progQuestPilgrimPathOpenDesc =>
+      'Set out on your journey — your first chapter begins here.';
+
+  @override
+  String get progQuestPilgrimPathFirstStepsTitle => 'First steps';
+
+  @override
+  String get progQuestPilgrimPathFirstStepsDesc =>
+      'Complete the daily steps goal and start walking the path.';
+
+  @override
+  String get progQuestPilgrimPathFirstSleepTitle => 'First rest';
+
+  @override
+  String get progQuestPilgrimPathFirstSleepDesc =>
+      'Complete the daily sleep goal and recover for the road ahead.';
+
+  @override
+  String get progQuestPilgrimPathFirstRewardTitle => 'First reward';
+
+  @override
+  String get progQuestPilgrimPathFirstRewardDesc =>
+      'Earn your first reward on the pilgrim\'s path.';
+
+  @override
+  String get progQuestPilgrimPathFinaleTitle => 'Pilgrim\'s Mark';
+
+  @override
+  String get progQuestPilgrimPathFinaleDesc =>
+      'Walk, rest, earn — then claim the Pilgrim\'s Mark.';
 
   @override
   String get progQuestForestTrialOpenTitle => 'Forest Trial';
@@ -4024,37 +4093,46 @@ class AppLocalizationsEn extends AppLocalizations {
       'Reach level 95.';
 
   @override
-  String get cosmeticEmblemForestMarkUnlockHint => 'Reach level 10.';
+  String get cosmeticEmblemForestMarkUnlockHint => 'Complete the Forest Trial.';
 
   @override
-  String get cosmeticEmblemPilgrimMarkUnlockHint => 'Begin your journey.';
+  String get cosmeticEmblemPilgrimMarkUnlockHint =>
+      'Complete the Pilgrim\'s Path.';
 
   @override
-  String get cosmeticEmblemRuinSigilUnlockHint => 'Reach level 20.';
+  String get cosmeticEmblemRuinSigilUnlockHint =>
+      'Complete the Ruins of Discipline.';
 
   @override
-  String get cosmeticEmblemGatekeeperMarkUnlockHint => 'Reach level 30.';
+  String get cosmeticEmblemGatekeeperMarkUnlockHint =>
+      'Complete the Mine Descent.';
 
   @override
-  String get cosmeticEmblemMineCrestUnlockHint => 'Reach level 40.';
+  String get cosmeticEmblemMineCrestUnlockHint =>
+      'Complete the Forge of Momentum.';
 
   @override
-  String get cosmeticEmblemUnderwaysMarkUnlockHint => 'Reach level 50.';
+  String get cosmeticEmblemUnderwaysMarkUnlockHint =>
+      'Complete the Underway Pact.';
 
   @override
-  String get cosmeticEmblemFrostSigilUnlockHint => 'Reach level 60.';
+  String get cosmeticEmblemFrostSigilUnlockHint =>
+      'Complete the Frostbound Oath.';
 
   @override
-  String get cosmeticEmblemIcewalkerMarkUnlockHint => 'Reach level 70.';
+  String get cosmeticEmblemIcewalkerMarkUnlockHint =>
+      'Complete the Icewalker Route.';
 
   @override
-  String get cosmeticEmblemMountainCrestUnlockHint => 'Reach level 80.';
+  String get cosmeticEmblemMountainCrestUnlockHint =>
+      'Complete the Mountain Ascent.';
 
   @override
-  String get cosmeticEmblemDragonMarkUnlockHint => 'Reach level 90.';
+  String get cosmeticEmblemDragonMarkUnlockHint => 'Complete the Dragonroad.';
 
   @override
-  String get cosmeticEmblemDragonrockEmblemUnlockHint => 'Reach level 100.';
+  String get cosmeticEmblemDragonrockEmblemUnlockHint =>
+      'Complete the Dragonrock Sovereign.';
 
   @override
   String get cosmeticRelicCampfireSparkUnlockHint =>

@@ -47,6 +47,7 @@ class EngineQuestProgress {
     required this.previewXp,
     this.domain,
     this.levelGate,
+    this.prereqGateNodeId,
   });
 
   final QuestNode node;
@@ -86,6 +87,15 @@ class EngineQuestProgress {
   /// (or the gate has already been cleared). Chapter cards render a
   /// "Reach level X" lock overlay when this is set.
   final int? levelGate;
+
+  /// Id of the first prerequisite node from
+  /// [QuestNode.prerequisiteNodeIds] that hasn't been completed yet.
+  /// Null when every prereq is satisfied. Drives the "finish chapter
+  /// X first" hint on locked chapter opens — without this, a player
+  /// past the level gate but still mid-previous-chapter would see
+  /// the next chapter's open in the active section instead of in
+  /// ZAMČENÉ.
+  final String? prereqGateNodeId;
 
   String get nodeId => node.id;
 }
@@ -161,6 +171,17 @@ class ProgressionEngineProvider extends ChangeNotifier {
   ProviderEngineInputSource? _source;
   String? _lastEvaluatedSignature;
   bool _evaluateQueued = false;
+
+  // Tracked references to currently-subscribed source providers.
+  // [bind] is invoked by the ChangeNotifierProxyProvider's `update`
+  // callback on every dependency rebuild — without these guards, each
+  // bind would `addListener` again and the same `_onSourceChanged`
+  // would fire dozens of times per notification. Remember the
+  // instance we last attached to and only re-subscribe when it
+  // actually changes (provider hot-reload, sign-out, tests).
+  GoalsProvider? _subscribedGoals;
+  FitnessProvider? _subscribedFitness;
+  KalorickeTabulkyProvider? _subscribedNutrition;
 
   ProgressionResolutionResult? _lastResult;
   LedgerSnapshot? _ledger;
@@ -264,7 +285,21 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// a check / claimed pill).
   List<EngineQuestProgress> get currentDailyQuests {
     final all = _questsForBucket(QuestDisplayBucket.daily);
-    return _pickDailyQuests(all, DateTime.now());
+    final picked = _pickDailyQuests(all, DateTime.now());
+    // Always surface claimable daily quests, even when they fall
+    // outside today's rotation. Without this a satisfied-but-unclaimed
+    // daily (e.g. yesterday's weight log claim that wasn't picked up by
+    // V1 → still pending in the V2 ledger) stays counted in
+    // `pendingClaimNodeIds` with nowhere on screen to actually claim
+    // it, so the badge reads "1" and the row is invisible. Order:
+    // today's rotation first, then any leftover claimable picks.
+    final pickedIds = {for (final q in picked) q.nodeId};
+    final extras = [
+      for (final q in all)
+        if (q.isAvailableForClaim && !pickedIds.contains(q.nodeId)) q,
+    ];
+    if (extras.isEmpty) return picked;
+    return [...picked, ...extras];
   }
 
   /// Returns the full daily quest pool (all daily-bucket quests in
@@ -282,6 +317,92 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// Same shape, but for the weekly bucket.
   List<EngineQuestProgress> get currentWeeklyQuests {
     return _questsForBucket(QuestDisplayBucket.weekly);
+  }
+
+  /// Long-term quests aggregated with any companion nodes that share
+  /// the same objective. Drives the "DLOUHODOBÉ CÍLE" section.
+  ///
+  /// Chain handling mirrors [currentChapterQuests] — for each chain id
+  /// we surface the lowest-chainOrder step the player has not yet
+  /// completed; orphan long-term quests (no chain) appear one row
+  /// each. This matches V1's `compactQuestChainRepresentatives` where
+  /// the screen showed one card per chain (the active step) and the
+  /// chain preview row inside the card communicated overall progress.
+  ///
+  /// Each entry also carries the companion nodes that share its
+  /// objective (typically the matching achievement). The screen
+  /// renders the quest's own pill + non-XP reward chips and surfaces
+  /// the companions in the "Also unlocks" expanded panel — V2 design
+  /// rule (quest + achievement on the same objective should not
+  /// duplicate UI).
+  List<EngineLongTermEntry> get currentLongTermQuests {
+    final all = _questsForBucket(QuestDisplayBucket.longTerm);
+    if (all.isEmpty) return const [];
+
+    // Group by chain so we can pick one representative per chain.
+    // Quests without a chainId become their own one-element "chain".
+    final byChain = <String, List<EngineQuestProgress>>{};
+    final orphans = <EngineQuestProgress>[];
+    for (final q in all) {
+      final chainId = q.node.chainId;
+      if (chainId == null || chainId.isEmpty) {
+        orphans.add(q);
+      } else {
+        byChain.putIfAbsent(chainId, () => []).add(q);
+      }
+    }
+
+    final reps = <EngineQuestProgress>[];
+    for (final entry in byChain.entries) {
+      final chain = [...entry.value]
+        ..sort((a, b) => (a.node.chainOrder ?? 0)
+            .compareTo(b.node.chainOrder ?? 0));
+      EngineQuestProgress? active;
+      for (final q in chain) {
+        // Skip claimed AND claimable steps — they now live in
+        // DOKONČENÉ. The long-term card surfaces only the
+        // in-progress step.
+        if (!q.isCompleted && !q.isAvailableForClaim) {
+          active = q;
+          break;
+        }
+      }
+      if (active != null) reps.add(active);
+    }
+    for (final q in orphans) {
+      if (!q.isCompleted && !q.isAvailableForClaim) reps.add(q);
+    }
+    reps.sort((a, b) => a.node.sortOrder.compareTo(b.node.sortOrder));
+    if (reps.isEmpty) return const [];
+
+    // Build objective → nodes index once so the per-entry companion
+    // lookup is O(1).
+    final byObjective = <String, List<ProgressionNode>>{};
+    for (final node in _nodeCatalog.build()) {
+      final objectiveId = _objectiveIdOf(node);
+      if (objectiveId == null) continue;
+      byObjective.putIfAbsent(objectiveId, () => []).add(node);
+    }
+
+    return [
+      for (final quest in reps)
+        EngineLongTermEntry(
+          quest: quest,
+          companions: [
+            for (final n in byObjective[quest.node.objectiveId] ?? const [])
+              if (n.id != quest.node.id) n,
+          ],
+        ),
+    ];
+  }
+
+  static String? _objectiveIdOf(ProgressionNode node) {
+    return switch (node) {
+      QuestNode() => node.objectiveId,
+      AchievementNode() => node.objectiveId,
+      MilestoneNode() => node.objectiveId,
+      _ => null,
+    };
   }
 
 
@@ -310,25 +431,115 @@ class ProgressionEngineProvider extends ChangeNotifier {
             .compareTo(b.node.chainOrder ?? 0));
       EngineQuestProgress? active;
       for (final q in chain) {
-        if (!q.isCompleted) {
+        // Skip claimed AND claimable steps — both live in DOKONČENÉ
+        // now; the active section shows only the in-progress step.
+        if (!q.isCompleted && !q.isAvailableForClaim) {
           active = q;
           break;
         }
       }
-      if (active != null) out.add(active);
+      // Skip chapters whose active step is still gated — either by
+      // an unmet level requirement or by an unfinished prereq chapter.
+      // Those surface in [lockedQuests] / the ZAMČENÉ QUESTY section
+      // instead, mirroring V1 behavior where a locked chapter is shown
+      // as a compact locked row rather than its full chapter card.
+      if (active != null &&
+          active.levelGate == null &&
+          active.prereqGateNodeId == null) {
+        out.add(active);
+      }
     }
     out.sort((a, b) =>
         (a.node.sortOrder).compareTo(b.node.sortOrder));
     return out;
   }
 
+  /// Quests that are gated and not yet started — either by an unmet
+  /// level requirement or by an unfinished prerequisite chapter.
+  /// Surfaces in the "ZAMČENÉ QUESTY" section so the player sees what
+  /// is coming up without it crowding the active sections.
+  ///
+  /// Chapter chains are sequential (`pilgrim_path → forest_trial →
+  /// ruins_discipline → …`); the locked section surfaces *only the
+  /// single next-up chain* — the lowest-sortOrder chapter whose open
+  /// hasn't yet auto-fired. Listing every future chapter would crowd
+  /// the section and spoil progression. Non-chapter level-gated quests
+  /// (e.g. a standalone weekly with [LevelAtLeast]) are still surfaced
+  /// individually.
+  List<EngineQuestProgress> get lockedQuests {
+    final out = <EngineQuestProgress>[];
+
+    // ── Non-chapter level-gated quests ──────────────────────────────
+    // Same shape as the legacy behaviour: any non-chain quest with
+    // an unmet level gate gets its own row.
+    final seenChains = <String>{};
+    for (final bucket in QuestDisplayBucket.values) {
+      if (bucket == QuestDisplayBucket.chapter) continue;
+      for (final q in _questsForBucket(bucket)) {
+        if (q.levelGate == null && q.prereqGateNodeId == null) continue;
+        if (q.isCompleted) continue;
+        final chainId = q.node.chainId;
+        if (chainId != null) {
+          if (seenChains.contains(chainId)) continue;
+          if ((q.node.chainOrder ?? 0) > 0) continue;
+          seenChains.add(chainId);
+        }
+        out.add(q);
+      }
+    }
+
+    // ── Chapter chains: surface only the next-up locked chain ──────
+    final chapters = _questsForBucket(QuestDisplayBucket.chapter);
+    final chapterChains = <String, List<EngineQuestProgress>>{};
+    for (final q in chapters) {
+      final chainId = q.node.chainId;
+      if (chainId == null) continue;
+      chapterChains.putIfAbsent(chainId, () => []).add(q);
+    }
+    // Stable ordering: walk chains by their open (chainOrder 0)
+    // sortOrder so Pilgrim → Forest Trial → Ruins → … is preserved.
+    final chainsByOpenSortOrder = chapterChains.entries
+        .map((e) {
+          final sorted = [...e.value]
+            ..sort((a, b) =>
+                (a.node.chainOrder ?? 0).compareTo(b.node.chainOrder ?? 0));
+          return sorted;
+        })
+        .toList()
+      ..sort((a, b) => a.first.node.sortOrder.compareTo(b.first.node.sortOrder));
+    for (final chain in chainsByOpenSortOrder) {
+      final open = chain.first;
+      // Chain already started (open auto-claimed) — handled by
+      // currentChapterQuests, never locked here.
+      if (open.isCompleted) continue;
+      // Open has no gate at all — would auto-fire on next evaluation.
+      // Skip; the engine will surface it as active soon.
+      if (open.levelGate == null && open.prereqGateNodeId == null) continue;
+      // Found the next-up locked chapter. Surface and stop — later
+      // chapters stay hidden until this one is reached.
+      out.add(open);
+      break;
+    }
+
+    out.sort((a, b) {
+      final byLevel = (a.levelGate ?? 0).compareTo(b.levelGate ?? 0);
+      if (byLevel != 0) return byLevel;
+      return a.node.sortOrder.compareTo(b.node.sortOrder);
+    });
+    return out;
+  }
+
   /// Resolves the chain (in chainOrder) for a given chain id. Used by
-  /// the screen's chapter chain preview to render the open → step →
-  /// step → finale dots beneath the active card.
+  /// the chapter card chain preview and the long-term card chain
+  /// preview — both render the same dot/connector strip. Scans every
+  /// display bucket so chains can live across daily/weekly/chapter/
+  /// long-term as authors see fit.
   List<EngineQuestProgress> chainQuestsFor(String chainId) {
     final out = <EngineQuestProgress>[];
-    for (final q in _questsForBucket(QuestDisplayBucket.chapter)) {
-      if (q.node.chainId == chainId) out.add(q);
+    for (final bucket in QuestDisplayBucket.values) {
+      for (final q in _questsForBucket(bucket)) {
+        if (q.node.chainId == chainId) out.add(q);
+      }
     }
     out.sort((a, b) =>
         (a.node.chainOrder ?? 0).compareTo(b.node.chainOrder ?? 0));
@@ -367,7 +578,151 @@ class ProgressionEngineProvider extends ChangeNotifier {
     return source.buildInput(
       totalXpFromLedger: totalXp,
       levelFromLedger: level,
+      totalRewardCount: _totalRewardCountFromLedger(),
+      rewardCountByDomain: _rewardCountByDomainFromLedger(),
+      nodeCompletionCounts: _nodeCompletionCountsFromLedger(),
+      bestStreakByRule: _bestStreakByRuleFromLedger(),
+      bestStreakByDomain: _bestStreakByDomainFromLedger(),
+      objectiveActualOverrides: _objectiveActualOverridesFromLedger(),
     );
+  }
+
+  // ── Ledger-derived input helpers ────────────────────────────────
+
+  /// Total XP-grant count from the ledger. Drives the reward-hunter
+  /// chain (RewardCountMetric) and any other counter objective that
+  /// reads `input.totalRewardCount`.
+  int _totalRewardCountFromLedger() {
+    final l = _ledger;
+    if (l == null) return 0;
+    var n = 0;
+    for (final g in l.rewardGrants) {
+      if (g.rewardKind == RewardGrantKind.xp) n++;
+    }
+    return n;
+  }
+
+  /// XP-grant counts grouped by domain. Resolves each grant's source
+  /// node → objective → domain. Used by domain-scoped reward counters
+  /// (e.g. nutrition rewards mastery).
+  Map<String, int> _rewardCountByDomainFromLedger() {
+    final l = _ledger;
+    if (l == null) return const {};
+    final out = <String, int>{};
+    for (final g in l.rewardGrants) {
+      if (g.rewardKind != RewardGrantKind.xp) continue;
+      final domain = domainForNodeId(g.nodeId);
+      out[domain.name] = (out[domain.name] ?? 0) + 1;
+    }
+    return out;
+  }
+
+  /// Node-completion counts from the ledger. Drives the
+  /// [NodeCompletionsMetric] used by chapter step objectives
+  /// (forest_trial step 1 needs N completions of `daily_steps_today`).
+  Map<String, int> _nodeCompletionCountsFromLedger() {
+    final l = _ledger;
+    if (l == null) return const {};
+    final out = <String, int>{};
+    for (final e in l.nodeCompletions) {
+      out[e.nodeId] = (out[e.nodeId] ?? 0) + 1;
+    }
+    return out;
+  }
+
+  /// Per-objective measured-value overrides for objectives with a
+  /// `baselineFromNodeId`. The override = count of completions of the
+  /// objective's metric node *after* the baseline node first
+  /// completed. Today only [NodeCompletionsMetric] is supported —
+  /// chapter step objectives use this so e.g. `daily_steps_today`
+  /// completions banked before a chain step unlocked don't auto-
+  /// satisfy the new step. Other metrics drop back to the regular
+  /// lifetime read until/if they grow per-event histories.
+  Map<String, double> _objectiveActualOverridesFromLedger() {
+    final l = _ledger;
+    if (l == null) return const {};
+
+    // Earliest completion timestamp per node — defines the unlock
+    // moment we baseline from.
+    final firstCompletionAt = <String, DateTime>{};
+    for (final e in l.nodeCompletions) {
+      final existing = firstCompletionAt[e.nodeId];
+      if (existing == null || e.timestamp.isBefore(existing)) {
+        firstCompletionAt[e.nodeId] = e.timestamp;
+      }
+    }
+
+    final overrides = <String, double>{};
+    for (final objective in _objectiveCatalog.build()) {
+      final baselineId = objective.baselineFromNodeId;
+      if (baselineId == null) continue;
+      final metric = objective.metric;
+      final baselineTs = firstCompletionAt[baselineId];
+      if (baselineTs == null) {
+        // Baseline node hasn't completed yet — the chain step isn't
+        // unlocked. Override the value to 0 so the objective reads as
+        // not-yet-progressed regardless of historical activity.
+        if (metric is NodeCompletionsMetric || metric is RewardCountMetric) {
+          overrides[objective.id] = 0;
+        }
+        continue;
+      }
+      if (metric is NodeCompletionsMetric) {
+        var count = 0;
+        for (final e in l.nodeCompletions) {
+          if (e.nodeId == metric.nodeId && !e.timestamp.isBefore(baselineTs)) {
+            count++;
+          }
+        }
+        overrides[objective.id] = count.toDouble();
+      } else if (metric is RewardCountMetric) {
+        var count = 0;
+        for (final g in l.rewardGrants) {
+          if (g.rewardKind != RewardGrantKind.xp) continue;
+          if (g.timestamp.isBefore(baselineTs)) continue;
+          if (metric.ruleId != null) {
+            // Map grant → source node → objective → ruleId is not
+            // currently tracked; ruleId-scoped reward counts fall back
+            // to lifetime by leaving the override unset.
+            continue;
+          }
+          if (metric.domain != null) {
+            final domain = domainForNodeId(g.nodeId);
+            if (domain.name != metric.domain) continue;
+          }
+          count++;
+        }
+        // Only emit when the metric variant is one we can compute
+        // since-unlock for. ruleId-scoped reward counts skip the
+        // override and fall back to the lifetime input value.
+        if (metric.ruleId == null) {
+          overrides[objective.id] = count.toDouble();
+        }
+      }
+      // StepsMetric / CaloriesMetric / etc. baselines are not yet
+      // supported — without per-event history we cannot reconstruct
+      // the metric value at the baseline timestamp. Chapter steps that
+      // use those metrics will fall back to lifetime and can
+      // insta-satisfy if the player is already past the threshold at
+      // unlock; chain prereqs still enforce sequential ordering.
+    }
+    return overrides;
+  }
+
+  /// Best streak per daily-objective id. The engine's
+  /// [StreakDaysMetric.byRule] keys on the objective id (V2 daily
+  /// objective ≈ V1 rule id), so this map mirrors what V1 fed in.
+  Map<String, int> _bestStreakByRuleFromLedger() {
+    return {
+      for (final e in _objectiveStreaks.entries) e.key: e.value.bestStreak,
+    };
+  }
+
+  /// Best streak per domain — feeds [StreakDaysMetric.byDomain].
+  Map<String, int> _bestStreakByDomainFromLedger() {
+    return {
+      for (final e in _domainStreaks.entries) e.key.name: e.value.bestStreak,
+    };
   }
 
   /// Latest [EngineCatalogContext] from the bound source. Null when no
@@ -393,15 +748,173 @@ class ProgressionEngineProvider extends ChangeNotifier {
     return List.unmodifiable(list);
   }
 
-  /// Completed quest nodes paired with their (most recent) completion
-  /// timestamp, newest first. Used by the quests-screen "Completed"
-  /// rollup. Filters [LedgerSnapshot.nodeCompletions] down to nodes
-  /// the catalog still classifies as a [QuestNode] — stale ledger
-  /// entries (catalog drift) are skipped silently.
-  List<EngineCompletedQuest> get completedQuests {
-    return _completedQuestsForBuckets(
-      excludeBuckets: const {QuestDisplayBucket.daily},
-    );
+  /// Chain-aware view of every non-daily quest that has progressed
+  /// past its objective — either already claimed (`isCompleted`) or
+  /// satisfied but pending claim (`isAvailableForClaim`).
+  ///
+  /// Each entry represents *one* surface in the DOKONČENÉ QUESTY
+  /// section:
+  ///
+  /// - **Chain quests** collapse into a single entry whose chain row
+  ///   accumulates a dot per progressed step (V1 parity — one row per
+  ///   chain, not per step). The representative is the latest step the
+  ///   player has touched (highest chainOrder among claimed +
+  ///   claimable), so the row title reads as the most recent progress.
+  /// - **Non-chain quests** (orphan weekly / long-term) become their
+  ///   own one-step entries.
+  ///
+  /// Daily quests stay out of this list — they have their own
+  /// "Nedávné odměny" surface backed by [recentDailyCompletions].
+  ///
+  /// Sorted newest-event first so the most recently progressed entry
+  /// shows up at the top.
+  List<EngineCompletedEntry> get completedEntries {
+    final l = _ledger;
+    if (l == null) return const [];
+
+    // 1. Collect every non-daily quest that's claimed OR claimable.
+    final touched = <EngineQuestProgress>[];
+    for (final bucket in QuestDisplayBucket.values) {
+      if (bucket == QuestDisplayBucket.daily) continue;
+      for (final q in _questsForBucket(bucket)) {
+        if (q.isCompleted || q.isAvailableForClaim) touched.add(q);
+      }
+    }
+    if (touched.isEmpty) return const [];
+
+    // 2. Per-node lookups (latest completion event, XP totals,
+    //    objective-completion timestamps).
+    final completionTsByNode = <String, DateTime>{};
+    for (final e in l.nodeCompletions) {
+      final existing = completionTsByNode[e.nodeId];
+      if (existing == null || e.timestamp.isAfter(existing)) {
+        completionTsByNode[e.nodeId] = e.timestamp;
+      }
+    }
+    final objectiveTsByObjective = <String, DateTime>{};
+    for (final e in l.objectiveCompletions) {
+      final existing = objectiveTsByObjective[e.objectiveId];
+      if (existing == null || e.timestamp.isAfter(existing)) {
+        objectiveTsByObjective[e.objectiveId] = e.timestamp;
+      }
+    }
+    final xpByNode = <String, int>{};
+    for (final g in l.rewardGrants) {
+      if (g.rewardKind != RewardGrantKind.xp) continue;
+      xpByNode[g.nodeId] = (xpByNode[g.nodeId] ?? 0) + (g.xpAmount ?? 0);
+    }
+
+    DateTime tsFor(EngineQuestProgress q) {
+      return completionTsByNode[q.nodeId] ??
+          objectiveTsByObjective[q.node.objectiveId] ??
+          DateTime.now();
+    }
+
+    // 3. Bucket by chain id; non-chain quests become orphans.
+    // Also build a parallel map of the FULL chain (touched + locked
+    // future steps) so the entry can render every dot in its chain
+    // preview, not just the steps the player has reached. Locked
+    // future steps render as 🔒 dots, communicating "more to come".
+    final byChain = <String, List<EngineQuestProgress>>{};
+    final fullChainById = <String, List<EngineQuestProgress>>{};
+    final orphans = <EngineQuestProgress>[];
+    for (final q in touched) {
+      final chainId = q.node.chainId;
+      if (chainId == null || chainId.isEmpty) {
+        orphans.add(q);
+      } else {
+        byChain.putIfAbsent(chainId, () => []).add(q);
+      }
+    }
+    if (byChain.isNotEmpty) {
+      for (final bucket in QuestDisplayBucket.values) {
+        if (bucket == QuestDisplayBucket.daily) continue;
+        for (final q in _questsForBucket(bucket)) {
+          final chainId = q.node.chainId;
+          if (chainId == null || !byChain.containsKey(chainId)) continue;
+          fullChainById.putIfAbsent(chainId, () => []).add(q);
+        }
+      }
+    }
+
+    // 4. Build companion index once (objective id → sibling nodes).
+    final companionsByObjective = <String, List<ProgressionNode>>{};
+    for (final node in _nodeCatalog.build()) {
+      final id = _objectiveIdOf(node);
+      if (id == null) continue;
+      companionsByObjective.putIfAbsent(id, () => []).add(node);
+    }
+    List<ProgressionNode> companionsFor(ProgressionNode self) {
+      final id = _objectiveIdOf(self);
+      if (id == null) return const [];
+      return [
+        for (final n in companionsByObjective[id] ?? const [])
+          if (n.id != self.id) n,
+      ];
+    }
+
+    // 5. Build entries.
+    final entries = <EngineCompletedEntry>[];
+
+    for (final entryGroup in byChain.entries) {
+      final chainId = entryGroup.key;
+      final touchedSteps = [...entryGroup.value]
+        ..sort((a, b) =>
+            (a.node.chainOrder ?? 0).compareTo(b.node.chainOrder ?? 0));
+      final fullChain = [...?fullChainById[chainId]]
+        ..sort((a, b) =>
+            (a.node.chainOrder ?? 0).compareTo(b.node.chainOrder ?? 0));
+      // Representative = highest-chainOrder touched step (most recent
+      // progress). The chain row shown on the card walks `fullChain`
+      // so locked future steps render as 🔒 dots — gives the player
+      // a visible "more to come" cue.
+      final representative = touchedSteps.last;
+      final lastEventAt = touchedSteps
+          .map(tsFor)
+          .reduce((a, b) => a.isAfter(b) ? a : b);
+      final claimedXp = touchedSteps
+          .where((q) => q.isCompleted)
+          .fold<int>(0, (s, q) => s + (xpByNode[q.nodeId] ?? 0));
+      final pendingXp = touchedSteps
+          .where((q) => q.isAvailableForClaim && !q.isCompleted)
+          .fold<int>(0, (s, q) => s + q.previewXp);
+      final hasClaimable =
+          touchedSteps.any((q) => q.isAvailableForClaim && !q.isCompleted);
+      entries.add(EngineCompletedEntry(
+        representative: representative,
+        chainQuests: fullChain.isEmpty ? touchedSteps : fullChain,
+        companions: companionsFor(representative.node),
+        lastEventAt: lastEventAt,
+        totalXpClaimed: claimedXp,
+        pendingXp: pendingXp,
+        hasClaimable: hasClaimable,
+      ));
+    }
+
+    for (final q in orphans) {
+      final claimable = q.isAvailableForClaim && !q.isCompleted;
+      entries.add(EngineCompletedEntry(
+        representative: q,
+        chainQuests: const [],
+        companions: companionsFor(q.node),
+        lastEventAt: tsFor(q),
+        totalXpClaimed: q.isCompleted ? (xpByNode[q.nodeId] ?? 0) : 0,
+        pendingXp: claimable ? q.previewXp : 0,
+        hasClaimable: claimable,
+      ));
+    }
+
+    // Sort: pending-claim entries float to the top so the player
+    // doesn't miss waiting XP. Within each group, newest event first
+    // (latest claim or objective completion) so the most recent
+    // activity is the most visible.
+    entries.sort((a, b) {
+      if (a.hasClaimable != b.hasClaimable) {
+        return a.hasClaimable ? -1 : 1;
+      }
+      return b.lastEventAt.compareTo(a.lastEventAt);
+    });
+    return List.unmodifiable(entries);
   }
 
   /// Daily-bucket quest completions only — the "Recent rewards"
@@ -428,6 +941,14 @@ class ProgressionEngineProvider extends ChangeNotifier {
       }
     }
 
+    // Sum XP grants per node so completed rows can display the actual
+    // claimed XP (V1 "+750 XP" pill) instead of just a check.
+    final xpByNode = <String, int>{};
+    for (final g in l.rewardGrants) {
+      if (g.rewardKind != RewardGrantKind.xp) continue;
+      xpByNode[g.nodeId] = (xpByNode[g.nodeId] ?? 0) + (g.xpAmount ?? 0);
+    }
+
     final out = <EngineCompletedQuest>[];
     for (final node in _nodeCatalog.build()) {
       if (node is! QuestNode) continue;
@@ -441,6 +962,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
       out.add(EngineCompletedQuest(
         node: node,
         completedAt: event.timestamp,
+        xpGranted: xpByNode[node.id] ?? 0,
       ));
     }
     out.sort((a, b) => b.completedAt.compareTo(a.completedAt));
@@ -503,11 +1025,37 @@ class ProgressionEngineProvider extends ChangeNotifier {
     // Subscribe to source changes — every fitness/nutrition/goal
     // notification kicks an audit-signature recheck. Only when the
     // signature changes do we run a real evaluation pass.
-    goalsProvider.addListener(_onSourceChanged);
-    fitnessProvider.addListener(_onSourceChanged);
-    nutritionProvider.addListener(_onSourceChanged);
+    //
+    // `bind` is invoked on every proxy-provider rebuild; guard each
+    // attach against the instance we already subscribed to so we
+    // don't stack duplicate listeners. If the provider instance
+    // genuinely changes (sign-out, hot reload), detach from the old
+    // one first.
+    if (!identical(_subscribedGoals, goalsProvider)) {
+      _subscribedGoals?.removeListener(_onSourceChanged);
+      goalsProvider.addListener(_onSourceChanged);
+      _subscribedGoals = goalsProvider;
+    }
+    if (!identical(_subscribedFitness, fitnessProvider)) {
+      _subscribedFitness?.removeListener(_onSourceChanged);
+      fitnessProvider.addListener(_onSourceChanged);
+      _subscribedFitness = fitnessProvider;
+    }
+    if (!identical(_subscribedNutrition, nutritionProvider)) {
+      _subscribedNutrition?.removeListener(_onSourceChanged);
+      nutritionProvider.addListener(_onSourceChanged);
+      _subscribedNutrition = nutritionProvider;
+    }
 
     unawaited(refresh());
+  }
+
+  @override
+  void dispose() {
+    _subscribedGoals?.removeListener(_onSourceChanged);
+    _subscribedFitness?.removeListener(_onSourceChanged);
+    _subscribedNutrition?.removeListener(_onSourceChanged);
+    super.dispose();
   }
 
   void _onSourceChanged() {
@@ -533,6 +1081,12 @@ class ProgressionEngineProvider extends ChangeNotifier {
     final input = source.buildInput(
       totalXpFromLedger: totalXp,
       levelFromLedger: level,
+      totalRewardCount: _totalRewardCountFromLedger(),
+      rewardCountByDomain: _rewardCountByDomainFromLedger(),
+      nodeCompletionCounts: _nodeCompletionCountsFromLedger(),
+      bestStreakByRule: _bestStreakByRuleFromLedger(),
+      bestStreakByDomain: _bestStreakByDomainFromLedger(),
+      objectiveActualOverrides: _objectiveActualOverridesFromLedger(),
     );
     _lastEvaluatedSignature = source.auditSignature();
     await evaluateWith(input: input, catalogContext: context);
@@ -583,10 +1137,21 @@ class ProgressionEngineProvider extends ChangeNotifier {
     }
   }
 
+  /// Claim a manual-claim node and re-evaluate.
+  ///
+  /// `input` is treated as a hint, not authoritative — the provider
+  /// always rebuilds [currentInput] from the latest ledger before the
+  /// engine runs so per-claim counters (totalRewardCount,
+  /// nodeCompletionCounts, etc.) reflect every prior claim in the same
+  /// loop. Without this rebuild, a sequential claim-all that captures
+  /// `input` once at the start ends with a stale resolution result and
+  /// can leave nodes hanging in `availableNodes` (e.g. the
+  /// reward_count_first quest that only becomes satisfied after the
+  /// earlier claims appended reward grants).
   Future<ProgressionResolutionResult?> claimNode({
     required String nodeId,
-    required EngineEvaluationInput input,
-    EngineCatalogContext catalogContext = const EngineCatalogContext(),
+    EngineEvaluationInput? input,
+    EngineCatalogContext? catalogContext,
   }) async {
     if (_isEvaluating) return null;
     _isEvaluating = true;
@@ -594,10 +1159,17 @@ class ProgressionEngineProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final freshInput = currentInput ?? input;
+      if (freshInput == null) {
+        _error = 'claimNode called before sources were bound';
+        return null;
+      }
+      final ctx =
+          catalogContext ?? currentCatalogContext ?? const EngineCatalogContext();
       final result = await _engine.claim(
         nodeId: nodeId,
-        input: input,
-        catalogContext: catalogContext,
+        input: freshInput,
+        catalogContext: ctx,
       );
       _lastResult = result;
       _ledger = await _repository.loadLedger();
@@ -833,6 +1405,20 @@ class ProgressionEngineProvider extends ChangeNotifier {
         }
       }
 
+      // First unmet `prerequisiteNodeIds` entry, in catalog order.
+      // The engine resolver also derives `NodeCompleted` conditions
+      // from this list, but the resolver only exposes the resulting
+      // available/locked state, not *which* prereq is blocking. We
+      // recompute here so the ZAMČENÉ row can say "Dokonči X" with
+      // the actual blocker name.
+      String? prereqGate;
+      for (final id in node.prerequisiteNodeIds) {
+        if (!completed.contains(id)) {
+          prereqGate = id;
+          break;
+        }
+      }
+
       out.add(EngineQuestProgress(
         node: node,
         actualValue: actual,
@@ -843,6 +1429,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
         domain: objective.domain,
         baseXp: baseXp,
         levelGate: levelGate,
+        prereqGateNodeId: prereqGate,
         previewXp: scaledXp,
       ));
     }
@@ -850,23 +1437,110 @@ class ProgressionEngineProvider extends ChangeNotifier {
   }
 }
 
-/// A completed quest node paired with the timestamp of its most
-/// recent completion event. Built by
-/// [ProgressionEngineProvider.completedQuests] +
-/// [ProgressionEngineProvider.recentDailyCompletions] from the ledger.
+/// One row in the "DLOUHODOBÉ CÍLE" section. Wraps a long-term
+/// QuestNode with every catalog node that references the same
+/// objective, so the UI can surface the shared-objective intent
+/// (V2 design rule: quest + achievement on the same goal should not
+/// duplicate; the long-term card displays both as one entry).
 ///
-/// Display surfaces show a neutral check chip — they do not surface
-/// XP value (V1 parity: claimed quests get a soft check, not the
-/// gold "+XP" pill).
+/// Example — `worldwalker_quest` and `steps_total_10000000` both bind
+/// to `lifetime_steps_10m`. The screen renders the quest's pill and
+/// drops every reward from the achievement (frame, relic cosmetics)
+/// into the same card via [companions].
+@immutable
+class EngineLongTermEntry {
+  const EngineLongTermEntry({
+    required this.quest,
+    required this.companions,
+  });
+
+  final EngineQuestProgress quest;
+
+  /// Other nodes in the catalog whose objectiveId matches
+  /// `quest.node.objectiveId`. Almost always achievements; could also
+  /// be milestones. Empty when the quest stands alone.
+  final List<ProgressionNode> companions;
+
+  /// Non-XP rewards across the primary quest + every companion. The
+  /// reward chip strip on the card surfaces one chip per entry so the
+  /// player sees "+badge, +emblem, +relic" alongside the XP pill.
+  List<RewardDefinition> get nonXpRewards {
+    final out = <RewardDefinition>[];
+    for (final r in quest.node.rewards) {
+      if (r is! XpReward) out.add(r);
+    }
+    for (final c in companions) {
+      for (final r in c.rewards) {
+        if (r is! XpReward) out.add(r);
+      }
+    }
+    return out;
+  }
+}
+
+/// One row in the DOKONČENÉ QUESTY section.
+///
+/// Aggregates the chain (when the representative belongs to one) so the
+/// section shows a single entry per chain — dots in the entry's chain
+/// row grow as more steps progress. Standalone quests become
+/// one-step entries (`chainQuests` empty / single-element).
+///
+/// Carries enough state to drive the compact card directly:
+///
+/// - [representative] — the quest whose title / domain / asset / pill
+///   drive the collapsed row. Picked as the highest-chainOrder step
+///   the player has actually touched (most recent progress).
+/// - [chainQuests] — every step in the chain that's claimed or pending
+///   claim, in chainOrder. Empty for non-chain entries.
+/// - [companions] — sibling catalog nodes sharing the representative's
+///   objective (achievement on the same goal). Shown in the expanded
+///   panel as the "Také odemkne" list.
+/// - [hasClaimable] — there's at least one step waiting on a manual
+///   claim. Drives the gold pill in the row.
+/// - [pendingXp] / [totalXpClaimed] — sums for the pill label.
+@immutable
+class EngineCompletedEntry {
+  const EngineCompletedEntry({
+    required this.representative,
+    required this.chainQuests,
+    required this.companions,
+    required this.lastEventAt,
+    required this.totalXpClaimed,
+    required this.pendingXp,
+    required this.hasClaimable,
+  });
+
+  final EngineQuestProgress representative;
+  final List<EngineQuestProgress> chainQuests;
+  final List<ProgressionNode> companions;
+  final DateTime lastEventAt;
+  final int totalXpClaimed;
+  final int pendingXp;
+  final bool hasClaimable;
+
+  bool get isChain => chainQuests.length > 1;
+}
+
+/// A single completed quest row — built by
+/// [ProgressionEngineProvider.recentDailyCompletions] for the
+/// "Nedávné odměny" surface from the most recent
+/// [LedgerSnapshot.nodeCompletions] event per node.
 @immutable
 class EngineCompletedQuest {
   const EngineCompletedQuest({
     required this.node,
     required this.completedAt,
+    this.xpGranted = 0,
   });
 
   final QuestNode node;
   final DateTime completedAt;
+
+  /// Total XP credited by this quest's reward grants in the ledger.
+  /// Zero when the catalog node carries no XP reward, or when the
+  /// grant pre-dates the field being tracked. UI surfaces a "+XP"
+  /// pill on the completed row when this is > 0.
+  final int xpGranted;
 
   String get nodeId => node.id;
 }

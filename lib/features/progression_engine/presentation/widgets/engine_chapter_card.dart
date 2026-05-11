@@ -10,6 +10,8 @@ import '../../../progression/domain/models/core_models.dart';
 import '../../application/progression_engine_provider.dart';
 import '../../domain/catalog/content/quest_assets.dart';
 import '../../domain/models/progression_node_definition.dart';
+import '../../domain/models/reward_definition.dart';
+import 'engine_companion_pill.dart';
 
 /// Chapter quest card with parallax-style background, large chapter
 /// icon, and a horizontal chain preview row beneath the progress bar.
@@ -47,14 +49,38 @@ class EngineChapterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final quest = this.quest;
     final domain = quest.domain ?? ProgressionDomain.activity;
     final accent = domain.color;
     final chapterId = quest.node.chapterId ?? quest.node.chainId ?? '';
     final bgAsset = chapterBgAssetFor(chapterId);
     final isLocked = quest.levelGate != null;
 
+    // Direct non-XP rewards authored on this step (typically the
+    // finale's emblem). Drives the companion pill under the XP pill.
+    final directNonXpRewards = [
+      for (final r in quest.node.rewards)
+        if (r is! XpReward) r,
+    ];
+    // Chain finale non-XP rewards — surfaced in the expanded body so
+    // even when the active step is XP-only the player can see what's
+    // waiting at the end (e.g. emblem_forest_mark on forest_trial_finale).
+    final finaleRewards = chain.isEmpty
+        ? const <RewardDefinition>[]
+        : [
+            for (final r in chain.last.node.rewards)
+              if (r is! XpReward) r,
+          ];
+    // Chapter cards are always expandable when the player can interact
+    // (not level-locked) — the chapter wraps a multi-step chain so
+    // there's always something useful in the expanded body: the full
+    // description, the chain context, and the finale reward. The
+    // original "only expand for non-XP" rule made pure-XP steps look
+    // unfinished and hid where the chain was heading.
+    final canExpand = !isLocked && onToggle != null;
+
     return GestureDetector(
-      onTap: onToggle,
+      onTap: canExpand ? onToggle : null,
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
@@ -115,30 +141,68 @@ class EngineChapterCard extends StatelessWidget {
                       const SizedBox(height: 3),
                       Text(
                         quest.node.descriptionKey(l10n),
-                        maxLines: isExpanded ? 3 : 2,
-                        overflow: TextOverflow.ellipsis,
+                        // No clamp when expanded — chapter step
+                        // descriptions tend to spill past two lines
+                        // and a "..." in the open state told the
+                        // player nothing about what comes next.
+                        maxLines: isExpanded ? null : 2,
+                        overflow: isExpanded
+                            ? TextOverflow.visible
+                            : TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w500,
                           color: Colors.white.withValues(alpha: 0.78),
+                          height: 1.4,
                         ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(width: Tokens.spaceSm),
+                // Right column: lock chip when level-gated, otherwise
+                // XP pill on top with an optional reward pill below
+                // for chapters that carry a non-XP reward (finale
+                // emblem / cosmetic). The pill replaces the legacy
+                // chevron — chapters with only XP have no expand
+                // affordance at all (user rule).
                 if (isLocked)
                   _LockChip(level: quest.levelGate!, l10n: l10n)
                 else
-                  XpClaimPill(key: pillKey, data: _pillData()),
-                if (onToggle != null) ...[
-                  const SizedBox(width: 6),
-                  ExpandChevron(
-                    expanded: isExpanded,
-                    color: Colors.white.withValues(alpha: 0.78),
-                    size: 20,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      XpClaimPill(key: pillKey, data: _pillData()),
+                      // The companion pill below the XP pill surfaces
+                      // a non-XP reward directly on *this* step (e.g.
+                      // finale emblem) — distinct from the chain
+                      // finale reward, which the expanded body shows
+                      // separately. The pill also doubles as the
+                      // expand arrow so the player has a clear tap
+                      // target on rewarded steps.
+                      if (canExpand && directNonXpRewards.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        EngineCompanionPill(
+                          badge: badgeForReward(directNonXpRewards.first),
+                          expanded: isExpanded,
+                          onTap: onToggle!,
+                          accent: accent,
+                        ),
+                      ] else if (canExpand) ...[
+                        // No direct reward to badge — show a plain
+                        // chevron so the card still has a visible
+                        // expand affordance. Without this, pure-XP
+                        // chapter steps would look unexpandable even
+                        // though tapping the row works.
+                        const SizedBox(height: 4),
+                        ExpandChevron(
+                          expanded: isExpanded,
+                          color: Colors.white.withValues(alpha: 0.72),
+                          size: 18,
+                        ),
+                      ],
+                    ],
                   ),
-                ],
               ],
             ),
             // Chain preview between the title row and the progress bar
@@ -164,14 +228,22 @@ class EngineChapterCard extends StatelessWidget {
             ],
             const SizedBox(height: Tokens.spaceSm),
             if (!isLocked) _ProgressRow(quest: quest, accent: accent),
-            if (isExpanded) ...[
-              const SizedBox(height: Tokens.spaceSm),
-              _ChapterExpandedDetails(
-                quest: quest,
-                accent: accent,
-                l10n: l10n,
-              ),
-            ],
+            AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: isExpanded
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: Tokens.spaceSm),
+                      child: _ChapterExpandedDetails(
+                        quest: quest,
+                        accent: accent,
+                        finaleRewards: finaleRewards,
+                        l10n: l10n,
+                      ),
+                    )
+                  : const SizedBox(width: double.infinity),
+            ),
           ],
         ),
       ),
@@ -282,38 +354,26 @@ class _ProgressRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final locale = Localizations.localeOf(context).toString();
-    final pct = (quest.progress * 100).clamp(0, 100).round();
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                _label(locale),
-                style: const TextStyle(
-                  fontSize: Tokens.fontSizeMicro,
-                  fontWeight: FontWeight.w600,
-                  color: Tokens.onSurfaceMuted,
-                ),
-              ),
-            ),
-            Text(
-              '$pct%',
-              style: TextStyle(
-                fontSize: Tokens.fontSizeMicro,
-                fontWeight: FontWeight.w800,
-                color: accent.withValues(alpha: 0.92),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
         ProgressBar(
           value: quest.progress,
           color: accent,
           glow: accent.withValues(alpha: 0.34),
+        ),
+        const SizedBox(height: 6),
+        Align(
+          alignment: Alignment.centerRight,
+          child: Text(
+            _label(locale),
+            style: TextStyle(
+              fontSize: Tokens.fontSizeMicro,
+              fontWeight: FontWeight.w700,
+              color: accent.withValues(alpha: 0.92),
+            ),
+          ),
         ),
       ],
     );
@@ -405,6 +465,12 @@ class _ChainNode extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final completed = quest.isCompleted;
+    // "Locked future" = not completed AND not the currently active step.
+    // These render a lock glyph in place of any label so the player
+    // doesn't read distant milestones (1M / 5M) as actionable. Explicit
+    // chainStepIcon still wins so finale shields / opener arrows stay
+    // legible.
+    final isLocked = !completed && !isCurrent;
     final ring = isCurrent
         ? accent
         : completed
@@ -422,11 +488,24 @@ class _ChainNode extends StatelessWidget {
         isCurrent ? Colors.white : Colors.white.withValues(alpha: 0.72);
 
     Widget glyph;
+    double horizontalPadding = 0;
     if (completed) {
       glyph = Icon(Icons.check_rounded, size: 12, color: accent);
+    } else if (isLocked && iconForStep == null) {
+      // V1 parity: locked steps without an explicit icon collapse to a
+      // small lock glyph instead of showing their target value.
+      glyph = Icon(
+        Icons.lock_rounded,
+        size: 11,
+        color: Colors.white.withValues(alpha: 0.48),
+      );
     } else if (iconForStep != null) {
       glyph = Icon(iconForStep, size: 12, color: glyphColor);
     } else if (label != null && label.isNotEmpty) {
+      // Text-bearing pill — give the label some horizontal room so the
+      // dot stretches into a small pill (e.g. "100K", "25K") instead of
+      // overflowing a fixed 22-wide circle.
+      horizontalPadding = 5;
       glyph = Text(
         label,
         style: TextStyle(
@@ -449,12 +528,15 @@ class _ChainNode extends StatelessWidget {
     }
 
     return Container(
-      width: 22,
-      height: 22,
+      constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: fill,
-        shape: BoxShape.circle,
+        // Pill shape — collapses to a circle when content is a single
+        // glyph (22×22), stretches horizontally when the label needs
+        // it. Drops the hard-coded width: 22.
+        borderRadius: BorderRadius.circular(11),
         border: Border.all(color: ring, width: isCurrent ? 1.6 : 1),
         boxShadow: isCurrent
             ? [BoxShadow(color: accent.withValues(alpha: 0.55), blurRadius: 8)]
@@ -488,18 +570,32 @@ class _ChapterExpandedDetails extends StatelessWidget {
   const _ChapterExpandedDetails({
     required this.quest,
     required this.accent,
+    required this.finaleRewards,
     required this.l10n,
   });
 
   final EngineQuestProgress quest;
   final Color accent;
+
+  /// Non-XP rewards on the chain's finale step. Surfaced as a "Po
+  /// dokončení kapitoly" block so the player can see what waits at
+  /// the end (emblem, relic, cosmetic) even while working a mid-chain
+  /// step that only carries XP.
+  final List<RewardDefinition> finaleRewards;
+
   final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
     final lockedHint = quest.node.lockedHintKey?.call(l10n);
-    final hasScaling = quest.baseXp > 0 && quest.previewXp != quest.baseXp;
     final stepLabel = quest.node.chainStepLabelKey?.call(l10n);
+
+    final hasStepLabel = stepLabel != null && stepLabel.isNotEmpty;
+    final hasLockedHint = lockedHint != null && lockedHint.isNotEmpty;
+    final hasFinale = finaleRewards.isNotEmpty;
+    if (!hasStepLabel && !hasLockedHint && !hasFinale) {
+      return const SizedBox.shrink();
+    }
 
     return Container(
       width: double.infinity,
@@ -512,7 +608,7 @@ class _ChapterExpandedDetails extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (stepLabel != null && stepLabel.isNotEmpty) ...[
+          if (hasStepLabel) ...[
             Text(
               stepLabel,
               style: TextStyle(
@@ -522,23 +618,48 @@ class _ChapterExpandedDetails extends StatelessWidget {
                 letterSpacing: 0.6,
               ),
             ),
-            const SizedBox(height: 6),
+            if (hasLockedHint || hasFinale) const SizedBox(height: 6),
           ],
-          if (quest.baseXp > 0)
-            _DetailLine(
-              icon: Icons.bolt_rounded,
-              color: accent,
-              text: hasScaling
-                  ? l10n.progXpScalingDetail(quest.baseXp, quest.previewXp)
-                  : l10n.progXpFlatDetail(quest.baseXp),
-            ),
-          if (lockedHint != null && lockedHint.isNotEmpty) ...[
-            const SizedBox(height: 6),
+          if (hasLockedHint) ...[
             _DetailLine(
               icon: Icons.lock_outline_rounded,
               color: Colors.white.withValues(alpha: 0.78),
               text: lockedHint,
             ),
+            if (hasFinale) const SizedBox(height: 8),
+          ],
+          if (hasFinale) ...[
+            Text(
+              l10n.progQuestChainFinaleReward.toUpperCase(),
+              style: const TextStyle(
+                fontSize: Tokens.fontSizeMicro,
+                fontWeight: FontWeight.w900,
+                color: Tokens.onSurfaceMuted,
+                letterSpacing: 1.1,
+              ),
+            ),
+            const SizedBox(height: 6),
+            // Rich reward rows — each shows the resolved cosmetic asset
+            // (e.g. forest emblem), the localized name, and a chevron
+            // that opens a read-only preview sheet. Lets the player
+            // inspect what's waiting at the finale before they unlock
+            // it, instead of staring at an anonymous icon chip.
+            for (var i = 0; i < finaleRewards.length; i++) ...[
+              if (i > 0) const SizedBox(height: 6),
+              EngineRewardDetailRow(
+                reward: finaleRewards[i],
+                l10n: l10n,
+                unlocked: false,
+                accent: accent,
+                onTap: () => showEngineRewardPreviewSheet(
+                  context,
+                  reward: finaleRewards[i],
+                  unlocked: false,
+                  accent: accent,
+                  l10n: l10n,
+                ),
+              ),
+            ],
           ],
         ],
       ),

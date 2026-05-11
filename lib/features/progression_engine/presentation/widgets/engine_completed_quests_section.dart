@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
+import '../../../../shared/widgets/xp_claim_pill.dart';
 import '../../../progression/domain/models/core_models.dart';
 import '../../../progression/presentation/widgets/progression_primitives.dart';
 import '../../application/progression_engine_provider.dart';
@@ -183,24 +184,30 @@ class _CompletedRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
-          // Per V1 parity: claimed quests show a soft success-toned
-          // check, not the gold "+XP" pill. The pill is reserved for
-          // active claimable rows.
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Tokens.success.withValues(alpha: 0.07),
-              borderRadius: BorderRadius.circular(Tokens.radiusProgress),
-              border: Border.all(
-                color: Tokens.success.withValues(alpha: 0.16),
+          // V1 parity: completed rows surface the XP that was credited
+          // ("+750 XP"). The pill renders in the [claimed] visual style
+          // (greyed gold with a check icon) so it is clearly read as
+          // a past grant, not a pending claim. Falls back to a plain
+          // check chip when the ledger has no XP for this node — old
+          // grants pre-dating the field, or cosmetic-only quests.
+          if (entry.xpGranted > 0)
+            XpClaimPill(data: XpClaimPillData.claimed(entry.xpGranted))
+          else
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Tokens.success.withValues(alpha: 0.07),
+                borderRadius: BorderRadius.circular(Tokens.radiusProgress),
+                border: Border.all(
+                  color: Tokens.success.withValues(alpha: 0.16),
+                ),
+              ),
+              child: Icon(
+                Icons.check_rounded,
+                size: 14,
+                color: Tokens.success.withValues(alpha: 0.78),
               ),
             ),
-            child: Icon(
-              Icons.check_rounded,
-              size: 14,
-              color: Tokens.success.withValues(alpha: 0.78),
-            ),
-          ),
         ],
       ),
     );

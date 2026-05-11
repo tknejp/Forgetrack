@@ -6,9 +6,11 @@ import '../../../l10n/l10n.dart';
 import '../../../shared/theme/design_tokens.dart';
 import '../../../shared/widgets/xp_sparkle_overlay.dart';
 import '../application/progression_engine_provider.dart';
-import '../domain/catalog/engine_catalog_context.dart';
 import 'widgets/engine_chapter_card.dart';
+import 'widgets/engine_completed_quest_card.dart';
 import 'widgets/engine_completed_quests_section.dart';
+import 'widgets/engine_locked_quest_row.dart';
+import 'widgets/engine_long_term_card.dart';
 import 'widgets/engine_quest_card.dart';
 import 'widgets/engine_quest_section.dart';
 
@@ -78,8 +80,7 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
     Offset? from,
   }) async {
     final provider = context.read<ProgressionEngineProvider>();
-    final input = provider.currentInput;
-    if (input == null) return;
+    if (provider.currentInput == null) return;
 
     final origin = from ?? _centerOfKey(_pillKeyFor(quest.nodeId));
     if (origin != null) {
@@ -90,18 +91,12 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
       );
     }
 
-    await provider.claimNode(
-      nodeId: quest.nodeId,
-      input: input,
-      catalogContext:
-          provider.currentCatalogContext ?? const EngineCatalogContext(),
-    );
+    await provider.claimNode(nodeId: quest.nodeId);
   }
 
   Future<void> _claimAll(List<EngineQuestProgress> claimable) async {
     final provider = context.read<ProgressionEngineProvider>();
-    final input = provider.currentInput;
-    if (input == null || claimable.isEmpty) return;
+    if (provider.currentInput == null || claimable.isEmpty) return;
 
     final origins = [
       for (final q in claimable) _centerOfKey(_pillKeyFor(q.nodeId)),
@@ -115,18 +110,29 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
       );
     }
 
-    final ctx =
-        provider.currentCatalogContext ?? const EngineCatalogContext();
-
     // Sequential — each claim advances the ledger and the engine's
     // idempotency bookkeeping. Parallel claims would race on
-    // appendEvents.
+    // appendEvents. The provider rebuilds the engine input from the
+    // latest ledger on every claim, so per-iteration counters
+    // (totalRewardCount, nodeCompletionCounts, …) stay accurate even
+    // when one step's claim should unlock the next.
     for (final quest in claimable) {
-      await provider.claimNode(
-        nodeId: quest.nodeId,
-        input: input,
-        catalogContext: ctx,
-      );
+      await provider.claimNode(nodeId: quest.nodeId);
+    }
+
+    // Cascade pass: a claim in the loop above can satisfy an objective
+    // that only becomes available *after* the previous claim's grants
+    // hit the ledger (e.g. `reward_count_first` triggers once the first
+    // XP grant lands). Without this, the badge would correctly report
+    // "1 to claim" but the screen wouldn't show a row to act on. Drain
+    // any freshly-available nodes here so the loop is idempotent.
+    var safety = 0;
+    while (provider.pendingClaimNodeIds.isNotEmpty && safety < 8) {
+      final cascade = provider.pendingClaimNodeIds.toList();
+      for (final id in cascade) {
+        await provider.claimNode(nodeId: id);
+      }
+      safety++;
     }
   }
 
@@ -160,8 +166,18 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
     final weeklyClaimable =
         weekly.where((q) => q.isAvailableForClaim).toList();
     final dailyActive = daily.where((q) => !q.isCompleted).toList();
-    final weeklyActive = weekly.where((q) => !q.isCompleted).toList();
+    // Weekly section now mirrors long-term / chapter rules: a quest
+    // that's claimable-but-not-claimed moves to DOKONČENÉ so the row
+    // doesn't double-list. Daily stays as-is (claimable still shows
+    // in the daily section so the player can claim from the active
+    // surface).
+    final weeklyActive = weekly
+        .where((q) => !q.isCompleted && !q.isAvailableForClaim)
+        .toList();
     final chapters = provider.currentChapterQuests;
+    final longTerm = provider.currentLongTermQuests;
+    final locked = provider.lockedQuests;
+    final completed = provider.completedEntries;
 
     return Scaffold(
       backgroundColor: Tokens.bg,
@@ -247,15 +263,33 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                       expandedNodeId: _expandedNodeId,
                       onToggleExpanded: _toggleExpanded,
                     ),
+                    if (longTerm.isNotEmpty) ...[
+                      const SizedBox(height: Tokens.spaceXl),
+                      _LongTermSection(
+                        entries: longTerm,
+                        chainResolver: provider.chainQuestsFor,
+                        l10n: l10n,
+                        enabled: !provider.isEvaluating,
+                        pillKeyFor: _pillKeyFor,
+                        onClaim: _claimQuest,
+                        expandedNodeId: _expandedNodeId,
+                        onToggleExpanded: _toggleExpanded,
+                      ),
+                    ],
+                    if (locked.isNotEmpty) ...[
+                      const SizedBox(height: Tokens.spaceXl),
+                      _LockedSection(quests: locked, l10n: l10n),
+                    ],
                     const SizedBox(height: Tokens.spaceXl),
-                    EngineCompletedQuestsSection(
-                      completed: provider.completedQuests,
+                    _CompletedSection(
+                      entries: completed,
                       l10n: l10n,
-                      resolveDomain: provider.domainForNodeId,
-                      header: l10n.progQuestsCompletedHeader,
-                      headerColor: Tokens.onSurfaceMuted,
-                      emptyTitle: l10n.progQuestsEmptyCompletedTitle,
-                      emptyCaption: l10n.progQuestsEmptyCompletedCaption,
+                      enabled: !provider.isEvaluating,
+                      pillKeyFor: _pillKeyFor,
+                      onClaim: _claimQuest,
+                      onClaimAll: _claimAll,
+                      expandedNodeId: _expandedNodeId,
+                      onToggleExpanded: _toggleExpanded,
                     ),
                     const SizedBox(height: Tokens.spaceXl),
                     EngineCompletedQuestsSection(
@@ -444,6 +478,214 @@ class _ChapterSection extends StatelessWidget {
   }
 }
 
+/// "DLOUHODOBÉ CÍLE" section. Renders one [EngineLongTermCard] per
+/// long-term quest entry. The card aggregates rewards from companion
+/// nodes (achievements sharing the same objective), so the player
+/// sees XP + items + companion achievements as one row.
+class _LongTermSection extends StatelessWidget {
+  const _LongTermSection({
+    required this.entries,
+    required this.chainResolver,
+    required this.l10n,
+    required this.enabled,
+    required this.pillKeyFor,
+    required this.onClaim,
+    required this.expandedNodeId,
+    required this.onToggleExpanded,
+  });
+
+  final List<EngineLongTermEntry> entries;
+  final List<EngineQuestProgress> Function(String chainId) chainResolver;
+  final AppLocalizations l10n;
+  final bool enabled;
+  final GlobalKey Function(String nodeId) pillKeyFor;
+  final Future<void> Function(EngineQuestProgress quest, {Offset? from})
+      onClaim;
+  final String? expandedNodeId;
+  final void Function(String nodeId) onToggleExpanded;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        EngineQuestSection(
+          label: l10n.progQuestsLongTermHeader,
+          color: Tokens.accent,
+          countLabel: entries.length <= 1
+              ? null
+              : l10n.progQuestsActiveCount(entries.length),
+          isEmpty: true,
+          children: const [],
+        ),
+        for (var i = 0; i < entries.length; i++) ...[
+          if (i > 0) const SizedBox(height: Tokens.spaceSm),
+          EngineLongTermCard(
+            entry: entries[i],
+            chain: chainResolver(entries[i].quest.node.chainId ?? ''),
+            l10n: l10n,
+            enabled: enabled,
+            pillKey: pillKeyFor(entries[i].quest.nodeId),
+            onClaim: onClaim,
+            isExpanded: expandedNodeId == entries[i].quest.nodeId,
+            onToggle: () => onToggleExpanded(entries[i].quest.nodeId),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// "DOKONČENÉ QUESTY" section. Renders one
+/// [EngineCompletedQuestCard] per [EngineCompletedEntry] from the
+/// provider. Chains aggregate to a single row whose chain preview
+/// grows a dot per progressed step.
+class _CompletedSection extends StatelessWidget {
+  const _CompletedSection({
+    required this.entries,
+    required this.l10n,
+    required this.enabled,
+    required this.pillKeyFor,
+    required this.onClaim,
+    required this.onClaimAll,
+    required this.expandedNodeId,
+    required this.onToggleExpanded,
+  });
+
+  final List<EngineCompletedEntry> entries;
+  final AppLocalizations l10n;
+  final bool enabled;
+  final GlobalKey Function(String nodeId) pillKeyFor;
+  final Future<void> Function(EngineQuestProgress quest, {Offset? from})
+      onClaim;
+  final Future<void> Function(List<EngineQuestProgress> quests) onClaimAll;
+  final String? expandedNodeId;
+  final void Function(String nodeId) onToggleExpanded;
+
+  /// Flattens every claimable-but-not-yet-claimed step across all
+  /// entries — used by the section's "Vyzvednout vše" button so the
+  /// player can drain pending claims in one tap. For non-chain
+  /// entries the representative is the only candidate; chain entries
+  /// can contribute multiple steps if more than one is simultaneously
+  /// claimable.
+  List<EngineQuestProgress> get _allClaimable {
+    final out = <EngineQuestProgress>[];
+    for (final e in entries) {
+      final source = e.chainQuests.isEmpty ? [e.representative] : e.chainQuests;
+      for (final q in source) {
+        if (q.isAvailableForClaim && !q.isCompleted) out.add(q);
+      }
+    }
+    return out;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final claimable = _allClaimable;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Three-column header row matching the legacy V1 quests
+        // screen: section title on the left (filling remaining
+        // space), count text in the middle, claim-all pill on the
+        // right with a 12 px gap. Keeping the count outside the
+        // section widget lets the pill keep its full visual weight
+        // without crowding the title row.
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: EngineQuestSection(
+                label: l10n.progQuestsCompletedHeader,
+                color: Tokens.onSurfaceMuted,
+                countLabel: null,
+                isEmpty: true,
+                children: const [],
+              ),
+            ),
+            if (entries.isNotEmpty)
+              Text(
+                l10n.progQuestsCompletedCount(entries.length),
+                style: const TextStyle(
+                  fontSize: Tokens.fontSizeMicro,
+                  fontWeight: FontWeight.w600,
+                  color: Tokens.onSurfaceMuted,
+                ),
+              ),
+            if (claimable.length > 1) ...[
+              const SizedBox(width: 12),
+              _ClaimAllButton(
+                label: l10n.progRewardsClaimAll,
+                enabled: enabled,
+                onTap: () => onClaimAll(claimable),
+              ),
+            ],
+          ],
+        ),
+        // Breathing room between the section header row (with the
+        // claim-all pill) and the first entry card.
+        const SizedBox(height: 10),
+        if (entries.isEmpty)
+          EngineQuestEmptyLine(
+            title: l10n.progQuestsEmptyCompletedTitle,
+            caption: l10n.progQuestsEmptyCompletedCaption,
+          )
+        else
+          for (var i = 0; i < entries.length; i++) ...[
+            if (i > 0) const SizedBox(height: 6),
+            EngineCompletedQuestCard(
+              entry: entries[i],
+              l10n: l10n,
+              enabled: enabled,
+              pillKey: pillKeyFor(entries[i].representative.nodeId),
+              onClaim: onClaim,
+              isExpanded:
+                  expandedNodeId == entries[i].representative.nodeId,
+              onToggle: () =>
+                  onToggleExpanded(entries[i].representative.nodeId),
+            ),
+          ],
+      ],
+    );
+  }
+}
+
+/// "ZAMČENÉ QUESTY" section. Renders one [EngineLockedQuestRow] per
+/// level-gated quest from [ProgressionEngineProvider.lockedQuests].
+/// V1 parity — the chapter quest (e.g. Lesní zkouška) lives here as a
+/// compact row until the player reaches its required level, instead
+/// of rendering a full chapter card up top.
+class _LockedSection extends StatelessWidget {
+  const _LockedSection({required this.quests, required this.l10n});
+
+  final List<EngineQuestProgress> quests;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        EngineQuestSection(
+          label: l10n.progQuestsLockedHeader,
+          color: Tokens.onSurfaceMuted,
+          countLabel: null,
+          isEmpty: true,
+          children: const [],
+        ),
+        Column(
+          children: [
+            for (var i = 0; i < quests.length; i++) ...[
+              if (i > 0) const SizedBox(height: 6),
+              EngineLockedQuestRow(quest: quests[i], l10n: l10n),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+}
+
 class _ClaimAllButton extends StatelessWidget {
   const _ClaimAllButton({
     required this.label,
@@ -462,12 +704,18 @@ class _ClaimAllButton extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: enabled ? onTap : null,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        // Sized to match the section header text height — V2's
+        // EngineQuestSection has an icon (14 px) + caption text, so
+        // a pill with the legacy 10/7 padding looked taller than the
+        // header row and broke vertical alignment. 8/3 with the micro
+        // font keeps the pill readable but lets it sit on the same
+        // baseline as the title and count text.
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
         decoration: BoxDecoration(
           color: enabled
               ? color.withValues(alpha: 0.16)
               : Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(Tokens.radiusIcon),
+          borderRadius: BorderRadius.circular(Tokens.radiusProgress),
           border: Border.all(
             color: enabled
                 ? color.withValues(alpha: 0.24)
@@ -477,9 +725,10 @@ class _ClaimAllButton extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-            fontSize: Tokens.fontSizeCaption,
+            fontSize: Tokens.fontSizeMicro,
             fontWeight: FontWeight.w800,
             color: enabled ? color : Tokens.onSurfaceFaint,
+            letterSpacing: 0.3,
           ),
         ),
       ),

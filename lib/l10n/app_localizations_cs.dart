@@ -1079,6 +1079,40 @@ class AppLocalizationsCs extends AppLocalizations {
   String get progQuestsLongTermHeader => 'DLOUHODOBÉ CÍLE';
 
   @override
+  String get progQuestsLongTermAlsoUnlocks => 'Také odemkne';
+
+  @override
+  String get progQuestNextStep => 'Další krok';
+
+  @override
+  String get progQuestNextStepLocked =>
+      'Splň předchozí krok, aby se odemkl další';
+
+  @override
+  String get progQuestChainFinaleReward => 'Po dokončení kapitoly';
+
+  @override
+  String get cosmeticTypeFrame => 'Rámeček';
+
+  @override
+  String get cosmeticTypeRelic => 'Relikvie';
+
+  @override
+  String get cosmeticTypeBackground => 'Pozadí';
+
+  @override
+  String get cosmeticTypeEmblem => 'Emblém';
+
+  @override
+  String get cosmeticTypeCompanion => 'Společník';
+
+  @override
+  String get cosmeticTypeTitleFlair => 'Titul';
+
+  @override
+  String get cosmeticTypeMapEffect => 'Mapový efekt';
+
+  @override
   String get progQuestsChapterWaitingHeader => 'PŘIPRAVENÉ KAPITOLY';
 
   @override
@@ -1782,6 +1816,41 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get progQuestSourceDragonrockSovereign => 'Vládce Dračí skály';
+
+  @override
+  String get progQuestPilgrimPathOpenTitle => 'Stezka poutníka';
+
+  @override
+  String get progQuestPilgrimPathOpenDesc =>
+      'Vydej se na svou cestu — tvá první kapitola začíná.';
+
+  @override
+  String get progQuestPilgrimPathFirstStepsTitle => 'První kroky';
+
+  @override
+  String get progQuestPilgrimPathFirstStepsDesc =>
+      'Splň denní cíl kroků a vyraz na stezku.';
+
+  @override
+  String get progQuestPilgrimPathFirstSleepTitle => 'První odpočinek';
+
+  @override
+  String get progQuestPilgrimPathFirstSleepDesc =>
+      'Splň denní cíl spánku a načerpej sílu na další den.';
+
+  @override
+  String get progQuestPilgrimPathFirstRewardTitle => 'První odměna';
+
+  @override
+  String get progQuestPilgrimPathFirstRewardDesc =>
+      'Získej svou první odměnu na cestě poutníka.';
+
+  @override
+  String get progQuestPilgrimPathFinaleTitle => 'Znak poutníka';
+
+  @override
+  String get progQuestPilgrimPathFinaleDesc =>
+      'Dokonči první kroky, odpočinek i odměnu a získej Znak poutníka.';
 
   @override
   String get progQuestForestTrialOpenTitle => 'Lesní zkouška';
@@ -4014,37 +4083,40 @@ class AppLocalizationsCs extends AppLocalizations {
       'Dosáhni úrovně 95.';
 
   @override
-  String get cosmeticEmblemForestMarkUnlockHint => 'Dosáhni úrovně 10.';
+  String get cosmeticEmblemForestMarkUnlockHint => 'Dokonči Lesní zkoušku.';
 
   @override
-  String get cosmeticEmblemPilgrimMarkUnlockHint => 'Vydej se na cestu.';
+  String get cosmeticEmblemPilgrimMarkUnlockHint => 'Dokonči Stezku poutníka.';
 
   @override
-  String get cosmeticEmblemRuinSigilUnlockHint => 'Dosáhni úrovně 20.';
+  String get cosmeticEmblemRuinSigilUnlockHint => 'Dokonči Ruiny disciplíny.';
 
   @override
-  String get cosmeticEmblemGatekeeperMarkUnlockHint => 'Dosáhni úrovně 30.';
+  String get cosmeticEmblemGatekeeperMarkUnlockHint =>
+      'Dokonči Sestup do dolu.';
 
   @override
-  String get cosmeticEmblemMineCrestUnlockHint => 'Dosáhni úrovně 40.';
+  String get cosmeticEmblemMineCrestUnlockHint => 'Dokonči Výheň tempa.';
 
   @override
-  String get cosmeticEmblemUnderwaysMarkUnlockHint => 'Dosáhni úrovně 50.';
+  String get cosmeticEmblemUnderwaysMarkUnlockHint => 'Dokonči Podzemní pakt.';
 
   @override
-  String get cosmeticEmblemFrostSigilUnlockHint => 'Dosáhni úrovně 60.';
+  String get cosmeticEmblemFrostSigilUnlockHint => 'Dokonči Mrazivou přísahu.';
 
   @override
-  String get cosmeticEmblemIcewalkerMarkUnlockHint => 'Dosáhni úrovně 70.';
+  String get cosmeticEmblemIcewalkerMarkUnlockHint =>
+      'Dokonči Cestu ledoběžce.';
 
   @override
-  String get cosmeticEmblemMountainCrestUnlockHint => 'Dosáhni úrovně 80.';
+  String get cosmeticEmblemMountainCrestUnlockHint => 'Dokonči Výstup na horu.';
 
   @override
-  String get cosmeticEmblemDragonMarkUnlockHint => 'Dosáhni úrovně 90.';
+  String get cosmeticEmblemDragonMarkUnlockHint => 'Dokonči Dračí cestu.';
 
   @override
-  String get cosmeticEmblemDragonrockEmblemUnlockHint => 'Dosáhni úrovně 100.';
+  String get cosmeticEmblemDragonrockEmblemUnlockHint =>
+      'Dokonči Vládce Dračí skály.';
 
   @override
   String get cosmeticRelicCampfireSparkUnlockHint =>
