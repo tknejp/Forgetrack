@@ -10,8 +10,7 @@ import '../../../health_connect/data/local/health_database.dart';
 import '../../../nutrition/application/kaloricke_tabulky_provider.dart';
 import '../../../nutrition/data/local/kt_nutrition_database.dart';
 import '../../../onboarding/application/onboarding_provider.dart';
-import '../../../progression/application/progression_provider.dart';
-import '../../../progression/data/local/progression_database.dart';
+import '../../../progression_engine/application/progression_engine_provider.dart';
 import '../../../social/application/social_provider.dart';
 import '../../application/devtools_provider.dart';
 import '../../application/factory_reset/factory_reset_models.dart';
@@ -207,10 +206,9 @@ class _DevToolsFactoryResetSectionState
     final deps = FactoryResetDeps(
       healthDatabase: context.read<HealthDatabase>(),
       ktNutritionDatabase: context.read<KtNutritionDatabase>(),
-      progressionDatabase: context.read<ProgressionDatabase>(),
       cosmeticsDatabase: context.read<CosmeticsDatabase>(),
       authProvider: context.read<AuthProvider>(),
-      progressionProvider: context.read<ProgressionProvider>(),
+      progressionEngineProvider: context.read<ProgressionEngineProvider>(),
       cosmeticsProvider: context.read<CosmeticsProvider>(),
       fitnessProvider: context.read<FitnessProvider>(),
       kalorickeTabulkyProvider: context.read<KalorickeTabulkyProvider>(),

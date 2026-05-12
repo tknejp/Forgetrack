@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../../shared/domain/rarity.dart';
 import '../domain/social_models.dart';
 import '../domain/social_repository.dart';
 
@@ -500,8 +501,7 @@ class FirestoreSocialRepository implements SocialRepository {
         'level': payload.stats.level,
         'totalXp': payload.stats.totalXp,
         'unlockedAchievementCount': payload.stats.unlockedAchievementCount,
-        'claimedRewardCount': payload.stats.claimedRewardCount,
-        'pendingRewardCount': payload.stats.pendingRewardCount,
+        'grantedRewardCount': payload.stats.grantedRewardCount,
         'bestStepsStreak': payload.stats.bestStepsStreak,
         'bestNutritionStreak': payload.stats.bestNutritionStreak,
         'updatedAt': FieldValue.serverTimestamp(),
@@ -629,8 +629,7 @@ class FirestoreSocialRepository implements SocialRepository {
       'achievementSnapshot': {
         'title': share.achievementSnapshot.title,
         'description': share.achievementSnapshot.description,
-        'difficulty': share.achievementSnapshot.difficulty,
-        'type': share.achievementSnapshot.type,
+        'rarity': share.achievementSnapshot.rarity.name,
         'domain': share.achievementSnapshot.domain,
       },
     });
@@ -715,8 +714,7 @@ class FirestoreSocialRepository implements SocialRepository {
         level: _readInt(stats['level']),
         totalXp: _readInt(stats['totalXp']),
         unlockedAchievementCount: _readInt(stats['unlockedAchievementCount']),
-        claimedRewardCount: _readInt(stats['claimedRewardCount']),
-        pendingRewardCount: _readInt(stats['pendingRewardCount']),
+        grantedRewardCount: _readInt(stats['grantedRewardCount']),
         bestStepsStreak: _readInt(stats['bestStepsStreak']),
         bestNutritionStreak: _readInt(stats['bestNutritionStreak']),
         updatedAt: _readDateTime(stats['updatedAt']),
@@ -765,8 +763,7 @@ class FirestoreSocialRepository implements SocialRepository {
       achievementSnapshot: SocialAchievementSnapshot(
         title: achievementSnapshot['title'] as String? ?? '',
         description: achievementSnapshot['description'] as String? ?? '',
-        difficulty: achievementSnapshot['difficulty'] as String? ?? '',
-        type: achievementSnapshot['type'] as String? ?? '',
+        rarity: _readRarity(achievementSnapshot['rarity']),
         domain: achievementSnapshot['domain'] as String?,
       ),
       reactions: reactions,
@@ -898,13 +895,20 @@ class FirestoreSocialRepository implements SocialRepository {
       achievementId: data['achievementId'] as String? ?? doc.id,
       title: data['title'] as String? ?? '',
       description: data['description'] as String? ?? '',
-      difficulty: data['difficulty'] as String? ?? '',
-      type: data['type'] as String? ?? '',
+      rarity: _readRarity(data['rarity']),
       domain: data['domain'] as String?,
-      ruleId: data['ruleId'] as String?,
       unlockedAt: _readDateTime(data['unlockedAt']) ??
           DateTime.fromMillisecondsSinceEpoch(0),
     );
+  }
+
+  Rarity _readRarity(dynamic value) {
+    if (value is String && value.isNotEmpty) {
+      for (final r in Rarity.values) {
+        if (r.name == value) return r;
+      }
+    }
+    return Rarity.common;
   }
 
   SocialFriendRequestStatus _mapFriendRequestStatus(String? value) {

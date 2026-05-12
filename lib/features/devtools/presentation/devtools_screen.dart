@@ -14,8 +14,6 @@ import 'sections/devtools_app_section.dart';
 import 'sections/devtools_db_section.dart';
 import 'sections/devtools_overrides_section.dart';
 import 'sections/devtools_progression_engine_section.dart';
-import 'sections/devtools_progression_section.dart';
-import 'sections/devtools_provider_section.dart';
 import 'sections/devtools_background_section.dart';
 import 'sections/devtools_health_pipeline_section.dart';
 import 'sections/devtools_notification_section.dart';
@@ -23,7 +21,6 @@ import 'sections/devtools_sync_section.dart';
 import 'sections/devtools_cosmetics_section.dart';
 import 'sections/devtools_factory_reset_section.dart';
 import 'sections/devtools_ui_section.dart';
-import 'sections/devtools_unlock_inventory_section.dart';
 
 class DevToolsScreen extends StatefulWidget {
   const DevToolsScreen({super.key});
@@ -76,12 +73,6 @@ class _DevToolsBodyState extends State<_DevToolsBody> {
       builder: () => const DevToolsAppSection(),
     ),
     _DevToolsSectionLink(
-      label: 'Providers',
-      icon: Icons.hub_rounded,
-      key: GlobalKey(),
-      builder: () => const DevToolsProviderSection(),
-    ),
-    _DevToolsSectionLink(
       label: 'Database',
       icon: Icons.storage_rounded,
       key: GlobalKey(),
@@ -119,21 +110,9 @@ class _DevToolsBodyState extends State<_DevToolsBody> {
     ),
     _DevToolsSectionLink(
       label: 'Progression',
-      icon: Icons.military_tech_rounded,
-      key: GlobalKey(),
-      builder: () => const DevToolsProgressionSection(),
-    ),
-    _DevToolsSectionLink(
-      label: 'Engine V2',
       icon: Icons.bolt_rounded,
       key: GlobalKey(),
       builder: () => const DevToolsProgressionEngineSection(),
-    ),
-    _DevToolsSectionLink(
-      label: 'Unlocks',
-      icon: Icons.fact_check_rounded,
-      key: GlobalKey(),
-      builder: () => const DevToolsUnlockInventorySection(),
     ),
     _DevToolsSectionLink(
       label: 'Cosmetics',
@@ -269,7 +248,7 @@ class _DevToolsBottomJumpBar extends StatelessWidget {
     final ft = context.ft;
     final priority = sections
         .where((s) =>
-            const {'Progression', 'Unlocks', 'Cosmetics'}.contains(s.label))
+            const {'Progression', 'Cosmetics', 'Sync'}.contains(s.label))
         .toList(growable: false);
 
     return Container(

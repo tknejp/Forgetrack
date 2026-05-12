@@ -1,7 +1,7 @@
 import '../domain/evaluator/reward_grant_planner.dart';
 import '../domain/models/ledger_event.dart';
 import '../domain/models/reward_definition.dart';
-import '../../progression/domain/policy/level_policy.dart';
+import '../domain/policy/level_policy.dart';
 
 /// Builds [RewardGrantEvent]s from planned grants. XP rewards are
 /// scaled at append time using the running level — the same logic

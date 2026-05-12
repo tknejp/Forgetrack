@@ -1,18 +1,18 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../../shared/widgets/xp_claim_pill.dart';
-import '../../../progression/domain/models/core_models.dart';
-import '../../../progression/presentation/widgets/progression_primitives.dart';
+import '../../domain/progression_domain.dart';
+import '../widgets/progression_primitives.dart';
 import '../../application/progression_engine_provider.dart';
 import 'engine_quest_section.dart';
 
 /// Completed-quests rollup section, used twice on the V2 quests
-/// screen: once for permanent completions ("Splněné cíle" — chapter,
+/// screen: once for permanent completions ("SplnÄ›nÃ© cÃ­le" â€” chapter,
 /// weekly, long-term) and once for today's daily-goal claims
-/// ("Nedávné odměny"). Header / empty-state strings are configurable
+/// ("NedÃ¡vnÃ© odmÄ›ny"). Header / empty-state strings are configurable
 /// so the same widget serves both surfaces with V1-matching copy.
 ///
 /// Default-shows the most recent [compactLimit] entries; reveals the
@@ -38,7 +38,7 @@ class EngineCompletedQuestsSection extends StatefulWidget {
   /// objective.
   final ProgressionDomain Function(String nodeId) resolveDomain;
 
-  /// Section header label (e.g. "Splněné cíle" or "Nedávné odměny").
+  /// Section header label (e.g. "SplnÄ›nÃ© cÃ­le" or "NedÃ¡vnÃ© odmÄ›ny").
   final String header;
 
   /// Accent color for the header row.
@@ -171,7 +171,7 @@ class _CompletedRow extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   l10n.progRewardsUnlockedAt(
-                    DateFormat('d MMM · HH:mm', locale)
+                    DateFormat('d MMM Â· HH:mm', locale)
                         .format(entry.completedAt),
                   ),
                   style: TextStyle(
@@ -188,7 +188,7 @@ class _CompletedRow extends StatelessWidget {
           // ("+750 XP"). The pill renders in the [claimed] visual style
           // (greyed gold with a check icon) so it is clearly read as
           // a past grant, not a pending claim. Falls back to a plain
-          // check chip when the ledger has no XP for this node — old
+          // check chip when the ledger has no XP for this node â€” old
           // grants pre-dating the field, or cosmetic-only quests.
           if (entry.xpGranted > 0)
             XpClaimPill(data: XpClaimPillData.claimed(entry.xpGranted))

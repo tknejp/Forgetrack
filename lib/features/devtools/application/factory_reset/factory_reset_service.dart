@@ -15,8 +15,7 @@ import '../../../health_connect/data/local/health_database.dart';
 import '../../../nutrition/application/kaloricke_tabulky_provider.dart';
 import '../../../nutrition/data/local/kt_nutrition_database.dart';
 import '../../../onboarding/application/onboarding_provider.dart';
-import '../../../progression/application/progression_provider.dart';
-import '../../../progression/data/local/progression_database.dart';
+import '../../../progression_engine/application/progression_engine_provider.dart';
 import '../../../social/application/social_provider.dart';
 import '../devtools_provider.dart';
 import 'devtools_user_data_purge_service.dart';
@@ -33,10 +32,9 @@ class FactoryResetDeps {
   const FactoryResetDeps({
     required this.healthDatabase,
     required this.ktNutritionDatabase,
-    required this.progressionDatabase,
     required this.cosmeticsDatabase,
     required this.authProvider,
-    required this.progressionProvider,
+    required this.progressionEngineProvider,
     required this.cosmeticsProvider,
     required this.fitnessProvider,
     required this.kalorickeTabulkyProvider,
@@ -48,11 +46,10 @@ class FactoryResetDeps {
 
   final HealthDatabase healthDatabase;
   final KtNutritionDatabase ktNutritionDatabase;
-  final ProgressionDatabase progressionDatabase;
   final CosmeticsDatabase cosmeticsDatabase;
 
   final AuthProvider authProvider;
-  final ProgressionProvider progressionProvider;
+  final ProgressionEngineProvider progressionEngineProvider;
   final CosmeticsProvider cosmeticsProvider;
   final FitnessProvider fitnessProvider;
   final KalorickeTabulkyProvider kalorickeTabulkyProvider;
@@ -247,26 +244,20 @@ class FactoryResetService {
 
     // 8. Local Isar databases — every collection used by Forgetrack.
     await runStep(FactoryResetStep.clearLocalDatabases, () async {
-      // ProgressionDatabase has no clearAll on the database object itself;
-      // the equivalent wipe lives on ProgressionProvider via the existing
-      // devtools path which also resets the celebration queue. We use the
-      // top-level "everything" path to also clear cosmetics inventory.
-      await deps.progressionProvider.devToolsResetEverything(
-        resetCosmeticsInventory:
-            deps.cosmeticsProvider.devToolsResetProgressionUnlocks,
-      );
-      // Above clears progression Isar + cosmetics inventory (entries
-      // sourced from progression). Also wipe any remaining cosmetics rows
-      // (devtools-granted, expirable entitlements) directly on the DB.
+      // V2 progression: wipe the engine ledger. This also clears the
+      // in-memory celebration queue (devToolsWipeLedger resets
+      // `_pendingCelebrations`).
+      await deps.progressionEngineProvider.devToolsWipeLedger();
+      // Cosmetics: clear the progression-sourced unlocks first, then
+      // drop any remaining rows (manual devtools grants, entitlements).
+      await deps.cosmeticsProvider.devToolsResetProgressionUnlocks();
       await deps.cosmeticsDatabase.clearAll();
       // Health + nutrition caches are independent.
       await deps.healthDatabase.clearAll();
       await deps.ktNutritionDatabase.clear();
-      // ProgressionDatabase: contents already cleared by devToolsResetEverything
-      // above via wipeAllProgressionData; no extra DB-level call needed.
       return (
         note: 'progression+cosmetics+health+nutrition wiped',
-        skipped: false
+        skipped: false,
       );
     });
 

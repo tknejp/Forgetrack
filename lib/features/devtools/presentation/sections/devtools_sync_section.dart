@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../features/health_connect/application/fitness_provider.dart';
 import '../../../../features/nutrition/application/kaloricke_tabulky_provider.dart';
-import '../../../../features/progression/application/progression_provider.dart';
+import '../../../../features/progression_engine/application/progression_engine_provider.dart';
 import '../../application/devtools_sync_logger.dart';
 import '../../domain/devtools_sync_event.dart';
 import '../widgets/devtools_action_tile.dart';
@@ -69,7 +69,7 @@ class _DevToolsSyncSectionState extends State<DevToolsSyncSection> {
   Future<void> _syncProgression() async {
     setState(() => _syncingProgression = true);
     try {
-      await context.read<ProgressionProvider>().refresh();
+      await context.read<ProgressionEngineProvider>().refresh();
     } finally {
       if (mounted) {
         setState(() => _syncingProgression = false);
@@ -81,7 +81,7 @@ class _DevToolsSyncSectionState extends State<DevToolsSyncSection> {
   Future<void> _syncAll() async {
     final fitness = context.read<FitnessProvider>();
     final kt = context.read<KalorickeTabulkyProvider>();
-    final progression = context.read<ProgressionProvider>();
+    final progression = context.read<ProgressionEngineProvider>();
     setState(() => _syncingAll = true);
     try {
       await fitness.refresh();
@@ -121,7 +121,7 @@ class _DevToolsSyncSectionState extends State<DevToolsSyncSection> {
         const DevToolsSectionDivider(),
         DevToolsActionTile(
           label: 'Run Progression Recalc',
-          subtitle: 'ProgressionProvider.refresh()',
+          subtitle: 'ProgressionEngineProvider.refresh()',
           isLoading: _syncingProgression || _syncingAll,
           isDisabled: _anyRunning,
           onTap: _anyRunning ? null : _syncProgression,

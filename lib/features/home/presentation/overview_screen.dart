@@ -1,12 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../health_connect/application/fitness_provider.dart';
 import '../../nutrition/application/kaloricke_tabulky_provider.dart';
-import '../../progression/domain/catalog/rule_catalog.dart';
-import '../../progression/domain/progression_models.dart';
-import '../../progression/application/progression_provider.dart';
+import '../../progression_engine/application/progression_engine_provider.dart';
 import '../../../l10n/l10n.dart';
 import '../../../shared/selected_period.dart';
 import '../../../features/health_connect/application/goals_provider.dart';
@@ -69,7 +69,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
     await Future.wait(futures);
 
     if (mounted) {
-      await context.read<ProgressionProvider>().refresh();
+      await context.read<ProgressionEngineProvider>().refresh();
     }
   }
 
@@ -133,144 +133,49 @@ class _OverviewScreenState extends State<OverviewScreen> {
     return '${hours}h ${minutes.toString().padLeft(2, '0')}m';
   }
 
-  XpClaimPillData? _xpPillData(
-    BuildContext context,
-    ProgressionProvider progression,
-    ProgressionDomain domain,
-    SelectedPeriod period,
-  ) {
-    if (period.type != PeriodType.day || !period.isCurrentPeriod) return null;
-
-    final today = progressionDate(DateTime.now());
-
-    final pending = progression.pendingRewards
-        .where(
-          (g) => g.domain == domain && progressionDate(g.period.start) == today,
-        )
-        .toList();
-
-    if (pending.isNotEmpty) {
-      final totalXp = pending.fold<int>(0, (sum, g) => sum + g.xpGranted);
-      return XpClaimPillData.claimable(
-        totalXp,
-        onTap: (center) {
-          _onXpClaimed(center);
-          for (final g in pending) {
-            progression.claimReward(g.rewardKey);
-          }
-        },
-      );
-    }
-
-    final claimed = progression.claimedRewards
-        .where(
-          (g) => g.domain == domain && progressionDate(g.period.start) == today,
-        )
-        .toList();
-
-    if (claimed.isNotEmpty) {
-      final totalXp = claimed.fold<int>(
-        0,
-        (sum, g) => sum + g.effectiveXpGranted,
-      );
-      return XpClaimPillData.claimed(totalXp);
-    }
-
-    final locked = progression.evaluations
-        .where(
-          (e) =>
-              e.domain == domain &&
-              !e.achieved &&
-              progressionDate(e.period.start) == today,
-        )
-        .toList();
-
-    if (locked.isNotEmpty) {
-      final totalXp = locked.fold<int>(0, (sum, e) => sum + e.rewardXp);
-      return XpClaimPillData.locked(totalXp);
-    }
-
-    return null;
-  }
-
-  XpClaimPillData? _xpPillDataForRule(
-    BuildContext context,
-    ProgressionProvider progression,
-    String ruleId,
-    SelectedPeriod period,
-  ) {
+  /// Per-card XP pill data for [questNodeId], a V2 [QuestNode] id.
+  ///
+  /// Daily quests are inherently `TodayScope` in V2, so the pill only
+  /// makes sense when the user is looking at the current period —
+  /// historic days never have claim state to surface. Matches the V1
+  /// gating exactly: domain-style pills (today's daily quests) require a
+  /// day-typed current period, weekly/activity-style pills accept any
+  /// current period (weekly_activity_today rolls up across the week).
+  XpClaimPillData? _xpPillForQuest(
+    ProgressionEngineProvider progression,
+    String questNodeId,
+    SelectedPeriod period, {
+    bool dayOnly = true,
+  }) {
+    if (dayOnly && period.type != PeriodType.day) return null;
     if (!period.isCurrentPeriod) return null;
 
-    final periodStart = progressionDate(
-      ruleId == 'weekly_activity'
-          ? SelectedPeriod.currentWeek().start
-          : period.start,
-    );
-    final pending = progression.pendingRewards
-        .where(
-          (g) =>
-              g.ruleId == ruleId &&
-              progressionDate(g.period.start) == periodStart,
-        )
-        .toList();
+    EngineQuestProgress? quest;
+    for (final q in progression.allDailyQuests) {
+      if (q.nodeId == questNodeId) {
+        quest = q;
+        break;
+      }
+    }
+    if (quest == null) return null;
+    final preview = quest.previewXp;
 
-    if (pending.isNotEmpty) {
-      final totalXp = pending.fold<int>(0, (sum, g) => sum + g.xpGranted);
+    if (quest.isCompleted) {
+      return XpClaimPillData.claimed(preview);
+    }
+    if (quest.isAvailableForClaim) {
+      final claimId = quest.nodeId;
       return XpClaimPillData.claimable(
-        totalXp,
+        preview,
         onTap: (center) {
           _onXpClaimed(center);
-          for (final g in pending) {
-            progression.claimReward(g.rewardKey);
-          }
+          unawaited(progression.claimNode(nodeId: claimId));
         },
       );
     }
-
-    final claimed = progression.claimedRewards
-        .where(
-          (g) =>
-              g.ruleId == ruleId &&
-              progressionDate(g.period.start) == periodStart,
-        )
-        .toList();
-
-    if (claimed.isNotEmpty) {
-      final totalXp = claimed.fold<int>(
-        0,
-        (sum, g) => sum + g.effectiveXpGranted,
-      );
-      return XpClaimPillData.claimed(totalXp);
+    if (preview > 0) {
+      return XpClaimPillData.locked(preview);
     }
-
-    final locked = progression.evaluations
-        .where(
-          (e) =>
-              e.ruleId == ruleId &&
-              !e.achieved &&
-              progressionDate(e.period.start) == periodStart,
-        )
-        .toList();
-
-    if (locked.isNotEmpty) {
-      final totalXp = locked.fold<int>(0, (sum, e) => sum + e.rewardXp);
-      return XpClaimPillData.locked(totalXp);
-    }
-
-    if (_shouldShowRuleFallbackPill(ruleId, period)) {
-      final hasGrantForPeriod = progression.rewardGrants.any(
-        (g) =>
-            g.ruleId == ruleId &&
-            progressionDate(g.period.start) == periodStart,
-      );
-      if (!hasGrantForPeriod) {
-        final rewardXp = _fallbackRuleXp(ruleId);
-        if (rewardXp != null) {
-          return XpClaimPillData.locked(rewardXp);
-        }
-      }
-    }
-
     return null;
   }
 
@@ -319,7 +224,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
     final fitness = context.watch<FitnessProvider>();
     final kt = context.watch<KalorickeTabulkyProvider>();
     final goals = context.watch<GoalsProvider>();
-    final progression = context.watch<ProgressionProvider>();
+    final progression = context.watch<ProgressionEngineProvider>();
 
     final tab = _period.type == PeriodType.week
         ? l10n.periodWeek
@@ -411,14 +316,12 @@ class _OverviewScreenState extends State<OverviewScreen> {
                     fmt: fmt,
                     l10n: l10n,
                     fmtSleep: _fmtSleep,
-                    xpPillData: (context, progression, domain) =>
-                        _xpPillData(context, progression, domain, period),
-                    ruleXpPillData: (context, progression, ruleId) =>
-                        _xpPillDataForRule(
-                      context,
+                    questPillData: (questNodeId, {dayOnly = true}) =>
+                        _xpPillForQuest(
                       progression,
-                      ruleId,
+                      questNodeId,
                       period,
+                      dayOnly: dayOnly,
                     ),
                     progression: progression,
                     weightForPeriod: _weightForPeriod(fitness, period),
@@ -441,6 +344,14 @@ class _OverviewScreenState extends State<OverviewScreen> {
 
 // ── Day content (animated on day change) ─────────────────────────────────────
 
+/// Resolves the XP pill data for a stat card backed by V2 [QuestNode].
+/// `dayOnly` mirrors the V1 distinction between "domain pill" (only on a
+/// day-typed current period) and "rule pill" (any current period).
+typedef _QuestPillResolver = XpClaimPillData? Function(
+  String questNodeId, {
+  bool dayOnly,
+});
+
 class _DayContent extends StatelessWidget {
   const _DayContent({
     super.key,
@@ -451,8 +362,7 @@ class _DayContent extends StatelessWidget {
     required this.fmt,
     required this.l10n,
     required this.fmtSleep,
-    required this.xpPillData,
-    required this.ruleXpPillData,
+    required this.questPillData,
     required this.progression,
     required this.weightForPeriod,
     required this.prevWeight,
@@ -470,14 +380,8 @@ class _DayContent extends StatelessWidget {
   final NumberFormat fmt;
   final dynamic l10n;
   final String Function(Duration?) fmtSleep;
-  final XpClaimPillData? Function(
-      BuildContext, ProgressionProvider, ProgressionDomain) xpPillData;
-  final XpClaimPillData? Function(
-    BuildContext,
-    ProgressionProvider,
-    String,
-  ) ruleXpPillData;
-  final ProgressionProvider progression;
+  final _QuestPillResolver questPillData;
+  final ProgressionEngineProvider progression;
   final double? weightForPeriod;
   final double? prevWeight;
   final VoidCallback onOpenActivities;
@@ -552,7 +456,8 @@ class _DayContent extends StatelessWidget {
         : 0.0;
 
     final periodActivities = fitness.activities.where((activity) {
-      final day = progressionDate(activity.startTime);
+      final start = activity.startTime;
+      final day = DateTime(start.year, start.month, start.day);
       return !day.isBefore(period.start) && !day.isAfter(period.end);
     }).toList(growable: false);
     final activeMinutes = periodActivities.fold<int>(
@@ -589,7 +494,7 @@ class _DayContent extends StatelessWidget {
           ],
           progress: stepsProgress,
           badge: '${(stepsProgress * 100).round()}%',
-          xpData: xpPillData(context, progression, ProgressionDomain.steps),
+          xpData: questPillData('daily_steps_today'),
           claimedXpLabel: l10n.progQuestStatusClaimed,
           children: [
             DetailShortcutButton(
@@ -629,7 +534,7 @@ class _DayContent extends StatelessWidget {
           ],
           progress: kcalProgress,
           badge: '$kcalPct%',
-          xpData: xpPillData(context, progression, ProgressionDomain.nutrition),
+          xpData: questPillData('daily_calories_today'),
           claimedXpLabel: l10n.progQuestStatusClaimed,
           children: [
             const SizedBox(height: Tokens.spaceMd),
@@ -714,11 +619,7 @@ class _DayContent extends StatelessWidget {
             ),
           ],
           showProgress: false,
-          xpData: ruleXpPillData(
-            context,
-            progression,
-            'daily_weight_log',
-          ),
+          xpData: questPillData('daily_weight_log_today', dayOnly: false),
           claimedXpLabel: l10n.progQuestStatusClaimed,
           children: [
             DetailShortcutButton(
@@ -753,11 +654,7 @@ class _DayContent extends StatelessWidget {
           ],
           progress: activityProgress,
           badge: '${(activityProgress * 100).round()}%',
-          xpData: ruleXpPillData(
-            context,
-            progression,
-            'daily_activity',
-          ),
+          xpData: questPillData('daily_activity_today', dayOnly: false),
           claimedXpLabel: l10n.progQuestStatusClaimed,
           children: [
             DetailShortcutButton(
@@ -796,7 +693,7 @@ class _DayContent extends StatelessWidget {
           badge: sleepDuration != null
               ? '${(sleepProgress * 100).round()}%'
               : null,
-          xpData: xpPillData(context, progression, ProgressionDomain.sleep),
+          xpData: questPillData('daily_sleep_today'),
           claimedXpLabel: l10n.progQuestStatusClaimed,
           children: [
             DetailShortcutButton(
@@ -864,7 +761,10 @@ int _activityGoalForPeriod(GoalsProvider goals, SelectedPeriod period) {
 
   switch (period.type) {
     case PeriodType.day:
-      return ProgressionRuleCatalog.dailyActivityTargetMinutes;
+      // Matches `_dailyActivityTargetMinutes` in
+      // progression_engine/.../activity_content.dart — the V2 catalog
+      // owns the canonical value, this is the day-view UI default.
+      return 30;
     case PeriodType.week:
       if (weekly <= 0) return 0;
       return weekly;
@@ -873,20 +773,6 @@ int _activityGoalForPeriod(GoalsProvider goals, SelectedPeriod period) {
       if (weekly <= 0) return 0;
       return weekly * 4;
   }
-}
-
-bool _shouldShowRuleFallbackPill(String ruleId, SelectedPeriod period) {
-  return period.type == PeriodType.day &&
-      period.isCurrentPeriod &&
-      (ruleId == 'daily_weight_log' || ruleId == 'daily_activity');
-}
-
-int? _fallbackRuleXp(String ruleId) {
-  return switch (ruleId) {
-    'daily_weight_log' => 20,
-    'daily_activity' => 50,
-    _ => null,
-  };
 }
 
 class _PermissionBanner extends StatelessWidget {

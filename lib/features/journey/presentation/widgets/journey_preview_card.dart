@@ -1,12 +1,12 @@
-import 'dart:math' as math;
+﻿import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../l10n/l10n.dart';
 import '../../../../shared/theme/design_tokens.dart';
-import '../../../progression/application/progression_provider.dart';
-import '../../../progression/presentation/widgets/progression_primitives.dart';
+import '../../../progression_engine/application/progression_engine_provider.dart';
+import '../../../progression_engine/presentation/widgets/progression_primitives.dart';
 import '../../domain/journey_models.dart';
 import '../hero_journey_map_screen.dart';
 import 'journey_adapter.dart';
@@ -31,7 +31,7 @@ class JourneyPreviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final progression = context.watch<ProgressionProvider>();
+    final progression = context.watch<ProgressionEngineProvider>();
     final map = JourneyAdapter.buildMilestoneMap(progression, l10n);
 
     return Column(

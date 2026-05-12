@@ -6,7 +6,7 @@ import '../../../l10n/l10n.dart';
 import '../../../shared/theme/design_tokens.dart';
 import '../../../shared/widgets/ft_back_button.dart';
 import '../../../shared/widgets/screen_header.dart';
-import '../../progression/application/progression_provider.dart';
+import '../../progression_engine/application/progression_engine_provider.dart';
 import '../domain/journey_models.dart';
 import 'widgets/journey_adapter.dart';
 import 'widgets/journey_event_feed.dart';
@@ -42,7 +42,7 @@ class _HeroJourneyMapScreenState extends State<HeroJourneyMapScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final progression = context.watch<ProgressionProvider>();
+    final progression = context.watch<ProgressionEngineProvider>();
     final checkpoints = JourneyAdapter.buildMilestoneMap(progression, l10n);
     final feed = JourneyAdapter.buildFeed(progression, l10n);
     final filteredFeedCount = feed

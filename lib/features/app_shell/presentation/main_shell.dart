@@ -10,8 +10,7 @@ import '../../devtools/application/devtools_permission_service.dart';
 import '../../devtools/application/devtools_provider.dart';
 import '../../devtools/presentation/devtools_screen.dart';
 import '../../devtools/presentation/sections/devtools_cosmetics_section.dart';
-import '../../devtools/presentation/sections/devtools_progression_section.dart';
-import '../../devtools/presentation/sections/devtools_unlock_inventory_section.dart';
+import '../../devtools/presentation/sections/devtools_progression_engine_section.dart';
 import '../../health_connect/presentation/activities_screen.dart';
 import '../../health_connect/presentation/body_screen.dart';
 import '../../health_connect/presentation/sleep_screen.dart';
@@ -502,7 +501,6 @@ class _DebugLauncherButton extends StatelessWidget {
 
 enum _DebugSheetTab {
   progression,
-  unlocks,
   cosmetics,
 }
 
@@ -590,20 +588,10 @@ class _DebugToolsSheetState extends State<_DebugToolsSheet> {
                         Expanded(
                           child: _DebugSheetChip(
                             label: 'Progression',
-                            icon: Icons.military_tech_rounded,
+                            icon: Icons.bolt_rounded,
                             selected: _tab == _DebugSheetTab.progression,
                             onTap: () =>
                                 setState(() => _tab = _DebugSheetTab.progression),
-                          ),
-                        ),
-                        const SizedBox(width: 7),
-                        Expanded(
-                          child: _DebugSheetChip(
-                            label: 'Unlocks',
-                            icon: Icons.fact_check_rounded,
-                            selected: _tab == _DebugSheetTab.unlocks,
-                            onTap: () =>
-                                setState(() => _tab = _DebugSheetTab.unlocks),
                           ),
                         ),
                         const SizedBox(width: 7),
@@ -703,9 +691,7 @@ class _DebugSheetContent extends StatelessWidget {
   Widget build(BuildContext context) {
     switch (tab) {
       case _DebugSheetTab.progression:
-        return const DevToolsProgressionSection();
-      case _DebugSheetTab.unlocks:
-        return const DevToolsUnlockInventorySection();
+        return const DevToolsProgressionEngineSection();
       case _DebugSheetTab.cosmetics:
         return const DevToolsCosmeticsSection();
     }

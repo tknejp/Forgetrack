@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../l10n/app_localizations.dart';
@@ -6,7 +6,7 @@ import '../../../../shared/theme/design_tokens.dart';
 import '../../../../shared/widgets/ft_expand_chevron.dart';
 import '../../../../shared/widgets/progress_bar.dart';
 import '../../../../shared/widgets/xp_claim_pill.dart';
-import '../../../progression/domain/models/core_models.dart';
+import '../../domain/progression_domain.dart';
 import '../../application/progression_engine_provider.dart';
 import '../../domain/catalog/content/quest_assets.dart';
 import '../../domain/models/progression_node_definition.dart';
@@ -62,7 +62,7 @@ class EngineChapterCard extends StatelessWidget {
       for (final r in quest.node.rewards)
         if (r is! XpReward) r,
     ];
-    // Chain finale non-XP rewards — surfaced in the expanded body so
+    // Chain finale non-XP rewards â€” surfaced in the expanded body so
     // even when the active step is XP-only the player can see what's
     // waiting at the end (e.g. emblem_forest_mark on forest_trial_finale).
     final finaleRewards = chain.isEmpty
@@ -72,7 +72,7 @@ class EngineChapterCard extends StatelessWidget {
               if (r is! XpReward) r,
           ];
     // Chapter cards are always expandable when the player can interact
-    // (not level-locked) — the chapter wraps a multi-step chain so
+    // (not level-locked) â€” the chapter wraps a multi-step chain so
     // there's always something useful in the expanded body: the full
     // description, the chain context, and the finale reward. The
     // original "only expand for non-XP" rule made pure-XP steps look
@@ -141,7 +141,7 @@ class EngineChapterCard extends StatelessWidget {
                       const SizedBox(height: 3),
                       Text(
                         quest.node.descriptionKey(l10n),
-                        // No clamp when expanded — chapter step
+                        // No clamp when expanded â€” chapter step
                         // descriptions tend to spill past two lines
                         // and a "..." in the open state told the
                         // player nothing about what comes next.
@@ -164,7 +164,7 @@ class EngineChapterCard extends StatelessWidget {
                 // XP pill on top with an optional reward pill below
                 // for chapters that carry a non-XP reward (finale
                 // emblem / cosmetic). The pill replaces the legacy
-                // chevron — chapters with only XP have no expand
+                // chevron â€” chapters with only XP have no expand
                 // affordance at all (user rule).
                 if (isLocked)
                   _LockChip(level: quest.levelGate!, l10n: l10n)
@@ -175,7 +175,7 @@ class EngineChapterCard extends StatelessWidget {
                       XpClaimPill(key: pillKey, data: _pillData()),
                       // The companion pill below the XP pill surfaces
                       // a non-XP reward directly on *this* step (e.g.
-                      // finale emblem) — distinct from the chain
+                      // finale emblem) â€” distinct from the chain
                       // finale reward, which the expanded body shows
                       // separately. The pill also doubles as the
                       // expand arrow so the player has a clear tap
@@ -189,7 +189,7 @@ class EngineChapterCard extends StatelessWidget {
                           accent: accent,
                         ),
                       ] else if (canExpand) ...[
-                        // No direct reward to badge — show a plain
+                        // No direct reward to badge â€” show a plain
                         // chevron so the card still has a visible
                         // expand affordance. Without this, pure-XP
                         // chapter steps would look unexpandable even
@@ -207,7 +207,7 @@ class EngineChapterCard extends StatelessWidget {
             ),
             // Chain preview between the title row and the progress bar
             // (V1 layout) so the player sees their position in the
-            // chain at a glance — the progress bar still belongs
+            // chain at a glance â€” the progress bar still belongs
             // immediately above the next visual primitive.
             if (chain.length > 1) ...[
               const SizedBox(height: Tokens.spaceSm),
@@ -502,7 +502,7 @@ class _ChainNode extends StatelessWidget {
     } else if (iconForStep != null) {
       glyph = Icon(iconForStep, size: 12, color: glyphColor);
     } else if (label != null && label.isNotEmpty) {
-      // Text-bearing pill — give the label some horizontal room so the
+      // Text-bearing pill â€” give the label some horizontal room so the
       // dot stretches into a small pill (e.g. "100K", "25K") instead of
       // overflowing a fixed 22-wide circle.
       horizontalPadding = 5;
@@ -517,7 +517,7 @@ class _ChainNode extends StatelessWidget {
       );
     } else {
       glyph = Text(
-        '·',
+        'Â·',
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w900,
@@ -533,8 +533,8 @@ class _ChainNode extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: fill,
-        // Pill shape — collapses to a circle when content is a single
-        // glyph (22×22), stretches horizontally when the label needs
+        // Pill shape â€” collapses to a circle when content is a single
+        // glyph (22Ã—22), stretches horizontally when the label needs
         // it. Drops the hard-coded width: 22.
         borderRadius: BorderRadius.circular(11),
         border: Border.all(color: ring, width: isCurrent ? 1.6 : 1),
@@ -578,7 +578,7 @@ class _ChapterExpandedDetails extends StatelessWidget {
   final Color accent;
 
   /// Non-XP rewards on the chain's finale step. Surfaced as a "Po
-  /// dokončení kapitoly" block so the player can see what waits at
+  /// dokonÄenÃ­ kapitoly" block so the player can see what waits at
   /// the end (emblem, relic, cosmetic) even while working a mid-chain
   /// step that only carries XP.
   final List<RewardDefinition> finaleRewards;
@@ -639,7 +639,7 @@ class _ChapterExpandedDetails extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
-            // Rich reward rows — each shows the resolved cosmetic asset
+            // Rich reward rows â€” each shows the resolved cosmetic asset
             // (e.g. forest emblem), the localized name, and a chevron
             // that opens a read-only preview sheet. Lets the player
             // inspect what's waiting at the finale before they unlock

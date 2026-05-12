@@ -1,10 +1,11 @@
+import '../../../shared/domain/rarity.dart';
+
 class SocialUserStats {
   const SocialUserStats({
     required this.level,
     required this.totalXp,
     required this.unlockedAchievementCount,
-    required this.claimedRewardCount,
-    required this.pendingRewardCount,
+    required this.grantedRewardCount,
     required this.bestStepsStreak,
     required this.bestNutritionStreak,
     this.updatedAt,
@@ -13,8 +14,11 @@ class SocialUserStats {
   final int level;
   final int totalXp;
   final int unlockedAchievementCount;
-  final int claimedRewardCount;
-  final int pendingRewardCount;
+
+  /// Total reward grants in the engine ledger. V2 grants rewards
+  /// immediately at evaluation time, so there is no claimed/pending
+  /// split — every grant is by definition granted.
+  final int grantedRewardCount;
   final int bestStepsStreak;
   final int bestNutritionStreak;
   final DateTime? updatedAt;
@@ -91,20 +95,16 @@ class SocialUnlockedAchievement {
     required this.achievementId,
     required this.title,
     required this.description,
-    required this.difficulty,
-    required this.type,
+    required this.rarity,
     required this.unlockedAt,
     this.domain,
-    this.ruleId,
   });
 
   final String achievementId;
   final String title;
   final String description;
-  final String difficulty;
-  final String type;
+  final Rarity rarity;
   final String? domain;
-  final String? ruleId;
   final DateTime unlockedAt;
 }
 
@@ -173,15 +173,13 @@ class SocialAchievementSnapshot {
   const SocialAchievementSnapshot({
     required this.title,
     required this.description,
-    required this.difficulty,
-    required this.type,
+    required this.rarity,
     this.domain,
   });
 
   final String title;
   final String description;
-  final String difficulty;
-  final String type;
+  final Rarity rarity;
   final String? domain;
 }
 

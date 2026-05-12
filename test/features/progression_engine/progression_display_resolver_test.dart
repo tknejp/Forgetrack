@@ -1,9 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:forgetrack/features/progression_engine/domain/catalog/level_milestone_specs.dart';
+import 'package:forgetrack/features/progression_engine/domain/catalog/progression_node_catalog.dart';
 import 'package:forgetrack/features/progression_engine/domain/display/progression_display_models.dart';
 import 'package:forgetrack/features/progression_engine/domain/display/progression_display_resolver.dart';
-import 'package:forgetrack/features/progression/domain/catalog/achievement_catalog.dart';
-import 'package:forgetrack/features/progression/domain/policy/level_config.dart';
+import 'package:forgetrack/features/progression_engine/domain/models/progression_node_definition.dart';
 import 'package:forgetrack/l10n/app_localizations_en.dart';
 
 void main() {
@@ -28,15 +29,15 @@ void main() {
       expect(display.rarity, Rarity.common);
     });
 
-    test('levelMilestones yields one entry per tier in order', () {
+    test('levelMilestones yields one entry per spec in order', () {
       final milestones = resolver.levelMilestones().toList();
-      expect(milestones, hasLength(kProgressionLevelTiers.length));
+      expect(milestones, hasLength(kLevelMilestones.length));
       for (var i = 0; i < milestones.length; i++) {
-        expect(milestones[i].level, kProgressionLevelTiers[i].level);
-        expect(milestones[i].emoji, kProgressionLevelTiers[i].emoji);
+        expect(milestones[i].level, kLevelMilestones[i].level);
+        expect(milestones[i].emoji, kLevelMilestones[i].emoji);
         expect(
           milestones[i].cosmeticRewardIds,
-          kProgressionLevelTiers[i].cosmeticRewards,
+          kLevelMilestones[i].cosmeticRewardIds,
         );
       }
     });
@@ -60,12 +61,13 @@ void main() {
       expect(display.description(l10n), isNotEmpty);
     });
 
-    test('nodeDisplay populates accentColor for every catalog entry', () {
+    test('nodeDisplay populates accentColor for every V2 achievement node', () {
       // Smoke test: accentColor is required on NodeDisplay; if a future
       // resolver branch forgets to set it, this catches it.
-      for (final def in const ProgressionAchievementCatalog().build()) {
-        final display = resolver.nodeDisplay(def.id, l10n);
-        expect(display, isNotNull, reason: 'no display for id=${def.id}');
+      for (final node in const ProgressionNodeCatalog().build()) {
+        if (node is! AchievementNode) continue;
+        final display = resolver.nodeDisplay(node.id, l10n);
+        expect(display, isNotNull, reason: 'no display for id=${node.id}');
         expect(display!.accentColor, isNotNull);
       }
     });
@@ -116,20 +118,23 @@ void main() {
       );
     });
 
-    test('returns a non-null formatted string for every catalog achievement', () {
-      // Smoke test: every real catalog entry must produce a summary so
-      // friend cards never crash when rendering an unknown criterion.
-      for (final def in const ProgressionAchievementCatalog().build()) {
-        final summary = resolver.compactSummary(def.id, l10n, locale);
-        expect(
-          summary,
-          isNotNull,
-          reason: 'compactSummary returned null for id=${def.id} '
-              '(criterion=${def.criterionType.name})',
-        );
-        expect(summary, isNotEmpty);
-      }
-    });
+    test(
+      'returns a non-null formatted string for every V2 achievement node',
+      () {
+        // Smoke test: every real V2 AchievementNode must produce a summary
+        // so friend cards never crash when rendering an unknown metric.
+        for (final node in const ProgressionNodeCatalog().build()) {
+          if (node is! AchievementNode) continue;
+          final summary = resolver.compactSummary(node.id, l10n, locale);
+          expect(
+            summary,
+            isNotNull,
+            reason: 'compactSummary returned null for id=${node.id}',
+          );
+          expect(summary, isNotEmpty);
+        }
+      },
+    );
 
     test('returns null for unknown ids', () {
       expect(

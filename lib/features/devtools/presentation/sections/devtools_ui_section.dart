@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../features/health_connect/application/fitness_provider.dart';
 import '../../../../features/nutrition/application/kaloricke_tabulky_provider.dart';
-import '../../../../features/progression/application/progression_provider.dart';
+import '../../../../features/progression_engine/application/progression_engine_provider.dart';
 import '../widgets/devtools_section_card.dart';
 import '../widgets/devtools_status_tile.dart';
 import '../widgets/devtools_action_tile.dart';
@@ -26,7 +26,7 @@ class DevToolsUiSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final f = context.watch<FitnessProvider>();
     final kt = context.watch<KalorickeTabulkyProvider>();
-    final p = context.watch<ProgressionProvider>();
+    final p = context.watch<ProgressionEngineProvider>();
     final cs = Theme.of(context).colorScheme;
 
     final today = DateTime.now();
@@ -93,7 +93,7 @@ class DevToolsUiSection extends StatelessWidget {
         DevToolsActionTile(
           label: 'Force Progression refresh',
           subtitle: 'Calls progression.refresh() — no sync log until Phase 3',
-          onTap: () => context.read<ProgressionProvider>().refresh(),
+          onTap: () => context.read<ProgressionEngineProvider>().refresh(),
         ),
       ],
     );

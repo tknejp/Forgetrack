@@ -6,7 +6,7 @@ import '../../cosmetics/application/cosmetics_provider.dart';
 import '../../health_connect/application/fitness_provider.dart';
 import '../../health_connect/application/goals_provider.dart';
 import '../../nutrition/application/kaloricke_tabulky_provider.dart';
-import '../../progression/domain/policy/level_policy.dart';
+import '../domain/policy/level_policy.dart';
 import '../data/provider_engine_input_source.dart';
 import '../domain/catalog/engine_catalog_context.dart';
 import '../domain/catalog/objective_catalog.dart';
@@ -185,6 +185,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
 
   ProgressionResolutionResult? _lastResult;
   LedgerSnapshot? _ledger;
+  DateTime? _lastEvaluatedAt;
   bool _isLoading = true;
   bool _isEvaluating = false;
   String? _error;
@@ -211,6 +212,13 @@ class ProgressionEngineProvider extends ChangeNotifier {
   String? get error => _error;
   ProgressionResolutionResult? get lastResult => _lastResult;
   LedgerSnapshot? get ledger => _ledger;
+
+  /// Timestamp of the most recent successful evaluation or claim. Null
+  /// until the first evaluation completes. UI surfaces that want to show
+  /// "last synced at" (e.g. the social profile snapshot's `updatedAt`)
+  /// read this so the value matches when the engine actually ran rather
+  /// than when the surface happened to read.
+  DateTime? get lastEvaluatedAt => _lastEvaluatedAt;
 
   // ── Derived state ────────────────────────────────────────────────
 
@@ -254,6 +262,78 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// Quick alias used by home-card / quests UI for the pending-claim
   /// badge ("3 nevyzvednutých" → `pendingClaimNodeIds.length`).
   Set<String> get pendingClaimNodeIds => availableNodeIds;
+
+  /// All [AchievementNode]s from the catalog. Cached on first access
+  /// since the catalog is const. Hero/Journey surfaces iterate this to
+  /// render the achievement grid and the journey side events.
+  Iterable<AchievementNode> get achievementNodes => _allAchievementNodes;
+  static final List<AchievementNode> _allAchievementNodes = [
+    for (final n in const ProgressionNodeCatalog().build())
+      if (n is AchievementNode) n,
+  ];
+
+  /// Earliest completion timestamp for [nodeId] from the ledger. Null
+  /// when the node has not been completed.
+  DateTime? earliestCompletionAt(String nodeId) {
+    final l = _ledger;
+    if (l == null) return null;
+    DateTime? best;
+    for (final e in l.nodeCompletions) {
+      if (e.nodeId != nodeId) continue;
+      if (best == null || e.timestamp.isBefore(best)) {
+        best = e.timestamp;
+      }
+    }
+    return best;
+  }
+
+  /// Current measured value for an objective from the latest
+  /// resolution result. Falls back to 0 when there is no outcome yet
+  /// (e.g. before the first evaluation) or [objectiveId] is null.
+  double objectiveActualValue(String? objectiveId) {
+    if (objectiveId == null) return 0;
+    final r = _lastResult;
+    if (r == null) return 0;
+    for (final o in r.allObjectiveOutcomes) {
+      if (o.objectiveId == objectiveId) return o.actualValue;
+    }
+    return 0;
+  }
+
+  /// Catalog lookup for an objective id. Returns null when the
+  /// objective is not in the catalog.
+  ObjectiveDefinition? objectiveById(String? objectiveId) {
+    if (objectiveId == null) return null;
+    for (final o in _objectiveCatalog.build()) {
+      if (o.id == objectiveId) return o;
+    }
+    return null;
+  }
+
+  /// Every quest node that has at least one completion event, paired
+  /// with the most recent completion timestamp. Feeds the journey
+  /// event feed — the V2 equivalent of legacy
+  /// `provider.completedQuests`.
+  List<EngineQuestCompletion> get allCompletedQuests {
+    final l = _ledger;
+    if (l == null) return const [];
+    final latestByNode = <String, DateTime>{};
+    for (final e in l.nodeCompletions) {
+      final existing = latestByNode[e.nodeId];
+      if (existing == null || e.timestamp.isAfter(existing)) {
+        latestByNode[e.nodeId] = e.timestamp;
+      }
+    }
+    final out = <EngineQuestCompletion>[];
+    for (final node in _nodeCatalog.build()) {
+      if (node is! QuestNode) continue;
+      final at = latestByNode[node.id];
+      if (at == null) continue;
+      out.add(EngineQuestCompletion(node: node, completedAt: at));
+    }
+    out.sort((a, b) => b.completedAt.compareTo(a.completedAt));
+    return List.unmodifiable(out);
+  }
 
   /// Count of unlocked achievements — node completions whose node
   /// type is [AchievementNode]. Cached per-build of the catalog
@@ -1077,6 +1157,17 @@ class ProgressionEngineProvider extends ChangeNotifier {
       return;
     }
 
+    // Bail when the source state has not moved since the previous run.
+    // `bind()` calls refresh() on every proxy-provider rebuild, and the
+    // post-eval cosmetic dispatch fires a CosmeticsProvider listener
+    // notification that itself triggers another proxy rebuild — without
+    // this guard the two close into an infinite re-evaluation cascade
+    // that inflates `_pendingCelebrations` on every cycle.
+    final signature = source.auditSignature();
+    if (_lastResult != null && signature == _lastEvaluatedSignature) {
+      return;
+    }
+
     final context = source.currentContext();
     final input = source.buildInput(
       totalXpFromLedger: totalXp,
@@ -1088,7 +1179,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
       bestStreakByDomain: _bestStreakByDomainFromLedger(),
       objectiveActualOverrides: _objectiveActualOverridesFromLedger(),
     );
-    _lastEvaluatedSignature = source.auditSignature();
+    _lastEvaluatedSignature = signature;
     await evaluateWith(input: input, catalogContext: context);
 
     if (_evaluateQueued) {
@@ -1121,11 +1212,16 @@ class ProgressionEngineProvider extends ChangeNotifier {
       );
       _lastResult = result;
       _ledger = await _repository.loadLedger();
+      _lastEvaluatedAt = DateTime.now();
       _recomputeStreaks();
       if (!result.isEmpty) _pendingCelebrations.add(result);
       // Cosmetic dispatch happens after ledger refresh so the
       // bridge sees a consistent picture.
-      await _cosmeticBridge.dispatch(result);
+      await _cosmeticBridge.dispatch(
+        result,
+        ledger: _ledger,
+        level: profile.level,
+      );
       return result;
     } catch (e) {
       _error = e.toString();
@@ -1173,9 +1269,14 @@ class ProgressionEngineProvider extends ChangeNotifier {
       );
       _lastResult = result;
       _ledger = await _repository.loadLedger();
+      _lastEvaluatedAt = DateTime.now();
       _recomputeStreaks();
       if (!result.isEmpty) _pendingCelebrations.add(result);
-      await _cosmeticBridge.dispatch(result);
+      await _cosmeticBridge.dispatch(
+        result,
+        ledger: _ledger,
+        level: profile.level,
+      );
       return result;
     } catch (e) {
       _error = e.toString();
@@ -1264,6 +1365,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
   Future<void> _hydrate() async {
     try {
       _ledger = await _repository.loadLedger();
+      _lastEvaluatedAt = _mostRecentLedgerTimestamp(_ledger);
       _recomputeStreaks();
       _error = null;
     } catch (e) {
@@ -1308,6 +1410,25 @@ class ProgressionEngineProvider extends ChangeNotifier {
       hash = (hash * 0x01000193) & 0x7fffffff;
     }
     return hash;
+  }
+
+  /// Newest event timestamp across the ledger's reward grants and node
+  /// completions. Lets [_hydrate] seed [lastEvaluatedAt] with something
+  /// meaningful after an app restart instead of waiting for the next
+  /// live evaluation.
+  DateTime? _mostRecentLedgerTimestamp(LedgerSnapshot? ledger) {
+    if (ledger == null) return null;
+    DateTime? best;
+    void consider(DateTime t) {
+      if (best == null || t.isAfter(best!)) best = t;
+    }
+    for (final g in ledger.rewardGrants) {
+      consider(g.timestamp);
+    }
+    for (final e in ledger.nodeCompletions) {
+      consider(e.timestamp);
+    }
+    return best;
   }
 
   int _totalClaimedXp(LedgerSnapshot ledger) {
@@ -1541,6 +1662,23 @@ class EngineCompletedQuest {
   /// grant pre-dates the field being tracked. UI surfaces a "+XP"
   /// pill on the completed row when this is > 0.
   final int xpGranted;
+
+  String get nodeId => node.id;
+}
+
+/// A quest node paired with its most recent completion timestamp.
+/// Built by [ProgressionEngineProvider.allCompletedQuests] — feeds the
+/// journey event feed (V2 analog of legacy
+/// `ProgressionProvider.completedQuests`).
+@immutable
+class EngineQuestCompletion {
+  const EngineQuestCompletion({
+    required this.node,
+    required this.completedAt,
+  });
+
+  final QuestNode node;
+  final DateTime completedAt;
 
   String get nodeId => node.id;
 }

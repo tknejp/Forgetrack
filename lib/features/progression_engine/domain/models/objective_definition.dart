@@ -1,11 +1,11 @@
 import 'package:flutter/foundation.dart';
 
-import '../../../progression/domain/progression_models.dart' show ProgressionDomain;
+import '../progression_domain.dart' show ProgressionDomain;
 import 'objective_metric.dart';
 import 'objective_operator.dart';
 import 'objective_scope.dart';
 
-export '../../../progression/domain/progression_models.dart' show ProgressionDomain;
+export '../progression_domain.dart' show ProgressionDomain;
 
 /// Pure machine-readable condition. **No UI, no rewards, no rarity, no
 /// display strings.** Display lives on [ProgressionNode], rewards live

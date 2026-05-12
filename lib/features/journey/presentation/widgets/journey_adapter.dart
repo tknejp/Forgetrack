@@ -1,22 +1,22 @@
 import '../../../../l10n/app_localizations.dart';
-import '../../../../shared/presentation/achievement_badge_specs.dart';
-import '../../../progression/application/progression_provider.dart';
-import '../../../progression/domain/policy/level_config.dart' as level_config;
-import '../../../progression/domain/progression_models.dart';
+import '../../../progression_engine/application/progression_engine_provider.dart';
+import '../../../progression_engine/domain/catalog/level_milestone_specs.dart';
+import '../../../progression_engine/presentation/adapters/engine_achievement_view.dart';
+import '../../domain/journey_levels.dart';
 import '../../domain/journey_models.dart';
 
 /// Builds the [JourneyCheckpoint] lists used by the Hero preview, the detail
-/// map and the milestone feed. All three views read from the same provider
-/// snapshot so glyphs, dates and labels stay consistent.
+/// map and the milestone feed. All three views read from the same V2
+/// progression engine snapshot so glyphs, dates and labels stay consistent.
 ///
 /// Streak / XP events are intentionally omitted — they fluctuate often and
 /// would clutter the journey timeline. Streaks remain visible through their
 /// own section on the Hero/Profile screen.
 ///
-/// Level milestone timestamps come from the matching `*_level_<N>`
-/// achievement's `unlockedAt` when the achievement is unlocked. There are no
-/// fake or synthesised dates: a milestone without a real timestamp simply
-/// gets `null`, which the feed honours by sorting it after dated entries.
+/// Level milestone timestamps come from the matching `level_<N>` achievement
+/// node's completion event in the V2 ledger. There are no fake or
+/// synthesised dates: a milestone without a real timestamp simply gets
+/// `null`, which the feed honours by sorting it after dated entries.
 ///
 /// TODO(journey): Replace with a dedicated journey ledger
 /// (`GET /journey/events`) once the backend persists level-up, title-unlock
@@ -27,15 +27,16 @@ abstract final class JourneyAdapter {
   static const int _targetMapNodeCount = 30;
 
   /// The complete static map spine, bottom-to-top in level order.
-  /// Sourced from `progression_level_config.kJourneyMapAnchors` — the single
-  /// source of truth for which levels appear as map anchors.
-  static List<int> get _staticMilestoneLevels =>
-      level_config.kJourneyMapAnchors;
+  /// Sourced from [kJourneyMapAnchors] — the single source of truth for
+  /// which levels appear as map anchors. Lives in the journey feature
+  /// since "which levels surface on the map" is a journey-display rule
+  /// layered on top of the engine catalog.
+  static List<int> get _staticMilestoneLevels => kJourneyMapAnchors;
 
   /// Compact node list for the Hero preview card, derived from the same static
   /// milestone spine as the full map.
   static List<JourneyCheckpoint> buildPreview(
-    ProgressionProvider provider,
+    ProgressionEngineProvider provider,
     AppLocalizations l10n,
   ) {
     final map = buildMilestoneMap(provider, l10n);
@@ -47,11 +48,16 @@ abstract final class JourneyAdapter {
   /// This intentionally excludes achievements and quests so the map length and
   /// node positions never change when historical feed events are added.
   static List<JourneyCheckpoint> buildMilestoneMap(
-    ProgressionProvider provider,
+    ProgressionEngineProvider provider,
     AppLocalizations l10n,
   ) {
     final currentLevel = _clampLevel(provider.profile.level);
-    final anchors = buildMilestoneAnchors(provider, l10n);
+    final achievementViews = buildEngineAchievementViews(provider, l10n);
+    final anchors = _buildMilestoneAnchorsFromViews(
+      provider: provider,
+      l10n: l10n,
+      achievementViews: achievementViews,
+    );
     final anchorCheckpoints = <JourneyCheckpoint>[];
 
     for (var i = 0; i < anchors.length; i++) {
@@ -70,7 +76,7 @@ abstract final class JourneyAdapter {
     final sideEventLimit =
         (_targetMapNodeCount - anchorCheckpoints.length).clamp(0, 999).toInt();
     final sideEvents = _buildMapSideEvents(
-      provider,
+      achievementViews,
       l10n,
       limit: sideEventLimit,
       currentLevel: currentLevel,
@@ -86,34 +92,20 @@ abstract final class JourneyAdapter {
   /// Data-only version of the static map spine. Useful when a caller needs
   /// levels/titles/status without Journey UI labels.
   static List<JourneyMilestoneAnchor> buildMilestoneAnchors(
-    ProgressionProvider provider,
+    ProgressionEngineProvider provider,
     AppLocalizations l10n,
   ) {
-    final currentLevel = _clampLevel(provider.profile.level);
-    final currentAnchorLevel = _currentStaticMilestoneFor(currentLevel);
-    final nextAnchorLevel = _nextStaticMilestoneAfter(currentLevel);
-    final levelDates = _levelUnlockDates(provider);
-
-    return _staticMilestoneLevels.reversed.map((level) {
-      final isUnlocked = level <= currentLevel;
-      final title = level_config.tierForLevel(level).title(l10n);
-
-      return JourneyMilestoneAnchor(
-        level: level,
-        title: title,
-        emoji: emojiForLevel(level),
-        isUnlocked: isUnlocked,
-        isCurrent: level == currentAnchorLevel,
-        isNext: level == nextAnchorLevel,
-        unlockedAt: isUnlocked ? levelDates[level] : null,
-      );
-    }).toList(growable: false);
+    return _buildMilestoneAnchorsFromViews(
+      provider: provider,
+      l10n: l10n,
+      achievementViews: buildEngineAchievementViews(provider, l10n),
+    );
   }
 
   /// Backwards-compatible map entry point. Prefer [buildMilestoneMap] for new
   /// map callers; [buildFeed] remains the historical event source.
   static List<JourneyCheckpoint> buildFull(
-    ProgressionProvider provider,
+    ProgressionEngineProvider provider,
     AppLocalizations l10n,
   ) =>
       buildMilestoneMap(provider, l10n);
@@ -128,33 +120,33 @@ abstract final class JourneyAdapter {
   /// Start checkpoint is intentionally not included in the feed; it is a map
   /// origin, not a timeline event with a persisted timestamp.
   static List<JourneyCheckpoint> buildFeed(
-    ProgressionProvider provider,
+    ProgressionEngineProvider provider,
     AppLocalizations l10n,
   ) {
     final profile = provider.profile;
-    final levelDates = _levelUnlockDates(provider);
+    final achievementViews = buildEngineAchievementViews(provider, l10n);
+    final levelDates = _levelUnlockDates(achievementViews);
     final dated = <_DatedCp>[];
     final undated = <JourneyCheckpoint>[];
 
     // Achievements, excluding level achievements.
-    for (final a in provider.achievements) {
-      if (!a.unlocked || a.unlockedAt == null) continue;
-      if (achievementLevelTarget(a) != null) continue;
-      final badge = achievementBadgeSpec(a);
+    for (final view in achievementViews) {
+      if (!view.unlocked || view.unlockedAt == null) continue;
+      if (view.levelTarget != null) continue;
 
       dated.add(
         _DatedCp(
-          a.unlockedAt!,
+          view.unlockedAt!,
           JourneyCheckpoint(
-            id: 'feed_ach_${a.id}',
+            id: 'feed_ach_${view.id}',
             type: JourneyEventType.achievement,
-            label: a.title(l10n),
+            label: view.display.title(l10n),
             sublabel: l10n.journeyEventAchievementUnlocked,
-            description: a.description(l10n),
-            unlockedAt: a.unlockedAt,
-            emoji: badge.emoji,
-            accentColorValue: badge.color.toARGB32(),
-            achievementDifficultyLabel: _achievementDifficultyLabel(a, l10n),
+            description: view.display.description(l10n),
+            unlockedAt: view.unlockedAt,
+            emoji: view.display.badgeEmoji,
+            accentColorValue: view.display.accentColor.toARGB32(),
+            achievementDifficultyLabel: view.display.rarity.label(l10n),
             isUnlocked: true,
           ),
         ),
@@ -162,18 +154,16 @@ abstract final class JourneyAdapter {
     }
 
     // Quests.
-    for (final q in provider.completedQuests) {
-      if (q.completedAt == null) continue;
-
+    for (final q in provider.allCompletedQuests) {
       dated.add(
         _DatedCp(
-          q.completedAt!,
+          q.completedAt,
           JourneyCheckpoint(
-            id: 'feed_quest_${q.id}',
+            id: 'feed_quest_${q.node.id}',
             type: JourneyEventType.quest,
-            label: q.title(l10n),
+            label: q.node.titleKey(l10n),
             sublabel: l10n.journeyEventQuestCompleted,
-            description: q.description(l10n),
+            description: q.node.descriptionKey(l10n),
             unlockedAt: q.completedAt,
             isUnlocked: true,
           ),
@@ -216,27 +206,55 @@ abstract final class JourneyAdapter {
   // ── Helpers ────────────────────────────────────────────────────────────
 
   /// Maps level → unlockedAt for every unlocked level achievement available.
-  static Map<int, DateTime> _levelUnlockDates(ProgressionProvider provider) {
+  static Map<int, DateTime> _levelUnlockDates(
+    List<EngineAchievementView> achievementViews,
+  ) {
     final out = <int, DateTime>{};
 
-    for (final a in provider.achievements) {
-      final lvl = achievementLevelTarget(a);
+    for (final view in achievementViews) {
+      final lvl = view.levelTarget;
       if (lvl == null) continue;
-      if (!a.unlocked || a.unlockedAt == null) continue;
+      if (!view.unlocked || view.unlockedAt == null) continue;
 
       // Multiple achievements may map to the same level defensively; keep the
       // earliest known timestamp.
       final existing = out[lvl];
-      if (existing == null || a.unlockedAt!.isBefore(existing)) {
-        out[lvl] = a.unlockedAt!;
+      if (existing == null || view.unlockedAt!.isBefore(existing)) {
+        out[lvl] = view.unlockedAt!;
       }
     }
 
     return out;
   }
 
+  static List<JourneyMilestoneAnchor> _buildMilestoneAnchorsFromViews({
+    required ProgressionEngineProvider provider,
+    required AppLocalizations l10n,
+    required List<EngineAchievementView> achievementViews,
+  }) {
+    final currentLevel = _clampLevel(provider.profile.level);
+    final currentAnchorLevel = _currentStaticMilestoneFor(currentLevel);
+    final nextAnchorLevel = _nextStaticMilestoneAfter(currentLevel);
+    final levelDates = _levelUnlockDates(achievementViews);
+
+    return _staticMilestoneLevels.reversed.map((level) {
+      final isUnlocked = level <= currentLevel;
+      final title = levelMilestoneAtOrBelow(level).titleKey(l10n);
+
+      return JourneyMilestoneAnchor(
+        level: level,
+        title: title,
+        emoji: journeyEmojiForLevel(level),
+        isUnlocked: isUnlocked,
+        isCurrent: level == currentAnchorLevel,
+        isNext: level == nextAnchorLevel,
+        unlockedAt: isUnlocked ? levelDates[level] : null,
+      );
+    }).toList(growable: false);
+  }
+
   static List<JourneyCheckpoint> _buildMapSideEvents(
-    ProgressionProvider provider,
+    List<EngineAchievementView> achievementViews,
     AppLocalizations l10n, {
     required int limit,
     required int currentLevel,
@@ -246,25 +264,24 @@ abstract final class JourneyAdapter {
 
     final dated = <_DatedCp>[];
 
-    for (final a in provider.achievements) {
-      if (!a.unlocked || a.unlockedAt == null) continue;
+    for (final view in achievementViews) {
+      if (!view.unlocked || view.unlockedAt == null) continue;
 
       // Level achievements are already represented by the static title path.
-      if (achievementLevelTarget(a) != null) continue;
-      final badge = achievementBadgeSpec(a);
+      if (view.levelTarget != null) continue;
 
       dated.add(_DatedCp(
-        a.unlockedAt!,
+        view.unlockedAt!,
         JourneyCheckpoint(
-          id: 'map_ach_${a.id}',
+          id: 'map_ach_${view.id}',
           type: JourneyEventType.achievement,
-          label: a.title(l10n),
+          label: view.display.title(l10n),
           sublabel: l10n.journeyEventAchievementUnlocked,
-          description: a.description(l10n),
-          unlockedAt: a.unlockedAt,
-          emoji: badge.emoji,
-          accentColorValue: badge.color.toARGB32(),
-          achievementDifficultyLabel: _achievementDifficultyLabel(a, l10n),
+          description: view.display.description(l10n),
+          unlockedAt: view.unlockedAt,
+          emoji: view.display.badgeEmoji,
+          accentColorValue: view.display.accentColor.toARGB32(),
+          achievementDifficultyLabel: view.display.rarity.label(l10n),
           isUnlocked: true,
           isPathAnchor: false,
           mapPointId: _sideEventPointId(
@@ -333,12 +350,6 @@ abstract final class JourneyAdapter {
     if (level > _maxLevel) return _maxLevel;
     return level;
   }
-
-  static String _achievementDifficultyLabel(
-    ProgressionAchievement achievement,
-    AppLocalizations l10n,
-  ) =>
-      achievement.difficulty.label(l10n);
 
   static int _currentStaticMilestoneFor(int currentLevel) {
     var currentAnchor = _startLevel;
@@ -519,7 +530,7 @@ abstract final class JourneyAdapter {
     required AppLocalizations l10n,
     String idSuffix = '',
   }) {
-    final title = level_config.tierForLevel(level).title(l10n);
+    final title = levelMilestoneAtOrBelow(level).titleKey(l10n);
 
     return JourneyCheckpoint(
       id: '${idSuffix}level_$level',
@@ -529,7 +540,7 @@ abstract final class JourneyAdapter {
       unlockedAt: unlockedAt,
       levelNumber: level,
       title: title,
-      emoji: emojiForLevel(level),
+      emoji: journeyEmojiForLevel(level),
       isUnlocked: isUnlocked,
     );
   }

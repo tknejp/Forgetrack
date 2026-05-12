@@ -7,8 +7,12 @@ import 'package:image_picker/image_picker.dart';
 import '../../../core/logging/app_log.dart';
 import '../../auth/application/auth_provider.dart';
 import '../../cosmetics/application/cosmetics_provider.dart';
-import '../../progression/domain/progression_models.dart';
-import '../../progression/application/progression_provider.dart';
+import '../../progression_engine/domain/progression_domain.dart' show ProgressionDomain;
+import '../../progression_engine/application/progression_engine_provider.dart';
+import '../../progression_engine/domain/models/ledger_event.dart'
+    show RewardGrantKind;
+import '../../progression_engine/domain/models/progression_node_definition.dart'
+    show AchievementNode;
 import '../data/social_firebase_bootstrap.dart';
 import '../data/social_firebase_session.dart';
 import '../domain/social_models.dart';
@@ -28,7 +32,7 @@ class SocialProvider extends ChangeNotifier {
   final SocialBackendState _backendState;
 
   AuthProvider? _authProvider;
-  ProgressionProvider? _progressionProvider;
+  ProgressionEngineProvider? _progressionProvider;
   CosmeticsProvider? _cosmeticsProvider;
 
   StreamSubscription<List<SocialFriendRequest>>? _incomingRequestsSubscription;
@@ -94,7 +98,7 @@ class SocialProvider extends ChangeNotifier {
 
   void bind({
     required AuthProvider authProvider,
-    required ProgressionProvider progressionProvider,
+    required ProgressionEngineProvider progressionProvider,
     CosmeticsProvider? cosmeticsProvider,
   }) {
     _authProvider = authProvider;
@@ -428,19 +432,15 @@ class SocialProvider extends ChangeNotifier {
       return;
     }
 
-    ProgressionAchievement? achievement;
-    for (final candidate in progressionProvider.achievements) {
-      if (candidate.id == achievementId && candidate.unlocked) {
-        achievement = candidate;
-        break;
-      }
-    }
-
-    if (achievement == null) {
+    final node = progressionProvider.nodeById(achievementId);
+    final isUnlockedAchievement = node is AchievementNode &&
+        progressionProvider.completedNodeIds.contains(achievementId);
+    if (!isUnlockedAchievement) {
       _error = 'Achievement $achievementId is not unlocked yet.';
       notifyListeners();
       return;
     }
+    final achievementNode = node;
 
     final user = authProvider!.user!;
     final displayName = user.displayName?.trim().isNotEmpty == true
@@ -455,7 +455,7 @@ class SocialProvider extends ChangeNotifier {
     final share = SocialAchievementShare(
       id: '',
       actorUid: uid,
-      achievementId: achievement.id,
+      achievementId: achievementNode.id,
       createdAt: DateTime.now(),
       message: message?.trim().isEmpty ?? true ? null : message!.trim(),
       visibility: SocialShareVisibility.friends,
@@ -464,11 +464,10 @@ class SocialProvider extends ChangeNotifier {
         photoUrl: actorSnapshot.photoUrl,
       ),
       achievementSnapshot: SocialAchievementSnapshot(
-        title: resolvedTitle ?? achievement.id,
+        title: resolvedTitle ?? achievementNode.id,
         description: resolvedDescription ?? '',
-        difficulty: achievement.difficulty.name,
-        type: achievement.type.name,
-        domain: achievement.domain?.name,
+        rarity: achievementNode.rarity,
+        domain: progressionProvider.domainForNodeId(achievementNode.id).name,
       ),
     );
 
@@ -665,21 +664,8 @@ class SocialProvider extends ChangeNotifier {
 
     final user = authProvider.user!;
 
-    final unlockedAchievements = progressionProvider.achievements
-        .where((a) => a.unlocked && a.unlockedAt != null)
-        .map(
-          (a) => SocialUnlockedAchievement(
-            achievementId: a.id,
-            title: a.id,
-            description: '',
-            difficulty: a.difficulty.name,
-            type: a.type.name,
-            domain: a.domain?.name,
-            ruleId: a.ruleId,
-            unlockedAt: a.unlockedAt!,
-          ),
-        )
-        .toList(growable: false);
+    final unlockedAchievements =
+        _buildUnlockedAchievementsFromEngine(progressionProvider);
 
     final displayName = user.displayName?.trim().isNotEmpty == true
         ? user.displayName!.trim()
@@ -702,18 +688,67 @@ class SocialProvider extends ChangeNotifier {
         level: progressionProvider.profile.level,
         totalXp: progressionProvider.profile.totalXp,
         unlockedAchievementCount: unlockedAchievements.length,
-        claimedRewardCount: progressionProvider.claimedRewards.length,
-        pendingRewardCount: progressionProvider.pendingRewards.length,
+        grantedRewardCount: _grantedRewardCount(progressionProvider),
         bestStepsStreak:
-            progressionProvider.streakForRule('daily_steps').bestStreak,
+            progressionProvider.streakForObjective('daily_steps').bestStreak,
         bestNutritionStreak: progressionProvider
             .streakForDomain(ProgressionDomain.nutrition)
             .bestStreak,
-        updatedAt: progressionProvider.lastEvaluatedAt,
+        updatedAt: progressionProvider.lastEvaluatedAt ?? DateTime.now(),
       ),
       unlockedAchievements: unlockedAchievements,
       equippedCosmetics: _buildEquippedCosmeticsSnapshot(),
     );
+  }
+
+  /// Builds the cloud-snapshot achievement list from the V2 ledger +
+  /// catalog. The published `rarity` field is the shared [Rarity] enum
+  /// (`rarity.name` on the wire); receivers with the achievement id in
+  /// their local catalog still resolve display through the V2 display
+  /// resolver — the cloud-side rarity is the unknown-id colour fallback.
+  List<SocialUnlockedAchievement> _buildUnlockedAchievementsFromEngine(
+    ProgressionEngineProvider engine,
+  ) {
+    final ledger = engine.ledger;
+    if (ledger == null) return const [];
+
+    final latestByNode = <String, DateTime>{};
+    final nodes = <String, AchievementNode>{};
+    for (final e in ledger.nodeCompletions) {
+      final node = engine.nodeById(e.nodeId);
+      if (node is! AchievementNode) continue;
+      nodes[e.nodeId] = node;
+      final existing = latestByNode[e.nodeId];
+      if (existing == null || e.timestamp.isAfter(existing)) {
+        latestByNode[e.nodeId] = e.timestamp;
+      }
+    }
+    if (latestByNode.isEmpty) return const [];
+
+    return [
+      for (final entry in latestByNode.entries)
+        SocialUnlockedAchievement(
+          achievementId: entry.key,
+          title: entry.key,
+          description: '',
+          rarity: nodes[entry.key]!.rarity,
+          domain: engine.domainForNodeId(entry.key).name,
+          unlockedAt: entry.value,
+        ),
+    ];
+  }
+
+  /// Total XP grant rows in the V2 ledger. V2 grants rewards
+  /// immediately at evaluation time — there is no claimed vs pending
+  /// split, so this single number stands in for both legacy counters.
+  int _grantedRewardCount(ProgressionEngineProvider engine) {
+    final ledger = engine.ledger;
+    if (ledger == null) return 0;
+    var count = 0;
+    for (final g in ledger.rewardGrants) {
+      if (g.rewardKind == RewardGrantKind.xp) count++;
+    }
+    return count;
   }
 
   SocialEquippedCosmetics _buildEquippedCosmeticsSnapshot() {
@@ -755,8 +790,7 @@ class SocialProvider extends ChangeNotifier {
       payload.stats.level.toString(),
       payload.stats.totalXp.toString(),
       payload.stats.unlockedAchievementCount.toString(),
-      payload.stats.claimedRewardCount.toString(),
-      payload.stats.pendingRewardCount.toString(),
+      payload.stats.grantedRewardCount.toString(),
       payload.stats.bestStepsStreak.toString(),
       payload.stats.bestNutritionStreak.toString(),
       payload.equippedCosmetics.frameId ?? '',

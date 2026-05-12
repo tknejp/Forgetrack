@@ -10,8 +10,6 @@ import 'app/notification_preferences_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:firebase_messaging/firebase_messaging.dart';
 
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'core/services/background_sync_service.dart';
 import 'core/services/fcm_service.dart';
 import 'core/services/notification_service.dart';
@@ -24,14 +22,7 @@ import 'features/cosmetics/data/cosmetic_entitlements_source.dart';
 import 'features/cosmetics/data/firestore_cosmetic_entitlements_source.dart';
 import 'features/cosmetics/data/isar_cosmetics_repository.dart';
 import 'features/cosmetics/data/local/cosmetics_database.dart';
-import 'features/progression/application/progression_engine.dart';
-import 'features/progression/data/firestore/firestore_progression_gateway.dart';
-import 'features/progression/data/hybrid_progression_repository.dart';
-import 'features/progression/data/local/progression_database.dart';
-import 'features/progression/data/progression_repository_impl.dart';
-import 'features/progression/application/progression_provider.dart';
-import 'features/progression_engine/application/progression_engine.dart'
-    as v2_engine;
+import 'features/progression_engine/application/progression_engine.dart';
 import 'features/progression_engine/application/progression_engine_provider.dart';
 import 'features/progression_engine/data/isar_progression_engine_repository.dart';
 import 'features/progression_engine/data/local/progression_engine_database.dart';
@@ -90,38 +81,19 @@ Future<void> main() async {
   final ktDb = KtNutritionDatabase();
   await ktDb.open();
 
-  final progressionDb = ProgressionDatabase();
-  await progressionDb.open();
-
-  // Phase 4 + 6: the new engine's Isar store + repository + engine.
+  // Phase 4 + 6: the V2 engine's Isar store + repository + engine.
   // The provider is constructed inside MultiProvider so it can bind
   // to live source providers via ChangeNotifierProxyProvider4.
   final progressionEngineDb = ProgressionEngineDatabase();
   await progressionEngineDb.open();
   final progressionEngineRepo =
       IsarProgressionEngineRepository(progressionEngineDb);
-  final progressionEngineV2 = v2_engine.ProgressionEngine(
+  final progressionEngineV2 = ProgressionEngine(
     repository: progressionEngineRepo,
   );
 
   final ktProvider = KalorickeTabulkyProvider(ktService, ktDb);
   final socialBackendState = await SocialFirebaseBootstrap.ensureInitialized();
-
-  final prefs = await SharedPreferences.getInstance();
-  final localProgressionRepo = ProgressionRepositoryImpl(progressionDb);
-  final progressionEngine = ProgressionEngine(
-    repository: socialBackendState.isReady
-        ? HybridProgressionRepository(
-            local: localProgressionRepo,
-            remote: FirestoreProgressionGateway(),
-            userIdProvider: () {
-              final user = FirebaseAuth.instance.currentUser;
-              return user != null ? canonicalUid(user) : null;
-            },
-            prefs: prefs,
-          )
-        : localProgressionRepo,
-  );
   // Musí být registrován před runApp – top-level handler pro FCM v background/terminated stavu
   FirebaseMessaging.onBackgroundMessage(fcmBackgroundHandler);
   final socialRepository = socialBackendState.isReady
@@ -200,7 +172,6 @@ Future<void> main() async {
         // BuildContext alongside the existing notifier providers.
         Provider<HealthDatabase>.value(value: healthDb),
         Provider<KtNutritionDatabase>.value(value: ktDb),
-        Provider<ProgressionDatabase>.value(value: progressionDb),
         Provider<ProgressionEngineDatabase>.value(value: progressionEngineDb),
         Provider<CosmeticsDatabase>.value(value: cosmeticsDatabase),
         Provider<FactoryResetService>(create: (_) => FactoryResetService()),
@@ -225,23 +196,9 @@ Future<void> main() async {
             return provider;
           },
         ),
-        ChangeNotifierProxyProvider4<GoalsProvider, FitnessProvider,
-            KalorickeTabulkyProvider, CosmeticsProvider, ProgressionProvider>(
-          create: (_) => ProgressionProvider(engine: progressionEngine),
-          update: (_, goals, fitness, kt, cosmetics, provider) {
-            provider!.bind(
-              goalsProvider: goals,
-              fitnessProvider: fitness,
-              nutritionProvider: kt,
-              cosmeticsProvider: cosmetics,
-            );
-            return provider;
-          },
-        ),
-        // V2 progression engine — declared after CosmeticsProvider +
-        // legacy ProgressionProvider so its bind() update sees both
-        // in scope. Same source dependencies as legacy progression
-        // (goals + fitness + nutrition + cosmetics).
+        // V2 progression engine — declared after CosmeticsProvider so its
+        // bind() update sees it in scope. Source dependencies: goals +
+        // fitness + nutrition + cosmetics.
         ChangeNotifierProxyProvider4<GoalsProvider, FitnessProvider,
             KalorickeTabulkyProvider, CosmeticsProvider,
             ProgressionEngineProvider>(
@@ -259,7 +216,7 @@ Future<void> main() async {
             return provider;
           },
         ),
-        ChangeNotifierProxyProvider3<AuthProvider, ProgressionProvider,
+        ChangeNotifierProxyProvider3<AuthProvider, ProgressionEngineProvider,
             CosmeticsProvider, SocialProvider>(
           create: (_) => SocialProvider(
             repository: socialRepository,
@@ -275,8 +232,8 @@ Future<void> main() async {
             return provider;
           },
         ),
-        ChangeNotifierProxyProvider2<ProgressionProvider, CosmeticsProvider,
-            CelebrationController>(
+        ChangeNotifierProxyProvider2<ProgressionEngineProvider,
+            CosmeticsProvider, CelebrationController>(
           create: (_) => CelebrationController(),
           update: (_, progression, cosmetics, controller) {
             controller!.bind(progression: progression, cosmetics: cosmetics);

@@ -3,23 +3,26 @@ import 'package:intl/intl.dart';
 
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../progression/domain/catalog/achievement_catalog.dart';
-import '../../../progression/domain/catalog/rule_catalog.dart';
-import '../../../progression/domain/policy/level_config.dart';
-import '../../../progression/domain/policy/level_policy.dart';
-import '../../../progression/domain/progression_models.dart';
+import '../catalog/content/daily_rule_display.dart';
+import '../catalog/level_milestone_specs.dart';
+import '../catalog/objective_catalog.dart';
+import '../catalog/progression_node_catalog.dart';
+import '../models/objective_definition.dart';
+import '../models/objective_metric.dart';
+import '../models/progression_node_definition.dart';
+import '../policy/level_policy.dart';
 import 'progression_display_models.dart';
 
-/// Public, feature-neutral facade over progression catalog and level data.
+/// Public, feature-neutral facade over the V2 progression catalog and
+/// level data.
 ///
-/// Phase 0.5 (current): backed by the legacy progression catalog +
-/// `kProgressionLevelTiers`. Phase 7 swaps the backing data source to the
-/// new `ProgressionNodeCatalog`; the public method signatures stay
-/// unchanged so consumers do not need to be touched again.
+/// Phase 9a (current): fully V2-backed. Reads [ProgressionNodeCatalog]
+/// + [ObjectiveCatalog] for node displays, [kLevelMilestones] for level
+/// metadata, [DailyRuleDisplay] for rule-bound subject labels and unit
+/// suffixes.
 ///
-/// Consumers (social, journey, future feed publishers) should import only
-/// this module. They must not reach into `lib/features/progression/...`
-/// directly. This is the seam that contains the legacy progression types.
+/// Consumers (social, journey, hero, future feed publishers) should
+/// import only this module.
 class ProgressionDisplayResolver {
   const ProgressionDisplayResolver();
 
@@ -30,44 +33,54 @@ class ProgressionDisplayResolver {
 
   /// Display payload for the player's current level. Always returns a
   /// non-null value; falls back to a synthetic title / common rarity /
-  /// accent for levels not in the tier table.
+  /// accent for levels not in [kLevelMilestones].
   LevelDisplay levelDisplay(int level) {
-    final tier = _tierForLevel(level);
+    final spec = levelMilestoneByLevel(level);
     return LevelDisplay(
       level: level,
-      title: tier?.title ?? ((l) => 'Level $level'),
-      emoji: tier?.emoji ?? '',
-      rarity: tier?.rarity ?? Rarity.common,
-      accentColor: _accentForTier(tier),
+      title: spec?.titleKey ?? ((l) => 'Level $level'),
+      emoji: spec?.emoji ?? '',
+      rarity: spec?.rarity ?? Rarity.common,
+      accentColor: _accentForRarity(spec?.rarity),
     );
   }
 
-  /// Every level milestone, in catalog order. Journey map and the social
-  /// profile header iterate this.
+  /// Every reward-bearing level milestone, in catalog order. Journey
+  /// map and the social profile header iterate this.
+  ///
+  /// `isJourneyMapAnchor` mirrors [LevelMilestoneSpec.isTitleBreakpoint]
+  /// — journey-display feature owns the actual map-anchor set in
+  /// [lib/features/journey/domain/journey_levels.dart]; consumers that
+  /// need the visual map spine should read `kJourneyMapAnchors`
+  /// directly. The flag stays on the display model for backwards-
+  /// compatible API and pre-tested social paths.
   Iterable<LevelMilestoneDisplay> levelMilestones() {
-    return kProgressionLevelTiers.map(
-      (tier) => LevelMilestoneDisplay(
-        level: tier.level,
-        title: tier.title,
-        emoji: tier.emoji,
-        rarity: tier.rarity,
-        accentColor: _accentForTier(tier),
-        cosmeticRewardIds: tier.cosmeticRewards,
-        isJourneyMapAnchor: tier.isJourneyMapAnchor,
-        isTitleBreakpoint: tier.isTitleBreakpoint,
+    return kLevelMilestones.map(
+      (spec) => LevelMilestoneDisplay(
+        level: spec.level,
+        title: spec.titleKey,
+        emoji: spec.emoji,
+        rarity: spec.rarity,
+        accentColor: _accentForRarity(spec.rarity),
+        cosmeticRewardIds: spec.cosmeticRewardIds,
+        isJourneyMapAnchor: spec.isTitleBreakpoint,
+        isTitleBreakpoint: spec.isTitleBreakpoint,
       ),
     );
   }
 
   // ── Nodes ────────────────────────────────────────────────────────────
 
-  /// Looks up display metadata for any progression node id.
+  /// Looks up display metadata for any V2 progression node id.
   ///
   /// Returns:
-  /// - Level milestone display for ids matching `level_<N>` (synthesised
-  ///   from `kProgressionLevelTiers`).
-  /// - Achievement display for ids registered in
-  ///   [ProgressionAchievementCatalog].
+  /// - Level milestone display for ids matching `level_<N>` (resolved
+  ///   from [ProgressionNodeCatalog] or synthesised from the tier table
+  ///   for ids the catalog hasn't materialised, e.g. level 1 origin).
+  /// - Achievement display for ids registered as [AchievementNode] in
+  ///   [ProgressionNodeCatalog].
+  /// - Milestone / chapter completion / content unlock displays for the
+  ///   corresponding V2 node kinds.
   /// - `null` for unknown ids — caller decides whether to render an
   ///   "unknown" tile or skip the entry entirely.
   NodeDisplay? nodeDisplay(String nodeId, AppLocalizations l10n) {
@@ -77,9 +90,9 @@ class ProgressionDisplayResolver {
       return _levelMilestoneDisplay(level, nodeId);
     }
 
-    final def = ProgressionAchievementCatalog.definitionForId(nodeId);
-    if (def == null) return null;
-    return _achievementDisplay(def);
+    final node = ProgressionNodeCatalog.definitionForId(nodeId);
+    if (node == null) return null;
+    return _displayForNode(node);
   }
 
   /// Compact one-line summary for friend cards / leaderboard rows.
@@ -95,9 +108,9 @@ class ProgressionDisplayResolver {
       return l10n.socialLevelLabel(level);
     }
 
-    final def = ProgressionAchievementCatalog.definitionForId(nodeId);
-    if (def == null) return null;
-    return _achievementCompactSummary(def, l10n, locale);
+    final node = ProgressionNodeCatalog.definitionForId(nodeId);
+    if (node == null) return null;
+    return _compactSummaryForNode(node, l10n, locale);
   }
 
   // ── Domains ──────────────────────────────────────────────────────────
@@ -125,58 +138,143 @@ class ProgressionDisplayResolver {
 
   // ── Internals ────────────────────────────────────────────────────────
 
-  ProgressionLevelTier? _tierForLevel(int level) {
-    for (final t in kProgressionLevelTiers) {
-      if (t.level == level) return t;
-    }
-    return null;
-  }
-
-  /// Accent colour for one tier. Today this is `tier.difficulty.color`;
-  /// in the new engine the per-rarity colour table will live in design
-  /// tokens (one source of truth) and the legacy `Difficulty` enum is
-  /// dropped per Q5. For unknown tiers we fall back to the design-token
-  /// accent so a freshly-added level still renders in the right ballpark.
-  Color _accentForTier(ProgressionLevelTier? tier) =>
-      tier?.difficulty.color ?? Tokens.accent;
+  /// Accent colour for a rarity. Drops V1's `Difficulty → Color` mapping
+  /// per Q5; the per-rarity colour table lives in design tokens. Unknown
+  /// rarities (null) fall back to the design-token accent.
+  Color _accentForRarity(Rarity? rarity) =>
+      rarity == null ? Tokens.accent : RarityPalette.forRarity(rarity).color;
 
   NodeDisplay _levelMilestoneDisplay(int level, String nodeId) {
-    final tier = _tierForLevel(level);
+    final spec = levelMilestoneByLevel(level);
     return NodeDisplay(
       nodeId: nodeId,
       kind: NodeDisplayKind.levelMilestone,
-      title: tier?.title ?? ((l) => 'Level $level'),
+      title: spec?.titleKey ?? ((l) => 'Level $level'),
       description: (l) => l.progLevelAchievementDesc(level),
-      rarity: tier?.rarity ?? Rarity.common,
-      accentColor: _accentForTier(tier),
-      badgeEmoji: tier?.emoji ?? '',
+      rarity: spec?.rarity ?? Rarity.common,
+      accentColor: _accentForRarity(spec?.rarity),
+      badgeEmoji: spec?.emoji ?? '',
       targetValue: _levelPolicy.xpRequiredForLevel(level),
     );
   }
 
-  NodeDisplay _achievementDisplay(ProgressionAchievementDefinition def) {
+  NodeDisplay _displayForNode(ProgressionNode node) {
+    return switch (node) {
+      LevelMilestoneNode() => NodeDisplay(
+          nodeId: node.id,
+          kind: NodeDisplayKind.levelMilestone,
+          title: node.titleKey,
+          description: node.descriptionKey,
+          rarity: node.rarity,
+          accentColor: _accentForRarity(node.rarity),
+          badgeEmoji: node.emoji,
+          targetValue: _levelPolicy.xpRequiredForLevel(node.level),
+        ),
+      AchievementNode() => _achievementDisplay(node),
+      MilestoneNode() => NodeDisplay(
+          nodeId: node.id,
+          kind: NodeDisplayKind.milestone,
+          title: node.titleKey,
+          description: node.descriptionKey,
+          rarity: node.rarity,
+          accentColor: _accentForRarity(node.rarity),
+          domain: _objectiveDomain(node.objectiveId),
+          targetValue: _objectiveTargetInt(node.objectiveId),
+        ),
+      ChapterCompletionNode() => NodeDisplay(
+          nodeId: node.id,
+          kind: NodeDisplayKind.chapterCompletion,
+          title: node.titleKey,
+          description: node.descriptionKey,
+          rarity: node.rarity,
+          accentColor: _accentForRarity(node.rarity),
+        ),
+      ContentUnlockNode() => NodeDisplay(
+          nodeId: node.id,
+          kind: NodeDisplayKind.contentUnlock,
+          title: node.titleKey,
+          description: node.descriptionKey,
+          rarity: node.rarity,
+          accentColor: _accentForRarity(node.rarity),
+        ),
+      CompanionAvailabilityNode() => NodeDisplay(
+          nodeId: node.id,
+          kind: NodeDisplayKind.companionAvailability,
+          title: node.titleKey,
+          description: node.descriptionKey,
+          rarity: node.rarity,
+          accentColor: _accentForRarity(node.rarity),
+        ),
+      RelicNode() => NodeDisplay(
+          nodeId: node.id,
+          kind: NodeDisplayKind.relic,
+          title: node.titleKey,
+          description: node.descriptionKey,
+          rarity: node.rarity,
+          accentColor: _accentForRarity(node.rarity),
+        ),
+      QuestNode() => NodeDisplay(
+          nodeId: node.id,
+          kind: NodeDisplayKind.quest,
+          title: node.titleKey,
+          description: node.descriptionKey,
+          rarity: node.rarity,
+          accentColor: _accentForRarity(node.rarity),
+          domain: _objectiveDomain(node.objectiveId),
+          assetKey: node.assetKey,
+          targetValue: _objectiveTargetInt(node.objectiveId),
+          subjectLabel: _subjectLabelForObjective(node.objectiveId),
+        ),
+    };
+  }
+
+  NodeDisplay _achievementDisplay(AchievementNode node) {
     return NodeDisplay(
-      nodeId: def.id,
+      nodeId: node.id,
       kind: NodeDisplayKind.achievement,
-      title: def.title,
-      description: def.description,
-      rarity: def.rarity,
-      accentColor: def.difficulty.color,
-      badgeEmoji: def.badgeEmoji,
-      targetValue: def.targetValue,
-      domain: def.domain,
-      subjectLabel: _subjectLabelFor(def),
+      title: node.titleKey,
+      description: node.descriptionKey,
+      rarity: node.rarity,
+      accentColor: _accentForRarity(node.rarity),
+      badgeEmoji: node.badgeEmoji,
+      assetKey: node.assetKey,
+      domain: _objectiveDomain(node.objectiveId),
+      subjectLabel: _subjectLabelForObjective(node.objectiveId),
+      targetValue: _objectiveTargetInt(node.objectiveId),
     );
   }
 
-  /// Pill-friendly secondary label — rule title for rule-bound
-  /// achievements, domain label otherwise, null when neither applies.
-  LocalizedText? _subjectLabelFor(ProgressionAchievementDefinition def) {
-    final ruleId = def.ruleId;
+  ObjectiveDefinition? _objectiveById(String? id) {
+    if (id == null) return null;
+    return ObjectiveCatalog.definitionForId(id);
+  }
+
+  ProgressionDomain? _objectiveDomain(String? objectiveId) =>
+      _objectiveById(objectiveId)?.domain;
+
+  int? _objectiveTargetInt(String? objectiveId) {
+    final value = _objectiveById(objectiveId)?.targetValue;
+    if (value == null) return null;
+    return value.isFinite ? value.toInt() : null;
+  }
+
+  /// Pill-friendly secondary label for an objective — rule title for
+  /// rule-bound `RewardCountMetric` / `StreakDaysMetric`, domain label
+  /// otherwise, null when neither applies.
+  LocalizedText? _subjectLabelForObjective(String? objectiveId) {
+    final objective = _objectiveById(objectiveId);
+    if (objective == null) return null;
+    final metric = objective.metric;
+    final ruleId = switch (metric) {
+      RewardCountMetric() => metric.ruleId,
+      StreakDaysMetric() => metric.ruleId,
+      _ => null,
+    };
     if (ruleId != null) {
-      return (l) => ProgressionRuleCatalog.titleForId(ruleId, l);
+      final ruleTitle = DailyRuleDisplay.titleFor(ruleId);
+      if (ruleTitle != null) return ruleTitle;
     }
-    final domain = def.domain;
+    final domain = objective.domain;
     if (domain != null) {
       return (l) => domain.label(l);
     }
@@ -207,7 +305,7 @@ class ProgressionDisplayResolver {
       title: (_) => fallbackTitle,
       description: (_) => fallbackDescription,
       rarity: rarity,
-      accentColor: accentColor ?? Tokens.accent,
+      accentColor: accentColor ?? _accentForRarity(rarity),
       badgeEmoji: badgeEmoji,
       unlockedAt: unlockedAt,
       domain: domain,
@@ -226,61 +324,148 @@ class ProgressionDisplayResolver {
     return display.title(l10n).toUpperCase();
   }
 
-  String _achievementCompactSummary(
-    ProgressionAchievementDefinition def,
+  String? _compactSummaryForNode(
+    ProgressionNode node,
     AppLocalizations l10n,
     String locale,
   ) {
-    switch (def.criterionType) {
-      case ProgressionAchievementCriterionType.totalXpAtLeast:
-        return '${_compactInt(def.targetValue, locale)} ${l10n.socialXpLabel}';
-      case ProgressionAchievementCriterionType.rewardCountAtLeast:
-        if (def.ruleId != null) {
-          return '${def.targetValue}x ${ProgressionRuleCatalog.titleForId(def.ruleId!, l10n)}';
-        }
-        if (def.domain != null) {
-          return '${def.targetValue}x ${def.domain!.label(l10n)}';
-        }
-        return '${def.targetValue} ${l10n.progRewardsSectionLabel}';
-      case ProgressionAchievementCriterionType.bestStreakAtLeast:
-        return '${def.targetValue} ${l10n.progStreakDaysSuffix}';
-      case ProgressionAchievementCriterionType.totalRuleValueAtLeast:
-      case ProgressionAchievementCriterionType.bestRollingWindowRuleValueAtLeast:
-        return _ruleTargetSummary(def, l10n, locale);
-      case ProgressionAchievementCriterionType.dailyQuestsCompletedAtLeast:
-        return '${def.targetValue} ${l10n.progAchievementSummaryDailyQuests}';
-      case ProgressionAchievementCriterionType.weeklyQuestsCompletedAtLeast:
-        return '${def.targetValue} ${l10n.progAchievementSummaryWeeklyQuests}';
-      case ProgressionAchievementCriterionType.totalQuestsCompletedAtLeast:
-        return '${def.targetValue} ${l10n.progAchievementSummaryTotalQuests}';
-      case ProgressionAchievementCriterionType.activeDaysAtLeast:
-        return '${def.targetValue} ${l10n.progAchievementSummaryActiveDays}';
-      case ProgressionAchievementCriterionType.perfectDaysAtLeast:
-        return '${def.targetValue} ${l10n.progAchievementSummaryPerfectDays}';
-      case ProgressionAchievementCriterionType.perfectWeeksAtLeast:
-        return '${def.targetValue} ${l10n.progAchievementSummaryPerfectWeeks}';
-      case ProgressionAchievementCriterionType.comboQuestsCompletedAtLeast:
-        return '${def.targetValue} ${l10n.progAchievementSummaryComboQuests}';
-      case ProgressionAchievementCriterionType.tripleComboQuestsCompletedAtLeast:
-        return '${def.targetValue} ${l10n.progAchievementSummaryTripleComboQuests}';
-      case ProgressionAchievementCriterionType.compositeAllOf:
-        return l10n.progAchievementSummaryComposite;
+    // Composite achievements (multiple unlock-condition gates) — V2
+    // models these via [unlockConditions] rather than the V1
+    // `compositeAllOf` criterion. Render the same generic label so the
+    // social card copy stays stable.
+    if (node is AchievementNode && node.unlockConditions.length > 1) {
+      return l10n.progAchievementSummaryComposite;
     }
+
+    final objectiveId = _objectiveIdOf(node);
+    if (objectiveId == null) {
+      // Reward-bearing nodes without an objective (e.g. condition-only
+      // welcomes, level milestones that already short-circuited above).
+      // Title makes the most sensible fallback.
+      return node.titleKey(l10n);
+    }
+
+    final objective = _objectiveById(objectiveId);
+    if (objective == null) return node.titleKey(l10n);
+    return _compactSummaryForObjective(objective, l10n, locale);
   }
 
-  String _ruleTargetSummary(
-    ProgressionAchievementDefinition def,
+  String? _objectiveIdOf(ProgressionNode node) {
+    return switch (node) {
+      AchievementNode() => node.objectiveId,
+      QuestNode() => node.objectiveId,
+      MilestoneNode() => node.objectiveId,
+      _ => null,
+    };
+  }
+
+  /// V2 metric-driven compact summary. Mirrors the V1 criterion switch
+  /// shape so friend cards keep their label format (e.g. "10k XP",
+  /// "30 steps streak", "5 daily quests").
+  String _compactSummaryForObjective(
+    ObjectiveDefinition objective,
     AppLocalizations l10n,
     String locale,
   ) {
-    // Sleep is special-cased: rule values are stored in minutes but the
-    // friendly summary shows hours.
-    if (def.ruleId == 'daily_sleep') {
-      final hours = (def.targetValue / 60).round();
-      return '$hours ${l10n.goalUnitHours}';
+    final target = objective.targetValue.toInt();
+    final metric = objective.metric;
+    return switch (metric) {
+      TotalXpMetric() =>
+        '${_compactInt(target, locale)} ${l10n.socialXpLabel}',
+      RewardCountMetric(:final ruleId, :final domain) => () {
+          if (ruleId != null) {
+            final ruleTitle = DailyRuleDisplay.titleFor(ruleId);
+            if (ruleTitle != null) {
+              return '${target}x ${ruleTitle(l10n)}';
+            }
+          }
+          if (domain != null) {
+            final parsed = parseDomain(domain);
+            if (parsed != null) {
+              return '${target}x ${parsed.label(l10n)}';
+            }
+          }
+          return '$target ${l10n.progRewardsSectionLabel}';
+        }(),
+      StreakDaysMetric() =>
+        '$target ${l10n.progStreakDaysSuffix}',
+      StepsMetric() => _ruleScaledSummary(
+          objective: objective,
+          targetValue: target,
+          l10n: l10n,
+          locale: locale,
+          ruleHintId: 'daily_steps',
+        ),
+      CaloriesMetric() => _ruleScaledSummary(
+          objective: objective,
+          targetValue: target,
+          l10n: l10n,
+          locale: locale,
+          ruleHintId: 'daily_calories',
+        ),
+      ProteinGramsMetric() => _ruleScaledSummary(
+          objective: objective,
+          targetValue: target,
+          l10n: l10n,
+          locale: locale,
+          ruleHintId: 'daily_protein',
+        ),
+      SleepMinutesMetric() => _sleepSummary(target, l10n),
+      ActivityMinutesMetric() => _ruleScaledSummary(
+          objective: objective,
+          targetValue: target,
+          l10n: l10n,
+          locale: locale,
+          ruleHintId: 'weekly_activity',
+        ),
+      NodeCompletionsMetric() => _nodeCompletionsSummary(
+          metric: metric,
+          target: target,
+          l10n: l10n,
+        ),
+      ComboPoolCompletionsMetric() =>
+        '$target ${l10n.progAchievementSummaryComboQuests}',
+      LevelMetric() => l10n.socialLevelLabel(target),
+    };
+  }
+
+  String _ruleScaledSummary({
+    required ObjectiveDefinition objective,
+    required int targetValue,
+    required AppLocalizations l10n,
+    required String locale,
+    required String ruleHintId,
+  }) {
+    final unit = DailyRuleDisplay.unitFor(ruleHintId)?.call(l10n);
+    if (unit == null || unit.isEmpty) return _compactInt(targetValue, locale);
+    return '${_compactInt(targetValue, locale)} $unit';
+  }
+
+  String _sleepSummary(int targetMinutes, AppLocalizations l10n) {
+    final hours = (targetMinutes / 60).round();
+    return '$hours ${l10n.goalUnitHours}';
+  }
+
+  String _nodeCompletionsSummary({
+    required NodeCompletionsMetric metric,
+    required int target,
+    required AppLocalizations l10n,
+  }) {
+    final referenced = ProgressionNodeCatalog.definitionForId(metric.nodeId);
+    if (referenced is QuestNode) {
+      switch (referenced.displayBucket) {
+        case _:
+          // Display bucket → friend summary label.
+        }
+      // Note: switch above is intentionally exhaustive in the next block
+      // to give a labelled summary per quest bucket.
+      return switch (referenced.displayBucket.name) {
+        'daily' => '$target ${l10n.progAchievementSummaryDailyQuests}',
+        'weekly' => '$target ${l10n.progAchievementSummaryWeeklyQuests}',
+        _ => '$target ${l10n.progAchievementSummaryTotalQuests}',
+      };
     }
-    final unit = ProgressionRuleCatalog.unitForId(def.ruleId, l10n);
-    return '${_compactInt(def.targetValue, locale)} $unit';
+    return '$target ${l10n.progAchievementSummaryTotalQuests}';
   }
 
   String _compactInt(int value, String locale) =>

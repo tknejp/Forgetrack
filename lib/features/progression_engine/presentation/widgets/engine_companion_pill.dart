@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -18,11 +18,11 @@ import '../../domain/models/reward_definition.dart';
 /// objective) or a non-XP direct reward.
 ///
 /// Content: the companion's badge glyph + a chevron. The whole pill is
-/// a tap target — taps bubble to the parent so the card expand can be
-/// toggled. Replaces the standalone chevron — when no companion / no
+/// a tap target â€” taps bubble to the parent so the card expand can be
+/// toggled. Replaces the standalone chevron â€” when no companion / no
 /// extra reward exists, the card isn't expandable at all.
 ///
-/// Fallback emoji: 🎁 for non-achievement extras (direct cosmetic / item
+/// Fallback emoji: ðŸŽ for non-achievement extras (direct cosmetic / item
 /// rewards on the quest itself, milestone companions without their own
 /// emoji).
 class EngineCompanionPill extends StatelessWidget {
@@ -35,10 +35,10 @@ class EngineCompanionPill extends StatelessWidget {
   });
 
   /// Single-glyph badge (typically an emoji from AchievementNode /
-  /// LevelMilestoneNode; defaults to 🎁 for non-emoji extras).
+  /// LevelMilestoneNode; defaults to ðŸŽ for non-emoji extras).
   final String badge;
 
-  /// Drives the chevron rotation — true when the parent card is
+  /// Drives the chevron rotation â€” true when the parent card is
   /// expanded.
   final bool expanded;
 
@@ -80,13 +80,13 @@ class EngineCompanionPill extends StatelessWidget {
 
 /// Resolves the badge glyph for a companion entry. Achievement nodes
 /// carry an emoji explicitly; level milestones carry their level emoji;
-/// everything else falls back to 🎁 so the player still gets a visual
+/// everything else falls back to ðŸŽ so the player still gets a visual
 /// "this is an extra reward" hint.
 String badgeForCompanion(ProgressionNode node) {
   return switch (node) {
     AchievementNode(:final badgeEmoji) => badgeEmoji,
     LevelMilestoneNode(:final emoji) => emoji,
-    _ => '🎁',
+    _ => 'ðŸŽ',
   };
 }
 
@@ -96,13 +96,13 @@ String badgeForCompanion(ProgressionNode node) {
 /// the chip strip but in emoji form for the pill.
 String badgeForReward(RewardDefinition reward) {
   return switch (reward) {
-    XpReward() => '⚡',
-    CosmeticReward() => '🎨',
-    ChapterUnlockReward() => '📖',
-    CompanionAvailabilityReward() => '🤝',
-    TitleReward() => '🎖️',
-    EmblemReward() => '🏅',
-    RelicReward() => '💎',
+    XpReward() => 'âš¡',
+    CosmeticReward() => 'ðŸŽ¨',
+    ChapterUnlockReward() => 'ðŸ“–',
+    CompanionAvailabilityReward() => 'ðŸ¤',
+    TitleReward() => 'ðŸŽ–ï¸',
+    EmblemReward() => 'ðŸ…',
+    RelicReward() => 'ðŸ’Ž',
   };
 }
 
@@ -115,9 +115,9 @@ String badgeForReward(RewardDefinition reward) {
 ///   target / progress passed in by the caller (companion shares the
 ///   long-term quest's objective).
 /// - Resolves each non-XP reward against [CosmeticCatalog] so the row
-///   shows the **real** cosmetic name (e.g. "Kámen Roklin", "Rámeček
+///   shows the **real** cosmetic name (e.g. "KÃ¡men Roklin", "RÃ¡meÄek
 ///   Worldwalker") instead of a generic palette glyph.
-/// - No social actions (share / pin) yet — these depend on the V2
+/// - No social actions (share / pin) yet â€” these depend on the V2
 ///   migration of social. The detail stays read-only until the
 ///   companion unlocks.
 Future<void> showEngineCompanionDetailSheet(
@@ -202,7 +202,7 @@ class _CompanionDetailSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: Tokens.spaceLg),
-            // Header row — matches legacy _AchievementDetailsSheet:
+            // Header row â€” matches legacy _AchievementDetailsSheet:
             // emoji badge in colored circle, title + summary, status
             // pill on the right.
             Row(
@@ -268,7 +268,7 @@ class _CompanionDetailSheet extends StatelessWidget {
               label: progressLabel,
               color: color,
             ),
-            // Reward rows — one per non-XP reward authored on the
+            // Reward rows â€” one per non-XP reward authored on the
             // companion. Each row resolves the cosmetic by id and
             // shows its real name + asset, not just the palette glyph
             // we used before.
@@ -453,16 +453,16 @@ class _ProgressBlock extends StatelessWidget {
   }
 }
 
-/// Per-reward row in the detail sheet's "Také odemkne" block and on
+/// Per-reward row in the detail sheet's "TakÃ© odemkne" block and on
 /// finale-reward expand panels (chapter / long-term).
 ///
 /// Resolves the reward against [CosmeticCatalog] so the row shows the
-/// real localized cosmetic name (e.g. "Kámen Roklin") instead of the
+/// real localized cosmetic name (e.g. "KÃ¡men Roklin") instead of the
 /// generic palette / diamond glyph we use in collapsed chip strips.
 /// Falls back to a generic reward-kind label when the id is not in the
 /// cosmetics catalog (chapter unlocks, RPG-only types).
 ///
-/// Tappable when [onTap] is set — finale reward blocks pass
+/// Tappable when [onTap] is set â€” finale reward blocks pass
 /// [showEngineRewardPreviewSheet] so the player can inspect the
 /// cosmetic asset and metadata even while it's still locked.
 class EngineRewardDetailRow extends StatelessWidget {
@@ -487,7 +487,7 @@ class EngineRewardDetailRow extends StatelessWidget {
     final name = lookup?.name(l10n) ?? _fallbackName(reward);
     final rarity = lookup?.rarity.label(l10n);
     final typeLabel = lookup?.type.label(l10n) ?? _kindLabel(reward, l10n);
-    final subtitle = rarity == null ? typeLabel : '$typeLabel · $rarity';
+    final subtitle = rarity == null ? typeLabel : '$typeLabel Â· $rarity';
     final cosmeticId = _cosmeticIdOf(reward);
     final opacity = unlocked ? 1.0 : 0.74;
 
@@ -506,7 +506,7 @@ class EngineRewardDetailRow extends StatelessWidget {
           ),
           child: Row(
             children: [
-            // Real cosmetic art when we can resolve it — otherwise a
+            // Real cosmetic art when we can resolve it â€” otherwise a
             // type-appropriate placeholder glyph. Keeps the row useful
             // even for reward ids that ship without an image yet.
             if (cosmeticId != null)
@@ -593,7 +593,7 @@ class EngineRewardDetailRow extends StatelessWidget {
     };
   }
 
-  /// Localized type label when the cosmetic id isn't in the catalog —
+  /// Localized type label when the cosmetic id isn't in the catalog â€”
   /// chapter unlocks, generic XP, or deleted entries. Mirrors the
   /// catalog [CosmeticType] vocabulary so the row reads consistently.
   String _kindLabel(RewardDefinition r, AppLocalizations l10n) {
@@ -633,7 +633,7 @@ class EngineRewardDetailRow extends StatelessWidget {
     };
   }
 
-  /// Last-resort label when the catalog has no entry for the id —
+  /// Last-resort label when the catalog has no entry for the id â€”
   /// either the cosmetic was deleted or the reward type ships its own
   /// id space (chapter unlocks). Falls back to the raw id so the row
   /// is still readable rather than blank.
@@ -654,8 +654,8 @@ class EngineRewardDetailRow extends StatelessWidget {
 ///
 /// When the reward resolves to a cosmetic via [CosmeticCatalog], we
 /// open the canonical [CosmeticDetailsSheet] so the inventory and the
-/// quest screen share one detail surface — locked finale rewards show
-/// the cosmetic's `unlockHint` (e.g. "Dokonči Lesní zkoušku") instead
+/// quest screen share one detail surface â€” locked finale rewards show
+/// the cosmetic's `unlockHint` (e.g. "DokonÄi LesnÃ­ zkouÅ¡ku") instead
 /// of a redundant bespoke layout. Falls back to a minimal local sheet
 /// only when the reward has no cosmetic backing (chapter unlocks, raw
 /// XP previews).
@@ -841,8 +841,8 @@ class _RewardPreviewSheet extends StatelessWidget {
   }
 }
 
-/// Localized label for a [CosmeticType] — used by the detail sheet's
-/// reward rows so each cosmetic reads as e.g. "Rámeček · Vzácný".
+/// Localized label for a [CosmeticType] â€” used by the detail sheet's
+/// reward rows so each cosmetic reads as e.g. "RÃ¡meÄek Â· VzÃ¡cnÃ½".
 extension _CosmeticTypeLabel on CosmeticType {
   String label(AppLocalizations l10n) {
     return switch (this) {

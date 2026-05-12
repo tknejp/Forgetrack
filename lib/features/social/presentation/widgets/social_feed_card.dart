@@ -57,14 +57,13 @@ class SocialFeedCard extends StatelessWidget {
     final myUid = social.currentUid;
     final myCurrentEmoji = share.reactions[myUid];
 
-    final color =
-        colorForDifficultyString(share.achievementSnapshot.difficulty);
+    final color = colorForRarity(share.achievementSnapshot.rarity);
     final emoji = const ProgressionDisplayResolver()
             .nodeDisplay(share.achievementId, l10n)
             ?.badgeEmoji ??
         '\u{1F3C5}';
-    final diffLabel = socialDifficultyLabelForName(
-        share.achievementSnapshot.difficulty, l10n);
+    final diffLabel =
+        socialRarityLabel(share.achievementSnapshot.rarity, l10n);
 
     return Container(
       decoration: BoxDecoration(

@@ -1,20 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:forgetrack/shared/presentation/achievement_badge_specs.dart';
 
-import '../../domain/progression_models.dart';
-import '../../domain/catalog/rule_catalog.dart';
-import '../../application/progression_provider.dart';
 import '../../../cosmetics/application/cosmetics_provider.dart';
 import '../../../cosmetics/config/cosmetics_config.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
 import '../../../cosmetics/presentation/cosmetics_screen.dart';
+import '../../../journey/presentation/widgets/journey_preview_card.dart';
+import '../../../progression_engine/application/progression_engine_provider.dart';
+import '../../../progression_engine/presentation/adapters/engine_achievement_view.dart';
 import '../../../social/application/social_provider.dart';
 import '../../../social/domain/social_models.dart';
-import '../widgets/progression_primitives.dart';
-import '../../../journey/presentation/widgets/journey_preview_card.dart';
-import '../widgets/progression_internals.dart';
+import '../../../progression_engine/presentation/widgets/progression_primitives.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../shared/theme/design_tokens.dart';
@@ -40,10 +37,28 @@ class _HeroScreenState extends State<HeroScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final progression = context.watch<ProgressionProvider>();
-    final viewData = ProgressionViewData.from(progression);
+    final progression = context.watch<ProgressionEngineProvider>();
+    final views = buildEngineAchievementViews(progression, l10n);
+    final unlocked = [
+      for (final v in views)
+        if (v.unlocked) v,
+    ]..sort((a, b) {
+        final rarity = b.display.rarity.index.compareTo(a.display.rarity.index);
+        if (rarity != 0) return rarity;
+        final at = a.unlockedAt?.millisecondsSinceEpoch ?? 0;
+        final bt = b.unlockedAt?.millisecondsSinceEpoch ?? 0;
+        return bt.compareTo(at);
+      });
+    final inProgress = [
+      for (final v in views)
+        if (!v.unlocked) v,
+    ]..sort((a, b) {
+        final rarity = b.display.rarity.index.compareTo(a.display.rarity.index);
+        if (rarity != 0) return rarity;
+        return b.progress.compareTo(a.progress);
+      });
 
-    if (progression.isLoading && progression.rewardGrants.isEmpty) {
+    if (progression.isLoading && progression.rewardHistory.isEmpty) {
       return ProgressionScaffold(
         child: ListView(
           padding: EdgeInsets.fromLTRB(14, widget.topContentInset + 8, 14, 24),
@@ -100,8 +115,8 @@ class _HeroScreenState extends State<HeroScreen> {
               ),
             ),
             _AchievementsSliverSection(
-              unlocked: viewData.unlocked,
-              inProgress: viewData.inProgress,
+              unlocked: unlocked,
+              inProgress: inProgress,
               l10n: l10n,
             ),
           ],
@@ -120,8 +135,8 @@ class _AchievementsSliverSection extends StatelessWidget {
     required this.l10n,
   });
 
-  final List<ProgressionAchievement> unlocked;
-  final List<ProgressionAchievement> inProgress;
+  final List<EngineAchievementView> unlocked;
+  final List<EngineAchievementView> inProgress;
   final AppLocalizations l10n;
 
   @override
@@ -154,7 +169,7 @@ class _AchievementBadgeSliverGrid extends StatelessWidget {
     required this.l10n,
   });
 
-  final List<ProgressionAchievement> achievements;
+  final List<EngineAchievementView> achievements;
   final AppLocalizations l10n;
 
   @override
@@ -173,7 +188,7 @@ class _AchievementBadgeSliverGrid extends StatelessWidget {
           ),
           delegate: SliverChildBuilderDelegate(
             (context, index) => _AchievementTile(
-              achievement: achievements[index],
+              view: achievements[index],
               l10n: l10n,
             ),
             childCount: achievements.length,
@@ -186,25 +201,24 @@ class _AchievementBadgeSliverGrid extends StatelessWidget {
 
 class _AchievementTile extends StatelessWidget {
   const _AchievementTile({
-    required this.achievement,
+    required this.view,
     required this.l10n,
   });
 
-  final ProgressionAchievement achievement;
+  final EngineAchievementView view;
   final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
-    final achievement = this.achievement;
-    final badge = achievementBadgeSpec(achievement);
-    final color = badge.color;
-    final unlocked = achievement.unlocked;
+    final color = view.display.accentColor;
+    final unlocked = view.unlocked;
+    final emoji = view.display.badgeEmoji ?? '';
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () => _showAchievementDetailsSheet(
         context,
-        achievement: achievement,
+        view: view,
         l10n: l10n,
       ),
       child: Container(
@@ -239,7 +253,7 @@ class _AchievementTile extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              badge.emoji,
+              emoji,
               style: TextStyle(
                 fontSize: 22,
                 color: unlocked ? null : const Color(0x66FFFFFF),
@@ -249,7 +263,7 @@ class _AchievementTile extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Text(
-                _achievementDisplayLabel(achievement, context),
+                _achievementDisplayLabel(view, l10n),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
@@ -308,11 +322,11 @@ class _AchievementEmojiBadge extends StatelessWidget {
 
 class _AchievementDetailsSheet extends StatefulWidget {
   const _AchievementDetailsSheet({
-    required this.achievement,
+    required this.view,
     required this.l10n,
   });
 
-  final ProgressionAchievement achievement;
+  final EngineAchievementView view;
   final AppLocalizations l10n;
 
   @override
@@ -329,9 +343,9 @@ class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
     setState(() => _sharing = true);
     final social = context.read<SocialProvider>();
     await social.shareAchievement(
-      widget.achievement.id,
-      resolvedTitle: widget.achievement.title(widget.l10n),
-      resolvedDescription: widget.achievement.description(widget.l10n),
+      widget.view.id,
+      resolvedTitle: widget.view.display.title(widget.l10n),
+      resolvedDescription: widget.view.display.description(widget.l10n),
     );
     if (!mounted) return;
     setState(() {
@@ -356,7 +370,7 @@ class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
     final social = context.read<SocialProvider>();
     final messenger = ScaffoldMessenger.of(context);
     await social.setCurrentAchievementPinned(
-      achievementId: widget.achievement.id,
+      achievementId: widget.view.id,
       pinned: pinned,
     );
     if (!mounted) return;
@@ -378,21 +392,19 @@ class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final achievement = widget.achievement;
+    final view = widget.view;
     final l10n = widget.l10n;
-    final badge = achievementBadgeSpec(achievement);
-    final color = badge.color;
+    final color = view.display.accentColor;
+    final emoji = view.display.badgeEmoji ?? '';
     final locale = Localizations.localeOf(context).toString();
-    final unlocked = achievement.unlocked;
+    final unlocked = view.unlocked;
     final progressLabel = l10n.progProgressRatio(
-      achievement.currentValue,
-      achievement.targetValue,
+      view.currentValue,
+      view.targetValue,
     );
-    final summary = _achievementCompactSummary(
-      achievement,
-      l10n,
-      locale,
-    );
+    final summary = _achievementCompactSummary(view, l10n, locale);
+    final subjectLabel = view.display.subjectLabel?.call(l10n) ??
+        view.display.domain?.label(l10n);
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return SafeArea(
@@ -424,7 +436,7 @@ class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _AchievementEmojiBadge(
-                  emoji: badge.emoji,
+                  emoji: emoji,
                   color: color,
                   unlocked: unlocked,
                 ),
@@ -434,7 +446,7 @@ class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        achievement.title(l10n),
+                        view.display.title(l10n),
                         style: const TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w900,
@@ -465,7 +477,7 @@ class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
             ),
             const SizedBox(height: Tokens.spaceLg),
             Text(
-              achievement.description(l10n),
+              view.display.description(l10n),
               style: const TextStyle(
                 fontSize: Tokens.fontSizeSmall,
                 height: 1.45,
@@ -478,24 +490,16 @@ class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
               runSpacing: 8,
               children: [
                 TinyPill(
-                  label: _achievementDifficultyLabel(achievement, l10n),
+                  label: view.display.rarity.label(l10n),
                   color: color,
                 ),
                 TinyPill(
                   label: progressLabel,
                   color: color,
                 ),
-                if (achievement.ruleId != null)
+                if (subjectLabel != null)
                   TinyPill(
-                    label: ProgressionRuleCatalog.titleForId(
-                      achievement.ruleId!,
-                      l10n,
-                    ),
-                    color: color.withValues(alpha: 0.88),
-                  )
-                else if (achievement.domain != null)
-                  TinyPill(
-                    label: achievement.domain!.label(l10n),
+                    label: subjectLabel,
                     color: color.withValues(alpha: 0.88),
                   ),
               ],
@@ -513,7 +517,7 @@ class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ProgressBar(
-                    value: unlocked ? 1 : achievement.progress,
+                    value: unlocked ? 1 : view.progress,
                     color: color,
                     glow: color.withValues(alpha: 0.35),
                     height: 4,
@@ -527,12 +531,11 @@ class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
                       color: Colors.white,
                     ),
                   ),
-                  if (unlocked && achievement.unlockedAt != null) ...[
+                  if (unlocked && view.unlockedAt != null) ...[
                     const SizedBox(height: Tokens.spaceXs),
                     Text(
                       l10n.progQuestCompletedOn(
-                        progressionFormatDateTime(
-                            achievement.unlockedAt!, locale),
+                        progressionFormatDateTime(view.unlockedAt!, locale),
                       ),
                       style: TextStyle(
                         fontSize: 10.5,
@@ -547,7 +550,7 @@ class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
             if (unlocked) ...[
               const SizedBox(height: 14),
               _PinnedAchievementAction(
-                achievementId: achievement.id,
+                achievementId: view.id,
                 color: color,
                 busy: _pinning,
                 onToggle: _setPinned,
@@ -709,7 +712,7 @@ class _PinnedAchievementAction extends StatelessWidget {
 
 void _showAchievementDetailsSheet(
   BuildContext context, {
-  required ProgressionAchievement achievement,
+  required EngineAchievementView view,
   required AppLocalizations l10n,
 }) {
   showModalBottomSheet<void>(
@@ -717,7 +720,7 @@ void _showAchievementDetailsSheet(
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
     builder: (context) => _AchievementDetailsSheet(
-      achievement: achievement,
+      view: view,
       l10n: l10n,
     ),
   );
@@ -726,77 +729,34 @@ void _showAchievementDetailsSheet(
 // ── Achievement display helpers ───────────────────────────────────────────────
 
 String _achievementDisplayLabel(
-  ProgressionAchievement achievement,
-  BuildContext context,
-) {
-  final levelTarget = achievementLevelTarget(achievement);
-  if (levelTarget != null) return 'LEVEL $levelTarget';
-  return achievement.title(context.l10n).toUpperCase();
-}
-
-String _achievementDifficultyLabel(
-  ProgressionAchievement achievement,
+  EngineAchievementView view,
   AppLocalizations l10n,
-) =>
-    achievement.difficulty.label(l10n);
+) {
+  final levelTarget = view.levelTarget;
+  if (levelTarget != null) return 'LEVEL $levelTarget';
+  return view.display.title(l10n).toUpperCase();
+}
 
 String _achievementCompactSummary(
-  ProgressionAchievement achievement,
+  EngineAchievementView view,
   AppLocalizations l10n,
   String locale,
 ) {
-  switch (achievement.criterionType) {
-    case ProgressionAchievementCriterionType.totalXpAtLeast:
-      final levelTarget = achievementLevelTarget(achievement);
-      if (levelTarget != null) {
-        return 'LEVEL $levelTarget';
-      }
-      return '${_formatCompactInt(achievement.targetValue, locale)} XP';
-    case ProgressionAchievementCriterionType.rewardCountAtLeast:
-      if (achievement.ruleId != null) {
-        return '${achievement.targetValue}x ${ProgressionRuleCatalog.titleForId(achievement.ruleId!, l10n)}';
-      }
-      if (achievement.domain != null) {
-        return '${achievement.targetValue}x ${achievement.domain!.label(l10n)}';
-      }
-      return '${achievement.targetValue} ${l10n.progRewardsSectionLabel}';
-    case ProgressionAchievementCriterionType.bestStreakAtLeast:
-      return '${achievement.targetValue} ${l10n.progStreakDaysSuffix}';
-    case ProgressionAchievementCriterionType.totalRuleValueAtLeast:
-    case ProgressionAchievementCriterionType.bestRollingWindowRuleValueAtLeast:
-      return _achievementTargetSummary(achievement, l10n, locale);
-    case ProgressionAchievementCriterionType.dailyQuestsCompletedAtLeast:
-      return '${achievement.targetValue} ${l10n.progAchievementSummaryDailyQuests}';
-    case ProgressionAchievementCriterionType.weeklyQuestsCompletedAtLeast:
-      return '${achievement.targetValue} ${l10n.progAchievementSummaryWeeklyQuests}';
-    case ProgressionAchievementCriterionType.totalQuestsCompletedAtLeast:
-      return '${achievement.targetValue} ${l10n.progAchievementSummaryTotalQuests}';
-    case ProgressionAchievementCriterionType.activeDaysAtLeast:
-      return '${achievement.targetValue} ${l10n.progAchievementSummaryActiveDays}';
-    case ProgressionAchievementCriterionType.perfectDaysAtLeast:
-      return '${achievement.targetValue} ${l10n.progAchievementSummaryPerfectDays}';
-    case ProgressionAchievementCriterionType.perfectWeeksAtLeast:
-      return '${achievement.targetValue} ${l10n.progAchievementSummaryPerfectWeeks}';
-    case ProgressionAchievementCriterionType.comboQuestsCompletedAtLeast:
-      return '${achievement.targetValue} ${l10n.progAchievementSummaryComboQuests}';
-    case ProgressionAchievementCriterionType.tripleComboQuestsCompletedAtLeast:
-      return '${achievement.targetValue} ${l10n.progAchievementSummaryTripleComboQuests}';
-    case ProgressionAchievementCriterionType.compositeAllOf:
-      return l10n.progAchievementSummaryComposite;
-  }
-}
+  // Level milestones get a "LEVEL N" summary regardless of how the
+  // resolver shaped the underlying achievement.
+  final levelTarget = view.levelTarget;
+  if (levelTarget != null) return 'LEVEL $levelTarget';
 
-String _achievementTargetSummary(
-  ProgressionAchievement achievement,
-  AppLocalizations l10n,
-  String locale,
-) {
-  if (achievement.ruleId == 'daily_sleep') {
-    final hours = (achievement.targetValue / 60).round();
-    return '$hours ${l10n.goalUnitHours}';
+  final subject = view.display.subjectLabel?.call(l10n) ??
+      view.display.domain?.label(l10n);
+  final target = view.display.targetValue ?? view.targetValue;
+  if (target <= 0) {
+    return view.display.title(l10n);
   }
-  final unit = ProgressionRuleCatalog.unitForId(achievement.ruleId, l10n);
-  return '${_formatCompactInt(achievement.targetValue, locale)} $unit';
+  if (subject != null && subject.isNotEmpty) {
+    return '${_formatCompactInt(target, locale)} $subject';
+  }
+  return '${_formatCompactInt(target, locale)} XP';
 }
 
 String _formatCompactInt(int value, String locale) {

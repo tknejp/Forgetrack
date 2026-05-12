@@ -8,10 +8,10 @@ import '../../../../l10n/app_localizations.dart';
 // re-exports either stay (the new engine reuses the same enum) or change to
 // point at the new module — call sites are unaffected either way.
 export '../../../../shared/domain/rarity.dart' show Rarity;
-export '../../../progression/domain/progression_models.dart' show ProgressionDomain;
+export '../progression_domain.dart' show ProgressionDomain;
 
 import '../../../../shared/domain/rarity.dart';
-import '../../../progression/domain/progression_models.dart' show ProgressionDomain;
+import '../progression_domain.dart' show ProgressionDomain;
 
 /// Closure returning a localised string. Same shape as the legacy
 /// `ProgressionLocalizedText` typedef; defined here so the display module

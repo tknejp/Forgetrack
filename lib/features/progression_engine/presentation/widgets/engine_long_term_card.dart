@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -6,8 +6,8 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../../shared/widgets/progress_bar.dart';
 import '../../../../shared/widgets/xp_claim_pill.dart';
-import '../../../progression/domain/models/core_models.dart';
-import '../../../progression/presentation/widgets/progression_primitives.dart';
+import '../../domain/progression_domain.dart';
+import '../widgets/progression_primitives.dart';
 import '../../application/progression_engine_provider.dart';
 import '../../domain/models/progression_node_definition.dart';
 import '../../domain/models/reward_definition.dart';
@@ -18,7 +18,7 @@ import 'engine_reward_chip.dart';
 /// Long-term goal card.
 ///
 /// Variant of [EngineQuestCard] specialised for the
-/// "DLOUHODOBÉ CÍLE" section. The differences from a daily/weekly
+/// "DLOUHODOBÃ‰ CÃLE" section. The differences from a daily/weekly
 /// card:
 ///
 /// - **Reward chip strip** under the description row that surfaces
@@ -26,7 +26,7 @@ import 'engine_reward_chip.dart';
 ///   companion node that shares the same objective. This is the V2
 ///   aggregate-display rule (Q rule: quest + achievement on the same
 ///   objective should not duplicate UI).
-/// - **"Také odemkne"** panel revealed when the card is expanded.
+/// - **"TakÃ© odemkne"** panel revealed when the card is expanded.
 ///   Lists each companion node (typically the achievement on the
 ///   same objective) with its badge emoji, title, and its own reward
 ///   chips so the player sees the full picture.
@@ -47,7 +47,7 @@ class EngineLongTermCard extends StatelessWidget {
 
   /// Full chain (in chainOrder) the active quest belongs to, used to
   /// render the dot/connector row beneath the description. Empty list
-  /// or one-element list when the quest is not part of a chain — the
+  /// or one-element list when the quest is not part of a chain â€” the
   /// preview row hides.
   final List<EngineQuestProgress> chain;
 
@@ -70,7 +70,7 @@ class EngineLongTermCard extends StatelessWidget {
         if (r is! XpReward) r,
     ];
     // Chain-finale non-XP rewards (e.g. Worldwalker frame on the
-    // chain's last step) — surfaced as a "Po dokončení řady" block
+    // chain's last step) â€” surfaced as a "Po dokonÄenÃ­ Å™ady" block
     // so a mid-chain step still advertises what waits at the end.
     final finaleRewards = chain.isEmpty
         ? const <RewardDefinition>[]
@@ -79,7 +79,7 @@ class EngineLongTermCard extends StatelessWidget {
               if (r is! XpReward) r,
           ];
     // First chain step the player hasn't yet touched. Drives the
-    // expanded panel's "Next step locked because…" hint so chained
+    // expanded panel's "Next step locked becauseâ€¦" hint so chained
     // long-term quests never look stuck without explanation.
     EngineQuestProgress? nextLockedStep;
     for (final q in chain) {
@@ -168,7 +168,7 @@ class EngineLongTermCard extends StatelessWidget {
                 const SizedBox(width: Tokens.spaceSm),
                 // Right column: XP pill on top, companion pill(s) below.
                 // The companion pill replaces the legacy stand-alone
-                // chevron — it's both the "extra reward exists" hint
+                // chevron â€” it's both the "extra reward exists" hint
                 // and the expand toggle.
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -185,7 +185,7 @@ class EngineLongTermCard extends StatelessWidget {
                 ),
               ],
             ),
-            // Chain preview row — same visual as the chapter card so
+            // Chain preview row â€” same visual as the chapter card so
             // chained long-term goals (lifetime steps, XP milestones,
             // reward hunter) read the same as chapter chains. Hidden
             // for orphan long-term quests with no chain.
@@ -235,7 +235,7 @@ class EngineLongTermCard extends StatelessWidget {
   /// Stack of [EngineCompanionPill]s rendered under the XP pill.
   ///
   /// One pill per companion node (capped at 2 to keep the right
-  /// column tidy — overflow surfaces in the expanded panel). When the
+  /// column tidy â€” overflow surfaces in the expanded panel). When the
   /// quest has no companions but carries a non-XP direct reward, a
   /// single fallback pill is rendered using the reward kind's emoji.
   List<Widget> _buildCompanionPills({
@@ -281,15 +281,15 @@ class EngineLongTermCard extends StatelessWidget {
 /// Combined expanded-body content for the long-term card. Stacks
 /// (in order, only the populated chunks):
 ///
-/// 1. **Next-step hint** — names the first locked chain step and
+/// 1. **Next-step hint** â€” names the first locked chain step and
 ///    explains the gate (uses node's `lockedHintKey` when authored,
 ///    otherwise the generic "complete the previous step" copy). Keeps
 ///    chained long-term quests from looking stuck without
 ///    explanation.
-/// 2. **Companion list** ("Také odemkne") — sibling nodes that share
+/// 2. **Companion list** ("TakÃ© odemkne") â€” sibling nodes that share
 ///    the active step's objective. Each row opens the V2 companion
 ///    detail sheet.
-/// 3. **Chain finale rewards** — non-XP rewards on the chain's last
+/// 3. **Chain finale rewards** â€” non-XP rewards on the chain's last
 ///    step (e.g. Worldwalker frame). Surfaced as a chip strip under
 ///    a "Chapter finale reward" header so the player can see what
 ///    waits at the end while working a mid-chain step.
@@ -343,8 +343,8 @@ class _LongTermExpanded extends StatelessWidget {
 
 /// Inline hint naming the first locked chain step and the reason it
 /// can't be worked on yet. Falls back to the authored
-/// [QuestNode.lockedHintKey] when set (e.g. "Vyžaduje level 10"),
-/// otherwise the generic "Splň předchozí krok" copy.
+/// [QuestNode.lockedHintKey] when set (e.g. "VyÅ¾aduje level 10"),
+/// otherwise the generic "SplÅˆ pÅ™edchozÃ­ krok" copy.
 class _NextStepHint extends StatelessWidget {
   const _NextStepHint({required this.node, required this.l10n});
 
@@ -407,7 +407,7 @@ class _NextStepHint extends StatelessWidget {
   }
 }
 
-/// Companions block — same shape as the legacy "Také odemkne" panel
+/// Companions block â€” same shape as the legacy "TakÃ© odemkne" panel
 /// kept its own class so the [_LongTermExpanded] orchestrator only
 /// stitches blocks together.
 class _AlsoUnlocks extends StatelessWidget {
@@ -461,8 +461,8 @@ class _AlsoUnlocks extends StatelessWidget {
   }
 }
 
-/// "Po dokončení řady" block — surfaces the chain's last step's
-/// non-XP rewards as chips. Mirrors the chapter card's "PO DOKONČENÍ
+/// "Po dokonÄenÃ­ Å™ady" block â€” surfaces the chain's last step's
+/// non-XP rewards as chips. Mirrors the chapter card's "PO DOKONÄŒENÃ
 /// KAPITOLY" footer so the player sees what's waiting at the end
 /// regardless of which step they're currently working on.
 class _FinaleRewards extends StatelessWidget {

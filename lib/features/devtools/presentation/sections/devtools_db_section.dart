@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../features/health_connect/application/fitness_provider.dart';
 import '../../../../features/nutrition/application/kaloricke_tabulky_provider.dart';
-import '../../../../features/progression/application/progression_provider.dart';
+import '../../../../features/progression_engine/application/progression_engine_provider.dart';
 import '../widgets/devtools_action_tile.dart';
 import '../widgets/devtools_section_card.dart';
 import '../widgets/devtools_status_tile.dart';
@@ -41,7 +41,7 @@ class _DevToolsDbSectionState extends State<DevToolsDbSection> {
   Widget build(BuildContext context) {
     final f = context.watch<FitnessProvider>();
     final kt = context.watch<KalorickeTabulkyProvider>();
-    final p = context.watch<ProgressionProvider>();
+    final p = context.watch<ProgressionEngineProvider>();
     final cs = Theme.of(context).colorScheme;
 
     final now = _lastRefresh;
@@ -234,7 +234,7 @@ class _DevToolsDbSectionState extends State<DevToolsDbSection> {
         ],
         const DevToolsSectionDivider(),
 
-        // ── Progression ────────────────────────────────────────────────────
+        // ── Progression (V2) ───────────────────────────────────────────────
         _SubHeader(label: 'Progression'),
         DevToolsStatusTile(
           label: 'Last evaluated',
@@ -247,14 +247,16 @@ class _DevToolsDbSectionState extends State<DevToolsDbSection> {
         ),
         const DevToolsSectionDivider(),
         DevToolsStatusTile(
-          label: 'Quests / Achievements',
-          value: '${p.quests.length} / ${p.achievements.length}',
+          label: 'Completed quests / Achievements',
+          value:
+              '${p.completedQuestCount} / ${p.unlockedAchievementCount}',
         ),
         const DevToolsSectionDivider(),
         DevToolsStatusTile(
-          label: 'Pending rewards',
-          value: '${p.pendingRewards.length}',
-          valueColor: p.pendingRewards.isNotEmpty ? Colors.orangeAccent : null,
+          label: 'Pending claims',
+          value: '${p.pendingClaimNodeIds.length}',
+          valueColor:
+              p.pendingClaimNodeIds.isNotEmpty ? Colors.orangeAccent : null,
         ),
         const DevToolsSectionDivider(),
 

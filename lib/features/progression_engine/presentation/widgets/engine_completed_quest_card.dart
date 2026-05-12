@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -6,34 +6,34 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../../shared/widgets/ft_expand_chevron.dart';
 import '../../../../shared/widgets/xp_claim_pill.dart';
-import '../../../progression/domain/models/core_models.dart';
-import '../../../progression/presentation/widgets/progression_primitives.dart';
+import '../../domain/progression_domain.dart';
+import '../widgets/progression_primitives.dart';
 import '../../application/progression_engine_provider.dart';
 import '../../domain/models/progression_node_definition.dart';
 import 'engine_chapter_card.dart' show EngineChapterChainPreview;
 import 'engine_companion_pill.dart';
 
-/// Compact, expandable card rendered inside the DOKONČENÉ QUESTY
-/// section. One card per [EngineCompletedEntry] — a single quest or
+/// Compact, expandable card rendered inside the DOKONÄŒENÃ‰ QUESTY
+/// section. One card per [EngineCompletedEntry] â€” a single quest or
 /// an aggregated chain.
 ///
 /// Collapsed layout:
 ///
 /// ```
 /// [asset] Title                               [+750 XP] [chevron]
-///         Dokončeno 12 kvě · 23:11
+///         DokonÄeno 12 kvÄ› Â· 23:11
 /// ```
 ///
 /// The pill goes "claimable" (gold + clickable, sparkle to the bar
 /// key) when [EngineCompletedEntry.hasClaimable] is true, otherwise
 /// "claimed" (greyed, check icon, total XP credited).
 ///
-/// Expanded layout adds — beneath the title row:
+/// Expanded layout adds â€” beneath the title row:
 ///
 /// 1. Description.
 /// 2. Chain preview row (only when the entry represents an actual
-///    chain — single-quest entries skip it).
-/// 3. Companion list ("Také odemkne") with the same row vocabulary as
+///    chain â€” single-quest entries skip it).
+/// 3. Companion list ("TakÃ© odemkne") with the same row vocabulary as
 ///    the long-term card. Tapping a companion opens
 ///    [showEngineCompanionDetailSheet].
 class EngineCompletedQuestCard extends StatelessWidget {
@@ -52,7 +52,7 @@ class EngineCompletedQuestCard extends StatelessWidget {
   final AppLocalizations l10n;
   final bool enabled;
 
-  /// Sparkle target key for the gold pill. Single key per entry —
+  /// Sparkle target key for the gold pill. Single key per entry â€”
   /// the screen still owns the pill key map.
   final GlobalKey pillKey;
 
@@ -83,7 +83,7 @@ class EngineCompletedQuestCard extends StatelessWidget {
           color: const Color(0xFF111423),
           borderRadius: BorderRadius.circular(Tokens.questCardRadius),
           border: Border.all(
-            // Gold-tinted border only while a claim is pending —
+            // Gold-tinted border only while a claim is pending â€”
             // already-claimed entries blend into the neutral card
             // background so the eye lands on rows that still owe the
             // player XP.
@@ -99,7 +99,7 @@ class EngineCompletedQuestCard extends StatelessWidget {
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
-            // Gold glow only on claimable entries — those still owe
+            // Gold glow only on claimable entries â€” those still owe
             // the player XP and deserve the visual nudge. Claimed
             // entries get the regular shadow only so they read as
             // archived rather than "look at me".
@@ -195,7 +195,7 @@ class EngineCompletedQuestCard extends StatelessWidget {
 
   XpClaimPillData _pillData() {
     if (entry.hasClaimable) {
-      // First claimable step drives the tap — claim handlers walk the
+      // First claimable step drives the tap â€” claim handlers walk the
       // chain top-down and claim what's available. We pass the
       // earliest-by-chainOrder claimable step so prereq chains advance
       // step by step.
@@ -210,18 +210,18 @@ class EngineCompletedQuestCard extends StatelessWidget {
         onTap: enabled ? (center) => onClaim(claimable, from: center) : (_) {},
       );
     }
-    // Fully claimed — show the credited XP total (sum across chain
+    // Fully claimed â€” show the credited XP total (sum across chain
     // steps) in the muted "claimed" pill style.
     return XpClaimPillData.claimed(entry.totalXpClaimed);
   }
 
   static String _formatDate(DateTime ts, String locale) {
-    return DateFormat('d MMM · HH:mm', locale).format(ts);
+    return DateFormat('d MMM Â· HH:mm', locale).format(ts);
   }
 }
 
 /// Leading asset that mirrors the long-term card's leading but greys
-/// out for claimed entries — matches the user's "zešedne jako zamčený
+/// out for claimed entries â€” matches the user's "zeÅ¡edne jako zamÄenÃ½
 /// quest" intent. Claimable entries stay at full opacity to draw the
 /// eye to the gold pill on the right.
 class _Leading extends StatelessWidget {
@@ -286,7 +286,7 @@ class _ExpandedBody extends StatelessWidget {
             height: 1.45,
           ),
         ),
-        // Chain preview — only renders when the entry is an actual
+        // Chain preview â€” only renders when the entry is an actual
         // chain. For single-quest entries we skip it; there's nothing
         // to show.
         if (entry.isChain) ...[
@@ -299,7 +299,7 @@ class _ExpandedBody extends StatelessWidget {
           ),
         ],
         // Surface the next-but-locked chain step. The chain row above
-        // already shows it as a 🔒 dot; this line names the step and
+        // already shows it as a ðŸ”’ dot; this line names the step and
         // explains why it's not yet active so the player isn't left
         // guessing whether the chain is broken.
         if (nextStep != null) ...[
@@ -319,8 +319,8 @@ class _ExpandedBody extends StatelessWidget {
     );
   }
 
-  /// The first chain step the player has not yet touched — i.e. the
-  /// next 🔒 dot in the chain preview. Returns null when every chain
+  /// The first chain step the player has not yet touched â€” i.e. the
+  /// next ðŸ”’ dot in the chain preview. Returns null when every chain
   /// step has been claimed / is claimable (player has reached the
   /// end of the authored chain) or when the entry isn't a chain.
   EngineQuestProgress? _nextLockedStep() {
@@ -341,7 +341,7 @@ class _NextStepHint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Prefer the node's own lockedHint when authors set one (chapter
-    // open uses "Vyžaduje level 10"). Otherwise fall back to the
+    // open uses "VyÅ¾aduje level 10"). Otherwise fall back to the
     // generic "complete the previous step" copy.
     final authoredHint = node.lockedHintKey?.call(l10n);
     final hint = (authoredHint != null && authoredHint.isNotEmpty)

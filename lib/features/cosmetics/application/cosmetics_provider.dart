@@ -16,11 +16,18 @@ const _log = AppLogger('COSMETICS', scope: 'provider');
 
 /// UI-facing state holder for the cosmetics feature.
 ///
-/// Mirrors the bind() pattern used by `ProgressionProvider` and
-/// `SocialProvider`: a single uid is bound (typically from AuthProvider in
-/// `main.dart`) and the provider lazily loads state on first bind. No
-/// streams — all reads/writes are Futures and listeners are notified after
-/// each completion.
+/// Mirrors the bind() pattern used by `SocialProvider`: a single uid is
+/// bound (typically from AuthProvider in `main.dart`) and the provider
+/// lazily loads state on first bind. No streams — all reads/writes are
+/// Futures and listeners are notified after each completion.
+///
+/// Progression input flow: cosmetic unlocks are driven by
+/// `ProgressionEngineProvider` via `CosmeticUnlockBridge`, which
+/// translates V2 `CosmeticReward` grants into [unlock] calls and pushes
+/// a [CosmeticUnlockSnapshot] for the partial-reveal UI through
+/// [cacheSnapshot]. This provider does not re-evaluate achievements,
+/// quests, milestones, or level rules — V2 is the source of truth for
+/// progression rewards.
 class CosmeticsProvider extends ChangeNotifier {
   CosmeticsProvider({
     required CosmeticsService service,
@@ -51,9 +58,19 @@ class CosmeticsProvider extends ChangeNotifier {
   /// Without a cached snapshot the reveal evaluator falls back to a minimal
   /// snapshot derived from owned cosmetics, which still correctly evaluates
   /// `ownsCosmetic(...)` conditions but treats level/quest counters as zero.
+  ///
+  /// Does **not** call [notifyListeners]: the snapshot is read on the
+  /// inventory screen's next render via [computeRevealResults], and any
+  /// observable change (a new unlock, a level-up grant) already flowed
+  /// through [unlock] which itself notified. Firing a second notification
+  /// here closes a feedback loop with [ProgressionEngineProvider] — the
+  /// V2 provider listens to [CosmeticsProvider] via its proxy and would
+  /// re-evaluate on the spot, which itself runs another dispatch → another
+  /// snapshot → another notify → infinite cascade. Skipping the notify
+  /// keeps the cache lazy: consumers see the new value when they next
+  /// rebuild for an unrelated reason.
   void cacheSnapshot(CosmeticUnlockSnapshot snapshot) {
     _revealSnapshot = snapshot;
-    notifyListeners();
   }
 
   /// Returns a [CosmeticRevealResult] for every enabled catalog item.

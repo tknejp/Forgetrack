@@ -8,11 +8,11 @@ import '../../../l10n/l10n.dart';
 import '../../auth/application/auth_provider.dart';
 import '../../health_connect/application/fitness_provider.dart';
 import '../../nutrition/application/kaloricke_tabulky_provider.dart';
-import '../../progression/application/progression_provider.dart';
-import '../../progression/domain/catalog/quest_catalog.dart';
-import '../../progression/domain/policy/level_config.dart';
-import '../../progression/domain/policy/level_policy.dart';
-import '../../progression/domain/progression_models.dart';
+import '../../progression_engine/application/progression_engine_provider.dart';
+import '../../progression_engine/domain/catalog/level_milestone_specs.dart';
+import '../../progression_engine/domain/catalog/progression_node_catalog.dart';
+import '../../progression_engine/domain/models/progression_node_definition.dart';
+import '../../progression_engine/domain/models/reward_definition.dart';
 import '../widgets/integration_toggle_row.dart';
 import '../widgets/kt_login_sheet.dart';
 import '../widgets/onboarding_primitives.dart';
@@ -25,17 +25,14 @@ class StepWelcome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progression = context.watch<ProgressionProvider>();
+    final progression = context.watch<ProgressionEngineProvider>();
     final l10n = context.l10n;
-    // Derive the displayed profile from the live policy rather than
-    // reading `progression.profile` directly — the provider's
-    // pre-hydration fallback hardcodes nextLevelXp=250 which can drift
-    // from what the policy actually computes for level 1. Resolving the
-    // profile here keeps the hero card in sync with the rest of the app
-    // even before the first sync finishes.
-    const policy = ProgressionLevelPolicy();
-    final profile = policy.resolve(progression.profile.totalXp);
-    final tier = tierForLevel(profile.level);
+    // V2 [EngineProfile] is always resolved through [ProgressionLevelPolicy]
+    // (see [ProgressionEngineProvider.profile]) — the pre-hydration zero
+    // profile and a populated ledger both go through the same policy, so
+    // reading the provider directly is now safe.
+    final profile = progression.profile;
+    final tier = levelMilestoneAtOrBelow(profile.level);
     // Gap inside the current level so it matches the in-app hero card.
     final levelGap =
         (profile.nextLevelXp - profile.levelFloorXp).clamp(1, 1 << 30);
@@ -64,7 +61,7 @@ class StepWelcome extends StatelessWidget {
             level: profile.level,
             xpInto: profile.xpIntoLevel,
             xpToNext: levelGap,
-            tierTitle: tier.title(l10n),
+            tierTitle: tier.titleKey(l10n),
           ),
         ],
       ),
@@ -875,24 +872,31 @@ class _StepFinalState extends State<StepFinal> {
 class _FirstQuestsCard extends StatelessWidget {
   const _FirstQuestsCard();
 
+  /// Curated quest ids surfaced on the welcome screen's "first quests"
+  /// preview. V2 mirrors V1's starter set (daily_steps_today +
+  /// daily_sleep_today + earn-first-reward), substituting V2 node ids
+  /// where the catalog renamed the entry. Edit this list to change the
+  /// curated set rather than the widget body.
+  static const List<String> _starterQuestNodeIds = [
+    'daily_steps_today',
+    'daily_sleep_today',
+    'long_term_earn_first_reward',
+  ];
+
   @override
   Widget build(BuildContext context) {
-    // Pulls the curated `kProgressionStarterQuestIds` out of the live
-    // catalog so titles + XP rewards stay in sync with what the player
-    // actually sees on day 1. Edit the constant in `quest_catalog.dart`
-    // to change the curated set, not this widget.
     final l10n = context.l10n;
-    final definitions = const ProgressionQuestCatalog().build();
-    final byId = <String, ProgressionQuestDefinition>{
-      for (final def in definitions) def.id: def,
-    };
     final rows = <_QuestRow>[];
-    for (final id in kProgressionStarterQuestIds) {
-      final def = byId[id];
-      if (def == null) continue;
+    for (final id in _starterQuestNodeIds) {
+      final node = ProgressionNodeCatalog.definitionForId(id);
+      if (node is! QuestNode) continue;
+      var rewardXp = 0;
+      for (final reward in node.rewards) {
+        if (reward is XpReward) rewardXp += reward.amount;
+      }
       rows.add(_QuestRow(
-        text: def.title(l10n),
-        xp: '+${def.rewardXp} XP',
+        text: node.titleKey(l10n),
+        xp: '+$rewardXp XP',
       ));
     }
     return Container(

@@ -34,41 +34,16 @@ String socialFmtXp(int xp) {
   return NumberFormat('#,##0').format(xp);
 }
 
-// ── Difficulty string bridge (cloud snapshots) ───────────────────────────────
+// ── Rarity → color / label ───────────────────────────────────────────────────
 //
-// Friend achievement records are persisted in Firestore with the legacy
-// `ProgressionAchievementDifficulty` enum *names* ("easy", "hard",
-// "extraHard", …) baked into the snapshot. Until those records are
-// migrated to use Rarity (Q5 decision: collapse Difficulty into Rarity),
-// social keeps its own string-keyed colour and label maps so it does not
-// have to import the legacy enum just to render a friend card.
+// Social snapshots store rarity directly (shared [Rarity] enum). Friend
+// feed cards and unknown-id fallbacks both colour and label off the same
+// source of truth as inventory cosmetics.
 
-const _difficultyColors = <String, Color>{
-  'easy': Tokens.difficultyEasy,
-  'medium': Tokens.difficultyMedium,
-  'hard': Tokens.difficultyHard,
-  'extraHard': Tokens.difficultyExtraHard,
-  'mythic': Tokens.difficultyMythic,
-};
+Color colorForRarity(Rarity rarity) => RarityPalette.forRarity(rarity).color;
 
-Color colorForDifficultyString(String diff) =>
-    _difficultyColors[diff] ?? Tokens.accent;
-
-String socialDifficultyLabelForName(String diff, AppLocalizations l10n) {
-  switch (diff) {
-    case 'medium':
-      return l10n.progAchievementDifficultyMedium;
-    case 'hard':
-      return l10n.progAchievementDifficultyHard;
-    case 'extraHard':
-      return l10n.progAchievementDifficultyExtraHard;
-    case 'mythic':
-      return l10n.progAchievementDifficultyMythic;
-    case 'easy':
-    default:
-      return l10n.progAchievementDifficultyEasy;
-  }
-}
+String socialRarityLabel(Rarity rarity, AppLocalizations l10n) =>
+    rarity.label(l10n);
 
 // ── Achievement → display mapping ────────────────────────────────────────────
 
@@ -95,7 +70,8 @@ List<NodeDisplay> mapSocialAchievementsToDisplays(
       nodeId: a.achievementId,
       fallbackTitle: a.title,
       fallbackDescription: a.description,
-      accentColor: colorForDifficultyString(a.difficulty),
+      rarity: a.rarity,
+      accentColor: colorForRarity(a.rarity),
       domain: _resolver.parseDomain(a.domain),
       unlockedAt: a.unlockedAt,
     );
