@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../features/progression_engine/application/progression_engine_provider.dart';
+import '../../../../features/progression_engine/domain/catalog/progression_node_catalog.dart';
 import '../../../../features/progression_engine/domain/models/engine_evaluation_input.dart';
+import '../../../../features/progression_engine/domain/models/progression_node_definition.dart';
+import '../../../../features/progression_engine/domain/models/quest_display_bucket.dart';
 import '../widgets/devtools_action_tile.dart';
 import '../widgets/devtools_section_card.dart';
 import '../widgets/devtools_status_tile.dart';
@@ -24,6 +27,7 @@ class _DevToolsProgressionEngineSectionState
   bool _isEvaluating = false;
   bool _isWiping = false;
   bool _isClaiming = false;
+  bool _isCompletingDailies = false;
 
   @override
   Widget build(BuildContext context) {
@@ -118,6 +122,73 @@ class _DevToolsProgressionEngineSectionState
         const DevToolsSectionDivider(),
         _SetXpPanel(isBusy: _isEvaluating || _isWiping || p.isEvaluating),
         const DevToolsSectionDivider(),
+        _AddXpPanel(isBusy: _isEvaluating || _isWiping || p.isEvaluating),
+        const DevToolsSectionDivider(),
+        _SetLevelPanel(isBusy: _isEvaluating || _isWiping || p.isEvaluating),
+        const DevToolsSectionDivider(),
+        _DailyGoalChipsPanel(
+          isBusy: _isEvaluating || _isWiping || p.isEvaluating,
+        ),
+        const DevToolsSectionDivider(),
+        DevToolsActionTile(
+          label: 'Claim today\'s visible daily quests',
+          subtitle:
+              'Force-completes only the two daily quests currently in '
+              'the daily section (surprise / active combo / rotation '
+              'pick). Quests not in today\'s rotation are not touched.',
+          icon: Icons.checklist_rounded,
+          isLoading: _isCompletingDailies,
+          isDisabled: _isEvaluating || _isWiping,
+          onTap: _isCompletingDailies
+              ? null
+              : () => _completeVisibleDailies(context),
+        ),
+        const DevToolsSectionDivider(),
+        DevToolsActionTile(
+          label: 'Advance day (devtools clock +1)',
+          subtitle:
+              'Shifts the engine\'s "today" forward by 1 day. Daily '
+              'rotation hash rolls, combo NodeCompletedBeforeToday '
+              'gates open, claimed dailies retire from the completed-'
+              'today set. Current offset: +${p.devDayOffset} day(s).',
+          icon: Icons.skip_next_rounded,
+          isDisabled: _isEvaluating || _isWiping || _isCompletingDailies,
+          onTap: () async {
+            final messenger = ScaffoldMessenger.of(context);
+            final provider = context.read<ProgressionEngineProvider>();
+            await provider.devToolsAdvanceDay();
+            if (!mounted) return;
+            messenger.showSnackBar(
+              SnackBar(
+                content: Text('Advanced to day +${provider.devDayOffset}'),
+              ),
+            );
+          },
+        ),
+        if (p.devDayOffset > 0) ...[
+          const DevToolsSectionDivider(),
+          DevToolsActionTile(
+            label: 'Reset day offset to 0',
+            subtitle:
+                'Snaps the devtools clock back to wall-clock today.',
+            icon: Icons.replay_rounded,
+            isDisabled: _isEvaluating || _isWiping || _isCompletingDailies,
+            onTap: () async {
+              final messenger = ScaffoldMessenger.of(context);
+              final provider = context.read<ProgressionEngineProvider>();
+              await provider.devToolsResetDayOffset();
+              if (!mounted) return;
+              messenger.showSnackBar(
+                const SnackBar(content: Text('Day offset reset to 0')),
+              );
+            },
+          ),
+        ],
+        const DevToolsSectionDivider(),
+        _NodePickerPanel(
+          isBusy: _isEvaluating || _isWiping || p.isEvaluating,
+        ),
+        const DevToolsSectionDivider(),
         DevToolsActionTile(
           label: 'Wipe V2 ledger',
           subtitle:
@@ -197,6 +268,35 @@ class _DevToolsProgressionEngineSectionState
       );
     } finally {
       if (mounted) setState(() => _isClaiming = false);
+    }
+  }
+
+  /// Force-completes only the daily quests currently surfaced in the
+  /// daily section slots ([ProgressionEngineProvider.currentDailyQuests]).
+  /// Quests outside today's rotation (level-gated, not picked by the
+  /// hash, retired side quests, etc.) stay untouched — the user wants
+  /// a tool that mirrors "claim what the player sees", not "complete
+  /// the entire catalog".
+  Future<void> _completeVisibleDailies(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = context.read<ProgressionEngineProvider>();
+    final visible = provider.currentDailyQuests;
+    if (visible.isEmpty) return;
+
+    setState(() => _isCompletingDailies = true);
+    var done = 0;
+    try {
+      for (final q in visible) {
+        if (q.isCompleted) continue;
+        await provider.devToolsForceCompleteNode(q.nodeId);
+        done += 1;
+      }
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text('Force-completed $done visible daily quests')),
+      );
+    } finally {
+      if (mounted) setState(() => _isCompletingDailies = false);
     }
   }
 
@@ -325,4 +425,480 @@ class _SetXpPanelState extends State<_SetXpPanel> {
       if (mounted) setState(() => _applying = false);
     }
   }
+}
+
+/// Inline panel that **adds** XP on top of existing ledger state
+/// (non-destructive, unlike [_SetXpPanel]). Triggers a downstream
+/// evaluation so any level-up celebration fires.
+class _AddXpPanel extends StatefulWidget {
+  const _AddXpPanel({required this.isBusy});
+
+  final bool isBusy;
+
+  @override
+  State<_AddXpPanel> createState() => _AddXpPanelState();
+}
+
+class _AddXpPanelState extends State<_AddXpPanel> {
+  final _controller = TextEditingController();
+  bool _applying = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  int? _resolve() {
+    final raw = _controller.text.trim();
+    if (raw.isEmpty) return null;
+    final parsed = int.tryParse(raw);
+    if (parsed == null || parsed <= 0) return null;
+    return parsed;
+  }
+
+  Future<void> _apply() async {
+    final xp = _resolve();
+    if (xp == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = context.read<ProgressionEngineProvider>();
+    setState(() => _applying = true);
+    try {
+      await provider.devToolsAddXp(xp);
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text('Granted +$xp XP')));
+      _controller.clear();
+    } finally {
+      if (mounted) setState(() => _applying = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final canApply = !widget.isBusy && !_applying && _resolve() != null;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Add XP',
+              style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 4),
+          Text(
+            'Appends a synthetic XP grant on top of the current ledger '
+            '(additive). Triggers a re-evaluation so level milestones fire.',
+            style: tt.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _controller,
+                  enabled: !widget.isBusy && !_applying,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    labelText: 'XP to add',
+                    hintText: 'e.g. 500',
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+              const SizedBox(width: 10),
+              FilledButton(
+                onPressed: canApply ? _apply : null,
+                child: _applying
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Add'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Inline panel that sets the player's level by deriving the target
+/// XP total from [ProgressionLevelPolicy]. Wipes existing grants
+/// like [_SetXpPanel].
+class _SetLevelPanel extends StatefulWidget {
+  const _SetLevelPanel({required this.isBusy});
+
+  final bool isBusy;
+
+  @override
+  State<_SetLevelPanel> createState() => _SetLevelPanelState();
+}
+
+class _SetLevelPanelState extends State<_SetLevelPanel> {
+  final _controller = TextEditingController();
+  bool _applying = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  int? _resolve() {
+    final raw = _controller.text.trim();
+    if (raw.isEmpty) return null;
+    final parsed = int.tryParse(raw);
+    if (parsed == null || parsed < 1) return null;
+    return parsed;
+  }
+
+  Future<void> _apply() async {
+    final level = _resolve();
+    if (level == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = context.read<ProgressionEngineProvider>();
+    setState(() => _applying = true);
+    try {
+      await provider.devToolsSetLevel(level);
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text('Set level to $level')));
+      _controller.clear();
+    } finally {
+      if (mounted) setState(() => _applying = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final canApply = !widget.isBusy && !_applying && _resolve() != null;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Set level',
+              style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 4),
+          Text(
+            'Wipes existing grants and inserts a synthetic XP grant equal '
+            'to ProgressionLevelPolicy.xpRequiredForLevel(level).',
+            style: tt.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _controller,
+                  enabled: !widget.isBusy && !_applying,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    labelText: 'Target level',
+                    hintText: 'e.g. 25',
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+              const SizedBox(width: 10),
+              FilledButton(
+                onPressed: canApply ? _apply : null,
+                child: _applying
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Apply'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One-tap chips for each `QuestDisplayBucket.daily` node. Picks up
+/// daily quests from the catalog at build time so any new daily atom
+/// (carbs/fat/fiber port, etc.) shows up automatically without
+/// touching this widget.
+class _DailyGoalChipsPanel extends StatefulWidget {
+  const _DailyGoalChipsPanel({required this.isBusy});
+
+  final bool isBusy;
+
+  @override
+  State<_DailyGoalChipsPanel> createState() => _DailyGoalChipsPanelState();
+}
+
+class _DailyGoalChipsPanelState extends State<_DailyGoalChipsPanel> {
+  String? _completingId;
+
+  late final List<QuestNode> _dailyQuests = [
+    for (final node in const ProgressionNodeCatalog().build())
+      if (node is QuestNode && node.displayBucket == QuestDisplayBucket.daily)
+        node,
+  ];
+
+  Future<void> _complete(QuestNode node) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = context.read<ProgressionEngineProvider>();
+    setState(() => _completingId = node.id);
+    try {
+      await provider.devToolsForceCompleteNode(node.id);
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text('Marked "${node.id}" met for today')),
+      );
+    } finally {
+      if (mounted) setState(() => _completingId = null);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Mark daily goal as met today',
+              style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 4),
+          Text(
+            'Force-completes the named daily quest with today\'s periodKey. '
+            'The quest jumps to claimed state, XP lands, and the celebration '
+            'fires on the next evaluation pass.',
+            style: tt.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final node in _dailyQuests)
+                ActionChip(
+                  label: _completingId == node.id
+                      ? const SizedBox(
+                          width: 12,
+                          height: 12,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(_chipLabelFor(node.id)),
+                  onPressed: widget.isBusy || _completingId != null
+                      ? null
+                      : () => _complete(node),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Strip the redundant `daily_*_today` suffix so chips read as
+  /// "steps", "calories", "protein" — fits much better in the wrap.
+  String _chipLabelFor(String nodeId) {
+    var label = nodeId;
+    if (label.startsWith('daily_')) label = label.substring(6);
+    if (label.endsWith('_today')) {
+      label = label.substring(0, label.length - 6);
+    }
+    return label;
+  }
+}
+
+/// Searchable node picker — typeahead filter over every node id in
+/// the catalog, with a "Complete" button on each row. Replaces the
+/// free-text "Force complete node" input the user found cumbersome.
+class _NodePickerPanel extends StatefulWidget {
+  const _NodePickerPanel({required this.isBusy});
+
+  final bool isBusy;
+
+  @override
+  State<_NodePickerPanel> createState() => _NodePickerPanelState();
+}
+
+class _NodePickerPanelState extends State<_NodePickerPanel> {
+  final _filterController = TextEditingController();
+  String? _completingId;
+
+  // Build the catalog index once. Sorted so the list reads in a
+  // predictable order (chapters → combo → achievements → …).
+  late final List<_NodeEntry> _entries = () {
+    final entries = <_NodeEntry>[
+      for (final node in const ProgressionNodeCatalog().build())
+        _NodeEntry(
+          id: node.id,
+          kind: _kindLabelFor(node),
+        ),
+    ]..sort((a, b) {
+      final byKind = a.kind.compareTo(b.kind);
+      if (byKind != 0) return byKind;
+      return a.id.compareTo(b.id);
+    });
+    return entries;
+  }();
+
+  @override
+  void dispose() {
+    _filterController.dispose();
+    super.dispose();
+  }
+
+  String _kindLabelFor(ProgressionNode node) => switch (node) {
+        QuestNode(:final displayBucket) => 'quest · ${displayBucket.name}',
+        AchievementNode() => 'achievement',
+        MilestoneNode() => 'milestone',
+        LevelMilestoneNode(:final level) => 'level $level',
+        ChapterCompletionNode() => 'chapter completion',
+        ContentUnlockNode() => 'content unlock',
+        CompanionAvailabilityNode() => 'companion availability',
+        RelicNode() => 'relic',
+      };
+
+  Future<void> _complete(String id) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = context.read<ProgressionEngineProvider>();
+    setState(() => _completingId = id);
+    try {
+      await provider.devToolsForceCompleteNode(id);
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text('Force-completed "$id"')),
+      );
+    } finally {
+      if (mounted) setState(() => _completingId = null);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final filter = _filterController.text.trim().toLowerCase();
+    final filtered = filter.isEmpty
+        ? const <_NodeEntry>[]
+        : _entries
+            .where((e) =>
+                e.id.toLowerCase().contains(filter) ||
+                e.kind.toLowerCase().contains(filter))
+            .take(40)
+            .toList();
+    final canType = !widget.isBusy && _completingId == null;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Search & force-complete any node',
+              style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 4),
+          Text(
+            'Type a partial node id or kind (e.g. "combo_balanced", '
+            '"achievement", "companion"). Tap a result\'s button to '
+            'inject the right completion events for that node — daily '
+            'quests use today\'s periodKey, manual claims cascade through '
+            'the engine so the celebration fires.',
+            style: tt.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _filterController,
+            enabled: canType,
+            decoration: const InputDecoration(
+              isDense: true,
+              prefixIcon: Icon(Icons.search_rounded, size: 18),
+              labelText: 'Filter',
+              hintText: 'e.g. combo, achievement, companion',
+              border: OutlineInputBorder(),
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 10),
+          if (filter.isEmpty)
+            Text(
+              '${_entries.length} nodes in the catalog. Type to filter.',
+              style: tt.bodySmall?.copyWith(
+                color: cs.onSurfaceVariant.withValues(alpha: 0.6),
+              ),
+            )
+          else if (filtered.isEmpty)
+            Text(
+              'No nodes match "$filter".',
+              style: tt.bodySmall?.copyWith(
+                color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+              ),
+            )
+          else
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 320),
+              child: ListView.separated(
+                shrinkWrap: true,
+                itemCount: filtered.length,
+                separatorBuilder: (_, __) => Divider(
+                  height: 1,
+                  color: cs.outline.withValues(alpha: 0.18),
+                ),
+                itemBuilder: (context, i) {
+                  final entry = filtered[i];
+                  final busy = _completingId == entry.id;
+                  return ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(
+                      entry.id,
+                      style: tt.bodyMedium?.copyWith(
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                    subtitle: Text(entry.kind),
+                    trailing: TextButton(
+                      onPressed: widget.isBusy ||
+                              _completingId != null
+                          ? null
+                          : () => _complete(entry.id),
+                      child: busy
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2),
+                            )
+                          : const Text('Complete'),
+                    ),
+                  );
+                },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NodeEntry {
+  const _NodeEntry({required this.id, required this.kind});
+  final String id;
+  final String kind;
 }

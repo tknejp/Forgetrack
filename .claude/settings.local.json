@@ -46,7 +46,9 @@
       "Bash(sed -i \"s|'ft_progress_bar.dart'|'progress_bar.dart'|g; s|'ft_stat_cell.dart'|'stat_cell.dart'|g; s|'ft_xp_claim_pill.dart'|'xp_claim_pill.dart'|g\" stat_card.dart macro_row.dart)",
       "Bash(grep -n \"class AddTableRequest\\\\|class Table\\\\b\\\\|class TableColumnProperty\\\\|class TableRange\" \"c:/Users/tknejp/AppData/Local/Pub/Cache/hosted/pub.dev/googleapis-16.0.0/lib/sheets/v4.dart\" | head -10)",
       "Read(//c/Users/tknejp/AppData/Local/Pub/Cache/hosted/pub.dev/googleapis-16.0.0/lib/sheets/**)",
-      "Bash(sed -n '1729,1800p' \"c:/Users/tknejp/AppData/Local/Pub/Cache/hosted/pub.dev/googleapis-16.0.0/lib/sheets/v4.dart\")"
+      "Bash(sed -n '1729,1800p' \"c:/Users/tknejp/AppData/Local/Pub/Cache/hosted/pub.dev/googleapis-16.0.0/lib/sheets/v4.dart\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\tknejp\\\\Desktop\\\\Forgetracker\\\\forgetracker\\\\lib\\\\features\\\\progression\" -Recurse -File)",
+      "Bash(Select-Object -ExpandProperty FullName)"
     ]
   }
 }

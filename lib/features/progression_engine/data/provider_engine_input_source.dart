@@ -50,6 +50,11 @@ class ProviderEngineInputSource {
     Map<String, int> bestStreakByRule = const {},
     Map<String, int> bestStreakByDomain = const {},
     Map<String, int> nodeCompletionCounts = const {},
+    int totalQuestCompletions = 0,
+    Map<String, int> questCompletionsByBucket = const {},
+    int distinctActiveDays = 0,
+    Set<String> nodesCompletedToday = const {},
+    Map<String, int> comboPoolCompletionCounts = const {},
     Map<String, double> objectiveActualOverrides = const {},
   }) {
     final today = _today();
@@ -62,6 +67,9 @@ class ProviderEngineInputSource {
       stepsLifetime: _stepsLifetime(),
       caloriesToday: nutrition.todayCalories.toDouble(),
       proteinGramsToday: nutrition.todayProtein.toDouble(),
+      carbsGramsToday: nutrition.todayCarbs.toDouble(),
+      fatGramsToday: nutrition.todayFat.toDouble(),
+      fiberGramsToday: nutrition.todayFiber.toDouble(),
       sleepMinutesToday:
           fitness.sleepForDate(today)?.totalDuration.inMinutes ?? 0,
       activityMinutesToday: _activityMinutesForDay(today),
@@ -71,6 +79,11 @@ class ProviderEngineInputSource {
       bestStreakByRule: bestStreakByRule,
       bestStreakByDomain: bestStreakByDomain,
       nodeCompletionCounts: nodeCompletionCounts,
+      totalQuestCompletions: totalQuestCompletions,
+      questCompletionsByBucket: questCompletionsByBucket,
+      distinctActiveDays: distinctActiveDays,
+      nodesCompletedToday: nodesCompletedToday,
+      comboPoolCompletionCounts: comboPoolCompletionCounts,
       objectiveActualOverrides: objectiveActualOverrides,
     );
   }

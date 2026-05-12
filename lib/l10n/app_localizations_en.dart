@@ -1065,6 +1065,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progQuestsDailyGoalsHeader => 'DAILY GOALS';
 
   @override
+  String get progQuestsDailyTasksHeader => 'DAILY TASKS';
+
+  @override
+  String get progQuestsDailyTasksHint =>
+      'Tasks rotate every day — completed ones stay visible until midnight.';
+
+  @override
   String get progQuestsDailyComboHeader => 'TODAY\'S COMBO';
 
   @override
@@ -1072,6 +1079,282 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get progQuestsChapterHeader => 'JOURNEY CHAPTERS';
+
+  @override
+  String get progQuestsComboHeader => 'DAILY COMBO';
+
+  @override
+  String get progQuestsDailyChallengeHeader => 'DAILY QUEST';
+
+  @override
+  String get progQuestsChapterSideQuestsHeader => 'CHAPTER SIDE QUESTS';
+
+  @override
+  String get progSidePilgrimMorningWalkTitle => 'Pilgrim\'s morning walk';
+
+  @override
+  String get progSidePilgrimMorningWalkDesc =>
+      'Set out on the path right after waking — meet today\'s steps and activity goals.';
+
+  @override
+  String get progSidePilgrimQuietRestTitle => 'Pilgrim\'s quiet rest';
+
+  @override
+  String get progSidePilgrimQuietRestDesc =>
+      'A pilgrim\'s body needs rest — meet today\'s sleep and protein goals.';
+
+  @override
+  String get progSideForestBriskwalkTitle => 'Brisk walk through the woods';
+
+  @override
+  String get progSideForestBriskwalkDesc =>
+      'The forest rewards steady movement — finish today\'s steps and active minutes.';
+
+  @override
+  String get progSideForestCampTitle => 'Camp beneath the trees';
+
+  @override
+  String get progSideForestCampDesc =>
+      'Quiet night in the woods — meet today\'s sleep, protein and calorie goals.';
+
+  @override
+  String get progSideForestClearingTitle => 'Clearing at first light';
+
+  @override
+  String get progSideForestClearingDesc =>
+      'The clearing tests every angle — finish today\'s steps, activity, sleep and protein.';
+
+  @override
+  String get progSideMineDeepShaftTitle => 'Deep shaft';
+
+  @override
+  String get progSideMineDeepShaftDesc =>
+      'A day spent in the deep — finish today\'s steps, activity and sleep.';
+
+  @override
+  String get progSideMineForgeFinaleTitle => 'Forge at the mountain\'s core';
+
+  @override
+  String get progSideMineForgeFinaleDesc =>
+      'The forge fires only for complete crews — meet five daily goals today, food included.';
+
+  @override
+  String get progSidePactMarchTitle => 'Pact march';
+
+  @override
+  String get progSidePactMarchDesc =>
+      'The pact marches all day — meet four basics today (steps, activity, sleep, calories).';
+
+  @override
+  String get progSidePactFinaleTitle => 'Seal of the pact';
+
+  @override
+  String get progSidePactFinaleDesc =>
+      'The pact peaks in a perfect blend — meet six different daily goals today.';
+
+  @override
+  String get progSideRuinsSteadyDawnTitle => 'Steady dawn';
+
+  @override
+  String get progSideRuinsSteadyDawnDesc =>
+      'Discipline starts at sunrise — finish today\'s steps, sleep and protein.';
+
+  @override
+  String get progSideRuinsIronIntakeTitle => 'Iron intake';
+
+  @override
+  String get progSideRuinsIronIntakeDesc =>
+      'Three macros before dusk — meet any three of today\'s nutrition goals.';
+
+  @override
+  String get progSideMineTorchbearerTitle => 'Torchbearer';
+
+  @override
+  String get progSideMineTorchbearerDesc =>
+      'Open a new shaft — finish today\'s steps and active minutes.';
+
+  @override
+  String get progSideMineLongHaulTitle => 'Long haul';
+
+  @override
+  String get progSideMineLongHaulDesc =>
+      'Stay deep all day — finish today\'s steps, activity and sleep.';
+
+  @override
+  String get progSideForgeMorningAnvilTitle => 'Morning anvil';
+
+  @override
+  String get progSideForgeMorningAnvilDesc =>
+      'Heat the forge before noon — finish today\'s steps and active minutes.';
+
+  @override
+  String get progSideForgeFullFurnaceTitle => 'Full furnace';
+
+  @override
+  String get progSideForgeFullFurnaceDesc =>
+      'Feed the fire from every side — meet four of today\'s nutrition goals.';
+
+  @override
+  String get progSideUnderwayWarmCampTitle => 'Warm camp';
+
+  @override
+  String get progSideUnderwayWarmCampDesc =>
+      'The party needs strength — meet today\'s sleep, protein and calorie goals.';
+
+  @override
+  String get progSideUnderwayLongWatchTitle => 'Long watch';
+
+  @override
+  String get progSideUnderwayLongWatchDesc =>
+      'Hold the pace into the night — finish today\'s steps, activity and sleep.';
+
+  @override
+  String get progSideFrostboundFirstLightTitle => 'First light of the oath';
+
+  @override
+  String get progSideFrostboundFirstLightDesc =>
+      'Move before the frost swallows your tracks — finish today\'s steps and active minutes.';
+
+  @override
+  String get progSideFrostboundLongOathTitle => 'Long oath';
+
+  @override
+  String get progSideFrostboundLongOathDesc =>
+      'Frost tests the whole body — finish today\'s steps, sleep, protein and calories.';
+
+  @override
+  String get progSideIcewalkerDawnMarchTitle => 'Dawn march';
+
+  @override
+  String get progSideIcewalkerDawnMarchDesc =>
+      'Ice is walked early — finish today\'s steps, activity and calories.';
+
+  @override
+  String get progSideIcewalkerProvisionerTitle => 'Provisioner';
+
+  @override
+  String get progSideIcewalkerProvisionerDesc =>
+      'The caravan eats complete — meet all five of today\'s nutrition goals.';
+
+  @override
+  String get progSideMountainSteepMorningTitle => 'Steep morning';
+
+  @override
+  String get progSideMountainSteepMorningDesc =>
+      'The ridge isn\'t climbed at noon — finish today\'s steps, activity and sleep.';
+
+  @override
+  String get progSideMountainFullRidgeTitle => 'Full ridge';
+
+  @override
+  String get progSideMountainFullRidgeDesc =>
+      'The summit demands the whole of you — finish today\'s steps, activity, sleep, protein and calories.';
+
+  @override
+  String get progSideDragonroadWardenDawnTitle => 'Warden\'s dawn';
+
+  @override
+  String get progSideDragonroadWardenDawnDesc =>
+      'The dragon road tests discipline — meet four basics today (steps, activity, calories, protein).';
+
+  @override
+  String get progSideDragonroadIronAppetiteTitle => 'Dragon\'s appetite';
+
+  @override
+  String get progSideDragonroadIronAppetiteDesc =>
+      'The dragon eats five courses — meet all five nutrition goals today.';
+
+  @override
+  String get progSideDragonrockSovereignDawnTitle => 'Sovereign\'s dawn';
+
+  @override
+  String get progSideDragonrockSovereignDawnDesc =>
+      'A sovereign never starves — finish today\'s steps and all four macro goals.';
+
+  @override
+  String get progSideDragonrockSovereignVigilTitle => 'Sovereign\'s vigil';
+
+  @override
+  String get progSideDragonrockSovereignVigilDesc =>
+      'Tend the whole kingdom of yourself — meet six of today\'s eight daily goals.';
+
+  @override
+  String get progSideIcewalkerFinaleTitle => 'Crew complete';
+
+  @override
+  String get progSideIcewalkerFinaleDesc =>
+      'The caravan stands tall no matter the cold — meet six different daily goals today.';
+
+  @override
+  String get progSideDragonroadFinaleTitle => 'Dragon\'s banquet';
+
+  @override
+  String get progSideDragonroadFinaleDesc =>
+      'The dragon demands a full table — meet seven of today\'s eight daily goals.';
+
+  @override
+  String get progSideDragonrockSovereignThroneTitle => 'Throne of Dragonrock';
+
+  @override
+  String get progSideDragonrockSovereignThroneDesc =>
+      'Your throne does not yield — meet seven daily goals today, all four macros included.';
+
+  @override
+  String get progSideDragonrockSovereignCrownTitle => 'Unbroken crown';
+
+  @override
+  String get progSideDragonrockSovereignCrownDesc =>
+      'An almost-perfect day — meet seven of today\'s eight daily goals and hold the pace till evening.';
+
+  @override
+  String get progSideDragonrockSovereignFinaleTitle =>
+      'Sovereign\'s perfect day';
+
+  @override
+  String get progSideDragonrockSovereignFinaleDesc =>
+      'The summit of the journey — meet all eight of today\'s daily goals. Bonus for 7+ h sleep and for finishing before 18:00.';
+
+  @override
+  String get progDailyChallengeNutriTripleTitle => 'Triple nutrition win';
+
+  @override
+  String get progDailyChallengeNutriTripleDesc =>
+      'Meet today\'s goal on 3 of 5 nutrition macros (calories, protein, carbs, fat, fiber).';
+
+  @override
+  String get progDailyChallengeActiveDayTitle => 'Active day';
+
+  @override
+  String get progDailyChallengeActiveDayDesc =>
+      'Meet today\'s steps and activity goals.';
+
+  @override
+  String get progDailyChallengeFullPlateTitle => 'Full plate';
+
+  @override
+  String get progDailyChallengeFullPlateDesc =>
+      'Meet today\'s goal on all 5 nutrition macros.';
+
+  @override
+  String get progDailyChallengeRecoveryTitle => 'Recovery day';
+
+  @override
+  String get progDailyChallengeRecoveryDesc =>
+      'Meet today\'s sleep and protein goals — give the body a break.';
+
+  @override
+  String get progDailyChallengeTripleComboTitle => 'Triple combo';
+
+  @override
+  String get progDailyChallengeTripleComboDesc =>
+      'Meet today\'s steps, sleep and protein goals.';
+
+  @override
+  String get progDailyChallengeBalancedTitle => 'Balanced day';
+
+  @override
+  String get progDailyChallengeBalancedDesc =>
+      'Meet any 4 of today\'s 8 daily goals.';
 
   @override
   String get progQuestsLongTermHeader => 'LONG-TERM GOALS';
@@ -1121,7 +1404,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Complete the previous chapter to begin.';
 
   @override
-  String get progQuestsLockedHeader => 'LOCKED QUESTS';
+  String get progQuestsLockedHeader => 'LOCKED';
 
   @override
   String get progQuestsCompletedHeader => 'COMPLETED QUESTS';
@@ -1347,6 +1630,31 @@ class AppLocalizationsEn extends AppLocalizations {
       'Reach the configured daily steps target.';
 
   @override
+  String get progRuleDailyStepsHintedDesc =>
+      'Reach the configured daily steps target.';
+
+  @override
+  String get progRuleDailyCaloriesHintedDesc =>
+      'Reach the configured daily calories target.';
+
+  @override
+  String get progRuleDailyActivityHintedDesc =>
+      'Reach the configured weekly activity-minutes target.';
+
+  @override
+  String progBonusXpBeforeHour(int xp, int hour) {
+    return '+$xp XP bonus if you claim before $hour:00';
+  }
+
+  @override
+  String progBonusXpSleepAtLeast(int xp, int minutes) {
+    return '+$xp XP bonus if you slept at least $minutes min';
+  }
+
+  @override
+  String get progBonusXpLabel => 'Bonus XP';
+
+  @override
   String get progRuleDailyCalories => 'Calorie Target';
 
   @override
@@ -1492,6 +1800,92 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get progQuestDailyRecoveryFocusTodayDesc =>
       'Complete both steps and sleep goals in the current day.';
+
+  @override
+  String get progComboBalancedStep1Title => 'Balanced day · 1 goal';
+
+  @override
+  String get progComboBalancedStep1Desc => 'Complete any 1 daily goal today.';
+
+  @override
+  String get progComboBalancedStep2Title => 'Balanced day · 2 goals';
+
+  @override
+  String get progComboBalancedStep2Desc => 'Complete any 2 daily goals today.';
+
+  @override
+  String get progComboBalancedStep3Title => 'Balanced day · 3 goals';
+
+  @override
+  String get progComboBalancedStep3Desc => 'Complete any 3 daily goals today.';
+
+  @override
+  String get progComboBalancedFinaleTitle => 'Balanced day · finale';
+
+  @override
+  String get progComboBalancedFinaleDesc => 'Complete any 4 daily goals today.';
+
+  @override
+  String get progComboRecoveryStep1Title => 'Recovery · sleep';
+
+  @override
+  String get progComboRecoveryStep1Desc => 'Meet today\'s sleep goal.';
+
+  @override
+  String get progComboRecoveryStep2Title => 'Recovery · sleep + steps';
+
+  @override
+  String get progComboRecoveryStep2Desc =>
+      'Meet today\'s sleep and steps goals.';
+
+  @override
+  String get progComboRecoveryStep3Title =>
+      'Recovery · sleep + steps + protein';
+
+  @override
+  String get progComboRecoveryStep3Desc =>
+      'Meet today\'s sleep, steps and protein goals.';
+
+  @override
+  String get progComboRecoveryFinaleTitle => 'Recovery · finale';
+
+  @override
+  String get progComboRecoveryFinaleDesc =>
+      'Meet today\'s sleep, steps, protein and calories goals.';
+
+  @override
+  String get progComboNutritionStep1Title => 'Nutrition master · calories';
+
+  @override
+  String get progComboNutritionStep1Desc => 'Meet today\'s calorie goal.';
+
+  @override
+  String get progComboNutritionStep2Title => 'Nutrition master · + protein';
+
+  @override
+  String get progComboNutritionStep2Desc =>
+      'Meet today\'s calorie and protein goals.';
+
+  @override
+  String get progComboNutritionStep3Title => 'Nutrition master · + carbs';
+
+  @override
+  String get progComboNutritionStep3Desc =>
+      'Meet today\'s calorie, protein and carb goals.';
+
+  @override
+  String get progComboNutritionStep4Title => 'Nutrition master · + fat';
+
+  @override
+  String get progComboNutritionStep4Desc =>
+      'Meet today\'s calorie, protein, carb and fat goals.';
+
+  @override
+  String get progComboNutritionFinaleTitle => 'Nutrition master · finale';
+
+  @override
+  String get progComboNutritionFinaleDesc =>
+      'Meet all macro goals today: calories, protein, carbs, fat and fiber.';
 
   @override
   String get progQuestSleepTotal250hTitle => 'Rested Soul';
@@ -3574,43 +3968,81 @@ class AppLocalizationsEn extends AppLocalizations {
   String get celebrationLocationEyebrow => 'Region discovered';
 
   @override
-  String get celebrationGreatRewardEyebrow => 'Great reward';
+  String get celebrationChapterEyebrow => 'Chapter complete';
 
   @override
-  String celebrationGotRewards(int count) {
+  String get celebrationChapterUnlockedEyebrow => 'New chapter unlocked';
+
+  @override
+  String get celebrationMilestoneEyebrow => 'Milestone reached';
+
+  @override
+  String get celebrationRelicEyebrow => 'Relic acquired';
+
+  @override
+  String get celebrationContentUnlockEyebrow => 'New chapter';
+
+  @override
+  String get celebrationCompanionReadyEyebrow => 'Companion ready';
+
+  @override
+  String get celebrationGoalEyebrow => 'Goal complete';
+
+  @override
+  String get celebrationAchievementPackEyebrow => 'Moment';
+
+  @override
+  String celebrationAchievementPackTitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'You got $count rewards',
-      one: 'You got $count reward',
+      other: '$count achievements unlocked',
+      one: '1 achievement unlocked',
     );
     return '$_temp0';
   }
 
   @override
-  String celebrationClaimXp(int xp) {
-    return 'Claim +$xp XP';
+  String get celebrationWelcomeBackEyebrow => 'Welcome back';
+
+  @override
+  String celebrationWelcomeBackTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rewards waiting for you',
+      one: '$count reward waiting for you',
+    );
+    return '$_temp0';
   }
 
   @override
-  String celebrationClaimedXp(int xp) {
-    return 'Claimed · +$xp XP';
+  String celebrationCosmeticUnlockedTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new rewards',
+      one: 'New reward',
+    );
+    return '$_temp0';
   }
 
   @override
-  String get celebrationNextReward => 'Next reward';
+  String get celebrationOrphanRewardHint => 'Reward from your progress';
+
+  @override
+  String get celebrationSummaryHint => 'Summary from the latest sync';
+
+  @override
+  String celebrationChapterUnlockedSuffix(String name) {
+    return 'Next chapter unlocked: $name';
+  }
 
   @override
   String get celebrationContinue => 'Continue';
 
   @override
   String get celebrationOpenInventory => 'Open inventory →';
-
-  @override
-  String get celebrationTapOrSwipe => 'Tap or swipe →';
-
-  @override
-  String get celebrationDone => 'Done';
 
   @override
   String celebrationLevelTitle(int level, String title) {
@@ -3620,6 +4052,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String celebrationLevelTitleNoTitle(int level) {
     return 'Level $level';
+  }
+
+  @override
+  String celebrationLevelDecorativeTitle(int level, String name) {
+    return 'Level $level · $name';
   }
 
   @override

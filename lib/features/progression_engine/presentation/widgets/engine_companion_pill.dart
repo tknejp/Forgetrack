@@ -22,7 +22,7 @@ import '../../domain/models/reward_definition.dart';
 /// toggled. Replaces the standalone chevron â€” when no companion / no
 /// extra reward exists, the card isn't expandable at all.
 ///
-/// Fallback emoji: ðŸŽ for non-achievement extras (direct cosmetic / item
+/// Fallback emoji: 🎁 for non-achievement extras (direct cosmetic / item
 /// rewards on the quest itself, milestone companions without their own
 /// emoji).
 class EngineCompanionPill extends StatelessWidget {
@@ -35,7 +35,7 @@ class EngineCompanionPill extends StatelessWidget {
   });
 
   /// Single-glyph badge (typically an emoji from AchievementNode /
-  /// LevelMilestoneNode; defaults to ðŸŽ for non-emoji extras).
+  /// LevelMilestoneNode; defaults to 🎁 for non-emoji extras).
   final String badge;
 
   /// Drives the chevron rotation â€” true when the parent card is
@@ -80,13 +80,13 @@ class EngineCompanionPill extends StatelessWidget {
 
 /// Resolves the badge glyph for a companion entry. Achievement nodes
 /// carry an emoji explicitly; level milestones carry their level emoji;
-/// everything else falls back to ðŸŽ so the player still gets a visual
+/// everything else falls back to 🎁 so the player still gets a visual
 /// "this is an extra reward" hint.
 String badgeForCompanion(ProgressionNode node) {
   return switch (node) {
     AchievementNode(:final badgeEmoji) => badgeEmoji,
     LevelMilestoneNode(:final emoji) => emoji,
-    _ => 'ðŸŽ',
+    _ => '🎁',
   };
 }
 
@@ -96,13 +96,14 @@ String badgeForCompanion(ProgressionNode node) {
 /// the chip strip but in emoji form for the pill.
 String badgeForReward(RewardDefinition reward) {
   return switch (reward) {
-    XpReward() => 'âš¡',
-    CosmeticReward() => 'ðŸŽ¨',
-    ChapterUnlockReward() => 'ðŸ“–',
-    CompanionAvailabilityReward() => 'ðŸ¤',
-    TitleReward() => 'ðŸŽ–ï¸',
-    EmblemReward() => 'ðŸ…',
-    RelicReward() => 'ðŸ’Ž',
+    XpReward() => '⚡',
+    BonusXpReward() => '\u{2728}', // ✨ sparkle for bonus XP
+    CosmeticReward() => '🎨',
+    ChapterUnlockReward() => '📖',
+    CompanionAvailabilityReward() => '🤝',
+    TitleReward() => '🎖️',
+    EmblemReward() => '🏅',
+    RelicReward() => '💎',
   };
 }
 
@@ -487,7 +488,7 @@ class EngineRewardDetailRow extends StatelessWidget {
     final name = lookup?.name(l10n) ?? _fallbackName(reward);
     final rarity = lookup?.rarity.label(l10n);
     final typeLabel = lookup?.type.label(l10n) ?? _kindLabel(reward, l10n);
-    final subtitle = rarity == null ? typeLabel : '$typeLabel Â· $rarity';
+    final subtitle = rarity == null ? typeLabel : '$typeLabel · $rarity';
     final cosmeticId = _cosmeticIdOf(reward);
     final opacity = unlocked ? 1.0 : 0.74;
 
@@ -599,6 +600,7 @@ class EngineRewardDetailRow extends StatelessWidget {
   String _kindLabel(RewardDefinition r, AppLocalizations l10n) {
     return switch (r) {
       XpReward() => 'XP',
+      BonusXpReward() => 'XP',
       CosmeticReward() => l10n.cosmeticTypeFrame,
       ChapterUnlockReward() => l10n.progQuestsChapterHeader,
       CompanionAvailabilityReward() => l10n.cosmeticTypeCompanion,
@@ -624,6 +626,7 @@ class EngineRewardDetailRow extends StatelessWidget {
   static IconData _iconForReward(RewardDefinition r) {
     return switch (r) {
       XpReward() => Icons.bolt_rounded,
+      BonusXpReward() => Icons.bolt_rounded,
       CosmeticReward() => Icons.card_giftcard_rounded,
       ChapterUnlockReward() => Icons.menu_book_rounded,
       CompanionAvailabilityReward() => Icons.groups_2_rounded,
@@ -646,6 +649,7 @@ class EngineRewardDetailRow extends StatelessWidget {
       CompanionAvailabilityReward(:final companionId) => companionId,
       ChapterUnlockReward(:final chapterId) => chapterId,
       XpReward() => 'XP',
+      BonusXpReward() => 'XP',
     };
   }
 }
@@ -737,10 +741,12 @@ class _RewardPreviewSheet extends StatelessWidget {
           CompanionAvailabilityReward(:final companionId) => companionId,
           ChapterUnlockReward(:final chapterId) => chapterId,
           XpReward() => 'XP',
+          BonusXpReward() => 'XP',
         };
     final typeLabel = lookup?.type.label(l10n) ??
         switch (reward) {
           XpReward() => 'XP',
+          BonusXpReward() => 'XP',
           CosmeticReward() => l10n.cosmeticTypeFrame,
           ChapterUnlockReward() => l10n.progQuestsChapterHeader,
           CompanionAvailabilityReward() => l10n.cosmeticTypeCompanion,
@@ -754,6 +760,7 @@ class _RewardPreviewSheet extends StatelessWidget {
 
     final fallbackIcon = switch (reward) {
       XpReward() => Icons.bolt_rounded,
+      BonusXpReward() => Icons.bolt_rounded,
       CosmeticReward() => Icons.card_giftcard_rounded,
       ChapterUnlockReward() => Icons.menu_book_rounded,
       CompanionAvailabilityReward() => Icons.groups_2_rounded,

@@ -55,8 +55,23 @@ class UnlockConditionResolver {
       ObjectiveCompleted(:final objectiveId) =>
         completedObjectiveIds.contains(objectiveId),
       NodeCompleted(:final nodeId) => completedNodeIds.contains(nodeId),
+      NodeCompletedBeforeToday(:final nodeId) => () {
+        final todayStart = DateTime(
+          input.evaluatedAt.year,
+          input.evaluatedAt.month,
+          input.evaluatedAt.day,
+        );
+        for (final e in ledger.nodeCompletions) {
+          if (e.nodeId != nodeId) continue;
+          if (e.timestamp.toLocal().isBefore(todayStart)) return true;
+        }
+        return false;
+      }(),
       ChapterUnlocked(:final chapterId) =>
         unlockedChapterIds.contains(chapterId),
+      ChapterActive(:final chapterId) =>
+        completedNodeIds.contains('${chapterId}_open') &&
+            !completedNodeIds.contains('${chapterId}_finale'),
       CompanionAvailable(:final companionId) =>
         availableCompanionIds.contains(companionId),
       RpgModeEnabled() => input.rpgModeEnabled,

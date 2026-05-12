@@ -10,6 +10,7 @@ import '../catalog/progression_node_catalog.dart';
 import '../models/objective_definition.dart';
 import '../models/objective_metric.dart';
 import '../models/progression_node_definition.dart';
+import '../models/quest_display_bucket.dart';
 import '../policy/level_policy.dart';
 import 'progression_display_models.dart';
 
@@ -410,6 +411,27 @@ class ProgressionDisplayResolver {
           locale: locale,
           ruleHintId: 'daily_protein',
         ),
+      CarbsGramsMetric() => _ruleScaledSummary(
+          objective: objective,
+          targetValue: target,
+          l10n: l10n,
+          locale: locale,
+          ruleHintId: 'daily_carbs',
+        ),
+      FatGramsMetric() => _ruleScaledSummary(
+          objective: objective,
+          targetValue: target,
+          l10n: l10n,
+          locale: locale,
+          ruleHintId: 'daily_fat',
+        ),
+      FiberGramsMetric() => _ruleScaledSummary(
+          objective: objective,
+          targetValue: target,
+          l10n: l10n,
+          locale: locale,
+          ruleHintId: 'daily_fiber',
+        ),
       SleepMinutesMetric() => _sleepSummary(target, l10n),
       ActivityMinutesMetric() => _ruleScaledSummary(
           objective: objective,
@@ -425,6 +447,19 @@ class ProgressionDisplayResolver {
         ),
       ComboPoolCompletionsMetric() =>
         '$target ${l10n.progAchievementSummaryComboQuests}',
+      QuestCompletionsByBucketMetric(:final bucket) => switch (bucket) {
+        QuestDisplayBucket.daily =>
+          '$target ${l10n.progAchievementSummaryDailyQuests}',
+        QuestDisplayBucket.weekly =>
+          '$target ${l10n.progAchievementSummaryWeeklyQuests}',
+        _ => '$target ${l10n.progAchievementSummaryTotalQuests}',
+      },
+      DistinctActiveDaysMetric() =>
+        '$target ${l10n.progAchievementSummaryActiveDays}',
+      TodayCompletionsAmongMetric(:final nodeIds) =>
+        '$target/${nodeIds.length} ${l10n.progAchievementSummaryDailyQuests}',
+      LifetimeCompletionsAmongMetric() =>
+        '$target ${l10n.progAchievementSummaryTripleComboQuests}',
       LevelMetric() => l10n.socialLevelLabel(target),
     };
   }

@@ -2060,6 +2060,18 @@ abstract class AppLocalizations {
   /// **'DAILY GOALS'**
   String get progQuestsDailyGoalsHeader;
 
+  /// No description provided for @progQuestsDailyTasksHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'DAILY TASKS'**
+  String get progQuestsDailyTasksHeader;
+
+  /// No description provided for @progQuestsDailyTasksHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks rotate every day — completed ones stay visible until midnight.'**
+  String get progQuestsDailyTasksHint;
+
   /// No description provided for @progQuestsDailyComboHeader.
   ///
   /// In en, this message translates to:
@@ -2077,6 +2089,480 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'JOURNEY CHAPTERS'**
   String get progQuestsChapterHeader;
+
+  /// No description provided for @progQuestsComboHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'DAILY COMBO'**
+  String get progQuestsComboHeader;
+
+  /// No description provided for @progQuestsDailyChallengeHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'DAILY QUEST'**
+  String get progQuestsDailyChallengeHeader;
+
+  /// No description provided for @progQuestsChapterSideQuestsHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'CHAPTER SIDE QUESTS'**
+  String get progQuestsChapterSideQuestsHeader;
+
+  /// No description provided for @progSidePilgrimMorningWalkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pilgrim\'s morning walk'**
+  String get progSidePilgrimMorningWalkTitle;
+
+  /// No description provided for @progSidePilgrimMorningWalkDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Set out on the path right after waking — meet today\'s steps and activity goals.'**
+  String get progSidePilgrimMorningWalkDesc;
+
+  /// No description provided for @progSidePilgrimQuietRestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pilgrim\'s quiet rest'**
+  String get progSidePilgrimQuietRestTitle;
+
+  /// No description provided for @progSidePilgrimQuietRestDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A pilgrim\'s body needs rest — meet today\'s sleep and protein goals.'**
+  String get progSidePilgrimQuietRestDesc;
+
+  /// No description provided for @progSideForestBriskwalkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Brisk walk through the woods'**
+  String get progSideForestBriskwalkTitle;
+
+  /// No description provided for @progSideForestBriskwalkDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The forest rewards steady movement — finish today\'s steps and active minutes.'**
+  String get progSideForestBriskwalkDesc;
+
+  /// No description provided for @progSideForestCampTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Camp beneath the trees'**
+  String get progSideForestCampTitle;
+
+  /// No description provided for @progSideForestCampDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet night in the woods — meet today\'s sleep, protein and calorie goals.'**
+  String get progSideForestCampDesc;
+
+  /// No description provided for @progSideForestClearingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clearing at first light'**
+  String get progSideForestClearingTitle;
+
+  /// No description provided for @progSideForestClearingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The clearing tests every angle — finish today\'s steps, activity, sleep and protein.'**
+  String get progSideForestClearingDesc;
+
+  /// No description provided for @progSideMineDeepShaftTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep shaft'**
+  String get progSideMineDeepShaftTitle;
+
+  /// No description provided for @progSideMineDeepShaftDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A day spent in the deep — finish today\'s steps, activity and sleep.'**
+  String get progSideMineDeepShaftDesc;
+
+  /// No description provided for @progSideMineForgeFinaleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Forge at the mountain\'s core'**
+  String get progSideMineForgeFinaleTitle;
+
+  /// No description provided for @progSideMineForgeFinaleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The forge fires only for complete crews — meet five daily goals today, food included.'**
+  String get progSideMineForgeFinaleDesc;
+
+  /// No description provided for @progSidePactMarchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pact march'**
+  String get progSidePactMarchTitle;
+
+  /// No description provided for @progSidePactMarchDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The pact marches all day — meet four basics today (steps, activity, sleep, calories).'**
+  String get progSidePactMarchDesc;
+
+  /// No description provided for @progSidePactFinaleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Seal of the pact'**
+  String get progSidePactFinaleTitle;
+
+  /// No description provided for @progSidePactFinaleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The pact peaks in a perfect blend — meet six different daily goals today.'**
+  String get progSidePactFinaleDesc;
+
+  /// No description provided for @progSideRuinsSteadyDawnTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Steady dawn'**
+  String get progSideRuinsSteadyDawnTitle;
+
+  /// No description provided for @progSideRuinsSteadyDawnDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Discipline starts at sunrise — finish today\'s steps, sleep and protein.'**
+  String get progSideRuinsSteadyDawnDesc;
+
+  /// No description provided for @progSideRuinsIronIntakeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Iron intake'**
+  String get progSideRuinsIronIntakeTitle;
+
+  /// No description provided for @progSideRuinsIronIntakeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Three macros before dusk — meet any three of today\'s nutrition goals.'**
+  String get progSideRuinsIronIntakeDesc;
+
+  /// No description provided for @progSideMineTorchbearerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Torchbearer'**
+  String get progSideMineTorchbearerTitle;
+
+  /// No description provided for @progSideMineTorchbearerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a new shaft — finish today\'s steps and active minutes.'**
+  String get progSideMineTorchbearerDesc;
+
+  /// No description provided for @progSideMineLongHaulTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Long haul'**
+  String get progSideMineLongHaulTitle;
+
+  /// No description provided for @progSideMineLongHaulDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay deep all day — finish today\'s steps, activity and sleep.'**
+  String get progSideMineLongHaulDesc;
+
+  /// No description provided for @progSideForgeMorningAnvilTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning anvil'**
+  String get progSideForgeMorningAnvilTitle;
+
+  /// No description provided for @progSideForgeMorningAnvilDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Heat the forge before noon — finish today\'s steps and active minutes.'**
+  String get progSideForgeMorningAnvilDesc;
+
+  /// No description provided for @progSideForgeFullFurnaceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Full furnace'**
+  String get progSideForgeFullFurnaceTitle;
+
+  /// No description provided for @progSideForgeFullFurnaceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Feed the fire from every side — meet four of today\'s nutrition goals.'**
+  String get progSideForgeFullFurnaceDesc;
+
+  /// No description provided for @progSideUnderwayWarmCampTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm camp'**
+  String get progSideUnderwayWarmCampTitle;
+
+  /// No description provided for @progSideUnderwayWarmCampDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The party needs strength — meet today\'s sleep, protein and calorie goals.'**
+  String get progSideUnderwayWarmCampDesc;
+
+  /// No description provided for @progSideUnderwayLongWatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Long watch'**
+  String get progSideUnderwayLongWatchTitle;
+
+  /// No description provided for @progSideUnderwayLongWatchDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold the pace into the night — finish today\'s steps, activity and sleep.'**
+  String get progSideUnderwayLongWatchDesc;
+
+  /// No description provided for @progSideFrostboundFirstLightTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'First light of the oath'**
+  String get progSideFrostboundFirstLightTitle;
+
+  /// No description provided for @progSideFrostboundFirstLightDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Move before the frost swallows your tracks — finish today\'s steps and active minutes.'**
+  String get progSideFrostboundFirstLightDesc;
+
+  /// No description provided for @progSideFrostboundLongOathTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Long oath'**
+  String get progSideFrostboundLongOathTitle;
+
+  /// No description provided for @progSideFrostboundLongOathDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Frost tests the whole body — finish today\'s steps, sleep, protein and calories.'**
+  String get progSideFrostboundLongOathDesc;
+
+  /// No description provided for @progSideIcewalkerDawnMarchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dawn march'**
+  String get progSideIcewalkerDawnMarchTitle;
+
+  /// No description provided for @progSideIcewalkerDawnMarchDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Ice is walked early — finish today\'s steps, activity and calories.'**
+  String get progSideIcewalkerDawnMarchDesc;
+
+  /// No description provided for @progSideIcewalkerProvisionerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Provisioner'**
+  String get progSideIcewalkerProvisionerTitle;
+
+  /// No description provided for @progSideIcewalkerProvisionerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The caravan eats complete — meet all five of today\'s nutrition goals.'**
+  String get progSideIcewalkerProvisionerDesc;
+
+  /// No description provided for @progSideMountainSteepMorningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Steep morning'**
+  String get progSideMountainSteepMorningTitle;
+
+  /// No description provided for @progSideMountainSteepMorningDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The ridge isn\'t climbed at noon — finish today\'s steps, activity and sleep.'**
+  String get progSideMountainSteepMorningDesc;
+
+  /// No description provided for @progSideMountainFullRidgeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Full ridge'**
+  String get progSideMountainFullRidgeTitle;
+
+  /// No description provided for @progSideMountainFullRidgeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The summit demands the whole of you — finish today\'s steps, activity, sleep, protein and calories.'**
+  String get progSideMountainFullRidgeDesc;
+
+  /// No description provided for @progSideDragonroadWardenDawnTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Warden\'s dawn'**
+  String get progSideDragonroadWardenDawnTitle;
+
+  /// No description provided for @progSideDragonroadWardenDawnDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The dragon road tests discipline — meet four basics today (steps, activity, calories, protein).'**
+  String get progSideDragonroadWardenDawnDesc;
+
+  /// No description provided for @progSideDragonroadIronAppetiteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dragon\'s appetite'**
+  String get progSideDragonroadIronAppetiteTitle;
+
+  /// No description provided for @progSideDragonroadIronAppetiteDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The dragon eats five courses — meet all five nutrition goals today.'**
+  String get progSideDragonroadIronAppetiteDesc;
+
+  /// No description provided for @progSideDragonrockSovereignDawnTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sovereign\'s dawn'**
+  String get progSideDragonrockSovereignDawnTitle;
+
+  /// No description provided for @progSideDragonrockSovereignDawnDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A sovereign never starves — finish today\'s steps and all four macro goals.'**
+  String get progSideDragonrockSovereignDawnDesc;
+
+  /// No description provided for @progSideDragonrockSovereignVigilTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sovereign\'s vigil'**
+  String get progSideDragonrockSovereignVigilTitle;
+
+  /// No description provided for @progSideDragonrockSovereignVigilDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Tend the whole kingdom of yourself — meet six of today\'s eight daily goals.'**
+  String get progSideDragonrockSovereignVigilDesc;
+
+  /// No description provided for @progSideIcewalkerFinaleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Crew complete'**
+  String get progSideIcewalkerFinaleTitle;
+
+  /// No description provided for @progSideIcewalkerFinaleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The caravan stands tall no matter the cold — meet six different daily goals today.'**
+  String get progSideIcewalkerFinaleDesc;
+
+  /// No description provided for @progSideDragonroadFinaleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dragon\'s banquet'**
+  String get progSideDragonroadFinaleTitle;
+
+  /// No description provided for @progSideDragonroadFinaleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The dragon demands a full table — meet seven of today\'s eight daily goals.'**
+  String get progSideDragonroadFinaleDesc;
+
+  /// No description provided for @progSideDragonrockSovereignThroneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Throne of Dragonrock'**
+  String get progSideDragonrockSovereignThroneTitle;
+
+  /// No description provided for @progSideDragonrockSovereignThroneDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your throne does not yield — meet seven daily goals today, all four macros included.'**
+  String get progSideDragonrockSovereignThroneDesc;
+
+  /// No description provided for @progSideDragonrockSovereignCrownTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unbroken crown'**
+  String get progSideDragonrockSovereignCrownTitle;
+
+  /// No description provided for @progSideDragonrockSovereignCrownDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'An almost-perfect day — meet seven of today\'s eight daily goals and hold the pace till evening.'**
+  String get progSideDragonrockSovereignCrownDesc;
+
+  /// No description provided for @progSideDragonrockSovereignFinaleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sovereign\'s perfect day'**
+  String get progSideDragonrockSovereignFinaleTitle;
+
+  /// No description provided for @progSideDragonrockSovereignFinaleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The summit of the journey — meet all eight of today\'s daily goals. Bonus for 7+ h sleep and for finishing before 18:00.'**
+  String get progSideDragonrockSovereignFinaleDesc;
+
+  /// No description provided for @progDailyChallengeNutriTripleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Triple nutrition win'**
+  String get progDailyChallengeNutriTripleTitle;
+
+  /// No description provided for @progDailyChallengeNutriTripleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet today\'s goal on 3 of 5 nutrition macros (calories, protein, carbs, fat, fiber).'**
+  String get progDailyChallengeNutriTripleDesc;
+
+  /// No description provided for @progDailyChallengeActiveDayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Active day'**
+  String get progDailyChallengeActiveDayTitle;
+
+  /// No description provided for @progDailyChallengeActiveDayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet today\'s steps and activity goals.'**
+  String get progDailyChallengeActiveDayDesc;
+
+  /// No description provided for @progDailyChallengeFullPlateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Full plate'**
+  String get progDailyChallengeFullPlateTitle;
+
+  /// No description provided for @progDailyChallengeFullPlateDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet today\'s goal on all 5 nutrition macros.'**
+  String get progDailyChallengeFullPlateDesc;
+
+  /// No description provided for @progDailyChallengeRecoveryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery day'**
+  String get progDailyChallengeRecoveryTitle;
+
+  /// No description provided for @progDailyChallengeRecoveryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet today\'s sleep and protein goals — give the body a break.'**
+  String get progDailyChallengeRecoveryDesc;
+
+  /// No description provided for @progDailyChallengeTripleComboTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Triple combo'**
+  String get progDailyChallengeTripleComboTitle;
+
+  /// No description provided for @progDailyChallengeTripleComboDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet today\'s steps, sleep and protein goals.'**
+  String get progDailyChallengeTripleComboDesc;
+
+  /// No description provided for @progDailyChallengeBalancedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced day'**
+  String get progDailyChallengeBalancedTitle;
+
+  /// No description provided for @progDailyChallengeBalancedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet any 4 of today\'s 8 daily goals.'**
+  String get progDailyChallengeBalancedDesc;
 
   /// No description provided for @progQuestsLongTermHeader.
   ///
@@ -2171,7 +2657,7 @@ abstract class AppLocalizations {
   /// No description provided for @progQuestsLockedHeader.
   ///
   /// In en, this message translates to:
-  /// **'LOCKED QUESTS'**
+  /// **'LOCKED'**
   String get progQuestsLockedHeader;
 
   /// No description provided for @progQuestsCompletedHeader.
@@ -2540,6 +3026,42 @@ abstract class AppLocalizations {
   /// **'Reach the configured daily steps target.'**
   String get progRuleDailyStepsDesc;
 
+  /// No description provided for @progRuleDailyStepsHintedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach the configured daily steps target.'**
+  String get progRuleDailyStepsHintedDesc;
+
+  /// No description provided for @progRuleDailyCaloriesHintedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach the configured daily calories target.'**
+  String get progRuleDailyCaloriesHintedDesc;
+
+  /// No description provided for @progRuleDailyActivityHintedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach the configured weekly activity-minutes target.'**
+  String get progRuleDailyActivityHintedDesc;
+
+  /// No description provided for @progBonusXpBeforeHour.
+  ///
+  /// In en, this message translates to:
+  /// **'+{xp} XP bonus if you claim before {hour}:00'**
+  String progBonusXpBeforeHour(int xp, int hour);
+
+  /// No description provided for @progBonusXpSleepAtLeast.
+  ///
+  /// In en, this message translates to:
+  /// **'+{xp} XP bonus if you slept at least {minutes} min'**
+  String progBonusXpSleepAtLeast(int xp, int minutes);
+
+  /// No description provided for @progBonusXpLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonus XP'**
+  String get progBonusXpLabel;
+
   /// No description provided for @progRuleDailyCalories.
   ///
   /// In en, this message translates to:
@@ -2791,6 +3313,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Complete both steps and sleep goals in the current day.'**
   String get progQuestDailyRecoveryFocusTodayDesc;
+
+  /// No description provided for @progComboBalancedStep1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced day · 1 goal'**
+  String get progComboBalancedStep1Title;
+
+  /// No description provided for @progComboBalancedStep1Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete any 1 daily goal today.'**
+  String get progComboBalancedStep1Desc;
+
+  /// No description provided for @progComboBalancedStep2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced day · 2 goals'**
+  String get progComboBalancedStep2Title;
+
+  /// No description provided for @progComboBalancedStep2Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete any 2 daily goals today.'**
+  String get progComboBalancedStep2Desc;
+
+  /// No description provided for @progComboBalancedStep3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced day · 3 goals'**
+  String get progComboBalancedStep3Title;
+
+  /// No description provided for @progComboBalancedStep3Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete any 3 daily goals today.'**
+  String get progComboBalancedStep3Desc;
+
+  /// No description provided for @progComboBalancedFinaleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced day · finale'**
+  String get progComboBalancedFinaleTitle;
+
+  /// No description provided for @progComboBalancedFinaleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete any 4 daily goals today.'**
+  String get progComboBalancedFinaleDesc;
+
+  /// No description provided for @progComboRecoveryStep1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery · sleep'**
+  String get progComboRecoveryStep1Title;
+
+  /// No description provided for @progComboRecoveryStep1Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet today\'s sleep goal.'**
+  String get progComboRecoveryStep1Desc;
+
+  /// No description provided for @progComboRecoveryStep2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery · sleep + steps'**
+  String get progComboRecoveryStep2Title;
+
+  /// No description provided for @progComboRecoveryStep2Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet today\'s sleep and steps goals.'**
+  String get progComboRecoveryStep2Desc;
+
+  /// No description provided for @progComboRecoveryStep3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery · sleep + steps + protein'**
+  String get progComboRecoveryStep3Title;
+
+  /// No description provided for @progComboRecoveryStep3Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet today\'s sleep, steps and protein goals.'**
+  String get progComboRecoveryStep3Desc;
+
+  /// No description provided for @progComboRecoveryFinaleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery · finale'**
+  String get progComboRecoveryFinaleTitle;
+
+  /// No description provided for @progComboRecoveryFinaleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet today\'s sleep, steps, protein and calories goals.'**
+  String get progComboRecoveryFinaleDesc;
+
+  /// No description provided for @progComboNutritionStep1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition master · calories'**
+  String get progComboNutritionStep1Title;
+
+  /// No description provided for @progComboNutritionStep1Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet today\'s calorie goal.'**
+  String get progComboNutritionStep1Desc;
+
+  /// No description provided for @progComboNutritionStep2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition master · + protein'**
+  String get progComboNutritionStep2Title;
+
+  /// No description provided for @progComboNutritionStep2Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet today\'s calorie and protein goals.'**
+  String get progComboNutritionStep2Desc;
+
+  /// No description provided for @progComboNutritionStep3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition master · + carbs'**
+  String get progComboNutritionStep3Title;
+
+  /// No description provided for @progComboNutritionStep3Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet today\'s calorie, protein and carb goals.'**
+  String get progComboNutritionStep3Desc;
+
+  /// No description provided for @progComboNutritionStep4Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition master · + fat'**
+  String get progComboNutritionStep4Title;
+
+  /// No description provided for @progComboNutritionStep4Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet today\'s calorie, protein, carb and fat goals.'**
+  String get progComboNutritionStep4Desc;
+
+  /// No description provided for @progComboNutritionFinaleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition master · finale'**
+  String get progComboNutritionFinaleTitle;
+
+  /// No description provided for @progComboNutritionFinaleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet all macro goals today: calories, protein, carbs, fat and fiber.'**
+  String get progComboNutritionFinaleDesc;
 
   /// No description provided for @progQuestSleepTotal250hTitle.
   ///
@@ -6428,35 +7106,95 @@ abstract class AppLocalizations {
   /// **'Region discovered'**
   String get celebrationLocationEyebrow;
 
-  /// No description provided for @celebrationGreatRewardEyebrow.
+  /// No description provided for @celebrationChapterEyebrow.
   ///
   /// In en, this message translates to:
-  /// **'Great reward'**
-  String get celebrationGreatRewardEyebrow;
+  /// **'Chapter complete'**
+  String get celebrationChapterEyebrow;
 
-  /// No description provided for @celebrationGotRewards.
+  /// No description provided for @celebrationChapterUnlockedEyebrow.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{You got {count} reward} other{You got {count} rewards}}'**
-  String celebrationGotRewards(int count);
+  /// **'New chapter unlocked'**
+  String get celebrationChapterUnlockedEyebrow;
 
-  /// No description provided for @celebrationClaimXp.
+  /// No description provided for @celebrationMilestoneEyebrow.
   ///
   /// In en, this message translates to:
-  /// **'Claim +{xp} XP'**
-  String celebrationClaimXp(int xp);
+  /// **'Milestone reached'**
+  String get celebrationMilestoneEyebrow;
 
-  /// No description provided for @celebrationClaimedXp.
+  /// No description provided for @celebrationRelicEyebrow.
   ///
   /// In en, this message translates to:
-  /// **'Claimed · +{xp} XP'**
-  String celebrationClaimedXp(int xp);
+  /// **'Relic acquired'**
+  String get celebrationRelicEyebrow;
 
-  /// No description provided for @celebrationNextReward.
+  /// No description provided for @celebrationContentUnlockEyebrow.
   ///
   /// In en, this message translates to:
-  /// **'Next reward'**
-  String get celebrationNextReward;
+  /// **'New chapter'**
+  String get celebrationContentUnlockEyebrow;
+
+  /// No description provided for @celebrationCompanionReadyEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Companion ready'**
+  String get celebrationCompanionReadyEyebrow;
+
+  /// No description provided for @celebrationGoalEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal complete'**
+  String get celebrationGoalEyebrow;
+
+  /// No description provided for @celebrationAchievementPackEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Moment'**
+  String get celebrationAchievementPackEyebrow;
+
+  /// No description provided for @celebrationAchievementPackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 achievement unlocked} other{{count} achievements unlocked}}'**
+  String celebrationAchievementPackTitle(int count);
+
+  /// No description provided for @celebrationWelcomeBackEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back'**
+  String get celebrationWelcomeBackEyebrow;
+
+  /// No description provided for @celebrationWelcomeBackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{count} reward waiting for you} other{{count} rewards waiting for you}}'**
+  String celebrationWelcomeBackTitle(int count);
+
+  /// No description provided for @celebrationCosmeticUnlockedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{New reward} other{{count} new rewards}}'**
+  String celebrationCosmeticUnlockedTitle(int count);
+
+  /// No description provided for @celebrationOrphanRewardHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reward from your progress'**
+  String get celebrationOrphanRewardHint;
+
+  /// No description provided for @celebrationSummaryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary from the latest sync'**
+  String get celebrationSummaryHint;
+
+  /// No description provided for @celebrationChapterUnlockedSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'Next chapter unlocked: {name}'**
+  String celebrationChapterUnlockedSuffix(String name);
 
   /// No description provided for @celebrationContinue.
   ///
@@ -6470,18 +7208,6 @@ abstract class AppLocalizations {
   /// **'Open inventory →'**
   String get celebrationOpenInventory;
 
-  /// No description provided for @celebrationTapOrSwipe.
-  ///
-  /// In en, this message translates to:
-  /// **'Tap or swipe →'**
-  String get celebrationTapOrSwipe;
-
-  /// No description provided for @celebrationDone.
-  ///
-  /// In en, this message translates to:
-  /// **'Done'**
-  String get celebrationDone;
-
   /// No description provided for @celebrationLevelTitle.
   ///
   /// In en, this message translates to:
@@ -6493,6 +7219,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Level {level}'**
   String celebrationLevelTitleNoTitle(int level);
+
+  /// No description provided for @celebrationLevelDecorativeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {level} · {name}'**
+  String celebrationLevelDecorativeTitle(int level, String name);
 
   /// No description provided for @celebrationXpRewardName.
   ///

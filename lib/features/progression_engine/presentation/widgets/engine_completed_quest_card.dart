@@ -216,7 +216,7 @@ class EngineCompletedQuestCard extends StatelessWidget {
   }
 
   static String _formatDate(DateTime ts, String locale) {
-    return DateFormat('d MMM Â· HH:mm', locale).format(ts);
+    return DateFormat('d MMM · HH:mm', locale).format(ts);
   }
 }
 

@@ -171,7 +171,7 @@ class _CompletedRow extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   l10n.progRewardsUnlockedAt(
-                    DateFormat('d MMM Â· HH:mm', locale)
+                    DateFormat('d MMM · HH:mm', locale)
                         .format(entry.completedAt),
                   ),
                   style: TextStyle(

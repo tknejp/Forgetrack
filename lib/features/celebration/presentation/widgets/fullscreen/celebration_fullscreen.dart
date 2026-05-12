@@ -9,6 +9,7 @@ import '../../../domain/models/celebration_reward.dart';
 import '../shared/aura_layer.dart';
 import '../shared/particles_layer.dart';
 import '../shared/rays_layer.dart';
+import '../shared/xp_award_pill.dart';
 import 'pagination_dots.dart';
 import 'reward_card_stack.dart';
 
@@ -80,29 +81,10 @@ class _CelebrationFullscreenState extends State<CelebrationFullscreen>
       r.kind == CelebrationRewardKind.background ||
       r.kind == CelebrationRewardKind.companion;
 
-  bool _claimFired = false;
-
-  /// Idempotent claim trigger. The combined quest+achievement event is
-  /// rendered fullscreen, but there's no separate claim button on this
-  /// variant — instead we fire the claim once when the celebration is
-  /// dismissed (close button or final "Pokračovat"), so the user gets
-  /// their XP automatically. The provider claim is itself idempotent, so
-  /// pairing with a card-based claim path stays safe.
-  Future<void> _maybeClaim() async {
-    if (_claimFired) return;
-    final claim = widget.event.claim;
-    if (claim == null) return;
-    _claimFired = true;
-    await claim.onClaim(claim.rewardKey);
-  }
-
-  void _dismiss() {
-    _maybeClaim();
-    widget.onDismiss();
-  }
+  void _dismiss() => widget.onDismiss();
 
   void _handlePrimary() {
-    if (_stack.atLast) {
+    if (_stack.atLast || widget.event.rewards.isEmpty) {
       _dismiss();
     } else {
       _stack.advance();
@@ -193,7 +175,7 @@ class _CelebrationFullscreenState extends State<CelebrationFullscreen>
                   FadeTransition(
                     opacity: headerFade,
                     child: Text(
-                      l10n.celebrationGreatRewardEyebrow.toUpperCase(),
+                      event.eyebrow(l10n).toUpperCase(),
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: token.color,
@@ -213,10 +195,10 @@ class _CelebrationFullscreenState extends State<CelebrationFullscreen>
                   FadeTransition(
                     opacity: headerFade,
                     child: Text(
-                      l10n.celebrationGotRewards(
-                        event.rewards.isEmpty ? 1 : event.rewards.length,
-                      ),
+                      event.title(l10n),
                       textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: Color(0xFFF5F3FF),
                         fontSize: 24,
@@ -225,6 +207,33 @@ class _CelebrationFullscreenState extends State<CelebrationFullscreen>
                       ),
                     ),
                   ),
+                  if (event.description != null) ...[
+                    const SizedBox(height: 8),
+                    FadeTransition(
+                      opacity: headerFade,
+                      child: Text(
+                        event.description!(l10n),
+                        textAlign: TextAlign.center,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: ft.onSurfaceMuted,
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                  if (event.xpAward != null) ...[
+                    const SizedBox(height: 10),
+                    FadeTransition(
+                      opacity: headerFade,
+                      child: CelebrationXpAwardPill(
+                        amount: event.xpAward!.amount,
+                      ),
+                    ),
+                  ],
                   const Spacer(),
                   if (event.rewards.isNotEmpty)
                     AnimatedBuilder(
@@ -257,27 +266,11 @@ class _CelebrationFullscreenState extends State<CelebrationFullscreen>
                       onTap: _stack.setActive,
                     ),
                   ),
-                  const SizedBox(height: 14),
-                  FadeTransition(
-                    opacity: cardsFade,
-                    child: Text(
-                      _stack.atLast
-                          ? l10n.celebrationDone
-                          : l10n.celebrationTapOrSwipe,
-                      style: TextStyle(
-                        color: ft.onSurfaceMuted,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
                   const Spacer(),
                   FadeTransition(
                     opacity: ctaFade,
                     child: _PrimaryCta(
-                      label: _stack.atLast
-                          ? l10n.celebrationContinue
-                          : l10n.celebrationNextReward,
+                      label: l10n.celebrationContinue,
                       color: token.color,
                       glow: token.glow,
                       onTap: _handlePrimary,

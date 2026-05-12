@@ -165,7 +165,11 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
     final dailyClaimable = daily.where((q) => q.isAvailableForClaim).toList();
     final weeklyClaimable =
         weekly.where((q) => q.isAvailableForClaim).toList();
-    final dailyActive = daily.where((q) => !q.isCompleted).toList();
+    // Daily slot is sticky for the whole day: claimed cards stay in the
+    // section reading as "done" until midnight rolls a new rotation, so
+    // we pass the full list (no `!isCompleted` filter). The count label
+    // uses unclaimed quests only.
+    final dailyUnclaimed = daily.where((q) => !q.isCompleted).toList();
     // Weekly section now mirrors long-term / chapter rules: a quest
     // that's claimable-but-not-claimed moves to DOKONČENÉ so the row
     // doesn't double-list. Daily stays as-is (claimable still shows
@@ -221,16 +225,17 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                       const SizedBox(height: Tokens.spaceXl),
                     ],
                     QuestSectionPanel(
-                      header: l10n.progQuestsDailyGoalsHeader,
+                      header: l10n.progQuestsDailyTasksHeader,
                       color: Tokens.steps.color,
-                      countLabel: dailyActive.isEmpty
+                      countLabel: dailyUnclaimed.isEmpty
                           ? null
-                          : l10n.progQuestsActiveCount(dailyActive.length),
+                          : l10n.progQuestsActiveCount(dailyUnclaimed.length),
                       emptyTitle: l10n.progQuestsEmptyActiveTitle,
                       emptyCaption: l10n.progQuestsEmptyActiveCaption,
                       claimAllLabel: l10n.progQuestClaimAll,
                       l10n: l10n,
-                      quests: dailyActive,
+                      hint: l10n.progQuestsDailyTasksHint,
+                      quests: daily,
                       claimable: dailyClaimable,
                       enabled: !provider.isEvaluating,
                       pillKeyFor: _pillKeyFor,
@@ -334,6 +339,7 @@ class QuestSectionPanel extends StatelessWidget {
     this.streakFor,
     this.expandedNodeId,
     this.onToggleExpanded,
+    this.hint,
   });
 
   final String header;
@@ -364,6 +370,10 @@ class QuestSectionPanel extends StatelessWidget {
   /// the expand chevron and ignore taps.
   final void Function(String nodeId)? onToggleExpanded;
 
+  /// Optional caption line rendered below the section header — used
+  /// by the daily section to hint that quests rotate at midnight.
+  final String? hint;
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -392,6 +402,17 @@ class QuestSectionPanel extends StatelessWidget {
               ),
           ],
         ),
+        if (hint != null)
+          Padding(
+            padding: const EdgeInsets.only(
+                left: 2, right: 2, bottom: Tokens.spaceXs),
+            child: Text(
+              hint!,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Tokens.onSurfaceMuted,
+                  ),
+            ),
+          ),
         if (quests.isEmpty)
           EngineQuestEmptyLine(title: emptyTitle, caption: emptyCaption)
         else
@@ -478,6 +499,10 @@ class _ChapterSection extends StatelessWidget {
   }
 }
 
+/// "VEDLEJŠÍ ÚKOLY KAPITOLY" section — narrative side quests tied
+/// to the currently-active chapter. One card per uncompleted side
+/// quest; cards disappear individually as they're claimed, and the
+/// whole section retires when the chapter finale completes.
 /// "DLOUHODOBÉ CÍLE" section. Renders one [EngineLongTermCard] per
 /// long-term quest entry. The card aggregates rewards from companion
 /// nodes (achievements sharing the same objective), so the player

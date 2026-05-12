@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../models/engine_evaluation_input.dart';
 import '../models/ledger_event.dart';
 import '../models/progression_node_definition.dart';
 import '../models/reward_definition.dart';
@@ -41,12 +42,21 @@ class RewardGrantPlanner {
     required Iterable<ProgressionNode> completedNodes,
     required LedgerSnapshot ledger,
     required Map<String, String?> periodKeyByNodeId,
+    required EngineEvaluationInput input,
   }) {
     final out = <PlannedRewardGrant>[];
     for (final node in completedNodes) {
       final periodKey = periodKeyByNodeId[node.id];
       for (var i = 0; i < node.rewards.length; i++) {
         final reward = node.rewards[i];
+        // Conditional bonus rewards drop out silently when their
+        // condition fails — the player claimed too late, slept too
+        // little, etc. No ledger event is emitted; the bonus just
+        // doesn't happen this time. The next claim re-evaluates.
+        if (reward is BonusXpReward &&
+            !_bonusConditionMet(reward.condition, input)) {
+          continue;
+        }
         final eventKey = ProgressionNodeResolver.rewardEventKey(
           nodeId: node.id,
           rewardOrdinal: i,
@@ -63,5 +73,16 @@ class RewardGrantPlanner {
       }
     }
     return out;
+  }
+
+  bool _bonusConditionMet(
+    BonusXpCondition condition,
+    EngineEvaluationInput input,
+  ) {
+    return switch (condition) {
+      CompletedBeforeHour(:final hour) =>
+        input.evaluatedAt.toLocal().hour < hour,
+      SleepAtLeast(:final minutes) => input.sleepMinutesToday >= minutes,
+    };
   }
 }

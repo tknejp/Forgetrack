@@ -33,8 +33,8 @@ class RewardGrantService {
 
     for (final p in planned) {
       events.add(_buildOne(p, runningXp: running, timestamp: timestamp));
-      if (p.reward is XpReward) {
-        final base = (p.reward as XpReward).amount;
+      final base = _baseXpFor(p.reward);
+      if (base > 0) {
         final level = levelPolicy.levelForXp(running);
         final scaled = levelPolicy.scaledRewardXp(baseXp: base, level: level);
         running += scaled;
@@ -42,6 +42,17 @@ class RewardGrantService {
     }
 
     return (events: events, runningClaimedXp: running);
+  }
+
+  /// XP rewards (base + bonus) both flow through the level / multiplier
+  /// scaling, so the running counter advances for both kinds. Non-XP
+  /// rewards return 0.
+  int _baseXpFor(RewardDefinition reward) {
+    return switch (reward) {
+      XpReward(:final amount) => amount,
+      BonusXpReward(:final amount) => amount,
+      _ => 0,
+    };
   }
 
   RewardGrantEvent _buildOne(
@@ -52,6 +63,23 @@ class RewardGrantService {
     final reward = planned.reward;
     return switch (reward) {
       XpReward(:final amount) => () {
+          final level = levelPolicy.levelForXp(runningXp);
+          final scaled =
+              levelPolicy.scaledRewardXp(baseXp: amount, level: level);
+          final multiplier = levelPolicy.rewardMultiplierForLevel(level);
+          return RewardGrantEvent(
+            eventKey: planned.eventKey,
+            timestamp: timestamp,
+            nodeId: planned.node.id,
+            rewardOrdinal: planned.rewardOrdinal,
+            rewardKind: RewardGrantKind.xp,
+            periodKey: planned.periodKey,
+            xpAmount: scaled,
+            levelAtGrant: level,
+            multiplierAtGrant: multiplier,
+          );
+        }(),
+      BonusXpReward(:final amount) => () {
           final level = levelPolicy.levelForXp(runningXp);
           final scaled =
               levelPolicy.scaledRewardXp(baseXp: amount, level: level);

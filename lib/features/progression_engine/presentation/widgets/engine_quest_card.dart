@@ -249,7 +249,7 @@ class _StreakChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('ðŸ”¥', style: TextStyle(fontSize: 11)),
+          const Text('🔥', style: TextStyle(fontSize: 11)),
           const SizedBox(width: 3),
           Text(
             '$days',
@@ -287,10 +287,24 @@ class _ExpandedDetails extends StatelessWidget {
     final bestStreak = streak?.bestStreak ?? 0;
 
     // The XP value already lives on the pill in the title row â€” repeating
-    // it inside the expanded panel only adds noise. The panel keeps just
-    // the streak record and any locked hint authored on the node.
+    // it inside the expanded panel only adds noise. The panel keeps the
+    // streak record, any locked hint authored on the node, and the
+    // bonus XP reward (so the player can read the condition without
+    // cluttering the compact description).
     final rows = <Widget>[];
+    for (final reward in quest.node.rewards) {
+      if (reward is! BonusXpReward) continue;
+      final text = _bonusConditionText(reward.condition, reward.amount, l10n);
+      if (text == null) continue;
+      if (rows.isNotEmpty) rows.add(const SizedBox(height: 6));
+      rows.add(_DetailLine(
+        icon: Icons.auto_awesome_rounded,
+        color: Tokens.xp,
+        text: text,
+      ));
+    }
     if (bestStreak > 0) {
+      if (rows.isNotEmpty) rows.add(const SizedBox(height: 6));
       rows.add(_DetailLine(
         icon: Icons.local_fire_department_rounded,
         color: accent,
@@ -321,6 +335,21 @@ class _ExpandedDetails extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Localised, structured text describing a bonus XP condition. Returns
+/// null when the condition variant has no player-facing copy yet.
+String? _bonusConditionText(
+  BonusXpCondition condition,
+  int amount,
+  AppLocalizations l10n,
+) {
+  return switch (condition) {
+    CompletedBeforeHour(:final hour) =>
+      l10n.progBonusXpBeforeHour(amount, hour),
+    SleepAtLeast(:final minutes) =>
+      l10n.progBonusXpSleepAtLeast(amount, minutes),
+  };
 }
 
 class _DetailLine extends StatelessWidget {

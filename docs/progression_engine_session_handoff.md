@@ -411,9 +411,105 @@ patterns:
 
 All chapters now in V2. Remaining content gaps:
 
-- ComboPoolDefinition + tiered daily configs — needed before the
-  daily-combo section can light up. Plan decisions are locked
-  (§4.6, §4.7 of the phase plan); not yet ported.
+- **All 8 V1 achievements ported (Phase 9c follow-up).** Live in
+  `meta_content.dart`:
+  - `daily_quest_3` / `daily_quest_7` / `quest_hunter_250` /
+    `active_days_7` (the four non-combo ones).
+  - `combo_victory_10` / `combo_triple_victory_25` /
+    `combo_triple_victory_100` (combo achievements driven by the
+    new combo infra).
+  - `dragonrock_trial` (composite — `objectiveId: null` with
+    `unlockConditions: [LevelAtLeast(100),
+    ObjectiveCompleted('quest_count_250'),
+    ObjectiveCompleted('lifetime_steps_10m')]`).
+- **Combo system rebuilt** (Phase 9c follow-up — supersedes the 5 V1
+  combo daily quests). The old V1-parity combo quests fought the
+  2-per-day base daily rotation and rarely surfaced. They've been
+  replaced with three themed sequential chains in `combo_content.dart`:
+  - `combo_balanced` (4 steps) → any 1/2/3/4 daily goals today
+  - `combo_recovery` (4 steps) → sleep → +steps → +protein → +calories
+  - `combo_nutrition` (5 steps) → kcal → +protein → +carbs → +fat → +fiber
+  
+  Each step uses `TodayCompletionsAmongMetric` with a growing
+  `nodeIds` set + `targetValue`, gated linearly by
+  `prerequisiteNodeIds`. Chain N+1's first step references chain N's
+  finale as its prerequisite — cross-chain rotation is **finite**:
+  chain 1 → 2 → 3 → end. Perpetual rotation needs an engine-level
+  lap counter (not implemented; documented as future work).
+  
+  Combo content lives in its own `QuestDisplayBucket.combo` bucket
+  rendered as a new "DENNÍ COMBO" section on the quest screen
+  (provider getter `currentComboQuests`; `_ComboSection` widget;
+  `lockedQuests` skips combo so locked steps don't crowd the section).
+  
+  Combo quests still share `comboPoolId: 'daily_combo_pool'` so
+  `combo_victory_10` keeps counting. `combo_triple_victory_25/100`
+  now reference the 7 "3+ atoms" combo node ids
+  (`combo_*_step_3`, `combo_*_finale`, `combo_nutrition_step_4`).
+- **Nutrition expansion** — added `CarbsGramsMetric`,
+  `FatGramsMetric`, `FiberGramsMetric` and three new daily quests
+  (`daily_carbs_today` / `daily_fat_today` / `daily_fiber_today`).
+  `EngineEvaluationInput` gains `carbsGramsToday`, `fatGramsToday`,
+  `fiberGramsToday`; `ProviderEngineInputSource` pulls them from
+  `KalorickeTabulkyProvider`. Fiber goal uses the `EngineGoalSet`
+  default (30 g) since `GoalsProvider` has no fiber setter yet.
+- **Celebration multi-merge** — fold pass now bundles ≥2 solo
+  `CelebrationType.achievement` events from the same evaluation
+  result into a single fullscreen "moment pack" event. Fixes the
+  welcome flow that previously showed `welcome_to_journey` and
+  `first_reward` as two separate popups. New l10n keys:
+  `celebrationAchievementPackEyebrow` /
+  `celebrationAchievementPackTitle(count)`.
+- **DevTools — progression engine controls** (Phase 9c). New panels
+  in `DevToolsProgressionEngineSection`:
+  - **Add XP**: appends a synthetic XP grant on top of existing
+    ledger state (additive, vs. the existing destructive "Set XP").
+  - **Set level**: derives target XP via
+    `ProgressionLevelPolicy.xpRequiredForLevel(N)` and calls
+    `devToolsSetTotalXp`.
+  - **Force complete node**: by id; injects a synthetic
+    `NodeCompletionEvent` + matching reward grants and re-evaluates
+    so cascading unlocks (companion, chapter content, level
+    milestones) fire as for real completion.
+  - **Complete all daily quests (today)**: shortcut that
+    force-completes every `QuestDisplayBucket.daily` node so the
+    day's combo chain advances + downstream achievements fire.
+- **All 7 companion availability nodes ported** to
+  `content/companions_content.dart`, mirroring the
+  `cosmetics/plan.md` chain spec: each `CompanionAvailabilityNode`
+  is gated on a level + completion of the two relic-granting
+  achievements (`NodeCompleted` references; relics live as
+  `CosmeticReward`s on the achievements, no standalone `RelicNode`
+  entries). Eight content tiers from `ember_sprite` (level 5) up to
+  `dragonling` (level 100, mythic).
+- **Required new metric infrastructure** (`objective_metric.dart`):
+  - `QuestCompletionsByBucketMetric({bucket})` — drives
+    `daily_quest_3/7` (bucket = daily) and `quest_hunter_250`
+    (bucket = null → total).
+  - `DistinctActiveDaysMetric()` — drives `active_days_7`.
+  - `TodayCompletionsAmongMetric({nodeIds})` — drives the combo
+    daily quests' "K of M daily rules met today" objective.
+  - `LifetimeCompletionsAmongMetric({nodeIds})` — drives the
+    `triple_combo_25/100` objectives that span both `triple_win`
+    and `four_pillars` quests (a quest can have at most one
+    `comboPoolId`, so a node-set sum was the cleanest expression).
+- **`EngineEvaluationInput` additions**: `totalQuestCompletions`,
+  `questCompletionsByBucket`, `distinctActiveDays`,
+  `nodesCompletedToday`, plus the previously declared-but-unused
+  `comboPoolCompletionCounts` is now populated.
+- **Ledger aggregators in `progression_engine_provider.dart`**:
+  `_questCompletionsFromLedger()` (joins ledger with catalog to
+  filter to `QuestNode` completions, returns total + per-bucket
+  counts), `_distinctActiveDaysFromLedger()`,
+  `_nodesCompletedTodayFromLedger()`, and
+  `_comboPoolCompletionCountsFromLedger()`. Both `buildInput`
+  call sites thread the new aggregations through.
+- **`rpg_placeholders.dart` deleted** (Phase 9c cleanup). It
+  contained a fake `companion_pilgrim_fox` (cosmetic id didn't exist
+  in the catalog) and a standalone `RelicNode` `relic_pilgrim_compass`
+  that shadowed the established "relic = `CosmeticReward` on
+  achievement" pattern used by every other relic. Both fired
+  spurious duplicate "Vítej na cestě" celebrations at level 20.
 - Step-based chapter steps (`mine_descent_steps_250k`,
   `icewalker_route_steps_500k`) fall back to lifetime semantics
   because the baseline-at-unlock override only handles

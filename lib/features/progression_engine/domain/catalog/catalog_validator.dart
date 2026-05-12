@@ -187,6 +187,15 @@ class CatalogValidator {
                   'NodeCompleted references node "$nodeId" which is not in the catalog.',
             );
           }
+        case NodeCompletedBeforeToday(:final nodeId):
+          if (!knownNodeIds.contains(nodeId)) {
+            yield CatalogValidationIssue(
+              severity: CatalogValidationSeverity.error,
+              path: 'nodes[$nodeId].unlockConditions',
+              message:
+                  'NodeCompletedBeforeToday references node "$nodeId" which is not in the catalog.',
+            );
+          }
         // Other condition types (LevelAtLeast, ObjectiveCompleted,
         // ChapterUnlocked, CompanionAvailable, RpgModeEnabled) need
         // catalog lookups (chapter catalog, companion id lists) that
@@ -195,6 +204,7 @@ class CatalogValidator {
         case LevelAtLeast():
         case ObjectiveCompleted():
         case ChapterUnlocked():
+        case ChapterActive():
         case CompanionAvailable():
         case RpgModeEnabled():
           break;
@@ -255,7 +265,9 @@ class CatalogValidator {
           out.addAll(_flattenLevelAtLeast(conditions));
         case ObjectiveCompleted():
         case NodeCompleted():
+        case NodeCompletedBeforeToday():
         case ChapterUnlocked():
+        case ChapterActive():
         case CompanionAvailable():
         case RpgModeEnabled():
           break;

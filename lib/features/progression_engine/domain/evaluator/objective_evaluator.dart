@@ -86,6 +86,18 @@ class ObjectiveEvaluator {
           TodayScope() => input.proteinGramsToday,
           _ => 0,
         },
+      CarbsGramsMetric() => switch (scope) {
+          TodayScope() => input.carbsGramsToday,
+          _ => 0,
+        },
+      FatGramsMetric() => switch (scope) {
+          TodayScope() => input.fatGramsToday,
+          _ => 0,
+        },
+      FiberGramsMetric() => switch (scope) {
+          TodayScope() => input.fiberGramsToday,
+          _ => 0,
+        },
       SleepMinutesMetric() => switch (scope) {
           TodayScope() => input.sleepMinutesToday.toDouble(),
           RollingWindowScope(:final days) =>
@@ -120,6 +132,24 @@ class ObjectiveEvaluator {
         (input.nodeCompletionCounts[nodeId] ?? 0).toDouble(),
       ComboPoolCompletionsMetric(:final poolId) =>
         (input.comboPoolCompletionCounts[poolId] ?? 0).toDouble(),
+      QuestCompletionsByBucketMetric(:final bucket) => bucket == null
+          ? input.totalQuestCompletions.toDouble()
+          : (input.questCompletionsByBucket[bucket.name] ?? 0).toDouble(),
+      DistinctActiveDaysMetric() => input.distinctActiveDays.toDouble(),
+      TodayCompletionsAmongMetric(:final nodeIds) => () {
+        var n = 0;
+        for (final id in nodeIds) {
+          if (input.nodesCompletedToday.contains(id)) n++;
+        }
+        return n.toDouble();
+      }(),
+      LifetimeCompletionsAmongMetric(:final nodeIds) => () {
+        var n = 0;
+        for (final id in nodeIds) {
+          n += input.nodeCompletionCounts[id] ?? 0;
+        }
+        return n.toDouble();
+      }(),
     };
   }
 

@@ -24,8 +24,32 @@ class NodeCompleted extends UnlockCondition {
   final String nodeId;
 }
 
+/// The named node has a completion event whose timestamp is **strictly
+/// before today's local midnight**. Used by combo daily chains where
+/// only one step per day may complete — step N+1 stays gated on the
+/// same calendar day step N finished, even if today's atoms would
+/// satisfy step N+1's objective.
+class NodeCompletedBeforeToday extends UnlockCondition {
+  const NodeCompletedBeforeToday(this.nodeId);
+  final String nodeId;
+}
+
 class ChapterUnlocked extends UnlockCondition {
   const ChapterUnlocked(this.chapterId);
+  final String chapterId;
+}
+
+/// Chapter is **currently active** — the player has cleared the
+/// chapter's `open` quest but has not yet completed its `finale`.
+/// Used by chapter-themed daily side quests so they only appear
+/// while the matching chapter is in play; once the chapter
+/// finishes, the side quests retire automatically.
+///
+/// Convention: open/finale node ids are `<chapterId>_open` and
+/// `<chapterId>_finale`. The resolver walks `completedNodeIds` to
+/// evaluate; no engine input wiring needed.
+class ChapterActive extends UnlockCondition {
+  const ChapterActive(this.chapterId);
   final String chapterId;
 }
 

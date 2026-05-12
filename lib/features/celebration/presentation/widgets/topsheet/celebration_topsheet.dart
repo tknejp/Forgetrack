@@ -8,7 +8,7 @@ import '../../../domain/models/celebration_event.dart';
 import '../shared/aura_layer.dart';
 import '../shared/particles_layer.dart';
 import '../shared/type_badge.dart';
-import 'claim_button.dart';
+import '../shared/xp_award_pill.dart';
 import 'topsheet_reward_row.dart';
 
 /// Variant D — top-anchored small-win celebration. Renders a stack of:
@@ -25,17 +25,10 @@ class CelebrationTopsheet extends StatefulWidget {
     super.key,
     required this.event,
     required this.onDismiss,
-    required this.onClaimAttempt,
   });
 
   final CelebrationEvent event;
   final VoidCallback onDismiss;
-
-  /// Invoked once the user taps the claim button — receives the
-  /// rewardKey and is responsible for the idempotent provider call. Returns
-  /// when the upstream operation completes (button stays in `claimed`
-  /// state regardless of outcome since the visual flip is one-way).
-  final Future<void> Function(String rewardKey) onClaimAttempt;
 
   @override
   State<CelebrationTopsheet> createState() => _CelebrationTopsheetState();
@@ -164,15 +157,12 @@ class _CelebrationTopsheetState extends State<CelebrationTopsheet>
                                   parentAnimation: _curve,
                                 ),
                               ],
-                              if (event.claim != null) ...[
+                              if (event.xpAward != null) ...[
                                 const SizedBox(height: 12),
                                 Align(
                                   alignment: Alignment.centerRight,
-                                  child: ClaimButton(
-                                    xpAmount: event.claim!.xpAmount,
-                                    onClaim: () => widget.onClaimAttempt(
-                                      event.claim!.rewardKey,
-                                    ),
+                                  child: CelebrationXpAwardPill(
+                                    amount: event.xpAward!.amount,
                                   ),
                                 ),
                               ],

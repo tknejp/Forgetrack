@@ -1,3 +1,5 @@
+import 'quest_display_bucket.dart';
+
 /// What an objective measures. Sealed so the evaluator gets exhaustive
 /// switch checking and adding a new metric is one case + one resolver
 /// branch.
@@ -21,6 +23,18 @@ class CaloriesMetric extends ObjectiveMetric {
 
 class ProteinGramsMetric extends ObjectiveMetric {
   const ProteinGramsMetric();
+}
+
+class CarbsGramsMetric extends ObjectiveMetric {
+  const CarbsGramsMetric();
+}
+
+class FatGramsMetric extends ObjectiveMetric {
+  const FatGramsMetric();
+}
+
+class FiberGramsMetric extends ObjectiveMetric {
+  const FiberGramsMetric();
 }
 
 class SleepMinutesMetric extends ObjectiveMetric {
@@ -79,4 +93,46 @@ class ComboPoolCompletionsMetric extends ObjectiveMetric {
   const ComboPoolCompletionsMetric({required this.poolId});
 
   final String poolId;
+}
+
+/// Number of [QuestNode] completions across the catalog. When [bucket]
+/// is set, only quests with that [QuestDisplayBucket] are counted
+/// (e.g. `daily` for "complete 3 daily quests"). When null, every
+/// quest counts (the V1 `totalQuestsCompletedAtLeast` semantic).
+class QuestCompletionsByBucketMetric extends ObjectiveMetric {
+  const QuestCompletionsByBucketMetric({this.bucket});
+
+  final QuestDisplayBucket? bucket;
+}
+
+/// Count of distinct calendar dates on which at least one node
+/// completion fired. Mirrors V1 `activeDaysAtLeast` — V1 counted any
+/// rule evaluation; the direct V2 analog is any [NodeCompletionEvent].
+class DistinctActiveDaysMetric extends ObjectiveMetric {
+  const DistinctActiveDaysMetric();
+}
+
+/// Count of how many of the named nodes have a completion event
+/// recorded today. Mirrors V1 `currentPeriodRuleSetAtLeast` — combo
+/// daily quests express "K of M daily rules met today" by listing
+/// the M rule node ids and asking for K matches.
+///
+/// Scope is implicit (today). Pair with [TodayScope] so the resolver
+/// reads the right input slot.
+class TodayCompletionsAmongMetric extends ObjectiveMetric {
+  const TodayCompletionsAmongMetric({required this.nodeIds});
+
+  final List<String> nodeIds;
+}
+
+/// Total lifetime completion count summed across a list of node ids.
+/// Use when an objective counts across several quest variants that
+/// can't share a [comboPoolId] (each [QuestNode] declares at most one
+/// pool today, so achievements like "25 triple-or-higher combos"
+/// that span `daily_triple_win_today` + `daily_four_pillars_today`
+/// reach for this metric instead).
+class LifetimeCompletionsAmongMetric extends ObjectiveMetric {
+  const LifetimeCompletionsAmongMetric({required this.nodeIds});
+
+  final List<String> nodeIds;
 }

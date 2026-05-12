@@ -206,6 +206,7 @@ class ProgressionEngine {
       completedNodes: newlyCompletedNodes,
       ledger: ledger,
       periodKeyByNodeId: periodKeyByNodeId,
+      input: input,
     );
 
     final runningXp = _runningClaimedXp(ledger);

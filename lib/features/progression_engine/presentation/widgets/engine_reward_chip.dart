@@ -65,6 +65,7 @@ class EngineRewardChip extends StatelessWidget {
   static IconData iconFor(RewardDefinition reward) {
     return switch (reward) {
       XpReward() => Icons.bolt_rounded,
+      BonusXpReward() => Icons.auto_awesome_rounded,
       CosmeticReward() => Icons.card_giftcard_rounded,
       ChapterUnlockReward() => Icons.menu_book_rounded,
       CompanionAvailabilityReward() => Icons.groups_2_rounded,

@@ -140,8 +140,16 @@ List<ProgressionNode> stepsNodes() {
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.progRuleDailyStepsDesc,
       titleKey: (l) => l.progRuleDailySteps,
-      descriptionKey: (l) => l.progRuleDailyStepsDesc,
-      rewards: const [XpReward(amount: 80)],
+      descriptionKey: (l) => l.progRuleDailyStepsHintedDesc,
+      // Base 80 XP, +80 bonus when claimed before 18:00 (2× total).
+      // Rewards on-the-day completion vs. last-minute claims.
+      rewards: const [
+        XpReward(amount: 80),
+        BonusXpReward(
+          amount: 80,
+          condition: CompletedBeforeHour(18),
+        ),
+      ],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.common,
       assetKey: questAssetSteps,

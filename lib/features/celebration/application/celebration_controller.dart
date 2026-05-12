@@ -52,12 +52,7 @@ class CelebrationController extends ChangeNotifier {
       _progression!.addListener(_onProgressionChanged);
     }
     if (progressionChanged || cosmeticsChanged) {
-      _adapter = ProgressionEngineCelebrationAdapter(
-        cosmetics: cosmetics,
-        claim: (nodeId) async {
-          await _progression?.claimNode(nodeId: nodeId);
-        },
-      );
+      _adapter = ProgressionEngineCelebrationAdapter(cosmetics: cosmetics);
     }
     _bound = true;
     // bind() runs during the proxy provider's update phase, which is part

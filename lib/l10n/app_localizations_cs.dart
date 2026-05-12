@@ -15,7 +15,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get navOverview => 'Přehled';
 
   @override
-  String get navQuests => 'Questy';
+  String get navQuests => 'Úkoly';
 
   @override
   String get navHero => 'Hero';
@@ -1050,13 +1050,13 @@ class AppLocalizationsCs extends AppLocalizations {
       'Aktivní questy nahoře, dokončené níže.';
 
   @override
-  String get questsScreenEyebrow => 'QUESTY';
+  String get questsScreenEyebrow => 'ÚKOLY';
 
   @override
-  String get questsScreenTitle => 'Tvoje questy a odměny';
+  String get questsScreenTitle => 'Tvoje úkoly a odměny';
 
   @override
-  String get progQuestsActiveHeader => 'AKTIVNÍ QUESTY';
+  String get progQuestsActiveHeader => 'AKTIVNÍ ÚKOLY';
 
   @override
   String progQuestsActiveCount(int count) {
@@ -1067,6 +1067,13 @@ class AppLocalizationsCs extends AppLocalizations {
   String get progQuestsDailyGoalsHeader => 'DENNÍ CÍLE';
 
   @override
+  String get progQuestsDailyTasksHeader => 'DENNÍ ÚKOLY';
+
+  @override
+  String get progQuestsDailyTasksHint =>
+      'Úkoly se denně obměňují — splněné zůstanou viditelné do půlnoci.';
+
+  @override
   String get progQuestsDailyComboHeader => 'DNEŠNÍ KOMBO';
 
   @override
@@ -1074,6 +1081,281 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get progQuestsChapterHeader => 'KAPITOLY CESTY';
+
+  @override
+  String get progQuestsComboHeader => 'DENNÍ COMBO';
+
+  @override
+  String get progQuestsDailyChallengeHeader => 'DENNÍ QUEST';
+
+  @override
+  String get progQuestsChapterSideQuestsHeader => 'VEDLEJŠÍ ÚKOLY KAPITOLY';
+
+  @override
+  String get progSidePilgrimMorningWalkTitle => 'Ranní pochod poutníka';
+
+  @override
+  String get progSidePilgrimMorningWalkDesc =>
+      'Vyraz na cestu hned po probuzení — splň dnes kroky i aktivní minuty.';
+
+  @override
+  String get progSidePilgrimQuietRestTitle => 'Klid poutníka';
+
+  @override
+  String get progSidePilgrimQuietRestDesc =>
+      'Tělo poutníka potřebuje odpočinek — splň dnes spánek i protein.';
+
+  @override
+  String get progSideForestBriskwalkTitle => 'Hbitý krok lesem';
+
+  @override
+  String get progSideForestBriskwalkDesc =>
+      'Les odměňuje pravidelný pohyb — splň dnes kroky i aktivní minuty.';
+
+  @override
+  String get progSideForestCampTitle => 'Tábor pod stromy';
+
+  @override
+  String get progSideForestCampDesc =>
+      'Klid noci v lese — splň dnes spánek, protein i kalorie.';
+
+  @override
+  String get progSideForestClearingTitle => 'Mýtina za úsvitem';
+
+  @override
+  String get progSideForestClearingDesc =>
+      'Mýtina prověří všechny směry — splň dnes kroky, aktivitu, spánek i protein.';
+
+  @override
+  String get progSideMineDeepShaftTitle => 'Hluboká štola';
+
+  @override
+  String get progSideMineDeepShaftDesc =>
+      'Den v hloubce — splň dnes kroky, aktivitu i spánek.';
+
+  @override
+  String get progSideMineForgeFinaleTitle => 'Výheň v jádru hor';
+
+  @override
+  String get progSideMineForgeFinaleDesc =>
+      'Výheň hoří jen pro plné týmy — splň dnes pět denních cílů včetně jídla.';
+
+  @override
+  String get progSidePactMarchTitle => 'Pochod paktu';
+
+  @override
+  String get progSidePactMarchDesc =>
+      'Pakt jde celý den — splň dnes čtyři ze základů (kroky, aktivita, spánek, kalorie).';
+
+  @override
+  String get progSidePactFinaleTitle => 'Pečeť paktu';
+
+  @override
+  String get progSidePactFinaleDesc =>
+      'Pakt vrcholí dokonalou kombinací — splň dnes šest různých denních cílů.';
+
+  @override
+  String get progSideRuinsSteadyDawnTitle => 'Pevné svítání';
+
+  @override
+  String get progSideRuinsSteadyDawnDesc =>
+      'Disciplína začíná ráno — splň dnes kroky, spánek i protein.';
+
+  @override
+  String get progSideRuinsIronIntakeTitle => 'Železná strava';
+
+  @override
+  String get progSideRuinsIronIntakeDesc =>
+      'Tři makra do soumraku — splň dnes libovolné tři nutriční cíle.';
+
+  @override
+  String get progSideMineTorchbearerTitle => 'Nositel pochodně';
+
+  @override
+  String get progSideMineTorchbearerDesc =>
+      'Otevři novou štolu — splň dnes kroky i aktivní minuty.';
+
+  @override
+  String get progSideMineLongHaulTitle => 'Dlouhá šachta';
+
+  @override
+  String get progSideMineLongHaulDesc =>
+      'Vydrž v hloubce celý den — splň kroky, aktivitu i spánek.';
+
+  @override
+  String get progSideForgeMorningAnvilTitle => 'Ranní kovadlina';
+
+  @override
+  String get progSideForgeMorningAnvilDesc =>
+      'Roztop výheň ještě před polednem — splň dnes kroky i aktivní minuty.';
+
+  @override
+  String get progSideForgeFullFurnaceTitle => 'Plná výheň';
+
+  @override
+  String get progSideForgeFullFurnaceDesc =>
+      'Krm oheň ze všech stran — splň dnes čtyři nutriční cíle.';
+
+  @override
+  String get progSideUnderwayWarmCampTitle => 'Teplý tábor';
+
+  @override
+  String get progSideUnderwayWarmCampDesc =>
+      'Skupina potřebuje sílu na cestu — splň dnes spánek, protein i kalorie.';
+
+  @override
+  String get progSideUnderwayLongWatchTitle => 'Dlouhá hlídka';
+
+  @override
+  String get progSideUnderwayLongWatchDesc =>
+      'Drž tempo i v noci — splň dnes kroky, aktivitu i spánek.';
+
+  @override
+  String get progSideFrostboundFirstLightTitle => 'První světlo přísahy';
+
+  @override
+  String get progSideFrostboundFirstLightDesc =>
+      'Vyraz dřív, než mráz polkne stopy — splň dnes kroky i aktivní minuty.';
+
+  @override
+  String get progSideFrostboundLongOathTitle => 'Dlouhá přísaha';
+
+  @override
+  String get progSideFrostboundLongOathDesc =>
+      'Mráz prověřuje celé tělo — splň dnes kroky, spánek, protein i kalorie.';
+
+  @override
+  String get progSideIcewalkerDawnMarchTitle => 'Pochod úsvitem';
+
+  @override
+  String get progSideIcewalkerDawnMarchDesc =>
+      'Ledem se kráčí brzy — splň dnes kroky, aktivitu i kalorie.';
+
+  @override
+  String get progSideIcewalkerProvisionerTitle => 'Zásobovač';
+
+  @override
+  String get progSideIcewalkerProvisionerDesc =>
+      'Karavana musí jíst kompletně — splň dnes všech pět nutričních cílů.';
+
+  @override
+  String get progSideMountainSteepMorningTitle => 'Strmé ráno';
+
+  @override
+  String get progSideMountainSteepMorningDesc =>
+      'Hřeben se neleze v poledne — splň dnes kroky, aktivitu i spánek.';
+
+  @override
+  String get progSideMountainFullRidgeTitle => 'Plný hřeben';
+
+  @override
+  String get progSideMountainFullRidgeDesc =>
+      'Vrchol vyžaduje celého tebe — splň dnes kroky, aktivitu, spánek, protein i kalorie.';
+
+  @override
+  String get progSideDragonroadWardenDawnTitle => 'Strážcovo úsvití';
+
+  @override
+  String get progSideDragonroadWardenDawnDesc =>
+      'Dračí cesta zkouší disciplínu — splň dnes čtyři ze základů (kroky, aktivita, kalorie, protein).';
+
+  @override
+  String get progSideDragonroadIronAppetiteTitle => 'Dračí apetit';
+
+  @override
+  String get progSideDragonroadIronAppetiteDesc =>
+      'Drak jí pět chodů — splň dnes všech pět nutričních cílů.';
+
+  @override
+  String get progSideDragonrockSovereignDawnTitle => 'Trůnní svítání';
+
+  @override
+  String get progSideDragonrockSovereignDawnDesc =>
+      'Vládce nikdy nehladoví — splň dnes kroky a všechny čtyři makro cíle.';
+
+  @override
+  String get progSideDragonrockSovereignVigilTitle => 'Vigilie panovníka';
+
+  @override
+  String get progSideDragonrockSovereignVigilDesc =>
+      'Pečuješ o celé království sebe sama — splň dnes šest z osmi denních cílů.';
+
+  @override
+  String get progSideIcewalkerFinaleTitle => 'Posádka kompletní';
+
+  @override
+  String get progSideIcewalkerFinaleDesc =>
+      'Karavana stojí pevně, ať mráz dělá co chce — splň dnes šest různých denních cílů.';
+
+  @override
+  String get progSideDragonroadFinaleTitle => 'Dračí hodokvas';
+
+  @override
+  String get progSideDragonroadFinaleDesc =>
+      'Drak požaduje celou tabuli — splň dnes sedm z osmi denních cílů.';
+
+  @override
+  String get progSideDragonrockSovereignThroneTitle => 'Trůn Dragonrocku';
+
+  @override
+  String get progSideDragonrockSovereignThroneDesc =>
+      'Tvůj trůn neuhne — splň dnes sedm denních cílů včetně všech čtyř maker.';
+
+  @override
+  String get progSideDragonrockSovereignCrownTitle => 'Koruna nezhasne';
+
+  @override
+  String get progSideDragonrockSovereignCrownDesc =>
+      'Téměř dokonalý den — splň dnes sedm z osmi denních cílů a podrž tempo až do večera.';
+
+  @override
+  String get progSideDragonrockSovereignFinaleTitle => 'Dokonalý den panovníka';
+
+  @override
+  String get progSideDragonrockSovereignFinaleDesc =>
+      'Vrchol cesty — splň dnes všech osm denních cílů. Bonus za 7+ h spánku i za uzavření před 18:00.';
+
+  @override
+  String get progDailyChallengeNutriTripleTitle => 'Trojitá nutri výhra';
+
+  @override
+  String get progDailyChallengeNutriTripleDesc =>
+      'Splň dnes 3 z 5 nutričních cílů (kalorie, protein, sacharidy, tuky, vláknina).';
+
+  @override
+  String get progDailyChallengeActiveDayTitle => 'Aktivní den';
+
+  @override
+  String get progDailyChallengeActiveDayDesc =>
+      'Splň dnes cíl kroků i aktivních minut.';
+
+  @override
+  String get progDailyChallengeFullPlateTitle => 'Plný talíř';
+
+  @override
+  String get progDailyChallengeFullPlateDesc =>
+      'Splň dnes všech 5 nutričních cílů.';
+
+  @override
+  String get progDailyChallengeRecoveryTitle => 'Regenerační den';
+
+  @override
+  String get progDailyChallengeRecoveryDesc =>
+      'Splň dnes spánek i protein — tělo si zaslouží odpočinek.';
+
+  @override
+  String get progDailyChallengeTripleComboTitle => 'Trojkombo';
+
+  @override
+  String get progDailyChallengeTripleComboDesc =>
+      'Splň dnes kroky, spánek i protein.';
+
+  @override
+  String get progDailyChallengeBalancedTitle => 'Vyvážený den';
+
+  @override
+  String get progDailyChallengeBalancedDesc =>
+      'Splň dnes jakékoli 4 denní cíle z osmi.';
 
   @override
   String get progQuestsLongTermHeader => 'DLOUHODOBÉ CÍLE';
@@ -1123,10 +1405,10 @@ class AppLocalizationsCs extends AppLocalizations {
       'Dokonči předchozí kapitolu, abys mohl začít.';
 
   @override
-  String get progQuestsLockedHeader => 'ZAMČENÉ QUESTY';
+  String get progQuestsLockedHeader => 'ZAMČENO';
 
   @override
-  String get progQuestsCompletedHeader => 'DOKONČENÉ QUESTY';
+  String get progQuestsCompletedHeader => 'DOKONČENÉ ÚKOLY';
 
   @override
   String progQuestsCompletedCount(int count) {
@@ -1134,11 +1416,11 @@ class AppLocalizationsCs extends AppLocalizations {
   }
 
   @override
-  String get progQuestsEmptyActiveTitle => 'Žádné aktivní questy.';
+  String get progQuestsEmptyActiveTitle => 'Žádné aktivní úkoly.';
 
   @override
   String get progQuestsEmptyActiveCaption =>
-      'Prošel jsi aktuální katalog questů.';
+      'Prošel jsi aktuální katalog úkolů.';
 
   @override
   String get progQuestsEmptyLockedTitle =>
@@ -1348,6 +1630,30 @@ class AppLocalizationsCs extends AppLocalizations {
   String get progRuleDailyStepsDesc => 'Splň nastavený denní cíl kroků.';
 
   @override
+  String get progRuleDailyStepsHintedDesc => 'Splň nastavený denní cíl kroků.';
+
+  @override
+  String get progRuleDailyCaloriesHintedDesc =>
+      'Splň nastavený denní cíl kalorií.';
+
+  @override
+  String get progRuleDailyActivityHintedDesc =>
+      'Splň nastavený týdenní cíl aktivních minut.';
+
+  @override
+  String progBonusXpBeforeHour(int xp, int hour) {
+    return '+$xp XP bonus, pokud vyzvedneš do $hour:00';
+  }
+
+  @override
+  String progBonusXpSleepAtLeast(int xp, int minutes) {
+    return '+$xp XP bonus, pokud jsi spal alespoň $minutes min';
+  }
+
+  @override
+  String get progBonusXpLabel => 'Bonus XP';
+
+  @override
   String get progRuleDailyCalories => 'Kalorický cíl';
 
   @override
@@ -1490,6 +1796,89 @@ class AppLocalizationsCs extends AppLocalizations {
   @override
   String get progQuestDailyRecoveryFocusTodayDesc =>
       'Splň v aktuálním dni cíl kroků i spánku.';
+
+  @override
+  String get progComboBalancedStep1Title => 'Vyvážený den · 1 cíl';
+
+  @override
+  String get progComboBalancedStep1Desc => 'Splň dnes jakýkoli 1 denní cíl.';
+
+  @override
+  String get progComboBalancedStep2Title => 'Vyvážený den · 2 cíle';
+
+  @override
+  String get progComboBalancedStep2Desc => 'Splň dnes jakékoli 2 denní cíle.';
+
+  @override
+  String get progComboBalancedStep3Title => 'Vyvážený den · 3 cíle';
+
+  @override
+  String get progComboBalancedStep3Desc => 'Splň dnes jakékoli 3 denní cíle.';
+
+  @override
+  String get progComboBalancedFinaleTitle => 'Vyvážený den · finále';
+
+  @override
+  String get progComboBalancedFinaleDesc => 'Splň dnes jakékoli 4 denní cíle.';
+
+  @override
+  String get progComboRecoveryStep1Title => 'Regenerace · spánek';
+
+  @override
+  String get progComboRecoveryStep1Desc => 'Splň dnes cíl spánku.';
+
+  @override
+  String get progComboRecoveryStep2Title => 'Regenerace · spánek + kroky';
+
+  @override
+  String get progComboRecoveryStep2Desc => 'Splň dnes cíl spánku a kroků.';
+
+  @override
+  String get progComboRecoveryStep3Title =>
+      'Regenerace · spánek + kroky + protein';
+
+  @override
+  String get progComboRecoveryStep3Desc => 'Splň dnes spánek, kroky a protein.';
+
+  @override
+  String get progComboRecoveryFinaleTitle => 'Regenerace · finále';
+
+  @override
+  String get progComboRecoveryFinaleDesc =>
+      'Splň dnes spánek, kroky, protein a kalorie.';
+
+  @override
+  String get progComboNutritionStep1Title => 'Nutriční mistr · kalorie';
+
+  @override
+  String get progComboNutritionStep1Desc => 'Splň dnes kalorický cíl.';
+
+  @override
+  String get progComboNutritionStep2Title => 'Nutriční mistr · + protein';
+
+  @override
+  String get progComboNutritionStep2Desc => 'Splň dnes kalorie a protein.';
+
+  @override
+  String get progComboNutritionStep3Title => 'Nutriční mistr · + sacharidy';
+
+  @override
+  String get progComboNutritionStep3Desc =>
+      'Splň dnes kalorie, protein a sacharidy.';
+
+  @override
+  String get progComboNutritionStep4Title => 'Nutriční mistr · + tuky';
+
+  @override
+  String get progComboNutritionStep4Desc =>
+      'Splň dnes kalorie, protein, sacharidy a tuky.';
+
+  @override
+  String get progComboNutritionFinaleTitle => 'Nutriční mistr · finále';
+
+  @override
+  String get progComboNutritionFinaleDesc =>
+      'Splň dnes všechny makro cíle: kalorie, protein, sacharidy, tuky a vlákninu.';
 
   @override
   String get progQuestSleepTotal250hTitle => 'Odpočatá duše';
@@ -3564,44 +3953,85 @@ class AppLocalizationsCs extends AppLocalizations {
   String get celebrationLocationEyebrow => 'Oblast objevena';
 
   @override
-  String get celebrationGreatRewardEyebrow => 'Velká odměna';
+  String get celebrationChapterEyebrow => 'Kapitola dokončena';
 
   @override
-  String celebrationGotRewards(int count) {
+  String get celebrationChapterUnlockedEyebrow => 'Nová kapitola otevřena';
+
+  @override
+  String get celebrationMilestoneEyebrow => 'Milník dosažen';
+
+  @override
+  String get celebrationRelicEyebrow => 'Relikvie získána';
+
+  @override
+  String get celebrationContentUnlockEyebrow => 'Nová kapitola';
+
+  @override
+  String get celebrationCompanionReadyEyebrow => 'Společník připraven';
+
+  @override
+  String get celebrationGoalEyebrow => 'Cíl splněn';
+
+  @override
+  String get celebrationAchievementPackEyebrow => 'Moment';
+
+  @override
+  String celebrationAchievementPackTitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Získal jsi $count odměn',
-      few: 'Získal jsi $count odměny',
-      one: 'Získal jsi $count odměnu',
+      other: 'Odemčeno $count úspěchů',
+      few: 'Odemčeny $count úspěchy',
+      one: 'Odemčen 1 úspěch',
     );
     return '$_temp0';
   }
 
   @override
-  String celebrationClaimXp(int xp) {
-    return 'Vyzvednout +$xp XP';
+  String get celebrationWelcomeBackEyebrow => 'Vítej zpět';
+
+  @override
+  String celebrationWelcomeBackTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Čeká na tebe $count odměn',
+      few: 'Čekají na tebe $count odměny',
+      one: 'Čeká na tebe $count odměna',
+    );
+    return '$_temp0';
   }
 
   @override
-  String celebrationClaimedXp(int xp) {
-    return 'Vyzvednuto · +$xp XP';
+  String celebrationCosmeticUnlockedTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nových odměn',
+      few: '$count nové odměny',
+      one: 'Nová odměna',
+    );
+    return '$_temp0';
   }
 
   @override
-  String get celebrationNextReward => 'Další odměna';
+  String get celebrationOrphanRewardHint => 'Odměna z postupu';
+
+  @override
+  String get celebrationSummaryHint =>
+      'Shrnutí pokroku z poslední synchronizace';
+
+  @override
+  String celebrationChapterUnlockedSuffix(String name) {
+    return 'Odemčena další kapitola: $name';
+  }
 
   @override
   String get celebrationContinue => 'Pokračovat';
 
   @override
   String get celebrationOpenInventory => 'Otevřít inventář →';
-
-  @override
-  String get celebrationTapOrSwipe => 'Tapni nebo přejeď →';
-
-  @override
-  String get celebrationDone => 'Hotovo';
 
   @override
   String celebrationLevelTitle(int level, String title) {
@@ -3611,6 +4041,11 @@ class AppLocalizationsCs extends AppLocalizations {
   @override
   String celebrationLevelTitleNoTitle(int level) {
     return 'Level $level';
+  }
+
+  @override
+  String celebrationLevelDecorativeTitle(int level, String name) {
+    return 'Level $level · $name';
   }
 
   @override

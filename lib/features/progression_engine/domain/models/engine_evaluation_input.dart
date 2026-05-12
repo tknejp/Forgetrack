@@ -20,6 +20,9 @@ class EngineEvaluationInput {
     this.stepsLifetime = 0,
     this.caloriesToday = 0,
     this.proteinGramsToday = 0,
+    this.carbsGramsToday = 0,
+    this.fatGramsToday = 0,
+    this.fiberGramsToday = 0,
     this.sleepMinutesToday = 0,
     this.activityMinutesToday = 0,
     this.totalRewardCount = 0,
@@ -31,6 +34,10 @@ class EngineEvaluationInput {
     this.bestRollingSleepMinutesByDays = const {},
     this.nodeCompletionCounts = const {},
     this.comboPoolCompletionCounts = const {},
+    this.totalQuestCompletions = 0,
+    this.questCompletionsByBucket = const {},
+    this.distinctActiveDays = 0,
+    this.nodesCompletedToday = const {},
     this.objectiveActualOverrides = const {},
     this.rpgModeEnabled = true,
   });
@@ -46,6 +53,9 @@ class EngineEvaluationInput {
   final int stepsLifetime;
   final double caloriesToday;
   final double proteinGramsToday;
+  final double carbsGramsToday;
+  final double fatGramsToday;
+  final double fiberGramsToday;
   final int sleepMinutesToday;
   final int activityMinutesToday;
 
@@ -87,6 +97,29 @@ class EngineEvaluationInput {
   /// `comboPoolId → completions in scope` — for
   /// `ComboPoolCompletionsMetric`.
   final Map<String, int> comboPoolCompletionCounts;
+
+  /// Total number of `QuestNode` completions in the ledger. Drives
+  /// [QuestCompletionsByBucketMetric] when its `bucket` is null
+  /// (V1 `totalQuestsCompletedAtLeast`).
+  final int totalQuestCompletions;
+
+  /// `QuestDisplayBucket.name → quest completion count`. Drives
+  /// [QuestCompletionsByBucketMetric] when its `bucket` is non-null
+  /// (V1 `dailyQuestsCompletedAtLeast`, etc.).
+  final Map<String, int> questCompletionsByBucket;
+
+  /// Number of distinct calendar dates on which any node completion
+  /// fired. Drives [DistinctActiveDaysMetric]. Date-of-event is
+  /// computed in the producer (the provider input source) so the
+  /// evaluator stays pure.
+  final int distinctActiveDays;
+
+  /// Set of node ids whose completion event landed *today*. Drives
+  /// [TodayCompletionsAmongMetric] — combo daily quests use this to
+  /// ask "K of {daily_steps_today, daily_calories_today, …}
+  /// completed today?" Producer (provider input source) decides what
+  /// "today" means (uses the same clock as `evaluatedAt`).
+  final Set<String> nodesCompletedToday;
 
   /// `objectiveId → measured value override` — bypasses the metric
   /// switch in [ObjectiveEvaluator] for objectives whose actual value

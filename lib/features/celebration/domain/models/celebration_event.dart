@@ -29,32 +29,15 @@ enum CelebrationType {
 /// force one variant with [CelebrationEvent.variantOverride].
 enum CelebrationVariant { topsheet, fullscreen }
 
-/// Optional XP-claim affordance attached to a celebration. When non-null the
-/// topsheet renders a gold "Vyzvednout +XP" pill; on tap the controller calls
-/// [onClaim] (idempotent) and flips the button to the "Vyzvednuto" state.
+/// Informational "XP credited" pill attached to a celebration. The V2 engine
+/// credits XP *before* the celebration fires, so this is **not** a tappable
+/// affordance — it reuses the same `XpClaimPill` widget in its `claimed`
+/// state with a one-shot shimmer on entry to communicate "this is what you
+/// just earned." Skipped entirely when [amount] <= 0.
 @immutable
-class CelebrationClaim {
-  const CelebrationClaim({
-    required this.rewardKey,
-    required this.xpAmount,
-    required this.onClaim,
-  });
-
-  /// Matches `ProgressionQuestRewardGrant.rewardKey`. The host pipes this
-  /// straight into `progressionProvider.claimQuestReward`.
-  final String rewardKey;
-
-  /// XP shown on the button (`Vyzvednout +205 XP` / `Vyzvednuto · +205 XP`).
-  /// Note this is the *displayed* value at the time the celebration was
-  /// queued; the engine recomputes the final XP at claim time using current
-  /// level / multiplier, but for the visual we keep the queued value to
-  /// match the user's expectations.
-  final int xpAmount;
-
-  /// Idempotent claim callback. The implementation must tolerate being
-  /// called twice (e.g. once from this celebration, once from a quest card)
-  /// without double-awarding XP.
-  final Future<void> Function(String rewardKey) onClaim;
+class CelebrationXpAward {
+  const CelebrationXpAward(this.amount);
+  final int amount;
 }
 
 /// Self-contained celebration payload. The progression layer produces these;
@@ -70,7 +53,7 @@ class CelebrationEvent {
     required this.rewards,
     required this.headRarity,
     this.description,
-    this.claim,
+    this.xpAward,
     this.variantOverride,
   });
 
@@ -100,8 +83,9 @@ class CelebrationEvent {
   /// ray intensity). Convenience: pass [maxRarityFrom] to compute it.
   final Rarity headRarity;
 
-  /// When non-null the topsheet renders a claim button.
-  final CelebrationClaim? claim;
+  /// When non-null, the celebration shows a static "XP credited" pill that
+  /// shimmers once on entry. Not tappable — V2 has already banked the XP.
+  final CelebrationXpAward? xpAward;
 
   /// When set, [CelebrationRouter.resolve] returns this variant unchanged.
   /// Use sparingly — the auto rule fits 95% of cases.

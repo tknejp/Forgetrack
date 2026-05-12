@@ -31,11 +31,13 @@ List<ProgressionNode> welcomeNodes() {
       // No objective, no conditions — fires on first evaluation.
       titleKey: (l) => l.progAchievementWelcomeToJourneyTitle,
       descriptionKey: (l) => l.progAchievementWelcomeToJourneyDesc,
-      // Welcome ships the camp background so the player has something
-      // to equip on day one. The pilgrim emblem is the Pilgrim Path
-      // chapter's finale reward, not a welcome drop.
+      // Welcome ships a starter pack so the player has something to
+      // equip on day one — the camp background + the pilgrim frame.
+      // The pilgrim_emblem comes later from the Pilgrim Path chapter
+      // finale; this is just the starter wardrobe.
       rewards: const [
         CosmeticReward(cosmeticId: 'background_camp'),
+        CosmeticReward(cosmeticId: 'frame_pilgrim'),
       ],
       contentTags: const [ContentTag.core, ContentTag.cosmetics],
       rarity: Rarity.common,

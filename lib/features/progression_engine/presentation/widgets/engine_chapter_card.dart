@@ -239,6 +239,16 @@ class EngineChapterCard extends StatelessWidget {
                         quest: quest,
                         accent: accent,
                         finaleRewards: finaleRewards,
+                        // Chapter title comes from the chain's open
+                        // node (chainOrder 0) — the chapter's own
+                        // titleKey lives there, not on per-step nodes.
+                        // Used as the expanded-body eyebrow so the
+                        // player sees "Stezka poutníka" instead of a
+                        // redundant step number that just mirrors the
+                        // chain dots above.
+                        chapterTitle: chain.isEmpty
+                            ? null
+                            : chain.first.node.titleKey(l10n),
                         l10n: l10n,
                       ),
                     )
@@ -517,7 +527,7 @@ class _ChainNode extends StatelessWidget {
       );
     } else {
       glyph = Text(
-        'Â·',
+        '·',
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w900,
@@ -571,6 +581,7 @@ class _ChapterExpandedDetails extends StatelessWidget {
     required this.quest,
     required this.accent,
     required this.finaleRewards,
+    required this.chapterTitle,
     required this.l10n,
   });
 
@@ -583,17 +594,23 @@ class _ChapterExpandedDetails extends StatelessWidget {
   /// step that only carries XP.
   final List<RewardDefinition> finaleRewards;
 
+  /// Localized chapter title (e.g. "Stezka poutníka"). Rendered as
+  /// the expanded-body eyebrow so the player learns which chapter
+  /// they're inside without crowding the collapsed card. Replaces
+  /// the previous chainStepLabel eyebrow, which only restated the
+  /// chain-dot number already visible in the chain row above.
+  final String? chapterTitle;
+
   final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
     final lockedHint = quest.node.lockedHintKey?.call(l10n);
-    final stepLabel = quest.node.chainStepLabelKey?.call(l10n);
 
-    final hasStepLabel = stepLabel != null && stepLabel.isNotEmpty;
+    final hasTitle = chapterTitle != null && chapterTitle!.isNotEmpty;
     final hasLockedHint = lockedHint != null && lockedHint.isNotEmpty;
     final hasFinale = finaleRewards.isNotEmpty;
-    if (!hasStepLabel && !hasLockedHint && !hasFinale) {
+    if (!hasTitle && !hasLockedHint && !hasFinale) {
       return const SizedBox.shrink();
     }
 
@@ -608,14 +625,14 @@ class _ChapterExpandedDetails extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (hasStepLabel) ...[
+          if (hasTitle) ...[
             Text(
-              stepLabel,
+              chapterTitle!.toUpperCase(),
               style: TextStyle(
                 fontSize: Tokens.fontSizeMicro,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w900,
                 color: accent,
-                letterSpacing: 0.6,
+                letterSpacing: 1.1,
               ),
             ),
             if (hasLockedHint || hasFinale) const SizedBox(height: 6),

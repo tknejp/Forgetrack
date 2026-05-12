@@ -1,4 +1,7 @@
+import 'bonus_xp_condition.dart';
 import 'content_tag.dart';
+
+export 'bonus_xp_condition.dart';
 
 /// One concrete reward attached to a [ProgressionNode]. Sealed so the
 /// dispatcher and celebration mapper get exhaustive switch checking
@@ -20,6 +23,28 @@ sealed class RewardDefinition {
 class XpReward extends RewardDefinition {
   const XpReward({required this.amount, super.contentTags});
   final int amount;
+}
+
+/// Conditional XP bonus — only fires when the attached
+/// [BonusXpCondition] evaluates to true at claim time. Scales
+/// through the same level / multiplier table as [XpReward], so a
+/// "+80 XP bonus before 18:00" on top of a base 80 XP reward gives
+/// the player a clean 2× reward when claimed early.
+///
+/// The planner filters bonus grants whose condition fails; failed
+/// bonuses leave no trace in the ledger (no "unclaimed bonus"
+/// event), they simply never happen. Per-period rewards (daily
+/// quests) embed their period key into the grant event so each
+/// day's potential bonus is its own idempotency-distinct event.
+class BonusXpReward extends RewardDefinition {
+  const BonusXpReward({
+    required this.amount,
+    required this.condition,
+    super.contentTags,
+  });
+
+  final int amount;
+  final BonusXpCondition condition;
 }
 
 /// Cosmetic unlock — frame, background, emblem, title flair, map

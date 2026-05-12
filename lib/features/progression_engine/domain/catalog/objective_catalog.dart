@@ -4,11 +4,13 @@ import 'content/body_content.dart';
 import 'content/chapter_content.dart';
 import 'content/chapter_forest_trial_content.dart';
 import 'content/chapter_pilgrim_path_content.dart';
+import 'content/chapter_side_quest_content.dart';
+import 'content/combo_content.dart';
+import 'content/daily_challenge_content.dart';
 import 'content/level_milestones.dart';
 import 'content/long_term_content.dart';
 import 'content/meta_content.dart';
 import 'content/nutrition_content.dart';
-import 'content/rpg_placeholders.dart';
 import 'content/sleep_content.dart';
 import 'content/steps_content.dart';
 import 'content/welcome_content.dart';
@@ -47,10 +49,12 @@ class ObjectiveCatalog {
       ...metaObjectives(context),
       ...welcomeObjectives(context),
       ...levelMilestoneObjectives(context),
-      ...rpgObjectives(context),
       ...pilgrimPathObjectives(),
       ...forestTrialObjectives(),
       ...chapterObjectives(),
+      ...comboObjectives(context),
+      ...dailyChallengeObjectives(context),
+      ...chapterSideQuestObjectives(context),
       ...longTermObjectives(),
     ];
   }

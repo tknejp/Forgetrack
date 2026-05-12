@@ -77,7 +77,6 @@ class _CelebrationOverlayHostState extends State<CelebrationOverlayHost> {
             key: ValueKey(event.id),
             event: event,
             onDismiss: controller.dismiss,
-            onClaimAttempt: controller.claim,
           ),
         ),
       ],
