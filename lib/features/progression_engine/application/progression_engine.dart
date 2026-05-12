@@ -84,18 +84,37 @@ class ProgressionEngine {
     final timestamp = input.evaluatedAt;
 
     // Step 2: evaluate objectives.
+    //
+    // A persisted `ObjectiveCompletionEvent` for the current period is
+    // authoritative: it means the engine (or devtools) already
+    // declared this objective done. We carry that forward so the
+    // node resolver downstream sees `outcome.completed == true` and
+    // emits the proper available / completed state. Without this,
+    // devtools shortcuts that write only the objective event
+    // (`devToolsMarkObjectiveMet`) would never surface the claim
+    // pill, because the live metric reading still says "not yet"
+    // and the resolver short-circuited to in-progress.
     final outcomes = <String, ObjectiveOutcome>{};
     final newObjectiveEvents = <ObjectiveCompletionEvent>[];
     final completedObjectives = <ObjectiveCompletion>[];
     for (final o in objectives) {
-      final outcome = _objectiveEvaluator.evaluate(o, input);
-      outcomes[o.id] = outcome;
-      if (!outcome.completed) continue;
+      var outcome = _objectiveEvaluator.evaluate(o, input);
       final key = ProgressionNodeResolver.objectiveCompletionEventKey(
         o.id,
         outcome.periodKey,
       );
-      if (ledger.hasEventKey(key)) continue;
+      final persistedComplete = ledger.hasEventKey(key);
+      if (persistedComplete && !outcome.completed) {
+        outcome = ObjectiveOutcome(
+          objectiveId: o.id,
+          actualValue: o.targetValue,
+          completed: true,
+          periodKey: outcome.periodKey,
+        );
+      }
+      outcomes[o.id] = outcome;
+      if (!outcome.completed) continue;
+      if (persistedComplete) continue;
       final event = ObjectiveCompletionEvent(
         eventKey: key,
         timestamp: timestamp,
@@ -169,15 +188,23 @@ class ProgressionEngine {
     final periodKeyByNodeId = <String, String?>{};
     for (final r in resolutions) {
       periodKeyByNodeId[r.node.id] = r.periodKey;
+      final completionKey = ProgressionNodeResolver.completionEventKey(
+        r.node.id,
+        r.periodKey,
+      );
+      // Periodic quests (daily / weekly) need a NodeCompletionEvent
+      // every period they're satisfied — yesterday's completion has
+      // a different periodKey, so dedup by the period-aware event
+      // key, not by raw node id. The old node-id dedup quietly
+      // suppressed every subsequent day's completion (and the
+      // matching reward grant), which broke devtools day-advance
+      // workflows for daily goals and would have broken real
+      // post-midnight rotation too.
       switch (r.state) {
         case _ when r.state.name == 'completed' &&
-              !priorCompletedNodeIds.contains(r.node.id):
-          final key = ProgressionNodeResolver.completionEventKey(
-            r.node.id,
-            r.periodKey,
-          );
+              !ledger.hasEventKey(completionKey):
           final event = NodeCompletionEvent(
-            eventKey: key,
+            eventKey: completionKey,
             timestamp: timestamp,
             nodeId: r.node.id,
             periodKey: r.periodKey,

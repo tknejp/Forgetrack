@@ -436,6 +436,12 @@ QuestNode _standalone({
     unlockConditions: [
       ChapterActive(chapterId),
       NodeCompleted(chapterEntryGateNodeId),
+      // Wait at least until the day after the chapter chain step
+      // lands. Without this, claiming a daily that satisfies the
+      // chapter step would surface the side quest in the very same
+      // session — the player would never get a sense of "tomorrow
+      // brings new content".
+      NodeCompletedBeforeToday(chapterEntryGateNodeId),
     ],
     titleKey: titleKey,
     descriptionKey: descriptionKey,
@@ -470,9 +476,14 @@ QuestNode _chainStep({
 }) {
   final unlocks = <UnlockCondition>[
     ChapterActive(chapterId),
-    if (prerequisiteNodeId == null)
-      NodeCompleted(chapterEntryGateNodeId)
-    else ...[
+    if (prerequisiteNodeId == null) ...[
+      NodeCompleted(chapterEntryGateNodeId),
+      // Step 1 of a chain waits one day after the chapter chain step
+      // it gates on — same rule as standalone side quests. Without
+      // this the player would unlock the side-quest chain in the
+      // same session as the daily that satisfied the chapter step.
+      NodeCompletedBeforeToday(chapterEntryGateNodeId),
+    ] else ...[
       NodeCompleted(prerequisiteNodeId),
       NodeCompletedBeforeToday(prerequisiteNodeId),
     ],

@@ -28,6 +28,7 @@ class _DevToolsProgressionEngineSectionState
   bool _isWiping = false;
   bool _isClaiming = false;
   bool _isCompletingDailies = false;
+  bool _isCompletingChapter = false;
 
   @override
   Widget build(BuildContext context) {
@@ -128,6 +129,23 @@ class _DevToolsProgressionEngineSectionState
         const DevToolsSectionDivider(),
         _DailyGoalChipsPanel(
           isBusy: _isEvaluating || _isWiping || p.isEvaluating,
+        ),
+        const DevToolsSectionDivider(),
+        DevToolsActionTile(
+          label: 'Mark active chapter step as met',
+          subtitle:
+              'Writes the chapter step\'s ObjectiveCompletionEvent so '
+              'the chapter card surfaces the normal Vyzvednout pill. '
+              'Tap the pill afterwards to trigger the real claim '
+              'flow (XP grant + fullscreen celebration). Auto-claim '
+              'devtools was silently finalising the step and '
+              'swallowing the celebration.',
+          icon: Icons.flag_rounded,
+          isLoading: _isCompletingChapter,
+          isDisabled: _isEvaluating || _isWiping || _isCompletingDailies,
+          onTap: _isCompletingChapter
+              ? null
+              : () => _completeActiveChapterSteps(context),
         ),
         const DevToolsSectionDivider(),
         DevToolsActionTile(
@@ -268,6 +286,40 @@ class _DevToolsProgressionEngineSectionState
       );
     } finally {
       if (mounted) setState(() => _isClaiming = false);
+    }
+  }
+
+  /// Marks the bound objective of every active chapter step as met
+  /// — **without** auto-claiming. The chapter card then surfaces the
+  /// "Vyzvednout XP" pill so the player can tap through the real
+  /// claim flow (XP grant + fullscreen celebration). The earlier
+  /// shortcut wrote `NodeClaimEvent` directly, which silently
+  /// finalised the step and skipped both the visible claim pill and
+  /// the celebration — exactly the symptom the user reported as
+  /// "chapter quest doesn't offer claim XP".
+  Future<void> _completeActiveChapterSteps(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = context.read<ProgressionEngineProvider>();
+    final chapters = provider.currentChapterQuests;
+    if (chapters.isEmpty) return;
+
+    setState(() => _isCompletingChapter = true);
+    var marked = 0;
+    try {
+      for (final q in chapters) {
+        if (q.isCompleted || q.isAvailableForClaim) continue;
+        await provider.devToolsMarkObjectiveMet(q.nodeId);
+        marked += 1;
+      }
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text(
+          'Marked objective met for $marked chapter step(s) — '
+          'tap the Vyzvednout pill on the chapter card to claim.',
+        )),
+      );
+    } finally {
+      if (mounted) setState(() => _isCompletingChapter = false);
     }
   }
 

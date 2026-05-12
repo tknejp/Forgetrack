@@ -211,7 +211,8 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                     28,
                   ),
                   children: [
-                    if (chapters.isNotEmpty) ...[
+                    if (chapters.isNotEmpty ||
+                        provider.nextLockedChapter != null) ...[
                       _ChapterSection(
                         chapters: chapters,
                         chainResolver: provider.chainQuestsFor,
@@ -221,6 +222,7 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                         onClaim: _claimQuest,
                         expandedNodeId: _expandedNodeId,
                         onToggleExpanded: _toggleExpanded,
+                        nextLocked: provider.nextLockedChapter,
                       ),
                       const SizedBox(height: Tokens.spaceXl),
                     ],
@@ -245,6 +247,7 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                           provider.streakForObjective(q.node.objectiveId),
                       expandedNodeId: _expandedNodeId,
                       onToggleExpanded: _toggleExpanded,
+                      chainResolver: provider.chainQuestsFor,
                     ),
                     const SizedBox(height: Tokens.spaceXl),
                     QuestSectionPanel(
@@ -340,6 +343,7 @@ class QuestSectionPanel extends StatelessWidget {
     this.expandedNodeId,
     this.onToggleExpanded,
     this.hint,
+    this.chainResolver,
   });
 
   final String header;
@@ -373,6 +377,11 @@ class QuestSectionPanel extends StatelessWidget {
   /// Optional caption line rendered below the section header — used
   /// by the daily section to hint that quests rotate at midnight.
   final String? hint;
+
+  /// Resolves the full chain (in chainOrder) for a given chainId.
+  /// When present, combo daily quests render the chain-dot preview
+  /// like chapter cards do. Tests can pass null to skip the lookup.
+  final List<EngineQuestProgress> Function(String chainId)? chainResolver;
 
   @override
   Widget build(BuildContext context) {
@@ -431,6 +440,17 @@ class QuestSectionPanel extends StatelessWidget {
                   onToggle: onToggleExpanded == null
                       ? null
                       : () => onToggleExpanded!(quests[i].nodeId),
+                  // Combo daily quests carry a chainId; the resolver
+                  // returns the full chain so the card renders the
+                  // chain-dot preview row. Non-combo cards pass an
+                  // empty chain and skip the row entirely.
+                  chain: () {
+                    final chainId = quests[i].node.chainId;
+                    if (chainId == null || chainResolver == null) {
+                      return const <EngineQuestProgress>[];
+                    }
+                    return chainResolver!(chainId);
+                  }(),
                 ),
               ],
             ],
@@ -455,6 +475,7 @@ class _ChapterSection extends StatelessWidget {
     required this.onClaim,
     required this.expandedNodeId,
     required this.onToggleExpanded,
+    this.nextLocked,
   });
 
   final List<EngineQuestProgress> chapters;
@@ -466,6 +487,12 @@ class _ChapterSection extends StatelessWidget {
       onClaim;
   final String? expandedNodeId;
   final void Function(String nodeId) onToggleExpanded;
+
+  /// Compact teaser for the next-up locked chapter. Renders below the
+  /// active chapter cards as a single low-info row ("Odemkne se na
+  /// úrovni 30") so the player sees what's coming after they finish
+  /// the current chapter without spoiling the upcoming content.
+  final EngineQuestProgress? nextLocked;
 
   @override
   Widget build(BuildContext context) {
@@ -494,7 +521,110 @@ class _ChapterSection extends StatelessWidget {
             onToggle: () => onToggleExpanded(chapters[i].nodeId),
           ),
         ],
+        if (nextLocked != null) ...[
+          if (chapters.isNotEmpty) const SizedBox(height: Tokens.spaceSm),
+          _NextChapterLockedTeaser(quest: nextLocked!, l10n: l10n),
+        ],
       ],
+    );
+  }
+}
+
+/// Compact "next chapter is coming" tile rendered at the tail of the
+/// JOURNEY section. Shows the chapter's icon (greyed), title, and a
+/// single hint line — no chain dots, no rewards, no XP pill. The
+/// player learns *what* is next and *when* it unlocks without seeing
+/// the actual chapter content yet.
+class _NextChapterLockedTeaser extends StatelessWidget {
+  const _NextChapterLockedTeaser({required this.quest, required this.l10n});
+
+  final EngineQuestProgress quest;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final node = quest.node;
+    final asset = node.assetKey;
+    final level = quest.levelGate;
+    final hint = level != null
+        ? l10n.progChapterLockedLabel(level)
+        : l10n.progQuestsEmptyLockedTitle;
+
+    return Container(
+      padding: const EdgeInsets.all(Tokens.questCardPadding),
+      decoration: BoxDecoration(
+        color: const Color(0xFF111423),
+        borderRadius: BorderRadius.circular(Tokens.questCardRadius),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (asset != null && asset.isNotEmpty)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: ColorFiltered(
+                colorFilter: const ColorFilter.matrix(<double>[
+                  // Greyscale matrix — chapter art is decorative until
+                  // the player unlocks it.
+                  0.33, 0.33, 0.33, 0, 0,
+                  0.33, 0.33, 0.33, 0, 0,
+                  0.33, 0.33, 0.33, 0, 0,
+                  0, 0, 0, 0.55, 0,
+                ]),
+                child: Image.asset(asset, width: 44, height: 44, fit: BoxFit.cover),
+              ),
+            )
+          else
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.lock_outline_rounded,
+                  color: Colors.white, size: 22),
+            ),
+          const SizedBox(width: Tokens.spaceMd),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  node.titleKey(l10n),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white.withValues(alpha: 0.78),
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.lock_outline_rounded,
+                      size: 12,
+                      color: Colors.white.withValues(alpha: 0.55),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      hint,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white.withValues(alpha: 0.55),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

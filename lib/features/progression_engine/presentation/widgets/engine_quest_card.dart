@@ -10,6 +10,7 @@ import '../widgets/progression_primitives.dart';
 import '../../application/progression_engine_provider.dart';
 import '../../domain/models/progression_node_definition.dart';
 import '../../domain/models/reward_definition.dart';
+import 'engine_chapter_card.dart' show EngineChapterChainPreview;
 import 'engine_companion_pill.dart';
 
 /// One quest card in the V2 quests screen.
@@ -34,6 +35,7 @@ class EngineQuestCard extends StatelessWidget {
     this.streak,
     this.isExpanded = false,
     this.onToggle,
+    this.chain = const [],
   });
 
   final EngineQuestProgress quest;
@@ -62,6 +64,12 @@ class EngineQuestCard extends StatelessWidget {
   /// Tap handler for the entire card. Null disables expansion (e.g.
   /// completed quests in the rollup row).
   final VoidCallback? onToggle;
+
+  /// Full chain (in chainOrder) the quest belongs to. Non-empty for
+  /// combo daily quests so the card can render the same horizontal
+  /// chain-dot preview chapters get. Default empty — non-chain cards
+  /// skip the row entirely.
+  final List<EngineQuestProgress> chain;
 
   /// Non-XP rewards on this quest. Surface as chips so future quests
   /// carrying cosmetic/title/emblem/relic/chapter/companion payloads
@@ -145,9 +153,12 @@ class EngineQuestCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 3),
                       Text(
+                        // Lets longer side-quest copy ("splň dnes
+                        // kroky, aktivitu, spánek i protein.") wrap to
+                        // a third line instead of getting clipped with
+                        // an ellipsis. Cards size to content; short
+                        // daily quests stay the same height.
                         quest.node.descriptionKey(l10n),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w500,
@@ -183,7 +194,31 @@ class EngineQuestCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: Tokens.spaceSm),
+            // Chain preview — surfaces only when this card belongs to
+            // a multi-step chain (combo daily quests). Indented under
+            // the leading icon to align with the title column. Small
+            // top gap + larger bottom gap before the progress bar so
+            // the row sits visually centered between the title block
+            // and the progress row instead of crowding the bar.
+            if (chain.length > 1) ...[
+              const SizedBox(height: Tokens.spaceXs),
+              Padding(
+                padding: EdgeInsets.only(
+                  left: (isExpanded
+                          ? Tokens.questAssetExpanded
+                          : Tokens.questAssetCollapsed) +
+                      Tokens.spaceMd,
+                ),
+                child: EngineChapterChainPreview(
+                  chain: chain,
+                  currentNodeId: quest.node.id,
+                  accent: accent,
+                  l10n: l10n,
+                ),
+              ),
+              const SizedBox(height: Tokens.spaceMd),
+            ] else
+              const SizedBox(height: Tokens.spaceSm),
             _ProgressRow(quest: quest, accent: accent),
             // Animate the expand block â€” `AnimatedSize` smooths the
             // height transition; the conditional child collapses to
@@ -395,6 +430,34 @@ class _ProgressRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final locale = Localizations.localeOf(context).toString();
+    final l10n = AppLocalizations.of(context);
+
+    // Completed quests don't need a progress bar — the player has
+    // already met the target. Swap the bar + raw label for a single
+    // "Splněno" line so the card visibly settles into a done state
+    // instead of looking like it's still tracking.
+    if (quest.isCompleted) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Icon(
+            Icons.check_circle_rounded,
+            size: 14,
+            color: accent.withValues(alpha: 0.92),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            l10n.progQuestStatusClaimed,
+            style: TextStyle(
+              fontSize: Tokens.fontSizeMicro,
+              fontWeight: FontWeight.w800,
+              color: accent.withValues(alpha: 0.92),
+              letterSpacing: 0.4,
+            ),
+          ),
+        ],
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -421,6 +484,15 @@ class _ProgressRow extends StatelessWidget {
   }
 
   String _progressLabel(String locale) {
+    // Sleep quests carry their target in minutes (Health Connect
+    // semantic), but the player thinks in hours — switch to the hour
+    // formatter when the objective signals that unit. Other metrics
+    // (steps, kcal, completion counts) stay as integer counts.
+    if (quest.valueUnit == EngineQuestValueUnit.minutes) {
+      final actualH = _formatHours(quest.actualValue, locale);
+      final targetH = _formatHours(quest.targetValue, locale);
+      return '$actualH / $targetH h';
+    }
     final actual = _formatNumber(quest.actualValue, locale);
     final target = _formatNumber(quest.targetValue, locale);
     return '$actual / $target';
@@ -433,6 +505,18 @@ class _ProgressRow extends StatelessWidget {
       return NumberFormat.decimalPattern(locale).format(safe.toInt());
     }
     return safe.toStringAsFixed(1);
+  }
+
+  /// Renders minutes → hours with one decimal when fractional. Used
+  /// for sleep targets so 480 reads as "8" instead of "480".
+  String _formatHours(double minutes, String locale) {
+    final safe = minutes.isFinite ? minutes : 0.0;
+    final hours = safe / 60.0;
+    final isWhole = hours.truncateToDouble() == hours;
+    if (isWhole) {
+      return NumberFormat.decimalPattern(locale).format(hours.toInt());
+    }
+    return hours.toStringAsFixed(1);
   }
 }
 

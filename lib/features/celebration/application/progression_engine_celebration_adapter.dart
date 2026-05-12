@@ -635,7 +635,7 @@ class ProgressionEngineCelebrationAdapter {
     };
   }
 
-  CelebrationEvent _buildQuestEvent(
+  CelebrationEvent? _buildQuestEvent(
     _NodeCompletionPair pair,
     ProgressionResolutionResult result,
   ) {
@@ -645,25 +645,38 @@ class ProgressionEngineCelebrationAdapter {
     final rewards = _cosmeticsToRewards(cosmeticIds);
     final xp = _xpAmountForNode(node.id, result);
 
-    // Chapter opener (first step of a chapter chain) gets the
-    // "Chapter unlocked" treatment — fullscreen, chapter icon as
-    // the headliner card, dedicated eyebrow. The opener itself has
-    // no cosmetic drops (the chapter finale carries those) so the
-    // chapter icon is the entire visual.
-    final isChapterOpener = node.displayBucket == QuestDisplayBucket.chapter &&
-        (node.chainOrder ?? 0) == 0 &&
+    // Quest claims no longer fire a celebration toast/screen by
+    // default — the XP pill on the card flipping to its claimed
+    // state is the only feedback the player needs. Two narrow
+    // exceptions survive:
+    //   * chapter opener → "Nová kapitola otevřena" fullscreen
+    //   * chapter finale → "Kapitola dokončena" fullscreen
+    // Everything else (daily, weekly, long-term, combo, daily
+    // challenge, chapter mid-chain step, chapter side quest)
+    // returns null and the controller silently swallows it.
+    final isChapter = node.displayBucket == QuestDisplayBucket.chapter &&
         node.chapterId != null;
+    final isChapterOpener = isChapter && (node.chainOrder ?? 0) == 0;
+    final isChapterFinale = isChapter &&
+        (node.chainOrder ?? 0) > 0 &&
+        node.nextNodeIds.isEmpty;
+
+    if (!isChapterOpener && !isChapterFinale) {
+      return null;
+    }
+
+    final iconCard = _chapterIconCard(
+      chapterId: node.chapterId!,
+      nameKey: (l) => node.titleKey(l),
+      rarity: node.rarity,
+    );
+    final allRewards = [iconCard, ...rewards];
+    final headRarity = Rarity.max(
+      node.rarity,
+      CelebrationEvent.maxRarityFrom(allRewards),
+    );
+
     if (isChapterOpener) {
-      final iconCard = _chapterIconCard(
-        chapterId: node.chapterId!,
-        nameKey: (l) => node.titleKey(l),
-        rarity: node.rarity,
-      );
-      final allRewards = [iconCard, ...rewards];
-      final headRarity = Rarity.max(
-        node.rarity,
-        CelebrationEvent.maxRarityFrom(allRewards),
-      );
       return CelebrationEvent(
         id: 'chapter-open|${node.id}|${completion.event.timestamp.microsecondsSinceEpoch}',
         type: CelebrationType.location,
@@ -677,23 +690,17 @@ class ProgressionEngineCelebrationAdapter {
       );
     }
 
-    final headRarity = _clampRarityIfDecorationless(
-      rewards.isEmpty
-          ? node.rarity
-          : Rarity.max(node.rarity, CelebrationEvent.maxRarityFrom(rewards)),
-      hasRewards: rewards.isNotEmpty,
-      hasXp: (xp ?? 0) > 0,
-      isHeadliner: false,
-    );
+    // Chapter finale — the chapter chain's last step.
     return CelebrationEvent(
-      id: 'quest|${node.id}|${completion.event.timestamp.microsecondsSinceEpoch}',
-      type: CelebrationType.quest,
-      eyebrow: (l) => l.celebrationQuestEyebrow,
+      id: 'chapter-finale|${node.id}|${completion.event.timestamp.microsecondsSinceEpoch}',
+      type: CelebrationType.location,
+      eyebrow: (l) => l.celebrationChapterEyebrow,
       title: (l) => node.titleKey(l),
       description: (l) => node.descriptionKey(l),
-      rewards: rewards,
+      rewards: allRewards,
       headRarity: headRarity,
       xpAward: (xp != null && xp > 0) ? CelebrationXpAward(xp) : null,
+      variantOverride: CelebrationVariant.fullscreen,
     );
   }
 

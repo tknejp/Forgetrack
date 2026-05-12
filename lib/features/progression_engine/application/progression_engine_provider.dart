@@ -34,6 +34,22 @@ import 'progression_engine.dart';
 
 export '../domain/evaluator/engine_streak_source.dart' show EngineStreakSummary;
 
+/// How [EngineQuestProgress.actualValue] / [EngineQuestProgress.targetValue]
+/// should be presented to the player.
+///
+/// Daily sleep stores its raw value in minutes (Health Connect API
+/// convention + matches V1's ledger semantics), but a "0 / 480"
+/// progress label reads as nonsense to the player — they think of
+/// sleep in hours. The UI consults this hint to format `480` as
+/// `8 h` while leaving step / kcal / count metrics untouched.
+enum EngineQuestValueUnit {
+  /// Default — render as a plain integer count.
+  count,
+
+  /// Stored in minutes; render as hours (`raw / 60`) with an "h" suffix.
+  minutes,
+}
+
 /// Runtime quest with progress info. Built per-build of the
 /// resolution result so progress bars reflect the latest evaluation
 /// without UI consumers re-running the engine.
@@ -51,6 +67,7 @@ class EngineQuestProgress {
     this.domain,
     this.levelGate,
     this.prereqGateNodeId,
+    this.valueUnit = EngineQuestValueUnit.count,
   });
 
   final QuestNode node;
@@ -99,6 +116,12 @@ class EngineQuestProgress {
   /// the next chapter's open in the active section instead of in
   /// ZAMČENÉ.
   final String? prereqGateNodeId;
+
+  /// How the UI should format [actualValue] / [targetValue]. Set by
+  /// the provider from the bound objective's metric — sleep metrics
+  /// resolve to [EngineQuestValueUnit.minutes] so labels render as
+  /// hours instead of raw minute counts.
+  final EngineQuestValueUnit valueUnit;
 
   String get nodeId => node.id;
 }
@@ -194,6 +217,23 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// the setter, so this is identical to `DateTime.now()`.
   DateTime _engineNow() =>
       DateTime.now().add(Duration(days: _devDayOffset));
+
+  /// Compact fingerprint of ledger state, mixed into the refresh
+  /// cache key so any new event (claim, devtools force-complete,
+  /// objective completion) invalidates the cache and triggers a
+  /// fresh evaluation. Without this, devtools writes that don't
+  /// touch the input sources never invalidate the audit signature
+  /// and the UI sticks on a stale `_lastResult` until the next
+  /// real-world data shift.
+  String _ledgerEventSignature() {
+    final l = _ledger;
+    if (l == null) return '0|0|0|0|$_devDayOffset';
+    return '${l.objectiveCompletions.length}|'
+        '${l.nodeCompletions.length}|'
+        '${l.nodeClaims.length}|'
+        '${l.rewardGrants.length}|'
+        '$_devDayOffset';
+  }
 
   // Tracked references to currently-subscribed source providers.
   // [bind] is invoked by the ChangeNotifierProxyProvider's `update`
@@ -429,15 +469,37 @@ class ProgressionEngineProvider extends ChangeNotifier {
     };
 
     // ── Tier 1: surprise (chapter side quest) — max ONE slot ──
-    // User spec: only one side quest visible at a time even if
-    // multiple are pending. Each is once-and-done so once claimed
-    // it falls out of pending naturally.
+    // User spec: only one side quest visible at a time. Each is
+    // once-and-done; the SAME claimed-today side quest stays pinned
+    // to the slot until midnight (just like daily quests do) so the
+    // card visibly flips from claimable → "Splněno" instead of
+    // disappearing the moment the player taps claim. Tomorrow the
+    // claimed quest retires from the pool naturally (`isCompleted`
+    // filter) and the next eligible side quest moves in.
     EngineQuestProgress? surprise;
+    final now = _engineNow();
     for (final q in sideQuestBucket) {
-      if (q.isCompleted) continue;
-      if (!_sideQuestEligibleNow(q.node, completedIds)) continue;
-      surprise = q;
-      break;
+      if (!q.isCompleted) continue;
+      final claimedToday = _ledger?.nodeClaims.any((e) {
+            if (e.nodeId != q.nodeId) return false;
+            final t = e.timestamp.toLocal();
+            return t.year == now.year &&
+                t.month == now.month &&
+                t.day == now.day;
+          }) ??
+          false;
+      if (claimedToday) {
+        surprise = q;
+        break;
+      }
+    }
+    if (surprise == null) {
+      for (final q in sideQuestBucket) {
+        if (q.isCompleted) continue;
+        if (!_sideQuestEligibleNow(q.node, completedIds)) continue;
+        surprise = q;
+        break;
+      }
     }
 
     // ── Tier 2: active combo step — ONE sticky slot until chain
@@ -676,9 +738,16 @@ class ProgressionEngineProvider extends ChangeNotifier {
             .compareTo(b.node.chainOrder ?? 0));
       EngineQuestProgress? active;
       for (final q in chain) {
-        // Skip claimed AND claimable steps — both live in DOKONČENÉ
-        // now; the active section shows only the in-progress step.
-        if (!q.isCompleted && !q.isAvailableForClaim) {
+        // Pick the first step that's not yet completed — including
+        // the "available for claim" state. Chapter steps that have
+        // satisfied their objective need to show their claim pill
+        // **on the chapter card itself** so the player sees the
+        // "Vyzvednout XP" call to action right where they read the
+        // chapter, instead of having the step quietly disappear
+        // into the DOKONČENÉ rollup. The card already renders the
+        // pill via _pillData() — including claimable steps here is
+        // the only missing piece.
+        if (!q.isCompleted) {
           active = q;
           break;
         }
@@ -765,13 +834,20 @@ class ProgressionEngineProvider extends ChangeNotifier {
       // include a `NodeCompletedBeforeToday(prevId)` and that prev id
       // is in today's completion set → the step is blocked *for
       // today only*. Show the completed step instead of the locked
-      // next-step card.
+      // next-step card; if no prior in-chain step is completed
+      // (cross-chain gating, e.g. Recovery's step 1 waits for
+      // `combo_balanced_finale` to land yesterday), hide the whole
+      // chain — surfacing a permanently-locked step with a "1/1"
+      // progress bar but no claim pill (the Regenerace bug) just
+      // looks broken to the player.
       final gatedByToday = _isStepGatedByCompletionToday(
         firstUncompleted.node,
         completedToday,
       );
-      if (gatedByToday && lastCompleted != null) {
-        out.add(lastCompleted);
+      if (gatedByToday) {
+        if (lastCompleted != null) {
+          out.add(lastCompleted);
+        }
         continue;
       }
 
@@ -883,6 +959,42 @@ class ProgressionEngineProvider extends ChangeNotifier {
     return false;
   }
 
+  /// The next-up locked chapter chain (lowest-sortOrder chapter whose
+  /// open hasn't auto-fired yet). Returns null when there's no
+  /// upcoming locked chapter — either the player is mid-chapter on
+  /// every chain or they've completed everything.
+  ///
+  /// Exposed separately from [lockedQuests] so the JOURNEY section
+  /// can render a compact teaser ("Odemkne se na úrovni 30") in
+  /// place of the just-finished chapter, instead of pushing it down
+  /// into the generic ZAMČENO bucket where it reads as a side note.
+  EngineQuestProgress? get nextLockedChapter {
+    final chapters = _questsForBucket(QuestDisplayBucket.chapter);
+    if (chapters.isEmpty) return null;
+    final chains = <String, List<EngineQuestProgress>>{};
+    for (final q in chapters) {
+      final chainId = q.node.chainId;
+      if (chainId == null) continue;
+      chains.putIfAbsent(chainId, () => []).add(q);
+    }
+    final sorted = chains.entries
+        .map((e) {
+          final c = [...e.value]
+            ..sort((a, b) =>
+                (a.node.chainOrder ?? 0).compareTo(b.node.chainOrder ?? 0));
+          return c;
+        })
+        .toList()
+      ..sort((a, b) => a.first.node.sortOrder.compareTo(b.first.node.sortOrder));
+    for (final chain in sorted) {
+      final open = chain.first;
+      if (open.isCompleted) continue;
+      if (open.levelGate == null && open.prereqGateNodeId == null) continue;
+      return open;
+    }
+    return null;
+  }
+
   /// Quests that are gated and not yet started — either by an unmet
   /// level requirement or by an unfinished prerequisite chapter.
   /// Surfaces in the "ZAMČENÉ QUESTY" section so the player sees what
@@ -933,38 +1045,12 @@ class ProgressionEngineProvider extends ChangeNotifier {
       }
     }
 
-    // ── Chapter chains: surface only the next-up locked chain ──────
-    final chapters = _questsForBucket(QuestDisplayBucket.chapter);
-    final chapterChains = <String, List<EngineQuestProgress>>{};
-    for (final q in chapters) {
-      final chainId = q.node.chainId;
-      if (chainId == null) continue;
-      chapterChains.putIfAbsent(chainId, () => []).add(q);
-    }
-    // Stable ordering: walk chains by their open (chainOrder 0)
-    // sortOrder so Pilgrim → Forest Trial → Ruins → … is preserved.
-    final chainsByOpenSortOrder = chapterChains.entries
-        .map((e) {
-          final sorted = [...e.value]
-            ..sort((a, b) =>
-                (a.node.chainOrder ?? 0).compareTo(b.node.chainOrder ?? 0));
-          return sorted;
-        })
-        .toList()
-      ..sort((a, b) => a.first.node.sortOrder.compareTo(b.first.node.sortOrder));
-    for (final chain in chainsByOpenSortOrder) {
-      final open = chain.first;
-      // Chain already started (open auto-claimed) — handled by
-      // currentChapterQuests, never locked here.
-      if (open.isCompleted) continue;
-      // Open has no gate at all — would auto-fire on next evaluation.
-      // Skip; the engine will surface it as active soon.
-      if (open.levelGate == null && open.prereqGateNodeId == null) continue;
-      // Found the next-up locked chapter. Surface and stop — later
-      // chapters stay hidden until this one is reached.
-      out.add(open);
-      break;
-    }
+    // Chapter chains used to surface their next-up locked open here
+    // too, but the JOURNEY section now renders that teaser inline
+    // (via [nextLockedChapter]) so a freshly-completed chapter
+    // visibly rolls over to its successor instead of pushing the
+    // hint down into the generic ZAMČENO bucket. Keep this method
+    // focused on non-chapter level-gated content.
 
     out.sort((a, b) {
       final byLevel = (a.levelGate ?? 0).compareTo(b.levelGate ?? 0);
@@ -1295,9 +1381,15 @@ class ProgressionEngineProvider extends ChangeNotifier {
     if (l == null) return const [];
 
     // 1. Collect every non-daily quest that's claimed OR claimable.
+    //
+    // Chapter quests are excluded — they live in the JOURNEY section
+    // now, including their "available for claim" state. Surfacing
+    // them here again would double-list the same chapter step on
+    // both surfaces while the player decides whether to claim.
     final touched = <EngineQuestProgress>[];
     for (final bucket in QuestDisplayBucket.values) {
       if (bucket == QuestDisplayBucket.daily) continue;
+      if (bucket == QuestDisplayBucket.chapter) continue;
       for (final q in _questsForBucket(bucket)) {
         if (q.isCompleted || q.isAvailableForClaim) touched.add(q);
       }
@@ -1604,13 +1696,23 @@ class ProgressionEngineProvider extends ChangeNotifier {
       return;
     }
 
-    // Bail when the source state has not moved since the previous run.
-    // `bind()` calls refresh() on every proxy-provider rebuild, and the
-    // post-eval cosmetic dispatch fires a CosmeticsProvider listener
-    // notification that itself triggers another proxy rebuild — without
-    // this guard the two close into an infinite re-evaluation cascade
-    // that inflates `_pendingCelebrations` on every cycle.
-    final signature = source.auditSignature();
+    // Bail when *both* the source state AND the ledger event count
+    // have not moved since the previous run. `bind()` calls refresh()
+    // on every proxy-provider rebuild, and the post-eval cosmetic
+    // dispatch fires a CosmeticsProvider listener notification that
+    // itself triggers another proxy rebuild — without this guard the
+    // two close into an infinite re-evaluation cascade that inflates
+    // `_pendingCelebrations` on every cycle.
+    //
+    // The ledger half of the signature is the key fix for UI delay:
+    // devtools chip taps + manual claims write events directly to
+    // the repo without touching the fitness/nutrition/goals input
+    // sources, so the source-only signature stayed identical and
+    // refresh would silently bail, leaving `_lastResult` stale and
+    // the UI showing pre-action state. Including the ledger event
+    // count in the signature guarantees every new event invalidates
+    // the cache and triggers a fresh evaluation.
+    final signature = '${source.auditSignature()}|${_ledgerEventSignature()}';
     if (_lastResult != null && signature == _lastEvaluatedSignature) {
       return;
     }
@@ -1730,7 +1832,18 @@ class ProgressionEngineProvider extends ChangeNotifier {
         ledger: _ledger,
         level: profile.level,
       );
-      return result;
+      // Second-pass refresh so combo steps + chapter steps that read
+      // `input.nodesCompletedToday` pick up the freshly-completed
+      // node. `engine.claim` evaluates with the input captured BEFORE
+      // the NodeCompletionEvent was written, so any objective that
+      // depends on "is this node done today" stayed at its pre-claim
+      // value. Mirrors the two-pass pattern used by
+      // [devToolsForceCompleteNode]. The audit-signature gate must be
+      // cleared since no input source changed externally.
+      _isEvaluating = false;
+      _lastEvaluatedSignature = null;
+      await refresh();
+      return _lastResult;
     } catch (e) {
       _error = e.toString();
       return null;
@@ -2013,6 +2126,57 @@ class ProgressionEngineProvider extends ChangeNotifier {
 
   /// Devtools — wipe the local ledger. No-op when the bound
   /// repository is not the local Isar variant.
+  /// Devtools-only: writes just an `ObjectiveCompletionEvent` for the
+  /// node's bound objective and re-evaluates — **without** the
+  /// matching `NodeClaimEvent`. Used by the chapter-step shortcut so
+  /// the chapter card surfaces the normal "Vyzvednout XP" claim pill
+  /// after the devtools nudge, letting the player tap through the
+  /// real claim flow (XP grant + celebration) instead of having
+  /// devtools complete the whole transaction silently. No-op for
+  /// nodes whose claim policy is automatic or whose objective is
+  /// already in the ledger for the current period.
+  Future<void> devToolsMarkObjectiveMet(String nodeId) async {
+    final node = ProgressionNodeCatalog.definitionForId(nodeId);
+    if (node == null) return;
+    final repo = _repository;
+    if (repo is! ProgressionEngineLocalRepository) return;
+    final objectiveId = _objectiveIdOfNode(node);
+    if (objectiveId == null) return;
+    final objective = ObjectiveCatalog.definitionForId(objectiveId);
+    if (objective == null) return;
+
+    final now = _engineNow();
+    final periodKey = _periodKeyForScope(objective.scope, now);
+    final eventKey = ProgressionNodeResolver.objectiveCompletionEventKey(
+      objective.id,
+      periodKey,
+    );
+
+    _isEvaluating = true;
+    notifyListeners();
+    try {
+      await repo.appendEvents([
+        ObjectiveCompletionEvent(
+          eventKey: eventKey,
+          timestamp: now,
+          objectiveId: objective.id,
+          actualValue: objective.targetValue,
+          periodKey: periodKey,
+        ),
+      ]);
+      _ledger = await _repository.loadLedger();
+      _recomputeStreaks();
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isEvaluating = false;
+      notifyListeners();
+    }
+    _lastEvaluatedSignature = null;
+    await refresh();
+  }
+
   /// Devtools-only: shifts the engine's notion of "today" forward by
   /// one day, then re-evaluates. After this call:
   ///
@@ -2194,17 +2358,30 @@ class ProgressionEngineProvider extends ChangeNotifier {
 
       final actual = outcome?.actualValue ?? 0;
       final target = objective.targetValue;
-      final isCompleted = completed.contains(node.id);
+      // Period-aware completion: a daily quest claimed yesterday
+      // should read as "not yet done today", and the same goes for
+      // weekly quests across the week boundary. The flat
+      // `completedNodeIds` set ignores periodKey and would keep
+      // every once-completed daily quest pinned to the "done" state
+      // forever, which is exactly the "auto-completed after advance
+      // day" symptom the user reported. Use the period-keyed event
+      // key from the outcome so the UI honours the actual period.
+      final completionKey = ProgressionNodeResolver.completionEventKey(
+        node.id,
+        outcome?.periodKey,
+      );
+      final isCompleted = _ledger?.hasEventKey(completionKey) ?? false;
       final isAvailable = available.contains(node.id);
 
-      double progress;
-      if (isCompleted) {
-        progress = 1.0;
-      } else if (target <= 0) {
-        progress = 0.0;
-      } else {
-        progress = (actual / target).clamp(0.0, 1.0).toDouble();
-      }
+      // Always derive the bar from the live actual/target ratio.
+      // The earlier `isCompleted → 1.0` shortcut backfired with the
+      // devtools force-complete shortcut (and any future flow that
+      // marks a node done without seeding matching metric data):
+      // the card displayed "0 / 8 h" but the bar was full. Drop the
+      // shortcut so the bar always agrees with the label.
+      final double progress = target <= 0
+          ? (isCompleted ? 1.0 : 0.0)
+          : (actual / target).clamp(0.0, 1.0).toDouble();
 
       // Pull the first XP reward off the node (V1 questy nevedou
       // víc XP rewardů, V2 to teoreticky umožňuje — bereme první
@@ -2257,6 +2434,13 @@ class ProgressionEngineProvider extends ChangeNotifier {
         levelGate: levelGate,
         prereqGateNodeId: prereqGate,
         previewXp: scaledXp,
+        // Sleep objectives store the target in minutes. Without
+        // this hint the UI shows "0 / 480" for the daily sleep
+        // quest; the formatter renders "0 / 8 h" when the unit is
+        // minutes.
+        valueUnit: objective.metric is SleepMinutesMetric
+            ? EngineQuestValueUnit.minutes
+            : EngineQuestValueUnit.count,
       ));
     }
     return out;
