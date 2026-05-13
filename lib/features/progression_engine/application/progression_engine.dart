@@ -86,28 +86,22 @@ class ProgressionEngine {
     final nodes = _nodeCatalog.build(catalogContext);
     final timestamp = input.evaluatedAt;
 
-    // Step 2: evaluate objectives.
-    //
-    // A persisted `ObjectiveCompletionEvent` for the current period is
-    // authoritative: it means the engine (or devtools) already
-    // declared this objective done. We carry that forward so the
-    // node resolver downstream sees `outcome.completed == true` and
-    // emits the proper available / completed state. Without this,
-    // devtools shortcuts that write only the objective event
-    // (`devToolsMarkObjectiveMet`) would never surface the claim
-    // pill, because the live metric reading still says "not yet"
-    // and the resolver short-circuited to in-progress.
+    // Step 2: evaluate objectives in memory. Writing the persisted
+    // `ObjectiveCompletionEvent` is deferred until step 4 (after the
+    // node resolver has decided eligibility) — see the long comment
+    // there for why. We still read any pre-existing persisted event
+    // here so devtools shortcuts that wrote only the objective event
+    // (`devToolsMarkObjectiveMet`) keep surfacing the claim pill —
+    // without the carry-forward the live metric would say "not yet"
+    // and the resolver would short-circuit to in-progress.
     final outcomes = <String, ObjectiveOutcome>{};
-    final newObjectiveEvents = <ObjectiveCompletionEvent>[];
-    final completedObjectives = <ObjectiveCompletion>[];
     for (final o in objectives) {
       var outcome = _objectiveEvaluator.evaluate(o, input);
       final key = ProgressionNodeResolver.objectiveCompletionEventKey(
         o.id,
         outcome.periodKey,
       );
-      final persistedComplete = ledger.hasEventKey(key);
-      if (persistedComplete && !outcome.completed) {
+      if (ledger.hasEventKey(key) && !outcome.completed) {
         outcome = ObjectiveOutcome(
           objectiveId: o.id,
           actualValue: o.targetValue,
@@ -116,27 +110,13 @@ class ProgressionEngine {
         );
       }
       outcomes[o.id] = outcome;
-      if (!outcome.completed) continue;
-      if (persistedComplete) continue;
-      final event = ObjectiveCompletionEvent(
-        eventKey: key,
-        timestamp: timestamp,
-        objectiveId: o.id,
-        actualValue: outcome.actualValue,
-        periodKey: outcome.periodKey,
-      );
-      newObjectiveEvents.add(event);
-      completedObjectives.add(ObjectiveCompletion(
-        objectiveId: o.id,
-        actualValue: outcome.actualValue,
-        event: event,
-      ));
     }
 
     // Step 3: resolve nodes.
     final completedObjectiveIds = {
       ...ledger.objectiveCompletions.map((e) => e.objectiveId),
-      ...newObjectiveEvents.map((e) => e.objectiveId),
+      for (final entry in outcomes.entries)
+        if (entry.value.completed) entry.key,
     };
     final priorCompletedNodeIds = {
       for (final e in ledger.nodeCompletions) e.nodeId,
@@ -159,6 +139,17 @@ class ProgressionEngine {
         if (e.rewardKind == RewardGrantKind.companionAvailability &&
             e.companionId != null)
           e.companionId!,
+    };
+
+    // Pre-compute the set of objectives that any catalog node binds to.
+    // Objectives outside this set ("orphans" — typically tracker-only
+    // objectives such as `level_xp_5`, paired with a `LevelMilestoneNode`
+    // that carries no `objectiveId`) get unconditional event emission
+    // after the resolution loop. Inside the loop, bound objectives
+    // wait for an eligible binding before persisting.
+    final boundObjectiveIds = <String>{
+      for (final n in nodes)
+        if (_objectiveIdOf(n) case final id?) id,
     };
 
     final resolutions = <NodeResolution>[];
@@ -184,7 +175,24 @@ class ProgressionEngine {
     }
 
     // Step 4: collect *newly* completed / available nodes (delta vs
-    // ledger). Pre-existing completions from the ledger never re-emit.
+    // ledger) AND newly emitted objective events. Pre-existing
+    // completions from the ledger never re-emit.
+    //
+    // Objective events are gated on at least one binding node being
+    // eligible. Today-bound combo metrics (`TodayCompletionsAmong`)
+    // used to write a permanent `ObjectiveCompletionEvent` the instant
+    // today's daily count met step N+1's target — even while step N+1
+    // was cooldown-locked behind step N. That permanent event then
+    // re-asserted the satisfied outcome tomorrow, surfacing step N+1
+    // as a 0/0 free claim the player had done nothing to earn. By
+    // emitting only when an eligible binding exists, an objective's
+    // persisted state can never outrun any node that's actually ready
+    // to claim it. For objectives whose only binding node is locked
+    // this run, the engine just re-evaluates next tick — live metric
+    // values aren't lost, only the durable shortcut event.
+    final newObjectiveEvents = <ObjectiveCompletionEvent>[];
+    final completedObjectives = <ObjectiveCompletion>[];
+    final emittedObjectiveIds = <String>{};
     final newCompletions = <NodeCompletion>[];
     final newCompletionEvents = <NodeCompletionEvent>[];
     final availability = <NodeAvailability>[];
@@ -194,7 +202,38 @@ class ProgressionEngine {
     final periodKeyByNodeId = <String, String?>{};
     for (final r in resolutions) {
       periodKeyByNodeId[r.node.id] = r.periodKey;
-      if (!r.eligibleByConditions) lockedNodeIds.add(r.node.id);
+      if (!r.eligibleByConditions) {
+        lockedNodeIds.add(r.node.id);
+      } else {
+        final boundObjectiveId = _objectiveIdOf(r.node);
+        if (boundObjectiveId != null &&
+            !emittedObjectiveIds.contains(boundObjectiveId)) {
+          final outcome = outcomes[boundObjectiveId];
+          if (outcome != null && outcome.completed) {
+            final objectiveKey =
+                ProgressionNodeResolver.objectiveCompletionEventKey(
+              boundObjectiveId,
+              outcome.periodKey,
+            );
+            if (!ledger.hasEventKey(objectiveKey)) {
+              final event = ObjectiveCompletionEvent(
+                eventKey: objectiveKey,
+                timestamp: timestamp,
+                objectiveId: boundObjectiveId,
+                actualValue: outcome.actualValue,
+                periodKey: outcome.periodKey,
+              );
+              newObjectiveEvents.add(event);
+              completedObjectives.add(ObjectiveCompletion(
+                objectiveId: boundObjectiveId,
+                actualValue: outcome.actualValue,
+                event: event,
+              ));
+            }
+            emittedObjectiveIds.add(boundObjectiveId);
+          }
+        }
+      }
       final completionKey = ProgressionNodeResolver.completionEventKey(
         r.node.id,
         r.periodKey,
@@ -248,6 +287,38 @@ class ProgressionEngine {
           // Locked or in-progress; nothing to emit.
           break;
       }
+    }
+
+    // Orphan objectives — no node binds their `objectiveId`, so the
+    // eligibility-gated emission inside the resolution loop never
+    // touches them. Tracker objectives like `level_xp_5` (paired with
+    // a `LevelMilestoneNode`, which carries no `objectiveId`) fall
+    // here, and downstream consumers (journey hooks, tests) still
+    // expect the completion event to land. Emit them unconditionally,
+    // matching the pre-refactor behaviour.
+    for (final entry in outcomes.entries) {
+      final objectiveId = entry.key;
+      if (boundObjectiveIds.contains(objectiveId)) continue;
+      final outcome = entry.value;
+      if (!outcome.completed) continue;
+      final key = ProgressionNodeResolver.objectiveCompletionEventKey(
+        objectiveId,
+        outcome.periodKey,
+      );
+      if (ledger.hasEventKey(key)) continue;
+      final event = ObjectiveCompletionEvent(
+        eventKey: key,
+        timestamp: timestamp,
+        objectiveId: objectiveId,
+        actualValue: outcome.actualValue,
+        periodKey: outcome.periodKey,
+      );
+      newObjectiveEvents.add(event);
+      completedObjectives.add(ObjectiveCompletion(
+        objectiveId: objectiveId,
+        actualValue: outcome.actualValue,
+        event: event,
+      ));
     }
 
     // Step 5: plan + build reward events for the newly-completed set.

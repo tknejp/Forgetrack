@@ -910,10 +910,19 @@ class _DailyGoalChipsPanelState extends State<_DailyGoalChipsPanel> {
     final provider = context.read<ProgressionEngineProvider>();
     setState(() => _completingId = node.id);
     try {
-      await provider.devToolsForceCompleteNode(node.id);
+      // `devToolsMarkObjectiveMet` writes just the objective event,
+      // so the card surfaces the Vyzvednout pill instead of jumping
+      // straight to claimed. `devToolsForceCompleteNode` (which used
+      // to live here) auto-claimed end-to-end and skipped the manual
+      // tap that the real player flow goes through.
+      await provider.devToolsMarkObjectiveMet(node.id);
       if (!mounted) return;
       messenger.showSnackBar(
-        SnackBar(content: Text('Marked "${node.id}" met for today')),
+        SnackBar(
+          content: Text(
+            'Marked "${node.id}" met for today — tap Vyzvednout on the card to claim.',
+          ),
+        ),
       );
     } finally {
       if (mounted) setState(() => _completingId = null);
@@ -935,8 +944,8 @@ class _DailyGoalChipsPanelState extends State<_DailyGoalChipsPanel> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Force-completes a daily quest with today\'s periodKey. Card '
-            'jumps to claimed state, XP lands, celebration fires.',
+            'Writes the objective-met event for today. Card surfaces the '
+            'Vyzvednout pill — tap to claim like a real player would.',
             style: tt.bodySmall?.copyWith(
               color: cs.onSurfaceVariant.withValues(alpha: 0.7),
             ),

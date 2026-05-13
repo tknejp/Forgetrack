@@ -364,6 +364,36 @@ class _ProgressRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final locale = Localizations.localeOf(context).toString();
+    final l10n = AppLocalizations.of(context);
+
+    // Same treatment as `EngineQuestCard._ProgressRow`: a completed
+    // step (pinned by the chapter walker until midnight) replaces
+    // the progress bar with a single "Splněno" line. Without this
+    // the card kept showing a full progress bar + "1 / 1" label
+    // after claim, which read like the chain was still actively
+    // tracking instead of resting on its claimed step.
+    if (quest.isCompleted) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Icon(
+            Icons.check_circle_rounded,
+            size: 14,
+            color: accent.withValues(alpha: 0.92),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            l10n.progQuestStatusClaimed,
+            style: TextStyle(
+              fontSize: Tokens.fontSizeMicro,
+              fontWeight: FontWeight.w800,
+              color: accent.withValues(alpha: 0.92),
+              letterSpacing: 0.4,
+            ),
+          ),
+        ],
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
