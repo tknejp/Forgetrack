@@ -75,7 +75,7 @@ class DailySectionResolver {
       slots.add(q);
     }
 
-    take(_pickPinned(pinPool, ledger, now));
+    take(_pickPinned(pinPool, ledger, now, nodesCompletedTodayIds));
     take(_pickActiveChainStep(chainPool, nodesCompletedTodayIds));
 
     if (slots.length < slotCount) {
@@ -105,6 +105,7 @@ class DailySectionResolver {
     List<EngineQuestProgress> pool,
     LedgerSnapshot? ledger,
     DateTime now,
+    Set<String> nodesCompletedTodayIds,
   ) {
     if (pool.isEmpty) return null;
     for (final q in pool) {
@@ -115,6 +116,17 @@ class DailySectionResolver {
       if (q.isCompleted) continue;
       if (q.levelGate != null) continue;
       if (q.prereqGateNodeId != null) continue;
+      // Cooldown-gated candidates (e.g. a side quest whose gating
+      // chapter step was just claimed today) read as "ungated" via
+      // the EngineQuestProgress flags above — `levelGate` /
+      // `prereqGateNodeId` are null because the prereq node has a
+      // completion event. The actual gate (`NodeCompletedBeforeToday`)
+      // is derived by the engine from `gatePolicy + prerequisiteNodeIds`,
+      // so we re-check it here to avoid surfacing a quest the
+      // resolver knows is locked-for-today. Without this guard the
+      // side-quest slot would jump to a locked card the moment the
+      // player claims the chapter step that gates it.
+      if (_isGatedByCompletionToday(q, nodesCompletedTodayIds)) continue;
       return q;
     }
     return null;

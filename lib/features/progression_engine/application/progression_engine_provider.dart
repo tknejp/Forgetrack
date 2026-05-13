@@ -588,6 +588,15 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// step that is not yet completed; that's what the player should be
   /// working on right now. Returns an empty list when all chapters are
   /// either fully completed or not yet unlocked.
+  ///
+  /// **Stickiness until midnight.** If the player just claimed a
+  /// chapter step today, the *claimed* step stays in the slot
+  /// (reading as "Splněno") until midnight — the chain doesn't
+  /// snap to the next step the instant the pill is tapped. Tomorrow
+  /// the timestamp falls behind today's midnight, the claimed-today
+  /// match fails, and the chain advances to the next uncompleted
+  /// step. This mirrors the daily / side-quest slot rule so all
+  /// claim cards age out at the same wall-clock boundary.
   List<EngineQuestProgress> get currentChapterQuests {
     final all = _questsForBucket(QuestDisplayBucket.chapter);
     if (all.isEmpty) return const [];
@@ -599,41 +608,67 @@ class ProgressionEngineProvider extends ChangeNotifier {
       byChain.putIfAbsent(chainId, () => []).add(q);
     }
 
+    final now = _engineNow();
     final out = <EngineQuestProgress>[];
     for (final entry in byChain.entries) {
       final chain = [...entry.value]
         ..sort((a, b) => (a.node.chainOrder ?? 0)
             .compareTo(b.node.chainOrder ?? 0));
-      EngineQuestProgress? active;
+      // Walk the chain looking for the first uncompleted step. Track
+      // the immediately-preceding completed step so we can pin it
+      // when its claim event lands on today's date.
+      EngineQuestProgress? lastCompleted;
+      EngineQuestProgress? firstUncompleted;
       for (final q in chain) {
-        // Pick the first step that's not yet completed — including
-        // the "available for claim" state. Chapter steps that have
-        // satisfied their objective need to show their claim pill
-        // **on the chapter card itself** so the player sees the
-        // "Vyzvednout XP" call to action right where they read the
-        // chapter, instead of having the step quietly disappear
-        // into the DOKONČENÉ rollup. The card already renders the
-        // pill via _pillData() — including claimable steps here is
-        // the only missing piece.
-        if (!q.isCompleted) {
-          active = q;
+        if (q.isCompleted) {
+          lastCompleted = q;
+        } else {
+          firstUncompleted = q;
           break;
         }
       }
-      // Skip chapters whose active step is still gated — either by
-      // an unmet level requirement or by an unfinished prereq chapter.
-      // Those surface in [lockedQuests] / the ZAMČENÉ QUESTY section
-      // instead, mirroring V1 behavior where a locked chapter is shown
-      // as a compact locked row rather than its full chapter card.
-      if (active != null &&
-          active.levelGate == null &&
-          active.prereqGateNodeId == null) {
-        out.add(active);
+      // Same-day pin: if the most recently completed step was claimed
+      // today (NodeClaimEvent timestamp matches `_engineNow`'s date),
+      // surface it as the active card. The chain effectively pauses
+      // on "Splněno" until midnight rolls and lastCompleted's claim
+      // timestamp falls before today.
+      if (lastCompleted != null &&
+          _wasNodeClaimedOnDate(lastCompleted.nodeId, now)) {
+        out.add(lastCompleted);
+        continue;
       }
+      if (firstUncompleted == null) continue;
+      // Skip chapters whose next step is still gated — either by an
+      // unmet level requirement or by an unfinished prereq chapter.
+      // Those surface in [lockedQuests] / the ZAMČENÉ QUESTY section
+      // instead, mirroring V1 behavior where a locked chapter is
+      // shown as a compact locked row rather than its full card.
+      if (firstUncompleted.levelGate != null ||
+          firstUncompleted.prereqGateNodeId != null) {
+        continue;
+      }
+      out.add(firstUncompleted);
     }
     out.sort((a, b) =>
         (a.node.sortOrder).compareTo(b.node.sortOrder));
     return out;
+  }
+
+  /// True when the ledger holds a `NodeClaimEvent` for [nodeId] whose
+  /// timestamp falls on the same local day as [now]. Used to keep
+  /// just-claimed chapter chain steps pinned in their card until
+  /// midnight (mirrors the slot rule daily / side quests already use).
+  bool _wasNodeClaimedOnDate(String nodeId, DateTime now) {
+    final l = _ledger;
+    if (l == null) return false;
+    for (final e in l.nodeClaims) {
+      if (e.nodeId != nodeId) continue;
+      final t = e.timestamp.toLocal();
+      if (t.year == now.year && t.month == now.month && t.day == now.day) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /// The next-up locked chapter chain (lowest-sortOrder chapter whose
