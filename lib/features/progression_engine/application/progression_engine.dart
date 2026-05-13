@@ -152,9 +152,22 @@ class ProgressionEngine {
         if (_objectiveIdOf(n) case final id?) id,
     };
 
+    // Today's deterministic daily-challenge pick per pool. A daily
+    // challenge that isn't today's pick is treated as locked — the
+    // engine doesn't fire its objective, doesn't surface it as
+    // available, doesn't let it pollute DOKONČENÉ. Mirrors the
+    // `DailySectionResolver._pickChallenge` algorithm so the daily
+    // section's "today's pick" and the engine's "eligible-by-pick"
+    // always agree. Without this gate, a single tick of nutrition
+    // metrics fired *every* template whose objective happened to
+    // satisfy (full_plate, nutri_triple, balanced) and surfaced
+    // them all as claimable rewards the player never opted into.
+    final dailyChallengePicks =
+        _computeDailyChallengePicks(nodes, ledger, input.evaluatedAt);
+
     final resolutions = <NodeResolution>[];
     for (final node in nodes) {
-      final eligible = _unlockConditionResolver.isEligible(
+      var eligible = _unlockConditionResolver.isEligible(
         conditions: _conditionsFor(node),
         completedObjectiveIds: completedObjectiveIds,
         completedNodesLifetime: priorCompletedNodeIds,
@@ -164,6 +177,17 @@ class ProgressionEngine {
         input: input,
         ledger: ledger,
       );
+      if (eligible &&
+          node is QuestNode &&
+          node.slotPolicy is DailyChallengeHashPick) {
+        final poolId = node.comboPoolId;
+        if (poolId != null) {
+          final pick = dailyChallengePicks[poolId];
+          if (pick != null && pick != node.id) {
+            eligible = false;
+          }
+        }
+      }
       final resolution = _nodeResolver.resolve(
         node: node,
         objectiveOutcome: _outcomeForNode(node, outcomes),
@@ -655,6 +679,82 @@ class ProgressionEngine {
         for (final pid in node.prerequisiteNodeIds)
           NodeCompletedBeforeToday(pid),
     ];
+  }
+
+  /// `comboPoolId → picked node id` for the daily-challenge templates.
+  /// Mirrors `DailySectionResolver._pickChallenge`: if any template in
+  /// the pool was claimed today (NodeCompletionEvent landing on the
+  /// local date), pin it; otherwise FNV-1a hash today's local date
+  /// modulo the un-claimed-lifetime pool size. Both engine and
+  /// resolver run the same algorithm against the same ledger, so the
+  /// daily section's "today's pick" and the engine's "eligible by
+  /// pick" agree node-for-node.
+  Map<String, String> _computeDailyChallengePicks(
+    List<ProgressionNode> nodes,
+    LedgerSnapshot ledger,
+    DateTime evaluatedAt,
+  ) {
+    final poolMembers = <String, List<QuestNode>>{};
+    for (final n in nodes) {
+      if (n is! QuestNode) continue;
+      if (n.slotPolicy is! DailyChallengeHashPick) continue;
+      final poolId = n.comboPoolId;
+      if (poolId == null) continue;
+      poolMembers.putIfAbsent(poolId, () => []).add(n);
+    }
+    if (poolMembers.isEmpty) return const {};
+
+    final now = evaluatedAt;
+    final claimedToday = <String>{};
+    final completedLifetime = <String>{};
+    for (final e in ledger.nodeCompletions) {
+      completedLifetime.add(e.nodeId);
+      final t = e.timestamp.toLocal();
+      if (t.year == now.year && t.month == now.month && t.day == now.day) {
+        claimedToday.add(e.nodeId);
+      }
+    }
+
+    final picks = <String, String>{};
+    for (final entry in poolMembers.entries) {
+      final poolId = entry.key;
+      final members = entry.value;
+
+      // Pinned: any pool member claimed today wins regardless of hash.
+      QuestNode? pinned;
+      for (final m in members) {
+        if (claimedToday.contains(m.id)) {
+          pinned = m;
+          break;
+        }
+      }
+      if (pinned != null) {
+        picks[poolId] = pinned.id;
+        continue;
+      }
+
+      // Hash modulo the unfinished (not-yet-claimed-lifetime) subset.
+      final unfinished = [
+        for (final m in members)
+          if (!completedLifetime.contains(m.id)) m,
+      ];
+      if (unfinished.isEmpty) continue;
+      final dateKey = '${now.year.toString().padLeft(4, '0')}-'
+          '${now.month.toString().padLeft(2, '0')}-'
+          '${now.day.toString().padLeft(2, '0')}';
+      final score = _fnvHash(dateKey);
+      picks[poolId] = unfinished[score % unfinished.length].id;
+    }
+    return picks;
+  }
+
+  int _fnvHash(String s) {
+    var hash = 0x811c9dc5;
+    for (final unit in s.codeUnits) {
+      hash ^= unit;
+      hash = (hash * 0x01000193) & 0x7fffffff;
+    }
+    return hash;
   }
 }
 
