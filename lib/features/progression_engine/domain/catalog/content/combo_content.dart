@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart' show Icons;
 
 import '../../../../../shared/domain/rarity.dart';
-import '../../models/claim_policy.dart';
 import '../../models/content_tag.dart';
 import '../../models/objective_definition.dart';
 import '../../models/objective_metric.dart';
 import '../../models/objective_operator.dart';
 import '../../models/objective_scope.dart';
 import '../../models/progression_node_definition.dart';
-import '../../models/quest_display_bucket.dart';
 import '../../models/reward_definition.dart';
 import '../../models/unlock_condition.dart';
 import '../engine_catalog_context.dart';
@@ -228,11 +226,9 @@ List<ObjectiveDefinition> comboObjectives(EngineCatalogContext context) {
 List<ProgressionNode> comboNodes() {
   return [
     // ── Chain 1: Balanced ──────────────────────────────────────
-    QuestNode(
+    ComboStepNode(
       id: 'combo_balanced_step_1',
       objectiveId: 'combo_balanced_step_1_obj',
-      displayBucket: QuestDisplayBucket.combo,
-      claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progComboBalancedStep1Title,
       descriptionKey: (l) => l.progComboBalancedStep1Desc,
       rewards: const [XpReward(amount: 50)],
@@ -245,11 +241,9 @@ List<ProgressionNode> comboNodes() {
       chainStepLabelKey: (_) => '1',
       nextNodeIds: const ['combo_balanced_step_2'],
     ),
-    QuestNode(
+    ComboStepNode(
       id: 'combo_balanced_step_2',
       objectiveId: 'combo_balanced_step_2_obj',
-      displayBucket: QuestDisplayBucket.combo,
-      claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progComboBalancedStep2Title,
       descriptionKey: (l) => l.progComboBalancedStep2Desc,
       rewards: const [XpReward(amount: 100)],
@@ -266,11 +260,9 @@ List<ProgressionNode> comboNodes() {
       ],
       nextNodeIds: const ['combo_balanced_step_3'],
     ),
-    QuestNode(
+    ComboStepNode(
       id: 'combo_balanced_step_3',
       objectiveId: 'combo_balanced_step_3_obj',
-      displayBucket: QuestDisplayBucket.combo,
-      claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progComboBalancedStep3Title,
       descriptionKey: (l) => l.progComboBalancedStep3Desc,
       rewards: const [XpReward(amount: 150)],
@@ -287,11 +279,9 @@ List<ProgressionNode> comboNodes() {
       ],
       nextNodeIds: const ['combo_balanced_finale'],
     ),
-    QuestNode(
+    ComboFinaleNode(
       id: 'combo_balanced_finale',
       objectiveId: 'combo_balanced_finale_obj',
-      displayBucket: QuestDisplayBucket.combo,
-      claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progComboBalancedFinaleTitle,
       descriptionKey: (l) => l.progComboBalancedFinaleDesc,
       rewards: const [XpReward(amount: 220)],
@@ -308,11 +298,9 @@ List<ProgressionNode> comboNodes() {
       ],
     ),
     // ── Chain 2: Recovery (sleep-anchored) ─────────────────────
-    QuestNode(
+    ComboStepNode(
       id: 'combo_recovery_step_1',
       objectiveId: 'combo_recovery_step_1_obj',
-      displayBucket: QuestDisplayBucket.combo,
-      claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progComboRecoveryStep1Title,
       descriptionKey: (l) => l.progComboRecoveryStep1Desc,
       rewards: const [XpReward(amount: 60)],
@@ -329,11 +317,9 @@ List<ProgressionNode> comboNodes() {
       ],
       nextNodeIds: const ['combo_recovery_step_2'],
     ),
-    QuestNode(
+    ComboStepNode(
       id: 'combo_recovery_step_2',
       objectiveId: 'combo_recovery_step_2_obj',
-      displayBucket: QuestDisplayBucket.combo,
-      claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progComboRecoveryStep2Title,
       descriptionKey: (l) => l.progComboRecoveryStep2Desc,
       rewards: const [XpReward(amount: 120)],
@@ -350,11 +336,9 @@ List<ProgressionNode> comboNodes() {
       ],
       nextNodeIds: const ['combo_recovery_step_3'],
     ),
-    QuestNode(
+    ComboStepNode(
       id: 'combo_recovery_step_3',
       objectiveId: 'combo_recovery_step_3_obj',
-      displayBucket: QuestDisplayBucket.combo,
-      claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progComboRecoveryStep3Title,
       descriptionKey: (l) => l.progComboRecoveryStep3Desc,
       rewards: const [XpReward(amount: 180)],
@@ -371,11 +355,9 @@ List<ProgressionNode> comboNodes() {
       ],
       nextNodeIds: const ['combo_recovery_finale'],
     ),
-    QuestNode(
+    ComboFinaleNode(
       id: 'combo_recovery_finale',
       objectiveId: 'combo_recovery_finale_obj',
-      displayBucket: QuestDisplayBucket.combo,
-      claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progComboRecoveryFinaleTitle,
       descriptionKey: (l) => l.progComboRecoveryFinaleDesc,
       rewards: const [XpReward(amount: 260)],
@@ -392,11 +374,9 @@ List<ProgressionNode> comboNodes() {
       ],
     ),
     // ── Chain 3: Nutrition (macro-anchored, 5 steps) ──────────
-    QuestNode(
+    ComboStepNode(
       id: 'combo_nutrition_step_1',
       objectiveId: 'combo_nutrition_step_1_obj',
-      displayBucket: QuestDisplayBucket.combo,
-      claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progComboNutritionStep1Title,
       descriptionKey: (l) => l.progComboNutritionStep1Desc,
       rewards: const [XpReward(amount: 60)],
@@ -413,11 +393,9 @@ List<ProgressionNode> comboNodes() {
       ],
       nextNodeIds: const ['combo_nutrition_step_2'],
     ),
-    QuestNode(
+    ComboStepNode(
       id: 'combo_nutrition_step_2',
       objectiveId: 'combo_nutrition_step_2_obj',
-      displayBucket: QuestDisplayBucket.combo,
-      claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progComboNutritionStep2Title,
       descriptionKey: (l) => l.progComboNutritionStep2Desc,
       rewards: const [XpReward(amount: 110)],
@@ -434,11 +412,9 @@ List<ProgressionNode> comboNodes() {
       ],
       nextNodeIds: const ['combo_nutrition_step_3'],
     ),
-    QuestNode(
+    ComboStepNode(
       id: 'combo_nutrition_step_3',
       objectiveId: 'combo_nutrition_step_3_obj',
-      displayBucket: QuestDisplayBucket.combo,
-      claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progComboNutritionStep3Title,
       descriptionKey: (l) => l.progComboNutritionStep3Desc,
       rewards: const [XpReward(amount: 170)],
@@ -455,11 +431,9 @@ List<ProgressionNode> comboNodes() {
       ],
       nextNodeIds: const ['combo_nutrition_step_4'],
     ),
-    QuestNode(
+    ComboStepNode(
       id: 'combo_nutrition_step_4',
       objectiveId: 'combo_nutrition_step_4_obj',
-      displayBucket: QuestDisplayBucket.combo,
-      claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progComboNutritionStep4Title,
       descriptionKey: (l) => l.progComboNutritionStep4Desc,
       rewards: const [XpReward(amount: 230)],
@@ -476,11 +450,9 @@ List<ProgressionNode> comboNodes() {
       ],
       nextNodeIds: const ['combo_nutrition_finale'],
     ),
-    QuestNode(
+    ComboFinaleNode(
       id: 'combo_nutrition_finale',
       objectiveId: 'combo_nutrition_finale_obj',
-      displayBucket: QuestDisplayBucket.combo,
-      claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progComboNutritionFinaleTitle,
       descriptionKey: (l) => l.progComboNutritionFinaleDesc,
       rewards: const [XpReward(amount: 320)],

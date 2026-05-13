@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart' show Icons;
 
 import '../../../../../shared/domain/rarity.dart';
-import '../../models/claim_policy.dart';
 import '../../models/content_tag.dart';
 import '../../models/objective_definition.dart';
 import '../../models/objective_metric.dart';
 import '../../models/objective_operator.dart';
 import '../../models/objective_scope.dart';
 import '../../models/progression_node_definition.dart';
-import '../../models/quest_display_bucket.dart';
 import '../../models/reward_definition.dart';
 import '../../models/unlock_condition.dart';
 import 'quest_assets.dart';
@@ -96,11 +94,9 @@ List<ObjectiveDefinition> forestTrialObjectives() {
 
 List<ProgressionNode> forestTrialNodes() {
   return [
-    QuestNode(
+    ChapterOpenerNode(
       id: 'forest_trial_open',
       objectiveId: 'forest_trial_open_objective',
-      displayBucket: QuestDisplayBucket.chapter,
-      claimPolicy: ClaimPolicy.automatic,
       // Explicit level gate so the resolver marks the chapter
       // ineligible (and the chapter card renders a locked overlay)
       // until the player reaches the chapter's start level. The
@@ -115,7 +111,6 @@ List<ProgressionNode> forestTrialNodes() {
       assetKey: questAssetForestTrialIcon,
       chapterId: _chapterId,
       chainId: _chapterId,
-      chainOrder: 0,
       displayGroupId: _chapterId,
       // Chapters chain across the whole game: Forest Trial can't
       // auto-open until the player finishes the starter chapter.
@@ -124,11 +119,9 @@ List<ProgressionNode> forestTrialNodes() {
       chainStepIcon: Icons.play_arrow_rounded,
       sortOrder: 300,
     ),
-    QuestNode(
+    ChapterStepNode(
       id: 'forest_trial_daily_wins_5',
       objectiveId: 'forest_trial_daily_wins_5_objective',
-      displayBucket: QuestDisplayBucket.chapter,
-      claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestForestTrialDailyWins5Title,
       descriptionKey: (l) => l.progQuestForestTrialDailyWins5Desc,
       rewards: const [XpReward(amount: 180)],
@@ -144,11 +137,9 @@ List<ProgressionNode> forestTrialNodes() {
       chainStepLabelKey: (_) => '5',
       sortOrder: 301,
     ),
-    QuestNode(
+    ChapterStepNode(
       id: 'forest_trial_steps_5',
       objectiveId: 'forest_trial_steps_5_objective',
-      displayBucket: QuestDisplayBucket.chapter,
-      claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestForestTrialSteps5Title,
       descriptionKey: (l) => l.progQuestForestTrialSteps5Desc,
       rewards: const [XpReward(amount: 180)],
@@ -164,11 +155,9 @@ List<ProgressionNode> forestTrialNodes() {
       chainStepLabelKey: (_) => '5',
       sortOrder: 302,
     ),
-    QuestNode(
+    ChapterStepNode(
       id: 'forest_trial_recovery_3',
       objectiveId: 'forest_trial_recovery_3_objective',
-      displayBucket: QuestDisplayBucket.chapter,
-      claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestForestTrialRecovery3Title,
       descriptionKey: (l) => l.progQuestForestTrialRecovery3Desc,
       rewards: const [XpReward(amount: 220)],
@@ -184,11 +173,9 @@ List<ProgressionNode> forestTrialNodes() {
       chainStepLabelKey: (_) => '3',
       sortOrder: 303,
     ),
-    QuestNode(
+    ChapterFinaleNode(
       id: 'forest_trial_finale',
       objectiveId: 'forest_trial_finale_objective',
-      displayBucket: QuestDisplayBucket.chapter,
-      claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestForestTrialFinaleTitle,
       descriptionKey: (l) => l.progQuestForestTrialFinaleDesc,
       rewards: const [

@@ -6,15 +6,13 @@ import 'package:forgetrack/features/progression/domain/models/core_models.dart';
 import 'package:forgetrack/features/progression_engine/application/progression_engine_provider.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/claim_policy.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/progression_node_definition.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/quest_display_bucket.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/reward_definition.dart';
 import 'package:forgetrack/features/progression_engine/presentation/quests_screen.dart';
 import 'package:forgetrack/l10n/app_localizations.dart';
 
-QuestNode _node(String id, int xp) => QuestNode(
+QuestNode _node(String id, int xp) => DailyQuestNode(
       id: id,
       objectiveId: '${id}_objective',
-      displayBucket: QuestDisplayBucket.daily,
       claimPolicy: ClaimPolicy.manual,
       titleKey: (_) => 'Title $id',
       descriptionKey: (_) => 'Desc $id',

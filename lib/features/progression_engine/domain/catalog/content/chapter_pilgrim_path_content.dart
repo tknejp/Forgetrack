@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart' show Icons;
 
 import '../../../../../shared/domain/rarity.dart';
-import '../../models/claim_policy.dart';
 import '../../models/content_tag.dart';
 import '../../models/objective_definition.dart';
 import '../../models/objective_metric.dart';
 import '../../models/objective_operator.dart';
 import '../../models/objective_scope.dart';
 import '../../models/progression_node_definition.dart';
-import '../../models/quest_display_bucket.dart';
 import '../../models/reward_definition.dart';
 import '../../models/unlock_condition.dart';
 import 'quest_assets.dart';
@@ -85,11 +83,9 @@ List<ObjectiveDefinition> pilgrimPathObjectives() {
 
 List<ProgressionNode> pilgrimPathNodes() {
   return [
-    QuestNode(
+    ChapterOpenerNode(
       id: 'pilgrim_path_open',
       objectiveId: 'pilgrim_path_open_objective',
-      displayBucket: QuestDisplayBucket.chapter,
-      claimPolicy: ClaimPolicy.automatic,
       unlockConditions: const [LevelAtLeast(1)],
       titleKey: (l) => l.progQuestPilgrimPathOpenTitle,
       descriptionKey: (l) => l.progQuestPilgrimPathOpenDesc,
@@ -99,17 +95,14 @@ List<ProgressionNode> pilgrimPathNodes() {
       assetKey: questAssetPilgrimPathIcon,
       chapterId: _chapterId,
       chainId: _chapterId,
-      chainOrder: 0,
       displayGroupId: _chapterId,
       nextNodeIds: const ['pilgrim_path_first_steps'],
       chainStepIcon: Icons.play_arrow_rounded,
       sortOrder: 200,
     ),
-    QuestNode(
+    ChapterStepNode(
       id: 'pilgrim_path_first_steps',
       objectiveId: 'pilgrim_path_first_steps_objective',
-      displayBucket: QuestDisplayBucket.chapter,
-      claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestPilgrimPathFirstStepsTitle,
       descriptionKey: (l) => l.progQuestPilgrimPathFirstStepsDesc,
       rewards: const [XpReward(amount: 60)],
@@ -125,11 +118,9 @@ List<ProgressionNode> pilgrimPathNodes() {
       chainStepLabelKey: (_) => '1',
       sortOrder: 201,
     ),
-    QuestNode(
+    ChapterStepNode(
       id: 'pilgrim_path_first_sleep',
       objectiveId: 'pilgrim_path_first_sleep_objective',
-      displayBucket: QuestDisplayBucket.chapter,
-      claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestPilgrimPathFirstSleepTitle,
       descriptionKey: (l) => l.progQuestPilgrimPathFirstSleepDesc,
       rewards: const [XpReward(amount: 60)],
@@ -145,11 +136,9 @@ List<ProgressionNode> pilgrimPathNodes() {
       chainStepLabelKey: (_) => '1',
       sortOrder: 202,
     ),
-    QuestNode(
+    ChapterStepNode(
       id: 'pilgrim_path_first_reward',
       objectiveId: 'pilgrim_path_first_reward_objective',
-      displayBucket: QuestDisplayBucket.chapter,
-      claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestPilgrimPathFirstRewardTitle,
       descriptionKey: (l) => l.progQuestPilgrimPathFirstRewardDesc,
       rewards: const [XpReward(amount: 80)],
@@ -165,11 +154,9 @@ List<ProgressionNode> pilgrimPathNodes() {
       chainStepLabelKey: (_) => '1',
       sortOrder: 203,
     ),
-    QuestNode(
+    ChapterFinaleNode(
       id: 'pilgrim_path_finale',
       objectiveId: 'pilgrim_path_finale_objective',
-      displayBucket: QuestDisplayBucket.chapter,
-      claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestPilgrimPathFinaleTitle,
       descriptionKey: (l) => l.progQuestPilgrimPathFinaleDesc,
       rewards: const [

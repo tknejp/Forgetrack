@@ -8,7 +8,6 @@ import '../../models/objective_metric.dart';
 import '../../models/objective_operator.dart';
 import '../../models/objective_scope.dart';
 import '../../models/progression_node_definition.dart';
-import '../../models/quest_display_bucket.dart';
 import '../../models/reward_definition.dart';
 import 'quest_assets.dart';
 
@@ -108,10 +107,9 @@ List<ObjectiveDefinition> longTermObjectives() {
 List<ProgressionNode> longTermNodes() {
   return [
     // ── Lifetime steps chain ────────────────────────────────────────
-    QuestNode(
+    LongTermQuestNode(
       id: 'long_term_steps_100k',
       objectiveId: 'lifetime_steps_100k',
-      displayBucket: QuestDisplayBucket.longTerm,
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progAchievementSteps100kTitle,
       descriptionKey: (l) => l.progAchievementSteps100kDesc,
@@ -125,10 +123,9 @@ List<ProgressionNode> longTermNodes() {
       nextNodeIds: const ['long_term_steps_500k'],
       sortOrder: 1100,
     ),
-    QuestNode(
+    LongTermQuestNode(
       id: 'long_term_steps_500k',
       objectiveId: 'lifetime_steps_500k',
-      displayBucket: QuestDisplayBucket.longTerm,
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progAchievementSteps500kTitle,
       descriptionKey: (l) => l.progAchievementSteps500kDesc,
@@ -142,10 +139,9 @@ List<ProgressionNode> longTermNodes() {
       nextNodeIds: const ['long_term_steps_1m'],
       sortOrder: 1101,
     ),
-    QuestNode(
+    LongTermQuestNode(
       id: 'long_term_steps_1m',
       objectiveId: 'lifetime_steps_1m',
-      displayBucket: QuestDisplayBucket.longTerm,
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progAchievementSteps1000000Title,
       descriptionKey: (l) => l.progAchievementSteps1000000Desc,
@@ -159,10 +155,9 @@ List<ProgressionNode> longTermNodes() {
       nextNodeIds: const ['long_term_steps_5m'],
       sortOrder: 1102,
     ),
-    QuestNode(
+    LongTermQuestNode(
       id: 'long_term_steps_5m',
       objectiveId: 'lifetime_steps_5m',
-      displayBucket: QuestDisplayBucket.longTerm,
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progAchievementSteps5000000Title,
       descriptionKey: (l) => l.progAchievementSteps5000000Desc,
@@ -176,10 +171,9 @@ List<ProgressionNode> longTermNodes() {
       nextNodeIds: const ['long_term_steps_10m'],
       sortOrder: 1103,
     ),
-    QuestNode(
+    LongTermQuestNode(
       id: 'long_term_steps_10m',
       objectiveId: 'lifetime_steps_10m',
-      displayBucket: QuestDisplayBucket.longTerm,
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progAchievementSteps10000000Title,
       descriptionKey: (l) => l.progAchievementSteps10000000Desc,
@@ -194,10 +188,9 @@ List<ProgressionNode> longTermNodes() {
     ),
 
     // ── XP milestones chain ─────────────────────────────────────────
-    QuestNode(
+    LongTermQuestNode(
       id: 'long_term_reach_500_xp',
       objectiveId: 'lifetime_xp_500',
-      displayBucket: QuestDisplayBucket.longTerm,
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestReach500XpTitle,
       descriptionKey: (l) => l.progQuestReach500XpDesc,
@@ -211,10 +204,9 @@ List<ProgressionNode> longTermNodes() {
       nextNodeIds: const ['long_term_reach_2000_xp'],
       sortOrder: 1200,
     ),
-    QuestNode(
+    LongTermQuestNode(
       id: 'long_term_reach_2000_xp',
       objectiveId: 'lifetime_xp_2000',
-      displayBucket: QuestDisplayBucket.longTerm,
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestReach2000XpTitle,
       descriptionKey: (l) => l.progQuestReach2000XpDesc,
@@ -228,10 +220,9 @@ List<ProgressionNode> longTermNodes() {
       nextNodeIds: const ['long_term_reach_5000_xp'],
       sortOrder: 1201,
     ),
-    QuestNode(
+    LongTermQuestNode(
       id: 'long_term_reach_5000_xp',
       objectiveId: 'lifetime_xp_5000',
-      displayBucket: QuestDisplayBucket.longTerm,
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestReach5000XpTitle,
       descriptionKey: (l) => l.progQuestReach5000XpDesc,
@@ -245,10 +236,9 @@ List<ProgressionNode> longTermNodes() {
       nextNodeIds: const ['long_term_reach_25000_xp'],
       sortOrder: 1202,
     ),
-    QuestNode(
+    LongTermQuestNode(
       id: 'long_term_reach_25000_xp',
       objectiveId: 'lifetime_xp_25000',
-      displayBucket: QuestDisplayBucket.longTerm,
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestReach25000XpTitle,
       descriptionKey: (l) => l.progQuestReach25000XpDesc,
@@ -262,10 +252,9 @@ List<ProgressionNode> longTermNodes() {
       nextNodeIds: const ['long_term_reach_100000_xp'],
       sortOrder: 1203,
     ),
-    QuestNode(
+    LongTermQuestNode(
       id: 'long_term_reach_100000_xp',
       objectiveId: 'lifetime_xp_100k',
-      displayBucket: QuestDisplayBucket.longTerm,
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestReach100000XpTitle,
       descriptionKey: (l) => l.progQuestReach100000XpDesc,
@@ -279,10 +268,9 @@ List<ProgressionNode> longTermNodes() {
       nextNodeIds: const ['long_term_reach_1000000_xp'],
       sortOrder: 1204,
     ),
-    QuestNode(
+    LongTermQuestNode(
       id: 'long_term_reach_1000000_xp',
       objectiveId: 'lifetime_xp_1m',
-      displayBucket: QuestDisplayBucket.longTerm,
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestReach1000000XpTitle,
       descriptionKey: (l) => l.progQuestReach1000000XpDesc,
@@ -297,10 +285,9 @@ List<ProgressionNode> longTermNodes() {
     ),
 
     // ── Reward hunter chain ─────────────────────────────────────────
-    QuestNode(
+    LongTermQuestNode(
       id: 'long_term_earn_first_reward',
       objectiveId: 'reward_count_first',
-      displayBucket: QuestDisplayBucket.longTerm,
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestEarnFirstRewardTitle,
       descriptionKey: (l) => l.progQuestEarnFirstRewardDesc,
@@ -314,10 +301,9 @@ List<ProgressionNode> longTermNodes() {
       nextNodeIds: const ['long_term_earn_25_rewards'],
       sortOrder: 1300,
     ),
-    QuestNode(
+    LongTermQuestNode(
       id: 'long_term_earn_25_rewards',
       objectiveId: 'reward_count_25',
-      displayBucket: QuestDisplayBucket.longTerm,
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestEarn25RewardsTitle,
       descriptionKey: (l) => l.progQuestEarn25RewardsDesc,
@@ -331,10 +317,9 @@ List<ProgressionNode> longTermNodes() {
       nextNodeIds: const ['long_term_earn_100_rewards'],
       sortOrder: 1301,
     ),
-    QuestNode(
+    LongTermQuestNode(
       id: 'long_term_earn_100_rewards',
       objectiveId: 'reward_count_100',
-      displayBucket: QuestDisplayBucket.longTerm,
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestEarn100RewardsTitle,
       descriptionKey: (l) => l.progQuestEarn100RewardsDesc,
@@ -348,10 +333,9 @@ List<ProgressionNode> longTermNodes() {
       nextNodeIds: const ['long_term_earn_250_rewards'],
       sortOrder: 1302,
     ),
-    QuestNode(
+    LongTermQuestNode(
       id: 'long_term_earn_250_rewards',
       objectiveId: 'reward_count_250',
-      displayBucket: QuestDisplayBucket.longTerm,
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestEarn250RewardsTitle,
       descriptionKey: (l) => l.progQuestEarn250RewardsDesc,

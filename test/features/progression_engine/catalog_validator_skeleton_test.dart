@@ -12,7 +12,6 @@ import 'package:forgetrack/features/progression_engine/domain/models/objective_m
 import 'package:forgetrack/features/progression_engine/domain/models/objective_operator.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/objective_scope.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/progression_node_definition.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/quest_display_bucket.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/reward_definition.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/unlock_condition.dart';
 import 'package:forgetrack/shared/domain/rarity.dart';
@@ -55,10 +54,9 @@ QuestNode _quest({
   List<ContentTag> contentTags = const [],
   List<UnlockCondition> unlockConditions = const [],
 }) =>
-    QuestNode(
+    DailyQuestNode(
       id: id,
       objectiveId: objectiveId,
-      displayBucket: QuestDisplayBucket.daily,
       titleKey: (_) => 'Title $id',
       descriptionKey: (_) => 'Desc $id',
       rewards: const [XpReward(amount: 10)],

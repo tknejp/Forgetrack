@@ -6,7 +6,6 @@ import '../../models/objective_metric.dart';
 import '../../models/objective_operator.dart';
 import '../../models/objective_scope.dart';
 import '../../models/progression_node_definition.dart';
-import '../../models/quest_display_bucket.dart';
 import '../../models/reward_definition.dart';
 import '../engine_catalog_context.dart';
 import 'quest_assets.dart';
@@ -64,10 +63,9 @@ List<ObjectiveDefinition> sleepObjectives(EngineCatalogContext context) {
 
 List<ProgressionNode> sleepNodes() {
   return [
-    QuestNode(
+    DailyQuestNode(
       id: 'daily_sleep_today',
       objectiveId: 'daily_sleep',
-      displayBucket: QuestDisplayBucket.daily,
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.progRuleDailySleepDesc,
       titleKey: (l) => l.progRuleDailySleep,

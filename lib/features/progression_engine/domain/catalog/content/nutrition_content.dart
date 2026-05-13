@@ -6,7 +6,6 @@ import '../../models/objective_metric.dart';
 import '../../models/objective_operator.dart';
 import '../../models/objective_scope.dart';
 import '../../models/progression_node_definition.dart';
-import '../../models/quest_display_bucket.dart';
 import '../../models/reward_definition.dart';
 import '../engine_catalog_context.dart';
 import 'quest_assets.dart';
@@ -105,10 +104,9 @@ List<ObjectiveDefinition> nutritionObjectives(EngineCatalogContext context) {
 List<ProgressionNode> nutritionNodes() {
   return [
     // Daily macro quests.
-    QuestNode(
+    DailyQuestNode(
       id: 'daily_calories_today',
       objectiveId: 'daily_calories',
-      displayBucket: QuestDisplayBucket.daily,
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.progRuleDailyCaloriesDesc,
       titleKey: (l) => l.progRuleDailyCalories,
@@ -125,10 +123,9 @@ List<ProgressionNode> nutritionNodes() {
       rarity: Rarity.common,
       assetKey: questAssetNutrition,
     ),
-    QuestNode(
+    DailyQuestNode(
       id: 'daily_protein_today',
       objectiveId: 'daily_protein',
-      displayBucket: QuestDisplayBucket.daily,
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.progRuleDailyProteinDesc,
       titleKey: (l) => l.progRuleDailyProtein,
@@ -138,10 +135,9 @@ List<ProgressionNode> nutritionNodes() {
       rarity: Rarity.common,
       assetKey: questAssetNutrition,
     ),
-    QuestNode(
+    DailyQuestNode(
       id: 'daily_carbs_today',
       objectiveId: 'daily_carbs',
-      displayBucket: QuestDisplayBucket.daily,
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.progRuleDailyCarbsDesc,
       titleKey: (l) => l.progRuleDailyCarbs,
@@ -151,10 +147,9 @@ List<ProgressionNode> nutritionNodes() {
       rarity: Rarity.common,
       assetKey: questAssetNutrition,
     ),
-    QuestNode(
+    DailyQuestNode(
       id: 'daily_fat_today',
       objectiveId: 'daily_fat',
-      displayBucket: QuestDisplayBucket.daily,
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.progRuleDailyFatDesc,
       titleKey: (l) => l.progRuleDailyFat,
@@ -164,10 +159,9 @@ List<ProgressionNode> nutritionNodes() {
       rarity: Rarity.common,
       assetKey: questAssetNutrition,
     ),
-    QuestNode(
+    DailyQuestNode(
       id: 'daily_fiber_today',
       objectiveId: 'daily_fiber',
-      displayBucket: QuestDisplayBucket.daily,
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.progRuleDailyFiberDesc,
       titleKey: (l) => l.progRuleDailyFiber,

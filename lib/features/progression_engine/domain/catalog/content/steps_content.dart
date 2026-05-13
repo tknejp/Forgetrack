@@ -6,7 +6,6 @@ import '../../models/objective_metric.dart';
 import '../../models/objective_operator.dart';
 import '../../models/objective_scope.dart';
 import '../../models/progression_node_definition.dart';
-import '../../models/quest_display_bucket.dart';
 import '../../models/reward_definition.dart';
 import '../engine_catalog_context.dart';
 import 'quest_assets.dart';
@@ -133,10 +132,9 @@ List<ProgressionNode> stepsNodes() {
   return [
     // Daily quest — manual claim so the player taps "Vyzvednout"
     // to grant XP, matching V1 UX.
-    QuestNode(
+    DailyQuestNode(
       id: 'daily_steps_today',
       objectiveId: 'daily_steps',
-      displayBucket: QuestDisplayBucket.daily,
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.progRuleDailyStepsDesc,
       titleKey: (l) => l.progRuleDailySteps,

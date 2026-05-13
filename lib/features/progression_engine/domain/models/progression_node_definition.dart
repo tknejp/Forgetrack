@@ -1,3 +1,12 @@
+// `type_init_formals` fires on every `required String super.chapterId`
+// in the subtypes below. The annotation is deliberate — it narrows
+// the base's nullable `chapterId` / `chainId` / `comboPoolId` fields
+// to non-null at the subtype's constructor surface (ChapterStepNode
+// can't exist without a chapterId, ComboStepNode can't exist without
+// a comboPoolId). Dropping the type would re-introduce nullability
+// and silently break catalog authoring.
+// ignore_for_file: type_init_formals
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart' show IconData;
 
@@ -56,7 +65,21 @@ sealed class ProgressionNode {
 
 // ── Concrete node types ─────────────────────────────────────────────
 
-class QuestNode extends ProgressionNode {
+/// Sealed base for every "quest" — the progress + claim primitive
+/// the player sees on screen.
+///
+/// Phase 1 of the subtype refactor: concrete subtypes carry an
+/// implicit `displayBucket` and tighten the constructor surface for
+/// catalog authors. Behavioural policies (slot persistence, gate
+/// cooldown, celebration variant) currently live in providers and
+/// the adapter as ad-hoc checks; Phase 2 moves them onto these
+/// subtypes as declarative fields so the rules live exactly once.
+///
+/// The base constructor stays wide enough for the existing catalog
+/// content to migrate mechanically — only the class name changes
+/// per node. Subtypes that don't use a given field (e.g. a
+/// standalone daily quest has no `chainId`) simply omit it.
+sealed class QuestNode extends ProgressionNode {
   const QuestNode({
     required super.id,
     required super.titleKey,
@@ -118,6 +141,294 @@ class QuestNode extends ProgressionNode {
   /// "finale" (shield) markers where a word would be noisier than an
   /// icon.
   final IconData? chainStepIcon;
+}
+
+// ── Quest subtypes ──────────────────────────────────────────────────
+//
+// Each subtype:
+// * Locks `displayBucket` to one value so authors stop having to
+//   spell it, and so `switch (node)` on the catalog is exhaustive
+//   instead of branching on a stringly-typed enum.
+// * Restricts the constructor to the fields that actually make
+//   sense for that flavour (e.g. a standalone daily quest can't
+//   carry a `chainId` — the constructor doesn't expose it).
+// * Acts as the type identity that Phase 2 will hang slot /
+//   celebration / cooldown policies on, eliminating the ad-hoc
+//   `displayBucket == ...` / `chainOrder == 0` / `nextNodeIds.isEmpty`
+//   checks scattered across the provider, adapter, and resolver.
+
+/// Standalone daily quest — e.g. `daily_steps_today`. Lives in the
+/// daily section with the rotation-sticky-until-midnight slot rule.
+class DailyQuestNode extends QuestNode {
+  const DailyQuestNode({
+    required super.id,
+    required super.titleKey,
+    required super.descriptionKey,
+    required super.rewards,
+    required super.objectiveId,
+    super.progressStartPolicy,
+    super.unlockConditions,
+    super.claimPolicy,
+    super.activationPolicy,
+    super.contentTags,
+    super.rarity,
+    super.lockedHintKey,
+    super.assetKey,
+    super.sortOrder,
+    super.dailyTierGroupId,
+    super.dailyTier,
+  }) : super(displayBucket: QuestDisplayBucket.daily);
+}
+
+/// Weekly quest — currently only `weekly_activity`. Stays visible in
+/// the weekly section until claimed / week rolls over.
+class WeeklyQuestNode extends QuestNode {
+  const WeeklyQuestNode({
+    required super.id,
+    required super.titleKey,
+    required super.descriptionKey,
+    required super.rewards,
+    required super.objectiveId,
+    super.unlockConditions,
+    super.claimPolicy,
+    super.activationPolicy,
+    super.contentTags,
+    super.rarity,
+    super.lockedHintKey,
+    super.assetKey,
+    super.sortOrder,
+  }) : super(displayBucket: QuestDisplayBucket.weekly);
+}
+
+/// Chapter chain *opener* — `chainOrder=0`, auto-claim when the level
+/// gate clears. Fires the "Nová kapitola otevřena" fullscreen
+/// celebration.
+class ChapterOpenerNode extends QuestNode {
+  const ChapterOpenerNode({
+    required super.id,
+    required super.titleKey,
+    required super.descriptionKey,
+    required super.rewards,
+    required super.objectiveId,
+    required String super.chapterId,
+    required String super.chainId,
+    required List<String> super.nextNodeIds,
+    super.prerequisiteNodeIds,
+    super.unlockConditions,
+    super.activationPolicy,
+    super.contentTags,
+    super.rarity,
+    super.lockedHintKey,
+    super.assetKey,
+    super.sortOrder,
+    super.chainStepIcon,
+    super.displayGroupId,
+  }) : super(
+          displayBucket: QuestDisplayBucket.chapter,
+          chainOrder: 0,
+          claimPolicy: ClaimPolicy.automatic,
+        );
+}
+
+/// Mid-chain chapter step. Manual claim — `nextNodeIds` is non-empty
+/// so the chain has at least one step after it. Silent on claim
+/// (Phase 2 will say so via [CelebrationPolicy]); the player sees
+/// the XP pill flip state on the chapter card.
+class ChapterStepNode extends QuestNode {
+  const ChapterStepNode({
+    required super.id,
+    required super.titleKey,
+    required super.descriptionKey,
+    required super.rewards,
+    required super.objectiveId,
+    required String super.chapterId,
+    required String super.chainId,
+    required int super.chainOrder,
+    required List<String> super.nextNodeIds,
+    super.prerequisiteNodeIds,
+    super.unlockConditions,
+    super.activationPolicy,
+    super.contentTags,
+    super.rarity,
+    super.lockedHintKey,
+    super.assetKey,
+    super.sortOrder,
+    super.chainStepLabelKey,
+    super.chainStepIcon,
+    super.displayGroupId,
+  }) : super(
+          displayBucket: QuestDisplayBucket.chapter,
+          claimPolicy: ClaimPolicy.manual,
+        );
+}
+
+/// Final step of a chapter chain. `nextNodeIds` is empty by
+/// definition. Fires the "Kapitola dokončena" fullscreen
+/// celebration with the chapter icon as headliner.
+class ChapterFinaleNode extends QuestNode {
+  const ChapterFinaleNode({
+    required super.id,
+    required super.titleKey,
+    required super.descriptionKey,
+    required super.rewards,
+    required super.objectiveId,
+    required String super.chapterId,
+    required String super.chainId,
+    required int super.chainOrder,
+    super.prerequisiteNodeIds,
+    super.unlockConditions,
+    super.activationPolicy,
+    super.contentTags,
+    super.rarity,
+    super.lockedHintKey,
+    super.assetKey,
+    super.sortOrder,
+    super.chainStepLabelKey,
+    super.chainStepIcon,
+    super.displayGroupId,
+  }) : super(
+          displayBucket: QuestDisplayBucket.chapter,
+          claimPolicy: ClaimPolicy.manual,
+          nextNodeIds: const [],
+        );
+}
+
+/// Narrative bonus quest tied to an active chapter. Surfaces only
+/// while `ChapterActive(chapterId)` is true; the daily section's
+/// surprise slot picks one at a time. Once-and-done (`LifetimeScope`
+/// objective). Carries a cooldown so it doesn't unlock the same day
+/// its gating chapter step was completed (Phase 2 will encode this
+/// as `CooldownDays(1)` instead of explicit unlock conditions).
+class ChapterSideQuestNode extends QuestNode {
+  const ChapterSideQuestNode({
+    required super.id,
+    required super.titleKey,
+    required super.descriptionKey,
+    required super.rewards,
+    required super.objectiveId,
+    required String super.chapterId,
+    super.chainId,
+    super.chainOrder,
+    super.nextNodeIds,
+    super.prerequisiteNodeIds,
+    super.unlockConditions,
+    super.claimPolicy,
+    super.activationPolicy,
+    super.contentTags,
+    super.rarity,
+    super.lockedHintKey,
+    super.assetKey,
+    super.sortOrder,
+    super.chainStepLabelKey,
+  }) : super(displayBucket: QuestDisplayBucket.chapterSideQuest);
+}
+
+/// Step in a daily combo chain. Manual claim, gated by
+/// `NodeCompletedBeforeToday(prev)` so only one chain step lands
+/// per day. `comboPoolId` ties the step to a shared completion
+/// pool that combo achievements ride on.
+class ComboStepNode extends QuestNode {
+  const ComboStepNode({
+    required super.id,
+    required super.titleKey,
+    required super.descriptionKey,
+    required super.rewards,
+    required super.objectiveId,
+    required String super.chainId,
+    required int super.chainOrder,
+    required String super.comboPoolId,
+    required List<String> super.nextNodeIds,
+    super.prerequisiteNodeIds,
+    super.unlockConditions,
+    super.activationPolicy,
+    super.contentTags,
+    super.rarity,
+    super.lockedHintKey,
+    super.assetKey,
+    super.sortOrder,
+    super.chainStepLabelKey,
+  }) : super(
+          displayBucket: QuestDisplayBucket.combo,
+          claimPolicy: ClaimPolicy.manual,
+        );
+}
+
+/// Final step of a daily combo chain. Same gating rules as
+/// [ComboStepNode] but `nextNodeIds` is empty. Phase 2 will give
+/// this a louder celebration than mid-chain steps.
+class ComboFinaleNode extends QuestNode {
+  const ComboFinaleNode({
+    required super.id,
+    required super.titleKey,
+    required super.descriptionKey,
+    required super.rewards,
+    required super.objectiveId,
+    required String super.chainId,
+    required int super.chainOrder,
+    required String super.comboPoolId,
+    super.prerequisiteNodeIds,
+    super.unlockConditions,
+    super.activationPolicy,
+    super.contentTags,
+    super.rarity,
+    super.lockedHintKey,
+    super.assetKey,
+    super.sortOrder,
+    super.chainStepLabelKey,
+    super.chainStepIcon,
+  }) : super(
+          displayBucket: QuestDisplayBucket.combo,
+          claimPolicy: ClaimPolicy.manual,
+          nextNodeIds: const [],
+        );
+}
+
+/// Daily challenge template — `LifetimeScope` objective; today's pick
+/// surfaces via deterministic hash and retires once claimed.
+class DailyChallengeNode extends QuestNode {
+  const DailyChallengeNode({
+    required super.id,
+    required super.titleKey,
+    required super.descriptionKey,
+    required super.rewards,
+    required super.objectiveId,
+    required String super.comboPoolId,
+    super.unlockConditions,
+    super.claimPolicy,
+    super.activationPolicy,
+    super.contentTags,
+    super.rarity,
+    super.lockedHintKey,
+    super.assetKey,
+    super.sortOrder,
+  }) : super(displayBucket: QuestDisplayBucket.dailyChallenge);
+}
+
+/// Long-term lifetime objective (mastery chain). Persistent — stays
+/// visible until claimed, no per-day rotation. Chain progression
+/// across many sessions.
+class LongTermQuestNode extends QuestNode {
+  const LongTermQuestNode({
+    required super.id,
+    required super.titleKey,
+    required super.descriptionKey,
+    required super.rewards,
+    required super.objectiveId,
+    super.chainId,
+    super.chainOrder,
+    super.nextNodeIds,
+    super.prerequisiteNodeIds,
+    super.unlockConditions,
+    super.claimPolicy,
+    super.activationPolicy,
+    super.contentTags,
+    super.rarity,
+    super.lockedHintKey,
+    super.assetKey,
+    super.sortOrder,
+    super.chainStepLabelKey,
+    super.chainStepIcon,
+  }) : super(displayBucket: QuestDisplayBucket.longTerm);
 }
 
 class AchievementNode extends ProgressionNode {

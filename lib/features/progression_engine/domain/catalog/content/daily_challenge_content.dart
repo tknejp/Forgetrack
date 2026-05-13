@@ -6,7 +6,6 @@ import '../../models/objective_metric.dart';
 import '../../models/objective_operator.dart';
 import '../../models/objective_scope.dart';
 import '../../models/progression_node_definition.dart';
-import '../../models/quest_display_bucket.dart';
 import '../../models/reward_definition.dart';
 import '../engine_catalog_context.dart';
 import 'quest_assets.dart';
@@ -115,10 +114,9 @@ List<ObjectiveDefinition> dailyChallengeObjectives(
 
 List<ProgressionNode> dailyChallengeNodes() {
   return [
-    QuestNode(
+    DailyChallengeNode(
       id: 'daily_challenge_nutri_triple',
       objectiveId: 'daily_challenge_nutri_triple_obj',
-      displayBucket: QuestDisplayBucket.dailyChallenge,
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progDailyChallengeNutriTripleTitle,
       descriptionKey: (l) => l.progDailyChallengeNutriTripleDesc,
@@ -128,10 +126,9 @@ List<ProgressionNode> dailyChallengeNodes() {
       assetKey: questAssetNutrition,
       comboPoolId: _comboPoolId,
     ),
-    QuestNode(
+    DailyChallengeNode(
       id: 'daily_challenge_active_day',
       objectiveId: 'daily_challenge_active_day_obj',
-      displayBucket: QuestDisplayBucket.dailyChallenge,
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progDailyChallengeActiveDayTitle,
       descriptionKey: (l) => l.progDailyChallengeActiveDayDesc,
@@ -141,10 +138,9 @@ List<ProgressionNode> dailyChallengeNodes() {
       assetKey: questAssetActivity,
       comboPoolId: _comboPoolId,
     ),
-    QuestNode(
+    DailyChallengeNode(
       id: 'daily_challenge_full_plate',
       objectiveId: 'daily_challenge_full_plate_obj',
-      displayBucket: QuestDisplayBucket.dailyChallenge,
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progDailyChallengeFullPlateTitle,
       descriptionKey: (l) => l.progDailyChallengeFullPlateDesc,
@@ -154,10 +150,9 @@ List<ProgressionNode> dailyChallengeNodes() {
       assetKey: questAssetNutrition,
       comboPoolId: _comboPoolId,
     ),
-    QuestNode(
+    DailyChallengeNode(
       id: 'daily_challenge_recovery',
       objectiveId: 'daily_challenge_recovery_obj',
-      displayBucket: QuestDisplayBucket.dailyChallenge,
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progDailyChallengeRecoveryTitle,
       descriptionKey: (l) => l.progDailyChallengeRecoveryDesc,
@@ -167,10 +162,9 @@ List<ProgressionNode> dailyChallengeNodes() {
       assetKey: questAssetStreak,
       comboPoolId: _comboPoolId,
     ),
-    QuestNode(
+    DailyChallengeNode(
       id: 'daily_challenge_triple_combo',
       objectiveId: 'daily_challenge_triple_combo_obj',
-      displayBucket: QuestDisplayBucket.dailyChallenge,
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progDailyChallengeTripleComboTitle,
       descriptionKey: (l) => l.progDailyChallengeTripleComboDesc,
@@ -180,10 +174,9 @@ List<ProgressionNode> dailyChallengeNodes() {
       assetKey: questAssetDoubleWin,
       comboPoolId: _comboPoolId,
     ),
-    QuestNode(
+    DailyChallengeNode(
       id: 'daily_challenge_balanced',
       objectiveId: 'daily_challenge_balanced_obj',
-      displayBucket: QuestDisplayBucket.dailyChallenge,
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progDailyChallengeBalancedTitle,
       descriptionKey: (l) => l.progDailyChallengeBalancedDesc,

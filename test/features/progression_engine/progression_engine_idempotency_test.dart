@@ -13,7 +13,6 @@ import 'package:forgetrack/features/progression_engine/domain/models/objective_m
 import 'package:forgetrack/features/progression_engine/domain/models/objective_operator.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/objective_scope.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/progression_node_definition.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/quest_display_bucket.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/reward_definition.dart';
 import 'package:forgetrack/shared/domain/rarity.dart';
 
@@ -55,10 +54,9 @@ QuestNode _quest({
   ClaimPolicy? claimPolicy,
   List<RewardDefinition>? rewards,
 }) =>
-    QuestNode(
+    DailyQuestNode(
       id: id,
       objectiveId: objectiveId,
-      displayBucket: QuestDisplayBucket.daily,
       titleKey: (_) => 'Title',
       descriptionKey: (_) => 'Desc',
       rewards: rewards ?? [XpReward(amount: xp)],
@@ -170,10 +168,9 @@ void main() {
         objectives: _FakeObjectiveCatalog([objective]),
         nodes: _FakeNodeCatalog([
           _quest(id: 'quest', objectiveId: objective.id, xp: 50),
-          QuestNode(
+          LongTermQuestNode(
             id: 'achievement_like',
             objectiveId: objective.id,
-            displayBucket: QuestDisplayBucket.longTerm,
             titleKey: (_) => 'Achievement',
             descriptionKey: (_) => 'Same objective',
             rewards: const [CosmeticReward(cosmeticId: 'frame_test')],
@@ -206,10 +203,9 @@ void main() {
       final engine = _newEngine(
         objectives: _FakeObjectiveCatalog([objective]),
         nodes: _FakeNodeCatalog([
-          QuestNode(
+          LongTermQuestNode(
             id: 'manual_node',
             objectiveId: objective.id,
-            displayBucket: QuestDisplayBucket.longTerm,
             titleKey: (_) => 'Manual',
             descriptionKey: (_) => 'Desc',
             rewards: const [XpReward(amount: 200)],

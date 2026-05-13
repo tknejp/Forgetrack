@@ -7,7 +7,6 @@ import '../../models/objective_metric.dart';
 import '../../models/objective_operator.dart';
 import '../../models/objective_scope.dart';
 import '../../models/progression_node_definition.dart';
-import '../../models/quest_display_bucket.dart';
 import '../../models/reward_definition.dart';
 import '../../models/unlock_condition.dart';
 import '../engine_catalog_context.dart';
@@ -428,10 +427,9 @@ QuestNode _standalone({
   required String assetKey,
   List<RewardDefinition> bonusRewards = const [],
 }) {
-  return QuestNode(
+  return ChapterSideQuestNode(
     id: id,
     objectiveId: objectiveId,
-    displayBucket: QuestDisplayBucket.chapterSideQuest,
     claimPolicy: ClaimPolicy.manual,
     unlockConditions: [
       ChapterActive(chapterId),
@@ -488,10 +486,9 @@ QuestNode _chainStep({
       NodeCompletedBeforeToday(prerequisiteNodeId),
     ],
   ];
-  return QuestNode(
+  return ChapterSideQuestNode(
     id: id,
     objectiveId: objectiveId,
-    displayBucket: QuestDisplayBucket.chapterSideQuest,
     claimPolicy: ClaimPolicy.manual,
     unlockConditions: unlocks,
     titleKey: titleKey,

@@ -2,14 +2,12 @@ import 'package:flutter/material.dart' show Icons;
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../shared/domain/rarity.dart';
-import '../../models/claim_policy.dart';
 import '../../models/content_tag.dart';
 import '../../models/objective_definition.dart';
 import '../../models/objective_metric.dart';
 import '../../models/objective_operator.dart';
 import '../../models/objective_scope.dart';
 import '../../models/progression_node_definition.dart';
-import '../../models/quest_display_bucket.dart';
 import '../../models/reward_definition.dart';
 import '../../models/unlock_condition.dart';
 import 'quest_assets.dart';
@@ -556,12 +554,13 @@ List<ProgressionNode> chapterNodes() {
     final firstStepId = c.steps.first.id;
     final chapterPrereq = _chapterPrereqByOpenId[openId];
 
-    out.add(QuestNode(
+    out.add(ChapterOpenerNode(
       id: openId,
       objectiveId: _openObjectiveId(c.id),
-      displayBucket: QuestDisplayBucket.chapter,
-      claimPolicy: ClaimPolicy.automatic,
-      unlockConditions: [LevelAtLeast(c.level)],
+      unlockConditions: [
+        LevelAtLeast(c.level),
+        if (chapterPrereq != null) NodeCompleted(chapterPrereq),
+      ],
       titleKey: c.openTitleKey,
       descriptionKey: c.openDescKey,
       rewards: [XpReward(amount: c.rewards[0])],
@@ -570,10 +569,7 @@ List<ProgressionNode> chapterNodes() {
       assetKey: c.iconAsset,
       chapterId: c.id,
       chainId: c.id,
-      chainOrder: 0,
       displayGroupId: c.id,
-      prerequisiteNodeIds:
-          chapterPrereq == null ? const [] : [chapterPrereq],
       nextNodeIds: [firstStepId],
       chainStepIcon: Icons.play_arrow_rounded,
       sortOrder: c.sortOrder,
@@ -584,11 +580,9 @@ List<ProgressionNode> chapterNodes() {
       final prevId = i == 0 ? openId : c.steps[i - 1].id;
       final nextId = i == c.steps.length - 1 ? finaleId : c.steps[i + 1].id;
       final stepLabel = step.chainStepLabel;
-      out.add(QuestNode(
+      out.add(ChapterStepNode(
         id: step.id,
         objectiveId: _stepObjectiveId(step.id),
-        displayBucket: QuestDisplayBucket.chapter,
-        claimPolicy: ClaimPolicy.manual,
         titleKey: step.titleKey,
         descriptionKey: step.descriptionKey,
         rewards: [XpReward(amount: c.rewards[i + 1])],
@@ -607,11 +601,9 @@ List<ProgressionNode> chapterNodes() {
     }
 
     final lastStepId = c.steps.last.id;
-    out.add(QuestNode(
+    out.add(ChapterFinaleNode(
       id: finaleId,
       objectiveId: _finaleObjectiveId(c.id),
-      displayBucket: QuestDisplayBucket.chapter,
-      claimPolicy: ClaimPolicy.manual,
       titleKey: c.finaleTitleKey,
       descriptionKey: c.finaleDescKey,
       rewards: [

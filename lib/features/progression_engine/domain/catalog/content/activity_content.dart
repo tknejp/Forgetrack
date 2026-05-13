@@ -6,7 +6,6 @@ import '../../models/objective_metric.dart';
 import '../../models/objective_operator.dart';
 import '../../models/objective_scope.dart';
 import '../../models/progression_node_definition.dart';
-import '../../models/quest_display_bucket.dart';
 import '../../models/reward_definition.dart';
 import '../engine_catalog_context.dart';
 import 'quest_assets.dart';
@@ -82,10 +81,9 @@ List<ObjectiveDefinition> activityObjectives(EngineCatalogContext context) {
 
 List<ProgressionNode> activityNodes() {
   return [
-    QuestNode(
+    DailyQuestNode(
       id: 'daily_activity_today',
       objectiveId: 'daily_activity',
-      displayBucket: QuestDisplayBucket.daily,
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.activitiesActiveMins,
       titleKey: (l) => l.activitiesActiveMins,
@@ -102,10 +100,9 @@ List<ProgressionNode> activityNodes() {
       rarity: Rarity.common,
       assetKey: questAssetActivity,
     ),
-    QuestNode(
+    WeeklyQuestNode(
       id: 'weekly_activity',
       objectiveId: 'weekly_activity',
-      displayBucket: QuestDisplayBucket.weekly,
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.progRuleWeeklyActivityDesc,
       titleKey: (l) => l.progRuleWeeklyActivity,
