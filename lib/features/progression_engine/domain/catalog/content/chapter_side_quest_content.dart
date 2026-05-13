@@ -431,16 +431,12 @@ QuestNode _standalone({
     id: id,
     objectiveId: objectiveId,
     claimPolicy: ClaimPolicy.manual,
-    unlockConditions: [
-      ChapterActive(chapterId),
-      NodeCompleted(chapterEntryGateNodeId),
-      // Wait at least until the day after the chapter chain step
-      // lands. Without this, claiming a daily that satisfies the
-      // chapter step would surface the side quest in the very same
-      // session — the player would never get a sense of "tomorrow
-      // brings new content".
-      NodeCompletedBeforeToday(chapterEntryGateNodeId),
-    ],
+    // ChapterActive is the only "soft" gate — it filters by the
+    // active chapter window. The "must be completed" + "must be at
+    // least a day old" gates derive from the prereq + the subtype's
+    // CooldownDays(1) policy.
+    unlockConditions: [ChapterActive(chapterId)],
+    prerequisiteNodeIds: [chapterEntryGateNodeId],
     titleKey: titleKey,
     descriptionKey: descriptionKey,
     rewards: [XpReward(amount: baseXp), ...bonusRewards],
@@ -452,9 +448,10 @@ QuestNode _standalone({
 }
 
 /// **Chain step** — sequential side quest. First step gates on the
-/// chapter entry node; subsequent steps gate on the prior step's
-/// completion **and** `NodeCompletedBeforeToday` so only one step
-/// is claimable per day.
+/// chapter entry node; subsequent steps gate on the prior step.
+/// The `CooldownDays(1)` policy on [ChapterSideQuestNode] adds the
+/// "wait until tomorrow" rule, so the catalog only declares the
+/// hard dependency.
 QuestNode _chainStep({
   required String id,
   required String objectiveId,
@@ -472,25 +469,17 @@ QuestNode _chainStep({
   required String assetKey,
   List<RewardDefinition> bonusRewards = const [],
 }) {
-  final unlocks = <UnlockCondition>[
-    ChapterActive(chapterId),
-    if (prerequisiteNodeId == null) ...[
-      NodeCompleted(chapterEntryGateNodeId),
-      // Step 1 of a chain waits one day after the chapter chain step
-      // it gates on — same rule as standalone side quests. Without
-      // this the player would unlock the side-quest chain in the
-      // same session as the daily that satisfied the chapter step.
-      NodeCompletedBeforeToday(chapterEntryGateNodeId),
-    ] else ...[
-      NodeCompleted(prerequisiteNodeId),
-      NodeCompletedBeforeToday(prerequisiteNodeId),
-    ],
-  ];
+  // First step gates on the chapter chain entry; subsequent steps
+  // gate on the prior side-quest step. Either way the gate goes
+  // into `prerequisiteNodeIds` and the subtype's CooldownDays(1)
+  // policy derives both `NodeCompleted` and `NodeCompletedBeforeToday`.
+  final prereqId = prerequisiteNodeId ?? chapterEntryGateNodeId;
   return ChapterSideQuestNode(
     id: id,
     objectiveId: objectiveId,
     claimPolicy: ClaimPolicy.manual,
-    unlockConditions: unlocks,
+    unlockConditions: [ChapterActive(chapterId)],
+    prerequisiteNodeIds: [prereqId],
     titleKey: titleKey,
     descriptionKey: descriptionKey,
     rewards: [XpReward(amount: baseXp), ...bonusRewards],
@@ -501,8 +490,6 @@ QuestNode _chainStep({
     chainId: chainId,
     chainOrder: chainOrder,
     chainStepLabelKey: (_) => chainStepLabel,
-    prerequisiteNodeIds:
-        prerequisiteNodeId == null ? const [] : [prerequisiteNodeId],
     nextNodeIds: nextNodeId == null ? const [] : [nextNodeId],
   );
 }

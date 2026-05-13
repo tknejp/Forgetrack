@@ -9,6 +9,7 @@ import '../domain/models/engine_evaluation_input.dart';
 import '../domain/models/ledger_event.dart';
 import '../domain/models/progression_node_definition.dart';
 import '../domain/models/progression_resolution_reason.dart';
+import '../domain/models/quest_policies.dart';
 import '../domain/models/unlock_condition.dart';
 import '../domain/models/progression_resolution_result.dart';
 import '../domain/repository/ledger_snapshot.dart';
@@ -350,18 +351,35 @@ class ProgressionEngine {
   }
 
   /// Combines [ProgressionNode.unlockConditions] with derived
-  /// [NodeCompleted] conditions for [QuestNode.prerequisiteNodeIds].
-  /// Catalog authors keep `prerequisiteNodeIds` ergonomic; the engine
-  /// expands it into the same UnlockCondition vocabulary the resolver
-  /// already understands.
+  /// conditions from [QuestNode.prerequisiteNodeIds] and the node's
+  /// [QuestNode.gatePolicy].
+  ///
+  /// `prerequisiteNodeIds` always expand to `NodeCompleted(pid)` —
+  /// catalog authors keep the list ergonomic without learning the
+  /// UnlockCondition vocabulary. On top of that, [GatePolicy] adds
+  /// time-based gates: a [CooldownDays] of 1 day pins a
+  /// `NodeCompletedBeforeToday(pid)` for every prereq so combo
+  /// chains advance one step per day and chapter side quests reveal
+  /// the day after their gating chapter step lands. Catalog content
+  /// therefore stops spelling out `NodeCompletedBeforeToday` — the
+  /// subtype declares the cadence and the engine wires the gate.
   List<UnlockCondition> _conditionsFor(ProgressionNode node) {
-    if (node is QuestNode && node.prerequisiteNodeIds.isNotEmpty) {
-      return [
-        ...node.unlockConditions,
-        for (final pid in node.prerequisiteNodeIds) NodeCompleted(pid),
-      ];
+    if (node is! QuestNode || node.prerequisiteNodeIds.isEmpty) {
+      return node.unlockConditions;
     }
-    return node.unlockConditions;
+    final gate = node.gatePolicy;
+    final cooldownDays = gate is CooldownDays ? gate.days : 0;
+    return [
+      ...node.unlockConditions,
+      for (final pid in node.prerequisiteNodeIds) NodeCompleted(pid),
+      // Today only CooldownDays(1) maps cleanly to a primitive
+      // condition. Larger cooldowns would need a new
+      // `NodeCompletedAtLeastDaysAgo` condition; deferred until a
+      // catalog node actually wants one.
+      if (cooldownDays == 1)
+        for (final pid in node.prerequisiteNodeIds)
+          NodeCompletedBeforeToday(pid),
+    ];
   }
 }
 

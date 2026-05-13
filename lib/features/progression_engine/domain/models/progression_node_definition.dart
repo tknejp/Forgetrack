@@ -17,6 +17,7 @@ import 'claim_policy.dart';
 import 'content_tag.dart';
 import 'progress_start_policy.dart';
 import 'quest_display_bucket.dart';
+import 'quest_policies.dart';
 import 'reward_definition.dart';
 import 'unlock_condition.dart';
 
@@ -87,6 +88,9 @@ sealed class QuestNode extends ProgressionNode {
     required super.rewards,
     required this.objectiveId,
     required this.displayBucket,
+    required this.slotPolicy,
+    required this.gatePolicy,
+    required this.celebrationPolicy,
     this.chainId,
     this.chainOrder,
     this.chapterId,
@@ -111,6 +115,23 @@ sealed class QuestNode extends ProgressionNode {
 
   final String objectiveId;
   final QuestDisplayBucket displayBucket;
+
+  /// How this quest shows up in the daily / weekly / chapter
+  /// section pickers. Each subtype hardcodes a default that matches
+  /// its display bucket; catalog authors don't override.
+  final SlotPolicy slotPolicy;
+
+  /// Time-based gate on top of [prerequisiteNodeIds]. When set to
+  /// [CooldownDays] the engine derives a `NodeCompletedBeforeToday`
+  /// for every prereq automatically, so combo / side-quest catalog
+  /// content doesn't have to spell those conditions out.
+  final GatePolicy gatePolicy;
+
+  /// How the celebration overlay should react when this quest's
+  /// objective completes. Read by the celebration adapter to skip
+  /// type-based branching.
+  final CelebrationPolicy celebrationPolicy;
+
   final String? chainId;
   final int? chainOrder;
   final String? chapterId;
@@ -177,7 +198,12 @@ class DailyQuestNode extends QuestNode {
     super.sortOrder,
     super.dailyTierGroupId,
     super.dailyTier,
-  }) : super(displayBucket: QuestDisplayBucket.daily);
+  }) : super(
+          displayBucket: QuestDisplayBucket.daily,
+          slotPolicy: const HashRotationStickyUntilMidnight(),
+          gatePolicy: const NoCooldown(),
+          celebrationPolicy: const SilentCelebration(),
+        );
 }
 
 /// Weekly quest — currently only `weekly_activity`. Stays visible in
@@ -197,7 +223,12 @@ class WeeklyQuestNode extends QuestNode {
     super.lockedHintKey,
     super.assetKey,
     super.sortOrder,
-  }) : super(displayBucket: QuestDisplayBucket.weekly);
+  }) : super(
+          displayBucket: QuestDisplayBucket.weekly,
+          slotPolicy: const Persistent(),
+          gatePolicy: const NoCooldown(),
+          celebrationPolicy: const SilentCelebration(),
+        );
 }
 
 /// Chapter chain *opener* — `chainOrder=0`, auto-claim when the level
@@ -227,6 +258,9 @@ class ChapterOpenerNode extends QuestNode {
           displayBucket: QuestDisplayBucket.chapter,
           chainOrder: 0,
           claimPolicy: ClaimPolicy.automatic,
+          slotPolicy: const ChapterCardSticky(),
+          gatePolicy: const NoCooldown(),
+          celebrationPolicy: const ChapterOpenedCelebration(),
         );
 }
 
@@ -259,6 +293,9 @@ class ChapterStepNode extends QuestNode {
   }) : super(
           displayBucket: QuestDisplayBucket.chapter,
           claimPolicy: ClaimPolicy.manual,
+          slotPolicy: const ChapterCardSticky(),
+          gatePolicy: const NoCooldown(),
+          celebrationPolicy: const SilentCelebration(),
         );
 }
 
@@ -290,6 +327,9 @@ class ChapterFinaleNode extends QuestNode {
           displayBucket: QuestDisplayBucket.chapter,
           claimPolicy: ClaimPolicy.manual,
           nextNodeIds: const [],
+          slotPolicy: const ChapterCardSticky(),
+          gatePolicy: const NoCooldown(),
+          celebrationPolicy: const ChapterCompletedCelebration(),
         );
 }
 
@@ -320,7 +360,12 @@ class ChapterSideQuestNode extends QuestNode {
     super.assetKey,
     super.sortOrder,
     super.chainStepLabelKey,
-  }) : super(displayBucket: QuestDisplayBucket.chapterSideQuest);
+  }) : super(
+          displayBucket: QuestDisplayBucket.chapterSideQuest,
+          slotPolicy: const PinClaimedTodayUntilMidnight(),
+          gatePolicy: const CooldownDays(1),
+          celebrationPolicy: const SilentCelebration(),
+        );
 }
 
 /// Step in a daily combo chain. Manual claim, gated by
@@ -350,6 +395,9 @@ class ComboStepNode extends QuestNode {
   }) : super(
           displayBucket: QuestDisplayBucket.combo,
           claimPolicy: ClaimPolicy.manual,
+          slotPolicy: const ChainPlaceholderUntilMidnight(),
+          gatePolicy: const CooldownDays(1),
+          celebrationPolicy: const SilentCelebration(),
         );
 }
 
@@ -380,6 +428,9 @@ class ComboFinaleNode extends QuestNode {
           displayBucket: QuestDisplayBucket.combo,
           claimPolicy: ClaimPolicy.manual,
           nextNodeIds: const [],
+          slotPolicy: const ChainPlaceholderUntilMidnight(),
+          gatePolicy: const CooldownDays(1),
+          celebrationPolicy: const SilentCelebration(),
         );
 }
 
@@ -401,7 +452,12 @@ class DailyChallengeNode extends QuestNode {
     super.lockedHintKey,
     super.assetKey,
     super.sortOrder,
-  }) : super(displayBucket: QuestDisplayBucket.dailyChallenge);
+  }) : super(
+          displayBucket: QuestDisplayBucket.dailyChallenge,
+          slotPolicy: const DailyChallengeHashPick(),
+          gatePolicy: const NoCooldown(),
+          celebrationPolicy: const SilentCelebration(),
+        );
 }
 
 /// Long-term lifetime objective (mastery chain). Persistent — stays
@@ -428,7 +484,12 @@ class LongTermQuestNode extends QuestNode {
     super.sortOrder,
     super.chainStepLabelKey,
     super.chainStepIcon,
-  }) : super(displayBucket: QuestDisplayBucket.longTerm);
+  }) : super(
+          displayBucket: QuestDisplayBucket.longTerm,
+          slotPolicy: const Persistent(),
+          gatePolicy: const NoCooldown(),
+          celebrationPolicy: const SilentCelebration(),
+        );
 }
 
 class AchievementNode extends ProgressionNode {

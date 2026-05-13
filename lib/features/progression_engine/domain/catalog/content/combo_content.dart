@@ -8,7 +8,6 @@ import '../../models/objective_operator.dart';
 import '../../models/objective_scope.dart';
 import '../../models/progression_node_definition.dart';
 import '../../models/reward_definition.dart';
-import '../../models/unlock_condition.dart';
 import '../engine_catalog_context.dart';
 import 'quest_assets.dart';
 
@@ -255,9 +254,6 @@ List<ProgressionNode> comboNodes() {
       chainOrder: 1,
       chainStepLabelKey: (_) => '2',
       prerequisiteNodeIds: const ['combo_balanced_step_1'],
-      unlockConditions: const [
-        NodeCompletedBeforeToday('combo_balanced_step_1'),
-      ],
       nextNodeIds: const ['combo_balanced_step_3'],
     ),
     ComboStepNode(
@@ -274,9 +270,6 @@ List<ProgressionNode> comboNodes() {
       chainOrder: 2,
       chainStepLabelKey: (_) => '3',
       prerequisiteNodeIds: const ['combo_balanced_step_2'],
-      unlockConditions: const [
-        NodeCompletedBeforeToday('combo_balanced_step_2'),
-      ],
       nextNodeIds: const ['combo_balanced_finale'],
     ),
     ComboFinaleNode(
@@ -293,9 +286,6 @@ List<ProgressionNode> comboNodes() {
       chainOrder: 3,
       chainStepIcon: Icons.flag_rounded,
       prerequisiteNodeIds: const ['combo_balanced_step_3'],
-      unlockConditions: const [
-        NodeCompletedBeforeToday('combo_balanced_step_3'),
-      ],
     ),
     // ── Chain 2: Recovery (sleep-anchored) ─────────────────────
     ComboStepNode(
@@ -312,9 +302,6 @@ List<ProgressionNode> comboNodes() {
       chainOrder: 0,
       chainStepLabelKey: (_) => '1',
       prerequisiteNodeIds: const ['combo_balanced_finale'],
-      unlockConditions: const [
-        NodeCompletedBeforeToday('combo_balanced_finale'),
-      ],
       nextNodeIds: const ['combo_recovery_step_2'],
     ),
     ComboStepNode(
@@ -331,9 +318,6 @@ List<ProgressionNode> comboNodes() {
       chainOrder: 1,
       chainStepLabelKey: (_) => '2',
       prerequisiteNodeIds: const ['combo_recovery_step_1'],
-      unlockConditions: const [
-        NodeCompletedBeforeToday('combo_recovery_step_1'),
-      ],
       nextNodeIds: const ['combo_recovery_step_3'],
     ),
     ComboStepNode(
@@ -350,9 +334,6 @@ List<ProgressionNode> comboNodes() {
       chainOrder: 2,
       chainStepLabelKey: (_) => '3',
       prerequisiteNodeIds: const ['combo_recovery_step_2'],
-      unlockConditions: const [
-        NodeCompletedBeforeToday('combo_recovery_step_2'),
-      ],
       nextNodeIds: const ['combo_recovery_finale'],
     ),
     ComboFinaleNode(
@@ -369,9 +350,6 @@ List<ProgressionNode> comboNodes() {
       chainOrder: 3,
       chainStepIcon: Icons.flag_rounded,
       prerequisiteNodeIds: const ['combo_recovery_step_3'],
-      unlockConditions: const [
-        NodeCompletedBeforeToday('combo_recovery_step_3'),
-      ],
     ),
     // ── Chain 3: Nutrition (macro-anchored, 5 steps) ──────────
     ComboStepNode(
@@ -388,9 +366,6 @@ List<ProgressionNode> comboNodes() {
       chainOrder: 0,
       chainStepLabelKey: (_) => '1',
       prerequisiteNodeIds: const ['combo_recovery_finale'],
-      unlockConditions: const [
-        NodeCompletedBeforeToday('combo_recovery_finale'),
-      ],
       nextNodeIds: const ['combo_nutrition_step_2'],
     ),
     ComboStepNode(
@@ -407,9 +382,6 @@ List<ProgressionNode> comboNodes() {
       chainOrder: 1,
       chainStepLabelKey: (_) => '2',
       prerequisiteNodeIds: const ['combo_nutrition_step_1'],
-      unlockConditions: const [
-        NodeCompletedBeforeToday('combo_nutrition_step_1'),
-      ],
       nextNodeIds: const ['combo_nutrition_step_3'],
     ),
     ComboStepNode(
@@ -426,9 +398,6 @@ List<ProgressionNode> comboNodes() {
       chainOrder: 2,
       chainStepLabelKey: (_) => '3',
       prerequisiteNodeIds: const ['combo_nutrition_step_2'],
-      unlockConditions: const [
-        NodeCompletedBeforeToday('combo_nutrition_step_2'),
-      ],
       nextNodeIds: const ['combo_nutrition_step_4'],
     ),
     ComboStepNode(
@@ -445,9 +414,6 @@ List<ProgressionNode> comboNodes() {
       chainOrder: 3,
       chainStepLabelKey: (_) => '4',
       prerequisiteNodeIds: const ['combo_nutrition_step_3'],
-      unlockConditions: const [
-        NodeCompletedBeforeToday('combo_nutrition_step_3'),
-      ],
       nextNodeIds: const ['combo_nutrition_finale'],
     ),
     ComboFinaleNode(
@@ -464,9 +430,6 @@ List<ProgressionNode> comboNodes() {
       chainOrder: 4,
       chainStepIcon: Icons.flag_rounded,
       prerequisiteNodeIds: const ['combo_nutrition_step_4'],
-      unlockConditions: const [
-        NodeCompletedBeforeToday('combo_nutrition_step_4'),
-      ],
     ),
   ];
 }
