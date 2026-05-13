@@ -38,44 +38,65 @@ List<ObjectiveDefinition> forestTrialObjectives() {
       targetValue: 10,
       debugLabel: 'Forest Trial open — level >= 10',
     ),
-    // Step 1: 5 daily-steps completions *after* the chapter opens.
-    // The `baselineFromNodeId` makes the engine count only daily
-    // completions banked after `forest_trial_open` cleared (player
-    // hit level 10 and the auto-claim fired). Without this, a
-    // late-arriving level-10 player would auto-finish step 1 the
-    // moment the chapter unlocked just because they already had 5+
-    // daily step completions on the books.
+    // Step 1 ("Rytmus stezky"): 5 days with at least 2 of the daily
+    // goals done. Matches the player-facing description ("splň
+    // alespoň 2 denní cíle v 5 různých dnech"); the old single-node
+    // `NodeCompletionsMetric(daily_steps_today)` lit the bar from
+    // step completions alone and made step 1 collapse into step 2's
+    // "5 step goals" check. Baseline so days banked before the
+    // chapter opens don't auto-finish the step.
     ObjectiveDefinition(
       id: 'forest_trial_daily_wins_5_objective',
       domain: ProgressionDomain.activity,
-      metric: NodeCompletionsMetric(nodeId: 'daily_steps_today'),
+      metric: DaysWithAtLeastKAmongMetric(
+        nodeIds: [
+          'daily_steps_today',
+          'daily_calories_today',
+          'daily_protein_today',
+          'daily_carbs_today',
+          'daily_fat_today',
+          'daily_fiber_today',
+          'daily_sleep_today',
+          'daily_activity_today',
+        ],
+        atLeast: 2,
+      ),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 5,
       baselineFromNodeId: 'forest_trial_open',
-      debugLabel: 'Forest Trial step 1 — 5 daily steps since open',
+      debugLabel: 'Forest Trial step 1 — 5 days with 2+ daily goals since open',
     ),
-    // Step 2: 5 daily-protein completions after step 1 cleared.
+    // Step 2 ("Pět dní na cestě"): 5 daily-steps completions after
+    // step 1 cleared. The old metric pointed at `daily_protein_today`
+    // — the description says "splň krokový cíl 5krát" so the metric
+    // must read step completions, not protein.
     ObjectiveDefinition(
       id: 'forest_trial_steps_5_objective',
-      domain: ProgressionDomain.nutrition,
-      metric: NodeCompletionsMetric(nodeId: 'daily_protein_today'),
+      domain: ProgressionDomain.steps,
+      metric: NodeCompletionsMetric(nodeId: 'daily_steps_today'),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 5,
       baselineFromNodeId: 'forest_trial_daily_wins_5',
-      debugLabel: 'Forest Trial step 2 — 5 daily protein since step 1',
+      debugLabel: 'Forest Trial step 2 — 5 daily steps since step 1',
     ),
-    // Step 3: 3 daily-sleep completions after step 2 cleared.
+    // Step 3 ("Odpočinek pod stromy"): 3 days with both daily steps
+    // AND daily sleep on the same day. The old metric tracked sleep
+    // alone, ignoring the "i kroků i spánku" pairing in the
+    // description.
     ObjectiveDefinition(
       id: 'forest_trial_recovery_3_objective',
       domain: ProgressionDomain.sleep,
-      metric: NodeCompletionsMetric(nodeId: 'daily_sleep_today'),
+      metric: DaysWithAtLeastKAmongMetric(
+        nodeIds: ['daily_steps_today', 'daily_sleep_today'],
+        atLeast: 2,
+      ),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 3,
       baselineFromNodeId: 'forest_trial_steps_5',
-      debugLabel: 'Forest Trial step 3 — 3 daily sleep since step 2',
+      debugLabel: 'Forest Trial step 3 — 3 days with steps + sleep since step 2',
     ),
     // Finale: cheap auto-true objective. Real gating lives in
     // [QuestNode.prerequisiteNodeIds] which forces all 3 steps to

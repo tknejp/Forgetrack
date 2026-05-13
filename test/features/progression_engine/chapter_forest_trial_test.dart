@@ -9,6 +9,7 @@ EngineEvaluationInput _input({
   int level = 10,
   int totalXp = 5000,
   Map<String, int> nodeCompletionCounts = const {},
+  Map<String, double> objectiveActualOverrides = const {},
 }) =>
     EngineEvaluationInput(
       evaluatedAt: DateTime(2026, 5, 11, 12),
@@ -17,6 +18,7 @@ EngineEvaluationInput _input({
       stepsToday: 0,
       proteinGramsToday: 0,
       nodeCompletionCounts: nodeCompletionCounts,
+      objectiveActualOverrides: objectiveActualOverrides,
     );
 
 /// Seed the ledger with a pilgrim_path_finale completion so the
@@ -65,7 +67,8 @@ void main() {
       expect(availableIds.contains('forest_trial_finale'), isFalse);
     });
 
-    test('step 1 becomes available once daily_steps_today has 5 completions',
+    test(
+        'step 1 becomes available once the player banks 5 days with 2+ daily goals',
         () async {
       final repo = InMemoryProgressionEngineRepository();
       await _seedPilgrimComplete(repo);
@@ -77,11 +80,16 @@ void main() {
       // First run: open auto-completes (gates the chain).
       await engine.evaluate(input: _input());
 
-      // Second run: player has racked up 5 daily_steps_today
-      // completions over time.
+      // Second run: provider would derive
+      // `forest_trial_daily_wins_5_objective = 5` from the ledger
+      // once 5 distinct days banked at least 2 daily completions
+      // each. Seed the override directly so the engine test stays
+      // independent of the ledger-history producer in the provider.
       final result = await engine.evaluate(
         input: _input(
-          nodeCompletionCounts: const {'daily_steps_today': 5},
+          objectiveActualOverrides: const {
+            'forest_trial_daily_wins_5_objective': 5.0,
+          },
         ),
       );
 
@@ -108,15 +116,18 @@ void main() {
       // ledger snapshot taken before this run, not after.
       await engine.evaluate(input: _input());
 
-      // Second evaluate with all backing objectives satisfied. Open
-      // is now in the ledger so step 1 unlocks; step 2 and 3 stay
-      // gated until the player claims step 1 (and step 2 in turn).
+      // Second evaluate with all backing objective values seeded.
+      // Step 1 (`DaysWithAtLeastKAmongMetric`) and step 3
+      // (`DaysWithAtLeastKAmongMetric` for steps+sleep) read from
+      // `objectiveActualOverrides` — the provider's ledger producer
+      // is bypassed in this unit test. Step 2 is the only single-
+      // node `NodeCompletionsMetric` left in the chain.
       final result = await engine.evaluate(
         input: _input(
-          nodeCompletionCounts: const {
-            'daily_steps_today': 5,
-            'daily_protein_today': 5,
-            'daily_sleep_today': 3,
+          nodeCompletionCounts: const {'daily_steps_today': 5},
+          objectiveActualOverrides: const {
+            'forest_trial_daily_wins_5_objective': 5.0,
+            'forest_trial_recovery_3_objective': 3.0,
           },
         ),
       );

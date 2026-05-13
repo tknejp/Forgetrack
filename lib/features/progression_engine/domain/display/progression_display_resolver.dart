@@ -460,6 +460,8 @@ class ProgressionDisplayResolver {
         '$target/${nodeIds.length} ${l10n.progAchievementSummaryDailyQuests}',
       LifetimeCompletionsAmongMetric() =>
         '$target ${l10n.progAchievementSummaryTripleComboQuests}',
+      DaysWithAtLeastKAmongMetric() =>
+        '$target ${l10n.progAchievementSummaryActiveDays}',
       LevelMetric() => l10n.socialLevelLabel(target),
     };
   }

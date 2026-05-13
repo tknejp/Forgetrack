@@ -150,6 +150,13 @@ class ObjectiveEvaluator {
         }
         return n.toDouble();
       }(),
+      // Per-day "at least K of these nodes were done" requires the
+      // ledger to reconstruct daily groupings — that's done in the
+      // provider and surfaced through `objectiveActualOverrides`.
+      // The evaluator returns 0 by default so an objective with no
+      // override registered (no baseline node yet completed) reads
+      // as not-yet-progressed instead of silently lifetime-true.
+      DaysWithAtLeastKAmongMetric() => 0,
     };
   }
 

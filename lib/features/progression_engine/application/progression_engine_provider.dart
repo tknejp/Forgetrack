@@ -1059,12 +1059,44 @@ class ProgressionEngineProvider extends ChangeNotifier {
         // Baseline node hasn't completed yet — the chain step isn't
         // unlocked. Override the value to 0 so the objective reads as
         // not-yet-progressed regardless of historical activity.
-        if (metric is NodeCompletionsMetric || metric is RewardCountMetric) {
+        if (metric is NodeCompletionsMetric ||
+            metric is RewardCountMetric ||
+            metric is DaysWithAtLeastKAmongMetric) {
           overrides[objective.id] = 0;
         }
         continue;
       }
-      if (metric is NodeCompletionsMetric) {
+      if (metric is DaysWithAtLeastKAmongMetric) {
+        // Group "done" events by local day, restricted to after the
+        // baseline node completed. Count days where at least
+        // `atLeast` of `nodeIds` were done. "Done" unions both
+        // NodeCompletionEvents (claim landed) and the matching daily
+        // ObjectiveCompletionEvents (goal met, claim still pending)
+        // — same goal-met-counts-as-done shift the single-node
+        // NodeCompletionsMetric path uses below.
+        final doneNodesByDay = <String, Set<String>>{};
+        for (final nodeId in metric.nodeIds) {
+          for (final e in l.nodeCompletions) {
+            if (e.nodeId != nodeId) continue;
+            if (e.timestamp.isBefore(baselineTs)) continue;
+            final dayKey = _localDateKey(e.timestamp.toLocal());
+            doneNodesByDay.putIfAbsent(dayKey, () => {}).add(nodeId);
+          }
+          final boundObjectiveId = objectiveIdByQuestNode[nodeId];
+          if (boundObjectiveId == null) continue;
+          for (final e in l.objectiveCompletions) {
+            if (e.objectiveId != boundObjectiveId) continue;
+            if (e.timestamp.isBefore(baselineTs)) continue;
+            final dayKey = _localDateKey(e.timestamp.toLocal());
+            doneNodesByDay.putIfAbsent(dayKey, () => {}).add(nodeId);
+          }
+        }
+        var qualifyingDays = 0;
+        for (final entry in doneNodesByDay.entries) {
+          if (entry.value.length >= metric.atLeast) qualifyingDays++;
+        }
+        overrides[objective.id] = qualifyingDays.toDouble();
+      } else if (metric is NodeCompletionsMetric) {
         // Count distinct DAYS (or periodKeys for periodic objectives)
         // on which the metric's quest node was "done" since baseline.
         // "Done" unions:

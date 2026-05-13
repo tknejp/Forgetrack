@@ -136,3 +136,25 @@ class LifetimeCompletionsAmongMetric extends ObjectiveMetric {
 
   final List<String> nodeIds;
 }
+
+/// Number of distinct calendar days on which at least [atLeast] of the
+/// named nodes were "done" (goal met or claimed). Use when a quest
+/// reads as "complete at least K daily goals on N different days"
+/// (`atLeast=K`, `targetValue=N`) or "complete both X and Y on the
+/// same day, N times" (`nodeIds=[X, Y], atLeast=2, targetValue=N`).
+///
+/// Always paired with [ObjectiveDefinition.baselineFromNodeId] today —
+/// the provider's `objectiveActualOverrides` path computes the day
+/// count from the ledger, restricted to days after the baseline node
+/// first completed. Without per-event history a non-baselined
+/// lifetime count isn't meaningful: chapter steps that use this
+/// must declare their baseline.
+class DaysWithAtLeastKAmongMetric extends ObjectiveMetric {
+  const DaysWithAtLeastKAmongMetric({
+    required this.nodeIds,
+    required this.atLeast,
+  });
+
+  final List<String> nodeIds;
+  final int atLeast;
+}
