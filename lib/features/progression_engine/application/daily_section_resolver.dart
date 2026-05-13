@@ -1,18 +1,24 @@
+import '../domain/models/quest_display_bucket.dart';
 import '../domain/models/quest_policies.dart';
 import '../domain/repository/ledger_snapshot.dart';
 import 'progression_engine_provider.dart' show EngineQuestProgress;
 
-/// Picks the questy that appear in the daily section.
+/// Picks the questy that appear in the quests-tab "DENNÍ ÚKOLY"
+/// section — the **bonus** daily quests layered on top of the per-metric
+/// daily goals.
 ///
-/// The provider used to spread this across three getters
-/// (`currentDailyQuests`, `currentComboQuests`,
-/// `currentChapterSideQuests`) plus an ad-hoc "claimed today"
-/// timestamp scan and `_isStepGatedByCompletionToday`. Every flavour
-/// of slot-persistence rule had its own bespoke implementation. The
-/// resolver consolidates them by reading [SlotPolicy] off the
-/// `QuestNode` subtype and dispatching once.
+/// Scope: combo chain steps, daily challenges, and chapter side
+/// quests. Per-metric daily-goal atoms
+/// (`QuestDisplayBucket.daily` — steps / calories / macros / sleep /
+/// activity / weight) are filtered out at the top of [resolve] because
+/// they have their own per-metric claim affordances on the home
+/// screen's stat cards (see `_xpPillForQuest` in `overview_screen`).
+/// Phase 6 originally bundled them in here behind a 2-slot hash
+/// rotation; the consolidation was reverted because off-rotation
+/// atoms became invisible everywhere on the quests tab.
 ///
-/// **Tier order** (defaults to the spec the player has been seeing):
+/// **Tier order** (the spec the player has been seeing for bonus
+/// quests):
 /// 1. `PinClaimedTodayUntilMidnight` — one chapter side quest slot.
 ///    Prefers a side quest the player claimed today (it stays pinned
 ///    as "Splněno" until midnight); otherwise picks the first
@@ -22,10 +28,10 @@ import 'progression_engine_provider.dart' show EngineQuestProgress;
 ///    same-day cooldown the player just triggered, surfaces the
 ///    previously-completed step as a placeholder so the slot reads
 ///    "done for today" instead of going empty.
-/// 3. `HashRotationStickyUntilMidnight` + `DailyChallengeHashPick` —
-///    the remaining slots are picked by a deterministic FNV-1a hash
-///    over the local date, so a given quest stays in its slot all
-///    day (claimed cards flip state, they don't rotate out).
+/// 3. `DailyChallengeHashPick` — today's deterministic pick from the
+///    daily-challenge pool. (`HashRotationStickyUntilMidnight` once
+///    drove per-metric atoms; with those filtered out it's effectively
+///    dormant — kept in the switch for shape.)
 ///
 /// Quests with `Persistent`, `ChapterCardSticky`, or
 /// `HiddenFromSections` slot policies never appear here — they have
@@ -48,6 +54,17 @@ class DailySectionResolver {
     final challengePool = <EngineQuestProgress>[];
 
     for (final q in quests) {
+      // Daily-goal atoms (steps / kcal / macros / sleep / activity /
+      // weight) are claimed directly from the home screen's per-metric
+      // cards — they don't belong in the quests-tab "DENNÍ ÚKOLY" slot
+      // pool. Phase 6 originally consolidated them here behind a hash
+      // rotation; the design was reverted because off-rotation atoms
+      // ended up invisible across the whole quests screen (the player
+      // earned a claim but the daily slot had picked two others, and
+      // no other section surfaced QuestDisplayBucket.daily).
+      if (q.node.displayBucket == QuestDisplayBucket.daily) {
+        continue;
+      }
       switch (q.node.slotPolicy) {
         case PinClaimedTodayUntilMidnight():
           // Drop side quests for finished chapters (`ChapterActive`

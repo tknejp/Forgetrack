@@ -73,6 +73,7 @@ class ProviderEngineInputSource {
       sleepMinutesToday:
           fitness.sleepForDate(today)?.totalDuration.inMinutes ?? 0,
       activityMinutesToday: _activityMinutesForDay(today),
+      weightLoggedToday: fitness.weightForDate(today) != null,
       totalRewardCount: totalRewardCount,
       rewardCountByRule: rewardCountByRule,
       rewardCountByDomain: rewardCountByDomain,
@@ -108,6 +109,7 @@ class ProviderEngineInputSource {
       nutrition.todayProtein,
       fitness.sleepForDate(today)?.totalDuration.inMinutes ?? 0,
       _activityMinutesForDay(today),
+      fitness.weightForDate(today) != null ? 1 : 0,
     ].join('|');
   }
 

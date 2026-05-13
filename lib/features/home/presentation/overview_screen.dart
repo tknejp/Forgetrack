@@ -545,6 +545,8 @@ class _DayContent extends StatelessWidget {
                 goal: goals.dailyProtein,
                 unit: 'g',
                 domain: Tokens.protein,
+                xpData: questPillData('daily_protein_today'),
+                claimedXpLabel: l10n.progQuestStatusClaimed,
               ),
               MacroRow(
                 label: l10n.macroCarbs,
@@ -552,6 +554,8 @@ class _DayContent extends StatelessWidget {
                 goal: goals.dailyCarbs,
                 unit: 'g',
                 domain: Tokens.carbs,
+                xpData: questPillData('daily_carbs_today'),
+                claimedXpLabel: l10n.progQuestStatusClaimed,
               ),
               MacroRow(
                 label: l10n.macroFat,
@@ -559,29 +563,32 @@ class _DayContent extends StatelessWidget {
                 goal: goals.dailyFat,
                 unit: 'g',
                 domain: Tokens.fat,
+                xpData: questPillData('daily_fat_today'),
+                claimedXpLabel: l10n.progQuestStatusClaimed,
+              ),
+              MacroRow(
+                // Fiber is a daily goal but `GoalsProvider` doesn't yet
+                // expose a configurable value — the engine's
+                // `EngineGoalSet.dailyFiberGrams` default is 30g and the
+                // catalog's `daily_fiber` objective targets that. Keep
+                // the home row aligned with what the engine evaluates
+                // until the goal becomes user-editable.
+                label: 'Fiber',
+                value: fiber,
+                goal: 30,
+                unit: 'g',
+                domain: Tokens.calories,
                 isLast: true,
+                xpData: questPillData('daily_fiber_today'),
+                claimedXpLabel: l10n.progQuestStatusClaimed,
               ),
               const SizedBox(height: Tokens.spaceMd),
-              Row(
-                children: [
-                  Expanded(
-                    child: _NutritionDetailTile(
-                      label: 'Fiber',
-                      value: '${fiber.toStringAsFixed(0)} g',
-                      color: Tokens.calories.color,
-                    ),
-                  ),
-                  const SizedBox(width: Tokens.spaceSm),
-                  Expanded(
-                    child: _NutritionDetailTile(
-                      label: l10n.caloriesRemaining,
-                      value: '${remainingToTarget.abs().round()} kcal',
-                      color: remainingToTarget >= 0
-                          ? Tokens.calories.color
-                          : Tokens.danger,
-                    ),
-                  ),
-                ],
+              _NutritionDetailTile(
+                label: l10n.caloriesRemaining,
+                value: '${remainingToTarget.abs().round()} kcal',
+                color: remainingToTarget >= 0
+                    ? Tokens.calories.color
+                    : Tokens.danger,
               ),
             ],
             DetailShortcutButton(

@@ -299,7 +299,7 @@ class _FtMainShellState extends State<MainShell> {
                 onTap: _goToPage,
                 questBadge: context
                     .watch<ProgressionEngineProvider>()
-                    .pendingClaimNodeIds
+                    .pendingQuestClaimNodeIds
                     .length,
                 socialBadge:
                     context.watch<SocialProvider>().incomingRequests.length +

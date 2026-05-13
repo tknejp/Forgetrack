@@ -45,6 +45,14 @@ class ActivityMinutesMetric extends ObjectiveMetric {
   const ActivityMinutesMetric();
 }
 
+/// Boolean "did the player log a weight measurement today?" metric.
+/// Reads as `1.0` when at least one weight record exists for the
+/// evaluated date and `0.0` otherwise. Pair with [TodayScope] +
+/// `atLeast 1` for the `daily_weight_log` objective.
+class WeightLoggedTodayMetric extends ObjectiveMetric {
+  const WeightLoggedTodayMetric();
+}
+
 // ── Engine-derived metrics ────────────────────────────────────────────
 
 class LevelMetric extends ObjectiveMetric {

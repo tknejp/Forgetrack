@@ -25,6 +25,7 @@ class EngineEvaluationInput {
     this.fiberGramsToday = 0,
     this.sleepMinutesToday = 0,
     this.activityMinutesToday = 0,
+    this.weightLoggedToday = false,
     this.totalRewardCount = 0,
     this.rewardCountByRule = const {},
     this.rewardCountByDomain = const {},
@@ -58,6 +59,11 @@ class EngineEvaluationInput {
   final double fiberGramsToday;
   final int sleepMinutesToday;
   final int activityMinutesToday;
+
+  /// True when a weight record exists for the evaluated date. Drives
+  /// [WeightLoggedTodayMetric] — the `daily_weight_log` objective fires
+  /// the moment the player saves their weight for the day.
+  final bool weightLoggedToday;
 
   // Engine-derived counters. These typically come from the ledger,
   // not the source — but for Phase 2 the test passes them in

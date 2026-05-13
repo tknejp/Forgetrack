@@ -331,8 +331,35 @@ class ProgressionEngineProvider extends ChangeNotifier {
   }
 
   /// Quick alias used by home-card / quests UI for the pending-claim
-  /// badge ("3 nevyzvednutých" → `pendingClaimNodeIds.length`).
+  /// badge ("3 nevyzvednutých" → `pendingClaimNodeIds.length`). Counts
+  /// **everything** the engine resolved to `available` — daily-goal
+  /// atoms (steps / kcal / macros / sleep / activity / weight) plus the
+  /// real quests (combo / challenge / chapter / weekly / long-term /
+  /// achievements). The home progression card uses this number because
+  /// every one of those claims has a surface on home (per-metric pills)
+  /// or on the quests tab.
   Set<String> get pendingClaimNodeIds => availableNodeIds;
+
+  /// Pending claims that live on the **quests tab**, excluding daily-goal
+  /// atoms (`QuestDisplayBucket.daily`). Those are claimed directly from
+  /// the per-metric home cards and would otherwise inflate the quest-tab
+  /// badge with claims that have no surface inside the quests screen.
+  /// Bottom-nav quest badge reads this so tapping it always lands on a
+  /// screen with at least that many claimable affordances visible.
+  Set<String> get pendingQuestClaimNodeIds {
+    final r = _lastResult;
+    if (r == null) return const {};
+    final out = <String>{};
+    for (final a in r.availableNodes) {
+      final def = ProgressionNodeCatalog.definitionForId(a.nodeId);
+      if (def is QuestNode &&
+          def.displayBucket == QuestDisplayBucket.daily) {
+        continue;
+      }
+      out.add(a.nodeId);
+    }
+    return out;
+  }
 
   /// Node ids the engine resolved to `locked` because their unlock
   /// conditions failed. Read by [_questsForBucket] so consumers
@@ -445,12 +472,12 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// already been completed; once a quest is in the rotation, it stays
   /// there even if the player completes it (so the card persists with
   /// a check / claimed pill).
-  /// "DENNÍ ÚKOLY" — the consolidated daily task pool. Always 2
-  /// active slots picked from every daily-tier bucket combined:
+  /// "DENNÍ ÚKOLY" — the **bonus** daily-quests pool surfaced on the
+  /// quests tab. Per-metric daily goals (`QuestDisplayBucket.daily` —
+  /// steps / calories / macros / sleep / activity / weight) do not
+  /// appear here; they're claimed directly from the matching home-
+  /// screen stat card. This pool only carries the bonus tier:
   ///
-  ///   * **Simple daily goals** (`QuestDisplayBucket.daily`) —
-  ///     steps / calories / protein / carbs / fat / fiber / sleep /
-  ///     activity. TodayScope → reset each day.
   ///   * **Active combo step** (`QuestDisplayBucket.combo`) — the
   ///     one step of the active chain that's not gated by a same-day
   ///     `NodeCompletedBeforeToday`. LifetimeScope → once-and-done.
@@ -459,24 +486,13 @@ class ProgressionEngineProvider extends ChangeNotifier {
   ///     LifetimeScope → once-and-done.
   ///   * **Chapter side quests** (`QuestDisplayBucket.chapterSideQuest`) —
   ///     surprise unlocks tied to the active chapter's progress.
-  ///     When pending they MAY take priority over the deterministic
-  ///     picks (see selection rules below).
+  ///     When pending they MAY take priority over the other picks.
   ///
   /// **Selection.** Pending chapter side quests (those whose
   /// `ChapterActive` + `NodeCompleted` unlock conditions are
   /// satisfied right now and which aren't claimed yet) **fill the
-  /// slots first** — at most two. Remaining slots are filled by a
-  /// deterministic hash pick over the rest of the pool so the same
-  /// two regular tasks appear all day for a given date.
-  ///
-  /// **Strict 2 slots.** Anything outside the two picks is hidden
-  /// today. A daily-atom that became claimable from real fitness
-  /// data but isn't in today's rotation waits for tomorrow's hash
-  /// to roll it. Completed-today tasks stay visible *only when
-  /// they were one of the 2 slots* (the slot card just flips to
-  /// the claimed state). Force-completed tasks via devtools follow
-  /// the same rule — visible only when in the slot pool — and
-  /// otherwise show in "Dokončené úkoly" or "Nedávné odměny".
+  /// slots first** — at most two. Remaining slots draw from the
+  /// active combo step + today's daily challenge.
   List<EngineQuestProgress> get currentDailyQuests {
     // The resolver knows how to read each quest's [SlotPolicy] and
     // dispatch — pin-claimed-today (side quest), chain placeholder

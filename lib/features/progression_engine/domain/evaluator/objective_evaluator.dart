@@ -108,6 +108,10 @@ class ObjectiveEvaluator {
           TodayScope() => input.activityMinutesToday.toDouble(),
           _ => 0,
         },
+      WeightLoggedTodayMetric() => switch (scope) {
+          TodayScope() => input.weightLoggedToday ? 1.0 : 0.0,
+          _ => 0,
+        },
       LevelMetric() => input.level.toDouble(),
       TotalXpMetric() => input.totalXp.toDouble(),
       RewardCountMetric(:final ruleId, :final domain) => () {

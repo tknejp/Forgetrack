@@ -440,6 +440,13 @@ class ProgressionDisplayResolver {
           locale: locale,
           ruleHintId: 'weekly_activity',
         ),
+      WeightLoggedTodayMetric() => _ruleScaledSummary(
+          objective: objective,
+          targetValue: target,
+          l10n: l10n,
+          locale: locale,
+          ruleHintId: 'daily_weight_log',
+        ),
       NodeCompletionsMetric() => _nodeCompletionsSummary(
           metric: metric,
           target: target,
