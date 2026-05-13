@@ -15,6 +15,7 @@ class InMemoryProgressionEngineRepository
   final List<ObjectiveCompletionEvent> _objectiveCompletions = [];
   final List<NodeCompletionEvent> _nodeCompletions = [];
   final List<NodeClaimEvent> _nodeClaims = [];
+  final List<NodeAnnouncedEvent> _nodeAnnouncements = [];
   final List<RewardGrantEvent> _rewardGrants = [];
   final Set<String> _seenKeys = {};
 
@@ -32,6 +33,8 @@ class InMemoryProgressionEngineRepository
           _nodeCompletions.add(e);
         case NodeClaimEvent():
           _nodeClaims.add(e);
+        case NodeAnnouncedEvent():
+          _nodeAnnouncements.add(e);
         case RewardGrantEvent():
           _rewardGrants.add(e);
       }
@@ -44,6 +47,7 @@ class InMemoryProgressionEngineRepository
     _objectiveCompletions.clear();
     _nodeCompletions.clear();
     _nodeClaims.clear();
+    _nodeAnnouncements.clear();
     _rewardGrants.clear();
     _seenKeys.clear();
   }
@@ -52,6 +56,7 @@ class InMemoryProgressionEngineRepository
         objectiveCompletions: List.unmodifiable(_objectiveCompletions),
         nodeCompletions: List.unmodifiable(_nodeCompletions),
         nodeClaims: List.unmodifiable(_nodeClaims),
+        nodeAnnouncements: List.unmodifiable(_nodeAnnouncements),
         rewardGrants: List.unmodifiable(_rewardGrants),
       );
 }

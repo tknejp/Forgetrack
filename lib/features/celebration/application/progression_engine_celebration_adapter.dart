@@ -99,8 +99,11 @@ class ProgressionEngineCelebrationAdapter {
     }
 
     // Fold companion availability into its gating completion (preferred)
-    // or matching level milestone (fallback).
-    for (final availability in result.availableNodes) {
+    // or matching level milestone (fallback). Reads `newlyAvailableNodes`
+    // (engine delta backed by NodeAnnouncedEvent in the ledger) so
+    // the fold fires the first time the companion surfaces and
+    // never again — including across app restarts.
+    for (final availability in result.newlyAvailableNodes) {
       final node = ProgressionNodeCatalog.definitionForId(availability.nodeId);
       if (node is! CompanionAvailabilityNode) continue;
       final completedHost = _findNodeCompletedHost(
@@ -207,7 +210,12 @@ class ProgressionEngineCelebrationAdapter {
     //    card. The fullscreen's secondary CTA ("Otevřít inventář →")
     //    is how the player actually unlocks the companion; there is
     //    no inline claim button.
-    for (final availability in result.availableNodes) {
+    //
+    //    Like the fold pass above, this reads `newlyAvailableNodes`
+    //    so the standalone overlay fires exactly once per companion
+    //    over the player's lifetime, with the persisted ledger
+    //    marker tracking it across app restarts.
+    for (final availability in result.newlyAvailableNodes) {
       if (foldedAvailabilityIds.contains(availability.nodeId)) continue;
       final node = ProgressionNodeCatalog.definitionForId(availability.nodeId);
       if (node is! CompanionAvailabilityNode) continue;

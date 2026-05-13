@@ -15,12 +15,14 @@ class LedgerSnapshot {
     this.objectiveCompletions = const [],
     this.nodeCompletions = const [],
     this.nodeClaims = const [],
+    this.nodeAnnouncements = const [],
     this.rewardGrants = const [],
   });
 
   final List<ObjectiveCompletionEvent> objectiveCompletions;
   final List<NodeCompletionEvent> nodeCompletions;
   final List<NodeClaimEvent> nodeClaims;
+  final List<NodeAnnouncedEvent> nodeAnnouncements;
   final List<RewardGrantEvent> rewardGrants;
 
   bool hasEventKey(String key) {
@@ -33,6 +35,9 @@ class LedgerSnapshot {
     for (final e in nodeClaims) {
       if (e.eventKey == key) return true;
     }
+    for (final e in nodeAnnouncements) {
+      if (e.eventKey == key) return true;
+    }
     for (final e in rewardGrants) {
       if (e.eventKey == key) return true;
     }
@@ -43,6 +48,7 @@ class LedgerSnapshot {
     yield* objectiveCompletions;
     yield* nodeCompletions;
     yield* nodeClaims;
+    yield* nodeAnnouncements;
     yield* rewardGrants;
   }
 }

@@ -144,6 +144,9 @@ class ProgressionNodeResolver {
   static String claimEventKey(String nodeId, String? periodKey) =>
       _claimEventKey(nodeId, periodKey);
 
+  static String announcementEventKey(String nodeId, String? periodKey) =>
+      _announcementEventKey(nodeId, periodKey);
+
   static String objectiveCompletionEventKey(
     String objectiveId,
     String? periodKey,
@@ -171,3 +174,8 @@ String _claimEventKey(String nodeId, String? periodKey) =>
     periodKey == null
         ? 'node|$nodeId|claim'
         : 'node|$nodeId|$periodKey|claim';
+
+String _announcementEventKey(String nodeId, String? periodKey) =>
+    periodKey == null
+        ? 'node|$nodeId|announced'
+        : 'node|$nodeId|$periodKey|announced';

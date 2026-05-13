@@ -50,6 +50,29 @@ class NodeCompletionEvent extends LedgerEvent {
   final String? periodKey;
 }
 
+/// First time a manual-claim node was surfaced to the player as
+/// available. Idempotent — written once per (node, period) so the
+/// adapter can emit a celebration for the *newly available* node
+/// exactly once, not on every subsequent evaluation that re-confirms
+/// the same availability.
+///
+/// Key shape: `node|<nodeId>|<periodKey?>|announced`. The matching
+/// `NodeAvailability` shows up in
+/// `ProgressionResolutionResult.newlyAvailableNodes` on the run that
+/// writes this event; subsequent runs only put the node in
+/// `availableNodes` (full snapshot) until it's claimed.
+class NodeAnnouncedEvent extends LedgerEvent {
+  const NodeAnnouncedEvent({
+    required super.eventKey,
+    required super.timestamp,
+    required this.nodeId,
+    this.periodKey,
+  });
+
+  final String nodeId;
+  final String? periodKey;
+}
+
 /// Player-initiated claim on a manual-claim node (companion, etc.).
 ///
 /// Key shape: `node|<nodeId>|<periodKey?>|claim`.

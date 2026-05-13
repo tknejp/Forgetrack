@@ -40,6 +40,31 @@ class EngineNodeCompletionRecord {
   late DateTime timestamp;
 }
 
+/// First-time availability announcement marker for a manual-claim
+/// node. Written once per (nodeId, periodKey) the first time the
+/// engine resolves the node into the `available` state. The
+/// celebration adapter reads `result.newlyAvailableNodes` (which
+/// the engine populates only when the matching announce event is
+/// fresh) to fire a "company unlocked" overlay exactly once, even
+/// across app restarts.
+///
+/// `eventKey` shape: `node|<nodeId>|<periodKey?>|announced`.
+@Collection()
+class EngineNodeAnnouncementRecord {
+  Id id = Isar.autoIncrement;
+
+  @Index(unique: true, replace: false)
+  late String eventKey;
+
+  @Index()
+  late String nodeId;
+
+  String? periodKey;
+
+  @Index()
+  late DateTime timestamp;
+}
+
 /// Player-initiated claim on a manual-claim node. `eventKey` shape:
 /// `node|<nodeId>|<periodKey?>|claim`.
 @Collection()

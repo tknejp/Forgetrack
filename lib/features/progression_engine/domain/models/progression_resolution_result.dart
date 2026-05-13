@@ -24,6 +24,7 @@ class ProgressionResolutionResult {
     required this.warnings,
     required this.inputSnapshot,
     this.allObjectiveOutcomes = const [],
+    this.newlyAvailableNodes = const [],
   });
 
   final String runId;
@@ -42,9 +43,23 @@ class ProgressionResolutionResult {
   /// Nodes that newly entered `completed` state during this run.
   final List<NodeCompletion> completedNodes;
 
-  /// Manual-claim nodes that newly entered `available` state during
-  /// this run. The player must claim before [completedNodes] grows.
+  /// **Snapshot** of every manual-claim node that's currently in
+  /// the `available` state — i.e. its objective is satisfied but no
+  /// claim event has fired yet. Re-emitted on every evaluation so
+  /// UI consumers (XP-pill claimable state, "Vyzvednout vše" CTA)
+  /// can read "what's claimable right now" without re-running the
+  /// engine. For *first-time announcements* (celebration trigger),
+  /// see [newlyAvailableNodes].
   final List<NodeAvailability> availableNodes;
+
+  /// **Delta** subset of [availableNodes]: nodes that are surfacing
+  /// as available for the first time, tracked via a persisted
+  /// `NodeAnnouncedEvent` in the ledger. Survives app restarts —
+  /// the celebration adapter reads this so a companion-unlocked
+  /// overlay fires exactly once across the player's lifetime
+  /// (instead of every refresh / cold start), without the
+  /// in-memory dedup that the CelebrationController used to keep.
+  final List<NodeAvailability> newlyAvailableNodes;
 
   /// Reward grants newly created during this run. Idempotency: if
   /// a reward was already granted in a prior run, it lands in

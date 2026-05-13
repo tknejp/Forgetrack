@@ -27,6 +27,8 @@ class IsarProgressionEngineRepository
     final nodeCompletions =
         await _isar.engineNodeCompletionRecords.where().findAll();
     final nodeClaims = await _isar.engineNodeClaimRecords.where().findAll();
+    final nodeAnnouncements =
+        await _isar.engineNodeAnnouncementRecords.where().findAll();
     final rewardGrants =
         await _isar.engineRewardGrantRecords.where().findAll();
 
@@ -38,6 +40,9 @@ class IsarProgressionEngineRepository
         for (final r in nodeCompletions) _toNodeCompletionEvent(r),
       ],
       nodeClaims: [for (final r in nodeClaims) _toNodeClaimEvent(r)],
+      nodeAnnouncements: [
+        for (final r in nodeAnnouncements) _toNodeAnnouncedEvent(r),
+      ],
       rewardGrants: [for (final r in rewardGrants) _toRewardGrantEvent(r)],
     );
   }
@@ -49,6 +54,7 @@ class IsarProgressionEngineRepository
     final objectiveRows = <EngineObjectiveCompletionRecord>[];
     final nodeCompletionRows = <EngineNodeCompletionRecord>[];
     final nodeClaimRows = <EngineNodeClaimRecord>[];
+    final nodeAnnouncementRows = <EngineNodeAnnouncementRecord>[];
     final rewardRows = <EngineRewardGrantRecord>[];
 
     for (final e in events) {
@@ -59,6 +65,8 @@ class IsarProgressionEngineRepository
           nodeCompletionRows.add(_fromNodeCompletion(e));
         case NodeClaimEvent():
           nodeClaimRows.add(_fromNodeClaim(e));
+        case NodeAnnouncedEvent():
+          nodeAnnouncementRows.add(_fromNodeAnnounced(e));
         case RewardGrantEvent():
           rewardRows.add(_fromRewardGrant(e));
       }
@@ -80,6 +88,10 @@ class IsarProgressionEngineRepository
       if (nodeClaimRows.isNotEmpty) {
         await _isar.engineNodeClaimRecords.putAllByEventKey(nodeClaimRows);
       }
+      if (nodeAnnouncementRows.isNotEmpty) {
+        await _isar.engineNodeAnnouncementRecords
+            .putAllByEventKey(nodeAnnouncementRows);
+      }
       if (rewardRows.isNotEmpty) {
         await _isar.engineRewardGrantRecords.putAllByEventKey(rewardRows);
       }
@@ -94,6 +106,7 @@ class IsarProgressionEngineRepository
       await _isar.engineObjectiveCompletionRecords.clear();
       await _isar.engineNodeCompletionRecords.clear();
       await _isar.engineNodeClaimRecords.clear();
+      await _isar.engineNodeAnnouncementRecords.clear();
       await _isar.engineRewardGrantRecords.clear();
       await _isar.engineActiveSelectionRecords.clear();
     });
@@ -120,6 +133,13 @@ class IsarProgressionEngineRepository
 
   EngineNodeClaimRecord _fromNodeClaim(NodeClaimEvent e) =>
       EngineNodeClaimRecord()
+        ..eventKey = e.eventKey
+        ..nodeId = e.nodeId
+        ..periodKey = e.periodKey
+        ..timestamp = e.timestamp;
+
+  EngineNodeAnnouncementRecord _fromNodeAnnounced(NodeAnnouncedEvent e) =>
+      EngineNodeAnnouncementRecord()
         ..eventKey = e.eventKey
         ..nodeId = e.nodeId
         ..periodKey = e.periodKey
@@ -168,6 +188,14 @@ class IsarProgressionEngineRepository
 
   NodeClaimEvent _toNodeClaimEvent(EngineNodeClaimRecord r) =>
       NodeClaimEvent(
+        eventKey: r.eventKey,
+        timestamp: r.timestamp,
+        nodeId: r.nodeId,
+        periodKey: r.periodKey,
+      );
+
+  NodeAnnouncedEvent _toNodeAnnouncedEvent(EngineNodeAnnouncementRecord r) =>
+      NodeAnnouncedEvent(
         eventKey: r.eventKey,
         timestamp: r.timestamp,
         nodeId: r.nodeId,

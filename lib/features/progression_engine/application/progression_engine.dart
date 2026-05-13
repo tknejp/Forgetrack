@@ -186,6 +186,8 @@ class ProgressionEngine {
     final newCompletions = <NodeCompletion>[];
     final newCompletionEvents = <NodeCompletionEvent>[];
     final availability = <NodeAvailability>[];
+    final newlyAvailable = <NodeAvailability>[];
+    final newAnnouncementEvents = <NodeAnnouncedEvent>[];
     final periodKeyByNodeId = <String, String?>{};
     for (final r in resolutions) {
       periodKeyByNodeId[r.node.id] = r.periodKey;
@@ -219,6 +221,25 @@ class ProgressionEngine {
           // as available; the player's claim action will trigger a
           // second evaluation that produces the completion.
           availability.add(NodeAvailability(nodeId: r.node.id));
+          // Persisted first-time announcement marker: if the ledger
+          // has no NodeAnnouncedEvent for this (node, period), we
+          // flag this resolution as `newlyAvailable` and queue the
+          // marker event. The celebration adapter reads this delta
+          // to fire a "company unlocked" overlay exactly once, even
+          // across app restarts.
+          final announceKey = ProgressionNodeResolver.announcementEventKey(
+            r.node.id,
+            r.periodKey,
+          );
+          if (!ledger.hasEventKey(announceKey)) {
+            newlyAvailable.add(NodeAvailability(nodeId: r.node.id));
+            newAnnouncementEvents.add(NodeAnnouncedEvent(
+              eventKey: announceKey,
+              timestamp: timestamp,
+              nodeId: r.node.id,
+              periodKey: r.periodKey,
+            ));
+          }
         default:
           // Locked or in-progress; nothing to emit.
           break;
@@ -248,6 +269,7 @@ class ProgressionEngine {
     final allNewEvents = [
       ...newObjectiveEvents,
       ...newCompletionEvents,
+      ...newAnnouncementEvents,
       ...built.events,
     ];
     if (allNewEvents.isNotEmpty) {
@@ -261,6 +283,7 @@ class ProgressionEngine {
       completedObjectives: completedObjectives,
       completedNodes: newCompletions,
       availableNodes: availability,
+      newlyAvailableNodes: newlyAvailable,
       grantedRewards: [for (final e in built.events) RewardGrant(event: e)],
       skippedEvents: const [],
       warnings: const [],

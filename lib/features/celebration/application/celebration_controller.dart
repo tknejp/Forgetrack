@@ -34,15 +34,6 @@ class CelebrationController extends ChangeNotifier {
   final Queue<CelebrationEvent> _buffered = Queue<CelebrationEvent>();
   bool _bound = false;
 
-  /// Celebration ids already promoted to [_current] or [_buffered]
-  /// during this session. Used to dedupe re-emits of the same event
-  /// (notably companion availability, which the engine re-publishes
-  /// on every evaluation until the player claims the companion).
-  /// Without this guard the "Společník odemčen" overlay would
-  /// reappear on every refresh / day-advance, even after the player
-  /// already dismissed it.
-  final Set<String> _seenEventIds = <String>{};
-
   CelebrationEvent? get current => _current;
 
   /// Wire the upstream providers. Safe to call repeatedly with the same
@@ -91,19 +82,15 @@ class CelebrationController extends ChangeNotifier {
       final next = _progression?.takePendingCelebration();
       if (next == null) return;
       final events = adapter.convert(next);
-      // Filter out events whose id has already been promoted this
-      // session — the engine re-publishes companion availability and
-      // re-emits objective completions on every refresh, so without
-      // this guard the same overlay re-appears on every day-advance
-      // or input-source tick.
-      final fresh = <CelebrationEvent>[];
-      for (final e in events) {
-        if (_seenEventIds.add(e.id)) fresh.add(e);
-      }
-      if (fresh.isEmpty) continue; // skip results with no new events
-      _current = fresh.first;
-      for (var i = 1; i < fresh.length; i++) {
-        _buffered.add(fresh[i]);
+      // No in-memory dedup needed any more — Phase 5 made the engine
+      // emit `newlyAvailableNodes` (and other "newly happened" sets)
+      // as a true delta backed by ledger markers, so the adapter only
+      // produces events for genuinely new state. Re-emits from
+      // refresh / day-advance / cold start don't reach this code.
+      if (events.isEmpty) continue;
+      _current = events.first;
+      for (var i = 1; i < events.length; i++) {
+        _buffered.add(events[i]);
       }
     }
     notifyListeners();
