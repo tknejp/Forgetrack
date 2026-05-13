@@ -202,7 +202,20 @@ class DailySectionResolver {
           break;
         }
       }
-      if (firstUncompleted == null) continue;
+      if (firstUncompleted == null) {
+        // Whole chain (combo finale claimed). Keep the finale pinned
+        // until midnight when its completion landed today — same
+        // stickiness rule that chapter / side quest slots use. The
+        // chain shouldn't vanish the instant the player taps the
+        // finale's Vyzvednout pill; tomorrow the completion event
+        // ages out of `nodesCompletedTodayIds` and the chain falls
+        // out of the pool naturally.
+        if (lastCompleted != null &&
+            nodesCompletedTodayIds.contains(lastCompleted.nodeId)) {
+          picks.add(lastCompleted);
+        }
+        continue;
+      }
       if (firstUncompleted.levelGate != null) continue;
       if (firstUncompleted.prereqGateNodeId != null) continue;
 

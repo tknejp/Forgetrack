@@ -1371,16 +1371,46 @@ class ProgressionEngineProvider extends ChangeNotifier {
     final l = _ledger;
     if (l == null) return const [];
 
-    final latestByNode = <String, NodeCompletionEvent>{};
+    // Latest "done" timestamp per node. We union two event sources:
+    // node completions (claim landed) and objective completions
+    // (goal met) mapped back to the bound quest node. Without the
+    // objective-side union, a player who meets a daily goal but
+    // forgets the Vyzvednout tap before midnight loses the visible
+    // record of having done it — yesterday's met-but-unclaimed
+    // dailies vanished from the recent-rewards strip even though
+    // the work was real.
+    final objectiveIdByQuestNode = <String, String>{};
+    for (final node in _nodeCatalog.build()) {
+      if (node is QuestNode) {
+        objectiveIdByQuestNode[node.id] = node.objectiveId;
+      }
+    }
+    final questNodeByObjective = <String, String>{
+      for (final entry in objectiveIdByQuestNode.entries)
+        entry.value: entry.key,
+    };
+
+    final latestByNode = <String, DateTime>{};
     for (final e in l.nodeCompletions) {
       final existing = latestByNode[e.nodeId];
-      if (existing == null || e.timestamp.isAfter(existing.timestamp)) {
-        latestByNode[e.nodeId] = e;
+      if (existing == null || e.timestamp.isAfter(existing)) {
+        latestByNode[e.nodeId] = e.timestamp;
+      }
+    }
+    for (final e in l.objectiveCompletions) {
+      final nodeId = questNodeByObjective[e.objectiveId];
+      if (nodeId == null) continue;
+      final existing = latestByNode[nodeId];
+      if (existing == null || e.timestamp.isAfter(existing)) {
+        latestByNode[nodeId] = e.timestamp;
       }
     }
 
     // Sum XP grants per node so completed rows can display the actual
-    // claimed XP (V1 "+750 XP" pill) instead of just a check.
+    // claimed XP (V1 "+750 XP" pill) instead of just a check. A row
+    // with no reward grant (goal met, not yet claimed) renders the
+    // check without a "+XP" pill so the player can tell at a glance
+    // which days they actually claimed.
     final xpByNode = <String, int>{};
     for (final g in l.rewardGrants) {
       if (g.rewardKind != RewardGrantKind.xp) continue;
@@ -1395,11 +1425,11 @@ class ProgressionEngineProvider extends ChangeNotifier {
         continue;
       }
       if (excludeBuckets.contains(node.displayBucket)) continue;
-      final event = latestByNode[node.id];
-      if (event == null) continue;
+      final ts = latestByNode[node.id];
+      if (ts == null) continue;
       out.add(EngineCompletedQuest(
         node: node,
-        completedAt: event.timestamp,
+        completedAt: ts,
         xpGranted: xpByNode[node.id] ?? 0,
       ));
     }
