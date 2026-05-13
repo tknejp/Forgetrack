@@ -67,6 +67,7 @@ class EngineQuestProgress {
     this.levelGate,
     this.prereqGateNodeId,
     this.valueUnit = EngineQuestValueUnit.count,
+    this.isLockedByConditions = false,
   });
 
   final QuestNode node;
@@ -121,6 +122,14 @@ class EngineQuestProgress {
   /// resolve to [EngineQuestValueUnit.minutes] so labels render as
   /// hours instead of raw minute counts.
   final EngineQuestValueUnit valueUnit;
+
+  /// True when the engine resolved this node to `locked` because its
+  /// unlock conditions weren't satisfied — covers gates that the
+  /// cheaper `levelGate` / `prereqGateNodeId` hints don't surface,
+  /// e.g. a chapter side quest whose `ChapterActive` window has
+  /// closed. The daily section resolver drops these so a finished
+  /// chapter's side quests don't keep leaking into DENNÍ ÚKOLY.
+  final bool isLockedByConditions;
 
   String get nodeId => node.id;
 }
@@ -324,6 +333,17 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// Quick alias used by home-card / quests UI for the pending-claim
   /// badge ("3 nevyzvednutých" → `pendingClaimNodeIds.length`).
   Set<String> get pendingClaimNodeIds => availableNodeIds;
+
+  /// Node ids the engine resolved to `locked` because their unlock
+  /// conditions failed. Read by [_questsForBucket] so consumers
+  /// (notably [DailySectionResolver]) can drop quests whose lock
+  /// state isn't captured by `levelGate` / `prereqGateNodeId` —
+  /// e.g. chapter side quests for a finished chapter.
+  Set<String> get lockedNodeIds {
+    final r = _lastResult;
+    if (r == null) return const {};
+    return r.lockedNodeIds;
+  }
 
   /// All [AchievementNode]s from the catalog. Cached on first access
   /// since the catalog is const. Hero/Journey surfaces iterate this to
@@ -1888,6 +1908,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
     };
     final completed = completedNodeIds;
     final available = availableNodeIds;
+    final locked = lockedNodeIds;
 
     final out = <EngineQuestProgress>[];
     for (final node in _nodeCatalog.build()) {
@@ -1987,6 +2008,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
         valueUnit: objective.metric is SleepMinutesMetric
             ? EngineQuestValueUnit.minutes
             : EngineQuestValueUnit.count,
+        isLockedByConditions: locked.contains(node.id),
       ));
     }
     return out;

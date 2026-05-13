@@ -190,9 +190,11 @@ class ProgressionEngine {
     final availability = <NodeAvailability>[];
     final newlyAvailable = <NodeAvailability>[];
     final newAnnouncementEvents = <NodeAnnouncedEvent>[];
+    final lockedNodeIds = <String>{};
     final periodKeyByNodeId = <String, String?>{};
     for (final r in resolutions) {
       periodKeyByNodeId[r.node.id] = r.periodKey;
+      if (!r.eligibleByConditions) lockedNodeIds.add(r.node.id);
       final completionKey = ProgressionNodeResolver.completionEventKey(
         r.node.id,
         r.periodKey,
@@ -291,6 +293,7 @@ class ProgressionEngine {
       warnings: const [],
       inputSnapshot: input,
       allObjectiveOutcomes: outcomes.values.toList(growable: false),
+      lockedNodeIds: lockedNodeIds,
     );
   }
 

@@ -25,6 +25,7 @@ class ProgressionResolutionResult {
     required this.inputSnapshot,
     this.allObjectiveOutcomes = const [],
     this.newlyAvailableNodes = const [],
+    this.lockedNodeIds = const {},
   });
 
   final String runId;
@@ -51,6 +52,17 @@ class ProgressionResolutionResult {
   /// engine. For *first-time announcements* (celebration trigger),
   /// see [newlyAvailableNodes].
   final List<NodeAvailability> availableNodes;
+
+  /// Snapshot of every node the engine resolved to `locked` this run
+  /// — its [ProgressionNode.unlockConditions] (incl. derived
+  /// `NodeCompleted` / `NodeCompletedBeforeToday` from prereqs +
+  /// gatePolicy) were not satisfied. UI surfaces (the daily section
+  /// resolver, locked-row builders) read this to drop nodes whose
+  /// eligibility state isn't already captured by the cheaper
+  /// `levelGate` / `prereqGateNodeId` hints — e.g. a chapter side
+  /// quest whose chapter has finished (`ChapterActive` false) was
+  /// otherwise indistinguishable from an in-progress one.
+  final Set<String> lockedNodeIds;
 
   /// **Delta** subset of [availableNodes]: nodes that are surfacing
   /// as available for the first time, tracked via a persisted

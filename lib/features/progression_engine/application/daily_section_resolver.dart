@@ -48,6 +48,14 @@ class DailySectionResolver {
     final challengePool = <EngineQuestProgress>[];
 
     for (final q in quests) {
+      // Engine resolved the node to `locked` (an unlock condition
+      // failed — typically `ChapterActive` flipping off after the
+      // chapter's finale). The pool tiers below only inspect
+      // `levelGate` / `prereqGateNodeId` / cooldowns, so without
+      // this guard a retired chapter side quest with a stale
+      // `TodayCompletionsAmong` outcome would keep leaking into
+      // DENNÍ ÚKOLY as a 2/2 card the player can never claim.
+      if (q.isLockedByConditions) continue;
       switch (q.node.slotPolicy) {
         case PinClaimedTodayUntilMidnight():
           pinPool.add(q);
