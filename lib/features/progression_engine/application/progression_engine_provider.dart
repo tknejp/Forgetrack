@@ -554,10 +554,13 @@ class ProgressionEngineProvider extends ChangeNotifier {
             .compareTo(b.node.chainOrder ?? 0));
       EngineQuestProgress? active;
       for (final q in chain) {
-        // Skip claimed AND claimable steps — they now live in
-        // DOKONČENÉ. The long-term card surfaces only the
-        // in-progress step.
-        if (!q.isCompleted && !q.isAvailableForClaim) {
+        // Pick the first not-yet-completed step. Claimable steps
+        // (`isAvailableForClaim` true, objective satisfied, awaiting
+        // tap) must stay here — the player tracks progress on this
+        // card and expects to claim in place. Shunting them to
+        // DOKONČENÉ made the workflow feel broken ("I just finished
+        // it, why did the card move?").
+        if (!q.isCompleted) {
           active = q;
           break;
         }
@@ -565,7 +568,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
       if (active != null) reps.add(active);
     }
     for (final q in orphans) {
-      if (!q.isCompleted && !q.isAvailableForClaim) reps.add(q);
+      if (!q.isCompleted) reps.add(q);
     }
     reps.sort((a, b) => a.node.sortOrder.compareTo(b.node.sortOrder));
     if (reps.isEmpty) return const [];
@@ -647,13 +650,16 @@ class ProgressionEngineProvider extends ChangeNotifier {
           break;
         }
       }
-      // Same-day pin: if the most recently completed step was claimed
-      // today (NodeClaimEvent timestamp matches `_engineNow`'s date),
-      // surface it as the active card. The chain effectively pauses
-      // on "Splněno" until midnight rolls and lastCompleted's claim
-      // timestamp falls before today.
+      // Same-day pin: if the most recently completed step *landed in
+      // the ledger* today, surface it as the active card. We check
+      // the NodeCompletionEvent (not NodeClaimEvent) because auto-
+      // claim nodes — `ChapterOpenerNode` is the canonical case —
+      // never write a claim event, so the chain would silently skip
+      // the just-opened chapter card. Completion events are written
+      // for both manual + auto claim flows; their timestamp matches
+      // `_engineNow` on the run that produced them.
       if (lastCompleted != null &&
-          _wasNodeClaimedOnDate(lastCompleted.nodeId, now)) {
+          _wasNodeCompletedOnDate(lastCompleted.nodeId, now)) {
         out.add(lastCompleted);
         continue;
       }
@@ -674,14 +680,19 @@ class ProgressionEngineProvider extends ChangeNotifier {
     return out;
   }
 
-  /// True when the ledger holds a `NodeClaimEvent` for [nodeId] whose
-  /// timestamp falls on the same local day as [now]. Used to keep
-  /// just-claimed chapter chain steps pinned in their card until
-  /// midnight (mirrors the slot rule daily / side quests already use).
-  bool _wasNodeClaimedOnDate(String nodeId, DateTime now) {
+  /// True when the ledger holds a `NodeCompletionEvent` for [nodeId]
+  /// whose timestamp falls on the same local day as [now]. Used to
+  /// keep just-completed chapter chain steps pinned in their card
+  /// until midnight (mirrors the slot rule daily / side quests
+  /// already use). Reads completion events rather than claim events
+  /// so the signal also covers auto-claim nodes (`ChapterOpenerNode`,
+  /// finale auto-grants) — those never write a NodeClaimEvent, but
+  /// they DO write a NodeCompletionEvent in the same evaluation
+  /// pass that decided the node completed.
+  bool _wasNodeCompletedOnDate(String nodeId, DateTime now) {
     final l = _ledger;
     if (l == null) return false;
-    for (final e in l.nodeClaims) {
+    for (final e in l.nodeCompletions) {
       if (e.nodeId != nodeId) continue;
       final t = e.timestamp.toLocal();
       if (t.year == now.year && t.month == now.month && t.day == now.day) {
@@ -1122,8 +1133,18 @@ class ProgressionEngineProvider extends ChangeNotifier {
     for (final bucket in QuestDisplayBucket.values) {
       if (bucket == QuestDisplayBucket.daily) continue;
       if (bucket == QuestDisplayBucket.chapter) continue;
+      // Long-term quests now stay in the active DLOUHODOBÉ section
+      // until claimed (see `currentLongTermQuests`). Surfacing the
+      // same claimable card here too would split the claim flow
+      // between two surfaces — exactly the confusion the player
+      // reported. Only completed long-term entries belong here.
+      final longTerm = bucket == QuestDisplayBucket.longTerm;
       for (final q in _questsForBucket(bucket)) {
-        if (q.isCompleted || q.isAvailableForClaim) touched.add(q);
+        if (q.isCompleted) {
+          touched.add(q);
+        } else if (q.isAvailableForClaim && !longTerm) {
+          touched.add(q);
+        }
       }
     }
     if (touched.isEmpty) return const [];

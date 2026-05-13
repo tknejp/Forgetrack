@@ -48,22 +48,30 @@ class DailySectionResolver {
     final challengePool = <EngineQuestProgress>[];
 
     for (final q in quests) {
-      // Engine resolved the node to `locked` (an unlock condition
-      // failed — typically `ChapterActive` flipping off after the
-      // chapter's finale). The pool tiers below only inspect
-      // `levelGate` / `prereqGateNodeId` / cooldowns, so without
-      // this guard a retired chapter side quest with a stale
-      // `TodayCompletionsAmong` outcome would keep leaking into
-      // DENNÍ ÚKOLY as a 2/2 card the player can never claim.
-      if (q.isLockedByConditions) continue;
       switch (q.node.slotPolicy) {
         case PinClaimedTodayUntilMidnight():
+          // Drop side quests for finished chapters (`ChapterActive`
+          // false → engine resolved to `locked`). Without this guard
+          // a retired side quest with a stale `TodayCompletionsAmong`
+          // outcome leaks into DENNÍ ÚKOLY as a 2/2 card the player
+          // can never claim.
+          if (q.isLockedByConditions) continue;
           pinPool.add(q);
         case ChainPlaceholderUntilMidnight():
+          // Combo steps locked *today only* by `CooldownDays(1)` (the
+          // engine derives `NodeCompletedBeforeToday(prereq)` from
+          // the gate) MUST stay in the pool. The chain walker needs
+          // to see them to recognise the same-day cooldown and pin
+          // the previously-claimed step as "Splněno"; filter them
+          // out and `firstUncompleted` collapses to null → the chain
+          // vanishes the moment a step is claimed.
           chainPool.add(q);
         case HashRotationStickyUntilMidnight():
-          if (q.levelGate == null) hashPool.add(q);
+          if (q.levelGate == null && !q.isLockedByConditions) {
+            hashPool.add(q);
+          }
         case DailyChallengeHashPick():
+          if (q.isLockedByConditions) continue;
           challengePool.add(q);
         case ChapterCardSticky():
         case Persistent():

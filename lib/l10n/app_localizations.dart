@@ -4121,13 +4121,13 @@ abstract class AppLocalizations {
   /// No description provided for @progQuestPilgrimPathFirstRewardTitle.
   ///
   /// In en, this message translates to:
-  /// **'First reward'**
+  /// **'Provisions for the road'**
   String get progQuestPilgrimPathFirstRewardTitle;
 
   /// No description provided for @progQuestPilgrimPathFirstRewardDesc.
   ///
   /// In en, this message translates to:
-  /// **'Earn your first reward on the pilgrim\'s path.'**
+  /// **'Strength fuels the path into the deep forest — hit today\'s protein goal.'**
   String get progQuestPilgrimPathFirstRewardDesc;
 
   /// No description provided for @progQuestPilgrimPathFinaleTitle.
@@ -4139,7 +4139,7 @@ abstract class AppLocalizations {
   /// No description provided for @progQuestPilgrimPathFinaleDesc.
   ///
   /// In en, this message translates to:
-  /// **'Walk, rest, earn — then claim the Pilgrim\'s Mark.'**
+  /// **'Walk, rest, gather provisions — then claim the Pilgrim\'s Mark.'**
   String get progQuestPilgrimPathFinaleDesc;
 
   /// No description provided for @progQuestForestTrialOpenTitle.

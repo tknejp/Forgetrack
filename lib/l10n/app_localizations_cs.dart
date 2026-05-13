@@ -2228,18 +2228,18 @@ class AppLocalizationsCs extends AppLocalizations {
       'Splň denní cíl spánku a načerpej sílu na další den.';
 
   @override
-  String get progQuestPilgrimPathFirstRewardTitle => 'První odměna';
+  String get progQuestPilgrimPathFirstRewardTitle => 'Zásoby na cestu';
 
   @override
   String get progQuestPilgrimPathFirstRewardDesc =>
-      'Získej svou první odměnu na cestě poutníka.';
+      'Před vstupem do hlubokého lesa potřebuješ sílu — splň dnes svůj cíl bílkovin.';
 
   @override
   String get progQuestPilgrimPathFinaleTitle => 'Znak poutníka';
 
   @override
   String get progQuestPilgrimPathFinaleDesc =>
-      'Dokonči první kroky, odpočinek i odměnu a získej Znak poutníka.';
+      'Splň první kroky, odpočinek i zásoby na cestu a získej Znak poutníka.';
 
   @override
   String get progQuestForestTrialOpenTitle => 'Lesní zkouška';

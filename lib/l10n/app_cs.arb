@@ -749,10 +749,10 @@
   "progQuestPilgrimPathFirstStepsDesc": "Splň denní cíl kroků a vyraz na stezku.",
   "progQuestPilgrimPathFirstSleepTitle": "První odpočinek",
   "progQuestPilgrimPathFirstSleepDesc": "Splň denní cíl spánku a načerpej sílu na další den.",
-  "progQuestPilgrimPathFirstRewardTitle": "První odměna",
-  "progQuestPilgrimPathFirstRewardDesc": "Získej svou první odměnu na cestě poutníka.",
+  "progQuestPilgrimPathFirstRewardTitle": "Zásoby na cestu",
+  "progQuestPilgrimPathFirstRewardDesc": "Před vstupem do hlubokého lesa potřebuješ sílu — splň dnes svůj cíl bílkovin.",
   "progQuestPilgrimPathFinaleTitle": "Znak poutníka",
-  "progQuestPilgrimPathFinaleDesc": "Dokonči první kroky, odpočinek i odměnu a získej Znak poutníka.",
+  "progQuestPilgrimPathFinaleDesc": "Splň první kroky, odpočinek i zásoby na cestu a získej Znak poutníka.",
 
   "progQuestForestTrialOpenTitle": "Lesní zkouška",
   "progQuestForestTrialOpenDesc": "Odemkni Lesní zkoušku dosažením 10. úrovně.",

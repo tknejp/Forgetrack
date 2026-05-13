@@ -59,15 +59,23 @@ List<ObjectiveDefinition> pilgrimPathObjectives() {
       baselineFromNodeId: 'pilgrim_path_first_steps',
       debugLabel: 'Pilgrim Path step 2 — daily sleep since step 1',
     ),
+    // Step 3 used to be `RewardCountMetric()` baselined on step 2,
+    // but that self-fulfils: claiming step 2 grants XP, which lands
+    // a reward event the same tick — step 3 reads 100% the instant
+    // step 2 finishes. Replaced with a "complete daily protein once
+    // since unlock" check. Narratively this introduces the third
+    // daily-loop pillar (steps + sleep already taught by steps 1 and
+    // 2) — a fitting send-off before the player heads into the
+    // Forest Trial chapter at level 10.
     ObjectiveDefinition(
       id: 'pilgrim_path_first_reward_objective',
-      domain: ProgressionDomain.activity,
-      metric: RewardCountMetric(),
+      domain: ProgressionDomain.nutrition,
+      metric: NodeCompletionsMetric(nodeId: 'daily_protein_today'),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 1,
       baselineFromNodeId: 'pilgrim_path_first_sleep',
-      debugLabel: 'Pilgrim Path step 3 — first reward since step 2',
+      debugLabel: 'Pilgrim Path step 3 — daily protein since step 2',
     ),
     ObjectiveDefinition(
       id: 'pilgrim_path_finale_objective',

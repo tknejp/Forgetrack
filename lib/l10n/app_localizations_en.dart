@@ -2238,18 +2238,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Complete the daily sleep goal and recover for the road ahead.';
 
   @override
-  String get progQuestPilgrimPathFirstRewardTitle => 'First reward';
+  String get progQuestPilgrimPathFirstRewardTitle => 'Provisions for the road';
 
   @override
   String get progQuestPilgrimPathFirstRewardDesc =>
-      'Earn your first reward on the pilgrim\'s path.';
+      'Strength fuels the path into the deep forest — hit today\'s protein goal.';
 
   @override
   String get progQuestPilgrimPathFinaleTitle => 'Pilgrim\'s Mark';
 
   @override
   String get progQuestPilgrimPathFinaleDesc =>
-      'Walk, rest, earn — then claim the Pilgrim\'s Mark.';
+      'Walk, rest, gather provisions — then claim the Pilgrim\'s Mark.';
 
   @override
   String get progQuestForestTrialOpenTitle => 'Forest Trial';

@@ -1378,10 +1378,10 @@
   "progQuestPilgrimPathFirstStepsDesc": "Complete the daily steps goal and start walking the path.",
   "progQuestPilgrimPathFirstSleepTitle": "First rest",
   "progQuestPilgrimPathFirstSleepDesc": "Complete the daily sleep goal and recover for the road ahead.",
-  "progQuestPilgrimPathFirstRewardTitle": "First reward",
-  "progQuestPilgrimPathFirstRewardDesc": "Earn your first reward on the pilgrim's path.",
+  "progQuestPilgrimPathFirstRewardTitle": "Provisions for the road",
+  "progQuestPilgrimPathFirstRewardDesc": "Strength fuels the path into the deep forest — hit today's protein goal.",
   "progQuestPilgrimPathFinaleTitle": "Pilgrim's Mark",
-  "progQuestPilgrimPathFinaleDesc": "Walk, rest, earn — then claim the Pilgrim's Mark.",
+  "progQuestPilgrimPathFinaleDesc": "Walk, rest, gather provisions — then claim the Pilgrim's Mark.",
 
   "progQuestForestTrialOpenTitle": "Forest Trial",
   "progQuestForestTrialOpenDesc": "Start the Forest Trial after reaching level 10.",
