@@ -944,13 +944,25 @@ class ProgressionEngineProvider extends ChangeNotifier {
     return days.length;
   }
 
-  /// Set of node ids whose completion event landed today (local
-  /// midnight boundary). Drives [TodayCompletionsAmongMetric] — combo
-  /// daily quests check "K of {daily_steps_today, …} done today?"
+  /// Set of node ids whose **goal is done today** — covers both the
+  /// "goal met but not yet claimed" state (objective fired) and the
+  /// "claim landed" state (node completion). Drives
+  /// [TodayCompletionsAmongMetric] — combo / extra-chapter / daily
+  /// challenge cards check "K of {daily_steps_today, …} done today?"
+  ///
+  /// Reading just `nodeCompletions` would lag the player by a claim:
+  /// they walk 8000 steps → daily steps goal met → combo card still
+  /// reads 0/2 until the player taps Vyzvednout. The combo metric
+  /// reflects work done, not button presses performed, so we union
+  /// the objective fires with the node claims. The objective period
+  /// key (`yyyy-MM-dd` for TodayScope) is the authoritative "this
+  /// happened on day X" marker — no timezone reinterpretation needed
+  /// here.
   Set<String> _nodesCompletedTodayFromLedger() {
     final l = _ledger;
     if (l == null) return const {};
     final now = _engineNow();
+    final todayKey = _localDateKey(now);
     final out = <String>{};
     for (final e in l.nodeCompletions) {
       final t = e.timestamp.toLocal();
@@ -958,8 +970,31 @@ class ProgressionEngineProvider extends ChangeNotifier {
         out.add(e.nodeId);
       }
     }
+    // Mark a daily quest as "done today" when its bound TodayScope
+    // objective has an event for today, even if no node completion
+    // has landed yet (manual-claim daily not yet tapped). The catalog
+    // wires every daily_X_today node to a unique daily_X objective,
+    // so the binding lookup is 1:1.
+    final firedToday = <String>{
+      for (final e in l.objectiveCompletions)
+        if (e.periodKey == todayKey) e.objectiveId,
+    };
+    if (firedToday.isNotEmpty) {
+      for (final node in _nodeCatalog.build()) {
+        if (node is! QuestNode) continue;
+        if (firedToday.contains(node.objectiveId)) out.add(node.id);
+      }
+    }
     return out;
   }
+
+  /// Local-date stamp in the same `yyyy-MM-dd` shape the
+  /// [ObjectiveEvaluator] uses for TodayScope periodKeys — equality
+  /// against `ObjectiveCompletionEvent.periodKey` lines up.
+  String _localDateKey(DateTime dt) =>
+      '${dt.year.toString().padLeft(4, '0')}-'
+      '${dt.month.toString().padLeft(2, '0')}-'
+      '${dt.day.toString().padLeft(2, '0')}';
 
   /// `comboPoolId → completions in the pool`. Drives
   /// [ComboPoolCompletionsMetric] used by combo achievements
@@ -1003,6 +1038,17 @@ class ProgressionEngineProvider extends ChangeNotifier {
       }
     }
 
+    // Map daily/weekly quest node id → its bound objective id, so the
+    // NodeCompletionsMetric path below can also credit objective
+    // fires (goal met, claim pending) — see the dedup-by-day logic
+    // there for why.
+    final objectiveIdByQuestNode = <String, String>{};
+    for (final node in _nodeCatalog.build()) {
+      if (node is QuestNode) {
+        objectiveIdByQuestNode[node.id] = node.objectiveId;
+      }
+    }
+
     final overrides = <String, double>{};
     for (final objective in _objectiveCatalog.build()) {
       final baselineId = objective.baselineFromNodeId;
@@ -1019,13 +1065,38 @@ class ProgressionEngineProvider extends ChangeNotifier {
         continue;
       }
       if (metric is NodeCompletionsMetric) {
-        var count = 0;
+        // Count distinct DAYS (or periodKeys for periodic objectives)
+        // on which the metric's quest node was "done" since baseline.
+        // "Done" unions:
+        //   - NodeCompletionEvent (claim landed), and
+        //   - ObjectiveCompletionEvent for the node's bound objective
+        //     (goal met but not yet claimed).
+        //
+        // The second source matters for chapter steps that gate on
+        // daily quests: the player walks 8000 steps, daily_steps fires
+        // its objective event, the chapter step's "daily steps done
+        // once since unlock" check should tick immediately — waiting
+        // for the manual Vyzvednout tap before the chapter advances
+        // makes the chain feel like double-bookkeeping.
+        final boundObjectiveId = objectiveIdByQuestNode[metric.nodeId];
+        final periodsSeen = <String>{};
         for (final e in l.nodeCompletions) {
-          if (e.nodeId == metric.nodeId && !e.timestamp.isBefore(baselineTs)) {
-            count++;
+          if (e.nodeId != metric.nodeId) continue;
+          if (e.timestamp.isBefore(baselineTs)) continue;
+          periodsSeen.add(
+            e.periodKey ?? 'ts-${_localDateKey(e.timestamp.toLocal())}',
+          );
+        }
+        if (boundObjectiveId != null) {
+          for (final e in l.objectiveCompletions) {
+            if (e.objectiveId != boundObjectiveId) continue;
+            if (e.timestamp.isBefore(baselineTs)) continue;
+            periodsSeen.add(
+              e.periodKey ?? 'ts-${_localDateKey(e.timestamp.toLocal())}',
+            );
           }
         }
-        overrides[objective.id] = count.toDouble();
+        overrides[objective.id] = periodsSeen.length.toDouble();
       } else if (metric is RewardCountMetric) {
         var count = 0;
         for (final g in l.rewardGrants) {
