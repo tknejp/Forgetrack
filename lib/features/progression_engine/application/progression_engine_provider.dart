@@ -30,6 +30,7 @@ import '../domain/models/reward_definition.dart';
 import '../domain/repository/ledger_snapshot.dart';
 import '../domain/repository/progression_engine_repository.dart';
 import 'cosmetic_unlock_bridge.dart';
+import 'daily_section_resolver.dart';
 import 'progression_engine.dart';
 
 export '../domain/evaluator/engine_streak_source.dart' show EngineStreakSummary;
@@ -459,154 +460,23 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// the same rule — visible only when in the slot pool — and
   /// otherwise show in "Dokončené úkoly" or "Nedávné odměny".
   List<EngineQuestProgress> get currentDailyQuests {
-    final dailyBucket = _questsForBucket(QuestDisplayBucket.daily);
-    final challengeBucket =
-        _questsForBucket(QuestDisplayBucket.dailyChallenge);
-    final sideQuestBucket =
-        _questsForBucket(QuestDisplayBucket.chapterSideQuest);
-    final completedIds = <String>{
-      for (final e in (_ledger?.nodeCompletions ?? const [])) e.nodeId,
-    };
-
-    // ── Tier 1: surprise (chapter side quest) — max ONE slot ──
-    // User spec: only one side quest visible at a time. Each is
-    // once-and-done; the SAME claimed-today side quest stays pinned
-    // to the slot until midnight (just like daily quests do) so the
-    // card visibly flips from claimable → "Splněno" instead of
-    // disappearing the moment the player taps claim. Tomorrow the
-    // claimed quest retires from the pool naturally (`isCompleted`
-    // filter) and the next eligible side quest moves in.
-    EngineQuestProgress? surprise;
-    final now = _engineNow();
-    for (final q in sideQuestBucket) {
-      if (!q.isCompleted) continue;
-      final claimedToday = _ledger?.nodeClaims.any((e) {
-            if (e.nodeId != q.nodeId) return false;
-            final t = e.timestamp.toLocal();
-            return t.year == now.year &&
-                t.month == now.month &&
-                t.day == now.day;
-          }) ??
-          false;
-      if (claimedToday) {
-        surprise = q;
-        break;
-      }
-    }
-    if (surprise == null) {
-      for (final q in sideQuestBucket) {
-        if (q.isCompleted) continue;
-        if (!_sideQuestEligibleNow(q.node, completedIds)) continue;
-        surprise = q;
-        break;
-      }
-    }
-
-    // ── Tier 2: active combo step — ONE sticky slot until chain
-    //    completes. Reuses [currentComboQuests] so the slot mirrors
-    //    the chain's display state — active step today, or
-    //    "completed for today" placeholder when the next step is
-    //    gated by `NodeCompletedBeforeToday` because the player
-    //    just claimed today's step. Without the placeholder the
-    //    combo slot would silently rotate out the moment the
-    //    player claimed today's step; the user wants it to read as
-    //    "done for today" until midnight.
-    final combosFromGetter = currentComboQuests;
-    final activeCombo =
-        combosFromGetter.isEmpty ? null : combosFromGetter.first;
-
-    // ── Tier 3: rotation pool — simple daily goals + daily challenge.
-    // Does **not** filter on `isCompleted` so the deterministic hash
-    // keeps picking the same quests for a given date even after the
-    // player claims them — the card just flips to the completed
-    // state. Tomorrow's hash rolls a different set. Daily challenge
-    // is the exception: it uses LifetimeScope, so a claimed template
-    // is permanently retired (handled inside
-    // [_resolveDailyChallengePick]).
-    final challengePick = _resolveDailyChallengePick(challengeBucket);
-    final simple = [
-      for (final q in dailyBucket)
-        if (q.levelGate == null) q,
-    ];
-    final rotationPool = <EngineQuestProgress>[
-      ...simple,
-      ...challengePick,
-    ];
-
-    // ── Slot assignment ────────────────────────────────────────
-    final slots = <EngineQuestProgress>[];
-    final usedIds = <String>{};
-    if (surprise != null && usedIds.add(surprise.nodeId)) {
-      slots.add(surprise);
-    }
-    if (slots.length < dailyQuestPickCount &&
-        activeCombo != null &&
-        usedIds.add(activeCombo.nodeId)) {
-      slots.add(activeCombo);
-    }
-    if (slots.length < dailyQuestPickCount && rotationPool.isNotEmpty) {
-      final need = dailyQuestPickCount - slots.length;
-      final picks = _pickDailyQuests(rotationPool, _engineNow(),
-          count: need);
-      for (final p in picks) {
-        if (slots.length >= dailyQuestPickCount) break;
-        if (usedIds.add(p.nodeId)) slots.add(p);
-      }
-    }
-
-    // No extras: the user spec is strict 2 slots. Anything that
-    // became claimable from real data but didn't make today's
-    // rotation waits for tomorrow's hash. Same for force-completed
-    // entries — they read out in the completed-tasks / recent-rewards
-    // sections instead of crowding the daily list.
-    return slots;
-  }
-
-  /// Side quest eligibility helper: checks `ChapterActive` + every
-  /// `NodeCompleted` on the side quest's unlockConditions against
-  /// the ledger directly. Mirrors what the resolver does at
-  /// evaluation time, since `EngineQuestProgress` doesn't surface a
-  /// "locked by unlockConditions" boolean.
-  bool _sideQuestEligibleNow(
-    ProgressionNode node,
-    Set<String> completedIds,
-  ) {
-    String? chapterId;
-    final requiredCompletions = <String>[];
-    for (final c in node.unlockConditions) {
-      if (c is ChapterActive) chapterId = c.chapterId;
-      if (c is NodeCompleted) requiredCompletions.add(c.nodeId);
-    }
-    if (chapterId == null) return false;
-    if (!completedIds.contains('${chapterId}_open')) return false;
-    if (completedIds.contains('${chapterId}_finale')) return false;
-    for (final id in requiredCompletions) {
-      if (!completedIds.contains(id)) return false;
-    }
-    return true;
-  }
-
-  /// Daily challenge pool pick — deterministic hash over the day key.
-  /// Returns at most one quest; empty when the pool is exhausted
-  /// (every template completed) or no challenges in catalog.
-  List<EngineQuestProgress> _resolveDailyChallengePick(
-    List<EngineQuestProgress> challengeBucket,
-  ) {
-    if (challengeBucket.isEmpty) return const [];
-    final unfinished = [
-      for (final q in challengeBucket) if (!q.isCompleted) q,
-    ];
-    if (unfinished.isEmpty) return const [];
-    final now = _engineNow();
-    final dayKey = '${now.year}-'
-        '${now.month.toString().padLeft(2, '0')}-'
-        '${now.day.toString().padLeft(2, '0')}';
-    var hash = 0x811c9dc5;
-    for (final unit in dayKey.codeUnits) {
-      hash ^= unit;
-      hash = (hash * 0x01000193) & 0x7fffffff;
-    }
-    return [unfinished[hash % unfinished.length]];
+    // The resolver knows how to read each quest's [SlotPolicy] and
+    // dispatch — pin-claimed-today (side quest), chain placeholder
+    // (combo), or hash rotation (daily / daily challenge). All the
+    // ad-hoc "is this claimed today?" / "is this step gated by a
+    // same-day cooldown?" logic that used to live inline here is
+    // now centralised in [DailySectionResolver].
+    return const DailySectionResolver().resolve(
+      quests: [
+        ..._questsForBucket(QuestDisplayBucket.daily),
+        ..._questsForBucket(QuestDisplayBucket.dailyChallenge),
+        ..._questsForBucket(QuestDisplayBucket.chapterSideQuest),
+        ..._questsForBucket(QuestDisplayBucket.combo),
+      ],
+      ledger: _ledger,
+      now: _engineNow(),
+      nodesCompletedTodayIds: _nodesCompletedTodayFromLedger(),
+    );
   }
 
   /// Returns the full daily quest pool (all daily-bucket quests in
@@ -766,197 +636,6 @@ class ProgressionEngineProvider extends ChangeNotifier {
     out.sort((a, b) =>
         (a.node.sortOrder).compareTo(b.node.sortOrder));
     return out;
-  }
-
-  /// Active combo-chain step — mirrors [currentChapterQuests] but for
-  /// [QuestDisplayBucket.combo]. Combo chains are linearly gated by
-  /// `prerequisiteNodeIds` (including across chains: chain N step 1
-  /// requires chain N-1 finale), so at any time only one step is
-  /// "active" (lowest-chainOrder uncompleted-and-unclaimable step in
-  /// the chain whose head has been unlocked).
-  ///
-  /// **"Done for today" affordance.** When the next step is gated by
-  /// [NodeCompletedBeforeToday] on a prereq that *was* completed today
-  /// — i.e. the player just claimed step N — we surface the completed
-  /// step instead of the locked next step. Combo chains advance one
-  /// step per day; the card stays visible as "completed today" until
-  /// tomorrow's evaluation flips the gate open. This is the visual the
-  /// user sees in the "DENNÍ COMBO" section after claiming.
-  List<EngineQuestProgress> get currentComboQuests {
-    final all = _questsForBucket(QuestDisplayBucket.combo);
-    if (all.isEmpty) return const [];
-
-    final byChain = <String, List<EngineQuestProgress>>{};
-    for (final q in all) {
-      final chainId = q.node.chainId;
-      if (chainId == null) continue;
-      byChain.putIfAbsent(chainId, () => []).add(q);
-    }
-
-    final completedToday = _nodesCompletedTodayFromLedger();
-    final out = <EngineQuestProgress>[];
-    for (final entry in byChain.entries) {
-      final chain = [...entry.value]
-        ..sort((a, b) => (a.node.chainOrder ?? 0)
-            .compareTo(b.node.chainOrder ?? 0));
-
-      // Walk the chain looking for the first uncompleted step. Track
-      // the immediately-preceding completed step so we can show it as
-      // "done for today" when the next step's same-day gate is the
-      // reason the chain isn't advancing.
-      EngineQuestProgress? lastCompleted;
-      EngineQuestProgress? firstUncompleted;
-      for (final q in chain) {
-        if (q.isCompleted) {
-          lastCompleted = q;
-        } else {
-          firstUncompleted = q;
-          break;
-        }
-      }
-
-      if (firstUncompleted == null) {
-        // Entire chain completed — nothing to show. Future engine
-        // work (lap counter) would restart the chain here.
-        continue;
-      }
-
-      // The chain's first uncompleted step is its candidate "active"
-      // tile. Skip the chain entirely if it's gated by a *cross-chain*
-      // prereq (previous chain still in progress) — those chains will
-      // wait their turn.
-      if (firstUncompleted.levelGate != null ||
-          firstUncompleted.prereqGateNodeId != null) {
-        continue;
-      }
-
-      // Same-day gate detection: the next step's `unlockConditions`
-      // include a `NodeCompletedBeforeToday(prevId)` and that prev id
-      // is in today's completion set → the step is blocked *for
-      // today only*. Show the completed step instead of the locked
-      // next-step card; if no prior in-chain step is completed
-      // (cross-chain gating, e.g. Recovery's step 1 waits for
-      // `combo_balanced_finale` to land yesterday), hide the whole
-      // chain — surfacing a permanently-locked step with a "1/1"
-      // progress bar but no claim pill (the Regenerace bug) just
-      // looks broken to the player.
-      final gatedByToday = _isStepGatedByCompletionToday(
-        firstUncompleted.node,
-        completedToday,
-      );
-      if (gatedByToday) {
-        if (lastCompleted != null) {
-          out.add(lastCompleted);
-        }
-        continue;
-      }
-
-      out.add(firstUncompleted);
-    }
-    out.sort((a, b) =>
-        (a.node.sortOrder).compareTo(b.node.sortOrder));
-    return out;
-  }
-
-  /// Chapter-themed side quests for the currently-active chapter.
-  /// Each side quest carries `ChapterActive(chapterId)` in its
-  /// `unlockConditions`; we cross-check the ledger directly here
-  /// (the resolver also enforces it at evaluation time, but
-  /// [EngineQuestProgress] doesn't surface a "locked by
-  /// unlockConditions" boolean, so we narrow the list by reading
-  /// the same condition the resolver does).
-  ///
-  /// Side quests are once-and-done (LifetimeScope objectives); when
-  /// claimed they drop from this list. When the chapter's `_finale`
-  /// completes, every remaining side quest for that chapter retires
-  /// automatically because `ChapterActive` returns false.
-  List<EngineQuestProgress> get currentChapterSideQuests {
-    final all = _questsForBucket(QuestDisplayBucket.chapterSideQuest);
-    if (all.isEmpty) return const [];
-
-    final completedIds = <String>{
-      for (final e in (_ledger?.nodeCompletions ?? const [])) e.nodeId,
-    };
-    final out = <EngineQuestProgress>[];
-    for (final q in all) {
-      if (q.isCompleted) continue;
-      // Pull the ChapterActive condition off the node — every side
-      // quest must declare one, and the matching chapter must be
-      // currently active for the quest to surface.
-      String? chapterId;
-      for (final c in q.node.unlockConditions) {
-        if (c is ChapterActive) {
-          chapterId = c.chapterId;
-          break;
-        }
-      }
-      if (chapterId == null) continue;
-      final openDone = completedIds.contains('${chapterId}_open');
-      final finaleDone = completedIds.contains('${chapterId}_finale');
-      if (!openDone || finaleDone) continue;
-      out.add(q);
-    }
-    out.sort((a, b) =>
-        a.node.sortOrder.compareTo(b.node.sortOrder));
-    return out;
-  }
-
-  /// Today's "DENNÍ QUEST" — one rotating themed bonus from the
-  /// [QuestDisplayBucket.dailyChallenge] pool. Deterministic daily
-  /// pick over never-completed templates, with a "completed today"
-  /// affordance so the player keeps seeing what they finished until
-  /// tomorrow's rollover (instead of the section abruptly emptying
-  /// after claim).
-  ///
-  /// The pool is finite (6 templates today) and each completes
-  /// once-and-done (LifetimeScope objectives). As the player burns
-  /// through it, the daily pool shrinks; when empty the section
-  /// disappears. Refilling is future content work.
-  List<EngineQuestProgress> get currentDailyChallenge {
-    final all = _questsForBucket(QuestDisplayBucket.dailyChallenge);
-    if (all.isEmpty) return const [];
-
-    // If any challenge was completed today, surface it — the player
-    // just claimed it and wants to see the result, not an empty
-    // section. Tomorrow's evaluation will move on to a fresh pick.
-    final completedToday = _nodesCompletedTodayFromLedger();
-    for (final q in all) {
-      if (completedToday.contains(q.nodeId)) {
-        return [q];
-      }
-    }
-
-    // Otherwise pick deterministically from never-completed
-    // templates so tomorrow rolls to a different challenge.
-    final unfinished = [for (final q in all) if (!q.isCompleted) q];
-    if (unfinished.isEmpty) return const [];
-    final now = _engineNow();
-    final dayKey = '${now.year}-'
-        '${now.month.toString().padLeft(2, '0')}-'
-        '${now.day.toString().padLeft(2, '0')}';
-    var hash = 0x811c9dc5;
-    for (final unit in dayKey.codeUnits) {
-      hash ^= unit;
-      hash = (hash * 0x01000193) & 0x7fffffff;
-    }
-    return [unfinished[hash % unfinished.length]];
-  }
-
-  /// Returns true when [node]'s [unlockConditions] include a
-  /// [NodeCompletedBeforeToday] whose target id was completed today.
-  /// Used by [currentComboQuests] to detect the "step N done, step
-  /// N+1 unlocks tomorrow" state.
-  bool _isStepGatedByCompletionToday(
-    ProgressionNode node,
-    Set<String> completedTodayIds,
-  ) {
-    for (final c in node.unlockConditions) {
-      if (c is NodeCompletedBeforeToday &&
-          completedTodayIds.contains(c.nodeId)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   /// The next-up locked chapter chain (lowest-sortOrder chapter whose
@@ -2243,42 +1922,6 @@ class ProgressionEngineProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
-  }
-
-  /// Deterministic per-date selection of daily quests. Uses the same
-  /// FNV-1a hash V1 used so the rotation lines up across engines until
-  /// V1 is removed. Stable for a given (date, questId) pair so a
-  /// quest doesn't shuffle out mid-day after the player completes it.
-  List<EngineQuestProgress> _pickDailyQuests(
-    List<EngineQuestProgress> all,
-    DateTime date, {
-    int count = dailyQuestPickCount,
-  }) {
-    if (all.length <= count) return all;
-    final dayKey = _dateKey(date);
-    final ranked = [...all]..sort((a, b) {
-        final byScore = _dailyScore(dayKey, a.nodeId)
-            .compareTo(_dailyScore(dayKey, b.nodeId));
-        if (byScore != 0) return byScore;
-        return a.nodeId.compareTo(b.nodeId);
-      });
-    return ranked.take(count).toList(growable: false);
-  }
-
-  String _dateKey(DateTime value) {
-    final year = value.year.toString().padLeft(4, '0');
-    final month = value.month.toString().padLeft(2, '0');
-    final day = value.day.toString().padLeft(2, '0');
-    return '$year-$month-$day';
-  }
-
-  int _dailyScore(String dayKey, String questId) {
-    var hash = 0x811c9dc5;
-    for (final unit in '$dayKey|$questId'.codeUnits) {
-      hash ^= unit;
-      hash = (hash * 0x01000193) & 0x7fffffff;
-    }
-    return hash;
   }
 
   /// Newest event timestamp across the ledger's reward grants and node
