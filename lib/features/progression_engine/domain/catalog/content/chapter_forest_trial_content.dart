@@ -111,7 +111,6 @@ List<ProgressionNode> forestTrialNodes() {
       assetKey: questAssetForestTrialIcon,
       chapterId: _chapterId,
       chainId: _chapterId,
-      displayGroupId: _chapterId,
       // Chapters chain across the whole game: Forest Trial can't
       // auto-open until the player finishes the starter chapter.
       prerequisiteNodeIds: const ['pilgrim_path_finale'],
@@ -131,7 +130,6 @@ List<ProgressionNode> forestTrialNodes() {
       chapterId: _chapterId,
       chainId: _chapterId,
       chainOrder: 1,
-      displayGroupId: _chapterId,
       prerequisiteNodeIds: const ['forest_trial_open'],
       nextNodeIds: const ['forest_trial_steps_5'],
       chainStepLabelKey: (_) => '5',
@@ -149,7 +147,6 @@ List<ProgressionNode> forestTrialNodes() {
       chapterId: _chapterId,
       chainId: _chapterId,
       chainOrder: 2,
-      displayGroupId: _chapterId,
       prerequisiteNodeIds: const ['forest_trial_daily_wins_5'],
       nextNodeIds: const ['forest_trial_recovery_3'],
       chainStepLabelKey: (_) => '5',
@@ -167,7 +164,6 @@ List<ProgressionNode> forestTrialNodes() {
       chapterId: _chapterId,
       chainId: _chapterId,
       chainOrder: 3,
-      displayGroupId: _chapterId,
       prerequisiteNodeIds: const ['forest_trial_steps_5'],
       nextNodeIds: const ['forest_trial_finale'],
       chainStepLabelKey: (_) => '3',
@@ -190,7 +186,6 @@ List<ProgressionNode> forestTrialNodes() {
       chapterId: _chapterId,
       chainId: _chapterId,
       chainOrder: 4,
-      displayGroupId: _chapterId,
       prerequisiteNodeIds: const ['forest_trial_recovery_3'],
       chainStepIcon: Icons.shield_rounded,
       // The chapter is gated by player level; the open auto-fires at

@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:intl/intl.dart';
 
 import '../../cosmetics/application/cosmetics_provider.dart';
 import '../../health_connect/application/fitness_provider.dart';
@@ -14,7 +13,6 @@ import '../domain/catalog/objective_catalog.dart';
 import '../domain/catalog/progression_node_catalog.dart';
 import '../domain/evaluator/engine_streak_source.dart';
 import '../domain/evaluator/progression_node_resolver.dart';
-import '../domain/models/claim_policy.dart';
 import '../domain/models/engine_evaluation_input.dart';
 import '../domain/models/ledger_event.dart';
 import '../domain/models/objective_definition.dart';
@@ -1645,114 +1643,33 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// `null`-keyed completions silently miss and the quest stays
   /// "available" forever. This method does the period math the
   /// engine does internally (see [ObjectiveEvaluator._periodKey]).
+  /// Thin delegate over [ProgressionEngine.simulateClaim] — the engine
+  /// owns the ledger-write surface, the provider just supplies the
+  /// freshest input + level for XP scaling and runs the standard
+  /// two-pass cascade so combo steps gated on
+  /// `TodayCompletionsAmongMetric` see the new completion on the
+  /// same turn.
   Future<void> devToolsForceCompleteNode(String nodeId) async {
     final node = ProgressionNodeCatalog.definitionForId(nodeId);
     if (node == null) return;
-    final repo = _repository;
-    if (repo is! ProgressionEngineLocalRepository) return;
+    final source = _source;
+    if (source == null) return;
+    final input = currentInput;
+    if (input == null) return;
 
     _isEvaluating = true;
     notifyListeners();
     try {
-      final now = _engineNow();
-      final objectiveId = _objectiveIdOfNode(node);
-      final objective = objectiveId == null
-          ? null
-          : ObjectiveCatalog.definitionForId(objectiveId);
-      final periodKey = objective == null
-          ? null
-          : _periodKeyForScope(objective.scope, now);
-
-      final events = <LedgerEvent>[];
-
-      // 1. Mark the objective as completed so the engine doesn't
-      //    re-emit on next eval. Skipped for nodes with no objective
-      //    (condition-only achievements like `welcome_to_journey`).
-      if (objective != null) {
-        events.add(ObjectiveCompletionEvent(
-          eventKey: ProgressionNodeResolver.objectiveCompletionEventKey(
-            objective.id,
-            periodKey,
-          ),
-          timestamp: now,
-          objectiveId: objective.id,
-          actualValue: objective.targetValue,
-          periodKey: periodKey,
-        ));
-      }
-
-      if (node.claimPolicy == ClaimPolicy.manual) {
-        // Manual-claim flow: inject a Claim event so the resolver
-        // short-circuits to "completed" on the next eval. The engine
-        // then emits NodeCompletionEvent + reward grants for the
-        // first time (celebration fires).
-        events.add(NodeClaimEvent(
-          eventKey:
-              ProgressionNodeResolver.claimEventKey(nodeId, periodKey),
-          timestamp: now,
-          nodeId: nodeId,
-          periodKey: periodKey,
-        ));
-      } else {
-        // Auto-claim flow: inject the completion + reward grants
-        // directly. No celebration fires (priorCompletedNodeIds
-        // will include this node on the next eval) but profile XP
-        // and any downstream unlocks pick up correctly.
-        events.add(NodeCompletionEvent(
-          eventKey: ProgressionNodeResolver.completionEventKey(
-            nodeId,
-            periodKey,
-          ),
-          timestamp: now,
-          nodeId: nodeId,
-          periodKey: periodKey,
-        ));
-        var grantOrdinal = (_ledger?.rewardGrants.length ?? 0);
-        for (final reward in node.rewards) {
-          if (reward is XpReward) {
-            events.add(RewardGrantEvent(
-              eventKey: ProgressionNodeResolver.rewardEventKey(
-                nodeId: nodeId,
-                rewardOrdinal: grantOrdinal,
-                periodKey: periodKey,
-              ),
-              timestamp: now,
-              nodeId: nodeId,
-              rewardOrdinal: grantOrdinal,
-              rewardKind: RewardGrantKind.xp,
-              xpAmount: reward.amount,
-              periodKey: periodKey,
-              levelAtGrant: level,
-              multiplierAtGrant: 1.0,
-            ));
-            grantOrdinal++;
-          } else if (reward is CosmeticReward) {
-            events.add(RewardGrantEvent(
-              eventKey: ProgressionNodeResolver.rewardEventKey(
-                nodeId: nodeId,
-                rewardOrdinal: grantOrdinal,
-                periodKey: periodKey,
-              ),
-              timestamp: now,
-              nodeId: nodeId,
-              rewardOrdinal: grantOrdinal,
-              rewardKind: RewardGrantKind.cosmetic,
-              cosmeticId: reward.cosmeticId,
-              periodKey: periodKey,
-              levelAtGrant: level,
-              multiplierAtGrant: 1.0,
-            ));
-            grantOrdinal++;
-          }
-          // Other reward kinds (relic, companion availability,
-          // chapter unlock) auto-flow from the node completion;
-          // no explicit grant event needed at the devtools layer.
-        }
-      }
-
-      await repo.appendEvents(events);
+      final result = await _engine.simulateClaim(
+        nodeId: nodeId,
+        input: input,
+        levelAtGrant: level,
+        catalogContext: source.currentContext(),
+      );
+      _lastResult = result;
       _ledger = await _repository.loadLedger();
       _recomputeStreaks();
+      if (!result.isEmpty) _pendingCelebrations.add(result);
       _error = null;
     } catch (e) {
       _error = e.toString();
@@ -1760,91 +1677,42 @@ class ProgressionEngineProvider extends ChangeNotifier {
       _isEvaluating = false;
       notifyListeners();
     }
-    // Two-pass cascade. The first refresh writes the
-    // NodeCompletionEvent for the manual-claim quest we just claimed
-    // (or sees the auto-claim completion we injected). The SECOND
-    // refresh rebuilds `currentInput` — including
-    // `nodesCompletedToday` — from the now-updated ledger, so any
-    // combo step whose objective is `TodayCompletionsAmongMetric`
-    // sees the new node-id and advances on this turn instead of
-    // waiting for the next external trigger. The audit-signature
-    // short-circuit must be cleared between passes since none of
-    // the input *sources* (fitness, nutrition, goals) changed.
-    await refresh();
+    // Two-pass cascade — see claimNode for the rationale: the second
+    // refresh rebuilds currentInput from the now-updated ledger so
+    // any combo step whose objective is TodayCompletionsAmongMetric
+    // picks up the new node-id on this turn.
     _lastEvaluatedSignature = null;
     await refresh();
   }
 
-  /// Extract the `objectiveId` from a node, regardless of subclass.
-  /// Mirrors the same shape used by the celebration adapter.
-  String? _objectiveIdOfNode(ProgressionNode node) => switch (node) {
-        QuestNode(:final objectiveId) => objectiveId,
-        AchievementNode(:final objectiveId) => objectiveId,
-        MilestoneNode(:final objectiveId) => objectiveId,
-        _ => null,
-      };
-
-  /// Compute the `periodKey` for a given objective scope at [at].
-  /// Mirrors `ObjectiveEvaluator._periodKey` — kept inline so the
-  /// devtools layer doesn't import an internal evaluator helper.
-  String? _periodKeyForScope(ObjectiveScope scope, DateTime at) {
-    final dateOnly = DateTime(at.year, at.month, at.day);
-    return switch (scope) {
-      TodayScope() => DateFormat('yyyy-MM-dd').format(dateOnly),
-      ThisWeekScope() => () {
-        // ISO-8601 week starts on Monday (1).
-        final daysFromMonday = (at.weekday - 1) % 7;
-        final monday = DateTime(at.year, at.month, at.day)
-            .subtract(Duration(days: daysFromMonday));
-        return 'w-${DateFormat('yyyy-MM-dd').format(monday)}';
-      }(),
-      LifetimeScope() => null,
-      _ => null,
-    };
-  }
-
   /// Devtools — wipe the local ledger. No-op when the bound
   /// repository is not the local Isar variant.
-  /// Devtools-only: writes just an `ObjectiveCompletionEvent` for the
-  /// node's bound objective and re-evaluates — **without** the
-  /// matching `NodeClaimEvent`. Used by the chapter-step shortcut so
-  /// the chapter card surfaces the normal "Vyzvednout XP" claim pill
-  /// after the devtools nudge, letting the player tap through the
-  /// real claim flow (XP grant + celebration) instead of having
-  /// devtools complete the whole transaction silently. No-op for
-  /// nodes whose claim policy is automatic or whose objective is
-  /// already in the ledger for the current period.
+  /// Thin delegate over [ProgressionEngine.simulateObjectiveMet].
+  /// The chapter-step devtools shortcut routes through this so the
+  /// chapter card surfaces the normal "Vyzvednout XP" claim pill
+  /// after the nudge — the player taps through the real claim flow
+  /// (XP grant + celebration) instead of devtools finalising the
+  /// whole transaction silently.
   Future<void> devToolsMarkObjectiveMet(String nodeId) async {
     final node = ProgressionNodeCatalog.definitionForId(nodeId);
     if (node == null) return;
-    final repo = _repository;
-    if (repo is! ProgressionEngineLocalRepository) return;
-    final objectiveId = _objectiveIdOfNode(node);
-    if (objectiveId == null) return;
-    final objective = ObjectiveCatalog.definitionForId(objectiveId);
-    if (objective == null) return;
-
-    final now = _engineNow();
-    final periodKey = _periodKeyForScope(objective.scope, now);
-    final eventKey = ProgressionNodeResolver.objectiveCompletionEventKey(
-      objective.id,
-      periodKey,
-    );
+    final source = _source;
+    if (source == null) return;
+    final input = currentInput;
+    if (input == null) return;
 
     _isEvaluating = true;
     notifyListeners();
     try {
-      await repo.appendEvents([
-        ObjectiveCompletionEvent(
-          eventKey: eventKey,
-          timestamp: now,
-          objectiveId: objective.id,
-          actualValue: objective.targetValue,
-          periodKey: periodKey,
-        ),
-      ]);
+      final result = await _engine.simulateObjectiveMet(
+        nodeId: nodeId,
+        input: input,
+        catalogContext: source.currentContext(),
+      );
+      _lastResult = result;
       _ledger = await _repository.loadLedger();
       _recomputeStreaks();
+      if (!result.isEmpty) _pendingCelebrations.add(result);
       _error = null;
     } catch (e) {
       _error = e.toString();

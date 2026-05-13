@@ -7,9 +7,11 @@ import '../domain/evaluator/reward_grant_planner.dart';
 import '../domain/evaluator/unlock_condition_resolver.dart';
 import '../domain/models/engine_evaluation_input.dart';
 import '../domain/models/ledger_event.dart';
+import '../domain/models/claim_policy.dart';
 import '../domain/models/progression_node_definition.dart';
 import '../domain/models/progression_resolution_reason.dart';
 import '../domain/models/quest_policies.dart';
+import '../domain/models/reward_definition.dart';
 import '../domain/models/unlock_condition.dart';
 import '../domain/models/progression_resolution_result.dart';
 import '../domain/repository/ledger_snapshot.dart';
@@ -164,8 +166,8 @@ class ProgressionEngine {
       final eligible = _unlockConditionResolver.isEligible(
         conditions: _conditionsFor(node),
         completedObjectiveIds: completedObjectiveIds,
-        completedNodeIds: priorCompletedNodeIds,
-        claimedNodeIds: priorClaimedNodeIds,
+        completedNodesLifetime: priorCompletedNodeIds,
+        claimedNodesLifetime: priorClaimedNodeIds,
         unlockedChapterIds: unlockedChapterIds,
         availableCompanionIds: availableCompanionIds,
         input: input,
@@ -347,6 +349,182 @@ class ProgressionEngine {
       RelicNode() => null,
       ContentUnlockNode() => null,
     };
+  }
+
+  // ── Authoring / devtools API ────────────────────────────────────
+  //
+  // Two narrow primitives the devtools layer used to do by hand,
+  // moved inside the engine so it stays the single source of ledger
+  // writes. Both go through the same period-key resolution +
+  // idempotent appendEvents path the production `claim` / `evaluate`
+  // flows use; the only difference is that the metric doesn't have
+  // to actually satisfy — the engine seeds the events directly and
+  // re-evaluates so the rest of the pipeline (resolver, reward
+  // planner, celebration adapter) reacts normally.
+
+  /// Mark the node's bound objective as met for the current period
+  /// **without** writing a claim. Manual-claim nodes will surface
+  /// their normal Vyzvednout pill on the next refresh; auto-claim
+  /// nodes complete + grant on the re-evaluation pass.
+  ///
+  /// Returns the post-write evaluation result, so callers can chain
+  /// celebrations / cosmetic dispatch the same way they would after
+  /// a normal claim.
+  Future<ProgressionResolutionResult> simulateObjectiveMet({
+    required String nodeId,
+    required EngineEvaluationInput input,
+    EngineCatalogContext catalogContext = const EngineCatalogContext(),
+  }) async {
+    final node = _nodeCatalog
+        .build(catalogContext)
+        .firstWhere((n) => n.id == nodeId);
+    final objectiveId = _objectiveIdOf(node);
+    if (objectiveId == null) {
+      // Condition-only node (welcome flow, content unlock). Nothing
+      // to seed; just re-evaluate so the resolver picks up whatever
+      // changed externally.
+      return evaluate(
+        input: input,
+        catalogContext: catalogContext,
+        reason: ProgressionResolutionReason.liveUpdate,
+      );
+    }
+    final objective = _objectiveCatalog
+        .build(catalogContext)
+        .firstWhere((o) => o.id == objectiveId);
+    final outcome = _objectiveEvaluator.evaluate(objective, input);
+    await _repository.appendEvents([
+      ObjectiveCompletionEvent(
+        eventKey: ProgressionNodeResolver.objectiveCompletionEventKey(
+          objective.id,
+          outcome.periodKey,
+        ),
+        timestamp: input.evaluatedAt,
+        objectiveId: objective.id,
+        actualValue: objective.targetValue,
+        periodKey: outcome.periodKey,
+      ),
+    ]);
+    return evaluate(
+      input: input,
+      catalogContext: catalogContext,
+      reason: ProgressionResolutionReason.liveUpdate,
+    );
+  }
+
+  /// Fast-forward the node to a fully claimed state:
+  ///
+  /// * For **manual-claim** nodes: writes the objective completion
+  ///   + the claim event. The resolver sees `alreadyClaimed`, emits
+  ///   `NodeCompletionEvent` on this run, and the reward planner
+  ///   grants whatever the node carries.
+  /// * For **auto-claim** nodes: writes the objective completion +
+  ///   the node completion + every XP/cosmetic reward event directly.
+  ///   No celebration fires (the node is already in
+  ///   `priorCompletedNodeIds` on the next eval) but XP and any
+  ///   downstream unlocks pick up correctly.
+  ///
+  /// Returns the post-write evaluation result.
+  Future<ProgressionResolutionResult> simulateClaim({
+    required String nodeId,
+    required EngineEvaluationInput input,
+    int levelAtGrant = 1,
+    EngineCatalogContext catalogContext = const EngineCatalogContext(),
+  }) async {
+    final ledger = await _repository.loadLedger();
+    final node = _nodeCatalog
+        .build(catalogContext)
+        .firstWhere((n) => n.id == nodeId);
+    final objectiveId = _objectiveIdOf(node);
+    String? periodKey;
+    if (objectiveId != null) {
+      final objective = _objectiveCatalog
+          .build(catalogContext)
+          .firstWhere((o) => o.id == objectiveId);
+      periodKey = _objectiveEvaluator.evaluate(objective, input).periodKey;
+    }
+
+    final events = <LedgerEvent>[];
+    if (objectiveId != null) {
+      final objective = _objectiveCatalog
+          .build(catalogContext)
+          .firstWhere((o) => o.id == objectiveId);
+      events.add(ObjectiveCompletionEvent(
+        eventKey: ProgressionNodeResolver.objectiveCompletionEventKey(
+          objective.id,
+          periodKey,
+        ),
+        timestamp: input.evaluatedAt,
+        objectiveId: objective.id,
+        actualValue: objective.targetValue,
+        periodKey: periodKey,
+      ));
+    }
+    if (node.claimPolicy == ClaimPolicy.manual) {
+      events.add(NodeClaimEvent(
+        eventKey: ProgressionNodeResolver.claimEventKey(nodeId, periodKey),
+        timestamp: input.evaluatedAt,
+        nodeId: nodeId,
+        periodKey: periodKey,
+      ));
+    } else {
+      events.add(NodeCompletionEvent(
+        eventKey: ProgressionNodeResolver.completionEventKey(
+          nodeId,
+          periodKey,
+        ),
+        timestamp: input.evaluatedAt,
+        nodeId: nodeId,
+        periodKey: periodKey,
+      ));
+      var grantOrdinal = ledger.rewardGrants.length;
+      for (final reward in node.rewards) {
+        if (reward is XpReward) {
+          events.add(RewardGrantEvent(
+            eventKey: ProgressionNodeResolver.rewardEventKey(
+              nodeId: nodeId,
+              rewardOrdinal: grantOrdinal,
+              periodKey: periodKey,
+            ),
+            timestamp: input.evaluatedAt,
+            nodeId: nodeId,
+            rewardOrdinal: grantOrdinal,
+            rewardKind: RewardGrantKind.xp,
+            xpAmount: reward.amount,
+            periodKey: periodKey,
+            levelAtGrant: levelAtGrant,
+            multiplierAtGrant: 1.0,
+          ));
+          grantOrdinal++;
+        } else if (reward is CosmeticReward) {
+          events.add(RewardGrantEvent(
+            eventKey: ProgressionNodeResolver.rewardEventKey(
+              nodeId: nodeId,
+              rewardOrdinal: grantOrdinal,
+              periodKey: periodKey,
+            ),
+            timestamp: input.evaluatedAt,
+            nodeId: nodeId,
+            rewardOrdinal: grantOrdinal,
+            rewardKind: RewardGrantKind.cosmetic,
+            cosmeticId: reward.cosmeticId,
+            periodKey: periodKey,
+            levelAtGrant: levelAtGrant,
+            multiplierAtGrant: 1.0,
+          ));
+          grantOrdinal++;
+        }
+        // Other reward kinds (relic, companion availability, chapter
+        // unlock) auto-flow from the node completion on the next
+        // evaluate pass; no explicit grant event needed here.
+      }
+    }
+    await _repository.appendEvents(events);
+    return evaluate(
+      input: input,
+      catalogContext: catalogContext,
+      reason: ProgressionResolutionReason.claim,
+    );
   }
 
   // ── Helpers ─────────────────────────────────────────────────────

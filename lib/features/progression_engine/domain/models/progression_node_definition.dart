@@ -94,7 +94,6 @@ sealed class QuestNode extends ProgressionNode {
     this.chainId,
     this.chainOrder,
     this.chapterId,
-    this.displayGroupId,
     this.comboPoolId,
     this.dailyTierGroupId,
     this.dailyTier,
@@ -135,7 +134,6 @@ sealed class QuestNode extends ProgressionNode {
   final String? chainId;
   final int? chainOrder;
   final String? chapterId;
-  final String? displayGroupId;
   final String? comboPoolId;
   final String? dailyTierGroupId;
   final int? dailyTier;
@@ -253,7 +251,6 @@ class ChapterOpenerNode extends QuestNode {
     super.assetKey,
     super.sortOrder,
     super.chainStepIcon,
-    super.displayGroupId,
   }) : super(
           displayBucket: QuestDisplayBucket.chapter,
           chainOrder: 0,
@@ -289,7 +286,6 @@ class ChapterStepNode extends QuestNode {
     super.sortOrder,
     super.chainStepLabelKey,
     super.chainStepIcon,
-    super.displayGroupId,
   }) : super(
           displayBucket: QuestDisplayBucket.chapter,
           claimPolicy: ClaimPolicy.manual,
@@ -322,7 +318,6 @@ class ChapterFinaleNode extends QuestNode {
     super.sortOrder,
     super.chainStepLabelKey,
     super.chainStepIcon,
-    super.displayGroupId,
   }) : super(
           displayBucket: QuestDisplayBucket.chapter,
           claimPolicy: ClaimPolicy.manual,
