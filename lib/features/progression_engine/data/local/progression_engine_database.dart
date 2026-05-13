@@ -34,6 +34,7 @@ class ProgressionEngineDatabase {
           EngineObjectiveCompletionRecordSchema,
           EngineNodeCompletionRecordSchema,
           EngineNodeClaimRecordSchema,
+          EngineNodeAnnouncementRecordSchema,
           EngineRewardGrantRecordSchema,
           EngineActiveSelectionRecordSchema,
         ],
