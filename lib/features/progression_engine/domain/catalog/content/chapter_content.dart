@@ -37,12 +37,45 @@ import 'quest_assets.dart';
 /// - `ruleCompletionsAtLeast(daily_X, day)` → `NodeCompletionsMetric('daily_X_today')`
 /// - `ruleCompletionsAtLeast(weekly_activity, week)` → `NodeCompletionsMetric('weekly_activity')`
 /// - `totalRuleValueAtLeast(daily_steps)` → `StepsMetric` lifetime (no baseline)
-/// - `ruleSetCompletionsAtLeast(reqCount, related[])` → proxied as the
-///   first listed rule's `NodeCompletionsMetric` with the V1 target.
-///   The "K of M rules per day" semantics aren't preserved — V2 does
-///   not yet have a multi-rule daily completion metric.
+/// - `ruleSetCompletionsAtLeast(reqCount, related[])` →
+///   `DaysWithAtLeastKAmongMetric(related, atLeast: reqCount)`. Counts
+///   distinct days on which at least `reqCount` of the listed daily
+///   atoms were done (goal met or claimed) since the chain step's
+///   baseline. Preserves V1's "K of M rules per day" semantics —
+///   "splň všechny 4 denní cíle 5krát" means 5 days with ≥4 daily
+///   goals met, not 5 step-quest completions.
 /// - `rewardCountAtLeast` → `RewardCountMetric()` since baseline
 /// - `domainRewardCountAtLeast(domain)` → `RewardCountMetric(domain: …)` since baseline
+
+/// The full set of daily-quest node ids that the "four pillars"
+/// chapter steps gate against. Steps that ask for "all 4 daily
+/// goals" check for at least 4 of these on the same day — matches
+/// the `daily_challenge_balanced` pool semantic the player already
+/// sees in the daily-challenge tier.
+const _allDailyAtoms = <String>[
+  'daily_steps_today',
+  'daily_calories_today',
+  'daily_protein_today',
+  'daily_carbs_today',
+  'daily_fat_today',
+  'daily_fiber_today',
+  'daily_sleep_today',
+  'daily_activity_today',
+];
+
+/// Calories + protein paired-day check used by mid-chapter nutrition
+/// steps ("splň cíl kalorií i bílkovin").
+const _calorieAndProtein = <String>[
+  'daily_calories_today',
+  'daily_protein_today',
+];
+
+/// Steps + sleep paired-day check used by recovery-themed steps
+/// ("splň cíl kroků i spánku ve stejný den").
+const _stepsAndSleep = <String>[
+  'daily_steps_today',
+  'daily_sleep_today',
+];
 
 class _ChapterSpec {
   const _ChapterSpec({
@@ -115,7 +148,14 @@ List<_ChapterSpec> _chapters() {
           id: 'ruins_discipline_nutrition_7',
           titleKey: (l) => l.progQuestRuinsDisciplineNutrition7Title,
           descriptionKey: (l) => l.progQuestRuinsDisciplineNutrition7Desc,
-          metric: const NodeCompletionsMetric(nodeId: 'daily_calories_today'),
+          // "splň cíl kalorií i bílkovin 7krát" — needs both nodes
+          // on the same day, 7 days total. Old single-node calories
+          // check let any 7 calorie days satisfy the step regardless
+          // of protein.
+          metric: const DaysWithAtLeastKAmongMetric(
+            nodeIds: _calorieAndProtein,
+            atLeast: 2,
+          ),
           targetValue: 7,
           chainStepLabel: '7',
           domain: ProgressionDomain.nutrition,
@@ -219,7 +259,11 @@ List<_ChapterSpec> _chapters() {
           id: 'forge_momentum_nutrition_15',
           titleKey: (l) => l.progQuestForgeMomentumNutrition15Title,
           descriptionKey: (l) => l.progQuestForgeMomentumNutrition15Desc,
-          metric: const NodeCompletionsMetric(nodeId: 'daily_calories_today'),
+          // "splň cíl kalorií i bílkovin 15krát" — paired-day check.
+          metric: const DaysWithAtLeastKAmongMetric(
+            nodeIds: _calorieAndProtein,
+            atLeast: 2,
+          ),
           targetValue: 15,
           chainStepLabel: '15',
           domain: ProgressionDomain.nutrition,
@@ -242,10 +286,14 @@ List<_ChapterSpec> _chapters() {
           id: 'underway_pact_four_pillars_5',
           titleKey: (l) => l.progQuestUnderwayPactFourPillars5Title,
           descriptionKey: (l) => l.progQuestUnderwayPactFourPillars5Desc,
-          // V1 four-pillars (≥4 rules per day) collapses to the
-          // primary daily steps rule as a proxy — V2 doesn't have a
-          // multi-rule daily completions metric yet.
-          metric: const NodeCompletionsMetric(nodeId: 'daily_steps_today'),
+          // "splň všechny 4 denní cíle 5krát" — 5 days with ≥4 of
+          // the 8 daily atoms done. Restored from the V1 four-pillars
+          // intent; the previous single-node proxy gave the player
+          // a free pass on every other daily goal.
+          metric: const DaysWithAtLeastKAmongMetric(
+            nodeIds: _allDailyAtoms,
+            atLeast: 4,
+          ),
           targetValue: 5,
           chainStepLabel: '5',
           domain: ProgressionDomain.activity,
@@ -263,7 +311,12 @@ List<_ChapterSpec> _chapters() {
           id: 'underway_pact_recovery_10',
           titleKey: (l) => l.progQuestUnderwayPactRecovery10Title,
           descriptionKey: (l) => l.progQuestUnderwayPactRecovery10Desc,
-          metric: const NodeCompletionsMetric(nodeId: 'daily_sleep_today'),
+          // "splň cíl kroků i spánku ve stejný den 10krát" —
+          // paired-day check on steps + sleep.
+          metric: const DaysWithAtLeastKAmongMetric(
+            nodeIds: _stepsAndSleep,
+            atLeast: 2,
+          ),
           targetValue: 10,
           chainStepLabel: '10',
           domain: ProgressionDomain.sleep,
@@ -368,7 +421,11 @@ List<_ChapterSpec> _chapters() {
           id: 'mountain_ascent_four_pillars_15',
           titleKey: (l) => l.progQuestMountainAscentFourPillars15Title,
           descriptionKey: (l) => l.progQuestMountainAscentFourPillars15Desc,
-          metric: const NodeCompletionsMetric(nodeId: 'daily_steps_today'),
+          // "splň všechny 4 denní cíle 15krát" — four-pillars check.
+          metric: const DaysWithAtLeastKAmongMetric(
+            nodeIds: _allDailyAtoms,
+            atLeast: 4,
+          ),
           targetValue: 15,
           chainStepLabel: '15',
           domain: ProgressionDomain.activity,
@@ -418,7 +475,11 @@ List<_ChapterSpec> _chapters() {
           id: 'dragonroad_four_pillars_25',
           titleKey: (l) => l.progQuestDragonroadFourPillars25Title,
           descriptionKey: (l) => l.progQuestDragonroadFourPillars25Desc,
-          metric: const NodeCompletionsMetric(nodeId: 'daily_steps_today'),
+          // "splň všechny 4 denní cíle 25krát" — four-pillars check.
+          metric: const DaysWithAtLeastKAmongMetric(
+            nodeIds: _allDailyAtoms,
+            atLeast: 4,
+          ),
           targetValue: 25,
           chainStepLabel: '25',
           domain: ProgressionDomain.activity,
@@ -451,7 +512,11 @@ List<_ChapterSpec> _chapters() {
           titleKey: (l) => l.progQuestDragonrockSovereignFourPillars30Title,
           descriptionKey: (l) =>
               l.progQuestDragonrockSovereignFourPillars30Desc,
-          metric: const NodeCompletionsMetric(nodeId: 'daily_steps_today'),
+          // "splň všechny 4 denní cíle 30krát" — four-pillars check.
+          metric: const DaysWithAtLeastKAmongMetric(
+            nodeIds: _allDailyAtoms,
+            atLeast: 4,
+          ),
           targetValue: 30,
           chainStepLabel: '30',
           domain: ProgressionDomain.activity,
