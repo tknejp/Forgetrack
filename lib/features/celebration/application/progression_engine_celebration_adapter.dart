@@ -6,7 +6,7 @@ import '../../progression_engine/domain/models/ledger_event.dart';
 import '../../progression_engine/domain/models/progression_node_definition.dart';
 import '../../progression_engine/domain/models/progression_resolution_reason.dart';
 import '../../progression_engine/domain/models/progression_resolution_result.dart';
-import '../../progression_engine/domain/models/quest_display_bucket.dart';
+import '../../progression_engine/domain/models/quest_policies.dart';
 import '../../progression_engine/domain/models/unlock_condition.dart';
 import '../domain/models/celebration_event.dart';
 import '../domain/models/celebration_reward.dart';
@@ -635,36 +635,50 @@ class ProgressionEngineCelebrationAdapter {
     };
   }
 
+  /// Dispatches on the QuestNode subtype's [CelebrationPolicy]. The
+  /// adapter used to derive "is opener / finale / mid / suppressed"
+  /// inline from displayBucket + chainOrder + nextNodeIds.isEmpty;
+  /// that branching now lives intrinsic to the subtype (Phase 2)
+  /// and the adapter just reads `node.celebrationPolicy`. Adding a
+  /// new celebration flavour is one switch case here + one policy
+  /// subclass, not a re-shape of these conditions.
   CelebrationEvent? _buildQuestEvent(
     _NodeCompletionPair pair,
     ProgressionResolutionResult result,
   ) {
     final node = pair.node as QuestNode;
+    return switch (node.celebrationPolicy) {
+      SilentCelebration() => null,
+      ChapterOpenedCelebration() => _buildChapterEventForQuest(
+          pair,
+          result,
+          idPrefix: 'chapter-open',
+          eyebrow: (l) => l.celebrationChapterUnlockedEyebrow,
+        ),
+      ChapterCompletedCelebration() => _buildChapterEventForQuest(
+          pair,
+          result,
+          idPrefix: 'chapter-finale',
+          eyebrow: (l) => l.celebrationChapterEyebrow,
+        ),
+    };
+  }
+
+  /// Shared shape for the two chapter-flavoured QuestNode
+  /// celebrations: fullscreen overlay, chapter icon as the headliner
+  /// reward card, accent rarity, optional XP award. The only delta
+  /// between opener and finale is the id prefix and eyebrow text.
+  CelebrationEvent _buildChapterEventForQuest(
+    _NodeCompletionPair pair,
+    ProgressionResolutionResult result, {
+    required String idPrefix,
+    required CelebrationText eyebrow,
+  }) {
+    final node = pair.node as QuestNode;
     final completion = pair.completion;
     final cosmeticIds = _cosmeticIdsForNode(node.id, result);
     final rewards = _cosmeticsToRewards(cosmeticIds);
     final xp = _xpAmountForNode(node.id, result);
-
-    // Quest claims no longer fire a celebration toast/screen by
-    // default — the XP pill on the card flipping to its claimed
-    // state is the only feedback the player needs. Two narrow
-    // exceptions survive:
-    //   * chapter opener → "Nová kapitola otevřena" fullscreen
-    //   * chapter finale → "Kapitola dokončena" fullscreen
-    // Everything else (daily, weekly, long-term, combo, daily
-    // challenge, chapter mid-chain step, chapter side quest)
-    // returns null and the controller silently swallows it.
-    final isChapter = node.displayBucket == QuestDisplayBucket.chapter &&
-        node.chapterId != null;
-    final isChapterOpener = isChapter && (node.chainOrder ?? 0) == 0;
-    final isChapterFinale = isChapter &&
-        (node.chainOrder ?? 0) > 0 &&
-        node.nextNodeIds.isEmpty;
-
-    if (!isChapterOpener && !isChapterFinale) {
-      return null;
-    }
-
     final iconCard = _chapterIconCard(
       chapterId: node.chapterId!,
       nameKey: (l) => node.titleKey(l),
@@ -675,26 +689,10 @@ class ProgressionEngineCelebrationAdapter {
       node.rarity,
       CelebrationEvent.maxRarityFrom(allRewards),
     );
-
-    if (isChapterOpener) {
-      return CelebrationEvent(
-        id: 'chapter-open|${node.id}|${completion.event.timestamp.microsecondsSinceEpoch}',
-        type: CelebrationType.location,
-        eyebrow: (l) => l.celebrationChapterUnlockedEyebrow,
-        title: (l) => node.titleKey(l),
-        description: (l) => node.descriptionKey(l),
-        rewards: allRewards,
-        headRarity: headRarity,
-        xpAward: (xp != null && xp > 0) ? CelebrationXpAward(xp) : null,
-        variantOverride: CelebrationVariant.fullscreen,
-      );
-    }
-
-    // Chapter finale — the chapter chain's last step.
     return CelebrationEvent(
-      id: 'chapter-finale|${node.id}|${completion.event.timestamp.microsecondsSinceEpoch}',
+      id: '$idPrefix|${node.id}|${completion.event.timestamp.microsecondsSinceEpoch}',
       type: CelebrationType.location,
-      eyebrow: (l) => l.celebrationChapterEyebrow,
+      eyebrow: eyebrow,
       title: (l) => node.titleKey(l),
       description: (l) => node.descriptionKey(l),
       rewards: allRewards,
