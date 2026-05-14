@@ -66,9 +66,20 @@ abstract class SocialRepository {
 
   Future<void> shareAchievement(SocialAchievementShare share);
 
-  Stream<List<SocialUnlockedAchievement>> watchUnlockedAchievements(String uid);
+  /// Streams every node completion event in the user's V2 engine ledger.
+  ///
+  /// Used by `SocialProvider.watchFriendAchievements` which filters down
+  /// to [AchievementNode] ids via the local progression catalog and
+  /// builds [SocialUnlockedAchievement]s. Completion of non-achievement
+  /// nodes (quests, milestones) is included in the stream — callers
+  /// must filter.
+  Stream<List<RemoteEngineNodeCompletion>> watchEngineNodeCompletions(
+    String uid,
+  );
 
-  Future<List<SocialUnlockedAchievement>> fetchUnlockedAchievements(String uid);
+  Future<List<RemoteEngineNodeCompletion>> fetchEngineNodeCompletions(
+    String uid,
+  );
 
   Future<void> removeFriend({required String friendshipId});
 

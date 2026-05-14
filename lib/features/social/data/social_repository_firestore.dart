@@ -28,8 +28,8 @@ class FirestoreSocialRepository implements SocialRepository {
   CollectionReference<Map<String, dynamic>> get _handles =>
       _firestore.collection('handles');
 
-  CollectionReference<Map<String, dynamic>> _achievementUnlocks(String uid) =>
-      _users.doc(uid).collection('achievementUnlocks');
+  CollectionReference<Map<String, dynamic>> _engineNodeCompletions(String uid) =>
+      _users.doc(uid).collection('engineNodeCompletions');
 
   @override
   Stream<List<SocialFriendRequest>> watchIncomingFriendRequests({
@@ -603,15 +603,11 @@ class FirestoreSocialRepository implements SocialRepository {
   }
 
   @override
-  Future<List<SocialUnlockedAchievement>> fetchUnlockedAchievements(
+  Future<List<RemoteEngineNodeCompletion>> fetchEngineNodeCompletions(
     String uid,
   ) async {
-    final snapshot = await _achievementUnlocks(uid).get();
-    final list = snapshot.docs
-        .map(_mapUnlockedAchievement)
-        .toList(growable: true)
-      ..sort((a, b) => b.unlockedAt.compareTo(a.unlockedAt));
-    return list;
+    final snapshot = await _engineNodeCompletions(uid).get();
+    return snapshot.docs.map(_mapEngineNodeCompletion).toList(growable: false);
   }
 
   @override
@@ -636,16 +632,12 @@ class FirestoreSocialRepository implements SocialRepository {
   }
 
   @override
-  Stream<List<SocialUnlockedAchievement>> watchUnlockedAchievements(
-      String uid) {
-    return _achievementUnlocks(uid).snapshots().map(
-      (snapshot) {
-        final achievements = snapshot.docs
-            .map(_mapUnlockedAchievement)
-            .toList(growable: true)
-          ..sort((a, b) => b.unlockedAt.compareTo(a.unlockedAt));
-        return achievements;
-      },
+  Stream<List<RemoteEngineNodeCompletion>> watchEngineNodeCompletions(
+    String uid,
+  ) {
+    return _engineNodeCompletions(uid).snapshots().map(
+      (snapshot) =>
+          snapshot.docs.map(_mapEngineNodeCompletion).toList(growable: false),
     );
   }
 
@@ -887,18 +879,15 @@ class FirestoreSocialRepository implements SocialRepository {
     );
   }
 
-  SocialUnlockedAchievement _mapUnlockedAchievement(
+  RemoteEngineNodeCompletion _mapEngineNodeCompletion(
     QueryDocumentSnapshot<Map<String, dynamic>> doc,
   ) {
     final data = doc.data();
-    return SocialUnlockedAchievement(
-      achievementId: data['achievementId'] as String? ?? doc.id,
-      title: data['title'] as String? ?? '',
-      description: data['description'] as String? ?? '',
-      rarity: _readRarity(data['rarity']),
-      domain: data['domain'] as String?,
-      unlockedAt: _readDateTime(data['unlockedAt']) ??
+    return RemoteEngineNodeCompletion(
+      nodeId: data['nodeId'] as String? ?? '',
+      completedAt: _readDateTime(data['timestamp']) ??
           DateTime.fromMillisecondsSinceEpoch(0),
+      periodKey: data['periodKey'] as String?,
     );
   }
 

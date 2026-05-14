@@ -118,13 +118,14 @@ class DisabledSocialRepository implements SocialRepository {
   }
 
   @override
-  Stream<List<SocialUnlockedAchievement>> watchUnlockedAchievements(
-      String uid) {
-    return Stream<List<SocialUnlockedAchievement>>.value(const []);
+  Stream<List<RemoteEngineNodeCompletion>> watchEngineNodeCompletions(
+    String uid,
+  ) {
+    return Stream<List<RemoteEngineNodeCompletion>>.value(const []);
   }
 
   @override
-  Future<List<SocialUnlockedAchievement>> fetchUnlockedAchievements(
+  Future<List<RemoteEngineNodeCompletion>> fetchEngineNodeCompletions(
     String uid,
   ) async {
     return const [];

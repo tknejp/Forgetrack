@@ -11,6 +11,7 @@ import '../../progression_engine/domain/progression_domain.dart' show Progressio
 import '../../progression_engine/application/progression_engine_provider.dart';
 import '../../progression_engine/domain/models/ledger_event.dart'
     show RewardGrantKind;
+import '../../progression_engine/domain/catalog/progression_node_catalog.dart';
 import '../../progression_engine/domain/models/progression_node_definition.dart'
     show AchievementNode;
 import '../data/social_firebase_bootstrap.dart';
@@ -290,8 +291,11 @@ class SocialProvider extends ChangeNotifier {
     return results.firstOrNull;
   }
 
-  Future<List<SocialUnlockedAchievement>> fetchFriendAchievements(String uid) {
-    return _repository.fetchUnlockedAchievements(uid);
+  Future<List<SocialUnlockedAchievement>> fetchFriendAchievements(
+    String uid,
+  ) async {
+    final completions = await _repository.fetchEngineNodeCompletions(uid);
+    return _buildUnlockedAchievementsFromRemote(completions);
   }
 
   Stream<SocialUserProfile?> watchProfileById(String uid) {
@@ -300,7 +304,53 @@ class SocialProvider extends ChangeNotifier {
   }
 
   Stream<List<SocialUnlockedAchievement>> watchFriendAchievements(String uid) {
-    return _repository.watchUnlockedAchievements(uid);
+    return _repository
+        .watchEngineNodeCompletions(uid)
+        .map(_buildUnlockedAchievementsFromRemote);
+  }
+
+  /// Maps raw V2 ledger completions read from `users/{uid}/engineNodeCompletions`
+  /// into the friend-view achievement list.
+  ///
+  /// Filters to [AchievementNode] ids — quest / milestone completions are
+  /// in the same collection but live elsewhere in the UI. Per-node we
+  /// keep the earliest completion timestamp (engine ledger may have
+  /// multiple period rows for repeating nodes; achievements are
+  /// once-and-done so this is mostly a guard).
+  ///
+  /// Catalog metadata (rarity, domain) comes from the LOCAL catalog —
+  /// every device runs the same compiled app version, so the catalog
+  /// is the right source even for someone else's data.
+  List<SocialUnlockedAchievement> _buildUnlockedAchievementsFromRemote(
+    List<RemoteEngineNodeCompletion> completions,
+  ) {
+    if (completions.isEmpty) return const [];
+
+    final earliestByNode = <String, DateTime>{};
+    final nodes = <String, AchievementNode>{};
+    for (final c in completions) {
+      final def = ProgressionNodeCatalog.definitionForId(c.nodeId);
+      if (def is! AchievementNode) continue;
+      nodes[c.nodeId] = def;
+      final existing = earliestByNode[c.nodeId];
+      if (existing == null || c.completedAt.isBefore(existing)) {
+        earliestByNode[c.nodeId] = c.completedAt;
+      }
+    }
+    if (earliestByNode.isEmpty) return const [];
+
+    final out = <SocialUnlockedAchievement>[
+      for (final entry in earliestByNode.entries)
+        SocialUnlockedAchievement(
+          achievementId: entry.key,
+          title: entry.key,
+          description: '',
+          rarity: nodes[entry.key]!.rarity,
+          domain: _progressionProvider?.domainForNodeId(entry.key).name,
+          unlockedAt: entry.value,
+        ),
+    ]..sort((a, b) => b.unlockedAt.compareTo(a.unlockedAt));
+    return out;
   }
 
   Stream<List<SocialAchievementShare>> watchProfileShares(

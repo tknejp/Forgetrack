@@ -108,6 +108,26 @@ class SocialUnlockedAchievement {
   final DateTime unlockedAt;
 }
 
+/// Raw row read from `users/{uid}/engineNodeCompletions/{eventKey}`.
+///
+/// The repo returns these untyped — `SocialProvider` filters down to
+/// AchievementNodes and resolves rarity / domain via the local
+/// progression catalog when building [SocialUnlockedAchievement] for
+/// the friend-profile view. Keeping the catalog lookup in the
+/// application layer means the repo stays Firestore-only and doesn't
+/// import progression engine domain types.
+class RemoteEngineNodeCompletion {
+  const RemoteEngineNodeCompletion({
+    required this.nodeId,
+    required this.completedAt,
+    this.periodKey,
+  });
+
+  final String nodeId;
+  final DateTime completedAt;
+  final String? periodKey;
+}
+
 enum SocialFriendRequestStatus {
   pending,
   accepted,
