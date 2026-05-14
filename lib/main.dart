@@ -1,17 +1,21 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import 'app.dart';
 import 'core/logging/app_log.dart';
 import 'app/notification_preferences_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'core/services/background_sync_service.dart';
 import 'core/services/fcm_service.dart';
+import 'core/services/firestore_network_gate.dart';
 import 'core/services/notification_service.dart';
 import 'features/auth/application/auth_provider.dart';
 import 'features/celebration/application/celebration_controller.dart';
@@ -55,6 +59,13 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   AppLog.app.info('Forgetrack starting up');
 
+  // Debug builds: keep screen awake so Android Doze doesn't drop the
+  // VM-service connection or trigger Firestore reconnect storms while
+  // we're actively debugging. Never enabled in release.
+  if (kDebugMode) {
+    unawaited(WakelockPlus.enable());
+  }
+
   AppLog.app.info('APP START TEST');
   AppLog.app.warn('APP WARN TEST');
   AppLog.app.error('APP ERROR TEST');
@@ -94,6 +105,12 @@ Future<void> main() async {
 
   final ktProvider = KalorickeTabulkyProvider(ktService, ktDb);
   final socialBackendState = await SocialFirebaseBootstrap.ensureInitialized();
+  // Once Firebase is up, gate Firestore's network on real connectivity so
+  // the SDK doesn't burn battery retrying gRPC streams under Doze / airplane
+  // mode / dead Wi-Fi. Reads still serve from cache while offline.
+  if (Firebase.apps.isNotEmpty) {
+    unawaited(FirestoreNetworkGate().start());
+  }
   // Musí být registrován před runApp – top-level handler pro FCM v background/terminated stavu
   FirebaseMessaging.onBackgroundMessage(fcmBackgroundHandler);
   final socialRepository = socialBackendState.isReady
