@@ -21,6 +21,7 @@ class ThemeTokens extends ThemeExtension<ThemeTokens> {
   final Color danger;
   final Color xp;
   final Color xpGlow;
+  final Color badgeTextOnLight;
   final Domain steps;
   final Domain calories;
   final Domain weight;
@@ -48,6 +49,7 @@ class ThemeTokens extends ThemeExtension<ThemeTokens> {
     required this.danger,
     required this.xp,
     required this.xpGlow,
+    required this.badgeTextOnLight,
     required this.steps,
     required this.calories,
     required this.weight,
@@ -76,6 +78,7 @@ class ThemeTokens extends ThemeExtension<ThemeTokens> {
     danger: Color(0xFFF87171),
     xp: Color(0xFFFFBD2E),
     xpGlow: Color(0x55FFBD2E),
+    badgeTextOnLight: Color(0xFF2A1A05),
     steps: Tokens.steps,
     calories: Tokens.calories,
     weight: Tokens.weight,
@@ -105,6 +108,7 @@ class ThemeTokens extends ThemeExtension<ThemeTokens> {
     Color? danger,
     Color? xp,
     Color? xpGlow,
+    Color? badgeTextOnLight,
     Domain? steps,
     Domain? calories,
     Domain? weight,
@@ -132,6 +136,7 @@ class ThemeTokens extends ThemeExtension<ThemeTokens> {
       danger: danger ?? this.danger,
       xp: xp ?? this.xp,
       xpGlow: xpGlow ?? this.xpGlow,
+      badgeTextOnLight: badgeTextOnLight ?? this.badgeTextOnLight,
       steps: steps ?? this.steps,
       calories: calories ?? this.calories,
       weight: weight ?? this.weight,
@@ -164,6 +169,8 @@ class ThemeTokens extends ThemeExtension<ThemeTokens> {
       danger: Color.lerp(danger, other.danger, t)!,
       xp: Color.lerp(xp, other.xp, t)!,
       xpGlow: Color.lerp(xpGlow, other.xpGlow, t)!,
+      badgeTextOnLight:
+          Color.lerp(badgeTextOnLight, other.badgeTextOnLight, t)!,
       steps: steps.lerp(other.steps, t),
       calories: calories.lerp(other.calories, t),
       weight: weight.lerp(other.weight, t),
@@ -207,6 +214,11 @@ abstract final class Tokens {
   // ── XP / progression ──────────────────────────────────────────────────────
   static const Color xp = Color(0xFFFFBD2E);
   static const Color xpGlow = Color(0x55FFBD2E);
+
+  // ── Badges ────────────────────────────────────────────────────────────────
+  // Foreground text colour used on light-coloured badge backgrounds (XP amber,
+  // warning yellow). Dark badges (danger red) use Colors.white instead.
+  static const Color badgeTextOnLight = Color(0xFF2A1A05);
 
   // ── Achievement difficulty ────────────────────────────────────────────────
   static const Color difficultyEasy = Color(0xFF34D399);
