@@ -93,4 +93,53 @@ class CosmeticUnlockBridge {
       );
     }
   }
+
+  /// Walks the entire ledger and re-applies every cosmetic reward grant
+  /// to the bound CosmeticsProvider.
+  ///
+  /// Use this after a cloud pull-and-merge: the engine's `evaluate()`
+  /// only emits grants for events it just produced, so historical
+  /// cosmetic grants that arrived in the merged ledger never reach the
+  /// CosmeticsProvider via the normal [dispatch] path. Without this
+  /// step a fresh install or second device would have the engine
+  /// ledger restored but the cosmetics inventory still empty.
+  ///
+  /// Idempotent — `cosmetics.unlock` is a no-op when the cosmetic is
+  /// already in the unlocked set.
+  Future<void> reapplyHistoricalCosmetics(LedgerSnapshot ledger) async {
+    final cosmetics = _cosmetics;
+    if (cosmetics == null || cosmetics.currentUid == null) {
+      _log.debug('reapplyHistoricalCosmetics skipped — no cosmetics binding');
+      return;
+    }
+
+    var applied = 0;
+    for (final grant in ledger.rewardGrants) {
+      if (grant.rewardKind != RewardGrantKind.cosmetic) continue;
+      final cosmeticId = grant.cosmeticId;
+      if (cosmeticId == null) continue;
+      if (cosmetics.state?.unlocked.containsKey(cosmeticId) ?? false) continue;
+      try {
+        await cosmetics.unlock(
+          cosmeticId,
+          sourceType: 'engineNode',
+          sourceId: grant.nodeId,
+        );
+        applied++;
+      } catch (e, st) {
+        _log.error(
+          'reapply unlock crashed',
+          payload: 'id=$cosmeticId node=${grant.nodeId}',
+          err: e,
+          stackTrace: st,
+        );
+      }
+    }
+    if (applied > 0) {
+      _log.info(
+        'historical cosmetic grants reapplied',
+        payload: 'applied=$applied total=${ledger.rewardGrants.length}',
+      );
+    }
+  }
 }

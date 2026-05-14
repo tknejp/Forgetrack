@@ -29,6 +29,8 @@ import 'features/cosmetics/data/isar_cosmetics_repository.dart';
 import 'features/cosmetics/data/local/cosmetics_database.dart';
 import 'features/progression_engine/application/progression_engine.dart';
 import 'features/progression_engine/application/progression_engine_provider.dart';
+import 'features/progression_engine/data/firestore_progression_engine_gateway.dart';
+import 'features/progression_engine/data/hybrid_progression_engine_repository.dart';
 import 'features/progression_engine/data/isar_progression_engine_repository.dart';
 import 'features/progression_engine/data/local/progression_engine_database.dart';
 import 'features/coach_log_export/application/bushido_export_provider.dart';
@@ -94,16 +96,14 @@ Future<void> main() async {
   final ktDb = KtNutritionDatabase();
   await ktDb.open();
 
-  // Phase 4 + 6: the V2 engine's Isar store + repository + engine.
-  // The provider is constructed inside MultiProvider so it can bind
-  // to live source providers via ChangeNotifierProxyProvider4.
+  // Phase 4 + 6: the V2 engine's Isar store + repository.
+  // Database open is async and slow on cold start, so kick it off
+  // here. Engine + (optional) cloud-sync wrapper are constructed
+  // below once we know whether the Firebase backend is up.
   final progressionEngineDb = ProgressionEngineDatabase();
   await progressionEngineDb.open();
-  final progressionEngineRepo =
+  final progressionEngineLocalRepo =
       IsarProgressionEngineRepository(progressionEngineDb);
-  final progressionEngineV2 = ProgressionEngine(
-    repository: progressionEngineRepo,
-  );
 
   final ktProvider = KalorickeTabulkyProvider(ktService, ktDb);
 
@@ -130,6 +130,25 @@ Future<void> main() async {
       : DisabledSocialRepository(reason: socialBackendState.message);
   final socialSession = SocialFirebaseSession(
     isEnabled: socialBackendState.isReady,
+  );
+
+  // Now that we know whether Firebase is up, decide if the engine
+  // pushes ledger events to Firestore. Hybrid wraps the local repo;
+  // ProgressionEngineProvider receives both refs (the wrapper as the
+  // repository, plus a typed cloud-sync handle for `bindCloudUser` /
+  // pull-and-merge calls). Without Firestore the local repo is used
+  // directly and cloudSync stays null — engine behaves exactly as
+  // before the V2 sync work.
+  final progressionEngineCloudSync = socialBackendState.isReady
+      ? HybridProgressionEngineRepository(
+          local: progressionEngineLocalRepo,
+          cloud: FirestoreProgressionEngineGateway(),
+        )
+      : null;
+  final progressionEngineRepo =
+      progressionEngineCloudSync ?? progressionEngineLocalRepo;
+  final progressionEngineV2 = ProgressionEngine(
+    repository: progressionEngineRepo,
   );
   await NotificationService.instance.initialize(
     requestPermissions: notificationPreferencesProvider.notificationsEnabled,
@@ -239,10 +258,14 @@ Future<void> main() async {
           },
         ),
         // V2 progression engine — declared after CosmeticsProvider so its
-        // bind() update sees it in scope. Source dependencies: goals +
-        // fitness + nutrition + cosmetics.
-        ChangeNotifierProxyProvider4<GoalsProvider, FitnessProvider,
-            KalorickeTabulkyProvider, CosmeticsProvider,
+        // bind() update sees it in scope. Source dependencies: auth (uid
+        // for cloud sync) + goals + fitness + nutrition + cosmetics.
+        ChangeNotifierProxyProvider5<
+            AuthProvider,
+            GoalsProvider,
+            FitnessProvider,
+            KalorickeTabulkyProvider,
+            CosmeticsProvider,
             ProgressionEngineProvider>(
           // Eager: provider's constructor calls `_hydrate()` which loads the
           // Isar ledger. We want that running in parallel with Cosmetics +
@@ -251,13 +274,15 @@ Future<void> main() async {
           create: (_) => ProgressionEngineProvider(
             engine: progressionEngineV2,
             repository: progressionEngineRepo,
+            cloudSync: progressionEngineCloudSync,
           ),
-          update: (_, goals, fitness, kt, cosmetics, provider) {
+          update: (_, auth, goals, fitness, kt, cosmetics, provider) {
             provider!.bind(
               goalsProvider: goals,
               fitnessProvider: fitness,
               nutritionProvider: kt,
               cosmeticsProvider: cosmetics,
+              authUid: auth.isSignedIn ? auth.user?.id : null,
             );
             return provider;
           },

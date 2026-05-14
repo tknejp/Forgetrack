@@ -26,7 +26,9 @@ import '../domain/models/progression_resolution_result.dart';
 import '../domain/models/quest_display_bucket.dart';
 import '../domain/models/reward_definition.dart';
 import '../domain/repository/ledger_snapshot.dart';
+import '../../../core/logging/app_log.dart';
 import '../domain/repository/progression_engine_repository.dart';
+import '../data/hybrid_progression_engine_repository.dart';
 import 'cosmetic_unlock_bridge.dart';
 import 'daily_section_resolver.dart';
 import 'progression_engine.dart';
@@ -185,10 +187,12 @@ class ProgressionEngineProvider extends ChangeNotifier {
   ProgressionEngineProvider({
     required ProgressionEngine engine,
     required ProgressionEngineRepository repository,
+    HybridProgressionEngineRepository? cloudSync,
     CosmeticUnlockBridge? cosmeticBridge,
     ProgressionLevelPolicy levelPolicy = const ProgressionLevelPolicy(),
   })  : _engine = engine,
         _repository = repository,
+        _cloudSync = cloudSync,
         _cosmeticBridge = cosmeticBridge ?? CosmeticUnlockBridge(),
         _levelPolicy = levelPolicy {
     unawaited(_hydrate());
@@ -196,8 +200,17 @@ class ProgressionEngineProvider extends ChangeNotifier {
 
   final ProgressionEngine _engine;
   final ProgressionEngineRepository _repository;
+  // Optional cloud-sync wrapper. When wired, claims/evaluations push
+  // ledger events through to Firestore (best-effort, idempotent) and
+  // [bindCloudUser] triggers a pull-and-merge so a fresh install /
+  // second device converges to the cloud's state on first sign-in.
+  // Null in tests and any environment without Firestore.
+  final HybridProgressionEngineRepository? _cloudSync;
   final CosmeticUnlockBridge _cosmeticBridge;
   final ProgressionLevelPolicy _levelPolicy;
+
+  String? _boundCloudUid;
+  bool _cloudPullInFlight = false;
   final EngineStreakSource _streakSource = const EngineStreakSource();
   final ObjectiveCatalog _objectiveCatalog = const ObjectiveCatalog();
   final ProgressionNodeCatalog _nodeCatalog = const ProgressionNodeCatalog();
@@ -1528,7 +1541,9 @@ class ProgressionEngineProvider extends ChangeNotifier {
     required FitnessProvider fitnessProvider,
     required KalorickeTabulkyProvider nutritionProvider,
     CosmeticsProvider? cosmeticsProvider,
+    String? authUid,
   }) {
+    bindCloudUser(authUid);
     _source = ProviderEngineInputSource(
       goals: goalsProvider,
       fitness: fitnessProvider,
@@ -1569,6 +1584,64 @@ class ProgressionEngineProvider extends ChangeNotifier {
     }
 
     unawaited(refresh());
+  }
+
+  /// Wires the cloud-sync wrapper to the active user. No-op when
+  /// [_cloudSync] is null (tests / Firestore disabled). On the first
+  /// non-null uid this also kicks a pull-and-merge so a fresh install
+  /// or second device picks up everything claimed elsewhere before
+  /// the engine is asked for its first evaluation.
+  ///
+  /// Re-entrant: if [bind] fires again with the same uid it's cheap
+  /// (the hybrid repo dedupes; pull is gated by [_boundCloudUid]).
+  void bindCloudUser(String? uid) {
+    final cloud = _cloudSync;
+    if (cloud == null) return;
+    cloud.bindUser(uid);
+    if (uid == null || uid.isEmpty) {
+      _boundCloudUid = null;
+      return;
+    }
+    if (_boundCloudUid == uid) return;
+    _boundCloudUid = uid;
+    unawaited(_pullCloudLedger(uid, cloud));
+  }
+
+  Future<void> _pullCloudLedger(
+    String uid,
+    HybridProgressionEngineRepository cloud,
+  ) async {
+    if (_cloudPullInFlight) return;
+    _cloudPullInFlight = true;
+    try {
+      final merged = await cloud.pullAndMerge(uid);
+      // Only adopt the cloud snapshot if the user is still bound to the
+      // same uid by the time the network round-trip resolves — sign-out
+      // mid-pull would otherwise stamp another user's ledger over a
+      // signed-out state.
+      if (_boundCloudUid != uid) return;
+      _ledger = merged;
+      _lastEvaluatedAt = _mostRecentLedgerTimestamp(_ledger);
+      _recomputeStreaks();
+      // Replay historical cosmetic grants into the local CosmeticsProvider.
+      // engine.evaluate() will not re-emit them (the events are already
+      // in the ledger), so without this call a second device sees the
+      // engine state restored but the cosmetics inventory empty.
+      await _cosmeticBridge.reapplyHistoricalCosmetics(merged);
+      // Force re-evaluation: the cloud may have brought new claims
+      // that change available / completed sets.
+      _lastEvaluatedSignature = null;
+      notifyListeners();
+      unawaited(refresh());
+    } catch (error, stackTrace) {
+      AppLog.sync.warn(
+        'engine cloud pull failed',
+        payload: 'uid=$uid error=$error',
+      );
+      AppLog.sync.debug('engine cloud pull stack', payload: stackTrace);
+    } finally {
+      _cloudPullInFlight = false;
+    }
   }
 
   @override
