@@ -9,6 +9,7 @@ import '../../health_connect/application/fitness_provider.dart';
 import '../../nutrition/application/kaloricke_tabulky_provider.dart';
 import '../../nutrition/presentation/widgets/kt_sync_error_banner.dart';
 import '../../settings/presentation/settings_screen.dart';
+import '../application/home_card_order_provider.dart';
 import '../../progression_engine/application/progression_engine_provider.dart';
 import '../../../l10n/l10n.dart';
 import '../../../shared/selected_period.dart';
@@ -257,6 +258,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
     final goals = context.watch<GoalsProvider>();
     final progression = context.watch<ProgressionEngineProvider>();
     final connectivity = context.watch<ConnectivityProvider>();
+    final cardOrder = context.watch<HomeCardOrderProvider>();
 
     final tab = _period.type == PeriodType.week
         ? l10n.periodWeek
@@ -356,6 +358,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
                     onShowCachedKt: () =>
                         setState(() => _showCachedKtAnyway = true),
                     isOnline: connectivity.isOnline,
+                    cardOrder: cardOrder.order,
+                    onReorderCards: cardOrder.reorder,
                     onOpenActivities: widget.onOpenActivities,
                     onOpenSteps: widget.onOpenSteps,
                     onOpenNutrition: widget.onOpenNutrition,
@@ -404,6 +408,8 @@ class _DayContent extends StatelessWidget {
     required this.hasCachedKtData,
     required this.onShowCachedKt,
     required this.isOnline,
+    required this.cardOrder,
+    required this.onReorderCards,
     required this.onOpenActivities,
     required this.onOpenSteps,
     required this.onOpenNutrition,
@@ -430,6 +436,8 @@ class _DayContent extends StatelessWidget {
   final bool hasCachedKtData;
   final VoidCallback onShowCachedKt;
   final bool isOnline;
+  final List<HomeCardKind> cardOrder;
+  final Future<void> Function(int oldIndex, int newIndex) onReorderCards;
   final VoidCallback onOpenActivities;
   final VoidCallback onOpenSteps;
   final VoidCallback onOpenNutrition;
@@ -539,20 +547,12 @@ class _DayContent extends StatelessWidget {
     final showKtOfflineBanner =
         !kt.isLoggedIn && !kt.isInitializing && showCachedKtAnyway;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (!isOnline) ...[
-          _OfflineSourceBanner(
-            message: l10n.homeOfflineBanner,
-            // Tap is a no-op for the system-level offline state — there's
-            // nothing the user can do in-app to restore connectivity.
-            onTap: () {},
-          ),
-          const SizedBox(height: 10),
-        ],
-        if (showHcPrompt)
-          _DataSourcePromptCard(
+    // Each card slot resolves to either its data widget, a prompt /
+    // offline variant, or null when the slot is hidden in the current
+    // app state (weight/activity/sleep collapse into a single HC prompt
+    // when permissions aren't granted).
+    final Widget stepsSlot = showHcPrompt
+        ? _DataSourcePromptCard(
             logoAsset: 'assets/icons/hc/health_connect_logo.png',
             accentColor: Tokens.weight.color,
             title: hcUnavailable
@@ -569,52 +569,56 @@ class _DayContent extends StatelessWidget {
             onAction: onHcAction,
             onShowCached: hasCachedHcData ? onShowCachedHc : null,
           )
-        else ...[
-          if (showHcOfflineBanner) ...[
-            _OfflineSourceBanner(
-              message: l10n.healthOfflineNotice,
-              onTap: onHcAction,
-            ),
-            const SizedBox(height: 10),
-          ],
-          StatCard(
-            icon: '\uD83E\uDD7E',
-            label: l10n.stepsTitle,
-            domain: Tokens.steps,
-          visualAssets: DashboardCardAssetResolver.forKind(
-            DashboardCardKind.steps,
-          ),
-          stats: [
-            StatStat(value: fmt.format(steps), label: l10n.stepsTitle),
-            StatStat(
-              value: fmt.format(stepsGoal),
-              label: l10n.stepsGoal,
-            ),
-            StatStat(
-              value:
-                  period.type == PeriodType.day ? fmt.format(stepsLeft) : '--',
-              label: period.type == PeriodType.day ? l10n.stepsRemaining : '',
-            ),
-          ],
-          progress: stepsProgress,
-          badge: '${(stepsProgress * 100).round()}%',
-          xpData: questPillData('daily_steps_today'),
-          claimedXpLabel: l10n.progQuestStatusClaimed,
-          children: [
-            DetailShortcutButton(
-              onTap: onOpenSteps,
-              domain: Tokens.steps,
-            ),
-          ],
-        ),
-        ],
-        const SizedBox(height: 10),
-        if (showKtPrompt)
-          _DataSourcePromptCard(
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (showHcOfflineBanner) ...[
+                _OfflineSourceBanner(
+                  message: l10n.healthOfflineNotice,
+                  onTap: onHcAction,
+                ),
+                const SizedBox(height: 10),
+              ],
+              StatCard(
+                icon: '🥾',
+                label: l10n.stepsTitle,
+                domain: Tokens.steps,
+                visualAssets: DashboardCardAssetResolver.forKind(
+                  DashboardCardKind.steps,
+                ),
+                stats: [
+                  StatStat(value: fmt.format(steps), label: l10n.stepsTitle),
+                  StatStat(
+                    value: fmt.format(stepsGoal),
+                    label: l10n.stepsGoal,
+                  ),
+                  StatStat(
+                    value: period.type == PeriodType.day
+                        ? fmt.format(stepsLeft)
+                        : '--',
+                    label: period.type == PeriodType.day
+                        ? l10n.stepsRemaining
+                        : '',
+                  ),
+                ],
+                progress: stepsProgress,
+                badge: '${(stepsProgress * 100).round()}%',
+                xpData: questPillData('daily_steps_today'),
+                claimedXpLabel: l10n.progQuestStatusClaimed,
+                children: [
+                  DetailShortcutButton(
+                    onTap: onOpenSteps,
+                    domain: Tokens.steps,
+                  ),
+                ],
+              ),
+            ],
+          );
+
+    final Widget caloriesSlot = showKtPrompt
+        ? _DataSourcePromptCard(
             logoAsset: 'assets/icons/kt/kaloricke_tabulky.png',
-            // Warm grass-green sampled from the KT logo
-            // (assets/icons/kt/kaloricke_tabulky.png) — Material Light
-            // Green 600. Tokens.steps emerald is too cool/teal here.
             accentColor: const Color(0xFF7AB342),
             title: l10n.caloriesTodayTitle,
             body: l10n.ktLoginPrompt,
@@ -626,235 +630,315 @@ class _DayContent extends StatelessWidget {
             ),
             onShowCached: hasCachedKtData ? onShowCachedKt : null,
           )
-        else ...[
-          if (showKtOfflineBanner) ...[
-            _OfflineSourceBanner(
-              message: l10n.ktOfflineNotice,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SettingsScreen()),
-              ),
-            ),
-            const SizedBox(height: 10),
-          ],
-          if (kt.isLoggedIn && kt.syncError != null) ...[
-            KtSyncErrorBanner(
-              onRetry: () => kt.refreshRange(period.start, period.end),
-            ),
-            const SizedBox(height: 10),
-          ],
-          StatCard(
-            icon: '\uD83D\uDD25',
-            label: period.type == PeriodType.day
-                ? l10n.caloriesTodayTitle
-                : l10n.caloriesAvgPerDay,
-          domain: Tokens.calories,
-          visualAssets: DashboardCardAssetResolver.forKind(
-            DashboardCardKind.nutrition,
-          ),
-          stats: [
-            StatStat(
-              value: fmt.format(kcal.round()),
-              label: l10n.caloriesConsumed,
-              unit: 'kcal',
-            ),
-            StatStat(
-              value: fmt.format(kcalGoal.round()),
-              label: l10n.weightGoal,
-              unit: 'kcal',
-            ),
-            StatStat(
-              value:
-                  '${kcalDiff >= 0 ? '+' : ''}${fmt.format(kcalDiff.round())}',
-              label:
-                  kcalDiff >= 0 ? l10n.caloriesBurned : l10n.caloriesRemaining,
-              unit: 'kcal',
-            ),
-          ],
-          progress: kcalProgress,
-          badge: '$kcalPct%',
-          xpData: questPillData('daily_calories_today'),
-          claimedXpLabel: l10n.progQuestStatusClaimed,
-          children: [
-            const SizedBox(height: Tokens.spaceMd),
-            if (nutritionHasDetails) ...[
-              MacroRow(
-                label: l10n.macroProtein,
-                value: protein,
-                goal: goals.dailyProtein,
-                unit: 'g',
-                domain: Tokens.protein,
-                xpData: questPillData('daily_protein_today'),
-                claimedXpLabel: l10n.progQuestStatusClaimed,
-              ),
-              MacroRow(
-                label: l10n.macroCarbs,
-                value: carbs,
-                goal: goals.dailyCarbs,
-                unit: 'g',
-                domain: Tokens.carbs,
-                xpData: questPillData('daily_carbs_today'),
-                claimedXpLabel: l10n.progQuestStatusClaimed,
-              ),
-              MacroRow(
-                label: l10n.macroFat,
-                value: fat,
-                goal: goals.dailyFat,
-                unit: 'g',
-                domain: Tokens.fat,
-                xpData: questPillData('daily_fat_today'),
-                claimedXpLabel: l10n.progQuestStatusClaimed,
-              ),
-              MacroRow(
-                // Fiber is a daily goal but `GoalsProvider` doesn't yet
-                // expose a configurable value — the engine's
-                // `EngineGoalSet.dailyFiberGrams` default is 30g and the
-                // catalog's `daily_fiber` objective targets that. Keep
-                // the home row aligned with what the engine evaluates
-                // until the goal becomes user-editable.
-                label: 'Fiber',
-                value: fiber,
-                goal: 30,
-                unit: 'g',
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (showKtOfflineBanner) ...[
+                _OfflineSourceBanner(
+                  message: l10n.ktOfflineNotice,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const SettingsScreen()),
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+              if (kt.isLoggedIn && kt.syncError != null) ...[
+                KtSyncErrorBanner(
+                  onRetry: () => kt.refreshRange(period.start, period.end),
+                ),
+                const SizedBox(height: 10),
+              ],
+              StatCard(
+                icon: '🔥',
+                label: period.type == PeriodType.day
+                    ? l10n.caloriesTodayTitle
+                    : l10n.caloriesAvgPerDay,
                 domain: Tokens.calories,
-                isLast: true,
-                xpData: questPillData('daily_fiber_today'),
+                visualAssets: DashboardCardAssetResolver.forKind(
+                  DashboardCardKind.nutrition,
+                ),
+                stats: [
+                  StatStat(
+                    value: fmt.format(kcal.round()),
+                    label: l10n.caloriesConsumed,
+                    unit: 'kcal',
+                  ),
+                  StatStat(
+                    value: fmt.format(kcalGoal.round()),
+                    label: l10n.weightGoal,
+                    unit: 'kcal',
+                  ),
+                  StatStat(
+                    value:
+                        '${kcalDiff >= 0 ? '+' : ''}${fmt.format(kcalDiff.round())}',
+                    label: kcalDiff >= 0
+                        ? l10n.caloriesBurned
+                        : l10n.caloriesRemaining,
+                    unit: 'kcal',
+                  ),
+                ],
+                progress: kcalProgress,
+                badge: '$kcalPct%',
+                xpData: questPillData('daily_calories_today'),
                 claimedXpLabel: l10n.progQuestStatusClaimed,
-              ),
-              const SizedBox(height: Tokens.spaceMd),
-              _NutritionDetailTile(
-                label: l10n.caloriesRemaining,
-                value: '${remainingToTarget.abs().round()} kcal',
-                color: remainingToTarget >= 0
-                    ? Tokens.calories.color
-                    : Tokens.danger,
+                children: [
+                  const SizedBox(height: Tokens.spaceMd),
+                  if (nutritionHasDetails) ...[
+                    MacroRow(
+                      label: l10n.macroProtein,
+                      value: protein,
+                      goal: goals.dailyProtein,
+                      unit: 'g',
+                      domain: Tokens.protein,
+                      xpData: questPillData('daily_protein_today'),
+                      claimedXpLabel: l10n.progQuestStatusClaimed,
+                    ),
+                    MacroRow(
+                      label: l10n.macroCarbs,
+                      value: carbs,
+                      goal: goals.dailyCarbs,
+                      unit: 'g',
+                      domain: Tokens.carbs,
+                      xpData: questPillData('daily_carbs_today'),
+                      claimedXpLabel: l10n.progQuestStatusClaimed,
+                    ),
+                    MacroRow(
+                      label: l10n.macroFat,
+                      value: fat,
+                      goal: goals.dailyFat,
+                      unit: 'g',
+                      domain: Tokens.fat,
+                      xpData: questPillData('daily_fat_today'),
+                      claimedXpLabel: l10n.progQuestStatusClaimed,
+                    ),
+                    MacroRow(
+                      label: 'Fiber',
+                      value: fiber,
+                      goal: 30,
+                      unit: 'g',
+                      domain: Tokens.calories,
+                      isLast: true,
+                      xpData: questPillData('daily_fiber_today'),
+                      claimedXpLabel: l10n.progQuestStatusClaimed,
+                    ),
+                    const SizedBox(height: Tokens.spaceMd),
+                    _NutritionDetailTile(
+                      label: l10n.caloriesRemaining,
+                      value: '${remainingToTarget.abs().round()} kcal',
+                      color: remainingToTarget >= 0
+                          ? Tokens.calories.color
+                          : Tokens.danger,
+                    ),
+                  ],
+                  DetailShortcutButton(
+                    onTap: onOpenNutrition,
+                    domain: Tokens.calories,
+                  ),
+                ],
               ),
             ],
-            DetailShortcutButton(
-              onTap: onOpenNutrition,
-              domain: Tokens.calories,
+          );
+
+    final Widget? weightSlot = showHcPrompt
+        ? null
+        : StatCard(
+            icon: '⚖',
+            label: l10n.weightTitle,
+            domain: Tokens.weight,
+            visualAssets: DashboardCardAssetResolver.forKind(
+              DashboardCardKind.weight,
             ),
-          ],
-        ),
+            stats: [
+              StatStat(
+                value: weightForPeriod?.toStringAsFixed(1) ?? '--',
+                label: period.type == PeriodType.day
+                    ? l10n.bodyCurrentWeight
+                    : l10n.weightAverage,
+                unit: 'kg',
+              ),
+              StatStat(
+                value: weightChange != null
+                    ? '${weightChange >= 0 ? '+' : ''}${weightChange.toStringAsFixed(1)}'
+                    : '--',
+                label: period.type == PeriodType.week
+                    ? l10n.weightVsPrevWeek
+                    : period.type == PeriodType.month
+                        ? l10n.weightVsPrevMonth
+                        : l10n.weightVsPrevMeasure,
+                unit: 'kg',
+              ),
+            ],
+            showProgress: false,
+            xpData: questPillData('daily_weight_log_today', dayOnly: false),
+            claimedXpLabel: l10n.progQuestStatusClaimed,
+            children: [
+              DetailShortcutButton(
+                onTap: onOpenBody,
+                domain: Tokens.weight,
+              ),
+            ],
+          );
+
+    final Widget? activitySlot = showHcPrompt
+        ? null
+        : StatCard(
+            icon: '⚡',
+            label: l10n.activitiesActiveMins,
+            // Home-only crimson override; the rest of the activity
+            // domain (progression pills, quests, journey) keeps the
+            // standard teal via Tokens.active.
+            domain: Tokens.activityCard,
+            visualAssets: DashboardCardAssetResolver.forKind(
+              DashboardCardKind.activity,
+            ),
+            stats: [
+              StatStat(
+                value: fmt.format(activeMinutes),
+                label: l10n.activitiesActiveMins,
+                unit: 'min',
+              ),
+              StatStat(
+                value: fmt.format(activityGoal),
+                label: l10n.stepsGoal,
+                unit: 'min',
+              ),
+              StatStat(
+                value: fmt.format(periodActivities.length),
+                label: l10n.activitiesWorkouts,
+              ),
+            ],
+            progress: activityProgress,
+            badge: '${(activityProgress * 100).round()}%',
+            xpData: questPillData('daily_activity_today', dayOnly: false),
+            claimedXpLabel: l10n.progQuestStatusClaimed,
+            children: [
+              DetailShortcutButton(
+                onTap: onOpenActivities,
+                domain: Tokens.activityCard,
+              ),
+            ],
+          );
+
+    final Widget? sleepSlot = showHcPrompt
+        ? null
+        : StatCard(
+            icon: '🌙',
+            label: l10n.sleepTitle,
+            domain: Tokens.sleep,
+            visualAssets: DashboardCardAssetResolver.forKind(
+              DashboardCardKind.sleep,
+            ),
+            stats: [
+              StatStat(
+                value: fmtSleep(sleepDuration),
+                label: l10n.sleepDuration,
+              ),
+              StatStat(
+                value: sleep?.sleepStart != null
+                    ? DateFormat('HH:mm', locale).format(sleep!.sleepStart)
+                    : '--',
+                label: l10n.sleepFellAsleep,
+              ),
+              StatStat(
+                value: sleep?.wakeTime != null
+                    ? DateFormat('HH:mm', locale).format(sleep!.wakeTime)
+                    : '--',
+                label: l10n.sleepWokeUp,
+              ),
+            ],
+            progress: sleepProgress,
+            badge: sleepDuration != null
+                ? '${(sleepProgress * 100).round()}%'
+                : null,
+            xpData: questPillData('daily_sleep_today'),
+            claimedXpLabel: l10n.progQuestStatusClaimed,
+            children: [
+              DetailShortcutButton(
+                onTap: onOpenSleep,
+                domain: Tokens.sleep,
+              ),
+            ],
+          );
+
+    final slots = <HomeCardKind, Widget?>{
+      HomeCardKind.steps: stepsSlot,
+      HomeCardKind.calories: caloriesSlot,
+      HomeCardKind.weight: weightSlot,
+      HomeCardKind.activity: activitySlot,
+      HomeCardKind.sleep: sleepSlot,
+    };
+
+    // Walk the user's stored order; drop slots hidden in the current
+    // state but keep their position in the prefs so the cards reappear
+    // in their preferred slot once the source becomes available again.
+    final visibleKinds = <HomeCardKind>[];
+    final visibleWidgets = <Widget>[];
+    for (final kind in cardOrder) {
+      final w = slots[kind];
+      if (w != null) {
+        visibleKinds.add(kind);
+        visibleWidgets.add(w);
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (!isOnline) ...[
+          _OfflineSourceBanner(
+            message: l10n.homeOfflineBanner,
+            // Tap is a no-op for the system-level offline state — there's
+            // nothing the user can do in-app to restore connectivity.
+            onTap: () {},
+          ),
+          const SizedBox(height: 10),
         ],
-        if (!showHcPrompt) ...[
-        const SizedBox(height: 10),
-        StatCard(
-          icon: '\u2696',
-          label: l10n.weightTitle,
-          domain: Tokens.weight,
-          visualAssets: DashboardCardAssetResolver.forKind(
-            DashboardCardKind.weight,
+        if (visibleWidgets.isNotEmpty)
+          ReorderableListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            // Whole-card long-press drag instead of visible side handles.
+            buildDefaultDragHandles: false,
+            itemCount: visibleWidgets.length,
+            itemBuilder: (ctx, i) {
+              final isLast = i == visibleWidgets.length - 1;
+              return ReorderableDelayedDragStartListener(
+                key: ValueKey(visibleKinds[i]),
+                index: i,
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: isLast ? 0 : 10),
+                  child: visibleWidgets[i],
+                ),
+              );
+            },
+            // Lift the dragged card so the user gets clear feedback.
+            proxyDecorator: (child, index, anim) => Material(
+              color: Colors.transparent,
+              elevation: 8,
+              shadowColor: Colors.black.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(Tokens.radiusCard),
+              child: child,
+            ),
+            onReorder: (oldIndex, newIndex) {
+              // ReorderableListView reports newIndex post-removal of the
+              // dragged item, so subtract 1 when moving downward.
+              var actualNew = newIndex;
+              if (newIndex > oldIndex) actualNew -= 1;
+              final fromKind = visibleKinds[oldIndex];
+              final toKind = visibleKinds[actualNew];
+              final fromAbs = cardOrder.indexOf(fromKind);
+              final toAbs = cardOrder.indexOf(toKind);
+              unawaited(onReorderCards(fromAbs, toAbs));
+            },
           ),
-          stats: [
-            StatStat(
-              value: weightForPeriod?.toStringAsFixed(1) ?? '--',
-              label: period.type == PeriodType.day
-                  ? l10n.bodyCurrentWeight
-                  : l10n.weightAverage,
-              unit: 'kg',
-            ),
-            StatStat(
-              value: weightChange != null
-                  ? '${weightChange >= 0 ? '+' : ''}${weightChange.toStringAsFixed(1)}'
-                  : '--',
-              label: period.type == PeriodType.week
-                  ? l10n.weightVsPrevWeek
-                  : period.type == PeriodType.month
-                      ? l10n.weightVsPrevMonth
-                      : l10n.weightVsPrevMeasure,
-              unit: 'kg',
-            ),
-          ],
-          showProgress: false,
-          xpData: questPillData('daily_weight_log_today', dayOnly: false),
-          claimedXpLabel: l10n.progQuestStatusClaimed,
-          children: [
-            DetailShortcutButton(
-              onTap: onOpenBody,
-              domain: Tokens.weight,
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        StatCard(
-          icon: '\u26A1',
-          label: l10n.activitiesActiveMins,
-          domain: Tokens.active,
-          visualAssets: DashboardCardAssetResolver.forKind(
-            DashboardCardKind.activity,
-          ),
-          stats: [
-            StatStat(
-              value: fmt.format(activeMinutes),
-              label: l10n.activitiesActiveMins,
-              unit: 'min',
-            ),
-            StatStat(
-              value: fmt.format(activityGoal),
-              label: l10n.stepsGoal,
-              unit: 'min',
-            ),
-            StatStat(
-              value: fmt.format(periodActivities.length),
-              label: l10n.activitiesWorkouts,
-            ),
-          ],
-          progress: activityProgress,
-          badge: '${(activityProgress * 100).round()}%',
-          xpData: questPillData('daily_activity_today', dayOnly: false),
-          claimedXpLabel: l10n.progQuestStatusClaimed,
-          children: [
-            DetailShortcutButton(
-              onTap: onOpenActivities,
-              domain: Tokens.active,
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        StatCard(
-          icon: '\uD83C\uDF19',
-          label: l10n.sleepTitle,
-          domain: Tokens.sleep,
-          visualAssets: DashboardCardAssetResolver.forKind(
-            DashboardCardKind.sleep,
-          ),
-          stats: [
-            StatStat(
-              value: fmtSleep(sleepDuration),
-              label: l10n.sleepDuration,
-            ),
-            StatStat(
-              value: sleep?.sleepStart != null
-                  ? DateFormat('HH:mm', locale).format(sleep!.sleepStart)
-                  : '--',
-              label: l10n.sleepFellAsleep,
-            ),
-            StatStat(
-              value: sleep?.wakeTime != null
-                  ? DateFormat('HH:mm', locale).format(sleep!.wakeTime)
-                  : '--',
-              label: l10n.sleepWokeUp,
-            ),
-          ],
-          progress: sleepProgress,
-          badge: sleepDuration != null
-              ? '${(sleepProgress * 100).round()}%'
-              : null,
-          xpData: questPillData('daily_sleep_today'),
-          claimedXpLabel: l10n.progQuestStatusClaimed,
-          children: [
-            DetailShortcutButton(
-              onTap: onOpenSleep,
-              domain: Tokens.sleep,
-            ),
-          ],
-        ),
-        ],
       ],
     );
   }
 }
+
 
 class _NutritionDetailTile extends StatelessWidget {
   final String label;

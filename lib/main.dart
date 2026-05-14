@@ -48,6 +48,7 @@ import 'features/nutrition/data/calorie_api_service.dart';
 import 'features/nutrition/data/kaloricke_tabulky_service.dart';
 import 'features/nutrition/data/local/kt_nutrition_database.dart';
 import 'features/health_connect/application/fitness_provider.dart';
+import 'features/home/application/home_card_order_provider.dart';
 import 'features/health_connect/data/health_connect_service.dart';
 import 'features/health_connect/data/local/health_database.dart';
 import 'features/health_connect/application/goals_provider.dart';
@@ -112,6 +113,9 @@ Future<void> main() async {
   // restore fails.
   final connectivityProvider = ConnectivityProvider();
   unawaited(connectivityProvider.init());
+
+  final homeCardOrderProvider = HomeCardOrderProvider();
+  await homeCardOrderProvider.init();
   final socialBackendState = await SocialFirebaseBootstrap.ensureInitialized();
   // Once Firebase is up, gate Firestore's network on real connectivity so
   // the SDK doesn't burn battery retrying gRPC streams under Doze / airplane
@@ -208,6 +212,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => CalorieProvider(calorieApi)),
         ChangeNotifierProvider.value(value: ktProvider),
         ChangeNotifierProvider.value(value: connectivityProvider),
+        ChangeNotifierProvider.value(value: homeCardOrderProvider),
         ChangeNotifierProvider(create: (_) => SheetsExportProvider()),
         ChangeNotifierProvider.value(value: bushidoExportProvider),
         ChangeNotifierProvider.value(value: devToolsProvider),

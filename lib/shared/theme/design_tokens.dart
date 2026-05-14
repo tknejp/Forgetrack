@@ -251,6 +251,21 @@ abstract final class Tokens {
     gradStart: Color(0x382DD4BF),
     gradEnd: Color(0x0F14B8A6),
   );
+
+  // Card-specific override for the home overview's activity tile.
+  // Soft coral-crimson (Tailwind red-400) — warm but not aggressive,
+  // picked so the home card stack isn't dominated by green-leaning
+  // tones (steps emerald + KT grass already cover the green band).
+  // Distinct from [active] on purpose: progression pills, quests,
+  // journey cards, and the activities screen all keep the established
+  // teal so this is purely a home-card visual cue.
+  static const Domain activityCard = Domain(
+    color: Color(0xFFF87171),
+    dim: Color(0x2EF87171),
+    glow: Color(0x40F87171),
+    gradStart: Color(0x38F87171),
+    gradEnd: Color(0x0FEF4444),
+  );
   static const Domain protein = Domain(
     color: Color(0xFF60A5FA),
     dim: Color(0x2E60A5FA),
