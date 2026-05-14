@@ -54,6 +54,7 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
   bool _isInitializing = false;
   bool _isLoading = false;
   bool _isRefreshing = false;
+  bool _hasStoredCredentials = false;
 
   String? _authError;
   String? _syncError;
@@ -69,6 +70,14 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
   bool get isInitializing => _isInitializing;
   bool get isLoading => _isLoading;
   bool get isRefreshing => _isRefreshing;
+
+  /// True when KT credentials are persisted on the device, regardless of
+  /// whether the current session is live. Lets the UI distinguish "user
+  /// is set up but offline" (don't prompt to reconnect) from "user has
+  /// never logged in" (show the connect prompt). Set early in
+  /// [initialize] before [restoreSession] so it stays accurate even when
+  /// the login POST fails (e.g. airplane mode).
+  bool get hasStoredCredentials => _hasStoredCredentials;
 
   String? get authError => _authError;
   String? get syncError => _syncError;
@@ -263,6 +272,12 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
 
     // Show cached today immediately so the UI isn't empty during network fetch.
     _loadTodayFromStore(reason: 'initialize-start');
+
+    // Resolve credential presence before the network call so a flaky
+    // restoreSession() can't make the UI think the user is logged out.
+    final storedEmail = await _service.storedEmail();
+    _hasStoredCredentials = storedEmail != null;
+    _loggedInEmail = storedEmail;
     notifyListeners();
 
     try {
@@ -315,6 +330,7 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
     try {
       await _service.login(email, password);
       _loggedInEmail = email;
+      _hasStoredCredentials = true;
       await _doSyncRecentDays();
       _triggerInitialHistoryIfNeeded();
     } on KtAuthException catch (e) {
@@ -579,6 +595,10 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
     _loggedInEmail = null;
     _today = null;
     _lastSyncedAt = null;
+    // Every caller of _resetLocalData reaches this point only after the
+    // service-side credentials have been wiped (explicit logout() or
+    // KtAuthException paths). Keep the flag in sync.
+    _hasStoredCredentials = false;
 
     if (!keepErrors) {
       _authError = null;

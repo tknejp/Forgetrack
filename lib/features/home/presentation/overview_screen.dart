@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/services/connectivity_provider.dart';
 import '../../health_connect/application/fitness_provider.dart';
 import '../../nutrition/application/kaloricke_tabulky_provider.dart';
 import '../../nutrition/presentation/widgets/kt_sync_error_banner.dart';
@@ -255,6 +256,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
     final kt = context.watch<KalorickeTabulkyProvider>();
     final goals = context.watch<GoalsProvider>();
     final progression = context.watch<ProgressionEngineProvider>();
+    final connectivity = context.watch<ConnectivityProvider>();
 
     final tab = _period.type == PeriodType.week
         ? l10n.periodWeek
@@ -353,6 +355,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
                     hasCachedKtData: kt.hasCachedNutrition,
                     onShowCachedKt: () =>
                         setState(() => _showCachedKtAnyway = true),
+                    isOnline: connectivity.isOnline,
                     onOpenActivities: widget.onOpenActivities,
                     onOpenSteps: widget.onOpenSteps,
                     onOpenNutrition: widget.onOpenNutrition,
@@ -400,6 +403,7 @@ class _DayContent extends StatelessWidget {
     required this.showCachedKtAnyway,
     required this.hasCachedKtData,
     required this.onShowCachedKt,
+    required this.isOnline,
     required this.onOpenActivities,
     required this.onOpenSteps,
     required this.onOpenNutrition,
@@ -425,6 +429,7 @@ class _DayContent extends StatelessWidget {
   final bool showCachedKtAnyway;
   final bool hasCachedKtData;
   final VoidCallback onShowCachedKt;
+  final bool isOnline;
   final VoidCallback onOpenActivities;
   final VoidCallback onOpenSteps;
   final VoidCallback onOpenNutrition;
@@ -523,15 +528,29 @@ class _DayContent extends StatelessWidget {
     final hcUnavailable = fitness.accessState == FitnessAccessState.unavailable;
     // Suppress the KT prompt while restoreSession() is still running so
     // the user doesn't see a flash of "sign in to KT" on cold start when
-    // they already have stored credentials. Mirrors the hcChecking guard.
-    final showKtPrompt =
-        !kt.isLoggedIn && !kt.isInitializing && !showCachedKtAnyway;
+    // they already have stored credentials. Same suppression applies
+    // when credentials exist but the network is unreachable — pushing
+    // the user to a sign-in flow they can't complete is worse than
+    // letting them stay in their connected-but-offline state.
+    final showKtPrompt = !kt.isLoggedIn &&
+        !kt.isInitializing &&
+        !kt.hasStoredCredentials &&
+        !showCachedKtAnyway;
     final showKtOfflineBanner =
         !kt.isLoggedIn && !kt.isInitializing && showCachedKtAnyway;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (!isOnline) ...[
+          _OfflineSourceBanner(
+            message: l10n.homeOfflineBanner,
+            // Tap is a no-op for the system-level offline state — there's
+            // nothing the user can do in-app to restore connectivity.
+            onTap: () {},
+          ),
+          const SizedBox(height: 10),
+        ],
         if (showHcPrompt)
           _DataSourcePromptCard(
             logoAsset: 'assets/icons/hc/health_connect_logo.png',

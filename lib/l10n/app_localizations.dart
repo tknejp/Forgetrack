@@ -800,6 +800,12 @@ abstract class AppLocalizations {
   /// **'Showing saved data — tap to set up Health Connect'**
   String get healthOfflineNotice;
 
+  /// Inline banner shown on the home overview when the device has no network connectivity, so users know data may be stale
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re offline — showing saved data'**
+  String get homeOfflineBanner;
+
   /// Inline banner shown above the calorie card when the user opted into viewing cached nutrition data instead of logging in
   ///
   /// In en, this message translates to:

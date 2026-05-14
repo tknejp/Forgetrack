@@ -381,6 +381,9 @@ class AppLocalizationsCs extends AppLocalizations {
       'Zobrazují se uložená data — klepnutím nastavte Health Connect';
 
   @override
+  String get homeOfflineBanner => 'Jste offline — zobrazují se uložená data';
+
+  @override
   String get ktOfflineNotice =>
       'Zobrazují se uložená data — klepnutím připojte Kalorické Tabulky';
 

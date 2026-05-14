@@ -380,6 +380,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Showing saved data — tap to set up Health Connect';
 
   @override
+  String get homeOfflineBanner => 'You\'re offline — showing saved data';
+
+  @override
   String get ktOfflineNotice =>
       'Showing saved data — tap to connect Kalorické Tabulky';
 

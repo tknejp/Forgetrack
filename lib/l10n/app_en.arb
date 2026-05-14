@@ -356,6 +356,9 @@
   "healthOfflineNotice": "Showing saved data — tap to set up Health Connect",
   "@healthOfflineNotice": { "description": "Inline banner shown above HC-driven cards when user opted into viewing cached data instead of granting permissions" },
 
+  "homeOfflineBanner": "You're offline — showing saved data",
+  "@homeOfflineBanner": { "description": "Inline banner shown on the home overview when the device has no network connectivity, so users know data may be stale" },
+
   "ktOfflineNotice": "Showing saved data — tap to connect Kalorické Tabulky",
   "@ktOfflineNotice": { "description": "Inline banner shown above the calorie card when the user opted into viewing cached nutrition data instead of logging in" },
 

@@ -14,6 +14,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'core/services/background_sync_service.dart';
+import 'core/services/connectivity_provider.dart';
 import 'core/services/fcm_service.dart';
 import 'core/services/firestore_network_gate.dart';
 import 'core/services/notification_service.dart';
@@ -104,6 +105,13 @@ Future<void> main() async {
   );
 
   final ktProvider = KalorickeTabulkyProvider(ktService, ktDb);
+
+  // Single source of truth for network availability — backs the home
+  // offline banner and lets data-source providers decide whether to
+  // surface "you're offline" instead of "connect this source" when a
+  // restore fails.
+  final connectivityProvider = ConnectivityProvider();
+  unawaited(connectivityProvider.init());
   final socialBackendState = await SocialFirebaseBootstrap.ensureInitialized();
   // Once Firebase is up, gate Firestore's network on real connectivity so
   // the SDK doesn't burn battery retrying gRPC streams under Doze / airplane
@@ -199,6 +207,7 @@ Future<void> main() async {
         ChangeNotifierProvider.value(value: fitnessProvider),
         ChangeNotifierProvider(create: (_) => CalorieProvider(calorieApi)),
         ChangeNotifierProvider.value(value: ktProvider),
+        ChangeNotifierProvider.value(value: connectivityProvider),
         ChangeNotifierProvider(create: (_) => SheetsExportProvider()),
         ChangeNotifierProvider.value(value: bushidoExportProvider),
         ChangeNotifierProvider.value(value: devToolsProvider),
