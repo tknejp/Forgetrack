@@ -17,6 +17,7 @@ import '../data/social_firebase_bootstrap.dart';
 import '../data/social_firebase_session.dart';
 import '../domain/social_models.dart';
 import '../domain/social_repository.dart';
+import 'profile_photo_precache.dart';
 
 class SocialProvider extends ChangeNotifier {
   SocialProvider({
@@ -108,6 +109,11 @@ class SocialProvider extends ChangeNotifier {
     final authSignature = _buildAuthSignature(authProvider);
     if (authSignature != _lastAuthSignature) {
       _lastAuthSignature = authSignature;
+      // Warm the image cache with the Auth photoUrl as soon as the user
+      // is known. This URL is the hero header's fallback before the
+      // Firestore profile arrives — precaching here means the avatar
+      // paints synchronously on first navigate to the home screen.
+      precacheProfilePhoto(authProvider.user?.photoUrl);
       unawaited(_reconcileSession());
     }
 
@@ -631,6 +637,11 @@ class SocialProvider extends ChangeNotifier {
 
       _lastProfileSignature = signature;
       _error = null;
+
+      // Once the Firestore profile is the source of truth for the
+      // hero header's photoUrl, prime the image cache with it so the
+      // first widget mount renders without a placeholder frame.
+      precacheProfilePhoto(payload.photoUrl);
 
       AppLog.social.debug(
         'Profile synced',

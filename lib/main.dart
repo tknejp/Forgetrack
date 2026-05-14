@@ -207,7 +207,15 @@ Future<void> main() async {
         ChangeNotifierProvider.value(value: localeProvider),
         ChangeNotifierProvider.value(value: notificationPreferencesProvider),
         ChangeNotifierProvider.value(value: goalsProvider),
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(
+          // Eager: AuthProvider listens to FirebaseAuth state changes from
+          // construction time. If we let it stay lazy, Firestore-dependent
+          // providers downstream (Social, Cosmetics) wait for first widget
+          // read before they even start their cold-start hydration round-trip,
+          // so the home screen briefly renders empty until streams catch up.
+          lazy: false,
+          create: (_) => AuthProvider(),
+        ),
         ChangeNotifierProvider.value(value: fitnessProvider),
         ChangeNotifierProvider(create: (_) => CalorieProvider(calorieApi)),
         ChangeNotifierProvider.value(value: ktProvider),
@@ -218,6 +226,9 @@ Future<void> main() async {
         ChangeNotifierProvider.value(value: devToolsProvider),
         ChangeNotifierProvider.value(value: onboardingProvider),
         ChangeNotifierProxyProvider<AuthProvider, CosmeticsProvider>(
+          // Eager so cosmetic entitlements load + Isar state hydrate kick off
+          // immediately at app boot rather than at first widget read.
+          lazy: false,
           create: (_) => CosmeticsProvider(
             service: cosmeticsService,
             entitlementsSource: cosmeticEntitlementsSource,
@@ -233,6 +244,10 @@ Future<void> main() async {
         ChangeNotifierProxyProvider4<GoalsProvider, FitnessProvider,
             KalorickeTabulkyProvider, CosmeticsProvider,
             ProgressionEngineProvider>(
+          // Eager: provider's constructor calls `_hydrate()` which loads the
+          // Isar ledger. We want that running in parallel with Cosmetics +
+          // Social so the home header doesn't wait on it.
+          lazy: false,
           create: (_) => ProgressionEngineProvider(
             engine: progressionEngineV2,
             repository: progressionEngineRepo,
@@ -249,6 +264,11 @@ Future<void> main() async {
         ),
         ChangeNotifierProxyProvider3<AuthProvider, ProgressionEngineProvider,
             CosmeticsProvider, SocialProvider>(
+          // Eager: starts Firestore session reconcile + friend / profile
+          // stream subscriptions during boot. Without this, the hero profile
+          // header on the home screen sees a blank avatar for 100-500 ms
+          // until a widget first reads SocialProvider and triggers create().
+          lazy: false,
           create: (_) => SocialProvider(
             repository: socialRepository,
             session: socialSession,

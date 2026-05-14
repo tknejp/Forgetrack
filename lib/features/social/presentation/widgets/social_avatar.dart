@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../shared/theme/design_tokens.dart';
@@ -30,6 +31,8 @@ class SocialAvatar extends StatelessWidget {
         .take(2)
         .join();
 
+    final initialsWidget = _Initials(initials: initials, color: c, size: size);
+
     return Container(
       width: size,
       height: size,
@@ -40,13 +43,18 @@ class SocialAvatar extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: photoUrl != null
-          ? Image.network(
-              photoUrl!,
+          ? Image(
+              // Image+CachedNetworkImageProvider renders synchronously when
+              // the bitmap is in Flutter's in-memory imageCache (warmed by
+              // precacheProfilePhoto on cold start). Falls back to the
+              // initials only when the load actually fails — no explicit
+              // placeholder frame between widget mount and image paint.
+              image: CachedNetworkImageProvider(photoUrl!),
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) =>
-                  _Initials(initials: initials, color: c, size: size),
+              gaplessPlayback: true,
+              errorBuilder: (_, __, ___) => initialsWidget,
             )
-          : _Initials(initials: initials, color: c, size: size),
+          : initialsWidget,
     );
   }
 }
