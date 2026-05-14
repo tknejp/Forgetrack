@@ -373,6 +373,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get healthRetry => 'Retry';
 
   @override
+  String get healthShowCachedData => 'Show saved data';
+
+  @override
+  String get healthOfflineNotice =>
+      'Showing saved data — tap to set up Health Connect';
+
+  @override
+  String get ktOfflineNotice =>
+      'Showing saved data — tap to connect Kalorické Tabulky';
+
+  @override
   String healthLastSynced(String time) {
     return 'Synced: $time';
   }

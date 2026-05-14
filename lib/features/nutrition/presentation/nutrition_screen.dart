@@ -18,6 +18,7 @@ import '../../../shared/widgets/swipe_period_gesture.dart';
 import '../../../shared/widgets/trend_chart.dart';
 import '../application/kaloricke_tabulky_provider.dart';
 import '../data/kaloricke_tabulky_service.dart';
+import 'widgets/kt_sync_error_banner.dart';
 
 /// Default daily hydration goal in liters (used when KT goal isn't pulled).
 const _defaultHydrationGoalL = 2.5;
@@ -367,8 +368,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (kt.syncError != null) ...[
-            _SyncErrorBanner(
-              message: kt.syncError!,
+            KtSyncErrorBanner(
               onRetry: () => kt.refreshRange(_period.start, _period.end),
             ),
             const SizedBox(height: 10),
@@ -1859,55 +1859,7 @@ class _DayModeOnlyHint extends StatelessWidget {
   }
 }
 
-// Sync error and not-connected states
-
-class _SyncErrorBanner extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
-
-  const _SyncErrorBanner({required this.message, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF87171).withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(Tokens.radiusInner),
-        border:
-            Border.all(color: const Color(0xFFF87171).withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.warning_amber_rounded,
-              size: 16, color: Color(0xFFF87171)),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              message,
-              style: const TextStyle(
-                fontSize: Tokens.fontSizeSmall,
-                color: Color(0xCCFFFFFF),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          GestureDetector(
-            onTap: onRetry,
-            child: Text(
-              context.l10n.healthRetry,
-              style: const TextStyle(
-                fontSize: Tokens.fontSizeSmall,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFFF87171),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+// Not-connected state
 
 class _NotConnectedState extends StatelessWidget {
   final VoidCallback onConnect;

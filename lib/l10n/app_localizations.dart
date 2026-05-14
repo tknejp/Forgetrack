@@ -788,6 +788,24 @@ abstract class AppLocalizations {
   /// **'Retry'**
   String get healthRetry;
 
+  /// Tertiary action on the Health Connect prompt card that lets the user view previously cached fitness data without re-granting permissions
+  ///
+  /// In en, this message translates to:
+  /// **'Show saved data'**
+  String get healthShowCachedData;
+
+  /// Inline banner shown above HC-driven cards when user opted into viewing cached data instead of granting permissions
+  ///
+  /// In en, this message translates to:
+  /// **'Showing saved data — tap to set up Health Connect'**
+  String get healthOfflineNotice;
+
+  /// Inline banner shown above the calorie card when the user opted into viewing cached nutrition data instead of logging in
+  ///
+  /// In en, this message translates to:
+  /// **'Showing saved data — tap to connect Kalorické Tabulky'**
+  String get ktOfflineNotice;
+
   /// Timestamp label shown after a successful health data sync
   ///
   /// In en, this message translates to:

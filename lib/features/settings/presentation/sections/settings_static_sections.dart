@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 import '../../../../core/config/constants.dart';
 import '../../../../l10n/l10n.dart';
-import '../../../auth/application/auth_provider.dart';
 import '../../../coach_log_export/presentation/bushido_export_screen.dart';
 import '../../../../shared/widgets/app_logo.dart';
 import '../../../sheets_export/presentation/sheets_export_screen.dart';
-import '../dialogs/settings_dialogs.dart';
 import '../widgets/settings_widgets.dart';
 
 class SettingsDataSection extends StatelessWidget {
@@ -111,45 +108,3 @@ class SettingsAboutSection extends StatelessWidget {
   }
 }
 
-class SettingsAccountSection extends StatelessWidget {
-  const SettingsAccountSection({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final l10n = context.l10n;
-
-    return SettingsCard(
-      children: [
-        SettingsTile(
-          icon: Icons.logout_rounded,
-          iconColor: cs.error,
-          iconBackgroundColor: cs.errorContainer.withValues(alpha: 0.75),
-          label: l10n.profileSignOut,
-          labelStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: cs.error,
-                fontWeight: FontWeight.w600,
-              ),
-          onTap: () => _confirmSignOut(context),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _confirmSignOut(BuildContext context) async {
-    final l10n = context.l10n;
-    final confirmed = await showSettingsConfirmationDialog(
-      context,
-      title: l10n.profileSignOutConfirmTitle,
-      message: l10n.profileSignOutConfirmMessage,
-      confirmLabel: l10n.profileSignOut,
-      isDestructive: true,
-    );
-
-    if (!confirmed || !context.mounted) {
-      return;
-    }
-
-    await context.read<AuthProvider>().signOut();
-  }
-}

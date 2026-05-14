@@ -1,7 +1,8 @@
 part of '../kaloricke_tabulky_service.dart';
 
 class _KtSessionClient {
-  final http.Client _client;
+  http.Client _client;
+  final bool _ownsClient;
   final FlutterSecureStorage _storage;
 
   String? _cookieHeader;
@@ -11,7 +12,39 @@ class _KtSessionClient {
     http.Client? client,
     FlutterSecureStorage? storage,
   })  : _client = client ?? http.Client(),
+        _ownsClient = client == null,
         _storage = storage ?? const FlutterSecureStorage();
+
+  /// Disposes the current keep-alive pool and creates a fresh client.
+  /// No-op when the client was injected (tests) — they manage lifecycle.
+  void _resetClient() {
+    if (!_ownsClient) return;
+    AppLog.ktApi.warn(
+      'Resetting HTTP client — likely stale keep-alive socket after network change',
+    );
+    try {
+      _client.close();
+    } catch (_) {
+      // Closing a client that's already disposed is fine.
+    }
+    _client = http.Client();
+  }
+
+  /// True for errors that typically indicate a pooled TLS socket bound to a
+  /// network interface that no longer exists (Wi-Fi -> mobile data hand-off,
+  /// VPN drop, sleep wake-up). The cure is to drop the pool and reconnect.
+  bool _isStaleConnectionError(Object e) {
+    if (e is SocketException) return true;
+    if (e is HandshakeException) return true;
+    if (e is http.ClientException) {
+      final msg = e.message.toLowerCase();
+      return msg.contains('connection closed') ||
+          msg.contains('connection reset') ||
+          msg.contains('connection abort') ||
+          msg.contains('broken pipe');
+    }
+    return false;
+  }
 
   bool get isLoggedIn => _loggedIn;
 
@@ -64,23 +97,45 @@ class _KtSessionClient {
   Future<void> _performLogin(String email, String passwordHash) async {
     AppLog.ktApi.debug('Performing KT login for ${_maskEmail(email)}');
 
-    final http.Response response;
+    final loginUri = Uri.parse('$_ktBaseUrl/login/create?=&format=json');
+    const headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    final loginPayload = jsonEncode({
+      'email': email,
+      'password': passwordHash,
+    });
+
+    Future<http.Response> postLogin() =>
+        _client.post(loginUri, headers: headers, body: loginPayload);
+
+    late http.Response response;
 
     try {
-      response = await _client.post(
-        Uri.parse('$_ktBaseUrl/login/create?=&format=json'),
-        headers: const {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode({
-          'email': email,
-          'password': passwordHash,
-        }),
-      );
+      response = await postLogin();
     } catch (e, st) {
-      AppLog.ktApi.error('Network error during login', err: e, stackTrace: st);
-      throw KtApiException('Network error during login: $e');
+      if (_isStaleConnectionError(e)) {
+        AppLog.ktApi.warn(
+          'Login network error looks like stale socket — resetting client and retrying once',
+          payload: '$e',
+        );
+        _resetClient();
+        try {
+          response = await postLogin();
+        } catch (e2, st2) {
+          AppLog.ktApi.error(
+            'Network error during login (after retry)',
+            err: e2,
+            stackTrace: st2,
+          );
+          throw KtApiException('Network error during login: $e2');
+        }
+      } else {
+        AppLog.ktApi
+            .error('Network error during login', err: e, stackTrace: st);
+        throw KtApiException('Network error during login: $e');
+      }
     }
 
     AppLog.ktApi.debug(
@@ -129,16 +184,37 @@ class _KtSessionClient {
       payload: 'hasCookie=${requestHeaders.containsKey("Cookie")}',
     );
 
-    final http.Response response;
+    final uri = Uri.parse(url);
+    Future<http.Response> doGet() => _client.get(uri, headers: requestHeaders);
+
+    late http.Response response;
     try {
-      response = await _client.get(Uri.parse(url), headers: requestHeaders);
+      response = await doGet();
     } catch (e, st) {
-      AppLog.ktApi.error(
-        'Network error during GET $url',
-        err: e,
-        stackTrace: st,
-      );
-      throw KtApiException('Network error: $e');
+      if (_isStaleConnectionError(e)) {
+        AppLog.ktApi.warn(
+          'GET network error looks like stale socket — resetting client and retrying once',
+          payload: 'url=$url, err=$e',
+        );
+        _resetClient();
+        try {
+          response = await doGet();
+        } catch (e2, st2) {
+          AppLog.ktApi.error(
+            'Network error during GET $url (after retry)',
+            err: e2,
+            stackTrace: st2,
+          );
+          throw KtApiException('Network error: $e2');
+        }
+      } else {
+        AppLog.ktApi.error(
+          'Network error during GET $url',
+          err: e,
+          stackTrace: st,
+        );
+        throw KtApiException('Network error: $e');
+      }
     }
 
     AppLog.ktApi.debug(

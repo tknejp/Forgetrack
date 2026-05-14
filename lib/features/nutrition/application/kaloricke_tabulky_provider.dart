@@ -78,6 +78,11 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
   bool get hasLoadedToday => _today != null;
   bool get hasTodayData => _today?.hasData ?? false;
 
+  /// True when the local DB has at least one cached day. Surfaces the
+  /// "use saved data" affordance on the home prompt card when the user
+  /// is logged out but has previously synced.
+  bool get hasCachedNutrition => _db.debugCacheCount > 0;
+
   // ─── Debug/diagnostic getters (read-only, no side effects) ─────────────────
 
   int get debugNutritionCacheCount => _db.debugCacheCount;
@@ -338,7 +343,9 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
   Future<void> logout() async {
     AppLog.ktProvider.info('logout() started');
     await _service.logout();
-    await _db.clear();
+    // Keep the local DB intact so the user can still view previously
+    // synced nutrition via the "Show saved data" affordance on the home
+    // prompt card. A full wipe stays available via factory reset.
     _resetLocalData();
     AppLog.ktProvider.success('logout() finished');
     notifyListeners();

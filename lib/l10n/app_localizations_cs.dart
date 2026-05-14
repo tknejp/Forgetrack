@@ -374,6 +374,17 @@ class AppLocalizationsCs extends AppLocalizations {
   String get healthRetry => 'Zkusit znovu';
 
   @override
+  String get healthShowCachedData => 'Zobrazit uložená data';
+
+  @override
+  String get healthOfflineNotice =>
+      'Zobrazují se uložená data — klepnutím nastavte Health Connect';
+
+  @override
+  String get ktOfflineNotice =>
+      'Zobrazují se uložená data — klepnutím připojte Kalorické Tabulky';
+
+  @override
   String healthLastSynced(String time) {
     return 'Synchronizováno: $time';
   }

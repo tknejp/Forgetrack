@@ -3,10 +3,20 @@ import 'package:provider/provider.dart';
 
 import '../../../../l10n/l10n.dart';
 import '../../../auth/application/auth_provider.dart';
-import '../../../auth/presentation/google_logo_icon.dart';
 import '../../../auth/presentation/google_sign_in_button.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../../shared/widgets/app_logo.dart';
+import '../dialogs/settings_dialogs.dart';
+import '../widgets/settings_widgets.dart';
+
+// Google brand palette — used to give the account card a distinctive
+// "Google rainbow" wash that visually identifies the source without
+// fighting with the cooler sky-blue used by Health Connect elsewhere
+// in Settings.
+const Color _kGoogleBlue = Color(0xFF4285F4);
+const Color _kGoogleRed = Color(0xFFEA4335);
+const Color _kGoogleYellow = Color(0xFFFBBC04);
+const Color _kGoogleGreen = Color(0xFF34A853);
 
 class SettingsHeaderCard extends StatelessWidget {
   final AuthProvider auth;
@@ -17,29 +27,33 @@ class SettingsHeaderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
+        // Multi-stop gradient drawn diagonally so the four Google brand
+        // colors blend into a single warm-cool wash. Blue dominates as
+        // the primary; the red/yellow/green hints add the recognizable
+        // "Google" feel without looking like a rainbow chip.
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
+          stops: const [0.0, 0.4, 0.7, 1.0],
           colors: [
-            Tokens.accent.withValues(alpha: 0.15),
-            Colors.white.withValues(alpha: 0.025),
+            _kGoogleBlue.withValues(alpha: 0.16),
+            _kGoogleRed.withValues(alpha: 0.04),
+            _kGoogleYellow.withValues(alpha: 0.04),
+            _kGoogleGreen.withValues(alpha: 0.06),
           ],
         ),
         borderRadius: BorderRadius.circular(Tokens.radiusCard),
-        border: Border.all(color: Tokens.accent.withValues(alpha: 0.22)),
+        border: Border.all(color: _kGoogleBlue.withValues(alpha: 0.28)),
         boxShadow: [
           BoxShadow(
-            color: Tokens.accentGlow.withValues(alpha: 0.45),
+            color: _kGoogleBlue.withValues(alpha: 0.35),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
         ],
       ),
       clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-        child: _buildContent(context),
-      ),
+      child: _buildContent(context),
     );
   }
 
@@ -49,10 +63,16 @@ class SettingsHeaderCard extends StatelessWidget {
     }
 
     if (auth.isSignedIn) {
+      // Signed-in mirrors the KT connected-card pattern: a SettingsTile
+      // row (avatar + name/email + trailing action), so both account
+      // cards in Settings share the same horizontal rhythm.
       return _SignedInHeaderContent(auth: auth);
     }
 
-    return _SignedOutHeaderContent(auth: auth);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+      child: _SignedOutHeaderContent(auth: auth),
+    );
   }
 }
 
@@ -86,72 +106,58 @@ class _SignedInHeaderContent extends StatelessWidget {
         : user.email;
     final showEmail = user.email.isNotEmpty && primaryLine != user.email;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        CircleAvatar(
-          radius: 32,
+    return Material(
+      color: Colors.transparent,
+      child: SettingsTile(
+        icon: Icons.person,
+        iconWidget: CircleAvatar(
+          radius: 18,
           backgroundImage: hasPhoto ? NetworkImage(photoUrl) : null,
-          backgroundColor: Tokens.accent.withValues(alpha: 0.22),
+          backgroundColor: _kGoogleBlue.withValues(alpha: 0.22),
           child: hasPhoto
               ? null
-              : Icon(
+              : const Icon(
                   Icons.person,
-                  size: 28,
+                  size: 18,
                   color: Tokens.onSurface,
                 ),
         ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                primaryLine,
-                style: tt.titleMedium?.copyWith(
-                  color: Tokens.onSurface,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              if (showEmail) ...[
-                const SizedBox(height: 2),
-                Text(
-                  user.email,
-                  style: tt.bodySmall?.copyWith(
-                    color: Tokens.onSurfaceMuted,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 8),
-              _HeaderBadge(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    GoogleLogoIcon(
-                      size: 13,
-                      fallback: Icon(
-                        Icons.link_rounded,
-                        size: 13,
-                        color: cs.primary,
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    Text(
-                      l10n.profileConnectedGoogle,
-                      style: tt.labelSmall?.copyWith(
-                        color: cs.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+        iconBorderless: true,
+        iconBackgroundColor: Colors.transparent,
+        label: primaryLine,
+        subtitle: showEmail ? user.email : null,
+        trailing: TextButton(
+          style: TextButton.styleFrom(
+            foregroundColor: cs.error,
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            minimumSize: const Size(0, 36),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          onPressed: () => _confirmSignOut(context),
+          child: Text(
+            l10n.profileSignOut,
+            style: tt.labelMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
         ),
-      ],
+      ),
     );
+  }
+
+  Future<void> _confirmSignOut(BuildContext context) async {
+    final l10n = context.l10n;
+    final confirmed = await showSettingsConfirmationDialog(
+      context,
+      title: l10n.profileSignOutConfirmTitle,
+      message: l10n.profileSignOutConfirmMessage,
+      confirmLabel: l10n.profileSignOut,
+      isDestructive: true,
+    );
+
+    if (!confirmed || !context.mounted) {
+      return;
+    }
+
+    await context.read<AuthProvider>().signOut();
   }
 }
 
@@ -226,27 +232,6 @@ class _SignedOutHeaderContent extends StatelessWidget {
           textColor: cs.onSurface,
         ),
       ],
-    );
-  }
-}
-
-class _HeaderBadge extends StatelessWidget {
-  final Widget child;
-
-  const _HeaderBadge({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: Tokens.accent.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: Tokens.accent.withValues(alpha: 0.28),
-        ),
-      ),
-      child: child,
     );
   }
 }

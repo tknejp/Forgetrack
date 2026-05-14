@@ -8,6 +8,37 @@ import '../../../../shared/theme/design_tokens.dart';
 import '../dialogs/settings_dialogs.dart';
 import '../widgets/settings_widgets.dart';
 
+/// Brand grass-green sampled from `assets/icons/kt/kaloricke_tabulky.png`
+/// (Material Light Green 600). Mirrors the accent color used on the home
+/// KT prompt card so the source has a consistent visual identity across
+/// the app.
+const Color _kKtBrandColor = Color(0xFF7AB342);
+
+/// Card decoration shared by the KT logged-out and connected states so
+/// the inner green glow stays after sign-in, matching the Google login
+/// header (which keeps its purple glow once signed in).
+BoxDecoration _ktBrandedCardDecoration() {
+  return BoxDecoration(
+    gradient: LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        _kKtBrandColor.withValues(alpha: 0.16),
+        _kKtBrandColor.withValues(alpha: 0.05),
+      ],
+    ),
+    borderRadius: BorderRadius.circular(Tokens.radiusCard),
+    border: Border.all(color: _kKtBrandColor.withValues(alpha: 0.24)),
+    boxShadow: [
+      BoxShadow(
+        color: _kKtBrandColor.withValues(alpha: 0.22),
+        blurRadius: 22,
+        offset: const Offset(0, 10),
+      ),
+    ],
+  );
+}
+
 class SettingsKtSection extends StatefulWidget {
   const SettingsKtSection({super.key});
 
@@ -105,35 +136,43 @@ class _KtConnectedCard extends StatelessWidget {
         l10n.ktSyncedAt(DateFormat('HH:mm', locale).format(kt.lastSyncedAt!)),
     ];
 
-    return SettingsCard(
-      children: [
-        _KtConnectedStatusTile(
-          subtitle: subtitleParts.isEmpty ? null : subtitleParts.join('\n'),
-          disconnectLabel: l10n.ktDisconnectButton,
-          onDisconnect: onDisconnect,
-        ),
-        if (kt.syncError != null) ...[
-          const SettingsTileDivider(indent: 0),
-          _KtMessageBox(
-            icon: Icons.warning_amber_rounded,
-            color: cs.error,
-            message: l10n.ktSyncError,
-            trailing: TextButton(
-              style: TextButton.styleFrom(
-                foregroundColor: cs.error,
-                padding: const EdgeInsets.symmetric(horizontal: 6),
-                minimumSize: const Size(0, 32),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              onPressed: () => kt.refresh(),
-              child: Text(
-                l10n.ktRetry,
-                style: tt.labelSmall?.copyWith(fontWeight: FontWeight.w700),
-              ),
+    return Container(
+      decoration: _ktBrandedCardDecoration(),
+      clipBehavior: Clip.antiAlias,
+      child: Material(
+        color: Colors.transparent,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _KtConnectedStatusTile(
+              subtitle: subtitleParts.isEmpty ? null : subtitleParts.join('\n'),
+              disconnectLabel: l10n.ktDisconnectButton,
+              onDisconnect: onDisconnect,
             ),
-          ),
-        ],
-      ],
+            if (kt.syncError != null) ...[
+              const SettingsTileDivider(indent: 0),
+              _KtMessageBox(
+                icon: Icons.warning_amber_rounded,
+                color: cs.error,
+                message: l10n.ktSyncError,
+                trailing: TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: cs.error,
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    minimumSize: const Size(0, 32),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  onPressed: () => kt.refresh(),
+                  child: Text(
+                    l10n.ktRetry,
+                    style: tt.labelSmall?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
@@ -205,27 +244,7 @@ class _KtLoginCard extends StatelessWidget {
     final l10n = context.l10n;
 
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Tokens.calories.gradStart.withValues(alpha: 0.16),
-            Tokens.calories.gradEnd.withValues(alpha: 0.08),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(Tokens.radiusCard),
-        border: Border.all(
-          color: Tokens.calories.color.withValues(alpha: 0.24),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Tokens.calories.glow.withValues(alpha: 0.20),
-            blurRadius: 20,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
+      decoration: _ktBrandedCardDecoration(),
       clipBehavior: Clip.antiAlias,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
@@ -282,22 +301,12 @@ class _KtLoginHeader extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
+        SizedBox(
           width: 38,
           height: 38,
-          decoration: BoxDecoration(
-            color: Tokens.calories.color.withValues(alpha: 0.14),
-            borderRadius: BorderRadius.circular(Tokens.radiusInner),
-            border: Border.all(
-              color: Tokens.calories.color.withValues(alpha: 0.24),
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(7),
-            child: Image.asset(
-              'assets/icons/kt/kaloricke_tabulky.png',
-              fit: BoxFit.contain,
-            ),
+          child: Image.asset(
+            'assets/icons/kt/kaloricke_tabulky.png',
+            fit: BoxFit.contain,
           ),
         ),
         const SizedBox(width: Tokens.spaceMd),
@@ -399,19 +408,25 @@ class _KtLoginButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     return SizedBox(
       width: double.infinity,
       child: FilledButton(
         onPressed: isLoading ? null : onSubmit,
+        // Brand-tinted button so the primary action visually matches the
+        // KT card's green decoration instead of the global purple accent.
+        style: FilledButton.styleFrom(
+          backgroundColor: _kKtBrandColor,
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: _kKtBrandColor.withValues(alpha: 0.4),
+          disabledForegroundColor: Colors.white.withValues(alpha: 0.7),
+        ),
         child: isLoading
-            ? SizedBox(
+            ? const SizedBox(
                 height: 18,
                 width: 18,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: cs.onPrimary,
+                  color: Colors.white,
                 ),
               )
             : Text(label),
@@ -432,6 +447,7 @@ InputDecoration _ktFieldDecoration(
     labelText: label,
     filled: true,
     fillColor: cs.surfaceContainerHigh.withValues(alpha: 0.42),
+    floatingLabelStyle: TextStyle(color: _kKtBrandColor),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(Tokens.radiusTile),
     ),
@@ -441,7 +457,7 @@ InputDecoration _ktFieldDecoration(
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(Tokens.radiusTile),
-      borderSide: BorderSide(color: cs.primary),
+      borderSide: BorderSide(color: _kKtBrandColor, width: 1.5),
     ),
     isDense: true,
     prefixIcon: Icon(icon),

@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 
 import '../../health_connect/application/fitness_provider.dart';
 import '../../nutrition/application/kaloricke_tabulky_provider.dart';
+import '../../nutrition/presentation/widgets/kt_sync_error_banner.dart';
+import '../../settings/presentation/settings_screen.dart';
 import '../../progression_engine/application/progression_engine_provider.dart';
 import '../../../l10n/l10n.dart';
 import '../../../shared/selected_period.dart';
@@ -48,6 +50,34 @@ class OverviewScreen extends StatefulWidget {
 
 class _OverviewScreenState extends State<OverviewScreen> {
   SelectedPeriod _period = SelectedPeriod.today();
+
+  /// When true, the user has explicitly chosen to view cached HC data
+  /// instead of being shown the "set up Health Connect" prompt. Reset on
+  /// app restart — once HC becomes ready, this flag stops mattering.
+  bool _showCachedHcAnyway = false;
+
+  /// Mirror of [_showCachedHcAnyway] for the Kalorické Tabulky source.
+  bool _showCachedKtAnyway = false;
+
+  bool _hasCachedHcData(FitnessProvider fitness) {
+    return fitness.stepsHistory.isNotEmpty ||
+        fitness.weightHistory.isNotEmpty ||
+        fitness.sleepHistory.isNotEmpty ||
+        fitness.activities.isNotEmpty;
+  }
+
+  /// Routes the prompt/banner action to install or grant based on the
+  /// current Health Connect access state.
+  Future<void> _handleHcAction(FitnessProvider fitness) async {
+    if (fitness.accessState == FitnessAccessState.unavailable) {
+      await fitness.installHealthConnect();
+      return;
+    }
+    await fitness.requestPermissions();
+    if (mounted) {
+      await fitness.initialize();
+    }
+  }
 
   Future<void> _refresh() async {
     final fitness = context.read<FitnessProvider>();
@@ -280,18 +310,6 @@ class _OverviewScreenState extends State<OverviewScreen> {
                           ? _openDatePicker
                           : null,
                     ),
-                    if (fitness.accessState ==
-                        FitnessAccessState.permissionRequired) ...[
-                      const SizedBox(height: 10),
-                      _PermissionBanner(
-                        onTap: () async {
-                          await fitness.requestPermissions();
-                          if (mounted) {
-                            await fitness.initialize();
-                          }
-                        },
-                      ),
-                    ],
                   ],
                 ),
               ),
@@ -326,6 +344,15 @@ class _OverviewScreenState extends State<OverviewScreen> {
                     progression: progression,
                     weightForPeriod: _weightForPeriod(fitness, period),
                     prevWeight: _previousWeightForPeriod(fitness, period),
+                    showCachedHcAnyway: _showCachedHcAnyway,
+                    hasCachedHcData: _hasCachedHcData(fitness),
+                    onHcAction: () => _handleHcAction(fitness),
+                    onShowCachedHc: () =>
+                        setState(() => _showCachedHcAnyway = true),
+                    showCachedKtAnyway: _showCachedKtAnyway,
+                    hasCachedKtData: kt.hasCachedNutrition,
+                    onShowCachedKt: () =>
+                        setState(() => _showCachedKtAnyway = true),
                     onOpenActivities: widget.onOpenActivities,
                     onOpenSteps: widget.onOpenSteps,
                     onOpenNutrition: widget.onOpenNutrition,
@@ -366,6 +393,13 @@ class _DayContent extends StatelessWidget {
     required this.progression,
     required this.weightForPeriod,
     required this.prevWeight,
+    required this.showCachedHcAnyway,
+    required this.hasCachedHcData,
+    required this.onHcAction,
+    required this.onShowCachedHc,
+    required this.showCachedKtAnyway,
+    required this.hasCachedKtData,
+    required this.onShowCachedKt,
     required this.onOpenActivities,
     required this.onOpenSteps,
     required this.onOpenNutrition,
@@ -384,6 +418,13 @@ class _DayContent extends StatelessWidget {
   final ProgressionEngineProvider progression;
   final double? weightForPeriod;
   final double? prevWeight;
+  final bool showCachedHcAnyway;
+  final bool hasCachedHcData;
+  final VoidCallback onHcAction;
+  final VoidCallback onShowCachedHc;
+  final bool showCachedKtAnyway;
+  final bool hasCachedKtData;
+  final VoidCallback onShowCachedKt;
   final VoidCallback onOpenActivities;
   final VoidCallback onOpenSteps;
   final VoidCallback onOpenNutrition;
@@ -470,13 +511,57 @@ class _DayContent extends StatelessWidget {
 
     final locale = Localizations.localeOf(context).toString();
 
+    // When Health Connect isn't ready and the user hasn't opted into the
+    // cached-anyway view, replace the HC-driven cards (steps/weight/activities/
+    // sleep) with one prominent prompt card. The KT calorie card is HC-
+    // independent so it stays.
+    final hcReady = fitness.accessState == FitnessAccessState.ready;
+    final hcChecking = fitness.accessState == FitnessAccessState.checking;
+    final showHcPrompt = !hcReady && !hcChecking && !showCachedHcAnyway;
+    final showHcOfflineBanner =
+        !hcReady && !hcChecking && showCachedHcAnyway;
+    final hcUnavailable = fitness.accessState == FitnessAccessState.unavailable;
+    // Suppress the KT prompt while restoreSession() is still running so
+    // the user doesn't see a flash of "sign in to KT" on cold start when
+    // they already have stored credentials. Mirrors the hcChecking guard.
+    final showKtPrompt =
+        !kt.isLoggedIn && !kt.isInitializing && !showCachedKtAnyway;
+    final showKtOfflineBanner =
+        !kt.isLoggedIn && !kt.isInitializing && showCachedKtAnyway;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        StatCard(
-          icon: '\uD83E\uDD7E',
-          label: l10n.stepsTitle,
-          domain: Tokens.steps,
+        if (showHcPrompt)
+          _DataSourcePromptCard(
+            logoAsset: 'assets/icons/hc/health_connect_logo.png',
+            accentColor: Tokens.weight.color,
+            title: hcUnavailable
+                ? l10n.healthNotAvailable
+                : l10n.healthPermissionRequired,
+            body: hcUnavailable
+                ? l10n.healthNotAvailableBody
+                : l10n.healthPermissionBody,
+            ctaIcon: hcUnavailable
+                ? Icons.download_rounded
+                : Icons.shield_outlined,
+            ctaLabel:
+                hcUnavailable ? l10n.healthInstall : l10n.healthGrantAccess,
+            onAction: onHcAction,
+            onShowCached: hasCachedHcData ? onShowCachedHc : null,
+          )
+        else ...[
+          if (showHcOfflineBanner) ...[
+            _OfflineSourceBanner(
+              message: l10n.healthOfflineNotice,
+              onTap: onHcAction,
+            ),
+            const SizedBox(height: 10),
+          ],
+          StatCard(
+            icon: '\uD83E\uDD7E',
+            label: l10n.stepsTitle,
+            domain: Tokens.steps,
           visualAssets: DashboardCardAssetResolver.forKind(
             DashboardCardKind.steps,
           ),
@@ -503,12 +588,47 @@ class _DayContent extends StatelessWidget {
             ),
           ],
         ),
+        ],
         const SizedBox(height: 10),
-        StatCard(
-          icon: '\uD83D\uDD25',
-          label: period.type == PeriodType.day
-              ? l10n.caloriesTodayTitle
-              : l10n.caloriesAvgPerDay,
+        if (showKtPrompt)
+          _DataSourcePromptCard(
+            logoAsset: 'assets/icons/kt/kaloricke_tabulky.png',
+            // Warm grass-green sampled from the KT logo
+            // (assets/icons/kt/kaloricke_tabulky.png) — Material Light
+            // Green 600. Tokens.steps emerald is too cool/teal here.
+            accentColor: const Color(0xFF7AB342),
+            title: l10n.caloriesTodayTitle,
+            body: l10n.ktLoginPrompt,
+            ctaIcon: Icons.settings_outlined,
+            ctaLabel: l10n.ktGoToSettings,
+            onAction: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            ),
+            onShowCached: hasCachedKtData ? onShowCachedKt : null,
+          )
+        else ...[
+          if (showKtOfflineBanner) ...[
+            _OfflineSourceBanner(
+              message: l10n.ktOfflineNotice,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+          if (kt.isLoggedIn && kt.syncError != null) ...[
+            KtSyncErrorBanner(
+              onRetry: () => kt.refreshRange(period.start, period.end),
+            ),
+            const SizedBox(height: 10),
+          ],
+          StatCard(
+            icon: '\uD83D\uDD25',
+            label: period.type == PeriodType.day
+                ? l10n.caloriesTodayTitle
+                : l10n.caloriesAvgPerDay,
           domain: Tokens.calories,
           visualAssets: DashboardCardAssetResolver.forKind(
             DashboardCardKind.nutrition,
@@ -597,6 +717,8 @@ class _DayContent extends StatelessWidget {
             ),
           ],
         ),
+        ],
+        if (!showHcPrompt) ...[
         const SizedBox(height: 10),
         StatCard(
           icon: '\u2696',
@@ -709,6 +831,7 @@ class _DayContent extends StatelessWidget {
             ),
           ],
         ),
+        ],
       ],
     );
   }
@@ -761,6 +884,209 @@ class _NutritionDetailTile extends StatelessWidget {
   }
 }
 
+// ── Shared data-source prompt card ──────────────────────────────────────────
+
+/// Unified "you need to set up X" card used by both Health Connect and
+/// Kalorické Tabulky on the home overview. Same visual structure: bare
+/// logo, title, body, primary CTA pill, optional ghost-pill "Show saved
+/// data" tertiary action. Background is a neutral info-card surface with
+/// a subtle [accentColor] tint so the card reads as a soft prompt rather
+/// than a brightly themed dashboard tile.
+class _DataSourcePromptCard extends StatelessWidget {
+  final String logoAsset;
+  final Color accentColor;
+  final String title;
+  final String body;
+  final IconData ctaIcon;
+  final String ctaLabel;
+  final VoidCallback onAction;
+
+  /// When non-null, renders the secondary "Show saved data" pill that
+  /// lets the user view previously cached data without setting up the
+  /// source. Null when there's no cache to show.
+  final VoidCallback? onShowCached;
+
+  const _DataSourcePromptCard({
+    required this.logoAsset,
+    required this.accentColor,
+    required this.title,
+    required this.body,
+    required this.ctaIcon,
+    required this.ctaLabel,
+    required this.onAction,
+    required this.onShowCached,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final ft = context.ft;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: ft.surfaceSubtle,
+        borderRadius: BorderRadius.circular(Tokens.radiusCard),
+        border: Border.all(color: accentColor.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              SizedBox(
+                width: 36,
+                height: 36,
+                child: Image.asset(logoAsset, fit: BoxFit.contain),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: Tokens.fontSizeBody,
+                    fontWeight: FontWeight.w800,
+                    color: ft.onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: Tokens.spaceMd),
+          Text(
+            body,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: ft.onSurfaceMuted,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: Tokens.spaceLg),
+          // Vertical full-width pills so HC and KT cards always lay out
+          // the same way, regardless of how long the localized labels are.
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onAction,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 11,
+                  ),
+                  decoration: BoxDecoration(
+                    color: accentColor,
+                    borderRadius: BorderRadius.circular(Tokens.radiusInner),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(ctaIcon, size: 16, color: Colors.white),
+                      const SizedBox(width: 8),
+                      Text(
+                        ctaLabel,
+                        style: const TextStyle(
+                          fontSize: Tokens.fontSizeSmall,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (onShowCached != null) ...[
+                const SizedBox(height: Tokens.spaceSm),
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onShowCached,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 11,
+                    ),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(Tokens.radiusInner),
+                      border: Border.all(color: ft.cardBorder),
+                    ),
+                    child: Text(
+                      l10n.healthShowCachedData,
+                      style: TextStyle(
+                        fontSize: Tokens.fontSizeSmall,
+                        fontWeight: FontWeight.w700,
+                        color: ft.onSurfaceMuted,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Compact tap-to-set-up banner shown above cards rendered with cached
+/// data only. Used for both KT (above the calorie card) and HC (above
+/// steps/weight/activities/sleep cards) to remind the user they're not
+/// fully connected.
+class _OfflineSourceBanner extends StatelessWidget {
+  final String message;
+  final VoidCallback onTap;
+
+  const _OfflineSourceBanner({required this.message, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final ft = context.ft;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: ft.surfaceSubtle,
+          borderRadius: BorderRadius.circular(Tokens.radiusInner),
+          border: Border.all(color: ft.cardBorder),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.cloud_off_rounded,
+              size: 14,
+              color: ft.onSurfaceMuted,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: ft.onSurfaceMuted,
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 16,
+              color: ft.onSurfaceMuted,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ── Permission banner ───────────────────────────────────────────────────────
 
 int _activityGoalForPeriod(GoalsProvider goals, SelectedPeriod period) {
@@ -782,40 +1108,3 @@ int _activityGoalForPeriod(GoalsProvider goals, SelectedPeriod period) {
   }
 }
 
-class _PermissionBanner extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _PermissionBanner({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: Tokens.accent.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(Tokens.radiusInner),
-          border: Border.all(color: Tokens.accent.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.favorite_border, size: 16, color: Tokens.accent),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                l10n.healthPermissionBody,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xCCFFFFFF),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

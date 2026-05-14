@@ -78,6 +78,7 @@ flutter:
   assets:
     - assets/branding/
     - assets/icons/google/
+    - assets/icons/hc/
     - assets/icons/kt/
     - assets/ui/
     - assets/ui/dashboard/cards/

@@ -349,10 +349,15 @@ class FitnessProvider extends ChangeNotifier {
 
       final perms = await _service.hasPermissions();
       _hasPermissions = perms == true;
+
+      // Always surface previously-cached data so the UI can offer a
+      // "show saved data" path when permissions are revoked. Cheap
+      // in-memory load — permissions only gate the live HC sync below.
+      _loadFromDb();
+
       if (_hasPermissions) {
         await _refreshHistoryAccess(interactive: false);
         await _refreshBackgroundAccess(interactive: false);
-        _loadFromDb();
 
         // Set up live DB watcher - when background task writes data, reload it.
         _dbChangeSubscription?.cancel();

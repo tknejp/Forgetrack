@@ -73,11 +73,6 @@ class SettingsScreen extends StatelessWidget {
               title: l10n.sectionAbout,
               child: const SettingsAboutSection(),
             ),
-            if (auth.isSignedIn)
-              SettingsSection(
-                title: l10n.sectionAccount,
-                child: const SettingsAccountSection(),
-              ),
             if (DevToolsPermissionService.hasAccess(auth.user?.firebaseUid))
               SettingsSection(
                 title: l10n.settingsDeveloperTools,

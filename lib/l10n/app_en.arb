@@ -350,6 +350,15 @@
   "healthRetry": "Retry",
   "@healthRetry": { "description": "Button to retry a failed health data load" },
 
+  "healthShowCachedData": "Show saved data",
+  "@healthShowCachedData": { "description": "Tertiary action on the Health Connect prompt card that lets the user view previously cached fitness data without re-granting permissions" },
+
+  "healthOfflineNotice": "Showing saved data — tap to set up Health Connect",
+  "@healthOfflineNotice": { "description": "Inline banner shown above HC-driven cards when user opted into viewing cached data instead of granting permissions" },
+
+  "ktOfflineNotice": "Showing saved data — tap to connect Kalorické Tabulky",
+  "@ktOfflineNotice": { "description": "Inline banner shown above the calorie card when the user opted into viewing cached nutrition data instead of logging in" },
+
   "healthLastSynced": "Synced: {time}",
   "@healthLastSynced": {
     "description": "Timestamp label shown after a successful health data sync",
