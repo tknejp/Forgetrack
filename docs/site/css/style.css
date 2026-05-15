@@ -54,19 +54,18 @@ code {
   font-weight: 600;
   font-size: var(--font-body);
   white-space: nowrap;
+  color: var(--color-on-surface);
+  text-decoration: none;
 }
 
+.brand:hover { text-decoration: none; }
+
 .brand-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: var(--color-accent);
-  color: var(--color-bg);
-  font-weight: 700;
-  font-size: var(--font-caption);
+  width: 32px;
+  height: 32px;
   border-radius: var(--radius-icon);
+  flex-shrink: 0;
+  object-fit: contain;
 }
 
 .brand-sub {

@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Forgetrack — Architektonická dokumentace</title>
+  <link rel="icon" type="image/png" href="app-icon.png" />
   <script>
     // Aplikace téma před prvním paintem, zabraňuje flash-of-dark.
     (function () {
@@ -22,10 +23,10 @@
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">
-      <span class="brand-mark">FT</span>
+    <a class="brand" href="#/features">
+      <img class="brand-mark" src="app-icon.png" alt="" width="32" height="32" />
       <span class="brand-name">Forgetrack <span class="brand-sub">/ architektura</span></span>
-    </div>
+    </a>
     <nav class="view-switcher" id="view-switcher">
       <a href="#/features" data-view="features">Feature</a>
       <a href="#/providers" data-view="providers">Providery</a>
