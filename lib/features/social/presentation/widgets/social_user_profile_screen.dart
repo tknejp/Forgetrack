@@ -1,24 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:image_picker_android/image_picker_android.dart';
+import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
 import 'package:provider/provider.dart';
 
 import '../../../progression_engine/domain/display/progression_display_models.dart';
-import '../../../progression_engine/domain/display/progression_display_resolver.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../shared/theme/design_tokens.dart';
-import '../../../cosmetics/config/cosmetics_config.dart';
+import '../../../../shared/widgets/ft_back_button.dart';
+import '../../../../shared/widgets/screen_header.dart';
+import '../../../cosmetics/application/cosmetics_provider.dart';
+import '../../../cosmetics/domain/cosmetic_models.dart';
 import '../../../cosmetics/presentation/widgets/cosmetic_equipped_chip.dart';
+import '../../../cosmetics/presentation/widgets/cosmetics_inventory_section.dart';
+import '../../application/pinned_emblems_store.dart';
 import '../../application/social_provider.dart';
 import '../../domain/social_models.dart';
 import '../social_profile_utils.dart';
+import 'emblem_slot_sheet.dart';
+import 'profile_detail_hero_card.dart';
 import 'social_cosmetic_avatar.dart';
+import 'social_edit_handle_sheet.dart';
 import 'social_feed_card.dart';
-import 'social_lv_badge.dart';
 import 'social_profile_achievement_grid.dart';
 import 'social_profile_friends_section.dart';
 
-class SocialUserProfileSheet extends StatefulWidget {
-  const SocialUserProfileSheet({
+class SocialUserProfileScreen extends StatefulWidget {
+  const SocialUserProfileScreen({
     super.key,
     required this.uid,
     this.initialDisplayName,
@@ -30,15 +39,17 @@ class SocialUserProfileSheet extends StatefulWidget {
   final String? initialPhotoUrl;
 
   @override
-  State<SocialUserProfileSheet> createState() => _SocialUserProfileSheetState();
+  State<SocialUserProfileScreen> createState() =>
+      _SocialUserProfileScreenState();
 }
 
-class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
+class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
   late final Stream<SocialUserProfile?> _profileStream;
   late final Stream<List<SocialUnlockedAchievement>> _achievementsStream;
   late final Stream<List<SocialAchievementShare>> _sharesStream;
   late final Stream<List<SocialUserProfile>> _friendsStream;
   bool _actionBusy = false;
+  bool _photoBusy = false;
 
   @override
   void initState() {
@@ -50,6 +61,155 @@ class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
     _friendsStream = social.watchFriendProfilesForUser(widget.uid);
   }
 
+  Future<void> _editOwnHandle(String currentHandle) async {
+    final next = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => EditHandleSheet(initialHandle: currentHandle),
+    );
+
+    if (next == null || !mounted) return;
+    final social = context.read<SocialProvider>();
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final savedHandle = await social.updateCurrentHandle(next);
+    if (!mounted) return;
+
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          savedHandle == null
+              ? l10n.socialHandleSaveFailed(
+                  social.error ?? l10n.socialTryAgain,
+                )
+              : l10n.socialHandleSaved(savedHandle),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickOwnProfilePhoto() async {
+    if (_photoBusy) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    final social = context.read<SocialProvider>();
+    final l10n = context.l10n;
+    XFile? image;
+
+    try {
+      final implementation = ImagePickerPlatform.instance;
+      if (implementation is ImagePickerAndroid) {
+        implementation.useAndroidPhotoPicker = true;
+      }
+      image = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1200,
+        maxHeight: 1200,
+        imageQuality: 86,
+        requestFullMetadata: false,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(l10n.socialPhotoPickFailed(error.toString())),
+        ),
+      );
+      return;
+    }
+
+    if (image == null || !mounted) return;
+
+    setState(() => _photoBusy = true);
+    final url = await social.uploadCurrentProfilePhoto(image);
+    if (!mounted) return;
+    setState(() => _photoBusy = false);
+
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          url == null
+              ? l10n.socialPhotoSaveFailed(
+                  social.error ?? l10n.socialTryAgain,
+                )
+              : l10n.socialPhotoSaved,
+        ),
+      ),
+    );
+  }
+
+  /// Returns the signed-in user's unlocked emblems sorted by unlock
+  /// time (oldest first) so the collection grid fills left-to-right in
+  /// the order the player earned them. Returns an empty list if not the
+  /// own profile, or if cosmetics state hasn't loaded yet.
+  List<CosmeticDefinition> _ownUnlockedEmblems(BuildContext context) {
+    final cosmetics = context.watch<CosmeticsProvider>();
+    final state = cosmetics.state;
+    if (state == null) return const <CosmeticDefinition>[];
+
+    final catalog = cosmetics.service.catalog;
+    final unlocked = <CosmeticDefinition>[];
+    for (final def in catalog.byType(CosmeticType.emblem)) {
+      if (!def.isEnabled) continue;
+      if (state.unlocked.containsKey(def.id)) unlocked.add(def);
+    }
+    unlocked.sort((a, b) {
+      final at = state.unlocked[a.id]!.unlockedAt;
+      final bt = state.unlocked[b.id]!.unlockedAt;
+      return at.compareTo(bt);
+    });
+    return unlocked;
+  }
+
+  /// Resolves the 11 grid slots → emblem definition map for the own
+  /// profile. Combines:
+  ///   * The user's saved pin layout (from [PinnedEmblemsStore]) —
+  ///     auto-filled from unlock order on first render.
+  ///   * The unlocked emblem catalogue from [CosmeticsProvider].
+  ///
+  /// Stale pin ids (e.g. an emblem the user lost) collapse to null
+  /// for that slot.
+  List<CosmeticDefinition?> _ownEmblemSlots(
+    BuildContext context,
+    List<CosmeticDefinition> unlocked,
+    String uid,
+  ) {
+    final pins = context
+        .watch<PinnedEmblemsStore>()
+        .pinsForUserOrAutoFill(
+          uid,
+          unlocked.map((def) => def.id).toList(growable: false),
+        );
+    final byId = {for (final def in unlocked) def.id: def};
+    return [for (final id in pins) id == null ? null : byId[id]];
+  }
+
+  Future<void> _openEmblemSlotSheet({
+    required int slotIndex,
+    required bool isOwner,
+    required String uid,
+    required List<CosmeticDefinition?> slots,
+    required List<CosmeticDefinition> unlocked,
+  }) async {
+    final current = slotIndex >= 0 && slotIndex < slots.length
+        ? slots[slotIndex]
+        : null;
+    final result = await EmblemSlotSheet.show(
+      context,
+      slotIndex: slotIndex,
+      currentEmblem: current,
+      unlockedEmblems: unlocked,
+      isOwner: isOwner,
+    );
+    if (result == null || !isOwner || !mounted) return;
+    await context.read<PinnedEmblemsStore>().setPin(
+          uid: uid,
+          slotIndex: result.slotIndex,
+          cosmeticId: result.cosmeticId,
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
     final social = context.watch<SocialProvider>();
@@ -57,189 +217,168 @@ class _SocialUserProfileSheetState extends State<SocialUserProfileSheet> {
     final l10n = context.l10n;
 
     final isMe = social.currentUid == widget.uid;
+    final ownUnlockedEmblems =
+        isMe ? _ownUnlockedEmblems(context) : const <CosmeticDefinition>[];
 
-    return Container(
-      margin: const EdgeInsets.only(top: 60),
-      decoration: BoxDecoration(
-        color: Tokens.bg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        border: Border.all(color: Tokens.cardBorder),
-      ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 12, bottom: 4),
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                  color: Tokens.cardBorder,
-                  borderRadius: BorderRadius.circular(Tokens.radiusProgress)),
-            ),
-          ),
-          Expanded(
-            child: StreamBuilder<SocialUserProfile?>(
-              stream: _profileStream,
-              builder: (context, profileSnap) {
-                final profile = profileSnap.data;
-                final displayName =
-                    profile?.displayName ?? widget.initialDisplayName ?? '';
-                final photoUrl = profile?.photoUrl ?? widget.initialPhotoUrl;
-                final handle = profile?.handle ?? '';
-                final stats = profile?.stats;
+    return Scaffold(
+      // Bg matches the hero header's fade-out target so the top/bottom
+      // gradient lands on the same shade and there's no visible seam.
+      backgroundColor: const Color(0xFF0A0E1C),
+      body: SafeArea(
+        bottom: false,
+        child: StreamBuilder<SocialUserProfile?>(
+          stream: _profileStream,
+          builder: (context, profileSnap) {
+            final profile = profileSnap.data;
+            final displayName =
+                profile?.displayName ?? widget.initialDisplayName ?? '';
+            final photoUrl = profile?.photoUrl ?? widget.initialPhotoUrl;
+            final handle = profile?.handle ?? '';
+            final stats = profile?.stats;
+            // Slot mapping → cosmetic def. For friend profiles we
+            // only know their single equipped emblem, so slot 0 shows
+            // it and everything else is null.
+            final emblemSlots = isMe
+                ? _ownEmblemSlots(context, ownUnlockedEmblems, widget.uid)
+                : <CosmeticDefinition?>[
+                    socialCosmeticById(
+                        profile?.equippedCosmetics.emblemId),
+                    for (var i = 1;
+                        i < ProfileDetailHeroCard.kEmblemSlotCount;
+                        i++)
+                      null,
+                  ];
+            final unlockedCount = isMe
+                ? ownUnlockedEmblems.length
+                : (profile?.equippedCosmetics.emblemId == null ? 0 : 1);
 
-                return SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(16, 8, 16, bottomPad + 24),
+            // The top app bar is rendered as a transparent overlay on
+            // top of the hero header — the background scene shows
+            // through under the status bar / back button, no chrome
+            // strip cutting into the cinematic image.
+            return Stack(
+              children: [
+                SingleChildScrollView(
+                  padding: EdgeInsets.only(top: 58, bottom: bottomPad + 24),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Profile card
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: const Alignment(-1, -1),
-                            end: const Alignment(1, 1),
-                            colors: [
-                              Tokens.accent.withValues(alpha: 0.16),
-                              Tokens.accent.withValues(alpha: 0.04),
-                            ],
-                          ),
-                          image: _profileBackgroundImage(profile),
-                          borderRadius:
-                              BorderRadius.circular(Tokens.radiusCard),
-                          border: Border.all(
-                              color: Tokens.accent.withValues(alpha: 0.26)),
+                      // Hero header bleeds to the screen edges — the
+                      // rest of the profile keeps the 16-px gutter.
+                      ProfileDetailHeroCard(
+                        displayName: displayName,
+                        handle: handle,
+                        photoUrl: photoUrl,
+                        profile: profile,
+                        isMe: isMe,
+                        emblemSlots: emblemSlots,
+                        unlockedCount: unlockedCount,
+                        photoBusy: _photoBusy,
+                        onEditPhoto: isMe ? _pickOwnProfilePhoto : null,
+                        onEditHandle:
+                            isMe ? () => _editOwnHandle(handle) : null,
+                        // Friend profiles get read-only detail; the
+                        // owner gets the full picker (equip / remove /
+                        // swap). Locked slots ignore the tap.
+                        onTapEmblemSlot: (slotIndex) =>
+                            _openEmblemSlotSheet(
+                          slotIndex: slotIndex,
+                          isOwner: isMe,
+                          uid: widget.uid,
+                          slots: emblemSlots,
+                          unlocked: ownUnlockedEmblems,
                         ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SocialCosmeticAvatar(
-                                  name: displayName,
-                                  size: 64,
-                                  photoUrl: photoUrl,
-                                  profile: profile,
-                                  radius: 18,
-                                  frameOverscan: 1.16,
-                                ),
-                                const SizedBox(width: Tokens.spaceMd),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        displayName,
-                                        style: const TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w800,
-                                            color: Tokens.onSurface,
-                                            letterSpacing: -0.3),
-                                      ),
-                                      if (handle.isNotEmpty)
-                                        Text('@$handle',
-                                            style: const TextStyle(
-                                                fontSize:
-                                                    Tokens.fontSizeCaption,
-                                                color: Tokens.onSurfaceFaint)),
-                                      if (stats != null) ...[
-                                        const SizedBox(height: 6),
-                                        Builder(builder: (context) {
-                                          final levelDisplay =
-                                              const ProgressionDisplayResolver()
-                                                  .levelDisplay(stats.level);
-                                          return Text(
-                                            levelDisplay
-                                                .title(context.l10n)
-                                                .toUpperCase(),
-                                            style: TextStyle(
-                                                fontSize: 7,
-                                                fontWeight: FontWeight.w800,
-                                                color: levelDisplay.accentColor,
-                                                letterSpacing: 1.0),
-                                          );
-                                        }),
-                                      ],
-                                    ],
-                                  ),
-                                ),
-                                if (stats != null)
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      SocialLvBadge(
-                                          level: stats.level, size: 40),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        socialFmtXp(stats.totalXp),
-                                        style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w900,
-                                            color: Tokens.onSurface,
-                                            letterSpacing: -0.5),
-                                      ),
-                                      Text(l10n.socialXpLabel,
-                                          style: const TextStyle(
-                                              fontSize: Tokens.fontSizeTiny,
-                                              color: Tokens.onSurfaceFaint)),
-                                    ],
-                                  ),
-                              ],
-                            ),
-                            if (!isMe && social.isFriendWith(widget.uid)) ...[
-                              const SizedBox(height: Tokens.spaceMd),
-                              Container(
-                                height: 1,
-                                color: Colors.white.withValues(alpha: 0.07),
-                              ),
-                              const SizedBox(height: 10),
-                              _buildActionArea(context, social, displayName),
+                            if (!isMe && social.isFriendWith(widget.uid))
+                              _buildActionArea(
+                                  context, social, displayName),
+                            if (stats != null) ...[
+                              if (!isMe && social.isFriendWith(widget.uid))
+                                const SizedBox(height: Tokens.spaceMd),
+                              _buildStats(stats),
                             ],
+                            const SizedBox(height: 10),
+                            ProfileFriendsSection(stream: _friendsStream),
+                            if (!isMe &&
+                                !social.isFriendWith(widget.uid)) ...[
+                              const SizedBox(height: 10),
+                              _buildActionArea(
+                                  context, social, displayName),
+                            ],
+                            // Own-profile only — friends don't see
+                            // your inventory tiles, and we don't have
+                            // their unlocked catalogue to render anyway.
+                            if (isMe) ...[
+                              const SizedBox(height: Tokens.spaceLg),
+                              const CosmeticsInventorySection(),
+                            ],
+                            _ProfileCosmeticsSection(profile: profile),
+                            const SizedBox(height: Tokens.spaceLg),
+                            _SectionTitle(
+                              icon: Icons.push_pin_rounded,
+                              title:
+                                  l10n.socialProfilePinnedAchievements,
+                            ),
+                            const SizedBox(height: 10),
+                            _PinnedAchievementsSection(
+                              profile: profile,
+                              isMe: isMe,
+                              stream: _achievementsStream,
+                              l10n: l10n,
+                            ),
+                            const SizedBox(height: 18),
+                            _SectionTitle(
+                              icon: Icons.forum_rounded,
+                              title: l10n.socialProfileSharedPosts,
+                            ),
+                            const SizedBox(height: 10),
+                            _ProfileSharesSection(
+                              stream: _sharesStream,
+                            ),
                           ],
                         ),
                       ),
-                      if (stats != null) ...[
-                        const SizedBox(height: Tokens.spaceMd),
-                        _buildStats(stats),
-                      ],
-                      const SizedBox(height: 10),
-                      ProfileFriendsSection(stream: _friendsStream),
-                      if (!isMe && !social.isFriendWith(widget.uid)) ...[
-                        const SizedBox(height: 10),
-                        _buildActionArea(context, social, displayName),
-                      ],
-                      _ProfileCosmeticsSection(profile: profile),
-                      const SizedBox(height: Tokens.spaceLg),
-                      _SectionTitle(
-                        icon: Icons.push_pin_rounded,
-                        title: l10n.socialProfilePinnedAchievements,
-                      ),
-                      const SizedBox(height: 10),
-                      _PinnedAchievementsSection(
-                        profile: profile,
-                        isMe: isMe,
-                        stream: _achievementsStream,
-                        l10n: l10n,
-                      ),
-                      const SizedBox(height: 18),
-                      _SectionTitle(
-                        icon: Icons.forum_rounded,
-                        title: l10n.socialProfileSharedPosts,
-                      ),
-                      const SizedBox(height: 10),
-                      _ProfileSharesSection(
-                        stream: _sharesStream,
-                      ),
                     ],
                   ),
-                );
-              },
-            ),
-          ),
-        ],
+                ),
+                // Transparent overlay app bar — sits above everything,
+                // letting the hero background image read under it.
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(14, 8, 14, 18),
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        stops: [0.0, 0.65, 1.0],
+                        colors: [
+                          Color(0xE60A0E1C), // strong top fade
+                          Color(0x990A0E1C), // soft middle
+                          Color(0x000A0E1C), // transparent bottom
+                        ],
+                      ),
+                    ),
+                    child: ScreenHeader(
+                      greeting: '',
+                      title: l10n.screenProfile,
+                      leading: Navigator.of(context).canPop()
+                          ? const FtBackButton()
+                          : null,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -491,21 +630,6 @@ class _ProfileSectionLoader extends StatelessWidget {
       ),
     );
   }
-}
-
-DecorationImage? _profileBackgroundImage(SocialUserProfile? profile) {
-  final background =
-      socialBackgroundDefinition(profile?.equippedCosmetics.backgroundId);
-  if (background == null) return null;
-  final assetPath = CosmeticsConfig.standard().resolveAssetPath(
-    background.previewAssetKey ?? background.assetKey,
-  );
-  if (assetPath == null) return null;
-  return DecorationImage(
-    image: AssetImage(assetPath),
-    fit: BoxFit.cover,
-    opacity: 0.18,
-  );
 }
 
 class _ProfileEmptyLine extends StatelessWidget {

@@ -6,7 +6,7 @@ import '../../../shared/theme/design_tokens.dart';
 import '../../progression_engine/domain/display/progression_display_models.dart';
 import '../../progression_engine/domain/display/progression_display_resolver.dart';
 import '../domain/social_models.dart';
-import 'widgets/social_user_profile_sheet.dart';
+import 'widgets/social_user_profile_screen.dart';
 
 const _resolver = ProgressionDisplayResolver();
 
@@ -137,14 +137,13 @@ void openUserProfile(
   String? initialDisplayName,
   String? initialPhotoUrl,
 }) {
-  showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (_) => SocialUserProfileSheet(
-      uid: uid,
-      initialDisplayName: initialDisplayName,
-      initialPhotoUrl: initialPhotoUrl,
+  Navigator.of(context).push<void>(
+    MaterialPageRoute(
+      builder: (_) => SocialUserProfileScreen(
+        uid: uid,
+        initialDisplayName: initialDisplayName,
+        initialPhotoUrl: initialPhotoUrl,
+      ),
     ),
   );
 }

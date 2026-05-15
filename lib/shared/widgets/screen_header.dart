@@ -6,6 +6,7 @@ class ScreenHeader extends StatelessWidget {
   final String greeting;
   final String title;
   final Widget? leading;
+  final Widget? trailing;
   final VoidCallback? onAvatarTap;
 
   const ScreenHeader({
@@ -13,6 +14,7 @@ class ScreenHeader extends StatelessWidget {
     required this.greeting,
     required this.title,
     this.leading,
+    this.trailing,
     this.onAvatarTap,
   });
 
@@ -55,7 +57,9 @@ class ScreenHeader extends StatelessWidget {
               ],
             ),
           ),
-          if (onAvatarTap != null)
+          if (trailing != null)
+            trailing!
+          else if (onAvatarTap != null)
             GestureDetector(
               onTap: onAvatarTap,
               child: Container(
