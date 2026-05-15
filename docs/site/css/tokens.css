@@ -54,3 +54,30 @@
   --topbar-height: 56px;
   --max-content-width: 1280px;
 }
+
+/* Světlý režim — aktivuje se přes <html data-theme="light">. */
+:root[data-theme="light"] {
+  /* Surfaces */
+  --color-bg: #F5F6FA;
+  --color-surface: #FFFFFF;
+  --color-surface-subtle: rgba(13, 15, 28, 0.025);
+  --color-card-border: rgba(13, 15, 28, 0.1);
+  --color-divider: rgba(13, 15, 28, 0.08);
+
+  /* Foreground — tmavá navy na světlém */
+  --color-on-surface: rgba(13, 15, 28, 0.92);
+  --color-on-surface-muted: rgba(13, 15, 28, 0.55);
+  --color-on-surface-faint: rgba(13, 15, 28, 0.32);
+
+  /* Accents — saturovanější varianty pro kontrast na bílé */
+  --color-accent: #5B4FE0;
+  --color-accent-glow: rgba(91, 79, 224, 0.15);
+  --color-secondary: #3F65D4;
+  --color-tertiary: #C77835;
+
+  /* Semantic */
+  --color-success: #059669;
+  --color-warning: #B45309;
+  --color-danger: #DC2626;
+  --color-xp: #B45309;
+}

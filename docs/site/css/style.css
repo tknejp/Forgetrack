@@ -103,6 +103,39 @@ code {
   background: var(--color-accent-glow);
 }
 
+/* ── Theme toggle ───────────────────────────────────────── */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-left: auto;
+  flex-shrink: 0;
+  background: transparent;
+  color: var(--color-on-surface-muted);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-icon);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.theme-toggle:hover {
+  background: var(--color-surface-subtle);
+  color: var(--color-on-surface);
+  border-color: var(--color-accent);
+}
+
+.theme-toggle-icon::before {
+  content: "☾"; /* moon — výchozí (tmavý režim → klik na světlý) */
+}
+
+:root[data-theme="light"] .theme-toggle-icon::before {
+  content: "☀";
+}
+
 /* ============================================================
    Main
    ============================================================ */
@@ -238,6 +271,69 @@ code {
 .feature-tile[data-group="gameplay"]  { border-left: 3px solid var(--color-accent); }
 .feature-tile[data-group="sync"]      { border-left: 3px solid var(--color-tertiary); }
 .feature-tile[data-group="shell"]     { border-left: 3px solid var(--color-on-surface-faint); }
+
+/* ============================================================
+   Graph container (Cytoscape)
+   ============================================================ */
+.graph-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  align-items: center;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-card);
+  margin-bottom: var(--space-lg);
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-small);
+  color: var(--color-on-surface-muted);
+}
+
+.legend-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid var(--color-card-border);
+  flex-shrink: 0;
+}
+
+.legend-swatch-ring {
+  background: transparent;
+  border-width: 2px;
+}
+
+.btn-subtle {
+  margin-left: auto;
+  padding: 6px 14px;
+  background: var(--color-surface-subtle);
+  color: var(--color-on-surface);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-button);
+  font: inherit;
+  font-size: var(--font-small);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-subtle:hover {
+  background: var(--color-accent-glow);
+  border-color: var(--color-accent);
+}
+
+.graph-container {
+  width: 100%;
+  height: min(700px, calc(100vh - 240px));
+  background: var(--color-surface);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-card);
+  position: relative;
+}
 
 /* ============================================================
    Side panel
@@ -383,6 +479,13 @@ code {
   text-decoration: none;
 }
 
+.detail-empty {
+  display: inline-block;
+  font-size: var(--font-small);
+  color: var(--color-on-surface-faint);
+  font-style: italic;
+}
+
 .empty-state {
   padding: var(--space-3xl);
   text-align: center;
@@ -404,6 +507,7 @@ code {
    ============================================================ */
 @media (max-width: 720px) {
   .topbar {
+    position: relative;
     flex-direction: column;
     align-items: flex-start;
     gap: var(--space-sm);
@@ -413,6 +517,13 @@ code {
 
   .view-switcher {
     width: 100%;
+  }
+
+  .theme-toggle {
+    position: absolute;
+    top: 10px;
+    right: var(--space-lg);
+    margin: 0;
   }
 
   .main {

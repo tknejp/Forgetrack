@@ -31,7 +31,7 @@ Pages. Žádný build step.
 | # | Co | Status |
 |---|---|---|
 | 1 | Foundation (HTML/CSS/JS shell, router, side panel) + **Mapa feature** | ✅ |
-| 2 | **Graf providerů** (Cytoscape) | ⏸️ |
+| 2 | **Graf providerů** (Cytoscape) + light mode toggle | ✅ |
 | 3 | **Úložiště** + **Externí integrace** | ⏸️ |
 | 4 | **Datové toky** (8–9 scénářů, Mermaid sequence) | ⏸️ |
 | 5 | **Doménový slovník** (sealed hierarchies, Mermaid class) | ⏸️ |

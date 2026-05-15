@@ -4,8 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Forgetrack — Architektonická dokumentace</title>
+  <script>
+    // Aplikace téma před prvním paintem, zabraňuje flash-of-dark.
+    (function () {
+      var stored = localStorage.getItem('forgetrack-theme');
+      var theme = (stored === 'light' || stored === 'dark')
+        ? stored
+        : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+      if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    })();
+  </script>
   <link rel="stylesheet" href="css/tokens.css" />
   <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -23,6 +34,9 @@
       <a href="#/progression" data-view="progression">RPG vrstva</a>
       <a href="#/decisions" data-view="decisions">Rozhodnutí</a>
     </nav>
+    <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Přepnout téma">
+      <span class="theme-toggle-icon" data-theme-icon></span>
+    </button>
   </header>
 
   <main id="main" class="main">

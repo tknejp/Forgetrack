@@ -4,6 +4,35 @@
 //   #/<view>/<detail>        → render view + open side panel for detail
 
 import { renderFeaturesView, openFeatureDetail } from './views/features.js';
+import { renderProvidersView, openProviderDetail } from './views/providers.js';
+
+// ─── Theme (light / dark) ──────────────────────────────────────
+// Aplikujeme co nejdřív, ať se ve světlém režimu neflashne tmavá.
+const THEME_KEY = 'forgetrack-theme';
+
+function initialTheme() {
+  const stored = localStorage.getItem(THEME_KEY);
+  if (stored === 'light' || stored === 'dark') return stored;
+  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+}
+
+function applyTheme(theme) {
+  if (theme === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+  }
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+  const next = current === 'light' ? 'dark' : 'light';
+  localStorage.setItem(THEME_KEY, next);
+  applyTheme(next);
+  document.dispatchEvent(new CustomEvent('themechange', { detail: { theme: next } }));
+}
+
+applyTheme(initialTheme());
 
 const VIEWS = {
   features: {
@@ -11,7 +40,11 @@ const VIEWS = {
     render: renderFeaturesView,
     openDetail: openFeatureDetail,
   },
-  providers: { label: 'Providery', render: renderPlaceholder('Providery', 'iteraci 2') },
+  providers: {
+    label: 'Providery',
+    render: renderProvidersView,
+    openDetail: openProviderDetail,
+  },
   dataflow: { label: 'Datové toky', render: renderPlaceholder('Datové toky', 'iteraci 4') },
   storage: { label: 'Úložiště', render: renderPlaceholder('Úložiště', 'iteraci 3') },
   integrations: { label: 'Integrace', render: renderPlaceholder('Integrace', 'iteraci 3') },
@@ -124,5 +157,7 @@ export async function fetchJson(path) {
 window.addEventListener('hashchange', handleRoute);
 window.addEventListener('DOMContentLoaded', () => {
   bindSidePanelClose();
+  const toggle = document.getElementById('theme-toggle');
+  if (toggle) toggle.addEventListener('click', toggleTheme);
   handleRoute();
 });

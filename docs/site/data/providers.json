@@ -1,0 +1,190 @@
+{
+  "kinds": {
+    "ChangeNotifierProvider": { "label": "ChangeNotifierProvider", "hint": "Notifier vystavený přes value/create, bez proxy závislostí." },
+    "ChangeNotifierProxyProvider": { "label": "ChangeNotifierProxy", "hint": "Notifier s update() voláním z 1–N upstream providerů." },
+    "Provider": { "label": "Provider (singleton)", "hint": "Plain (ne-ChangeNotifier) singleton vystavený přes Provider.value." }
+  },
+  "groups": {
+    "data": "Datové zdroje",
+    "gameplay": "Gameplay & RPG",
+    "sync": "Sync & export",
+    "shell": "Shell & UX",
+    "infra": "Infrastruktura"
+  },
+  "providers": [
+    {
+      "id": "AuthProvider",
+      "displayName": "Auth",
+      "feature": "auth",
+      "group": "data",
+      "kind": "ChangeNotifierProvider",
+      "eager": true,
+      "file": "lib/features/auth/application/auth_provider.dart",
+      "summary": "Google Sign-In + Firebase Auth session. Publikuje aktuálního uživatele a změny do downstream providerů.",
+      "dependsOn": []
+    },
+    {
+      "id": "FitnessProvider",
+      "displayName": "Fitness",
+      "feature": "health_connect",
+      "group": "data",
+      "kind": "ChangeNotifierProvider",
+      "file": "lib/features/health_connect/application/fitness_provider.dart",
+      "summary": "Snapshot Health Connect dat (kroky, spánek, váha, aktivity) z lokální Isar cache + refresh API.",
+      "dependsOn": []
+    },
+    {
+      "id": "GoalsProvider",
+      "displayName": "Goals",
+      "feature": "health_connect",
+      "group": "data",
+      "kind": "ChangeNotifierProvider",
+      "file": "lib/features/health_connect/application/goals_provider.dart",
+      "summary": "Uživatelské cíle (kroky, kalorie, makra, váha). Konzumují progression rules.",
+      "dependsOn": []
+    },
+    {
+      "id": "KalorickeTabulkyProvider",
+      "displayName": "KT Nutrition",
+      "feature": "nutrition",
+      "group": "data",
+      "kind": "ChangeNotifierProvider",
+      "file": "lib/features/nutrition/application/kaloricke_tabulky_provider.dart",
+      "summary": "Kalorické tabulky — denní makro a kalorické záznamy z REST API + Isar cache.",
+      "dependsOn": []
+    },
+    {
+      "id": "CalorieProvider",
+      "displayName": "Calorie",
+      "feature": "nutrition",
+      "group": "data",
+      "kind": "ChangeNotifierProvider",
+      "file": "lib/features/nutrition/application/calorie_provider.dart",
+      "summary": "Lightweight aggregated kalorické metriky pro home dashboard.",
+      "dependsOn": []
+    },
+    {
+      "id": "CosmeticsProvider",
+      "displayName": "Cosmetics",
+      "feature": "cosmetics",
+      "group": "gameplay",
+      "kind": "ChangeNotifierProxyProvider",
+      "eager": true,
+      "file": "lib/features/cosmetics/application/cosmetics_provider.dart",
+      "summary": "Katalog kosmetiky + per-user unlock & equip stav. Bindne uid z Authu, hydratuje Isar + Firestore entitlements.",
+      "dependsOn": ["AuthProvider"]
+    },
+    {
+      "id": "ProgressionEngineProvider",
+      "displayName": "Progression Engine",
+      "feature": "progression_engine",
+      "group": "gameplay",
+      "kind": "ChangeNotifierProxyProvider",
+      "eager": true,
+      "file": "lib/features/progression_engine/application/progression_engine_provider.dart",
+      "summary": "V2 engine — vyhodnocování objectives, append-only ledger, hybrid sync do Firestoru. Nejnetriviálnější uzel grafu (5 závislostí).",
+      "dependsOn": ["AuthProvider", "GoalsProvider", "FitnessProvider", "KalorickeTabulkyProvider", "CosmeticsProvider"]
+    },
+    {
+      "id": "SocialProvider",
+      "displayName": "Social",
+      "feature": "social",
+      "group": "sync",
+      "kind": "ChangeNotifierProxyProvider",
+      "eager": true,
+      "file": "lib/features/social/application/social_provider.dart",
+      "summary": "Přátelé, leaderboard, profile snapshot do Firestoru. Čte level + achievement summary z progression engine.",
+      "dependsOn": ["AuthProvider", "ProgressionEngineProvider", "CosmeticsProvider"]
+    },
+    {
+      "id": "CelebrationController",
+      "displayName": "Celebration",
+      "feature": "celebration",
+      "group": "gameplay",
+      "kind": "ChangeNotifierProxyProvider",
+      "file": "lib/features/celebration/application/celebration_controller.dart",
+      "summary": "Fronta celebration scén nad navigací — reaguje na engine signály a nové cosmetic unlocky.",
+      "dependsOn": ["ProgressionEngineProvider", "CosmeticsProvider"]
+    },
+    {
+      "id": "SheetsExportProvider",
+      "displayName": "Sheets Export",
+      "feature": "sheets_export",
+      "group": "sync",
+      "kind": "ChangeNotifierProvider",
+      "file": "lib/features/sheets_export/application/sheets_export_provider.dart",
+      "summary": "Raw DB dump do Google Sheets — merge by date pro osobní analýzu.",
+      "dependsOn": []
+    },
+    {
+      "id": "BushidoExportProvider",
+      "displayName": "Coach Log Export",
+      "feature": "coach_log_export",
+      "group": "sync",
+      "kind": "ChangeNotifierProvider",
+      "file": "lib/features/coach_log_export/application/bushido_export_provider.dart",
+      "summary": "Týdenní coaching report do Google Sheets — ISO week bloky, idempotentní re-export.",
+      "dependsOn": []
+    },
+    {
+      "id": "ConnectivityProvider",
+      "displayName": "Connectivity",
+      "feature": "core",
+      "group": "infra",
+      "kind": "ChangeNotifierProvider",
+      "file": "lib/core/services/connectivity_provider.dart",
+      "summary": "Online / offline stav. Gatuje Firestore network access aby se neretryovalo offline.",
+      "dependsOn": []
+    },
+    {
+      "id": "LocaleProvider",
+      "displayName": "Locale",
+      "feature": "core",
+      "group": "infra",
+      "kind": "ChangeNotifierProvider",
+      "file": "lib/app/locale_provider.dart",
+      "summary": "Aktivní jazyk (cs / en). Persistováno v SharedPreferences.",
+      "dependsOn": []
+    },
+    {
+      "id": "NotificationPreferencesProvider",
+      "displayName": "Notification Prefs",
+      "feature": "core",
+      "group": "infra",
+      "kind": "ChangeNotifierProvider",
+      "file": "lib/app/notification_preferences_provider.dart",
+      "summary": "Uživatelské nastavení push notifikací a debug notifikací.",
+      "dependsOn": []
+    },
+    {
+      "id": "HomeCardOrderProvider",
+      "displayName": "Home Card Order",
+      "feature": "home",
+      "group": "shell",
+      "kind": "ChangeNotifierProvider",
+      "file": "lib/features/home/application/home_card_order_provider.dart",
+      "summary": "Drag-and-drop pořadí dashboard karet. Persistováno v SharedPreferences.",
+      "dependsOn": []
+    },
+    {
+      "id": "OnboardingProvider",
+      "displayName": "Onboarding",
+      "feature": "onboarding",
+      "group": "shell",
+      "kind": "ChangeNotifierProvider",
+      "file": "lib/features/onboarding/application/onboarding_provider.dart",
+      "summary": "First-run flow stav (HC permissions, KT login, Google sign-in). Tracked v SharedPreferences.",
+      "dependsOn": []
+    },
+    {
+      "id": "DevToolsProvider",
+      "displayName": "DevTools",
+      "feature": "devtools",
+      "group": "shell",
+      "kind": "ChangeNotifierProvider",
+      "file": "lib/features/devtools/application/devtools_provider.dart",
+      "summary": "Debug panel state. Gated kDebugMode + developer UID allowlistem.",
+      "dependsOn": []
+    }
+  ]
+}
