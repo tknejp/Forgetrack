@@ -21,12 +21,30 @@ void main() {
       expect(display.rarity, Rarity.common);
     });
 
-    test('levelDisplay falls back to a synthetic title for unknown levels', () {
+    test('levelDisplay above the level cap inherits the highest milestone', () {
+      // Player past the level 100 cap keeps wearing the level-100 title +
+      // rarity instead of dropping to a generic "Level N" fallback.
       final display = resolver.levelDisplay(9999);
+      final top = kLevelMilestones.last;
       expect(display.level, 9999);
-      expect(display.title(l10n), 'Level 9999');
-      expect(display.emoji, '');
-      expect(display.rarity, Rarity.common);
+      expect(display.title(l10n), top.titleKey(l10n));
+      expect(display.emoji, top.emoji);
+      expect(display.rarity, top.rarity);
+    });
+
+    test('levelDisplay between milestones inherits the governing breakpoint',
+        () {
+      // Levels 2-4 don't have their own milestone spec — they should keep
+      // the level-1 (Pilgrim) title + common rarity until the next
+      // breakpoint at level 5 fires. Regression guard for the screen
+      // header showing "Level 2 ⚔ LEVEL 2" with the default accent.
+      for (final mid in [2, 3, 4]) {
+        final display = resolver.levelDisplay(mid);
+        final governing = kLevelMilestones.first;
+        expect(display.level, mid);
+        expect(display.title(l10n), governing.titleKey(l10n));
+        expect(display.rarity, governing.rarity);
+      }
     });
 
     test('levelMilestones yields one entry per spec in order', () {

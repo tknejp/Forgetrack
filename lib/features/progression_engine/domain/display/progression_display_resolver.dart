@@ -33,16 +33,20 @@ class ProgressionDisplayResolver {
   // ── Levels ───────────────────────────────────────────────────────────
 
   /// Display payload for the player's current level. Always returns a
-  /// non-null value; falls back to a synthetic title / common rarity /
-  /// accent for levels not in [kLevelMilestones].
+  /// non-null value; for levels that are not themselves a milestone in
+  /// [kLevelMilestones] (e.g. 2, 3, 4, 6, 7, …) we surface the *governing*
+  /// spec — the highest milestone whose level is ≤ [level]. That keeps the
+  /// player wearing the previous breakpoint's title + rarity colour until
+  /// the next breakpoint fires, instead of falling back to a generic
+  /// "Level N" label and the default accent.
   LevelDisplay levelDisplay(int level) {
-    final spec = levelMilestoneByLevel(level);
+    final spec = levelMilestoneAtOrBelow(level);
     return LevelDisplay(
       level: level,
-      title: spec?.titleKey ?? ((l) => 'Level $level'),
-      emoji: spec?.emoji ?? '',
-      rarity: spec?.rarity ?? Rarity.common,
-      accentColor: _accentForRarity(spec?.rarity),
+      title: spec.titleKey,
+      emoji: spec.emoji,
+      rarity: spec.rarity,
+      accentColor: _accentForRarity(spec.rarity),
     );
   }
 
