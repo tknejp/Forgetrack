@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../features/auth/application/auth_provider.dart';
 import '../../../shared/theme/design_tokens.dart';
 import '../../../shared/widgets/drag_reveal_pager.dart';
+import '../../../l10n/l10n.dart';
 import '../application/social_provider.dart';
 import 'tabs/social_activity_tab.dart';
 import 'tabs/social_feed_tab.dart';
@@ -76,6 +77,8 @@ class _FtSocialScreenState extends State<SocialScreen>
                     ? null
                     : () => context.read<AuthProvider>().signIn(),
               ),
+            if (auth.isSignedIn && social.backendReady && social.isReady)
+              _FriendCountRow(count: social.friends.length),
             SocialTabBar(
               controller: _tab,
               pendingCount: social.incomingRequests.length,
@@ -100,6 +103,51 @@ class _FtSocialScreenState extends State<SocialScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _FriendCountRow extends StatelessWidget {
+  const _FriendCountRow({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
+            decoration: BoxDecoration(
+              color: Tokens.active.dim,
+              borderRadius: BorderRadius.circular(Tokens.radiusProgress),
+              border:
+                  Border.all(color: Tokens.active.color.withValues(alpha: 0.24)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.groups_rounded,
+                  size: 14,
+                  color: Tokens.active.color,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  context.l10n.socialFriendCount(count),
+                  style: TextStyle(
+                    color: Tokens.active.color,
+                    fontSize: Tokens.fontSizeSmall,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
