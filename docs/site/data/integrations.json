@@ -1,0 +1,196 @@
+{
+  "categories": {
+    "android": "Android platform",
+    "google": "Google APIs",
+    "firebase": "Firebase",
+    "third_party": "Třetí strany"
+  },
+  "integrations": [
+    {
+      "id": "health_connect",
+      "name": "Health Connect",
+      "category": "android",
+      "summary": "Android Health Connect API pro fitness data — kroky, kalorie, spánek, váha, aktivity.",
+      "package": "health: ^13.3.1",
+      "auth": "Permission-based přes platform dialog. Permissions lze revokovat pouze přes Android Settings, ne přes appku.",
+      "entry": "lib/features/health_connect/data/health_connect_service.dart",
+      "usedBy": ["health_connect"],
+      "endpoints": [
+        { "name": "getHealthDataFromTypes", "purpose": "Range fetch (steps / calories / sleep / weight / activity)." },
+        { "name": "hasPermissions / requestAuthorization", "purpose": "Permission state + request flow." }
+      ],
+      "constraints": [
+        "External source of truth — appka data nikdy nemaže ani nemodifikuje.",
+        "Inclusive UI range + **exclusive query end** (endExclusive = endDay + 1).",
+        "Quota errors **nesmí** přepsat valid cached data ani razítkovat lastSyncedAt.",
+        "Pozor na local vs UTC DateTime boundaries."
+      ],
+      "docs": ["docs/architecture.md"]
+    },
+    {
+      "id": "google_signin",
+      "name": "Google Sign-In",
+      "category": "google",
+      "summary": "OAuth flow pro Google identitu. Token slouží Firebase Authu + Sheets API + Drive scope.",
+      "package": "google_sign_in: ^7.2.0",
+      "auth": "Native dialog Google Play Services. V7.x má authenticatedClient() přímo zabudované.",
+      "entry": "lib/features/auth/data/",
+      "usedBy": ["auth", "sheets_export", "coach_log_export"],
+      "endpoints": [
+        { "name": "signIn / signInSilently", "purpose": "Interaktivní + tichý refresh sign-in." },
+        { "name": "authenticatedClient", "purpose": "HTTP klient se zabudovaným OAuth bearer pro Google APIs." }
+      ],
+      "constraints": [
+        "Sheets export potřebuje scope 'https://www.googleapis.com/auth/spreadsheets'.",
+        "Token se transparentně refreshuje uvnitř pluginu."
+      ]
+    },
+    {
+      "id": "firebase_auth",
+      "name": "Firebase Auth",
+      "category": "firebase",
+      "summary": "Firebase Authentication propojený s Google Sign-In jako identity providerem.",
+      "package": "firebase_auth: ^6.4.0",
+      "auth": "GoogleAuthProvider credential z Google Sign-In tokenu → FirebaseAuth.signInWithCredential.",
+      "entry": "lib/features/auth/data/",
+      "usedBy": ["auth", "social", "cosmetics", "progression_engine"],
+      "endpoints": [
+        { "name": "signInWithCredential", "purpose": "Sign-in s Google credential." },
+        { "name": "authStateChanges (stream)", "purpose": "Reactivní user/null stream." },
+        { "name": "currentUser.uid", "purpose": "Klíč pro per-user Firestore subkolekce." }
+      ],
+      "constraints": [
+        "Při sign-out se musí explicitně volat signOut i na google_sign_in, jinak zůstává Google session."
+      ]
+    },
+    {
+      "id": "firestore",
+      "name": "Cloud Firestore",
+      "category": "firebase",
+      "summary": "Cloud document store pro V2 progression ledger, social profile, friendships a notifikace.",
+      "package": "cloud_firestore: ^6.3.0",
+      "auth": "Firebase Auth — pravidla na server-side filtrují podle request.auth.uid.",
+      "entry": "lib/features/progression_engine/data/firestore_progression_engine_gateway.dart, lib/features/social/data/social_repository_firestore.dart",
+      "usedBy": ["progression_engine", "social", "cosmetics"],
+      "endpoints": [
+        { "name": "collection().doc().set/get/snapshots", "purpose": "Standardní CRUD + realtime streams." },
+        { "name": "batched writes", "purpose": "Pull-and-merge i wipe pages." }
+      ],
+      "constraints": [
+        "Engine events používají set() místo transakcí — eventy jsou immutable s deterministickým eventKey.",
+        "Cloud failures jsou fire-and-forget (unawaited), nesmí blokovat lokální commits.",
+        "ConnectivityProvider gatuje network access kvůli reconnect storm při offline.",
+        "Schema pro V2 engine viz [docs/features/firestore_sync.md](docs/features/firestore_sync.md)."
+      ],
+      "docs": ["docs/features/firestore_sync.md"]
+    },
+    {
+      "id": "firebase_messaging",
+      "name": "Firebase Cloud Messaging",
+      "category": "firebase",
+      "summary": "Push notifikace — friend requests, achievement shares, narozeniny streaks.",
+      "package": "firebase_messaging: ^16.2.0",
+      "auth": "FCM token vázán na FirebaseAuth uid, ukládá se do users/{uid}.fcmTokens[].",
+      "entry": "lib/core/services/fcm_service.dart",
+      "usedBy": ["social", "core"],
+      "endpoints": [
+        { "name": "getToken / onTokenRefresh", "purpose": "Získání + update tokenu při refresh." },
+        { "name": "onMessage / onBackgroundMessage", "purpose": "Foreground + background handlery." }
+      ],
+      "constraints": [
+        "Token registrace honoruje NotificationPreferencesProvider — opt-out uživatelé nedostávají push.",
+        "Background message handler musí být top-level funkce (Dart isolate requirement)."
+      ]
+    },
+    {
+      "id": "firebase_storage",
+      "name": "Firebase Storage",
+      "category": "firebase",
+      "summary": "Cloud blob storage pro profilové fotky.",
+      "package": "firebase_storage: ^13.3.0",
+      "auth": "Firebase Auth pravidla — user smí psát jen do social_profile_photos/{vlastní uid}/.",
+      "entry": "lib/features/social/application/social_provider.dart",
+      "usedBy": ["social"],
+      "endpoints": [
+        { "name": "ref.putFile", "purpose": "Upload fotky vybrané přes image_picker." },
+        { "name": "ref.getDownloadURL", "purpose": "Public CDN URL pro users/{uid}.photoURL." }
+      ],
+      "constraints": [
+        "SocialAvatar používá cached_network_image — fotka se cachuje na disk mezi spuštěními, žádný re-download z CDN."
+      ]
+    },
+    {
+      "id": "google_sheets",
+      "name": "Google Sheets API",
+      "category": "google",
+      "summary": "Sheets API v4 pro raw DB dump i Coach Log týdenní reporty.",
+      "package": "googleapis: ^16.0.0",
+      "auth": "Google Sign-In authenticatedClient (OAuth bearer).",
+      "entry": "lib/features/sheets_export/data/, lib/features/coach_log_export/data/bushido_sheets_service.dart",
+      "usedBy": ["sheets_export", "coach_log_export"],
+      "endpoints": [
+        { "name": "spreadsheets.values.get / update / batchUpdate", "purpose": "Čtení a zápis cell ranges." },
+        { "name": "spreadsheets.batchUpdate (developer metadata, conditional formatting)", "purpose": "Setup formátování (budoucí)." }
+      ],
+      "constraints": [
+        "Raw export drží merge-by-date semantiku.",
+        "Coach Log použivá marker BUSHIDO_WEEK:{year}-W{ww}:v{layoutVersion} v skrytém sloupci Z; markery se scanují jednou na začátku exportRange.",
+        "Coach Log re-export nikdy nepřepisuje manuální buňky (sloupce I:L).",
+        "Chybějící hodnoty se zapisují jako blank (nikdy 0) — AVERAGE vzorce blank ignorují."
+      ],
+      "docs": ["docs/features/coach_log_export.md"]
+    },
+    {
+      "id": "kaloricke_tabulky",
+      "name": "Kalorické tabulky (REST)",
+      "category": "third_party",
+      "summary": "Třetí strana — kaloricketabulky.cz. Cookie-based session auth, JSON REST endpoints.",
+      "package": "http: ^1.2.1 (raw klient)",
+      "auth": "Cookie session — email + heslo (uložené přes flutter_secure_storage jako hash), session cookies se obnovují automaticky.",
+      "entry": "lib/features/nutrition/data/kaloricke_tabulky_service.dart",
+      "usedBy": ["nutrition"],
+      "endpoints": [
+        { "name": "GET /user/diary/{dd.mm.yyyy}/get?format=json", "purpose": "Denní záznam (kcal, makra per jídlo)." }
+      ],
+      "constraints": [
+        "Žádné official API — kontrakt může lupnout kdykoli.",
+        "Session cookies se musí refreshnout při 401 → re-login.",
+        "Capture kompletního response: docs/integrations/kt_api_reference.md."
+      ],
+      "docs": ["docs/integrations/kt_api_reference.md"]
+    },
+    {
+      "id": "workmanager",
+      "name": "Android WorkManager",
+      "category": "android",
+      "summary": "Periodický background sync (Health Connect refresh + progression evaluation).",
+      "package": "workmanager: ^0.9.0",
+      "auth": "Není.",
+      "entry": "lib/core/services/background_sync_service.dart",
+      "usedBy": ["core"],
+      "endpoints": [
+        { "name": "registerPeriodicTask", "purpose": "Plánování pravidelného background syncu." }
+      ],
+      "constraints": [
+        "Android Doze + battery saver mohou exekuci posunout — timing není exaktní.",
+        "Background isolate musí inicializovat vlastní Firebase + lokalizaci."
+      ]
+    },
+    {
+      "id": "local_notifications",
+      "name": "flutter_local_notifications",
+      "category": "android",
+      "summary": "Lokální notifikace bez serveru — debug sync notifikace v dev buildech.",
+      "package": "flutter_local_notifications: ^18.0.0",
+      "auth": "Notification permission (Android 13+).",
+      "entry": "lib/core/services/notification_service.dart",
+      "usedBy": ["core", "devtools"],
+      "endpoints": [
+        { "name": "show / cancel", "purpose": "Zobrazit / zrušit local notification." }
+      ],
+      "constraints": [
+        "Debug notifikace gated kDebugMode + devtools toggle (devtools_bg_debug_notifications_enabled)."
+      ]
+    }
+  ]
+}

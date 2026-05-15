@@ -1,0 +1,200 @@
+{
+  "buckets": [
+    {
+      "id": "isar",
+      "name": "Isar (lokální databáze)",
+      "summary": "Type-safe lokální DB. Čtyři oddělené instance, jedna per doménová oblast. Generované .g.dart soubory jsou součástí gitu.",
+      "kind": "local-typed",
+      "stores": [
+        {
+          "id": "health_database",
+          "name": "HealthDatabase",
+          "path": "lib/features/health_connect/data/local/health_database.dart",
+          "modelsPath": "lib/features/health_connect/data/local/hc_records.dart",
+          "role": "Lokální cache Health Connect dat.",
+          "collections": [
+            { "name": "HcStepsDayRecord", "purpose": "Kroky agregované per den." },
+            { "name": "HcCalorieDayRecord", "purpose": "Aktivní + total kalorie per den." },
+            { "name": "HcWeightRecord", "purpose": "Jednotlivé záznamy váhy s timestampem." },
+            { "name": "HcSleepRecord", "purpose": "Spánkové intervaly (sleep stages)." },
+            { "name": "HcActivityRecord", "purpose": "Tracked aktivity (běh, chůze, jiné)." },
+            { "name": "HcMetaRecord", "purpose": "lastSyncedAt, permission state, range coverage." }
+          ],
+          "writers": ["FitnessProvider"],
+          "readers": ["FitnessProvider", "ProgressionEngineProvider (přes adapter)", "SheetsExportProvider"]
+        },
+        {
+          "id": "kt_nutrition_database",
+          "name": "KtNutritionDatabase",
+          "path": "lib/features/nutrition/data/local/kt_nutrition_database.dart",
+          "modelsPath": "lib/features/nutrition/data/local/nutrition_day_record.dart",
+          "role": "Cache denních makro / kalorických záznamů z Kalorické tabulky.",
+          "collections": [
+            { "name": "NutritionDayRecord", "purpose": "Den, kcal, bílkoviny, sacharidy, tuky, vláknina." }
+          ],
+          "writers": ["KalorickeTabulkyProvider"],
+          "readers": ["KalorickeTabulkyProvider", "ProgressionEngineProvider (přes adapter)", "SheetsExportProvider"]
+        },
+        {
+          "id": "progression_engine_database",
+          "name": "ProgressionEngineDatabase",
+          "path": "lib/features/progression_engine/data/local/progression_engine_database.dart",
+          "modelsPath": "lib/features/progression_engine/data/local/progression_engine_local_models.dart",
+          "role": "Append-only ledger V2 engine. Source of truth pro lokální stav; každý event má deterministický eventKey.",
+          "collections": [
+            { "name": "EngineObjectiveCompletionRecord", "purpose": "Objective splněn pro daný period (date / week / chapter)." },
+            { "name": "EngineNodeCompletionRecord", "purpose": "Quest / achievement / milestone uzel přešel do completed." },
+            { "name": "EngineNodeClaimRecord", "purpose": "Uživatel claimnul reward (oproti completion, který je auto)." },
+            { "name": "EngineRewardGrantRecord", "purpose": "Granted reward (XP, cosmetic, chapter unlock, …). finalXp vypočteno v okamžiku claimu." },
+            { "name": "EngineNodeAnnouncementRecord", "purpose": "UI announcement event — bylo zobrazeno tooltipem / celebration sheetem?" },
+            { "name": "EngineActiveSelectionRecord", "purpose": "Aktivní set side-questů / chapterů (perzistovaný mission board)." }
+          ],
+          "writers": ["ProgressionEngineProvider (via HybridProgressionEngineRepository)"],
+          "readers": ["ProgressionEngineProvider", "Celebration", "Journey", "Social (snapshot)"]
+        },
+        {
+          "id": "cosmetics_database",
+          "name": "CosmeticsDatabase",
+          "path": "lib/features/cosmetics/data/local/cosmetics_database.dart",
+          "modelsPath": "lib/features/cosmetics/data/local/cosmetics_local_models.dart",
+          "role": "Per-user stav kosmetiky — unlocky a aktuálně equipped sloty.",
+          "collections": [
+            { "name": "CosmeticsUserStateRecord", "purpose": "Jeden row per uid: equipped slot IDs + updatedAt." },
+            { "name": "CosmeticsUnlockRecord", "purpose": "Jeden row per (uid, cosmeticId): timestamp, source, sourceId. Composite unique index → duplicates impossible." }
+          ],
+          "writers": ["CosmeticsProvider (via service)"],
+          "readers": ["CosmeticsProvider", "Cosmetic Reveal Evaluator", "Social (equipped IDs)"]
+        }
+      ]
+    },
+    {
+      "id": "firestore",
+      "name": "Cloud Firestore",
+      "summary": "Cloud source of truth pro události, které musí přežít reinstall (claimy, achievement unlocky, social profil). Per-user data pod users/{uid}/.",
+      "kind": "cloud-document",
+      "stores": [
+        {
+          "id": "users",
+          "name": "users/{uid}",
+          "path": "Per-user profile snapshot",
+          "role": "Denormalizovaný display profile pro social (level, totalXp, equipped cosmetic IDs, unlocked achievement IDs, handle, photoURL).",
+          "writers": ["SocialProvider.upsertProfile"],
+          "readers": ["SocialProvider.watchProfileById", "Friends tab"]
+        },
+        {
+          "id": "engine_reward_grants",
+          "name": "users/{uid}/engineRewardGrants/{eventKey}",
+          "role": "V2 RewardGrantEvent — XP, cosmetic grant, chapter unlock. Document ID = sanitizovaný eventKey.",
+          "writers": ["FirestoreProgressionEngineGateway"],
+          "readers": ["HybridProgressionEngineRepository.pullAndMerge"]
+        },
+        {
+          "id": "engine_node_claims",
+          "name": "users/{uid}/engineNodeClaims/{eventKey}",
+          "role": "V2 NodeClaimEvent — okamžik manuálního claimu uzlu.",
+          "writers": ["FirestoreProgressionEngineGateway"],
+          "readers": ["HybridProgressionEngineRepository.pullAndMerge"]
+        },
+        {
+          "id": "engine_node_completions",
+          "name": "users/{uid}/engineNodeCompletions/{eventKey}",
+          "role": "V2 NodeCompletionEvent — uzel byl splněn. Social tab čte odsud friend achievement seznam.",
+          "writers": ["FirestoreProgressionEngineGateway"],
+          "readers": ["HybridProgressionEngineRepository.pullAndMerge", "SocialProvider (friend achievements)"]
+        },
+        {
+          "id": "engine_objective_completions",
+          "name": "users/{uid}/engineObjectiveCompletions/{eventKey}",
+          "role": "V2 ObjectiveCompletionEvent — periodický cíl splněn (např. denní steps).",
+          "writers": ["FirestoreProgressionEngineGateway"],
+          "readers": ["HybridProgressionEngineRepository.pullAndMerge"]
+        },
+        {
+          "id": "engine_node_announcements",
+          "name": "users/{uid}/engineNodeAnnouncements/{eventKey}",
+          "role": "UI announcement event (celebration shown).",
+          "writers": ["FirestoreProgressionEngineGateway"],
+          "readers": ["HybridProgressionEngineRepository.pullAndMerge"]
+        },
+        {
+          "id": "cosmetic_entitlements",
+          "name": "users/{uid}/cosmeticEntitlements/{cosmeticId}",
+          "role": "Read-only z pohledu klienta. Promotional grants psané Cloud Functions / externí systémy.",
+          "writers": ["(externí — Cloud Functions)"],
+          "readers": ["FirestoreCosmeticEntitlementsSource"]
+        },
+        {
+          "id": "notifications",
+          "name": "users/{uid}/notifications",
+          "role": "User-facing notifikace (achievement unlock, friend request, …).",
+          "writers": ["SocialProvider", "Cloud Functions"],
+          "readers": ["SocialProvider (stream)"]
+        },
+        {
+          "id": "friend_requests",
+          "name": "friend_requests",
+          "role": "Top-level kolekce friend request dokumentů (from / to / status).",
+          "writers": ["SocialProvider"],
+          "readers": ["SocialProvider (stream)"]
+        },
+        {
+          "id": "friendships",
+          "name": "friendships",
+          "role": "Top-level kolekce navázaných přátelství.",
+          "writers": ["SocialProvider"],
+          "readers": ["SocialProvider (stream)"]
+        },
+        {
+          "id": "achievement_shares",
+          "name": "achievement_shares",
+          "role": "Sdílené achievement snapshoty (achievement title + uživatelův snapshot v jeho jazyce, robust k version skew).",
+          "writers": ["SocialProvider"],
+          "readers": ["SocialProvider (stream + feed)"]
+        },
+        {
+          "id": "handles",
+          "name": "handles",
+          "role": "Unique handle reservation — pro garantovanou jednoznačnost @handles.",
+          "writers": ["SocialProvider"],
+          "readers": ["SocialProvider (validation)"]
+        }
+      ]
+    },
+    {
+      "id": "shared_prefs",
+      "name": "SharedPreferences",
+      "summary": "Plochá key-value úložiště pro user settings, migration markery a perzistovaný UI stav.",
+      "kind": "local-keyvalue",
+      "stores": [
+        { "id": "pref-locale", "name": "selected_language_code", "role": "Aktivní jazyk (cs / en).", "writers": ["LocaleProvider"], "readers": ["LocaleProvider", "FCM service", "Background sync"] },
+        { "id": "pref-notif-enabled", "name": "notifications_enabled", "role": "Master switch lokálních + push notifikací.", "writers": ["NotificationPreferencesProvider"], "readers": ["NotificationPreferencesProvider", "BackgroundSyncService"] },
+        { "id": "pref-onboarding", "name": "onboarding_completed", "role": "Onboarding flow dokončen?", "writers": ["OnboardingProvider"], "readers": ["OnboardingProvider"] },
+        { "id": "pref-spreadsheet", "name": "spreadsheet_id", "role": "ID Google Sheets dokumentu používaného exporty.", "writers": ["SheetsExportService"], "readers": ["SheetsExportService", "BushidoSheetsService"] },
+        { "id": "pref-goals", "name": "daily_steps / weekly_activity_mins", "role": "Uživatelské cíle (kroky, aktivita).", "writers": ["GoalsProvider"], "readers": ["GoalsProvider"] },
+        { "id": "pref-card-order", "name": "home_card_order", "role": "Pořadí dashboard karet (drag-and-drop).", "writers": ["HomeCardOrderProvider"], "readers": ["HomeCardOrderProvider"] },
+        { "id": "pref-devtools", "name": "devtools_debug_mode / devtools_bg_debug_notifications_enabled / devtools_access_granted_last_known / devtools_overrides", "role": "DevTools state a overrides.", "writers": ["DevToolsProvider"], "readers": ["DevToolsProvider", "BackgroundSyncService"] },
+        { "id": "pref-pinned-emblems", "name": "pinned_emblems_{uid}", "role": "Per-user vybrané emblems na profil.", "writers": ["PinnedEmblemsStore"], "readers": ["PinnedEmblemsStore"] },
+        { "id": "pref-theme", "name": "forgetrack-theme (jen docs site)", "role": "Téma docs (light / dark). Není součástí appky.", "writers": ["docs/site/js/app.js"], "readers": ["docs/site/js/app.js"] }
+      ]
+    },
+    {
+      "id": "secure_storage",
+      "name": "flutter_secure_storage",
+      "summary": "Citlivé credentials uložené v Android Keystore.",
+      "kind": "local-secure",
+      "stores": [
+        { "id": "kt-email", "name": "kt_email", "role": "Email pro Kalorické tabulky.", "writers": ["KalorickeTabulkyService"], "readers": ["KalorickeTabulkyService"] },
+        { "id": "kt-pwd-hash", "name": "kt_pwd_hash", "role": "Hash hesla pro Kalorické tabulky (uložen hash, ne plaintext).", "writers": ["KalorickeTabulkyService"], "readers": ["KalorickeTabulkyService"] }
+      ]
+    },
+    {
+      "id": "firebase_storage",
+      "name": "Firebase Storage",
+      "summary": "Velké binární assety — profile fotky.",
+      "kind": "cloud-blob",
+      "stores": [
+        { "id": "profile-photos", "name": "social_profile_photos/{uid}/profile_{ts}.{ext}", "role": "Originál profilové fotky. URL se ukládá do users/{uid}.photoURL.", "writers": ["SocialProvider.uploadCurrentProfilePhoto"], "readers": ["SocialAvatar (přes CachedNetworkImage)"] }
+      ]
+    }
+  ]
+}

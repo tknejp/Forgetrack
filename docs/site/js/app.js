@@ -5,6 +5,8 @@
 
 import { renderFeaturesView, openFeatureDetail } from './views/features.js';
 import { renderProvidersView, openProviderDetail } from './views/providers.js';
+import { renderStorageView, openStorageDetail } from './views/storage.js';
+import { renderIntegrationsView, openIntegrationDetail } from './views/integrations.js';
 
 // ─── Theme (light / dark) ──────────────────────────────────────
 // Aplikujeme co nejdřív, ať se ve světlém režimu neflashne tmavá.
@@ -46,8 +48,16 @@ const VIEWS = {
     openDetail: openProviderDetail,
   },
   dataflow: { label: 'Datové toky', render: renderPlaceholder('Datové toky', 'iteraci 4') },
-  storage: { label: 'Úložiště', render: renderPlaceholder('Úložiště', 'iteraci 3') },
-  integrations: { label: 'Integrace', render: renderPlaceholder('Integrace', 'iteraci 3') },
+  storage: {
+    label: 'Úložiště',
+    render: renderStorageView,
+    openDetail: openStorageDetail,
+  },
+  integrations: {
+    label: 'Integrace',
+    render: renderIntegrationsView,
+    openDetail: openIntegrationDetail,
+  },
   glossary: { label: 'Slovník', render: renderPlaceholder('Doménový slovník', 'iteraci 5') },
   progression: { label: 'RPG vrstva', render: renderPlaceholder('RPG vrstva', 'iteraci 6') },
   decisions: { label: 'Rozhodnutí', render: renderPlaceholder('Rozhodnutí (ADRs)', 'iteraci 7') },
