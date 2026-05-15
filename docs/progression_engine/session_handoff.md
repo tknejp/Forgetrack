@@ -1,7 +1,7 @@
 # Progression Engine V2 — Session Handoff (2026-05-11)
 
 Read this on session resume. Authoritative plan in
-[progression_engine_v2_phased_plan.md](progression_engine_v2_phased_plan.md);
+[v2_phased_plan.md](v2_phased_plan.md);
 this doc is the working state.
 
 ## Branch + commits

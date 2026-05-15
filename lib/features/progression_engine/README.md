@@ -1,83 +1,95 @@
 # progression_engine
 
-The new progression engine. Built beside the legacy `lib/features/progression/`
-module per the phased plan in
-[docs/progression_engine_v2_phased_plan.md](../../../docs/progression_engine_v2_phased_plan.md).
+The V2 progression engine. Owns objective evaluation, the
+node/reward/unlock catalog, the append-only ledger, and the display
+facade other features consume.
 
-## Status
+## Layout
 
-| Phase | Description | Status |
-|---|---|---|
-| 0.5 | Display Resolver bridge over legacy catalog | done |
-| 0.6 | Journey extraction (consumer of resolver) | done |
-| 1 | Domain skeleton (objectives, sealed nodes, rewards) | done |
-| 2 | Evaluation skeleton | done |
-| 3 | Catalog port | pilot done — full port pending |
-| 2 | Evaluation skeleton | not started |
-| 3 | Catalog port | not started |
-| 4 | Persistence (Isar) | not started |
-| 5 | Celebration integration | not started |
-| 6 | Progression UI integration | not started |
-| 7 | Display Resolver swap to new catalog | not started |
-| 8 | RPG mode readiness | not started |
-| 9 | Legacy removal | not started |
+```text
+domain/
+├── catalog/
+│   ├── content/                 # Per-domain catalog content (chapters, daily,
+│   │                            #   long-term, companions, level milestones,
+│   │                            #   side-quest chains, etc.)
+│   ├── objective_catalog.dart   # Goal definitions consumed by ObjectiveEvaluator
+│   ├── progression_node_catalog.dart  # Sealed-node catalog (quest / achievement /
+│   │                                  #   milestone / level-milestone / chapter-
+│   │                                  #   completion / companion-availability /
+│   │                                  #   relic / content-unlock)
+│   ├── level_milestone_specs.dart     # Level-tier metadata (title, emoji, anchors)
+│   └── catalog_validator.dart   # Duplicate ids, dangling node refs, RPG-tag drift
+├── display/
+│   ├── progression_display_resolver.dart  # Public, feature-neutral display facade
+│   └── progression_display_models.dart    # DTOs other features consume
+├── evaluator/                   # Pure evaluators (no I/O, no Flutter)
+│   ├── objective_evaluator.dart       # metric × scope × operator → outcome
+│   ├── unlock_condition_resolver.dart # recursive AllOf / AnyOf
+│   ├── progression_node_resolver.dart # objective + unlock + claim + ledger → NodeState
+│   ├── reward_grant_planner.dart      # newly completed nodes → planned grants
+│   └── engine_streak_source.dart      # derives streak summaries from the ledger
+├── models/                      # Sealed hierarchies: ProgressionNode,
+│   │                            #   RewardDefinition, UnlockCondition,
+│   │                            #   ObjectiveMetric / Scope / Operator,
+│   │                            #   LedgerEvent, ContentTag, etc.
+├── policy/
+│   └── level_policy.dart        # XP ↔ level table
+└── repository/
+    ├── ledger_snapshot.dart
+    └── progression_engine_repository.dart
 
-## What lives here today
+application/
+├── progression_engine.dart           # Orchestrator. Single entry: evaluate(input, reason)
+├── progression_engine_provider.dart  # ChangeNotifier the UI binds to
+├── reward_grant_service.dart         # Builds reward events with XP scaling
+├── daily_section_resolver.dart       # Builds daily section view-model
+├── cosmetic_unlock_bridge.dart       # Engine grants → cosmetics unlocks
+└── cosmetic_reveal_snapshot_builder.dart  # Builds the reveal-state snapshot
 
-- `domain/display/` — public, feature-neutral display facade. Other features
-  (social, journey, future feed publishers) consume progression metadata
-  exclusively through this surface.
-- `domain/models/` — V2 core domain types: `ObjectiveDefinition`,
-  sealed `ProgressionNode` hierarchy (Quest / Achievement / Milestone /
-  LevelMilestone / ChapterCompletion / CompanionAvailability / Relic /
-  ContentUnlock), sealed `RewardDefinition` (XP / Cosmetic / Chapter /
-  Companion / Title / Emblem / Relic), sealed `UnlockCondition` (with
-  AllOf / AnyOf composition), `ContentTag`, `ActivationPolicy`,
-  `ClaimPolicy`, `NodeState`, sealed `ObjectiveMetric`, sealed
-  `ObjectiveScope`, `ObjectiveOperator`.
-- `domain/catalog/` — empty `ObjectiveCatalog` and `ProgressionNodeCatalog`
-  with two sample entries each (one shared `sample_steps_today` objective
-  proves the "one objective, many nodes" design end-to-end). Real
-  catalog port lands in Phase 3. `CatalogValidator` checks duplicate
-  ids, missing objective references, missing node references on
-  `NodeCompleted` conditions, manual-claim missing `lockedHintKey`,
-  and RPG-activation-without-RPG-tag drift.
-- `presentation/widgets/level_badge.dart` — generic level badge.
-- `domain/evaluator/` — pure evaluators: `ObjectiveEvaluator` (metric ×
-  scope × operator → outcome with period key), `UnlockConditionResolver`
-  (recursive AllOf/AnyOf), `ProgressionNodeResolver` (objective + unlock
-  + claim policy + ledger → `NodeState`), `RewardGrantPlanner` (newly
-  completed nodes → planned grants, idempotent skip on existing keys).
-- `domain/repository/` — `LedgerSnapshot` value object and the
-  `ProgressionEngineRepository` interface.
-- `data/in_memory_progression_engine_repository.dart` — Phase 2 backing.
-  Phase 4 swaps in an Isar implementation behind the same interface.
-- `application/progression_engine.dart` — orchestrator. Composes
-  evaluators + reward grant service + repository over a single
-  `evaluate(input, reason)` entry point that produces a
-  `ProgressionResolutionResult`. Manual-claim nodes flow through
-  `claim(nodeId, input)` → re-evaluate.
-- `application/reward_grant_service.dart` — builds reward events and
-  applies XP scaling via the legacy `ProgressionLevelPolicy`
-  (reused as the canonical XP↔level table).
+data/
+├── isar_progression_engine_repository.dart    # Local persistence
+├── in_memory_progression_engine_repository.dart  # Tests
+├── firestore_progression_engine_gateway.dart  # Cloud I/O
+├── hybrid_progression_engine_repository.dart  # Local-first, fire-and-forget cloud
+├── provider_engine_input_source.dart          # Maps fitness/nutrition providers → engine input
+└── local/                       # Isar collection records (+ generated .g.dart)
 
-## What does not live here yet
-
-Everything else. Engine, evaluators, catalogs, persistence, celebration
-adapter, RPG mode logic — all to be added in subsequent phases. During
-coexistence the legacy module at `lib/features/progression/` remains the
-source of truth.
-
-## Class-name conflict during coexistence
-
-Both modules will eventually contain a class named `ProgressionEngine`
-(legacy in `progression/application/progression_engine.dart`, new in
-`progression_engine/application/progression_engine.dart`). Files that need
-to import both must use a prefixed import:
-
-```dart
-import 'package:forgetrack/features/progression/application/progression_engine.dart' as legacy;
-// then refer to: legacy.ProgressionEngine
+presentation/
+├── quests_screen.dart                 # V2 quests screen
+├── adapters/engine_achievement_view.dart  # Shared view-model for achievement rendering
+└── widgets/                     # Quest cards, chapter cards, companion pills,
+                                 #   reward chips, level badge, etc.
 ```
 
-After Phase 9 the legacy file is gone and the prefix can be dropped.
+## Core principles
+
+- **Deterministic.** Same input + same ledger → same result.
+- **Idempotent.** Re-running `evaluate` produces the same accepted
+  events; duplicates land as `skippedEvents`.
+- **Append-only ledger.** Events have deterministic `eventKey`s; the
+  ledger is the source of truth for "what happened".
+- **Display facade.** Other features (`social`, `journey`,
+  `celebration`, `home`) consume progression metadata exclusively
+  through `ProgressionDisplayResolver`. They do not import catalog,
+  evaluators, or ledger types directly.
+- **Cloud sync.** Ledger events write through to Firestore via the
+  hybrid repository — see [../../../docs/features/firestore_sync.md](../../../docs/features/firestore_sync.md).
+
+## How to extend
+
+- **Add a new objective** (a new metric / scope / operator combination):
+  define an `ObjectiveDefinition` in
+  `domain/catalog/content/<domain>_content.dart`.
+- **Add a new node** (quest / achievement / milestone): define a
+  `ProgressionNodeDefinition` referencing one or more objectives.
+- **Add a new reward type**: extend the sealed `RewardDefinition`
+  hierarchy and handle it in `RewardGrantService` and the relevant
+  bridge (e.g. `cosmetic_unlock_bridge.dart` for cosmetic rewards).
+- **Add a new unlock condition**: extend the sealed `UnlockCondition`
+  hierarchy; `UnlockConditionResolver` handles `AllOf` / `AnyOf`
+  composition.
+
+Validate any catalog change by running `CatalogValidator` — it checks
+duplicate ids, missing objective references, missing node references on
+`NodeCompleted` conditions, manual-claim nodes missing `lockedHintKey`,
+and RPG-activation-without-RPG-tag drift.

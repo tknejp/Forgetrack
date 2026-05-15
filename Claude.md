@@ -1,44 +1,39 @@
 # Forgetrack — Claude Code Instructions
 
-## Project architecture
-- Use feature-first architecture.
-- Each feature should follow domain/application/data/presentation layering where practical.
-- Keep business logic out of widgets.
-- Prefer explicit services/providers over hidden side effects.
+Flutter fitness/RPG tracking app. Feature-first architecture under `lib/features/`.
+
+## Where to look
+
+- **Architecture, layering rules, design tokens, dependency rules, HC / KT / progression invariants:** [docs/architecture.md](docs/architecture.md)
+- **Progression Engine V2** (durable refactor running alongside the legacy `lib/features/progression/` module): plan + live phase status in [docs/progression_engine/](docs/progression_engine/) — read `session_handoff.md` first when resuming V2 work.
+- **Feature designs:** [docs/features/](docs/features/) — coach log export, Firestore sync.
+- **External API capture:** [docs/integrations/](docs/integrations/) — Kalorické Tabulky.
+- **Feature internals:** READMEs in `lib/features/<feature>/`.
 
 ## Coding style
-- Prefer simple imperative code.
-- Avoid streams unless they clearly simplify the solution.
-- Keep orchestration readable and sequential.
-- Add AppLog logging for important sync/reset/export/progression steps.
 
-## Progression system
-- Rewards must be idempotent.
-- Reward grants should use deterministic keys.
-- Achievement unlocks are durable events, not recomputed UI-only state.
-- Do not implement migrations unless explicitly requested; the app can be reset during development.
+- Prefer simple imperative code. Avoid streams unless they clearly simplify the solution.
+- Keep business logic out of widgets; put it in `application/` providers or `domain/` services.
+- Use `AppLog` from `lib/core/logging/app_log.dart` for sync / reset / export / progression / cosmetics steps. Never use `print()`.
+- No migrations unless explicitly requested — the app can be reset during development.
 
-## Health Connect
-- Treat Health Connect as external source of truth.
-- Never delete or modify user Health Connect data.
-- Local cache may be cleared.
-- Permissions may be revoked only if Android/plugin supports it.
+## Localization
 
-## Google Sheets export
-- Preserve merge-by-date semantics.
-- Use localized labels.
-- Keep formatting logic centralized where possible.
+- Strings live in `lib/l10n/app_en.arb` and `lib/l10n/app_cs.arb`. After editing either file, run `flutter gen-l10n`.
+- Catalog entries use closure-style localization: `name: (l10n) => l10n.cosmeticXxxName`. Missing ARB keys break the build.
+
+## Verification after changes
+
+- `flutter analyze` clean (pre-existing Isar `.g.dart` warnings are accepted).
+- Run relevant `flutter test` files for the area you touched.
+
+## Documentation conventions
+
+- READMEs in `lib/features/<feature>/` describe **what is currently there** — current files, current dependencies, current behavior. They do NOT contain phase status, planning, work logs, or status tables.
+- Plans, refactor docs, and phase trackers live in `docs/`, never inside `lib/`. When a plan is fully implemented, delete it — durable knowledge belongs in the relevant feature README or in `docs/architecture.md`.
 
 ## Output expectations
+
 - Before editing, inspect the relevant files.
 - Make minimal targeted changes.
 - After changes, summarize modified files and remaining risks.
-
-## Progression Engine V2 — in-flight refactor
-
-- Branch `refactor/progression-engine-v2` runs the new engine alongside
-  the legacy progression module. Status + cookbook in
-  [docs/progression_engine_session_handoff.md](docs/progression_engine_session_handoff.md).
-- Authoritative phased plan in
-  [docs/progression_engine_v2_phased_plan.md](docs/progression_engine_v2_phased_plan.md).
-- Read the handoff first when resuming the V2 work.

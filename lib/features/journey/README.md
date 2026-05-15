@@ -1,51 +1,39 @@
 # journey
 
-Hero Journey map and milestone feed. Lives outside the progression engine
-because it is a pure consumer of progression state — it reads `level`,
-`achievements`, and `completedQuests`, and renders a map / event feed.
-It produces no signals back into the engine.
-
-## Status
-
-Phase 0.6 — extracted from `lib/features/progression/presentation/journey/`
-and `lib/features/progression/domain/journey_models.dart` per the phased
-plan in [docs/progression_engine_v2_phased_plan.md](../../../docs/progression_engine_v2_phased_plan.md).
+Hero Journey map and milestone feed. Consumes V2 progression state via
+`ProgressionEngineProvider` and renders a map + event feed; produces no
+signals back into the engine.
 
 ## Layout
 
-```
+```text
 lib/features/journey/
 ├── domain/
-│   └── journey_models.dart           # JourneyCheckpoint, JourneyEventType, JourneyMilestoneAnchor
+│   ├── journey_models.dart  # JourneyCheckpoint, JourneyEventType, JourneyMilestoneAnchor
+│   └── journey_levels.dart  # kJourneyMapAnchors — which levels surface as map anchors
 └── presentation/
     ├── hero_journey_map_screen.dart  # detail screen
     └── widgets/
-        ├── journey_adapter.dart      # ProgressionProvider → JourneyCheckpoint lists
-        ├── journey_event_feed.dart   # milestone feed below the map
+        ├── journey_adapter.dart        # ProgressionEngineProvider → JourneyCheckpoint lists
+        ├── journey_event_feed.dart     # milestone feed below the map
         ├── journey_interactive_map.dart # pannable, zoomable map
-        ├── journey_map_route.dart    # JSON-loaded route data class
-        ├── journey_preview_card.dart # compact preview on hero screen
-        └── journey_primitives.dart   # shared visual primitives
+        ├── journey_map_route.dart      # JSON-loaded route data class
+        ├── journey_preview_card.dart   # compact preview on hero screen
+        └── journey_primitives.dart     # shared visual primitives
 ```
 
-## Current dependencies on progression
+## Dependencies
 
-- `ProgressionProvider` — state (player level, achievements, quests).
-  Will be swapped to the new engine's provider in Phase 6.
-- `kProgressionLevelTiers` / `tierForLevel` / `kJourneyMapAnchors` /
-  `kJourneyTitleBreakpoints` from
-  `progression/domain/policy/level_config.dart` — level-tier metadata.
-  Will be sourced from `ProgressionDisplayResolver.levelMilestones()`
-  in Phase 6 (resolver methods extended in Phase 7's pre-work).
-- `ProgressionAchievement` type from
-  `progression/domain/progression_models.dart` — passed through from
-  `provider.achievements`. Goes away with the provider swap.
-- `achievement_badge_specs.dart` from `lib/shared/presentation/` — shared
-  visual helper. Stays in shared/ until the new engine collapses
-  Difficulty into Rarity.
+- `progression_engine/application/progression_engine_provider.dart` —
+  player level, achievement / quest completion ledger.
+- `progression_engine/domain/catalog/level_milestone_specs.dart` —
+  level-tier metadata (titles, emoji).
+- `progression_engine/presentation/adapters/engine_achievement_view.dart` —
+  shared view-model for milestone rendering.
+- `shared/presentation/achievement_badge_specs.dart` — shared visual
+  helper for badge rendering.
 
-## What does not live here
-
-Progression evaluation, catalog, persistence, claim flow — all in
-`lib/features/progression/` (legacy) and incrementally in
-`lib/features/progression_engine/` (V2).
+Level milestone timestamps come from the matching `level_<N>`
+achievement node's completion event in the V2 ledger. There are no
+synthesised dates — a milestone without a real timestamp gets `null`,
+which the feed sorts after dated entries.

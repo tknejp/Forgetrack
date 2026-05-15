@@ -1,4 +1,10 @@
-# Progression Engine
+# Progression Engine (legacy)
+
+> **Status:** this is the legacy progression module. A V2 engine is being
+> built in parallel at [`lib/features/progression_engine/`](../progression_engine/),
+> tracked in [docs/progression_engine/](../../../docs/progression_engine/).
+> The legacy module stays here as the production source of truth until
+> Phase 9 of the V2 plan, then is deleted entirely.
 
 Progression Engine deterministicky vyhodnocuje fitness a nutrition data,
 vytvari auditovatelny ledger evaluaci, claimnutych XP rewardu a achievement

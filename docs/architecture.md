@@ -1,5 +1,12 @@
 # Forgetrack – Architecture Guide
 
+This is the durable reference for how Forgetrack is organised. Day-to-day
+working agreements live in [../CLAUDE.md](../CLAUDE.md); this document
+describes the structure, layering, dependency rules, and design-system
+foundations that those agreements assume.
+
+---
+
 ## Directory layout
 
 ```
@@ -24,7 +31,7 @@ lib/
     extensions/             # Dart extension methods used across features
     formatters/             # Date, number, unit formatters with no feature owner
     theme/                  # AppTheme, design tokens, time palette
-    widgets/                # Reusable widgets with no feature owner (e.g. FtPlainCard)
+    widgets/                # Reusable widgets with no feature owner (e.g. PlainCard)
   l10n/                     # ARB files and generated localizations
   firebase_options.dart
   main.dart
@@ -46,62 +53,221 @@ lib/
 | `auth/` | Sign-in, sign-out, session state, `AuthProvider`, `AuthUser` |
 | `health_connect/` | Steps, sleep, body weight, activities; `FitnessProvider`; Health Connect adapter |
 | `nutrition/` | Kaloricke Tabulky sync, calorie + macro tracking; `KalorickeTabulkyProvider` |
-| `progression/` | XP engine, quests, achievements, level policy; `ProgressionProvider` |
-| `sheets_export/` | Google Sheets date-merge export pipeline; `SheetsExportProvider` |
-| `social/` | Friends, leaderboard, push notifications; `SocialProvider`; Firestore backend |
-| `home/` | `FtOverviewScreen` — main dashboard showing steps, calories, weight, sleep |
+| `progression/` | Legacy XP engine, quests, achievements, level policy (being retired) |
+| `progression_engine/` | V2 progression engine — see [progression_engine/](progression_engine/) |
+| `journey/` | Hero journey map, chapter/node display |
+| `celebration/` | Reward celebration screens and orchestration |
+| `cosmetics/` | Cosmetic catalog, inventory, equipped slots |
+| `coach_log_export/` | Bushido / coach log Sheets export — see [features/coach_log_export.md](features/coach_log_export.md) |
+| `sheets_export/` | Raw Google Sheets date-merge export pipeline |
+| `social/` | Friends, leaderboard, profile, push notifications; Firestore backend |
+| `home/` | `OverviewScreen` — main dashboard |
 | `settings/` | `SettingsScreen` and all settings sections/widgets/dialogs |
-| `app_shell/` | `FtMainShell` — root shell with page controller, bottom nav, top chrome |
+| `app_shell/` | `MainShell` — root shell with page controller, bottom nav, top chrome |
+| `onboarding/` | First-run flow |
 | `devtools/` | Debug panels, internal diagnostics; never shipped to users |
+
+---
+
+## Dependency rules
+
+These rules are hard constraints. Static analysis catches most violations
+indirectly through import errors, but a few — especially the
+shared→features and application→presentation ones — must be enforced by
+review.
+
+1. **`shared/` must not import `features/*`.**
+   Shared widgets receive data through constructor parameters. If a
+   widget needs `AuthProvider` / `FitnessProvider` / etc., keep it inside
+   the relevant feature or pass plain values into it.
+
+2. **`application/` must not import `presentation/`.**
+   Providers and use-cases cannot depend on UI files. If a provider is
+   currently in `presentation/`, move it to `application/`.
+
+3. **`domain/` must stay pure.**
+   No Flutter widgets, `BuildContext`, `Provider`, Firebase, Isar, HTTP,
+   `SharedPreferences`, or UI imports. Domain models and logic should be
+   testable without Flutter.
+
+4. **`data/` can depend on `domain/`, not on `presentation/`.**
+   Data layer handles APIs, DB, parsing, persistence. It must not call
+   UI or provider methods directly.
+
+5. **`presentation/` can read providers and build UI.**
+   UI can use `context.watch` / `read` / `select`. Keep heavy logic out
+   of widgets; move it to provider / query / helper classes.
+
+6. **`core/` is not a god layer.**
+   `core/services` may orchestrate cross-cutting work like background
+   sync, notifications, logging. If business logic grows there, split it
+   into feature-specific services / providers.
+
+7. **No reintroducing legacy top-level folders.**
+   `lib/screens/`, `lib/providers/`, `lib/models/`, `lib/services/`,
+   `lib/widgets/`, `lib/theme/` are all retired. Use feature-first paths
+   instead. Their original homes:
+
+   | Legacy folder | Migrated to |
+   |---|---|
+   | `lib/screens/` | `lib/features/*/presentation/` |
+   | `lib/services/` | `lib/core/services/` |
+   | `lib/theme/` | `lib/shared/theme/` |
+   | `lib/widgets/` | `lib/shared/widgets/` |
+   | `lib/providers/` | `lib/app/` (`locale_provider`) or `lib/features/*/application/` |
+   | `lib/models/` | `lib/shared/` (cross-feature value objects) or `lib/features/*/domain/` |
+
+8. **`devtools/` may import anything** — it is a debug-only feature
+   and is gated by `kDebugMode` / developer UID allowlist.
+
+### Cross-feature presentation imports
+
+Cross-feature imports between feature `presentation/` layers are a smell
+and should be removed when found. The current accepted exception:
+
+- `social/` imports `progression/l10n/progression_l10n.dart` (and reads
+  progression labels for level / XP / achievement names). L10n is a
+  shared concern; copying the strings would be worse.
+
+---
 
 ## Shared vs. feature code
 
-**Use `shared/`** when a widget, formatter, or extension has no single owning feature and is
-used by three or more features. Examples: `FtPlainCard`, `FtScreenHeader`, date formatters.
+**Use `shared/`** when a widget, formatter, or extension has no single
+owning feature and is used by three or more features. Examples:
+`PlainCard`, `ScreenHeader`, `TinyPill`, date formatters.
 
-**Keep it in the feature** when it is only used within that feature, even if it looks generic.
-Premature promotion to `shared/` creates coupling without benefit.
+**Keep it in the feature** when it is only used within that feature,
+even if it looks generic. Premature promotion to `shared/` creates
+coupling without benefit.
 
 ## Core vs. feature services
 
-**Use `core/`** for technical infrastructure that has no domain meaning: logging (`AppLog`),
-the global navigator key, generic storage helpers, typed errors.
+**Use `core/`** for technical infrastructure that has no domain meaning:
+logging (`AppLog`), the global navigator key, generic storage helpers,
+typed errors.
 
-**Keep it in the feature** when a service encapsulates domain rules for one feature (e.g.
-`HealthConnectService` in `health_connect/data/`).
+**Keep it in the feature** when a service encapsulates domain rules for
+one feature (e.g. `HealthConnectService` in `health_connect/data/`).
 
-## Legacy folders (being gradually emptied)
+---
 
-The following folders are legacy and should not receive new code. Existing code will be
-migrated feature-by-feature as part of normal development, not a big-bang rewrite.
+## Design system & theming
 
-| Legacy folder | Migration target |
-|---|---|
-| `lib/screens/` | **Done** — all files moved to `lib/features/*/presentation/` |
-| `lib/services/` | **Done** — moved to `lib/core/services/` |
-| `lib/theme/` | **Done** — moved to `lib/shared/theme/` |
-| `lib/widgets/` | **Done** — moved to `lib/shared/widgets/` |
-| `lib/providers/` | **Done** — see table below |
-| `lib/models/` | **Done** — see table below |
+### Tokens
 
-### Providers migration
+All design values live in `lib/shared/theme/`:
 
-| File | New location | Reason |
-|---|---|---|
-| `locale_provider.dart` | `lib/app/locale_provider.dart` | App-level locale state, no feature affinity |
-| `goals_provider.dart` | `lib/features/health_connect/application/goals_provider.dart` | Manages health/activity/body/nutrition goals; majority of consumers are health_connect screens |
+- `FtThemeTokens` — full palette + typography exposed as a Flutter
+  `ThemeExtension`. Accessed in widgets via `context.tokens`.
+- `FtTokens` — static constants for compile-time use (painters, static
+  contexts, const expressions): spacing, radius, font sizes, semantic
+  colors (`success`, `warning`, `danger`, `xp`, `xpGlow`), achievement
+  difficulty colors, rarity palette (`FtRarity`).
+- Per-domain palettes on `FtTokens` (`steps`, `calories`, `weight`,
+  `sleep`, `active`, `protein`, `fat`, `carbs`) provide
+  `color` / `dim` / `glow` / `gradStart` / `gradEnd` / `gradient` /
+  `cardDecoration()`.
 
-### Models migration
+### Token usage rules
 
-| File | New location | Reason |
-|---|---|---|
-| `selected_period.dart` | `lib/shared/selected_period.dart` | Cross-feature value object used by health_connect, home, and nutrition presentations |
-| `weight_card_data.dart` | `lib/features/health_connect/domain/weight_card_data.dart` | Exclusively consumed by health_connect application and presentation layers |
-| `sync_record.dart` | _Deleted_ — zero consumers (dead code) | |
+- `BorderRadius.circular(N)` is only allowed inside `FtTokens` or
+  `AppTheme`; everywhere else use the token constant (`radiusCard`,
+  `radiusInner`, `radiusTile`, `radiusButton`, `radiusIcon`,
+  `radiusProgress`).
+- Inline `BoxShadow` literals are forbidden in widget code; define named
+  shadows in tokens.
+- Avoid `Colors.white` / `Colors.black` with `.withValues(alpha:…)` —
+  use `FtTokens.onSurface` / `onSurfaceMuted` / `onSurfaceFaint`.
+- Spacing literals (4, 8, 12, 16, 20, 24, 32) must use the
+  `FtTokens.space*` constants. Value `10` has no token — it is a known
+  gap pending a design decision (normalize to 8 or 12).
+- `fontSize:` literals use `FtTokens.fontSize{Tiny,Micro,Caption,Small,Body,Title}`.
+- When migrating hardcoded literals to tokens, only replace when the
+  token value is identical or visually equivalent. Never change alpha
+  while migrating.
+
+### Naming
+
+- Shared design-system widgets live in `shared/widgets/` without an `Ft`
+  prefix (e.g. `PlainCard`, `ScreenHeader`, `TinyPill`, `StatCard`).
+- Feature-internal private widgets stay in
+  `features/<feature>/presentation/widgets/`.
+- One primary public class per file; file name must match it
+  (snake_case of class name).
+- No generic bag files (`helpers.dart`, `shared.dart`, `utils.dart`) —
+  name by responsibility.
+
+---
+
+## Health Connect rules
+
+- Treat Health Connect as the external source of truth. Never delete or
+  modify user Health Connect data. Local cache may be cleared.
+- Do not overwrite valid cached DB data with empty lists after partial
+  Health Connect failures.
+- Quota errors must preserve DB state and not stamp `lastSyncedAt` as
+  successful.
+- For range refreshes, use inclusive UI range but **exclusive query
+  end**:
+  - `start = selected start day 00:00`
+  - `endExclusive = selected end day + 1 day`
+- After fetching, filter records back to the selected inclusive range
+  before saving.
+- Be careful with `DateTime` local vs UTC boundaries.
+
+## KT (Kalorické Tabulky) nutrition rules
+
+- Avoid repeated `getRange()` / `avgField()` spam from `build()`
+  methods. Compute one range summary once and reuse it in UI.
+- Today can legitimately be zero just after midnight if no food is
+  logged yet.
+- Do not let a past-range refresh accidentally overwrite today's
+  provider state with stale or empty values.
+- Keep cached data available even if API sync fails.
+- HTTP API reference: [integrations/kt_api_reference.md](integrations/kt_api_reference.md).
+
+## Progression rules
+
+- Progression evaluates from provider / DB state, not directly from UI
+  widgets.
+- Be careful with "today" after midnight — if the current day has no
+  nutrition yet, daily nutrition quests will show 0.
+- Avoid evaluating progression repeatedly during every rebuild. Prefer
+  explicit refresh / recalc triggers or debounced provider-level
+  updates.
+- Rewards must be idempotent; reward grants use deterministic keys.
+- Achievement unlocks are durable events, not recomputed UI-only state.
+- The V2 engine writes through to Firestore — see
+  [features/firestore_sync.md](features/firestore_sync.md).
+
+---
+
+## DevTools
+
+- DevTools is gated by `kDebugMode` or an explicit developer UID
+  allowlist.
+- May inspect provider state, DB / cache state, sync history, background
+  refresh and notifications.
+- Debug actions that mutate real app state require confirmation.
+- Debug overrides must not affect production calculations unless
+  explicitly requested and safely gated.
+
+## Logging
+
+Use `AppLog` from `lib/core/app_log.dart`. Do not use `print()`. Keep
+logs structured and domain-scoped. AppLog levels, scopes, and gating are
+documented in the user-level memory index — see
+`memory/project_logging.md` if you need the detail.
+
+---
 
 ## Adding a new feature
 
 1. Create `lib/features/<name>/` with the four standard layers.
-2. Put providers in `application/`, entities in `domain/`, data adapters in `data/`, screens in `presentation/`.
-3. Register providers in `lib/app/app_providers.dart` (once that file exists; for now, `main.dart`).
-4. Do not reach into another feature's `data/` or `domain/` directly — go through its `application/` layer.
+2. Put providers in `application/`, entities in `domain/`, data adapters
+   in `data/`, screens in `presentation/`.
+3. Register providers in `lib/main.dart` (or `lib/app/app_providers.dart`
+   once that file exists).
+4. Do not reach into another feature's `data/` or `domain/` directly —
+   go through its `application/` layer.
