@@ -61,6 +61,7 @@ functions/.firebase/
 
 # Screenshots
 old_screenshots/
+flutter_*.png
 
 # Gradle local cache (per-user, should never be tracked)
 .gradle-user-home/
