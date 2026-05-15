@@ -457,6 +457,25 @@ code {
   height: auto;
 }
 
+/* Zoomable variant pro class diagramy — fixní výška + bez border-radius
+   kolize s pan-zoom control icons. */
+.flow-diagram-zoomable {
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.flow-diagram-zoomable svg {
+  max-width: none;
+  background: var(--color-bg);
+}
+
+/* svg-pan-zoom control icons (zoom in/out/reset) — světlejší pozadí na světlém tématu */
+:root[data-theme="light"] .flow-diagram-zoomable svg #svg-pan-zoom-controls rect {
+  fill: var(--color-surface);
+  stroke: var(--color-card-border);
+}
+
 .mermaid-error {
   color: var(--color-danger);
   font-family: monospace;

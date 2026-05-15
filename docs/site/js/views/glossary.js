@@ -2,6 +2,7 @@
 
 import { fetchJson, escapeHtml } from '../app.js';
 import { renderMermaid, resetMermaidTheme } from '../lib/mermaid_helpers.js';
+import { enablePanZoom, destroyAllPanZoom } from '../lib/pan_zoom.js';
 
 let cache = null;
 
@@ -13,6 +14,8 @@ async function loadData() {
 
 export async function renderGlossaryView(main) {
   const data = await loadData();
+  // Při opětovném otevření view zlikvidujeme staré pan-zoom instance.
+  destroyAllPanZoom();
   const byCategory = {};
   for (const e of data.entries) {
     (byCategory[e.category] ||= []).push(e);
@@ -21,7 +24,7 @@ export async function renderGlossaryView(main) {
   main.innerHTML = `
     <div class="view-header">
       <h1 class="view-title">Doménový slovník</h1>
-      <p class="view-subtitle">${data.entries.length} sealed hierarchií a klíčových enumů. Třídní diagramy odrážejí strukturu kódu — soubor je uveden v každé sekci.</p>
+      <p class="view-subtitle">${data.entries.length} sealed hierarchií a klíčových enumů. Diagramy jsou <strong>zoom + drag</strong> — kolečko myši mění zoom, drag posouvá. Tlačítka v rohu umožňují reset / fit.</p>
     </div>
     <div class="dataflow-layout">
       <aside class="dataflow-toc">
@@ -63,13 +66,17 @@ async function renderAllDiagrams(entries) {
   for (const e of entries) {
     const host = document.querySelector(`.flow-diagram[data-glossary-id="${cssEscape(e.id)}"]`);
     if (!host) continue;
+    host.classList.add('flow-diagram-zoomable');
     const svg = await renderMermaid(e.diagram);
     host.innerHTML = svg;
+    // Class diagramy bývají horizontálně přeplněné — pan+zoom dělá text čitelný.
+    enablePanZoom(host, e.id);
   }
 }
 
 async function onThemeChange(entries) {
   resetMermaidTheme();
+  destroyAllPanZoom();
   await renderAllDiagrams(entries);
 }
 

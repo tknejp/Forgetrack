@@ -12,6 +12,7 @@ import { renderGlossaryView } from './views/glossary.js';
 import { renderProgressionView } from './views/progression.js';
 import { renderDecisionsView, openDecisionDetail } from './views/decisions.js';
 import { cleanupMermaidOrphans } from './lib/mermaid_helpers.js';
+import { destroyAllPanZoom } from './lib/pan_zoom.js';
 
 // ─── Theme (light / dark) ──────────────────────────────────────
 // Aplikujeme co nejdřív, ať se ve světlém režimu neflashne tmavá.
@@ -98,8 +99,10 @@ async function handleRoute() {
 
   const def = VIEWS[view];
   main.innerHTML = '<div class="loading">Načítání…</div>';
-  // Pro jistotu odklidíme případné Mermaid orphan elementy z předchozího view.
+  // Pro jistotu odklidíme případné Mermaid orphan elementy a pan-zoom
+  // instance z předchozího view.
   cleanupMermaidOrphans();
+  destroyAllPanZoom();
   try {
     await def.render(main);
     if (detail && def.openDetail) {
