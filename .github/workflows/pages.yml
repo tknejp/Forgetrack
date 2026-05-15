@@ -1,12 +1,17 @@
 name: Deploy docs site to GitHub Pages
 
+# Manual-only trigger.
+#
+# Pages musí být explicitně aktivované v repo Settings → Pages → Source =
+# "GitHub Actions" (na public repu zdarma, na private vyžaduje placený plán).
+# Jakmile je Pages aktivní, spusť tento workflow přes "Actions" tab →
+# "Run workflow" → main; nebo přepni `on:` zpět na push pro auto-deploy.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'docs/site/**'
-      - '.github/workflows/pages.yml'
   workflow_dispatch:
+
+# Suppress Node.js 20 deprecation warnings z actions/checkout, configure-pages.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 permissions:
   contents: read
@@ -29,6 +34,9 @@ jobs:
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
+        with:
+          # Auto-enable Pages, pokud ho admin ještě nezapnul ručně.
+          enablement: true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

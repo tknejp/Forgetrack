@@ -39,12 +39,27 @@ docs/site/
 
 ## Hosting
 
-GitHub Pages přes Actions workflow [`.github/workflows/pages.yml`](../../.github/workflows/pages.yml).
-Workflow se spustí při každém push do `main`, který se dotkne
-`docs/site/**` nebo samotného workflow souboru, a publikuje
-obsah `docs/site/` jako statický web.
+GitHub Pages přes workflow [`.github/workflows/pages.yml`](../../.github/workflows/pages.yml).
 
-Pro aktivaci v GitHub UI: Settings → Pages → Source = "GitHub Actions".
+**Aktivace** (jednorázově, vyžaduje public repo nebo GitHub Pro / Team /
+Enterprise plán pro Pages na private repu):
+
+1. Settings → Pages → Source = "GitHub Actions"
+2. Actions tab → "Deploy docs site to GitHub Pages" → "Run workflow" → main
+
+Trigger je záměrně `workflow_dispatch` only (manuální), aby nepadal na
+repech bez aktivovaného Pages. Pokud chceš auto-deploy při každém
+push, přepni `on:` v workflow souboru na:
+
+```yaml
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/site/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+```
 
 ## Udržování
 
