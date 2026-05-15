@@ -1,0 +1,195 @@
+{
+  "intro": "Architecture Decision Records (ADRs) — záznamy klíčových rozhodnutí v projektu. Každý ADR zachycuje kontext, vlastní rozhodnutí, důsledky a uvažované alternativy. Kód řekne JAK, tyto záznamy řeknou PROČ.",
+  "statusLabels": {
+    "accepted": "Přijato",
+    "proposed": "Navrženo",
+    "superseded": "Nahrazeno"
+  },
+  "decisions": [
+    {
+      "id": "feature-first-architecture",
+      "title": "Feature-first architektura",
+      "status": "accepted",
+      "date": "2025",
+      "context": "Aplikace má 15+ doménových oblastí (auth, health, nutrition, progression engine, kosmetika, social, exporty, …). Layer-first organizace (`lib/screens`, `lib/services`, `lib/models`) by vedla k 'god-folderům' a tomu, že změna v jedné oblasti dotkne každého patra napříč repem.",
+      "decision": "Každá doménová oblast žije ve své vlastní složce pod `lib/features/<feature>/` se 4 standardními vrstvami: `domain/`, `data/`, `application/`, `presentation/`. Sdílené utility v `lib/shared/`, technická infrastruktura v `lib/core/`. Žádný `lib/screens` / `lib/services` / `lib/models` neexistuje.",
+      "consequences": [
+        "Smazat celou feature = smazat jednu složku. Žádné scavenger hunting.",
+        "Cross-feature dependencies musí jít přes `application/` interface — `shared/` nikdy neimportuje `features/*`, `application/` nikdy neimportuje `presentation/`.",
+        "Někdy boilerplate pro malé feature (5 souborů ve 4 vrstvách) — akceptovaná cena za konzistenci.",
+        "DevTools jako feature smí importovat cokoli (debug-only)."
+      ],
+      "alternatives": "Layer-first (Clean Architecture / MVC). Odmítnuto kvůli rozsahu a tempu iterace.",
+      "links": ["docs/architecture.md"]
+    },
+    {
+      "id": "isar-over-sqlite",
+      "title": "Isar místo Drift / SQLite / Hive",
+      "status": "accepted",
+      "date": "2025",
+      "context": "Aplikace potřebuje lokální storage pro fitness záznamy, nutriční data, progression ledger a kosmetiku. Velikost: tisíce řádků per uživatel, časté range queries (kroky za týden), indexy nad datem + typem.",
+      "decision": "Isar 3.1.x s build_runner generated `.g.dart` soubory. Čtyři oddělené databáze (health / KT nutrition / progression engine / cosmetics) — žádný shared schema.",
+      "consequences": [
+        "Type-safe queries bez SQL stringů, IDE autocomplete na všech polích.",
+        "Composite unique indexy zaručují idempotenci (např. `(uid, cosmeticId)` v CosmeticsUnlockRecord).",
+        "Generated code patří do gitu — pamatovat na `flutter pub run build_runner build` po schema změně.",
+        "Isar 4 přepisuje API. Upgrade bude vyžadovat migraci. Zatím vázáni na 3.x.",
+        "Menší community než SQLite — méně answers na SO, ale dokumentace dobrá."
+      ],
+      "alternatives": "Drift (typed SQL), SQLite (raw), Hive (key-value). Isar nabízí lepší balanc typové bezpečnosti a query výkonu pro náš use-case.",
+      "links": []
+    },
+    {
+      "id": "append-only-ledger",
+      "title": "Append-only event ledger pro progression",
+      "status": "accepted",
+      "date": "2026",
+      "context": "V2 progression engine vyhodnocuje stav z fitness/nutrition dat. Naivní přístup by ukládal current state (level=42, achievements=[...]). To znamená potenciální race conditions při concurrent updatech a obtížnou debug auditovatelnost ('proč mám tenhle achievement?').",
+      "decision": "Engine produkuje sealed `LedgerEvent` hierarchii (RewardGrant / NodeCompletion / NodeClaim / ObjectiveCompletion / NodeAnnouncement) s deterministickým `eventKey`. Ledger je append-only — žádný update, žádný delete. Current state je derived view nad ledgerem.",
+      "consequences": [
+        "Idempotentní retries: re-zápis stejného eventu je no-op (composite unique v Isaru, set() s deterministickým doc ID ve Firestoru).",
+        "Replay-able: stejný ledger + stejný catalog = stejný stav, kdykoli.",
+        "Auditovatelnost: kdy přesně se který achievement unlocknul, jaké eventy ho předcházely.",
+        "Větší storage footprint (každá akce nový event).",
+        "Některé akce jsou nepřirozeně append-only (např. 'unclaim' by potřeboval kompenzační event)."
+      ],
+      "alternatives": "Mutable state s optimistic locking. Odmítnuto — replay-ability je pro RPG mechaniky příliš hodnotná.",
+      "links": ["docs/features/firestore_sync.md"]
+    },
+    {
+      "id": "hybrid-local-first-sync",
+      "title": "Hybrid local-first repository s write-through sync",
+      "status": "accepted",
+      "date": "2026",
+      "context": "Appka musí fungovat offline (uživatel je v lese, na běžce, v metru). Cloud parity je ale potřeba pro reinstall a multi-device. Cloud-first by znamenal čekání na network roundtrip při každém claimu.",
+      "decision": "`HybridProgressionEngineRepository` wraps `IsarProgressionEngineRepository`. Každý `appendEvents()` zapíše do Isaru synchronně, pak fire-and-forget unawaited push do Firestoru. Cloud failure se loguje, ale nikdy neblokuje lokální commit. Při loginu se spustí `pullAndMerge` — stažení všech subkolekcí + re-evaluation.",
+      "consequences": [
+        "UI dostane výsledek okamžitě (Isar write je rychlý).",
+        "Offline-friendly: claimy jdou stále, cloud sync se dorovná, až bude network k dispozici.",
+        "Eventually consistent: druhé zařízení může vidět starší stav, dokud nedoběhne push.",
+        "Deterministický `eventKey` zaručí, že retry nikdy nevytvoří duplikát.",
+        "Logika 'kdy je která side ahead' je nepotřeba — append-only + deterministické klíče."
+      ],
+      "alternatives": "Cloud-first (každý zápis čeká na Firestore confirm). Odmítnuto kvůli offline UX. Periodic sync (každých N minut). Odmítnuto kvůli stale state.",
+      "links": ["docs/features/firestore_sync.md"]
+    },
+    {
+      "id": "sealed-hierarchies",
+      "title": "Sealed hierarchie pro doménové modely",
+      "status": "accepted",
+      "date": "2025-2026",
+      "context": "V2 engine potřebuje reprezentovat různé typy uzlů (Quest / Achievement / Milestone / Level / Companion / Relic / …), rewardů (XP / Cosmetic / Chapter / Title / Emblem / Relic), unlock conditions (LevelAtLeast / NodeCompleted / AllOf / AnyOf / …). Naive 'enum + nullable fields' patterny vedou k 'třída s 20 nullable fieldy, jen 3 vyplněné podle typu'.",
+      "decision": "Dart 3 `sealed class` pro každou doménovou hierarchii. Konkrétní typy jako `final class X extends Sealed`. Spotřebitelé používají `switch` se compile-time exhaustiveness checkem.",
+      "consequences": [
+        "Compiler hlásí chybějící case při přidání nového subtype — žádné zapomenuté větve.",
+        "Žádné nullable fields, které platí jen pro některé subtypes.",
+        "IDE autocomplete je čistší.",
+        "Pattern matching syntaxe je verbose pro hierarchies s 10+ subtypes (např. ProgressionNode).",
+        "Refactor sealed hierarchy = breaking change pro všechny switche."
+      ],
+      "alternatives": "Single class s `type` field + nullable payload fields. Visitor pattern (over-engineered pro náš use-case).",
+      "links": []
+    },
+    {
+      "id": "compile-time-catalog",
+      "title": "Compile-time catalog místo DB-driven content",
+      "status": "accepted",
+      "date": "2026",
+      "context": "Progression má 11 kapitol, ~100 questů, ~50 achievementů, level milestone-y do 100. Stejně tak kosmetika má desítky položek. Klasický web/backend přístup by tohle držel v DB s admin UI pro editaci.",
+      "decision": "Veškerý content žije v compile-time Dart souborech pod `domain/catalog/content/`. `ObjectiveCatalog`, `ProgressionNodeCatalog`, `CosmeticCatalog` jsou statické. `CatalogValidator` kontroluje duplicate IDs, dangling node references, RPG-tag drift.",
+      "consequences": [
+        "Type-safe content — kompilátor odchytí chybný ID reference.",
+        "Žádné runtime DB queries nad katalogem = rychlejší startup, méně paměti.",
+        "Content změny vyžadují app release (žádný hot reload obsahu).",
+        "Validator zachytí dlouhý seznam drift bugů, které by jinak unikly do produkce.",
+        "Žádné A/B testování obsahu bez nového buildu."
+      ],
+      "alternatives": "Firestore-driven catalog s cache. Příliš složité pro náš rozsah — content se mění pomalu, vydání jsou týdenní/měsíční.",
+      "links": []
+    },
+    {
+      "id": "display-facade",
+      "title": "ProgressionDisplayResolver jako jediná veřejná fasáda",
+      "status": "accepted",
+      "date": "2026",
+      "context": "Social, Journey, Celebration, Home — všechny potřebují číst progression metadata (level, XP, achievement seznam, …). Pokud každá feature naimportuje katalog a evaluator přímo, vznikne tichá vazba na vnitřnosti engine. Refactor engine vrstvy se stane breaking change pro 5+ feature.",
+      "decision": "Engine vystavuje pouze `ProgressionDisplayResolver` + DTO modely v `domain/display/`. Ostatní feature **nesmí** importovat catalog, evaluators ani ledger types napřímo.",
+      "consequences": [
+        "Engine vrstvy lze refactorovat bez dotyku spotřebitelů, dokud zůstává display facade stabilní.",
+        "Nové spotřebitelské feature (např. AI narrator) mají jasný interface.",
+        "Soft enforcement — linter to nehlídá, závisí na review.",
+        "Někdy musí display facade přidat metodu, aby uvolnila stávající use-case ('display facade tax')."
+      ],
+      "alternatives": "Direct imports z `progression_engine/domain/`. Odmítnuto — viz kontext.",
+      "links": []
+    },
+    {
+      "id": "cosmetics-as-separate-feature",
+      "title": "Kosmetika jako samostatná feature",
+      "status": "accepted",
+      "date": "2025-2026",
+      "context": "Kosmetika (frames, relikvie, pozadí, emblémy, companions) má svou state (unlocked, equipped) a katalog. Mohla by žít uvnitř `progression/`, protože většina unlocků pochází z progression rewardů. Nebo uvnitř `social/`, protože se zobrazuje na profilu.",
+      "decision": "Kosmetika je samostatná feature `lib/features/cosmetics/` s vlastní Isar DB a `CosmeticsProvider`. Závislost je opačná: progression volá `cosmetics.unlock(...)`. Cosmetics nikdy neimportuje `progression/` ani `social/`.",
+      "consequences": [
+        "Jasný vlastník unlock + equip pipeline.",
+        "Budoucí feature (shop, events, promotional grants) může grantovat unlocky přes stejný API bez dotyku progression.",
+        "Reveal evaluator s 5 stavy (unlocked / hidden / visibleLocked / partial / companion teaser) má samostatný domov, který by jinak rušil progression mental model.",
+        "Cosmetic Bridge v progression engine musí explicitně forwardovat rewardy — drobný boilerplate."
+      ],
+      "alternatives": "Uvnitř `progression/` jako subdoména. Odmítnuto — různá tempa evoluce, různé concerns.",
+      "links": ["lib/features/cosmetics/README.md"]
+    },
+    {
+      "id": "provider-state-management",
+      "title": "Provider místo Riverpod / Bloc",
+      "status": "accepted",
+      "date": "2025",
+      "context": "Flutter state management krajina: Provider (původní), Riverpod (Provider 2.0), Bloc, GetX, MobX, Redux. Volba ovlivňuje DI, testovatelnost a křivku učení.",
+      "decision": "`package:provider` 6.x. Hlavně `ChangeNotifierProvider` + `ChangeNotifierProxyProvider*` pro DI v `main.dart`. 17 providerů, 11 proxy hran.",
+      "consequences": [
+        "Jednoduchý mental model: provider = ChangeNotifier, listener = `context.watch/read`.",
+        "Žádné code generation pro DI (oproti Riverpod 2.x s annotation generator).",
+        "Proxy provider hierarchie v `main.dart` je explicitní DI graph — viditelná v Providery view.",
+        "`ChangeNotifierProxyProvider5` (5 závislostí) je hranice čitelnosti. Víc by chtělo Riverpod.",
+        "Stejně mutable state — nelze jednoduše replay state."
+      ],
+      "alternatives": "Riverpod (modernější, type-safe), Bloc (sealed events / states). Pro náš rozsah Provider zatím dostačuje.",
+      "links": []
+    },
+    {
+      "id": "google-signin-firebase-auth",
+      "title": "Google Sign-In + Firebase Auth",
+      "status": "accepted",
+      "date": "2025",
+      "context": "Appka potřebuje identitu pro Firestore data isolation (`users/{uid}/`) a Google Sheets API (OAuth bearer). Vlastní email/password auth znamená správu hesel, reset flows, email verifikaci.",
+      "decision": "Google Sign-In jako jediný auth provider. Token → Firebase Auth credential. Firebase Authentication jako session manager. UID z Firebase Authu se používá jako Firestore key.",
+      "consequences": [
+        "Žádné password management.",
+        "Sheets API dostane authenticatedClient z Google Sign-In tokenu zdarma.",
+        "Vázáni na Google ecosystem — Apple / GitHub login by vyžadoval další providery.",
+        "Sign-out vyžaduje explicitní volání na obě strany (google_sign_in + Firebase) — historický source bugů.",
+        "Anonymous play není možný (každý uživatel musí mít Google account)."
+      ],
+      "alternatives": "Email/password (vlastní správa). Anonymous + later upgrade. Odmítnuto — viz kontext.",
+      "links": []
+    },
+    {
+      "id": "closure-based-l10n",
+      "title": "Closure-based lokalizace v katalozích",
+      "status": "accepted",
+      "date": "2026",
+      "context": "Katalogy (kosmetika, achievementy, questy, chaptery) obsahují user-facing texty. Klasický pattern je id-based lookup v ARB: `l10n.getByKey('cosmetic_${id}_name')` — runtime string concat, chybějící klíč selže až za běhu.",
+      "decision": "Katalogové entry inlinují closure: `name: (l10n) => l10n.cosmeticFramePilgrimName`. ARB klíče jsou konkrétní getry na `AppLocalizations`.",
+      "consequences": [
+        "Compiler odchytí chybějící klíč — build se nepřeloží.",
+        "IDE autocomplete pro klíče.",
+        "Refactor klíče v ARB → trigger rebuild → automatický refactor v Dart kódu (s gen-l10n).",
+        "ARB je single source of truth pro stringy. Catalog drží jen reference.",
+        "Při přidávání položky 3 kroky: ARB klíč + gen-l10n + catalog entry. Zapomenutí gen-l10n = build error.",
+        "Progression V2 přijal stejný pattern. Legacy progression měl id-based fallback — to zmizelo s V1."
+      ],
+      "alternatives": "Id-based lookup s runtime fallback. Příliš křehké — chyba se neukáže, dokud ten konkrétní text nepokrývá render.",
+      "links": []
+    }
+  ]
+}

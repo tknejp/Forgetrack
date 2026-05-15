@@ -10,6 +10,7 @@ import { renderIntegrationsView, openIntegrationDetail } from './views/integrati
 import { renderDataflowView } from './views/dataflow.js';
 import { renderGlossaryView } from './views/glossary.js';
 import { renderProgressionView } from './views/progression.js';
+import { renderDecisionsView, openDecisionDetail } from './views/decisions.js';
 import { cleanupMermaidOrphans } from './lib/mermaid_helpers.js';
 
 // ─── Theme (light / dark) ──────────────────────────────────────
@@ -64,7 +65,11 @@ const VIEWS = {
   },
   glossary: { label: 'Slovník', render: renderGlossaryView },
   progression: { label: 'RPG vrstva', render: renderProgressionView },
-  decisions: { label: 'Rozhodnutí', render: renderPlaceholder('Rozhodnutí (ADRs)', 'iteraci 7') },
+  decisions: {
+    label: 'Rozhodnutí',
+    render: renderDecisionsView,
+    openDetail: openDecisionDetail,
+  },
 };
 
 const DEFAULT_VIEW = 'features';

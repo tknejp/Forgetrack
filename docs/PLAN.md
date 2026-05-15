@@ -36,7 +36,7 @@ Pages. Žádný build step.
 | 4 | **Datové toky** (8–9 scénářů, Mermaid sequence) | ✅ |
 | 5 | **Doménový slovník** (sealed hierarchies, Mermaid class) | ✅ |
 | 6 | **RPG vrstva** (cross-cutting flowchart) | ✅ |
-| 7 | **ADRs** (8–12 rozhodnutí, derivováno z `git log` + kódu) | ⏸️ |
+| 7 | **ADRs** (8–12 rozhodnutí, derivováno z `git log` + kódu) | ✅ |
 | 8 | GitHub Pages workflow + polish + zmínka v CLAUDE.md o údržbě | ⏸️ |
 
 ## Zásady
