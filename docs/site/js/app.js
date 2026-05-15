@@ -10,6 +10,7 @@ import { renderIntegrationsView, openIntegrationDetail } from './views/integrati
 import { renderDataflowView } from './views/dataflow.js';
 import { renderGlossaryView } from './views/glossary.js';
 import { renderProgressionView } from './views/progression.js';
+import { cleanupMermaidOrphans } from './lib/mermaid_helpers.js';
 
 // ─── Theme (light / dark) ──────────────────────────────────────
 // Aplikujeme co nejdřív, ať se ve světlém režimu neflashne tmavá.
@@ -92,6 +93,8 @@ async function handleRoute() {
 
   const def = VIEWS[view];
   main.innerHTML = '<div class="loading">Načítání…</div>';
+  // Pro jistotu odklidíme případné Mermaid orphan elementy z předchozího view.
+  cleanupMermaidOrphans();
   try {
     await def.render(main);
     if (detail && def.openDetail) {

@@ -243,6 +243,8 @@ code {
   color: var(--color-on-surface-faint);
   font-family: "SFMono-Regular", Consolas, monospace;
   font-size: var(--font-caption);
+  overflow-wrap: anywhere;
+  word-break: break-all;
 }
 
 .feature-tile-summary {
