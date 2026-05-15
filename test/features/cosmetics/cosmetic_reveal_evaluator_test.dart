@@ -188,12 +188,12 @@ void main() {
 
   group('CosmeticRevealEvaluator — partial', () {
     test('companion_forest_fox shows partial when level gate met but relics missing', () {
-      // Condition 1: atLevel(10) → satisfied
+      // Condition 1: atLevel(15) → satisfied
       // Condition 2: ownsCosmetic(relic_moonlit_foxglove) → not satisfied
       // Condition 3: ownsCosmetic(relic_ancient_root) → not satisfied
       const id = 'companion_forest_fox';
       final results = _evaluate(
-        snapshot: _snapshot(level: 10),
+        snapshot: _snapshot(level: 15),
         owned: {},
       );
       final result = results[id]!;
@@ -202,13 +202,13 @@ void main() {
       expect(result.totalConditions, 3);
     });
 
-    test('companion_ice_wisp shows partial at level 65 without relics', () {
-      // Condition 1: atLevel(65) → satisfied
+    test('companion_ice_wisp shows partial at level 75 without relics', () {
+      // Condition 1: atLevel(75) → satisfied
       // Condition 2: ownsCosmetic(relic_polar_lantern) → not satisfied
-      // Condition 3: ownsCosmetic(relic_frozen_lake_heart) → not satisfied
+      // Condition 3: ownsCosmetic(relic_frost_shard) → not satisfied
       const id = 'companion_ice_wisp';
       final results = _evaluate(
-        snapshot: _snapshot(level: 65),
+        snapshot: _snapshot(level: 75),
         owned: {},
       );
       final result = results[id]!;
@@ -251,17 +251,17 @@ void main() {
     });
 
     test('partial companion has conditionRows with correct met flags', () {
-      // companion_forest_fox: level=10 (gate met), no relics.
-      // conditionRows: level_at_least_10=true, owns_relic_moonlit_foxglove=false,
+      // companion_forest_fox: level=15 (gate met), no relics.
+      // conditionRows: level_at_least_15=true, owns_relic_moonlit_foxglove=false,
       //                owns_relic_ancient_root=false.
       const id = 'companion_forest_fox';
-      final results = _evaluate(snapshot: _snapshot(level: 10), owned: {});
+      final results = _evaluate(snapshot: _snapshot(level: 15), owned: {});
       final result = results[id]!;
       expect(result.state, CosmeticRevealState.partial);
       final rows = result.conditionRows;
       expect(rows, isNotNull);
       expect(rows!.length, 3);
-      expect(rows.firstWhere((r) => r.conditionId == 'level_at_least_10').met, isTrue);
+      expect(rows.firstWhere((r) => r.conditionId == 'level_at_least_15').met, isTrue);
       expect(rows.firstWhere((r) => r.conditionId == 'owns_relic_moonlit_foxglove').met, isFalse);
       expect(rows.firstWhere((r) => r.conditionId == 'owns_relic_ancient_root').met, isFalse);
     });

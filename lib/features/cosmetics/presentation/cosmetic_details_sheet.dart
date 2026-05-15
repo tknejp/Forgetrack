@@ -206,7 +206,7 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                                 color: color,
                               ),
                               _TinyPill(
-                                label: cosmeticRarityLabel(definition.rarity, l10n),
+                                label: definition.rarity.label(l10n),
                                 color: color,
                               ),
                             ],

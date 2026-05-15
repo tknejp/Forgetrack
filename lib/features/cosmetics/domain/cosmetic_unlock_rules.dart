@@ -33,6 +33,12 @@ class CosmeticUnlockRules {
 /// see the relics in ownedCosmeticIds.
 final List<CosmeticUnlockRule> kCosmeticUnlockRules = <CosmeticUnlockRule>[
   // -- Companions: relic gate + level gate, idempotent, no consumption -------
+  //
+  // Companion ladder is paced every 10 levels from 5 to 95 and mapped to the
+  // journey environment progression: camp (5) → forest end (15) → ruins (25)
+  // → bridge (35) → mines (45) → rocky descent (55) → ice plain (65) →
+  // ice lake (75) → end-game climb (85) → pre-dragonrock (95). Lvl 100 is a
+  // quiet cap with no companion unlock.
   CosmeticUnlockRule(
     cosmeticId: 'companion_ember_sprite',
     sourceType: 'compound',
@@ -49,7 +55,7 @@ final List<CosmeticUnlockRule> kCosmeticUnlockRules = <CosmeticUnlockRule>[
     sourceType: 'compound',
     sourceId: 'compound_lesni_liska',
     conditions: [
-      Cond.atLevel(10),
+      Cond.atLevel(15),
       Cond.ownsCosmetic('relic_moonlit_foxglove'),
       Cond.ownsCosmetic('relic_ancient_root'),
     ],
@@ -67,6 +73,17 @@ final List<CosmeticUnlockRule> kCosmeticUnlockRules = <CosmeticUnlockRule>[
     isHidden: true,
   ),
   CosmeticUnlockRule(
+    cosmeticId: 'companion_bridge_gargoyle',
+    sourceType: 'compound',
+    sourceId: 'compound_mostni_gargoyle',
+    conditions: [
+      Cond.atLevel(35),
+      Cond.ownsCosmetic('relic_oathbound_mark'),
+      Cond.ownsCosmetic('relic_bridge_key'),
+    ],
+    isHidden: true,
+  ),
+  CosmeticUnlockRule(
     cosmeticId: 'companion_lantern_golem',
     sourceType: 'compound',
     sourceId: 'compound_lucernovy_golem',
@@ -78,13 +95,35 @@ final List<CosmeticUnlockRule> kCosmeticUnlockRules = <CosmeticUnlockRule>[
     isHidden: true,
   ),
   CosmeticUnlockRule(
+    cosmeticId: 'companion_cave_lynx',
+    sourceType: 'compound',
+    sourceId: 'compound_jeskynni_rys',
+    conditions: [
+      Cond.atLevel(55),
+      Cond.ownsCosmetic('relic_wildwood_charm'),
+      Cond.ownsCosmetic('relic_ravine_stone'),
+    ],
+    isHidden: true,
+  ),
+  CosmeticUnlockRule(
+    cosmeticId: 'companion_aurora_stag',
+    sourceType: 'compound',
+    sourceId: 'compound_polarni_jelen',
+    conditions: [
+      Cond.atLevel(65),
+      Cond.ownsCosmetic('relic_frozen_lake_heart'),
+      Cond.ownsCosmetic('relic_aurora_thread'),
+    ],
+    isHidden: true,
+  ),
+  CosmeticUnlockRule(
     cosmeticId: 'companion_ice_wisp',
     sourceType: 'compound',
     sourceId: 'compound_ledovy_prizrak',
     conditions: [
-      Cond.atLevel(65),
+      Cond.atLevel(75),
       Cond.ownsCosmetic('relic_polar_lantern'),
-      Cond.ownsCosmetic('relic_frozen_lake_heart'),
+      Cond.ownsCosmetic('relic_frost_shard'),
     ],
     isHidden: true,
   ),
@@ -104,7 +143,7 @@ final List<CosmeticUnlockRule> kCosmeticUnlockRules = <CosmeticUnlockRule>[
     sourceType: 'compound',
     sourceId: 'compound_draci_mlade',
     conditions: [
-      Cond.atLevel(100),
+      Cond.atLevel(95),
       Cond.ownsCosmetic('relic_dragon_scale'),
       Cond.ownsCosmetic('relic_dragonrock_heart'),
     ],

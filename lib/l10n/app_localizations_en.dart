@@ -2772,6 +2772,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Accumulate 1,000,000 total steps.';
 
   @override
+  String get progAchievementSteps2500000Title => 'Highland Strider';
+
+  @override
+  String get progAchievementSteps2500000Desc =>
+      'Accumulate 2,500,000 total steps.';
+
+  @override
   String get progAchievementSteps5000000Title => 'Gemstone Path';
 
   @override
@@ -2884,6 +2891,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Complete the weekly activity rule 24 times.';
 
   @override
+  String get progAchievementWeeklyActivity36Title => 'Aurora Season';
+
+  @override
+  String get progAchievementWeeklyActivity36Desc =>
+      'Complete the weekly activity rule 36 times.';
+
+  @override
   String get progAchievementWeeklyActivity52Title => 'Yearlong Engine';
 
   @override
@@ -2942,6 +2956,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get progAchievementActiveDays7Desc => 'Be active for 7 days.';
+
+  @override
+  String get progAchievementActiveDays90Title => 'A Season on the Road';
+
+  @override
+  String get progAchievementActiveDays90Desc => 'Be active for 90 days.';
 
   @override
   String get progAchievementPerfectDays7Title => 'Balanced Week';
@@ -3381,6 +3401,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Developer-only background. Grant via DevTools.';
 
   @override
+  String get cosmeticCompanionDevOnlyDesc =>
+      'Developer-only companion. Grant via DevTools.';
+
+  @override
+  String get cosmeticCompanionMonsterEnergyName => 'Monster Energy';
+
+  @override
   String get dialogClose => 'Close';
 
   @override
@@ -3640,7 +3667,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cosmeticRelicRavineStoneDesc =>
-      'A heavy stone carried over a hundred thousand steps.';
+      'A heavy stone carried over millions of steps.';
 
   @override
   String get cosmeticRelicRuinSealName => 'Ruin Seal';
@@ -3678,6 +3705,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'A splinter of true frost, cold to the touch under any sun.';
 
   @override
+  String get cosmeticRelicAuroraThreadName => 'Aurora Thread';
+
+  @override
+  String get cosmeticRelicAuroraThreadDesc =>
+      'A strand of aurora light, woven from thirty-six unbroken weeks.';
+
+  @override
   String get cosmeticRelicFrozenLakeHeartName => 'Frozen Lake Heart';
 
   @override
@@ -3710,7 +3744,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cosmeticRelicWildwoodCharmDesc =>
-      'A token braided from forest grasses and small steady wins.';
+      'A token braided from forest grasses and many seasons of steady wins.';
 
   @override
   String get cosmeticRelicAshenOmenName => 'Ashen Omen';
@@ -3832,6 +3866,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'A black bird from the old halls, seen most often after a weekly quest is closed.';
 
   @override
+  String get cosmeticCompanionBridgeGargoyleName => 'Bridge Gargoyle';
+
+  @override
+  String get cosmeticCompanionBridgeGargoyleDesc =>
+      'A stone gargoyle hatchling that guards the old bridge — sealed-bone oath and iron key are its tribute.';
+
+  @override
   String get cosmeticCompanionLanternGolemName => 'Lantern Golem';
 
   @override
@@ -3839,11 +3880,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'A small stone golem with a flickering lantern in its chest.';
 
   @override
+  String get cosmeticCompanionCaveLynxName => 'Cave Lynx';
+
+  @override
+  String get cosmeticCompanionCaveLynxDesc =>
+      'A lynx from the rocky descent who follows walkers carrying the scent of distant forests and ravines.';
+
+  @override
+  String get cosmeticCompanionAuroraStagName => 'Aurora Stag';
+
+  @override
+  String get cosmeticCompanionAuroraStagDesc =>
+      'A white stag whose antlers weave living aurora — it emerges on the ice plain only for walkers carrying the lake\'s heart.';
+
+  @override
   String get cosmeticCompanionIceWispName => 'Ice Wisp';
 
   @override
   String get cosmeticCompanionIceWispDesc =>
-      'A pale spark drawn out of the frozen lake by those who carry both shard and heart.';
+      'A pale spark drawn out over the frozen lake by those who carry both lantern and shard.';
 
   @override
   String get cosmeticCompanionMountainGryphonName => 'Mountain Gryphon';
@@ -4594,7 +4649,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Maintain a 7-day step streak.';
 
   @override
-  String get cosmeticRelicRavineStoneUnlockHint => 'Walk 100,000 total steps.';
+  String get cosmeticRelicRavineStoneUnlockHint =>
+      'Walk 2,500,000 total steps.';
 
   @override
   String get cosmeticRelicRuinSealUnlockHint =>
@@ -4613,6 +4669,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cosmeticRelicFrostShardUnlockHint => 'Reach level 65.';
 
   @override
+  String get cosmeticRelicAuroraThreadUnlockHint =>
+      'Complete the weekly activity rule 36 times.';
+
+  @override
   String get cosmeticRelicFrozenLakeHeartUnlockHint =>
       'Walk 1,000,000 total steps.';
 
@@ -4627,7 +4687,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Stay active for 7 days.';
 
   @override
-  String get cosmeticRelicWildwoodCharmUnlockHint => 'Complete 7 daily quests.';
+  String get cosmeticRelicWildwoodCharmUnlockHint => 'Be active for 90 days.';
 
   @override
   String get cosmeticRelicAshenOmenUnlockHint =>
@@ -4663,23 +4723,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cosmeticCompanionRuinRavenUnlockHint =>
-      'Obtain the Ruin Sigil and complete your first weekly quest.';
+      'Obtain the Ruin Seal and the Ashen Omen.';
+
+  @override
+  String get cosmeticCompanionBridgeGargoyleUnlockHint =>
+      'Obtain the Oathbound Mark and the Bridge Key.';
 
   @override
   String get cosmeticCompanionLanternGolemUnlockHint =>
-      'Obtain the Miner\'s Lantern and complete 75 quests.';
+      'Obtain the Deep Ember Core and the Miner\'s Lantern.';
+
+  @override
+  String get cosmeticCompanionCaveLynxUnlockHint =>
+      'Obtain the Wildwood Charm and the Ravine Stone.';
+
+  @override
+  String get cosmeticCompanionAuroraStagUnlockHint =>
+      'Obtain the Frozen Lake Heart and the Aurora Thread.';
 
   @override
   String get cosmeticCompanionIceWispUnlockHint =>
-      'Obtain the Frost Shard and the Frozen Lake Heart.';
+      'Obtain the Polar Lantern and the Frost Shard.';
 
   @override
   String get cosmeticCompanionMountainGryphonUnlockHint =>
-      'Reach level 80 and obtain the Frozen Lake Heart.';
+      'Obtain the Summit Feather and the Stormcrest Plume.';
 
   @override
   String get cosmeticCompanionDragonlingUnlockHint =>
-      'Reach level 100 and obtain the Dragonrock Crown.';
+      'Reach level 95 and obtain the Dragon Scale and the Dragonrock Heart.';
 
   @override
   String get coachLogExportTitle => 'Coach Log Export';

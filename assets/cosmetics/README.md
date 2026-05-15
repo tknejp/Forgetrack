@@ -56,8 +56,8 @@ placeholders until the file ships.
 `pilgrim_cloak.png`, `trail_compass.png`, `ancient_root.png`,
 `ravine_stone.png`, `ruin_seal.png`, `bridge_key.png`,
 `miners_lantern.png`, `polar_lantern.png`, `frost_shard.png`,
-`frozen_lake_heart.png`, `dragon_scale.png`, `dragon_crown.png`,
-`dragonrock_crown.png`.
+`aurora_thread.png`, `frozen_lake_heart.png`, `dragon_scale.png`,
+`dragon_crown.png`, `dragonrock_crown.png`.
 
 **Frames** (`frames/`):
 `pilgrim.png`, `wildwood.png`, `dwarven.png`, `underways.png`, `frost.png`,
@@ -69,7 +69,8 @@ endgame frame — there is no separate `dragonrock_frame.png`),
 
 **Companions** (`companions/`):
 `ember_sprite.png`, `forest_fox.png`, `ruin_raven.png`,
-`lantern_golem.png`, `ice_wisp.png`, `mountain_gryphon.png`,
+`bridge_gargoyle.png`, `lantern_golem.png`, `cave_lynx.png`,
+`aurora_stag.png`, `ice_wisp.png`, `mountain_gryphon.png`,
 `dragonling.png`.
 
 The asset key declared in the catalog (`cosmetics.frames.pilgrim`) is mapped

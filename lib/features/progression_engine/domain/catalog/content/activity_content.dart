@@ -69,6 +69,14 @@ List<ObjectiveDefinition> activityObjectives(EngineCatalogContext context) {
       targetValue: 24,
     ),
     const ObjectiveDefinition(
+      id: 'reward_count_weekly_activity_36',
+      domain: ProgressionDomain.activity,
+      metric: RewardCountMetric(ruleId: 'weekly_activity'),
+      scope: LifetimeScope(),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: 36,
+    ),
+    const ObjectiveDefinition(
       id: 'reward_count_weekly_activity_52',
       domain: ProgressionDomain.activity,
       metric: RewardCountMetric(ruleId: 'weekly_activity'),
@@ -149,6 +157,18 @@ List<ProgressionNode> activityNodes() {
       titleKey: (l) => l.progAchievementWeeklyActivity24Title,
       descriptionKey: (l) => l.progAchievementWeeklyActivity24Desc,
       rewards: const [CosmeticReward(cosmeticId: 'relic_polar_lantern')],
+      contentTags: const [ContentTag.core, ContentTag.fitness],
+      rarity: Rarity.epic,
+    ),
+    AchievementNode(
+      id: 'weekly_activity_36',
+      objectiveId: 'reward_count_weekly_activity_36',
+      badgeEmoji: '\u{2744}\u{FE0F}', // snowflake
+      titleKey: (l) => l.progAchievementWeeklyActivity36Title,
+      descriptionKey: (l) => l.progAchievementWeeklyActivity36Desc,
+      // Sources relic_aurora_thread — ~9 months of consistent weekly
+      // activity, the Aurora Stag (lvl 65) ingredient.
+      rewards: const [CosmeticReward(cosmeticId: 'relic_aurora_thread')],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.epic,
     ),

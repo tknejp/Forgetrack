@@ -54,6 +54,14 @@ List<ObjectiveDefinition> stepsObjectives(EngineCatalogContext context) {
       targetValue: 1000000,
     ),
     const ObjectiveDefinition(
+      id: 'lifetime_steps_2_5m',
+      domain: ProgressionDomain.steps,
+      metric: StepsMetric(),
+      scope: LifetimeScope(),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: 2500000,
+    ),
+    const ObjectiveDefinition(
       id: 'lifetime_steps_5m',
       domain: ProgressionDomain.steps,
       metric: StepsMetric(),
@@ -160,7 +168,9 @@ List<ProgressionNode> stepsNodes() {
       badgeEmoji: '\u{1F97E}',
       titleKey: (l) => l.progAchievementSteps100kTitle,
       descriptionKey: (l) => l.progAchievementSteps100kDesc,
-      rewards: const [CosmeticReward(cosmeticId: 'relic_ravine_stone')],
+      // Relic reward moved to `steps_total_2_5m` so the Cave Lynx (lvl 55)
+      // unlock pair lands in the right difficulty band rather than week one.
+      rewards: const [],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.common,
     ),
@@ -181,6 +191,18 @@ List<ProgressionNode> stepsNodes() {
       titleKey: (l) => l.progAchievementSteps1000000Title,
       descriptionKey: (l) => l.progAchievementSteps1000000Desc,
       rewards: const [CosmeticReward(cosmeticId: 'relic_deep_ember_core')],
+      contentTags: const [ContentTag.core, ContentTag.fitness],
+      rarity: Rarity.epic,
+    ),
+    AchievementNode(
+      id: 'steps_total_2_5m',
+      objectiveId: 'lifetime_steps_2_5m',
+      badgeEmoji: '\u{1F97E}',
+      titleKey: (l) => l.progAchievementSteps2500000Title,
+      descriptionKey: (l) => l.progAchievementSteps2500000Desc,
+      // Sources relic_ravine_stone — mid-game (~8–9 months) ingredient for
+      // the Cave Lynx (lvl 55) companion pair.
+      rewards: const [CosmeticReward(cosmeticId: 'relic_ravine_stone')],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.epic,
     ),

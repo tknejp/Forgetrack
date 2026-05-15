@@ -2760,6 +2760,13 @@ class AppLocalizationsCs extends AppLocalizations {
       'Nasbírej celkem 1 000 000 kroků.';
 
   @override
+  String get progAchievementSteps2500000Title => 'Skalní poutník';
+
+  @override
+  String get progAchievementSteps2500000Desc =>
+      'Nasbírej celkem 2 500 000 kroků.';
+
+  @override
   String get progAchievementSteps5000000Title => 'Stezka drahokamů';
 
   @override
@@ -2872,6 +2879,13 @@ class AppLocalizationsCs extends AppLocalizations {
       'Splň týdenní cíl aktivity čtyřiadvacetkrát.';
 
   @override
+  String get progAchievementWeeklyActivity36Title => 'Sezóna polární záře';
+
+  @override
+  String get progAchievementWeeklyActivity36Desc =>
+      'Splň týdenní cíl aktivity šestatřicetkrát.';
+
+  @override
   String get progAchievementWeeklyActivity52Title => 'Celoroční motor';
 
   @override
@@ -2929,6 +2943,12 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get progAchievementActiveDays7Desc => 'Buď aktivní 7 dní.';
+
+  @override
+  String get progAchievementActiveDays90Title => 'Sezóna na cestě';
+
+  @override
+  String get progAchievementActiveDays90Desc => 'Buď aktivní 90 dní.';
 
   @override
   String get progAchievementPerfectDays7Title => 'Vyvážený týden';
@@ -3367,6 +3387,13 @@ class AppLocalizationsCs extends AppLocalizations {
       'Vyvojarske pozadi. Grant pres DevTools.';
 
   @override
+  String get cosmeticCompanionDevOnlyDesc =>
+      'Vývojářský společník. Grant přes DevTools.';
+
+  @override
+  String get cosmeticCompanionMonsterEnergyName => 'Monster Energy';
+
+  @override
   String get dialogClose => 'Zavřít';
 
   @override
@@ -3626,7 +3653,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get cosmeticRelicRavineStoneDesc =>
-      'Těžký kámen donesený přes sto tisíc kroků.';
+      'Těžký kámen, který jsi pronesl přes nespočet tisíc kroků.';
 
   @override
   String get cosmeticRelicRuinSealName => 'Pečeť starých ruin';
@@ -3664,6 +3691,13 @@ class AppLocalizationsCs extends AppLocalizations {
       'Úlomek pravého ledu, chladný i pod letním sluncem.';
 
   @override
+  String get cosmeticRelicAuroraThreadName => 'Vlákno polární záře';
+
+  @override
+  String get cosmeticRelicAuroraThreadDesc =>
+      'Vlákno polární záře utkané z třiceti šesti nepřerušených týdnů.';
+
+  @override
   String get cosmeticRelicFrozenLakeHeartName => 'Srdce ledového jezera';
 
   @override
@@ -3696,7 +3730,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get cosmeticRelicWildwoodCharmDesc =>
-      'Talisman spletený z lesních trav a drobných ustálených vítězství.';
+      'Talisman spletený z lesních trav a mnoha sezón vytrvalých malých výher.';
 
   @override
   String get cosmeticRelicAshenOmenName => 'Popelná věštba';
@@ -3817,6 +3851,13 @@ class AppLocalizationsCs extends AppLocalizations {
       'Černý pták ze starých síní, nejčastěji k vidění po splnění týdenního questu.';
 
   @override
+  String get cosmeticCompanionBridgeGargoyleName => 'Mostní gargoyle';
+
+  @override
+  String get cosmeticCompanionBridgeGargoyleDesc =>
+      'Mládě kamenného gargoyla, které střeží starý most — pečetní přísaha a železný klíč jsou jeho dary.';
+
+  @override
   String get cosmeticCompanionLanternGolemName => 'Lucernový golem';
 
   @override
@@ -3824,11 +3865,25 @@ class AppLocalizationsCs extends AppLocalizations {
       'Malý kamenný golem s lucernou poblikávající v hrudi.';
 
   @override
+  String get cosmeticCompanionCaveLynxName => 'Jeskynní rys';
+
+  @override
+  String get cosmeticCompanionCaveLynxDesc =>
+      'Rys ze skalního přechodu, který následuje poutníky nesoucí vůni dávných lesů a roklí.';
+
+  @override
+  String get cosmeticCompanionAuroraStagName => 'Polární jelen';
+
+  @override
+  String get cosmeticCompanionAuroraStagDesc =>
+      'Bílý jelen, jehož paroží protkává živá polární záře — vystupuje na ledové pláni jen těm, kdo nesou srdce jezera.';
+
+  @override
   String get cosmeticCompanionIceWispName => 'Ledový přízrak';
 
   @override
   String get cosmeticCompanionIceWispDesc =>
-      'Bledá jiskra vyvolaná ze zamrzlého jezera těmi, kdo nesou střep i srdce.';
+      'Bledá jiskra tančící nad zamrzlým jezerem těm, kdo nesou lucernu i ledový střep.';
 
   @override
   String get cosmeticCompanionMountainGryphonName => 'Horský gryf';
@@ -4576,7 +4631,8 @@ class AppLocalizationsCs extends AppLocalizations {
       'Udržuj 7denní krokovací sérii.';
 
   @override
-  String get cosmeticRelicRavineStoneUnlockHint => 'Ujdi celkem 100 000 kroků.';
+  String get cosmeticRelicRavineStoneUnlockHint =>
+      'Ujdi celkem 2 500 000 kroků.';
 
   @override
   String get cosmeticRelicRuinSealUnlockHint =>
@@ -4595,6 +4651,10 @@ class AppLocalizationsCs extends AppLocalizations {
   String get cosmeticRelicFrostShardUnlockHint => 'Dosáhni úrovně 65.';
 
   @override
+  String get cosmeticRelicAuroraThreadUnlockHint =>
+      'Splň týdenní cíl aktivity 36krát.';
+
+  @override
   String get cosmeticRelicFrozenLakeHeartUnlockHint =>
       'Ujdi celkem 1 000 000 kroků.';
 
@@ -4608,7 +4668,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get cosmeticRelicMoonlitFoxgloveUnlockHint => 'Buď aktivní 7 dní.';
 
   @override
-  String get cosmeticRelicWildwoodCharmUnlockHint => 'Splň 7 denních úkolů.';
+  String get cosmeticRelicWildwoodCharmUnlockHint => 'Buď aktivní 90 dní.';
 
   @override
   String get cosmeticRelicAshenOmenUnlockHint => 'Splň týdenní aktivitu 4×.';
@@ -4642,23 +4702,35 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get cosmeticCompanionRuinRavenUnlockHint =>
-      'Získej Ruinové pečetidlo a dokonči první týdenní úkol.';
+      'Získej Ruinovou pečeť a Popelové znamení.';
+
+  @override
+  String get cosmeticCompanionBridgeGargoyleUnlockHint =>
+      'Získej Pečeť přísahy a Klíč mostu.';
 
   @override
   String get cosmeticCompanionLanternGolemUnlockHint =>
-      'Získej Hornickou lucernu a dokonči 75 úkolů.';
+      'Získej Hluboké uhlíkové jádro a Hornickou lucernu.';
+
+  @override
+  String get cosmeticCompanionCaveLynxUnlockHint =>
+      'Získej Lesní amulet a Kámen rokle.';
+
+  @override
+  String get cosmeticCompanionAuroraStagUnlockHint =>
+      'Získej Srdce ledového jezera a Vlákno polární záře.';
 
   @override
   String get cosmeticCompanionIceWispUnlockHint =>
-      'Získej Ledový střep a Srdce zmrzlého jezera.';
+      'Získej Polární lucernu a Ledový střep.';
 
   @override
   String get cosmeticCompanionMountainGryphonUnlockHint =>
-      'Dosáhni úrovně 80 a získej Srdce zmrzlého jezera.';
+      'Získej Vrcholové pero a Bouřkové peří.';
 
   @override
   String get cosmeticCompanionDragonlingUnlockHint =>
-      'Dosáhni úrovně 100 a získej Dračí korunu pevnosti.';
+      'Dosáhni úrovně 95 a získej Dračí šupinu a Srdce dračí skály.';
 
   @override
   String get coachLogExportTitle => 'Coach Log Export';

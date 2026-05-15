@@ -90,20 +90,21 @@ void main() {
               g.event.nodeId != 'pilgrim_path_open')
           .toList();
       expect(manualClaimXpGrants, isEmpty);
-      // Cosmetics: welcome's camp background + relic from
-      // steps_total_100k + background from level_5. emblem_pilgrim_mark
-      // moved to the Pilgrim Path finale (manual claim) so it no
-      // longer fires on the first evaluation.
+      // Cosmetics: welcome's camp background + background from level_5.
+      // emblem_pilgrim_mark moved to the Pilgrim Path finale (manual claim)
+      // so it no longer fires on the first evaluation. relic_ravine_stone
+      // moved off steps_total_100k to steps_total_2_5m (Cave Lynx ingredient)
+      // so it no longer fires on the 100k step milestone.
       final cosmeticIds = result.grantedRewards
           .where((g) => g.event.rewardKind == RewardGrantKind.cosmetic)
           .map((g) => g.event.cosmeticId)
           .toSet();
       expect(cosmeticIds, containsAll({
         'background_camp',
-        'relic_ravine_stone',
         'background_forest_trail',
       }));
       expect(cosmeticIds, isNot(contains('emblem_pilgrim_mark')));
+      expect(cosmeticIds, isNot(contains('relic_ravine_stone')));
     });
 
     test('claiming a manual quest grants XP and moves it to completed',

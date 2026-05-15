@@ -5042,6 +5042,18 @@ abstract class AppLocalizations {
   /// **'Accumulate 1,000,000 total steps.'**
   String get progAchievementSteps1000000Desc;
 
+  /// No description provided for @progAchievementSteps2500000Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Highland Strider'**
+  String get progAchievementSteps2500000Title;
+
+  /// No description provided for @progAchievementSteps2500000Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 2,500,000 total steps.'**
+  String get progAchievementSteps2500000Desc;
+
   /// No description provided for @progAchievementSteps5000000Title.
   ///
   /// In en, this message translates to:
@@ -5234,6 +5246,18 @@ abstract class AppLocalizations {
   /// **'Complete the weekly activity rule 24 times.'**
   String get progAchievementWeeklyActivity24Desc;
 
+  /// No description provided for @progAchievementWeeklyActivity36Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Aurora Season'**
+  String get progAchievementWeeklyActivity36Title;
+
+  /// No description provided for @progAchievementWeeklyActivity36Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the weekly activity rule 36 times.'**
+  String get progAchievementWeeklyActivity36Desc;
+
   /// No description provided for @progAchievementWeeklyActivity52Title.
   ///
   /// In en, this message translates to:
@@ -5341,6 +5365,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Be active for 7 days.'**
   String get progAchievementActiveDays7Desc;
+
+  /// No description provided for @progAchievementActiveDays90Title.
+  ///
+  /// In en, this message translates to:
+  /// **'A Season on the Road'**
+  String get progAchievementActiveDays90Title;
+
+  /// No description provided for @progAchievementActiveDays90Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Be active for 90 days.'**
+  String get progAchievementActiveDays90Desc;
 
   /// No description provided for @progAchievementPerfectDays7Title.
   ///
@@ -6098,6 +6134,18 @@ abstract class AppLocalizations {
   /// **'Developer-only background. Grant via DevTools.'**
   String get cosmeticBackgroundDevOnlyDesc;
 
+  /// No description provided for @cosmeticCompanionDevOnlyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Developer-only companion. Grant via DevTools.'**
+  String get cosmeticCompanionDevOnlyDesc;
+
+  /// No description provided for @cosmeticCompanionMonsterEnergyName.
+  ///
+  /// In en, this message translates to:
+  /// **'Monster Energy'**
+  String get cosmeticCompanionMonsterEnergyName;
+
   /// Generic close button label
   ///
   /// In en, this message translates to:
@@ -6557,7 +6605,7 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticRelicRavineStoneDesc.
   ///
   /// In en, this message translates to:
-  /// **'A heavy stone carried over a hundred thousand steps.'**
+  /// **'A heavy stone carried over millions of steps.'**
   String get cosmeticRelicRavineStoneDesc;
 
   /// No description provided for @cosmeticRelicRuinSealName.
@@ -6620,6 +6668,18 @@ abstract class AppLocalizations {
   /// **'A splinter of true frost, cold to the touch under any sun.'**
   String get cosmeticRelicFrostShardDesc;
 
+  /// No description provided for @cosmeticRelicAuroraThreadName.
+  ///
+  /// In en, this message translates to:
+  /// **'Aurora Thread'**
+  String get cosmeticRelicAuroraThreadName;
+
+  /// No description provided for @cosmeticRelicAuroraThreadDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A strand of aurora light, woven from thirty-six unbroken weeks.'**
+  String get cosmeticRelicAuroraThreadDesc;
+
   /// No description provided for @cosmeticRelicFrozenLakeHeartName.
   ///
   /// In en, this message translates to:
@@ -6677,7 +6737,7 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticRelicWildwoodCharmDesc.
   ///
   /// In en, this message translates to:
-  /// **'A token braided from forest grasses and small steady wins.'**
+  /// **'A token braided from forest grasses and many seasons of steady wins.'**
   String get cosmeticRelicWildwoodCharmDesc;
 
   /// No description provided for @cosmeticRelicAshenOmenName.
@@ -6884,6 +6944,18 @@ abstract class AppLocalizations {
   /// **'A black bird from the old halls, seen most often after a weekly quest is closed.'**
   String get cosmeticCompanionRuinRavenDesc;
 
+  /// No description provided for @cosmeticCompanionBridgeGargoyleName.
+  ///
+  /// In en, this message translates to:
+  /// **'Bridge Gargoyle'**
+  String get cosmeticCompanionBridgeGargoyleName;
+
+  /// No description provided for @cosmeticCompanionBridgeGargoyleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A stone gargoyle hatchling that guards the old bridge — sealed-bone oath and iron key are its tribute.'**
+  String get cosmeticCompanionBridgeGargoyleDesc;
+
   /// No description provided for @cosmeticCompanionLanternGolemName.
   ///
   /// In en, this message translates to:
@@ -6896,6 +6968,30 @@ abstract class AppLocalizations {
   /// **'A small stone golem with a flickering lantern in its chest.'**
   String get cosmeticCompanionLanternGolemDesc;
 
+  /// No description provided for @cosmeticCompanionCaveLynxName.
+  ///
+  /// In en, this message translates to:
+  /// **'Cave Lynx'**
+  String get cosmeticCompanionCaveLynxName;
+
+  /// No description provided for @cosmeticCompanionCaveLynxDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A lynx from the rocky descent who follows walkers carrying the scent of distant forests and ravines.'**
+  String get cosmeticCompanionCaveLynxDesc;
+
+  /// No description provided for @cosmeticCompanionAuroraStagName.
+  ///
+  /// In en, this message translates to:
+  /// **'Aurora Stag'**
+  String get cosmeticCompanionAuroraStagName;
+
+  /// No description provided for @cosmeticCompanionAuroraStagDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A white stag whose antlers weave living aurora — it emerges on the ice plain only for walkers carrying the lake\'s heart.'**
+  String get cosmeticCompanionAuroraStagDesc;
+
   /// No description provided for @cosmeticCompanionIceWispName.
   ///
   /// In en, this message translates to:
@@ -6905,7 +7001,7 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticCompanionIceWispDesc.
   ///
   /// In en, this message translates to:
-  /// **'A pale spark drawn out of the frozen lake by those who carry both shard and heart.'**
+  /// **'A pale spark drawn out over the frozen lake by those who carry both lantern and shard.'**
   String get cosmeticCompanionIceWispDesc;
 
   /// No description provided for @cosmeticCompanionMountainGryphonName.
@@ -8142,7 +8238,7 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticRelicRavineStoneUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Walk 100,000 total steps.'**
+  /// **'Walk 2,500,000 total steps.'**
   String get cosmeticRelicRavineStoneUnlockHint;
 
   /// No description provided for @cosmeticRelicRuinSealUnlockHint.
@@ -8175,6 +8271,12 @@ abstract class AppLocalizations {
   /// **'Reach level 65.'**
   String get cosmeticRelicFrostShardUnlockHint;
 
+  /// No description provided for @cosmeticRelicAuroraThreadUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the weekly activity rule 36 times.'**
+  String get cosmeticRelicAuroraThreadUnlockHint;
+
   /// No description provided for @cosmeticRelicFrozenLakeHeartUnlockHint.
   ///
   /// In en, this message translates to:
@@ -8202,7 +8304,7 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticRelicWildwoodCharmUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Complete 7 daily quests.'**
+  /// **'Be active for 90 days.'**
   String get cosmeticRelicWildwoodCharmUnlockHint;
 
   /// No description provided for @cosmeticRelicAshenOmenUnlockHint.
@@ -8256,31 +8358,49 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticCompanionRuinRavenUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Obtain the Ruin Sigil and complete your first weekly quest.'**
+  /// **'Obtain the Ruin Seal and the Ashen Omen.'**
   String get cosmeticCompanionRuinRavenUnlockHint;
+
+  /// No description provided for @cosmeticCompanionBridgeGargoyleUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Obtain the Oathbound Mark and the Bridge Key.'**
+  String get cosmeticCompanionBridgeGargoyleUnlockHint;
 
   /// No description provided for @cosmeticCompanionLanternGolemUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Obtain the Miner\'s Lantern and complete 75 quests.'**
+  /// **'Obtain the Deep Ember Core and the Miner\'s Lantern.'**
   String get cosmeticCompanionLanternGolemUnlockHint;
+
+  /// No description provided for @cosmeticCompanionCaveLynxUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Obtain the Wildwood Charm and the Ravine Stone.'**
+  String get cosmeticCompanionCaveLynxUnlockHint;
+
+  /// No description provided for @cosmeticCompanionAuroraStagUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Obtain the Frozen Lake Heart and the Aurora Thread.'**
+  String get cosmeticCompanionAuroraStagUnlockHint;
 
   /// No description provided for @cosmeticCompanionIceWispUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Obtain the Frost Shard and the Frozen Lake Heart.'**
+  /// **'Obtain the Polar Lantern and the Frost Shard.'**
   String get cosmeticCompanionIceWispUnlockHint;
 
   /// No description provided for @cosmeticCompanionMountainGryphonUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Reach level 80 and obtain the Frozen Lake Heart.'**
+  /// **'Obtain the Summit Feather and the Stormcrest Plume.'**
   String get cosmeticCompanionMountainGryphonUnlockHint;
 
   /// No description provided for @cosmeticCompanionDragonlingUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Reach level 100 and obtain the Dragonrock Crown.'**
+  /// **'Reach level 95 and obtain the Dragon Scale and the Dragonrock Heart.'**
   String get cosmeticCompanionDragonlingUnlockHint;
 
   /// Screen title and settings tile for the Bushido coach-log export screen

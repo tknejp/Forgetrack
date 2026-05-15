@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:forgetrack/l10n/app_localizations.dart';
 
 import '../../../shared/theme/design_tokens.dart';
 import '../domain/cosmetic_models.dart';
@@ -196,23 +195,6 @@ String cosmeticTypeLabel(CosmeticType type) {
       return 'Titul';
     case CosmeticType.mapEffect:
       return 'Efekt mapy';
-  }
-}
-
-String cosmeticRarityLabel(Rarity rarity, AppLocalizations l10n) {
-  switch (rarity) {
-    case Rarity.common:
-      return l10n.cosmeticRarityCommon;
-    case Rarity.uncommon:
-      return l10n.cosmeticRarityUncommon;
-    case Rarity.rare:
-      return l10n.cosmeticRarityRare;
-    case Rarity.epic:
-      return l10n.cosmeticRarityEpic;
-    case Rarity.legendary:
-      return l10n.cosmeticRarityLegendary;
-    case Rarity.mythic:
-      return l10n.cosmeticRarityMythic;
   }
 }
 

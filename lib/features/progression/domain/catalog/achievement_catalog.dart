@@ -92,7 +92,11 @@ class ProgressionAchievementCatalog {
         badgeEmoji: _emojiBoot,
         targetValue: 100000,
         ruleId: 'daily_steps',
-        cosmeticRewards: ['relic_ravine_stone'],
+        // relic_ravine_stone moved to steps_total_2_5m in the V2 catalog
+        // (lib/features/progression_engine/domain/catalog/content/
+        // steps_content.dart) so the Cave Lynx (lvl 55) unlock pair lands
+        // in the right difficulty band.
+        cosmeticRewards: const [],
       ),
       ProgressionAchievementDefinition(
         id: 'steps_streak_3',
@@ -478,7 +482,11 @@ class ProgressionAchievementCatalog {
         title: (l10n) => l10n.progAchievementDailyQuest7Title,
         description: (l10n) => l10n.progAchievementDailyQuest7Desc,
         targetValue: 7,
-        cosmeticRewards: ['relic_wildwood_charm'],
+        // relic_wildwood_charm moved to active_days_90 in the V2 catalog
+        // (lib/features/progression_engine/domain/catalog/content/
+        // meta_content.dart) so the Cave Lynx (lvl 55) unlock pair lands
+        // in the right difficulty band.
+        cosmeticRewards: const [],
       ),
       ProgressionAchievementDefinition(
         id: 'quest_hunter_250',

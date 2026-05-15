@@ -76,6 +76,13 @@ List<ObjectiveDefinition> metaObjectives(EngineCatalogContext context) {
       operator: ObjectiveOperator.atLeast,
       targetValue: 7,
     ),
+    ObjectiveDefinition(
+      id: 'active_days_90',
+      metric: DistinctActiveDaysMetric(),
+      scope: LifetimeScope(),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: 90,
+    ),
     // Combo-pool counters (Phase 9c follow-up).
     ObjectiveDefinition(
       id: 'combo_pool_10',
@@ -186,7 +193,9 @@ List<ProgressionNode> metaNodes() {
       badgeEmoji: '\u{1F33F}', // herb
       titleKey: (l) => l.progAchievementDailyQuest7Title,
       descriptionKey: (l) => l.progAchievementDailyQuest7Desc,
-      rewards: const [CosmeticReward(cosmeticId: 'relic_wildwood_charm')],
+      // Relic reward moved to `active_days_90` so the Cave Lynx (lvl 55)
+      // unlock pair lands in the right difficulty band rather than week one.
+      rewards: const [],
       contentTags: const [ContentTag.core],
       rarity: Rarity.uncommon,
     ),
@@ -209,6 +218,18 @@ List<ProgressionNode> metaNodes() {
       rewards: const [CosmeticReward(cosmeticId: 'relic_moonlit_foxglove')],
       contentTags: const [ContentTag.core],
       rarity: Rarity.rare,
+    ),
+    AchievementNode(
+      id: 'active_days_90',
+      objectiveId: 'active_days_90',
+      badgeEmoji: '\u{1F33F}', // herb — re-uses motif from daily_quest_7
+      titleKey: (l) => l.progAchievementActiveDays90Title,
+      descriptionKey: (l) => l.progAchievementActiveDays90Desc,
+      // Sources relic_wildwood_charm — mid-game (~3 months) ingredient for
+      // the Cave Lynx (lvl 55) companion pair.
+      rewards: const [CosmeticReward(cosmeticId: 'relic_wildwood_charm')],
+      contentTags: const [ContentTag.core],
+      rarity: Rarity.epic,
     ),
     // Combo achievements (Phase 9c follow-up). Backing infra:
     // ComboPoolCompletionsMetric for the lifetime "all combos" tally,

@@ -27,12 +27,20 @@ class CosmeticsScreen extends StatefulWidget {
 }
 
 class _CosmeticsScreenState extends State<CosmeticsScreen> {
-  CosmeticType? _selectedType;
+  late final PageController _pageController;
+  int _currentIndex = 0;
+  bool _didInitialJump = false;
 
   @override
   void initState() {
     super.initState();
-    _selectedType = widget.initialType;
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   @override
@@ -96,13 +104,18 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
       revealResults = const {};
     } else {
       revealResults = cosmetics.computeRevealResults(kCosmeticUnlockRules);
-      // Show all enabled items whose reveal state is not hidden due to
-      // premium/devOnly policy. Hidden-category items (???) are included;
-      // truly suppressed items have state == hidden in revealResults.
+      // Display policy: unlocked items always show. Companions additionally
+      // surface in `partial` state (at least one of their compound conditions
+      // met) so the player sees a teaser of what's brewing. Frames, relics,
+      // backgrounds and emblems stay out of the inventory until owned —
+      // they're Tier-1 rewards where a locked preview would just be clutter.
       displayDefs = cosmetics.service.catalog.enabled
           .where((def) {
             final r = revealResults[def.id];
-            return r != null && r.state != CosmeticRevealState.hidden;
+            if (r == null) return false;
+            if (r.state == CosmeticRevealState.unlocked) return true;
+            return def.type == CosmeticType.companion &&
+                r.state == CosmeticRevealState.partial;
           })
           .toList()
         ..sort((a, b) => _sortRevealDefs(a, b, state, revealResults));
@@ -114,27 +127,83 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
         : CosmeticType.values
             .where((type) => displayDefs.any((def) => def.type == type))
             .toList(growable: false);
-    final selectedType =
-        presentTypes.contains(_selectedType) ? _selectedType : null;
-    final filteredDefs = selectedType == null
-        ? displayDefs
-        : displayDefs
-            .where((def) => def.type == selectedType)
-            .toList(growable: false);
 
-    return RefreshIndicator(
-      onRefresh: cosmetics.refresh,
-      color: Tokens.accent,
-      backgroundColor: Tokens.surface,
-      child: CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
-            sliver: SliverToBoxAdapter(
-              child: _EquippedSection(
-                definitions: equippedDefs,
+    // Tab layout: index 0 = "Vše" (null type, shows every displayDef),
+    // followed by one tab per present type. PageView pages stay in lockstep
+    // with the segmented selector via the shared PageController.
+    final tabs = <CosmeticType?>[null, ...presentTypes];
+
+    // One-shot initial jump from widget.initialType. We can't pass an initial
+    // page to the controller in initState because `tabs` is derived from the
+    // current cosmetics state, which isn't available until first build.
+    if (!_didInitialJump && widget.initialType != null) {
+      final idx = tabs.indexOf(widget.initialType);
+      if (idx > 0) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _pageController.hasClients) {
+            _pageController.jumpToPage(idx);
+            setState(() => _currentIndex = idx);
+          }
+        });
+      }
+      _didInitialJump = true;
+    }
+
+    // Clamp _currentIndex in case the tab list shrank (e.g. last item in a
+    // category was unequipped/removed).
+    final activeIndex =
+        _currentIndex >= tabs.length ? 0 : _currentIndex;
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
+          child: _EquippedSection(
+            definitions: equippedDefs,
+            state: state,
+            l10n: l10n,
+            onTap: (definition) => _showDetails(
+              context,
+              cosmetics: cosmetics,
+              state: state,
+              definition: definition,
+              l10n: l10n,
+              devTools: devTools,
+              revealResult: revealResults[definition.id],
+            ),
+          ),
+        ),
+        if (tabs.length > 1)
+          _SegmentedTabs(
+            tabs: tabs,
+            currentIndex: activeIndex,
+            onTap: (i) {
+              setState(() => _currentIndex = i);
+              _pageController.animateToPage(
+                i,
+                duration: const Duration(milliseconds: 240),
+                curve: Curves.easeOutCubic,
+              );
+            },
+          ),
+        Expanded(
+          child: PageView.builder(
+            controller: _pageController,
+            onPageChanged: (i) => setState(() => _currentIndex = i),
+            itemCount: tabs.length,
+            itemBuilder: (context, pageIndex) {
+              final type = tabs[pageIndex];
+              final pageDefs = type == null
+                  ? displayDefs
+                  : displayDefs
+                      .where((def) => def.type == type)
+                      .toList(growable: false);
+              return _CategoryGrid(
+                defs: pageDefs,
+                cosmetics: cosmetics,
                 state: state,
+                revealResults: revealResults,
+                devTools: devTools,
                 l10n: l10n,
                 onTap: (definition) => _showDetails(
                   context,
@@ -145,60 +214,11 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
                   devTools: devTools,
                   revealResult: revealResults[definition.id],
                 ),
-              ),
-            ),
+              );
+            },
           ),
-          if (presentTypes.isNotEmpty)
-            SliverToBoxAdapter(
-              child: _FilterBar(
-                types: presentTypes,
-                selectedType: selectedType,
-                onSelect: (type) => setState(() => _selectedType = type),
-              ),
-            ),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 36),
-            sliver: filteredDefs.isEmpty
-                ? const SliverToBoxAdapter(child: _EmptyInventory())
-                : SliverGrid(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final definition = filteredDefs[index];
-                        final isUnlocked =
-                            state.unlocked.containsKey(definition.id);
-                        final revealResult = revealResults[definition.id];
-                        return _CosmeticCard(
-                          definition: definition,
-                          isEquipped: state.equipped.slotId(definition.type) ==
-                              definition.id,
-                          isLocked: devTools && !isUnlocked,
-                          showMissingAsset: devTools,
-                          revealResult: devTools ? null : revealResult,
-                          l10n: l10n,
-                          onTap: () => _showDetails(
-                            context,
-                            cosmetics: cosmetics,
-                            state: state,
-                            definition: definition,
-                            l10n: l10n,
-                            devTools: devTools,
-                            revealResult: revealResult,
-                          ),
-                        );
-                      },
-                      childCount: filteredDefs.length,
-                    ),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                      childAspectRatio: 0.88,
-                    ),
-                  ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -290,47 +310,50 @@ class _EquippedSection extends StatelessWidget {
   }
 }
 
-class _FilterBar extends StatelessWidget {
-  const _FilterBar({
-    required this.types,
-    required this.selectedType,
-    required this.onSelect,
+class _SegmentedTabs extends StatelessWidget {
+  const _SegmentedTabs({
+    required this.tabs,
+    required this.currentIndex,
+    required this.onTap,
   });
 
-  final List<CosmeticType> types;
-  final CosmeticType? selectedType;
-  final ValueChanged<CosmeticType?> onSelect;
+  /// Index 0 is always the "Vše" tab (null type). Remaining entries are the
+  /// types currently present in the inventory, in catalog order.
+  final List<CosmeticType?> tabs;
+  final int currentIndex;
+  final ValueChanged<int> onTap;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 18, 0, 0),
+      padding: const EdgeInsets.fromLTRB(14, 18, 14, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const _SectionHead(label: 'Inventář'),
           const SizedBox(height: 10),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            clipBehavior: Clip.none,
-            padding: const EdgeInsets.only(right: 14),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(Tokens.radiusProgress),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+            ),
+            padding: const EdgeInsets.all(3),
             child: Row(
               children: [
-                _FilterChipButton(
-                  label: 'Vše',
-                  icon: Icons.apps_rounded,
-                  isSelected: selectedType == null,
-                  onTap: () => onSelect(null),
-                ),
-                for (final type in types) ...[
-                  const SizedBox(width: Tokens.spaceSm),
-                  _FilterChipButton(
-                    label: cosmeticTypeLabel(type),
-                    icon: cosmeticIconForType(type),
-                    isSelected: selectedType == type,
-                    onTap: () => onSelect(type),
+                for (var i = 0; i < tabs.length; i++)
+                  Expanded(
+                    child: _SegmentButton(
+                      label: tabs[i] == null
+                          ? 'Vše'
+                          : cosmeticTypeLabel(tabs[i]!),
+                      icon: tabs[i] == null
+                          ? Icons.apps_rounded
+                          : cosmeticIconForType(tabs[i]!),
+                      isSelected: currentIndex == i,
+                      onTap: () => onTap(i),
+                    ),
                   ),
-                ],
               ],
             ),
           ),
@@ -340,8 +363,8 @@ class _FilterBar extends StatelessWidget {
   }
 }
 
-class _FilterChipButton extends StatelessWidget {
-  const _FilterChipButton({
+class _SegmentButton extends StatelessWidget {
+  const _SegmentButton({
     required this.label,
     required this.icon,
     required this.isSelected,
@@ -358,31 +381,29 @@ class _FilterChipButton extends StatelessWidget {
     final color = isSelected ? Tokens.accent : Tokens.onSurfaceMuted;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(Tokens.radiusProgress),
+      borderRadius: BorderRadius.circular(Tokens.radiusProgress - 3),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 140),
-        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+        padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 4),
         decoration: BoxDecoration(
           color: isSelected
               ? Tokens.accent.withValues(alpha: 0.14)
-              : Colors.white.withValues(alpha: 0.03),
-          borderRadius: BorderRadius.circular(Tokens.radiusProgress),
-          border: Border.all(
-            color: isSelected
-                ? Tokens.accent.withValues(alpha: 0.44)
-                : Colors.white.withValues(alpha: 0.06),
-          ),
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(Tokens.radiusProgress - 3),
         ),
-        child: Row(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: color),
-            const SizedBox(width: 6),
+            Icon(icon, size: 16, color: color),
+            const SizedBox(height: 2),
             Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
               style: TextStyle(
                 color: color,
-                fontSize: Tokens.fontSizeCaption,
+                fontSize: Tokens.fontSizeTiny,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 0,
               ),
@@ -390,6 +411,70 @@ class _FilterChipButton extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _CategoryGrid extends StatelessWidget {
+  const _CategoryGrid({
+    required this.defs,
+    required this.cosmetics,
+    required this.state,
+    required this.revealResults,
+    required this.devTools,
+    required this.l10n,
+    required this.onTap,
+  });
+
+  final List<CosmeticDefinition> defs;
+  final CosmeticsProvider cosmetics;
+  final UserCosmeticsState state;
+  final Map<String, CosmeticRevealResult> revealResults;
+  final bool devTools;
+  final AppLocalizations l10n;
+  final ValueChanged<CosmeticDefinition> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return RefreshIndicator(
+      onRefresh: cosmetics.refresh,
+      color: Tokens.accent,
+      backgroundColor: Tokens.surface,
+      child: defs.isEmpty
+          ? ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: const [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(14, 30, 14, 36),
+                  child: _EmptyInventory(),
+                ),
+              ],
+            )
+          : GridView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 36),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                childAspectRatio: 0.88,
+              ),
+              itemCount: defs.length,
+              itemBuilder: (context, index) {
+                final def = defs[index];
+                final isUnlocked = state.unlocked.containsKey(def.id);
+                final revealResult = revealResults[def.id];
+                return _CosmeticCard(
+                  definition: def,
+                  isEquipped: state.equipped.slotId(def.type) == def.id,
+                  isLocked: devTools && !isUnlocked,
+                  showMissingAsset: devTools,
+                  revealResult: devTools ? null : revealResult,
+                  l10n: l10n,
+                  onTap: () => onTap(def),
+                );
+              },
+            ),
     );
   }
 }
@@ -819,7 +904,7 @@ int _compareUnlockedCosmetics(
   CosmeticDefinition b,
   UserCosmeticsState state,
 ) {
-  final rarity = _rarityRank(b.rarity).compareTo(_rarityRank(a.rarity));
+  final rarity = b.rarity.index.compareTo(a.rarity.index);
   if (rarity != 0) return rarity;
   final unlockedAtA = state.unlocked[a.id]?.unlockedAt;
   final unlockedAtB = state.unlocked[b.id]?.unlockedAt;
@@ -832,19 +917,3 @@ int _compareUnlockedCosmetics(
   return a.id.compareTo(b.id);
 }
 
-int _rarityRank(Rarity rarity) {
-  switch (rarity) {
-    case Rarity.common:
-      return 0;
-    case Rarity.uncommon:
-      return 1;
-    case Rarity.rare:
-      return 2;
-    case Rarity.epic:
-      return 3;
-    case Rarity.legendary:
-      return 4;
-    case Rarity.mythic:
-      return 5;
-  }
-}

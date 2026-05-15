@@ -55,27 +55,103 @@ void main() {
     });
   });
 
-  group('companion_forest_fox (level 10, moonlit_foxglove, ancient_root)', () {
+  group('companion_forest_fox (level 15, moonlit_foxglove, ancient_root)', () {
     const relics = {'relic_moonlit_foxglove', 'relic_ancient_root'};
 
-    test('unlocks with level 10 and both relics', () {
+    test('unlocks with level 15 and both relics', () {
       expect(
-        _unlock(_snap(level: 10, owned: relics)),
+        _unlock(_snap(level: 15, owned: relics)),
         contains('companion_forest_fox'),
       );
     });
 
     test('does not unlock when missing relic_ancient_root', () {
       expect(
-        _unlock(_snap(level: 10, owned: {'relic_moonlit_foxglove'})),
+        _unlock(_snap(level: 15, owned: {'relic_moonlit_foxglove'})),
         isNot(contains('companion_forest_fox')),
       );
     });
 
-    test('does not unlock below level 10', () {
+    test('does not unlock below level 15', () {
       expect(
-        _unlock(_snap(level: 9, owned: relics)),
+        _unlock(_snap(level: 14, owned: relics)),
         isNot(contains('companion_forest_fox')),
+      );
+    });
+  });
+
+  group('companion_bridge_gargoyle (level 35, oathbound_mark, bridge_key)', () {
+    const relics = {'relic_oathbound_mark', 'relic_bridge_key'};
+
+    test('unlocks with level 35 and both relics', () {
+      expect(
+        _unlock(_snap(level: 35, owned: relics)),
+        contains('companion_bridge_gargoyle'),
+      );
+    });
+
+    test('does not unlock when missing relic_bridge_key', () {
+      expect(
+        _unlock(_snap(level: 35, owned: {'relic_oathbound_mark'})),
+        isNot(contains('companion_bridge_gargoyle')),
+      );
+    });
+
+    test('does not unlock below level 35', () {
+      expect(
+        _unlock(_snap(level: 34, owned: relics)),
+        isNot(contains('companion_bridge_gargoyle')),
+      );
+    });
+  });
+
+  group('companion_cave_lynx (level 55, wildwood_charm, ravine_stone)', () {
+    const relics = {'relic_wildwood_charm', 'relic_ravine_stone'};
+
+    test('unlocks with level 55 and both relics', () {
+      expect(
+        _unlock(_snap(level: 55, owned: relics)),
+        contains('companion_cave_lynx'),
+      );
+    });
+
+    test('does not unlock when missing relic_ravine_stone', () {
+      expect(
+        _unlock(_snap(level: 55, owned: {'relic_wildwood_charm'})),
+        isNot(contains('companion_cave_lynx')),
+      );
+    });
+
+    test('does not unlock below level 55', () {
+      expect(
+        _unlock(_snap(level: 54, owned: relics)),
+        isNot(contains('companion_cave_lynx')),
+      );
+    });
+  });
+
+  group('companion_aurora_stag (level 65, frozen_lake_heart, aurora_thread)',
+      () {
+    const relics = {'relic_frozen_lake_heart', 'relic_aurora_thread'};
+
+    test('unlocks with level 65 and both relics', () {
+      expect(
+        _unlock(_snap(level: 65, owned: relics)),
+        contains('companion_aurora_stag'),
+      );
+    });
+
+    test('does not unlock when missing relic_aurora_thread', () {
+      expect(
+        _unlock(_snap(level: 65, owned: {'relic_frozen_lake_heart'})),
+        isNot(contains('companion_aurora_stag')),
+      );
+    });
+
+    test('does not unlock below level 65', () {
+      expect(
+        _unlock(_snap(level: 64, owned: relics)),
+        isNot(contains('companion_aurora_stag')),
       );
     });
   });
@@ -131,26 +207,26 @@ void main() {
     });
   });
 
-  group('companion_ice_wisp (level 65, polar_lantern, frozen_lake_heart)', () {
-    const relics = {'relic_polar_lantern', 'relic_frozen_lake_heart'};
+  group('companion_ice_wisp (level 75, polar_lantern, frost_shard)', () {
+    const relics = {'relic_polar_lantern', 'relic_frost_shard'};
 
-    test('unlocks with level 65 and both relics', () {
+    test('unlocks with level 75 and both relics', () {
       expect(
-        _unlock(_snap(level: 65, owned: relics)),
+        _unlock(_snap(level: 75, owned: relics)),
         contains('companion_ice_wisp'),
       );
     });
 
     test('does not unlock when missing relic_polar_lantern', () {
       expect(
-        _unlock(_snap(level: 65, owned: {'relic_frozen_lake_heart'})),
+        _unlock(_snap(level: 75, owned: {'relic_frost_shard'})),
         isNot(contains('companion_ice_wisp')),
       );
     });
 
-    test('does not unlock below level 65', () {
+    test('does not unlock below level 75', () {
       expect(
-        _unlock(_snap(level: 64, owned: relics)),
+        _unlock(_snap(level: 74, owned: relics)),
         isNot(contains('companion_ice_wisp')),
       );
     });
@@ -183,33 +259,33 @@ void main() {
     });
   });
 
-  group('companion_dragonling (level 100, dragon_scale, dragonrock_heart)', () {
+  group('companion_dragonling (level 95, dragon_scale, dragonrock_heart)', () {
     const relics = {'relic_dragon_scale', 'relic_dragonrock_heart'};
 
-    test('unlocks with level 100 and both relics', () {
+    test('unlocks with level 95 and both relics', () {
       expect(
-        _unlock(_snap(level: 100, owned: relics)),
+        _unlock(_snap(level: 95, owned: relics)),
         contains('companion_dragonling'),
       );
     });
 
     test('does not unlock when missing relic_dragonrock_heart', () {
       expect(
-        _unlock(_snap(level: 100, owned: {'relic_dragon_scale'})),
+        _unlock(_snap(level: 95, owned: {'relic_dragon_scale'})),
         isNot(contains('companion_dragonling')),
       );
     });
 
     test('does not unlock with legacy relic_dragonrock_crown instead', () {
       expect(
-        _unlock(_snap(level: 100, owned: {'relic_dragonrock_crown'})),
+        _unlock(_snap(level: 95, owned: {'relic_dragonrock_crown'})),
         isNot(contains('companion_dragonling')),
       );
     });
 
-    test('does not unlock below level 100', () {
+    test('does not unlock below level 95', () {
       expect(
-        _unlock(_snap(level: 99, owned: relics)),
+        _unlock(_snap(level: 94, owned: relics)),
         isNot(contains('companion_dragonling')),
       );
     });
@@ -218,7 +294,7 @@ void main() {
   group('Idempotency', () {
     test('companion already owned is not re-granted', () {
       const relics = {'relic_dragon_scale', 'relic_dragonrock_heart'};
-      final snap = _snap(level: 100, owned: relics);
+      final snap = _snap(level: 95, owned: relics);
 
       expect(_unlock(snap), contains('companion_dragonling'));
       expect(
