@@ -37,10 +37,29 @@ docs/site/
 └── data/                   # JSON podklad pro každý pohled
 ```
 
+## Hosting
+
+GitHub Pages přes Actions workflow [`.github/workflows/pages.yml`](../../.github/workflows/pages.yml).
+Workflow se spustí při každém push do `main`, který se dotkne
+`docs/site/**` nebo samotného workflow souboru, a publikuje
+obsah `docs/site/` jako statický web.
+
+Pro aktivaci v GitHub UI: Settings → Pages → Source = "GitHub Actions".
+
 ## Udržování
 
-Při změně architektury (nová feature, nový provider, nový datový tok)
-aktualizuj odpovídající JSON v `data/`. Žádný build step není potřeba.
+Při změně architektury aktualizuj odpovídající JSON v `data/` — žádný
+build step. Mapování:
+
+| Změna v projektu | Aktualizuj |
+|---|---|
+| Nová feature pod `lib/features/` | `data/features.json` |
+| Nový provider / proxy závislost v `main.dart` | `data/providers.json` |
+| Nová Isar kolekce / Firestore subkolekce / prefs klíč | `data/storage.json` |
+| Nová externí integrace (API, SDK) | `data/integrations.json` |
+| Nový architektonicky významný flow | `data/dataflows.json` |
+| Nová sealed hierarchie / klíčový enum | `data/glossary.json` |
+| Nové architektonické rozhodnutí | `data/decisions.json` |
 
 JSON soubory záměrně držíme oddělené od JS — PR diffy zůstávají
 čitelné a obsah lze validovat samostatně.
