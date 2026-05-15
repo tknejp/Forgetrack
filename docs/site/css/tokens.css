@@ -1,0 +1,56 @@
+/* CSS proměnné odvozené z lib/shared/theme/design_tokens.dart (ThemeTokens.dark). */
+:root {
+  /* Surfaces */
+  --color-bg: #0D0F1C;
+  --color-surface: #111422;
+  --color-surface-subtle: rgba(255, 255, 255, 0.03);
+  --color-card-border: rgba(255, 255, 255, 0.078);
+  --color-divider: rgba(255, 255, 255, 0.06);
+
+  /* Foreground */
+  --color-on-surface: rgba(255, 255, 255, 0.95);
+  --color-on-surface-muted: rgba(255, 255, 255, 0.4);
+  --color-on-surface-faint: rgba(255, 255, 255, 0.24);
+
+  /* Accents */
+  --color-accent: #7C6FFF;
+  --color-accent-glow: rgba(124, 111, 255, 0.35);
+  --color-secondary: #5A86F0;
+  --color-tertiary: #F2A35A;
+
+  /* Semantic */
+  --color-success: #34D399;
+  --color-warning: #FBBF24;
+  --color-danger: #F87171;
+  --color-xp: #FFBD2E;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 20px;
+  --space-2xl: 24px;
+  --space-3xl: 32px;
+
+  /* Radii */
+  --radius-icon: 10px;
+  --radius-inner: 12px;
+  --radius-tile: 14px;
+  --radius-button: 16px;
+  --radius-card: 18px;
+  --radius-pill: 999px;
+
+  /* Type scale */
+  --font-tiny: 9px;
+  --font-micro: 10px;
+  --font-caption: 11px;
+  --font-small: 12px;
+  --font-body: 14px;
+  --font-title: 20px;
+  --font-heading: 28px;
+
+  /* Layout */
+  --topbar-height: 56px;
+  --max-content-width: 1280px;
+}

@@ -1,0 +1,258 @@
+{
+  "groups": [
+    {
+      "id": "data",
+      "name": "Datové zdroje",
+      "description": "Vrstvy nad externími systémy — autentizace, fitness, výživa."
+    },
+    {
+      "id": "gameplay",
+      "name": "Gameplay & RPG",
+      "description": "Progression engine, kosmetika, journey mapa, celebration screens."
+    },
+    {
+      "id": "sync",
+      "name": "Sync & export",
+      "description": "Exporty do Sheets a sociální / cloud synchronizace."
+    },
+    {
+      "id": "shell",
+      "name": "Shell & UX",
+      "description": "Root shell, dashboard, nastavení, onboarding a devtools."
+    }
+  ],
+  "features": [
+    {
+      "id": "auth",
+      "displayName": "Auth",
+      "group": "data",
+      "summary": "Google Sign-In přihlášení a Firebase Auth session, vystavuje aktuálního uživatele.",
+      "description": "Pure Google Sign-In (přes plugin v7.x) propojený s Firebase Authentication. Provider udržuje aktuálního uživatele a publikuje změny do ostatních feature.",
+      "providers": ["AuthProvider"],
+      "consumes": [],
+      "producedSignals": ["auth.userChanged"],
+      "files": {
+        "application": "lib/features/auth/application/auth_provider.dart",
+        "data": "lib/features/auth/data/",
+        "presentation": "lib/features/auth/presentation/"
+      },
+      "docs": []
+    },
+    {
+      "id": "health_connect",
+      "displayName": "Health Connect",
+      "group": "data",
+      "summary": "Android Health Connect integrace — kroky, spánek, váha, aktivity. Lokální Isar cache.",
+      "description": "External source of truth jsou data v Health Connect; appka data nikdy nemaže ani nemodifikuje. Lokální Isar cache slouží jako rychlý read-path. Range refresh používá inclusive UI range + exclusive query end.",
+      "providers": ["FitnessProvider", "GoalsProvider"],
+      "consumes": [],
+      "producedSignals": ["fitness.snapshotUpdated"],
+      "files": {
+        "domain": "lib/features/health_connect/domain/",
+        "application": "lib/features/health_connect/application/",
+        "data": "lib/features/health_connect/data/",
+        "presentation": "lib/features/health_connect/presentation/"
+      },
+      "docs": ["docs/architecture.md"]
+    },
+    {
+      "id": "nutrition",
+      "displayName": "Kalorické tabulky",
+      "group": "data",
+      "summary": "Klient pro REST API kaloricketabulky.cz — denní makro a kalorické záznamy.",
+      "description": "Cookie-based autentizace s credentials ve flutter_secure_storage. Lokální Isar cache pro nutriční záznamy. Dnešní záznam může být legitimně 0 (uživatel ještě nic neloggoval).",
+      "providers": ["KalorickeTabulkyProvider", "CalorieProvider"],
+      "consumes": ["auth"],
+      "producedSignals": ["nutrition.dailyUpdated"],
+      "files": {
+        "domain": "lib/features/nutrition/domain/",
+        "application": "lib/features/nutrition/application/",
+        "data": "lib/features/nutrition/data/",
+        "presentation": "lib/features/nutrition/presentation/"
+      },
+      "docs": ["docs/integrations/kt_api_reference.md"]
+    },
+    {
+      "id": "progression_engine",
+      "displayName": "Progression Engine",
+      "group": "gameplay",
+      "summary": "Append-only ledger engine vyhodnocující objectives, granty rewardů a achievement unlocky.",
+      "description": "Deterministický evaluator nad sealed hierarchií ProgressionNode (Quest, Achievement, Milestone, LevelMilestone, ChapterCompletion, CompanionAvailability, Relic, ContentUnlock). Eventy jsou append-only s deterministickými klíči, ledger píše přes hybrid repository do Isaru i Firestoru (write-through). Display facade je jediný způsob, jak ostatní feature konzumují progression metadata.",
+      "providers": ["ProgressionEngineProvider"],
+      "consumes": ["auth", "health_connect", "nutrition"],
+      "producedSignals": ["engine.evaluated", "engine.rewardGranted", "engine.nodeCompleted"],
+      "files": {
+        "domain": "lib/features/progression_engine/domain/",
+        "application": "lib/features/progression_engine/application/",
+        "data": "lib/features/progression_engine/data/",
+        "presentation": "lib/features/progression_engine/presentation/"
+      },
+      "docs": ["docs/progression_engine/v2_phased_plan.md", "docs/progression_engine/session_handoff.md", "docs/features/firestore_sync.md"]
+    },
+    {
+      "id": "cosmetics",
+      "displayName": "Cosmetics",
+      "group": "gameplay",
+      "summary": "Katalog kosmetiky (frames, relikvie, pozadí, emblémy, companions) + unlock + equip state.",
+      "description": "Stateful feature s vlastním Isar úložištěm. Žádné importy z progression nebo social — dependence je opačná: progression volá cosmetics.unlock(...). Reveal evaluator řeší pět stavů (unlocked / visibleLocked / hidden / partial / companion teaser).",
+      "providers": ["CosmeticsProvider"],
+      "consumes": ["auth"],
+      "producedSignals": ["cosmetics.unlocked", "cosmetics.equipped"],
+      "files": {
+        "domain": "lib/features/cosmetics/domain/",
+        "application": "lib/features/cosmetics/application/",
+        "data": "lib/features/cosmetics/data/",
+        "config": "lib/features/cosmetics/config/cosmetics_config.dart",
+        "presentation": "lib/features/cosmetics/presentation/"
+      },
+      "docs": ["lib/features/cosmetics/README.md"]
+    },
+    {
+      "id": "journey",
+      "displayName": "Journey",
+      "group": "gameplay",
+      "summary": "Hero journey mapa a milestone feed. Konzumuje V2 engine, sám neprodukuje signály.",
+      "description": "Pure consumer V2 progression state přes ProgressionEngineProvider. Renderuje statickou level-spine mapu, milestone feed a preview kartu na hero screenu. Žádné signály zpět do engine.",
+      "providers": [],
+      "consumes": ["progression_engine"],
+      "files": {
+        "domain": "lib/features/journey/domain/",
+        "presentation": "lib/features/journey/presentation/"
+      },
+      "docs": ["lib/features/journey/README.md"]
+    },
+    {
+      "id": "celebration",
+      "displayName": "Celebration",
+      "group": "gameplay",
+      "summary": "Fullscreen celebration screens pro level-upy, reward claimy a chapter completiony.",
+      "description": "Reaguje na engine signály a vrství fullscreen scénu nad běžnou navigaci. Controller (ne ChangeNotifier provider) řídí frontu událostí, aby se nikdy nezobrazily dvě celebrace najednou.",
+      "providers": [],
+      "consumes": ["progression_engine"],
+      "files": {
+        "domain": "lib/features/celebration/domain/",
+        "application": "lib/features/celebration/application/celebration_controller.dart",
+        "presentation": "lib/features/celebration/presentation/"
+      },
+      "docs": []
+    },
+    {
+      "id": "social",
+      "displayName": "Social",
+      "group": "sync",
+      "summary": "Přátelé, leaderboard, sdílení achievementů. Firestore backend + FCM push.",
+      "description": "Spravuje user profile snapshot (`users/{uid}`), friend requests, friendship, achievement shares. Čte denormalizovaný progress (level, totalXp, achievement ids) z profile dokumentů — neukazuje detail jiného hráče.",
+      "providers": ["SocialProvider"],
+      "consumes": ["auth", "progression_engine", "cosmetics"],
+      "files": {
+        "application": "lib/features/social/application/",
+        "data": "lib/features/social/data/",
+        "presentation": "lib/features/social/presentation/"
+      },
+      "docs": []
+    },
+    {
+      "id": "sheets_export",
+      "displayName": "Sheets Export (raw)",
+      "group": "sync",
+      "summary": "DB dump do Google Sheets — merge by date semantics, lokalizované labely.",
+      "description": "Surový export všech metrik (Health Connect + nutrition + body) sloučených podle data. Slouží jako kompletní datový dump pro osobní analýzu a debugging. Coach Log Export je samostatná feature s jiným use-casem.",
+      "providers": ["SheetsExportProvider"],
+      "consumes": ["auth", "health_connect", "nutrition"],
+      "files": {
+        "domain": "lib/features/sheets_export/domain/",
+        "application": "lib/features/sheets_export/application/",
+        "data": "lib/features/sheets_export/data/",
+        "config": "lib/features/sheets_export/config/",
+        "presentation": "lib/features/sheets_export/presentation/"
+      },
+      "docs": []
+    },
+    {
+      "id": "coach_log_export",
+      "displayName": "Coach Log Export",
+      "group": "sync",
+      "summary": "Týdenní coaching report do Sheets — ISO week bloky, idempotentní re-export, marker v sloupci Z.",
+      "description": "Kalendářní report pro nutričního kouče a klienta. ISO týdny jako pevné bloky (každý 7 dní). Re-export nikdy nepřepisuje manuální buňky a chybějící data zapisuje jako blank (ne 0), aby Sheets vzorce AVERAGE počítaly správně.",
+      "providers": ["BushidoExportProvider"],
+      "consumes": ["auth", "health_connect", "nutrition"],
+      "files": {
+        "domain": "lib/features/coach_log_export/domain/",
+        "application": "lib/features/coach_log_export/application/",
+        "data": "lib/features/coach_log_export/data/",
+        "config": "lib/features/coach_log_export/config/",
+        "presentation": "lib/features/coach_log_export/presentation/"
+      },
+      "docs": ["docs/features/coach_log_export.md"]
+    },
+    {
+      "id": "home",
+      "displayName": "Home",
+      "group": "shell",
+      "summary": "Overview dashboard — reorderovatelné karty kroky / kalorie / spánek / váha / progression.",
+      "description": "Hlavní obrazovka. Karty jsou drag-and-drop reorderovatelné, pořadí se ukládá do SharedPreferences. Konzumuje fitness, nutrition i progression provider.",
+      "providers": ["HomeCardOrderProvider"],
+      "consumes": ["health_connect", "nutrition", "progression_engine"],
+      "files": {
+        "application": "lib/features/home/application/",
+        "presentation": "lib/features/home/presentation/"
+      },
+      "docs": []
+    },
+    {
+      "id": "app_shell",
+      "displayName": "App Shell",
+      "group": "shell",
+      "summary": "Root shell s page controllerem, bottom navem a horním chrome.",
+      "description": "MainShell — root widget, který drží PageController, bottom nav bar, header s profilem. Žádný vlastní provider; konzumuje auth, progression a další.",
+      "providers": [],
+      "consumes": ["auth", "progression_engine", "health_connect"],
+      "files": {
+        "presentation": "lib/features/app_shell/presentation/"
+      },
+      "docs": []
+    },
+    {
+      "id": "settings",
+      "displayName": "Settings",
+      "group": "shell",
+      "summary": "Settings screen — locale, notifikace, účty, údržba.",
+      "description": "Jediná obrazovka s tile-based sekcemi. Žádný vlastní provider; čte z LocaleProvider, NotificationPreferencesProvider, AuthProvider.",
+      "providers": [],
+      "consumes": ["auth"],
+      "files": {
+        "presentation": "lib/features/settings/presentation/"
+      },
+      "docs": []
+    },
+    {
+      "id": "onboarding",
+      "displayName": "Onboarding",
+      "group": "shell",
+      "summary": "First-run flow — Health Connect permissions, KT login, Google sign-in.",
+      "description": "Step-based wizard, postup se trackuje v SharedPreferences. Po dokončení se uživatel přesune do hlavního shellu.",
+      "providers": ["OnboardingProvider"],
+      "consumes": ["auth", "health_connect", "nutrition"],
+      "files": {
+        "application": "lib/features/onboarding/application/",
+        "presentation": "lib/features/onboarding/presentation/"
+      },
+      "docs": []
+    },
+    {
+      "id": "devtools",
+      "displayName": "DevTools",
+      "group": "shell",
+      "summary": "Debug panely a factory reset. Gated kDebugMode + developer UID allowlistem.",
+      "description": "Smí importovat cokoli — debug-only feature. Obsahuje factory reset service (mazání Isaru, Firestoru, secure storage, prefs), provider state inspector, sync history, day-offset advance pro testy progression.",
+      "providers": ["DevToolsProvider"],
+      "consumes": ["auth", "health_connect", "nutrition", "progression_engine", "cosmetics", "social"],
+      "files": {
+        "application": "lib/features/devtools/application/",
+        "domain": "lib/features/devtools/domain/",
+        "presentation": "lib/features/devtools/presentation/"
+      },
+      "docs": []
+    }
+  ]
+}

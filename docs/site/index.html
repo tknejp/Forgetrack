@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forgetrack — Architektonická dokumentace</title>
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">FT</span>
+      <span class="brand-name">Forgetrack <span class="brand-sub">/ architektura</span></span>
+    </div>
+    <nav class="view-switcher" id="view-switcher">
+      <a href="#/features" data-view="features">Feature</a>
+      <a href="#/providers" data-view="providers">Providery</a>
+      <a href="#/dataflow" data-view="dataflow">Datové toky</a>
+      <a href="#/storage" data-view="storage">Úložiště</a>
+      <a href="#/integrations" data-view="integrations">Integrace</a>
+      <a href="#/glossary" data-view="glossary">Slovník</a>
+      <a href="#/progression" data-view="progression">RPG vrstva</a>
+      <a href="#/decisions" data-view="decisions">Rozhodnutí</a>
+    </nav>
+  </header>
+
+  <main id="main" class="main">
+    <div class="loading">Načítání…</div>
+  </main>
+
+  <aside class="side-panel" id="side-panel" aria-hidden="true">
+    <div class="side-panel-backdrop" data-close-panel></div>
+    <div class="side-panel-content">
+      <button class="side-panel-close" data-close-panel aria-label="Zavřít">×</button>
+      <div id="side-panel-body"></div>
+    </div>
+  </aside>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
