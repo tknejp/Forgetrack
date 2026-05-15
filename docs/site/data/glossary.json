@@ -1,0 +1,68 @@
+{
+  "entries": [
+    {
+      "id": "ledger-event",
+      "title": "LedgerEvent",
+      "category": "Progression",
+      "file": "lib/features/progression_engine/domain/models/ledger_event.dart",
+      "summary": "Sealed hierarchie 5 typů událostí v append-only ledgeru. Každá nese deterministický eventKey — re-zápis stejného eventu je no-op (set() v Firestore, composite unique v Isaru).",
+      "diagram": "classDiagram\n    class LedgerEvent {\n      <<sealed>>\n      +String eventKey\n      +DateTime occurredAt\n    }\n    class ObjectiveCompletionEvent {\n      +String objectiveId\n      +String periodKey\n    }\n    class NodeCompletionEvent {\n      +String nodeId\n      +String periodKey\n    }\n    class NodeAnnouncedEvent {\n      +String nodeId\n      +String periodKey\n    }\n    class NodeClaimEvent {\n      +String nodeId\n      +String periodKey\n    }\n    class RewardGrantEvent {\n      +RewardDefinition reward\n      +int finalXp\n      +int levelAtClaim\n    }\n    LedgerEvent <|-- ObjectiveCompletionEvent\n    LedgerEvent <|-- NodeCompletionEvent\n    LedgerEvent <|-- NodeAnnouncedEvent\n    LedgerEvent <|-- NodeClaimEvent\n    LedgerEvent <|-- RewardGrantEvent"
+    },
+    {
+      "id": "progression-node-quests",
+      "title": "ProgressionNode — Quest typy",
+      "category": "Progression",
+      "file": "lib/features/progression_engine/domain/models/progression_node_definition.dart",
+      "summary": "QuestNode je sealed sub-hierarchie ProgressionNode. Pokrývá denní cíle, týdenní cíle, chapter storyline, combo a long-term questy.",
+      "diagram": "classDiagram\n    class ProgressionNode {\n      <<sealed>>\n      +String id\n      +UnlockCondition unlockCondition\n      +List~RewardDefinition~ rewards\n    }\n    class QuestNode {\n      <<sealed>>\n      +ObjectiveRef objectiveId\n      +ClaimPolicy claimPolicy\n    }\n    ProgressionNode <|-- QuestNode\n    QuestNode <|-- DailyQuestNode\n    QuestNode <|-- WeeklyQuestNode\n    QuestNode <|-- DailyChallengeNode\n    QuestNode <|-- LongTermQuestNode\n    QuestNode <|-- ChapterOpenerNode\n    QuestNode <|-- ChapterStepNode\n    QuestNode <|-- ChapterFinaleNode\n    QuestNode <|-- ChapterSideQuestNode\n    QuestNode <|-- ComboStepNode\n    QuestNode <|-- ComboFinaleNode"
+    },
+    {
+      "id": "progression-node-non-quests",
+      "title": "ProgressionNode — Non-quest typy",
+      "category": "Progression",
+      "file": "lib/features/progression_engine/domain/models/progression_node_definition.dart",
+      "summary": "Achievementy, milestone-y, level-up uzly, chapter completiony, companion availability, reliky, content unlocky.",
+      "diagram": "classDiagram\n    class ProgressionNode {\n      <<sealed>>\n    }\n    class AchievementNode {\n      +ContentTag tag\n    }\n    class MilestoneNode {\n      +String label\n    }\n    class LevelMilestoneNode {\n      +int level\n    }\n    class ChapterCompletionNode {\n      +String chapterId\n    }\n    class CompanionAvailabilityNode {\n      +String companionId\n    }\n    class RelicNode {\n      +String relicId\n    }\n    class ContentUnlockNode {\n      +String contentId\n    }\n    ProgressionNode <|-- AchievementNode\n    ProgressionNode <|-- MilestoneNode\n    ProgressionNode <|-- LevelMilestoneNode\n    ProgressionNode <|-- ChapterCompletionNode\n    ProgressionNode <|-- CompanionAvailabilityNode\n    ProgressionNode <|-- RelicNode\n    ProgressionNode <|-- ContentUnlockNode"
+    },
+    {
+      "id": "reward-definition",
+      "title": "RewardDefinition",
+      "category": "Progression",
+      "file": "lib/features/progression_engine/domain/models/reward_definition.dart",
+      "summary": "Typy odměn, které může uzel udělit. XP scaling se počítá až v okamžiku grantu (finalXp v RewardGrantEvent).",
+      "diagram": "classDiagram\n    class RewardDefinition {\n      <<sealed>>\n    }\n    class XpReward {\n      +int baseXp\n    }\n    class BonusXpReward {\n      +int xp\n      +BonusXpCondition condition\n    }\n    class CosmeticReward {\n      +String cosmeticId\n    }\n    class ChapterUnlockReward {\n      +String chapterId\n    }\n    class CompanionAvailabilityReward {\n      +String companionId\n    }\n    class TitleReward {\n      +String titleId\n    }\n    class EmblemReward {\n      +String emblemId\n    }\n    class RelicReward {\n      +String relicId\n    }\n    RewardDefinition <|-- XpReward\n    RewardDefinition <|-- BonusXpReward\n    RewardDefinition <|-- CosmeticReward\n    RewardDefinition <|-- ChapterUnlockReward\n    RewardDefinition <|-- CompanionAvailabilityReward\n    RewardDefinition <|-- TitleReward\n    RewardDefinition <|-- EmblemReward\n    RewardDefinition <|-- RelicReward"
+    },
+    {
+      "id": "unlock-condition",
+      "title": "UnlockCondition",
+      "category": "Progression",
+      "file": "lib/features/progression_engine/domain/models/unlock_condition.dart",
+      "summary": "Podmínky odemčení uzlů. Skládají se přes AllOf / AnyOf — recursive resolver vyhodnocuje stromy.",
+      "diagram": "classDiagram\n    class UnlockCondition {\n      <<sealed>>\n    }\n    class LevelAtLeast {\n      +int level\n    }\n    class ObjectiveCompleted {\n      +String objectiveId\n      +ObjectiveScope scope\n    }\n    class NodeCompleted {\n      +String nodeId\n    }\n    class NodeCompletedBeforeToday {\n      +String nodeId\n    }\n    class ChapterUnlocked {\n      +String chapterId\n    }\n    class ChapterActive {\n      +String chapterId\n    }\n    class CompanionAvailable {\n      +String companionId\n    }\n    class RpgModeEnabled\n    class AllOf {\n      +List~UnlockCondition~ conditions\n    }\n    class AnyOf {\n      +List~UnlockCondition~ conditions\n    }\n    UnlockCondition <|-- LevelAtLeast\n    UnlockCondition <|-- ObjectiveCompleted\n    UnlockCondition <|-- NodeCompleted\n    UnlockCondition <|-- NodeCompletedBeforeToday\n    UnlockCondition <|-- ChapterUnlocked\n    UnlockCondition <|-- ChapterActive\n    UnlockCondition <|-- CompanionAvailable\n    UnlockCondition <|-- RpgModeEnabled\n    UnlockCondition <|-- AllOf\n    UnlockCondition <|-- AnyOf\n    AllOf o-- UnlockCondition\n    AnyOf o-- UnlockCondition"
+    },
+    {
+      "id": "objective-metric",
+      "title": "ObjectiveMetric",
+      "category": "Progression",
+      "file": "lib/features/progression_engine/domain/models/objective_metric.dart",
+      "summary": "Co se měří. 20+ konkrétních metrik seskupených podle domény. Pro přehlednost jsou ve diagramu jen reprezentanti — celý seznam je v souboru.",
+      "diagram": "classDiagram\n    class ObjectiveMetric {\n      <<sealed>>\n    }\n    class StepsMetric\n    class CaloriesMetric\n    class ProteinGramsMetric\n    class SleepMinutesMetric\n    class ActivityMinutesMetric\n    class WeightLoggedTodayMetric\n    class LevelMetric\n    class TotalXpMetric\n    class RewardCountMetric\n    class StreakDaysMetric\n    class NodeCompletionsMetric\n    class ComboPoolCompletionsMetric\n    class QuestCompletionsByBucketMetric\n    class DistinctActiveDaysMetric\n    note for ObjectiveMetric \"…a další (Carbs, Fat, Fiber, TodayCompletionsAmong, LifetimeCompletionsAmong, DaysWithAtLeastKAmong, …)\"\n    ObjectiveMetric <|-- StepsMetric\n    ObjectiveMetric <|-- CaloriesMetric\n    ObjectiveMetric <|-- ProteinGramsMetric\n    ObjectiveMetric <|-- SleepMinutesMetric\n    ObjectiveMetric <|-- ActivityMinutesMetric\n    ObjectiveMetric <|-- WeightLoggedTodayMetric\n    ObjectiveMetric <|-- LevelMetric\n    ObjectiveMetric <|-- TotalXpMetric\n    ObjectiveMetric <|-- RewardCountMetric\n    ObjectiveMetric <|-- StreakDaysMetric\n    ObjectiveMetric <|-- NodeCompletionsMetric\n    ObjectiveMetric <|-- ComboPoolCompletionsMetric\n    ObjectiveMetric <|-- QuestCompletionsByBucketMetric\n    ObjectiveMetric <|-- DistinctActiveDaysMetric"
+    },
+    {
+      "id": "objective-scope",
+      "title": "ObjectiveScope",
+      "category": "Progression",
+      "file": "lib/features/progression_engine/domain/models/objective_scope.dart",
+      "summary": "Časové okno, ve kterém se metrika vyhodnocuje. Period key se odvozuje od scope (date / iso-week / lifetime / window-N-days / current-chapter).",
+      "diagram": "classDiagram\n    class ObjectiveScope {\n      <<sealed>>\n    }\n    class TodayScope\n    class ThisWeekScope\n    class LifetimeScope\n    class RollingWindowScope {\n      +int days\n    }\n    class CurrentChapterScope\n    ObjectiveScope <|-- TodayScope\n    ObjectiveScope <|-- ThisWeekScope\n    ObjectiveScope <|-- LifetimeScope\n    ObjectiveScope <|-- RollingWindowScope\n    ObjectiveScope <|-- CurrentChapterScope"
+    },
+    {
+      "id": "cosmetic-enums",
+      "title": "CosmeticType / Region / UnlockSource",
+      "category": "Cosmetics",
+      "file": "lib/features/cosmetics/domain/cosmetic_models.dart",
+      "summary": "Enumy popisující kosmetiku — typ slotu, narativní region, zdroj unlocku. Rarity je definovaná zvlášť v shared/domain/rarity.dart.",
+      "diagram": "classDiagram\n    class CosmeticType {\n      <<enum>>\n      frame\n      relic\n      background\n      emblem\n      companion\n      titleFlair\n      mapEffect\n    }\n    class CosmeticRegion {\n      <<enum>>\n      forestTrail\n      ruinedPass\n      …\n    }\n    class CosmeticUnlockSource {\n      <<enum>>\n      defaultBaseline\n      progressionLevel\n      achievement\n      quest\n      manual\n      promotional\n    }\n    class Rarity {\n      <<enum>>\n      common\n      rare\n      epic\n      legendary\n      mythic\n    }"
+    }
+  ]
+}

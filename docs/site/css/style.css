@@ -343,6 +343,163 @@ code {
 }
 
 /* ============================================================
+   Data flows + Glossary (dual-column layout with sticky TOC)
+   ============================================================ */
+.dataflow-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: var(--space-2xl);
+  align-items: start;
+}
+
+.dataflow-toc {
+  position: sticky;
+  top: calc(var(--topbar-height) + var(--space-lg));
+  align-self: start;
+  padding: var(--space-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-card);
+  font-size: var(--font-small);
+  max-height: calc(100vh - var(--topbar-height) - var(--space-2xl));
+  overflow-y: auto;
+}
+
+.dataflow-toc h3 {
+  margin: 0 0 var(--space-md);
+  font-size: var(--font-caption);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-on-surface-muted);
+}
+
+.toc-group {
+  margin-bottom: var(--space-md);
+}
+
+.toc-group-name {
+  font-size: var(--font-tiny);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-on-surface-faint);
+  margin-bottom: 4px;
+}
+
+.toc-group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.toc-group li {
+  padding: 3px 0;
+}
+
+.toc-group a {
+  color: var(--color-on-surface-muted);
+  display: block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.toc-group a:hover {
+  color: var(--color-on-surface);
+  background: var(--color-surface-subtle);
+}
+
+.dataflow-stream {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xl);
+}
+
+.flow-card {
+  padding: var(--space-2xl);
+  background: var(--color-surface);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-card);
+  scroll-margin-top: calc(var(--topbar-height) + var(--space-md));
+}
+
+.flow-card header {
+  margin-bottom: var(--space-lg);
+}
+
+.flow-title {
+  margin: var(--space-sm) 0 var(--space-xs);
+  font-size: var(--font-title);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.flow-summary {
+  margin: 0 0 var(--space-sm);
+  color: var(--color-on-surface-muted);
+  font-size: var(--font-small);
+  line-height: 1.6;
+  max-width: 720px;
+}
+
+.flow-diagram {
+  background: var(--color-bg);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-inner);
+  padding: var(--space-lg);
+  overflow-x: auto;
+}
+
+.flow-diagram svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.mermaid-error {
+  color: var(--color-danger);
+  font-family: monospace;
+  font-size: var(--font-small);
+}
+
+/* ============================================================
+   Progression / RPG view principles
+   ============================================================ */
+.principles {
+  margin-top: var(--space-3xl);
+}
+
+.principles-title {
+  font-size: var(--font-title);
+  margin: 0 0 var(--space-lg);
+}
+
+.principles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-lg);
+}
+
+.principle-card {
+  padding: var(--space-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-card-border);
+  border-left: 3px solid var(--color-accent);
+  border-radius: var(--radius-card);
+}
+
+.principle-name {
+  font-weight: 600;
+  margin-bottom: var(--space-sm);
+}
+
+.principle-detail {
+  margin: 0;
+  font-size: var(--font-small);
+  color: var(--color-on-surface-muted);
+  line-height: 1.55;
+}
+
+/* ============================================================
    Side panel
    ============================================================ */
 .side-panel {
@@ -539,5 +696,14 @@ code {
 
   .feature-grid {
     grid-template-columns: 1fr;
+  }
+
+  .dataflow-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .dataflow-toc {
+    position: static;
+    max-height: none;
   }
 }

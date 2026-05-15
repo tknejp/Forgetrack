@@ -1,0 +1,26 @@
+{
+  "intro": "Tento pohled spojuje všechny vrstvy RPG: jak se z fitness dat stane XP, achievement, kosmetika nebo celebrace. Diagram čte shora dolů — vstupy nahoře, persistované eventy a UI signály dole.",
+  "principles": [
+    {
+      "name": "Deterministická evaluace",
+      "detail": "Stejný input + stejný ledger = stejný výsledek. Žádný nondeterminismus, žádné side effecty v evaluator vrstvě."
+    },
+    {
+      "name": "Append-only ledger",
+      "detail": "Eventy mají deterministický eventKey. Re-zápis stejného eventu je no-op (set() v Firestore, composite unique v Isaru). Nikdy se nepřepisuje historie."
+    },
+    {
+      "name": "Display facade",
+      "detail": "Ostatní feature (Social, Journey, Celebration, Home) konzumují progression metadata výhradně přes ProgressionDisplayResolver. Žádné importy katalogu, evaluators ani ledger typů."
+    },
+    {
+      "name": "Cosmetic Bridge",
+      "detail": "Cosmetic granty z engine se forwardují přes Cosmetic Unlock Bridge do CosmeticsProvider. Cosmetics feature nikdy neimportuje progression."
+    },
+    {
+      "name": "Cloud parity",
+      "detail": "HybridProgressionEngineRepository zrcadlí každý lokální append do Firestoru fire-and-forget. Pull-and-merge na login dokáže obnovit veškerý progress."
+    }
+  ],
+  "flowchart": "flowchart TD\n    classDef input fill:#5A86F0,stroke:#3F65D4,color:#fff\n    classDef catalog fill:#7C6FFF,stroke:#5B4FE0,color:#fff\n    classDef eval fill:#F2A35A,stroke:#C77835,color:#fff\n    classDef event fill:#34D399,stroke:#059669,color:#0D0F1C\n    classDef store fill:#0D0F1C,stroke:#FBBF24,color:#FBBF24\n    classDef ui fill:#FBBF24,stroke:#B45309,color:#0D0F1C\n\n    HC[Health Connect<br/>steps · sleep · weight · activity]:::input\n    KT[Kalorické tabulky<br/>kcal · macros]:::input\n    Goals[Goals<br/>daily targets]:::input\n\n    HC --> Input[EngineEvaluationInput]:::eval\n    KT --> Input\n    Goals --> Input\n\n    Input --> Engine[ProgressionEngine.evaluate]:::eval\n\n    subgraph Catalog[Catalog — compile-time content]\n      direction LR\n      Obj[ObjectiveCatalog<br/>cíle: metric × scope × operator]:::catalog\n      Nodes[ProgressionNodeCatalog<br/>quests / achievements / milestones]:::catalog\n      Chapter[Chapter content<br/>11 chapters · side quests]:::catalog\n    end\n    Catalog --> Engine\n\n    Engine --> OE[Objective Evaluator]:::eval\n    Engine --> NR[Node Resolver]:::eval\n    Engine --> RGP[Reward Grant Planner]:::eval\n\n    OE --> NR\n    NR --> RGP\n\n    RGP --> Events[LedgerEvent stream]:::event\n    Events --> Repo[HybridProgressionEngineRepository]:::eval\n\n    Repo --> Isar[(Isar ledger)]:::store\n    Repo -.unawaited.-> FS[(Firestore subcollections)]:::store\n\n    Events --> Bridge[Cosmetic Unlock Bridge]:::eval\n    Bridge --> CosProv[CosmeticsProvider.unlock]:::ui\n    CosProv --> CosIsar[(Cosmetics Isar)]:::store\n\n    Engine --> Result[ProgressionResolutionResult]:::event\n    Result --> Display[ProgressionDisplayResolver]:::eval\n\n    Display --> Hero[Hero / Home<br/>level · XP · streaks]:::ui\n    Display --> Journey[Journey<br/>map + feed]:::ui\n    Display --> Social[Social<br/>profile snapshot]:::ui\n    Result --> Celeb[Celebration<br/>queue of fullscreen scenes]:::ui\n\n    click Engine \"#/glossary/ledger-event\" \"Otevřít LedgerEvent\"\n    click NR \"#/glossary/progression-node-quests\" \"Otevřít ProgressionNode\"\n    click RGP \"#/glossary/reward-definition\" \"Otevřít RewardDefinition\"\n    click OE \"#/glossary/objective-metric\" \"Otevřít ObjectiveMetric\"\n    click Repo \"#/dataflow/write-through-cloud-sync\" \"Otevřít Write-through sync\""
+}

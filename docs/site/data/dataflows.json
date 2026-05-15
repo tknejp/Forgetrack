@@ -1,0 +1,53 @@
+{
+  "flows": [
+    {
+      "id": "v2-evaluation-cycle",
+      "title": "V2 evaluation cycle",
+      "category": "Progression Engine",
+      "summary": "Jádro V2 engine. Vyhodnotí všechny objectives nad aktuálním inputem, určí stav uzlů, naplánuje granty rewardů a appendne události do append-only ledgeru.",
+      "diagram": "sequenceDiagram\n    autonumber\n    participant UI as ProgressionEngineProvider\n    participant Eng as ProgressionEngine\n    participant Cat as Objective + Node<br/>Catalog\n    participant Eval as Evaluators<br/>(objective, node, planner)\n    participant Repo as HybridProgression<br/>EngineRepository\n    participant Isar as Isar<br/>(ledger)\n    participant FS as Firestore<br/>(eager, unawaited)\n    participant CB as Cosmetic Bridge\n\n    UI->>Eng: evaluate(input, reason)\n    Eng->>Cat: load definitions\n    Eng->>Eval: ObjectiveEvaluator.evaluateAll(input)\n    Eval-->>Eng: ObjectiveOutcome[]\n    Eng->>Eval: NodeResolver.resolveAll(outcomes, ledgerSnapshot)\n    Eval-->>Eng: NodeState[] (locked / available / completed / claimed)\n    Eng->>Eval: RewardGrantPlanner.plan(newly completed nodes)\n    Eval-->>Eng: LedgerEvent[] (skip events s existujícím eventKey)\n    Eng->>Repo: appendEvents(events)\n    Repo->>Isar: write (deterministic eventKey)\n    Repo-)FS: unawaited push (fire-and-forget)\n    Eng->>CB: forwardCosmeticGrants(events)\n    CB->>UI: notify CosmeticsProvider\n    Eng-->>UI: ProgressionResolutionResult"
+    },
+    {
+      "id": "write-through-cloud-sync",
+      "title": "Write-through cloud sync",
+      "category": "Progression Engine",
+      "summary": "Každý lokální append do Isaru se zrcadlí do Firestoru fire-and-forget pushem. Cloud failure nikdy neblokuje lokální commit — events jsou immutable s deterministickým eventKey, takže retry je idempotentní.",
+      "diagram": "sequenceDiagram\n    autonumber\n    participant Eng as ProgressionEngine\n    participant Hybrid as HybridProgressionEngineRepository\n    participant Isar\n    participant GW as FirestoreProgressionEngineGateway\n    participant FS as Firestore\n\n    Eng->>Hybrid: appendEvents(events)\n    Hybrid->>Isar: append (per collection)\n    Isar-->>Hybrid: ok\n    Note over Hybrid: synchronní část je hotová — UI dostane výsledek hned\n    Hybrid-)GW: unawaited push\n    GW->>FS: set() per event<br/>(idempotentní; eventKey = doc ID)\n    alt cloud failure\n      FS--xGW: error\n      GW->>GW: AppLog.sync.warn(err)\n    end"
+    },
+    {
+      "id": "pull-and-merge",
+      "title": "Pull-and-merge na login",
+      "category": "Progression Engine",
+      "summary": "První non-null uid po sign-inu spustí pullAndMerge: stáhne všechny Firestore subkolekce, vrátí jejich události do Isaru a re-evaluate engine. Cosmetic bridge re-aplikuje historické unlocky pro fresh install / druhé zařízení.",
+      "diagram": "sequenceDiagram\n    autonumber\n    participant Auth as AuthProvider\n    participant Prov as ProgressionEngineProvider\n    participant Hybrid as HybridProgressionEngineRepository\n    participant GW as Gateway\n    participant FS as Firestore\n    participant Isar\n    participant Eng as ProgressionEngine\n    participant CB as Cosmetic Bridge\n\n    Auth-->>Prov: authStateChanges (uid)\n    Prov->>Hybrid: bindCloudUser(uid)\n    Hybrid->>GW: pull(uid)\n    par parallel batches\n      GW->>FS: get engineNodeCompletions\n      GW->>FS: get engineNodeClaims\n      GW->>FS: get engineRewardGrants\n      GW->>FS: get engineObjectiveCompletions\n      GW->>FS: get engineNodeAnnouncements\n    end\n    FS-->>GW: LedgerEvent[]\n    GW-->>Hybrid: combined events\n    Hybrid->>Isar: appendEvents (dedup via eventKey)\n    Hybrid->>Eng: evaluate(input, reason=cloudMerge)\n    Eng->>CB: reapplyHistoricalCosmetics(ledgerSnapshot)\n    CB->>CB: re-emit cosmetics.unlock pro každý cosmetic grant"
+    },
+    {
+      "id": "health-connect-sync",
+      "title": "Health Connect refresh (foreground)",
+      "category": "Data sources",
+      "summary": "Range refresh fitness dat — kroky, kalorie, spánek, váha, aktivity. Používá inclusive UI range + exclusive query end, aby HC API vrátilo poslední den. Při quota erroru se zachová cached state.",
+      "diagram": "sequenceDiagram\n    autonumber\n    participant UI\n    participant FP as FitnessProvider\n    participant HC as HealthConnectService\n    participant HCAPI as Health Connect API\n    participant DB as HealthDatabase (Isar)\n\n    UI->>FP: refreshRange(from, to)\n    FP->>FP: normalize: endExclusive = to + 1d\n    FP->>HC: getDataInRange(from, endExclusive, types)\n    HC->>HCAPI: getHealthDataFromTypes(...)\n    alt success\n      HCAPI-->>HC: records (může zahrnovat den + 1)\n      HC->>HC: filter zpět na inclusive [from, to]\n      HC-->>FP: filtered records\n      FP->>DB: upsert per collection (steps / cals / sleep / weight / activity)\n      FP->>DB: update HcMetaRecord.lastSyncedAt\n      FP-->>UI: notifyListeners()\n    else quota error\n      HCAPI--xHC: QuotaExceeded\n      HC-->>FP: error\n      Note over FP,DB: existující cache zachovaná, lastSyncedAt se NEupdatuje\n      FP-->>UI: notifyListeners(error)\n    end"
+    },
+    {
+      "id": "kt-login-sync",
+      "title": "Kalorické tabulky login + sync",
+      "category": "Data sources",
+      "summary": "Cookie-based session auth s credentials ve flutter_secure_storage. Pokud session vyprší, transparent re-login + retry.",
+      "diagram": "sequenceDiagram\n    autonumber\n    participant UI\n    participant KP as KalorickeTabulkyProvider\n    participant KT as KalorickeTabulkyService\n    participant SS as flutter_secure_storage\n    participant API as kaloricketabulky.cz\n    participant DB as KtNutritionDatabase (Isar)\n\n    UI->>KP: refreshDay(date)\n    KP->>KT: fetchDailyDiary(date)\n    KT->>API: GET /user/diary/{dd.mm.yyyy}/get<br/>(cookie session)\n    alt session OK\n      API-->>KT: 200 + JSON\n    else session expired\n      API--xKT: 401\n      KT->>SS: read kt_email + kt_pwd_hash\n      SS-->>KT: credentials\n      KT->>API: POST login\n      API-->>KT: 200 + new session cookies\n      KT->>API: retry GET /user/diary/...\n      API-->>KT: 200 + JSON\n    end\n    KT-->>KP: NutritionDayRecord\n    KP->>DB: upsert NutritionDayRecord\n    KP-->>UI: notifyListeners()"
+    },
+    {
+      "id": "coach-log-export",
+      "title": "Coach Log (Bushido) export",
+      "category": "Sync & export",
+      "summary": "Idempotentní týdenní coaching report do Google Sheets. Scan skrytého sloupce Z najednou na začátku, in-memory cache markerů, append nových bloků na konec listu. Manual buňky se nikdy nepřepisují.",
+      "diagram": "sequenceDiagram\n    autonumber\n    participant UI\n    participant Prov as BushidoExportProvider\n    participant Builder as ExportDataBuilder\n    participant Sheets as BushidoSheetsService\n    participant GS as Google Sheets API\n\n    UI->>Prov: exportRange(from, to)\n    Prov->>Prov: refresh HC + KT pro rozsah\n    Prov->>Sheets: read Z:Z (jedno volání)\n    Sheets->>GS: spreadsheets.values.get(Z:Z)\n    GS-->>Sheets: marker rows\n    Sheets-->>Prov: { IsoWeek → startRow } cache\n    loop pro každý ISO týden v rozsahu\n      Prov->>Builder: build(week, HC + KT data)\n      Builder-->>Prov: BushidoWeekReport (7 dnů, missing = null)\n      alt blok existuje v cache\n        Prov->>Sheets: writeAutoCells(startRow, report) [A:H]\n      else blok neexistuje\n        Prov->>Sheets: appendWeekBlock(week)\n        Sheets->>GS: append marker + headers + vzorce\n        Sheets-->>Prov: nový startRow → update cache\n        Prov->>Sheets: writeAutoCells(startRow, report)\n      end\n      Note over Sheets: manual sloupce I:L se NIKDY nezapisují\n    end\n    Prov->>Sheets: ensureWeekBlock(nextWeek)"
+    },
+    {
+      "id": "factory-reset",
+      "title": "Factory reset",
+      "category": "Devtools",
+      "summary": "DevTools action — kompletní wipe lokálního stavu (Isar + Prefs + secure) + (volitelně) Firestore. Po dokončení appka pokračuje jako fresh install.",
+      "diagram": "sequenceDiagram\n    autonumber\n    participant UI as DevTools UI\n    participant FRS as FactoryResetService\n    participant Isar as 4× Isar DB\n    participant SP as SharedPreferences\n    participant SS as flutter_secure_storage\n    participant Auth as FirebaseAuth\n    participant FS as Firestore\n\n    UI->>UI: confirm dialog\n    UI->>FRS: reset(scopes)\n    FRS->>Isar: close + delete files<br/>(health / kt / engine / cosmetics)\n    FRS->>SP: clear() — všechny klíče\n    FRS->>SS: delete kt_email + kt_pwd_hash\n    opt deleteCloudData\n      FRS->>FS: batched delete users/{uid}/engine* + ostatní\n    end\n    FRS->>Auth: signOut (Firebase + Google)\n    FRS-->>UI: hotovo\n    Note over UI: appka restartuje do onboardingu"
+    }
+  ]
+}
