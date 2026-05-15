@@ -51,7 +51,7 @@ class CosmeticCatalog {
     CosmeticDefinition(
       id: 'frame_ruins',
       type: CosmeticType.frame,
-      rarity: Rarity.uncommon,
+      rarity: Rarity.rare,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticFrameRuinsName,
       description: (l10n) => l10n.cosmeticFrameRuinsDesc,
