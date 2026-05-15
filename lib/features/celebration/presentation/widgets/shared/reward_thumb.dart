@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../shared/theme/design_tokens.dart';
 import '../../../domain/models/celebration_reward.dart';
+import 'type_badge.dart';
 
 /// Square reward thumbnail (topsheet rows). Renders the asset preview when
 /// available, falling back to a kind-typed icon. The frame is rarity-tinted.
@@ -42,7 +43,7 @@ class RewardThumb extends StatelessWidget {
 
   Widget _buildContent(Color tint) {
     final assetPath = reward.assetPath;
-    final icon = reward.fallbackIcon ?? _iconForKind(reward.kind);
+    final icon = reward.fallbackIcon ?? iconForRewardKind(reward.kind);
     if (assetPath != null) {
       return Image.asset(
         assetPath,
@@ -107,7 +108,7 @@ class RewardDisc extends StatelessWidget {
 
   Widget _buildContent(Color tint) {
     final assetPath = reward.assetPath;
-    final icon = reward.fallbackIcon ?? _iconForKind(reward.kind);
+    final icon = reward.fallbackIcon ?? iconForRewardKind(reward.kind);
     if (assetPath != null) {
       return Image.asset(
         assetPath,
@@ -122,29 +123,3 @@ class RewardDisc extends StatelessWidget {
   }
 }
 
-IconData _iconForKind(CelebrationRewardKind kind) {
-  switch (kind) {
-    case CelebrationRewardKind.sparkle:
-      return Icons.auto_awesome_rounded;
-    case CelebrationRewardKind.xp:
-      return Icons.bolt_rounded;
-    case CelebrationRewardKind.title:
-      return Icons.workspace_premium_rounded;
-    case CelebrationRewardKind.badge:
-      return Icons.shield_rounded;
-    case CelebrationRewardKind.flame:
-      return Icons.local_fire_department_rounded;
-    case CelebrationRewardKind.flag:
-      return Icons.flag_rounded;
-    case CelebrationRewardKind.location:
-      return Icons.place_rounded;
-    case CelebrationRewardKind.frame:
-      return Icons.crop_square_rounded;
-    case CelebrationRewardKind.background:
-      return Icons.landscape_rounded;
-    case CelebrationRewardKind.companion:
-      return Icons.pets_rounded;
-    case CelebrationRewardKind.gem:
-      return Icons.diamond_rounded;
-  }
-}

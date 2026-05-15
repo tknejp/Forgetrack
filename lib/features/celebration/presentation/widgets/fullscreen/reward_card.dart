@@ -106,7 +106,7 @@ class RewardCard extends StatelessWidget {
                   alignment: Alignment.centerLeft,
                   child: RewardKindBadgePill(
                     kind: reward.kind,
-                    label: labelForRewardKind(reward.kind, l10n).toUpperCase(),
+                    label: reward.kind.label(l10n).toUpperCase(),
                     color: token.color,
                   ),
                 ),

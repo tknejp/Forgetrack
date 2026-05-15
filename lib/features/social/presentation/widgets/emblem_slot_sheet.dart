@@ -252,7 +252,7 @@ class _CurrentEmblemBlock extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      _rarityLabel(emblem.rarity).toUpperCase(),
+                      emblem.rarity.label(l10n).toUpperCase(),
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
@@ -466,19 +466,3 @@ class _EmblemThumb extends StatelessWidget {
   }
 }
 
-String _rarityLabel(Rarity rarity) {
-  switch (rarity) {
-    case Rarity.common:
-      return 'Běžný';
-    case Rarity.uncommon:
-      return 'Neobyčejný';
-    case Rarity.rare:
-      return 'Vzácný';
-    case Rarity.epic:
-      return 'Epický';
-    case Rarity.legendary:
-      return 'Legendární';
-    case Rarity.mythic:
-      return 'Mytický';
-  }
-}

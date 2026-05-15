@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../l10n/app_localizations.dart';
 import '../../../../../shared/theme/design_tokens.dart';
 import '../../../domain/models/celebration_event.dart';
 import '../../../domain/models/celebration_reward.dart';
@@ -146,60 +145,6 @@ class TypeBadgePill extends StatelessWidget {
   }
 }
 
-/// Short, uppercase-friendly localized label for [type] (e.g. "ACHIEVEMENT",
-/// "QUEST"). Used by the topsheet header eyebrow context.
-String labelForType(CelebrationType type, AppLocalizations l10n) {
-  switch (type) {
-    case CelebrationType.achievement:
-      return l10n.celebrationTypeAchievement;
-    case CelebrationType.quest:
-      return l10n.celebrationTypeQuest;
-    case CelebrationType.level:
-      return l10n.celebrationTypeLevel;
-    case CelebrationType.title:
-      return l10n.celebrationTypeTitle;
-    case CelebrationType.streak:
-      return l10n.celebrationTypeStreak;
-    case CelebrationType.location:
-      return l10n.celebrationTypeLocation;
-    case CelebrationType.cosmetic:
-      return l10n.celebrationTypeCosmetic;
-  }
-}
-
-/// Label that describes a single [CelebrationRewardKind] — used by the
-/// fullscreen reward card's badge so it reflects what the *card* contains
-/// rather than the celebration's overall type. (A "title-unlocked"
-/// celebration can ship a background reward; the card should say
-/// "POZADÍ", not "TITUL".)
-String labelForRewardKind(
-    CelebrationRewardKind kind, AppLocalizations l10n) {
-  switch (kind) {
-    case CelebrationRewardKind.sparkle:
-      return l10n.celebrationKindSparkle;
-    case CelebrationRewardKind.xp:
-      return l10n.celebrationKindXp;
-    case CelebrationRewardKind.title:
-      return l10n.celebrationKindTitle;
-    case CelebrationRewardKind.badge:
-      return l10n.celebrationKindBadge;
-    case CelebrationRewardKind.flame:
-      return l10n.celebrationKindFlame;
-    case CelebrationRewardKind.flag:
-      return l10n.celebrationKindFlag;
-    case CelebrationRewardKind.location:
-      return l10n.celebrationKindLocation;
-    case CelebrationRewardKind.frame:
-      return l10n.celebrationKindFrame;
-    case CelebrationRewardKind.background:
-      return l10n.celebrationKindBackground;
-    case CelebrationRewardKind.companion:
-      return l10n.celebrationKindCompanion;
-    case CelebrationRewardKind.gem:
-      return l10n.celebrationKindGem;
-  }
-}
-
 /// Pill-style badge for fullscreen cards. Coloured by the **rarity** so the
 /// badge matches the card's accent (instead of inheriting an unrelated
 /// celebration-type colour) and labelled by the reward's kind.
@@ -227,7 +172,7 @@ class RewardKindBadgePill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(_iconForRewardKind(kind), color: color, size: 12),
+          Icon(iconForRewardKind(kind), color: color, size: 12),
           const SizedBox(width: 5),
           Text(
             label,
@@ -244,7 +189,10 @@ class RewardKindBadgePill extends StatelessWidget {
   }
 }
 
-IconData _iconForRewardKind(CelebrationRewardKind kind) {
+/// Single source of truth for the glyph representing a [CelebrationRewardKind].
+/// Shared between the small kind pill (fullscreen card) and the larger reward
+/// thumb (topsheet rows) so both surfaces speak the same visual language.
+IconData iconForRewardKind(CelebrationRewardKind kind) {
   switch (kind) {
     case CelebrationRewardKind.sparkle:
       return Icons.auto_awesome_rounded;

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/domain/rarity.dart';
 import 'celebration_reward.dart';
 
@@ -21,7 +22,28 @@ enum CelebrationType {
   title,
   streak,
   location,
-  cosmetic,
+  cosmetic;
+
+  /// Short, uppercase-friendly localized label (e.g. "ÚSPĚCH", "QUEST").
+  /// Used by the topsheet header eyebrow context.
+  String label(AppLocalizations l10n) {
+    switch (this) {
+      case CelebrationType.achievement:
+        return l10n.celebrationTypeAchievement;
+      case CelebrationType.quest:
+        return l10n.celebrationTypeQuest;
+      case CelebrationType.level:
+        return l10n.celebrationTypeLevel;
+      case CelebrationType.title:
+        return l10n.celebrationTypeTitle;
+      case CelebrationType.streak:
+        return l10n.celebrationTypeStreak;
+      case CelebrationType.location:
+        return l10n.celebrationTypeLocation;
+      case CelebrationType.cosmetic:
+        return l10n.celebrationTypeCosmetic;
+    }
+  }
 }
 
 /// Which celebration UI to show. The router defaults to [topsheet] for small

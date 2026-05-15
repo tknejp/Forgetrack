@@ -46,7 +46,36 @@ enum CelebrationRewardKind {
   companion,
 
   /// Generic gem / treasure.
-  gem,
+  gem;
+
+  /// Player-facing label describing this reward kind (e.g. "POZADÍ", "TITUL").
+  /// Used by the fullscreen reward card's kind pill.
+  String label(AppLocalizations l10n) {
+    switch (this) {
+      case CelebrationRewardKind.sparkle:
+        return l10n.celebrationKindSparkle;
+      case CelebrationRewardKind.xp:
+        return l10n.celebrationKindXp;
+      case CelebrationRewardKind.title:
+        return l10n.celebrationKindTitle;
+      case CelebrationRewardKind.badge:
+        return l10n.celebrationKindBadge;
+      case CelebrationRewardKind.flame:
+        return l10n.celebrationKindFlame;
+      case CelebrationRewardKind.flag:
+        return l10n.celebrationKindFlag;
+      case CelebrationRewardKind.location:
+        return l10n.celebrationKindLocation;
+      case CelebrationRewardKind.frame:
+        return l10n.celebrationKindFrame;
+      case CelebrationRewardKind.background:
+        return l10n.celebrationKindBackground;
+      case CelebrationRewardKind.companion:
+        return l10n.celebrationKindCompanion;
+      case CelebrationRewardKind.gem:
+        return l10n.celebrationKindGem;
+    }
+  }
 }
 
 /// One reward inside a [CelebrationEvent]. Immutable; localized text is
