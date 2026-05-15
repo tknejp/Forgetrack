@@ -248,11 +248,6 @@ abstract final class SheetExportFields {
 
   // ── helpers ────────────────────────────────────────────────────────────────
 
-  static double? _round(double? v) {
-    if (v == null || v == 0) return null;
-    return double.parse(v.toStringAsFixed(2));
-  }
-
   static int? _roundToInt(double? v) {
     if (v == null || v == 0) return null;
     return v.round();
