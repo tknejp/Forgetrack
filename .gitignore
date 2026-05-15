@@ -61,3 +61,20 @@ functions/.firebase/
 
 # Screenshots
 old_screenshots/
+
+# Gradle local cache (per-user, should never be tracked)
+.gradle-user-home/
+.gradle/
+
+# Claude Code session-local settings
+.claude/settings.local.json
+
+# Auto-generated audit reports — regenerate via tooling/project_audit.py
+audit/
+
+# Working tree artefacts — stashed diffs, WIP notes
+*.diff
+*.patch
+
+# Personal memory notes (kept locally, not shared)
+memory/
