@@ -55,31 +55,16 @@ class MacroRow extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        label,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: ft.onSurface.withValues(alpha: 0.85),
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (xpData != null) ...[
-                      const SizedBox(width: 6),
-                      XpClaimPill(
-                        data: xpData!,
-                        claimedLabel: claimedXpLabel,
-                      ),
-                    ],
-                  ],
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: ft.onSurface.withValues(alpha: 0.85),
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               const SizedBox(width: 8),
@@ -91,6 +76,13 @@ class MacroRow extends StatelessWidget {
                   color: over ? barColor : ft.onSurfaceMuted,
                 ),
               ),
+              if (xpData != null) ...[
+                const SizedBox(width: 8),
+                XpClaimPill(
+                  data: xpData!,
+                  claimedLabel: claimedXpLabel,
+                ),
+              ],
             ],
           ),
           const SizedBox(height: 7),

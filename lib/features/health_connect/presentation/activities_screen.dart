@@ -16,6 +16,8 @@ import '../../../shared/widgets/screen_link_card.dart';
 import '../../../shared/widgets/stat_card.dart';
 import '../../../shared/widgets/swipe_period_gesture.dart';
 import '../../../shared/widgets/trend_chart.dart';
+import '../../../shared/widgets/xp_claim_pill.dart';
+import '../../progression_engine/application/progression_engine_provider.dart';
 import '../application/fitness_provider.dart';
 import '../domain/activity_record.dart';
 import 'activity_detail_screen.dart';
@@ -33,6 +35,17 @@ class ActivitiesScreen extends StatefulWidget {
 
 class _ActivitiesScreenState extends State<ActivitiesScreen> {
   SelectedPeriod _period = SelectedPeriod.currentWeek();
+
+  /// When true, the Recent-activity list ignores [_period] and shows
+  /// every claimable workout in the engine's retroactive window
+  /// instead. Toggled via the backfill banner / its dismiss action;
+  /// auto-exits when nothing's left to claim in-window.
+  bool _claimModeOn = false;
+
+  /// True while the banner's bulk-claim action is iterating through
+  /// the window. Disables the action button to prevent double-fires
+  /// and surfaces a spinner so the user knows work is happening.
+  bool _isClaimingAll = false;
 
   String _periodDateLabel(BuildContext context, SelectedPeriod period) {
     final locale = Localizations.localeOf(context).toString();
@@ -143,12 +156,81 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
     ];
   }
 
+  /// Iterates every claimable workout in the engine's retroactive
+  /// window and claims them sequentially. `claimActivity` internally
+  /// guards on `_isEvaluating`, so awaiting each call serialises the
+  /// loop without bypassing the engine's concurrency lock.
+  ///
+  /// On success: surfaces a snackbar with the total XP granted and
+  /// exits claim mode since the list would otherwise be empty.
+  Future<void> _claimAllBackfill(
+    BuildContext context,
+    List<ActivityRecord> claimable,
+  ) async {
+    if (_isClaimingAll || claimable.isEmpty) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
+    final provider = context.read<ProgressionEngineProvider>();
+
+    // Snapshot the preview total before claims fire — once each
+    // grant lands, `activityClaim(record).previewXp` switches to the
+    // claimed-amount path which would re-read the same number, but
+    // capturing up-front sidesteps any race on the iterator.
+    final totalXp = claimable.fold<int>(
+      0,
+      (sum, a) => sum + provider.activityClaim(a).previewXp,
+    );
+
+    setState(() => _isClaimingAll = true);
+    var claimed = 0;
+    try {
+      for (final a in claimable) {
+        await provider.claimActivity(a);
+        claimed += 1;
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isClaimingAll = false;
+          // Nothing left to surface in claim-mode view — drop back
+          // to the period-filtered list automatically.
+          _claimModeOn = false;
+        });
+      }
+    }
+    if (!mounted) return;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          l10n.activitiesBackfillClaimedToast(claimed, totalXp),
+        ),
+      ),
+    );
+  }
+
   Widget _buildActivityRow(
     BuildContext context,
     ActivityRecord activity,
     bool isLast,
   ) {
     final mapped = _mapActivity(activity.type);
+    final progression = context.watch<ProgressionEngineProvider>();
+    final claim = progression.activityClaim(activity);
+
+    XpClaimPillData pillData;
+    if (claim.isClaimed) {
+      pillData = XpClaimPillData.claimed(claim.previewXp);
+    } else if (claim.isClaimable) {
+      pillData = XpClaimPillData.claimable(
+        claim.previewXp,
+        // Sub-screen has no anchor for the XP-to-AppBar sparkle —
+        // pill's own state-change is sufficient feedback here.
+        onTap: (_) => progression.claimActivity(activity),
+      );
+    } else {
+      pillData = XpClaimPillData.locked(claim.previewXp);
+    }
+
     return ActivityRow(
       type: mapped.type,
       typeLabel: _formatActivityType(activity.type).toUpperCase(),
@@ -158,7 +240,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
       kcal: activity.caloriesBurned != null
           ? '${activity.caloriesBurned} kcal'
           : '-- kcal',
-      xp: (activity.duration.inMinutes * 2).clamp(10, 200),
+      xpData: pillData,
       isLast: isLast,
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(
@@ -174,6 +256,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
     GoalsProvider goals,
   ) {
     final l10n = context.l10n;
+    final progression = context.watch<ProgressionEngineProvider>();
     final tab = _tab(context, _period);
 
     // ── Today (period-independent) ──────────────────────────────────────
@@ -211,8 +294,46 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
         : 0.0;
     final typeBars = _buildTypeBreakdownBars(periodActivities);
 
-    final recentActivities = [...periodActivities]
-      ..sort((a, b) => b.startTime.compareTo(a.startTime));
+    // Retroactive-claim backfill: every activity inside the engine's
+    // claim window that is currently claimable. Used both to drive
+    // the banner ("you have X claimable outside the current period")
+    // and as the alternate list source when [_claimModeOn] is true.
+    final window = progression.historicalClaimWindow;
+    bool inWindow(DateTime t) {
+      final d = DateTime(t.year, t.month, t.day);
+      return !d.isBefore(window.earliest) && !d.isAfter(window.latest);
+    }
+    bool inPeriod(DateTime t) {
+      final d = DateTime(t.year, t.month, t.day);
+      return !d.isBefore(_period.start) && !d.isAfter(_period.end);
+    }
+    final windowClaimable = fitness.activities
+        .where((a) => inWindow(a.startTime))
+        .where((a) => progression.activityClaim(a).isClaimable)
+        .toList();
+    final outsidePeriodClaimable =
+        windowClaimable.where((a) => !inPeriod(a.startTime)).toList();
+
+    final recentActivities = _claimModeOn
+        ? ([...windowClaimable]
+          ..sort((a, b) => b.startTime.compareTo(a.startTime)))
+        : ([...periodActivities]
+          ..sort((a, b) => b.startTime.compareTo(a.startTime)));
+    final showBackfillBanner =
+        _claimModeOn || outsidePeriodClaimable.isNotEmpty;
+    final backfillCount =
+        _claimModeOn ? windowClaimable.length : outsidePeriodClaimable.length;
+    // Claimables in the *visible* list — the bulk-claim pill scope
+    // follows what the player can see. In period view that's the
+    // claimable subset of `periodActivities`; in claim mode the list
+    // is already `windowClaimable`, so they coincide.
+    final listClaimable = recentActivities
+        .where((a) => progression.activityClaim(a).isClaimable)
+        .toList();
+    final listTotalXp = listClaimable.fold<int>(
+      0,
+      (sum, a) => sum + progression.activityClaim(a).previewXp,
+    );
 
     return SwipePeriodGesture(
       onPrev: () => setState(() => _period = _period.backward()),
@@ -309,7 +430,6 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
             ],
             progress: activeMinsProgress,
             badge: '${(activeMinsProgress * 100).round()}%',
-            xp: '+${periodActivities.length * 60} XP',
           ),
 
           const SizedBox(height: 10),
@@ -331,6 +451,21 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
             const SizedBox(height: 10),
           ],
 
+          // ── Backfill banner — surfaces claimable workouts that
+          // fall outside the currently visible period so the user
+          // doesn't have to swipe back through the period navigator
+          // to find them.
+          if (showBackfillBanner) ...[
+            _BackfillBanner(
+              count: backfillCount,
+              isClaimModeOn: _claimModeOn,
+              onToggle: () {
+                setState(() => _claimModeOn = !_claimModeOn);
+              },
+            ),
+            const SizedBox(height: 10),
+          ],
+
           // ── Recent activities (period-filtered) ────────────────────
           PlainCard(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 4),
@@ -339,24 +474,34 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
               children: [
                 Row(
                   children: [
-                    Text(
-                      l10n.activitiesRecentActivity.toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: Tokens.fontSizeCaption,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0x80FFFFFF),
-                        letterSpacing: 1.2,
+                    Expanded(
+                      child: Text(
+                        (_claimModeOn
+                                ? l10n.activitiesBackfillHeader
+                                : l10n.activitiesRecentActivity)
+                            .toUpperCase(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: Tokens.fontSizeCaption,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0x80FFFFFF),
+                          letterSpacing: 1.2,
+                        ),
                       ),
                     ),
-                    const Spacer(),
-                    if (recentActivities.isNotEmpty)
-                      Text(
-                        '${recentActivities.length} →',
-                        style: TextStyle(
-                          fontSize: Tokens.fontSizeCaption,
-                          fontWeight: FontWeight.w600,
-                          color: Tokens.accent,
-                        ),
+                    if (listClaimable.isNotEmpty)
+                      _ClaimAllPill(
+                        label:
+                            l10n.activitiesBackfillClaimAll(listTotalXp),
+                        isLoading: _isClaimingAll,
+                        onTap: _isClaimingAll
+                            ? null
+                            : () => _claimAllBackfill(
+                                  context,
+                                  listClaimable,
+                                ),
+                        accent: context.ft.xp,
                       ),
                   ],
                 ),
@@ -484,6 +629,144 @@ class _WorkoutPermissionBanner extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Tap-to-toggle banner that surfaces claimable workouts falling
+/// outside the user's current period selection. When the list is in
+/// claim mode (showing every claimable workout in the engine's
+/// retroactive window instead of the period slice), the banner
+/// switches to an "exit" affordance.
+class _BackfillBanner extends StatelessWidget {
+  const _BackfillBanner({
+    required this.count,
+    required this.isClaimModeOn,
+    required this.onToggle,
+  });
+
+  final int count;
+  final bool isClaimModeOn;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final ft = context.ft;
+    final accent = ft.xp;
+
+    // Whole banner is a single button. Label switches between the
+    // "you have N to claim" pitch (default mode) and the explicit
+    // "go back" action (claim mode). No separate trailing affordance
+    // — at narrow widths the dual label + body row was forcing
+    // ellipses on the meaningful text.
+    final label = isClaimModeOn
+        ? l10n.activitiesBackfillExit
+        : l10n.activitiesBackfillBanner(count);
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onToggle,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: accent.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(Tokens.radiusInner),
+          border: Border.all(color: accent.withValues(alpha: 0.32)),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              isClaimModeOn
+                  ? Icons.arrow_back_rounded
+                  : Icons.bolt_rounded,
+              size: 16,
+              color: accent,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: isClaimModeOn
+                      ? accent
+                      : ft.onSurface.withValues(alpha: 0.92),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Subtle pill rendered inside [_BackfillBanner] for the bulk-claim
+/// action. Visual style mirrors the per-row [XpClaimPill] in its
+/// claimable state — accent tint background + border + accent text —
+/// so the banner action reads as "a pill that claims many things"
+/// rather than a CTA that competes with the page hero. Disabled or
+/// in-flight: faded contents, same surface so layout doesn't reflow.
+class _ClaimAllPill extends StatelessWidget {
+  const _ClaimAllPill({
+    required this.label,
+    required this.isLoading,
+    required this.onTap,
+    required this.accent,
+  });
+
+  final String label;
+  final bool isLoading;
+  final VoidCallback? onTap;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onTap != null && !isLoading;
+    final contentOpacity = enabled ? 1.0 : 0.55;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: enabled ? onTap : null,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: accent.withValues(alpha: 0.18),
+          borderRadius: BorderRadius.circular(Tokens.radiusProgress),
+          border: Border.all(color: accent.withValues(alpha: 0.35)),
+        ),
+        child: Opacity(
+          opacity: contentOpacity,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isLoading)
+                SizedBox(
+                  width: 10,
+                  height: 10,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 1.5,
+                    valueColor: AlwaysStoppedAnimation(accent),
+                  ),
+                )
+              else
+                Icon(Icons.bolt_rounded, size: 11, color: accent),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: Tokens.fontSizeMicro,
+                  fontWeight: FontWeight.w700,
+                  color: accent,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

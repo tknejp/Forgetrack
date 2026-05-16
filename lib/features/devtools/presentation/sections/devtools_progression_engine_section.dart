@@ -364,6 +364,30 @@ class _QuickStatePanel extends StatelessWidget {
               ],
             ],
           ),
+          const SizedBox(height: 8),
+          // Joined-date controls. Floor for retroactive claim
+          // windows; pick a date in the past to widen the window
+          // beyond the real install date, or reseed to fall back to
+          // `min(now, earliest ledger event)`.
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed:
+                      busy ? null : () => _pickJoinedAt(context, provider),
+                  icon: const Icon(Icons.event_rounded, size: 18),
+                  label: Text('Joined: ${_formatDate(provider.joinedAt)}'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              OutlinedButton.icon(
+                onPressed:
+                    busy ? null : () => _reseedJoinedAt(context, provider),
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: const Text('Reseed'),
+              ),
+            ],
+          ),
           if (provider.error != null) ...[
             const SizedBox(height: 8),
             Text(
@@ -394,6 +418,46 @@ class _QuickStatePanel extends StatelessWidget {
     messenger.showSnackBar(
       const SnackBar(content: Text('Day offset reset to 0')),
     );
+  }
+
+  Future<void> _pickJoinedAt(
+    BuildContext context,
+    ProgressionEngineProvider provider,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: provider.joinedAt,
+      firstDate: DateTime(now.year - 5),
+      lastDate: now,
+    );
+    if (picked == null) return;
+    await provider.devToolsSetJoinedAt(picked);
+    if (!context.mounted) return;
+    messenger.showSnackBar(
+      SnackBar(content: Text('Joined date set to ${_formatDate(picked)}')),
+    );
+  }
+
+  Future<void> _reseedJoinedAt(
+    BuildContext context,
+    ProgressionEngineProvider provider,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    await provider.devToolsSetJoinedAt(null);
+    if (!context.mounted) return;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text('Reseeded joined date to ${_formatDate(provider.joinedAt)}'),
+      ),
+    );
+  }
+
+  String _formatDate(DateTime d) {
+    final m = d.month.toString().padLeft(2, '0');
+    final day = d.day.toString().padLeft(2, '0');
+    return '${d.year}-$m-$day';
   }
 }
 

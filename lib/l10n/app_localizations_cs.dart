@@ -512,6 +512,47 @@ class AppLocalizationsCs extends AppLocalizations {
   String get activitiesActiveMins => 'Aktivní min.';
 
   @override
+  String get homeActivityClaimsHeader => 'Vyzvednout XP za trénink';
+
+  @override
+  String activitiesBackfillBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count starších tréninků k vyzvednutí',
+      few: '$count starší tréninky k vyzvednutí',
+      one: '$count starší trénink k vyzvednutí',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get activitiesBackfillShowAll => 'Zobrazit vše k vyzvednutí';
+
+  @override
+  String get activitiesBackfillExit => 'Zpět na zvolené období';
+
+  @override
+  String get activitiesBackfillHeader => 'K vyzvednutí';
+
+  @override
+  String activitiesBackfillClaimAll(int xp) {
+    return 'Vyzvednout vše · +$xp XP';
+  }
+
+  @override
+  String activitiesBackfillClaimedToast(int count, int xp) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Vyzvednuto $count tréninků · +$xp XP',
+      few: 'Vyzvednuty $count tréninky · +$xp XP',
+      one: 'Vyzvednut $count trénink · +$xp XP',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get activitiesWorkouts => 'Tréninky';
 
   @override

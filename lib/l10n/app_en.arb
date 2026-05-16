@@ -480,6 +480,31 @@
   "activitiesActiveMins": "Active min.",
   "@activitiesActiveMins": { "description": "Label for active minutes in Activities screen" },
 
+  "homeActivityClaimsHeader": "Claim XP per workout",
+  "@homeActivityClaimsHeader": { "description": "Section header above the per-activity claim list in the expanded home activity card." },
+
+  "activitiesBackfillBanner": "{count, plural, one{{count} workout to claim from earlier} other{{count} workouts to claim from earlier}}",
+  "@activitiesBackfillBanner": {
+    "description": "Banner on the activities screen pointing the user at claimable workouts that fall outside the currently-visible period.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "activitiesBackfillShowAll": "Show all claimable",
+  "@activitiesBackfillShowAll": { "description": "Banner action that switches the activities list into 'claim mode' — shows every claimable workout in the retroactive window regardless of period." },
+  "activitiesBackfillExit": "Back to period view",
+  "@activitiesBackfillExit": { "description": "Banner action while claim mode is active — returns the list to the standard period-filtered view." },
+  "activitiesBackfillHeader": "All claimable",
+  "@activitiesBackfillHeader": { "description": "List header shown above the recent activities while claim mode is active." },
+  "activitiesBackfillClaimAll": "Claim all · +{xp} XP",
+  "@activitiesBackfillClaimAll": {
+    "description": "Bulk-claim button inside the backfill banner. xp is the total preview XP across every claimable workout in the retroactive window.",
+    "placeholders": { "xp": { "type": "int" } }
+  },
+  "activitiesBackfillClaimedToast": "{count, plural, one{Claimed {count} workout · +{xp} XP} other{Claimed {count} workouts · +{xp} XP}}",
+  "@activitiesBackfillClaimedToast": {
+    "description": "Snackbar shown after a successful bulk claim.",
+    "placeholders": { "count": { "type": "int" }, "xp": { "type": "int" } }
+  },
+
   "activitiesWorkouts": "Workouts",
   "@activitiesWorkouts": { "description": "Section title for workout list in Activities screen" },
 

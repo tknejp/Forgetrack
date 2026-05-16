@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 
 import '../../../core/services/connectivity_provider.dart';
 import '../../health_connect/application/fitness_provider.dart';
+import '../../health_connect/domain/activity_record.dart';
+import '../../progression_engine/domain/activity_claim/activity_claim_state.dart';
 import '../../nutrition/application/kaloricke_tabulky_provider.dart';
 import '../../nutrition/presentation/widgets/kt_sync_error_banner.dart';
 import '../../settings/presentation/settings_screen.dart';
@@ -345,6 +347,10 @@ class _OverviewScreenState extends State<OverviewScreen> {
                       period,
                       dayOnly: dayOnly,
                     ),
+                    onActivityClaim: (record, center) {
+                      _onXpClaimed(center);
+                      unawaited(progression.claimActivity(record));
+                    },
                     progression: progression,
                     weightForPeriod: _weightForPeriod(fitness, period),
                     prevWeight: _previousWeightForPeriod(fitness, period),
@@ -397,6 +403,7 @@ class _DayContent extends StatelessWidget {
     required this.l10n,
     required this.fmtSleep,
     required this.questPillData,
+    required this.onActivityClaim,
     required this.progression,
     required this.weightForPeriod,
     required this.prevWeight,
@@ -425,6 +432,7 @@ class _DayContent extends StatelessWidget {
   final dynamic l10n;
   final String Function(Duration?) fmtSleep;
   final _QuestPillResolver questPillData;
+  final void Function(ActivityRecord record, Offset center) onActivityClaim;
   final ProgressionEngineProvider progression;
   final double? weightForPeriod;
   final double? prevWeight;
@@ -605,7 +613,6 @@ class _DayContent extends StatelessWidget {
                 progress: stepsProgress,
                 badge: '${(stepsProgress * 100).round()}%',
                 xpData: questPillData('daily_steps_today'),
-                claimedXpLabel: l10n.progQuestStatusClaimed,
                 children: [
                   DetailShortcutButton(
                     onTap: onOpenSteps,
@@ -683,7 +690,6 @@ class _DayContent extends StatelessWidget {
                 progress: kcalProgress,
                 badge: '$kcalPct%',
                 xpData: questPillData('daily_calories_today'),
-                claimedXpLabel: l10n.progQuestStatusClaimed,
                 children: [
                   const SizedBox(height: Tokens.spaceMd),
                   if (nutritionHasDetails) ...[
@@ -694,7 +700,6 @@ class _DayContent extends StatelessWidget {
                       unit: 'g',
                       domain: Tokens.protein,
                       xpData: questPillData('daily_protein_today'),
-                      claimedXpLabel: l10n.progQuestStatusClaimed,
                     ),
                     MacroRow(
                       label: l10n.macroCarbs,
@@ -703,7 +708,6 @@ class _DayContent extends StatelessWidget {
                       unit: 'g',
                       domain: Tokens.carbs,
                       xpData: questPillData('daily_carbs_today'),
-                      claimedXpLabel: l10n.progQuestStatusClaimed,
                     ),
                     MacroRow(
                       label: l10n.macroFat,
@@ -712,7 +716,6 @@ class _DayContent extends StatelessWidget {
                       unit: 'g',
                       domain: Tokens.fat,
                       xpData: questPillData('daily_fat_today'),
-                      claimedXpLabel: l10n.progQuestStatusClaimed,
                     ),
                     MacroRow(
                       label: 'Fiber',
@@ -722,7 +725,6 @@ class _DayContent extends StatelessWidget {
                       domain: Tokens.calories,
                       isLast: true,
                       xpData: questPillData('daily_fiber_today'),
-                      claimedXpLabel: l10n.progQuestStatusClaimed,
                     ),
                     const SizedBox(height: Tokens.spaceMd),
                     _NutritionDetailTile(
@@ -773,7 +775,6 @@ class _DayContent extends StatelessWidget {
             ],
             showProgress: false,
             xpData: questPillData('daily_weight_log_today', dayOnly: false),
-            claimedXpLabel: l10n.progQuestStatusClaimed,
             children: [
               DetailShortcutButton(
                 onTap: onOpenBody,
@@ -813,8 +814,17 @@ class _DayContent extends StatelessWidget {
             progress: activityProgress,
             badge: '${(activityProgress * 100).round()}%',
             xpData: questPillData('daily_activity_today', dayOnly: false),
-            claimedXpLabel: l10n.progQuestStatusClaimed,
             children: [
+              if (period.type == PeriodType.day) ...[
+                _ActivityClaimsList(
+                  claims: progression.activityClaimsForDate(
+                    date: period.start,
+                    activities: periodActivities,
+                  ),
+                  header: l10n.homeActivityClaimsHeader,
+                  onClaim: onActivityClaim,
+                ),
+              ],
               DetailShortcutButton(
                 onTap: onOpenActivities,
                 domain: Tokens.activityCard,
@@ -854,7 +864,6 @@ class _DayContent extends StatelessWidget {
                 ? '${(sleepProgress * 100).round()}%'
                 : null,
             xpData: questPillData('daily_sleep_today'),
-            claimedXpLabel: l10n.progQuestStatusClaimed,
             children: [
               DetailShortcutButton(
                 onTap: onOpenSleep,
@@ -1208,6 +1217,187 @@ int _activityGoalForPeriod(GoalsProvider goals, SelectedPeriod period) {
     case PeriodType.custom:
       if (weekly <= 0) return 0;
       return weekly * 4;
+  }
+}
+
+// ── Per-activity claim list (expanded activity card) ────────────────────────
+
+typedef _ActivityClaimTap = void Function(ActivityRecord record, Offset center);
+
+/// Compact list of per-workout claim pills rendered inside the home
+/// activity card's expanded body. One row per activity for the
+/// selected day; each row carries an [XpClaimPill] reflecting the
+/// engine's per-activity claim state (locked / claimable / claimed).
+class _ActivityClaimsList extends StatelessWidget {
+  const _ActivityClaimsList({
+    required this.claims,
+    required this.header,
+    required this.onClaim,
+  });
+
+  final List<ActivityClaimState> claims;
+  final String header;
+  final _ActivityClaimTap onClaim;
+
+  @override
+  Widget build(BuildContext context) {
+    if (claims.isEmpty) return const SizedBox.shrink();
+    final ft = context.ft;
+    return Padding(
+      padding: const EdgeInsets.only(top: Tokens.spaceMd),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            header.toUpperCase(),
+            style: TextStyle(
+              fontSize: Tokens.fontSizeMicro,
+              fontWeight: FontWeight.w700,
+              color: ft.onSurfaceMuted,
+              letterSpacing: 1.0,
+            ),
+          ),
+          const SizedBox(height: Tokens.spaceSm),
+          for (int i = 0; i < claims.length; i++)
+            _ActivityClaimRow(
+              key: ValueKey(claims[i].claimKey),
+              state: claims[i],
+              isLast: i == claims.length - 1,
+              onClaim: onClaim,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActivityClaimRow extends StatelessWidget {
+  const _ActivityClaimRow({
+    super.key,
+    required this.state,
+    required this.isLast,
+    required this.onClaim,
+  });
+
+  final ActivityClaimState state;
+  final bool isLast;
+  final _ActivityClaimTap onClaim;
+
+  @override
+  Widget build(BuildContext context) {
+    final ft = context.ft;
+    final record = state.record;
+    final emoji = _emojiFor(record.type);
+    final label = _formatType(record.type);
+    final duration = _formatDuration(record.duration);
+    final time = _formatStartTime(context, record.startTime);
+
+    final XpClaimPillData pillData;
+    if (state.isClaimed) {
+      pillData = XpClaimPillData.claimed(state.previewXp);
+    } else if (state.isClaimable) {
+      pillData = XpClaimPillData.claimable(
+        state.previewXp,
+        onTap: (center) => onClaim(record, center),
+      );
+    } else {
+      pillData = XpClaimPillData.locked(state.previewXp);
+    }
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: isLast ? 0 : 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          border: isLast
+              ? null
+              : Border(bottom: BorderSide(color: ft.divider)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: ft.active.dim,
+                borderRadius: BorderRadius.circular(Tokens.radiusIcon),
+                border: Border.all(
+                  color: ft.active.color.withValues(alpha: 0.25),
+                ),
+              ),
+              child: Text(emoji, style: const TextStyle(fontSize: 14)),
+            ),
+            const SizedBox(width: Tokens.spaceMd),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: ft.onSurface.withValues(alpha: 0.9),
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    '$time · $duration',
+                    style: TextStyle(
+                      fontSize: Tokens.fontSizeMicro,
+                      color: ft.onSurfaceMuted,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            XpClaimPill(data: pillData),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatType(String hcType) => hcType
+      .split('_')
+      .map(
+        (word) => word.isEmpty
+            ? ''
+            : '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}',
+      )
+      .join(' ');
+
+  String _formatDuration(Duration d) {
+    final m = d.inMinutes;
+    if (m < 60) return '${m}m';
+    final h = d.inHours;
+    final rest = m - h * 60;
+    return '${h}h ${rest.toString().padLeft(2, '0')}m';
+  }
+
+  String _formatStartTime(BuildContext context, DateTime t) {
+    final locale = Localizations.localeOf(context).toString();
+    return DateFormat('HH:mm', locale).format(t);
+  }
+
+  String _emojiFor(String hcType) {
+    final t = hcType.toUpperCase();
+    if (t.contains('HIKE') || t.contains('TRAIL')) return '🥾';
+    if (t.contains('RUN') || t.contains('JOG')) return '🏃';
+    if (t.contains('CYCL') || t.contains('BIKE')) return '🚴';
+    if (t.contains('SWIM')) return '🏊';
+    if (t.contains('WALK')) return '🚶';
+    if (t.contains('YOGA') || t.contains('MEDIT') || t.contains('STRETCH')) {
+      return '🧘';
+    }
+    if (t.contains('STRENGTH') || t.contains('WEIGHT')) return '🏋';
+    return '⚔';
   }
 }
 

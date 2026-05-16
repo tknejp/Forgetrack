@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/design_tokens.dart';
+import 'xp_claim_pill.dart';
 
 enum ActivityType { walking, strength }
 
@@ -11,7 +12,17 @@ class ActivityRow extends StatelessWidget {
   final String date;
   final String duration;
   final String kcal;
-  final int xp;
+
+  /// Per-activity XP claim pill. Optional — when null the row hides
+  /// the trailing XP element entirely (used for read-only contexts
+  /// like analytics screens that haven't been wired to the engine
+  /// yet).
+  final XpClaimPillData? xpData;
+
+  /// Label substituted for "+N XP" once the claim is in the claimed
+  /// state. Falls back to the bare "+N XP" string.
+  final String? claimedXpLabel;
+
   final bool isLast;
 
   /// When non-null, the row becomes tappable (e.g. to open an activity detail
@@ -26,7 +37,8 @@ class ActivityRow extends StatelessWidget {
     required this.date,
     required this.duration,
     required this.kcal,
-    required this.xp,
+    this.xpData,
+    this.claimedXpLabel,
     this.isLast = false,
     this.onTap,
   });
@@ -101,24 +113,20 @@ class ActivityRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 1),
-              Text.rich(
-                TextSpan(
-                  text: '$kcal | ',
-                  style: TextStyle(
-                    fontSize: Tokens.fontSizeMicro,
-                    color: ft.onSurfaceMuted,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  children: [
-                    TextSpan(
-                      text: '+$xp XP',
-                      style: TextStyle(color: ft.sleep.color),
-                    ),
-                  ],
+              Text(
+                kcal,
+                style: TextStyle(
+                  fontSize: Tokens.fontSizeMicro,
+                  color: ft.onSurfaceMuted,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
           ),
+          if (xpData != null) ...[
+            const SizedBox(width: 8),
+            XpClaimPill(data: xpData!, claimedLabel: claimedXpLabel),
+          ],
         ],
       ),
     );

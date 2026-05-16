@@ -417,8 +417,8 @@ class RarityPalette {
     gradStart: Color(0xFF6E6E6E),
   );
   static const uncommon = RarityPalette(
-    color: Color(0xFF34D399),
-    gradStart: Color(0xFF10B981),
+    color: Color(0xFF5E8F6A),
+    gradStart: Color(0xFF2F5D3A),
   );
   static const rare = RarityPalette(
     color: Color(0xFF58A6FF),

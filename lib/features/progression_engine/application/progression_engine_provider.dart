@@ -1,12 +1,19 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../cosmetics/application/cosmetics_provider.dart';
 import '../../health_connect/application/fitness_provider.dart';
 import '../../health_connect/application/goals_provider.dart';
 import '../../nutrition/application/kaloricke_tabulky_provider.dart';
+import '../domain/activity_claim/activity_claim_constants.dart';
+import '../domain/activity_claim/activity_claim_key.dart';
+import '../domain/activity_claim/activity_claim_state.dart';
+import '../domain/activity_claim/activity_reward_formula.dart';
+import '../domain/historical_claim_window.dart';
 import '../domain/policy/level_policy.dart';
+import '../../health_connect/domain/activity_record.dart';
 import '../data/provider_engine_input_source.dart';
 import '../domain/catalog/engine_catalog_context.dart';
 import '../domain/catalog/objective_catalog.dart';
@@ -218,6 +225,18 @@ class ProgressionEngineProvider extends ChangeNotifier {
   ProviderEngineInputSource? _source;
   String? _lastEvaluatedSignature;
   bool _evaluateQueued = false;
+
+  /// SharedPreferences key carrying the user's "joined the game"
+  /// timestamp — the floor for retroactive claim windows. Persisted
+  /// once on first hydrate so a fresh install or a future change in
+  /// ledger semantics can't shift the player's effective join date.
+  static const String _prefsJoinedAtKey = 'forgetrack_joined_at_iso';
+
+  /// Cached join timestamp. Populated by [_hydrate] from prefs (or
+  /// seeded there on first run). Null only between provider
+  /// construction and the first `_hydrate` completion, in which
+  /// window [joinedAt] falls back to `_engineNow`.
+  DateTime? _joinedAtCache;
 
   /// Whole-day clock offset applied to *every* `DateTime.now()` the
   /// provider hands to the engine + rotation helpers. Defaults to 0
@@ -1828,6 +1847,255 @@ class ProgressionEngineProvider extends ChangeNotifier {
     }
   }
 
+  // ── Per-activity claims (home expanded activity card) ─────────────
+
+  /// Stable timestamp of the player's first day in the app — floor
+  /// for every retroactive claim window so a fresh install never
+  /// offers claims on days that predate the player joining.
+  ///
+  /// Persisted to SharedPreferences on first hydrate so it survives
+  /// ledger wipes and engine schema changes; existing users get a
+  /// one-time backfill from their earliest ledger event.
+  DateTime get joinedAt => _joinedAtCache ?? _engineNow();
+
+  /// Current retroactive claim window, derived from [joinedAt] and
+  /// the engine clock. Exposed so UI surfaces can match their own
+  /// filter ranges to the engine's authoritative window without
+  /// recomputing the math themselves.
+  HistoricalClaimWindow get historicalClaimWindow => makeHistoricalClaimWindow(
+        now: _engineNow(),
+        joinedAt: joinedAt,
+      );
+
+  /// Per-day list of [ActivityClaimState] for the home activity card
+  /// and the activities screen. Pure derivation from the ledger plus
+  /// the supplied [activities] — does not query HC itself, the caller
+  /// passes whichever set of records is in scope.
+  ///
+  /// [date] filters by calendar day. Activities outside the
+  /// retroactive claim window render with `isWithinWindow: false` —
+  /// the pill should be locked, not hidden, so the player understands
+  /// why historic data isn't claimable.
+  List<ActivityClaimState> activityClaimsForDate({
+    required DateTime date,
+    required Iterable<ActivityRecord> activities,
+  }) {
+    final day = DateTime(date.year, date.month, date.day);
+    final window = makeHistoricalClaimWindow(
+      now: _engineNow(),
+      joinedAt: joinedAt,
+    );
+    final isInWindow = window.contains(day);
+    final claimedKeys = _claimedActivityKeys();
+    final grantsByKey = _activityGrantsByKey();
+    final currentLevel = level;
+    final out = <ActivityClaimState>[];
+    for (final a in activities) {
+      final aDay =
+          DateTime(a.startTime.year, a.startTime.month, a.startTime.day);
+      if (aDay != day) continue;
+      final key = activityClaimKey(a);
+      final isClaimed = claimedKeys.contains(key);
+      final baseXp = activityRewardXp(
+        durationMinutes: a.duration.inMinutes,
+        hcType: a.type,
+      );
+      // Claimed pill freezes on the historically granted amount so a
+      // level-up after the claim does not retroactively change the
+      // "+N XP" the player saw.
+      final xp = isClaimed
+          ? (grantsByKey[key] ??
+              _levelPolicy.scaledRewardXp(
+                baseXp: baseXp,
+                level: currentLevel,
+              ))
+          : _levelPolicy.scaledRewardXp(
+              baseXp: baseXp,
+              level: currentLevel,
+            );
+      out.add(
+        ActivityClaimState(
+          record: a,
+          claimKey: key,
+          previewXp: xp,
+          isClaimed: isClaimed,
+          isWithinWindow: isInWindow,
+        ),
+      );
+    }
+    out.sort((a, b) => b.record.startTime.compareTo(a.record.startTime));
+    return out;
+  }
+
+  /// Single-record variant of [activityClaimsForDate] — convenient
+  /// when iterating a heterogenous list (activities screen across a
+  /// week / month) where per-day filtering would force a regroup.
+  ActivityClaimState activityClaim(ActivityRecord record) {
+    final day = DateTime(
+      record.startTime.year,
+      record.startTime.month,
+      record.startTime.day,
+    );
+    final window = makeHistoricalClaimWindow(
+      now: _engineNow(),
+      joinedAt: joinedAt,
+    );
+    final isInWindow = window.contains(day);
+    final key = activityClaimKey(record);
+    final isClaimed = _claimedActivityKeys().contains(key);
+    final baseXp = activityRewardXp(
+      durationMinutes: record.duration.inMinutes,
+      hcType: record.type,
+    );
+    final granted = _activityGrantsByKey()[key];
+    final xp = isClaimed
+        ? (granted ??
+            _levelPolicy.scaledRewardXp(baseXp: baseXp, level: level))
+        : _levelPolicy.scaledRewardXp(baseXp: baseXp, level: level);
+    return ActivityClaimState(
+      record: record,
+      claimKey: key,
+      previewXp: xp,
+      isClaimed: isClaimed,
+      isWithinWindow: isInWindow,
+    );
+  }
+
+  Set<String> _claimedActivityKeys() {
+    final l = _ledger;
+    if (l == null) return const {};
+    final out = <String>{};
+    for (final e in l.nodeClaims) {
+      if (e.nodeId != kActivityWorkoutClaimNodeId) continue;
+      final k = e.periodKey;
+      if (k != null) out.add(k);
+    }
+    return out;
+  }
+
+  Map<String, int> _activityGrantsByKey() {
+    final l = _ledger;
+    if (l == null) return const {};
+    final out = <String, int>{};
+    for (final e in l.rewardGrants) {
+      if (e.nodeId != kActivityWorkoutClaimNodeId) continue;
+      if (e.rewardKind != RewardGrantKind.xp) continue;
+      final k = e.periodKey;
+      final xp = e.xpAmount;
+      if (k == null || xp == null) continue;
+      out.putIfAbsent(k, () => xp);
+    }
+    return out;
+  }
+
+  /// Player-initiated claim on a single workout. Writes a
+  /// [NodeClaimEvent] + [RewardGrantEvent] under the synthetic
+  /// [kActivityWorkoutClaimNodeId] with the activity's claim key as
+  /// the event's `periodKey`. Bypasses the engine resolver — there is
+  /// no catalog node to match — but reuses the standard ledger /
+  /// reward-grant plumbing, so total XP / level / streaks update
+  /// automatically and cloud sync replicates the event like any other
+  /// grant.
+  ///
+  /// No-op when: another evaluation is in flight, the activity has no
+  /// duration, the calendar day is outside [historicalClaimWindow],
+  /// or a claim event already exists for this key.
+  Future<void> claimActivity(ActivityRecord activity) async {
+    if (_isEvaluating) return;
+    final baseXp = activityRewardXp(
+      durationMinutes: activity.duration.inMinutes,
+      hcType: activity.type,
+    );
+    if (baseXp <= 0) return;
+
+    final day = DateTime(
+      activity.startTime.year,
+      activity.startTime.month,
+      activity.startTime.day,
+    );
+    final window = makeHistoricalClaimWindow(
+      now: _engineNow(),
+      joinedAt: joinedAt,
+    );
+    if (!window.contains(day)) return;
+
+    final key = activityClaimKey(activity);
+    if (_claimedActivityKeys().contains(key)) return;
+
+    final currentLevel = level;
+    final scaledXp = _levelPolicy.scaledRewardXp(
+      baseXp: baseXp,
+      level: currentLevel,
+    );
+    final multiplier = _levelPolicy.rewardMultiplierForLevel(currentLevel);
+    final now = _engineNow();
+    final ordinal = _ledger?.rewardGrants.length ?? 0;
+
+    _isEvaluating = true;
+    notifyListeners();
+    try {
+      await _repository.appendEvents([
+        NodeClaimEvent(
+          eventKey: 'node|$kActivityWorkoutClaimNodeId|$key|claim',
+          timestamp: now,
+          nodeId: kActivityWorkoutClaimNodeId,
+          periodKey: key,
+        ),
+        RewardGrantEvent(
+          eventKey:
+              'reward|$kActivityWorkoutClaimNodeId|$ordinal|$key|grant',
+          timestamp: now,
+          nodeId: kActivityWorkoutClaimNodeId,
+          rewardOrdinal: ordinal,
+          rewardKind: RewardGrantKind.xp,
+          periodKey: key,
+          xpAmount: scaledXp,
+          levelAtGrant: currentLevel,
+          multiplierAtGrant: multiplier,
+        ),
+      ]);
+      _ledger = await _repository.loadLedger();
+      _lastEvaluatedAt = now;
+      _recomputeStreaks();
+      AppLog.app.info(
+        'claimActivity: granted $scaledXp XP for "${activity.type}" key=$key',
+      );
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
+      AppLog.app.warn('claimActivity: failed — $e');
+    } finally {
+      _isEvaluating = false;
+      notifyListeners();
+    }
+    // Refresh so any level-milestone unlock crossed by this grant
+    // fires its celebration on the same turn (mirrors devToolsAddXp).
+    _lastEvaluatedSignature = null;
+    await refresh();
+  }
+
+  /// Devtools — override the persisted join date. Useful when
+  /// testing retroactive claim windows on activities older than the
+  /// real install date (e.g. backfilling 5 days into the past to
+  /// verify the 7-day window edge). Pass `null` to clear the prefs
+  /// key entirely; the next [_resolveJoinedAt] will reseed from
+  /// `min(now, earliestLedgerEvent)` as on a fresh install.
+  ///
+  /// Writes through to SharedPreferences immediately so a hot-restart
+  /// preserves the override.
+  Future<void> devToolsSetJoinedAt(DateTime? date) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (date == null) {
+      await prefs.remove(_prefsJoinedAtKey);
+      _joinedAtCache = await _resolveJoinedAt(_ledger);
+    } else {
+      await prefs.setString(_prefsJoinedAtKey, date.toIso8601String());
+      _joinedAtCache = date;
+    }
+    AppLog.app.info('progression: devToolsSetJoinedAt $_joinedAtCache');
+    notifyListeners();
+  }
+
   /// Devtools — seed the ledger with a synthetic XP grant so the
   /// profile reflects the chosen total. Wipes existing grants first
   /// so `totalXp` matches [xp] exactly. Mirrors V1's
@@ -2080,6 +2348,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
     try {
       _ledger = await _repository.loadLedger();
       _lastEvaluatedAt = _mostRecentLedgerTimestamp(_ledger);
+      _joinedAtCache = await _resolveJoinedAt(_ledger);
       _recomputeStreaks();
       _error = null;
     } catch (e) {
@@ -2088,6 +2357,36 @@ class ProgressionEngineProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  /// Reads the player's join timestamp from prefs. On first read,
+  /// seeds prefs with `min(now, earliestLedgerEvent)` so existing
+  /// users — whose ledger history predates this feature — get a
+  /// retroactive join date that matches their actual first day in
+  /// the engine, not the day this prefs key was introduced.
+  ///
+  /// Factory reset (`prefs.clear()`) drops this key alongside the
+  /// rest of app state, which is the right behavior for a "treat
+  /// this as a fresh install" reset.
+  Future<DateTime> _resolveJoinedAt(LedgerSnapshot? ledger) async {
+    final prefs = await SharedPreferences.getInstance();
+    final stored = prefs.getString(_prefsJoinedAtKey);
+    if (stored != null) {
+      final parsed = DateTime.tryParse(stored);
+      if (parsed != null) return parsed;
+    }
+    final now = _engineNow();
+    DateTime joinedAt = now;
+    if (ledger != null) {
+      for (final e in ledger.all) {
+        if (e.timestamp.isBefore(joinedAt)) joinedAt = e.timestamp;
+      }
+    }
+    await prefs.setString(_prefsJoinedAtKey, joinedAt.toIso8601String());
+    AppLog.app.info(
+      'progression: seeded joinedAt=$joinedAt',
+    );
+    return joinedAt;
   }
 
   /// Newest event timestamp across the ledger's reward grants and node

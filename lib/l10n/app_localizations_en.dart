@@ -511,6 +511,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activitiesActiveMins => 'Active min.';
 
   @override
+  String get homeActivityClaimsHeader => 'Claim XP per workout';
+
+  @override
+  String activitiesBackfillBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count workouts to claim from earlier',
+      one: '$count workout to claim from earlier',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get activitiesBackfillShowAll => 'Show all claimable';
+
+  @override
+  String get activitiesBackfillExit => 'Back to period view';
+
+  @override
+  String get activitiesBackfillHeader => 'All claimable';
+
+  @override
+  String activitiesBackfillClaimAll(int xp) {
+    return 'Claim all · +$xp XP';
+  }
+
+  @override
+  String activitiesBackfillClaimedToast(int count, int xp) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Claimed $count workouts · +$xp XP',
+      one: 'Claimed $count workout · +$xp XP',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get activitiesWorkouts => 'Workouts';
 
   @override
