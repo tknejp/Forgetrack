@@ -683,6 +683,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get goalDailyCarbs => 'Daily carbs';
 
   @override
+  String get goalDailyFiber => 'Daily fiber';
+
+  @override
+  String settingsGoalsNutritionSummary(
+      String kcal, String protein, String fat, String carbs, String fiber) {
+    return '$kcal kcal · ${protein}P / ${fat}F / ${carbs}C / ${fiber}Fi g';
+  }
+
+  @override
+  String get settingsGoalsMacroBreakdownLabel => 'Calories from macros';
+
+  @override
+  String settingsGoalsMacroBreakdownMismatch(int delta) {
+    String _temp0 = intl.Intl.pluralLogic(
+      delta,
+      locale: localeName,
+      other: '$delta kcal off',
+      zero: 'matches',
+    );
+    return 'Doesn\'t match calorie goal ($_temp0)';
+  }
+
+  @override
+  String get settingsGoalsActivityHeader => 'Activity';
+
+  @override
+  String get settingsGoalsNutritionHeader => 'Nutrition';
+
+  @override
+  String get settingsGoalsSleepHeader => 'Sleep';
+
+  @override
+  String get settingsGoalsBodyHeader => 'Body';
+
+  @override
   String get nutritionPeriod7d => '7 days';
 
   @override

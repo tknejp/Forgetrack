@@ -34,6 +34,7 @@ class ProviderEngineInputSource {
         dailyProteinGrams: goals.dailyProtein,
         dailyCarbsGrams: goals.dailyCarbs,
         dailyFatGrams: goals.dailyFat,
+        dailyFiberGrams: goals.dailyFiber,
         sleepMinutes: (goals.sleepHours * 60).round(),
         weeklyActivityMinutes: goals.weeklyActivityMins,
         targetWeightKg: goals.targetWeight,

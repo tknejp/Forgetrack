@@ -1358,6 +1358,55 @@ abstract class AppLocalizations {
   /// **'Daily carbs'**
   String get goalDailyCarbs;
 
+  /// Goal label: daily fiber intake target.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily fiber'**
+  String get goalDailyFiber;
+
+  /// One-line summary on the nutrition section header. Macros are abbreviated (P/F/C/Fi) so the summary fits without wrapping.
+  ///
+  /// In en, this message translates to:
+  /// **'{kcal} kcal · {protein}P / {fat}F / {carbs}C / {fiber}Fi g'**
+  String settingsGoalsNutritionSummary(
+      String kcal, String protein, String fat, String carbs, String fiber);
+
+  /// Info-row label inside the nutrition section that shows the kcal total derived from current macro targets (4 kcal/g protein, 9 kcal/g fat, 4 kcal/g carbs).
+  ///
+  /// In en, this message translates to:
+  /// **'Calories from macros'**
+  String get settingsGoalsMacroBreakdownLabel;
+
+  /// Sub-label warning when the macro-derived kcal total drifts from the calorie target by more than tolerance.
+  ///
+  /// In en, this message translates to:
+  /// **'Doesn\'t match calorie goal ({delta, plural, =0{matches} other{{delta} kcal off}})'**
+  String settingsGoalsMacroBreakdownMismatch(int delta);
+
+  /// Nicer header for the activity goals expandable in settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get settingsGoalsActivityHeader;
+
+  /// Nicer header for the nutrition goals expandable in settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition'**
+  String get settingsGoalsNutritionHeader;
+
+  /// Nicer header for the sleep goals expandable in settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep'**
+  String get settingsGoalsSleepHeader;
+
+  /// Nicer header for the body goals expandable in settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Body'**
+  String get settingsGoalsBodyHeader;
+
   /// Nutrition screen period selector: last 7 days
   ///
   /// In en, this message translates to:

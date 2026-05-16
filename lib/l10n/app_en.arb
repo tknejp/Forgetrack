@@ -643,6 +643,36 @@
   "goalDailyCarbs": "Daily carbs",
   "@goalDailyCarbs": { "description": "Goal label: daily carbohydrate intake target" },
 
+  "goalDailyFiber": "Daily fiber",
+  "@goalDailyFiber": { "description": "Goal label: daily fiber intake target." },
+
+  "settingsGoalsNutritionSummary": "{kcal} kcal · {protein}P / {fat}F / {carbs}C / {fiber}Fi g",
+  "@settingsGoalsNutritionSummary": {
+    "description": "One-line summary on the nutrition section header. Macros are abbreviated (P/F/C/Fi) so the summary fits without wrapping.",
+    "placeholders": {
+      "kcal": { "type": "String" },
+      "protein": { "type": "String" },
+      "fat": { "type": "String" },
+      "carbs": { "type": "String" },
+      "fiber": { "type": "String" }
+    }
+  },
+  "settingsGoalsMacroBreakdownLabel": "Calories from macros",
+  "@settingsGoalsMacroBreakdownLabel": { "description": "Info-row label inside the nutrition section that shows the kcal total derived from current macro targets (4 kcal/g protein, 9 kcal/g fat, 4 kcal/g carbs)." },
+  "settingsGoalsMacroBreakdownMismatch": "Doesn't match calorie goal ({delta, plural, =0{matches} other{{delta} kcal off}})",
+  "@settingsGoalsMacroBreakdownMismatch": {
+    "description": "Sub-label warning when the macro-derived kcal total drifts from the calorie target by more than tolerance.",
+    "placeholders": { "delta": { "type": "int" } }
+  },
+  "settingsGoalsActivityHeader": "Activity",
+  "@settingsGoalsActivityHeader": { "description": "Nicer header for the activity goals expandable in settings." },
+  "settingsGoalsNutritionHeader": "Nutrition",
+  "@settingsGoalsNutritionHeader": { "description": "Nicer header for the nutrition goals expandable in settings." },
+  "settingsGoalsSleepHeader": "Sleep",
+  "@settingsGoalsSleepHeader": { "description": "Nicer header for the sleep goals expandable in settings." },
+  "settingsGoalsBodyHeader": "Body",
+  "@settingsGoalsBodyHeader": { "description": "Nicer header for the body goals expandable in settings." },
+
   "nutritionPeriod7d": "7 days",
   "@nutritionPeriod7d": { "description": "Nutrition screen period selector: last 7 days" },
 

@@ -253,6 +253,14 @@
 
   "goalDailyFat": "Denní tuky",
   "goalDailyCarbs": "Denní sacharidy",
+  "goalDailyFiber": "Denní vláknina",
+  "settingsGoalsNutritionSummary": "{kcal} kcal · {protein}B / {fat}T / {carbs}S / {fiber}V g",
+  "settingsGoalsMacroBreakdownLabel": "Energie z makroživin",
+  "settingsGoalsMacroBreakdownMismatch": "{delta, plural, =0{Odpovídá kalorickému cíli} one{Odchylka {delta} kcal} few{Odchylka {delta} kcal} other{Odchylka {delta} kcal}}",
+  "settingsGoalsActivityHeader": "Aktivita",
+  "settingsGoalsNutritionHeader": "Výživa",
+  "settingsGoalsSleepHeader": "Spánek",
+  "settingsGoalsBodyHeader": "Tělo",
 
   "nutritionPeriod7d": "7 dní",
   "nutritionPeriod30d": "30 dní",

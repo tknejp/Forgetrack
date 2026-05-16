@@ -685,6 +685,43 @@ class AppLocalizationsCs extends AppLocalizations {
   String get goalDailyCarbs => 'Denní sacharidy';
 
   @override
+  String get goalDailyFiber => 'Denní vláknina';
+
+  @override
+  String settingsGoalsNutritionSummary(
+      String kcal, String protein, String fat, String carbs, String fiber) {
+    return '$kcal kcal · ${protein}B / ${fat}T / ${carbs}S / ${fiber}V g';
+  }
+
+  @override
+  String get settingsGoalsMacroBreakdownLabel => 'Energie z makroživin';
+
+  @override
+  String settingsGoalsMacroBreakdownMismatch(int delta) {
+    String _temp0 = intl.Intl.pluralLogic(
+      delta,
+      locale: localeName,
+      other: 'Odchylka $delta kcal',
+      few: 'Odchylka $delta kcal',
+      one: 'Odchylka $delta kcal',
+      zero: 'Odpovídá kalorickému cíli',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsGoalsActivityHeader => 'Aktivita';
+
+  @override
+  String get settingsGoalsNutritionHeader => 'Výživa';
+
+  @override
+  String get settingsGoalsSleepHeader => 'Spánek';
+
+  @override
+  String get settingsGoalsBodyHeader => 'Tělo';
+
+  @override
   String get nutritionPeriod7d => '7 dní';
 
   @override

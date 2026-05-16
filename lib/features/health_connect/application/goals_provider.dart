@@ -10,11 +10,15 @@ class GoalsProvider extends ChangeNotifier {
   static const _kDailyProtein = 'goal_daily_protein';
   static const _kDailyFat = 'goal_daily_fat';
   static const _kDailyCarbs = 'goal_daily_carbs';
+  static const _kDailyFiber = 'goal_daily_fiber';
   static const _kSleepHours = 'goal_sleep_hours';
   static const _kWeeklyActivityMins = 'goal_weekly_activity_mins';
   static const _kDailyStepsHistory = 'goal_daily_steps_history';
   static const _kDailyCaloriesHistory = 'goal_daily_calories_history';
   static const _kDailyProteinHistory = 'goal_daily_protein_history';
+  static const _kDailyFatHistory = 'goal_daily_fat_history';
+  static const _kDailyCarbsHistory = 'goal_daily_carbs_history';
+  static const _kDailyFiberHistory = 'goal_daily_fiber_history';
   static const _kSleepHoursHistory = 'goal_sleep_hours_history';
   static const _kWeeklyActivityMinsHistory = 'goal_weekly_activity_history';
 
@@ -24,11 +28,15 @@ class GoalsProvider extends ChangeNotifier {
   double _dailyProtein = 150;
   double _dailyFat = 65;
   double _dailyCarbs = 250;
+  double _dailyFiber = 30;
   double _sleepHours = 8.0;
   int _weeklyActivityMins = 150;
   List<_GoalHistoryEntry> _dailyStepsHistory = const [];
   List<_GoalHistoryEntry> _dailyCaloriesHistory = const [];
   List<_GoalHistoryEntry> _dailyProteinHistory = const [];
+  List<_GoalHistoryEntry> _dailyFatHistory = const [];
+  List<_GoalHistoryEntry> _dailyCarbsHistory = const [];
+  List<_GoalHistoryEntry> _dailyFiberHistory = const [];
   List<_GoalHistoryEntry> _sleepHoursHistory = const [];
   List<_GoalHistoryEntry> _weeklyActivityMinsHistory = const [];
 
@@ -38,12 +46,16 @@ class GoalsProvider extends ChangeNotifier {
   double get dailyProtein => _dailyProtein;
   double get dailyFat => _dailyFat;
   double get dailyCarbs => _dailyCarbs;
+  double get dailyFiber => _dailyFiber;
   double get sleepHours => _sleepHours;
   int get weeklyActivityMins => _weeklyActivityMins;
   String get progressionHistorySignature => [
         _historySignature(_dailyStepsHistory),
         _historySignature(_dailyCaloriesHistory),
         _historySignature(_dailyProteinHistory),
+        _historySignature(_dailyFatHistory),
+        _historySignature(_dailyCarbsHistory),
+        _historySignature(_dailyFiberHistory),
         _historySignature(_sleepHoursHistory),
         _historySignature(_weeklyActivityMinsHistory),
       ].join('|');
@@ -56,6 +68,7 @@ class GoalsProvider extends ChangeNotifier {
     _dailyProtein = prefs.getDouble(_kDailyProtein) ?? 150;
     _dailyFat = prefs.getDouble(_kDailyFat) ?? 65;
     _dailyCarbs = prefs.getDouble(_kDailyCarbs) ?? 250;
+    _dailyFiber = prefs.getDouble(_kDailyFiber) ?? 30;
     _sleepHours = prefs.getDouble(_kSleepHours) ?? 8.0;
     _weeklyActivityMins = prefs.getInt(_kWeeklyActivityMins) ?? 150;
     _dailyStepsHistory = _loadHistory(
@@ -72,6 +85,21 @@ class GoalsProvider extends ChangeNotifier {
       prefs: prefs,
       key: _kDailyProteinHistory,
       fallbackValue: _dailyProtein,
+    );
+    _dailyFatHistory = _loadHistory(
+      prefs: prefs,
+      key: _kDailyFatHistory,
+      fallbackValue: _dailyFat,
+    );
+    _dailyCarbsHistory = _loadHistory(
+      prefs: prefs,
+      key: _kDailyCarbsHistory,
+      fallbackValue: _dailyCarbs,
+    );
+    _dailyFiberHistory = _loadHistory(
+      prefs: prefs,
+      key: _kDailyFiberHistory,
+      fallbackValue: _dailyFiber,
     );
     _sleepHoursHistory = _loadHistory(
       prefs: prefs,
@@ -129,6 +157,51 @@ class GoalsProvider extends ChangeNotifier {
         prefs: prefs,
         key: _kDailyProteinHistory,
         entries: _dailyProteinHistory,
+      );
+    }
+
+    final migratedDailyFatHistory = _ensureRevisionForAnchor(
+      entries: _dailyFatHistory,
+      anchor: today,
+      currentValue: _dailyFat,
+    );
+    if (!_sameHistory(_dailyFatHistory, migratedDailyFatHistory)) {
+      _dailyFatHistory = migratedDailyFatHistory;
+      historyChanged = true;
+      await _saveHistory(
+        prefs: prefs,
+        key: _kDailyFatHistory,
+        entries: _dailyFatHistory,
+      );
+    }
+
+    final migratedDailyCarbsHistory = _ensureRevisionForAnchor(
+      entries: _dailyCarbsHistory,
+      anchor: today,
+      currentValue: _dailyCarbs,
+    );
+    if (!_sameHistory(_dailyCarbsHistory, migratedDailyCarbsHistory)) {
+      _dailyCarbsHistory = migratedDailyCarbsHistory;
+      historyChanged = true;
+      await _saveHistory(
+        prefs: prefs,
+        key: _kDailyCarbsHistory,
+        entries: _dailyCarbsHistory,
+      );
+    }
+
+    final migratedDailyFiberHistory = _ensureRevisionForAnchor(
+      entries: _dailyFiberHistory,
+      anchor: today,
+      currentValue: _dailyFiber,
+    );
+    if (!_sameHistory(_dailyFiberHistory, migratedDailyFiberHistory)) {
+      _dailyFiberHistory = migratedDailyFiberHistory;
+      historyChanged = true;
+      await _saveHistory(
+        prefs: prefs,
+        key: _kDailyFiberHistory,
+        entries: _dailyFiberHistory,
       );
     }
 
@@ -235,6 +308,16 @@ class GoalsProvider extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(_kDailyFat, v);
+    _dailyFatHistory = _withRevision(
+      entries: _dailyFatHistory,
+      effectiveFrom: progressionDate(DateTime.now()),
+      value: v,
+    );
+    await _saveHistory(
+      prefs: prefs,
+      key: _kDailyFatHistory,
+      entries: _dailyFatHistory,
+    );
   }
 
   Future<void> setDailyCarbs(double v) async {
@@ -242,6 +325,33 @@ class GoalsProvider extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(_kDailyCarbs, v);
+    _dailyCarbsHistory = _withRevision(
+      entries: _dailyCarbsHistory,
+      effectiveFrom: progressionDate(DateTime.now()),
+      value: v,
+    );
+    await _saveHistory(
+      prefs: prefs,
+      key: _kDailyCarbsHistory,
+      entries: _dailyCarbsHistory,
+    );
+  }
+
+  Future<void> setDailyFiber(double v) async {
+    _dailyFiber = v;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_kDailyFiber, v);
+    _dailyFiberHistory = _withRevision(
+      entries: _dailyFiberHistory,
+      effectiveFrom: progressionDate(DateTime.now()),
+      value: v,
+    );
+    await _saveHistory(
+      prefs: prefs,
+      key: _kDailyFiberHistory,
+      entries: _dailyFiberHistory,
+    );
   }
 
   Future<void> setSleepHours(double v) async {
@@ -286,6 +396,15 @@ class GoalsProvider extends ChangeNotifier {
 
   double progressionDailyProteinForDate(DateTime day) =>
       _resolveValue(_dailyProteinHistory, progressionDate(day));
+
+  double progressionDailyFatForDate(DateTime day) =>
+      _resolveValue(_dailyFatHistory, progressionDate(day));
+
+  double progressionDailyCarbsForDate(DateTime day) =>
+      _resolveValue(_dailyCarbsHistory, progressionDate(day));
+
+  double progressionDailyFiberForDate(DateTime day) =>
+      _resolveValue(_dailyFiberHistory, progressionDate(day));
 
   double progressionSleepHoursForDate(DateTime day) =>
       _resolveValue(_sleepHoursHistory, progressionDate(day));

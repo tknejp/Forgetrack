@@ -2457,9 +2457,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
         final n = kt.nutritionForDate(day);
         return _DailyGoalSpec(
           actual: n?.carbs ?? 0,
-          // TODO: historize daily carbs/fat/fiber goal once those
-          // goals have history tracking in GoalsProvider.
-          target: goals.dailyCarbs,
+          target: goals.progressionDailyCarbsForDate(day),
           unit: DailyGoalValueUnit.count,
           hasData: n != null,
         );
@@ -2468,18 +2466,16 @@ class ProgressionEngineProvider extends ChangeNotifier {
         final n = kt.nutritionForDate(day);
         return _DailyGoalSpec(
           actual: n?.fat ?? 0,
-          target: goals.dailyFat,
+          target: goals.progressionDailyFatForDate(day),
           unit: DailyGoalValueUnit.count,
           hasData: n != null,
         );
       case 'daily_fiber_today':
         if (kt == null) return null;
         final n = kt.nutritionForDate(day);
-        // Fiber has no user-facing goal field; matches the
-        // hardcoded 30 g target in overview_screen's macro row.
         return _DailyGoalSpec(
           actual: n?.fiber ?? 0,
-          target: 30,
+          target: goals.progressionDailyFiberForDate(day),
           unit: DailyGoalValueUnit.count,
           hasData: n != null,
         );

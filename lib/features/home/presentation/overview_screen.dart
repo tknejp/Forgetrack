@@ -720,7 +720,7 @@ class _DayContent extends StatelessWidget {
                     MacroRow(
                       label: 'Fiber',
                       value: fiber,
-                      goal: 30,
+                      goal: goals.dailyFiber,
                       unit: 'g',
                       domain: Tokens.calories,
                       isLast: true,
