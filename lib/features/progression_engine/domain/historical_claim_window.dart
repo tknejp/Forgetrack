@@ -35,12 +35,13 @@ class HistoricalClaimWindow {
 /// Returns the inclusive day-granularity window for retroactive claims.
 ///
 /// [lookbackDays] is the number of days the window spans **including
-/// today** — so `lookbackDays: 7` lets the player claim today + the
-/// previous 6 days, totalling a calendar week. Defaults to 7.
+/// today** — so `lookbackDays: 14` lets the player claim today plus
+/// the previous 13 days. Defaults to 14, matching the unified backfill
+/// view the quest screen surfaces.
 HistoricalClaimWindow makeHistoricalClaimWindow({
   required DateTime now,
   required DateTime joinedAt,
-  int lookbackDays = 7,
+  int lookbackDays = 14,
 }) {
   assert(lookbackDays >= 1, 'lookbackDays must be at least 1 (today).');
   final today = DateTime(now.year, now.month, now.day);

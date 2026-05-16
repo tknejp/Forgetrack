@@ -11,6 +11,7 @@ import '../domain/activity_claim/activity_claim_constants.dart';
 import '../domain/activity_claim/activity_claim_key.dart';
 import '../domain/activity_claim/activity_claim_state.dart';
 import '../domain/activity_claim/activity_reward_formula.dart';
+import '../domain/backfill/daily_backfill_models.dart';
 import '../domain/historical_claim_window.dart';
 import '../domain/policy/level_policy.dart';
 import '../../health_connect/domain/activity_record.dart';
@@ -2074,6 +2075,456 @@ class ProgressionEngineProvider extends ChangeNotifier {
     await refresh();
   }
 
+  // ── Daily backfill (quest screen "K vyzvednutí · 14 dní") ─────────
+
+  /// Catalog `nodeId`s for daily goals surfaced in the backfill
+  /// section, in display order. The order is also the visual priority
+  /// inside an expanded day card.
+  static const List<String> _kDailyGoalBackfillNodeIds = <String>[
+    'daily_steps_today',
+    'daily_calories_today',
+    'daily_protein_today',
+    'daily_carbs_today',
+    'daily_fat_today',
+    'daily_fiber_today',
+    'daily_sleep_today',
+    'daily_weight_log_today',
+    'daily_activity_today',
+  ];
+
+  /// Per-day rollup across every supported daily goal + per-activity
+  /// claim. Pure derivation from cached fitness / KT / goals state and
+  /// the engine ledger — no engine evaluation, no I/O.
+  ///
+  /// Returned days run newest-first and are clamped to [joinedAt] so
+  /// pre-join days are dropped. The UI can hide empty days via
+  /// [DailyBackfillEntry.hasAnyContent].
+  List<DailyBackfillEntry> dailyBackfillForRange({
+    required DateTime startDay,
+    required DateTime endDay,
+  }) {
+    final start = DateTime(startDay.year, startDay.month, startDay.day);
+    final end = DateTime(endDay.year, endDay.month, endDay.day);
+    if (start.isAfter(end)) return const [];
+
+    final window = historicalClaimWindow;
+    final join = DateTime(joinedAt.year, joinedAt.month, joinedAt.day);
+
+    // Pre-index the ledger per nodeId + periodKey. Per-day lookups
+    // collapse to O(1) instead of scanning the entire claim / grant
+    // lists for every (day × goal) cell.
+    final claimedKeys = _claimedDailyGoalKeysByNodeId();
+    final grantsByKey = _xpGrantsByNodeIdAndPeriodKey();
+
+    // Pre-group activities by day so each entry can pull its list
+    // without re-filtering all of fitness.activities.
+    final activitiesByDay = <String, List<ActivityRecord>>{};
+    final fitness = _subscribedFitness;
+    if (fitness != null) {
+      for (final a in fitness.activities) {
+        final k = _periodDayKey(a.startTime);
+        (activitiesByDay[k] ??= []).add(a);
+      }
+    }
+
+    final out = <DailyBackfillEntry>[];
+    var cursor = end;
+    while (!cursor.isBefore(start)) {
+      final day = DateTime(cursor.year, cursor.month, cursor.day);
+      if (day.isBefore(join)) break;
+      final dKey = _periodDayKey(day);
+      final inWindow = window.contains(day);
+
+      final goals = <DailyGoalClaimItem>[];
+      for (final nodeId in _kDailyGoalBackfillNodeIds) {
+        final item = _evaluateDailyGoal(
+          nodeId: nodeId,
+          day: day,
+          dayKey: dKey,
+          isWithinWindow: inWindow,
+          claimedKeysByNode: claimedKeys,
+          grantsByKey: grantsByKey,
+        );
+        if (item != null) goals.add(item);
+      }
+
+      final dayActivities =
+          activitiesByDay[dKey] ?? const <ActivityRecord>[];
+      final acts = [
+        for (final a in dayActivities) activityClaim(a),
+      ]..sort((a, b) => b.record.startTime.compareTo(a.record.startTime));
+
+      out.add(DailyBackfillEntry(
+        date: day,
+        isWithinWindow: inWindow,
+        dailyGoals: goals,
+        activities: acts,
+      ));
+      cursor = cursor.subtract(const Duration(days: 1));
+    }
+    return out;
+  }
+
+  /// Player-initiated retroactive claim on one daily goal for one
+  /// specific day. Writes the full 4-event sequence the engine emits
+  /// for a same-day claim — `ObjectiveCompletionEvent`,
+  /// `NodeCompletionEvent`, `NodeClaimEvent`, `RewardGrantEvent` —
+  /// keyed by `periodKey = "yyyy-MM-dd"`. This keeps the ledger shape
+  /// consistent so any `RewardCountMetric` achievement that counts
+  /// past completions picks up the increment.
+  ///
+  /// No-op when: another evaluation is in flight, the node is not a
+  /// known daily-goal node, the goal wasn't actually met that day,
+  /// the day is outside [historicalClaimWindow], or the day is
+  /// already claimed.
+  Future<void> claimDailyGoal({
+    required String nodeId,
+    required DateTime day,
+  }) async {
+    if (_isEvaluating) return;
+    if (!_kDailyGoalBackfillNodeIds.contains(nodeId)) return;
+
+    final normalisedDay = DateTime(day.year, day.month, day.day);
+    final window = historicalClaimWindow;
+    if (!window.contains(normalisedDay)) return;
+
+    final dayKey = _periodDayKey(normalisedDay);
+    final claimedKeys = _claimedDailyGoalKeysByNodeId();
+    if (claimedKeys[nodeId]?.contains(dayKey) ?? false) return;
+
+    final node = ProgressionNodeCatalog.definitionForId(nodeId);
+    if (node is! QuestNode) return;
+    final objectiveId = node.objectiveId;
+    final objective = objectiveById(objectiveId);
+    if (objective == null) return;
+
+    final goals = _subscribedGoals;
+    final fitness = _subscribedFitness;
+    final kt = _subscribedNutrition;
+    final spec = _dailyGoalData(
+      nodeId: nodeId,
+      day: normalisedDay,
+      fitness: fitness,
+      kt: kt,
+      goals: goals,
+    );
+    if (spec == null || !spec.hasData) return;
+    final isMet = _objectiveSatisfied(
+      actual: spec.actual,
+      target: spec.target,
+      operator: objective.operator,
+      tolerance: objective.toleranceRatio,
+    );
+    if (!isMet) return;
+
+    final baseXp = _baseXpForNode(node);
+    if (baseXp <= 0) return;
+    final currentLevel = level;
+    final scaledXp = _levelPolicy.scaledRewardXp(
+      baseXp: baseXp,
+      level: currentLevel,
+    );
+    final multiplier = _levelPolicy.rewardMultiplierForLevel(currentLevel);
+    final now = _engineNow();
+    final ordinal = _ledger?.rewardGrants.length ?? 0;
+
+    _isEvaluating = true;
+    notifyListeners();
+    try {
+      await _repository.appendEvents([
+        ObjectiveCompletionEvent(
+          eventKey: 'objective|$objectiveId|$dayKey|completed',
+          timestamp: now,
+          objectiveId: objectiveId,
+          actualValue: spec.actual,
+          periodKey: dayKey,
+        ),
+        NodeCompletionEvent(
+          eventKey: 'node|$nodeId|$dayKey|complete',
+          timestamp: now,
+          nodeId: nodeId,
+          periodKey: dayKey,
+        ),
+        NodeClaimEvent(
+          eventKey: 'node|$nodeId|$dayKey|claim',
+          timestamp: now,
+          nodeId: nodeId,
+          periodKey: dayKey,
+        ),
+        RewardGrantEvent(
+          eventKey: 'reward|$nodeId|$ordinal|$dayKey|grant',
+          timestamp: now,
+          nodeId: nodeId,
+          rewardOrdinal: ordinal,
+          rewardKind: RewardGrantKind.xp,
+          periodKey: dayKey,
+          xpAmount: scaledXp,
+          levelAtGrant: currentLevel,
+          multiplierAtGrant: multiplier,
+        ),
+      ]);
+      _ledger = await _repository.loadLedger();
+      _lastEvaluatedAt = now;
+      _recomputeStreaks();
+      AppLog.app.info(
+        'claimDailyGoal: granted $scaledXp XP for $nodeId on $dayKey',
+      );
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
+      AppLog.app.warn('claimDailyGoal: failed — $e');
+    } finally {
+      _isEvaluating = false;
+      notifyListeners();
+    }
+    _lastEvaluatedSignature = null;
+    await refresh();
+  }
+
+  // ── Daily-backfill helpers ────────────────────────────────────────
+
+  String _periodDayKey(DateTime t) {
+    final m = t.month.toString().padLeft(2, '0');
+    final d = t.day.toString().padLeft(2, '0');
+    return '${t.year}-$m-$d';
+  }
+
+  Map<String, Set<String>> _claimedDailyGoalKeysByNodeId() {
+    final l = _ledger;
+    if (l == null) return const {};
+    final out = <String, Set<String>>{};
+    for (final e in l.nodeClaims) {
+      final pk = e.periodKey;
+      if (pk == null) continue;
+      (out[e.nodeId] ??= <String>{}).add(pk);
+    }
+    return out;
+  }
+
+  Map<String, Map<String, int>> _xpGrantsByNodeIdAndPeriodKey() {
+    final l = _ledger;
+    if (l == null) return const {};
+    final out = <String, Map<String, int>>{};
+    for (final e in l.rewardGrants) {
+      if (e.rewardKind != RewardGrantKind.xp) continue;
+      final pk = e.periodKey;
+      final xp = e.xpAmount;
+      if (pk == null || xp == null) continue;
+      final m = out[e.nodeId] ??= <String, int>{};
+      m.putIfAbsent(pk, () => xp);
+    }
+    return out;
+  }
+
+  DailyGoalClaimItem? _evaluateDailyGoal({
+    required String nodeId,
+    required DateTime day,
+    required String dayKey,
+    required bool isWithinWindow,
+    required Map<String, Set<String>> claimedKeysByNode,
+    required Map<String, Map<String, int>> grantsByKey,
+  }) {
+    final node = ProgressionNodeCatalog.definitionForId(nodeId);
+    if (node is! QuestNode) return null;
+    final objective = objectiveById(node.objectiveId);
+    if (objective == null) return null;
+
+    final spec = _dailyGoalData(
+      nodeId: nodeId,
+      day: day,
+      fitness: _subscribedFitness,
+      kt: _subscribedNutrition,
+      goals: _subscribedGoals,
+    );
+    if (spec == null) return null;
+
+    final isMet = _objectiveSatisfied(
+      actual: spec.actual,
+      target: spec.target,
+      operator: objective.operator,
+      tolerance: objective.toleranceRatio,
+    );
+    final isClaimed =
+        claimedKeysByNode[nodeId]?.contains(dayKey) ?? false;
+    final baseXp = _baseXpForNode(node);
+    // Claimed pills freeze on the historically granted amount.
+    final xp = isClaimed
+        ? (grantsByKey[nodeId]?[dayKey] ??
+            _levelPolicy.scaledRewardXp(baseXp: baseXp, level: level))
+        : _levelPolicy.scaledRewardXp(baseXp: baseXp, level: level);
+
+    return DailyGoalClaimItem(
+      node: node,
+      domain: objective.domain ?? ProgressionDomain.steps,
+      actualValue: spec.actual,
+      targetValue: spec.target,
+      valueUnit: spec.unit,
+      isMet: isMet,
+      previewXp: xp,
+      isClaimed: isClaimed,
+      isWithinWindow: isWithinWindow,
+      hasData: spec.hasData,
+    );
+  }
+
+  /// Sum of base XP across every `XpReward` in [node]'s reward list.
+  /// `BonusXpReward`s are skipped — they depend on time-of-day
+  /// conditions like `CompletedBeforeHour(12)` which don't translate
+  /// to retroactive claims fired now for a past day.
+  int _baseXpForNode(QuestNode node) {
+    var sum = 0;
+    for (final r in node.rewards) {
+      if (r is XpReward) sum += r.amount;
+    }
+    return sum;
+  }
+
+  /// Inlined copy of [ObjectiveEvaluator]'s operator dispatch. Pure
+  /// helper so the backfill list can decide "was this objective met
+  /// on day X" without spinning up a full engine evaluation pass.
+  bool _objectiveSatisfied({
+    required double actual,
+    required double target,
+    required ObjectiveOperator operator,
+    required double tolerance,
+  }) {
+    switch (operator) {
+      case ObjectiveOperator.atLeast:
+        return actual >= target;
+      case ObjectiveOperator.atMost:
+        return actual <= target;
+      case ObjectiveOperator.betweenInclusive:
+        // Daily-goal nodes don't use `betweenInclusive` today (it
+        // ships with `upperTargetValue` on the objective which we
+        // don't read here). Treat as atLeast as a safe fallback.
+        return actual >= target;
+      case ObjectiveOperator.withinTolerance:
+        final lower = target - (target * tolerance);
+        final upper = target + (target * tolerance);
+        return actual >= lower && actual <= upper;
+      case ObjectiveOperator.atLeastWithTolerance:
+        final lower = target - (target * tolerance);
+        return actual >= lower;
+    }
+  }
+
+  /// Per-`nodeId` data resolver — pulls the player's recorded value
+  /// for [day] from the relevant cached provider and the goal target
+  /// from the historized goal where available (steps / kcal /
+  /// protein / sleep). Carbs / fat / fiber goals are not yet
+  /// historized; we fall back to the current goal value with a known
+  /// loss of accuracy when the player has changed those goals
+  /// recently.
+  _DailyGoalSpec? _dailyGoalData({
+    required String nodeId,
+    required DateTime day,
+    required FitnessProvider? fitness,
+    required KalorickeTabulkyProvider? kt,
+    required GoalsProvider? goals,
+  }) {
+    if (goals == null) return null;
+    switch (nodeId) {
+      case 'daily_steps_today':
+        if (fitness == null) return null;
+        final actual = fitness.stepsForDate(day).toDouble();
+        final target = goals.progressionDailyStepsForDate(day).toDouble();
+        return _DailyGoalSpec(
+          actual: actual,
+          target: target,
+          unit: DailyGoalValueUnit.count,
+          hasData: actual > 0,
+        );
+      case 'daily_calories_today':
+        if (kt == null) return null;
+        final n = kt.nutritionForDate(day);
+        return _DailyGoalSpec(
+          actual: n?.calories ?? 0,
+          target: goals.progressionDailyCaloriesForDate(day),
+          unit: DailyGoalValueUnit.count,
+          hasData: n != null,
+        );
+      case 'daily_protein_today':
+        if (kt == null) return null;
+        final n = kt.nutritionForDate(day);
+        return _DailyGoalSpec(
+          actual: n?.protein ?? 0,
+          target: goals.progressionDailyProteinForDate(day),
+          unit: DailyGoalValueUnit.count,
+          hasData: n != null,
+        );
+      case 'daily_carbs_today':
+        if (kt == null) return null;
+        final n = kt.nutritionForDate(day);
+        return _DailyGoalSpec(
+          actual: n?.carbs ?? 0,
+          // TODO: historize daily carbs/fat/fiber goal once those
+          // goals have history tracking in GoalsProvider.
+          target: goals.dailyCarbs,
+          unit: DailyGoalValueUnit.count,
+          hasData: n != null,
+        );
+      case 'daily_fat_today':
+        if (kt == null) return null;
+        final n = kt.nutritionForDate(day);
+        return _DailyGoalSpec(
+          actual: n?.fat ?? 0,
+          target: goals.dailyFat,
+          unit: DailyGoalValueUnit.count,
+          hasData: n != null,
+        );
+      case 'daily_fiber_today':
+        if (kt == null) return null;
+        final n = kt.nutritionForDate(day);
+        // Fiber has no user-facing goal field; matches the
+        // hardcoded 30 g target in overview_screen's macro row.
+        return _DailyGoalSpec(
+          actual: n?.fiber ?? 0,
+          target: 30,
+          unit: DailyGoalValueUnit.count,
+          hasData: n != null,
+        );
+      case 'daily_sleep_today':
+        if (fitness == null) return null;
+        final s = fitness.sleepForDate(day);
+        final minutes = (s?.totalDuration.inMinutes ?? 0).toDouble();
+        final target = goals.progressionSleepHoursForDate(day) * 60;
+        return _DailyGoalSpec(
+          actual: minutes,
+          target: target,
+          unit: DailyGoalValueUnit.minutes,
+          hasData: s != null,
+        );
+      case 'daily_weight_log_today':
+        if (fitness == null) return null;
+        final w = fitness.weightForDate(day);
+        return _DailyGoalSpec(
+          actual: w != null ? 1 : 0,
+          target: 1,
+          unit: DailyGoalValueUnit.flag,
+          // A "weight logged" goal is always actionable — even on a
+          // day the player skipped, the locked pill reads "missed
+          // this one" rather than no-op.
+          hasData: true,
+        );
+      case 'daily_activity_today':
+        if (fitness == null) return null;
+        var minutes = 0;
+        for (final a in fitness.activities) {
+          final aDay =
+              DateTime(a.startTime.year, a.startTime.month, a.startTime.day);
+          if (aDay == day) minutes += a.duration.inMinutes;
+        }
+        return _DailyGoalSpec(
+          actual: minutes.toDouble(),
+          // Matches the hardcoded 30-min target in activity_content.
+          target: 30,
+          unit: DailyGoalValueUnit.minutes,
+          hasData: minutes > 0,
+        );
+    }
+    return null;
+  }
+
   /// Devtools — override the persisted join date. Useful when
   /// testing retroactive claim windows on activities older than the
   /// real install date (e.g. backfilling 5 days into the past to
@@ -2694,3 +3145,22 @@ ObjectiveDefinition objectiveCatalogFallback(String id) => ObjectiveDefinition(
       targetValue: 0,
       debugLabel: 'fallback for missing objective',
     );
+
+/// Compact result tuple from
+/// [ProgressionEngineProvider._dailyGoalData] — the player's measured
+/// value, the goal target, the display unit, and whether the source
+/// has any record for that day. Kept private to the provider since no
+/// caller outside `dailyBackfillForRange` / `claimDailyGoal` reads it.
+class _DailyGoalSpec {
+  const _DailyGoalSpec({
+    required this.actual,
+    required this.target,
+    required this.unit,
+    required this.hasData,
+  });
+
+  final double actual;
+  final double target;
+  final DailyGoalValueUnit unit;
+  final bool hasData;
+}
