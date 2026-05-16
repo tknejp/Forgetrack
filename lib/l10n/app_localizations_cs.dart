@@ -1502,6 +1502,86 @@ class AppLocalizationsCs extends AppLocalizations {
   String get progQuestStatusClaimed => 'Splněno';
 
   @override
+  String get progBackfillSectionLabel => 'Historie odměn';
+
+  @override
+  String get progBackfillEmptyTitle => 'Zatím nic nezaznamenáno';
+
+  @override
+  String get progBackfillEmptyCaption =>
+      'Jakmile začneš zaznamenávat kroky, spánek nebo tréninky, denní odměny se objeví zde.';
+
+  @override
+  String progBackfillPendingChip(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count k vyzvednutí',
+      few: '$count k vyzvednutí',
+      one: '$count k vyzvednutí',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get progBackfillDayHeaderToday => 'Dnes';
+
+  @override
+  String get progBackfillDayHeaderYesterday => 'Včera';
+
+  @override
+  String get progBackfillGroupThisWeek => 'Tento týden';
+
+  @override
+  String get progBackfillGroupLastWeek => 'Minulý týden';
+
+  @override
+  String progBackfillGroupWeeksAgo(int weeks) {
+    return 'Před $weeks týdny';
+  }
+
+  @override
+  String get progBackfillGroupMonthAgo => 'Před měsícem';
+
+  @override
+  String progBackfillGroupMonthsAgo(int months) {
+    return 'Před $months měsíci';
+  }
+
+  @override
+  String progBackfillClaimAllDay(int xp) {
+    return 'Vyzvednout vše · +$xp XP';
+  }
+
+  @override
+  String progBackfillClaimedToast(int count, int xp) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Vyzvednuto $count odměn · +$xp XP',
+      few: 'Vyzvednuty $count odměny · +$xp XP',
+      one: 'Vyzvednuta $count odměna · +$xp XP',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String progBackfillShowMore(int count) {
+    return 'Zobrazit dalších $count dní';
+  }
+
+  @override
+  String progBackfillShowAllSinceJoin(String date) {
+    return 'Zobrazit vše od $date';
+  }
+
+  @override
+  String get progBackfillGoalUnmet => 'Nesplněno';
+
+  @override
+  String get progBackfillGoalNoData => 'Bez záznamu';
+
+  @override
   String get progQuestStatusCompleted => 'Dokončeno';
 
   @override

@@ -1120,6 +1120,62 @@
   "progQuestStatusActive": "Active",
   "progQuestStatusLocked": "Locked",
   "progQuestStatusClaimed": "Claimed",
+
+  "progBackfillSectionLabel": "Reward history",
+  "@progBackfillSectionLabel": { "description": "Quest screen section header for the per-day backfill list (audit log + retroactive claim)." },
+  "progBackfillEmptyTitle": "Nothing logged yet",
+  "@progBackfillEmptyTitle": { "description": "Empty state title when the player has no past days with logged activity." },
+  "progBackfillEmptyCaption": "Once you start logging steps, sleep or workouts, your daily rewards will show up here.",
+  "@progBackfillEmptyCaption": { "description": "Empty state caption for the backfill section." },
+  "progBackfillPendingChip": "{count, plural, one{{count} to claim} other{{count} to claim}}",
+  "@progBackfillPendingChip": {
+    "description": "Count chip on a day card header signalling unclaimed rewards on that day.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "progBackfillDayHeaderToday": "Today",
+  "@progBackfillDayHeaderToday": { "description": "Relative-date label for a backfill day card representing today." },
+  "progBackfillDayHeaderYesterday": "Yesterday",
+  "@progBackfillDayHeaderYesterday": { "description": "Relative-date label for a backfill day card representing yesterday." },
+  "progBackfillGroupThisWeek": "This week",
+  "@progBackfillGroupThisWeek": { "description": "Group header above day cards from the calendar week containing today." },
+  "progBackfillGroupLastWeek": "Last week",
+  "@progBackfillGroupLastWeek": { "description": "Group header above day cards from the calendar week before this one." },
+  "progBackfillGroupWeeksAgo": "{weeks} weeks ago",
+  "@progBackfillGroupWeeksAgo": {
+    "description": "Group header for older weeks (2-3 weeks ago).",
+    "placeholders": { "weeks": { "type": "int" } }
+  },
+  "progBackfillGroupMonthAgo": "A month ago",
+  "@progBackfillGroupMonthAgo": { "description": "Group header for day cards roughly one month back." },
+  "progBackfillGroupMonthsAgo": "{months} months ago",
+  "@progBackfillGroupMonthsAgo": {
+    "description": "Group header for day cards multiple months back.",
+    "placeholders": { "months": { "type": "int" } }
+  },
+  "progBackfillClaimAllDay": "Claim all · +{xp} XP",
+  "@progBackfillClaimAllDay": {
+    "description": "Bulk-claim button at the bottom of an expanded day card.",
+    "placeholders": { "xp": { "type": "int" } }
+  },
+  "progBackfillClaimedToast": "{count, plural, one{Claimed {count} reward · +{xp} XP} other{Claimed {count} rewards · +{xp} XP}}",
+  "@progBackfillClaimedToast": {
+    "description": "Snackbar shown after a successful bulk backfill claim.",
+    "placeholders": { "count": { "type": "int" }, "xp": { "type": "int" } }
+  },
+  "progBackfillShowMore": "Show {count} more days",
+  "@progBackfillShowMore": {
+    "description": "Footer button that expands the backfill list to show older days.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "progBackfillShowAllSinceJoin": "Show all since {date}",
+  "@progBackfillShowAllSinceJoin": {
+    "description": "Footer button that expands the backfill list all the way back to the player's join date.",
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "progBackfillGoalUnmet": "Not met",
+  "@progBackfillGoalUnmet": { "description": "Trailing label on a daily-goal row when the target wasn't reached that day (no claim possible)." },
+  "progBackfillGoalNoData": "No data",
+  "@progBackfillGoalNoData": { "description": "Trailing label on a daily-goal row when the underlying data source has no record for that day." },
   "progQuestStatusCompleted": "Completed",
   "progQuestClaimAll": "Claim all quests",
   "progQuestClaim": "Claim quest",

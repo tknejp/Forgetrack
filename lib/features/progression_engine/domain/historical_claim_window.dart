@@ -13,6 +13,8 @@
 /// and surfacing them as claimable would look broken.
 library;
 
+import 'backfill/backfill_config.dart';
+
 class HistoricalClaimWindow {
   const HistoricalClaimWindow({
     required this.earliest,
@@ -35,13 +37,12 @@ class HistoricalClaimWindow {
 /// Returns the inclusive day-granularity window for retroactive claims.
 ///
 /// [lookbackDays] is the number of days the window spans **including
-/// today** — so `lookbackDays: 14` lets the player claim today plus
-/// the previous 13 days. Defaults to 14, matching the unified backfill
-/// view the quest screen surfaces.
+/// today**. Defaults to [kBackfillClaimLookbackDays] — bump that
+/// constant if you want to widen or shrink the window globally.
 HistoricalClaimWindow makeHistoricalClaimWindow({
   required DateTime now,
   required DateTime joinedAt,
-  int lookbackDays = 14,
+  int lookbackDays = kBackfillClaimLookbackDays,
 }) {
   assert(lookbackDays >= 1, 'lookbackDays must be at least 1 (today).');
   final today = DateTime(now.year, now.month, now.day);

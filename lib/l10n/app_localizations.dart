@@ -2792,6 +2792,108 @@ abstract class AppLocalizations {
   /// **'Claimed'**
   String get progQuestStatusClaimed;
 
+  /// Quest screen section header for the per-day backfill list (audit log + retroactive claim).
+  ///
+  /// In en, this message translates to:
+  /// **'Reward history'**
+  String get progBackfillSectionLabel;
+
+  /// Empty state title when the player has no past days with logged activity.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing logged yet'**
+  String get progBackfillEmptyTitle;
+
+  /// Empty state caption for the backfill section.
+  ///
+  /// In en, this message translates to:
+  /// **'Once you start logging steps, sleep or workouts, your daily rewards will show up here.'**
+  String get progBackfillEmptyCaption;
+
+  /// Count chip on a day card header signalling unclaimed rewards on that day.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} to claim} other{{count} to claim}}'**
+  String progBackfillPendingChip(int count);
+
+  /// Relative-date label for a backfill day card representing today.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get progBackfillDayHeaderToday;
+
+  /// Relative-date label for a backfill day card representing yesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get progBackfillDayHeaderYesterday;
+
+  /// Group header above day cards from the calendar week containing today.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get progBackfillGroupThisWeek;
+
+  /// Group header above day cards from the calendar week before this one.
+  ///
+  /// In en, this message translates to:
+  /// **'Last week'**
+  String get progBackfillGroupLastWeek;
+
+  /// Group header for older weeks (2-3 weeks ago).
+  ///
+  /// In en, this message translates to:
+  /// **'{weeks} weeks ago'**
+  String progBackfillGroupWeeksAgo(int weeks);
+
+  /// Group header for day cards roughly one month back.
+  ///
+  /// In en, this message translates to:
+  /// **'A month ago'**
+  String get progBackfillGroupMonthAgo;
+
+  /// Group header for day cards multiple months back.
+  ///
+  /// In en, this message translates to:
+  /// **'{months} months ago'**
+  String progBackfillGroupMonthsAgo(int months);
+
+  /// Bulk-claim button at the bottom of an expanded day card.
+  ///
+  /// In en, this message translates to:
+  /// **'Claim all · +{xp} XP'**
+  String progBackfillClaimAllDay(int xp);
+
+  /// Snackbar shown after a successful bulk backfill claim.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Claimed {count} reward · +{xp} XP} other{Claimed {count} rewards · +{xp} XP}}'**
+  String progBackfillClaimedToast(int count, int xp);
+
+  /// Footer button that expands the backfill list to show older days.
+  ///
+  /// In en, this message translates to:
+  /// **'Show {count} more days'**
+  String progBackfillShowMore(int count);
+
+  /// Footer button that expands the backfill list all the way back to the player's join date.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all since {date}'**
+  String progBackfillShowAllSinceJoin(String date);
+
+  /// Trailing label on a daily-goal row when the target wasn't reached that day (no claim possible).
+  ///
+  /// In en, this message translates to:
+  /// **'Not met'**
+  String get progBackfillGoalUnmet;
+
+  /// Trailing label on a daily-goal row when the underlying data source has no record for that day.
+  ///
+  /// In en, this message translates to:
+  /// **'No data'**
+  String get progBackfillGoalNoData;
+
   /// No description provided for @progQuestStatusCompleted.
   ///
   /// In en, this message translates to:

@@ -6,9 +6,9 @@ import '../../../l10n/l10n.dart';
 import '../../../shared/theme/design_tokens.dart';
 import '../../../shared/widgets/xp_sparkle_overlay.dart';
 import '../application/progression_engine_provider.dart';
+import 'widgets/engine_backfill_section.dart';
 import 'widgets/engine_chapter_card.dart';
 import 'widgets/engine_completed_quest_card.dart';
-import 'widgets/engine_completed_quests_section.dart';
 import 'widgets/engine_locked_quest_row.dart';
 import 'widgets/engine_long_term_card.dart';
 import 'widgets/engine_quest_card.dart';
@@ -300,14 +300,9 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                       onToggleExpanded: _toggleExpanded,
                     ),
                     const SizedBox(height: Tokens.spaceXl),
-                    EngineCompletedQuestsSection(
-                      completed: provider.recentDailyCompletions,
+                    EngineBackfillSection(
+                      barKey: widget.barKey,
                       l10n: l10n,
-                      resolveDomain: provider.domainForNodeId,
-                      header: l10n.progRewardsSectionLabel,
-                      headerColor: Tokens.calories.color,
-                      emptyTitle: l10n.progRewardsEmptyTitle,
-                      emptyCaption: l10n.progRewardsEmptyCaption,
                     ),
                   ],
                 ),

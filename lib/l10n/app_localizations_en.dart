@@ -1498,6 +1498,84 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progQuestStatusClaimed => 'Claimed';
 
   @override
+  String get progBackfillSectionLabel => 'Reward history';
+
+  @override
+  String get progBackfillEmptyTitle => 'Nothing logged yet';
+
+  @override
+  String get progBackfillEmptyCaption =>
+      'Once you start logging steps, sleep or workouts, your daily rewards will show up here.';
+
+  @override
+  String progBackfillPendingChip(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count to claim',
+      one: '$count to claim',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get progBackfillDayHeaderToday => 'Today';
+
+  @override
+  String get progBackfillDayHeaderYesterday => 'Yesterday';
+
+  @override
+  String get progBackfillGroupThisWeek => 'This week';
+
+  @override
+  String get progBackfillGroupLastWeek => 'Last week';
+
+  @override
+  String progBackfillGroupWeeksAgo(int weeks) {
+    return '$weeks weeks ago';
+  }
+
+  @override
+  String get progBackfillGroupMonthAgo => 'A month ago';
+
+  @override
+  String progBackfillGroupMonthsAgo(int months) {
+    return '$months months ago';
+  }
+
+  @override
+  String progBackfillClaimAllDay(int xp) {
+    return 'Claim all · +$xp XP';
+  }
+
+  @override
+  String progBackfillClaimedToast(int count, int xp) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Claimed $count rewards · +$xp XP',
+      one: 'Claimed $count reward · +$xp XP',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String progBackfillShowMore(int count) {
+    return 'Show $count more days';
+  }
+
+  @override
+  String progBackfillShowAllSinceJoin(String date) {
+    return 'Show all since $date';
+  }
+
+  @override
+  String get progBackfillGoalUnmet => 'Not met';
+
+  @override
+  String get progBackfillGoalNoData => 'No data';
+
+  @override
   String get progQuestStatusCompleted => 'Completed';
 
   @override
