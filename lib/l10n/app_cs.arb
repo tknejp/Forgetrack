@@ -1,4 +1,4 @@
-{
+﻿{
   "@@locale": "cs",
 
   "appTitle": "Forgetrack",
@@ -181,10 +181,6 @@
   "activitiesActiveCalories": "Aktivní kalorie",
   "activitiesActiveMins": "Aktivní min.",
   "homeActivityClaimsHeader": "Vyzvednout XP za trénink",
-  "activitiesBackfillBanner": "{count, plural, one{{count} starší trénink k vyzvednutí} few{{count} starší tréninky k vyzvednutí} other{{count} starších tréninků k vyzvednutí}}",
-  "activitiesBackfillShowAll": "Zobrazit vše k vyzvednutí",
-  "activitiesBackfillExit": "Zpět na zvolené období",
-  "activitiesBackfillHeader": "K vyzvednutí",
   "activitiesBackfillClaimAll": "Vyzvednout vše · +{xp} XP",
   "activitiesBackfillClaimedToast": "{count, plural, one{Vyzvednut {count} trénink · +{xp} XP} few{Vyzvednuty {count} tréninky · +{xp} XP} other{Vyzvednuto {count} tréninků · +{xp} XP}}",
   "progBackfillSectionLabel": "Historie odměn",

@@ -36,15 +36,11 @@ class ActivitiesScreen extends StatefulWidget {
 class _ActivitiesScreenState extends State<ActivitiesScreen> {
   SelectedPeriod _period = SelectedPeriod.currentWeek();
 
-  /// When true, the Recent-activity list ignores [_period] and shows
-  /// every claimable workout in the engine's retroactive window
-  /// instead. Toggled via the backfill banner / its dismiss action;
-  /// auto-exits when nothing's left to claim in-window.
-  bool _claimModeOn = false;
-
-  /// True while the banner's bulk-claim action is iterating through
-  /// the window. Disables the action button to prevent double-fires
-  /// and surfaces a spinner so the user knows work is happening.
+  /// True while the section-header bulk-claim is iterating. Disables
+  /// the pill to prevent double-fires and surfaces a spinner so the
+  /// user knows work is in flight. Retroactive cross-period claim
+  /// lives in the quest-screen backfill section; this screen only
+  /// claims what's visible in the currently-selected period.
   bool _isClaimingAll = false;
 
   String _periodDateLabel(BuildContext context, SelectedPeriod period) {
@@ -189,14 +185,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
         claimed += 1;
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isClaimingAll = false;
-          // Nothing left to surface in claim-mode view — drop back
-          // to the period-filtered list automatically.
-          _claimModeOn = false;
-        });
-      }
+      if (mounted) setState(() => _isClaimingAll = false);
     }
     if (!mounted) return;
     messenger.showSnackBar(
@@ -294,39 +283,13 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
         : 0.0;
     final typeBars = _buildTypeBreakdownBars(periodActivities);
 
-    // Retroactive-claim backfill: every activity inside the engine's
-    // claim window that is currently claimable. Used both to drive
-    // the banner ("you have X claimable outside the current period")
-    // and as the alternate list source when [_claimModeOn] is true.
-    final window = progression.historicalClaimWindow;
-    bool inWindow(DateTime t) {
-      final d = DateTime(t.year, t.month, t.day);
-      return !d.isBefore(window.earliest) && !d.isAfter(window.latest);
-    }
-    bool inPeriod(DateTime t) {
-      final d = DateTime(t.year, t.month, t.day);
-      return !d.isBefore(_period.start) && !d.isAfter(_period.end);
-    }
-    final windowClaimable = fitness.activities
-        .where((a) => inWindow(a.startTime))
-        .where((a) => progression.activityClaim(a).isClaimable)
-        .toList();
-    final outsidePeriodClaimable =
-        windowClaimable.where((a) => !inPeriod(a.startTime)).toList();
-
-    final recentActivities = _claimModeOn
-        ? ([...windowClaimable]
-          ..sort((a, b) => b.startTime.compareTo(a.startTime)))
-        : ([...periodActivities]
-          ..sort((a, b) => b.startTime.compareTo(a.startTime)));
-    final showBackfillBanner =
-        _claimModeOn || outsidePeriodClaimable.isNotEmpty;
-    final backfillCount =
-        _claimModeOn ? windowClaimable.length : outsidePeriodClaimable.length;
-    // Claimables in the *visible* list — the bulk-claim pill scope
-    // follows what the player can see. In period view that's the
-    // claimable subset of `periodActivities`; in claim mode the list
-    // is already `windowClaimable`, so they coincide.
+    final recentActivities = [...periodActivities]
+      ..sort((a, b) => b.startTime.compareTo(a.startTime));
+    // Claimables in the period-filtered list — the section-header
+    // bulk-claim pill claims exactly what the player is looking at.
+    // Cross-period retroactive claim lives in the quest-screen
+    // backfill section, so this screen doesn't need its own window
+    // computation anymore.
     final listClaimable = recentActivities
         .where((a) => progression.activityClaim(a).isClaimable)
         .toList();
@@ -451,21 +414,6 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
             const SizedBox(height: 10),
           ],
 
-          // ── Backfill banner — surfaces claimable workouts that
-          // fall outside the currently visible period so the user
-          // doesn't have to swipe back through the period navigator
-          // to find them.
-          if (showBackfillBanner) ...[
-            _BackfillBanner(
-              count: backfillCount,
-              isClaimModeOn: _claimModeOn,
-              onToggle: () {
-                setState(() => _claimModeOn = !_claimModeOn);
-              },
-            ),
-            const SizedBox(height: 10),
-          ],
-
           // ── Recent activities (period-filtered) ────────────────────
           PlainCard(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 4),
@@ -476,10 +424,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                   children: [
                     Expanded(
                       child: Text(
-                        (_claimModeOn
-                                ? l10n.activitiesBackfillHeader
-                                : l10n.activitiesRecentActivity)
-                            .toUpperCase(),
+                        l10n.activitiesRecentActivity.toUpperCase(),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -635,83 +580,11 @@ class _WorkoutPermissionBanner extends StatelessWidget {
   }
 }
 
-/// Tap-to-toggle banner that surfaces claimable workouts falling
-/// outside the user's current period selection. When the list is in
-/// claim mode (showing every claimable workout in the engine's
-/// retroactive window instead of the period slice), the banner
-/// switches to an "exit" affordance.
-class _BackfillBanner extends StatelessWidget {
-  const _BackfillBanner({
-    required this.count,
-    required this.isClaimModeOn,
-    required this.onToggle,
-  });
-
-  final int count;
-  final bool isClaimModeOn;
-  final VoidCallback onToggle;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final ft = context.ft;
-    final accent = ft.xp;
-
-    // Whole banner is a single button. Label switches between the
-    // "you have N to claim" pitch (default mode) and the explicit
-    // "go back" action (claim mode). No separate trailing affordance
-    // — at narrow widths the dual label + body row was forcing
-    // ellipses on the meaningful text.
-    final label = isClaimModeOn
-        ? l10n.activitiesBackfillExit
-        : l10n.activitiesBackfillBanner(count);
-
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onToggle,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: accent.withValues(alpha: 0.10),
-          borderRadius: BorderRadius.circular(Tokens.radiusInner),
-          border: Border.all(color: accent.withValues(alpha: 0.32)),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              isClaimModeOn
-                  ? Icons.arrow_back_rounded
-                  : Icons.bolt_rounded,
-              size: 16,
-              color: accent,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: isClaimModeOn
-                      ? accent
-                      : ft.onSurface.withValues(alpha: 0.92),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Subtle pill rendered inside [_BackfillBanner] for the bulk-claim
-/// action. Visual style mirrors the per-row [XpClaimPill] in its
-/// claimable state — accent tint background + border + accent text —
-/// so the banner action reads as "a pill that claims many things"
-/// rather than a CTA that competes with the page hero. Disabled or
+/// Subtle pill used by the section-header bulk-claim affordance.
+/// Visual style mirrors the per-row [XpClaimPill] in its claimable
+/// state — accent tint background + border + accent text — so the
+/// section action reads as "a pill that claims many things" rather
+/// than a CTA that competes with the page hero. Disabled or
 /// in-flight: faded contents, same surface so layout doesn't reflow.
 class _ClaimAllPill extends StatelessWidget {
   const _ClaimAllPill({

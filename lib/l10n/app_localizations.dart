@@ -1052,30 +1052,6 @@ abstract class AppLocalizations {
   /// **'Claim XP per workout'**
   String get homeActivityClaimsHeader;
 
-  /// Banner on the activities screen pointing the user at claimable workouts that fall outside the currently-visible period.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, one{{count} workout to claim from earlier} other{{count} workouts to claim from earlier}}'**
-  String activitiesBackfillBanner(int count);
-
-  /// Banner action that switches the activities list into 'claim mode' — shows every claimable workout in the retroactive window regardless of period.
-  ///
-  /// In en, this message translates to:
-  /// **'Show all claimable'**
-  String get activitiesBackfillShowAll;
-
-  /// Banner action while claim mode is active — returns the list to the standard period-filtered view.
-  ///
-  /// In en, this message translates to:
-  /// **'Back to period view'**
-  String get activitiesBackfillExit;
-
-  /// List header shown above the recent activities while claim mode is active.
-  ///
-  /// In en, this message translates to:
-  /// **'All claimable'**
-  String get activitiesBackfillHeader;
-
   /// Bulk-claim button inside the backfill banner. xp is the total preview XP across every claimable workout in the retroactive window.
   ///
   /// In en, this message translates to:
