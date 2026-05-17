@@ -1,3 +1,4 @@
+import '../progression/catalog/ids.dart';
 import 'journal_event.dart';
 
 /// Read-only view of the player's event-sourced history.
@@ -33,16 +34,21 @@ abstract class Journal {
   /// list on every read.
   Iterable<JournalEvent> get events;
 
-  /// Events that reference [nodeId] in their primary node field.
+  /// Events that reference [id] in their primary node field.
   /// Matches: [NodeCompletionEvent], [NodeAnnouncedEvent],
   /// [NodeClaimEvent], [RewardGrantEvent], [QuestOfferedEvent].
   /// Does NOT match: [ObjectiveCompletionEvent] (keyed by objectiveId
   /// — use [eventsForObjective]).
-  Iterable<JournalEvent> eventsForNode(String nodeId);
+  ///
+  /// Accepts any subtype of [ProgressionEntryId] ([QuestId],
+  /// [AchievementId], [MilestoneId]). Implementations should compare
+  /// against the event's stored node id via `.raw` at the data
+  /// boundary.
+  Iterable<JournalEvent> eventsForNode(ProgressionEntryId id);
 
-  /// Events that reference [objectiveId] in their primary objective
-  /// field. Matches: [ObjectiveCompletionEvent].
-  Iterable<JournalEvent> eventsForObjective(String objectiveId);
+  /// Events that reference [id] in their primary objective field.
+  /// Matches: [ObjectiveCompletionEvent].
+  Iterable<JournalEvent> eventsForObjective(ObjectiveId id);
 
   /// Events whose [JournalEvent.timestamp] satisfies
   /// `from <= timestamp < to`. Inclusive lower bound, exclusive upper
