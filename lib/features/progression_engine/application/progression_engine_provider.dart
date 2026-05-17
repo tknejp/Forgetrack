@@ -2161,6 +2161,34 @@ class ProgressionEngineProvider extends ChangeNotifier {
       }
     }
 
+    // Pre-group quest offerings by day so each entry can resolve its
+    // daily-section quests with one map lookup.
+    final offeringsByDay = <String, List<QuestOfferedEvent>>{};
+    final ledger = _ledger;
+    if (ledger != null) {
+      for (final e in ledger.questOfferings) {
+        (offeringsByDay[e.dayKey] ??= []).add(e);
+      }
+    }
+
+    // Pre-index lifetime claims so quest-claim lookups don't scan the
+    // whole ledger per cell. Today-scope claims still resolve via
+    // [claimedKeys] (keyed by periodKey).
+    final lifetimeClaims = <String>{};
+    final lifetimeGrants = <String, int>{};
+    if (ledger != null) {
+      for (final e in ledger.nodeClaims) {
+        if (e.periodKey == null) lifetimeClaims.add(e.nodeId);
+      }
+      for (final e in ledger.rewardGrants) {
+        if (e.rewardKind != RewardGrantKind.xp) continue;
+        if (e.periodKey != null) continue;
+        final xp = e.xpAmount;
+        if (xp == null) continue;
+        lifetimeGrants.putIfAbsent(e.nodeId, () => xp);
+      }
+    }
+
     final out = <DailyBackfillEntry>[];
     var cursor = end;
     while (!cursor.isBefore(start)) {
@@ -2182,6 +2210,20 @@ class ProgressionEngineProvider extends ChangeNotifier {
         if (item != null) goals.add(item);
       }
 
+      final quests = <DailyQuestClaimItem>[];
+      for (final offering in offeringsByDay[dKey] ?? const []) {
+        final item = _evaluateDailyQuest(
+          nodeId: offering.nodeId,
+          dayKey: dKey,
+          isWithinWindow: inWindow,
+          claimedKeysByNode: claimedKeys,
+          grantsByKey: grantsByKey,
+          lifetimeClaims: lifetimeClaims,
+          lifetimeGrants: lifetimeGrants,
+        );
+        if (item != null) quests.add(item);
+      }
+
       final dayActivities =
           activitiesByDay[dKey] ?? const <ActivityRecord>[];
       final acts = [
@@ -2192,6 +2234,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
         date: day,
         isWithinWindow: inWindow,
         dailyGoals: goals,
+        dailyQuests: quests,
         activities: acts,
       ));
       cursor = cursor.subtract(const Duration(days: 1));
@@ -2529,6 +2572,91 @@ class ProgressionEngineProvider extends ChangeNotifier {
       isWithinWindow: isWithinWindow,
       hasData: spec.hasData,
     );
+  }
+
+  /// Resolves the backfill view model for one daily-section quest
+  /// offered on [dayKey]. Reads the bound objective's scope to know
+  /// whether to look up the claim by periodKey (TodayScope) or by
+  /// the lifetime-claim set (LifetimeScope).
+  DailyQuestClaimItem? _evaluateDailyQuest({
+    required String nodeId,
+    required String dayKey,
+    required bool isWithinWindow,
+    required Map<String, Set<String>> claimedKeysByNode,
+    required Map<String, Map<String, int>> grantsByKey,
+    required Set<String> lifetimeClaims,
+    required Map<String, int> lifetimeGrants,
+  }) {
+    final node = ProgressionNodeCatalog.definitionForId(nodeId);
+    if (node is! QuestNode) return null;
+    final objective = objectiveById(node.objectiveId);
+    if (objective == null) return null;
+    final scope = objective.scope;
+
+    bool isClaimed;
+    int? grantedXp;
+    if (scope is TodayScope) {
+      isClaimed = claimedKeysByNode[nodeId]?.contains(dayKey) ?? false;
+      grantedXp = grantsByKey[nodeId]?[dayKey];
+    } else if (scope is LifetimeScope) {
+      isClaimed = lifetimeClaims.contains(nodeId);
+      grantedXp = lifetimeGrants[nodeId];
+    } else {
+      // Other scopes (ThisWeek / Range / Stretch) aren't expected on
+      // daily-section nodes today — surface nothing rather than
+      // guess at the right periodKey.
+      return null;
+    }
+
+    // Engine flags come from the most recent resolution. When no
+    // resolution exists yet (cold-start) the quest reads as
+    // incomplete / unavailable — that's fine for the backfill view,
+    // which only acts on isClaimed + isClaimable anyway.
+    final progress = _findQuestProgress(nodeId);
+    final isCompleted = progress?.isCompleted ?? false;
+    final isAvailableForClaim = progress?.isAvailableForClaim ?? false;
+
+    final baseXp = _baseXpForNode(node);
+    final currentLevel = level;
+    final xp = isClaimed
+        ? (grantedXp ??
+            _levelPolicy.scaledRewardXp(
+              baseXp: baseXp,
+              level: currentLevel,
+            ))
+        : _levelPolicy.scaledRewardXp(baseXp: baseXp, level: currentLevel);
+
+    return DailyQuestClaimItem(
+      node: node,
+      domain: objective.domain ?? ProgressionDomain.steps,
+      isCompleted: isCompleted,
+      isAvailableForClaim: isAvailableForClaim,
+      previewXp: xp,
+      isClaimed: isClaimed,
+      isWithinWindow: isWithinWindow,
+    );
+  }
+
+  /// Looks up an [EngineQuestProgress] for a node id by scanning the
+  /// most recent resolution. O(N) over visible quests; the backfill
+  /// list calls this a handful of times per day so a map cache isn't
+  /// worth the bookkeeping.
+  EngineQuestProgress? _findQuestProgress(String nodeId) {
+    final result = _lastResult;
+    if (result == null) return null;
+    for (final q in allDailyQuests) {
+      if (q.nodeId == nodeId) return q;
+    }
+    for (final bucket in [
+      QuestDisplayBucket.dailyChallenge,
+      QuestDisplayBucket.chapterSideQuest,
+      QuestDisplayBucket.combo,
+    ]) {
+      for (final q in _questsForBucket(bucket)) {
+        if (q.nodeId == nodeId) return q;
+      }
+    }
+    return null;
   }
 
   /// Sum of base XP across every `XpReward` in [node]'s reward list.

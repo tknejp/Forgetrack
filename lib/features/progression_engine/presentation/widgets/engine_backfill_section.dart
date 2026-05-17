@@ -135,6 +135,7 @@ class _EngineBackfillSectionState extends State<EngineBackfillSection> {
             expandedDayKey: _expandedDayKey,
             onToggle: _toggleExpanded,
             onClaimGoal: _claimGoal,
+            onClaimQuest: _claimQuest,
             onClaimActivity: _claimActivity,
             onClaimAllDay: _claimAllForDay,
             isClaimingAll: _isClaimingAll,
@@ -196,6 +197,22 @@ class _EngineBackfillSectionState extends State<EngineBackfillSection> {
     await provider.claimDailyGoal(nodeId: item.nodeId, day: day);
   }
 
+  Future<void> _claimQuest(
+    DailyQuestClaimItem item,
+    DateTime day,
+    Offset? sparkleFrom,
+  ) async {
+    final provider = context.read<ProgressionEngineProvider>();
+    if (sparkleFrom != null) {
+      XpSparkleLauncher.launchToKey(
+        context,
+        from: sparkleFrom,
+        targetKey: widget.barKey,
+      );
+    }
+    await provider.claimDailyQuest(nodeId: item.nodeId, day: day);
+  }
+
   Future<void> _claimActivity(
     ActivityClaimRef ref,
     Offset? sparkleFrom,
@@ -225,12 +242,17 @@ class _EngineBackfillSectionState extends State<EngineBackfillSection> {
       for (final g in entry.dailyGoals)
         if (g.isClaimable) g,
     ];
+    final questTargets = [
+      for (final q in entry.dailyQuests)
+        if (q.isClaimable) q,
+    ];
     final activityTargets = [
       for (final a in entry.activities)
         if (a.isClaimable) a.record,
     ];
     final totalXp = entry.claimableXp;
-    final pendingCount = goalTargets.length + activityTargets.length;
+    final pendingCount =
+        goalTargets.length + questTargets.length + activityTargets.length;
     if (pendingCount == 0) return;
 
     // Launch a single sparkle burst per pill so the visual reads as
@@ -239,6 +261,12 @@ class _EngineBackfillSectionState extends State<EngineBackfillSection> {
     for (final g in goalTargets) {
       final c = _centerOfKey(
         _pillKeyFor('goal|${g.nodeId}|${_dayKey(entry.date)}'),
+      );
+      if (c != null) origins.add(c);
+    }
+    for (final q in questTargets) {
+      final c = _centerOfKey(
+        _pillKeyFor('quest|${q.nodeId}|${_dayKey(entry.date)}'),
       );
       if (c != null) origins.add(c);
     }
@@ -260,6 +288,9 @@ class _EngineBackfillSectionState extends State<EngineBackfillSection> {
     try {
       for (final g in goalTargets) {
         await provider.claimDailyGoal(nodeId: g.nodeId, day: entry.date);
+      }
+      for (final q in questTargets) {
+        await provider.claimDailyQuest(nodeId: q.nodeId, day: entry.date);
       }
       for (final r in activityTargets) {
         await provider.claimActivity(r);
@@ -295,6 +326,7 @@ class _BuildList extends StatelessWidget {
     required this.expandedDayKey,
     required this.onToggle,
     required this.onClaimGoal,
+    required this.onClaimQuest,
     required this.onClaimActivity,
     required this.onClaimAllDay,
     required this.isClaimingAll,
@@ -312,6 +344,11 @@ class _BuildList extends StatelessWidget {
     DateTime day,
     Offset? sparkleFrom,
   ) onClaimGoal;
+  final Future<void> Function(
+    DailyQuestClaimItem item,
+    DateTime day,
+    Offset? sparkleFrom,
+  ) onClaimQuest;
   final Future<void> Function(ActivityClaimRef ref, Offset? sparkleFrom)
       onClaimActivity;
   final Future<void> Function(DailyBackfillEntry entry) onClaimAllDay;
@@ -341,6 +378,7 @@ class _BuildList extends StatelessWidget {
           onToggle: () => onToggle(dKey),
           l10n: l10n,
           onClaimGoal: onClaimGoal,
+          onClaimQuest: onClaimQuest,
           onClaimActivity: onClaimActivity,
           onClaimAllDay: onClaimAllDay,
           isClaimingAll: isClaimingAll,
@@ -411,6 +449,7 @@ class _BackfillDayCard extends StatelessWidget {
     required this.onToggle,
     required this.l10n,
     required this.onClaimGoal,
+    required this.onClaimQuest,
     required this.onClaimActivity,
     required this.onClaimAllDay,
     required this.isClaimingAll,
@@ -428,6 +467,11 @@ class _BackfillDayCard extends StatelessWidget {
     DateTime day,
     Offset? sparkleFrom,
   ) onClaimGoal;
+  final Future<void> Function(
+    DailyQuestClaimItem item,
+    DateTime day,
+    Offset? sparkleFrom,
+  ) onClaimQuest;
   final Future<void> Function(ActivityClaimRef ref, Offset? sparkleFrom)
       onClaimActivity;
   final Future<void> Function(DailyBackfillEntry entry) onClaimAllDay;
@@ -551,6 +595,23 @@ class _BackfillDayCard extends StatelessWidget {
                         ),
                       ),
                     if (entry.dailyGoals.isNotEmpty &&
+                        entry.dailyQuests.isNotEmpty)
+                      const SizedBox(height: 4),
+                    for (final q in entry.dailyQuests)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: _DailyQuestRow(
+                          item: q,
+                          day: entry.date,
+                          pillKey: pillKeyFor(
+                            'quest|${q.nodeId}|$dayKey',
+                          ),
+                          onClaim: onClaimQuest,
+                          l10n: l10n,
+                        ),
+                      ),
+                    if ((entry.dailyGoals.isNotEmpty ||
+                            entry.dailyQuests.isNotEmpty) &&
                         entry.activities.isNotEmpty)
                       const SizedBox(height: 4),
                     for (final a in entry.activities)
@@ -613,6 +674,69 @@ class _BackfillDayCard extends StatelessWidget {
           : '${label[0].toUpperCase()}${label.substring(1)}';
     }
     return DateFormat('d. MMMM', locale).format(day);
+  }
+}
+
+/// Compact backfill row for a daily-section quest offered on this
+/// day. Smaller than [_DailyGoalRow] — no value / target column, just
+/// quest icon + title + pill — so the day card stays readable when
+/// many goals + quests + activities stack up.
+class _DailyQuestRow extends StatelessWidget {
+  const _DailyQuestRow({
+    required this.item,
+    required this.day,
+    required this.pillKey,
+    required this.onClaim,
+    required this.l10n,
+  });
+
+  final DailyQuestClaimItem item;
+  final DateTime day;
+  final GlobalKey pillKey;
+  final Future<void> Function(
+    DailyQuestClaimItem item,
+    DateTime day,
+    Offset? sparkleFrom,
+  ) onClaim;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final title = item.node.titleKey(l10n);
+
+    return Row(
+      children: [
+        ProgDomIco(domain: item.domain, size: 22),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              height: 1.2,
+            ),
+          ),
+        ),
+        const SizedBox(width: 6),
+        KeyedSubtree(
+          key: pillKey,
+          child: XpClaimPill(
+            data: item.isClaimed
+                ? XpClaimPillData.claimed(item.previewXp)
+                : item.isClaimable
+                    ? XpClaimPillData.claimable(
+                        item.previewXp,
+                        onTap: (center) => onClaim(item, day, center),
+                      )
+                    : XpClaimPillData.locked(item.previewXp),
+          ),
+        ),
+      ],
+    );
   }
 }
 

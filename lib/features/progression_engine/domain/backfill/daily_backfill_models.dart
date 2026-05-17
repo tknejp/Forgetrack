@@ -82,6 +82,57 @@ class DailyGoalClaimItem {
   bool get isClaimable => isMet && !isClaimed && isWithinWindow && previewXp > 0;
 }
 
+/// One daily-section quest row inside a backfill day card — daily
+/// challenge, combo chain step, or chapter side quest that was
+/// offered on this day via [QuestOfferedEvent]. Compact compared to
+/// [DailyGoalClaimItem]: no actual / target value (the underlying
+/// objective handles satisfaction internally) — just title + pill.
+@immutable
+class DailyQuestClaimItem {
+  const DailyQuestClaimItem({
+    required this.node,
+    required this.domain,
+    required this.isCompleted,
+    required this.isAvailableForClaim,
+    required this.previewXp,
+    required this.isClaimed,
+    required this.isWithinWindow,
+  });
+
+  /// Catalog node — UI resolves `node.titleKey(l10n)` etc.
+  final QuestNode node;
+
+  String get nodeId => node.id;
+
+  /// Domain inherited from the bound objective for icon / accent.
+  final ProgressionDomain domain;
+
+  /// Engine flag — true when the bound objective has fired its
+  /// completion event for the relevant period.
+  final bool isCompleted;
+
+  /// Engine flag — true when the manual-claim pill should fire.
+  /// Subsumed by [isClaimable] (which also gates on window + xp).
+  final bool isAvailableForClaim;
+
+  /// Level-scaled XP the player would receive on claim. Frozen on the
+  /// granted amount once [isClaimed] is true so a level-up doesn't
+  /// retroactively change the "+N XP" pill the player saw.
+  final int previewXp;
+
+  /// True when the matching [NodeClaimEvent] is in the ledger.
+  final bool isClaimed;
+
+  /// True when [DailyBackfillEntry.date] is inside
+  /// [HistoricalClaimWindow]. Outside the window the pill renders as
+  /// locked even if the quest is otherwise available.
+  final bool isWithinWindow;
+
+  /// Can the player tap the pill right now?
+  bool get isClaimable =>
+      isAvailableForClaim && !isClaimed && isWithinWindow && previewXp > 0;
+}
+
 /// One day in the backfill section. Aggregates per-goal rows + per-
 /// activity rows so the card can render both in a single expanded body
 /// and compute footer totals (claim-all XP, pending count) in one
@@ -92,6 +143,7 @@ class DailyBackfillEntry {
     required this.date,
     required this.isWithinWindow,
     required this.dailyGoals,
+    required this.dailyQuests,
     required this.activities,
   });
 
@@ -105,6 +157,7 @@ class DailyBackfillEntry {
   final bool isWithinWindow;
 
   final List<DailyGoalClaimItem> dailyGoals;
+  final List<DailyQuestClaimItem> dailyQuests;
   final List<ActivityClaimState> activities;
 
   /// Records exposed by the activity rows — convenient when the
@@ -114,11 +167,15 @@ class DailyBackfillEntry {
       activities.map((a) => a.record);
 
   /// Sum of XP the player would *gain* by tapping "Claim all" on this
-  /// day: every claimable goal + every claimable activity.
+  /// day: every claimable goal + every claimable quest + every
+  /// claimable activity.
   int get claimableXp {
     var sum = 0;
     for (final g in dailyGoals) {
       if (g.isClaimable) sum += g.previewXp;
+    }
+    for (final q in dailyQuests) {
+      if (q.isClaimable) sum += q.previewXp;
     }
     for (final a in activities) {
       if (a.isClaimable) sum += a.previewXp;
@@ -133,6 +190,9 @@ class DailyBackfillEntry {
     for (final g in dailyGoals) {
       if (g.isClaimed) sum += g.previewXp;
     }
+    for (final q in dailyQuests) {
+      if (q.isClaimed) sum += q.previewXp;
+    }
     for (final a in activities) {
       if (a.isClaimed) sum += a.previewXp;
     }
@@ -146,19 +206,25 @@ class DailyBackfillEntry {
     for (final g in dailyGoals) {
       if (g.isClaimable) n += 1;
     }
+    for (final q in dailyQuests) {
+      if (q.isClaimable) n += 1;
+    }
     for (final a in activities) {
       if (a.isClaimable) n += 1;
     }
     return n;
   }
 
-  /// True when the day has at least one met goal *or* one activity —
-  /// i.e. there is something to surface to the player. Empty days
-  /// (player didn't log anything) can be hidden by the caller.
+  /// True when the day has at least one met goal *or* one quest
+  /// offered *or* one activity — i.e. there is something to surface to
+  /// the player. Empty days (player didn't log anything and the
+  /// rotation didn't pick anything either) can be hidden by the
+  /// caller.
   bool get hasAnyContent {
     for (final g in dailyGoals) {
       if (g.hasData) return true;
     }
+    if (dailyQuests.isNotEmpty) return true;
     return activities.isNotEmpty;
   }
 }
