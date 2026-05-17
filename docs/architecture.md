@@ -163,7 +163,7 @@ All design values live in `lib/shared/theme/`:
 - `FtTokens` — static constants for compile-time use (painters, static
   contexts, const expressions): spacing, radius, font sizes, semantic
   colors (`success`, `warning`, `danger`, `xp`, `xpGlow`), achievement
-  difficulty colors, rarity palette (`FtRarity`).
+  difficulty colors, rarity palette (`Rarity`).
 - Per-domain palettes on `FtTokens` (`steps`, `calories`, `weight`,
   `sleep`, `active`, `protein`, `fat`, `carbs`) provide
   `color` / `dim` / `glow` / `gradStart` / `gradEnd` / `gradient` /
