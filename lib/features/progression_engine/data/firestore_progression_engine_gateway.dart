@@ -67,7 +67,7 @@ class FirestoreProgressionEngineGateway {
     }
     await flush();
 
-    AppLog.sync.debug(
+    AppLog.sync.info(
       'engine ledger push',
       payload: 'uid=$uid count=${events.length}',
     );

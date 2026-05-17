@@ -9,6 +9,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'app.dart';
 import 'core/logging/app_log.dart';
 import 'app/notification_preferences_provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' show FirebaseFirestore, Settings;
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -124,6 +125,14 @@ Future<void> main() async {
   // the SDK doesn't burn battery retrying gRPC streams under Doze / airplane
   // mode / dead Wi-Fi. Reads still serve from cache while offline.
   if (Firebase.apps.isNotEmpty) {
+    // Defensively explicit: persistence is on by default on iOS/Android but
+    // off on web. Setting it here documents the intent and survives any
+    // future platform expansion. Must be set before the first Firestore
+    // read/write (FirestoreNetworkGate is the first consumer below).
+    FirebaseFirestore.instance.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    );
     unawaited(FirestoreNetworkGate().start());
   }
   // Musí být registrován před runApp – top-level handler pro FCM v background/terminated stavu
