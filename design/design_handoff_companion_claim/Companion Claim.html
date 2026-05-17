@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8" />
+<title>Forgetrack — Vyzvednutí společníka</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; background: #07080f; font-family: Inter, system-ui, sans-serif; min-height: 100vh; }
+  body {
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+    box-sizing: border-box;
+  }
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); opacity: 0.6; }
+    50%      { transform: scale(1.08); opacity: 1; }
+  }
+  @keyframes floatA {
+    0%, 100% { transform: translateY(0) rotate(-4deg); }
+    50%      { transform: translateY(-10px) rotate(4deg); }
+  }
+  @keyframes floatB {
+    0%, 100% { transform: translateY(0) rotate(4deg); }
+    50%      { transform: translateY(-8px) rotate(-3deg); }
+  }
+  @keyframes companionIdle {
+    0%, 100% { transform: translateY(0) rotate(-1deg); }
+    50%      { transform: translateY(-6px) rotate(2deg); }
+  }
+  @keyframes sheetIn {
+    from { transform: translateY(40px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes sheetRise {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+  .sheet-in {
+    position: absolute; inset: 0; pointer-events: none;
+    animation: sheetIn .42s cubic-bezier(.2,.7,.2,1) both;
+  }
+  .sheet-in > * { pointer-events: auto; }
+  .sheet-rising {
+    position: absolute; inset: 0; pointer-events: none;
+    animation: sheetRise 1.1s cubic-bezier(.22,.8,.2,1) both;
+  }
+  .sheet-rising > * { pointer-events: auto; }
+  /* hide scrollbars inside frame */
+  ::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="android-frame.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="app.jsx"></script>
+<script type="text/babel" src="sheets.jsx"></script>
+<script type="text/babel" src="claim.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "style": "orbit",
+  "speed": 0.7,
+  "intensity": 1,
+  "autoReplay": false,
+  "hapticHint": true
+}/*EDITMODE-END*/;
+
+const COMPANION = {
+  name: 'Jiskřička',
+  rarity: 'Běžné',
+  desc: 'Malá jiskra, která doprovází ty, kdo udrží tempo.',
+  perk: '+5 % zkušeností za dokončené denní úkoly',
+};
+
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const [phase, setPhase] = useState('ready'); // ready | forging | morphing | detail
+  const [pulse, setPulse] = useState(false); // haptic-button feedback
+  const morphRef = useRef(null);
+
+  // screen size (Android frame inner)
+  const SCREEN_W = 412;
+  const SCREEN_H = 820; // content area inside frame
+
+  const startClaim = () => {
+    setPulse(true);
+    setTimeout(() => setPulse(false), 320);
+    setPhase('forging');
+  };
+
+  const reset = () => setPhase('ready');
+
+  // morph: overlay companion glides to detail-sheet position while sheet slides up
+  useEffect(() => {
+    if (phase === 'morphing') {
+      const id = setTimeout(() => setPhase('detail'), 1200);
+      return () => clearTimeout(id);
+    }
+  }, [phase]);
+
+  // auto-replay
+  useEffect(() => {
+    if (t.autoReplay && phase === 'detail') {
+      const id = setTimeout(reset, 2400);
+      return () => clearTimeout(id);
+    }
+  }, [phase, t.autoReplay]);
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <AndroidDevice width={428} height={900} dark>
+        <div data-screen-label="Kosmetika — claim flow" style={{
+          position: 'relative', width: '100%', height: '100%', overflow: 'hidden',
+        }}>
+          {/* Static background */}
+          <KosmetikaBg revealed={phase === 'detail'} />
+
+          {/* READY sheet */}
+          {phase === 'ready' && (
+            <div className="sheet-in" key="ready">
+              <ReadySheet onClaim={startClaim} />
+            </div>
+          )}
+
+          {/* FORGING — animation overlay */}
+          {phase === 'forging' && (
+            <ClaimOverlay
+              style={t.style}
+              speed={t.speed}
+              intensity={t.intensity}
+              screenW={SCREEN_W + 16}
+              screenH={SCREEN_H}
+              onComplete={() => setPhase('morphing')}
+            />
+          )}
+
+          {/* DETAIL sheet — also visible during morph so it can slide up;
+              same className across both phases so it doesn't re-animate on hand-off */}
+          {(phase === 'detail' || phase === 'morphing') && (
+            <div className="sheet-rising" key="detail">
+              <DetailSheet
+                companion={COMPANION}
+                onReset={reset}
+                hideCompanion={phase === 'morphing'}
+              />
+            </div>
+          )}
+
+          {/* MORPHING — companion glides into the detail-sheet slot.
+              Rendered AFTER the sheet so the companion stays on top during the rise. */}
+          {phase === 'morphing' && (
+            <MorphTransition
+              screenW={SCREEN_W + 16}
+              screenH={SCREEN_H}
+              animStyle={t.style}
+            />
+          )}
+
+          {/* (gold-frame pulse on the locked tile removed — it pulsed off-tempo with the
+              main ritual; the morph itself communicates where the companion lands) */}
+        </div>
+      </AndroidDevice>
+
+      {/* "haptic" pulse — purely visual, mimics button press feel */}
+      {pulse && (
+        <div style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          boxShadow: 'inset 0 0 60px rgba(255,180,80,0.3)',
+          borderRadius: 24,
+        }} />
+      )}
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection title="Styl animace">
+          <TweakSelect
+            label="Varianta"
+            value={t.style}
+            onChange={v => setTweak('style', v)}
+            options={[
+              { value: 'orbit',    label: 'Orbita — relikvie obíhají a fúzují' },
+              { value: 'fountain', label: 'Fontána — geyser jisker' },
+              { value: 'shatter',  label: 'Náraz — relikvie se srazí' },
+            ]}
+          />
+        </TweakSection>
+
+        <TweakSection title="Tempo a intenzita">
+          <TweakSlider label="Rychlost" min={0.5} max={2} step={0.1}
+            value={t.speed} onChange={v => setTweak('speed', v)} />
+          <TweakSlider label="Intenzita částic" min={0.2} max={2.2} step={0.1}
+            value={t.intensity} onChange={v => setTweak('intensity', v)} />
+        </TweakSection>
+
+        <TweakSection title="Chování">
+          <TweakToggle label="Automaticky opakovat"
+            value={t.autoReplay} onChange={v => setTweak('autoReplay', v)} />
+          <TweakButton label="Přehrát znovu" onClick={() => {
+            setPhase('ready');
+            setTimeout(startClaim, 250);
+          }} />
+          <TweakButton label="Restartovat na začátek" onClick={reset} />
+        </TweakSection>
+
+        <div style={{ fontSize: 11, color: '#8a8fb0', lineHeight: 1.5, marginTop: 4 }}>
+          Stav: <b style={{ color: '#fff' }}>{phase}</b><br/>
+          Tip: zkus všechny tři varianty animace.
+        </div>
+      </TweaksPanel>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+
+</body>
+</html>
