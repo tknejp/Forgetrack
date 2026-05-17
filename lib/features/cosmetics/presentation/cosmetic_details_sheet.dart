@@ -2,15 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/logging/app_log.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/theme/design_tokens.dart';
+import '../../progression_engine/application/progression_engine_provider.dart';
+import '../application/companions_registry.dart';
 import '../application/cosmetics_provider.dart';
+import '../domain/companion_state.dart';
 import '../domain/cosmetic_catalog.dart';
 import '../domain/cosmetic_models.dart';
 import '../domain/cosmetic_reveal_state.dart';
 import '../domain/cosmetic_unlock_rule.dart';
+import '../domain/cosmetic_unlock_rules.dart';
+import '../domain/consumed_relics.dart';
 import 'cosmetics_screen_internals.dart';
+import 'widgets/companion_claim_reveal.dart';
 import 'widgets/companion_fake_idle_preview.dart';
+
+const _log = AppLogger('COSMETICS', scope: 'details_sheet');
 
 class CosmeticDetailsSheet extends StatefulWidget {
   const CosmeticDetailsSheet({
@@ -22,6 +31,8 @@ class CosmeticDetailsSheet extends StatefulWidget {
     this.devToolsUnlockRules,
     this.devToolsMode = false,
     this.revealResult,
+    this.companion,
+    this.isRelicConsumed = false,
   });
 
   final CosmeticDefinition definition;
@@ -35,6 +46,19 @@ class CosmeticDetailsSheet extends StatefulWidget {
 
   /// Normal-mode reveal result. Null in devTools mode.
   final CosmeticRevealResult? revealResult;
+
+  /// Resolved companion view (state + node + cosmetic) when the
+  /// sheet renders a companion outside devTools mode. The sheet
+  /// refreshes its own copy off the providers on every build so a
+  /// claim that lands mid-sheet immediately flips the layout —
+  /// this prop is the **initial** state only, useful when the
+  /// providers haven't notified yet.
+  final Companion? companion;
+
+  /// True for a relic that has already been consumed by a companion
+  /// claim. Adds a "Použito" pill + replaces the unlock-source hint
+  /// with the consumed flavor line.
+  final bool isRelicConsumed;
 
   @override
   State<CosmeticDetailsSheet> createState() => _CosmeticDetailsSheetState();
@@ -85,23 +109,61 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
     final definition = widget.definition;
     final l10n = widget.l10n;
     final color = cosmeticRarityColor(definition.rarity);
+    // Watch the cosmetics provider so a successful claim from the
+    // embedded [CompanionClaimReveal] flips this sheet from the
+    // claim-flow layout into the normal unlocked layout without
+    // requiring the player to re-open the sheet. Watching progression
+    // alongside catches the case where the engine finished the manual
+    // claim before the cosmetics-side notify arrives (the order is
+    // not contractually guaranteed by `claimNode`).
+    final cosmeticsProvider = context.watch<CosmeticsProvider>();
+    final cosmeticsState = cosmeticsProvider.state ?? widget.state;
+    final progression = context.watch<ProgressionEngineProvider>();
     final isEquipped =
-        widget.state.equipped.slotId(definition.type) == definition.id;
+        cosmeticsState.equipped.slotId(definition.type) == definition.id;
     final assetPath = context
         .read<CosmeticsProvider>()
         .service
         .config
         .resolveAssetPath(definition.previewAssetKey ?? definition.assetKey);
     final description = definition.description(l10n);
-    final unlock = widget.state.unlocked[definition.id];
+    final unlock = cosmeticsState.unlocked[definition.id];
     final bottomPad = MediaQuery.of(context).padding.bottom;
     final isLocked = widget.isLocked;
     final devTools = widget.devToolsMode;
     final rules = widget.devToolsUnlockRules;
     final anyBusy = _equipBusy || _devBusy;
 
+    // Recompute the reveal result from the **current** cosmetics
+    // state instead of using the stale `widget.revealResult` snapshot
+    // captured at the moment `_showDetails` was called. Without this
+    // the sheet keeps showing ZAMČENO + "1/3 podmínek splněno" after
+    // the player claims the companion mid-sheet, because the parent's
+    // reveal map was frozen at "partial".
+    final revealResults = devTools
+        ? const <String, CosmeticRevealResult>{}
+        : cosmeticsProvider.computeRevealResults(kCosmeticUnlockRules);
+    final revealResult = devTools
+        ? null
+        : (revealResults[definition.id] ?? widget.revealResult);
+
+    // Re-derive the companion view from the current canonical
+    // sources rather than trusting [widget.companion]. The latter
+    // is a snapshot from the parent's last build; if the player
+    // claimed mid-sheet, the providers above already notified and
+    // the fresh resolution flips us from `claimable` to `claimed`.
+    final companion = devTools || definition.type != CosmeticType.companion
+        ? null
+        : const CompanionsRegistry().byId(
+            definition.id,
+            unlockedCosmeticIds: cosmeticsState.unlocked.keys.toSet(),
+            availableNodeIds: progression.availableNodeIds,
+            revealResults: revealResults,
+          );
+    final isRelicConsumed = widget.isRelicConsumed;
+
     // Determine effective reveal state for normal mode.
-    final revealState = devTools ? null : widget.revealResult?.state;
+    final revealState = devTools ? null : revealResult?.state;
     final isHidden = revealState == CosmeticRevealState.hidden;
     final isPartial = revealState == CosmeticRevealState.partial;
     final isVisibleLocked = revealState == CosmeticRevealState.visibleLocked;
@@ -112,6 +174,28 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
     final hiddenColor = isHidden
         ? Tokens.onSurfaceMuted
         : color;
+
+    // Companion lifecycle: identity (asset + name) is concealed for
+    // every state except `claimed`. The four-state model maps to
+    // three distinct sheet bodies:
+    //   * claimable  → forging animation + "Vyzvedni" CTA
+    //   * partial / hidden → mystery sheet with optional checklist
+    //   * claimed    → fall through to the regular cosmetic layout
+    if (companion != null && !companion.state.isClaimed) {
+      if (companion.state == CompanionState.claimable) {
+        return _ClaimableCompanionBody(
+          definition: definition,
+          l10n: l10n,
+          color: color,
+          bottomPad: bottomPad,
+        );
+      }
+      return _LockedCompanionBody(
+        companion: companion,
+        l10n: l10n,
+        bottomPad: bottomPad,
+      );
+    }
 
     return ConstrainedBox(
       constraints: BoxConstraints(
@@ -227,13 +311,18 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                                 label: l10n.cosmeticNoAsset,
                                 color: Colors.orange,
                               ),
+                            if (isRelicConsumed)
+                              _TinyPill(
+                                label: l10n.cosmeticRelicConsumedBadge,
+                                color: Tokens.onSurfaceMuted,
+                              ),
                           ],
                         ),
                         // partial progress indicator
-                        if (isPartial && widget.revealResult != null) ...[
+                        if (isPartial && revealResult != null) ...[
                           const SizedBox(height: 8),
                           _PartialProgressRow(
-                            result: widget.revealResult!,
+                            result: revealResult,
                             l10n: l10n,
                             color: color,
                           ),
@@ -258,14 +347,19 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                 ),
               ],
 
-              // companion requirements checklist
+              // companion requirements checklist — shown for every
+              // companion reveal state where we have rows (partial /
+              // visibleLocked teaser / unlocked). The evaluator now
+              // populates rows for `unlocked` too, with every entry
+              // marked met, so the player sees the same checklist
+              // they used while progressing — just fully ticked.
               if (!devTools &&
                   !isHidden &&
                   definition.type == CosmeticType.companion &&
-                  widget.revealResult?.conditionRows != null) ...[
+                  revealResult?.conditionRows != null) ...[
                 const SizedBox(height: 18),
                 _CompanionChecklist(
-                  conditionRows: widget.revealResult!.conditionRows!,
+                  conditionRows: revealResult!.conditionRows!,
                   color: color,
                   l10n: l10n,
                 ),
@@ -324,6 +418,28 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                         definition.unlockHint!(l10n),
                         style: TextStyle(
                           color: color.withValues(alpha: 0.7),
+                          fontSize: Tokens.fontSizeCaption,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+
+              // consumed relic flavor line
+              if (isRelicConsumed) ...[
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Icon(Icons.auto_awesome_rounded,
+                        size: 13, color: Tokens.onSurfaceMuted),
+                    const SizedBox(width: 5),
+                    Expanded(
+                      child: Text(
+                        l10n.cosmeticRelicConsumedHint,
+                        style: const TextStyle(
+                          color: Tokens.onSurfaceMuted,
                           fontSize: Tokens.fontSizeCaption,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1092,6 +1208,298 @@ class _TinyPill extends StatelessWidget {
           fontSize: Tokens.fontSizeMicro,
           fontWeight: FontWeight.w800,
           letterSpacing: 0,
+        ),
+      ),
+    );
+  }
+}
+
+/// Claim-flow body shown in place of the regular details layout when a
+/// companion's `CompanionAvailabilityNode` is in `available` state. The
+/// player taps "Vyzvedni společníka" inside the [CompanionClaimReveal]
+/// stage — that triggers the relic-fusing animation and, on completion,
+/// calls `progression.claimNode` which grants the cosmetic. The
+/// surrounding [CosmeticDetailsSheet] watches `CosmeticsProvider`, so
+/// once the cosmetic lands in the unlocked set the parent rebuilds and
+/// replaces this body with the standard companion details.
+class _ClaimableCompanionBody extends StatelessWidget {
+  const _ClaimableCompanionBody({
+    required this.definition,
+    required this.l10n,
+    required this.color,
+    required this.bottomPad,
+  });
+
+  final CosmeticDefinition definition;
+  final AppLocalizations l10n;
+  final Color color;
+  final double bottomPad;
+
+  @override
+  Widget build(BuildContext context) {
+    final relicIds = companionRelicGateIds(definition.id);
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.92,
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Tokens.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        ),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(18, 12, 18, bottomPad + 18),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.16),
+                    borderRadius:
+                        BorderRadius.circular(Tokens.radiusProgress),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                l10n.cosmeticCompanionClaimableBadge,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Tokens.accent,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 2.0,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                l10n.cosmeticCompanionClaimableHiddenName,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Tokens.onSurface,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.2,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                l10n.cosmeticCompanionClaimableHint,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Tokens.onSurfaceMuted,
+                  fontSize: 13,
+                  height: 1.4,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 18),
+              CompanionClaimReveal(
+                companion: definition,
+                relicIds: relicIds,
+                color: color,
+                onClaim: () => _runClaim(context),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Calls `progression.claimNode` for the matching
+  /// `CompanionAvailabilityNode` (id == cosmetic id, see
+  /// `companions_content.dart`). Logged so resets / sync flows can
+  /// be correlated to the moment the player tapped Vyzvedni.
+  Future<void> _runClaim(BuildContext context) async {
+    final progression = context.read<ProgressionEngineProvider>();
+    _log.info('claim companion', payload: 'id=${definition.id}');
+    await progression.claimNode(nodeId: definition.id);
+  }
+}
+
+/// Body shown for `hidden` or `partial` companions. Identity stays
+/// concealed (silhouette + mystery name) per the four-state spec —
+/// the player meets the actual companion only after they reach the
+/// claim flow. The body still surfaces:
+///
+///   * a progress chip when [Companion.revealResult] carries
+///     satisfied/total counters (i.e. `partial` only — `hidden`
+///     returns no counters),
+///   * the requirements checklist with live `met` flags so the
+///     player can see what to work toward (or, in the rare
+///     teaser-floor case, a generic placeholder when the checklist
+///     is empty).
+///
+/// No action buttons are rendered here — the only way out of these
+/// states is engine progress (granted gating-relic achievements),
+/// which is observed automatically when the providers notify and
+/// the parent sheet rebuilds.
+class _LockedCompanionBody extends StatelessWidget {
+  const _LockedCompanionBody({
+    required this.companion,
+    required this.l10n,
+    required this.bottomPad,
+  });
+
+  final Companion companion;
+  final AppLocalizations l10n;
+  final double bottomPad;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = cosmeticRarityColor(companion.cosmetic.rarity);
+    final hiddenColor = Tokens.onSurfaceMuted;
+    final satisfied = companion.satisfiedConditions;
+    final total = companion.totalConditions;
+    final rows = companion.conditionRows;
+
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.92,
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Tokens.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        ),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(18, 12, 18, bottomPad + 18),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.16),
+                    borderRadius:
+                        BorderRadius.circular(Tokens.radiusProgress),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _HiddenBadgeLarge(color: hiddenColor),
+                  const SizedBox(width: Tokens.spaceLg),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.cosmeticCompanionClaimableHiddenName,
+                          style: const TextStyle(
+                            color: Tokens.onSurfaceMuted,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0,
+                          ),
+                        ),
+                        const SizedBox(height: 7),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
+                            _TinyPill(
+                              label: l10n.journeyBadgeLocked,
+                              color: hiddenColor.withValues(alpha: 0.85),
+                            ),
+                          ],
+                        ),
+                        if (satisfied != null && total != null) ...[
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.incomplete_circle_rounded,
+                                size: 13,
+                                color: color.withValues(alpha: 0.8),
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                l10n.cosmeticPartialProgress(satisfied, total),
+                                style: TextStyle(
+                                  color: color.withValues(alpha: 0.8),
+                                  fontSize: Tokens.fontSizeCaption,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (rows != null && rows.isNotEmpty) ...[
+                const SizedBox(height: 18),
+                _CompanionChecklist(
+                  conditionRows: rows,
+                  color: color,
+                  l10n: l10n,
+                ),
+              ],
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Icon(
+                    Icons.help_outline_rounded,
+                    size: 13,
+                    color: Tokens.onSurfaceFaint.withValues(alpha: 0.7),
+                  ),
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: Text(
+                      l10n.cosmeticHiddenUnlockCondition,
+                      style: TextStyle(
+                        color: Tokens.onSurfaceFaint.withValues(alpha: 0.7),
+                        fontSize: Tokens.fontSizeCaption,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: hiddenColor,
+                    side: BorderSide(
+                      color: hiddenColor.withValues(alpha: 0.34),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 13,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(Tokens.radiusInner),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                  child: Text(l10n.dialogClose),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

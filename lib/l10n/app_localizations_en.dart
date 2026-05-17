@@ -4259,6 +4259,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get celebrationOpenInventory => 'Open inventory →';
 
   @override
+  String get celebrationClaimCompanion => 'Claim companion →';
+
+  @override
+  String get cosmeticCompanionClaimableBadge => 'READY';
+
+  @override
+  String get cosmeticCompanionClaimableHiddenName => 'Mysterious companion';
+
+  @override
+  String get cosmeticCompanionClaimCta => 'Claim companion';
+
+  @override
+  String get cosmeticCompanionClaimableHint =>
+      'Fuse the required relics and summon your companion.';
+
+  @override
+  String get cosmeticCompanionCelebrationHint =>
+      'Open its card in your inventory to claim it.';
+
+  @override
+  String get cosmeticCompanionClaimingFlavor => 'Forging companion…';
+
+  @override
+  String get cosmeticRelicConsumedBadge => 'Used';
+
+  @override
+  String get cosmeticRelicConsumedHint => 'Used to summon a companion.';
+
+  @override
   String celebrationLevelTitle(int level, String title) {
     return 'Level $level · $title';
   }

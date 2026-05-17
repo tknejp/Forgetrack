@@ -31,7 +31,10 @@ class CelebrationFullscreen extends StatefulWidget {
   /// Optional. When non-null *and* the event has at least one wearable
   /// reward, the secondary CTA "Otevřít inventář →" is shown. The callback
   /// is responsible for navigating after the fullscreen has dismissed.
-  final VoidCallback? onOpenInventory;
+  /// The optional `focusCompanionId` is set when the event's headline
+  /// reward is a companion availability — the inventory screen uses it
+  /// to land directly on that companion's details sheet.
+  final void Function({String? focusCompanionId})? onOpenInventory;
 
   @override
   State<CelebrationFullscreen> createState() => _CelebrationFullscreenState();
@@ -75,6 +78,26 @@ class _CelebrationFullscreenState extends State<CelebrationFullscreen>
   }
 
   bool get _hasWearable => widget.event.rewards.any(_isWearable);
+  bool get _hasCompanion =>
+      widget.event.rewards.any((r) => r.kind == CelebrationRewardKind.companion);
+
+  /// Pulls the companion id off the first companion reward in the event
+  /// (typically the only one) so the inventory CTA can land directly on
+  /// that companion's details sheet. Reward ids are namespaced
+  /// `companion-<id>` (see `_companionPreviewCard` in the adapter) or
+  /// `cosmetic-<id>` (for orphan cosmetic grants of type companion).
+  String? get _focusCompanionId {
+    for (final r in widget.event.rewards) {
+      if (r.kind != CelebrationRewardKind.companion) continue;
+      final id = r.id;
+      const prefixes = ['companion-', 'cosmetic-'];
+      for (final p in prefixes) {
+        if (id.startsWith(p)) return id.substring(p.length);
+      }
+      return id;
+    }
+    return null;
+  }
 
   static bool _isWearable(CelebrationReward r) =>
       r.kind == CelebrationRewardKind.frame ||
@@ -282,14 +305,19 @@ class _CelebrationFullscreenState extends State<CelebrationFullscreen>
                       opacity: ctaFade,
                       child: TextButton(
                         onPressed: () {
+                          final companionId = _focusCompanionId;
                           _dismiss();
-                          widget.onOpenInventory!();
+                          widget.onOpenInventory!(
+                            focusCompanionId: companionId,
+                          );
                         },
                         style: TextButton.styleFrom(
                           foregroundColor: const Color(0xFFC7C2E0),
                         ),
                         child: Text(
-                          l10n.celebrationOpenInventory,
+                          _hasCompanion
+                              ? l10n.celebrationClaimCompanion
+                              : l10n.celebrationOpenInventory,
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -387,7 +415,7 @@ class _CloseButton extends StatelessWidget {
 Future<void> openCelebrationFullscreen({
   required BuildContext context,
   required CelebrationEvent event,
-  VoidCallback? onOpenInventory,
+  void Function({String? focusCompanionId})? onOpenInventory,
 }) {
   return Navigator.of(context, rootNavigator: true).push(
     PageRouteBuilder<void>(

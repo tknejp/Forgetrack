@@ -4253,6 +4253,35 @@ class AppLocalizationsCs extends AppLocalizations {
   String get celebrationOpenInventory => 'Otevřít inventář →';
 
   @override
+  String get celebrationClaimCompanion => 'Vyzvedni společníka →';
+
+  @override
+  String get cosmeticCompanionClaimableBadge => 'PŘIPRAVEN';
+
+  @override
+  String get cosmeticCompanionClaimableHiddenName => 'Tajemný společník';
+
+  @override
+  String get cosmeticCompanionClaimCta => 'Vyzvedni společníka';
+
+  @override
+  String get cosmeticCompanionClaimableHint =>
+      'Spoj potřebné relikvie a vyvolej svého společníka.';
+
+  @override
+  String get cosmeticCompanionCelebrationHint =>
+      'Otevři jeho kartu v inventáři a vyzvedni jej.';
+
+  @override
+  String get cosmeticCompanionClaimingFlavor => 'Spojuji relikvie…';
+
+  @override
+  String get cosmeticRelicConsumedBadge => 'Použito';
+
+  @override
+  String get cosmeticRelicConsumedHint => 'Použito k vyvolání společníka.';
+
+  @override
   String celebrationLevelTitle(int level, String title) {
     return 'Level $level · $title';
   }

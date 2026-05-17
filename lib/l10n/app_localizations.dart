@@ -7521,6 +7521,60 @@ abstract class AppLocalizations {
   /// **'Open inventory →'**
   String get celebrationOpenInventory;
 
+  /// Secondary CTA on fullscreen celebration when a companion-availability reward is present.
+  ///
+  /// In en, this message translates to:
+  /// **'Claim companion →'**
+  String get celebrationClaimCompanion;
+
+  /// Pill on a companion grid card whose availability node is pending claim.
+  ///
+  /// In en, this message translates to:
+  /// **'READY'**
+  String get cosmeticCompanionClaimableBadge;
+
+  /// Placeholder name shown for a claimable-but-not-yet-claimed companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Mysterious companion'**
+  String get cosmeticCompanionClaimableHiddenName;
+
+  /// Action button in the companion details sheet that triggers the claim animation.
+  ///
+  /// In en, this message translates to:
+  /// **'Claim companion'**
+  String get cosmeticCompanionClaimCta;
+
+  /// Hint shown above the claim animation in the companion details sheet — describes the action the player is about to take by tapping the claim button below.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuse the required relics and summon your companion.'**
+  String get cosmeticCompanionClaimableHint;
+
+  /// Hint shown on the standalone companion-availability celebration — points the player to the inventory where the claim animation lives.
+  ///
+  /// In en, this message translates to:
+  /// **'Open its card in your inventory to claim it.'**
+  String get cosmeticCompanionCelebrationHint;
+
+  /// Flavor text shown during the claim animation.
+  ///
+  /// In en, this message translates to:
+  /// **'Forging companion…'**
+  String get cosmeticCompanionClaimingFlavor;
+
+  /// Pill shown on a relic that has been used to summon a companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Used'**
+  String get cosmeticRelicConsumedBadge;
+
+  /// Detail hint shown on a relic that has been consumed by a companion claim.
+  ///
+  /// In en, this message translates to:
+  /// **'Used to summon a companion.'**
+  String get cosmeticRelicConsumedHint;
+
   /// No description provided for @celebrationLevelTitle.
   ///
   /// In en, this message translates to:

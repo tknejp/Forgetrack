@@ -61,8 +61,17 @@ class CosmeticUnlockBridge {
     }
 
     for (final grant in result.grantedRewards) {
-      if (grant.event.rewardKind != RewardGrantKind.cosmetic) continue;
-      final cosmeticId = grant.event.cosmeticId;
+      // Two grant kinds map to a cosmetics inventory unlock:
+      //  * `cosmetic` — every Tier-1 reward (frame / relic / background
+      //    / emblem / title) carries its cosmetic id directly.
+      //  * `companionAvailability` — manual-claim companion nodes
+      //    emit this kind when the player claims; the `companionId`
+      //    is the same string as the companion's cosmetic id (see
+      //    `companions_content.dart` — id == companionId by
+      //    construction). Without this branch the claim animation
+      //    runs but the inventory entry never flips to unlocked,
+      //    leaving the companion permanently un-equippable.
+      final cosmeticId = _cosmeticIdForUnlock(grant.event);
       if (cosmeticId == null) continue;
       try {
         await cosmetics.unlock(
@@ -115,8 +124,7 @@ class CosmeticUnlockBridge {
 
     var applied = 0;
     for (final grant in ledger.rewardGrants) {
-      if (grant.rewardKind != RewardGrantKind.cosmetic) continue;
-      final cosmeticId = grant.cosmeticId;
+      final cosmeticId = _cosmeticIdForUnlock(grant);
       if (cosmeticId == null) continue;
       if (cosmetics.state?.unlocked.containsKey(cosmeticId) ?? false) continue;
       try {
@@ -140,6 +148,26 @@ class CosmeticUnlockBridge {
         'historical cosmetic grants reapplied',
         payload: 'applied=$applied total=${ledger.rewardGrants.length}',
       );
+    }
+  }
+
+  /// Returns the cosmetic id to unlock for a reward grant, or null when
+  /// the grant doesn't represent a wearable inventory entry (XP,
+  /// chapter unlock). Companion-availability grants resolve to the
+  /// companion id, which doubles as the cosmetic id by catalog
+  /// construction.
+  static String? _cosmeticIdForUnlock(RewardGrantEvent event) {
+    switch (event.rewardKind) {
+      case RewardGrantKind.cosmetic:
+        return event.cosmeticId;
+      case RewardGrantKind.companionAvailability:
+        return event.companionId;
+      case RewardGrantKind.xp:
+      case RewardGrantKind.chapterUnlock:
+      case RewardGrantKind.title:
+      case RewardGrantKind.emblem:
+      case RewardGrantKind.relic:
+        return null;
     }
   }
 }

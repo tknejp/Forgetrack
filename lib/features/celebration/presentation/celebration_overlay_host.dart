@@ -22,7 +22,7 @@ class CelebrationOverlayHost extends StatefulWidget {
     this.router = const CelebrationRouter(),
   });
 
-  final VoidCallback? onOpenInventory;
+  final void Function({String? focusCompanionId})? onOpenInventory;
   final CelebrationRouter router;
 
   @override

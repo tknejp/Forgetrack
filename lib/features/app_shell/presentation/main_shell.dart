@@ -105,14 +105,16 @@ class _FtMainShellState extends State<MainShell> {
     });
   }
 
-  void _onOpenInventory() {
-    // The "Otevřít inventář →" CTA on the fullscreen celebration takes
-    // the user straight to the cosmetics inventory rather than the Hero
-    // overview. The fullscreen route has already been popped by the
-    // celebration before this fires, so this push lands on the main
-    // shell's navigator on top of the active tab.
+  void _onOpenInventory({String? focusCompanionId}) {
+    // The fullscreen celebration CTA pops itself before invoking this,
+    // so the push lands on top of the active tab. `focusCompanionId` is
+    // forwarded so a companion-availability celebration lands directly
+    // on that companion's details sheet (where the player triggers the
+    // claim animation) rather than on the inventory's "Vše" tab.
     Navigator.of(context).push<void>(
-      MaterialPageRoute(builder: (_) => const CosmeticsScreen()),
+      MaterialPageRoute(
+        builder: (_) => CosmeticsScreen(initialFocusId: focusCompanionId),
+      ),
     );
   }
 

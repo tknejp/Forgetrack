@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 import '../../cosmetics/application/cosmetics_provider.dart';
 import '../../cosmetics/domain/cosmetic_models.dart';
 import '../../progression_engine/domain/catalog/content/quest_assets.dart';
@@ -377,18 +379,22 @@ class ProgressionEngineCelebrationAdapter {
     return null;
   }
 
+  /// Reward card for a not-yet-claimed companion. We intentionally hide
+  /// the companion's real name + art on the celebration surface — the
+  /// claim flow inside the inventory's details sheet is what actually
+  /// reveals the companion (with its forging animation). Until then the
+  /// card reads as a generic "mysterious companion" preview so the
+  /// reveal moment lands in one place, not split between celebration
+  /// and claim.
   CelebrationReward _companionPreviewCard(CompanionAvailabilityNode node) {
-    final def = cosmetics.service.catalog.byId(node.companionId);
     return CelebrationReward(
       id: 'companion-${node.companionId}',
-      name: (l) => node.titleKey(l),
+      name: (l) => l.cosmeticCompanionClaimableHiddenName,
       sub: (l) => node.rarity.label(l),
       rarity: node.rarity,
       kind: CelebrationRewardKind.companion,
-      assetPath: def == null
-          ? null
-          : cosmetics.service.config
-              .resolveAssetPath(def.previewAssetKey ?? def.assetKey),
+      assetPath: null,
+      fallbackIcon: Icons.lock_rounded,
     );
   }
 
@@ -432,6 +438,12 @@ class ProgressionEngineCelebrationAdapter {
   /// The companion appears as a single reward card and the fullscreen's
   /// existing "Open inventory →" CTA is how the player completes the
   /// activation.
+  /// Standalone fullscreen for an un-folded companion availability.
+  /// Title + description are kept neutral — the real reveal happens in
+  /// the inventory claim flow, not on this screen. Without this swap
+  /// the celebration would spoil the companion's name (and the asset
+  /// path on `_companionPreviewCard` would leak the artwork) before
+  /// the player even reaches the forging animation.
   CelebrationEvent _buildStandaloneCompanionEvent(
     CompanionAvailabilityNode node,
   ) {
@@ -440,8 +452,8 @@ class ProgressionEngineCelebrationAdapter {
       id: 'companion-available|${node.id}',
       type: CelebrationType.cosmetic,
       eyebrow: (l) => l.celebrationCompanionReadyEyebrow,
-      title: (l) => node.titleKey(l),
-      description: (l) => node.descriptionKey(l),
+      title: (l) => l.cosmeticCompanionClaimableHiddenName,
+      description: (l) => l.cosmeticCompanionCelebrationHint,
       rewards: [card],
       headRarity: node.rarity,
       variantOverride: CelebrationVariant.fullscreen,

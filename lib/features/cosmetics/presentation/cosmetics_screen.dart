@@ -6,17 +6,33 @@ import '../../../l10n/app_localizations.dart';
 import '../../../shared/theme/design_tokens.dart';
 import '../../../shared/widgets/ft_back_button.dart';
 import '../../../shared/widgets/screen_header.dart';
+import '../../progression_engine/application/progression_engine_provider.dart';
+import '../application/companions_registry.dart';
 import '../application/cosmetics_provider.dart';
+import '../domain/companion_state.dart';
 import '../domain/cosmetic_models.dart';
 import '../domain/cosmetic_reveal_state.dart';
 import '../domain/cosmetic_unlock_rules.dart';
+import '../domain/consumed_relics.dart';
 import 'cosmetic_details_sheet.dart';
 import 'cosmetics_screen_internals.dart';
 
 class CosmeticsScreen extends StatefulWidget {
-  const CosmeticsScreen({super.key, this.initialType, this.devToolsMode = false});
+  const CosmeticsScreen({
+    super.key,
+    this.initialType,
+    this.initialFocusId,
+    this.devToolsMode = false,
+  });
 
   final CosmeticType? initialType;
+
+  /// Cosmetic id to land on. When set, the screen auto-jumps to the
+  /// matching tab and pops the details sheet on first build. Used by
+  /// the celebration "Vyzvedni společníka →" CTA so a companion-
+  /// availability celebration goes straight to its claim sheet rather
+  /// than dropping the player on a generic inventory grid.
+  final String? initialFocusId;
 
   /// When true: shows every catalog item (locked + unlocked), asset-missing
   /// indicators, and passes unlock conditions to the details sheet.
@@ -30,6 +46,7 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
   late final PageController _pageController;
   int _currentIndex = 0;
   bool _didInitialJump = false;
+  bool _didInitialFocus = false;
 
   @override
   void initState() {
@@ -46,6 +63,9 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
   @override
   Widget build(BuildContext context) {
     final cosmetics = context.watch<CosmeticsProvider>();
+    // Watch progression so the grid + details sheet react when a
+    // companion claim turns the cosmetic from claimable to unlocked.
+    final progression = context.watch<ProgressionEngineProvider>();
     final l10n = AppLocalizations.of(context);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -72,7 +92,9 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
               ),
             ),
             const SizedBox(height: 14),
-            Expanded(child: _buildBody(context, cosmetics, l10n)),
+            Expanded(
+              child: _buildBody(context, cosmetics, progression, l10n),
+            ),
           ],
         ),
       ),
@@ -82,6 +104,7 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
   Widget _buildBody(
     BuildContext context,
     CosmeticsProvider cosmetics,
+    ProgressionEngineProvider progression,
     AppLocalizations l10n,
   ) {
     if (cosmetics.isLoading && cosmetics.state == null) {
@@ -94,9 +117,16 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
     if (state == null) return const _NotSignedIn();
 
     final devTools = widget.devToolsMode;
+    final consumedIds = consumedRelicIds(state);
 
     final List<CosmeticDefinition> displayDefs;
     final Map<String, CosmeticRevealResult> revealResults;
+    // Map of companion id → resolved [Companion] view object. Built
+    // once per build from canonical sources (cosmetics state +
+    // progression availability + reveal evaluator) by
+    // [CompanionsRegistry] and threaded down to cards / details
+    // sheet so every surface renders from the same snapshot.
+    Map<String, Companion> companions = const {};
 
     if (devTools) {
       displayDefs = cosmetics.service.catalog.all.toList()
@@ -104,18 +134,30 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
       revealResults = const {};
     } else {
       revealResults = cosmetics.computeRevealResults(kCosmeticUnlockRules);
-      // Display policy: unlocked items always show. Companions additionally
-      // surface in `partial` state (at least one of their compound conditions
-      // met) so the player sees a teaser of what's brewing. Frames, relics,
-      // backgrounds and emblems stay out of the inventory until owned —
-      // they're Tier-1 rewards where a locked preview would just be clutter.
+      final list = const CompanionsRegistry().snapshot(
+        unlockedCosmeticIds: state.unlocked.keys.toSet(),
+        availableNodeIds: progression.availableNodeIds,
+        revealResults: revealResults,
+      );
+      companions = {for (final c in list) c.id: c};
+      // Display policy: unlocked items always show. Companions
+      // additionally surface for `partial` and `claimable` states so
+      // the player sees what's brewing and can claim it. `hidden`
+      // companions stay off the grid — once the player meets the
+      // first prerequisite the card materialises in `partial`.
+      // Frames, relics, backgrounds and emblems stay out of the
+      // inventory until owned — they're Tier-1 rewards where a
+      // locked preview would just be clutter.
       displayDefs = cosmetics.service.catalog.enabled
           .where((def) {
             final r = revealResults[def.id];
             if (r == null) return false;
             if (r.state == CosmeticRevealState.unlocked) return true;
-            return def.type == CosmeticType.companion &&
-                r.state == CosmeticRevealState.partial;
+            if (def.type == CosmeticType.companion) {
+              final c = companions[def.id];
+              return c != null && c.state != CompanionState.hidden;
+            }
+            return false;
           })
           .toList()
         ..sort((a, b) => _sortRevealDefs(a, b, state, revealResults));
@@ -149,6 +191,44 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
       _didInitialJump = true;
     }
 
+    // One-shot auto-open of the details sheet for `widget.initialFocusId`.
+    // Triggered after the post-frame so the PageController has had a
+    // chance to settle on the initial tab (or the focus-driven jump
+    // below has landed). We resolve against displayDefs first so a
+    // claimable companion that lives in `partial` reveal state still
+    // counts as a valid focus target.
+    if (!_didInitialFocus && widget.initialFocusId != null) {
+      _didInitialFocus = true;
+      final id = widget.initialFocusId!;
+      final def = cosmetics.service.catalog.byId(id);
+      if (def != null) {
+        // If we know the cosmetic type, also jump to the matching tab
+        // so when the player dismisses the sheet they land in context.
+        final typeIdx = tabs.indexOf(def.type);
+        if (typeIdx > 0) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted || !_pageController.hasClients) return;
+            _pageController.jumpToPage(typeIdx);
+            setState(() => _currentIndex = typeIdx);
+          });
+        }
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _showDetails(
+            context,
+            cosmetics: cosmetics,
+            state: state,
+            definition: def,
+            l10n: l10n,
+            devTools: devTools,
+            revealResult: revealResults[def.id],
+            companions: companions,
+            consumedRelicIdSet: consumedIds,
+          );
+        });
+      }
+    }
+
     // Clamp _currentIndex in case the tab list shrank (e.g. last item in a
     // category was unequipped/removed).
     final activeIndex =
@@ -170,6 +250,8 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
               l10n: l10n,
               devTools: devTools,
               revealResult: revealResults[definition.id],
+              companions: companions,
+              consumedRelicIdSet: consumedIds,
             ),
           ),
         ),
@@ -205,6 +287,8 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
                 revealResults: revealResults,
                 devTools: devTools,
                 l10n: l10n,
+                companions: companions,
+                consumedRelicIds: consumedIds,
                 onTap: (definition) => _showDetails(
                   context,
                   cosmetics: cosmetics,
@@ -213,6 +297,8 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
                   l10n: l10n,
                   devTools: devTools,
                   revealResult: revealResults[definition.id],
+                  companions: companions,
+                  consumedRelicIdSet: consumedIds,
                 ),
               );
             },
@@ -230,6 +316,8 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
     required AppLocalizations l10n,
     bool devTools = false,
     CosmeticRevealResult? revealResult,
+    Map<String, Companion> companions = const {},
+    Set<String> consumedRelicIdSet = const {},
   }) {
     final isLocked = !state.unlocked.containsKey(definition.id);
     final rules = devTools
@@ -237,6 +325,16 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
             .where((r) => r.cosmeticId == definition.id)
             .toList()
         : null;
+    // For companion cosmetics we hand the entire [Companion] view
+    // object to the sheet — state, reveal-result rows and the
+    // availability node travel together so the sheet has no need to
+    // do its own engine introspection.
+    final companion = !devTools && definition.type == CosmeticType.companion
+        ? companions[definition.id]
+        : null;
+    final isRelicConsumed = !devTools &&
+        definition.type == CosmeticType.relic &&
+        consumedRelicIdSet.contains(definition.id);
     showModalBottomSheet<void>(
       context: context,
       useSafeArea: true,
@@ -250,6 +348,8 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
         devToolsUnlockRules: rules,
         devToolsMode: devTools,
         revealResult: devTools ? null : revealResult,
+        companion: companion,
+        isRelicConsumed: isRelicConsumed,
       ),
     );
   }
@@ -424,6 +524,8 @@ class _CategoryGrid extends StatelessWidget {
     required this.devTools,
     required this.l10n,
     required this.onTap,
+    this.companions = const {},
+    this.consumedRelicIds = const {},
   });
 
   final List<CosmeticDefinition> defs;
@@ -433,6 +535,8 @@ class _CategoryGrid extends StatelessWidget {
   final bool devTools;
   final AppLocalizations l10n;
   final ValueChanged<CosmeticDefinition> onTap;
+  final Map<String, Companion> companions;
+  final Set<String> consumedRelicIds;
 
   @override
   Widget build(BuildContext context) {
@@ -464,6 +568,13 @@ class _CategoryGrid extends StatelessWidget {
                 final def = defs[index];
                 final isUnlocked = state.unlocked.containsKey(def.id);
                 final revealResult = revealResults[def.id];
+                final companion =
+                    !devTools && def.type == CosmeticType.companion
+                        ? companions[def.id]
+                        : null;
+                final isRelicConsumed = !devTools &&
+                    def.type == CosmeticType.relic &&
+                    consumedRelicIds.contains(def.id);
                 return _CosmeticCard(
                   definition: def,
                   isEquipped: state.equipped.slotId(def.type) == def.id,
@@ -471,6 +582,8 @@ class _CategoryGrid extends StatelessWidget {
                   showMissingAsset: devTools,
                   revealResult: devTools ? null : revealResult,
                   l10n: l10n,
+                  companion: companion,
+                  isRelicConsumed: isRelicConsumed,
                   onTap: () => onTap(def),
                 );
               },
@@ -488,6 +601,8 @@ class _CosmeticCard extends StatelessWidget {
     this.isLocked = false,
     this.showMissingAsset = false,
     this.revealResult,
+    this.companion,
+    this.isRelicConsumed = false,
   });
 
   final CosmeticDefinition definition;
@@ -497,14 +612,34 @@ class _CosmeticCard extends StatelessWidget {
   final bool showMissingAsset;
   /// Non-null in normal (non-devTools) mode; null in devTools mode.
   final CosmeticRevealResult? revealResult;
+  /// Resolved [Companion] view when [definition.type] == companion
+  /// and the card is rendered outside devTools mode. Null for every
+  /// other cosmetic type (frames / relics / backgrounds / emblems …)
+  /// and inside devTools mode — those paths fall back to the
+  /// reveal-evaluator output.
+  final Companion? companion;
+  /// True for a relic that has been "consumed" by a companion claim —
+  /// stays in inventory but dim + "Použito" pill.
+  final bool isRelicConsumed;
   final AppLocalizations l10n;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final revealState = revealResult?.state;
-    final isHiddenCard = revealState == CosmeticRevealState.hidden;
-    final isPartialCard = revealState == CosmeticRevealState.partial;
+    // Companion cards branch on the strict four-state lifecycle —
+    // identity (asset + name) stays hidden for every non-`claimed`
+    // state. The reveal evaluator's `partial` / `visibleLocked`
+    // signals only feed the badge (progress chip vs READY pill);
+    // they no longer leak the companion's artwork.
+    final cState = companion?.state;
+    final isCompanionLocked = cState != null && !cState.isClaimed;
+    final isHiddenCard = isCompanionLocked ||
+        (cState == null && revealState == CosmeticRevealState.hidden);
+    final isPartialCard = cState == CompanionState.partial ||
+        (cState == null &&
+            revealState == CosmeticRevealState.partial);
+    final isClaimableCompanion = cState == CompanionState.claimable;
     final isVisibleLocked = revealState == CosmeticRevealState.visibleLocked;
     final isNormalLocked = isLocked || isVisibleLocked;
 
@@ -521,12 +656,20 @@ class _CosmeticCard extends StatelessWidget {
             .resolveAssetPath(definition.previewAssetKey ?? definition.assetKey);
     final hasAsset = definition.assetKey != null;
 
-    final displayName = isHiddenCard ? l10n.cosmeticHiddenName : definition.name(l10n);
-    final cardOpacity = (isLocked || isVisibleLocked)
-        ? 0.55
+    final displayName = isCompanionLocked
+        ? l10n.cosmeticCompanionClaimableHiddenName
         : isHiddenCard
-            ? 0.35
-            : 1.0;
+            ? l10n.cosmeticHiddenName
+            : definition.name(l10n);
+    final cardOpacity = isRelicConsumed
+        ? 0.55
+        : (isLocked || isVisibleLocked)
+            ? 0.55
+            : isClaimableCompanion
+                ? 0.95
+                : isHiddenCard
+                    ? 0.35
+                    : 1.0;
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -624,8 +767,15 @@ class _CosmeticCard extends StatelessWidget {
                     color: color.withValues(alpha: 0.55),
                   ),
                 ),
-              // partial progress chip
-              if (isPartialCard && revealResult != null)
+              // partial progress chip — only when there's a real
+              // partial reveal result attached. For companions, the
+              // chip surfaces in `partial` state with the snapshot
+              // numbers from the evaluator, then yields to the READY
+              // pill once the engine flips the companion availability
+              // node into `claimable`.
+              if (isPartialCard &&
+                  !isClaimableCompanion &&
+                  revealResult != null)
                 Positioned(
                   bottom: 5,
                   right: 5,
@@ -634,6 +784,26 @@ class _CosmeticCard extends StatelessWidget {
                     total: revealResult!.totalConditions,
                     color: color,
                   ),
+                ),
+              // claimable companion: pulsing READY pill — replaces the
+              // partial progress chip so the player understands this
+              // card is actionable, not still in progress.
+              if (isClaimableCompanion)
+                Positioned(
+                  bottom: 5,
+                  right: 5,
+                  child: _ReadyPill(
+                    label: l10n.cosmeticCompanionClaimableBadge,
+                  ),
+                ),
+              // consumed relic: "Použito" pill in the bottom-right
+              // corner so the player can see at a glance which relics
+              // have already fed a companion claim.
+              if (isRelicConsumed)
+                Positioned(
+                  bottom: 5,
+                  right: 5,
+                  child: _ConsumedPill(label: l10n.cosmeticRelicConsumedBadge),
                 ),
               if (showMissingAsset && !hasAsset)
                 Positioned(
@@ -716,6 +886,93 @@ class _ProgressChip extends StatelessWidget {
           fontSize: 7,
           fontWeight: FontWeight.w900,
           letterSpacing: 0.3,
+        ),
+      ),
+    );
+  }
+}
+
+/// Pulsing "PŘIPRAVEN" pill for a claimable companion card. Uses the
+/// brand accent so it pops against the muted hidden-state palette.
+class _ReadyPill extends StatefulWidget {
+  const _ReadyPill({required this.label});
+
+  final String label;
+
+  @override
+  State<_ReadyPill> createState() => _ReadyPillState();
+}
+
+class _ReadyPillState extends State<_ReadyPill>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1400),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (context, _) {
+        final t = _ctrl.value;
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+          decoration: BoxDecoration(
+            color: Tokens.accent.withValues(alpha: 0.18 + 0.18 * t),
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(
+              color: Tokens.accent.withValues(alpha: 0.5 + 0.3 * t),
+            ),
+          ),
+          child: Text(
+            widget.label,
+            style: TextStyle(
+              color: Tokens.accent,
+              fontSize: 7,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.6,
+              shadows: [
+                Shadow(
+                  color: Tokens.accent.withValues(alpha: 0.4 * t),
+                  blurRadius: 6,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ConsumedPill extends StatelessWidget {
+  const _ConsumedPill({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(3),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Tokens.onSurfaceMuted,
+          fontSize: 7,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.6,
         ),
       ),
     );

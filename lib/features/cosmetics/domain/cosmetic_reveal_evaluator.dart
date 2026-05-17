@@ -67,11 +67,25 @@ class CosmeticRevealEvaluator {
     CosmeticUnlockSnapshot snapshot,
     Set<String> ownedIds,
   ) {
-    // 1. Unlocked always wins.
+    // 1. Unlocked always wins. For companion cosmetics we still build
+    //    the requirements checklist (with every row ticked) so the
+    //    details sheet can render the same checklist surface it shows
+    //    for `partial` / `visibleLocked` — the player sees a clean
+    //    list of "what I needed to earn this" instead of a stripped
+    //    layout that drops the only summary of the unlock chain.
     if (ownedIds.contains(def.id)) {
+      List<CosmeticRevealConditionRow>? conditionRows;
+      if (def.type == CosmeticType.companion) {
+        for (final rule in rules) {
+          if (rule.cosmeticId != def.id) continue;
+          conditionRows = _buildConditionRows(rule, snapshot);
+          break;
+        }
+      }
       return CosmeticRevealResult(
         cosmeticId: def.id,
         state: CosmeticRevealState.unlocked,
+        conditionRows: conditionRows,
       );
     }
 
