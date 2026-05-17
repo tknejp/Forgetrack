@@ -1187,7 +1187,7 @@ Each phase keeps the app compiling and the legacy progression system functional.
 
 Output: this document.
 
-### Phase 0.5 — Display Resolver bridge (decouples social *now*)
+### Phase 0.5 — Display Resolver bridge (decouples social *now*) ✅
 
 The 15 social → progression imports are independent of the V2 redesign. Fixing them first removes the largest dependency leak and unblocks every social PR from now until Phase 9. The resolver lives in V2's eventual location but in this phase reads from the **legacy** catalog — same data, new facade.
 
@@ -1219,7 +1219,7 @@ When V2 catalog goes live in Phase 7, swap the resolver's backing data source (s
 - Resolver smoke test passes against legacy catalog (every catalog achievement produces a non-null compactSummary + accentColor; every level tier yields a milestone display).
 - Note: this phase no longer needs to be repeated in Phase 7 — Phase 7 becomes a single internal swap of the resolver's data source.
 
-### Phase 0.6 — Extract Journey as standalone feature
+### Phase 0.6 — Extract Journey as standalone feature ✅
 
 Journey map is today inside `lib/features/progression/presentation/journey/` but is functionally a pure consumer of progression state — it produces no signals back to the engine. Extracting it now (a) decouples it from the engine for the rest of the migration, (b) establishes the same `ProgressionDisplayResolver`-as-public-API pattern used for social, (c) gives journey room to grow (per-chapter inner maps, map effects via `CosmeticType.mapEffect`, discovery system, mini-maps embedded elsewhere) without touching the engine.
 
@@ -1257,7 +1257,7 @@ Delete (after move):
 - Journey reads only from `ProgressionDisplayResolver` (no direct catalog imports, no `kProgressionLevelTiers` import).
 - `flutter analyze` clean; existing journey tests pass with updated imports.
 
-### Phase 1 — V2 domain skeleton
+### Phase 1 — V2 domain skeleton ✅
 
 Create `lib/features/progression_engine/` with:
 
@@ -1271,7 +1271,7 @@ Create `lib/features/progression_engine/` with:
 - New test `test/features/progression_engine/catalog_validator_skeleton_test.dart` passes (catches a duplicate id in a synthetic catalog).
 - No imports from any other feature into `progression_engine/` yet.
 
-### Phase 2 — V2 evaluation skeleton
+### Phase 2 — V2 evaluation skeleton ✅
 
 - `domain/evaluator/objective_evaluator.dart` — implements at least 3–4 representative metrics (`steps`, `level`, `totalXp`, `questCompletions`).
 - `domain/evaluator/unlock_condition_resolver.dart`.
@@ -1287,7 +1287,7 @@ Create `lib/features/progression_engine/` with:
 - Unit tests cover idempotency: same inputs → same result, no spurious grants on second run.
 - Legacy progression unaffected.
 
-### Phase 3 — Catalog port
+### Phase 3 — Catalog port ✅
 
 Port real content from V1 catalogs into new definitions, in this order:
 
@@ -1315,7 +1315,7 @@ For each chunk:
 - Cardinality matches expectation (rough parity with V1: same number of daily/weekly quests, same number of achievements, same chapters).
 - DevTools "Run V2 evaluation" produces a result whose `availableNodes` includes the same intuitive set as the V1 active quest list.
 
-### Phase 4 — Persistence
+### Phase 4 — Persistence ✅
 
 - `data/local/progression_engine_local_models.dart` — the new Isar collections.
 - `data/local/progression_engine_database.dart`.
@@ -1329,7 +1329,7 @@ For each chunk:
 - Wipe button clears V2 collections without touching V1.
 - Existing factory reset flow still works on V1 (V2 wipe is a separate button for now).
 
-### Phase 5 — Celebration integration
+### Phase 5 — Celebration integration ✅
 
 - `lib/features/celebration/application/progression_engine_celebration_adapter.dart` — pure transformer from `ProgressionResolutionResult` to `List<CelebrationEvent>`.
 - `application/progression_engine_provider.dart` — owns state, exposes `pendingCelebrations` queue powered by the adapter.
@@ -1341,7 +1341,7 @@ For each chunk:
 - Manual-claim node correctly renders the gold "Vyzvednout" pill; tapping it triggers a second resolution that grants the reward.
 - A `historicalResync` reason produces a single compact celebration, not N popups.
 
-### Phase 6 — Progression UI integration
+### Phase 6 — Progression UI integration ✅
 
 Migrate UI consumers from `ProgressionProvider` to `ProgressionEngineProvider` one screen at a time. Suggested order (smallest blast radius first):
 
@@ -1361,7 +1361,7 @@ For each migration: update imports, replace getters with V2 equivalents, run the
 - No screen reads from both providers simultaneously (avoid drift).
 - Build flag flipped: V2 is now the canonical engine for migrated screens.
 
-### Phase 7 — Swap Display Resolver to V2 catalog
+### Phase 7 — Swap Display Resolver to V2 catalog ✅
 
 Social was already migrated to `ProgressionDisplayResolver` in Phase 0.5. This phase is now a single internal change: swap the resolver's backing data source from the legacy catalog to the V2 catalog.
 
@@ -1374,7 +1374,7 @@ Edit:
 - Unknown / removed node ids (legacy ids that don't exist in V2) render an explicit "Unknown achievement" tile rather than a synthetic guess.
 - Social file count touched in this phase: zero. (All social files were migrated in Phase 0.5.)
 
-### Phase 8 — RPG mode readiness
+### Phase 8 — RPG mode readiness ⏳ TODO
 
 - Add a `RpgModeProvider` (a thin `ChangeNotifier` over a SharedPreferences-backed bool) — but **no toggle UI**.
 - Wire `ActivationPolicy` enforcement into the resolver and display layer.
@@ -1386,7 +1386,13 @@ Edit:
 - Re-enabling RPG retroactively grants any `onlyWhenRpgEnabled` (non-NoBackfill) nodes whose objectives are already complete.
 - No `if (rpgModeEnabled)` literals exist in UI files (grep verifies).
 
-### Phase 9 — Remove legacy
+### Phase 9 — Remove legacy ⏳ TODO
+
+> **Status note (2026-05-17):** working drafts of this phase have
+> already landed on `main` (the V2 module is in active use on every
+> UI surface) but the final cleanup — deleting `lib/features/progression/`
+> wholesale and verifying acceptance — has not been done in a single
+> committed pass. Re-verify each bullet below before closing.
 
 - Delete `lib/features/progression/` (or move to `lib/features/_legacy_progression/` for one PR cycle if anyone wants to diff).
 - Delete legacy Isar collections from the database setup.

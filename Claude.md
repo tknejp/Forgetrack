@@ -5,7 +5,7 @@ Flutter fitness/RPG tracking app. Feature-first architecture under `lib/features
 ## Where to look
 
 - **Architecture, layering rules, design tokens, dependency rules, HC / KT / progression invariants:** [docs/architecture.md](docs/architecture.md)
-- **Progression Engine V2:** plan + live phase status in [docs/progression_engine/](docs/progression_engine/) — read `session_handoff.md` first when resuming V2 work.
+- **Progression Engine V2:** plan + live phase status in [docs/progression_engine/](docs/progression_engine/). Read the per-handoff doc for the open phases first (currently `phase_8_9_handoff.md`); fall back to `v2_phased_plan.md` for the full spec, `archive/` for completed sub-plans.
 - **Feature designs:** [docs/features/](docs/features/) — coach log export, Firestore sync.
 - **External API capture:** [docs/integrations/](docs/integrations/) — Kalorické Tabulky.
 - **Feature internals:** READMEs in `lib/features/<feature>/`.
