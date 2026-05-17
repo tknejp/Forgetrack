@@ -28,6 +28,7 @@ class FirestoreProgressionEngineGateway {
   static const _nodeClaimCollection = 'engineNodeClaims';
   static const _nodeAnnouncementCollection = 'engineNodeAnnouncements';
   static const _rewardGrantCollection = 'engineRewardGrants';
+  static const _questOfferingCollection = 'engineQuestOfferings';
 
   // Firestore caps a WriteBatch at 500 operations.
   static const _maxBatchOps = 500;
@@ -86,6 +87,7 @@ class FirestoreProgressionEngineGateway {
       _userCol(uid, _nodeClaimCollection).get(),
       _userCol(uid, _nodeAnnouncementCollection).get(),
       _userCol(uid, _rewardGrantCollection).get(),
+      _userCol(uid, _questOfferingCollection).get(),
     ]);
 
     final objectives = <ObjectiveCompletionEvent>[];
@@ -93,6 +95,7 @@ class FirestoreProgressionEngineGateway {
     final nodeClaims = <NodeClaimEvent>[];
     final nodeAnnouncements = <NodeAnnouncedEvent>[];
     final rewardGrants = <RewardGrantEvent>[];
+    final questOfferings = <QuestOfferedEvent>[];
 
     for (final doc in results[0].docs) {
       final e = _objectiveFromMap(doc.data());
@@ -114,13 +117,17 @@ class FirestoreProgressionEngineGateway {
       final e = _rewardGrantFromMap(doc.data());
       if (e != null) rewardGrants.add(e);
     }
+    for (final doc in results[5].docs) {
+      final e = _questOfferedFromMap(doc.data());
+      if (e != null) questOfferings.add(e);
+    }
 
     AppLog.sync.info(
       'engine ledger pull',
       payload:
           'uid=$uid objectives=${objectives.length} nodeCompletions=${nodeCompletions.length} '
           'nodeClaims=${nodeClaims.length} announcements=${nodeAnnouncements.length} '
-          'rewardGrants=${rewardGrants.length}',
+          'rewardGrants=${rewardGrants.length} questOfferings=${questOfferings.length}',
     );
 
     return LedgerSnapshot(
@@ -129,6 +136,7 @@ class FirestoreProgressionEngineGateway {
       nodeClaims: nodeClaims,
       nodeAnnouncements: nodeAnnouncements,
       rewardGrants: rewardGrants,
+      questOfferings: questOfferings,
     );
   }
 
@@ -142,6 +150,7 @@ class FirestoreProgressionEngineGateway {
       _wipeCollection(_userCol(uid, _nodeClaimCollection)),
       _wipeCollection(_userCol(uid, _nodeAnnouncementCollection)),
       _wipeCollection(_userCol(uid, _rewardGrantCollection)),
+      _wipeCollection(_userCol(uid, _questOfferingCollection)),
     ]);
     AppLog.sync.info('engine ledger wipe', payload: 'uid=$uid');
   }
@@ -183,6 +192,8 @@ class FirestoreProgressionEngineGateway {
       NodeAnnouncedEvent() =>
         _userCol(uid, _nodeAnnouncementCollection).doc(docId),
       RewardGrantEvent() => _userCol(uid, _rewardGrantCollection).doc(docId),
+      QuestOfferedEvent() =>
+        _userCol(uid, _questOfferingCollection).doc(docId),
     };
   }
 
@@ -242,6 +253,12 @@ class FirestoreProgressionEngineGateway {
           'relicId': event.relicId,
           'levelAtGrant': event.levelAtGrant,
           'multiplierAtGrant': event.multiplierAtGrant,
+        },
+      QuestOfferedEvent() => {
+          ...base,
+          'type': 'questOffered',
+          'nodeId': event.nodeId,
+          'dayKey': event.dayKey,
         },
     };
   }
@@ -304,6 +321,25 @@ class FirestoreProgressionEngineGateway {
       timestamp: timestamp,
       nodeId: nodeId,
       periodKey: _readNullableString(data['periodKey']),
+    );
+  }
+
+  QuestOfferedEvent? _questOfferedFromMap(Map<String, dynamic> data) {
+    final eventKey = _readString(data['eventKey']);
+    final timestamp = _readDate(data['timestamp']);
+    final nodeId = _readString(data['nodeId']);
+    final dayKey = _readString(data['dayKey']);
+    if (eventKey == null ||
+        timestamp == null ||
+        nodeId == null ||
+        dayKey == null) {
+      return null;
+    }
+    return QuestOfferedEvent(
+      eventKey: eventKey,
+      timestamp: timestamp,
+      nodeId: nodeId,
+      dayKey: dayKey,
     );
   }
 

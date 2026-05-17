@@ -31,6 +31,8 @@ class IsarProgressionEngineRepository
         await _isar.engineNodeAnnouncementRecords.where().findAll();
     final rewardGrants =
         await _isar.engineRewardGrantRecords.where().findAll();
+    final questOfferings =
+        await _isar.engineQuestOfferingRecords.where().findAll();
 
     return LedgerSnapshot(
       objectiveCompletions: [
@@ -44,6 +46,9 @@ class IsarProgressionEngineRepository
         for (final r in nodeAnnouncements) _toNodeAnnouncedEvent(r),
       ],
       rewardGrants: [for (final r in rewardGrants) _toRewardGrantEvent(r)],
+      questOfferings: [
+        for (final r in questOfferings) _toQuestOfferedEvent(r),
+      ],
     );
   }
 
@@ -56,6 +61,7 @@ class IsarProgressionEngineRepository
     final nodeClaimRows = <EngineNodeClaimRecord>[];
     final nodeAnnouncementRows = <EngineNodeAnnouncementRecord>[];
     final rewardRows = <EngineRewardGrantRecord>[];
+    final questOfferingRows = <EngineQuestOfferingRecord>[];
 
     for (final e in events) {
       switch (e) {
@@ -69,6 +75,8 @@ class IsarProgressionEngineRepository
           nodeAnnouncementRows.add(_fromNodeAnnounced(e));
         case RewardGrantEvent():
           rewardRows.add(_fromRewardGrant(e));
+        case QuestOfferedEvent():
+          questOfferingRows.add(_fromQuestOffered(e));
       }
     }
 
@@ -95,6 +103,10 @@ class IsarProgressionEngineRepository
       if (rewardRows.isNotEmpty) {
         await _isar.engineRewardGrantRecords.putAllByEventKey(rewardRows);
       }
+      if (questOfferingRows.isNotEmpty) {
+        await _isar.engineQuestOfferingRecords
+            .putAllByEventKey(questOfferingRows);
+      }
     });
 
     return loadLedger();
@@ -108,6 +120,7 @@ class IsarProgressionEngineRepository
       await _isar.engineNodeClaimRecords.clear();
       await _isar.engineNodeAnnouncementRecords.clear();
       await _isar.engineRewardGrantRecords.clear();
+      await _isar.engineQuestOfferingRecords.clear();
       await _isar.engineActiveSelectionRecords.clear();
     });
   }
@@ -163,6 +176,13 @@ class IsarProgressionEngineRepository
         ..levelAtGrant = e.levelAtGrant
         ..multiplierAtGrant = e.multiplierAtGrant;
 
+  EngineQuestOfferingRecord _fromQuestOffered(QuestOfferedEvent e) =>
+      EngineQuestOfferingRecord()
+        ..eventKey = e.eventKey
+        ..nodeId = e.nodeId
+        ..dayKey = e.dayKey
+        ..timestamp = e.timestamp;
+
   // ── Isar → Domain ────────────────────────────────────────────────
 
   ObjectiveCompletionEvent _toObjectiveCompletionEvent(
@@ -200,6 +220,14 @@ class IsarProgressionEngineRepository
         timestamp: r.timestamp,
         nodeId: r.nodeId,
         periodKey: r.periodKey,
+      );
+
+  QuestOfferedEvent _toQuestOfferedEvent(EngineQuestOfferingRecord r) =>
+      QuestOfferedEvent(
+        eventKey: r.eventKey,
+        timestamp: r.timestamp,
+        nodeId: r.nodeId,
+        dayKey: r.dayKey,
       );
 
   RewardGrantEvent _toRewardGrantEvent(EngineRewardGrantRecord r) {

@@ -124,6 +124,29 @@ class EngineRewardGrantRecord {
   double? multiplierAtGrant;
 }
 
+/// Per-day record that a daily-section slot picked this node on
+/// [dayKey]. Used by `DailySectionResolver` to read recent offerings
+/// for anti-repeat cooldown and to pin today's pick across UI
+/// rebuilds (so the resolver doesn't re-roll within the same day).
+///
+/// `eventKey` shape: `offered|<nodeId>|<dayKey>`.
+@Collection()
+class EngineQuestOfferingRecord {
+  Id id = Isar.autoIncrement;
+
+  @Index(unique: true, replace: false)
+  late String eventKey;
+
+  @Index()
+  late String nodeId;
+
+  @Index()
+  late String dayKey;
+
+  @Index()
+  late DateTime timestamp;
+}
+
 /// Stochastic per-period selection record — combo pool rotation,
 /// tiered daily picks. Persisted so a re-roll on app restart does
 /// not change the player's daily set.

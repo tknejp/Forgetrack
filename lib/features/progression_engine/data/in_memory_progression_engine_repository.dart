@@ -17,6 +17,7 @@ class InMemoryProgressionEngineRepository
   final List<NodeClaimEvent> _nodeClaims = [];
   final List<NodeAnnouncedEvent> _nodeAnnouncements = [];
   final List<RewardGrantEvent> _rewardGrants = [];
+  final List<QuestOfferedEvent> _questOfferings = [];
   final Set<String> _seenKeys = {};
 
   @override
@@ -37,6 +38,8 @@ class InMemoryProgressionEngineRepository
           _nodeAnnouncements.add(e);
         case RewardGrantEvent():
           _rewardGrants.add(e);
+        case QuestOfferedEvent():
+          _questOfferings.add(e);
       }
     }
     return _snapshot();
@@ -49,6 +52,7 @@ class InMemoryProgressionEngineRepository
     _nodeClaims.clear();
     _nodeAnnouncements.clear();
     _rewardGrants.clear();
+    _questOfferings.clear();
     _seenKeys.clear();
   }
 
@@ -58,5 +62,6 @@ class InMemoryProgressionEngineRepository
         nodeClaims: List.unmodifiable(_nodeClaims),
         nodeAnnouncements: List.unmodifiable(_nodeAnnouncements),
         rewardGrants: List.unmodifiable(_rewardGrants),
+        questOfferings: List.unmodifiable(_questOfferings),
       );
 }

@@ -36,6 +36,7 @@ class ProgressionEngineDatabase {
           EngineNodeClaimRecordSchema,
           EngineNodeAnnouncementRecordSchema,
           EngineRewardGrantRecordSchema,
+          EngineQuestOfferingRecordSchema,
           EngineActiveSelectionRecordSchema,
         ],
         directory: dir.path,

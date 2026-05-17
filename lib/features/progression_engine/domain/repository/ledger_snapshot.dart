@@ -17,6 +17,7 @@ class LedgerSnapshot {
     this.nodeClaims = const [],
     this.nodeAnnouncements = const [],
     this.rewardGrants = const [],
+    this.questOfferings = const [],
   });
 
   final List<ObjectiveCompletionEvent> objectiveCompletions;
@@ -24,6 +25,7 @@ class LedgerSnapshot {
   final List<NodeClaimEvent> nodeClaims;
   final List<NodeAnnouncedEvent> nodeAnnouncements;
   final List<RewardGrantEvent> rewardGrants;
+  final List<QuestOfferedEvent> questOfferings;
 
   bool hasEventKey(String key) {
     for (final e in objectiveCompletions) {
@@ -41,6 +43,9 @@ class LedgerSnapshot {
     for (final e in rewardGrants) {
       if (e.eventKey == key) return true;
     }
+    for (final e in questOfferings) {
+      if (e.eventKey == key) return true;
+    }
     return false;
   }
 
@@ -50,5 +55,6 @@ class LedgerSnapshot {
     yield* nodeClaims;
     yield* nodeAnnouncements;
     yield* rewardGrants;
+    yield* questOfferings;
   }
 }

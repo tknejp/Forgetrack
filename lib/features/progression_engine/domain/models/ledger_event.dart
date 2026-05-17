@@ -73,6 +73,27 @@ class NodeAnnouncedEvent extends LedgerEvent {
   final String? periodKey;
 }
 
+/// Per-day record that a daily-section slot picked this node on
+/// [dayKey]. Idempotent — written once per (node, dayKey) so the
+/// resolver can read recent offerings to enforce an anti-repeat
+/// cooldown and pin today's pick across UI rebuilds.
+///
+/// Key shape: `offered|<nodeId>|<dayKey>`. [dayKey] is always a
+/// non-null `yyyy-MM-dd` string; the daily-section pool runs per
+/// calendar day, so the periodKey concept from completion/claim
+/// events doesn't apply here.
+class QuestOfferedEvent extends LedgerEvent {
+  const QuestOfferedEvent({
+    required super.eventKey,
+    required super.timestamp,
+    required this.nodeId,
+    required this.dayKey,
+  });
+
+  final String nodeId;
+  final String dayKey;
+}
+
 /// Player-initiated claim on a manual-claim node (companion, etc.).
 ///
 /// Key shape: `node|<nodeId>|<periodKey?>|claim`.

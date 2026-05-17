@@ -8363,6 +8363,1291 @@ extension EngineRewardGrantRecordQueryProperty on QueryBuilder<
 // coverage:ignore-file
 // ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
 
+extension GetEngineQuestOfferingRecordCollection on Isar {
+  IsarCollection<EngineQuestOfferingRecord> get engineQuestOfferingRecords =>
+      this.collection();
+}
+
+const EngineQuestOfferingRecordSchema = CollectionSchema(
+  name: r'EngineQuestOfferingRecord',
+  id: -1443708876413458834,
+  properties: {
+    r'dayKey': PropertySchema(
+      id: 0,
+      name: r'dayKey',
+      type: IsarType.string,
+    ),
+    r'eventKey': PropertySchema(
+      id: 1,
+      name: r'eventKey',
+      type: IsarType.string,
+    ),
+    r'nodeId': PropertySchema(
+      id: 2,
+      name: r'nodeId',
+      type: IsarType.string,
+    ),
+    r'timestamp': PropertySchema(
+      id: 3,
+      name: r'timestamp',
+      type: IsarType.dateTime,
+    )
+  },
+  estimateSize: _engineQuestOfferingRecordEstimateSize,
+  serialize: _engineQuestOfferingRecordSerialize,
+  deserialize: _engineQuestOfferingRecordDeserialize,
+  deserializeProp: _engineQuestOfferingRecordDeserializeProp,
+  idName: r'id',
+  indexes: {
+    r'eventKey': IndexSchema(
+      id: -6167434590247707527,
+      name: r'eventKey',
+      unique: true,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'eventKey',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'nodeId': IndexSchema(
+      id: -6491850230428693976,
+      name: r'nodeId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'nodeId',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'dayKey': IndexSchema(
+      id: -3264092797330672150,
+      name: r'dayKey',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'dayKey',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'timestamp': IndexSchema(
+      id: 1852253767416892198,
+      name: r'timestamp',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'timestamp',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    )
+  },
+  links: {},
+  embeddedSchemas: {},
+  getId: _engineQuestOfferingRecordGetId,
+  getLinks: _engineQuestOfferingRecordGetLinks,
+  attach: _engineQuestOfferingRecordAttach,
+  version: '3.1.0+1',
+);
+
+int _engineQuestOfferingRecordEstimateSize(
+  EngineQuestOfferingRecord object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  bytesCount += 3 + object.dayKey.length * 3;
+  bytesCount += 3 + object.eventKey.length * 3;
+  bytesCount += 3 + object.nodeId.length * 3;
+  return bytesCount;
+}
+
+void _engineQuestOfferingRecordSerialize(
+  EngineQuestOfferingRecord object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeString(offsets[0], object.dayKey);
+  writer.writeString(offsets[1], object.eventKey);
+  writer.writeString(offsets[2], object.nodeId);
+  writer.writeDateTime(offsets[3], object.timestamp);
+}
+
+EngineQuestOfferingRecord _engineQuestOfferingRecordDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = EngineQuestOfferingRecord();
+  object.dayKey = reader.readString(offsets[0]);
+  object.eventKey = reader.readString(offsets[1]);
+  object.id = id;
+  object.nodeId = reader.readString(offsets[2]);
+  object.timestamp = reader.readDateTime(offsets[3]);
+  return object;
+}
+
+P _engineQuestOfferingRecordDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readString(offset)) as P;
+    case 1:
+      return (reader.readString(offset)) as P;
+    case 2:
+      return (reader.readString(offset)) as P;
+    case 3:
+      return (reader.readDateTime(offset)) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+Id _engineQuestOfferingRecordGetId(EngineQuestOfferingRecord object) {
+  return object.id;
+}
+
+List<IsarLinkBase<dynamic>> _engineQuestOfferingRecordGetLinks(
+    EngineQuestOfferingRecord object) {
+  return [];
+}
+
+void _engineQuestOfferingRecordAttach(
+    IsarCollection<dynamic> col, Id id, EngineQuestOfferingRecord object) {
+  object.id = id;
+}
+
+extension EngineQuestOfferingRecordByIndex
+    on IsarCollection<EngineQuestOfferingRecord> {
+  Future<EngineQuestOfferingRecord?> getByEventKey(String eventKey) {
+    return getByIndex(r'eventKey', [eventKey]);
+  }
+
+  EngineQuestOfferingRecord? getByEventKeySync(String eventKey) {
+    return getByIndexSync(r'eventKey', [eventKey]);
+  }
+
+  Future<bool> deleteByEventKey(String eventKey) {
+    return deleteByIndex(r'eventKey', [eventKey]);
+  }
+
+  bool deleteByEventKeySync(String eventKey) {
+    return deleteByIndexSync(r'eventKey', [eventKey]);
+  }
+
+  Future<List<EngineQuestOfferingRecord?>> getAllByEventKey(
+      List<String> eventKeyValues) {
+    final values = eventKeyValues.map((e) => [e]).toList();
+    return getAllByIndex(r'eventKey', values);
+  }
+
+  List<EngineQuestOfferingRecord?> getAllByEventKeySync(
+      List<String> eventKeyValues) {
+    final values = eventKeyValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'eventKey', values);
+  }
+
+  Future<int> deleteAllByEventKey(List<String> eventKeyValues) {
+    final values = eventKeyValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'eventKey', values);
+  }
+
+  int deleteAllByEventKeySync(List<String> eventKeyValues) {
+    final values = eventKeyValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'eventKey', values);
+  }
+
+  Future<Id> putByEventKey(EngineQuestOfferingRecord object) {
+    return putByIndex(r'eventKey', object);
+  }
+
+  Id putByEventKeySync(EngineQuestOfferingRecord object,
+      {bool saveLinks = true}) {
+    return putByIndexSync(r'eventKey', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllByEventKey(List<EngineQuestOfferingRecord> objects) {
+    return putAllByIndex(r'eventKey', objects);
+  }
+
+  List<Id> putAllByEventKeySync(List<EngineQuestOfferingRecord> objects,
+      {bool saveLinks = true}) {
+    return putAllByIndexSync(r'eventKey', objects, saveLinks: saveLinks);
+  }
+}
+
+extension EngineQuestOfferingRecordQueryWhereSort on QueryBuilder<
+    EngineQuestOfferingRecord, EngineQuestOfferingRecord, QWhere> {
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterWhere> anyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterWhere> anyTimestamp() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'timestamp'),
+      );
+    });
+  }
+}
+
+extension EngineQuestOfferingRecordQueryWhere on QueryBuilder<
+    EngineQuestOfferingRecord, EngineQuestOfferingRecord, QWhereClause> {
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterWhereClause> idEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterWhereClause> idNotEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            )
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            )
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterWhereClause> idGreaterThan(Id id, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.greaterThan(lower: id, includeLower: include),
+      );
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterWhereClause> idLessThan(Id id, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.lessThan(upper: id, includeUpper: include),
+      );
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterWhereClause> idBetween(
+    Id lowerId,
+    Id upperId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterWhereClause> eventKeyEqualTo(String eventKey) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'eventKey',
+        value: [eventKey],
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterWhereClause> eventKeyNotEqualTo(String eventKey) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'eventKey',
+              lower: [],
+              upper: [eventKey],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'eventKey',
+              lower: [eventKey],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'eventKey',
+              lower: [eventKey],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'eventKey',
+              lower: [],
+              upper: [eventKey],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterWhereClause> nodeIdEqualTo(String nodeId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'nodeId',
+        value: [nodeId],
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterWhereClause> nodeIdNotEqualTo(String nodeId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'nodeId',
+              lower: [],
+              upper: [nodeId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'nodeId',
+              lower: [nodeId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'nodeId',
+              lower: [nodeId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'nodeId',
+              lower: [],
+              upper: [nodeId],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterWhereClause> dayKeyEqualTo(String dayKey) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'dayKey',
+        value: [dayKey],
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterWhereClause> dayKeyNotEqualTo(String dayKey) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'dayKey',
+              lower: [],
+              upper: [dayKey],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'dayKey',
+              lower: [dayKey],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'dayKey',
+              lower: [dayKey],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'dayKey',
+              lower: [],
+              upper: [dayKey],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterWhereClause> timestampEqualTo(DateTime timestamp) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'timestamp',
+        value: [timestamp],
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterWhereClause> timestampNotEqualTo(DateTime timestamp) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'timestamp',
+              lower: [],
+              upper: [timestamp],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'timestamp',
+              lower: [timestamp],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'timestamp',
+              lower: [timestamp],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'timestamp',
+              lower: [],
+              upper: [timestamp],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterWhereClause> timestampGreaterThan(
+    DateTime timestamp, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'timestamp',
+        lower: [timestamp],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterWhereClause> timestampLessThan(
+    DateTime timestamp, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'timestamp',
+        lower: [],
+        upper: [timestamp],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterWhereClause> timestampBetween(
+    DateTime lowerTimestamp,
+    DateTime upperTimestamp, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'timestamp',
+        lower: [lowerTimestamp],
+        includeLower: includeLower,
+        upper: [upperTimestamp],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+}
+
+extension EngineQuestOfferingRecordQueryFilter on QueryBuilder<
+    EngineQuestOfferingRecord, EngineQuestOfferingRecord, QFilterCondition> {
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> dayKeyEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'dayKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> dayKeyGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'dayKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> dayKeyLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'dayKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> dayKeyBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'dayKey',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> dayKeyStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'dayKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> dayKeyEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'dayKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+          QAfterFilterCondition>
+      dayKeyContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'dayKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+          QAfterFilterCondition>
+      dayKeyMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'dayKey',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> dayKeyIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'dayKey',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> dayKeyIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'dayKey',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> eventKeyEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'eventKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> eventKeyGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'eventKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> eventKeyLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'eventKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> eventKeyBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'eventKey',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> eventKeyStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'eventKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> eventKeyEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'eventKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+          QAfterFilterCondition>
+      eventKeyContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'eventKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+          QAfterFilterCondition>
+      eventKeyMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'eventKey',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> eventKeyIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'eventKey',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> eventKeyIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'eventKey',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> idEqualTo(Id value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> idBetween(
+    Id lower,
+    Id upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> nodeIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'nodeId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> nodeIdGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'nodeId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> nodeIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'nodeId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> nodeIdBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'nodeId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> nodeIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'nodeId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> nodeIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'nodeId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+          QAfterFilterCondition>
+      nodeIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'nodeId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+          QAfterFilterCondition>
+      nodeIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'nodeId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> nodeIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'nodeId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> nodeIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'nodeId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> timestampEqualTo(DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'timestamp',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> timestampGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'timestamp',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> timestampLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'timestamp',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterFilterCondition> timestampBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'timestamp',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+}
+
+extension EngineQuestOfferingRecordQueryObject on QueryBuilder<
+    EngineQuestOfferingRecord, EngineQuestOfferingRecord, QFilterCondition> {}
+
+extension EngineQuestOfferingRecordQueryLinks on QueryBuilder<
+    EngineQuestOfferingRecord, EngineQuestOfferingRecord, QFilterCondition> {}
+
+extension EngineQuestOfferingRecordQuerySortBy on QueryBuilder<
+    EngineQuestOfferingRecord, EngineQuestOfferingRecord, QSortBy> {
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterSortBy> sortByDayKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dayKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterSortBy> sortByDayKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dayKey', Sort.desc);
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterSortBy> sortByEventKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'eventKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterSortBy> sortByEventKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'eventKey', Sort.desc);
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterSortBy> sortByNodeId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nodeId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterSortBy> sortByNodeIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nodeId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterSortBy> sortByTimestamp() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'timestamp', Sort.asc);
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterSortBy> sortByTimestampDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'timestamp', Sort.desc);
+    });
+  }
+}
+
+extension EngineQuestOfferingRecordQuerySortThenBy on QueryBuilder<
+    EngineQuestOfferingRecord, EngineQuestOfferingRecord, QSortThenBy> {
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterSortBy> thenByDayKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dayKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterSortBy> thenByDayKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dayKey', Sort.desc);
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterSortBy> thenByEventKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'eventKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterSortBy> thenByEventKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'eventKey', Sort.desc);
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterSortBy> thenById() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.asc);
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterSortBy> thenByIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterSortBy> thenByNodeId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nodeId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterSortBy> thenByNodeIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nodeId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterSortBy> thenByTimestamp() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'timestamp', Sort.asc);
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord,
+      QAfterSortBy> thenByTimestampDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'timestamp', Sort.desc);
+    });
+  }
+}
+
+extension EngineQuestOfferingRecordQueryWhereDistinct on QueryBuilder<
+    EngineQuestOfferingRecord, EngineQuestOfferingRecord, QDistinct> {
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord, QDistinct>
+      distinctByDayKey({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'dayKey', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord, QDistinct>
+      distinctByEventKey({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'eventKey', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord, QDistinct>
+      distinctByNodeId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'nodeId', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, EngineQuestOfferingRecord, QDistinct>
+      distinctByTimestamp() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'timestamp');
+    });
+  }
+}
+
+extension EngineQuestOfferingRecordQueryProperty on QueryBuilder<
+    EngineQuestOfferingRecord, EngineQuestOfferingRecord, QQueryProperty> {
+  QueryBuilder<EngineQuestOfferingRecord, int, QQueryOperations> idProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, String, QQueryOperations>
+      dayKeyProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'dayKey');
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, String, QQueryOperations>
+      eventKeyProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'eventKey');
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, String, QQueryOperations>
+      nodeIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'nodeId');
+    });
+  }
+
+  QueryBuilder<EngineQuestOfferingRecord, DateTime, QQueryOperations>
+      timestampProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'timestamp');
+    });
+  }
+}
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
 extension GetEngineActiveSelectionRecordCollection on Isar {
   IsarCollection<EngineActiveSelectionRecord>
       get engineActiveSelectionRecords => this.collection();
