@@ -1598,6 +1598,10 @@ class AppLocalizationsCs extends AppLocalizations {
   String get progBackfillGoalNoData => 'Bez záznamu';
 
   @override
+  String get progDailyQuestCompletedTodayBadge =>
+      'Hotovo pro dnešek · vrátí se zítra';
+
+  @override
   String get progQuestStatusCompleted => 'Dokončeno';
 
   @override

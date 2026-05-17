@@ -1195,6 +1195,8 @@
   "@progBackfillGoalUnmet": { "description": "Trailing label on a daily-goal row when the target wasn't reached that day (no claim possible)." },
   "progBackfillGoalNoData": "No data",
   "@progBackfillGoalNoData": { "description": "Trailing label on a daily-goal row when the underlying data source has no record for that day." },
+  "progDailyQuestCompletedTodayBadge": "Done for today · returns tomorrow",
+  "@progDailyQuestCompletedTodayBadge": { "description": "Subtle caption shown under a daily-section quest card when the quest is completed today — telling the player the slot is locked until midnight rotation." },
   "progQuestStatusCompleted": "Completed",
   "progQuestClaimAll": "Claim all quests",
   "progQuestClaim": "Claim quest",

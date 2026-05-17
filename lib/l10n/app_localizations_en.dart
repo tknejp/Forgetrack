@@ -1591,6 +1591,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progBackfillGoalNoData => 'No data';
 
   @override
+  String get progDailyQuestCompletedTodayBadge =>
+      'Done for today · returns tomorrow';
+
+  @override
   String get progQuestStatusCompleted => 'Completed';
 
   @override

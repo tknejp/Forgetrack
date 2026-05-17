@@ -2919,6 +2919,12 @@ abstract class AppLocalizations {
   /// **'No data'**
   String get progBackfillGoalNoData;
 
+  /// Subtle caption shown under a daily-section quest card when the quest is completed today — telling the player the slot is locked until midnight rotation.
+  ///
+  /// In en, this message translates to:
+  /// **'Done for today · returns tomorrow'**
+  String get progDailyQuestCompletedTodayBadge;
+
   /// No description provided for @progQuestStatusCompleted.
   ///
   /// In en, this message translates to:

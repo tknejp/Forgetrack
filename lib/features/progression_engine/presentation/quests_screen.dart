@@ -446,6 +446,10 @@ class QuestSectionPanel extends StatelessWidget {
                     }
                     return chainResolver!(chainId);
                   }(),
+                  // Daily-section cards (steps domain accent) surface
+                  // the "rotate at midnight" hint when today's quest
+                  // is already done; weekly + chapter cards opt out.
+                  showCompletedTodayBadge: color == Tokens.steps.color,
                 ),
               ],
             ],

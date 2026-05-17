@@ -36,6 +36,7 @@ class EngineQuestCard extends StatelessWidget {
     this.isExpanded = false,
     this.onToggle,
     this.chain = const [],
+    this.showCompletedTodayBadge = false,
   });
 
   final EngineQuestProgress quest;
@@ -70,6 +71,13 @@ class EngineQuestCard extends StatelessWidget {
   /// chain-dot preview chapters get. Default empty — non-chain cards
   /// skip the row entirely.
   final List<EngineQuestProgress> chain;
+
+  /// Opt-in caption rendered below the description when [quest] is
+  /// completed today. Daily-section cards turn this on so the player
+  /// understands why the slot doesn't rotate to a fresh pick the
+  /// moment they tap claim — the universal "rotate only across
+  /// midnight" rule keeps today's quest in place.
+  final bool showCompletedTodayBadge;
 
   /// Non-XP rewards on this quest. Surface as chips so future quests
   /// carrying cosmetic/title/emblem/relic/chapter/companion payloads
@@ -169,6 +177,13 @@ class EngineQuestCard extends StatelessWidget {
                         const SizedBox(height: 6),
                         _StreakChip(days: streakValue, accent: accent),
                       ],
+                      if (showCompletedTodayBadge && quest.isCompleted) ...[
+                        const SizedBox(height: 6),
+                        _CompletedTodayBadge(
+                          label: l10n.progDailyQuestCompletedTodayBadge,
+                          accent: accent,
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -261,6 +276,41 @@ class EngineQuestCard extends StatelessWidget {
     // Either the objective isn't satisfied yet, or a refresh/claim is
     // in flight â€” show the locked pill with the would-be XP.
     return XpClaimPillData.locked(quest.previewXp);
+  }
+}
+
+/// Subtle "done for today" caption shown under the description when a
+/// daily-section quest has been completed today. Communicates the
+/// universal "rotate only across midnight" rule — the slot stays
+/// pinned even after the player taps claim, because the next pick
+/// won't drop until tomorrow.
+class _CompletedTodayBadge extends StatelessWidget {
+  const _CompletedTodayBadge({required this.label, required this.accent});
+
+  final String label;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.check_circle_outline_rounded, size: 12, color: accent),
+        const SizedBox(width: 4),
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: Tokens.fontSizeMicro,
+              fontWeight: FontWeight.w600,
+              color: accent.withValues(alpha: 0.82),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 

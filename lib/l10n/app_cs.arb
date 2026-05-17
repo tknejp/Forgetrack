@@ -200,6 +200,7 @@
   "progBackfillShowAllSinceJoin": "Zobrazit vše od {date}",
   "progBackfillGoalUnmet": "Nesplněno",
   "progBackfillGoalNoData": "Bez záznamu",
+  "progDailyQuestCompletedTodayBadge": "Hotovo pro dnešek · vrátí se zítra",
   "activitiesWorkouts": "Tréninky",
   "activitiesNoWorkouts": "Žádné tréninky za posledních 30 dní",
   "activitiesRecentActivity": "Poslední tréninky",
