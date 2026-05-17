@@ -21,6 +21,7 @@ import '../domain/catalog/objective_catalog.dart';
 import '../domain/catalog/progression_node_catalog.dart';
 import '../domain/evaluator/engine_streak_source.dart';
 import '../domain/evaluator/progression_node_resolver.dart';
+import '../domain/models/claim_policy.dart';
 import '../domain/models/engine_evaluation_input.dart';
 import '../domain/models/ledger_event.dart';
 import '../domain/models/objective_definition.dart';
@@ -2306,6 +2307,136 @@ class ProgressionEngineProvider extends ChangeNotifier {
     } catch (e) {
       _error = e.toString();
       AppLog.app.warn('claimDailyGoal: failed — $e');
+    } finally {
+      _isEvaluating = false;
+      notifyListeners();
+    }
+    _lastEvaluatedSignature = null;
+    await refresh();
+  }
+
+  /// Retroactive claim on a daily-section quest (daily challenge,
+  /// combo chain step, or chapter side quest) that was offered on
+  /// [day]. Parallels [claimDailyGoal] for daily-goal atoms — both
+  /// bypass the engine's standard `claim` flow and write the four
+  /// canonical ledger events directly so the claim is correctly
+  /// associated with the historical day.
+  ///
+  /// `periodKey` follows the bound objective's scope: TodayScope
+  /// nodes (daily challenges after Phase 2) anchor on `yyyy-MM-dd`,
+  /// LifetimeScope nodes (combo chain steps, side quests) write null
+  /// so the once-and-done semantics hold.
+  ///
+  /// No-op when: another evaluation is in flight, the node isn't a
+  /// claimable quest, the day is outside [historicalClaimWindow], no
+  /// [QuestOfferedEvent] exists for (nodeId, day), or the node was
+  /// already claimed for that period.
+  Future<void> claimDailyQuest({
+    required String nodeId,
+    required DateTime day,
+  }) async {
+    if (_isEvaluating) return;
+
+    final normalisedDay = DateTime(day.year, day.month, day.day);
+    final window = historicalClaimWindow;
+    if (!window.contains(normalisedDay)) return;
+
+    final dayKey = _periodDayKey(normalisedDay);
+    final ledger = _ledger;
+    if (ledger == null) return;
+
+    // Sanity guard: only claim quests that were actually offered on
+    // this day. Prevents UI bugs from forging claims on quests the
+    // rotation never picked.
+    final offeringExists = ledger.questOfferings.any(
+      (e) => e.nodeId == nodeId && e.dayKey == dayKey,
+    );
+    if (!offeringExists) return;
+
+    final node = ProgressionNodeCatalog.definitionForId(nodeId);
+    if (node is! QuestNode) return;
+    if (node.claimPolicy != ClaimPolicy.manual) return;
+    final objective = objectiveById(node.objectiveId);
+    if (objective == null) return;
+
+    // periodKey + eventKey shape mirror what the engine writes for
+    // a live claim of the same scope.
+    final scope = objective.scope;
+    String? periodKey;
+    String suffix;
+    if (scope is TodayScope) {
+      periodKey = dayKey;
+      suffix = '|$dayKey';
+    } else if (scope is LifetimeScope) {
+      periodKey = null;
+      suffix = '';
+    } else {
+      // Other scopes (ThisWeek / Range / Stretch) aren't expected on
+      // daily-section nodes today; bail rather than guess.
+      return;
+    }
+
+    final claimKey = 'node|$nodeId$suffix|claim';
+    if (ledger.hasEventKey(claimKey)) return;
+
+    final baseXp = _baseXpForNode(node);
+    if (baseXp <= 0) return;
+    final currentLevel = level;
+    final scaledXp = _levelPolicy.scaledRewardXp(
+      baseXp: baseXp,
+      level: currentLevel,
+    );
+    final multiplier = _levelPolicy.rewardMultiplierForLevel(currentLevel);
+    final now = _engineNow();
+    final ordinal = ledger.rewardGrants.length;
+    final actualValue = objectiveActualValue(node.objectiveId);
+
+    _isEvaluating = true;
+    notifyListeners();
+    try {
+      await _repository.appendEvents([
+        ObjectiveCompletionEvent(
+          eventKey: 'objective|${node.objectiveId}$suffix|completed',
+          timestamp: now,
+          objectiveId: node.objectiveId,
+          actualValue: actualValue,
+          periodKey: periodKey,
+        ),
+        NodeCompletionEvent(
+          eventKey: 'node|$nodeId$suffix|complete',
+          timestamp: now,
+          nodeId: nodeId,
+          periodKey: periodKey,
+        ),
+        NodeClaimEvent(
+          eventKey: claimKey,
+          timestamp: now,
+          nodeId: nodeId,
+          periodKey: periodKey,
+        ),
+        RewardGrantEvent(
+          eventKey: 'reward|$nodeId|$ordinal$suffix|grant',
+          timestamp: now,
+          nodeId: nodeId,
+          rewardOrdinal: ordinal,
+          rewardKind: RewardGrantKind.xp,
+          periodKey: periodKey,
+          xpAmount: scaledXp,
+          levelAtGrant: currentLevel,
+          multiplierAtGrant: multiplier,
+        ),
+      ]);
+      _ledger = await _repository.loadLedger();
+      _lastEvaluatedAt = now;
+      _recomputeStreaks();
+      AppLog.app.info(
+        'claimDailyQuest: granted $scaledXp XP for $nodeId on $dayKey '
+        '(scope=${scope.runtimeType})',
+      );
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
+      AppLog.app.warn('claimDailyQuest: failed — $e');
     } finally {
       _isEvaluating = false;
       notifyListeners();
