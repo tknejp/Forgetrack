@@ -1484,88 +1484,6 @@ class ProgressionEngineProvider extends ChangeNotifier {
     return List.unmodifiable(entries);
   }
 
-  /// Daily-bucket quest completions only — the "Recent rewards"
-  /// section on the quests screen surfaces these so the player sees
-  /// what they wrapped up today / this week. Sorted newest first.
-  List<EngineCompletedQuest> get recentDailyCompletions {
-    return _completedQuestsForBuckets(
-      includeBuckets: const {QuestDisplayBucket.daily},
-    );
-  }
-
-  List<EngineCompletedQuest> _completedQuestsForBuckets({
-    Set<QuestDisplayBucket>? includeBuckets,
-    Set<QuestDisplayBucket> excludeBuckets = const {},
-  }) {
-    final l = _ledger;
-    if (l == null) return const [];
-
-    // Latest "done" timestamp per node. We union two event sources:
-    // node completions (claim landed) and objective completions
-    // (goal met) mapped back to the bound quest node. Without the
-    // objective-side union, a player who meets a daily goal but
-    // forgets the Vyzvednout tap before midnight loses the visible
-    // record of having done it — yesterday's met-but-unclaimed
-    // dailies vanished from the recent-rewards strip even though
-    // the work was real.
-    final objectiveIdByQuestNode = <String, String>{};
-    for (final node in _nodeCatalog.build()) {
-      if (node is QuestNode) {
-        objectiveIdByQuestNode[node.id] = node.objectiveId;
-      }
-    }
-    final questNodeByObjective = <String, String>{
-      for (final entry in objectiveIdByQuestNode.entries)
-        entry.value: entry.key,
-    };
-
-    final latestByNode = <String, DateTime>{};
-    for (final e in l.nodeCompletions) {
-      final existing = latestByNode[e.nodeId];
-      if (existing == null || e.timestamp.isAfter(existing)) {
-        latestByNode[e.nodeId] = e.timestamp;
-      }
-    }
-    for (final e in l.objectiveCompletions) {
-      final nodeId = questNodeByObjective[e.objectiveId];
-      if (nodeId == null) continue;
-      final existing = latestByNode[nodeId];
-      if (existing == null || e.timestamp.isAfter(existing)) {
-        latestByNode[nodeId] = e.timestamp;
-      }
-    }
-
-    // Sum XP grants per node so completed rows can display the actual
-    // claimed XP (V1 "+750 XP" pill) instead of just a check. A row
-    // with no reward grant (goal met, not yet claimed) renders the
-    // check without a "+XP" pill so the player can tell at a glance
-    // which days they actually claimed.
-    final xpByNode = <String, int>{};
-    for (final g in l.rewardGrants) {
-      if (g.rewardKind != RewardGrantKind.xp) continue;
-      xpByNode[g.nodeId] = (xpByNode[g.nodeId] ?? 0) + (g.xpAmount ?? 0);
-    }
-
-    final out = <EngineCompletedQuest>[];
-    for (final node in _nodeCatalog.build()) {
-      if (node is! QuestNode) continue;
-      if (includeBuckets != null &&
-          !includeBuckets.contains(node.displayBucket)) {
-        continue;
-      }
-      if (excludeBuckets.contains(node.displayBucket)) continue;
-      final ts = latestByNode[node.id];
-      if (ts == null) continue;
-      out.add(EngineCompletedQuest(
-        node: node,
-        completedAt: ts,
-        xpGranted: xpByNode[node.id] ?? 0,
-      ));
-    }
-    out.sort((a, b) => b.completedAt.compareTo(a.completedAt));
-    return List.unmodifiable(out);
-  }
-
   /// Resolves a node id to its catalog definition, or null when the
   /// catalog no longer knows that id. UI consumers (history feed,
   /// completed rollup) call this to look up titles / asset keys for
@@ -3397,30 +3315,6 @@ class EngineCompletedEntry {
   final bool hasClaimable;
 
   bool get isChain => chainQuests.length > 1;
-}
-
-/// A single completed quest row — built by
-/// [ProgressionEngineProvider.recentDailyCompletions] for the
-/// "Nedávné odměny" surface from the most recent
-/// [LedgerSnapshot.nodeCompletions] event per node.
-@immutable
-class EngineCompletedQuest {
-  const EngineCompletedQuest({
-    required this.node,
-    required this.completedAt,
-    this.xpGranted = 0,
-  });
-
-  final QuestNode node;
-  final DateTime completedAt;
-
-  /// Total XP credited by this quest's reward grants in the ledger.
-  /// Zero when the catalog node carries no XP reward, or when the
-  /// grant pre-dates the field being tracked. UI surfaces a "+XP"
-  /// pill on the completed row when this is > 0.
-  final int xpGranted;
-
-  String get nodeId => node.id;
 }
 
 /// A quest node paired with its most recent completion timestamp.
