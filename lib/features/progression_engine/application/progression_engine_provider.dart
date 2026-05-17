@@ -533,6 +533,15 @@ class ProgressionEngineProvider extends ChangeNotifier {
     // ad-hoc "is this claimed today?" / "is this step gated by a
     // same-day cooldown?" logic that used to live inline here is
     // now centralised in [DailySectionResolver].
+    //
+    // The resolver is pure — it only reads the ledger's
+    // [QuestOfferedEvent]s; persistence of new offerings happens in
+    // [evaluateWith] via [_persistDailyOfferings]. Calling this
+    // getter on every UI rebuild is safe.
+    return _resolveDailySection().slots;
+  }
+
+  DailySectionResolution _resolveDailySection() {
     return const DailySectionResolver().resolve(
       quests: [
         ..._questsForBucket(QuestDisplayBucket.daily),
@@ -544,6 +553,25 @@ class ProgressionEngineProvider extends ChangeNotifier {
       now: _engineNow(),
       nodesCompletedTodayIds: _nodesCompletedTodayFromLedger(),
     );
+  }
+
+  /// Writes today's planned [QuestOfferedEvent]s for slots the
+  /// resolver just filled. Idempotent — anything already in the
+  /// ledger is dropped before `appendEvents` runs. Called once per
+  /// evaluation cycle (after the engine's own writes land) so daily
+  /// rotation rolls forward across midnight without depending on UI
+  /// rebuilds.
+  Future<void> _persistDailyOfferings() async {
+    final ledger = _ledger;
+    if (ledger == null) return;
+    final resolution = _resolveDailySection();
+    if (resolution.plannedOfferings.isEmpty) return;
+    final newEvents = <QuestOfferedEvent>[
+      for (final e in resolution.plannedOfferings)
+        if (!ledger.hasEventKey(e.eventKey)) e,
+    ];
+    if (newEvents.isEmpty) return;
+    _ledger = await _repository.appendEvents(newEvents);
   }
 
   /// Returns the full daily quest pool (all daily-bucket quests in
@@ -1762,6 +1790,11 @@ class ProgressionEngineProvider extends ChangeNotifier {
       );
       _lastResult = result;
       _ledger = await _repository.loadLedger();
+      // Daily-section rotation events get written *after* the engine
+      // pass so the resolver sees up-to-date quest-progress flags
+      // (isCompleted, isAvailableForClaim) before deciding what to
+      // pin in the slot. Idempotent — same-day repeat calls are no-ops.
+      await _persistDailyOfferings();
       _lastEvaluatedAt = _engineNow();
       _recomputeStreaks();
       if (!result.isEmpty) _pendingCelebrations.add(result);

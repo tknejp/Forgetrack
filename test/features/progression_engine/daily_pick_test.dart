@@ -58,5 +58,70 @@ void main() {
           provider.currentDailyQuests.map((q) => q.nodeId).toSet();
       expect(firstCall, equals(secondCall));
     });
+
+    test(
+        'evaluateWith persists a QuestOfferedEvent for every slot, '
+        'idempotent on repeat calls', () async {
+      final provider = _provider();
+      await provider.evaluateWith(input: _input());
+
+      final picks =
+          provider.currentDailyQuests.map((q) => q.nodeId).toSet();
+      final firstLedger = provider.ledger!;
+      final firstOfferingNodes =
+          firstLedger.questOfferings.map((e) => e.nodeId).toSet();
+      // Today's offerings cover every slot the resolver picked.
+      expect(firstOfferingNodes.containsAll(picks), isTrue);
+      // All offerings share the same calendar day.
+      final dayKeys = firstLedger.questOfferings.map((e) => e.dayKey).toSet();
+      expect(dayKeys, hasLength(1));
+
+      // Second evaluation on the same day must not duplicate.
+      await provider.evaluateWith(input: _input());
+      final secondLedger = provider.ledger!;
+      expect(
+        secondLedger.questOfferings.length,
+        firstLedger.questOfferings.length,
+      );
+    });
+
+    test(
+        'cooldown prevents a daily challenge from repeating the next day',
+        () async {
+      bool isChallenge(String nodeId) => nodeId.startsWith('daily_challenge_');
+
+      final provider = _provider();
+      await provider.evaluateWith(input: _input());
+      final ledgerDay0 = provider.ledger!;
+      final day0Key = ledgerDay0.questOfferings.isEmpty
+          ? null
+          : ledgerDay0.questOfferings.first.dayKey;
+      final day0Challenges = ledgerDay0.questOfferings
+          .where((e) => isChallenge(e.nodeId))
+          .map((e) => e.nodeId)
+          .toSet();
+
+      await provider.devToolsAdvanceDay();
+      await provider.evaluateWith(input: _input());
+
+      final ledgerDay1 = provider.ledger!;
+      final day1Challenges = ledgerDay1.questOfferings
+          .where((e) => e.dayKey != day0Key && isChallenge(e.nodeId))
+          .map((e) => e.nodeId)
+          .toSet();
+
+      // Combo / chapter side quests can repeat day-to-day (their own
+      // gating handles rotation) so we narrow the assertion to the
+      // tier-3 daily challenge pool, which IS cooldown-filtered.
+      // Both sides may be empty if neither day produced a challenge
+      // pick — combo/pin can absorb the whole slot count.
+      if (day0Challenges.isNotEmpty && day1Challenges.isNotEmpty) {
+        expect(
+          day0Challenges.intersection(day1Challenges),
+          isEmpty,
+          reason: 'Daily challenges must not repeat within cooldown window.',
+        );
+      }
+    });
   });
 }
