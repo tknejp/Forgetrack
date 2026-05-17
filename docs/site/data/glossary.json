@@ -1,12 +1,44 @@
 {
   "entries": [
     {
-      "id": "ledger-event",
-      "title": "LedgerEvent",
-      "category": "Progression",
-      "file": "lib/features/progression_engine/domain/models/ledger_event.dart",
-      "summary": "Sealed hierarchie 6 typů událostí v append-only ledgeru. Každá nese deterministický eventKey — re-zápis stejného eventu je no-op (set() v Firestore, composite unique v Isaru).",
-      "diagram": "classDiagram\n    class LedgerEvent {\n      <<sealed>>\n      +String eventKey\n      +DateTime occurredAt\n    }\n    class ObjectiveCompletionEvent {\n      +String objectiveId\n      +String periodKey\n    }\n    class NodeCompletionEvent {\n      +String nodeId\n      +String periodKey\n    }\n    class NodeAnnouncedEvent {\n      +String nodeId\n      +String periodKey\n    }\n    class NodeClaimEvent {\n      +String nodeId\n      +String periodKey\n    }\n    class RewardGrantEvent {\n      +RewardDefinition reward\n      +int finalXp\n      +int levelAtClaim\n    }\n    class QuestOfferedEvent {\n      +String nodeId\n      +String dayKey\n    }\n    LedgerEvent <|-- ObjectiveCompletionEvent\n    LedgerEvent <|-- NodeCompletionEvent\n    LedgerEvent <|-- NodeAnnouncedEvent\n    LedgerEvent <|-- NodeClaimEvent\n    LedgerEvent <|-- RewardGrantEvent\n    LedgerEvent <|-- QuestOfferedEvent"
+      "id": "journal-event",
+      "title": "JournalEvent",
+      "category": "Journal",
+      "file": "lib/domain/journal/journal_event.dart",
+      "summary": "Sealed hierarchie 6 typů událostí v append-only journalu (přejmenováno z LedgerEvent v Stage A doménového refactoru). Každá nese deterministický eventKey — re-zápis stejného eventu je no-op (set() v Firestore, composite unique v Isaru). Žije v lib/domain/journal/ a používá package:meta místo flutter/foundation, aby splnila domain purity guard.",
+      "diagram": "classDiagram\n    class JournalEvent {\n      <<sealed>>\n      +String eventKey\n      +DateTime timestamp\n    }\n    class ObjectiveCompletionEvent {\n      +String objectiveId\n      +double actualValue\n      +String? periodKey\n    }\n    class NodeCompletionEvent {\n      +String nodeId\n      +String? periodKey\n    }\n    class NodeAnnouncedEvent {\n      +String nodeId\n      +String? periodKey\n    }\n    class NodeClaimEvent {\n      +String nodeId\n      +String? periodKey\n    }\n    class RewardGrantEvent {\n      +String nodeId\n      +int rewardOrdinal\n      +RewardGrantKind rewardKind\n    }\n    class QuestOfferedEvent {\n      +String nodeId\n      +String dayKey\n    }\n    JournalEvent <|-- ObjectiveCompletionEvent\n    JournalEvent <|-- NodeCompletionEvent\n    JournalEvent <|-- NodeAnnouncedEvent\n    JournalEvent <|-- NodeClaimEvent\n    JournalEvent <|-- RewardGrantEvent\n    JournalEvent <|-- QuestOfferedEvent"
+    },
+    {
+      "id": "journal-interface",
+      "title": "Journal (abstract aggregate)",
+      "category": "Journal",
+      "file": "lib/domain/journal/journal.dart",
+      "summary": "Read-only doménová abstrakce nad ledger storage. Nahrazuje přímé volání repository query metod z application vrstvy — providers / projekce čtou přes Journal facade, append zůstává repository concern. Scaffold landl v Phase 2; konzumenti migrují inkrementálně přes strangler-fig pattern.",
+      "diagram": "classDiagram\n    class Journal {\n      <<abstract>>\n      +Iterable~JournalEvent~ events\n      +eventsForNode(ProgressionEntryId)\n      +eventsForObjective(ObjectiveId)\n      +eventsInRange(DateTime, DateTime)\n    }\n    Journal --> JournalEvent\n    Journal --> ProgressionEntryId\n    Journal --> ObjectiveId"
+    },
+    {
+      "id": "period-key",
+      "title": "PeriodKey (UTC-enforced VO)",
+      "category": "Journal",
+      "file": "lib/domain/journal/period_key.dart",
+      "summary": "Value object pro time-window klíče v Journal eventech (yyyy-MM-dd den, yyyy-Www ISO týden, lifetime, chapter:id). Konstrukce výhradně přes named factories, které normalizují DateTime na UTC. Adresuje cross-TZ collision risk z deeper auditu — dva přístroje v různých zónách na stejný UTC den teď produkují identický key.",
+      "diagram": "classDiagram\n    class PeriodKey {\n      -String _value\n      +String raw\n      +PeriodKey.day(DateTime)$\n      +PeriodKey.isoWeek(DateTime)$\n      +PeriodKey.chapter(String)$\n      +PeriodKey.fromRaw(String)$\n      +PeriodKey.lifetime$\n    }"
+    },
+    {
+      "id": "event-key",
+      "title": "EventKey (typed wrapper)",
+      "category": "Journal",
+      "file": "lib/domain/journal/event_key.dart",
+      "summary": "Extension type wrapping String pro deterministický event identifier. Zero runtime cost (kompiluje se na čistý String), ale compiler odmítá záměnu s raw String nebo jiným typed id. Catch refactoring typos by construction.",
+      "diagram": "classDiagram\n    class EventKey {\n      <<extension type>>\n      +String value\n      +String raw\n    }\n    note for EventKey \"erasure: runtime je String\""
+    },
+    {
+      "id": "progression-ids",
+      "title": "Progression catalog identifier hierarchy",
+      "category": "Journal",
+      "file": "lib/domain/progression/catalog/ids.dart",
+      "summary": "Šest extension type wrappers pro String ids v progression a objective katalozích. Tři implementují umbrella ProgressionEntryId (QuestId, AchievementId, MilestoneId) — generic API (Journal.eventsForNode) přijímá libovolný. ChapterId + ObjectiveId zůstávají separate namespaces, protože reprezentují konceptuálně odlišné entity. Zero runtime overhead, compile-time discriminace mezi catalog kindy.",
+      "diagram": "classDiagram\n    class ProgressionEntryId {\n      <<extension type>>\n      +String value\n      +String raw\n    }\n    class QuestId {\n      <<extension type>>\n    }\n    class AchievementId {\n      <<extension type>>\n    }\n    class MilestoneId {\n      <<extension type>>\n    }\n    class ChapterId {\n      <<extension type>>\n    }\n    class ObjectiveId {\n      <<extension type>>\n    }\n    ProgressionEntryId <|.. QuestId\n    ProgressionEntryId <|.. AchievementId\n    ProgressionEntryId <|.. MilestoneId"
     },
     {
       "id": "backfill-models",

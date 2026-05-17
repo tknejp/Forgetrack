@@ -224,6 +224,54 @@
       ],
       "alternatives": "FNV(date) % poolSize bez cooldown — pravděpodobnostně se challenges opakují. Strict cycle s offeredCooldownDays = poolSize-1 — moc rigid. Per-quest manual claim-until-claim — sticky claim by zaplnil sloty.",
       "links": ["docs/progression_engine/quest_history_refactor.md", "docs/features/firestore_sync.md"]
+    },
+    {
+      "id": "lib-domain-folder",
+      "title": "lib/domain/ jako cross-aggregate vrstva (hybrid layout)",
+      "status": "accepted",
+      "date": "2026-05-17",
+      "context": "Před refactorem patřil každý doménový typ k jedné feature. Player level/XP se de facto fabrikoval uvnitř ProgressionEngineProvider, takže social, cosmetics i app_shell musely importovat progression_engine jen aby přečetly úroveň hráče. To tlačí features ke kruhovým závislostem a degraduje 'feature-first' principle (každá feature stand-alone) na 'feature-first-but-everyone-needs-progression'.",
+      "decision": "Cross-aggregate doménové typy (Player, Journal, JournalEvent, EventKey, PeriodKey, ProgressionEntryId family, LevelCurve, lifecycle sealed classes) žijí v nové top-level složce lib/domain/. Feature-internal doménové typy (KTCredentials, HealthSnapshot, NutritionSnapshot, EmblemBoard, SocialPresence sub-entity) zůstávají v lib/features/<f>/domain/. Hybrid layout: 'features stand-alone PLUS shared aggregaty na úrovni nad nimi'.",
+      "consequences": [
+        "lib/domain/ je čistě pure Dart — žádné Flutter, Provider, Firebase, Isar, platform plugin importy. Vynuceno test/domain_purity_test.dart který běží v každé test session.",
+        "Social, Cosmetics, App-shell mohou číst Player aniž by importovaly progression_engine.",
+        "@immutable potřebuje package:meta jako direct dependency (promote z transitive přes flutter foundation).",
+        "Nový level lint: každý PR musí respektovat purity. Phase 21 zpevní lint do CI."
+      ],
+      "alternatives": "Option A: vše ve features (preserves feature-first ortodox, ale provider grafy se zauzlí). Option B: vše v lib/domain/ (clean separation, ale feature self-containment zaniká). Hybrid byl zvolen po user-confirmed evaluaci v session 2026-05-17.",
+      "links": ["docs/domain_model/proposal.md", "docs/domain_model/migration_plan.md", "docs/architecture.md"]
+    },
+    {
+      "id": "period-key-utc",
+      "title": "PeriodKey UTC normalizace v factory",
+      "status": "accepted",
+      "date": "2026-05-17",
+      "context": "Audit cross-device sync (docs/domain_model/follow_ups.md §2.12) odhalil, že současné periodKey stringy (yyyy-MM-dd den, yyyy-Www ISO week) byly konstruovány z DateTime.now() bez UTC normalizace. Uživatel cestující mezi časovými zónami nebo na hranici půlnoci mohl claimnout daily quest na 'svůj' lokální den, který se ale serializoval s jiným calendar-day stringem než duplicate claim z druhého přístroje — výsledkem byl drift nebo dvojitý grant.",
+      "decision": "PeriodKey je VO s privátním konstruktorem. Veřejné jsou pouze pojmenované factories PeriodKey.day(DateTime), PeriodKey.isoWeek(DateTime), PeriodKey.chapter(String), PeriodKey.lifetime, a PeriodKey.fromRaw(String). Day/isoWeek vždy volají moment.toUtc() před formatováním. Žádný call site nemůže vyrobit non-normalised key — kompilátor brání.",
+      "consequences": [
+        "Same UTC instant → same key, bez ohledu na lokální TZ caller-u (verified v test/domain/journal/period_key_test.dart).",
+        "ISO week implementace je pure (žádný DateTime.weekday lokálně-závislý) — explicit ISO 8601 algoritmus.",
+        "fromRaw existuje pro deserializaci legacy / Firestore data — netýká se normalizací, trust-the-store. Devtools audit (post-Phase-2) decoide o legacy cleanupu, ne application code.",
+        "Day-rollover timer v ProgressionEngineProvider stále musí používat consistent clock — to není v scope tohoto ADR."
+      ],
+      "alternatives": "A) Local-TZ keys + reconciliation logic at sync time. Odmítnuto — zauzluje pull-and-merge, hard to test. B) Plain String periodKey s konvencí 'use UTC'. Odmítnuto — convention without enforcement, audit ukázal že fail. C) Sealed PeriodKey union (DayKey / IsoWeekKey / ChapterKey / Lifetime). Over-engineering pro dnešní use-case; VO s factories stačí.",
+      "links": ["docs/domain_model/migration_plan.md", "docs/domain_model/follow_ups.md"]
+    },
+    {
+      "id": "typed-identifiers",
+      "title": "Typed identifier hierarchy přes Dart 3 extension types",
+      "status": "accepted",
+      "date": "2026-05-17",
+      "context": "Před refactorem byly všechny ids v progression / cosmetics / objective katalozích plain String. Klasický stringly-typed anti-pattern (proposal §7.3): inventory.byCosmeticId(quest.id) se kompiluje, ale runtime explodes. Companion-flow bugy v posledních sessions byly přesně tohle — 'companion id == cosmetic id == availability node id' bylo enforced pouze komentářem, ne typem.",
+      "decision": "Šest extension types v lib/domain/progression/catalog/ids.dart: ProgressionEntryId (umbrella) + QuestId / AchievementId / MilestoneId (implementují umbrella) + ChapterId / ObjectiveId (separate namespaces). Compile-time discriminace, zero runtime cost (extension type erases to String). Generic interfaces (Journal.eventsForNode) přijímají umbrella; type-specific interfaces přijímají konkrétní typed id.",
+      "consequences": [
+        "Compiler odmítá záměnu — Inventory.byCosmeticId(quest.id) nyní fails to compile pokud parametr je CosmeticId.",
+        "Domain a application code drží typed ids; persistence boundary v data/ unwrapping přes .raw při Isar/Firestore I/O.",
+        "Catalog row signatures (ProgressionEntry.id field type) migrují inkrementálně v Phase 3.b.2 — zatím field type zůstává String, call sites wrappují s ProgressionEntryId(node.id) na boundary do typed API.",
+        "Žádný runtime overhead — JIT/AOT optimizes away the wrapper."
+      ],
+      "alternatives": "A) Sealed class IdToken { String value; } pro každý kind. Boilerplate (equals/hashCode/toString) per typ, ne zero-cost. B) String typedef NodeId = String. Žádná typová izolace — kompilátor toleruje záměnu. C) Status quo (raw String) — odmítnuto, audit + companion bugy ukázaly nedostatek.",
+      "links": ["docs/domain_model/proposal.md", "docs/domain_model/migration_plan.md"]
     }
   ]
 }
