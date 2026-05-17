@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../core/logging/app_log.dart';
-import '../../auth/application/auth_user.dart';
+import '../../auth/domain/identity.dart';
 
 class SocialFirebaseSession {
   SocialFirebaseSession({

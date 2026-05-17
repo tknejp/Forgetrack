@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-import 'auth_user.dart';
+import '../domain/identity.dart';
 import '../data/google_auth_service.dart';
 
 enum AuthSessionState { checking, signedIn, signedOut }
