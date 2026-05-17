@@ -1,3 +1,9 @@
+// TODO(domain-model): hardcoded Czech labels (label: 'Datum', 'Váha', 'Kcal',
+// …) bypass AppLocalizations. Export-only file with single-language target,
+// so this is treated as a documented exception rather than the closure-based
+// LocalizedText pattern used elsewhere in domain. Out of scope for the active
+// domain-model refactor — see docs/domain_model/proposal.md §1.1.
+
 // Sloupce denní tabulky, 0-indexed od levého okraje bloku (sloupec A = offset 0).
 enum BushidoColumn {
   date(label: 'Datum', isAuto: true, columnOffset: 0),

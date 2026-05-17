@@ -7,6 +7,10 @@ class StepsRecord {
 
   const StepsRecord({required this.date, required this.steps});
 
+  // TODO(domain-model): export concern leaking into domain entity. Move
+  // formatting to a mapper in sheets_export/data/ or coach_log_export/data/.
+  // Out of scope for the active domain-model refactor — see
+  // docs/domain_model/proposal.md §1.1 + §7 anti-pattern #10.
   List<Object?> toSheetRow() => [
         DateFormat('yyyy-MM-dd').format(date),
         steps,
@@ -51,6 +55,10 @@ class ActivityRecord {
     );
   }
 
+  // TODO(domain-model): export concern leaking into domain entity. Move
+  // formatting to a mapper in sheets_export/data/ or coach_log_export/data/.
+  // Out of scope for the active domain-model refactor — see
+  // docs/domain_model/proposal.md §1.1 + §7 anti-pattern #10.
   List<Object?> toSheetRow() {
     final fmt = DateFormat('yyyy-MM-dd HH:mm');
     return [

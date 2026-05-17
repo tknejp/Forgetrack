@@ -1,3 +1,10 @@
+// TODO(domain-model): this file lives in `domain/` but imports providers from
+// `application/` (FitnessProvider, KalorickeTabulkyProvider), violating the
+// "domain stays pure" rule in docs/architecture.md §3. Out of scope for the
+// active domain-model refactor — see docs/domain_model/proposal.md §1.1.
+// Future fix: either move this catalog to `application/`, or refactor
+// `SheetExportField.resolve` to take HealthSnapshot + NutritionSnapshot
+// arguments instead of provider handles.
 import 'package:flutter/foundation.dart';
 
 import '../../../l10n/app_localizations.dart';
