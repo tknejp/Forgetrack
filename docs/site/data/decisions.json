@@ -263,14 +263,15 @@
       "status": "accepted",
       "date": "2026-05-17",
       "context": "Před refactorem byly všechny ids v progression / cosmetics / objective katalozích plain String. Klasický stringly-typed anti-pattern (proposal §7.3): inventory.byCosmeticId(quest.id) se kompiluje, ale runtime explodes. Companion-flow bugy v posledních sessions byly přesně tohle — 'companion id == cosmetic id == availability node id' bylo enforced pouze komentářem, ne typem.",
-      "decision": "Šest extension types v lib/domain/progression/catalog/ids.dart: ProgressionEntryId (umbrella) + QuestId / AchievementId / MilestoneId (implementují umbrella) + ChapterId / ObjectiveId (separate namespaces). Compile-time discriminace, zero runtime cost (extension type erases to String). Generic interfaces (Journal.eventsForNode) přijímají umbrella; type-specific interfaces přijímají konkrétní typed id.",
+      "decision": "Sedm extension types: ProgressionEntryId (umbrella) + QuestId / AchievementId / MilestoneId (implementují umbrella) v lib/domain/progression/catalog/ids.dart; ChapterId + ObjectiveId tamtéž jako separate namespaces; CosmeticId v lib/features/cosmetics/domain/ids.dart (feature-local catalog). Všech sedm deklarováno `implements String` — typed wrapper IS-A String, takže typed id auto-coerce do String parametru bez explicitního .raw. Reverse směr (String → typed id) zůstává blokován, čímž authoring sites musí explicitně konstruovat typed (catching typos at compile time). Zero runtime cost (extension type erases to String).",
       "consequences": [
-        "Compiler odmítá záměnu — Inventory.byCosmeticId(quest.id) nyní fails to compile pokud parametr je CosmeticId.",
-        "Domain a application code drží typed ids; persistence boundary v data/ unwrapping přes .raw při Isar/Firestore I/O.",
-        "Catalog row signatures (ProgressionEntry.id field type) migrují inkrementálně v Phase 3.b.2 — zatím field type zůstává String, call sites wrappují s ProgressionEntryId(node.id) na boundary do typed API.",
-        "Žádný runtime overhead — JIT/AOT optimizes away the wrapper."
+        "Compiler odmítá záměnu při konstrukci — Inventory(byCosmeticId: ProgressionEntryId(...)) fails. Discriminace funguje tam, kde typing matters.",
+        "Při čtení a passing typed id do String API funguje auto-coercion — žádný cascade .raw napříč ~30 konzumenty. Migrace catalog field signatures (Phase 3.b.2) byla unblocked tímto designem.",
+        "Persistence boundary (Isar / Firestore mappers) může číst/psát typed ids přímo jako String; explicit .raw je stylistic preference pro self-documenting intent.",
+        "Catalog row field types migrované: ProgressionEntry.id (umbrella), Objective.id (ObjectiveId), Cosmetic.id (CosmeticId). 258 progression literals + 109 objective literals + 75 cosmetic literals wrapped.",
+        "Žádný runtime overhead — JIT/AOT optimizes away the wrapper. Stejná wire format jako před refactorem."
       ],
-      "alternatives": "A) Sealed class IdToken { String value; } pro každý kind. Boilerplate (equals/hashCode/toString) per typ, ne zero-cost. B) String typedef NodeId = String. Žádná typová izolace — kompilátor toleruje záměnu. C) Status quo (raw String) — odmítnuto, audit + companion bugy ukázaly nedostatek.",
+      "alternatives": "A) Sealed class IdToken { String value; } pro každý kind. Boilerplate (equals/hashCode/toString) per typ, ne zero-cost. B) String typedef NodeId = String. Žádná typová izolace — kompilátor toleruje záměnu. C) Status quo (raw String) — odmítnuto, audit + companion bugy ukázaly nedostatek. D) Extension types `implements Object` (původní volba) — zachovává oboustrannou type-isolation, ale vyžaduje .raw na každém String-parameter call site. Migrace pak cascade-rolovala ~600 errorů; přechod na `implements String` v rámci Phase 3.b.2 redukoval to na ~20 spravovatelných míst (catalog literál wraps).",
       "links": ["docs/domain_model/proposal.md", "docs/domain_model/migration_plan.md"]
     }
   ]

@@ -37,7 +37,7 @@
       "title": "Progression catalog identifier hierarchy",
       "category": "Journal",
       "file": "lib/domain/progression/catalog/ids.dart",
-      "summary": "Šest extension type wrappers pro String ids v progression a objective katalozích. Tři implementují umbrella ProgressionEntryId (QuestId, AchievementId, MilestoneId) — generic API (Journal.eventsForNode) přijímá libovolný. ChapterId + ObjectiveId zůstávají separate namespaces, protože reprezentují konceptuálně odlišné entity. Zero runtime overhead, compile-time discriminace mezi catalog kindy.",
+      "summary": "Sedm extension type wrappers pro String ids v progression / objective / cosmetic katalozích. Tři implementují umbrella ProgressionEntryId (QuestId, AchievementId, MilestoneId) — generic API (Journal.eventsForNode) přijímá libovolný. ChapterId + ObjectiveId zůstávají separate namespaces, CosmeticId žije feature-locally v lib/features/cosmetics/domain/ids.dart. Všech sedm `implements String` — typed wrapper IS-A String, takže typed → String passing nevyžaduje .raw cascade. Reverse směr (String → typed) blokovan kompilátorem, takže authoring sites musí explicitně konstruovat. Zero runtime overhead.",
       "diagram": "classDiagram\n    class ProgressionEntryId {\n      <<extension type>>\n      +String value\n      +String raw\n    }\n    class QuestId {\n      <<extension type>>\n    }\n    class AchievementId {\n      <<extension type>>\n    }\n    class MilestoneId {\n      <<extension type>>\n    }\n    class ChapterId {\n      <<extension type>>\n    }\n    class ObjectiveId {\n      <<extension type>>\n    }\n    ProgressionEntryId <|.. QuestId\n    ProgressionEntryId <|.. AchievementId\n    ProgressionEntryId <|.. MilestoneId"
     },
     {
