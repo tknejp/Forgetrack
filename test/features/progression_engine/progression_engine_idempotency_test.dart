@@ -1,3 +1,4 @@
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:forgetrack/features/progression_engine/application/progression_engine.dart';
@@ -40,7 +41,7 @@ class _FakeNodeCatalog extends ProgressionEntryCatalog {
 
 Objective _stepsTodayObjective({double target = 1000}) =>
     Objective(
-      id: 'steps_today_$target',
+      id: ObjectiveId('steps_today_$target'),
       metric: const StepsMetric(),
       scope: const TodayScope(),
       operator: ObjectiveOperator.atLeast,
@@ -55,7 +56,7 @@ Quest _quest({
   List<RewardDefinition>? rewards,
 }) =>
     DailyQuest(
-      id: id,
+      id: ProgressionEntryId(id),
       objectiveId: objectiveId,
       titleKey: (_) => 'Title',
       descriptionKey: (_) => 'Desc',
@@ -169,7 +170,7 @@ void main() {
         nodes: _FakeNodeCatalog([
           _quest(id: 'quest', objectiveId: objective.id, xp: 50),
           LongTermQuest(
-            id: 'achievement_like',
+            id: const ProgressionEntryId('achievement_like'),
             objectiveId: objective.id,
             titleKey: (_) => 'Achievement',
             descriptionKey: (_) => 'Same objective',
@@ -204,7 +205,7 @@ void main() {
         objectives: _FakeObjectiveCatalog([objective]),
         nodes: _FakeNodeCatalog([
           LongTermQuest(
-            id: 'manual_node',
+            id: const ProgressionEntryId('manual_node'),
             objectiveId: objective.id,
             titleKey: (_) => 'Manual',
             descriptionKey: (_) => 'Desc',

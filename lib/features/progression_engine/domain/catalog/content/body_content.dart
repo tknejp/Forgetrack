@@ -1,3 +1,4 @@
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import '../../../../../shared/domain/rarity.dart';
 import '../../models/claim_policy.dart';
 import '../../models/content_tag.dart';
@@ -20,7 +21,7 @@ List<Objective> bodyObjectives(EngineCatalogContext context) {
   return const [
     // Logged a weight today (presence-only check).
     Objective(
-      id: 'daily_weight_log',
+      id: const ObjectiveId('daily_weight_log'),
       domain: ProgressionDomain.body,
       metric: WeightLoggedTodayMetric(),
       scope: TodayScope(),
@@ -33,7 +34,7 @@ List<Objective> bodyObjectives(EngineCatalogContext context) {
 List<ProgressionEntry> bodyNodes() {
   return [
     DailyQuest(
-      id: 'daily_weight_log_today',
+      id: const ProgressionEntryId('daily_weight_log_today'),
       objectiveId: 'daily_weight_log',
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.progRuleDailyWeightLogDesc,

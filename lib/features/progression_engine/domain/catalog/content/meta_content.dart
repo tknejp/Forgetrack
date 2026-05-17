@@ -1,3 +1,4 @@
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import '../../../../../shared/domain/rarity.dart';
 import '../../models/content_tag.dart';
 import '../../models/objective_definition.dart';
@@ -17,28 +18,28 @@ import '../engine_catalog_context.dart';
 List<Objective> metaObjectives(EngineCatalogContext context) {
   return const [
     Objective(
-      id: 'lifetime_xp_100k',
+      id: const ObjectiveId('lifetime_xp_100k'),
       metric: TotalXpMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 100000,
     ),
     Objective(
-      id: 'lifetime_xp_1m',
+      id: const ObjectiveId('lifetime_xp_1m'),
       metric: TotalXpMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 1000000,
     ),
     Objective(
-      id: 'reward_count_25',
+      id: const ObjectiveId('reward_count_25'),
       metric: RewardCountMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 25,
     ),
     Objective(
-      id: 'reward_count_100',
+      id: const ObjectiveId('reward_count_100'),
       metric: RewardCountMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -49,35 +50,35 @@ List<Objective> metaObjectives(EngineCatalogContext context) {
     // DistinctActiveDaysMetric); ledger aggregations live in
     // `progression_engine_provider.dart`.
     Objective(
-      id: 'daily_quest_count_3',
+      id: const ObjectiveId('daily_quest_count_3'),
       metric: QuestCompletionsByBucketMetric(bucket: QuestDisplayBucket.daily),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 3,
     ),
     Objective(
-      id: 'daily_quest_count_7',
+      id: const ObjectiveId('daily_quest_count_7'),
       metric: QuestCompletionsByBucketMetric(bucket: QuestDisplayBucket.daily),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 7,
     ),
     Objective(
-      id: 'quest_count_250',
+      id: const ObjectiveId('quest_count_250'),
       metric: QuestCompletionsByBucketMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 250,
     ),
     Objective(
-      id: 'active_days_7',
+      id: const ObjectiveId('active_days_7'),
       metric: DistinctActiveDaysMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 7,
     ),
     Objective(
-      id: 'active_days_90',
+      id: const ObjectiveId('active_days_90'),
       metric: DistinctActiveDaysMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -85,7 +86,7 @@ List<Objective> metaObjectives(EngineCatalogContext context) {
     ),
     // Combo-pool counters (Phase 9c follow-up).
     Objective(
-      id: 'combo_pool_10',
+      id: const ObjectiveId('combo_pool_10'),
       metric: ComboPoolCompletionsMetric(poolId: 'daily_combo_pool'),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -96,7 +97,7 @@ List<Objective> metaObjectives(EngineCatalogContext context) {
     // shape spreads "3-of-N" wins across multiple chains, so we
     // enumerate them explicitly here.
     Objective(
-      id: 'triple_combo_25',
+      id: const ObjectiveId('triple_combo_25'),
       metric: LifetimeCompletionsAmongMetric(
         nodeIds: [
           'combo_balanced_step_3',
@@ -113,7 +114,7 @@ List<Objective> metaObjectives(EngineCatalogContext context) {
       targetValue: 25,
     ),
     Objective(
-      id: 'triple_combo_100',
+      id: const ObjectiveId('triple_combo_100'),
       metric: LifetimeCompletionsAmongMetric(
         nodeIds: [
           'combo_balanced_step_3',
@@ -135,7 +136,7 @@ List<Objective> metaObjectives(EngineCatalogContext context) {
 List<ProgressionEntry> metaNodes() {
   return [
     Achievement(
-      id: 'xp_100000',
+      id: const ProgressionEntryId('xp_100000'),
       objectiveId: 'lifetime_xp_100k',
       badgeEmoji: '\u{2728}',
       titleKey: (l) => l.progAchievementXp100000Title,
@@ -145,7 +146,7 @@ List<ProgressionEntry> metaNodes() {
       rarity: Rarity.epic,
     ),
     Achievement(
-      id: 'xp_1000000',
+      id: const ProgressionEntryId('xp_1000000'),
       objectiveId: 'lifetime_xp_1m',
       badgeEmoji: '\u{1F31F}',
       titleKey: (l) => l.progAchievementXp1000000Title,
@@ -155,7 +156,7 @@ List<ProgressionEntry> metaNodes() {
       rarity: Rarity.legendary,
     ),
     Achievement(
-      id: 'reward_hunter_25',
+      id: const ProgressionEntryId('reward_hunter_25'),
       objectiveId: 'reward_count_25',
       badgeEmoji: '\u{2694}\u{FE0F}',
       titleKey: (l) => l.progAchievementRewardHunter25Title,
@@ -165,7 +166,7 @@ List<ProgressionEntry> metaNodes() {
       rarity: Rarity.uncommon,
     ),
     Achievement(
-      id: 'reward_hunter_100',
+      id: const ProgressionEntryId('reward_hunter_100'),
       objectiveId: 'reward_count_100',
       badgeEmoji: '\u{2694}\u{FE0F}',
       titleKey: (l) => l.progAchievementRewardHunter100Title,
@@ -178,7 +179,7 @@ List<ProgressionEntry> metaNodes() {
     // authored in `cosmetic_catalog.dart`; this is the missing
     // achievement→relic wiring.
     Achievement(
-      id: 'daily_quest_3',
+      id: const ProgressionEntryId('daily_quest_3'),
       objectiveId: 'daily_quest_count_3',
       badgeEmoji: '\u{1F525}', // fire
       titleKey: (l) => l.progAchievementDailyQuest3Title,
@@ -188,7 +189,7 @@ List<ProgressionEntry> metaNodes() {
       rarity: Rarity.common,
     ),
     Achievement(
-      id: 'daily_quest_7',
+      id: const ProgressionEntryId('daily_quest_7'),
       objectiveId: 'daily_quest_count_7',
       badgeEmoji: '\u{1F33F}', // herb
       titleKey: (l) => l.progAchievementDailyQuest7Title,
@@ -200,7 +201,7 @@ List<ProgressionEntry> metaNodes() {
       rarity: Rarity.uncommon,
     ),
     Achievement(
-      id: 'quest_hunter_250',
+      id: const ProgressionEntryId('quest_hunter_250'),
       objectiveId: 'quest_count_250',
       badgeEmoji: '\u{1F3F9}', // bow
       titleKey: (l) => l.progAchievementQuestHunter250Title,
@@ -210,7 +211,7 @@ List<ProgressionEntry> metaNodes() {
       rarity: Rarity.epic,
     ),
     Achievement(
-      id: 'active_days_7',
+      id: const ProgressionEntryId('active_days_7'),
       objectiveId: 'active_days_7',
       badgeEmoji: '\u{1F319}', // moon
       titleKey: (l) => l.progAchievementActiveDays7Title,
@@ -220,7 +221,7 @@ List<ProgressionEntry> metaNodes() {
       rarity: Rarity.rare,
     ),
     Achievement(
-      id: 'active_days_90',
+      id: const ProgressionEntryId('active_days_90'),
       objectiveId: 'active_days_90',
       badgeEmoji: '\u{1F33F}', // herb — re-uses motif from daily_quest_7
       titleKey: (l) => l.progAchievementActiveDays90Title,
@@ -238,7 +239,7 @@ List<ProgressionEntry> metaNodes() {
     // existing objectives via unlockConditions since Achievement
     // supports condition-only completion (`objectiveId: null`).
     Achievement(
-      id: 'combo_victory_10',
+      id: const ProgressionEntryId('combo_victory_10'),
       objectiveId: 'combo_pool_10',
       badgeEmoji: '\u{2728}', // sparkles
       titleKey: (l) => l.progAchievementComboVictory10Title,
@@ -248,7 +249,7 @@ List<ProgressionEntry> metaNodes() {
       rarity: Rarity.rare,
     ),
     Achievement(
-      id: 'combo_triple_victory_25',
+      id: const ProgressionEntryId('combo_triple_victory_25'),
       objectiveId: 'triple_combo_25',
       badgeEmoji: '\u{1F3AF}', // direct hit
       titleKey: (l) => l.progAchievementComboTripleVictory25Title,
@@ -258,7 +259,7 @@ List<ProgressionEntry> metaNodes() {
       rarity: Rarity.epic,
     ),
     Achievement(
-      id: 'combo_triple_victory_100',
+      id: const ProgressionEntryId('combo_triple_victory_100'),
       objectiveId: 'triple_combo_100',
       badgeEmoji: '\u{1F3C6}', // trophy
       titleKey: (l) => l.progAchievementComboTripleVictory100Title,
@@ -268,7 +269,7 @@ List<ProgressionEntry> metaNodes() {
       rarity: Rarity.legendary,
     ),
     Achievement(
-      id: 'dragonrock_trial',
+      id: const ProgressionEntryId('dragonrock_trial'),
       // Condition-only: AND of level + quest count + lifetime steps.
       objectiveId: null,
       unlockConditions: const [

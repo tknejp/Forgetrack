@@ -1,3 +1,4 @@
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import '../../models/content_tag.dart';
 import '../../models/objective_definition.dart';
 import '../../models/objective_metric.dart';
@@ -25,7 +26,7 @@ List<Objective> levelMilestoneObjectives(
   return [
     for (final spec in kLevelMilestones.where((s) => s.level > 1))
       Objective(
-        id: 'level_xp_${spec.level}',
+        id: ObjectiveId('level_xp_${spec.level}'),
         metric: const TotalXpMetric(),
         scope: const LifetimeScope(),
         operator: ObjectiveOperator.atLeast,
@@ -40,7 +41,7 @@ List<ProgressionEntry> levelMilestones() {
   return [
     for (final spec in kLevelMilestones.where((s) => s.level > 1))
       LevelMilestone(
-        id: 'level_${spec.level}',
+        id: ProgressionEntryId('level_${spec.level}'),
         level: spec.level,
         emoji: spec.emoji,
         titleKey: spec.titleKey,

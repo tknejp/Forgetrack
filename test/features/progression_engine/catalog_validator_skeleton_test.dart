@@ -1,3 +1,4 @@
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:forgetrack/features/progression_engine/domain/catalog/catalog_validator.dart';
@@ -39,7 +40,7 @@ class _FakeEntryCatalog extends ProgressionEntryCatalog {
 }
 
 Objective _objective(String id) => Objective(
-      id: id,
+      id: ObjectiveId(id),
       metric: const StepsMetric(),
       scope: const TodayScope(),
       operator: ObjectiveOperator.atLeast,
@@ -55,7 +56,7 @@ Quest _quest({
   List<UnlockCondition> unlockConditions = const [],
 }) =>
     DailyQuest(
-      id: id,
+      id: ProgressionEntryId(id),
       objectiveId: objectiveId,
       titleKey: (_) => 'Title $id',
       descriptionKey: (_) => 'Desc $id',

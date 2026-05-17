@@ -38,9 +38,12 @@ library;
 /// this when the caller's code is generic over kind (e.g. a Journal
 /// reader that doesn't care whether the node is a Quest or an
 /// Achievement).
-extension type const ProgressionEntryId(String value) implements Object {
-  /// Stable serialisation form. Returns the underlying raw string.
-  /// Used by Isar / Firestore mappers at the data-layer boundary.
+extension type const ProgressionEntryId(String value) implements String {
+  /// Stable serialisation form alias for [value]. Use [raw] at the
+  /// persistence boundary for self-documenting intent; the underlying
+  /// String IS-A relationship (`implements String`) means a typed id
+  /// can also be passed directly wherever a String is expected, so
+  /// `.raw` is mostly stylistic.
   String get raw => value;
 }
 
@@ -64,13 +67,13 @@ extension type const MilestoneId(String value)
 /// chapter is not itself a catalog row — it's an aggregating concept
 /// that ties multiple ProgressionEntry rows (opener, steps, finale,
 /// side-quests, completion node) together via a shared id.
-extension type const ChapterId(String value) implements Object {
+extension type const ChapterId(String value) implements String {
   String get raw => value;
 }
 
 /// Id for an [Objective] catalog row. Objectives are referenced by
 /// quest / achievement / milestone nodes via `objectiveId` to signal
 /// what they measure.
-extension type const ObjectiveId(String value) implements Object {
+extension type const ObjectiveId(String value) implements String {
   String get raw => value;
 }

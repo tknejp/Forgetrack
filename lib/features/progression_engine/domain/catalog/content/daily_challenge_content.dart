@@ -1,3 +1,4 @@
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import '../../../../../shared/domain/rarity.dart';
 import '../../models/claim_policy.dart';
 import '../../models/content_tag.dart';
@@ -58,14 +59,14 @@ List<Objective> dailyChallengeObjectives(
 ) {
   return const [
     Objective(
-      id: 'daily_challenge_nutri_triple_obj',
+      id: const ObjectiveId('daily_challenge_nutri_triple_obj'),
       metric: TodayCompletionsAmongMetric(nodeIds: _nutriAtoms),
       scope: TodayScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 3,
     ),
     Objective(
-      id: 'daily_challenge_active_day_obj',
+      id: const ObjectiveId('daily_challenge_active_day_obj'),
       metric: TodayCompletionsAmongMetric(
         nodeIds: ['daily_steps_today', 'daily_activity_today'],
       ),
@@ -74,14 +75,14 @@ List<Objective> dailyChallengeObjectives(
       targetValue: 2,
     ),
     Objective(
-      id: 'daily_challenge_full_plate_obj',
+      id: const ObjectiveId('daily_challenge_full_plate_obj'),
       metric: TodayCompletionsAmongMetric(nodeIds: _nutriAtoms),
       scope: TodayScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 5,
     ),
     Objective(
-      id: 'daily_challenge_recovery_obj',
+      id: const ObjectiveId('daily_challenge_recovery_obj'),
       metric: TodayCompletionsAmongMetric(
         nodeIds: ['daily_sleep_today', 'daily_protein_today'],
       ),
@@ -90,7 +91,7 @@ List<Objective> dailyChallengeObjectives(
       targetValue: 2,
     ),
     Objective(
-      id: 'daily_challenge_triple_combo_obj',
+      id: const ObjectiveId('daily_challenge_triple_combo_obj'),
       metric: TodayCompletionsAmongMetric(
         nodeIds: [
           'daily_steps_today',
@@ -103,7 +104,7 @@ List<Objective> dailyChallengeObjectives(
       targetValue: 3,
     ),
     Objective(
-      id: 'daily_challenge_balanced_obj',
+      id: const ObjectiveId('daily_challenge_balanced_obj'),
       metric: TodayCompletionsAmongMetric(nodeIds: _allDailyAtoms),
       scope: TodayScope(),
       operator: ObjectiveOperator.atLeast,
@@ -115,7 +116,7 @@ List<Objective> dailyChallengeObjectives(
 List<ProgressionEntry> dailyChallenges() {
   return [
     DailyChallenge(
-      id: 'daily_challenge_nutri_triple',
+      id: const ProgressionEntryId('daily_challenge_nutri_triple'),
       objectiveId: 'daily_challenge_nutri_triple_obj',
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progDailyChallengeNutriTripleTitle,
@@ -127,7 +128,7 @@ List<ProgressionEntry> dailyChallenges() {
       comboPoolId: _comboPoolId,
     ),
     DailyChallenge(
-      id: 'daily_challenge_active_day',
+      id: const ProgressionEntryId('daily_challenge_active_day'),
       objectiveId: 'daily_challenge_active_day_obj',
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progDailyChallengeActiveDayTitle,
@@ -139,7 +140,7 @@ List<ProgressionEntry> dailyChallenges() {
       comboPoolId: _comboPoolId,
     ),
     DailyChallenge(
-      id: 'daily_challenge_full_plate',
+      id: const ProgressionEntryId('daily_challenge_full_plate'),
       objectiveId: 'daily_challenge_full_plate_obj',
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progDailyChallengeFullPlateTitle,
@@ -151,7 +152,7 @@ List<ProgressionEntry> dailyChallenges() {
       comboPoolId: _comboPoolId,
     ),
     DailyChallenge(
-      id: 'daily_challenge_recovery',
+      id: const ProgressionEntryId('daily_challenge_recovery'),
       objectiveId: 'daily_challenge_recovery_obj',
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progDailyChallengeRecoveryTitle,
@@ -163,7 +164,7 @@ List<ProgressionEntry> dailyChallenges() {
       comboPoolId: _comboPoolId,
     ),
     DailyChallenge(
-      id: 'daily_challenge_triple_combo',
+      id: const ProgressionEntryId('daily_challenge_triple_combo'),
       objectiveId: 'daily_challenge_triple_combo_obj',
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progDailyChallengeTripleComboTitle,
@@ -175,7 +176,7 @@ List<ProgressionEntry> dailyChallenges() {
       comboPoolId: _comboPoolId,
     ),
     DailyChallenge(
-      id: 'daily_challenge_balanced',
+      id: const ProgressionEntryId('daily_challenge_balanced'),
       objectiveId: 'daily_challenge_balanced_obj',
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progDailyChallengeBalancedTitle,

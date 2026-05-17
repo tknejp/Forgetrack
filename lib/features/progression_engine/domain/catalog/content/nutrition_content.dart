@@ -1,3 +1,4 @@
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import '../../../../../shared/domain/rarity.dart';
 import '../../models/claim_policy.dart';
 import '../../models/content_tag.dart';
@@ -22,7 +23,7 @@ List<Objective> nutritionObjectives(EngineCatalogContext context) {
   final goals = context.goals;
   return [
     Objective(
-      id: 'daily_calories',
+      id: const ObjectiveId('daily_calories'),
       domain: ProgressionDomain.nutrition,
       metric: const CaloriesMetric(),
       scope: const TodayScope(),
@@ -31,7 +32,7 @@ List<Objective> nutritionObjectives(EngineCatalogContext context) {
       toleranceRatio: _nutritionTol,
     ),
     Objective(
-      id: 'daily_protein',
+      id: const ObjectiveId('daily_protein'),
       domain: ProgressionDomain.nutrition,
       metric: const ProteinGramsMetric(),
       scope: const TodayScope(),
@@ -40,7 +41,7 @@ List<Objective> nutritionObjectives(EngineCatalogContext context) {
       toleranceRatio: _nutritionTol,
     ),
     Objective(
-      id: 'daily_carbs',
+      id: const ObjectiveId('daily_carbs'),
       domain: ProgressionDomain.nutrition,
       metric: const CarbsGramsMetric(),
       scope: const TodayScope(),
@@ -49,7 +50,7 @@ List<Objective> nutritionObjectives(EngineCatalogContext context) {
       toleranceRatio: _nutritionTol,
     ),
     Objective(
-      id: 'daily_fat',
+      id: const ObjectiveId('daily_fat'),
       domain: ProgressionDomain.nutrition,
       metric: const FatGramsMetric(),
       scope: const TodayScope(),
@@ -58,7 +59,7 @@ List<Objective> nutritionObjectives(EngineCatalogContext context) {
       toleranceRatio: _nutritionTol,
     ),
     Objective(
-      id: 'daily_fiber',
+      id: const ObjectiveId('daily_fiber'),
       domain: ProgressionDomain.nutrition,
       metric: const FiberGramsMetric(),
       scope: const TodayScope(),
@@ -67,7 +68,7 @@ List<Objective> nutritionObjectives(EngineCatalogContext context) {
       toleranceRatio: _nutritionTol,
     ),
     const Objective(
-      id: 'streak_nutrition_3',
+      id: const ObjectiveId('streak_nutrition_3'),
       domain: ProgressionDomain.nutrition,
       metric: StreakDaysMetric.byDomain('nutrition'),
       scope: LifetimeScope(),
@@ -75,7 +76,7 @@ List<Objective> nutritionObjectives(EngineCatalogContext context) {
       targetValue: 3,
     ),
     const Objective(
-      id: 'streak_nutrition_30',
+      id: const ObjectiveId('streak_nutrition_30'),
       domain: ProgressionDomain.nutrition,
       metric: StreakDaysMetric.byDomain('nutrition'),
       scope: LifetimeScope(),
@@ -83,7 +84,7 @@ List<Objective> nutritionObjectives(EngineCatalogContext context) {
       targetValue: 30,
     ),
     const Objective(
-      id: 'streak_nutrition_100',
+      id: const ObjectiveId('streak_nutrition_100'),
       domain: ProgressionDomain.nutrition,
       metric: StreakDaysMetric.byDomain('nutrition'),
       scope: LifetimeScope(),
@@ -91,7 +92,7 @@ List<Objective> nutritionObjectives(EngineCatalogContext context) {
       targetValue: 100,
     ),
     const Objective(
-      id: 'reward_count_nutrition_25',
+      id: const ObjectiveId('reward_count_nutrition_25'),
       domain: ProgressionDomain.nutrition,
       metric: RewardCountMetric(domain: 'nutrition'),
       scope: LifetimeScope(),
@@ -105,7 +106,7 @@ List<ProgressionEntry> nutritionNodes() {
   return [
     // Daily macro quests.
     DailyQuest(
-      id: 'daily_calories_today',
+      id: const ProgressionEntryId('daily_calories_today'),
       objectiveId: 'daily_calories',
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.progRuleDailyCaloriesDesc,
@@ -124,7 +125,7 @@ List<ProgressionEntry> nutritionNodes() {
       assetKey: questAssetNutrition,
     ),
     DailyQuest(
-      id: 'daily_protein_today',
+      id: const ProgressionEntryId('daily_protein_today'),
       objectiveId: 'daily_protein',
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.progRuleDailyProteinDesc,
@@ -136,7 +137,7 @@ List<ProgressionEntry> nutritionNodes() {
       assetKey: questAssetNutrition,
     ),
     DailyQuest(
-      id: 'daily_carbs_today',
+      id: const ProgressionEntryId('daily_carbs_today'),
       objectiveId: 'daily_carbs',
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.progRuleDailyCarbsDesc,
@@ -148,7 +149,7 @@ List<ProgressionEntry> nutritionNodes() {
       assetKey: questAssetNutrition,
     ),
     DailyQuest(
-      id: 'daily_fat_today',
+      id: const ProgressionEntryId('daily_fat_today'),
       objectiveId: 'daily_fat',
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.progRuleDailyFatDesc,
@@ -160,7 +161,7 @@ List<ProgressionEntry> nutritionNodes() {
       assetKey: questAssetNutrition,
     ),
     DailyQuest(
-      id: 'daily_fiber_today',
+      id: const ProgressionEntryId('daily_fiber_today'),
       objectiveId: 'daily_fiber',
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.progRuleDailyFiberDesc,
@@ -173,7 +174,7 @@ List<ProgressionEntry> nutritionNodes() {
     ),
     // Nutrition streak + reward-count achievements.
     Achievement(
-      id: 'nutrition_streak_3',
+      id: const ProgressionEntryId('nutrition_streak_3'),
       objectiveId: 'streak_nutrition_3',
       badgeEmoji: '\u{1F338}',
       titleKey: (l) => l.progAchievementBalancedRhythmTitle,
@@ -183,7 +184,7 @@ List<ProgressionEntry> nutritionNodes() {
       rarity: Rarity.common,
     ),
     Achievement(
-      id: 'nutrition_streak_30',
+      id: const ProgressionEntryId('nutrition_streak_30'),
       objectiveId: 'streak_nutrition_30',
       badgeEmoji: '\u{1F34E}',
       titleKey: (l) => l.progAchievementNutritionStreak30Title,
@@ -193,7 +194,7 @@ List<ProgressionEntry> nutritionNodes() {
       rarity: Rarity.epic,
     ),
     Achievement(
-      id: 'nutrition_streak_100',
+      id: const ProgressionEntryId('nutrition_streak_100'),
       objectiveId: 'streak_nutrition_100',
       badgeEmoji: '\u{1F344}',
       titleKey: (l) => l.progAchievementNutritionStreak100Title,
@@ -203,7 +204,7 @@ List<ProgressionEntry> nutritionNodes() {
       rarity: Rarity.legendary,
     ),
     Achievement(
-      id: 'nutrition_rewards_25',
+      id: const ProgressionEntryId('nutrition_rewards_25'),
       objectiveId: 'reward_count_nutrition_25',
       badgeEmoji: '\u{1F957}',
       titleKey: (l) => l.progAchievementNutritionRewards25Title,

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../cosmetics/application/cosmetics_provider.dart';
@@ -3383,7 +3384,7 @@ class EngineQuestCompletion {
 /// a zero-target objective so progress falls back to 0 instead of
 /// throwing.
 Objective objectiveCatalogFallback(String id) => Objective(
-      id: id,
+      id: ObjectiveId(id),
       metric: const StepsMetric(),
       scope: const TodayScope(),
       operator: ObjectiveOperator.atLeast,

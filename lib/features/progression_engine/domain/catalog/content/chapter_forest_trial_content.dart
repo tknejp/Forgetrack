@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart' show Icons;
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 
 import '../../../../../shared/domain/rarity.dart';
 import '../../models/content_tag.dart';
@@ -30,7 +31,7 @@ List<Objective> forestTrialObjectives() {
   return const [
     // Open: satisfied automatically once the player reaches level 10.
     Objective(
-      id: 'forest_trial_open_objective',
+      id: const ObjectiveId('forest_trial_open_objective'),
       domain: ProgressionDomain.activity,
       metric: LevelMetric(),
       scope: LifetimeScope(),
@@ -46,7 +47,7 @@ List<Objective> forestTrialObjectives() {
     // "5 step goals" check. Baseline so days banked before the
     // chapter opens don't auto-finish the step.
     Objective(
-      id: 'forest_trial_daily_wins_5_objective',
+      id: const ObjectiveId('forest_trial_daily_wins_5_objective'),
       domain: ProgressionDomain.activity,
       metric: DaysWithAtLeastKAmongMetric(
         nodeIds: [
@@ -72,7 +73,7 @@ List<Objective> forestTrialObjectives() {
     // — the description says "splň krokový cíl 5krát" so the metric
     // must read step completions, not protein.
     Objective(
-      id: 'forest_trial_steps_5_objective',
+      id: const ObjectiveId('forest_trial_steps_5_objective'),
       domain: ProgressionDomain.steps,
       metric: NodeCompletionsMetric(nodeId: 'daily_steps_today'),
       scope: LifetimeScope(),
@@ -86,7 +87,7 @@ List<Objective> forestTrialObjectives() {
     // alone, ignoring the "i kroků i spánku" pairing in the
     // description.
     Objective(
-      id: 'forest_trial_recovery_3_objective',
+      id: const ObjectiveId('forest_trial_recovery_3_objective'),
       domain: ProgressionDomain.sleep,
       metric: DaysWithAtLeastKAmongMetric(
         nodeIds: ['daily_steps_today', 'daily_sleep_today'],
@@ -102,7 +103,7 @@ List<Objective> forestTrialObjectives() {
     // [QuestNode.prerequisiteNodeIds] which forces all 3 steps to
     // complete first.
     Objective(
-      id: 'forest_trial_finale_objective',
+      id: const ObjectiveId('forest_trial_finale_objective'),
       domain: ProgressionDomain.activity,
       metric: LevelMetric(),
       scope: LifetimeScope(),
@@ -116,7 +117,7 @@ List<Objective> forestTrialObjectives() {
 List<ProgressionEntry> forestTrialNodes() {
   return [
     ChapterOpener(
-      id: 'forest_trial_open',
+      id: const ProgressionEntryId('forest_trial_open'),
       objectiveId: 'forest_trial_open_objective',
       // Explicit level gate so the resolver marks the chapter
       // ineligible (and the chapter card renders a locked overlay)
@@ -140,7 +141,7 @@ List<ProgressionEntry> forestTrialNodes() {
       sortOrder: 300,
     ),
     ChapterStep(
-      id: 'forest_trial_daily_wins_5',
+      id: const ProgressionEntryId('forest_trial_daily_wins_5'),
       objectiveId: 'forest_trial_daily_wins_5_objective',
       titleKey: (l) => l.progQuestForestTrialDailyWins5Title,
       descriptionKey: (l) => l.progQuestForestTrialDailyWins5Desc,
@@ -157,7 +158,7 @@ List<ProgressionEntry> forestTrialNodes() {
       sortOrder: 301,
     ),
     ChapterStep(
-      id: 'forest_trial_steps_5',
+      id: const ProgressionEntryId('forest_trial_steps_5'),
       objectiveId: 'forest_trial_steps_5_objective',
       titleKey: (l) => l.progQuestForestTrialSteps5Title,
       descriptionKey: (l) => l.progQuestForestTrialSteps5Desc,
@@ -174,7 +175,7 @@ List<ProgressionEntry> forestTrialNodes() {
       sortOrder: 302,
     ),
     ChapterStep(
-      id: 'forest_trial_recovery_3',
+      id: const ProgressionEntryId('forest_trial_recovery_3'),
       objectiveId: 'forest_trial_recovery_3_objective',
       titleKey: (l) => l.progQuestForestTrialRecovery3Title,
       descriptionKey: (l) => l.progQuestForestTrialRecovery3Desc,
@@ -191,7 +192,7 @@ List<ProgressionEntry> forestTrialNodes() {
       sortOrder: 303,
     ),
     ChapterFinale(
-      id: 'forest_trial_finale',
+      id: const ProgressionEntryId('forest_trial_finale'),
       objectiveId: 'forest_trial_finale_objective',
       titleKey: (l) => l.progQuestForestTrialFinaleTitle,
       descriptionKey: (l) => l.progQuestForestTrialFinaleDesc,

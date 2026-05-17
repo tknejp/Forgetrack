@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart' show Icons;
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 
 import '../../../../../shared/domain/rarity.dart';
 import '../../models/content_tag.dart';
@@ -85,28 +86,28 @@ List<Objective> comboObjectives(EngineCatalogContext context) {
   return const [
     // ── Chain 1: Balanced — any daily goal ──────────────────────
     Objective(
-      id: 'combo_balanced_step_1_obj',
+      id: const ObjectiveId('combo_balanced_step_1_obj'),
       metric: TodayCompletionsAmongMetric(nodeIds: _allDailyQuests),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 1,
     ),
     Objective(
-      id: 'combo_balanced_step_2_obj',
+      id: const ObjectiveId('combo_balanced_step_2_obj'),
       metric: TodayCompletionsAmongMetric(nodeIds: _allDailyQuests),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 2,
     ),
     Objective(
-      id: 'combo_balanced_step_3_obj',
+      id: const ObjectiveId('combo_balanced_step_3_obj'),
       metric: TodayCompletionsAmongMetric(nodeIds: _allDailyQuests),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 3,
     ),
     Objective(
-      id: 'combo_balanced_finale_obj',
+      id: const ObjectiveId('combo_balanced_finale_obj'),
       metric: TodayCompletionsAmongMetric(nodeIds: _allDailyQuests),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -114,7 +115,7 @@ List<Objective> comboObjectives(EngineCatalogContext context) {
     ),
     // ── Chain 2: Recovery — sleep-anchored ──────────────────────
     Objective(
-      id: 'combo_recovery_step_1_obj',
+      id: const ObjectiveId('combo_recovery_step_1_obj'),
       metric: TodayCompletionsAmongMetric(
         nodeIds: ['daily_sleep_today'],
       ),
@@ -123,7 +124,7 @@ List<Objective> comboObjectives(EngineCatalogContext context) {
       targetValue: 1,
     ),
     Objective(
-      id: 'combo_recovery_step_2_obj',
+      id: const ObjectiveId('combo_recovery_step_2_obj'),
       metric: TodayCompletionsAmongMetric(
         nodeIds: ['daily_sleep_today', 'daily_steps_today'],
       ),
@@ -132,7 +133,7 @@ List<Objective> comboObjectives(EngineCatalogContext context) {
       targetValue: 2,
     ),
     Objective(
-      id: 'combo_recovery_step_3_obj',
+      id: const ObjectiveId('combo_recovery_step_3_obj'),
       metric: TodayCompletionsAmongMetric(
         nodeIds: [
           'daily_sleep_today',
@@ -145,7 +146,7 @@ List<Objective> comboObjectives(EngineCatalogContext context) {
       targetValue: 3,
     ),
     Objective(
-      id: 'combo_recovery_finale_obj',
+      id: const ObjectiveId('combo_recovery_finale_obj'),
       metric: TodayCompletionsAmongMetric(
         nodeIds: [
           'daily_sleep_today',
@@ -160,7 +161,7 @@ List<Objective> comboObjectives(EngineCatalogContext context) {
     ),
     // ── Chain 3: Nutrition — macro-anchored ─────────────────────
     Objective(
-      id: 'combo_nutrition_step_1_obj',
+      id: const ObjectiveId('combo_nutrition_step_1_obj'),
       metric: TodayCompletionsAmongMetric(
         nodeIds: ['daily_calories_today'],
       ),
@@ -169,7 +170,7 @@ List<Objective> comboObjectives(EngineCatalogContext context) {
       targetValue: 1,
     ),
     Objective(
-      id: 'combo_nutrition_step_2_obj',
+      id: const ObjectiveId('combo_nutrition_step_2_obj'),
       metric: TodayCompletionsAmongMetric(
         nodeIds: ['daily_calories_today', 'daily_protein_today'],
       ),
@@ -178,7 +179,7 @@ List<Objective> comboObjectives(EngineCatalogContext context) {
       targetValue: 2,
     ),
     Objective(
-      id: 'combo_nutrition_step_3_obj',
+      id: const ObjectiveId('combo_nutrition_step_3_obj'),
       metric: TodayCompletionsAmongMetric(
         nodeIds: [
           'daily_calories_today',
@@ -191,7 +192,7 @@ List<Objective> comboObjectives(EngineCatalogContext context) {
       targetValue: 3,
     ),
     Objective(
-      id: 'combo_nutrition_step_4_obj',
+      id: const ObjectiveId('combo_nutrition_step_4_obj'),
       metric: TodayCompletionsAmongMetric(
         nodeIds: [
           'daily_calories_today',
@@ -205,7 +206,7 @@ List<Objective> comboObjectives(EngineCatalogContext context) {
       targetValue: 4,
     ),
     Objective(
-      id: 'combo_nutrition_finale_obj',
+      id: const ObjectiveId('combo_nutrition_finale_obj'),
       metric: TodayCompletionsAmongMetric(
         nodeIds: [
           'daily_calories_today',
@@ -226,7 +227,7 @@ List<ProgressionEntry> comboNodes() {
   return [
     // ── Chain 1: Balanced ──────────────────────────────────────
     ComboStep(
-      id: 'combo_balanced_step_1',
+      id: const ProgressionEntryId('combo_balanced_step_1'),
       objectiveId: 'combo_balanced_step_1_obj',
       titleKey: (l) => l.progComboBalancedStep1Title,
       descriptionKey: (l) => l.progComboBalancedStep1Desc,
@@ -241,7 +242,7 @@ List<ProgressionEntry> comboNodes() {
       nextNodeIds: const ['combo_balanced_step_2'],
     ),
     ComboStep(
-      id: 'combo_balanced_step_2',
+      id: const ProgressionEntryId('combo_balanced_step_2'),
       objectiveId: 'combo_balanced_step_2_obj',
       titleKey: (l) => l.progComboBalancedStep2Title,
       descriptionKey: (l) => l.progComboBalancedStep2Desc,
@@ -257,7 +258,7 @@ List<ProgressionEntry> comboNodes() {
       nextNodeIds: const ['combo_balanced_step_3'],
     ),
     ComboStep(
-      id: 'combo_balanced_step_3',
+      id: const ProgressionEntryId('combo_balanced_step_3'),
       objectiveId: 'combo_balanced_step_3_obj',
       titleKey: (l) => l.progComboBalancedStep3Title,
       descriptionKey: (l) => l.progComboBalancedStep3Desc,
@@ -273,7 +274,7 @@ List<ProgressionEntry> comboNodes() {
       nextNodeIds: const ['combo_balanced_finale'],
     ),
     ComboFinale(
-      id: 'combo_balanced_finale',
+      id: const ProgressionEntryId('combo_balanced_finale'),
       objectiveId: 'combo_balanced_finale_obj',
       titleKey: (l) => l.progComboBalancedFinaleTitle,
       descriptionKey: (l) => l.progComboBalancedFinaleDesc,
@@ -289,7 +290,7 @@ List<ProgressionEntry> comboNodes() {
     ),
     // ── Chain 2: Recovery (sleep-anchored) ─────────────────────
     ComboStep(
-      id: 'combo_recovery_step_1',
+      id: const ProgressionEntryId('combo_recovery_step_1'),
       objectiveId: 'combo_recovery_step_1_obj',
       titleKey: (l) => l.progComboRecoveryStep1Title,
       descriptionKey: (l) => l.progComboRecoveryStep1Desc,
@@ -305,7 +306,7 @@ List<ProgressionEntry> comboNodes() {
       nextNodeIds: const ['combo_recovery_step_2'],
     ),
     ComboStep(
-      id: 'combo_recovery_step_2',
+      id: const ProgressionEntryId('combo_recovery_step_2'),
       objectiveId: 'combo_recovery_step_2_obj',
       titleKey: (l) => l.progComboRecoveryStep2Title,
       descriptionKey: (l) => l.progComboRecoveryStep2Desc,
@@ -321,7 +322,7 @@ List<ProgressionEntry> comboNodes() {
       nextNodeIds: const ['combo_recovery_step_3'],
     ),
     ComboStep(
-      id: 'combo_recovery_step_3',
+      id: const ProgressionEntryId('combo_recovery_step_3'),
       objectiveId: 'combo_recovery_step_3_obj',
       titleKey: (l) => l.progComboRecoveryStep3Title,
       descriptionKey: (l) => l.progComboRecoveryStep3Desc,
@@ -337,7 +338,7 @@ List<ProgressionEntry> comboNodes() {
       nextNodeIds: const ['combo_recovery_finale'],
     ),
     ComboFinale(
-      id: 'combo_recovery_finale',
+      id: const ProgressionEntryId('combo_recovery_finale'),
       objectiveId: 'combo_recovery_finale_obj',
       titleKey: (l) => l.progComboRecoveryFinaleTitle,
       descriptionKey: (l) => l.progComboRecoveryFinaleDesc,
@@ -353,7 +354,7 @@ List<ProgressionEntry> comboNodes() {
     ),
     // ── Chain 3: Nutrition (macro-anchored, 5 steps) ──────────
     ComboStep(
-      id: 'combo_nutrition_step_1',
+      id: const ProgressionEntryId('combo_nutrition_step_1'),
       objectiveId: 'combo_nutrition_step_1_obj',
       titleKey: (l) => l.progComboNutritionStep1Title,
       descriptionKey: (l) => l.progComboNutritionStep1Desc,
@@ -369,7 +370,7 @@ List<ProgressionEntry> comboNodes() {
       nextNodeIds: const ['combo_nutrition_step_2'],
     ),
     ComboStep(
-      id: 'combo_nutrition_step_2',
+      id: const ProgressionEntryId('combo_nutrition_step_2'),
       objectiveId: 'combo_nutrition_step_2_obj',
       titleKey: (l) => l.progComboNutritionStep2Title,
       descriptionKey: (l) => l.progComboNutritionStep2Desc,
@@ -385,7 +386,7 @@ List<ProgressionEntry> comboNodes() {
       nextNodeIds: const ['combo_nutrition_step_3'],
     ),
     ComboStep(
-      id: 'combo_nutrition_step_3',
+      id: const ProgressionEntryId('combo_nutrition_step_3'),
       objectiveId: 'combo_nutrition_step_3_obj',
       titleKey: (l) => l.progComboNutritionStep3Title,
       descriptionKey: (l) => l.progComboNutritionStep3Desc,
@@ -401,7 +402,7 @@ List<ProgressionEntry> comboNodes() {
       nextNodeIds: const ['combo_nutrition_step_4'],
     ),
     ComboStep(
-      id: 'combo_nutrition_step_4',
+      id: const ProgressionEntryId('combo_nutrition_step_4'),
       objectiveId: 'combo_nutrition_step_4_obj',
       titleKey: (l) => l.progComboNutritionStep4Title,
       descriptionKey: (l) => l.progComboNutritionStep4Desc,
@@ -417,7 +418,7 @@ List<ProgressionEntry> comboNodes() {
       nextNodeIds: const ['combo_nutrition_finale'],
     ),
     ComboFinale(
-      id: 'combo_nutrition_finale',
+      id: const ProgressionEntryId('combo_nutrition_finale'),
       objectiveId: 'combo_nutrition_finale_obj',
       titleKey: (l) => l.progComboNutritionFinaleTitle,
       descriptionKey: (l) => l.progComboNutritionFinaleDesc,

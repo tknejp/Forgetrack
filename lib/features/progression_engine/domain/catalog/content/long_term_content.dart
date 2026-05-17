@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart' show Icons;
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 
 import '../../../../../shared/domain/rarity.dart';
 import '../../models/claim_policy.dart';
@@ -59,28 +60,28 @@ List<Objective> longTermObjectives() {
   return const [
     // XP milestones not already in meta_content.
     Objective(
-      id: 'lifetime_xp_500',
+      id: const ObjectiveId('lifetime_xp_500'),
       metric: TotalXpMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 500,
     ),
     Objective(
-      id: 'lifetime_xp_2000',
+      id: const ObjectiveId('lifetime_xp_2000'),
       metric: TotalXpMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 2000,
     ),
     Objective(
-      id: 'lifetime_xp_5000',
+      id: const ObjectiveId('lifetime_xp_5000'),
       metric: TotalXpMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 5000,
     ),
     Objective(
-      id: 'lifetime_xp_25000',
+      id: const ObjectiveId('lifetime_xp_25000'),
       metric: TotalXpMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -88,14 +89,14 @@ List<Objective> longTermObjectives() {
     ),
     // Reward-count milestones not already in meta_content.
     Objective(
-      id: 'reward_count_first',
+      id: const ObjectiveId('reward_count_first'),
       metric: RewardCountMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 1,
     ),
     Objective(
-      id: 'reward_count_250',
+      id: const ObjectiveId('reward_count_250'),
       metric: RewardCountMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -108,7 +109,7 @@ List<ProgressionEntry> longTermNodes() {
   return [
     // ── Lifetime steps chain ────────────────────────────────────────
     LongTermQuest(
-      id: 'long_term_steps_100k',
+      id: const ProgressionEntryId('long_term_steps_100k'),
       objectiveId: 'lifetime_steps_100k',
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progAchievementSteps100kTitle,
@@ -124,7 +125,7 @@ List<ProgressionEntry> longTermNodes() {
       sortOrder: 1100,
     ),
     LongTermQuest(
-      id: 'long_term_steps_500k',
+      id: const ProgressionEntryId('long_term_steps_500k'),
       objectiveId: 'lifetime_steps_500k',
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progAchievementSteps500kTitle,
@@ -140,7 +141,7 @@ List<ProgressionEntry> longTermNodes() {
       sortOrder: 1101,
     ),
     LongTermQuest(
-      id: 'long_term_steps_1m',
+      id: const ProgressionEntryId('long_term_steps_1m'),
       objectiveId: 'lifetime_steps_1m',
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progAchievementSteps1000000Title,
@@ -156,7 +157,7 @@ List<ProgressionEntry> longTermNodes() {
       sortOrder: 1102,
     ),
     LongTermQuest(
-      id: 'long_term_steps_5m',
+      id: const ProgressionEntryId('long_term_steps_5m'),
       objectiveId: 'lifetime_steps_5m',
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progAchievementSteps5000000Title,
@@ -172,7 +173,7 @@ List<ProgressionEntry> longTermNodes() {
       sortOrder: 1103,
     ),
     LongTermQuest(
-      id: 'long_term_steps_10m',
+      id: const ProgressionEntryId('long_term_steps_10m'),
       objectiveId: 'lifetime_steps_10m',
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progAchievementSteps10000000Title,
@@ -189,7 +190,7 @@ List<ProgressionEntry> longTermNodes() {
 
     // ── XP milestones chain ─────────────────────────────────────────
     LongTermQuest(
-      id: 'long_term_reach_500_xp',
+      id: const ProgressionEntryId('long_term_reach_500_xp'),
       objectiveId: 'lifetime_xp_500',
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestReach500XpTitle,
@@ -205,7 +206,7 @@ List<ProgressionEntry> longTermNodes() {
       sortOrder: 1200,
     ),
     LongTermQuest(
-      id: 'long_term_reach_2000_xp',
+      id: const ProgressionEntryId('long_term_reach_2000_xp'),
       objectiveId: 'lifetime_xp_2000',
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestReach2000XpTitle,
@@ -221,7 +222,7 @@ List<ProgressionEntry> longTermNodes() {
       sortOrder: 1201,
     ),
     LongTermQuest(
-      id: 'long_term_reach_5000_xp',
+      id: const ProgressionEntryId('long_term_reach_5000_xp'),
       objectiveId: 'lifetime_xp_5000',
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestReach5000XpTitle,
@@ -237,7 +238,7 @@ List<ProgressionEntry> longTermNodes() {
       sortOrder: 1202,
     ),
     LongTermQuest(
-      id: 'long_term_reach_25000_xp',
+      id: const ProgressionEntryId('long_term_reach_25000_xp'),
       objectiveId: 'lifetime_xp_25000',
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestReach25000XpTitle,
@@ -253,7 +254,7 @@ List<ProgressionEntry> longTermNodes() {
       sortOrder: 1203,
     ),
     LongTermQuest(
-      id: 'long_term_reach_100000_xp',
+      id: const ProgressionEntryId('long_term_reach_100000_xp'),
       objectiveId: 'lifetime_xp_100k',
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestReach100000XpTitle,
@@ -269,7 +270,7 @@ List<ProgressionEntry> longTermNodes() {
       sortOrder: 1204,
     ),
     LongTermQuest(
-      id: 'long_term_reach_1000000_xp',
+      id: const ProgressionEntryId('long_term_reach_1000000_xp'),
       objectiveId: 'lifetime_xp_1m',
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestReach1000000XpTitle,
@@ -286,7 +287,7 @@ List<ProgressionEntry> longTermNodes() {
 
     // ── Reward hunter chain ─────────────────────────────────────────
     LongTermQuest(
-      id: 'long_term_earn_first_reward',
+      id: const ProgressionEntryId('long_term_earn_first_reward'),
       objectiveId: 'reward_count_first',
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestEarnFirstRewardTitle,
@@ -302,7 +303,7 @@ List<ProgressionEntry> longTermNodes() {
       sortOrder: 1300,
     ),
     LongTermQuest(
-      id: 'long_term_earn_25_rewards',
+      id: const ProgressionEntryId('long_term_earn_25_rewards'),
       objectiveId: 'reward_count_25',
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestEarn25RewardsTitle,
@@ -318,7 +319,7 @@ List<ProgressionEntry> longTermNodes() {
       sortOrder: 1301,
     ),
     LongTermQuest(
-      id: 'long_term_earn_100_rewards',
+      id: const ProgressionEntryId('long_term_earn_100_rewards'),
       objectiveId: 'reward_count_100',
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestEarn100RewardsTitle,
@@ -334,7 +335,7 @@ List<ProgressionEntry> longTermNodes() {
       sortOrder: 1302,
     ),
     LongTermQuest(
-      id: 'long_term_earn_250_rewards',
+      id: const ProgressionEntryId('long_term_earn_250_rewards'),
       objectiveId: 'reward_count_250',
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progQuestEarn250RewardsTitle,

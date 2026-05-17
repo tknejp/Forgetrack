@@ -9,6 +9,7 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart' show IconData;
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 
 import '../../../../shared/domain/rarity.dart';
 import '../localized_text.dart';
@@ -46,7 +47,7 @@ sealed class ProgressionEntry {
     this.sortOrder = 0,
   });
 
-  final String id;
+  final ProgressionEntryId id;
   final LocalizedText titleKey;
   final LocalizedText descriptionKey;
   final List<RewardDefinition> rewards;

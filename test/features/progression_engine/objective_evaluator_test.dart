@@ -1,3 +1,4 @@
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:forgetrack/features/progression_engine/domain/evaluator/objective_evaluator.dart';
@@ -39,7 +40,7 @@ Objective _objective({
   double toleranceRatio = 0,
 }) =>
     Objective(
-      id: id,
+      id: ObjectiveId(id),
       metric: metric,
       scope: scope,
       operator: operator,

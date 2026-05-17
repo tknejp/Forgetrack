@@ -1,3 +1,4 @@
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import '../../../../../shared/domain/rarity.dart';
 import '../../models/content_tag.dart';
 import '../../models/objective_definition.dart';
@@ -15,7 +16,7 @@ import '../engine_catalog_context.dart';
 List<Objective> welcomeObjectives(EngineCatalogContext context) {
   return const [
     Objective(
-      id: 'reward_count_1',
+      id: const ObjectiveId('reward_count_1'),
       metric: RewardCountMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -27,7 +28,7 @@ List<Objective> welcomeObjectives(EngineCatalogContext context) {
 List<ProgressionEntry> welcomeNodes() {
   return [
     Achievement(
-      id: 'welcome_to_journey',
+      id: const ProgressionEntryId('welcome_to_journey'),
       // No objective, no conditions — fires on first evaluation.
       titleKey: (l) => l.progAchievementWelcomeToJourneyTitle,
       descriptionKey: (l) => l.progAchievementWelcomeToJourneyDesc,
@@ -43,7 +44,7 @@ List<ProgressionEntry> welcomeNodes() {
       rarity: Rarity.common,
     ),
     Achievement(
-      id: 'first_reward',
+      id: const ProgressionEntryId('first_reward'),
       objectiveId: 'reward_count_1',
       badgeEmoji: '\u{1F3C6}',
       titleKey: (l) => l.progAchievementFirstRewardTitle,

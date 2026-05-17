@@ -1,3 +1,4 @@
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import '../../../../../shared/domain/rarity.dart';
 import '../../models/claim_policy.dart';
 import '../../models/content_tag.dart';
@@ -18,7 +19,7 @@ List<Objective> sleepObjectives(EngineCatalogContext context) {
   final goals = context.goals;
   return [
     Objective(
-      id: 'daily_sleep',
+      id: const ObjectiveId('daily_sleep'),
       domain: ProgressionDomain.sleep,
       metric: const SleepMinutesMetric(),
       scope: const TodayScope(),
@@ -26,7 +27,7 @@ List<Objective> sleepObjectives(EngineCatalogContext context) {
       targetValue: goals.sleepMinutes.toDouble(),
     ),
     const Objective(
-      id: 'lifetime_sleep_250h',
+      id: const ObjectiveId('lifetime_sleep_250h'),
       domain: ProgressionDomain.sleep,
       metric: SleepMinutesMetric(),
       scope: LifetimeScope(),
@@ -35,7 +36,7 @@ List<Objective> sleepObjectives(EngineCatalogContext context) {
       targetValue: 15000,
     ),
     const Objective(
-      id: 'lifetime_sleep_1000h',
+      id: const ObjectiveId('lifetime_sleep_1000h'),
       domain: ProgressionDomain.sleep,
       metric: SleepMinutesMetric(),
       scope: LifetimeScope(),
@@ -43,7 +44,7 @@ List<Objective> sleepObjectives(EngineCatalogContext context) {
       targetValue: 60000,
     ),
     const Objective(
-      id: 'rolling_sleep_30d_225h',
+      id: const ObjectiveId('rolling_sleep_30d_225h'),
       domain: ProgressionDomain.sleep,
       metric: SleepMinutesMetric(),
       scope: RollingWindowScope(days: 30),
@@ -51,7 +52,7 @@ List<Objective> sleepObjectives(EngineCatalogContext context) {
       targetValue: 13500,
     ),
     const Objective(
-      id: 'rolling_sleep_30d_240h',
+      id: const ObjectiveId('rolling_sleep_30d_240h'),
       domain: ProgressionDomain.sleep,
       metric: SleepMinutesMetric(),
       scope: RollingWindowScope(days: 30),
@@ -64,7 +65,7 @@ List<Objective> sleepObjectives(EngineCatalogContext context) {
 List<ProgressionEntry> sleepNodes() {
   return [
     DailyQuest(
-      id: 'daily_sleep_today',
+      id: const ProgressionEntryId('daily_sleep_today'),
       objectiveId: 'daily_sleep',
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.progRuleDailySleepDesc,
@@ -76,7 +77,7 @@ List<ProgressionEntry> sleepNodes() {
       assetKey: questAssetStreak,
     ),
     Achievement(
-      id: 'sleep_total_250h',
+      id: const ProgressionEntryId('sleep_total_250h'),
       objectiveId: 'lifetime_sleep_250h',
       badgeEmoji: '\u{1F6CC}',
       titleKey: (l) => l.progAchievementSleep250hTitle,
@@ -86,7 +87,7 @@ List<ProgressionEntry> sleepNodes() {
       rarity: Rarity.common,
     ),
     Achievement(
-      id: 'sleep_total_1000h',
+      id: const ProgressionEntryId('sleep_total_1000h'),
       objectiveId: 'lifetime_sleep_1000h',
       badgeEmoji: '\u{1F48E}',
       titleKey: (l) => l.progAchievementSleep1000hTitle,
@@ -96,7 +97,7 @@ List<ProgressionEntry> sleepNodes() {
       rarity: Rarity.uncommon,
     ),
     Achievement(
-      id: 'sleep_month_225h',
+      id: const ProgressionEntryId('sleep_month_225h'),
       objectiveId: 'rolling_sleep_30d_225h',
       badgeEmoji: '\u{1F31C}',
       titleKey: (l) => l.progAchievementSleepMonth225hTitle,
@@ -106,7 +107,7 @@ List<ProgressionEntry> sleepNodes() {
       rarity: Rarity.epic,
     ),
     Achievement(
-      id: 'sleep_month_240h',
+      id: const ProgressionEntryId('sleep_month_240h'),
       objectiveId: 'rolling_sleep_30d_240h',
       badgeEmoji: '\u{1F451}',
       titleKey: (l) => l.progAchievementSleepMonth240hTitle,

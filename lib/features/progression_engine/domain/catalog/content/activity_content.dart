@@ -1,3 +1,4 @@
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import '../../../../../shared/domain/rarity.dart';
 import '../../models/claim_policy.dart';
 import '../../models/content_tag.dart';
@@ -21,7 +22,7 @@ List<Objective> activityObjectives(EngineCatalogContext context) {
   final goals = context.goals;
   return [
     const Objective(
-      id: 'daily_activity',
+      id: const ObjectiveId('daily_activity'),
       domain: ProgressionDomain.activity,
       metric: ActivityMinutesMetric(),
       scope: TodayScope(),
@@ -29,7 +30,7 @@ List<Objective> activityObjectives(EngineCatalogContext context) {
       targetValue: _dailyActivityTargetMinutes,
     ),
     Objective(
-      id: 'weekly_activity',
+      id: const ObjectiveId('weekly_activity'),
       domain: ProgressionDomain.activity,
       metric: const ActivityMinutesMetric(),
       scope: const ThisWeekScope(),
@@ -37,7 +38,7 @@ List<Objective> activityObjectives(EngineCatalogContext context) {
       targetValue: goals.weeklyActivityMinutes.toDouble(),
     ),
     const Objective(
-      id: 'reward_count_weekly_activity_1',
+      id: const ObjectiveId('reward_count_weekly_activity_1'),
       domain: ProgressionDomain.activity,
       metric: RewardCountMetric(ruleId: 'weekly_activity'),
       scope: LifetimeScope(),
@@ -45,7 +46,7 @@ List<Objective> activityObjectives(EngineCatalogContext context) {
       targetValue: 1,
     ),
     const Objective(
-      id: 'reward_count_weekly_activity_4',
+      id: const ObjectiveId('reward_count_weekly_activity_4'),
       domain: ProgressionDomain.activity,
       metric: RewardCountMetric(ruleId: 'weekly_activity'),
       scope: LifetimeScope(),
@@ -53,7 +54,7 @@ List<Objective> activityObjectives(EngineCatalogContext context) {
       targetValue: 4,
     ),
     const Objective(
-      id: 'reward_count_weekly_activity_12',
+      id: const ObjectiveId('reward_count_weekly_activity_12'),
       domain: ProgressionDomain.activity,
       metric: RewardCountMetric(ruleId: 'weekly_activity'),
       scope: LifetimeScope(),
@@ -61,7 +62,7 @@ List<Objective> activityObjectives(EngineCatalogContext context) {
       targetValue: 12,
     ),
     const Objective(
-      id: 'reward_count_weekly_activity_24',
+      id: const ObjectiveId('reward_count_weekly_activity_24'),
       domain: ProgressionDomain.activity,
       metric: RewardCountMetric(ruleId: 'weekly_activity'),
       scope: LifetimeScope(),
@@ -69,7 +70,7 @@ List<Objective> activityObjectives(EngineCatalogContext context) {
       targetValue: 24,
     ),
     const Objective(
-      id: 'reward_count_weekly_activity_36',
+      id: const ObjectiveId('reward_count_weekly_activity_36'),
       domain: ProgressionDomain.activity,
       metric: RewardCountMetric(ruleId: 'weekly_activity'),
       scope: LifetimeScope(),
@@ -77,7 +78,7 @@ List<Objective> activityObjectives(EngineCatalogContext context) {
       targetValue: 36,
     ),
     const Objective(
-      id: 'reward_count_weekly_activity_52',
+      id: const ObjectiveId('reward_count_weekly_activity_52'),
       domain: ProgressionDomain.activity,
       metric: RewardCountMetric(ruleId: 'weekly_activity'),
       scope: LifetimeScope(),
@@ -90,7 +91,7 @@ List<Objective> activityObjectives(EngineCatalogContext context) {
 List<ProgressionEntry> activityNodes() {
   return [
     DailyQuest(
-      id: 'daily_activity_today',
+      id: const ProgressionEntryId('daily_activity_today'),
       objectiveId: 'daily_activity',
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.activitiesActiveMins,
@@ -109,7 +110,7 @@ List<ProgressionEntry> activityNodes() {
       assetKey: questAssetActivity,
     ),
     WeeklyQuest(
-      id: 'weekly_activity',
+      id: const ProgressionEntryId('weekly_activity'),
       objectiveId: 'weekly_activity',
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.progRuleWeeklyActivityDesc,
@@ -121,7 +122,7 @@ List<ProgressionEntry> activityNodes() {
       assetKey: questAssetActivity,
     ),
     Achievement(
-      id: 'weekly_activity_mastery',
+      id: const ProgressionEntryId('weekly_activity_mastery'),
       objectiveId: 'reward_count_weekly_activity_1',
       badgeEmoji: '\u{1F3CB}',
       titleKey: (l) => l.progAchievementWeeklyWarriorTitle,
@@ -131,7 +132,7 @@ List<ProgressionEntry> activityNodes() {
       rarity: Rarity.common,
     ),
     Achievement(
-      id: 'weekly_activity_4',
+      id: const ProgressionEntryId('weekly_activity_4'),
       objectiveId: 'reward_count_weekly_activity_4',
       badgeEmoji: '\u{1F3CC}',
       titleKey: (l) => l.progAchievementWeeklyActivity4Title,
@@ -141,7 +142,7 @@ List<ProgressionEntry> activityNodes() {
       rarity: Rarity.uncommon,
     ),
     Achievement(
-      id: 'weekly_activity_12',
+      id: const ProgressionEntryId('weekly_activity_12'),
       objectiveId: 'reward_count_weekly_activity_12',
       badgeEmoji: '\u{1F3C3}',
       titleKey: (l) => l.progAchievementWeeklyActivity12Title,
@@ -151,7 +152,7 @@ List<ProgressionEntry> activityNodes() {
       rarity: Rarity.epic,
     ),
     Achievement(
-      id: 'weekly_activity_24',
+      id: const ProgressionEntryId('weekly_activity_24'),
       objectiveId: 'reward_count_weekly_activity_24',
       badgeEmoji: '\u{1F938}',
       titleKey: (l) => l.progAchievementWeeklyActivity24Title,
@@ -161,7 +162,7 @@ List<ProgressionEntry> activityNodes() {
       rarity: Rarity.epic,
     ),
     Achievement(
-      id: 'weekly_activity_36',
+      id: const ProgressionEntryId('weekly_activity_36'),
       objectiveId: 'reward_count_weekly_activity_36',
       badgeEmoji: '\u{2744}\u{FE0F}', // snowflake
       titleKey: (l) => l.progAchievementWeeklyActivity36Title,
@@ -173,7 +174,7 @@ List<ProgressionEntry> activityNodes() {
       rarity: Rarity.epic,
     ),
     Achievement(
-      id: 'weekly_activity_52',
+      id: const ProgressionEntryId('weekly_activity_52'),
       objectiveId: 'reward_count_weekly_activity_52',
       badgeEmoji: '\u{1F9D7}',
       titleKey: (l) => l.progAchievementWeeklyActivity52Title,

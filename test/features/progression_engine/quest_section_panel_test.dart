@@ -1,3 +1,4 @@
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,7 +12,7 @@ import 'package:forgetrack/features/progression_engine/presentation/quests_scree
 import 'package:forgetrack/l10n/app_localizations.dart';
 
 Quest _node(String id, int xp) => DailyQuest(
-      id: id,
+      id: ProgressionEntryId(id),
       objectiveId: '${id}_objective',
       claimPolicy: ClaimPolicy.manual,
       titleKey: (_) => 'Title $id',

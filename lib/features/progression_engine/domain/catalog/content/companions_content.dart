@@ -1,3 +1,4 @@
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import '../../../../../shared/domain/rarity.dart';
 import '../../models/progression_node_definition.dart';
 import '../../models/reward_definition.dart';
@@ -28,7 +29,7 @@ import '../../models/unlock_condition.dart';
 List<ProgressionEntry> companionNodes() {
   return [
     CompanionAvailability(
-      id: 'companion_ember_sprite',
+      id: const ProgressionEntryId('companion_ember_sprite'),
       companionId: 'companion_ember_sprite',
       titleKey: (l) => l.cosmeticCompanionEmberSpriteName,
       descriptionKey: (l) => l.cosmeticCompanionEmberSpriteDesc,
@@ -44,7 +45,7 @@ List<ProgressionEntry> companionNodes() {
       rarity: Rarity.uncommon,
     ),
     CompanionAvailability(
-      id: 'companion_forest_fox',
+      id: const ProgressionEntryId('companion_forest_fox'),
       companionId: 'companion_forest_fox',
       titleKey: (l) => l.cosmeticCompanionForestFoxName,
       descriptionKey: (l) => l.cosmeticCompanionForestFoxDesc,
@@ -60,7 +61,7 @@ List<ProgressionEntry> companionNodes() {
       rarity: Rarity.rare,
     ),
     CompanionAvailability(
-      id: 'companion_ruin_raven',
+      id: const ProgressionEntryId('companion_ruin_raven'),
       companionId: 'companion_ruin_raven',
       titleKey: (l) => l.cosmeticCompanionRuinRavenName,
       descriptionKey: (l) => l.cosmeticCompanionRuinRavenDesc,
@@ -76,7 +77,7 @@ List<ProgressionEntry> companionNodes() {
       rarity: Rarity.rare,
     ),
     CompanionAvailability(
-      id: 'companion_lantern_golem',
+      id: const ProgressionEntryId('companion_lantern_golem'),
       companionId: 'companion_lantern_golem',
       titleKey: (l) => l.cosmeticCompanionLanternGolemName,
       descriptionKey: (l) => l.cosmeticCompanionLanternGolemDesc,
@@ -92,7 +93,7 @@ List<ProgressionEntry> companionNodes() {
       rarity: Rarity.epic,
     ),
     CompanionAvailability(
-      id: 'companion_ice_wisp',
+      id: const ProgressionEntryId('companion_ice_wisp'),
       companionId: 'companion_ice_wisp',
       titleKey: (l) => l.cosmeticCompanionIceWispName,
       descriptionKey: (l) => l.cosmeticCompanionIceWispDesc,
@@ -108,7 +109,7 @@ List<ProgressionEntry> companionNodes() {
       rarity: Rarity.legendary,
     ),
     CompanionAvailability(
-      id: 'companion_mountain_gryphon',
+      id: const ProgressionEntryId('companion_mountain_gryphon'),
       companionId: 'companion_mountain_gryphon',
       titleKey: (l) => l.cosmeticCompanionMountainGryphonName,
       descriptionKey: (l) => l.cosmeticCompanionMountainGryphonDesc,
@@ -126,7 +127,7 @@ List<ProgressionEntry> companionNodes() {
       rarity: Rarity.legendary,
     ),
     CompanionAvailability(
-      id: 'companion_dragonling',
+      id: const ProgressionEntryId('companion_dragonling'),
       companionId: 'companion_dragonling',
       titleKey: (l) => l.cosmeticCompanionDragonlingName,
       descriptionKey: (l) => l.cosmeticCompanionDragonlingDesc,

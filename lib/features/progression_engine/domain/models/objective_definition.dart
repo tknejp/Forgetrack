@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 
 import '../progression_domain.dart' show ProgressionDomain;
 import 'objective_metric.dart';
@@ -30,7 +31,7 @@ class Objective {
     this.baselineFromNodeId,
   });
 
-  final String id;
+  final ObjectiveId id;
   final ObjectiveMetric metric;
   final ObjectiveScope scope;
   final ObjectiveOperator operator;

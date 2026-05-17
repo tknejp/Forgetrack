@@ -1,3 +1,4 @@
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import '../../../../../shared/domain/rarity.dart';
 import '../../localized_text.dart';
 import '../../models/claim_policy.dart';
@@ -62,7 +63,7 @@ Objective _amongObjective(
   int target,
 ) {
   return Objective(
-    id: id,
+    id: ObjectiveId(id),
     metric: TodayCompletionsAmongMetric(nodeIds: nodeIds),
     scope: const LifetimeScope(),
     operator: ObjectiveOperator.atLeast,
@@ -428,7 +429,7 @@ Quest _standalone({
   List<RewardDefinition> bonusRewards = const [],
 }) {
   return ChapterSideQuest(
-    id: id,
+    id: ProgressionEntryId(id),
     objectiveId: objectiveId,
     claimPolicy: ClaimPolicy.manual,
     // ChapterActive is the only "soft" gate — it filters by the
@@ -475,7 +476,7 @@ Quest _chainStep({
   // policy derives both `NodeCompleted` and `NodeCompletedBeforeToday`.
   final prereqId = prerequisiteNodeId ?? chapterEntryGateNodeId;
   return ChapterSideQuest(
-    id: id,
+    id: ProgressionEntryId(id),
     objectiveId: objectiveId,
     claimPolicy: ClaimPolicy.manual,
     unlockConditions: [ChapterActive(chapterId)],
@@ -498,7 +499,7 @@ List<ProgressionEntry> chapterSideQuests() {
   return [
     // ── Pilgrim Path (2 standalone) ────────────────────────────
     _standalone(
-      id: 'side_pilgrim_morning_walk',
+      id: const ProgressionEntryId('side_pilgrim_morning_walk'),
       objectiveId: 'side_pilgrim_morning_walk_obj',
       chapterId: _pilgrimPath,
       chapterEntryGateNodeId: 'pilgrim_path_first_steps',
@@ -509,7 +510,7 @@ List<ProgressionEntry> chapterSideQuests() {
       assetKey: questAssetPilgrimPathIcon,
     ),
     _standalone(
-      id: 'side_pilgrim_quiet_rest',
+      id: const ProgressionEntryId('side_pilgrim_quiet_rest'),
       objectiveId: 'side_pilgrim_quiet_rest_obj',
       chapterId: _pilgrimPath,
       chapterEntryGateNodeId: 'pilgrim_path_first_reward',
@@ -522,7 +523,7 @@ List<ProgressionEntry> chapterSideQuests() {
 
     // ── Forest Trial (1 standalone + 2-step chain) ─────────────
     _standalone(
-      id: 'side_forest_briskwalk',
+      id: const ProgressionEntryId('side_forest_briskwalk'),
       objectiveId: 'side_forest_briskwalk_obj',
       chapterId: _forestTrial,
       chapterEntryGateNodeId: 'forest_trial_daily_wins_5',
@@ -533,7 +534,7 @@ List<ProgressionEntry> chapterSideQuests() {
       assetKey: questAssetForestTrialIcon,
     ),
     _chainStep(
-      id: 'side_forest_camp',
+      id: const ProgressionEntryId('side_forest_camp'),
       objectiveId: 'side_forest_camp_obj',
       chapterId: _forestTrial,
       chainId: 'forest_trial_side',
@@ -549,7 +550,7 @@ List<ProgressionEntry> chapterSideQuests() {
       assetKey: questAssetForestTrialIcon,
     ),
     _chainStep(
-      id: 'side_forest_clearing',
+      id: const ProgressionEntryId('side_forest_clearing'),
       objectiveId: 'side_forest_clearing_obj',
       chapterId: _forestTrial,
       chainId: 'forest_trial_side',
@@ -570,7 +571,7 @@ List<ProgressionEntry> chapterSideQuests() {
 
     // ── Ruins of Discipline (2 standalone) ─────────────────────
     _standalone(
-      id: 'side_ruins_steady_dawn',
+      id: const ProgressionEntryId('side_ruins_steady_dawn'),
       objectiveId: 'side_ruins_steady_dawn_obj',
       chapterId: _ruinsDiscipline,
       chapterEntryGateNodeId: 'ruins_discipline_nutrition_7',
@@ -581,7 +582,7 @@ List<ProgressionEntry> chapterSideQuests() {
       assetKey: questAssetRuinsDisciplineIcon,
     ),
     _standalone(
-      id: 'side_ruins_iron_intake',
+      id: const ProgressionEntryId('side_ruins_iron_intake'),
       objectiveId: 'side_ruins_iron_intake_obj',
       chapterId: _ruinsDiscipline,
       chapterEntryGateNodeId: 'ruins_discipline_weekly_2',
@@ -597,7 +598,7 @@ List<ProgressionEntry> chapterSideQuests() {
 
     // ── Mine Descent (2 standalone) ────────────────────────────
     _standalone(
-      id: 'side_mine_torchbearer',
+      id: const ProgressionEntryId('side_mine_torchbearer'),
       objectiveId: 'side_mine_torchbearer_obj',
       chapterId: _mineDescent,
       chapterEntryGateNodeId: 'mine_descent_steps_250k',
@@ -608,7 +609,7 @@ List<ProgressionEntry> chapterSideQuests() {
       assetKey: questAssetMineDescentIcon,
     ),
     _standalone(
-      id: 'side_mine_long_haul',
+      id: const ProgressionEntryId('side_mine_long_haul'),
       objectiveId: 'side_mine_long_haul_obj',
       chapterId: _mineDescent,
       chapterEntryGateNodeId: 'mine_descent_activity_rewards_12',
@@ -624,7 +625,7 @@ List<ProgressionEntry> chapterSideQuests() {
 
     // ── Mine Descent combo chain (2-step, gates on chain step 3) ─
     _chainStep(
-      id: 'side_mine_deep_shaft',
+      id: const ProgressionEntryId('side_mine_deep_shaft'),
       objectiveId: 'side_mine_deep_shaft_obj',
       chapterId: _mineDescent,
       chainId: 'mine_descent_side',
@@ -643,7 +644,7 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
     _chainStep(
-      id: 'side_mine_forge_finale',
+      id: const ProgressionEntryId('side_mine_forge_finale'),
       objectiveId: 'side_mine_forge_finale_obj',
       chapterId: _mineDescent,
       chainId: 'mine_descent_side',
@@ -664,7 +665,7 @@ List<ProgressionEntry> chapterSideQuests() {
 
     // ── Forge Momentum (2 standalone) ──────────────────────────
     _standalone(
-      id: 'side_forge_morning_anvil',
+      id: const ProgressionEntryId('side_forge_morning_anvil'),
       objectiveId: 'side_forge_morning_anvil_obj',
       chapterId: _forgeMomentum,
       chapterEntryGateNodeId: 'forge_momentum_weekly_4',
@@ -678,7 +679,7 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
     _standalone(
-      id: 'side_forge_full_furnace',
+      id: const ProgressionEntryId('side_forge_full_furnace'),
       objectiveId: 'side_forge_full_furnace_obj',
       chapterId: _forgeMomentum,
       chapterEntryGateNodeId: 'forge_momentum_steps_20',
@@ -694,7 +695,7 @@ List<ProgressionEntry> chapterSideQuests() {
 
     // ── Underway Pact (2 standalone) ───────────────────────────
     _standalone(
-      id: 'side_underway_warm_camp',
+      id: const ProgressionEntryId('side_underway_warm_camp'),
       objectiveId: 'side_underway_warm_camp_obj',
       chapterId: _underwayPact,
       chapterEntryGateNodeId: 'underway_pact_four_pillars_5',
@@ -708,7 +709,7 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
     _standalone(
-      id: 'side_underway_long_watch',
+      id: const ProgressionEntryId('side_underway_long_watch'),
       objectiveId: 'side_underway_long_watch_obj',
       chapterId: _underwayPact,
       chapterEntryGateNodeId: 'underway_pact_sleep_14',
@@ -724,7 +725,7 @@ List<ProgressionEntry> chapterSideQuests() {
 
     // ── Underway Pact combo chain (2-step, gates on chain step 3) ─
     _chainStep(
-      id: 'side_pact_march',
+      id: const ProgressionEntryId('side_pact_march'),
       objectiveId: 'side_pact_march_obj',
       chapterId: _underwayPact,
       chainId: 'underway_pact_side',
@@ -743,7 +744,7 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
     _chainStep(
-      id: 'side_pact_finale',
+      id: const ProgressionEntryId('side_pact_finale'),
       objectiveId: 'side_pact_finale_obj',
       chapterId: _underwayPact,
       chainId: 'underway_pact_side',
@@ -764,7 +765,7 @@ List<ProgressionEntry> chapterSideQuests() {
 
     // ── Frostbound Oath (2 standalone) ─────────────────────────
     _standalone(
-      id: 'side_frostbound_first_light',
+      id: const ProgressionEntryId('side_frostbound_first_light'),
       objectiveId: 'side_frostbound_first_light_obj',
       chapterId: _frostboundOath,
       chapterEntryGateNodeId: 'frostbound_oath_steps_21',
@@ -778,7 +779,7 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
     _standalone(
-      id: 'side_frostbound_long_oath',
+      id: const ProgressionEntryId('side_frostbound_long_oath'),
       objectiveId: 'side_frostbound_long_oath_obj',
       chapterId: _frostboundOath,
       chapterEntryGateNodeId: 'frostbound_oath_sleep_21',
@@ -794,7 +795,7 @@ List<ProgressionEntry> chapterSideQuests() {
 
     // ── Icewalker Route (1 standalone + 2-step chain) ──────────
     _standalone(
-      id: 'side_icewalker_dawn_march',
+      id: const ProgressionEntryId('side_icewalker_dawn_march'),
       objectiveId: 'side_icewalker_dawn_march_obj',
       chapterId: _icewalkerRoute,
       chapterEntryGateNodeId: 'icewalker_route_steps_500k',
@@ -808,7 +809,7 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
     _chainStep(
-      id: 'side_icewalker_provisioner',
+      id: const ProgressionEntryId('side_icewalker_provisioner'),
       objectiveId: 'side_icewalker_provisioner_obj',
       chapterId: _icewalkerRoute,
       chainId: 'icewalker_route_side',
@@ -827,7 +828,7 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
     _chainStep(
-      id: 'side_icewalker_finale',
+      id: const ProgressionEntryId('side_icewalker_finale'),
       objectiveId: 'side_icewalker_finale_obj',
       chapterId: _icewalkerRoute,
       chainId: 'icewalker_route_side',
@@ -848,7 +849,7 @@ List<ProgressionEntry> chapterSideQuests() {
 
     // ── Mountain Ascent (2 standalone, deliberately no chain) ──
     _standalone(
-      id: 'side_mountain_steep_morning',
+      id: const ProgressionEntryId('side_mountain_steep_morning'),
       objectiveId: 'side_mountain_steep_morning_obj',
       chapterId: _mountainAscent,
       chapterEntryGateNodeId: 'mountain_ascent_four_pillars_15',
@@ -862,7 +863,7 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
     _standalone(
-      id: 'side_mountain_full_ridge',
+      id: const ProgressionEntryId('side_mountain_full_ridge'),
       objectiveId: 'side_mountain_full_ridge_obj',
       chapterId: _mountainAscent,
       chapterEntryGateNodeId: 'mountain_ascent_steps_30',
@@ -878,7 +879,7 @@ List<ProgressionEntry> chapterSideQuests() {
 
     // ── Dragonroad (1 standalone + 2-step chain) ───────────────
     _standalone(
-      id: 'side_dragonroad_warden_dawn',
+      id: const ProgressionEntryId('side_dragonroad_warden_dawn'),
       objectiveId: 'side_dragonroad_warden_dawn_obj',
       chapterId: _dragonroad,
       chapterEntryGateNodeId: 'dragonroad_rewards_250',
@@ -892,7 +893,7 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
     _chainStep(
-      id: 'side_dragonroad_iron_appetite',
+      id: const ProgressionEntryId('side_dragonroad_iron_appetite'),
       objectiveId: 'side_dragonroad_iron_appetite_obj',
       chapterId: _dragonroad,
       chainId: 'dragonroad_side',
@@ -911,7 +912,7 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
     _chainStep(
-      id: 'side_dragonroad_finale',
+      id: const ProgressionEntryId('side_dragonroad_finale'),
       objectiveId: 'side_dragonroad_finale_obj',
       chapterId: _dragonroad,
       chainId: 'dragonroad_side',
@@ -932,7 +933,7 @@ List<ProgressionEntry> chapterSideQuests() {
 
     // ── Dragonrock Sovereign (1 standalone + 4-step apex) ──────
     _standalone(
-      id: 'side_dragonrock_sovereign_dawn',
+      id: const ProgressionEntryId('side_dragonrock_sovereign_dawn'),
       objectiveId: 'side_dragonrock_sovereign_dawn_obj',
       chapterId: _dragonrockSovereign,
       chapterEntryGateNodeId: 'dragonrock_sovereign_four_pillars_30',
@@ -946,7 +947,7 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
     _chainStep(
-      id: 'side_dragonrock_sovereign_vigil',
+      id: const ProgressionEntryId('side_dragonrock_sovereign_vigil'),
       objectiveId: 'side_dragonrock_sovereign_vigil_obj',
       chapterId: _dragonrockSovereign,
       chainId: 'dragonrock_sovereign_side',
@@ -965,7 +966,7 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
     _chainStep(
-      id: 'side_dragonrock_sovereign_throne',
+      id: const ProgressionEntryId('side_dragonrock_sovereign_throne'),
       objectiveId: 'side_dragonrock_sovereign_throne_obj',
       chapterId: _dragonrockSovereign,
       chainId: 'dragonrock_sovereign_side',
@@ -984,7 +985,7 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
     _chainStep(
-      id: 'side_dragonrock_sovereign_crown',
+      id: const ProgressionEntryId('side_dragonrock_sovereign_crown'),
       objectiveId: 'side_dragonrock_sovereign_crown_obj',
       chapterId: _dragonrockSovereign,
       chainId: 'dragonrock_sovereign_side',
@@ -1006,7 +1007,7 @@ List<ProgressionEntry> chapterSideQuests() {
     // daily goals met — with two stacked bonuses (≥ 7 h sleep AND
     // finished before 18:00). Highest base XP in the catalog.
     _chainStep(
-      id: 'side_dragonrock_sovereign_finale',
+      id: const ProgressionEntryId('side_dragonrock_sovereign_finale'),
       objectiveId: 'side_dragonrock_sovereign_finale_obj',
       chapterId: _dragonrockSovereign,
       chainId: 'dragonrock_sovereign_side',

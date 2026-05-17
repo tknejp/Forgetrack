@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart' show Icons;
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 
 import '../../../../../shared/domain/rarity.dart';
 import '../../models/content_tag.dart';
@@ -31,7 +32,7 @@ const _chapterId = 'pilgrim_path';
 List<Objective> pilgrimPathObjectives() {
   return const [
     Objective(
-      id: 'pilgrim_path_open_objective',
+      id: const ObjectiveId('pilgrim_path_open_objective'),
       domain: ProgressionDomain.activity,
       metric: LevelMetric(),
       scope: LifetimeScope(),
@@ -40,7 +41,7 @@ List<Objective> pilgrimPathObjectives() {
       debugLabel: 'Pilgrim Path open — level >= 1 (auto-unlocked)',
     ),
     Objective(
-      id: 'pilgrim_path_first_steps_objective',
+      id: const ObjectiveId('pilgrim_path_first_steps_objective'),
       domain: ProgressionDomain.steps,
       metric: NodeCompletionsMetric(nodeId: 'daily_steps_today'),
       scope: LifetimeScope(),
@@ -50,7 +51,7 @@ List<Objective> pilgrimPathObjectives() {
       debugLabel: 'Pilgrim Path step 1 — daily steps since open',
     ),
     Objective(
-      id: 'pilgrim_path_first_sleep_objective',
+      id: const ObjectiveId('pilgrim_path_first_sleep_objective'),
       domain: ProgressionDomain.sleep,
       metric: NodeCompletionsMetric(nodeId: 'daily_sleep_today'),
       scope: LifetimeScope(),
@@ -68,7 +69,7 @@ List<Objective> pilgrimPathObjectives() {
     // 2) — a fitting send-off before the player heads into the
     // Forest Trial chapter at level 10.
     Objective(
-      id: 'pilgrim_path_first_reward_objective',
+      id: const ObjectiveId('pilgrim_path_first_reward_objective'),
       domain: ProgressionDomain.nutrition,
       metric: NodeCompletionsMetric(nodeId: 'daily_protein_today'),
       scope: LifetimeScope(),
@@ -78,7 +79,7 @@ List<Objective> pilgrimPathObjectives() {
       debugLabel: 'Pilgrim Path step 3 — daily protein since step 2',
     ),
     Objective(
-      id: 'pilgrim_path_finale_objective',
+      id: const ObjectiveId('pilgrim_path_finale_objective'),
       domain: ProgressionDomain.activity,
       metric: LevelMetric(),
       scope: LifetimeScope(),
@@ -92,7 +93,7 @@ List<Objective> pilgrimPathObjectives() {
 List<ProgressionEntry> pilgrimPathNodes() {
   return [
     ChapterOpener(
-      id: 'pilgrim_path_open',
+      id: const ProgressionEntryId('pilgrim_path_open'),
       objectiveId: 'pilgrim_path_open_objective',
       unlockConditions: const [LevelAtLeast(1)],
       titleKey: (l) => l.progQuestPilgrimPathOpenTitle,
@@ -108,7 +109,7 @@ List<ProgressionEntry> pilgrimPathNodes() {
       sortOrder: 200,
     ),
     ChapterStep(
-      id: 'pilgrim_path_first_steps',
+      id: const ProgressionEntryId('pilgrim_path_first_steps'),
       objectiveId: 'pilgrim_path_first_steps_objective',
       titleKey: (l) => l.progQuestPilgrimPathFirstStepsTitle,
       descriptionKey: (l) => l.progQuestPilgrimPathFirstStepsDesc,
@@ -125,7 +126,7 @@ List<ProgressionEntry> pilgrimPathNodes() {
       sortOrder: 201,
     ),
     ChapterStep(
-      id: 'pilgrim_path_first_sleep',
+      id: const ProgressionEntryId('pilgrim_path_first_sleep'),
       objectiveId: 'pilgrim_path_first_sleep_objective',
       titleKey: (l) => l.progQuestPilgrimPathFirstSleepTitle,
       descriptionKey: (l) => l.progQuestPilgrimPathFirstSleepDesc,
@@ -142,7 +143,7 @@ List<ProgressionEntry> pilgrimPathNodes() {
       sortOrder: 202,
     ),
     ChapterStep(
-      id: 'pilgrim_path_first_reward',
+      id: const ProgressionEntryId('pilgrim_path_first_reward'),
       objectiveId: 'pilgrim_path_first_reward_objective',
       titleKey: (l) => l.progQuestPilgrimPathFirstRewardTitle,
       descriptionKey: (l) => l.progQuestPilgrimPathFirstRewardDesc,
@@ -159,7 +160,7 @@ List<ProgressionEntry> pilgrimPathNodes() {
       sortOrder: 203,
     ),
     ChapterFinale(
-      id: 'pilgrim_path_finale',
+      id: const ProgressionEntryId('pilgrim_path_finale'),
       objectiveId: 'pilgrim_path_finale_objective',
       titleKey: (l) => l.progQuestPilgrimPathFinaleTitle,
       descriptionKey: (l) => l.progQuestPilgrimPathFinaleDesc,

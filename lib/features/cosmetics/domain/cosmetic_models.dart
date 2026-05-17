@@ -4,6 +4,7 @@
 
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/domain/rarity.dart';
+import 'ids.dart';
 
 export '../../../shared/domain/rarity.dart' show Rarity;
 
@@ -71,7 +72,7 @@ class Cosmetic {
     this.metadata = const <String, Object?>{},
   });
 
-  final String id;
+  final CosmeticId id;
   final CosmeticType type;
   final Rarity rarity;
   final CosmeticRegion region;
