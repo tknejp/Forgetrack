@@ -26,8 +26,8 @@ Plán dodržuje 5 pravidel, která jsou silnější než cokoliv v jednotlivých
 |---|---|---|---|---|
 | **A: Foundation** | 0 | Skeleton + lint guardrails | nízké | ~50 |
 | | 1 | Identity rename (AuthUser → Identity) | nízké | ~150 |
-| | 2 | Journal infrastructure (LedgerEvent → JournalEvent) | nízké | ~200 |
-| | 3 | Catalog rename pass (ProgressionNode → ProgressionEntry + suffix drop) | střední | ~500 (mechanický) |
+| | 2 | Journal infrastructure (LedgerEvent → JournalEvent) + PeriodKey UTC | nízké | ~250 |
+| | 3 | Catalog rename pass + typed identifier rollout (extension types) | střední | ~700 (mechanický) |
 | **B: Player + Lifecycles** | 4 | Player aggregate scaffolding | střední | ~250 |
 | | 5 | Player computed level/XP (Player as source-of-truth) | vysoké | ~300 |
 | | 6 | PlayerQuestLifecycle (sealed) + NodeState removal | vysoké | ~350 |
@@ -42,12 +42,13 @@ Plán dodržuje 5 pravidel, která jsou silnější než cokoliv v jednotlivých
 | | 15 | HealthSnapshot + NutritionSnapshot domain types | střední | ~250 |
 | | 16 | Engine signature refactor (EngineEvaluationInput → arg list) | vysoké | ~350 |
 | | 17 | SocialPresence aggregate | střední | ~300 |
-| | 18 | UI sweep — widgets read-only audit | střední | ~variable |
-| **E: Hardening** | 19 | Cache rebuild paths + JournalProjection interface | nízké | ~150 |
-| | 20 | Lint rules / review checklist | nízké | ~100 |
-| **deferred** | 21 | Legacy V1 progression cleanup (`lib/features/progression/`) | mimo scope tohoto plánu | — |
+| | 18 | **Result/Error type hierarchy** (typed errors + sealed AppError) | střední | ~400 |
+| | 19 | UI sweep — widgets read-only audit | střední | ~variable |
+| **E: Hardening** | 20 | Cache rebuild paths + JournalProjection interface | nízké | ~150 |
+| | 21 | Lint rules (domain purity + typed-id + l10n strings) / review checklist | nízké | ~200 |
+| **deferred** | 22 | Legacy V1 progression cleanup (`lib/features/progression/`) | mimo scope tohoto plánu | — |
 
-**Celkový odhad:** ~4500 LoC změn napříč ~50 PR (po sub-fázích). Realistický time-frame: **3-6 měsíců** podle volné kapacity.
+**Celkový odhad:** ~5100 LoC změn napříč ~55 PR (po sub-fázích). Realistický time-frame: **3-6 měsíců** podle volné kapacity.
 
 ---
 
@@ -137,7 +138,7 @@ Plán dodržuje 5 pravidel, která jsou silnější než cokoliv v jednotlivých
   Future<void> append(JournalEvent event);  // delegated to repository
   ```
 - New: `lib/domain/journal/event_key.dart` — `EventKey` VO (typed alias kolem String pro deterministic dedupe; jen typedef + helpers).
-- New: `lib/domain/journal/period_key.dart` — `PeriodKey` VO.
+- New: `lib/domain/journal/period_key.dart` — `PeriodKey` VO. **UTC-enforced**: factory `PeriodKey.day(DateTime)` přijme libovolný `DateTime` a normalizuje na `yyyy-MM-dd` v UTC; factory `PeriodKey.isoWeek(DateTime)` stejně. Konstruktor s raw String je private — externí kód musí jít přes factories. Adresuje timezone-collision risk identifikovaný v auditu (long-offline + cross-TZ → duplicate periodKey claims).
 - Modify: `progression_engine/data/` repository implementuje `Journal` interface a forwarduje na existující Isar reads.
 - Update call sajty v `progression_engine_provider`, `hybrid_progression_engine_repository`, `daily_section_resolver`, `firestore_*_gateway`, atd. (~15 souborů).
 
@@ -152,6 +153,7 @@ Plán dodržuje 5 pravidel, která jsou silnější než cokoliv v jednotlivých
 - `flutter analyze` clean.
 - `flutter test test/features/progression/` + `test/features/progression_engine/` passes — existující testy pokrývají ledger reads.
 - New test `test/domain/journal/journal_adapter_test.dart` — IsarJournalAdapter vrátí stejné events jako přímý Isar read pro stejný `uid`. Golden test.
+- New test `test/domain/journal/period_key_test.dart` — `PeriodKey.day(localDateTime)` z různých timezone vrátí stejnou hodnotu pro stejný UTC den. Cross-TZ collision test.
 
 **DoD:**
 - [ ] `LedgerEvent` symbol mrtvý.
@@ -165,41 +167,73 @@ Plán dodržuje 5 pravidel, která jsou silnější než cokoliv v jednotlivých
 
 ---
 
-### Phase 3 — Catalog rename pass
+### Phase 3 — Catalog rename pass + typed identifier rollout
 
-**Goal:** Mechanický rename `ProgressionNode` → `ProgressionEntry`, drop `Node` suffix u všech subtypů, `ObjectiveDefinition` → `Objective`, `CosmeticDefinition` → `Cosmetic`. `RewardDefinition` zachován (proposal §2.3 disambiguation).
+**Goal:** Dva paralelní mechanické refactor passy v jednom Stage:
+
+(a) Rename `ProgressionNode` → `ProgressionEntry`, drop `Node` suffix u všech subtypů, `ObjectiveDefinition` → `Objective`, `CosmeticDefinition` → `Cosmetic`. `RewardDefinition` zachován (proposal §2.3 disambiguation).
+
+(b) **Typed identifier rollout** přes `extension type` (Dart 3, zero runtime cost). `String` ids dostávají typové wrappers: `QuestId`, `AchievementId`, `ChapterId`, `CosmeticId`, `ObjectiveId`, `MilestoneId`. Zero-overhead, ale kompilátor refusne `Inventory.byId(quest.id)` typo.
 
 **Pre-conditions:** Phase 2 done (Journal exists tak, abychom mohli referencovat).
 
+**Sub-fáze (rozdělit na sub-PR pokud roste přes ~300 LoC):**
+
+- **3.a:** Mechanický class rename (Node suffix drop + Definition drop).
+- **3.b:** Typed identifier introduction — definice extension types + rollout v catalog + repository contracts.
+- **3.c:** UI + provider call sajt sweep — passing `QuestId.value` jen na boundary do Isar / Firestore, jinde čistě typed.
+
 **Files touched:**
+
+(a) Rename:
+
 - `lib/features/progression_engine/domain/models/progression_node_definition.dart` — rename všechny classes.
 - `lib/features/progression_engine/domain/catalog/content/*.dart` (~12 files) — update všechny subtype call sites.
 - `lib/features/progression_engine/domain/catalog/progression_node_catalog.dart` → `progression_entry_catalog.dart`. Rename `ProgressionNodeCatalog` → `ProgressionEntryCatalog`.
 - `lib/features/progression_engine/domain/models/objective_definition.dart` — class rename.
 - `lib/features/cosmetics/domain/cosmetic_models.dart` — `CosmeticDefinition` → `Cosmetic` (single class for now; sealing přijde v Phase 9).
-- ~50+ call sites napříč evaluators, presenters, tests.
+
+(b) Typed ids:
+
+- New: `lib/domain/progression/catalog/ids.dart` — definice `extension type QuestId(String value) implements Object`, atd.
+- Modify: catalog row constructors přijímají `QuestId` / `AchievementId` (ne `String`). Catalog factories používají typed.
+- Modify: `Journal.eventsForNode(QuestId | AchievementId | ...)` — sjednocený typ `ProgressionEntryId` jako sealed (?) nebo overloaded API.
+- Modify: ~50+ call sites napříč evaluators, presenters, tests.
 
 **Implementation steps:**
-1. Pure mechanická rename — IDE-driven refactor "Rename Symbol" zvládne většinu.
-2. Update všechny string-id konvence v komentářích (ne v kódu — id stringy zachovat).
-3. Update `progression_node_catalog.dart` filename + class name.
-4. Run `flutter analyze` — fixnout pozůstatky.
-5. `lib/domain/progression/catalog/` zatím **prázdná** — fyzický move přijde až v Phase 4+.
 
-**Implementation note:** Tato fáze **nepřesouvá** soubory do `lib/domain/`. Jen renamuje uvnitř `lib/features/progression_engine/domain/`. Cíl: oddělit renaming risk od move-and-restructure risk.
+1. (3.a) Mechanická rename — IDE-driven refactor "Rename Symbol".
+2. (3.a) Update všechny string-id konvence v komentářích (ne v kódu — id stringy zachovat na úrovni serializace).
+3. (3.b) Definovat extension types. Decided: použít `extension type Xxx(String value)` (Dart 3.3+). **Nepoužít** `typedef` — ten neposkytuje typovou izolaci.
+4. (3.b) Migrovat catalog row signatures — `class Quest { final QuestId id; ...}`.
+5. (3.c) Provider + UI call sajt — kde se id z UI předává do API, zabalit do `QuestId(rawString)`.
+6. **Persistence boundary:** Isar a Firestore stále serializují/deserializují jako raw `String`. Mappers konvertují `QuestId.value` ↔ `String` na hranici. Tj. typed ids zůstávají v doméně + application; data layer zná raw String.
+7. Run `flutter analyze` — fixnout pozůstatky.
+8. `lib/domain/progression/catalog/` zatím **prázdná** pro classes — fyzický move přijde až v Phase 4+. Ale `ids.dart` už tam žije (typed ids jsou pure domain).
+
+**Implementation note:** Tato fáze **nepřesouvá** classes do `lib/domain/`. Jen renamuje + zavádí typed ids uvnitř `lib/features/progression_engine/domain/`. Cíl: oddělit renaming + typed-id risk od move-and-restructure risk.
 
 **Test plan:**
-- `flutter analyze` clean.
+
+- `flutter analyze` clean. Typed ids zachytí typo, který by se předtím zkompiloval.
 - All test suites pass (`flutter test`).
+- New test `test/domain/progression/ids_test.dart` — typed ids equality, fromJson/toJson, can't construct from another typed id (compiler check via expected-fail test fixture).
 - Manuální smoke test: spustit appku, otevřít každou progression-aware obrazovku (Home progression card, Quests V2, Achievements, Journey).
 
 **DoD:**
+
 - [ ] Žádný symbol s `Node` suffixem v `progression_engine/domain/` (kromě `_node_` v Isar `.g.dart` files, které nepatří doméně).
 - [ ] `Cosmetic` (ne `CosmeticDefinition`) napříč repo.
 - [ ] `Objective` (ne `ObjectiveDefinition`) napříč repo.
+- [ ] `QuestId`, `AchievementId`, `ChapterId`, `CosmeticId`, `ObjectiveId` definovány a používány v catalog + repository signatures.
+- [ ] Persistence boundary explicitně dokumentován — Isar/Firestore mappers konvertují na/z `String`.
 - [ ] Build green; all tests pass.
 
-**Rizika:** Generic rename collisions. Např. `class Companion` (po renamingu z `CompanionAvailabilityNode → CompanionAvailability` … počkat — `CompanionAvailability` zachovává disambiguator. Re-check: per proposal §2.3, `CompanionAvailabilityNode` → `CompanionAvailability` (catalog node), zatímco `Cosmetic` typu `companion` → bude `Companion` (catalog cosmetic) až v Phase 9. Tady v Phase 3 jen rename `CompanionAvailabilityNode` → `CompanionAvailability`.
+**Rizika:**
+
+- Generic rename collisions. Např. `CompanionAvailabilityNode` → `CompanionAvailability` (catalog node), `Cosmetic` typu `companion` → bude `Companion` (catalog cosmetic) až v Phase 9.
+- Extension type adoption má learning curve — v týmovém kontextu by potřebovala doc. Solo developer (uživatel) tomu rozumí rychle.
+- Mass-id wrap může explodovat PR size — proto sub-fáze 3.a/3.b/3.c.
 
 **Rollback:** `git revert`. Stable point.
 
@@ -698,7 +732,59 @@ Plán dodržuje 5 pravidel, která jsou silnější než cokoliv v jednotlivých
 
 ---
 
-### Phase 18 — UI sweep: widget read-only audit
+### Phase 18 — Result/Error type hierarchy
+
+**Goal:** Zavést `sealed AppError` hierarchii a `Result<T, AppError>` return type na **domain layer + repository contracts + Firestore gateway**. Eliminuje silent error swallowing (`try/catch (e) → AppLog.warn(e)` patterny) v sync codepath. Není totální rewrite — scope se omezuje na external-boundary kontrakt.
+
+**Pre-conditions:** Phase 17 done — všechny repositories existují jako domain interfaces.
+
+**Background:** Audit (viz `follow_ups.md`) odhalil že `BackgroundSyncService` swallows errors at line 232, vrací `true` aby zabránil WorkManager retry. Firestore gateway loguje pull errors at `info` a push errors at `debug` — chyby z cloud push jsou v podstatě neviditelné. **Žádná retry/backoff classification, žádné typed errors.** Tato fáze adresuje root cause na úrovni kontraktů.
+
+**Files touched:**
+
+- New: `lib/core/errors/app_error.dart` — sealed `AppError` + 5 subtypů:
+  - `NetworkError(originalError, isTransient: bool)` — Firestore offline, KT 401, HC quota.
+  - `ValidationError(reason)` — invalid input.
+  - `PermissionError(scope)` — HC permission denied, Firestore rule rejection.
+  - `NotFoundError(entityType, id)` — quest/cosmetic/user not found.
+  - `UpstreamError(originalError, stackTrace)` — catch-all unknown.
+- New: `lib/core/result/result.dart` — sealed `Result<T, E>` s `Success(T value)` a `Failure(E error)`. Helper extension `.map`, `.flatMap`, `.unwrapOr(fallback)`.
+- Modify: domain repository interfaces (`JournalRepository`, `PlayerRepository`, `InventoryRepository`, `SocialPresenceRepository`) — methods vrací `Future<Result<T, AppError>>` namísto `Future<T>` (kde failure je možný).
+- Modify: `firestore_progression_engine_gateway.dart` — wrap push/pull v Result. Map known Firestore errors na typed subtypes.
+- Modify: `kaloricke_tabulky_service.dart` — wrap HTTP errors. 401 → `NetworkError(isTransient: true)` triggers re-login retry.
+- Modify: `background_sync_service.dart` — explicit Result-based decision: transient → return true (WorkManager retries), permanent → return false + log warn.
+
+**Implementation steps:**
+
+1. Definice `AppError` sealed + `Result<T, E>` sealed.
+2. Repository interfaces — change one at a time. Start with `JournalRepository` (most critical, most error-prone).
+3. Firestore gateway — explicit error categorization na `FirebaseException.code` (`unavailable` → transient, `permission-denied` → permanent, atd.).
+4. BackgroundSync — refactor sync callback na `Future<Result<SyncSummary, AppError>>`. WorkManager retry decision je pattern-match na error severity.
+5. Cosmetic entitlements source, social repository — same pattern.
+6. **NEDĚLAT:** widget `try/catch` bloky, UI snackbar handling. Toto je scope follow-up phase 19+ pokud potřeba.
+
+**Test plan:**
+
+- Unit test `test/core/result/result_test.dart` — Success / Failure pattern matching exhaustive.
+- Integration test: simulate `FirebaseException(code: 'unavailable')` → assert returns `Failure(NetworkError(isTransient: true))`.
+- Integration test: BackgroundSync gets transient error → return true; permanent → return false.
+- Existing tests — repositoryReadCallback() now returns Result, update assertions.
+
+**DoD:**
+
+- [ ] `AppError` sealed hierarchy + `Result<T, E>` exist v `lib/core/`.
+- [ ] All cross-boundary repository methods (Firestore push/pull, KT HTTP, HC quota-prone) return Result.
+- [ ] BackgroundSync explicitně pattern-matchuje na error severity.
+- [ ] Audit: `grep "catch (.*) {" lib/core/services/` ukazuje 0 untyped swallows v sync codepath.
+- [ ] Tests pass; specifically new error-categorization tests.
+
+**Rizika:** Scope creep — pokušení typecastnout všechny errors v codebase. Mitigation: explicit scope statement v PR description: "Domain + repository + outermost data layer only. Widget try/catch je out of scope."
+
+**Rollback:** `git revert`. Stable point pokud bude Result API mít sub-optimální shape.
+
+---
+
+### Phase 19 — UI sweep: widget read-only audit
 
 **Goal:** Audit pass napříč všemi widgety. Cíl: žádný `build()` neobsahuje **logiku nad doménou** (žádné `.where`, `.firstWhere`, `_isXxx`, `_resolveYyy`, žádné komputované booleans). Widget jen čte hotový `PlayerXxx` z provideru a switchuje na lifecycle.
 
@@ -711,7 +797,7 @@ Plán dodržuje 5 pravidel, která jsou silnější než cokoliv v jednotlivých
 2. `grep -r "\.firstWhere(" lib/features/*/presentation/`.
 3. `grep -r "bool _" lib/features/*/presentation/` (private bool methods on widget state).
 4. Pro každý hit: rozhodnout — je to UI-only logic (např. layout-driven filter) nebo domain-derived? Pokud domain-derived, **přesunout do read projection** v provideru.
-5. Track findings v interní checklist; landovat per-feature batch PR (Phase 18.a — Quests UI, 18.b — Cosmetics UI, atd.).
+5. Track findings v interní checklist; landovat per-feature batch PR (Phase 19.a — Quests UI, 19.b — Cosmetics UI, atd.).
 
 **Test plan:**
 - Visual regression — golden screenshots na klíčových obrazovkách před/po sweepu.
@@ -732,7 +818,7 @@ Plán dodržuje 5 pravidel, která jsou silnější než cokoliv v jednotlivých
 
 ---
 
-### Phase 19 — Cache rebuild paths + JournalProjection interface
+### Phase 20 — Cache rebuild paths + JournalProjection interface
 
 **Goal:** Promote `cosmetic_unlock_bridge.dart` pattern na first-class `JournalProjection<T>` interface. Document `SocialUserProfile` + `CosmeticsUnlockRecord` cache rebuild triggers explicitly. Each cache má `RebuildFromJournalReason` enum.
 
@@ -763,38 +849,51 @@ Plán dodržuje 5 pravidel, která jsou silnější než cokoliv v jednotlivých
 
 ---
 
-### Phase 20 — Lint rules / review checklist
+### Phase 21 — Lint rules / review checklist
 
-**Goal:** Pevně zabudovat anti-patterns z proposal §7 jako lint pravidla nebo PR review checklist.
+**Goal:** Pevně zabudovat anti-patterns z proposal §7 jako lint pravidla nebo PR review checklist. Tři kategorie rules: doménová puritu, typed-id usage, l10n string discipline.
 
-**Pre-conditions:** Phase 19 done.
+**Pre-conditions:** Phase 20 done.
 
 **Files touched:**
-- New: `analysis_options.yaml` rules nebo `tools/lints/`.
+
+- New: `analysis_options.yaml` rules nebo `tools/lints/` (custom_lint package).
 - New: `docs/contributing.md` (or `CLAUDE.md` extension) — review checklist.
 
 **Implementation steps:**
-1. Identify which anti-patterns can be linted (most: domain purity, widget no-logic) and which require review (denormalized cache treatment).
-2. Add machine-checked rules.
-3. Document non-machine rules.
+
+1. **Domain purity** (already in Phase 0 skeleton; promote z test-based check na proper lint).
+2. **Typed-id usage check** — lint nebo grep-based test, který fail-fastne při `String questId = ...` v doménové vrstvě. Mělo by být `QuestId questId = QuestId('...')`.
+3. **L10n strings lint** — žádné string literally v widget text-bearing positions (`Text('...')`, `AppBar(title: Text('...'))`, atd.). Whitelist: `Text('')` (empty placeholder), debug-only assertions, asset paths. Implementace přes [`custom_lint`](https://pub.dev/packages/custom_lint) nebo [`flutter_lints`](https://pub.dev/packages/flutter_lints) extension.
+4. **Widget no-logic check** — grep-based test, který skenuje `lib/features/*/presentation/` na `.where(`, `.firstWhere(`, `_isXxx` patterns. Fail-fast pokud match nad domain collection.
+5. **Sealed exhaustive switch** — z analysis_options povolit Dart compiler exhaustive switch checking (`switch_expression_exhaustive` rule).
+6. Document non-machine rules (denormalized cache treatment, persistence-schema-no-change) v review checklist.
 
 **Test plan:**
-- Lint catches deliberate violations in test fixtures.
-- Review checklist on next PR.
+
+- Lint catches deliberate violations v `test/lint_fixtures/` (přidat fixture per pravidlo: bad domain import, untyped id, string literal v Text, .where v build).
+- Review checklist used na následující PR (smoke test of doc usability).
 
 **DoD:**
-- [ ] Lint rules active.
-- [ ] Review checklist in repo docs.
+
+- [ ] Domain purity lint active.
+- [ ] Typed-id usage lint or grep-test active.
+- [ ] L10n string lint active s documented whitelist.
+- [ ] Widget no-logic lint or grep-test active.
+- [ ] Exhaustive switch enforcement.
+- [ ] Review checklist v `docs/contributing.md`.
+
+**Rizika:** Custom lint packages přidávají dev dependency a build time. Mitigation: kde lint je heavy, použít grep-based test runnable in CI (cheap). Lint package adoption gradual.
 
 **Rollback:** `git revert`.
 
 ---
 
-### Phase 21 — Legacy V1 progression cleanup (deferred)
+### Phase 22 — Legacy V1 progression cleanup (deferred)
 
 **Goal:** Delete `lib/features/progression/`. Migrate `background_sync_service.dart` to V2 engine. Migrate devtools sections. Delete legacy tests.
 
-**Pre-conditions:** Phases 0-20 done. Out of scope této session.
+**Pre-conditions:** Phases 0-21 done. Out of scope této session.
 
 **Files touched:**
 - Delete: `lib/features/progression/` (full folder, 30+ files).
@@ -832,7 +931,7 @@ Plán dodržuje 5 pravidel, která jsou silnější než cokoliv v jednotlivých
 | **Companion identity leak before claim** | Original motivace refactoru. | Phase 11 odstraňuje by construction — pattern matching `is Companion && lifecycle is! CosmeticOwned`. |
 | **Persistence schema accidentally migrated** | Isar `.g.dart` re-generated, breaks existing DB. | Plan explicitly forbids schema changes. Each PR checks `git diff` on `.g.dart` — should be unchanged. |
 | **PR-size creep** | Phases X.a/X.b/X.c balloon over 500 LoC. | Hard 300-LoC limit per PR. If a phase blows the limit, split into sub-fáze. Plan revision allowed. |
-| **Legacy V1 contaminuje new path** | Some test inadvertently exercises V1 evaluator. | Phase 21 is deferred precisely because V1 cleanup is a separate concern. Until then, isolate V1 in its folder. |
+| **Legacy V1 contaminuje new path** | Some test inadvertently exercises V1 evaluator. | Phase 22 is deferred precisely because V1 cleanup is a separate concern. Until then, isolate V1 in its folder. |
 | **freezed / build_runner introduced via PR drift** | Some helper PR adds dependency. | Phase 0 lint rule blocks unknown pubspec deps. Review checklist. |
 
 ---
@@ -853,19 +952,99 @@ Refactor je hotový, když platí všech 7:
 
 ## 5. Out of scope této session
 
-- Phase 21 (V1 cleanup) — execution.
+- Phase 22 (V1 cleanup) — execution.
 - Phase changes to persistence schema.
 - New feature work — refactor je infrastructure, ne nová funkčnost.
 - Performance optimization beyond what naturally falls out of read-projection caching.
 - L10n cleanup (proposal §1.1 smell items 1+2 — sheets_export, bushido_export_config).
+- Items v `follow_ups.md` označené jako "Deferred" — cloud-hosted catalogs/configs, persistence migration framework, three-layer Config System, atd.
 
-Tyto byly explicit označeny v code (TODO comments add v této session).
+Tyto byly explicit označeny v code (TODO comments add v této session) nebo v `follow_ups.md`.
 
 ---
 
 ## 6. Communication patterns mezi fázemi
 
 - **Každá fáze startuje** novou session s pre-conditions check (verify předchozí fáze landla a tests pass).
-- **Každá fáze končí** updatem [docs/site/data/](../site/data/) JSONs per CLAUDE.md instrukce (nové providery, nové sealed types, nové ADRs).
+- **Každá fáze končí** updatem [docs/site/data/](../site/data/) JSONs per CLAUDE.md instrukce (viz §7.4 níž — explicit triggers a soubory).
 - **Migration progress** se trackuje v dedicated `docs/domain_model/migration_status.md` (created v Phase 0) — checklist phases + landed PR links.
-- **Po Phase 21** je tento `migration_plan.md` archivován do `docs/domain_model/archive/` per CLAUDE.md "closing out a finished plan" workflow.
+- **Po Phase 22** je tento `migration_plan.md` archivován do `docs/domain_model/archive/` per CLAUDE.md "closing out a finished plan" workflow.
+
+---
+
+## 7. Per-phase session protocol (fresh-session execution)
+
+**Klíčové pravidlo:** Každá fáze musí být plně proveditelná v nové Claude session **bez kontextu z předchozích sessions**. Implementace fáze čerpá výhradně z trvalých artefaktů v repu: `proposal.md`, tento `migration_plan.md`, `follow_ups.md`, `CLAUDE.md`, kód, `git log`. Žádné spoléhání na "to už víme z minula" — to už víme z dokumentů.
+
+### 7.1 Bootstrap pro novou session
+
+Implementující session na začátku **musí** projít tento protokol:
+
+1. **Identifikuj cílovou fázi.** Uživatel ji řekne (např. "implementuj Phase 3.a") nebo vyber nejnižší `pending` v `migration_status.md`.
+2. **Přečti v tomto pořadí, celé (žádné skimování):**
+   - `docs/domain_model/proposal.md` — celý dokument. Definuje cílový tvar doménového modelu.
+   - `docs/domain_model/migration_plan.md` — celý dokument (§1-7), s důrazem na sekci cílové fáze.
+   - `docs/domain_model/follow_ups.md` — § 1 (folded items) a §2 (deferred — vědět, co **není** scope).
+   - `CLAUDE.md` (root) — pracovní pravidla projektu.
+   - `docs/architecture.md` — layering rules + design tokens.
+3. **Verify pre-conditions cílové fáze.** Pro každou předchozí fázi uvedenou v `Pre-conditions` zkontroluj:
+   - `git log --grep "Phase N" --oneline` ukazuje merged commit.
+   - `git diff origin/main..HEAD` ukazuje **prázdné** (jsme na čisté main).
+   - `flutter analyze` clean.
+   - Relevantní testy z té fáze pass (`flutter test test/...` z DoD předchozí fáze).
+4. **Přečti všechny soubory v `Files touched` sekci cílové fáze** Read toolem **před** jakoukoli edicí. Bez čtení `Edit` nefunguje a riskujeme blind edits.
+5. **Zaregistruj TodoWrite checklist** podle `Implementation steps` cílové fáze. Každý step jako todo item.
+
+### 7.2 Implementační smyčka
+
+- Po každém Implementation step → mark todo `completed`.
+- Po každém logickém commitu → push to `refactor/phase-N-<slug>` branch.
+- Pokud step ukáže nový problém mimo scope fáze → **zapsat do `follow_ups.md`**, ne fixnout teď. Scope discipline.
+- Pokud step blokuje další progress → STOP a zeptat se uživatele (per CLAUDE.md).
+
+### 7.3 Closing checklist (DoD verification)
+
+Před PR open:
+
+- [ ] Všechny `DoD` checkboxy cílové fáze v migration plánu zaškrtnuty.
+- [ ] `flutter analyze` clean.
+- [ ] `Test plan` items zaškrtnuté, výsledky v PR description.
+- [ ] Manuální smoke check kde fáze vyžaduje (UI obrazovky).
+- [ ] **docs/site/data/ updates** dle §7.4 — pokud fáze přidala providery / sealed types / Isar collections / Firestore subcollections / ADRs.
+- [ ] **migration_status.md** updated — cílová fáze přesunuta z `pending` do `done`, link na PR.
+- [ ] No persistence schema change (`git diff` na `.g.dart` files je prázdný).
+- [ ] No new pubspec.yaml dependency (kromě explicitně schválených ve fázi).
+
+### 7.4 docs/site/data/ update triggers
+
+Per CLAUDE.md "Adding a new feature" workflow — každá fáze musí ověřit, jestli některý z těchto triggerů kvalifikuje. Pokud ano, update **ve stejném commitu** jako produkční změny.
+
+| Trigger | Update soubor |
+| --- | --- |
+| Nová feature složka v `lib/features/` | `docs/site/data/features.json` |
+| Nový provider / přidaná DI edge | `docs/site/data/providers.json` |
+| Nová Isar collection / Firestore subcollection / SharedPreferences key / secure storage key | `docs/site/data/storage.json` |
+| Nový externí system (HTTP API, OS integration) | `docs/site/data/integrations.json` |
+| Nový významný data flow | `docs/site/data/dataflows.json` |
+| Nový sealed type / významný enum / hierarchie value object | `docs/site/data/glossary.json` |
+| Nové architektonické rozhodnutí (alternative considered, trade-off chosen) | `docs/site/data/decisions.json` (ADR) |
+| User-visible feature change | top-level `README.md` |
+
+**Příklady aplikace:**
+
+- Phase 2 (Journal infrastructure) → `glossary.json` (přidat `Journal`, `JournalEvent`, `EventKey`, `PeriodKey` jako sealed/VO), `providers.json` (Journal interface visible v DI grafu). `decisions.json` — ADR "Why event-sourced read layer over relational projection".
+- Phase 4 (Player aggregate) → `glossary.json` (`Player`, `LevelCurve`), `providers.json` (`PlayerProvider`), `decisions.json` — ADR "Single-player app: Player as root aggregate, no Context".
+- Phase 6 (PlayerQuestLifecycle) → `glossary.json` (sealed lifecycle, 4 stavy).
+- Phase 9 (Cosmetic sealed catalog) → `glossary.json` (Cosmetic sealed + 7 subtypy nahrazuje 1 class s discriminator enum), `decisions.json` — ADR "Sealed hierarchy nad single-class enum-discriminated".
+- Phase 11 (Companion lifecycle merge) → `decisions.json` — ADR "Pattern matching nad paralelními enum hierarchiemi" + revoke předchozí companion-specific ADR pokud existoval.
+- Phase 18 (Result/Error type hierarchy) → `glossary.json` (`Result<T, E>`, `AppError` sealed), `decisions.json` — ADR.
+- Phase 20 (JournalProjection) → `glossary.json`, `dataflows.json` (rebuild from journal flow), `decisions.json` — ADR.
+
+**Pokud fáze žádný trigger neaktivuje** (např. čistě rename pass v Phase 3.a) — pak no-op, ale **explicitně to v PR description uveď**: "No docs/site/ update — pure rename without architectural change".
+
+### 7.5 Anti-protocols (co NEDĚLAT)
+
+- ❌ Nereferenovat "minulou session" v PR description nebo commit message. Reference je code + docs.
+- ❌ Necitovat decisions, které nejsou v `proposal.md` / `migration_plan.md` / `follow_ups.md` / ADR. Pokud rozhodnutí existuje jen v paměti, dokumentuj ho.
+- ❌ Nebackport-ovat scope z pozdějších fází ("when I was at it, I also did Phase 5 changes"). Drž PR atomické.
+- ❌ Nepřejíždět follow-up items "by the way". `follow_ups.md` items mají vlastní lifecycle.
