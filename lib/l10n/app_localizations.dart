@@ -2925,6 +2925,24 @@ abstract class AppLocalizations {
   /// **'Done for today · returns tomorrow'**
   String get progDailyQuestCompletedTodayBadge;
 
+  /// Mini section heading above the daily-goal rows inside an expanded backfill day card.
+  ///
+  /// In en, this message translates to:
+  /// **'Goals'**
+  String get progBackfillDayGoalsLabel;
+
+  /// Mini section heading above the daily-quest rows inside an expanded backfill day card.
+  ///
+  /// In en, this message translates to:
+  /// **'Quests'**
+  String get progBackfillDayQuestsLabel;
+
+  /// Mini section heading above the activity rows inside an expanded backfill day card.
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts'**
+  String get progBackfillDayActivitiesLabel;
+
   /// No description provided for @progQuestStatusCompleted.
   ///
   /// In en, this message translates to:

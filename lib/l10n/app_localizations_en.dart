@@ -1595,6 +1595,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Done for today · returns tomorrow';
 
   @override
+  String get progBackfillDayGoalsLabel => 'Goals';
+
+  @override
+  String get progBackfillDayQuestsLabel => 'Quests';
+
+  @override
+  String get progBackfillDayActivitiesLabel => 'Workouts';
+
+  @override
   String get progQuestStatusCompleted => 'Completed';
 
   @override

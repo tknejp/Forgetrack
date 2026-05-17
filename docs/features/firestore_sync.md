@@ -21,6 +21,7 @@ Document IDs are the deterministic `eventKey` (sanitised).
 | `NodeCompletionEvent` | `users/{uid}/engineNodeCompletions/{eventKey}` |
 | `ObjectiveCompletionEvent` | `users/{uid}/engineObjectiveCompletions/{eventKey}` |
 | `NodeAnnouncementEvent` | `users/{uid}/engineNodeAnnouncements/{eventKey}` |
+| `QuestOfferedEvent` | `users/{uid}/engineQuestOfferings/{eventKey}` |
 
 Cosmetic grants flow through this same gateway as
 `RewardGrantEvent(rewardKind: cosmetic)` — there is no separate cosmetic

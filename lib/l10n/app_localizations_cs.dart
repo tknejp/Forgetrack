@@ -1602,6 +1602,15 @@ class AppLocalizationsCs extends AppLocalizations {
       'Hotovo pro dnešek · vrátí se zítra';
 
   @override
+  String get progBackfillDayGoalsLabel => 'Cíle';
+
+  @override
+  String get progBackfillDayQuestsLabel => 'Úkoly';
+
+  @override
+  String get progBackfillDayActivitiesLabel => 'Tréninky';
+
+  @override
   String get progQuestStatusCompleted => 'Dokončeno';
 
   @override

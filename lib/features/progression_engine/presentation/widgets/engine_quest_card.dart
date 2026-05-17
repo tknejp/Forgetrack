@@ -573,10 +573,15 @@ class _ProgressRow extends StatelessWidget {
 /// Leading visual on a quest card. Renders [QuestNode.assetKey] when set,
 /// falling back to [ProgDomIco] (the domain icon tile) when the node
 /// doesn't carry one. Asset failure (missing PNG, decode error) also
-/// degrades to the icon â€” the screen never goes blank because of a
+/// degrades to the icon — the screen never goes blank because of a
 /// stale asset path.
-class _QuestLeading extends StatelessWidget {
-  const _QuestLeading({
+///
+/// Public so non-card surfaces (backfill section rows, hero header)
+/// can reuse the same fallback chain instead of duplicating the
+/// asset / errorBuilder dance.
+class EngineQuestLeading extends StatelessWidget {
+  const EngineQuestLeading({
+    super.key,
     required this.node,
     required this.domain,
     required this.size,
@@ -605,3 +610,5 @@ class _QuestLeading extends StatelessWidget {
     );
   }
 }
+
+typedef _QuestLeading = EngineQuestLeading;

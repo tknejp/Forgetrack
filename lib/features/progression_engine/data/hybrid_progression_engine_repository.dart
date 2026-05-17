@@ -110,6 +110,7 @@ class HybridProgressionEngineRepository
       ...cloud.nodeClaims,
       ...cloud.nodeAnnouncements,
       ...cloud.rewardGrants,
+      ...cloud.questOfferings,
     ];
     if (all.isEmpty) return _local.loadLedger();
     return _local.appendEvents(all);

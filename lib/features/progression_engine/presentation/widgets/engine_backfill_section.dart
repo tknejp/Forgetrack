@@ -9,6 +9,7 @@ import '../../../../shared/widgets/xp_sparkle_overlay.dart';
 import '../../application/progression_engine_provider.dart';
 import '../../domain/backfill/backfill_config.dart';
 import '../../domain/backfill/daily_backfill_models.dart';
+import 'engine_quest_card.dart' show EngineQuestLeading;
 import 'engine_quest_section.dart';
 import 'progression_primitives.dart';
 
@@ -581,50 +582,61 @@ class _BackfillDayCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    for (final g in entry.dailyGoals)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: _DailyGoalRow(
-                          item: g,
-                          day: entry.date,
-                          pillKey: pillKeyFor(
-                            'goal|${g.nodeId}|$dayKey',
-                          ),
-                          onClaim: onClaimGoal,
-                          l10n: l10n,
-                        ),
+                    if (entry.dailyGoals.isNotEmpty) ...[
+                      _DaySectionSubheader(
+                        label: l10n.progBackfillDayGoalsLabel,
                       ),
-                    if (entry.dailyGoals.isNotEmpty &&
-                        entry.dailyQuests.isNotEmpty)
-                      const SizedBox(height: 4),
-                    for (final q in entry.dailyQuests)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: _DailyQuestRow(
-                          item: q,
-                          day: entry.date,
-                          pillKey: pillKeyFor(
-                            'quest|${q.nodeId}|$dayKey',
+                      for (final g in entry.dailyGoals)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: _DailyGoalRow(
+                            item: g,
+                            day: entry.date,
+                            pillKey: pillKeyFor(
+                              'goal|${g.nodeId}|$dayKey',
+                            ),
+                            onClaim: onClaimGoal,
+                            l10n: l10n,
                           ),
-                          onClaim: onClaimQuest,
-                          l10n: l10n,
                         ),
+                    ],
+                    if (entry.dailyQuests.isNotEmpty) ...[
+                      _DaySectionSubheader(
+                        label: l10n.progBackfillDayQuestsLabel,
+                        topGap: entry.dailyGoals.isNotEmpty,
                       ),
-                    if ((entry.dailyGoals.isNotEmpty ||
-                            entry.dailyQuests.isNotEmpty) &&
-                        entry.activities.isNotEmpty)
-                      const SizedBox(height: 4),
-                    for (final a in entry.activities)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: _ActivityClaimRowSimple(
-                          state: a,
-                          pillKey: pillKeyFor(
-                            'act|${a.record.startTime.millisecondsSinceEpoch}',
+                      for (final q in entry.dailyQuests)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: _DailyQuestRow(
+                            item: q,
+                            day: entry.date,
+                            pillKey: pillKeyFor(
+                              'quest|${q.nodeId}|$dayKey',
+                            ),
+                            onClaim: onClaimQuest,
+                            l10n: l10n,
                           ),
-                          onClaim: onClaimActivity,
                         ),
+                    ],
+                    if (entry.activities.isNotEmpty) ...[
+                      _DaySectionSubheader(
+                        label: l10n.progBackfillDayActivitiesLabel,
+                        topGap: entry.dailyGoals.isNotEmpty ||
+                            entry.dailyQuests.isNotEmpty,
                       ),
+                      for (final a in entry.activities)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: _ActivityClaimRowSimple(
+                            state: a,
+                            pillKey: pillKeyFor(
+                              'act|${a.record.startTime.millisecondsSinceEpoch}',
+                            ),
+                            onClaim: onClaimActivity,
+                          ),
+                        ),
+                    ],
                     if (claimable > 0) ...[
                       const SizedBox(height: 4),
                       Align(
@@ -706,7 +718,11 @@ class _DailyQuestRow extends StatelessWidget {
 
     return Row(
       children: [
-        ProgDomIco(domain: item.domain, size: 22),
+        EngineQuestLeading(
+          node: item.node,
+          domain: item.domain,
+          size: 28,
+        ),
         const SizedBox(width: 10),
         Expanded(
           child: Text(
@@ -736,6 +752,38 @@ class _DailyQuestRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Tiny uppercased label that introduces a subgroup inside an
+/// expanded day card. Mirrors the section-header styling used
+/// elsewhere on the quests screen at a smaller scale — same
+/// letter-spacing + muted colour so the labels read as quiet
+/// dividers rather than competing with the rows below.
+class _DaySectionSubheader extends StatelessWidget {
+  const _DaySectionSubheader({required this.label, this.topGap = false});
+
+  final String label;
+
+  /// True for every subheader after the first one in a day card so the
+  /// gap before it doesn't collapse the divider against the previous
+  /// section's last row.
+  final bool topGap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(2, topGap ? 8 : 0, 2, 4),
+      child: Text(
+        label.toUpperCase(),
+        style: const TextStyle(
+          fontSize: Tokens.fontSizeMicro,
+          fontWeight: FontWeight.w700,
+          color: Tokens.onSurfaceFaint,
+          letterSpacing: 1.2,
+        ),
+      ),
     );
   }
 }
