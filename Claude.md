@@ -31,7 +31,7 @@ Flutter fitness/RPG tracking app. Feature-first architecture under `lib/features
 ## Documentation conventions
 
 - READMEs in `lib/features/<feature>/` describe **what is currently there** — current files, current dependencies, current behavior. They do NOT contain phase status, planning, work logs, or status tables.
-- Plans, refactor docs, and phase trackers live in `docs/`, never inside `lib/`. When a plan is fully implemented, delete it — durable knowledge belongs in the relevant feature README or in `docs/architecture.md`.
+- Plans, refactor docs, and phase trackers live in `docs/`, never inside `lib/`.
 - **Interactive architecture site** lives in `docs/site/`. Update its JSON data when the underlying architecture changes:
   - New feature → `docs/site/data/features.json`
   - New provider / new DI edge → `docs/site/data/providers.json`
@@ -40,6 +40,17 @@ Flutter fitness/RPG tracking app. Feature-first architecture under `lib/features
   - New significant data flow → `docs/site/data/dataflows.json`
   - New sealed type → `docs/site/data/glossary.json`
   - New architectural decision → `docs/site/data/decisions.json`
+
+### Closing out a finished plan
+
+When every phase of a `docs/<area>/*_refactor.md` (or similar plan doc) has shipped, treat it as a permanent design record and clean up the surrounding docs in the same commit:
+
+1. **Archive, don't delete.** Move the plan to `docs/<area>/archive/<plan>.md` (create `archive/` if it doesn't exist). It stays as a permanent design record — future maintainers should be able to read why the system looks the way it does.
+2. **Update the working-state doc** in the same area (e.g. `docs/progression_engine/session_handoff.md`). Add a dated block summarising the outcomes + linking to the archived plan, so a cold-start session sees the latest state without reading the whole archive.
+3. **Update the interactive architecture site JSONs** per the table above for every architectural change the plan introduced — new collections / providers / sealed types / data flows / external integrations.
+4. **Add ADRs** to `docs/site/data/decisions.json` for non-trivial design decisions the plan landed (context + decision + consequences + alternatives). The code says HOW; the ADR says WHY.
+5. **Surface user-visible features** in the top-level `README.md` so the project description reflects what the app actually does today.
+6. **Update related feature docs** in `docs/features/*.md` (e.g. `firestore_sync.md`) when the plan changes wire formats, sync semantics, or introduces known limitations / gaps.
 
 ## Output expectations
 
