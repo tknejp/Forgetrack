@@ -46,7 +46,7 @@ Flutter fitness/RPG tracking app. Feature-first architecture under `lib/features
 When every phase of a `docs/<area>/*_refactor.md` (or similar plan doc) has shipped, treat it as a permanent design record and clean up the surrounding docs in the same commit:
 
 1. **Archive, don't delete.** Move the plan to `docs/<area>/archive/<plan>.md` (create `archive/` if it doesn't exist). It stays as a permanent design record — future maintainers should be able to read why the system looks the way it does.
-2. **Update the working-state doc** in the same area (e.g. `docs/progression_engine/session_handoff.md`). Add a dated block summarising the outcomes + linking to the archived plan, so a cold-start session sees the latest state without reading the whole archive.
+2. **Update the working-state doc** in the same area (per-handoff doc focused on the open phases — currently `docs/progression_engine/phase_8_9_handoff.md`). Add a dated block summarising the outcomes + linking to the archived plan, so a cold-start session sees the latest state without reading the whole archive. Once the handoff's own scope closes, retire it too — don't accumulate stale handoffs.
 3. **Update the interactive architecture site JSONs** per the table above for every architectural change the plan introduced — new collections / providers / sealed types / data flows / external integrations.
 4. **Add ADRs** to `docs/site/data/decisions.json` for non-trivial design decisions the plan landed (context + decision + consequences + alternatives). The code says HOW; the ADR says WHY.
 5. **Surface user-visible features** in the top-level `README.md` so the project description reflects what the app actually does today.
