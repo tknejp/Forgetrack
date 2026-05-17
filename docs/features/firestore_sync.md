@@ -107,6 +107,22 @@ ledger).
   to have no live writers in the current build. Decide whether to drop
   the old `progressionClaims` / `achievementUnlocks` collections or
   copy-once into the V2 collections before public release.
+- **Goal history not synced.** `GoalsProvider`'s per-day historized
+  targets (`progressionDailyStepsForDate`, etc.) live in
+  SharedPreferences. On a device swap they reset to the user's
+  freshly-entered values; the backfill section then renders past-day
+  rows with the *current* goal as target. Granted XP is unaffected —
+  it lives in `RewardGrantEvent.xpAmount` in the cloud-synced ledger,
+  frozen at claim time. The mismatch is purely cosmetic ("12k / 12k"
+  reads as goal-met even if the historical target was 10k). Mitigation
+  path if it becomes a problem: append-only goal-revision events in a
+  new `userGoalRevisions` collection, mirrored by the existing hybrid
+  push path.
+- **`joinedAt` prefs not synced directly** but cross-device-correct in
+  practice. The prefs key reseeds on a new device from the earliest
+  ledger event timestamp (which IS cloud-synced via `pullAndMerge`),
+  so the retroactive claim window anchors on the original first-launch
+  day without explicit sync code.
 
 ---
 

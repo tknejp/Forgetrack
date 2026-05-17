@@ -1632,6 +1632,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _midnightTimer?.cancel();
     _subscribedGoals?.removeListener(_onSourceChanged);
     _subscribedFitness?.removeListener(_onSourceChanged);
     _subscribedNutrition?.removeListener(_onSourceChanged);
@@ -3031,7 +3032,50 @@ class ProgressionEngineProvider extends ChangeNotifier {
       _error = e.toString();
     } finally {
       _isLoading = false;
+      _scheduleMidnightRefresh();
       notifyListeners();
+    }
+  }
+
+  /// Wall-clock midnight watcher. Refreshes the engine right after
+  /// 00:00 local time so day-scoped rotations roll forward without
+  /// waiting for the next input-source change.
+  ///
+  /// Without this, an app left open across midnight kept yesterday's
+  /// `QuestOfferedEvent`s pinning the daily slot until the user
+  /// touched something that triggered a refresh — daily challenges
+  /// would visually "miss midnight" by hours.
+  ///
+  /// Fires once per day and re-schedules itself so a single instance
+  /// keeps the rollover alive forever; `dispose()` cancels the timer
+  /// so widget trees rebuilding the provider don't leak.
+  Timer? _midnightTimer;
+
+  void _scheduleMidnightRefresh() {
+    _midnightTimer?.cancel();
+    final now = DateTime.now();
+    // 5-second buffer past midnight so any wall-clock drift between
+    // Timer and DateTime.now() doesn't fire on the previous day.
+    final nextMidnight = DateTime(now.year, now.month, now.day + 1, 0, 0, 5);
+    final delay = nextMidnight.difference(now);
+    _midnightTimer = Timer(delay, _onMidnightTick);
+  }
+
+  Future<void> _onMidnightTick() async {
+    AppLog.app.info(
+      'progression: midnight tick — re-evaluating daily rotation',
+    );
+    // Force the engine to re-run regardless of source-signature
+    // staleness — the calendar day changed but no source dispatched
+    // a notify, so the audit-signature gate would otherwise reject
+    // the refresh.
+    _lastEvaluatedSignature = null;
+    try {
+      await refresh();
+    } finally {
+      // Even if refresh threw, schedule the next tick so we don't
+      // permanently abandon midnight watching.
+      _scheduleMidnightRefresh();
     }
   }
 
