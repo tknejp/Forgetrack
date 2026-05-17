@@ -77,7 +77,7 @@ class CosmeticsConfig {
   /// True if a cosmetic is currently usable given config flags. Catalog
   /// `isEnabled` is the static gate; this layer adds runtime gating
   /// (premium, experimental, slot availability).
-  bool isUsable(CosmeticDefinition definition) {
+  bool isUsable(Cosmetic definition) {
     if (!definition.isEnabled) return false;
     if (definition.isPremium && !premiumEnabled) return false;
     if (!_slotEnabled(definition.type)) return false;

@@ -82,8 +82,8 @@ void main() {
     test('nodeDisplay populates accentColor for every V2 achievement node', () {
       // Smoke test: accentColor is required on NodeDisplay; if a future
       // resolver branch forgets to set it, this catches it.
-      for (final node in const ProgressionNodeCatalog().build()) {
-        if (node is! AchievementNode) continue;
+      for (final node in const ProgressionEntryCatalog().build()) {
+        if (node is! Achievement) continue;
         final display = resolver.nodeDisplay(node.id, l10n);
         expect(display, isNotNull, reason: 'no display for id=${node.id}');
         expect(display!.accentColor, isNotNull);
@@ -139,10 +139,10 @@ void main() {
     test(
       'returns a non-null formatted string for every V2 achievement node',
       () {
-        // Smoke test: every real V2 AchievementNode must produce a summary
+        // Smoke test: every real V2 Achievement must produce a summary
         // so friend cards never crash when rendering an unknown metric.
-        for (final node in const ProgressionNodeCatalog().build()) {
-          if (node is! AchievementNode) continue;
+        for (final node in const ProgressionEntryCatalog().build()) {
+          if (node is! Achievement) continue;
           final summary = resolver.compactSummary(node.id, l10n, locale);
           expect(
             summary,

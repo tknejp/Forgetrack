@@ -19,7 +19,7 @@ import 'cosmetic_reveal_state.dart';
 ///   stays hidden; the requirements checklist surfaces so the player
 ///   can see how to keep progressing.
 /// * [claimable]: every prerequisite met and the engine has surfaced
-///   the `CompanionAvailabilityNode` as `available`. Identity stays
+///   the `CompanionAvailability` as `available`. Identity stays
 ///   hidden — the player triggers the reveal by claiming inside the
 ///   details sheet.
 /// * [claimed]: the cosmetic is unlocked. Real artwork + name +

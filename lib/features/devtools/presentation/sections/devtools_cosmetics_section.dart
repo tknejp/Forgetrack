@@ -281,7 +281,7 @@ class _CompanionRow extends StatelessWidget {
   // Imported via the controller's catalog snapshot — using the
   // progression-engine type directly avoids re-exporting it from
   // application/.
-  final dynamic node; // CompanionAvailabilityNode (dynamic to avoid extra import)
+  final dynamic node; // CompanionAvailability (dynamic to avoid extra import)
   final CompanionState current;
   final bool isBusy;
   final bool isRowBusy;

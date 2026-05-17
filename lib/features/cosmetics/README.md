@@ -90,7 +90,7 @@ lib/features/cosmetics/
 | `CosmeticRarity`     | enum — common / rare / epic / legendary               |
 | `CosmeticRegion`     | enum — narrative region (forestTrail, ruinedPass, …)  |
 | `CosmeticUnlockSource` | enum — defaultBaseline, progressionLevel, achievement, quest, manual, promotional, other (open-set; sourceType on records is a free string) |
-| `CosmeticDefinition` | static metadata for one cosmetic — id, type, rarity, region, localized text resolvers, asset keys, flags, `metadata` bag |
+| `Cosmetic` | static metadata for one cosmetic — id, type, rarity, region, localized text resolvers, asset keys, flags, `metadata` bag |
 | `UnlockedCosmetic`   | per-user unlock record — id, timestamp, source        |
 | `EquippedCosmetics`  | snapshot of equipped slots; one nullable id per slot  |
 | `UserCosmeticsState` | uid + unlocked map + equipped + updatedAt             |
@@ -178,7 +178,7 @@ For non-throwing pre-checks (e.g. greying out a tile in a grid), use
 
 ## How to add a new cosmetic
 
-1. Append a `CosmeticDefinition` to `CosmeticCatalog.definitions` with a
+1. Append a `Cosmetic` to `CosmeticCatalog.definitions` with a
    unique `id` and the right `type` / `rarity` / `region`.
 2. Add the artwork file under
    `assets/cosmetics/<bucket>/<id-without-prefix>.png` (see

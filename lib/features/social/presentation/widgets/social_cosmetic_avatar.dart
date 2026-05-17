@@ -63,22 +63,22 @@ class SocialCosmeticAvatar extends StatelessWidget {
   }
 }
 
-CosmeticDefinition? socialFrameDefinition(String? id) {
+Cosmetic? socialFrameDefinition(String? id) {
   return _cosmeticById(id ?? _defaultFrameId, CosmeticType.frame);
 }
 
-CosmeticDefinition? socialBackgroundDefinition(String? id) {
+Cosmetic? socialBackgroundDefinition(String? id) {
   return _cosmeticById(id ?? _defaultBackgroundId, CosmeticType.background);
 }
 
-CosmeticDefinition? socialCosmeticById(String? id) {
+Cosmetic? socialCosmeticById(String? id) {
   if (id == null || id.isEmpty) return null;
   final definition = _catalog.byId(id);
   if (definition == null || !definition.isEnabled) return null;
   return definition;
 }
 
-List<CosmeticDefinition> socialProfileExtraCosmetics(
+List<Cosmetic> socialProfileExtraCosmetics(
   SocialUserProfile? profile,
 ) {
   final equipped = profile?.equippedCosmetics;
@@ -92,11 +92,11 @@ List<CosmeticDefinition> socialProfileExtraCosmetics(
     equipped.mapEffectId,
   ]
       .map(socialCosmeticById)
-      .whereType<CosmeticDefinition>()
+      .whereType<Cosmetic>()
       .toList(growable: false);
 }
 
-CosmeticDefinition? _cosmeticById(String id, CosmeticType type) {
+Cosmetic? _cosmeticById(String id, CosmeticType type) {
   final definition = _catalog.byId(id);
   if (definition == null || !definition.isEnabled || definition.type != type) {
     return null;

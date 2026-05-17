@@ -81,7 +81,7 @@ class EngineQuestProgress {
     this.isLockedByConditions = false,
   });
 
-  final QuestNode node;
+  final Quest node;
 
   /// Current measured value for the quest's objective.
   final double actualValue;
@@ -120,7 +120,7 @@ class EngineQuestProgress {
   final int? levelGate;
 
   /// Id of the first prerequisite node from
-  /// [QuestNode.prerequisiteNodeIds] that hasn't been completed yet.
+  /// [Quest.prerequisiteNodeIds] that hasn't been completed yet.
   /// Null when every prereq is satisfied. Drives the "finish chapter
   /// X first" hint on locked chapter opens — without this, a player
   /// past the level gate but still mid-previous-chapter would see
@@ -222,7 +222,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
   bool _cloudPullInFlight = false;
   final EngineStreakSource _streakSource = const EngineStreakSource();
   final ObjectiveCatalog _objectiveCatalog = const ObjectiveCatalog();
-  final ProgressionNodeCatalog _nodeCatalog = const ProgressionNodeCatalog();
+  final ProgressionEntryCatalog _nodeCatalog = const ProgressionEntryCatalog();
 
   ProviderEngineInputSource? _source;
   String? _lastEvaluatedSignature;
@@ -301,13 +301,13 @@ class ProgressionEngineProvider extends ChangeNotifier {
 
   // Static node-type id caches. Catalog is const so these are
   // computed once on first access.
-  static final Set<String> _achievementNodeIds = {
-    for (final n in const ProgressionNodeCatalog().build())
-      if (n is AchievementNode) n.id,
+  static final Set<String> _achievementIds = {
+    for (final n in const ProgressionEntryCatalog().build())
+      if (n is Achievement) n.id,
   };
   static final Set<String> _questNodeIds = {
-    for (final n in const ProgressionNodeCatalog().build())
-      if (n is QuestNode) n.id,
+    for (final n in const ProgressionEntryCatalog().build())
+      if (n is Quest) n.id,
   };
 
   final List<ProgressionResolutionResult> _pendingCelebrations = [];
@@ -385,8 +385,8 @@ class ProgressionEngineProvider extends ChangeNotifier {
     if (r == null) return const {};
     final out = <String>{};
     for (final a in r.availableNodes) {
-      final def = ProgressionNodeCatalog.definitionForId(a.nodeId);
-      if (def is QuestNode &&
+      final def = ProgressionEntryCatalog.definitionForId(a.nodeId);
+      if (def is Quest &&
           def.displayBucket == QuestDisplayBucket.daily) {
         continue;
       }
@@ -406,13 +406,13 @@ class ProgressionEngineProvider extends ChangeNotifier {
     return r.lockedNodeIds;
   }
 
-  /// All [AchievementNode]s from the catalog. Cached on first access
+  /// All [Achievement]s from the catalog. Cached on first access
   /// since the catalog is const. Hero/Journey surfaces iterate this to
   /// render the achievement grid and the journey side events.
-  Iterable<AchievementNode> get achievementNodes => _allAchievementNodes;
-  static final List<AchievementNode> _allAchievementNodes = [
-    for (final n in const ProgressionNodeCatalog().build())
-      if (n is AchievementNode) n,
+  Iterable<Achievement> get achievements => _allAchievements;
+  static final List<Achievement> _allAchievements = [
+    for (final n in const ProgressionEntryCatalog().build())
+      if (n is Achievement) n,
   ];
 
   /// Earliest completion timestamp for [nodeId] from the ledger. Null
@@ -445,7 +445,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
 
   /// Catalog lookup for an objective id. Returns null when the
   /// objective is not in the catalog.
-  ObjectiveDefinition? objectiveById(String? objectiveId) {
+  Objective? objectiveById(String? objectiveId) {
     if (objectiveId == null) return null;
     for (final o in _objectiveCatalog.build()) {
       if (o.id == objectiveId) return o;
@@ -469,7 +469,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
     }
     final out = <EngineQuestCompletion>[];
     for (final node in _nodeCatalog.build()) {
-      if (node is! QuestNode) continue;
+      if (node is! Quest) continue;
       final at = latestByNode[node.id];
       if (at == null) continue;
       out.add(EngineQuestCompletion(node: node, completedAt: at));
@@ -479,12 +479,12 @@ class ProgressionEngineProvider extends ChangeNotifier {
   }
 
   /// Count of unlocked achievements — node completions whose node
-  /// type is [AchievementNode]. Cached per-build of the catalog
+  /// type is [Achievement]. Cached per-build of the catalog
   /// since the catalog is static.
   int get unlockedAchievementCount {
     final completed = completedNodeIds;
     if (completed.isEmpty) return 0;
-    return completed.where(_achievementNodeIds.contains).length;
+    return completed.where(_achievementIds.contains).length;
   }
 
   /// Count of completed quest nodes — analog of V1's
@@ -653,7 +653,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
 
     // Build objective → nodes index once so the per-entry companion
     // lookup is O(1).
-    final byObjective = <String, List<ProgressionNode>>{};
+    final byObjective = <String, List<ProgressionEntry>>{};
     for (final node in _nodeCatalog.build()) {
       final objectiveId = _objectiveIdOf(node);
       if (objectiveId == null) continue;
@@ -672,11 +672,11 @@ class ProgressionEngineProvider extends ChangeNotifier {
     ];
   }
 
-  static String? _objectiveIdOf(ProgressionNode node) {
+  static String? _objectiveIdOf(ProgressionEntry node) {
     return switch (node) {
-      QuestNode() => node.objectiveId,
-      AchievementNode() => node.objectiveId,
-      MilestoneNode() => node.objectiveId,
+      Quest() => node.objectiveId,
+      Achievement() => node.objectiveId,
+      Milestone() => node.objectiveId,
       _ => null,
     };
   }
@@ -731,7 +731,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
       // Same-day pin: if the most recently completed step *landed in
       // the ledger* today, surface it as the active card. We check
       // the NodeCompletionEvent (not NodeClaimEvent) because auto-
-      // claim nodes — `ChapterOpenerNode` is the canonical case —
+      // claim nodes — `ChapterOpener` is the canonical case —
       // never write a claim event, so the chain would silently skip
       // the just-opened chapter card. Completion events are written
       // for both manual + auto claim flows; their timestamp matches
@@ -763,7 +763,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// keep just-completed chapter chain steps pinned in their card
   /// until midnight (mirrors the slot rule daily / side quests
   /// already use). Reads completion events rather than claim events
-  /// so the signal also covers auto-claim nodes (`ChapterOpenerNode`,
+  /// so the signal also covers auto-claim nodes (`ChapterOpener`,
   /// finale auto-grants) — those never write a NodeClaimEvent, but
   /// they DO write a NodeCompletionEvent in the same evaluation
   /// pass that decided the node completed.
@@ -999,8 +999,8 @@ class ProgressionEngineProvider extends ChangeNotifier {
     var total = 0;
     final byBucket = <String, int>{};
     for (final e in l.nodeCompletions) {
-      final node = ProgressionNodeCatalog.definitionForId(e.nodeId);
-      if (node is! QuestNode) continue;
+      final node = ProgressionEntryCatalog.definitionForId(e.nodeId);
+      if (node is! Quest) continue;
       total += 1;
       final key = node.displayBucket.name;
       byBucket[key] = (byBucket[key] ?? 0) + 1;
@@ -1059,7 +1059,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
     };
     if (firedToday.isNotEmpty) {
       for (final node in _nodeCatalog.build()) {
-        if (node is! QuestNode) continue;
+        if (node is! Quest) continue;
         if (firedToday.contains(node.objectiveId)) out.add(node.id);
       }
     }
@@ -1077,7 +1077,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// `comboPoolId → completions in the pool`. Drives
   /// [ComboPoolCompletionsMetric] used by combo achievements
   /// (`combo_victory_10`, `combo_triple_victory_25/100`). Pool
-  /// membership is declared on each [QuestNode.comboPoolId]; we walk
+  /// membership is declared on each [Quest.comboPoolId]; we walk
   /// the ledger, look up each completion in the catalog, and bump the
   /// pool counter when the node is a quest with a non-null pool id.
   Map<String, int> _comboPoolCompletionCountsFromLedger() {
@@ -1085,8 +1085,8 @@ class ProgressionEngineProvider extends ChangeNotifier {
     if (l == null) return const {};
     final out = <String, int>{};
     for (final e in l.nodeCompletions) {
-      final node = ProgressionNodeCatalog.definitionForId(e.nodeId);
-      if (node is! QuestNode) continue;
+      final node = ProgressionEntryCatalog.definitionForId(e.nodeId);
+      if (node is! Quest) continue;
       final pool = node.comboPoolId;
       if (pool == null) continue;
       out[pool] = (out[pool] ?? 0) + 1;
@@ -1122,7 +1122,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
     // there for why.
     final objectiveIdByQuestNode = <String, String>{};
     for (final node in _nodeCatalog.build()) {
-      if (node is QuestNode) {
+      if (node is Quest) {
         objectiveIdByQuestNode[node.id] = node.objectiveId;
       }
     }
@@ -1393,13 +1393,13 @@ class ProgressionEngineProvider extends ChangeNotifier {
     }
 
     // 4. Build companion index once (objective id → sibling nodes).
-    final companionsByObjective = <String, List<ProgressionNode>>{};
+    final companionsByObjective = <String, List<ProgressionEntry>>{};
     for (final node in _nodeCatalog.build()) {
       final id = _objectiveIdOf(node);
       if (id == null) continue;
       companionsByObjective.putIfAbsent(id, () => []).add(node);
     }
-    List<ProgressionNode> companionsFor(ProgressionNode self) {
+    List<ProgressionEntry> companionsFor(ProgressionEntry self) {
       final id = _objectiveIdOf(self);
       if (id == null) return const [];
       return [
@@ -1488,8 +1488,8 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// catalog no longer knows that id. UI consumers (history feed,
   /// completed rollup) call this to look up titles / asset keys for
   /// ledger entries.
-  ProgressionNode? nodeById(String id) {
-    return ProgressionNodeCatalog.definitionForId(id);
+  ProgressionEntry? nodeById(String id) {
+    return ProgressionEntryCatalog.definitionForId(id);
   }
 
   /// Resolves the visual domain a ledger entry should render under.
@@ -1498,12 +1498,12 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// `ProgressionDomain.steps` when the node or its objective is not
   /// in the catalog (catalog drift, devtools synthetic grants).
   ProgressionDomain domainForNodeId(String id) {
-    final node = ProgressionNodeCatalog.definitionForId(id);
+    final node = ProgressionEntryCatalog.definitionForId(id);
     if (node == null) return ProgressionDomain.steps;
     final objectiveId = switch (node) {
-      QuestNode() => node.objectiveId,
-      AchievementNode() => node.objectiveId,
-      MilestoneNode() => node.objectiveId,
+      Quest() => node.objectiveId,
+      Achievement() => node.objectiveId,
+      Milestone() => node.objectiveId,
       _ => null,
     };
     if (objectiveId == null) return ProgressionDomain.steps;
@@ -2207,8 +2207,8 @@ class ProgressionEngineProvider extends ChangeNotifier {
     final claimedKeys = _claimedDailyGoalKeysByNodeId();
     if (claimedKeys[nodeId]?.contains(dayKey) ?? false) return;
 
-    final node = ProgressionNodeCatalog.definitionForId(nodeId);
-    if (node is! QuestNode) return;
+    final node = ProgressionEntryCatalog.definitionForId(nodeId);
+    if (node is! Quest) return;
     final objectiveId = node.objectiveId;
     final objective = objectiveById(objectiveId);
     if (objective == null) return;
@@ -2334,8 +2334,8 @@ class ProgressionEngineProvider extends ChangeNotifier {
     );
     if (!offeringExists) return;
 
-    final node = ProgressionNodeCatalog.definitionForId(nodeId);
-    if (node is! QuestNode) return;
+    final node = ProgressionEntryCatalog.definitionForId(nodeId);
+    if (node is! Quest) return;
     if (node.claimPolicy != ClaimPolicy.manual) return;
     final objective = objectiveById(node.objectiveId);
     if (objective == null) return;
@@ -2469,8 +2469,8 @@ class ProgressionEngineProvider extends ChangeNotifier {
     required Map<String, Set<String>> claimedKeysByNode,
     required Map<String, Map<String, int>> grantsByKey,
   }) {
-    final node = ProgressionNodeCatalog.definitionForId(nodeId);
-    if (node is! QuestNode) return null;
+    final node = ProgressionEntryCatalog.definitionForId(nodeId);
+    if (node is! Quest) return null;
     final objective = objectiveById(node.objectiveId);
     if (objective == null) return null;
 
@@ -2525,8 +2525,8 @@ class ProgressionEngineProvider extends ChangeNotifier {
     required Set<String> lifetimeClaims,
     required Map<String, int> lifetimeGrants,
   }) {
-    final node = ProgressionNodeCatalog.definitionForId(nodeId);
-    if (node is! QuestNode) return null;
+    final node = ProgressionEntryCatalog.definitionForId(nodeId);
+    if (node is! Quest) return null;
     final objective = objectiveById(node.objectiveId);
     if (objective == null) return null;
     final scope = objective.scope;
@@ -2601,7 +2601,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// `BonusXpReward`s are skipped — they depend on time-of-day
   /// conditions like `CompletedBeforeHour(12)` which don't translate
   /// to retroactive claims fired now for a past day.
-  int _baseXpForNode(QuestNode node) {
+  int _baseXpForNode(Quest node) {
     var sum = 0;
     for (final r in node.rewards) {
       if (r is XpReward) sum += r.amount;
@@ -2893,7 +2893,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// `TodayCompletionsAmongMetric` see the new completion on the
   /// same turn.
   Future<void> devToolsForceCompleteNode(String nodeId) async {
-    final node = ProgressionNodeCatalog.definitionForId(nodeId);
+    final node = ProgressionEntryCatalog.definitionForId(nodeId);
     if (node == null) return;
     final source = _source;
     if (source == null) return;
@@ -2937,7 +2937,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// (XP grant + celebration) instead of devtools finalising the
   /// whole transaction silently.
   Future<void> devToolsMarkObjectiveMet(String nodeId) async {
-    final node = ProgressionNodeCatalog.definitionForId(nodeId);
+    final node = ProgressionEntryCatalog.definitionForId(nodeId);
     if (node == null) return;
     final source = _source;
     if (source == null) return;
@@ -3174,7 +3174,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
 
     final out = <EngineQuestProgress>[];
     for (final node in _nodeCatalog.build()) {
-      if (node is! QuestNode) continue;
+      if (node is! Quest) continue;
       if (node.displayBucket != bucket) continue;
 
       final outcome = outcomesById[node.objectiveId];
@@ -3299,7 +3299,7 @@ class EngineLongTermEntry {
   /// Other nodes in the catalog whose objectiveId matches
   /// `quest.node.objectiveId`. Almost always achievements; could also
   /// be milestones. Empty when the quest stands alone.
-  final List<ProgressionNode> companions;
+  final List<ProgressionEntry> companions;
 
   /// Non-XP rewards across the primary quest + every companion. The
   /// reward chip strip on the card surfaces one chip per entry so the
@@ -3352,7 +3352,7 @@ class EngineCompletedEntry {
 
   final EngineQuestProgress representative;
   final List<EngineQuestProgress> chainQuests;
-  final List<ProgressionNode> companions;
+  final List<ProgressionEntry> companions;
   final DateTime lastEventAt;
   final int totalXpClaimed;
   final int pendingXp;
@@ -3372,7 +3372,7 @@ class EngineQuestCompletion {
     required this.completedAt,
   });
 
-  final QuestNode node;
+  final Quest node;
   final DateTime completedAt;
 
   String get nodeId => node.id;
@@ -3382,7 +3382,7 @@ class EngineQuestCompletion {
 /// is no longer in the catalog (catalog drift / stale build). Returns
 /// a zero-target objective so progress falls back to 0 instead of
 /// throwing.
-ObjectiveDefinition objectiveCatalogFallback(String id) => ObjectiveDefinition(
+Objective objectiveCatalogFallback(String id) => Objective(
       id: id,
       metric: const StepsMetric(),
       scope: const TodayScope(),

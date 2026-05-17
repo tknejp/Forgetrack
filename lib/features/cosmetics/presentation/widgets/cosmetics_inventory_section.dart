@@ -194,7 +194,7 @@ class _FeaturedCosmetic {
     required this.isEquipped,
   });
 
-  final CosmeticDefinition definition;
+  final Cosmetic definition;
   final bool isEquipped;
 }
 

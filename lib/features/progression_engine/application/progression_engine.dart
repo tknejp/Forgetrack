@@ -35,7 +35,7 @@ class ProgressionEngine {
   ProgressionEngine({
     required ProgressionEngineRepository repository,
     ObjectiveCatalog objectiveCatalog = const ObjectiveCatalog(),
-    ProgressionNodeCatalog nodeCatalog = const ProgressionNodeCatalog(),
+    ProgressionEntryCatalog nodeCatalog = const ProgressionEntryCatalog(),
     ObjectiveEvaluator objectiveEvaluator = const ObjectiveEvaluator(),
     UnlockConditionResolver unlockConditionResolver =
         const UnlockConditionResolver(),
@@ -55,7 +55,7 @@ class ProgressionEngine {
 
   final ProgressionEngineRepository _repository;
   final ObjectiveCatalog _objectiveCatalog;
-  final ProgressionNodeCatalog _nodeCatalog;
+  final ProgressionEntryCatalog _nodeCatalog;
   final ObjectiveEvaluator _objectiveEvaluator;
   final UnlockConditionResolver _unlockConditionResolver;
   final ProgressionNodeResolver _nodeResolver;
@@ -143,7 +143,7 @@ class ProgressionEngine {
 
     // Pre-compute the set of objectives that any catalog node binds to.
     // Objectives outside this set ("orphans" — typically tracker-only
-    // objectives such as `level_xp_5`, paired with a `LevelMilestoneNode`
+    // objectives such as `level_xp_5`, paired with a `LevelMilestone`
     // that carries no `objectiveId`) get unconditional event emission
     // after the resolution loop. Inside the loop, bound objectives
     // wait for an eligible binding before persisting.
@@ -178,7 +178,7 @@ class ProgressionEngine {
         ledger: ledger,
       );
       if (eligible &&
-          node is QuestNode &&
+          node is Quest &&
           node.slotPolicy is DailyChallengeHashPick) {
         final poolId = node.comboPoolId;
         if (poolId != null) {
@@ -316,7 +316,7 @@ class ProgressionEngine {
     // Orphan objectives — no node binds their `objectiveId`, so the
     // eligibility-gated emission inside the resolution loop never
     // touches them. Tracker objectives like `level_xp_5` (paired with
-    // a `LevelMilestoneNode`, which carries no `objectiveId`) fall
+    // a `LevelMilestone`, which carries no `objectiveId`) fall
     // here, and downstream consumers (journey hooks, tests) still
     // expect the completion event to land. Emit them unconditionally,
     // matching the pre-refactor behaviour.
@@ -436,16 +436,16 @@ class ProgressionEngine {
     );
   }
 
-  String? _objectiveIdOf(ProgressionNode node) {
+  String? _objectiveIdOf(ProgressionEntry node) {
     return switch (node) {
-      QuestNode(:final objectiveId) => objectiveId,
-      AchievementNode(:final objectiveId) => objectiveId,
-      MilestoneNode(:final objectiveId) => objectiveId,
-      LevelMilestoneNode() => null,
-      ChapterCompletionNode() => null,
-      CompanionAvailabilityNode() => null,
-      RelicNode() => null,
-      ContentUnlockNode() => null,
+      Quest(:final objectiveId) => objectiveId,
+      Achievement(:final objectiveId) => objectiveId,
+      Milestone(:final objectiveId) => objectiveId,
+      LevelMilestone() => null,
+      ChapterCompletion() => null,
+      CompanionAvailability() => null,
+      Relic() => null,
+      ContentUnlock() => null,
     };
   }
 
@@ -542,7 +542,7 @@ class ProgressionEngine {
       periodKey = _objectiveEvaluator.evaluate(objective, input).periodKey;
     }
 
-    final events = <LedgerEvent>[];
+    final events = <JournalEvent>[];
     if (objectiveId != null) {
       final objective = _objectiveCatalog
           .build(catalogContext)
@@ -628,13 +628,13 @@ class ProgressionEngine {
   // ── Helpers ─────────────────────────────────────────────────────
 
   ObjectiveOutcome? _outcomeForNode(
-    ProgressionNode node,
+    ProgressionEntry node,
     Map<String, ObjectiveOutcome> outcomes,
   ) {
     return switch (node) {
-      QuestNode(:final objectiveId) => outcomes[objectiveId],
-      AchievementNode(:final objectiveId) => outcomes[objectiveId],
-      MilestoneNode(:final objectiveId) => outcomes[objectiveId],
+      Quest(:final objectiveId) => outcomes[objectiveId],
+      Achievement(:final objectiveId) => outcomes[objectiveId],
+      Milestone(:final objectiveId) => outcomes[objectiveId],
       _ => null,
     };
   }
@@ -649,9 +649,9 @@ class ProgressionEngine {
     return sum;
   }
 
-  /// Combines [ProgressionNode.unlockConditions] with derived
-  /// conditions from [QuestNode.prerequisiteNodeIds] and the node's
-  /// [QuestNode.gatePolicy].
+  /// Combines [ProgressionEntry.unlockConditions] with derived
+  /// conditions from [Quest.prerequisiteNodeIds] and the node's
+  /// [Quest.gatePolicy].
   ///
   /// `prerequisiteNodeIds` always expand to `NodeCompleted(pid)` —
   /// catalog authors keep the list ergonomic without learning the
@@ -662,8 +662,8 @@ class ProgressionEngine {
   /// the day after their gating chapter step lands. Catalog content
   /// therefore stops spelling out `NodeCompletedBeforeToday` — the
   /// subtype declares the cadence and the engine wires the gate.
-  List<UnlockCondition> _conditionsFor(ProgressionNode node) {
-    if (node is! QuestNode || node.prerequisiteNodeIds.isEmpty) {
+  List<UnlockCondition> _conditionsFor(ProgressionEntry node) {
+    if (node is! Quest || node.prerequisiteNodeIds.isEmpty) {
       return node.unlockConditions;
     }
     final gate = node.gatePolicy;
@@ -690,13 +690,13 @@ class ProgressionEngine {
   /// daily section's "today's pick" and the engine's "eligible by
   /// pick" agree node-for-node.
   Map<String, String> _computeDailyChallengePicks(
-    List<ProgressionNode> nodes,
+    List<ProgressionEntry> nodes,
     LedgerSnapshot ledger,
     DateTime evaluatedAt,
   ) {
-    final poolMembers = <String, List<QuestNode>>{};
+    final poolMembers = <String, List<Quest>>{};
     for (final n in nodes) {
-      if (n is! QuestNode) continue;
+      if (n is! Quest) continue;
       if (n.slotPolicy is! DailyChallengeHashPick) continue;
       final poolId = n.comboPoolId;
       if (poolId == null) continue;
@@ -721,7 +721,7 @@ class ProgressionEngine {
       final members = entry.value;
 
       // Pinned: any pool member claimed today wins regardless of hash.
-      QuestNode? pinned;
+      Quest? pinned;
       for (final m in members) {
         if (claimedToday.contains(m.id)) {
           pinned = m;

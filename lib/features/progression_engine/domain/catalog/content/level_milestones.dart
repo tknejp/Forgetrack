@@ -19,12 +19,12 @@ import '../level_milestone_specs.dart';
 /// "level achievement" view (separate from the milestone) can hook
 /// into the same data without re-inventing the threshold table.
 
-List<ObjectiveDefinition> levelMilestoneObjectives(
+List<Objective> levelMilestoneObjectives(
   EngineCatalogContext context,
 ) {
   return [
     for (final spec in kLevelMilestones.where((s) => s.level > 1))
-      ObjectiveDefinition(
+      Objective(
         id: 'level_xp_${spec.level}',
         metric: const TotalXpMetric(),
         scope: const LifetimeScope(),
@@ -36,10 +36,10 @@ List<ObjectiveDefinition> levelMilestoneObjectives(
   ];
 }
 
-List<ProgressionNode> levelMilestoneNodes() {
+List<ProgressionEntry> levelMilestones() {
   return [
     for (final spec in kLevelMilestones.where((s) => s.level > 1))
-      LevelMilestoneNode(
+      LevelMilestone(
         id: 'level_${spec.level}',
         level: spec.level,
         emoji: spec.emoji,

@@ -12,11 +12,11 @@ import '../../models/unlock_condition.dart';
 /// Unlock condition shape: `[LevelAtLeast(N), NodeCompleted(relic1_ach),
 /// NodeCompleted(relic2_ach)]`. The relics themselves are
 /// `CosmeticReward`s on achievement nodes (V2 doesn't have standalone
-/// RelicNode entries for them) — so the gate references the *granting*
+/// Relic entries for them) — so the gate references the *granting*
 /// achievement's id, not the relic id.
 ///
 /// All seven nodes use `ClaimPolicy.manual` (inherited from
-/// CompanionAvailabilityNode). The celebration adapter folds the
+/// CompanionAvailability). The celebration adapter folds the
 /// reveal into the achievement event that granted the final relic
 /// via the companion-availability fold pass (`adapter.convert`
 /// looks for `NodeCompleted` host matches and merges the companion
@@ -25,9 +25,9 @@ import '../../models/unlock_condition.dart';
 /// completed), the companion gets a standalone fullscreen reveal
 /// pointing to the inventory.
 
-List<ProgressionNode> companionNodes() {
+List<ProgressionEntry> companionNodes() {
   return [
-    CompanionAvailabilityNode(
+    CompanionAvailability(
       id: 'companion_ember_sprite',
       companionId: 'companion_ember_sprite',
       titleKey: (l) => l.cosmeticCompanionEmberSpriteName,
@@ -43,7 +43,7 @@ List<ProgressionNode> companionNodes() {
       lockedHintKey: (l) => l.cosmeticCompanionLevelGate(5),
       rarity: Rarity.uncommon,
     ),
-    CompanionAvailabilityNode(
+    CompanionAvailability(
       id: 'companion_forest_fox',
       companionId: 'companion_forest_fox',
       titleKey: (l) => l.cosmeticCompanionForestFoxName,
@@ -59,7 +59,7 @@ List<ProgressionNode> companionNodes() {
       lockedHintKey: (l) => l.cosmeticCompanionLevelGate(10),
       rarity: Rarity.rare,
     ),
-    CompanionAvailabilityNode(
+    CompanionAvailability(
       id: 'companion_ruin_raven',
       companionId: 'companion_ruin_raven',
       titleKey: (l) => l.cosmeticCompanionRuinRavenName,
@@ -75,7 +75,7 @@ List<ProgressionNode> companionNodes() {
       lockedHintKey: (l) => l.cosmeticCompanionLevelGate(25),
       rarity: Rarity.rare,
     ),
-    CompanionAvailabilityNode(
+    CompanionAvailability(
       id: 'companion_lantern_golem',
       companionId: 'companion_lantern_golem',
       titleKey: (l) => l.cosmeticCompanionLanternGolemName,
@@ -91,7 +91,7 @@ List<ProgressionNode> companionNodes() {
       lockedHintKey: (l) => l.cosmeticCompanionLevelGate(45),
       rarity: Rarity.epic,
     ),
-    CompanionAvailabilityNode(
+    CompanionAvailability(
       id: 'companion_ice_wisp',
       companionId: 'companion_ice_wisp',
       titleKey: (l) => l.cosmeticCompanionIceWispName,
@@ -107,7 +107,7 @@ List<ProgressionNode> companionNodes() {
       lockedHintKey: (l) => l.cosmeticCompanionLevelGate(65),
       rarity: Rarity.legendary,
     ),
-    CompanionAvailabilityNode(
+    CompanionAvailability(
       id: 'companion_mountain_gryphon',
       companionId: 'companion_mountain_gryphon',
       titleKey: (l) => l.cosmeticCompanionMountainGryphonName,
@@ -125,7 +125,7 @@ List<ProgressionNode> companionNodes() {
       lockedHintKey: (l) => l.cosmeticCompanionLevelGate(85),
       rarity: Rarity.legendary,
     ),
-    CompanionAvailabilityNode(
+    CompanionAvailability(
       id: 'companion_dragonling',
       companionId: 'companion_dragonling',
       titleKey: (l) => l.cosmeticCompanionDragonlingName,

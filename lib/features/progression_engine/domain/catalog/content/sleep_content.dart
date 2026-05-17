@@ -14,10 +14,10 @@ import 'quest_assets.dart';
 /// mastery achievements. Mirrors V1: rule `daily_sleep`,
 /// `sleep_total_250h`/`1000h`, `sleep_month_225h`/`240h`.
 
-List<ObjectiveDefinition> sleepObjectives(EngineCatalogContext context) {
+List<Objective> sleepObjectives(EngineCatalogContext context) {
   final goals = context.goals;
   return [
-    ObjectiveDefinition(
+    Objective(
       id: 'daily_sleep',
       domain: ProgressionDomain.sleep,
       metric: const SleepMinutesMetric(),
@@ -25,7 +25,7 @@ List<ObjectiveDefinition> sleepObjectives(EngineCatalogContext context) {
       operator: ObjectiveOperator.atLeast,
       targetValue: goals.sleepMinutes.toDouble(),
     ),
-    const ObjectiveDefinition(
+    const Objective(
       id: 'lifetime_sleep_250h',
       domain: ProgressionDomain.sleep,
       metric: SleepMinutesMetric(),
@@ -34,7 +34,7 @@ List<ObjectiveDefinition> sleepObjectives(EngineCatalogContext context) {
       // V1 stores sleep in minutes; 250h = 15000 minutes.
       targetValue: 15000,
     ),
-    const ObjectiveDefinition(
+    const Objective(
       id: 'lifetime_sleep_1000h',
       domain: ProgressionDomain.sleep,
       metric: SleepMinutesMetric(),
@@ -42,7 +42,7 @@ List<ObjectiveDefinition> sleepObjectives(EngineCatalogContext context) {
       operator: ObjectiveOperator.atLeast,
       targetValue: 60000,
     ),
-    const ObjectiveDefinition(
+    const Objective(
       id: 'rolling_sleep_30d_225h',
       domain: ProgressionDomain.sleep,
       metric: SleepMinutesMetric(),
@@ -50,7 +50,7 @@ List<ObjectiveDefinition> sleepObjectives(EngineCatalogContext context) {
       operator: ObjectiveOperator.atLeast,
       targetValue: 13500,
     ),
-    const ObjectiveDefinition(
+    const Objective(
       id: 'rolling_sleep_30d_240h',
       domain: ProgressionDomain.sleep,
       metric: SleepMinutesMetric(),
@@ -61,9 +61,9 @@ List<ObjectiveDefinition> sleepObjectives(EngineCatalogContext context) {
   ];
 }
 
-List<ProgressionNode> sleepNodes() {
+List<ProgressionEntry> sleepNodes() {
   return [
-    DailyQuestNode(
+    DailyQuest(
       id: 'daily_sleep_today',
       objectiveId: 'daily_sleep',
       claimPolicy: ClaimPolicy.manual,
@@ -75,7 +75,7 @@ List<ProgressionNode> sleepNodes() {
       rarity: Rarity.common,
       assetKey: questAssetStreak,
     ),
-    AchievementNode(
+    Achievement(
       id: 'sleep_total_250h',
       objectiveId: 'lifetime_sleep_250h',
       badgeEmoji: '\u{1F6CC}',
@@ -85,7 +85,7 @@ List<ProgressionNode> sleepNodes() {
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.common,
     ),
-    AchievementNode(
+    Achievement(
       id: 'sleep_total_1000h',
       objectiveId: 'lifetime_sleep_1000h',
       badgeEmoji: '\u{1F48E}',
@@ -95,7 +95,7 @@ List<ProgressionNode> sleepNodes() {
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.uncommon,
     ),
-    AchievementNode(
+    Achievement(
       id: 'sleep_month_225h',
       objectiveId: 'rolling_sleep_30d_225h',
       badgeEmoji: '\u{1F31C}',
@@ -105,7 +105,7 @@ List<ProgressionNode> sleepNodes() {
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.epic,
     ),
-    AchievementNode(
+    Achievement(
       id: 'sleep_month_240h',
       objectiveId: 'rolling_sleep_30d_240h',
       badgeEmoji: '\u{1F451}',

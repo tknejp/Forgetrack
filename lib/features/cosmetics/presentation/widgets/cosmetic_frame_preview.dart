@@ -29,7 +29,7 @@ class CosmeticFramePreview extends StatelessWidget {
   });
 
   final Widget child;
-  final CosmeticDefinition? definition;
+  final Cosmetic? definition;
   final CosmeticsConfig? config;
 
   /// Size of the avatar (and the widget's external bounds).

@@ -1,8 +1,8 @@
 // `type_init_formals` fires on every `required String super.chapterId`
 // in the subtypes below. The annotation is deliberate — it narrows
 // the base's nullable `chapterId` / `chainId` / `comboPoolId` fields
-// to non-null at the subtype's constructor surface (ChapterStepNode
-// can't exist without a chapterId, ComboStepNode can't exist without
+// to non-null at the subtype's constructor surface (ChapterStep
+// can't exist without a chapterId, ComboStep can't exist without
 // a comboPoolId). Dropping the type would re-introduce nullability
 // and silently break catalog authoring.
 // ignore_for_file: type_init_formals
@@ -30,8 +30,8 @@ import 'unlock_condition.dart';
 /// splits that into one subclass per node type: each carries only the
 /// fields it actually needs.
 @immutable
-sealed class ProgressionNode {
-  const ProgressionNode({
+sealed class ProgressionEntry {
+  const ProgressionEntry({
     required this.id,
     required this.titleKey,
     required this.descriptionKey,
@@ -80,8 +80,8 @@ sealed class ProgressionNode {
 /// content to migrate mechanically — only the class name changes
 /// per node. Subtypes that don't use a given field (e.g. a
 /// standalone daily quest has no `chainId`) simply omit it.
-sealed class QuestNode extends ProgressionNode {
-  const QuestNode({
+sealed class Quest extends ProgressionEntry {
+  const Quest({
     required super.id,
     required super.titleKey,
     required super.descriptionKey,
@@ -178,8 +178,8 @@ sealed class QuestNode extends ProgressionNode {
 
 /// Standalone daily quest — e.g. `daily_steps_today`. Lives in the
 /// daily section with the rotation-sticky-until-midnight slot rule.
-class DailyQuestNode extends QuestNode {
-  const DailyQuestNode({
+class DailyQuest extends Quest {
+  const DailyQuest({
     required super.id,
     required super.titleKey,
     required super.descriptionKey,
@@ -206,8 +206,8 @@ class DailyQuestNode extends QuestNode {
 
 /// Weekly quest — currently only `weekly_activity`. Stays visible in
 /// the weekly section until claimed / week rolls over.
-class WeeklyQuestNode extends QuestNode {
-  const WeeklyQuestNode({
+class WeeklyQuest extends Quest {
+  const WeeklyQuest({
     required super.id,
     required super.titleKey,
     required super.descriptionKey,
@@ -232,8 +232,8 @@ class WeeklyQuestNode extends QuestNode {
 /// Chapter chain *opener* — `chainOrder=0`, auto-claim when the level
 /// gate clears. Fires the "Nová kapitola otevřena" fullscreen
 /// celebration.
-class ChapterOpenerNode extends QuestNode {
-  const ChapterOpenerNode({
+class ChapterOpener extends Quest {
+  const ChapterOpener({
     required super.id,
     required super.titleKey,
     required super.descriptionKey,
@@ -265,8 +265,8 @@ class ChapterOpenerNode extends QuestNode {
 /// so the chain has at least one step after it. Silent on claim
 /// (Phase 2 will say so via [CelebrationPolicy]); the player sees
 /// the XP pill flip state on the chapter card.
-class ChapterStepNode extends QuestNode {
-  const ChapterStepNode({
+class ChapterStep extends Quest {
+  const ChapterStep({
     required super.id,
     required super.titleKey,
     required super.descriptionKey,
@@ -298,8 +298,8 @@ class ChapterStepNode extends QuestNode {
 /// Final step of a chapter chain. `nextNodeIds` is empty by
 /// definition. Fires the "Kapitola dokončena" fullscreen
 /// celebration with the chapter icon as headliner.
-class ChapterFinaleNode extends QuestNode {
-  const ChapterFinaleNode({
+class ChapterFinale extends Quest {
+  const ChapterFinale({
     required super.id,
     required super.titleKey,
     required super.descriptionKey,
@@ -334,8 +334,8 @@ class ChapterFinaleNode extends QuestNode {
 /// objective). Carries a cooldown so it doesn't unlock the same day
 /// its gating chapter step was completed (Phase 2 will encode this
 /// as `CooldownDays(1)` instead of explicit unlock conditions).
-class ChapterSideQuestNode extends QuestNode {
-  const ChapterSideQuestNode({
+class ChapterSideQuest extends Quest {
+  const ChapterSideQuest({
     required super.id,
     required super.titleKey,
     required super.descriptionKey,
@@ -367,8 +367,8 @@ class ChapterSideQuestNode extends QuestNode {
 /// `NodeCompletedBeforeToday(prev)` so only one chain step lands
 /// per day. `comboPoolId` ties the step to a shared completion
 /// pool that combo achievements ride on.
-class ComboStepNode extends QuestNode {
-  const ComboStepNode({
+class ComboStep extends Quest {
+  const ComboStep({
     required super.id,
     required super.titleKey,
     required super.descriptionKey,
@@ -397,10 +397,10 @@ class ComboStepNode extends QuestNode {
 }
 
 /// Final step of a daily combo chain. Same gating rules as
-/// [ComboStepNode] but `nextNodeIds` is empty. Phase 2 will give
+/// [ComboStep] but `nextNodeIds` is empty. Phase 2 will give
 /// this a louder celebration than mid-chain steps.
-class ComboFinaleNode extends QuestNode {
-  const ComboFinaleNode({
+class ComboFinale extends Quest {
+  const ComboFinale({
     required super.id,
     required super.titleKey,
     required super.descriptionKey,
@@ -431,8 +431,8 @@ class ComboFinaleNode extends QuestNode {
 
 /// Daily challenge template — `LifetimeScope` objective; today's pick
 /// surfaces via deterministic hash and retires once claimed.
-class DailyChallengeNode extends QuestNode {
-  const DailyChallengeNode({
+class DailyChallenge extends Quest {
+  const DailyChallenge({
     required super.id,
     required super.titleKey,
     required super.descriptionKey,
@@ -458,8 +458,8 @@ class DailyChallengeNode extends QuestNode {
 /// Long-term lifetime objective (mastery chain). Persistent — stays
 /// visible until claimed, no per-day rotation. Chain progression
 /// across many sessions.
-class LongTermQuestNode extends QuestNode {
-  const LongTermQuestNode({
+class LongTermQuest extends Quest {
+  const LongTermQuest({
     required super.id,
     required super.titleKey,
     required super.descriptionKey,
@@ -487,8 +487,8 @@ class LongTermQuestNode extends QuestNode {
         );
 }
 
-class AchievementNode extends ProgressionNode {
-  const AchievementNode({
+class Achievement extends ProgressionEntry {
+  const Achievement({
     required super.id,
     required super.titleKey,
     required super.descriptionKey,
@@ -505,14 +505,14 @@ class AchievementNode extends ProgressionNode {
 
   /// When null, the achievement is condition-driven only (welcome
   /// achievements, level milestones, anything satisfied by unlock
-  /// conditions alone). When set, references an [ObjectiveDefinition]
+  /// conditions alone). When set, references an [Objective]
   /// in [ObjectiveCatalog].
   final String? objectiveId;
   final String badgeEmoji;
 }
 
-class MilestoneNode extends ProgressionNode {
-  const MilestoneNode({
+class Milestone extends ProgressionEntry {
+  const Milestone({
     required super.id,
     required super.titleKey,
     required super.descriptionKey,
@@ -531,8 +531,8 @@ class MilestoneNode extends ProgressionNode {
   final bool journeyMapAnchor;
 }
 
-class LevelMilestoneNode extends ProgressionNode {
-  const LevelMilestoneNode({
+class LevelMilestone extends ProgressionEntry {
+  const LevelMilestone({
     required super.id,
     required super.titleKey,
     required super.descriptionKey,
@@ -552,8 +552,8 @@ class LevelMilestoneNode extends ProgressionNode {
   final bool isJourneyMapAnchor;
 }
 
-class ChapterCompletionNode extends ProgressionNode {
-  const ChapterCompletionNode({
+class ChapterCompletion extends ProgressionEntry {
+  const ChapterCompletion({
     required super.id,
     required super.titleKey,
     required super.descriptionKey,
@@ -568,8 +568,8 @@ class ChapterCompletionNode extends ProgressionNode {
   final String chapterId;
 }
 
-class CompanionAvailabilityNode extends ProgressionNode {
-  const CompanionAvailabilityNode({
+class CompanionAvailability extends ProgressionEntry {
+  const CompanionAvailability({
     required super.id,
     required super.titleKey,
     required super.descriptionKey,
@@ -584,8 +584,8 @@ class CompanionAvailabilityNode extends ProgressionNode {
   final String companionId;
 }
 
-class RelicNode extends ProgressionNode {
-  const RelicNode({
+class Relic extends ProgressionEntry {
+  const Relic({
     required super.id,
     required super.titleKey,
     required super.descriptionKey,
@@ -599,8 +599,8 @@ class RelicNode extends ProgressionNode {
   final String relicId;
 }
 
-class ContentUnlockNode extends ProgressionNode {
-  const ContentUnlockNode({
+class ContentUnlock extends ProgressionEntry {
+  const ContentUnlock({
     required super.id,
     required super.titleKey,
     required super.descriptionKey,

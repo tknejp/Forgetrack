@@ -49,7 +49,7 @@ class LedgerSnapshot {
     return false;
   }
 
-  Iterable<LedgerEvent> get all sync* {
+  Iterable<JournalEvent> get all sync* {
     yield* objectiveCompletions;
     yield* nodeCompletions;
     yield* nodeClaims;

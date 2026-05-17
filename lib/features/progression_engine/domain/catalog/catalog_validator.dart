@@ -57,11 +57,11 @@ class CatalogValidationException implements Exception {
 class CatalogValidator {
   const CatalogValidator({
     this.objectiveCatalog = const ObjectiveCatalog(),
-    this.nodeCatalog = const ProgressionNodeCatalog(),
+    this.nodeCatalog = const ProgressionEntryCatalog(),
   });
 
   final ObjectiveCatalog objectiveCatalog;
-  final ProgressionNodeCatalog nodeCatalog;
+  final ProgressionEntryCatalog nodeCatalog;
 
   /// Returns every issue found, errors and warnings mixed. Order is
   /// stable: objectives first, then nodes in catalog order, with
@@ -105,7 +105,7 @@ class CatalogValidator {
   // ── Objective checks ────────────────────────────────────────────
 
   Iterable<CatalogValidationIssue> _checkObjectiveIdentity(
-    List<ObjectiveDefinition> objectives,
+    List<Objective> objectives,
   ) sync* {
     final seen = <String>{};
     for (final o in objectives) {
@@ -122,7 +122,7 @@ class CatalogValidator {
   // ── Node checks ─────────────────────────────────────────────────
 
   Iterable<CatalogValidationIssue> _checkNodeIdentity(
-    List<ProgressionNode> nodes,
+    List<ProgressionEntry> nodes,
   ) sync* {
     final seen = <String>{};
     for (final n in nodes) {
@@ -137,7 +137,7 @@ class CatalogValidator {
   }
 
   Iterable<CatalogValidationIssue> _checkNodeReferences(
-    List<ProgressionNode> nodes,
+    List<ProgressionEntry> nodes,
     Set<String> knownObjectiveIds,
   ) sync* {
     final knownNodeIds = {for (final n in nodes) n.id};
@@ -213,7 +213,7 @@ class CatalogValidator {
   }
 
   Iterable<CatalogValidationIssue> _checkClaimPolicyCoherence(
-    List<ProgressionNode> nodes,
+    List<ProgressionEntry> nodes,
   ) sync* {
     for (final n in nodes) {
       if (n.claimPolicy == ClaimPolicy.manual && n.lockedHintKey == null) {
@@ -228,17 +228,17 @@ class CatalogValidator {
   }
 
   Iterable<CatalogValidationIssue> _checkLevelMilestoneCoherence(
-    List<ProgressionNode> nodes,
+    List<ProgressionEntry> nodes,
   ) sync* {
     for (final n in nodes) {
-      if (n is! LevelMilestoneNode) continue;
+      if (n is! LevelMilestone) continue;
       final levels = _flattenLevelAtLeast(n.unlockConditions);
       if (levels.isEmpty) {
         yield CatalogValidationIssue(
           severity: CatalogValidationSeverity.error,
           path: 'nodes[${n.id}].unlockConditions',
           message:
-              'LevelMilestoneNode level=${n.level} has no LevelAtLeast unlock condition.',
+              'LevelMilestone level=${n.level} has no LevelAtLeast unlock condition.',
         );
         continue;
       }
@@ -247,7 +247,7 @@ class CatalogValidator {
           severity: CatalogValidationSeverity.error,
           path: 'nodes[${n.id}].unlockConditions',
           message:
-              'LevelMilestoneNode level=${n.level} unlock conditions reference $levels — none match.',
+              'LevelMilestone level=${n.level} unlock conditions reference $levels — none match.',
         );
       }
     }
@@ -277,7 +277,7 @@ class CatalogValidator {
   }
 
   Iterable<CatalogValidationIssue> _checkActivationContentTagCoherence(
-    List<ProgressionNode> nodes,
+    List<ProgressionEntry> nodes,
   ) sync* {
     for (final n in nodes) {
       final isRpgPolicy =
@@ -302,16 +302,16 @@ class CatalogValidator {
 
   /// Returns the `objectiveId` field on the node when present, null
   /// for node types that are unlock-condition-only.
-  String? _objectiveIdOf(ProgressionNode node) {
+  String? _objectiveIdOf(ProgressionEntry node) {
     return switch (node) {
-      QuestNode(:final objectiveId) => objectiveId,
-      AchievementNode(:final objectiveId) => objectiveId,
-      MilestoneNode(:final objectiveId) => objectiveId,
-      LevelMilestoneNode() => null,
-      ChapterCompletionNode() => null,
-      CompanionAvailabilityNode() => null,
-      RelicNode() => null,
-      ContentUnlockNode() => null,
+      Quest(:final objectiveId) => objectiveId,
+      Achievement(:final objectiveId) => objectiveId,
+      Milestone(:final objectiveId) => objectiveId,
+      LevelMilestone() => null,
+      ChapterCompletion() => null,
+      CompanionAvailability() => null,
+      Relic() => null,
+      ContentUnlock() => null,
     };
   }
 }
@@ -319,5 +319,5 @@ class CatalogValidator {
 // Currently unused — keeps the analyzer happy when a future check
 // needs to introspect rewards by type.
 // ignore: unused_element
-List<RewardDefinition> _allRewards(List<ProgressionNode> nodes) =>
+List<RewardDefinition> _allRewards(List<ProgressionEntry> nodes) =>
     nodes.expand((n) => n.rewards).toList(growable: false);

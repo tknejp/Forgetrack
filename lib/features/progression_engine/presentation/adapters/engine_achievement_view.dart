@@ -6,7 +6,7 @@ import '../../domain/display/progression_display_models.dart';
 import '../../domain/display/progression_display_resolver.dart';
 import '../../domain/models/progression_node_definition.dart';
 
-/// Display-ready view of a V2 [AchievementNode] paired with the
+/// Display-ready view of a V2 [Achievement] paired with the
 /// player's current state from the ledger and the latest evaluator
 /// outcomes.
 ///
@@ -28,7 +28,7 @@ class EngineAchievementView {
   });
 
   /// Catalog entry this view wraps.
-  final AchievementNode node;
+  final Achievement node;
 
   /// Resolver-derived display data (title, description, accent
   /// colour, emoji, subject label).
@@ -58,7 +58,7 @@ class EngineAchievementView {
 
 /// Builds the achievement view list for the hero screen and journey
 /// adapter from the V2 provider. Returns one entry per
-/// [AchievementNode] in the catalog whose display data the resolver
+/// [Achievement] in the catalog whose display data the resolver
 /// can produce.
 List<EngineAchievementView> buildEngineAchievementViews(
   ProgressionEngineProvider provider,
@@ -68,7 +68,7 @@ List<EngineAchievementView> buildEngineAchievementViews(
   final completed = provider.completedNodeIds;
 
   final out = <EngineAchievementView>[];
-  for (final node in provider.achievementNodes) {
+  for (final node in provider.achievements) {
     final display = resolver.nodeDisplay(node.id, l10n);
     if (display == null) continue;
 

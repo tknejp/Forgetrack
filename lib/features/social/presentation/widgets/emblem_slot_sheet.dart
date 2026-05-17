@@ -33,15 +33,15 @@ class EmblemSlotSheet extends StatelessWidget {
   });
 
   final int slotIndex;
-  final CosmeticDefinition? currentEmblem;
-  final List<CosmeticDefinition> unlockedEmblems;
+  final Cosmetic? currentEmblem;
+  final List<Cosmetic> unlockedEmblems;
   final bool isOwner;
 
   static Future<EmblemSlotPick?> show(
     BuildContext context, {
     required int slotIndex,
-    required CosmeticDefinition? currentEmblem,
-    required List<CosmeticDefinition> unlockedEmblems,
+    required Cosmetic? currentEmblem,
+    required List<Cosmetic> unlockedEmblems,
     required bool isOwner,
   }) {
     return showModalBottomSheet<EmblemSlotPick>(
@@ -159,7 +159,7 @@ class _SheetHeader extends StatelessWidget {
 
   final int slotIndex;
   final bool isOwner;
-  final CosmeticDefinition? currentEmblem;
+  final Cosmetic? currentEmblem;
 
   @override
   Widget build(BuildContext context) {
@@ -206,7 +206,7 @@ class _CurrentEmblemBlock extends StatelessWidget {
     required this.onRemove,
   });
 
-  final CosmeticDefinition emblem;
+  final Cosmetic emblem;
   final bool isOwner;
   final VoidCallback onRemove;
 
@@ -335,9 +335,9 @@ class _UnlockedEmblemGrid extends StatelessWidget {
     required this.onPick,
   });
 
-  final List<CosmeticDefinition> emblems;
+  final List<Cosmetic> emblems;
   final String? currentEmblemId;
-  final void Function(CosmeticDefinition) onPick;
+  final void Function(Cosmetic) onPick;
 
   @override
   Widget build(BuildContext context) {
@@ -376,7 +376,7 @@ class _PickerTile extends StatelessWidget {
     required this.onTap,
   });
 
-  final CosmeticDefinition emblem;
+  final Cosmetic emblem;
   final bool isCurrent;
   final VoidCallback onTap;
 

@@ -119,7 +119,7 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
     final devTools = widget.devToolsMode;
     final consumedIds = consumedRelicIds(state);
 
-    final List<CosmeticDefinition> displayDefs;
+    final List<Cosmetic> displayDefs;
     final Map<String, CosmeticRevealResult> revealResults;
     // Map of companion id → resolved [Companion] view object. Built
     // once per build from canonical sources (cosmetics state +
@@ -312,7 +312,7 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
     BuildContext context, {
     required CosmeticsProvider cosmetics,
     required UserCosmeticsState state,
-    required CosmeticDefinition definition,
+    required Cosmetic definition,
     required AppLocalizations l10n,
     bool devTools = false,
     CosmeticRevealResult? revealResult,
@@ -363,10 +363,10 @@ class _EquippedSection extends StatelessWidget {
     required this.onTap,
   });
 
-  final List<CosmeticDefinition> definitions;
+  final List<Cosmetic> definitions;
   final UserCosmeticsState state;
   final AppLocalizations l10n;
-  final ValueChanged<CosmeticDefinition> onTap;
+  final ValueChanged<Cosmetic> onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -528,13 +528,13 @@ class _CategoryGrid extends StatelessWidget {
     this.consumedRelicIds = const {},
   });
 
-  final List<CosmeticDefinition> defs;
+  final List<Cosmetic> defs;
   final CosmeticsProvider cosmetics;
   final UserCosmeticsState state;
   final Map<String, CosmeticRevealResult> revealResults;
   final bool devTools;
   final AppLocalizations l10n;
-  final ValueChanged<CosmeticDefinition> onTap;
+  final ValueChanged<Cosmetic> onTap;
   final Map<String, Companion> companions;
   final Set<String> consumedRelicIds;
 
@@ -605,7 +605,7 @@ class _CosmeticCard extends StatelessWidget {
     this.isRelicConsumed = false,
   });
 
-  final CosmeticDefinition definition;
+  final Cosmetic definition;
   final bool isEquipped;
   // devTools-only: shows lock icon + dim
   final bool isLocked;
@@ -1113,7 +1113,7 @@ double _cardBadgeSize(CosmeticType type) {
   }
 }
 
-int _byTypeThenSortOrder(CosmeticDefinition a, CosmeticDefinition b) {
+int _byTypeThenSortOrder(Cosmetic a, Cosmetic b) {
   final typeRank = CosmeticType.values.indexOf(a.type)
       .compareTo(CosmeticType.values.indexOf(b.type));
   if (typeRank != 0) return typeRank;
@@ -1125,8 +1125,8 @@ int _byTypeThenSortOrder(CosmeticDefinition a, CosmeticDefinition b) {
 /// 2. Partial items (by sortOrder — discovered rewards the player is progressing toward)
 /// 3. VisibleLocked items (by sortOrder)
 int _sortRevealDefs(
-  CosmeticDefinition a,
-  CosmeticDefinition b,
+  Cosmetic a,
+  Cosmetic b,
   UserCosmeticsState state,
   Map<String, CosmeticRevealResult> revealResults,
 ) {
@@ -1157,8 +1157,8 @@ int _revealSortRank(CosmeticRevealState state) {
 }
 
 int _compareUnlockedCosmetics(
-  CosmeticDefinition a,
-  CosmeticDefinition b,
+  Cosmetic a,
+  Cosmetic b,
   UserCosmeticsState state,
 ) {
   final rarity = b.rarity.index.compareTo(a.rarity.index);

@@ -232,7 +232,7 @@ class _Leading extends StatelessWidget {
     required this.dimmed,
   });
 
-  final QuestNode node;
+  final Quest node;
   final ProgressionDomain domain;
   final double size;
   final bool dimmed;
@@ -335,7 +335,7 @@ class _ExpandedBody extends StatelessWidget {
 class _NextStepHint extends StatelessWidget {
   const _NextStepHint({required this.node, required this.l10n});
 
-  final QuestNode node;
+  final Quest node;
   final AppLocalizations l10n;
 
   @override
@@ -405,7 +405,7 @@ class _Companions extends StatelessWidget {
     required this.l10n,
   });
 
-  final List<ProgressionNode> companions;
+  final List<ProgressionEntry> companions;
   final EngineQuestProgress quest;
   final Color accent;
   final AppLocalizations l10n;
@@ -456,7 +456,7 @@ class _CompanionRow extends StatelessWidget {
     required this.l10n,
   });
 
-  final ProgressionNode node;
+  final ProgressionEntry node;
   final EngineQuestProgress quest;
   final Color accent;
   final AppLocalizations l10n;

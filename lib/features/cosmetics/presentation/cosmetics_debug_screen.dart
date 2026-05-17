@@ -172,7 +172,7 @@ class _UnequipChip extends StatelessWidget {
     required this.onUnequip,
   });
 
-  final CosmeticDefinition definition;
+  final Cosmetic definition;
   final AppLocalizations? l10n;
   final VoidCallback onUnequip;
 
@@ -204,7 +204,7 @@ class _TypeSection extends StatelessWidget {
   });
 
   final CosmeticType type;
-  final List<CosmeticDefinition> definitions;
+  final List<Cosmetic> definitions;
   final UserCosmeticsState state;
   final CosmeticsProvider cosmetics;
   final AppLocalizations? l10n;
@@ -275,7 +275,7 @@ class _Tile extends StatelessWidget {
     required this.cosmetics,
   });
 
-  final CosmeticDefinition definition;
+  final Cosmetic definition;
   final bool isUnlocked;
   final bool isEquipped;
   final AppLocalizations? l10n;

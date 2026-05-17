@@ -111,7 +111,7 @@ class SocialUnlockedAchievement {
 /// Raw row read from `users/{uid}/engineNodeCompletions/{eventKey}`.
 ///
 /// The repo returns these untyped — `SocialProvider` filters down to
-/// AchievementNodes and resolves rarity / domain via the local
+/// Achievements and resolves rarity / domain via the local
 /// progression catalog when building [SocialUnlockedAchievement] for
 /// the friend-profile view. Keeping the catalog lookup in the
 /// application layer means the repo stays Firestore-only and doesn't

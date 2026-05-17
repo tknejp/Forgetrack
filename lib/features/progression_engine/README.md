@@ -78,7 +78,7 @@ presentation/
 ## How to extend
 
 - **Add a new objective** (a new metric / scope / operator combination):
-  define an `ObjectiveDefinition` in
+  define an `Objective` in
   `domain/catalog/content/<domain>_content.dart`.
 - **Add a new node** (quest / achievement / milestone): define a
   `ProgressionNodeDefinition` referencing one or more objectives.

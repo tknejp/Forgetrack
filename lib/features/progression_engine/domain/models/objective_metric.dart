@@ -151,7 +151,7 @@ class LifetimeCompletionsAmongMetric extends ObjectiveMetric {
 /// (`atLeast=K`, `targetValue=N`) or "complete both X and Y on the
 /// same day, N times" (`nodeIds=[X, Y], atLeast=2, targetValue=N`).
 ///
-/// Always paired with [ObjectiveDefinition.baselineFromNodeId] today —
+/// Always paired with [Objective.baselineFromNodeId] today —
 /// the provider's `objectiveActualOverrides` path computes the day
 /// count from the ledger, restricted to days after the baseline node
 /// first completed. Without per-event history a non-baselined

@@ -19,7 +19,7 @@ class CosmeticCollectionTile extends StatelessWidget {
     this.onTap,
   });
 
-  final CosmeticDefinition definition;
+  final Cosmetic definition;
   final bool isUnlocked;
   final bool isEquipped;
   final CosmeticsConfig? config;

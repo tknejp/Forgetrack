@@ -19,7 +19,7 @@ class NodeResolution {
     required this.periodKey,
   });
 
-  final ProgressionNode node;
+  final ProgressionEntry node;
   final NodeState state;
 
   /// Were the unlock conditions satisfied? Distinct from completion:
@@ -51,7 +51,7 @@ class ProgressionNodeResolver {
   /// Resolves one node. The caller is responsible for passing the
   /// objective outcome map and the appropriate eligibility sets.
   NodeResolution resolve({
-    required ProgressionNode node,
+    required ProgressionEntry node,
     required ObjectiveOutcome? objectiveOutcome,
     required bool eligibleByConditions,
     required EngineEvaluationInput input,

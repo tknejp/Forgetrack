@@ -62,7 +62,7 @@ class ChapterUnlockReward extends RewardDefinition {
 }
 
 /// Marks a companion as **available**. The actual equip step is a
-/// separate manual claim on a [CompanionAvailabilityNode] — Q3
+/// separate manual claim on a [CompanionAvailability] — Q3
 /// decision: companions are never auto-equipped.
 class CompanionAvailabilityReward extends RewardDefinition {
   const CompanionAvailabilityReward({

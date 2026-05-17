@@ -6,9 +6,9 @@ import '../domain/repository/ledger_snapshot.dart';
 
 /// Cloud-side gateway for the V2 progression engine ledger.
 ///
-/// Maps the sealed [LedgerEvent] hierarchy to Firestore documents under
+/// Maps the sealed [JournalEvent] hierarchy to Firestore documents under
 /// `users/{uid}/engine{EventType}s/{eventKey}`. Writes use plain `set()`
-/// because [LedgerEvent.eventKey] is deterministic and event payloads
+/// because [JournalEvent.eventKey] is deterministic and event payloads
 /// are immutable — re-writing the same event with the same data is a
 /// safe no-op at the data level (Firestore still bills the write,
 /// which is why the hybrid repository pushes only the events the local
@@ -44,7 +44,7 @@ class FirestoreProgressionEngineGateway {
   /// Pushes [events] to Firestore. Splits across multiple WriteBatches
   /// when over the 500-op limit. Errors propagate; the caller decides
   /// whether to retry or swallow.
-  Future<void> pushEvents(String uid, List<LedgerEvent> events) async {
+  Future<void> pushEvents(String uid, List<JournalEvent> events) async {
     if (uid.isEmpty || events.isEmpty) return;
 
     var batch = _firestore.batch();
@@ -179,7 +179,7 @@ class FirestoreProgressionEngineGateway {
 
   DocumentReference<Map<String, dynamic>>? _refFor(
     String uid,
-    LedgerEvent event,
+    JournalEvent event,
   ) {
     final docId = _sanitizeDocId(event.eventKey);
     if (docId.isEmpty) return null;
@@ -206,7 +206,7 @@ class FirestoreProgressionEngineGateway {
 
   // ── Domain → Map ────────────────────────────────────────────────────
 
-  Map<String, dynamic> _toMap(LedgerEvent event) {
+  Map<String, dynamic> _toMap(JournalEvent event) {
     final base = {
       'eventKey': event.eventKey,
       'timestamp': Timestamp.fromDate(event.timestamp),

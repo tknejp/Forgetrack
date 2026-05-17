@@ -18,28 +18,28 @@ import 'package:forgetrack/shared/domain/rarity.dart';
 
 class _FakeObjectiveCatalog extends ObjectiveCatalog {
   const _FakeObjectiveCatalog(this._defs);
-  final List<ObjectiveDefinition> _defs;
+  final List<Objective> _defs;
 
   @override
-  List<ObjectiveDefinition> build([
+  List<Objective> build([
     EngineCatalogContext context = const EngineCatalogContext(),
   ]) =>
       _defs;
 }
 
-class _FakeNodeCatalog extends ProgressionNodeCatalog {
+class _FakeNodeCatalog extends ProgressionEntryCatalog {
   const _FakeNodeCatalog(this._nodes);
-  final List<ProgressionNode> _nodes;
+  final List<ProgressionEntry> _nodes;
 
   @override
-  List<ProgressionNode> build([
+  List<ProgressionEntry> build([
     EngineCatalogContext context = const EngineCatalogContext(),
   ]) =>
       _nodes;
 }
 
-ObjectiveDefinition _stepsTodayObjective({double target = 1000}) =>
-    ObjectiveDefinition(
+Objective _stepsTodayObjective({double target = 1000}) =>
+    Objective(
       id: 'steps_today_$target',
       metric: const StepsMetric(),
       scope: const TodayScope(),
@@ -47,14 +47,14 @@ ObjectiveDefinition _stepsTodayObjective({double target = 1000}) =>
       targetValue: target,
     );
 
-QuestNode _quest({
+Quest _quest({
   required String id,
   required String objectiveId,
   int xp = 100,
   ClaimPolicy? claimPolicy,
   List<RewardDefinition>? rewards,
 }) =>
-    DailyQuestNode(
+    DailyQuest(
       id: id,
       objectiveId: objectiveId,
       titleKey: (_) => 'Title',
@@ -74,7 +74,7 @@ EngineEvaluationInput _input({int steps = 1500, int level = 1, int totalXp = 0})
 
 ProgressionEngine _newEngine({
   required ObjectiveCatalog objectives,
-  required ProgressionNodeCatalog nodes,
+  required ProgressionEntryCatalog nodes,
   required InMemoryProgressionEngineRepository repository,
   String runId = 'test-run',
 }) =>
@@ -168,7 +168,7 @@ void main() {
         objectives: _FakeObjectiveCatalog([objective]),
         nodes: _FakeNodeCatalog([
           _quest(id: 'quest', objectiveId: objective.id, xp: 50),
-          LongTermQuestNode(
+          LongTermQuest(
             id: 'achievement_like',
             objectiveId: objective.id,
             titleKey: (_) => 'Achievement',
@@ -203,7 +203,7 @@ void main() {
       final engine = _newEngine(
         objectives: _FakeObjectiveCatalog([objective]),
         nodes: _FakeNodeCatalog([
-          LongTermQuestNode(
+          LongTermQuest(
             id: 'manual_node',
             objectiveId: objective.id,
             titleKey: (_) => 'Manual',

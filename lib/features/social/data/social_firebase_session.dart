@@ -12,7 +12,7 @@ class SocialFirebaseSession {
   final FirebaseAuth _auth;
   final bool isEnabled;
 
-  Future<void> ensureSignedInWithGoogle(AuthUser user) async {
+  Future<void> ensureSignedInWithGoogle(Identity user) async {
     if (!isEnabled) return;
 
     final currentUser = _auth.currentUser;

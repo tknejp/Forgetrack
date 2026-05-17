@@ -8,9 +8,9 @@ abstract class ProgressionEngineRepository {
   Future<LedgerSnapshot> loadLedger();
 
   /// Append a batch of new events. Implementations must dedupe by
-  /// [LedgerEvent.eventKey] so re-running the engine with no real
+  /// [JournalEvent.eventKey] so re-running the engine with no real
   /// changes is a no-op at the repository layer.
-  Future<LedgerSnapshot> appendEvents(List<LedgerEvent> events);
+  Future<LedgerSnapshot> appendEvents(List<JournalEvent> events);
 }
 
 /// Devtools-only extension. Only the local Isar-backed repo

@@ -10,7 +10,7 @@ import 'package:forgetrack/features/progression_engine/domain/models/reward_defi
 import 'package:forgetrack/features/progression_engine/presentation/quests_screen.dart';
 import 'package:forgetrack/l10n/app_localizations.dart';
 
-QuestNode _node(String id, int xp) => DailyQuestNode(
+Quest _node(String id, int xp) => DailyQuest(
       id: id,
       objectiveId: '${id}_objective',
       claimPolicy: ClaimPolicy.manual,

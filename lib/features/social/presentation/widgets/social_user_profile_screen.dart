@@ -143,13 +143,13 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
   /// time (oldest first) so the collection grid fills left-to-right in
   /// the order the player earned them. Returns an empty list if not the
   /// own profile, or if cosmetics state hasn't loaded yet.
-  List<CosmeticDefinition> _ownUnlockedEmblems(BuildContext context) {
+  List<Cosmetic> _ownUnlockedEmblems(BuildContext context) {
     final cosmetics = context.watch<CosmeticsProvider>();
     final state = cosmetics.state;
-    if (state == null) return const <CosmeticDefinition>[];
+    if (state == null) return const <Cosmetic>[];
 
     final catalog = cosmetics.service.catalog;
-    final unlocked = <CosmeticDefinition>[];
+    final unlocked = <Cosmetic>[];
     for (final def in catalog.byType(CosmeticType.emblem)) {
       if (!def.isEnabled) continue;
       if (state.unlocked.containsKey(def.id)) unlocked.add(def);
@@ -170,9 +170,9 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
   ///
   /// Stale pin ids (e.g. an emblem the user lost) collapse to null
   /// for that slot.
-  List<CosmeticDefinition?> _ownEmblemSlots(
+  List<Cosmetic?> _ownEmblemSlots(
     BuildContext context,
-    List<CosmeticDefinition> unlocked,
+    List<Cosmetic> unlocked,
     String uid,
   ) {
     final pins = context
@@ -189,8 +189,8 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
     required int slotIndex,
     required bool isOwner,
     required String uid,
-    required List<CosmeticDefinition?> slots,
-    required List<CosmeticDefinition> unlocked,
+    required List<Cosmetic?> slots,
+    required List<Cosmetic> unlocked,
   }) async {
     final current = slotIndex >= 0 && slotIndex < slots.length
         ? slots[slotIndex]
@@ -218,7 +218,7 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
 
     final isMe = social.currentUid == widget.uid;
     final ownUnlockedEmblems =
-        isMe ? _ownUnlockedEmblems(context) : const <CosmeticDefinition>[];
+        isMe ? _ownUnlockedEmblems(context) : const <Cosmetic>[];
 
     return Scaffold(
       // Bg matches the hero header's fade-out target so the top/bottom
@@ -240,7 +240,7 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
             // it and everything else is null.
             final emblemSlots = isMe
                 ? _ownEmblemSlots(context, ownUnlockedEmblems, widget.uid)
-                : <CosmeticDefinition?>[
+                : <Cosmetic?>[
                     socialCosmeticById(
                         profile?.equippedCosmetics.emblemId),
                     for (var i = 1;

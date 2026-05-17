@@ -29,7 +29,7 @@ EngineEvaluationInput _input({
       comboPoolCompletionCounts: comboPoolCompletionCounts,
     );
 
-ObjectiveDefinition _objective({
+Objective _objective({
   String id = 'o',
   ObjectiveMetric metric = const StepsMetric(),
   ObjectiveScope scope = const TodayScope(),
@@ -38,7 +38,7 @@ ObjectiveDefinition _objective({
   double? upperTargetValue,
   double toleranceRatio = 0,
 }) =>
-    ObjectiveDefinition(
+    Objective(
       id: id,
       metric: metric,
       scope: scope,

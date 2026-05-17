@@ -130,7 +130,7 @@ class EngineEvaluationInput {
   /// `objectiveId → measured value override` — bypasses the metric
   /// switch in [ObjectiveEvaluator] for objectives whose actual value
   /// is computed elsewhere from the ledger. Used today by
-  /// `ObjectiveDefinition.baselineFromNodeId` — chapter step
+  /// `Objective.baselineFromNodeId` — chapter step
   /// objectives whose counter must start from the moment the chain
   /// step unlocked instead of all-time.
   final Map<String, double> objectiveActualOverrides;

@@ -133,8 +133,8 @@ class CosmeticsService {
 
   /// Returns the catalog definitions for whatever is currently equipped, in
   /// slot order. Slots with nothing equipped are skipped.
-  List<CosmeticDefinition> getEquippedDefinitions(UserCosmeticsState state) {
-    final out = <CosmeticDefinition>[];
+  List<Cosmetic> getEquippedDefinitions(UserCosmeticsState state) {
+    final out = <Cosmetic>[];
     for (final type in CosmeticType.values) {
       final id = state.equipped.slotId(type);
       if (id == null) continue;
@@ -144,8 +144,8 @@ class CosmeticsService {
     return out;
   }
 
-  List<CosmeticDefinition> getUnlockedDefinitions(UserCosmeticsState state) {
-    final out = <CosmeticDefinition>[];
+  List<Cosmetic> getUnlockedDefinitions(UserCosmeticsState state) {
+    final out = <Cosmetic>[];
     for (final id in state.unlocked.keys) {
       final def = _catalog.byId(id);
       if (def != null) out.add(def);
@@ -156,11 +156,11 @@ class CosmeticsService {
 
   /// All cosmetics of [type] that the user has unlocked and that the config
   /// currently considers usable.
-  List<CosmeticDefinition> getAvailableByType(
+  List<Cosmetic> getAvailableByType(
     UserCosmeticsState state,
     CosmeticType type,
   ) {
-    final out = <CosmeticDefinition>[];
+    final out = <Cosmetic>[];
     for (final def in _catalog.byType(type)) {
       if (!_config.isUsable(def)) continue;
       if (!state.unlocked.containsKey(def.id)) continue;

@@ -963,13 +963,13 @@ class _DailyGoalChipsPanel extends StatefulWidget {
 class _DailyGoalChipsPanelState extends State<_DailyGoalChipsPanel> {
   String? _completingId;
 
-  late final List<QuestNode> _dailyQuests = [
-    for (final node in const ProgressionNodeCatalog().build())
-      if (node is QuestNode && node.displayBucket == QuestDisplayBucket.daily)
+  late final List<Quest> _dailyQuests = [
+    for (final node in const ProgressionEntryCatalog().build())
+      if (node is Quest && node.displayBucket == QuestDisplayBucket.daily)
         node,
   ];
 
-  Future<void> _complete(QuestNode node) async {
+  Future<void> _complete(Quest node) async {
     final messenger = ScaffoldMessenger.of(context);
     final provider = context.read<ProgressionEngineProvider>();
     setState(() => _completingId = node.id);
@@ -1068,7 +1068,7 @@ class _NodePickerPanelState extends State<_NodePickerPanel> {
 
   late final List<_NodeEntry> _entries = () {
     final entries = <_NodeEntry>[
-      for (final node in const ProgressionNodeCatalog().build())
+      for (final node in const ProgressionEntryCatalog().build())
         _NodeEntry(id: node.id, kind: _kindLabelFor(node)),
     ]..sort((a, b) {
         final byKind = a.kind.compareTo(b.kind);
@@ -1084,15 +1084,15 @@ class _NodePickerPanelState extends State<_NodePickerPanel> {
     super.dispose();
   }
 
-  String _kindLabelFor(ProgressionNode node) => switch (node) {
-        QuestNode(:final displayBucket) => 'quest · ${displayBucket.name}',
-        AchievementNode() => 'achievement',
-        MilestoneNode() => 'milestone',
-        LevelMilestoneNode(:final level) => 'level $level',
-        ChapterCompletionNode() => 'chapter completion',
-        ContentUnlockNode() => 'content unlock',
-        CompanionAvailabilityNode() => 'companion availability',
-        RelicNode() => 'relic',
+  String _kindLabelFor(ProgressionEntry node) => switch (node) {
+        Quest(:final displayBucket) => 'quest · ${displayBucket.name}',
+        Achievement() => 'achievement',
+        Milestone() => 'milestone',
+        LevelMilestone(:final level) => 'level $level',
+        ChapterCompletion() => 'chapter completion',
+        ContentUnlock() => 'content unlock',
+        CompanionAvailability() => 'companion availability',
+        Relic() => 'relic',
       };
 
   Future<void> _complete(String id) async {

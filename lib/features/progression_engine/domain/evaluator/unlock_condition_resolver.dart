@@ -7,7 +7,7 @@ import '../repository/ledger_snapshot.dart';
 /// the node is eligible.
 ///
 /// `AllOf` / `AnyOf` recurse; an empty condition list is always
-/// eligible (the node's own [ObjectiveDefinition] outcome decides
+/// eligible (the node's own [Objective] outcome decides
 /// completion).
 ///
 /// **Lifetime vs period semantics.** Every set this resolver receives

@@ -225,10 +225,10 @@ void main() {
       expect(ObjectiveCatalog.definitionForId('lifetime_steps_100k'),
           isNotNull);
       expect(
-          ProgressionNodeCatalog.definitionForId('welcome_to_journey'),
+          ProgressionEntryCatalog.definitionForId('welcome_to_journey'),
           isNotNull);
-      expect(ProgressionNodeCatalog.definitionForId('level_5'), isNotNull);
-      expect(ProgressionNodeCatalog.definitionForId('steps_total_100k'),
+      expect(ProgressionEntryCatalog.definitionForId('level_5'), isNotNull);
+      expect(ProgressionEntryCatalog.definitionForId('steps_total_100k'),
           isNotNull);
     });
   });

@@ -6,7 +6,7 @@ export '../../../../shared/domain/rarity.dart' show Rarity;
 
 /// Single source of truth for V2 level-milestone metadata.
 ///
-/// Drives the `levelMilestoneNodes()` catalog (which the engine grants
+/// Drives the `levelMilestones()` catalog (which the engine grants
 /// rewards from) and the `ProgressionDisplayResolver` level helpers.
 /// Replaces V1's [kProgressionLevelTiers] / decorative-cosmetics map /
 /// decorative-emoji map — one flat ordered list instead of three side

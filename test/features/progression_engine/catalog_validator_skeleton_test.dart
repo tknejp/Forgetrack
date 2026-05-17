@@ -18,27 +18,27 @@ import 'package:forgetrack/shared/domain/rarity.dart';
 
 class _FakeObjectiveCatalog extends ObjectiveCatalog {
   const _FakeObjectiveCatalog(this._defs);
-  final List<ObjectiveDefinition> _defs;
+  final List<Objective> _defs;
 
   @override
-  List<ObjectiveDefinition> build([
+  List<Objective> build([
     EngineCatalogContext context = const EngineCatalogContext(),
   ]) =>
       _defs;
 }
 
-class _FakeNodeCatalog extends ProgressionNodeCatalog {
-  const _FakeNodeCatalog(this._nodes);
-  final List<ProgressionNode> _nodes;
+class _FakeEntryCatalog extends ProgressionEntryCatalog {
+  const _FakeEntryCatalog(this._nodes);
+  final List<ProgressionEntry> _nodes;
 
   @override
-  List<ProgressionNode> build([
+  List<ProgressionEntry> build([
     EngineCatalogContext context = const EngineCatalogContext(),
   ]) =>
       _nodes;
 }
 
-ObjectiveDefinition _objective(String id) => ObjectiveDefinition(
+Objective _objective(String id) => Objective(
       id: id,
       metric: const StepsMetric(),
       scope: const TodayScope(),
@@ -46,7 +46,7 @@ ObjectiveDefinition _objective(String id) => ObjectiveDefinition(
       targetValue: 1000,
     );
 
-QuestNode _quest({
+Quest _quest({
   required String id,
   required String objectiveId,
   ClaimPolicy claimPolicy = ClaimPolicy.automatic,
@@ -54,7 +54,7 @@ QuestNode _quest({
   List<ContentTag> contentTags = const [],
   List<UnlockCondition> unlockConditions = const [],
 }) =>
-    DailyQuestNode(
+    DailyQuest(
       id: id,
       objectiveId: objectiveId,
       titleKey: (_) => 'Title $id',
@@ -75,7 +75,7 @@ void main() {
           _objective('dup'),
           _objective('dup'),
         ]),
-        nodeCatalog: const _FakeNodeCatalog([]),
+        nodeCatalog: const _FakeEntryCatalog([]),
       );
       final issues = validator.validate();
       expect(
@@ -89,7 +89,7 @@ void main() {
     test('flags duplicate node ids as errors', () {
       final validator = CatalogValidator(
         objectiveCatalog: _FakeObjectiveCatalog([_objective('o1')]),
-        nodeCatalog: _FakeNodeCatalog([
+        nodeCatalog: _FakeEntryCatalog([
           _quest(id: 'dup', objectiveId: 'o1'),
           _quest(id: 'dup', objectiveId: 'o1'),
         ]),
@@ -109,7 +109,7 @@ void main() {
           _objective('dup'),
           _objective('dup'),
         ]),
-        nodeCatalog: const _FakeNodeCatalog([]),
+        nodeCatalog: const _FakeEntryCatalog([]),
       );
       expect(dupValidator.validateOrThrow,
           throwsA(isA<CatalogValidationException>()));
@@ -117,7 +117,7 @@ void main() {
       // Warning-only catalog should not throw.
       final warningValidator = CatalogValidator(
         objectiveCatalog: _FakeObjectiveCatalog([_objective('o1')]),
-        nodeCatalog: _FakeNodeCatalog([
+        nodeCatalog: _FakeEntryCatalog([
           _quest(
             id: 'q1',
             objectiveId: 'o1',
@@ -134,7 +134,7 @@ void main() {
     test('flags node referencing unknown objective', () {
       final validator = CatalogValidator(
         objectiveCatalog: const _FakeObjectiveCatalog([]),
-        nodeCatalog: _FakeNodeCatalog([
+        nodeCatalog: _FakeEntryCatalog([
           _quest(id: 'q1', objectiveId: 'does_not_exist'),
         ]),
       );
@@ -150,7 +150,7 @@ void main() {
     test('flags NodeCompleted referencing unknown node id', () {
       final validator = CatalogValidator(
         objectiveCatalog: _FakeObjectiveCatalog([_objective('o1')]),
-        nodeCatalog: _FakeNodeCatalog([
+        nodeCatalog: _FakeEntryCatalog([
           _quest(
             id: 'q1',
             objectiveId: 'o1',
@@ -170,7 +170,7 @@ void main() {
     test('warns on manual claim node missing lockedHintKey', () {
       final validator = CatalogValidator(
         objectiveCatalog: _FakeObjectiveCatalog([_objective('o1')]),
-        nodeCatalog: _FakeNodeCatalog([
+        nodeCatalog: _FakeEntryCatalog([
           _quest(id: 'q1', objectiveId: 'o1', claimPolicy: ClaimPolicy.manual),
         ]),
       );
@@ -186,7 +186,7 @@ void main() {
     test('warns on RPG activation policy without RPG content tag', () {
       final validator = CatalogValidator(
         objectiveCatalog: _FakeObjectiveCatalog([_objective('o1')]),
-        nodeCatalog: _FakeNodeCatalog([
+        nodeCatalog: _FakeEntryCatalog([
           _quest(
             id: 'q1',
             objectiveId: 'o1',
@@ -207,7 +207,7 @@ void main() {
     test('does not warn when RPG activation matches RPG content tag', () {
       final validator = CatalogValidator(
         objectiveCatalog: _FakeObjectiveCatalog([_objective('o1')]),
-        nodeCatalog: _FakeNodeCatalog([
+        nodeCatalog: _FakeEntryCatalog([
           _quest(
             id: 'q1',
             objectiveId: 'o1',

@@ -96,7 +96,7 @@
       "status": "accepted",
       "date": "2026",
       "context": "Progression má 11 kapitol, ~100 questů, ~50 achievementů, level milestone-y do 100. Stejně tak kosmetika má desítky položek. Klasický web/backend přístup by tohle držel v DB s admin UI pro editaci.",
-      "decision": "Veškerý content žije v compile-time Dart souborech pod `domain/catalog/content/`. `ObjectiveCatalog`, `ProgressionNodeCatalog`, `CosmeticCatalog` jsou statické. `CatalogValidator` kontroluje duplicate IDs, dangling node references, RPG-tag drift.",
+      "decision": "Veškerý content žije v compile-time Dart souborech pod `domain/catalog/content/`. `ObjectiveCatalog`, `ProgressionEntryCatalog`, `CosmeticCatalog` jsou statické. `CatalogValidator` kontroluje duplicate IDs, dangling node references, RPG-tag drift.",
       "consequences": [
         "Type-safe content — kompilátor odchytí chybný ID reference.",
         "Žádné runtime DB queries nad katalogem = rychlejší startup, méně paměti.",

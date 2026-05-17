@@ -22,7 +22,7 @@ class CosmeticEquippedChip extends StatelessWidget {
     this.onTap,
   });
 
-  final CosmeticDefinition definition;
+  final Cosmetic definition;
   final AppLocalizations? l10n;
   final CosmeticsConfig? config;
   final String? labelOverride;

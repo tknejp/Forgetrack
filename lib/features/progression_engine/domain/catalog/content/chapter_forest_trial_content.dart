@@ -19,17 +19,17 @@ const _chapterId = 'forest_trial';
 ///
 /// Shape mirrors the V1 monolith: one auto-claim "open" quest gated by
 /// player level, three manual-claim "step" quests that share the
-/// chapter chain via [QuestNode.prerequisiteNodeIds] /
-/// [QuestNode.nextNodeIds], and a manual-claim finale that drops the
+/// chapter chain via [Quest.prerequisiteNodeIds] /
+/// [Quest.nextNodeIds], and a manual-claim finale that drops the
 /// chapter emblem (cosmetic reward).
 ///
 /// Other V1 chapters (ruins_discipline, mine_descent, …) are deferred
 /// until this pattern proves itself end-to-end in the V2 quests
 /// screen.
-List<ObjectiveDefinition> forestTrialObjectives() {
+List<Objective> forestTrialObjectives() {
   return const [
     // Open: satisfied automatically once the player reaches level 10.
-    ObjectiveDefinition(
+    Objective(
       id: 'forest_trial_open_objective',
       domain: ProgressionDomain.activity,
       metric: LevelMetric(),
@@ -45,7 +45,7 @@ List<ObjectiveDefinition> forestTrialObjectives() {
     // step completions alone and made step 1 collapse into step 2's
     // "5 step goals" check. Baseline so days banked before the
     // chapter opens don't auto-finish the step.
-    ObjectiveDefinition(
+    Objective(
       id: 'forest_trial_daily_wins_5_objective',
       domain: ProgressionDomain.activity,
       metric: DaysWithAtLeastKAmongMetric(
@@ -71,7 +71,7 @@ List<ObjectiveDefinition> forestTrialObjectives() {
     // step 1 cleared. The old metric pointed at `daily_protein_today`
     // — the description says "splň krokový cíl 5krát" so the metric
     // must read step completions, not protein.
-    ObjectiveDefinition(
+    Objective(
       id: 'forest_trial_steps_5_objective',
       domain: ProgressionDomain.steps,
       metric: NodeCompletionsMetric(nodeId: 'daily_steps_today'),
@@ -85,7 +85,7 @@ List<ObjectiveDefinition> forestTrialObjectives() {
     // AND daily sleep on the same day. The old metric tracked sleep
     // alone, ignoring the "i kroků i spánku" pairing in the
     // description.
-    ObjectiveDefinition(
+    Objective(
       id: 'forest_trial_recovery_3_objective',
       domain: ProgressionDomain.sleep,
       metric: DaysWithAtLeastKAmongMetric(
@@ -101,7 +101,7 @@ List<ObjectiveDefinition> forestTrialObjectives() {
     // Finale: cheap auto-true objective. Real gating lives in
     // [QuestNode.prerequisiteNodeIds] which forces all 3 steps to
     // complete first.
-    ObjectiveDefinition(
+    Objective(
       id: 'forest_trial_finale_objective',
       domain: ProgressionDomain.activity,
       metric: LevelMetric(),
@@ -113,9 +113,9 @@ List<ObjectiveDefinition> forestTrialObjectives() {
   ];
 }
 
-List<ProgressionNode> forestTrialNodes() {
+List<ProgressionEntry> forestTrialNodes() {
   return [
-    ChapterOpenerNode(
+    ChapterOpener(
       id: 'forest_trial_open',
       objectiveId: 'forest_trial_open_objective',
       // Explicit level gate so the resolver marks the chapter
@@ -139,7 +139,7 @@ List<ProgressionNode> forestTrialNodes() {
       chainStepIcon: Icons.play_arrow_rounded,
       sortOrder: 300,
     ),
-    ChapterStepNode(
+    ChapterStep(
       id: 'forest_trial_daily_wins_5',
       objectiveId: 'forest_trial_daily_wins_5_objective',
       titleKey: (l) => l.progQuestForestTrialDailyWins5Title,
@@ -156,7 +156,7 @@ List<ProgressionNode> forestTrialNodes() {
       chainStepLabelKey: (_) => '5',
       sortOrder: 301,
     ),
-    ChapterStepNode(
+    ChapterStep(
       id: 'forest_trial_steps_5',
       objectiveId: 'forest_trial_steps_5_objective',
       titleKey: (l) => l.progQuestForestTrialSteps5Title,
@@ -173,7 +173,7 @@ List<ProgressionNode> forestTrialNodes() {
       chainStepLabelKey: (_) => '5',
       sortOrder: 302,
     ),
-    ChapterStepNode(
+    ChapterStep(
       id: 'forest_trial_recovery_3',
       objectiveId: 'forest_trial_recovery_3_objective',
       titleKey: (l) => l.progQuestForestTrialRecovery3Title,
@@ -190,7 +190,7 @@ List<ProgressionNode> forestTrialNodes() {
       chainStepLabelKey: (_) => '3',
       sortOrder: 303,
     ),
-    ChapterFinaleNode(
+    ChapterFinale(
       id: 'forest_trial_finale',
       objectiveId: 'forest_trial_finale_objective',
       titleKey: (l) => l.progQuestForestTrialFinaleTitle,

@@ -4,7 +4,7 @@
 /// Sealed so the resolver gets exhaustive switch checking. Compose
 /// with [AllOf] / [AnyOf] when a node needs more than one gate; a node
 /// with an empty `unlockConditions` list is always eligible (subject
-/// to its [ObjectiveDefinition] outcome).
+/// to its [Objective] outcome).
 sealed class UnlockCondition {
   const UnlockCondition();
 }

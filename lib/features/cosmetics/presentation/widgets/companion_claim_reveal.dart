@@ -12,7 +12,7 @@ import 'cosmetic_asset_thumb.dart';
 
 /// Animated reveal of a companion as it's "forged" from its gating
 /// relics. Renders inside the companion details sheet when the
-/// companion is claimable (its `CompanionAvailabilityNode` is in
+/// companion is claimable (its `CompanionAvailability` is in
 /// progression's `availableNodes` and its cosmetic id is not yet in the
 /// unlocked map).
 ///
@@ -33,7 +33,7 @@ class CompanionClaimReveal extends StatefulWidget {
     required this.onClaim,
   });
 
-  final CosmeticDefinition companion;
+  final Cosmetic companion;
 
   /// Relic ids that gate the companion. Empty list still works — the
   /// silhouette + CTA stay; we just render a generic glow ring.
@@ -197,7 +197,7 @@ class _ForgeStage extends StatelessWidget {
 
   final double forge;
   final double idle;
-  final CosmeticDefinition companion;
+  final Cosmetic companion;
   final String? assetPath;
   final List<String> relicIds;
   final Color color;

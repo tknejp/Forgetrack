@@ -56,12 +56,12 @@ const _mountainAscent = 'mountain_ascent';
 const _dragonroad = 'dragonroad';
 const _dragonrockSovereign = 'dragonrock_sovereign';
 
-ObjectiveDefinition _amongObjective(
+Objective _amongObjective(
   String id,
   List<String> nodeIds,
   int target,
 ) {
-  return ObjectiveDefinition(
+  return Objective(
     id: id,
     metric: TodayCompletionsAmongMetric(nodeIds: nodeIds),
     scope: const LifetimeScope(),
@@ -70,7 +70,7 @@ ObjectiveDefinition _amongObjective(
   );
 }
 
-List<ObjectiveDefinition> chapterSideQuestObjectives(
+List<Objective> chapterSideQuestObjectives(
   EngineCatalogContext context,
 ) {
   return [
@@ -415,7 +415,7 @@ List<ObjectiveDefinition> chapterSideQuestObjectives(
 /// **Standalone side quest** — ungated by other side quests, just
 /// gated by the chapter being active + an early chapter chain step
 /// being done. The default everywhere except chain steps.
-QuestNode _standalone({
+Quest _standalone({
   required String id,
   required String objectiveId,
   required String chapterId,
@@ -427,7 +427,7 @@ QuestNode _standalone({
   required String assetKey,
   List<RewardDefinition> bonusRewards = const [],
 }) {
-  return ChapterSideQuestNode(
+  return ChapterSideQuest(
     id: id,
     objectiveId: objectiveId,
     claimPolicy: ClaimPolicy.manual,
@@ -449,10 +449,10 @@ QuestNode _standalone({
 
 /// **Chain step** — sequential side quest. First step gates on the
 /// chapter entry node; subsequent steps gate on the prior step.
-/// The `CooldownDays(1)` policy on [ChapterSideQuestNode] adds the
+/// The `CooldownDays(1)` policy on [ChapterSideQuest] adds the
 /// "wait until tomorrow" rule, so the catalog only declares the
 /// hard dependency.
-QuestNode _chainStep({
+Quest _chainStep({
   required String id,
   required String objectiveId,
   required String chapterId,
@@ -474,7 +474,7 @@ QuestNode _chainStep({
   // into `prerequisiteNodeIds` and the subtype's CooldownDays(1)
   // policy derives both `NodeCompleted` and `NodeCompletedBeforeToday`.
   final prereqId = prerequisiteNodeId ?? chapterEntryGateNodeId;
-  return ChapterSideQuestNode(
+  return ChapterSideQuest(
     id: id,
     objectiveId: objectiveId,
     claimPolicy: ClaimPolicy.manual,
@@ -494,7 +494,7 @@ QuestNode _chainStep({
   );
 }
 
-List<ProgressionNode> chapterSideQuestNodes() {
+List<ProgressionEntry> chapterSideQuests() {
   return [
     // ── Pilgrim Path (2 standalone) ────────────────────────────
     _standalone(

@@ -10,7 +10,7 @@ enum QuestDisplayBucket {
   chapter,
 
   /// Daily combo chains — themed sequential chains gated by
-  /// `prerequisiteNodeIds` and rotated via `ContentUnlockNode`
+  /// `prerequisiteNodeIds` and rotated via `ContentUnlock`
   /// bridges between chain finales. Lives in its own quest-screen
   /// section so combo content doesn't compete with the 2-per-day
   /// daily rotation.

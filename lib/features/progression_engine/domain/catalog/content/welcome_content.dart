@@ -12,9 +12,9 @@ import '../engine_catalog_context.dart';
 /// (no objective, no conditions) plus the "first reward" milestone
 /// that fires after their first claimed grant.
 
-List<ObjectiveDefinition> welcomeObjectives(EngineCatalogContext context) {
+List<Objective> welcomeObjectives(EngineCatalogContext context) {
   return const [
-    ObjectiveDefinition(
+    Objective(
       id: 'reward_count_1',
       metric: RewardCountMetric(),
       scope: LifetimeScope(),
@@ -24,9 +24,9 @@ List<ObjectiveDefinition> welcomeObjectives(EngineCatalogContext context) {
   ];
 }
 
-List<ProgressionNode> welcomeNodes() {
+List<ProgressionEntry> welcomeNodes() {
   return [
-    AchievementNode(
+    Achievement(
       id: 'welcome_to_journey',
       // No objective, no conditions — fires on first evaluation.
       titleKey: (l) => l.progAchievementWelcomeToJourneyTitle,
@@ -42,7 +42,7 @@ List<ProgressionNode> welcomeNodes() {
       contentTags: const [ContentTag.core, ContentTag.cosmetics],
       rarity: Rarity.common,
     ),
-    AchievementNode(
+    Achievement(
       id: 'first_reward',
       objectiveId: 'reward_count_1',
       badgeEmoji: '\u{1F3C6}',

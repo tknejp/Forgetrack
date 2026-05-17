@@ -35,7 +35,7 @@ class CosmeticDetailsSheet extends StatefulWidget {
     this.isRelicConsumed = false,
   });
 
-  final CosmeticDefinition definition;
+  final Cosmetic definition;
   final UserCosmeticsState state;
   final AppLocalizations l10n;
 
@@ -785,7 +785,7 @@ class _DebugDetailsSection extends StatelessWidget {
     required this.color,
   });
 
-  final CosmeticDefinition definition;
+  final Cosmetic definition;
   final UnlockedCosmetic? unlock;
   final Color color;
 
@@ -1215,7 +1215,7 @@ class _TinyPill extends StatelessWidget {
 }
 
 /// Claim-flow body shown in place of the regular details layout when a
-/// companion's `CompanionAvailabilityNode` is in `available` state. The
+/// companion's `CompanionAvailability` is in `available` state. The
 /// player taps "Vyzvedni společníka" inside the [CompanionClaimReveal]
 /// stage — that triggers the relic-fusing animation and, on completion,
 /// calls `progression.claimNode` which grants the cosmetic. The
@@ -1230,7 +1230,7 @@ class _ClaimableCompanionBody extends StatelessWidget {
     required this.bottomPad,
   });
 
-  final CosmeticDefinition definition;
+  final Cosmetic definition;
   final AppLocalizations l10n;
   final Color color;
   final double bottomPad;
@@ -1314,7 +1314,7 @@ class _ClaimableCompanionBody extends StatelessWidget {
   }
 
   /// Calls `progression.claimNode` for the matching
-  /// `CompanionAvailabilityNode` (id == cosmetic id, see
+  /// `CompanionAvailability` (id == cosmetic id, see
   /// `companions_content.dart`). Logged so resets / sync flows can
   /// be correlated to the moment the player tapped Vyzvedni.
   Future<void> _runClaim(BuildContext context) async {

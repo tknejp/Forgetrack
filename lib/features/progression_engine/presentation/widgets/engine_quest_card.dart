@@ -570,7 +570,7 @@ class _ProgressRow extends StatelessWidget {
   }
 }
 
-/// Leading visual on a quest card. Renders [QuestNode.assetKey] when set,
+/// Leading visual on a quest card. Renders [Quest.assetKey] when set,
 /// falling back to [ProgDomIco] (the domain icon tile) when the node
 /// doesn't carry one. Asset failure (missing PNG, decode error) also
 /// degrades to the icon — the screen never goes blank because of a
@@ -587,7 +587,7 @@ class EngineQuestLeading extends StatelessWidget {
     required this.size,
   });
 
-  final QuestNode node;
+  final Quest node;
   final ProgressionDomain domain;
   final double size;
 

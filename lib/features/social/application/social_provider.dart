@@ -13,7 +13,7 @@ import '../../progression_engine/domain/models/ledger_event.dart'
     show RewardGrantKind;
 import '../../progression_engine/domain/catalog/progression_node_catalog.dart';
 import '../../progression_engine/domain/models/progression_node_definition.dart'
-    show AchievementNode;
+    show Achievement;
 import '../data/social_firebase_bootstrap.dart';
 import '../data/social_firebase_session.dart';
 import '../domain/social_models.dart';
@@ -312,7 +312,7 @@ class SocialProvider extends ChangeNotifier {
   /// Maps raw V2 ledger completions read from `users/{uid}/engineNodeCompletions`
   /// into the friend-view achievement list.
   ///
-  /// Filters to [AchievementNode] ids — quest / milestone completions are
+  /// Filters to [Achievement] ids — quest / milestone completions are
   /// in the same collection but live elsewhere in the UI. Per-node we
   /// keep the earliest completion timestamp (engine ledger may have
   /// multiple period rows for repeating nodes; achievements are
@@ -327,10 +327,10 @@ class SocialProvider extends ChangeNotifier {
     if (completions.isEmpty) return const [];
 
     final earliestByNode = <String, DateTime>{};
-    final nodes = <String, AchievementNode>{};
+    final nodes = <String, Achievement>{};
     for (final c in completions) {
-      final def = ProgressionNodeCatalog.definitionForId(c.nodeId);
-      if (def is! AchievementNode) continue;
+      final def = ProgressionEntryCatalog.definitionForId(c.nodeId);
+      if (def is! Achievement) continue;
       nodes[c.nodeId] = def;
       final existing = earliestByNode[c.nodeId];
       if (existing == null || c.completedAt.isBefore(existing)) {
@@ -489,14 +489,14 @@ class SocialProvider extends ChangeNotifier {
     }
 
     final node = progressionProvider.nodeById(achievementId);
-    final isUnlockedAchievement = node is AchievementNode &&
+    final isUnlockedAchievement = node is Achievement &&
         progressionProvider.completedNodeIds.contains(achievementId);
     if (!isUnlockedAchievement) {
       _error = 'Achievement $achievementId is not unlocked yet.';
       notifyListeners();
       return;
     }
-    final achievementNode = node;
+    final achievement = node;
 
     final user = authProvider!.user!;
     final displayName = user.displayName?.trim().isNotEmpty == true
@@ -511,7 +511,7 @@ class SocialProvider extends ChangeNotifier {
     final share = SocialAchievementShare(
       id: '',
       actorUid: uid,
-      achievementId: achievementNode.id,
+      achievementId: achievement.id,
       createdAt: DateTime.now(),
       message: message?.trim().isEmpty ?? true ? null : message!.trim(),
       visibility: SocialShareVisibility.friends,
@@ -520,10 +520,10 @@ class SocialProvider extends ChangeNotifier {
         photoUrl: actorSnapshot.photoUrl,
       ),
       achievementSnapshot: SocialAchievementSnapshot(
-        title: resolvedTitle ?? achievementNode.id,
+        title: resolvedTitle ?? achievement.id,
         description: resolvedDescription ?? '',
-        rarity: achievementNode.rarity,
-        domain: progressionProvider.domainForNodeId(achievementNode.id).name,
+        rarity: achievement.rarity,
+        domain: progressionProvider.domainForNodeId(achievement.id).name,
       ),
     );
 
@@ -774,10 +774,10 @@ class SocialProvider extends ChangeNotifier {
     if (ledger == null) return const [];
 
     final latestByNode = <String, DateTime>{};
-    final nodes = <String, AchievementNode>{};
+    final nodes = <String, Achievement>{};
     for (final e in ledger.nodeCompletions) {
       final node = engine.nodeById(e.nodeId);
-      if (node is! AchievementNode) continue;
+      if (node is! Achievement) continue;
       nodes[e.nodeId] = node;
       final existing = latestByNode[e.nodeId];
       if (existing == null || e.timestamp.isAfter(existing)) {

@@ -13,7 +13,7 @@ import '../domain/repository/ledger_snapshot.dart';
 ///
 /// Counters are derived from the engine ledger plus the static catalog:
 /// quest counts walk [LedgerSnapshot.nodeCompletions] filtered to
-/// [QuestNode] ids, "active days" is the distinct calendar-day count
+/// [Quest] ids, "active days" is the distinct calendar-day count
 /// across every ledger event, and level comes from the resolved
 /// profile.
 ///
@@ -85,7 +85,7 @@ class CosmeticRevealSnapshotBuilder {
   /// Quest id → display bucket. Computed once from the static catalog
   /// since the catalog is const.
   static final Map<String, QuestDisplayBucket> _bucketByQuestId = {
-    for (final node in const ProgressionNodeCatalog().build())
-      if (node is QuestNode) node.id: node.displayBucket,
+    for (final node in const ProgressionEntryCatalog().build())
+      if (node is Quest) node.id: node.displayBucket,
   };
 }

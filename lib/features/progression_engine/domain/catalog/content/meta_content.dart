@@ -14,30 +14,30 @@ import '../engine_catalog_context.dart';
 /// reward-count "reward hunter" mastery achievements. Mirrors V1:
 /// `xp_100000`/`xp_1000000`, `reward_hunter_25`/`100`.
 
-List<ObjectiveDefinition> metaObjectives(EngineCatalogContext context) {
+List<Objective> metaObjectives(EngineCatalogContext context) {
   return const [
-    ObjectiveDefinition(
+    Objective(
       id: 'lifetime_xp_100k',
       metric: TotalXpMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 100000,
     ),
-    ObjectiveDefinition(
+    Objective(
       id: 'lifetime_xp_1m',
       metric: TotalXpMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 1000000,
     ),
-    ObjectiveDefinition(
+    Objective(
       id: 'reward_count_25',
       metric: RewardCountMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 25,
     ),
-    ObjectiveDefinition(
+    Objective(
       id: 'reward_count_100',
       metric: RewardCountMetric(),
       scope: LifetimeScope(),
@@ -48,35 +48,35 @@ List<ObjectiveDefinition> metaObjectives(EngineCatalogContext context) {
     // `objective_metric.dart` (QuestCompletionsByBucketMetric,
     // DistinctActiveDaysMetric); ledger aggregations live in
     // `progression_engine_provider.dart`.
-    ObjectiveDefinition(
+    Objective(
       id: 'daily_quest_count_3',
       metric: QuestCompletionsByBucketMetric(bucket: QuestDisplayBucket.daily),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 3,
     ),
-    ObjectiveDefinition(
+    Objective(
       id: 'daily_quest_count_7',
       metric: QuestCompletionsByBucketMetric(bucket: QuestDisplayBucket.daily),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 7,
     ),
-    ObjectiveDefinition(
+    Objective(
       id: 'quest_count_250',
       metric: QuestCompletionsByBucketMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 250,
     ),
-    ObjectiveDefinition(
+    Objective(
       id: 'active_days_7',
       metric: DistinctActiveDaysMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 7,
     ),
-    ObjectiveDefinition(
+    Objective(
       id: 'active_days_90',
       metric: DistinctActiveDaysMetric(),
       scope: LifetimeScope(),
@@ -84,7 +84,7 @@ List<ObjectiveDefinition> metaObjectives(EngineCatalogContext context) {
       targetValue: 90,
     ),
     // Combo-pool counters (Phase 9c follow-up).
-    ObjectiveDefinition(
+    Objective(
       id: 'combo_pool_10',
       metric: ComboPoolCompletionsMetric(poolId: 'daily_combo_pool'),
       scope: LifetimeScope(),
@@ -95,7 +95,7 @@ List<ObjectiveDefinition> metaObjectives(EngineCatalogContext context) {
     // combo chain step whose target is 3+ atoms — the new combo
     // shape spreads "3-of-N" wins across multiple chains, so we
     // enumerate them explicitly here.
-    ObjectiveDefinition(
+    Objective(
       id: 'triple_combo_25',
       metric: LifetimeCompletionsAmongMetric(
         nodeIds: [
@@ -112,7 +112,7 @@ List<ObjectiveDefinition> metaObjectives(EngineCatalogContext context) {
       operator: ObjectiveOperator.atLeast,
       targetValue: 25,
     ),
-    ObjectiveDefinition(
+    Objective(
       id: 'triple_combo_100',
       metric: LifetimeCompletionsAmongMetric(
         nodeIds: [
@@ -132,9 +132,9 @@ List<ObjectiveDefinition> metaObjectives(EngineCatalogContext context) {
   ];
 }
 
-List<ProgressionNode> metaNodes() {
+List<ProgressionEntry> metaNodes() {
   return [
-    AchievementNode(
+    Achievement(
       id: 'xp_100000',
       objectiveId: 'lifetime_xp_100k',
       badgeEmoji: '\u{2728}',
@@ -144,7 +144,7 @@ List<ProgressionNode> metaNodes() {
       contentTags: const [ContentTag.core],
       rarity: Rarity.epic,
     ),
-    AchievementNode(
+    Achievement(
       id: 'xp_1000000',
       objectiveId: 'lifetime_xp_1m',
       badgeEmoji: '\u{1F31F}',
@@ -154,7 +154,7 @@ List<ProgressionNode> metaNodes() {
       contentTags: const [ContentTag.core],
       rarity: Rarity.legendary,
     ),
-    AchievementNode(
+    Achievement(
       id: 'reward_hunter_25',
       objectiveId: 'reward_count_25',
       badgeEmoji: '\u{2694}\u{FE0F}',
@@ -164,7 +164,7 @@ List<ProgressionNode> metaNodes() {
       contentTags: const [ContentTag.core],
       rarity: Rarity.uncommon,
     ),
-    AchievementNode(
+    Achievement(
       id: 'reward_hunter_100',
       objectiveId: 'reward_count_100',
       badgeEmoji: '\u{2694}\u{FE0F}',
@@ -177,7 +177,7 @@ List<ProgressionNode> metaNodes() {
     // V1 → V2 ports (Phase 9c follow-up). Relic ids are already
     // authored in `cosmetic_catalog.dart`; this is the missing
     // achievement→relic wiring.
-    AchievementNode(
+    Achievement(
       id: 'daily_quest_3',
       objectiveId: 'daily_quest_count_3',
       badgeEmoji: '\u{1F525}', // fire
@@ -187,7 +187,7 @@ List<ProgressionNode> metaNodes() {
       contentTags: const [ContentTag.core],
       rarity: Rarity.common,
     ),
-    AchievementNode(
+    Achievement(
       id: 'daily_quest_7',
       objectiveId: 'daily_quest_count_7',
       badgeEmoji: '\u{1F33F}', // herb
@@ -199,7 +199,7 @@ List<ProgressionNode> metaNodes() {
       contentTags: const [ContentTag.core],
       rarity: Rarity.uncommon,
     ),
-    AchievementNode(
+    Achievement(
       id: 'quest_hunter_250',
       objectiveId: 'quest_count_250',
       badgeEmoji: '\u{1F3F9}', // bow
@@ -209,7 +209,7 @@ List<ProgressionNode> metaNodes() {
       contentTags: const [ContentTag.core],
       rarity: Rarity.epic,
     ),
-    AchievementNode(
+    Achievement(
       id: 'active_days_7',
       objectiveId: 'active_days_7',
       badgeEmoji: '\u{1F319}', // moon
@@ -219,7 +219,7 @@ List<ProgressionNode> metaNodes() {
       contentTags: const [ContentTag.core],
       rarity: Rarity.rare,
     ),
-    AchievementNode(
+    Achievement(
       id: 'active_days_90',
       objectiveId: 'active_days_90',
       badgeEmoji: '\u{1F33F}', // herb — re-uses motif from daily_quest_7
@@ -235,9 +235,9 @@ List<ProgressionNode> metaNodes() {
     // ComboPoolCompletionsMetric for the lifetime "all combos" tally,
     // LifetimeCompletionsAmongMetric for the triple-or-higher tally
     // (triple_win + four_pillars). dragonrock_trial composes three
-    // existing objectives via unlockConditions since AchievementNode
+    // existing objectives via unlockConditions since Achievement
     // supports condition-only completion (`objectiveId: null`).
-    AchievementNode(
+    Achievement(
       id: 'combo_victory_10',
       objectiveId: 'combo_pool_10',
       badgeEmoji: '\u{2728}', // sparkles
@@ -247,7 +247,7 @@ List<ProgressionNode> metaNodes() {
       contentTags: const [ContentTag.core],
       rarity: Rarity.rare,
     ),
-    AchievementNode(
+    Achievement(
       id: 'combo_triple_victory_25',
       objectiveId: 'triple_combo_25',
       badgeEmoji: '\u{1F3AF}', // direct hit
@@ -257,7 +257,7 @@ List<ProgressionNode> metaNodes() {
       contentTags: const [ContentTag.core],
       rarity: Rarity.epic,
     ),
-    AchievementNode(
+    Achievement(
       id: 'combo_triple_victory_100',
       objectiveId: 'triple_combo_100',
       badgeEmoji: '\u{1F3C6}', // trophy
@@ -267,7 +267,7 @@ List<ProgressionNode> metaNodes() {
       contentTags: const [ContentTag.core],
       rarity: Rarity.legendary,
     ),
-    AchievementNode(
+    Achievement(
       id: 'dragonrock_trial',
       // Condition-only: AND of level + quest count + lifetime steps.
       objectiveId: null,

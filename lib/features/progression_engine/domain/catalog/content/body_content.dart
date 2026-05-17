@@ -16,10 +16,10 @@ import 'quest_assets.dart';
 /// driven by [WeightLoggedTodayMetric]. The home weight card surfaces
 /// the resulting "Vyzvednout XP" pill via `daily_weight_log_today`.
 
-List<ObjectiveDefinition> bodyObjectives(EngineCatalogContext context) {
+List<Objective> bodyObjectives(EngineCatalogContext context) {
   return const [
     // Logged a weight today (presence-only check).
-    ObjectiveDefinition(
+    Objective(
       id: 'daily_weight_log',
       domain: ProgressionDomain.body,
       metric: WeightLoggedTodayMetric(),
@@ -30,9 +30,9 @@ List<ObjectiveDefinition> bodyObjectives(EngineCatalogContext context) {
   ];
 }
 
-List<ProgressionNode> bodyNodes() {
+List<ProgressionEntry> bodyNodes() {
   return [
-    DailyQuestNode(
+    DailyQuest(
       id: 'daily_weight_log_today',
       objectiveId: 'daily_weight_log',
       claimPolicy: ClaimPolicy.manual,

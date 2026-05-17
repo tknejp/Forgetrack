@@ -26,16 +26,16 @@ class CompanionDevController {
   final CosmeticsProvider cosmetics;
   final ProgressionEngineProvider progression;
 
-  /// Returns every authored `CompanionAvailabilityNode`, in catalog
+  /// Returns every authored `CompanionAvailability`, in catalog
   /// order. Used by the matrix UI to enumerate rows even before any
   /// player state has loaded — see [CompanionsRegistry.allNodes].
-  static List<CompanionAvailabilityNode> allCompanions() =>
+  static List<CompanionAvailability> allCompanions() =>
       CompanionsRegistry.allNodes;
 
   /// `LevelAtLeast` requirement parsed off the companion's V2 unlock
   /// conditions — companions always carry exactly one (see
   /// `companions_content.dart`).
-  static int? gateLevelFor(CompanionAvailabilityNode node) {
+  static int? gateLevelFor(CompanionAvailability node) {
     for (final c in node.unlockConditions) {
       if (c is LevelAtLeast) return c.level;
     }
@@ -44,7 +44,7 @@ class CompanionDevController {
 
   /// Achievement node ids that gate the companion (each grants one
   /// of the relic cosmetics through its reward table).
-  static List<String> gatingNodeIds(CompanionAvailabilityNode node) {
+  static List<String> gatingNodeIds(CompanionAvailability node) {
     return [
       for (final c in node.unlockConditions)
         if (c is NodeCompleted) c.nodeId,
@@ -55,7 +55,7 @@ class CompanionDevController {
   /// resolution path the inventory grid uses, no devtools-only
   /// branch. Returns [CompanionState.hidden] as a safe fallback
   /// when cosmetics state hasn't bound yet.
-  CompanionState detect(CompanionAvailabilityNode node) {
+  CompanionState detect(CompanionAvailability node) {
     final state = cosmetics.state;
     if (state == null) return CompanionState.hidden;
     final revealResults =
@@ -88,7 +88,7 @@ class CompanionDevController {
   /// always shows the **actual** outcome — never the requested
   /// target unless they coincide.
   Future<void> applyState(
-    CompanionAvailabilityNode node,
+    CompanionAvailability node,
     CompanionState target,
   ) async {
     final gate = gateLevelFor(node) ?? 1;

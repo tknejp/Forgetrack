@@ -60,7 +60,7 @@ class EngineStreakSource {
   /// (caller can ignore them).
   Map<String, EngineStreakSummary> summarizeByObjective({
     required LedgerSnapshot ledger,
-    required List<ObjectiveDefinition> objectives,
+    required List<Objective> objectives,
   }) {
     final today = _today();
     final dailyObjectiveIds = {
@@ -86,7 +86,7 @@ class EngineStreakSource {
   /// with that domain (and with [TodayScope]) completed that day.
   Map<ProgressionDomain, EngineStreakSummary> summarizeByDomain({
     required LedgerSnapshot ledger,
-    required List<ObjectiveDefinition> objectives,
+    required List<Objective> objectives,
   }) {
     final today = _today();
     final domainByObjective = <String, ProgressionDomain>{};

@@ -155,9 +155,9 @@ class _HeaderBody extends StatelessWidget {
   final String displayName;
   final String handle;
   final String? photoUrl;
-  final CosmeticDefinition? equippedFrame;
-  final CosmeticDefinition? equippedBackground;
-  final CosmeticDefinition? equippedCompanion;
+  final Cosmetic? equippedFrame;
+  final Cosmetic? equippedBackground;
+  final Cosmetic? equippedCompanion;
   final bool expanded;
   final VoidCallback onToggleExpanded;
   final VoidCallback onOpenProfile;
@@ -292,7 +292,7 @@ class _IdentityRow extends StatelessWidget {
   final String displayName;
   final String handle;
   final String? photoUrl;
-  final CosmeticDefinition? equippedFrame;
+  final Cosmetic? equippedFrame;
   final VoidCallback onTapAvatar;
 
   @override
@@ -568,7 +568,7 @@ class CompanionAsset extends StatelessWidget {
     this.fallbackIcon = Icons.pets_rounded,
   });
 
-  final CosmeticDefinition definition;
+  final Cosmetic definition;
   final double size;
   final IconData fallbackIcon;
 
@@ -654,7 +654,7 @@ class _HeaderFrame extends StatelessWidget {
   });
 
   final Widget child;
-  final CosmeticDefinition? backgroundDefinition;
+  final Cosmetic? backgroundDefinition;
   final VoidCallback? onTap;
 
   @override
@@ -772,7 +772,7 @@ class _SignedOutAvatar extends StatelessWidget {
   }
 }
 
-CosmeticDefinition? _resolveEquippedFrame(CosmeticsProvider cosmetics) {
+Cosmetic? _resolveEquippedFrame(CosmeticsProvider cosmetics) {
   final state = cosmetics.state;
   if (state == null) return null;
   final catalog = cosmetics.service.catalog;
@@ -791,7 +791,7 @@ CosmeticDefinition? _resolveEquippedFrame(CosmeticsProvider cosmetics) {
   return null;
 }
 
-CosmeticDefinition? _resolveEquippedCompanion(CosmeticsProvider cosmetics) {
+Cosmetic? _resolveEquippedCompanion(CosmeticsProvider cosmetics) {
   final state = cosmetics.state;
   if (state == null) return null;
   final catalog = cosmetics.service.catalog;
@@ -802,7 +802,7 @@ CosmeticDefinition? _resolveEquippedCompanion(CosmeticsProvider cosmetics) {
   return def;
 }
 
-CosmeticDefinition? _resolveEquippedBackground(CosmeticsProvider cosmetics) {
+Cosmetic? _resolveEquippedBackground(CosmeticsProvider cosmetics) {
   final state = cosmetics.state;
   if (state == null) return null;
   final catalog = cosmetics.service.catalog;

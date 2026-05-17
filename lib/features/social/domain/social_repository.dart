@@ -69,7 +69,7 @@ abstract class SocialRepository {
   /// Streams every node completion event in the user's V2 engine ledger.
   ///
   /// Used by `SocialProvider.watchFriendAchievements` which filters down
-  /// to [AchievementNode] ids via the local progression catalog and
+  /// to [Achievement] ids via the local progression catalog and
   /// builds [SocialUnlockedAchievement]s. Completion of non-achievement
   /// nodes (quests, milestones) is included in the stream — callers
   /// must filter.

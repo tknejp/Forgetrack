@@ -21,7 +21,7 @@ class PlannedRewardGrant {
   });
 
   final String eventKey;
-  final ProgressionNode node;
+  final ProgressionEntry node;
   final int rewardOrdinal;
   final RewardDefinition reward;
   final String? periodKey;
@@ -39,7 +39,7 @@ class RewardGrantPlanner {
   const RewardGrantPlanner();
 
   List<PlannedRewardGrant> plan({
-    required Iterable<ProgressionNode> completedNodes,
+    required Iterable<ProgressionEntry> completedNodes,
     required LedgerSnapshot ledger,
     required Map<String, String?> periodKeyByNodeId,
     required EngineEvaluationInput input,

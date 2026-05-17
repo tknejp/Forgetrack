@@ -31,13 +31,13 @@ class ObjectiveCatalog {
   /// Class-level lookup using the default goal set. Used by display
   /// helpers and the validator that do not know per-player goals.
   /// Live evaluation goes through `build(context)` with current goals.
-  static ObjectiveDefinition? definitionForId(String id) => _byId[id];
+  static Objective? definitionForId(String id) => _byId[id];
 
-  static final Map<String, ObjectiveDefinition> _byId = {
+  static final Map<String, Objective> _byId = {
     for (final def in const ObjectiveCatalog().build()) def.id: def,
   };
 
-  List<ObjectiveDefinition> build([
+  List<Objective> build([
     EngineCatalogContext context = const EngineCatalogContext(),
   ]) {
     return [

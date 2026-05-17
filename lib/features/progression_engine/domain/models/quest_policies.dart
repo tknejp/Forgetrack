@@ -139,14 +139,14 @@ class SilentCelebration extends CelebrationPolicy {
 }
 
 /// Fullscreen "Nová kapitola otevřena" celebration with the chapter
-/// icon as the headliner card. Reserved for [ChapterOpenerNode].
+/// icon as the headliner card. Reserved for [ChapterOpener].
 class ChapterOpenedCelebration extends CelebrationPolicy {
   const ChapterOpenedCelebration();
 }
 
 /// Fullscreen "Kapitola dokončena" celebration with the chapter
 /// icon plus any finale cosmetic rewards. Reserved for
-/// [ChapterFinaleNode].
+/// [ChapterFinale].
 class ChapterCompletedCelebration extends CelebrationPolicy {
   const ChapterCompletedCelebration();
 }

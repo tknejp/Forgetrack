@@ -8,8 +8,8 @@ import 'package:flutter/foundation.dart';
 /// with the same inputs produces no new events, just `SkippedEvent`s
 /// in the resolution result.
 @immutable
-sealed class LedgerEvent {
-  const LedgerEvent({required this.eventKey, required this.timestamp});
+sealed class JournalEvent {
+  const JournalEvent({required this.eventKey, required this.timestamp});
 
   final String eventKey;
   final DateTime timestamp;
@@ -21,7 +21,7 @@ sealed class LedgerEvent {
 /// Key shape: `objective|<objectiveId>|<periodKey?>|completed`. For
 /// lifetime objectives `periodKey` is omitted; for daily/weekly it
 /// embeds the period anchor.
-class ObjectiveCompletionEvent extends LedgerEvent {
+class ObjectiveCompletionEvent extends JournalEvent {
   const ObjectiveCompletionEvent({
     required super.eventKey,
     required super.timestamp,
@@ -38,7 +38,7 @@ class ObjectiveCompletionEvent extends LedgerEvent {
 /// One node entered the `completed` state for a given period.
 ///
 /// Key shape: `node|<nodeId>|<periodKey?>|complete`.
-class NodeCompletionEvent extends LedgerEvent {
+class NodeCompletionEvent extends JournalEvent {
   const NodeCompletionEvent({
     required super.eventKey,
     required super.timestamp,
@@ -61,7 +61,7 @@ class NodeCompletionEvent extends LedgerEvent {
 /// `ProgressionResolutionResult.newlyAvailableNodes` on the run that
 /// writes this event; subsequent runs only put the node in
 /// `availableNodes` (full snapshot) until it's claimed.
-class NodeAnnouncedEvent extends LedgerEvent {
+class NodeAnnouncedEvent extends JournalEvent {
   const NodeAnnouncedEvent({
     required super.eventKey,
     required super.timestamp,
@@ -82,7 +82,7 @@ class NodeAnnouncedEvent extends LedgerEvent {
 /// non-null `yyyy-MM-dd` string; the daily-section pool runs per
 /// calendar day, so the periodKey concept from completion/claim
 /// events doesn't apply here.
-class QuestOfferedEvent extends LedgerEvent {
+class QuestOfferedEvent extends JournalEvent {
   const QuestOfferedEvent({
     required super.eventKey,
     required super.timestamp,
@@ -97,7 +97,7 @@ class QuestOfferedEvent extends LedgerEvent {
 /// Player-initiated claim on a manual-claim node (companion, etc.).
 ///
 /// Key shape: `node|<nodeId>|<periodKey?>|claim`.
-class NodeClaimEvent extends LedgerEvent {
+class NodeClaimEvent extends JournalEvent {
   const NodeClaimEvent({
     required super.eventKey,
     required super.timestamp,
@@ -114,7 +114,7 @@ class NodeClaimEvent extends LedgerEvent {
 /// other reward kinds they are null.
 ///
 /// Key shape: `reward|<nodeId>|<rewardOrdinal>|<periodKey?>|grant`.
-class RewardGrantEvent extends LedgerEvent {
+class RewardGrantEvent extends JournalEvent {
   const RewardGrantEvent({
     required super.eventKey,
     required super.timestamp,

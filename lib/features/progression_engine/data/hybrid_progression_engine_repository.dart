@@ -56,7 +56,7 @@ class HybridProgressionEngineRepository
   Future<LedgerSnapshot> loadLedger() => _local.loadLedger();
 
   @override
-  Future<LedgerSnapshot> appendEvents(List<LedgerEvent> events) async {
+  Future<LedgerSnapshot> appendEvents(List<JournalEvent> events) async {
     final snapshot = await _local.appendEvents(events);
 
     final uid = _uid;
@@ -104,7 +104,7 @@ class HybridProgressionEngineRepository
       return _local.loadLedger();
     }
 
-    final all = <LedgerEvent>[
+    final all = <JournalEvent>[
       ...cloud.objectiveCompletions,
       ...cloud.nodeCompletions,
       ...cloud.nodeClaims,
@@ -116,7 +116,7 @@ class HybridProgressionEngineRepository
     return _local.appendEvents(all);
   }
 
-  Future<void> _pushSafely(String uid, List<LedgerEvent> events) async {
+  Future<void> _pushSafely(String uid, List<JournalEvent> events) async {
     try {
       await _cloud.pushEvents(uid, events);
     } catch (error, stackTrace) {

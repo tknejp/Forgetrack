@@ -41,7 +41,7 @@ class DailyGoalClaimItem {
   /// Catalog node — UI resolves the title via `node.titleKey(l10n)`
   /// and pulls any other node-level fields (asset, description) on
   /// demand. Provider can't depend on the l10n delegate.
-  final QuestNode node;
+  final Quest node;
 
   String get nodeId => node.id;
 
@@ -100,7 +100,7 @@ class DailyQuestClaimItem {
   });
 
   /// Catalog node — UI resolves `node.titleKey(l10n)` etc.
-  final QuestNode node;
+  final Quest node;
 
   String get nodeId => node.id;
 

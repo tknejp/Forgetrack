@@ -17,10 +17,10 @@ import 'quest_assets.dart';
 
 const double _dailyActivityTargetMinutes = 30;
 
-List<ObjectiveDefinition> activityObjectives(EngineCatalogContext context) {
+List<Objective> activityObjectives(EngineCatalogContext context) {
   final goals = context.goals;
   return [
-    const ObjectiveDefinition(
+    const Objective(
       id: 'daily_activity',
       domain: ProgressionDomain.activity,
       metric: ActivityMinutesMetric(),
@@ -28,7 +28,7 @@ List<ObjectiveDefinition> activityObjectives(EngineCatalogContext context) {
       operator: ObjectiveOperator.atLeast,
       targetValue: _dailyActivityTargetMinutes,
     ),
-    ObjectiveDefinition(
+    Objective(
       id: 'weekly_activity',
       domain: ProgressionDomain.activity,
       metric: const ActivityMinutesMetric(),
@@ -36,7 +36,7 @@ List<ObjectiveDefinition> activityObjectives(EngineCatalogContext context) {
       operator: ObjectiveOperator.atLeast,
       targetValue: goals.weeklyActivityMinutes.toDouble(),
     ),
-    const ObjectiveDefinition(
+    const Objective(
       id: 'reward_count_weekly_activity_1',
       domain: ProgressionDomain.activity,
       metric: RewardCountMetric(ruleId: 'weekly_activity'),
@@ -44,7 +44,7 @@ List<ObjectiveDefinition> activityObjectives(EngineCatalogContext context) {
       operator: ObjectiveOperator.atLeast,
       targetValue: 1,
     ),
-    const ObjectiveDefinition(
+    const Objective(
       id: 'reward_count_weekly_activity_4',
       domain: ProgressionDomain.activity,
       metric: RewardCountMetric(ruleId: 'weekly_activity'),
@@ -52,7 +52,7 @@ List<ObjectiveDefinition> activityObjectives(EngineCatalogContext context) {
       operator: ObjectiveOperator.atLeast,
       targetValue: 4,
     ),
-    const ObjectiveDefinition(
+    const Objective(
       id: 'reward_count_weekly_activity_12',
       domain: ProgressionDomain.activity,
       metric: RewardCountMetric(ruleId: 'weekly_activity'),
@@ -60,7 +60,7 @@ List<ObjectiveDefinition> activityObjectives(EngineCatalogContext context) {
       operator: ObjectiveOperator.atLeast,
       targetValue: 12,
     ),
-    const ObjectiveDefinition(
+    const Objective(
       id: 'reward_count_weekly_activity_24',
       domain: ProgressionDomain.activity,
       metric: RewardCountMetric(ruleId: 'weekly_activity'),
@@ -68,7 +68,7 @@ List<ObjectiveDefinition> activityObjectives(EngineCatalogContext context) {
       operator: ObjectiveOperator.atLeast,
       targetValue: 24,
     ),
-    const ObjectiveDefinition(
+    const Objective(
       id: 'reward_count_weekly_activity_36',
       domain: ProgressionDomain.activity,
       metric: RewardCountMetric(ruleId: 'weekly_activity'),
@@ -76,7 +76,7 @@ List<ObjectiveDefinition> activityObjectives(EngineCatalogContext context) {
       operator: ObjectiveOperator.atLeast,
       targetValue: 36,
     ),
-    const ObjectiveDefinition(
+    const Objective(
       id: 'reward_count_weekly_activity_52',
       domain: ProgressionDomain.activity,
       metric: RewardCountMetric(ruleId: 'weekly_activity'),
@@ -87,9 +87,9 @@ List<ObjectiveDefinition> activityObjectives(EngineCatalogContext context) {
   ];
 }
 
-List<ProgressionNode> activityNodes() {
+List<ProgressionEntry> activityNodes() {
   return [
-    DailyQuestNode(
+    DailyQuest(
       id: 'daily_activity_today',
       objectiveId: 'daily_activity',
       claimPolicy: ClaimPolicy.manual,
@@ -108,7 +108,7 @@ List<ProgressionNode> activityNodes() {
       rarity: Rarity.common,
       assetKey: questAssetActivity,
     ),
-    WeeklyQuestNode(
+    WeeklyQuest(
       id: 'weekly_activity',
       objectiveId: 'weekly_activity',
       claimPolicy: ClaimPolicy.manual,
@@ -120,7 +120,7 @@ List<ProgressionNode> activityNodes() {
       rarity: Rarity.uncommon,
       assetKey: questAssetActivity,
     ),
-    AchievementNode(
+    Achievement(
       id: 'weekly_activity_mastery',
       objectiveId: 'reward_count_weekly_activity_1',
       badgeEmoji: '\u{1F3CB}',
@@ -130,7 +130,7 @@ List<ProgressionNode> activityNodes() {
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.common,
     ),
-    AchievementNode(
+    Achievement(
       id: 'weekly_activity_4',
       objectiveId: 'reward_count_weekly_activity_4',
       badgeEmoji: '\u{1F3CC}',
@@ -140,7 +140,7 @@ List<ProgressionNode> activityNodes() {
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.uncommon,
     ),
-    AchievementNode(
+    Achievement(
       id: 'weekly_activity_12',
       objectiveId: 'reward_count_weekly_activity_12',
       badgeEmoji: '\u{1F3C3}',
@@ -150,7 +150,7 @@ List<ProgressionNode> activityNodes() {
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.epic,
     ),
-    AchievementNode(
+    Achievement(
       id: 'weekly_activity_24',
       objectiveId: 'reward_count_weekly_activity_24',
       badgeEmoji: '\u{1F938}',
@@ -160,7 +160,7 @@ List<ProgressionNode> activityNodes() {
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.epic,
     ),
-    AchievementNode(
+    Achievement(
       id: 'weekly_activity_36',
       objectiveId: 'reward_count_weekly_activity_36',
       badgeEmoji: '\u{2744}\u{FE0F}', // snowflake
@@ -172,7 +172,7 @@ List<ProgressionNode> activityNodes() {
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.epic,
     ),
-    AchievementNode(
+    Achievement(
       id: 'weekly_activity_52',
       objectiveId: 'reward_count_weekly_activity_52',
       badgeEmoji: '\u{1F9D7}',

@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-class AuthUser {
-  const AuthUser({
+class Identity {
+  const Identity({
     required this.id,
     required this.email,
     this.displayName,
@@ -20,8 +20,8 @@ class AuthUser {
 
   bool get hasGoogleAccount => googleAccount != null;
 
-  factory AuthUser.fromGoogle(GoogleSignInAccount account) {
-    return AuthUser(
+  factory Identity.fromGoogle(GoogleSignInAccount account) {
+    return Identity(
       id: account.id,
       email: account.email,
       displayName: account.displayName,
@@ -30,7 +30,7 @@ class AuthUser {
     );
   }
 
-  factory AuthUser.fromFirebase(User user) {
+  factory Identity.fromFirebase(User user) {
     UserInfo? googleInfo;
     for (final provider in user.providerData) {
       if (provider.providerId == 'google.com') {
@@ -45,7 +45,7 @@ class AuthUser {
       user.uid,
     ]);
 
-    return AuthUser(
+    return Identity(
       id: canonicalId,
       email: _firstNonEmpty([
         user.email,
@@ -63,8 +63,8 @@ class AuthUser {
     );
   }
 
-  AuthUser mergeGoogle(GoogleSignInAccount account) {
-    return AuthUser(
+  Identity mergeGoogle(GoogleSignInAccount account) {
+    return Identity(
       id: account.id.isNotEmpty ? account.id : id,
       email: account.email.isNotEmpty ? account.email : email,
       displayName: _firstNonEmptyNullable([

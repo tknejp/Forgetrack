@@ -277,13 +277,13 @@ lib/features/social/application/
 
 ## 4. Proposed Core Domain Model
 
-### 4.1 ObjectiveDefinition
+### 4.1 Objective
 
 A pure, machine-readable condition. **No UI, no rewards, no rarity, no display strings.**
 
 ```dart
-class ObjectiveDefinition {
-  const ObjectiveDefinition({
+class Objective {
+  const Objective({
     required this.id,
     required this.metric,
     required this.scope,
@@ -389,8 +389,8 @@ class QuestNode extends ProgressionNode {
   final ProgressStartPolicy progressStartPolicy;
 }
 
-class AchievementNode extends ProgressionNode {
-  const AchievementNode({
+class Achievement extends ProgressionNode {
+  const Achievement({
     required super.id,
     required super.titleKey,
     required super.descriptionKey,
@@ -410,8 +410,8 @@ class AchievementNode extends ProgressionNode {
   final String badgeEmoji;
 }
 
-class MilestoneNode extends ProgressionNode {
-  const MilestoneNode({
+class Milestone extends ProgressionNode {
+  const Milestone({
     required super.id,
     required super.titleKey,
     required super.descriptionKey,
@@ -430,8 +430,8 @@ class MilestoneNode extends ProgressionNode {
   final bool journeyMapAnchor;
 }
 
-class LevelMilestoneNode extends ProgressionNode {
-  const LevelMilestoneNode({
+class LevelMilestone extends ProgressionNode {
+  const LevelMilestone({
     required super.id,
     required super.titleKey,
     required super.descriptionKey,
@@ -450,8 +450,8 @@ class LevelMilestoneNode extends ProgressionNode {
   final bool isJourneyMapAnchor;
 }
 
-class ChapterCompletionNode extends ProgressionNode {
-  const ChapterCompletionNode({
+class ChapterCompletion extends ProgressionNode {
+  const ChapterCompletion({
     required super.id,
     required super.titleKey,
     required super.descriptionKey,
@@ -466,8 +466,8 @@ class ChapterCompletionNode extends ProgressionNode {
   final String chapterId;
 }
 
-class CompanionAvailabilityNode extends ProgressionNode {
-  const CompanionAvailabilityNode({
+class CompanionAvailability extends ProgressionNode {
+  const CompanionAvailability({
     required super.id,
     required super.titleKey,
     required super.descriptionKey,
@@ -482,8 +482,8 @@ class CompanionAvailabilityNode extends ProgressionNode {
   final String companionId;
 }
 
-class RelicNode extends ProgressionNode {
-  const RelicNode({
+class Relic extends ProgressionNode {
+  const Relic({
     required super.id,
     required super.titleKey,
     required super.descriptionKey,
@@ -497,8 +497,8 @@ class RelicNode extends ProgressionNode {
   final String relicId;
 }
 
-class ContentUnlockNode extends ProgressionNode {
-  const ContentUnlockNode({
+class ContentUnlock extends ProgressionNode {
+  const ContentUnlock({
     required super.id,
     required super.titleKey,
     required super.descriptionKey,
@@ -669,7 +669,7 @@ enum ComboRotationPolicy { daily, weekly, manual }
 **Achievement integration.** Achievements that count combo completions reference the *pool id*, not a hard-coded id list. New criterion shape:
 
 ```dart
-class ComboCompletionsObjective extends ObjectiveDefinition {
+class ComboCompletionsObjective extends Objective {
   // metric: comboPoolCompletions(comboPoolId)
   // operator: atLeast
   // targetValue: 5
@@ -797,7 +797,7 @@ The only difference from legacy keys is that `node` replaces both `quest` and `a
 Source data (snapshots, profile, prior ledger)
   ↓
 ObjectiveEvaluator
-  • For each ObjectiveDefinition: read metric for scope, compare against operator+target.
+  • For each Objective: read metric for scope, compare against operator+target.
   • Output: Map<objectiveId, ObjectiveOutcome { value, completed, period? }>
   ↓
 UnlockConditionResolver
@@ -897,12 +897,12 @@ Cloud overlay (Firestore) can wrap the local repo with a hybrid like today's `Hy
 ```dart
 class ObjectiveCatalog {
   const ObjectiveCatalog();
-  List<ObjectiveDefinition> build(ProgressionGoalSet goals) { ... }
-  static ObjectiveDefinition? definitionForId(String id) => ...;
+  List<Objective> build(ProgressionGoalSet goals) { ... }
+  static Objective? definitionForId(String id) => ...;
 }
 
-class ProgressionNodeCatalog {
-  const ProgressionNodeCatalog();
+class ProgressionEntryCatalog {
+  const ProgressionEntryCatalog();
   List<ProgressionNode> build() { ... }            // sealed nodes; see §4.2
   static ProgressionNode? definitionForId(String id) => ...;
 }
@@ -923,7 +923,7 @@ Checks:
 1. **Identity** — duplicate objective ids; duplicate node ids; duplicate combo pool ids; duplicate tiered daily group ids; duplicate reward ordinals within a node.
 2. **References** — every `node.objectiveId` resolves; every `UnlockCondition` reference (`ObjectiveCompleted`, `NodeCompleted`, `ChapterUnlocked`, `CompanionAvailable`) resolves; every `CosmeticReward.cosmeticId` resolves against `CosmeticCatalog`; every `QuestNode.comboPoolId` resolves to a `ComboPoolDefinition`; every `QuestNode.dailyTierGroupId` resolves to a `TieredDailyConfig`.
 3. **Chapter integrity** — every `chapterId` referenced by a node exists in `ChapterCatalog`; chapter has at least one entry node and one completion node.
-4. **Reward × policy coherence** — `ClaimPolicy.manual` nodes must have a `lockedHintKey` (so the player knows what to do); `CompanionAvailabilityNode` is `ClaimPolicy.manual` by construction (compiler-enforced); `RelicNode` is `ClaimPolicy.automatic` by construction; nodes tagged `core` must not contain RPG-only rewards unless `ActivationPolicy != always`.
+4. **Reward × policy coherence** — `ClaimPolicy.manual` nodes must have a `lockedHintKey` (so the player knows what to do); `CompanionAvailability` is `ClaimPolicy.manual` by construction (compiler-enforced); `Relic` is `ClaimPolicy.automatic` by construction; nodes tagged `core` must not contain RPG-only rewards unless `ActivationPolicy != always`.
 5. **Display coverage** — visible nodes (not `displayBucket: hidden`) must have non-empty `titleKey` and `descriptionKey`; `lockedHintKey` recommended.
 6. **Chain coherence** — all nodes sharing a `chainId` form a strict order via `chainOrder`; no cycles; no gaps.
 7. **Localization** — every `*Key` closure resolves to a non-empty string for all supported locales (the closure system already enforces this at compile time, so this is a smoke test).
@@ -1366,7 +1366,7 @@ For each migration: update imports, replace getters with V2 equivalents, run the
 Social was already migrated to `ProgressionDisplayResolver` in Phase 0.5. This phase is now a single internal change: swap the resolver's backing data source from the legacy catalog to the V2 catalog.
 
 Edit:
-- `lib/features/progression_engine/domain/display/progression_display_resolver.dart` — replace `ProgressionAchievementCatalog.definitionForId(...)` reads with `ProgressionNodeCatalog.definitionForId(...)` reads. Map `ProgressionNode` (sealed) to `NodeDisplay` via exhaustive switch.
+- `lib/features/progression_engine/domain/display/progression_display_resolver.dart` — replace `ProgressionAchievementCatalog.definitionForId(...)` reads with `ProgressionEntryCatalog.definitionForId(...)` reads. Map `ProgressionNode` (sealed) to `NodeDisplay` via exhaustive switch.
 - `test/features/progression_engine/progression_display_resolver_v2_backed_test.dart` — replaces the legacy-backed test from Phase 0.5.
 
 **Acceptance:**

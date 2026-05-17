@@ -319,7 +319,7 @@ class _LockChip extends StatelessWidget {
 class _ChapterIcon extends StatelessWidget {
   const _ChapterIcon({required this.node, required this.size});
 
-  final QuestNode node;
+  final Quest node;
   final double size;
 
   @override

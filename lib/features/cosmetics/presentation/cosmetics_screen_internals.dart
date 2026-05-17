@@ -18,7 +18,7 @@ class CosmeticBadge extends StatelessWidget {
     this.contentScale = 1.0,
   });
 
-  final CosmeticDefinition definition;
+  final Cosmetic definition;
   final String? assetPath;
   final Color color;
   final double size;

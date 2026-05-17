@@ -53,7 +53,7 @@ class IsarProgressionEngineRepository
   }
 
   @override
-  Future<LedgerSnapshot> appendEvents(List<LedgerEvent> events) async {
+  Future<LedgerSnapshot> appendEvents(List<JournalEvent> events) async {
     if (events.isEmpty) return loadLedger();
 
     final objectiveRows = <EngineObjectiveCompletionRecord>[];

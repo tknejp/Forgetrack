@@ -39,7 +39,7 @@ class ObjectiveEvaluator {
   const ObjectiveEvaluator();
 
   ObjectiveOutcome evaluate(
-    ObjectiveDefinition objective,
+    Objective objective,
     EngineEvaluationInput input,
   ) {
     // Provider-supplied override wins — used for objectives whose

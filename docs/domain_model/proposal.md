@@ -16,7 +16,7 @@
 | **Aggregate root** | `Player` (single-player app — žádný explicit `Context`). |
 | **Catalog ↔ Instance pattern** | `Quest` (catalog, sealed) ↔ `PlayerQuest` (instance, sealed lifecycle); `Cosmetic` ↔ `PlayerCosmetic`; `Achievement` ↔ `PlayerAchievement`; `Chapter` ↔ `PlayerChapter`. Container symetrie: `QuestCatalog` ↔ `PlayerQuestCatalog`. |
 | **Catalog umbrella** | Sealed `ProgressionEntry` ← `Quest` (sealed) / `Achievement` / `Milestone` / `LevelMilestone` / `ChapterCompletion` / `CompanionAvailability` / `Relic` / `ContentUnlock`. |
-| **Naming sjednoceno** | Drop `Definition` / `Node` suffix u všech catalog typů. `CosmeticDefinition` → `Cosmetic`, `QuestNode` → `Quest`, `ObjectiveDefinition` → `Objective`, `ProgressionNode` → `ProgressionEntry`. |
+| **Naming sjednoceno** | Drop `Definition` / `Node` suffix u všech catalog typů. `Cosmetic` → `Cosmetic`, `QuestNode` → `Quest`, `Objective` → `Objective`, `ProgressionNode` → `ProgressionEntry`. |
 | **Folder layout** | Hybrid: `lib/domain/` pro cross-aggregate typy, `lib/features/<f>/domain/` pro feature-internal. |
 | **Code-gen** | Žádný. Hand-written `const` + `==`/`hashCode`. Sealed unions s native Dart 3 switch. |
 | **Player level/XP** | Field na `Player`, nikoli engine input. Engine ho čte z Player, ne naopak. |
@@ -94,24 +94,24 @@ Každá "věc" v appce klasifikovaná podle DDD slovníku. **AR** = Aggregate Ro
 |---|---|---|---|
 | `ProgressionEntry` | **sealed CAT** | `lib/domain/progression/catalog/` | Renamed `ProgressionNode`. Sealed umbrella všech progression catalog rows. |
 | `Quest` | **sealed CAT** (child) | `lib/domain/progression/catalog/` | Renamed `QuestNode`. Sealed sub-hierarchy: `DailyQuest`, `WeeklyQuest`, `DailyChallenge`, `LongTermQuest`, `ChapterOpener`, `ChapterStep`, `ChapterFinale`, `ChapterSideQuest`, `ComboStep`, `ComboFinale`. |
-| `Achievement` | **CAT** (child) | `lib/domain/progression/catalog/` | Renamed `AchievementNode`. |
-| `Milestone` | **CAT** (child) | `lib/domain/progression/catalog/` | Renamed `MilestoneNode`. |
-| `LevelMilestone` | **CAT** (child) | `lib/domain/progression/catalog/` | Renamed `LevelMilestoneNode`. XP-threshold gate. |
-| `ChapterCompletion` | **CAT** (child) | `lib/domain/progression/catalog/` | Renamed `ChapterCompletionNode`. Marks "kapitola X dokončena". |
-| `CompanionAvailability` | **CAT** (child) | `lib/domain/progression/catalog/` | Renamed `CompanionAvailabilityNode`. Manual-claim gate pro odemčení Companion `Cosmetic`. |
-| `Relic` | **CAT** (child) | `lib/domain/progression/catalog/` | Renamed `RelicNode`. |
-| `ContentUnlock` | **CAT** (child) | `lib/domain/progression/catalog/` | Renamed `ContentUnlockNode`. |
-| `Objective` | **CAT** | `lib/domain/progression/catalog/` | Renamed `ObjectiveDefinition`. Co se měří + scope. |
+| `Achievement` | **CAT** (child) | `lib/domain/progression/catalog/` | Renamed `Achievement`. |
+| `Milestone` | **CAT** (child) | `lib/domain/progression/catalog/` | Renamed `Milestone`. |
+| `LevelMilestone` | **CAT** (child) | `lib/domain/progression/catalog/` | Renamed `LevelMilestone`. XP-threshold gate. |
+| `ChapterCompletion` | **CAT** (child) | `lib/domain/progression/catalog/` | Renamed `ChapterCompletion`. Marks "kapitola X dokončena". |
+| `CompanionAvailability` | **CAT** (child) | `lib/domain/progression/catalog/` | Renamed `CompanionAvailability`. Manual-claim gate pro odemčení Companion `Cosmetic`. |
+| `Relic` | **CAT** (child) | `lib/domain/progression/catalog/` | Renamed `Relic`. |
+| `ContentUnlock` | **CAT** (child) | `lib/domain/progression/catalog/` | Renamed `ContentUnlock`. |
+| `Objective` | **CAT** | `lib/domain/progression/catalog/` | Renamed `Objective`. Co se měří + scope. |
 | `ObjectiveMetric` | **sealed VO** | `lib/domain/progression/catalog/` | 20+ metrik. Beze změny. |
 | `ObjectiveScope` | **sealed VO** | `lib/domain/progression/catalog/` | Time window. Beze změny. |
 | `UnlockCondition` | **sealed VO** | `lib/domain/progression/catalog/` | 11 subtypů včetně `AllOf` / `AnyOf`. Beze změny. |
 | `RewardDefinition` | **sealed VO** | `lib/domain/progression/catalog/` | 8 subtypů. **Suffix `Definition` výjimečně zůstává**, protože `Reward` jako noun by kolidoval s `RewardGrantEvent` na ledger úrovni. |
 | `ClaimPolicy` / `ActivationPolicy` / `CelebrationPolicy` / `GatePolicy` / `SlotPolicy` / `ProgressStartPolicy` | enum / sealed VO | `lib/domain/progression/catalog/` | Beze změny. |
 | `Chapter` | **CAT** | `lib/domain/progression/catalog/` | Aggregating type — chapter id, title, ordered chain (`ChapterOpener` → `ChapterStep`...n → `ChapterFinale`), side-quests, `ChapterCompletion` reference. Dnes implicitně rozprostřeno přes `chapter_*_content.dart` literály — proposal navrhuje explicit catalog wrapper. |
-| `Cosmetic` | **CAT** | `lib/features/cosmetics/domain/` | Renamed `CosmeticDefinition`. Sealed sub-hierarchie pro 7 typů (`Frame`, `Background`, `Companion`, `RelicCosmetic` *(disambiguated)*, `Emblem`, `TitleFlair`, `MapEffect`). Lokace zůstává ve feature, dokud cosmetics zůstávají self-contained. |
+| `Cosmetic` | **CAT** | `lib/features/cosmetics/domain/` | Renamed `Cosmetic`. Sealed sub-hierarchie pro 7 typů (`Frame`, `Background`, `Companion`, `RelicCosmetic` *(disambiguated)*, `Emblem`, `TitleFlair`, `MapEffect`). Lokace zůstává ve feature, dokud cosmetics zůstávají self-contained. |
 | `Rarity` | enum | `lib/shared/domain/` | Beze změny. |
 
-> Pojmenování `RelicCosmetic` *(vs. `Relic` catalog node)*: dnes je dvojí "Relic" — `RelicNode` (progression catalog) a `Cosmetic` typu `relic` (cosmetics catalog). Návrh: progression catalog drží `Relic` (gating node), cosmetics catalog drží `RelicCosmetic` (visual asset). Reference je 1:1 přes `cosmeticId`, ale typy jsou semantically různé.
+> Pojmenování `RelicCosmetic` *(vs. `Relic` catalog node)*: dnes je dvojí "Relic" — `Relic` (progression catalog) a `Cosmetic` typu `relic` (cosmetics catalog). Návrh: progression catalog drží `Relic` (gating node), cosmetics catalog drží `RelicCosmetic` (visual asset). Reference je 1:1 přes `cosmeticId`, ale typy jsou semantically různé.
 
 ### 2.4 Player-side per-type collections
 
@@ -139,7 +139,7 @@ Každý lifecycle nahrazuje sadu booleanů nebo paralelní enumy. **Compiler vyn
 | `PlayerQuestLifecycle` | `QuestLocked(remaining)` / `QuestAvailable(actual, target, progress)` / `QuestCompletedPendingClaim(completedAt, previewXp)` / `QuestClaimed(claimedAt, finalXp)` | `NodeState` enum (3 hodnoty) + ad-hoc `isAvailableForClaim`, `previewXp`, `isClaimed` boolean rozházené po providerech. |
 | `PlayerAchievementLifecycle` | `AchievementLocked(remaining)` / `AchievementInProgress(actual, target)` / `AchievementUnlocked(unlockedAt, finalXp)` | `NodeState` + denormalizovaný `SocialUnlockedAchievement.unlockedAt`. |
 | `PlayerCosmeticLifecycle` | `CosmeticHidden` / `CosmeticTeased(satisfied, total, rows)` / `CosmeticClaimable(claimVia?)` / `CosmeticOwned(unlockedAt, source, sourceId)` | `CosmeticRevealState` enum (4) **paralelně s** `CompanionState` enum (4) **paralelně s** `UnlockedCosmetic` map. 3 lifecycly → 1. |
-| `ChapterLifecycle` | `ChapterLocked(gate)` / `ChapterUnlockedNotStarted(unlockedAt)` / `ChapterInProgress(currentChainNodeId, stepsCompleted, stepsTotal)` / `ChapterCompleted(completedAt)` | Dnes implicitní — chapter state derivován z `ChapterUnlocked` UnlockCondition + `ChapterCompletionNode` `NodeState`. Explicitní lifecycle ukázán níž. |
+| `ChapterLifecycle` | `ChapterLocked(gate)` / `ChapterUnlockedNotStarted(unlockedAt)` / `ChapterInProgress(currentChainNodeId, stepsCompleted, stepsTotal)` / `ChapterCompleted(completedAt)` | Dnes implicitní — chapter state derivován z `ChapterUnlocked` UnlockCondition + `ChapterCompletion` `NodeState`. Explicitní lifecycle ukázán níž. |
 
 Dnes existující sealed věci, které **zůstávají** beze změny modelu:
 - `JournalEvent` (přejmenování z `LedgerEvent`, ale 6 subtypů stejně).
@@ -571,7 +571,7 @@ Per handoff §10 a §11.
 | `lib/features/progression_engine/domain/models/ledger_event.dart` (6 subtypů) | Sealed hierarchie zachována, jen rename `LedgerEvent` → `JournalEvent` a přesun do `lib/domain/journal/`. Model + semantics beze změny. |
 | `lib/features/progression_engine/domain/models/progression_node_definition.dart` (sealed hierarchie) | Skvěle modelovaná sealed hierarchie. Rename `ProgressionNode` → `ProgressionEntry`, drop `Node` suffix u subtypů. Žádná logická změna. |
 | `lib/features/progression_engine/domain/models/reward_definition.dart` | Beze změny. Suffix `Definition` zachován (jediný — viz §2.3 disambiguace). |
-| `lib/features/progression_engine/domain/models/objective_*.dart` | Drop `Definition` suffix (`ObjectiveDefinition` → `Objective`), jinak beze změny. |
+| `lib/features/progression_engine/domain/models/objective_*.dart` | Drop `Definition` suffix (`Objective` → `Objective`), jinak beze změny. |
 | `lib/features/progression_engine/domain/models/unlock_condition.dart` | Beze změny. |
 | `lib/features/progression_engine/domain/models/{claim,activation,progress_start,quest}_policies.dart` | Beze změny. |
 | `lib/features/progression_engine/data/local/progression_engine_database.dart` + 7 Isar collections | **Persistence schema beze změny.** Jen repository wrapper v `data/` adaptér na nový `JournalRepository` interface. |
@@ -588,7 +588,7 @@ Per handoff §10 a §11.
 | Soubor / vrstva | Co s ním |
 |---|---|
 | `lib/features/auth/application/auth_user.dart` | Rename `AuthUser` → `Identity`, přesun do `lib/features/auth/domain/identity.dart`. Statické factory metody (`fromGoogle`, `fromFirebase`) zůstávají. |
-| `lib/features/cosmetics/domain/cosmetic_models.dart` | Rozdělit: `Cosmetic` (catalog, sealed + 7 subtypy — dnes jeden `CosmeticDefinition` enum-discriminated), `PlayerCosmetic`, `Inventory`, `Loadout`. `UserCosmeticsState` zaniká — aggregate Player má `Inventory` + `Loadout` přímo. `CosmeticType` zůstává jako discriminator pro slot identification, ale catalog používá sealed subtypy. |
+| `lib/features/cosmetics/domain/cosmetic_models.dart` | Rozdělit: `Cosmetic` (catalog, sealed + 7 subtypy — dnes jeden `Cosmetic` enum-discriminated), `PlayerCosmetic`, `Inventory`, `Loadout`. `UserCosmeticsState` zaniká — aggregate Player má `Inventory` + `Loadout` přímo. `CosmeticType` zůstává jako discriminator pro slot identification, ale catalog používá sealed subtypy. |
 | `lib/features/cosmetics/domain/cosmetic_reveal_state.dart` + `cosmetic_unlock_evaluator.dart` | Reveal state enum se slévá s `PlayerCosmeticLifecycle`. `CosmeticRevealEvaluator` přežívá jako pure function `(Cosmetic, Player, Journal) → PlayerCosmeticLifecycle`. |
 | `lib/features/cosmetics/domain/companion_state.dart` | **Delete.** Stavy se slévají do `PlayerCosmeticLifecycle` (§4.3). `hidesIdentity` / `showsChecklist` jsou pattern-matched derivations. |
 | `lib/features/cosmetics/application/companions_registry.dart` | **Delete.** `Companion` view object zaniká — UI čte přímo `PlayerCosmetic` (`Inventory[companionId]`) + catalog `CompanionAvailability` (`ProgressionEntryCatalog`). Žádný 3-store reconciliation factory. |

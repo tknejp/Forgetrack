@@ -20,10 +20,10 @@ import 'quest_assets.dart';
 ///
 /// Each chapter has five nodes: an auto-claim **open** gated by
 /// player level, three manual-claim **step** nodes chained by
-/// [QuestNode.prerequisiteNodeIds] / [QuestNode.nextNodeIds], and a
+/// [Quest.prerequisiteNodeIds] / [Quest.nextNodeIds], and a
 /// manual-claim **finale** that drops the chapter's emblem cosmetic.
 ///
-/// Step objectives use [ObjectiveDefinition.baselineFromNodeId] so
+/// Step objectives use [Objective.baselineFromNodeId] so
 /// progress counts only what the player does *after* the previous
 /// step completed — keeps a high-level player from auto-finishing a
 /// late chapter on day one just because their lifetime ledger is
@@ -551,12 +551,12 @@ String _finaleObjectiveId(String chapterId) => '${chapterId}_finale_objective';
 String _openNodeId(String chapterId) => '${chapterId}_open';
 String _finaleNodeId(String chapterId) => '${chapterId}_finale';
 
-List<ObjectiveDefinition> chapterObjectives() {
-  final out = <ObjectiveDefinition>[];
+List<Objective> chapterObjectives() {
+  final out = <Objective>[];
   for (final c in _chapters()) {
     // Open: level gate. The objective is satisfied automatically once
     // the player reaches the chapter's start level.
-    out.add(ObjectiveDefinition(
+    out.add(Objective(
       id: _openObjectiveId(c.id),
       domain: ProgressionDomain.activity,
       metric: const LevelMetric(),
@@ -569,7 +569,7 @@ List<ObjectiveDefinition> chapterObjectives() {
     // previous step's completion.
     var prevNodeId = _openNodeId(c.id);
     for (final s in c.steps) {
-      out.add(ObjectiveDefinition(
+      out.add(Objective(
         id: _stepObjectiveId(s.id),
         domain: s.domain,
         metric: s.metric,
@@ -582,7 +582,7 @@ List<ObjectiveDefinition> chapterObjectives() {
       prevNodeId = s.id;
     }
     // Finale: same level gate as open; prereqs gate the actual ordering.
-    out.add(ObjectiveDefinition(
+    out.add(Objective(
       id: _finaleObjectiveId(c.id),
       domain: ProgressionDomain.activity,
       metric: const LevelMetric(),
@@ -611,15 +611,15 @@ const _chapterPrereqByOpenId = <String, String>{
   'dragonrock_sovereign_open': 'dragonroad_finale',
 };
 
-List<ProgressionNode> chapterNodes() {
-  final out = <ProgressionNode>[];
+List<ProgressionEntry> chapterNodes() {
+  final out = <ProgressionEntry>[];
   for (final c in _chapters()) {
     final openId = _openNodeId(c.id);
     final finaleId = _finaleNodeId(c.id);
     final firstStepId = c.steps.first.id;
     final chapterPrereq = _chapterPrereqByOpenId[openId];
 
-    out.add(ChapterOpenerNode(
+    out.add(ChapterOpener(
       id: openId,
       objectiveId: _openObjectiveId(c.id),
       unlockConditions: [
@@ -644,7 +644,7 @@ List<ProgressionNode> chapterNodes() {
       final prevId = i == 0 ? openId : c.steps[i - 1].id;
       final nextId = i == c.steps.length - 1 ? finaleId : c.steps[i + 1].id;
       final stepLabel = step.chainStepLabel;
-      out.add(ChapterStepNode(
+      out.add(ChapterStep(
         id: step.id,
         objectiveId: _stepObjectiveId(step.id),
         titleKey: step.titleKey,
@@ -664,7 +664,7 @@ List<ProgressionNode> chapterNodes() {
     }
 
     final lastStepId = c.steps.last.id;
-    out.add(ChapterFinaleNode(
+    out.add(ChapterFinale(
       id: finaleId,
       objectiveId: _finaleObjectiveId(c.id),
       titleKey: c.finaleTitleKey,

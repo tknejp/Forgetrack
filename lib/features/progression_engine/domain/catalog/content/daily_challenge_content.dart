@@ -53,18 +53,18 @@ const _allDailyAtoms = <String>[
   'daily_activity_today',
 ];
 
-List<ObjectiveDefinition> dailyChallengeObjectives(
+List<Objective> dailyChallengeObjectives(
   EngineCatalogContext context,
 ) {
   return const [
-    ObjectiveDefinition(
+    Objective(
       id: 'daily_challenge_nutri_triple_obj',
       metric: TodayCompletionsAmongMetric(nodeIds: _nutriAtoms),
       scope: TodayScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 3,
     ),
-    ObjectiveDefinition(
+    Objective(
       id: 'daily_challenge_active_day_obj',
       metric: TodayCompletionsAmongMetric(
         nodeIds: ['daily_steps_today', 'daily_activity_today'],
@@ -73,14 +73,14 @@ List<ObjectiveDefinition> dailyChallengeObjectives(
       operator: ObjectiveOperator.atLeast,
       targetValue: 2,
     ),
-    ObjectiveDefinition(
+    Objective(
       id: 'daily_challenge_full_plate_obj',
       metric: TodayCompletionsAmongMetric(nodeIds: _nutriAtoms),
       scope: TodayScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 5,
     ),
-    ObjectiveDefinition(
+    Objective(
       id: 'daily_challenge_recovery_obj',
       metric: TodayCompletionsAmongMetric(
         nodeIds: ['daily_sleep_today', 'daily_protein_today'],
@@ -89,7 +89,7 @@ List<ObjectiveDefinition> dailyChallengeObjectives(
       operator: ObjectiveOperator.atLeast,
       targetValue: 2,
     ),
-    ObjectiveDefinition(
+    Objective(
       id: 'daily_challenge_triple_combo_obj',
       metric: TodayCompletionsAmongMetric(
         nodeIds: [
@@ -102,7 +102,7 @@ List<ObjectiveDefinition> dailyChallengeObjectives(
       operator: ObjectiveOperator.atLeast,
       targetValue: 3,
     ),
-    ObjectiveDefinition(
+    Objective(
       id: 'daily_challenge_balanced_obj',
       metric: TodayCompletionsAmongMetric(nodeIds: _allDailyAtoms),
       scope: TodayScope(),
@@ -112,9 +112,9 @@ List<ObjectiveDefinition> dailyChallengeObjectives(
   ];
 }
 
-List<ProgressionNode> dailyChallengeNodes() {
+List<ProgressionEntry> dailyChallenges() {
   return [
-    DailyChallengeNode(
+    DailyChallenge(
       id: 'daily_challenge_nutri_triple',
       objectiveId: 'daily_challenge_nutri_triple_obj',
       claimPolicy: ClaimPolicy.manual,
@@ -126,7 +126,7 @@ List<ProgressionNode> dailyChallengeNodes() {
       assetKey: questAssetNutrition,
       comboPoolId: _comboPoolId,
     ),
-    DailyChallengeNode(
+    DailyChallenge(
       id: 'daily_challenge_active_day',
       objectiveId: 'daily_challenge_active_day_obj',
       claimPolicy: ClaimPolicy.manual,
@@ -138,7 +138,7 @@ List<ProgressionNode> dailyChallengeNodes() {
       assetKey: questAssetActivity,
       comboPoolId: _comboPoolId,
     ),
-    DailyChallengeNode(
+    DailyChallenge(
       id: 'daily_challenge_full_plate',
       objectiveId: 'daily_challenge_full_plate_obj',
       claimPolicy: ClaimPolicy.manual,
@@ -150,7 +150,7 @@ List<ProgressionNode> dailyChallengeNodes() {
       assetKey: questAssetNutrition,
       comboPoolId: _comboPoolId,
     ),
-    DailyChallengeNode(
+    DailyChallenge(
       id: 'daily_challenge_recovery',
       objectiveId: 'daily_challenge_recovery_obj',
       claimPolicy: ClaimPolicy.manual,
@@ -162,7 +162,7 @@ List<ProgressionNode> dailyChallengeNodes() {
       assetKey: questAssetStreak,
       comboPoolId: _comboPoolId,
     ),
-    DailyChallengeNode(
+    DailyChallenge(
       id: 'daily_challenge_triple_combo',
       objectiveId: 'daily_challenge_triple_combo_obj',
       claimPolicy: ClaimPolicy.manual,
@@ -174,7 +174,7 @@ List<ProgressionNode> dailyChallengeNodes() {
       assetKey: questAssetDoubleWin,
       comboPoolId: _comboPoolId,
     ),
-    DailyChallengeNode(
+    DailyChallenge(
       id: 'daily_challenge_balanced',
       objectiveId: 'daily_challenge_balanced_obj',
       claimPolicy: ClaimPolicy.manual,

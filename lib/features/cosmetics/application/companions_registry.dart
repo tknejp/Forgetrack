@@ -29,11 +29,11 @@ class Companion {
 
   /// Visual / catalog facts (asset, localised name, description,
   /// rarity tier).
-  final CosmeticDefinition cosmetic;
+  final Cosmetic cosmetic;
 
   /// Progression-engine node that owns the manual-claim contract.
   /// Drives [claimNode] calls when the player taps "Vyzvedni".
-  final CompanionAvailabilityNode node;
+  final CompanionAvailability node;
 
   /// Resolved lifecycle state for the current player. See
   /// [CompanionState] for the four-state model.
@@ -83,20 +83,20 @@ class CompanionsRegistry {
 
   final CosmeticCatalog cosmeticCatalog;
 
-  /// Cached list of every `CompanionAvailabilityNode` in the engine
+  /// Cached list of every `CompanionAvailability` in the engine
   /// catalog (currently 7 — see `companions_content.dart`). Built
   /// once at first access; the catalog is `const` so a single eager
   /// pass is fine.
-  static final List<CompanionAvailabilityNode> _nodes = [
-    for (final node in const ProgressionNodeCatalog().build())
-      if (node is CompanionAvailabilityNode) node,
+  static final List<CompanionAvailability> _nodes = [
+    for (final node in const ProgressionEntryCatalog().build())
+      if (node is CompanionAvailability) node,
   ];
 
   /// Read-only view of every companion-availability node in the
   /// catalog. Used by devtools surfaces that don't have a player
   /// state yet (e.g. pre-bind) and just want to know which
   /// companions exist.
-  static List<CompanionAvailabilityNode> get allNodes =>
+  static List<CompanionAvailability> get allNodes =>
       List.unmodifiable(_nodes);
 
   /// Build a [Companion] for every catalog entry. Order matches the

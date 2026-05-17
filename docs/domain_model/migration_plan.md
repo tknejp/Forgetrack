@@ -171,7 +171,7 @@ Plán dodržuje 5 pravidel, která jsou silnější než cokoliv v jednotlivých
 
 **Goal:** Dva paralelní mechanické refactor passy v jednom Stage:
 
-(a) Rename `ProgressionNode` → `ProgressionEntry`, drop `Node` suffix u všech subtypů, `ObjectiveDefinition` → `Objective`, `CosmeticDefinition` → `Cosmetic`. `RewardDefinition` zachován (proposal §2.3 disambiguation).
+(a) Rename `ProgressionNode` → `ProgressionEntry`, drop `Node` suffix u všech subtypů, `Objective` → `Objective`, `Cosmetic` → `Cosmetic`. `RewardDefinition` zachován (proposal §2.3 disambiguation).
 
 (b) **Typed identifier rollout** přes `extension type` (Dart 3, zero runtime cost). `String` ids dostávají typové wrappers: `QuestId`, `AchievementId`, `ChapterId`, `CosmeticId`, `ObjectiveId`, `MilestoneId`. Zero-overhead, ale kompilátor refusne `Inventory.byId(quest.id)` typo.
 
@@ -189,9 +189,9 @@ Plán dodržuje 5 pravidel, která jsou silnější než cokoliv v jednotlivých
 
 - `lib/features/progression_engine/domain/models/progression_node_definition.dart` — rename všechny classes.
 - `lib/features/progression_engine/domain/catalog/content/*.dart` (~12 files) — update všechny subtype call sites.
-- `lib/features/progression_engine/domain/catalog/progression_node_catalog.dart` → `progression_entry_catalog.dart`. Rename `ProgressionNodeCatalog` → `ProgressionEntryCatalog`.
+- `lib/features/progression_engine/domain/catalog/progression_node_catalog.dart` → `progression_entry_catalog.dart`. Rename `ProgressionEntryCatalog` → `ProgressionEntryCatalog`.
 - `lib/features/progression_engine/domain/models/objective_definition.dart` — class rename.
-- `lib/features/cosmetics/domain/cosmetic_models.dart` — `CosmeticDefinition` → `Cosmetic` (single class for now; sealing přijde v Phase 9).
+- `lib/features/cosmetics/domain/cosmetic_models.dart` — `Cosmetic` → `Cosmetic` (single class for now; sealing přijde v Phase 9).
 
 (b) Typed ids:
 
@@ -223,15 +223,15 @@ Plán dodržuje 5 pravidel, která jsou silnější než cokoliv v jednotlivých
 **DoD:**
 
 - [ ] Žádný symbol s `Node` suffixem v `progression_engine/domain/` (kromě `_node_` v Isar `.g.dart` files, které nepatří doméně).
-- [ ] `Cosmetic` (ne `CosmeticDefinition`) napříč repo.
-- [ ] `Objective` (ne `ObjectiveDefinition`) napříč repo.
+- [ ] `Cosmetic` (ne `Cosmetic`) napříč repo.
+- [ ] `Objective` (ne `Objective`) napříč repo.
 - [ ] `QuestId`, `AchievementId`, `ChapterId`, `CosmeticId`, `ObjectiveId` definovány a používány v catalog + repository signatures.
 - [ ] Persistence boundary explicitně dokumentován — Isar/Firestore mappers konvertují na/z `String`.
 - [ ] Build green; all tests pass.
 
 **Rizika:**
 
-- Generic rename collisions. Např. `CompanionAvailabilityNode` → `CompanionAvailability` (catalog node), `Cosmetic` typu `companion` → bude `Companion` (catalog cosmetic) až v Phase 9.
+- Generic rename collisions. Např. `CompanionAvailability` → `CompanionAvailability` (catalog node), `Cosmetic` typu `companion` → bude `Companion` (catalog cosmetic) až v Phase 9.
 - Extension type adoption má learning curve — v týmovém kontextu by potřebovala doc. Solo developer (uživatel) tomu rozumí rychle.
 - Mass-id wrap může explodovat PR size — proto sub-fáze 3.a/3.b/3.c.
 
@@ -434,7 +434,7 @@ Plán dodržuje 5 pravidel, která jsou silnější než cokoliv v jednotlivých
 
 **Goal:** Refactor `Cosmetic` ze single class s `CosmeticType type` enum diskriminátor na sealed hierarchii: `Frame`, `Background`, `Companion`, `RelicCosmetic`, `Emblem`, `TitleFlair`, `MapEffect`. Catalog factories per-typ.
 
-**Pre-conditions:** Phase 3 done (Cosmetic rename z CosmeticDefinition).
+**Pre-conditions:** Phase 3 done (Cosmetic rename z Cosmetic).
 
 **Files touched:**
 - Modify: `lib/features/cosmetics/domain/cosmetic_models.dart` — convert `class Cosmetic` na `sealed class Cosmetic` + 7 subtypů.

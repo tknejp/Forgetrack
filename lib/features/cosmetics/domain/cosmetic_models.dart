@@ -8,7 +8,7 @@ import '../../../shared/domain/rarity.dart';
 export '../../../shared/domain/rarity.dart' show Rarity;
 
 /// Resolves a localized string from the active [AppLocalizations]. Used by
-/// [CosmeticDefinition] for player-facing text (name / description / unlock
+/// [Cosmetic] for player-facing text (name / description / unlock
 /// hint) so the catalog itself is the single mapping from cosmetic id to
 /// generated `.arb` getter — no separate switch table to maintain.
 typedef CosmeticText = String Function(AppLocalizations l10n);
@@ -54,8 +54,8 @@ enum CosmeticUnlockSource {
 /// catalog entry inlines its own `(l) => l.cosmeticXxx` resolver — there is
 /// no separate id-to-key switch table. Adding a cosmetic touches the catalog
 /// and the `.arb` files, nothing else.
-class CosmeticDefinition {
-  const CosmeticDefinition({
+class Cosmetic {
+  const Cosmetic({
     required this.id,
     required this.type,
     required this.rarity,

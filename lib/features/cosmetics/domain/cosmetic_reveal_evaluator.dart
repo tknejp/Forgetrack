@@ -62,7 +62,7 @@ class CosmeticRevealEvaluator {
   }
 
   static CosmeticRevealResult _evaluateOne(
-    CosmeticDefinition def,
+    Cosmetic def,
     List<CosmeticUnlockRule> rules,
     CosmeticUnlockSnapshot snapshot,
     Set<String> ownedIds,

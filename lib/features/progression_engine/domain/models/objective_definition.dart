@@ -16,8 +16,8 @@ export '../progression_domain.dart' show ProgressionDomain;
 /// reward, the achievement unlock and the milestone are three nodes
 /// pointing at it. The evaluator computes the outcome once.
 @immutable
-class ObjectiveDefinition {
-  const ObjectiveDefinition({
+class Objective {
+  const Objective({
     required this.id,
     required this.metric,
     required this.scope,

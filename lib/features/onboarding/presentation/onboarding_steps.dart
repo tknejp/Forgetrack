@@ -888,8 +888,8 @@ class _FirstQuestsCard extends StatelessWidget {
     final l10n = context.l10n;
     final rows = <_QuestRow>[];
     for (final id in _starterQuestNodeIds) {
-      final node = ProgressionNodeCatalog.definitionForId(id);
-      if (node is! QuestNode) continue;
+      final node = ProgressionEntryCatalog.definitionForId(id);
+      if (node is! Quest) continue;
       var rewardXp = 0;
       for (final reward in node.rewards) {
         if (reward is XpReward) rewardXp += reward.amount;

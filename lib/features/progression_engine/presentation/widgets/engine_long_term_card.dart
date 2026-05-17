@@ -343,12 +343,12 @@ class _LongTermExpanded extends StatelessWidget {
 
 /// Inline hint naming the first locked chain step and the reason it
 /// can't be worked on yet. Falls back to the authored
-/// [QuestNode.lockedHintKey] when set (e.g. "VyÅ¾aduje level 10"),
+/// [Quest.lockedHintKey] when set (e.g. "VyÅ¾aduje level 10"),
 /// otherwise the generic "SplÅˆ pÅ™edchozÃ­ krok" copy.
 class _NextStepHint extends StatelessWidget {
   const _NextStepHint({required this.node, required this.l10n});
 
-  final QuestNode node;
+  final Quest node;
   final AppLocalizations l10n;
 
   @override
@@ -418,7 +418,7 @@ class _AlsoUnlocks extends StatelessWidget {
     required this.l10n,
   });
 
-  final List<ProgressionNode> companions;
+  final List<ProgressionEntry> companions;
   final EngineQuestProgress quest;
   final Color accent;
   final AppLocalizations l10n;
@@ -529,7 +529,7 @@ class _CompanionRow extends StatelessWidget {
     required this.l10n,
   });
 
-  final ProgressionNode node;
+  final ProgressionEntry node;
   final EngineQuestProgress quest;
   final Color accent;
   final AppLocalizations l10n;
@@ -607,7 +607,7 @@ class _Leading extends StatelessWidget {
     required this.size,
   });
 
-  final QuestNode node;
+  final Quest node;
   final ProgressionDomain domain;
   final double size;
 
