@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '../models/ledger_event.dart';
+import 'package:forgetrack/domain/journal/journal_event.dart';
 
 /// Immutable view of the engine's ledger at one point in time.
 ///

@@ -6,7 +6,7 @@ import '../domain/evaluator/progression_node_resolver.dart';
 import '../domain/evaluator/reward_grant_planner.dart';
 import '../domain/evaluator/unlock_condition_resolver.dart';
 import '../domain/models/engine_evaluation_input.dart';
-import '../domain/models/ledger_event.dart';
+import 'package:forgetrack/domain/journal/journal_event.dart';
 import '../domain/models/claim_policy.dart';
 import '../domain/models/progression_node_definition.dart';
 import '../domain/models/progression_resolution_reason.dart';

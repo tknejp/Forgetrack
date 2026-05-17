@@ -23,7 +23,7 @@ import '../domain/evaluator/engine_streak_source.dart';
 import '../domain/evaluator/progression_node_resolver.dart';
 import '../domain/models/claim_policy.dart';
 import '../domain/models/engine_evaluation_input.dart';
-import '../domain/models/ledger_event.dart';
+import 'package:forgetrack/domain/journal/journal_event.dart';
 import '../domain/models/objective_definition.dart';
 import '../domain/models/objective_metric.dart';
 import '../domain/models/objective_operator.dart';

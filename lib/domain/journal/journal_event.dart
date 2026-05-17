@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 
 /// One persisted record in the engine's append-only ledger. Sealed so
 /// the repository, devtools dump, and future cloud-sync mapper get

@@ -4,7 +4,7 @@ import '../../cosmetics/application/cosmetics_provider.dart';
 import '../../cosmetics/domain/cosmetic_models.dart';
 import '../../progression_engine/domain/catalog/content/quest_assets.dart';
 import '../../progression_engine/domain/catalog/progression_node_catalog.dart';
-import '../../progression_engine/domain/models/ledger_event.dart';
+import 'package:forgetrack/domain/journal/journal_event.dart';
 import '../../progression_engine/domain/models/progression_node_definition.dart';
 import '../../progression_engine/domain/models/progression_resolution_reason.dart';
 import '../../progression_engine/domain/models/progression_resolution_result.dart';

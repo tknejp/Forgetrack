@@ -1,5 +1,5 @@
 import '../domain/evaluator/reward_grant_planner.dart';
-import '../domain/models/ledger_event.dart';
+import 'package:forgetrack/domain/journal/journal_event.dart';
 import '../domain/models/reward_definition.dart';
 import '../domain/policy/level_policy.dart';
 

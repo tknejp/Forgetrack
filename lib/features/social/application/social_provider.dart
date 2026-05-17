@@ -9,7 +9,7 @@ import '../../auth/application/auth_provider.dart';
 import '../../cosmetics/application/cosmetics_provider.dart';
 import '../../progression_engine/domain/progression_domain.dart' show ProgressionDomain;
 import '../../progression_engine/application/progression_engine_provider.dart';
-import '../../progression_engine/domain/models/ledger_event.dart'
+import 'package:forgetrack/domain/journal/journal_event.dart'
     show RewardGrantKind;
 import '../../progression_engine/domain/catalog/progression_node_catalog.dart';
 import '../../progression_engine/domain/models/progression_node_definition.dart'

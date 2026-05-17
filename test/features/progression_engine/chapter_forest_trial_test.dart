@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forgetrack/features/progression_engine/application/progression_engine.dart';
 import 'package:forgetrack/features/progression_engine/data/in_memory_progression_engine_repository.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/engine_evaluation_input.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/ledger_event.dart';
+import 'package:forgetrack/domain/journal/journal_event.dart';
 
 EngineEvaluationInput _input({
   int level = 10,

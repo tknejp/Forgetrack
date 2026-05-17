@@ -1,4 +1,4 @@
-import '../models/ledger_event.dart';
+import 'package:forgetrack/domain/journal/journal_event.dart';
 import 'ledger_snapshot.dart';
 
 /// Persistence interface for the new engine. Phase 2 uses an

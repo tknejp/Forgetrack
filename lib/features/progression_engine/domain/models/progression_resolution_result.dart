@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../evaluator/objective_evaluator.dart' show ObjectiveOutcome;
 import 'engine_evaluation_input.dart';
-import 'ledger_event.dart';
+import 'package:forgetrack/domain/journal/journal_event.dart';
 import 'progression_resolution_reason.dart';
 
 export '../evaluator/objective_evaluator.dart' show ObjectiveOutcome;

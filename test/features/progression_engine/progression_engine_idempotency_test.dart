@@ -7,7 +7,7 @@ import 'package:forgetrack/features/progression_engine/domain/catalog/objective_
 import 'package:forgetrack/features/progression_engine/domain/catalog/progression_node_catalog.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/claim_policy.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/engine_evaluation_input.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/ledger_event.dart';
+import 'package:forgetrack/domain/journal/journal_event.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/objective_definition.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/objective_metric.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/objective_operator.dart';

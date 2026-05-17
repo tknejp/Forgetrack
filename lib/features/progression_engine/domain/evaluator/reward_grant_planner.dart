@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../models/engine_evaluation_input.dart';
-import '../models/ledger_event.dart';
+import 'package:forgetrack/domain/journal/journal_event.dart';
 import '../models/progression_node_definition.dart';
 import '../models/reward_definition.dart';
 import '../repository/ledger_snapshot.dart';

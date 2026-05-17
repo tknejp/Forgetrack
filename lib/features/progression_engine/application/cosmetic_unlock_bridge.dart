@@ -2,7 +2,7 @@ import 'dart:async';
 
 import '../../../core/logging/app_log.dart';
 import '../../cosmetics/application/cosmetics_provider.dart';
-import '../domain/models/ledger_event.dart';
+import 'package:forgetrack/domain/journal/journal_event.dart';
 import '../domain/models/progression_resolution_result.dart';
 import '../domain/repository/ledger_snapshot.dart';
 import 'cosmetic_reveal_snapshot_builder.dart';

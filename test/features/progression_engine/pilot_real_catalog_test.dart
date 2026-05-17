@@ -7,7 +7,7 @@ import 'package:forgetrack/features/progression_engine/domain/catalog/engine_cat
 import 'package:forgetrack/features/progression_engine/domain/catalog/objective_catalog.dart';
 import 'package:forgetrack/features/progression_engine/domain/catalog/progression_node_catalog.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/engine_evaluation_input.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/ledger_event.dart';
+import 'package:forgetrack/domain/journal/journal_event.dart';
 
 EngineEvaluationInput _ambitiousPlayerInput() => EngineEvaluationInput(
       evaluatedAt: DateTime(2026, 5, 10, 18),

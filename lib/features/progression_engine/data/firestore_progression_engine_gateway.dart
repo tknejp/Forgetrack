@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../core/logging/app_log.dart';
-import '../domain/models/ledger_event.dart';
+import 'package:forgetrack/domain/journal/journal_event.dart';
 import '../domain/repository/ledger_snapshot.dart';
 
 /// Cloud-side gateway for the V2 progression engine ledger.

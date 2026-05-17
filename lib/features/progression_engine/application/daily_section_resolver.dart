@@ -1,4 +1,4 @@
-import '../domain/models/ledger_event.dart';
+import 'package:forgetrack/domain/journal/journal_event.dart';
 import '../domain/models/quest_display_bucket.dart';
 import '../domain/models/quest_policies.dart';
 import '../domain/repository/ledger_snapshot.dart';
