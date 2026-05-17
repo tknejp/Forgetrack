@@ -47,7 +47,8 @@
             { "name": "EngineNodeClaimRecord", "purpose": "Uživatel claimnul reward (oproti completion, který je auto)." },
             { "name": "EngineRewardGrantRecord", "purpose": "Granted reward (XP, cosmetic, chapter unlock, …). finalXp vypočteno v okamžiku claimu." },
             { "name": "EngineNodeAnnouncementRecord", "purpose": "UI announcement event — bylo zobrazeno tooltipem / celebration sheetem?" },
-            { "name": "EngineActiveSelectionRecord", "purpose": "Aktivní set side-questů / chapterů (perzistovaný mission board)." }
+            { "name": "EngineActiveSelectionRecord", "purpose": "Aktivní set side-questů / chapterů (perzistovaný mission board)." },
+            { "name": "EngineQuestOfferingRecord", "purpose": "Per-day záznam, že DailySectionResolver vybral tento uzel jako dnešní slot. Drží slot uzamčený do půlnoci + napájí 2denní anti-repeat cooldown filter." }
           ],
           "writers": ["ProgressionEngineProvider (via HybridProgressionEngineRepository)"],
           "readers": ["ProgressionEngineProvider", "Celebration", "Journey", "Social (snapshot)"]
@@ -117,6 +118,13 @@
           "readers": ["HybridProgressionEngineRepository.pullAndMerge"]
         },
         {
+          "id": "engine_quest_offerings",
+          "name": "users/{uid}/engineQuestOfferings/{eventKey}",
+          "role": "V2 QuestOfferedEvent — daily-section pick na konkrétní den (yyyy-MM-dd). Cross-device sync drží konzistentní rotaci + anti-repeat cooldown napříč zařízeními.",
+          "writers": ["FirestoreProgressionEngineGateway"],
+          "readers": ["HybridProgressionEngineRepository.pullAndMerge", "DailySectionResolver (přes ledger)"]
+        },
+        {
           "id": "cosmetic_entitlements",
           "name": "users/{uid}/cosmeticEntitlements/{cosmeticId}",
           "role": "Read-only z pohledu klienta. Promotional grants psané Cloud Functions / externí systémy.",
@@ -170,7 +178,9 @@
         { "id": "pref-notif-enabled", "name": "notifications_enabled", "role": "Master switch lokálních + push notifikací.", "writers": ["NotificationPreferencesProvider"], "readers": ["NotificationPreferencesProvider", "BackgroundSyncService"] },
         { "id": "pref-onboarding", "name": "onboarding_completed", "role": "Onboarding flow dokončen?", "writers": ["OnboardingProvider"], "readers": ["OnboardingProvider"] },
         { "id": "pref-spreadsheet", "name": "spreadsheet_id", "role": "ID Google Sheets dokumentu používaného exporty.", "writers": ["SheetsExportService"], "readers": ["SheetsExportService", "BushidoSheetsService"] },
-        { "id": "pref-goals", "name": "daily_steps / weekly_activity_mins", "role": "Uživatelské cíle (kroky, aktivita).", "writers": ["GoalsProvider"], "readers": ["GoalsProvider"] },
+        { "id": "pref-goals", "name": "goal_daily_steps / goal_daily_calories / goal_daily_protein / goal_daily_carbs / goal_daily_fat / goal_daily_fiber / goal_sleep_hours / goal_weekly_activity_mins / goal_target_weight", "role": "Uživatelské cíle (kroky, kalorie, makra, spánek, aktivita, váha).", "writers": ["GoalsProvider"], "readers": ["GoalsProvider"] },
+        { "id": "pref-goal-history", "name": "goal_*_history (steps / calories / protein / fat / carbs / fiber / sleep / weekly_activity)", "role": "Per-cíl JSON pole revizí (effectiveFrom + value) — historized cíle pro retroactive backfill evaluation. Local-only, na novém zařízení se reseeduje na aktuální hodnotu.", "writers": ["GoalsProvider"], "readers": ["GoalsProvider.progressionDaily*ForDate"] },
+        { "id": "pref-joined-at", "name": "forgetrack_joined_at_iso", "role": "ISO timestamp prvního dne v appce — floor pro retroactive claim window. Reseeds z nejstaršího ledger eventu po pullAndMerge, takže cross-device se chová správně i bez explicitního sync.", "writers": ["ProgressionEngineProvider._resolveJoinedAt"], "readers": ["ProgressionEngineProvider.joinedAt"] },
         { "id": "pref-card-order", "name": "home_card_order", "role": "Pořadí dashboard karet (drag-and-drop).", "writers": ["HomeCardOrderProvider"], "readers": ["HomeCardOrderProvider"] },
         { "id": "pref-devtools", "name": "devtools_debug_mode / devtools_bg_debug_notifications_enabled / devtools_access_granted_last_known / devtools_overrides", "role": "DevTools state a overrides.", "writers": ["DevToolsProvider"], "readers": ["DevToolsProvider", "BackgroundSyncService"] },
         { "id": "pref-pinned-emblems", "name": "pinned_emblems_{uid}", "role": "Per-user vybrané emblems na profil.", "writers": ["PinnedEmblemsStore"], "readers": ["PinnedEmblemsStore"] },

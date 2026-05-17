@@ -39,9 +39,9 @@ Built with Flutter, fully localized in **Czech and English**.
 
 ### Progression — the RPG layer
 
-- **Append-only event ledger** — every reward, claim and node
-  completion is an immutable event with a deterministic key. Replayable,
-  idempotent, and audit-friendly.
+- **Append-only event ledger** — every reward, claim, node completion,
+  and daily-section offering is an immutable event with a
+  deterministic key. Replayable, idempotent, and audit-friendly.
 - **Catalog-driven content** — 11 chapters with storyline quests, daily
   & weekly objectives, combo chains, long-term goals, level milestones
   (1 to 100), achievements, and side-quests. All compile-time Dart, so
@@ -51,6 +51,12 @@ Built with Flutter, fully localized in **Czech and English**.
   (`level ≥ N AND owns relic_X AND owns relic_Y`).
 - **Journey map + celebrations** — pannable level-spine map and
   fullscreen celebration scenes for reward claims.
+- **Retroactive claim window** — forgot to tap claim? Backfill section
+  in the quests screen lets you reach 7 days back for daily goals,
+  daily quests, and individual workouts. Granted XP is frozen at
+  claim time, so a level-up never retroactively changes a past pill.
+  Daily challenge slot rotates only across midnight with a 2-day
+  anti-repeat cooldown to keep the daily pool varied.
 
 ### Sync & export
 

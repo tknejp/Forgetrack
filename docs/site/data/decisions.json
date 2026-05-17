@@ -190,6 +190,40 @@
       ],
       "alternatives": "Id-based lookup s runtime fallback. Příliš křehké — chyba se neukáže, dokud ten konkrétní text nepokrývá render.",
       "links": []
+    },
+    {
+      "id": "retroactive-claim-window",
+      "title": "Retroactive claim window — 7 dní zpět, anchored on joinedAt",
+      "status": "accepted",
+      "date": "2026",
+      "context": "Hráči zapomínají claimnout XP pily — z denních cílů, denních questů, jednotlivých workoutů. Strict same-day claim flow trestá zapomenutí; volný lifetime claim by pozval grind („shrábnu vše za 3 měsíce naráz\"). Engine ledger eventy se píší per-period (TodayScope → yyyy-MM-dd), takže retroaktivní zápis na den X je technicky čistý.",
+      "decision": "Společné okno [today − 7 days, today], capnuté na joinedAt. Konstanta kBackfillClaimLookbackDays v lib/features/progression_engine/domain/backfill/backfill_config.dart, default 7. Vstupní bod přes makeHistoricalClaimWindow(now, joinedAt). Claim API (claimActivity / claimDailyGoal / claimDailyQuest) sdílejí window check a píší standardní 4-event sekvenci s periodKey dle scope objectivu.",
+      "consequences": [
+        "Generic backfill model — claimActivity, claimDailyGoal, claimDailyQuest sdílejí window helper, hierarchii eventů, retroactive flow.",
+        "joinedAt seedován z prefs při prvním _hydrate, fallback na nejstarší ledger event → cross-device-correct přes pullAndMerge i bez explicitního sync prefs klíče.",
+        "Devtools tlačítko 'Joined date' umožní testerovi posunout okno do minulosti pro testování edge cases.",
+        "Goal history musí být historized (per-day target), aby retroaktivní evaluace dávala správné met / not-met výsledky. Steps / calories / protein / fat / carbs / fiber / sleep / weekly-activity historized; goal sync do Firestore záměrně NENÍ (cosmetic-only mismatch po device-swapu).",
+        "Achievementy s RewardCountMetric inkrementují korektně, protože retroactive claim píše plnou 4-event sekvenci včetně NodeCompletion + RewardGrant."
+      ],
+      "alternatives": "Same-day only claim (žádný backfill) — trestá zapomenutí. Lifetime claim — pozve grind. Variable window per quest type — komplikace bez přínosu. Per-quest manual claim-until-claim — sticky claim by zaplnil sloty.",
+      "links": ["docs/progression_engine/quest_history_refactor.md"]
+    },
+    {
+      "id": "daily-rotation-via-offered-events",
+      "title": "Daily quest rotace přes QuestOfferedEvent ledger",
+      "status": "accepted",
+      "date": "2026",
+      "context": "Daily challenges byly LifetimeScope — jednou splněný challenge navždy vypadl z poolu. Plus sticky-claim-today branch v rezolveru pinoval completed-not-claimed quest po celý den, takže nesprávně potlačoval fresh pick. Hráč viděl monotónní rotaci („proč mám stejný challenge včera i dnes?\") a uváznuté questy v slotu.",
+      "decision": "Daily challenges přepnuty na TodayScope (objektiv per-den, nikoli once-and-done). Nový QuestOfferedEvent(nodeId, dayKey) v ledgeru — idempotentní záznam, že rezolver vybral uzel na konkrétní den. Rezolver Step 1 reuse-uje dnešní offered eventy (pin slot), Step 2 picknuje fresh z cooldown-filtered poolu (offeredCooldownDays = 2). Univerzální pravidlo: 'quest rotuje jedině přes půlnoc dne, kdy byl přidán'.",
+      "consequences": [
+        "Cooldown filter: 2 dny → daily challenge nepadne den po sobě, 3. den už ano. Hráč vidí variability.",
+        "Sticky-claim-today branche pryč — slot drží přes offered event, ne přes completion ledger.",
+        "Daily challenges + jednotlivé combo steps + side quests automaticky do sekce Historie odměn (na dni offered eventu). Sekce Dokončené úkoly nyní jen long-term + chapter milestones + weekly + achievementy + combo finale.",
+        "Cross-device: offered eventy syncovány přes Firestore, takže anti-repeat funguje napříč zařízeními.",
+        "Day-rollover timer v ProgressionEngineProvider clearuje audit-signature 5 s po půlnoci a forceuje refresh, aby fresh pick nečekal na input change."
+      ],
+      "alternatives": "FNV(date) % poolSize bez cooldown — pravděpodobnostně se challenges opakují. Strict cycle s offeredCooldownDays = poolSize-1 — moc rigid. Per-quest manual claim-until-claim — sticky claim by zaplnil sloty.",
+      "links": ["docs/progression_engine/quest_history_refactor.md", "docs/features/firestore_sync.md"]
     }
   ]
 }

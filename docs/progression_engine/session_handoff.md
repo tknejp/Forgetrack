@@ -1,8 +1,44 @@
-# Progression Engine V2 — Session Handoff (2026-05-11)
+# Progression Engine V2 — Session Handoff (2026-05-17)
 
 Read this on session resume. Authoritative plan in
 [v2_phased_plan.md](v2_phased_plan.md);
 this doc is the working state.
+
+## 2026-05-17 — Retroactive claim + quest rotation history (post-V2)
+
+A separate, post-V2-foundation refactor landed on top of `main`. Plan
++ all 8 phases archived at
+[archive/quest_history_refactor.md](archive/quest_history_refactor.md).
+Headline outcomes:
+
+- **Per-day claim ledger** for activities, daily goals, and daily
+  quests. New `QuestOfferedEvent` ledger type + `claimActivity` /
+  `claimDailyGoal` / `claimDailyQuest` provider APIs.
+- **7-day retroactive claim window** (`kBackfillClaimLookbackDays`)
+  anchored on `joinedAt`, used by every backfill surface. Devtools
+  knob to override the join date for testing.
+- **Daily challenges** flipped from LifetimeScope to TodayScope —
+  each day picks a fresh challenge with a 2-day anti-repeat
+  cooldown. "Sticky-claim-today" branches retired; today's offered
+  event pins the slot until midnight (no in-day rotation).
+- **Quest screen** sections re-scoped: `_CompletedSection` keeps
+  long-term + chapter + weekly + achievements + combo finales;
+  daily challenges and per-step combo entries moved to the new
+  `EngineBackfillSection` ("Historie odměn") that lists past days
+  with goal / quest / activity rows.
+- **Goal historization** for fat / carbs / fiber + new `dailyFiber`
+  field in `GoalsProvider`; settings goals UX redesigned around
+  domain-tinted accents + single-tap edit for body / sleep.
+- **Day-rollover timer** in `ProgressionEngineProvider` so an app
+  left open past midnight re-evaluates daily rotation at ~00:00:05.
+- **Firestore sync** mirrors the new `QuestOfferedEvent` collection
+  + `pullAndMerge` bug fixed (was missing `questOfferings` in the
+  spread). Goal history is intentionally local-only — documented as
+  cosmetic-only mismatch on device-swap in
+  [`docs/features/firestore_sync.md`](../features/firestore_sync.md).
+
+Phase 6.6+ (next section) of the V2 plan remains the open
+workstream and is unaffected.
 
 ## Branch + commits
 

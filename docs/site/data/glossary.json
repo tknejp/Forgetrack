@@ -5,8 +5,24 @@
       "title": "LedgerEvent",
       "category": "Progression",
       "file": "lib/features/progression_engine/domain/models/ledger_event.dart",
-      "summary": "Sealed hierarchie 5 typů událostí v append-only ledgeru. Každá nese deterministický eventKey — re-zápis stejného eventu je no-op (set() v Firestore, composite unique v Isaru).",
-      "diagram": "classDiagram\n    class LedgerEvent {\n      <<sealed>>\n      +String eventKey\n      +DateTime occurredAt\n    }\n    class ObjectiveCompletionEvent {\n      +String objectiveId\n      +String periodKey\n    }\n    class NodeCompletionEvent {\n      +String nodeId\n      +String periodKey\n    }\n    class NodeAnnouncedEvent {\n      +String nodeId\n      +String periodKey\n    }\n    class NodeClaimEvent {\n      +String nodeId\n      +String periodKey\n    }\n    class RewardGrantEvent {\n      +RewardDefinition reward\n      +int finalXp\n      +int levelAtClaim\n    }\n    LedgerEvent <|-- ObjectiveCompletionEvent\n    LedgerEvent <|-- NodeCompletionEvent\n    LedgerEvent <|-- NodeAnnouncedEvent\n    LedgerEvent <|-- NodeClaimEvent\n    LedgerEvent <|-- RewardGrantEvent"
+      "summary": "Sealed hierarchie 6 typů událostí v append-only ledgeru. Každá nese deterministický eventKey — re-zápis stejného eventu je no-op (set() v Firestore, composite unique v Isaru).",
+      "diagram": "classDiagram\n    class LedgerEvent {\n      <<sealed>>\n      +String eventKey\n      +DateTime occurredAt\n    }\n    class ObjectiveCompletionEvent {\n      +String objectiveId\n      +String periodKey\n    }\n    class NodeCompletionEvent {\n      +String nodeId\n      +String periodKey\n    }\n    class NodeAnnouncedEvent {\n      +String nodeId\n      +String periodKey\n    }\n    class NodeClaimEvent {\n      +String nodeId\n      +String periodKey\n    }\n    class RewardGrantEvent {\n      +RewardDefinition reward\n      +int finalXp\n      +int levelAtClaim\n    }\n    class QuestOfferedEvent {\n      +String nodeId\n      +String dayKey\n    }\n    LedgerEvent <|-- ObjectiveCompletionEvent\n    LedgerEvent <|-- NodeCompletionEvent\n    LedgerEvent <|-- NodeAnnouncedEvent\n    LedgerEvent <|-- NodeClaimEvent\n    LedgerEvent <|-- RewardGrantEvent\n    LedgerEvent <|-- QuestOfferedEvent"
+    },
+    {
+      "id": "backfill-models",
+      "title": "DailyBackfillEntry & claim items",
+      "category": "Progression",
+      "file": "lib/features/progression_engine/domain/backfill/daily_backfill_models.dart",
+      "summary": "View modely sekce „Historie odměn\" v quest screenu. Per-den agregát tří typů řádků: daily-goal claim, daily-quest claim (offered ten den), per-activity workout claim. Pure derivation z ledgeru — žádný state.",
+      "diagram": "classDiagram\n    class DailyBackfillEntry {\n      +DateTime date\n      +bool isWithinWindow\n      +List~DailyGoalClaimItem~ dailyGoals\n      +List~DailyQuestClaimItem~ dailyQuests\n      +List~ActivityClaimState~ activities\n      +int claimableXp\n      +int claimedXp\n      +int pendingCount\n    }\n    class DailyGoalClaimItem {\n      +QuestNode node\n      +double actualValue\n      +double targetValue\n      +DailyGoalValueUnit valueUnit\n      +bool isMet\n      +int previewXp\n      +bool isClaimed\n    }\n    class DailyQuestClaimItem {\n      +QuestNode node\n      +bool isCompleted\n      +bool isAvailableForClaim\n      +int previewXp\n      +bool isClaimed\n    }\n    class ActivityClaimState {\n      +ActivityRecord record\n      +String claimKey\n      +int previewXp\n      +bool isClaimed\n    }\n    DailyBackfillEntry o-- DailyGoalClaimItem\n    DailyBackfillEntry o-- DailyQuestClaimItem\n    DailyBackfillEntry o-- ActivityClaimState"
+    },
+    {
+      "id": "historical-claim-window",
+      "title": "HistoricalClaimWindow",
+      "category": "Progression",
+      "file": "lib/features/progression_engine/domain/historical_claim_window.dart",
+      "summary": "Inkluzivní 7denní okno [earliest, latest] od dneška zpět, capnuté na joinedAt. Společný gate pro všechny retroactive claim API: claimActivity / claimDailyGoal / claimDailyQuest. Tunable přes kBackfillClaimLookbackDays v backfill_config.dart.",
+      "diagram": "classDiagram\n    class HistoricalClaimWindow {\n      +DateTime earliest\n      +DateTime latest\n      +bool contains(DateTime day)\n    }\n    class makeHistoricalClaimWindow {\n      <<function>>\n      +HistoricalClaimWindow(now, joinedAt, lookbackDays)\n    }"
     },
     {
       "id": "progression-node-quests",
