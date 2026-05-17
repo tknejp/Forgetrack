@@ -1310,10 +1310,16 @@ class ProgressionEngineProvider extends ChangeNotifier {
     // now, including their "available for claim" state. Surfacing
     // them here again would double-list the same chapter step on
     // both surfaces while the player decides whether to claim.
+    //
+    // Daily challenges are excluded — they're surfaced in the
+    // backfill section ("Historie odměn"), bound to the day they
+    // were offered on. Showing them here again would double-list a
+    // claim across two surfaces.
     final touched = <EngineQuestProgress>[];
     for (final bucket in QuestDisplayBucket.values) {
       if (bucket == QuestDisplayBucket.daily) continue;
       if (bucket == QuestDisplayBucket.chapter) continue;
+      if (bucket == QuestDisplayBucket.dailyChallenge) continue;
       // Long-term quests now stay in the active DLOUHODOBÉ section
       // until claimed (see `currentLongTermQuests`). Surfacing the
       // same claimable card here too would split the claim flow
@@ -1377,6 +1383,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
     if (byChain.isNotEmpty) {
       for (final bucket in QuestDisplayBucket.values) {
         if (bucket == QuestDisplayBucket.daily) continue;
+        if (bucket == QuestDisplayBucket.dailyChallenge) continue;
         for (final q in _questsForBucket(bucket)) {
           final chainId = q.node.chainId;
           if (chainId == null || !byChain.containsKey(chainId)) continue;
@@ -1412,6 +1419,18 @@ class ProgressionEngineProvider extends ChangeNotifier {
       final fullChain = [...?fullChainById[chainId]]
         ..sort((a, b) =>
             (a.node.chainOrder ?? 0).compareTo(b.node.chainOrder ?? 0));
+
+      // Combo chains hide their per-step entries here — those live in
+      // the backfill section attached to the day each step was
+      // offered. The aggregate chain card only surfaces once the
+      // finale is claimable or claimed, signalling the narrative
+      // milestone moment ("you closed the chain").
+      final isCombo =
+          touchedSteps.first.node.displayBucket == QuestDisplayBucket.combo;
+      if (isCombo) {
+        final finale = fullChain.isEmpty ? touchedSteps.last : fullChain.last;
+        if (!finale.isCompleted && !finale.isAvailableForClaim) continue;
+      }
       // Representative = highest-chainOrder touched step (most recent
       // progress). The chain row shown on the card walks `fullChain`
       // so locked future steps render as 🔒 dots — gives the player
