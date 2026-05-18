@@ -86,6 +86,16 @@
       "dependsOn": ["AuthProvider", "GoalsProvider", "FitnessProvider", "KalorickeTabulkyProvider", "CosmeticsProvider"]
     },
     {
+      "id": "PlayerProvider",
+      "displayName": "Player",
+      "feature": "domain",
+      "group": "gameplay",
+      "kind": "ChangeNotifierProxyProvider",
+      "file": "lib/app/player_provider.dart",
+      "summary": "Player aggregate read-through wrapper nad AuthProvider + ProgressionEngineProvider. Phase 4 scaffolding — žádný consumer zatím nečte přes Player; Phase 5 přepojí level/XP/joinedAt na Journal jako source-of-truth.",
+      "dependsOn": ["AuthProvider", "ProgressionEngineProvider"]
+    },
+    {
       "id": "SocialProvider",
       "displayName": "Social",
       "feature": "social",

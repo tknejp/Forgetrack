@@ -60,6 +60,7 @@ import 'features/devtools/application/devtools_provider.dart';
 import 'features/devtools/application/factory_reset/factory_reset_service.dart';
 import 'features/onboarding/application/onboarding_provider.dart';
 import 'app/locale_provider.dart';
+import 'app/player_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -296,6 +297,31 @@ Future<void> main() async {
               nutritionProvider: kt,
               cosmeticsProvider: cosmetics,
               authUid: auth.isSignedIn ? auth.user?.id : null,
+            );
+            return provider;
+          },
+        ),
+        // Phase 4 of the domain refactor: Player aggregate scaffolding.
+        // Read-through wrapper over AuthProvider + ProgressionEngineProvider
+        // — no consumer reads through Player yet (that's Phase 5+). The
+        // proxy lives directly after ProgressionEngineProvider so its
+        // update sees both upstream providers in scope.
+        ChangeNotifierProxyProvider2<AuthProvider, ProgressionEngineProvider,
+            PlayerProvider>(
+          // Lazy: nothing reads PlayerProvider in Phase 4, so deferring
+          // creation until first read keeps startup cost flat while the
+          // scaffolding is in place.
+          create: (_) => PlayerProvider(),
+          update: (_, auth, engine, provider) {
+            final identity = auth.user;
+            final profile = engine.profile;
+            provider!.applySnapshot(
+              uid: identity?.id ?? '',
+              level: profile.level,
+              totalXp: profile.totalXp,
+              joinedAt: engine.joinedAt,
+              displayName: identity?.displayName,
+              photoUrl: identity?.photoUrl,
             );
             return provider;
           },

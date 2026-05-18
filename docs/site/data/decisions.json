@@ -273,6 +273,23 @@
       ],
       "alternatives": "A) Sealed class IdToken { String value; } pro každý kind. Boilerplate (equals/hashCode/toString) per typ, ne zero-cost. B) String typedef NodeId = String. Žádná typová izolace — kompilátor toleruje záměnu. C) Status quo (raw String) — odmítnuto, audit + companion bugy ukázaly nedostatek. D) Extension types `implements Object` (původní volba) — zachovává oboustrannou type-isolation, ale vyžaduje .raw na každém String-parameter call site. Migrace pak cascade-rolovala ~600 errorů; přechod na `implements String` v rámci Phase 3.b.2 redukoval to na ~20 spravovatelných míst (catalog literál wraps).",
       "links": ["docs/domain_model/proposal.md", "docs/domain_model/migration_plan.md"]
+    },
+    {
+      "id": "player-as-root-aggregate",
+      "title": "Player jako root aggregate (žádný globální Context)",
+      "status": "accepted",
+      "date": "2026-05-18",
+      "context": "Před refactorem byl per-user durable state rozházený přes ProgressionEngineProvider (level / totalXp / joinedAt), AuthProvider (Identity → displayName / photoUrl), zatím-neexistující settings surface (rpgModeEnabled). DDD učebnice často radí 'Context aggregate' jako globální kořen, ale Forgetrack je single-player app — žádný explicit Context není potřeba. Proposal §10 Q2 to potvrdil; Phase 4 migration plánu to teď zhmotňuje v kódu.",
+      "decision": "Player je root aggregate v lib/domain/player/player.dart — immutable value object s fieldy (uid, level, totalXp, joinedAt, rpgModeEnabled, displayName, photoUrl), const ctor, value-based equals/hashCode. Kompozice s upstream daty se děje ve widget stromu skrz ChangeNotifierProxyProvider2<AuthProvider, ProgressionEngineProvider, PlayerProvider>, ne přes explicit aggregate-of-aggregates. Phase 4 ponechává Player jako read-through wrapper — žádný consumer ještě nečte přes něj (to je úkol Phase 5+, který přepojí level/XP/joinedAt na Journal jako source-of-truth). PlayerProvider.applySnapshot bere primitivy, ne live upstream providery — drží unit test surface úzký a oddělí seam od Firebase / Isar.",
+      "consequences": [
+        "Single-source-of-truth pro per-user state: jedna immutable value class místo getterů rozházených přes 3 providery.",
+        "Kompozice je grep-able — provider tree v main.dart je searchable kód, žádný runtime DI reflection.",
+        "Phase 5 může repointnout level/XP/joinedAt na Journal aniž by se hnula API surface, kterou consumeři uvidí (`player.level` zůstane stejný symbol).",
+        "Anonymous sentinel (Player.anonymous) místo nullable Player — UI čte fieldy bez null check.",
+        "Sub-aggregaty (Inventory, Loadout, EmblemBoard, GoalBoard, SocialPresence) zůstávají feature-internal — Player odkazuje na ně přes uid lookup, ne containment. Šetří load-everything přepočet při každé notify."
+      ],
+      "alternatives": "A) Globální Context aggregate containing Player + Inventory + Journal + SocialPresence. Odmítnuto: zbytečná indirection pro single-player app; každý cross-feature consumer by pak musel watch celý Context. B) Žádný Player aggregate, ponechat status quo (level/XP rozházený přes providery). Odmítnuto: bránilo by Phase 5 source-of-truth migraci a opěrnému bodu pro Phase 6+ lifecycles. C) Player jako ChangeNotifier (mutable se setter API). Odmítnuto: porušuje immutability anti-pattern (proposal §7 #12); whole-object replacement skrz notifyListeners je čistší.",
+      "links": ["docs/domain_model/proposal.md", "docs/domain_model/migration_plan.md"]
     }
   ]
 }

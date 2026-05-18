@@ -41,6 +41,22 @@
       "diagram": "classDiagram\n    class ProgressionEntryId {\n      <<extension type>>\n      +String value\n      +String raw\n    }\n    class QuestId {\n      <<extension type>>\n    }\n    class AchievementId {\n      <<extension type>>\n    }\n    class MilestoneId {\n      <<extension type>>\n    }\n    class ChapterId {\n      <<extension type>>\n    }\n    class ObjectiveId {\n      <<extension type>>\n    }\n    ProgressionEntryId <|.. QuestId\n    ProgressionEntryId <|.. AchievementId\n    ProgressionEntryId <|.. MilestoneId"
     },
     {
+      "id": "player-aggregate",
+      "title": "Player (aggregate root)",
+      "category": "Player",
+      "file": "lib/domain/player/player.dart",
+      "summary": "Immutable value object aggregating per-user durable state (uid, level, totalXp, joinedAt, rpgModeEnabled, displayName, photoUrl). Single-player app — neexistuje globální Context aggregate, kompozice se děje ve widget stromu (ChangeNotifierProxyProvider2). Phase 4 scaffolding: Player je read-through fabrikovaný PlayerProviderem nad AuthProvider + ProgressionEngineProvider, zatím nikdo nečte přes něj. Phase 5 přepojí level/XP/joinedAt na Journal jako source-of-truth.",
+      "diagram": "classDiagram\n    class Player {\n      <<immutable VO>>\n      +String uid\n      +int level\n      +int totalXp\n      +DateTime joinedAt\n      +bool rpgModeEnabled\n      +String? displayName\n      +String? photoUrl\n      +Player anonymous$\n      +Player copyWith(...)\n    }\n    note for Player \"const ctor, value-equal, žije v lib/domain/player/\""
+    },
+    {
+      "id": "level-curve",
+      "title": "LevelCurve (XP-curve policy)",
+      "category": "Player",
+      "file": "lib/domain/player/level_curve.dart",
+      "summary": "Pure-Dart policy pro XP-to-level math: rewardMultiplierForLevel, scaledRewardXp, levelForXp, resolve(totalXp) → LevelResolution. Phase 4 přesunul tuto policy z lib/features/progression_engine/domain/policy/level_policy.dart do lib/domain/player/ (původní soubor je teď tenký re-export pro backwards-compat). Class symbol zůstal ProgressionLevelPolicy aby diff byl minimální; typedef LevelCurve = ProgressionLevelPolicy odpovídá proposal §2.1 vocabulary.",
+      "diagram": "classDiagram\n    class ProgressionLevelPolicy {\n      +int baseDailyRewardXp\n      +int baseWeeklyRewardXp\n      +double level30RewardMultiplier\n      +double rewardMultiplierForLevel(int)\n      +int scaledRewardXp(baseXp, level)\n      +int levelForXp(int)\n      +LevelResolution resolve(int)\n    }\n    class LevelResolution {\n      +int totalXp\n      +int level\n      +int levelFloorXp\n      +int nextLevelXp\n      +int xpIntoLevel\n    }\n    ProgressionLevelPolicy ..> LevelResolution : produces\n    note for ProgressionLevelPolicy \"typedef LevelCurve = ProgressionLevelPolicy\""
+    },
+    {
       "id": "backfill-models",
       "title": "DailyBackfillEntry & claim items",
       "category": "Progression",
