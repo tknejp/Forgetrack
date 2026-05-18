@@ -456,6 +456,57 @@ class ProgressionEngineProvider extends ChangeNotifier {
     return catalog;
   }
 
+  // ── Daily / Weekly lifecycle-filtered projections (Phase 19) ─────
+  //
+  // Phase 19 of the domain refactor moves lifecycle-based `.where`
+  // filters out of `quests_screen.dart`'s `build()` into the
+  // provider. The widget previously walked `currentDailyQuests` /
+  // `currentWeeklyQuests` and called `playerQuestCatalog.byId(...)`
+  // inline to derive claimable / unclaimed / weekly-active buckets;
+  // domain logic in `build()` was the proposal §7 anti-pattern #1.
+  // These getters expose pre-filtered slices so the widget reads
+  // hot lists and switches on lifecycle for per-card rendering only.
+
+  PlayerQuestLifecycle _lifecycleOf(EngineQuestProgress q) =>
+      playerQuestCatalog.byId(QuestId(q.node.id.value))?.lifecycle ??
+          const QuestLocked();
+
+  /// Daily quests in [PlayerQuestCompletedPendingClaim] state — the
+  /// "Vyzvednout" pill list the daily section's claim-all CTA acts on.
+  List<EngineQuestProgress> get currentDailyClaimableQuests =>
+      currentDailyQuests
+          .where((q) => _lifecycleOf(q) is QuestCompletedPendingClaim)
+          .toList(growable: false);
+
+  /// Daily quests that are *not* claimed yet (locked / available /
+  /// pending claim). Drives the unclaimed-count label on the daily
+  /// section header. Claimed cards stay in the section so the slot
+  /// reads as "done" until midnight rolls a new rotation.
+  List<EngineQuestProgress> get currentDailyUnclaimedQuests =>
+      currentDailyQuests
+          .where((q) => _lifecycleOf(q) is! QuestClaimed)
+          .toList(growable: false);
+
+  /// Weekly quests in [PlayerQuestCompletedPendingClaim] — analogue
+  /// of [currentDailyClaimableQuests] for the weekly section.
+  List<EngineQuestProgress> get currentWeeklyClaimableQuests =>
+      currentWeeklyQuests
+          .where((q) => _lifecycleOf(q) is QuestCompletedPendingClaim)
+          .toList(growable: false);
+
+  /// Weekly quests still in the active section (locked or available).
+  /// Pending-claim + claimed weeklies migrate to DOKONČENÉ so the row
+  /// doesn't double-list. Daily section behaves differently
+  /// (claimable stays visible) — that's encoded in the daily-only
+  /// getters above.
+  List<EngineQuestProgress> get currentWeeklyActiveQuests =>
+      currentWeeklyQuests
+          .where((q) => switch (_lifecycleOf(q)) {
+                QuestAvailable() || QuestLocked() => true,
+                QuestCompletedPendingClaim() || QuestClaimed() => false,
+              })
+          .toList(growable: false);
+
   // ── PlayerAchievementShelf projection ────────────────────────────
   //
   // Phase 8 read projection mirroring Phase 7. Built lazily from the

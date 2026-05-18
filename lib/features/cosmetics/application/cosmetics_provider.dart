@@ -12,6 +12,7 @@ import '../domain/cosmetic_unlock_rule.dart';
 import '../domain/cosmetic_unlock_rules.dart';
 import '../domain/cosmetic_unlock_snapshot.dart';
 import '../domain/inventory.dart';
+import '../domain/player_cosmetic_lifecycle.dart';
 import 'cosmetics_service.dart';
 import 'player_cosmetic_lifecycle_service.dart';
 
@@ -130,6 +131,119 @@ class CosmeticsProvider extends ChangeNotifier {
       claimableNodeIds: claimableNodeIds,
       evaluatedAt: evaluatedAt ?? DateTime.now(),
     );
+  }
+
+  /// Returns the ordered list of [Cosmetic] entries the cosmetics
+  /// grid should display, with the same filter + sort policy the
+  /// pre-extraction `cosmetics_screen.build()` applied inline.
+  ///
+  /// Phase 19 of the domain refactor moved this off the widget into
+  /// the provider per proposal §7 anti-pattern #1 — `build()` must
+  /// not run domain logic. The widget now reads the projection +
+  /// renders cards; lifecycle-based decisions stay here.
+  ///
+  /// **Display policy (non-devtools).**
+  ///   - Owned cosmetics always show.
+  ///   - [Companion] cosmetics surface for `teased` + `claimable` too
+  ///     so the player sees what's brewing.
+  ///   - Frames / relics / backgrounds / emblems stay hidden until
+  ///     owned (Tier-1 rewards where a locked preview would be
+  ///     clutter).
+  ///   - Hidden lifecycles are always culled.
+  ///
+  /// **Sort policy (non-devtools).**
+  ///   - Sorted by lifecycle precedence: Owned < Claimable < Teased
+  ///     (with progress) < Teased (no progress) < Hidden.
+  ///   - Within Owned: rarity desc → unlockedAt desc → sortOrder asc
+  ///     → id asc.
+  ///   - Within Teased / others: by sortOrder asc.
+  ///
+  /// **Devtools mode** bypasses the filter (every catalog entry
+  /// surfaces) and sorts by [CosmeticType] index → sortOrder.
+  List<Cosmetic> displayCosmeticsForGrid({
+    required Set<String> claimableNodeIds,
+    required bool devTools,
+    Inventory? inventory,
+  }) {
+    final currentState = _state;
+    if (currentState == null) return const [];
+
+    if (devTools) {
+      return _service.catalog.all.toList()
+        ..sort(_byTypeThenSortOrder);
+    }
+
+    final inv = inventory ??
+        buildInventory(claimableNodeIds: claimableNodeIds);
+
+    return _service.catalog.enabled
+        .where((def) {
+          final lifecycle = inv.byIdString(def.id)?.lifecycle;
+          if (lifecycle == null) return false;
+          if (lifecycle is CosmeticOwned) return true;
+          if (def is Companion) {
+            return lifecycle is! CosmeticHidden;
+          }
+          return false;
+        })
+        .toList()
+      ..sort((a, b) => _sortByLifecycle(a, b, currentState, inv));
+  }
+
+  static int _byTypeThenSortOrder(Cosmetic a, Cosmetic b) {
+    final typeRank = CosmeticType.values
+        .indexOf(a.type)
+        .compareTo(CosmeticType.values.indexOf(b.type));
+    if (typeRank != 0) return typeRank;
+    return a.sortOrder.compareTo(b.sortOrder);
+  }
+
+  static int _sortByLifecycle(
+    Cosmetic a,
+    Cosmetic b,
+    UserCosmeticsState state,
+    Inventory inventory,
+  ) {
+    final lifecycleA = inventory.byIdString(a.id)?.lifecycle;
+    final lifecycleB = inventory.byIdString(b.id)?.lifecycle;
+
+    final rankA = _lifecycleSortRank(lifecycleA);
+    final rankB = _lifecycleSortRank(lifecycleB);
+    if (rankA != rankB) return rankA.compareTo(rankB);
+
+    if (lifecycleA is CosmeticOwned) {
+      return _compareUnlockedCosmetics(a, b, state);
+    }
+    return a.sortOrder.compareTo(b.sortOrder);
+  }
+
+  static int _lifecycleSortRank(PlayerCosmeticLifecycle? lifecycle) {
+    return switch (lifecycle) {
+      CosmeticOwned() => 0,
+      CosmeticClaimable() => 1,
+      CosmeticTeased(:final totalConditions) when totalConditions > 0 => 2,
+      CosmeticTeased() => 3,
+      CosmeticHidden() => 4,
+      null => 3,
+    };
+  }
+
+  static int _compareUnlockedCosmetics(
+    Cosmetic a,
+    Cosmetic b,
+    UserCosmeticsState state,
+  ) {
+    final rarity = b.rarity.index.compareTo(a.rarity.index);
+    if (rarity != 0) return rarity;
+    final unlockedAtA = state.unlocked[a.id]?.unlockedAt;
+    final unlockedAtB = state.unlocked[b.id]?.unlockedAt;
+    if (unlockedAtA != null && unlockedAtB != null) {
+      final unlockedAt = unlockedAtB.compareTo(unlockedAtA);
+      if (unlockedAt != 0) return unlockedAt;
+    }
+    final sortOrder = a.sortOrder.compareTo(b.sortOrder);
+    if (sortOrder != 0) return sortOrder;
+    return a.id.compareTo(b.id);
   }
 
   static CosmeticUnlockSnapshot _minimalSnapshot(Set<String> ownedIds) {

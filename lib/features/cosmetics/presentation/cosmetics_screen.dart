@@ -120,44 +120,28 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
     final devTools = widget.devToolsMode;
     final consumedIds = consumedRelicIds(state);
 
-    final List<Cosmetic> displayDefs;
+    // Phase 19 of the domain refactor moved the lifecycle-aware
+    // display filter + sort off this widget and onto
+    // `CosmeticsProvider.displayCosmeticsForGrid`. The widget reads
+    // the projection + the inventory it derived from; cards
+    // pattern-match on lifecycle for per-card rendering only.
     final Map<String, CosmeticRevealResult> revealResults;
-    // Phase 10 read projection: every enabled cosmetic + its
-    // [PlayerCosmeticLifecycle]. Built once per build from the
-    // CosmeticsProvider, threaded into cards so they pattern-match
-    // on the lifecycle subtype.
-    Inventory inventory = Inventory.empty;
-
+    final Inventory inventory;
+    final List<Cosmetic> displayDefs;
     if (devTools) {
-      displayDefs = cosmetics.service.catalog.all.toList()
-        ..sort(_byTypeThenSortOrder);
       revealResults = const {};
+      inventory = Inventory.empty;
     } else {
       revealResults = cosmetics.computeRevealResults(kCosmeticUnlockRules);
       inventory = cosmetics.buildInventory(
         claimableNodeIds: progression.availableNodeIds,
       );
-      // Display policy: owned items always show. Companions
-      // additionally surface for `teased` and `claimable` states so
-      // the player sees what's brewing and can claim it. `hidden`
-      // companions stay off the grid — once the player meets the
-      // first prerequisite the card materialises in `teased`.
-      // Frames, relics, backgrounds and emblems stay out of the
-      // inventory until owned — they're Tier-1 rewards where a
-      // locked preview would just be clutter.
-      displayDefs = cosmetics.service.catalog.enabled
-          .where((def) {
-            final lifecycle = inventory.byIdString(def.id)?.lifecycle;
-            if (lifecycle == null) return false;
-            if (lifecycle is CosmeticOwned) return true;
-            if (def is Companion) {
-              return lifecycle is! CosmeticHidden;
-            }
-            return false;
-          })
-          .toList()
-        ..sort((a, b) => _sortByLifecycle(a, b, state, inventory));
     }
+    displayDefs = cosmetics.displayCosmeticsForGrid(
+      claimableNodeIds: progression.availableNodeIds,
+      devTools: devTools,
+      inventory: inventory,
+    );
 
     final equippedDefs = cosmetics.service.getEquippedDefinitions(state);
     final presentTypes = devTools
@@ -1085,69 +1069,9 @@ double _cardBadgeSize(CosmeticType type) {
   }
 }
 
-int _byTypeThenSortOrder(Cosmetic a, Cosmetic b) {
-  final typeRank = CosmeticType.values.indexOf(a.type)
-      .compareTo(CosmeticType.values.indexOf(b.type));
-  if (typeRank != 0) return typeRank;
-  return a.sortOrder.compareTo(b.sortOrder);
-}
-
-/// Sort order for normal (non-devTools) mode:
-/// 1. Unlocked items (existing sort: rarity desc → unlockedAt desc → sortOrder)
-/// 2. Partial items (by sortOrder — discovered rewards the player is progressing toward)
-/// 3. Teased no-progress (by sortOrder)
-int _sortByLifecycle(
-  Cosmetic a,
-  Cosmetic b,
-  UserCosmeticsState state,
-  Inventory inventory,
-) {
-  final lifecycleA = inventory.byIdString(a.id)?.lifecycle;
-  final lifecycleB = inventory.byIdString(b.id)?.lifecycle;
-
-  final rankA = _lifecycleSortRank(lifecycleA);
-  final rankB = _lifecycleSortRank(lifecycleB);
-  if (rankA != rankB) return rankA.compareTo(rankB);
-
-  if (lifecycleA is CosmeticOwned) {
-    return _compareUnlockedCosmetics(a, b, state);
-  }
-  return a.sortOrder.compareTo(b.sortOrder);
-}
-
-/// Sort precedence within the grid:
-///   0. Owned (rendered as standard cards)
-///   1. Claimable (READY pulse — actionable first among locked)
-///   2. Teased with progress (showing `satisfied/total`)
-///   3. Teased without progress (visibleLocked flavour)
-///   4. Hidden (silhouettes — should not appear today since the
-///      display filter culls them; keeps the comparator total).
-int _lifecycleSortRank(PlayerCosmeticLifecycle? lifecycle) {
-  return switch (lifecycle) {
-    CosmeticOwned() => 0,
-    CosmeticClaimable() => 1,
-    CosmeticTeased(:final totalConditions) when totalConditions > 0 => 2,
-    CosmeticTeased() => 3,
-    CosmeticHidden() => 4,
-    null => 3,
-  };
-}
-
-int _compareUnlockedCosmetics(
-  Cosmetic a,
-  Cosmetic b,
-  UserCosmeticsState state,
-) {
-  final rarity = b.rarity.index.compareTo(a.rarity.index);
-  if (rarity != 0) return rarity;
-  final unlockedAtA = state.unlocked[a.id]?.unlockedAt;
-  final unlockedAtB = state.unlocked[b.id]?.unlockedAt;
-  if (unlockedAtA != null && unlockedAtB != null) {
-    final unlockedAt = unlockedAtB.compareTo(unlockedAtA);
-    if (unlockedAt != 0) return unlockedAt;
-  }
-  final sortOrder = a.sortOrder.compareTo(b.sortOrder);
-  if (sortOrder != 0) return sortOrder;
-  return a.id.compareTo(b.id);
-}
+// Phase 19 of the domain refactor moved the grid filter + sort
+// helpers (`_byTypeThenSortOrder`, `_sortByLifecycle`,
+// `_lifecycleSortRank`, `_compareUnlockedCosmetics`) onto
+// `CosmeticsProvider.displayCosmeticsForGrid`. Widget no longer
+// composes domain logic.
 
