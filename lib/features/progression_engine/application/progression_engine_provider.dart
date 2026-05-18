@@ -26,10 +26,14 @@ import '../domain/models/claim_policy.dart';
 import '../domain/models/engine_evaluation_input.dart';
 import 'package:forgetrack/domain/journal/journal_event.dart';
 import 'package:forgetrack/domain/player/player.dart';
+import 'package:forgetrack/domain/progression/catalog/chapter.dart';
 import 'package:forgetrack/domain/progression/player/player_achievement_shelf.dart';
+import 'package:forgetrack/domain/progression/player/player_chapter_progress.dart';
 import 'package:forgetrack/domain/progression/player/player_quest_catalog.dart';
 import 'package:forgetrack/domain/progression/player/player_quest_lifecycle.dart';
+import 'chapter_catalog_builder.dart';
 import 'player_achievement_shelf_service.dart';
+import 'player_chapter_progress_service.dart';
 import 'player_quest_catalog_service.dart';
 import '../domain/models/objective_definition.dart';
 import '../domain/models/objective_metric.dart';
@@ -505,6 +509,62 @@ class ProgressionEngineProvider extends ChangeNotifier {
     _cachedPlayerAchievementShelf = shelf;
     _playerAchievementShelfCacheKey = cacheKey;
     return shelf;
+  }
+
+  // ── Phase 13: PlayerChapterProgress read projection ────────────────
+  //
+  // The chapter aggregate sits next to the quest catalog + achievement
+  // shelf as the third major read projection over the same evaluator
+  // state. Same cache discipline (identityHashCode(_ledger) +
+  // _devDayOffset), same "service takes primitives" contract — the
+  // chapter catalog wrapper is built once and reused; only the
+  // projection rebuilds when the ledger changes.
+
+  static const ChapterCatalogBuilder _chapterCatalogBuilder =
+      ChapterCatalogBuilder();
+  static const PlayerChapterProgressService _playerChapterProgressService =
+      PlayerChapterProgressService();
+
+  /// Memoised [ChapterCatalog] — the wrapper is derived from the
+  /// const [ProgressionEntryCatalog] so a single eager pass at first
+  /// access is fine.
+  static final ChapterCatalog _chapterCatalog =
+      _chapterCatalogBuilder.build();
+
+  PlayerChapterProgress? _cachedPlayerChapterProgress;
+  int? _playerChapterProgressCacheKey;
+
+  /// Read-only [ChapterCatalog] view for callers that need chapter
+  /// chain structure (chain entry ids, side-quest membership)
+  /// independent of player state.
+  ChapterCatalog get chapterCatalog => _chapterCatalog;
+
+  /// Phase 13 read projection. Returns [PlayerChapterProgress.empty]
+  /// before the first evaluation completes; once `_lastResult` is in
+  /// place the projection rebuilds from the chapter catalog +
+  /// completed/locked node id sets + earliest-completion lookup.
+  ///
+  /// Cache key mirrors the Phase 7 / 8 scheme:
+  /// `(identityHashCode(_ledger), _devDayOffset)`.
+  PlayerChapterProgress get playerChapterProgress {
+    final l = _ledger;
+    final r = _lastResult;
+    if (l == null || r == null) return PlayerChapterProgress.empty;
+    final cacheKey = Object.hash(identityHashCode(l), _devDayOffset);
+    final cached = _cachedPlayerChapterProgress;
+    if (cached != null && _playerChapterProgressCacheKey == cacheKey) {
+      return cached;
+    }
+    final progress = _playerChapterProgressService.build(
+      chapters: _chapterCatalog,
+      completedNodeIds: completedNodeIds,
+      lockedNodeIds: lockedNodeIds,
+      earliestCompletionAt: earliestCompletionAt,
+      evaluatedAt: _lastEvaluatedAt ?? _engineNow(),
+    );
+    _cachedPlayerChapterProgress = progress;
+    _playerChapterProgressCacheKey = cacheKey;
+    return progress;
   }
 
   /// Set of node ids the engine has marked completed. Order is not

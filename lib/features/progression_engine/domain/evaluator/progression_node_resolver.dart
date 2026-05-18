@@ -3,10 +3,39 @@ import 'package:flutter/foundation.dart';
 import '../models/activation_policy.dart';
 import '../models/claim_policy.dart';
 import '../models/engine_evaluation_input.dart';
-import '../models/node_state.dart';
 import '../models/progression_node_definition.dart';
 import '../repository/ledger_snapshot.dart';
 import 'objective_evaluator.dart';
+
+/// Internal classification the resolver assigns to a node on a
+/// single evaluation pass. Phase 13 inlined this enum (formerly
+/// `lib/features/progression_engine/domain/models/node_state.dart`)
+/// into the resolver file — every player-facing surface that used to
+/// pattern-match on it has migrated to per-aggregate sealed
+/// lifecycles (`PlayerQuestLifecycle` / `PlayerAchievementLifecycle`
+/// / `ChapterLifecycle`). The enum survives only as resolver-internal
+/// state-machine vocabulary; the engine consumer keys off `.name`
+/// strings (not the enum type) so the resolver can keep this private
+/// without leaking the type across the application boundary.
+///
+/// Name values (`locked` / `available` / `completed`) are preserved
+/// verbatim from the legacy enum because
+/// `lib/features/progression_engine/application/progression_engine.dart`
+/// switches on `r.state.name == 'completed'` / `'available'`.
+/// Renaming would silently break that match.
+enum NodeState {
+  /// Unlock conditions not met (or activation policy disables the node
+  /// in current RPG mode). Player cannot interact.
+  locked,
+
+  /// Unlock conditions met; objective in progress (or already complete
+  /// for a manual-claim node awaiting the user's tap).
+  available,
+
+  /// Objective complete and rewards granted (automatic claim) — or
+  /// player tapped to claim (manual claim).
+  completed,
+}
 
 /// What the node resolver decides for one node on this evaluation.
 @immutable
