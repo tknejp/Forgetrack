@@ -443,6 +443,36 @@ Tyto věci původně vznikly jako "follow-ups", ale uživatel se rozhodl zapojit
 
 ---
 
+### 2.25 Phase 21 lint baseline cleanup queue (deferred from Phase 21)
+
+**Phase 21 status:** Lint matchers shipped + ratchet-tested 2026-05-19 (commit forthcoming). Each rule has a numeric baseline captured in [test/lint/production_scan_test.dart](../../test/lint/production_scan_test.dart). The ratchet prevents new violations; pre-existing ones remain.
+
+**Baseline snapshot (2026-05-19):**
+
+| Rule slug | Scope | Baseline | Hot spots |
+|---|---|---|---|
+| `domain-purity` | `lib/features/*/domain/` | 35 | catalog content files importing `flutter/material show Color/Icons`, `health_connect/domain/activity_record.dart` importing `package:health/`, `auth/domain/identity.dart` importing firebase_auth + google_sign_in. |
+| `untyped-id` | `lib/domain/` | 7 | almost all in `lib/domain/journal/journal_event.dart` — these are storage-boundary fields holding raw persisted strings. Probably stay; revisit if/when typed-id wrappers cross the persistence layer cleanly. |
+| `untyped-id` | `lib/features/*/domain/` | 72 | progression_engine + cosmetics + social aggregates. Each is a 2-5 line typed-wrapper swap, but mass-touching aggregates is risky outside a dedicated phase. |
+| `l10n-literal` | `lib/features/*/presentation/` | 29 | scattered hard-coded Czech / English strings in dialogs, error banners, devtools. Each is a 2-line ARB add + Text() rewrite. |
+| `widget-no-logic` | `lib/features/*/presentation/` | 60 | `.where(` / `.firstWhere(` for theme/style lookup + collection filtering. Some are legitimate (`// lint-ignore: widget-no-logic`); most need extraction into a provider getter. |
+
+**Co dnes funguje bez cleanup:** Existing code compiles + behaves correctly. The ratchet is preventive — new code can't add to the debt. Existing screens look the same.
+
+**Možná řešení:**
+
+- (a) **Opportunistic, file-by-file.** Touch a file for unrelated work → fix the violations in it → lower baselines by the delta. No dedicated PR needed; cleanup compounds.
+- (b) **Per-rule sweep PRs.** One PR per rule slug clearing the whole baseline. Smallest risk per PR is `l10n-literal` (29 mechanical Text() swaps + ARB additions). `untyped-id` sweep is highest risk (touches aggregate constructors → every callsite).
+- (c) **Rule retirement.** Some violations may turn out to be intentional design (`untyped-id` in journal_event.dart storage-boundary fields). For those, mark the line with `// lint-ignore: <rule>` + a one-line reason, and lower the baseline accordingly. Net effect: lint ratchet stays accurate, intent stays documented.
+
+**Proč deferred:** Phase 21 ships the discipline (matcher + ratchet + checklist + docs). Mass cleanup of 169 pre-existing violations is its own multi-PR effort, outside the "lint rules / review checklist" goal of Phase 21.
+
+**Kdy to řešit:** Opportunistically. Each ratchet failure ("shrank") in a future PR is a free baseline lower — encourage that pattern.
+
+**Není blocking pro:** Phase 22 (V1 cleanup), or any future feature work. The ratchet is silent until violations grow.
+
+---
+
 ## 3. Audit findings že NEJSOU folded ani deferred
 
 Tyto byly raised v audit reportu, ale nepřevedeny na action item — buď jsou false positive nebo z natury povahy doménového refactoru řeší.

@@ -1,0 +1,13 @@
+// Phase 21 lint fixture — deliberate untyped-id violation + ignore demo.
+
+class BadDomain {
+  const BadDomain({required this.questId, required this.achievementId});
+  final String questId;
+  final String achievementId;
+}
+
+class GoodDomain {
+  const GoodDomain({required this.rawEventKey});
+  // Storage-boundary field — raw persisted string is correct here.
+  final String rawEventKey; // lint-ignore: untyped-id
+}

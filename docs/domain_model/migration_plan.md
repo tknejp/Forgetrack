@@ -833,7 +833,7 @@ Stage E (Hardening) opens with Phase 20 (JournalProjection); deferred sub-phases
 
 ### Stage E — Hardening
 
-**Status (2026-05-19):** Phase 20 shipped (see commit log). Phases 21 (lint rules / review checklist) and 22 (legacy V1 progression cleanup) remain — both non-blocking, can land opportunistically.
+**Status (2026-05-19):** Phase 20 + Phase 21 shipped (see commit log). Phase 21 lint matchers ratchet existing violations (baselines documented in [follow_ups.md §2.25](follow_ups.md#225-phase-21-lint-baseline-cleanup-queue-deferred-from-phase-21)). Phase 22 (legacy V1 progression cleanup) remains — non-blocking, can land opportunistically.
 
 ---
 
@@ -895,12 +895,12 @@ Stage E (Hardening) opens with Phase 20 (JournalProjection); deferred sub-phases
 
 **DoD:**
 
-- [ ] Domain purity lint active.
-- [ ] Typed-id usage lint or grep-test active.
-- [ ] L10n string lint active s documented whitelist.
-- [ ] Widget no-logic lint or grep-test active.
-- [ ] Exhaustive switch enforcement.
-- [ ] Review checklist v `docs/contributing.md`.
+- [x] Domain purity lint active — `test/domain_purity_test.dart` (strict on `lib/domain/`) + ratchet on `lib/features/*/domain/` v `test/lint/production_scan_test.dart`.
+- [x] Typed-id usage grep-test active — `findUntypedIdDeclarations` matcher + ratchet (baselines: 7 v `lib/domain/`, 72 v `lib/features/*/domain/`).
+- [x] L10n string lint active s documented whitelist — `findRawTextLiterals` matcher (skips empty `Text('')`, interpolated strings, `// lint-ignore: l10n-literal`); ratchet baseline 29.
+- [x] Widget no-logic grep-test active — `findWidgetCollectionLogic` matcher (`.where(`, `.firstWhere(`, `.singleWhere(`, `.indexWhere(` v presentation/); ratchet baseline 60.
+- [x] Exhaustive switch enforcement — `exhaustive_cases: true` v `analysis_options.yaml` (sealed types already enforced by Dart 3 compiler).
+- [x] Review checklist v [docs/contributing.md](../contributing.md) — covers lint matchers, per-line opt-out marker syntax, ratchet protocol, and review-only rules (denormalised caches, persistence-schema-no-change, cross-feature reach).
 
 **Rizika:** Custom lint packages přidávají dev dependency a build time. Mitigation: kde lint je heavy, použít grep-based test runnable in CI (cheap). Lint package adoption gradual.
 

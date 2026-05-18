@@ -1,0 +1,18 @@
+// Phase 21 lint fixture — deliberate raw-Text-literal violation.
+
+import 'package:flutter/material.dart';
+
+class BadWidget extends StatelessWidget {
+  const BadWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: const [
+        Text('Hard-coded copy'),
+        Text(''), // empty literal is allowed
+        Text('°C'), // lint-ignore: l10n-literal (unit symbol)
+      ],
+    );
+  }
+}
