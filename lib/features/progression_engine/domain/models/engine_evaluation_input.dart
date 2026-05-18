@@ -44,6 +44,17 @@ class EngineEvaluationInput {
   });
 
   final DateTime evaluatedAt;
+
+  /// Total XP and resolved level at evaluation time.
+  ///
+  /// **Phase 5 migration state.** These fields are filled by the
+  /// engine provider via `Player.fromJournal(...).totalXp` /
+  /// `.level` — the canonical Player derivation. The redundant
+  /// inputs survive on `EngineEvaluationInput` so the evaluator's
+  /// existing call sites (objective evaluator, reward planner,
+  /// unlock-condition resolver) keep their flat-record shape.
+  /// Phase 16 of the domain refactor will rework the engine
+  /// signature to take `Player` directly and retire these fields.
   final int totalXp;
   final int level;
 

@@ -25,6 +25,7 @@ import '../domain/evaluator/progression_node_resolver.dart';
 import '../domain/models/claim_policy.dart';
 import '../domain/models/engine_evaluation_input.dart';
 import 'package:forgetrack/domain/journal/journal_event.dart';
+import 'package:forgetrack/domain/player/player.dart';
 import '../domain/models/objective_definition.dart';
 import '../domain/models/objective_metric.dart';
 import '../domain/models/objective_operator.dart';
@@ -3129,15 +3130,8 @@ class ProgressionEngineProvider extends ChangeNotifier {
     return best;
   }
 
-  int _totalClaimedXp(LedgerSnapshot ledger) {
-    var sum = 0;
-    for (final e in ledger.rewardGrants) {
-      if (e.rewardKind == RewardGrantKind.xp) {
-        sum += e.xpAmount ?? 0;
-      }
-    }
-    return sum;
-  }
+  int _totalClaimedXp(LedgerSnapshot ledger) =>
+      Player.totalXpFromGrants(ledger.rewardGrants);
 
   /// Recomputes streak summaries against the current ledger. Called
   /// from [_hydrate] and after every successful evaluation pass.

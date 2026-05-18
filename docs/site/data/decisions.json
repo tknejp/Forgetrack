@@ -290,6 +290,24 @@
       ],
       "alternatives": "A) Globální Context aggregate containing Player + Inventory + Journal + SocialPresence. Odmítnuto: zbytečná indirection pro single-player app; každý cross-feature consumer by pak musel watch celý Context. B) Žádný Player aggregate, ponechat status quo (level/XP rozházený přes providery). Odmítnuto: bránilo by Phase 5 source-of-truth migraci a opěrnému bodu pro Phase 6+ lifecycles. C) Player jako ChangeNotifier (mutable se setter API). Odmítnuto: porušuje immutability anti-pattern (proposal §7 #12); whole-object replacement skrz notifyListeners je čistší.",
       "links": ["docs/domain_model/proposal.md", "docs/domain_model/migration_plan.md"]
+    },
+    {
+      "id": "player-from-journal-canonical",
+      "title": "Player.level / totalXp computed přes statickou factory (canonical derivation, žádný provider cycle)",
+      "status": "accepted",
+      "date": "2026-05-18",
+      "context": "Phase 5 měla přepnout source-of-truth pro level/totalXp z 'engine drží profile field, Player ho čte' na 'Player je computed z Journal eventů'. Literal čtení migration plánu navrhuje, aby ProgressionEngineProvider četl level/XP z PlayerProvider při plnění EngineEvaluationInput. Phase 4 ale wired PlayerProvider jako downstream ProgressionEngineProvider (kvůli přístupu k ledgeru). Reverse dep by vytvořil provider cycle (PlayerProvider ← engine.ledger; ProgressionEngineProvider ← player.level). Migration plán §7.5 + prompt session pojmenovaly cyclic dep explicitně jako blocker.",
+      "decision": "Player.fromJournal(uid, rewardGrants, levelCurve, joinedAt, ...) je statická factory v lib/domain/player/player.dart — canonical derivation Playera z Journal eventů. Sumuje XP přes Player.totalXpFromGrants (public static helper), aplikuje LevelCurve.resolve. Dva nezávislí konzumenti factory volají: (1) PlayerProvider.applySnapshot routes každý update sem; (2) ProgressionEngineProvider._totalClaimedXp delegates na Player.totalXpFromGrants. Žádný provider nečte druhého kvůli level/XP — oba volají factory přímo s ledger.rewardGrants. Migration plán intent 'Player je source-of-truth' satisfied silnějším way: source-of-truth IS Player.fromJournal factory, ne live provider instance. ProgressionEngineProvider's EngineProfile getter pořád existuje (UI consumers ho čtou pro nextLevelXp / xpIntoLevel — fields, které Player.fromJournal nezpřístupňuje), ale jeho XP sum jde přes shared static. PlayerProvider má lazy cache: identical(rewardGrants) + identical chrome → skip recompute + skip notify, takže rebuild storm z auth/engine notifies se nešíří přes widget tree.",
+      "consequences": [
+        "Žádný cycle. Phase 4 wiring (PlayerProvider downstream ProgressionEngineProvider) zůstává beze změny.",
+        "Single XP-sum implementation (Player.totalXpFromGrants). Refactor jednoho místa = obě derivace v sync.",
+        "Player.fromJournal je testable bez Firebase / Isar — Phase 5 test cover golden states + side-by-side parity (5 seeded ledgers; Player.fromJournal == legacy inline derivation) + 1000-event perf gate (< 10ms, dle DoD).",
+        "EngineEvaluationInput.level / totalXp fields ZŮSTÁVAJÍ (s deprecation comment ukazujícím na Phase 16) — engine evaluator signature change je Phase 16 territory, Phase 5 jen producer-side shift.",
+        "Lazy cache v PlayerProvider potlačí redundant rebuilds: identity-equality na rewardGrants iterable (LedgerSnapshot je immutable + replaced wholesale → identical reference ⇒ identical XP, no need to re-fold).",
+        "Trade-off: 'engine reads player' interpretation by byla čistší arrow (jeden směr dep). Místo toho máme dva nezávislé volání té samé factory — vyžaduje discipline aby factory zůstala čistá / cheap (nesmí být holding state). Mitigation: factory je pure function (žádný state) + side-by-side test je oracle."
+      ],
+      "alternatives": "A) Vyhovět literal čtení — PlayerProvider depends pouze na AuthProvider + repo, čte ledger přes repository stream (data layer). ProgressionEngineProvider depends na PlayerProvider. Odmítnuto: repository neexpozuje stream (jen Future<LedgerSnapshot> load + appendEvents). Příprava streamu by si vyžádala vlastní sub-phase + překryt by se s §2.13 (IsarJournalAdapter deferred). Phase 5 by se přerostla do Phase 2.5. B) Player jako live ChangeNotifier (Phase 4 ADR-A odmítnuto stejnou logikou); engine listens jeho notifies. Odmítnuto: porušuje immutability + zaváděl by druhý fan-out point. C) Status quo (engine fields jsou source-of-truth, PlayerProvider read-through). Odmítnuto: pak Phase 5 je no-op — Player nikdy nesplňuje 'source-of-truth' kontrakt.",
+      "links": ["docs/domain_model/proposal.md", "docs/domain_model/migration_plan.md", "docs/domain_model/follow_ups.md"]
     }
   ]
 }

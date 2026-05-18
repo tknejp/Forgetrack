@@ -61,6 +61,8 @@ import 'features/devtools/application/factory_reset/factory_reset_service.dart';
 import 'features/onboarding/application/onboarding_provider.dart';
 import 'app/locale_provider.dart';
 import 'app/player_provider.dart';
+import 'domain/journal/journal_event.dart';
+import 'domain/player/level_curve.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -301,24 +303,27 @@ Future<void> main() async {
             return provider;
           },
         ),
-        // Phase 4 of the domain refactor: Player aggregate scaffolding.
-        // Read-through wrapper over AuthProvider + ProgressionEngineProvider
-        // — no consumer reads through Player yet (that's Phase 5+). The
-        // proxy lives directly after ProgressionEngineProvider so its
-        // update sees both upstream providers in scope.
+        // Phase 5 of the domain refactor: Player is computed from
+        // the Journal via Player.fromJournal, not read-through over
+        // the engine's pre-computed profile. The proxy passes the
+        // ledger's reward grants + the LevelCurve so the provider's
+        // applySnapshot routes through the canonical derivation.
+        // ProgressionEngineProvider's EngineProfile getter runs the
+        // same XP sum (via Player.totalXpFromGrants) so the two
+        // consumers stay in lockstep without a provider cycle.
         ChangeNotifierProxyProvider2<AuthProvider, ProgressionEngineProvider,
             PlayerProvider>(
-          // Lazy: nothing reads PlayerProvider in Phase 4, so deferring
-          // creation until first read keeps startup cost flat while the
-          // scaffolding is in place.
+          // Lazy: no Phase 5 consumer reads PlayerProvider yet, so
+          // deferring creation until first read keeps startup cost
+          // flat while the scaffolding is in place.
           create: (_) => PlayerProvider(),
           update: (_, auth, engine, provider) {
             final identity = auth.user;
-            final profile = engine.profile;
             provider!.applySnapshot(
               uid: identity?.id ?? '',
-              level: profile.level,
-              totalXp: profile.totalXp,
+              rewardGrants:
+                  engine.ledger?.rewardGrants ?? const <RewardGrantEvent>[],
+              levelCurve: const LevelCurve(),
               joinedAt: engine.joinedAt,
               displayName: identity?.displayName,
               photoUrl: identity?.photoUrl,
