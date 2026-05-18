@@ -81,6 +81,30 @@
       "diagram": "classDiagram\n    class PlayerQuestCatalog {\n      <<immutable>>\n      -Map~QuestId, PlayerQuest~ _entries\n      +PlayerQuestCatalog.fromEntries(Iterable~PlayerQuest~)$\n      +PlayerQuestCatalog empty$\n      +PlayerQuest? byId(QuestId)\n      +Iterable~PlayerQuest~ all\n      +Iterable~PlayerQuest~ locked\n      +Iterable~PlayerQuest~ available\n      +Iterable~PlayerQuest~ pendingClaim\n      +Iterable~PlayerQuest~ claimed\n      +Iterable~PlayerQuest~ among(Iterable~QuestId~)\n      +Iterable~PlayerQuest~ where(predicate)\n    }\n    PlayerQuestCatalog o-- PlayerQuest\n    note for PlayerQuestCatalog \"Provider caches by (identityHashCode(ledger), devDayOffset). PlayerQuestCatalogService builds it from EngineQuestProgress entries via Phase 6 lifecycle bridge.\""
     },
     {
+      "id": "player-achievement-lifecycle",
+      "title": "PlayerAchievementLifecycle (sealed, 3 stavy)",
+      "category": "Player",
+      "file": "lib/domain/progression/player/player_achievement_lifecycle.dart",
+      "summary": "Phase 8 sealed lifecycle pro Achievement catalog rows. 3 podtypy: AchievementLocked / AchievementInProgress (actual, target) / AchievementUnlocked (finalXp, unlockedAt). Žádný PendingClaim stav — V2 achievementy mají ClaimPolicy.automatic per proposal §4.2, takže přechod InProgress → Unlocked je atomický v rámci jednoho eval cycle. Bridge mezi old EngineAchievementView flags (unlocked / isLockedByConditions) a new sealed type je getter EngineAchievementView.lifecycle (mirror Phase 6 EngineQuestProgress.lifecycle). Precedence: Unlocked > Locked > InProgress — JINÁ než quest precedence (Locked > Claimed > PendingClaim > Available) protože achievementy se nikdy nere-lockují (idempotent completion event). Pinned 4-row mapping table v test/features/progression_engine/engine_achievement_view_lifecycle_test.dart. AchievementLocked.remaining payload (proposal §4.2 navrhuje List<UnlockCondition>) je v Phase 8 prázdný — UnlockCondition pořád žije v lib/features/, plný condition slice landne až s catalog rename.",
+      "diagram": "classDiagram\n    class PlayerAchievementLifecycle {\n      <<sealed>>\n    }\n    class AchievementLocked {\n      +const ctor (no payload v Phase 8)\n    }\n    class AchievementInProgress {\n      +double actual\n      +double target\n    }\n    class AchievementUnlocked {\n      +int finalXp\n      +DateTime? unlockedAt\n    }\n    PlayerAchievementLifecycle <|-- AchievementLocked\n    PlayerAchievementLifecycle <|-- AchievementInProgress\n    PlayerAchievementLifecycle <|-- AchievementUnlocked\n    note for PlayerAchievementLifecycle \"Precedence: Unlocked > Locked > InProgress. EngineAchievementView.lifecycle derives this from existing flags.\""
+    },
+    {
+      "id": "player-achievement",
+      "title": "PlayerAchievement (read projection unit)",
+      "category": "Player",
+      "file": "lib/domain/progression/player/player_achievement.dart",
+      "summary": "Phase 8 mirror PlayerQuestu. Immutable VO: typed AchievementId, sealed PlayerAchievementLifecycle, DateTime evaluatedAt. Value-based equals + copyWith. Stejný QuestId-keyed deferral pattern jako PlayerQuest — proposal §2.4 chce { Achievement achievement; ... }, ale Achievement pořád žije v features/ a domain ho nemůže importovat. Application/presentation konzumenti resolvují plný catalog row přes ProgressionEntryCatalog.definitionForId(...).",
+      "diagram": "classDiagram\n    class PlayerAchievement {\n      <<immutable VO>>\n      +AchievementId id\n      +PlayerAchievementLifecycle lifecycle\n      +DateTime evaluatedAt\n      +PlayerAchievement copyWith(...)\n    }\n    PlayerAchievement --> AchievementId\n    PlayerAchievement --> PlayerAchievementLifecycle"
+    },
+    {
+      "id": "player-achievement-shelf",
+      "title": "PlayerAchievementShelf (read projection collection)",
+      "category": "Player",
+      "file": "lib/domain/progression/player/player_achievement_shelf.dart",
+      "summary": "Phase 8 read projection: Map<AchievementId, PlayerAchievement> wrapped immutably. Konzumenty: ProgressionEngineProvider.playerAchievementShelf getter (lazy cache (identityHashCode(_ledger), _devDayOffset)). Accessors: byId / all / length / isEmpty / contains; lifecycle filters locked / inProgress / unlocked + unlockedCount; bucket slice among(ids); ad-hoc where(predicate). PlayerAchievementShelf.empty sentinel. \"Shelf\" namespace per proposal §2.4 — achievementy se ukazují v gridu, ne queue jako quests. Phase 8 service bere primitives (catalog + completed/locked sets + objective lookups + XP scaler), ne EngineAchievementView, protože view nese AppLocalizations dependency kterou provider nemá. Decoupled cleanly: shelf = lifecycle state, view = lifecycle state + display data.",
+      "diagram": "classDiagram\n    class PlayerAchievementShelf {\n      <<immutable>>\n      -Map~AchievementId, PlayerAchievement~ _entries\n      +PlayerAchievementShelf.fromEntries(Iterable~PlayerAchievement~)$\n      +PlayerAchievementShelf empty$\n      +PlayerAchievement? byId(AchievementId)\n      +Iterable~PlayerAchievement~ all\n      +Iterable~PlayerAchievement~ locked\n      +Iterable~PlayerAchievement~ inProgress\n      +Iterable~PlayerAchievement~ unlocked\n      +int unlockedCount\n      +Iterable~PlayerAchievement~ among(Iterable~AchievementId~)\n      +Iterable~PlayerAchievement~ where(predicate)\n    }\n    PlayerAchievementShelf o-- PlayerAchievement\n    note for PlayerAchievementShelf \"Provider caches by (identityHashCode(ledger), devDayOffset). PlayerAchievementShelfService builds it from engine primitives (catalog + completed/locked sets + objective lookups + XP scaler).\""
+    },
+    {
       "id": "backfill-models",
       "title": "DailyBackfillEntry & claim items",
       "category": "Progression",

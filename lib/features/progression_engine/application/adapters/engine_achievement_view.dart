@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../../domain/progression/player/player_achievement_lifecycle.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../application/progression_engine_provider.dart';
 import '../../domain/display/progression_display_models.dart';
 import '../../domain/display/progression_display_resolver.dart';
 import '../../domain/models/progression_node_definition.dart';
+import '../../domain/models/reward_definition.dart';
+import '../progression_engine_provider.dart';
 
 /// Display-ready view of a V2 [Achievement] paired with the
 /// player's current state from the ledger and the latest evaluator
@@ -25,6 +27,8 @@ class EngineAchievementView {
     required this.targetValue,
     required this.progress,
     required this.levelTarget,
+    this.isLockedByConditions = false,
+    this.previewXp = 0,
   });
 
   /// Catalog entry this view wraps.
@@ -53,7 +57,58 @@ class EngineAchievementView {
   /// Null for non-level achievements.
   final int? levelTarget;
 
+  /// Phase 8 bridge field — true when the engine resolved this
+  /// achievement to `NodeState.locked` (unlock conditions failed).
+  /// Distinguishes locked-by-conditions rows from in-progress rows
+  /// so the [lifecycle] getter can route to [AchievementLocked]
+  /// instead of [AchievementInProgress]. Defaults to false for
+  /// backwards compat with construction sites that haven't been
+  /// updated yet.
+  final bool isLockedByConditions;
+
+  /// Phase 8 bridge field — level-scaled XP the player would receive
+  /// (or did receive) for unlocking this achievement, computed via
+  /// `ProgressionLevelPolicy.scaledRewardXp`. Mirrors
+  /// `EngineQuestProgress.previewXp`. Drives
+  /// [AchievementUnlocked.finalXp] in the lifecycle bridge. Defaults
+  /// to 0 for construction sites that haven't wired the catalog
+  /// reward XP yet.
+  final int previewXp;
+
   String get id => node.id;
+
+  /// Phase 8 bridge: derives the [PlayerAchievementLifecycle] sealed
+  /// discriminator from the engine flags. Widgets pattern-match on
+  /// the sealed type instead of inspecting `unlocked` /
+  /// `isLockedByConditions` directly. Mapping precedence:
+  ///
+  ///   - `unlocked == true`         → [AchievementUnlocked]
+  ///   - `isLockedByConditions == true` → [AchievementLocked]
+  ///   - otherwise                   → [AchievementInProgress]
+  ///
+  /// **Precedence rationale.** Unlike Phase 6 quests (where Locked
+  /// wins over Claimed because side-quests of closed chapters must
+  /// stay classified as locked even after the player finished them),
+  /// achievements never re-lock — once the ledger has a completion
+  /// event, the row is idempotently Unlocked. So Unlocked wins over
+  /// Locked here. The 4-row mapping table is pinned by
+  /// `test/features/progression_engine/engine_achievement_view_lifecycle_test.dart`.
+  ///
+  /// Phase 16+ retires this bridge once the engine produces
+  /// `PlayerAchievement` directly.
+  PlayerAchievementLifecycle get lifecycle {
+    if (unlocked) {
+      return AchievementUnlocked(
+        finalXp: previewXp,
+        unlockedAt: unlockedAt,
+      );
+    }
+    if (isLockedByConditions) return const AchievementLocked();
+    return AchievementInProgress(
+      actual: currentValue.toDouble(),
+      target: targetValue.toDouble(),
+    );
+  }
 }
 
 /// Builds the achievement view list for the hero screen and journey
@@ -66,6 +121,7 @@ List<EngineAchievementView> buildEngineAchievementViews(
 ) {
   const resolver = ProgressionDisplayResolver();
   final completed = provider.completedNodeIds;
+  final locked = provider.lockedNodeIds;
 
   final out = <EngineAchievementView>[];
   for (final node in provider.achievements) {
@@ -90,6 +146,16 @@ List<EngineAchievementView> buildEngineAchievementViews(
       progress = (actual / target).clamp(0.0, 1.0).toDouble();
     }
 
+    // Phase 8 bridge wiring. The catalog row's first XpReward drives
+    // the previewXp value through the provider's public level-scaling
+    // helper — same math the engine uses for quest preview pills. The
+    // locked set comes from the engine resolver's NodeState classification
+    // (a node failing its unlock conditions lands in [lockedNodeIds]).
+    final baseXp = node.rewards
+        .whereType<XpReward>()
+        .fold<int>(0, (sum, r) => sum + r.amount);
+    final previewXp = provider.scaledRewardXp(baseXp: baseXp);
+
     out.add(EngineAchievementView(
       node: node,
       display: display,
@@ -99,6 +165,8 @@ List<EngineAchievementView> buildEngineAchievementViews(
       targetValue: target,
       progress: progress,
       levelTarget: _levelTargetFromId(node.id),
+      isLockedByConditions: !unlocked && locked.contains(node.id),
+      previewXp: previewXp,
     ));
   }
   return out;

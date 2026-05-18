@@ -26,8 +26,10 @@ import '../domain/models/claim_policy.dart';
 import '../domain/models/engine_evaluation_input.dart';
 import 'package:forgetrack/domain/journal/journal_event.dart';
 import 'package:forgetrack/domain/player/player.dart';
+import 'package:forgetrack/domain/progression/player/player_achievement_shelf.dart';
 import 'package:forgetrack/domain/progression/player/player_quest_catalog.dart';
 import 'package:forgetrack/domain/progression/player/player_quest_lifecycle.dart';
+import 'player_achievement_shelf_service.dart';
 import 'player_quest_catalog_service.dart';
 import '../domain/models/objective_definition.dart';
 import '../domain/models/objective_metric.dart';
@@ -384,6 +386,16 @@ class ProgressionEngineProvider extends ChangeNotifier {
   int get level => profile.level;
   int get totalXp => profile.totalXp;
 
+  /// Public alias for the engine's level-scaling math so out-of-provider
+  /// consumers (notably the achievement view adapter) can compute the
+  /// preview XP a node would grant at the player's current level
+  /// without reaching into the private [_levelPolicy] field. Mirrors
+  /// the same call the engine itself uses for quest preview pills.
+  int scaledRewardXp({required int baseXp}) =>
+      baseXp == 0
+          ? 0
+          : _levelPolicy.scaledRewardXp(baseXp: baseXp, level: profile.level);
+
   // ── PlayerQuestCatalog projection ────────────────────────────────
   //
   // Phase 7 read projection. Built lazily on read from the union of
@@ -436,6 +448,63 @@ class ProgressionEngineProvider extends ChangeNotifier {
     _cachedPlayerQuestCatalog = catalog;
     _playerQuestCatalogCacheKey = cacheKey;
     return catalog;
+  }
+
+  // ── PlayerAchievementShelf projection ────────────────────────────
+  //
+  // Phase 8 read projection mirroring Phase 7. Built lazily from the
+  // achievement catalog + the engine's completed/locked sets + the
+  // objective outcome lookups. Cached by the same identity-keyed
+  // strategy as the quest catalog: a fresh ledger reference or a
+  // shifted dev-day-offset rebuilds the shelf; otherwise repeated
+  // reads are O(1).
+  //
+  // See:
+  //   - lib/domain/progression/player/player_achievement_shelf.dart
+  //   - ADR `player-achievement-shelf-projection`.
+
+  static const PlayerAchievementShelfService _playerAchievementShelfService =
+      PlayerAchievementShelfService();
+
+  PlayerAchievementShelf? _cachedPlayerAchievementShelf;
+  int? _playerAchievementShelfCacheKey;
+
+  /// Phase 8 read projection. Returns [PlayerAchievementShelf.empty]
+  /// before the first evaluation completes; once `_lastResult` is in
+  /// place the shelf rebuilds from the achievement catalog +
+  /// completed/locked node id sets + per-objective outcome lookups.
+  ///
+  /// Cache key reuses the Phase 7 scheme:
+  /// `(identityHashCode(_ledger), _devDayOffset)`. _lastResult is
+  /// refreshed whenever the ledger changes or the engine re-evaluates
+  /// — identity-equality on the ledger detects both. The
+  /// dev-day-offset term keeps the cache honest when devtools "advance
+  /// day" shifts the resolver output without a ledger append.
+  PlayerAchievementShelf get playerAchievementShelf {
+    final l = _ledger;
+    final r = _lastResult;
+    if (l == null || r == null) return PlayerAchievementShelf.empty;
+    final cacheKey = Object.hash(identityHashCode(l), _devDayOffset);
+    final cached = _cachedPlayerAchievementShelf;
+    if (cached != null && _playerAchievementShelfCacheKey == cacheKey) {
+      return cached;
+    }
+    final completed = completedNodeIds;
+    final locked = lockedNodeIds;
+    final shelf = _playerAchievementShelfService.build(
+      achievements: achievements,
+      completedNodeIds: completed,
+      lockedNodeIds: locked,
+      earliestCompletionAt: earliestCompletionAt,
+      objectiveActual: objectiveActualValue,
+      objectiveTarget: (id) =>
+          objectiveById(id)?.targetValue.toDouble() ?? 0.0,
+      scaledRewardXp: (baseXp) => scaledRewardXp(baseXp: baseXp),
+      evaluatedAt: _lastEvaluatedAt ?? _engineNow(),
+    );
+    _cachedPlayerAchievementShelf = shelf;
+    _playerAchievementShelfCacheKey = cacheKey;
+    return shelf;
   }
 
   /// Set of node ids the engine has marked completed. Order is not

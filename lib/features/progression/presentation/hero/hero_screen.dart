@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../domain/progression/player/player_achievement_lifecycle.dart';
 import '../../../cosmetics/presentation/widgets/cosmetics_inventory_section.dart';
 import '../../../journey/presentation/widgets/journey_preview_card.dart';
 import '../../../progression_engine/application/progression_engine_provider.dart';
-import '../../../progression_engine/presentation/adapters/engine_achievement_view.dart';
+import '../../../progression_engine/application/adapters/engine_achievement_view.dart';
 import '../../../social/application/social_provider.dart';
 import '../../../social/domain/social_models.dart';
 import '../../../progression_engine/presentation/widgets/progression_primitives.dart';
@@ -37,9 +38,14 @@ class _HeroScreenState extends State<HeroScreen> {
     final l10n = context.l10n;
     final progression = context.watch<ProgressionEngineProvider>();
     final views = buildEngineAchievementViews(progression, l10n);
+    // Phase 8: route state filters through the sealed
+    // PlayerAchievementLifecycle exposed by EngineAchievementView.lifecycle.
+    // The boolean view.unlocked is preserved as a producer-side flag
+    // (mirrors the Phase 6/7 EngineQuestProgress pattern), but every
+    // *consumer* of state goes through the discriminated lifecycle.
     final unlocked = [
       for (final v in views)
-        if (v.unlocked) v,
+        if (v.lifecycle is AchievementUnlocked) v,
     ]..sort((a, b) {
         final rarity = b.display.rarity.index.compareTo(a.display.rarity.index);
         if (rarity != 0) return rarity;
@@ -49,7 +55,7 @@ class _HeroScreenState extends State<HeroScreen> {
       });
     final inProgress = [
       for (final v in views)
-        if (!v.unlocked) v,
+        if (v.lifecycle is! AchievementUnlocked) v,
     ]..sort((a, b) {
         final rarity = b.display.rarity.index.compareTo(a.display.rarity.index);
         if (rarity != 0) return rarity;
@@ -211,7 +217,7 @@ class _AchievementTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = view.display.accentColor;
-    final unlocked = view.unlocked;
+    final unlocked = view.lifecycle is AchievementUnlocked;
     final emoji = view.display.badgeEmoji ?? '';
 
     return GestureDetector(
@@ -397,7 +403,7 @@ class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
     final color = view.display.accentColor;
     final emoji = view.display.badgeEmoji ?? '';
     final locale = Localizations.localeOf(context).toString();
-    final unlocked = view.unlocked;
+    final unlocked = view.lifecycle is AchievementUnlocked;
     final progressLabel = l10n.progProgressRatio(
       view.currentValue,
       view.targetValue,
