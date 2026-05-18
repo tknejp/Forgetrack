@@ -604,6 +604,15 @@ Plán dodržuje 5 pravidel, která jsou silnější než cokoliv v jednotlivých
 
 ### Stage D — Engine + Social + UI
 
+**Status:** ✅ closed 2026-05-19. All 4 phases shipped:
+
+- Phase 16 (engine signature refactor) — `57a9f6e` 2026-05-18
+- Phase 17 (SocialPresence aggregate) — `35b40b8` 2026-05-18
+- Phase 18 (Result/AppError — foundation + outermost layer) — `c09db65` 2026-05-18, with Phase 18.b (repository contracts) deferred per [follow_ups.md §2.17](follow_ups.md#217-phase-18b--repository-contracts-return-resultt-apperror-deferred-from-phase-18).
+- Phase 19 (UI sweep — quests + cosmetics) — `daf5ca6` 2026-05-18, with Phase 19.c (journey map) + 19.d (HC screens) deferred per [follow_ups.md §2.18](follow_ups.md#218-phase-19-leftovers--journey-map--health-connect-screens-deferred-from-phase-19).
+
+Stage E (Hardening) opens with Phase 20 (JournalProjection); deferred sub-phases are non-blocking and can land opportunistically.
+
 ---
 
 ### Phase 14 — GoalBoard extraction
@@ -701,6 +710,8 @@ Plán dodržuje 5 pravidel, která jsou silnější než cokoliv v jednotlivých
 
 ### Phase 17 — SocialPresence aggregate
 
+**Status:** ✅ shipped 2026-05-18 (`35b40b8`). See ADR `social-presence-aggregate-extraction`.
+
 **Goal:** `SocialPresence` aggregate s `Handle` / `Friendship` / `FriendRequest` / `AchievementShare` / `SocialNotification` components. Rename `SocialRepository` → `SocialPresenceRepository`. `SocialUserProfile` zůstává jako documented read model.
 
 **Pre-conditions:** Phase 11 done (Cosmetic Loadout exists — SocialPresence reference equipped cosmetics).
@@ -735,6 +746,8 @@ Plán dodržuje 5 pravidel, která jsou silnější než cokoliv v jednotlivých
 ---
 
 ### Phase 18 — Result/Error type hierarchy
+
+**Status:** ⚠️ partially shipped 2026-05-18 (`c09db65`). Foundation + outermost data layer done; repository contract migrations explicitly deferred as **Phase 18.b** ([follow_ups.md §2.17](follow_ups.md#217-phase-18b--repository-contracts-return-resultt-apperror-deferred-from-phase-18)). See ADR `result-app-error-foundation`.
 
 **Goal:** Zavést `sealed AppError` hierarchii a `Result<T, AppError>` return type na **domain layer + repository contracts + Firestore gateway**. Eliminuje silent error swallowing (`try/catch (e) → AppLog.warn(e)` patterny) v sync codepath. Není totální rewrite — scope se omezuje na external-boundary kontrakt.
 
@@ -787,6 +800,8 @@ Plán dodržuje 5 pravidel, která jsou silnější než cokoliv v jednotlivých
 ---
 
 ### Phase 19 — UI sweep: widget read-only audit
+
+**Status:** ⚠️ partially shipped 2026-05-18 (`daf5ca6`). 2 features (quests + cosmetics) migrated; journey map + HC screens explicitly deferred as **Phase 19.c / 19.d** ([follow_ups.md §2.18](follow_ups.md#218-phase-19-leftovers--journey-map--health-connect-screens-deferred-from-phase-19)). See ADR `ui-sweep-quests-cosmetics`.
 
 **Goal:** Audit pass napříč všemi widgety. Cíl: žádný `build()` neobsahuje **logiku nad doménou** (žádné `.where`, `.firstWhere`, `_isXxx`, `_resolveYyy`, žádné komputované booleans). Widget jen čte hotový `PlayerXxx` z provideru a switchuje na lifecycle.
 

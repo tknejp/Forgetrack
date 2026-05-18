@@ -283,6 +283,52 @@ Tyto věci původně vznikly jako "follow-ups", ale uživatel se rozhodl zapojit
 
 ---
 
+### 2.17 Phase 18.b — repository contracts return `Result<T, AppError>` (deferred from Phase 18)
+
+**Phase 18 status:** Phase 18 (`c09db65`, 2026-05-18) shipla foundation (sealed `AppError` + `Result<T,E>` v `lib/core/`) + Firebase / KT classifiers + Result-based wrapping na **outermost data layer** (`HybridProgressionEngineRepository` push/pull/wipe + `BackgroundSyncService.backgroundSyncCallback`). DoD audit `grep "catch (.*) {" lib/core/services/` ukázal 0 untyped swallows v sync codepath.
+
+**Co Phase 18 vynechala:** Plan §Phase 18 'Files touched' list explicitně počítal s migrací **domain repository interfaces** (`JournalRepository`, `PlayerRepository`, `InventoryRepository`, `SocialPresenceRepository`) na `Future<Result<T, AppError>>` return types. User explicit scope-directive na Phase 18 ('SCOPE TIGHTLY') vyloučila widget try/catch — ale provider metody, které widgety volají, jsou tou samou hranicí. Migrate repository contracts = cascade do call sites:
+
+- `SocialPresenceRepository` má 16 metod × ~12 SocialProvider call sites + downstream widget readers = ~400 LoC blast radius.
+- `PlayerRepository.load` vrací `Player.anonymous` jako sign-out happy case (no error path); migration je no-op + symbolic.
+- `JournalRepository` a `InventoryRepository` v plánu jako interfaces **dnes neexistují** ([§2.13 deferred IsarJournalAdapter](#213-concrete-isarjournaladapter-deferred-from-phase-2); Inventory je read projection z Phase 10, ne repository).
+- `ProgressionEngineRepository.loadLedger / appendEvents` jsou hot-path každého engine evaluate; každý call site by se musel pattern-matchovat.
+
+**Co dnes funguje bez Phase 18.b:** Outermost data layer audit splněn (hybrid repo + BackgroundSync). Existing AppError + Result types jsou usable adoptovat opportunisticky kdykoli (např. `HybridProgressionEngineRepository.pullEventsClassified()` už je veřejné). Phase 20 JournalProjection landne JournalRepository jako natural place to introduce typed errors at the contract level.
+
+**Kdy to řešit:** Volitelně. Pokud Phase 21 lint pass odhalí silent error sites v provider methods, batch je. Nebo počkat až vznikne konkrétní production issue, kde untyped error swallowing hurts (např. Social profile sync silently failing). Velikost: ~1-2 dny solo per repository.
+
+**Není blocking pro:** Phase 19 (UI sweep — shipped 2026-05-18), Phase 20 (JournalProjection — Stage E entry).
+
+---
+
+### 2.18 Phase 19 leftovers — journey map + Health Connect screens (deferred from Phase 19)
+
+**Phase 19 status:** Phase 19 (`daf5ca6`, 2026-05-18) shipla 2 features (quests_screen + cosmetics_screen) per user scope-directive 'time-box max 3 features'. Anti-pattern audit `grep .where(/.firstWhere(` napříč `lib/features/*/presentation/` identifikoval čtyři další kandidáty které Phase 19 explicitně vynechala:
+
+**Deferred screens (s reason per Phase 19 ADR `ui-sweep-quests-cosmetics`):**
+
+| Soubor | Hits | Důvod deferru |
+|---|---|---|
+| `lib/features/journey/presentation/widgets/journey_interactive_map.dart` | 5 | Na user-defined STOP threshold (`> 5 instances same anti-pattern v jednom widgetu`). 1200-line file s multiple stateful widget scopes (checkpoints filter v build + map state lifecycle methods) — needs bigger architectural pass. |
+| `lib/features/health_connect/presentation/body_screen.dart` | 3 | HC-specific, domain ownership unclear mezi FitnessProvider helpers + view models. |
+| `lib/features/health_connect/presentation/activities_screen.dart` | 3 | Same. |
+| `lib/features/health_connect/presentation/sleep_screen.dart` | 2 | Same. |
+
+**Explicitně NEdoporučeno k migraci (analyzed, false positive / skip):**
+
+- `lib/features/progression/presentation/quests/quest_screen_sections.dart` (5 hits) — V1 progression, delete-candidate per proposal §9.3.
+- `lib/features/social/presentation/widgets/social_feed_card.dart` (2 hits) — UI-only reaction emoji filters per per-interaction sheet rendering, not domain state.
+
+**Návrh sub-phases:**
+
+- **Phase 19.c — Journey map:** dedicated pass on `journey_interactive_map.dart`. Extract checkpoint filter projections (`unlocked / pathAnchors / visibleCheckpoints`) na `JourneyProvider`. Time-box: ~2-3 dny solo.
+- **Phase 19.d — Health Connect screens:** body / activities / sleep screens — analyze whether filters are domain-derived (move) or UI-driven (stay). Time-box: ~1 den solo.
+
+**Není blocking pro:** Phase 20 (JournalProjection — Stage E entry). UI sweep je continuous-improvement, ne prerequisite.
+
+---
+
 ## 3. Audit findings že NEJSOU folded ani deferred
 
 Tyto byly raised v audit reportu, ale nepřevedeny na action item — buď jsou false positive nebo z natury povahy doménového refactoru řeší.
