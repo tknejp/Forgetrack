@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../domain/progression/catalog/ids.dart';
 import '../../../domain/progression/player/player_quest_lifecycle.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/l10n.dart';
@@ -163,22 +164,32 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
       );
     }
 
+    // Phase 7: lifecycle reads route through the PlayerQuestCatalog
+    // projection. The bucket lists (`daily`, `weekly`) come from
+    // engine-ordered output; the catalog is the lifecycle authority.
+    // Looking up via `catalog.byId(...)` instead of `q.lifecycle`
+    // proves the projection is wired and establishes the pattern
+    // Phase 8 / Phase 13 will follow for achievements + chapters.
+    final catalog = provider.playerQuestCatalog;
+    PlayerQuestLifecycle lifecycleOf(EngineQuestProgress q) =>
+        catalog.byId(QuestId(q.node.id.value))?.lifecycle ??
+            const QuestLocked();
     final dailyClaimable =
-        daily.where((q) => q.lifecycle is QuestCompletedPendingClaim).toList();
+        daily.where((q) => lifecycleOf(q) is QuestCompletedPendingClaim).toList();
     final weeklyClaimable =
-        weekly.where((q) => q.lifecycle is QuestCompletedPendingClaim).toList();
+        weekly.where((q) => lifecycleOf(q) is QuestCompletedPendingClaim).toList();
     // Daily slot is sticky for the whole day: claimed cards stay in the
     // section reading as "done" until midnight rolls a new rotation, so
     // we pass the full list (no QuestClaimed filter). The count label
     // uses unclaimed quests only.
-    final dailyUnclaimed = daily.where((q) => q.lifecycle is! QuestClaimed).toList();
+    final dailyUnclaimed = daily.where((q) => lifecycleOf(q) is! QuestClaimed).toList();
     // Weekly section now mirrors long-term / chapter rules: a quest
     // that's claimable-but-not-claimed moves to DOKONČENÉ so the row
     // doesn't double-list. Daily stays as-is (claimable still shows
     // in the daily section so the player can claim from the active
     // surface).
     final weeklyActive = weekly
-        .where((q) => switch (q.lifecycle) {
+        .where((q) => switch (lifecycleOf(q)) {
               QuestAvailable() || QuestLocked() => true,
               QuestCompletedPendingClaim() || QuestClaimed() => false,
             })

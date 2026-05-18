@@ -26,7 +26,9 @@ import '../domain/models/claim_policy.dart';
 import '../domain/models/engine_evaluation_input.dart';
 import 'package:forgetrack/domain/journal/journal_event.dart';
 import 'package:forgetrack/domain/player/player.dart';
+import 'package:forgetrack/domain/progression/player/player_quest_catalog.dart';
 import 'package:forgetrack/domain/progression/player/player_quest_lifecycle.dart';
+import 'player_quest_catalog_service.dart';
 import '../domain/models/objective_definition.dart';
 import '../domain/models/objective_metric.dart';
 import '../domain/models/objective_operator.dart';
@@ -381,6 +383,60 @@ class ProgressionEngineProvider extends ChangeNotifier {
 
   int get level => profile.level;
   int get totalXp => profile.totalXp;
+
+  // ── PlayerQuestCatalog projection ────────────────────────────────
+  //
+  // Phase 7 read projection. Built lazily on read from the union of
+  // the engine's bucket lists, cached by `_ledger` reference identity
+  // + dev-day-offset so repeated reads in the same eval window are
+  // O(1) instead of O(buckets · resolver). Invalidates implicitly
+  // whenever a new ledger snapshot lands (the next read sees a
+  // different identity and rebuilds).
+  //
+  // See:
+  //   - lib/domain/progression/player/player_quest_catalog.dart
+  //   - ADR `player-quest-catalog-projection`.
+
+  static const PlayerQuestCatalogService _playerQuestCatalogService =
+      PlayerQuestCatalogService();
+
+  PlayerQuestCatalog? _cachedPlayerQuestCatalog;
+  int? _playerQuestCatalogCacheKey;
+
+  /// Phase 7 read projection. Returns [PlayerQuestCatalog.empty]
+  /// before the first ledger load completes; once the ledger is in
+  /// place, the catalog rebuilds from the union of
+  /// [currentDailyQuests] + [currentWeeklyQuests] +
+  /// [currentChapterQuests] + [currentLongTermQuests] (unwrapped
+  /// from their `EngineLongTermEntry.quest`) + [lockedQuests].
+  ///
+  /// Cache by `(identityHashCode(_ledger), _devDayOffset)` — any
+  /// devtools "advance day" tap shifts the offset, which shifts the
+  /// daily-section pick, which must reseed the catalog even when
+  /// the underlying ledger reference is stable.
+  PlayerQuestCatalog get playerQuestCatalog {
+    final l = _ledger;
+    if (l == null) return PlayerQuestCatalog.empty;
+    final cacheKey = Object.hash(identityHashCode(l), _devDayOffset);
+    final cached = _cachedPlayerQuestCatalog;
+    if (cached != null && _playerQuestCatalogCacheKey == cacheKey) {
+      return cached;
+    }
+    final entries = <EngineQuestProgress>[
+      ...currentDailyQuests,
+      ...currentWeeklyQuests,
+      ...currentChapterQuests,
+      for (final lt in currentLongTermQuests) lt.quest,
+      ...lockedQuests,
+    ];
+    final catalog = _playerQuestCatalogService.build(
+      questProgressEntries: entries,
+      evaluatedAt: _lastEvaluatedAt ?? _engineNow(),
+    );
+    _cachedPlayerQuestCatalog = catalog;
+    _playerQuestCatalogCacheKey = cacheKey;
+    return catalog;
+  }
 
   /// Set of node ids the engine has marked completed. Order is not
   /// guaranteed; consumers should iterate via the catalog when they

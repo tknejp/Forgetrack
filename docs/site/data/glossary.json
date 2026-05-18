@@ -65,6 +65,22 @@
       "diagram": "classDiagram\n    class PlayerQuestLifecycle {\n      <<sealed>>\n    }\n    class QuestLocked {\n      +const ctor (no payload v Phase 6)\n    }\n    class QuestAvailable {\n      +double actual\n      +double target\n      +double progress\n    }\n    class QuestCompletedPendingClaim {\n      +int previewXp\n      +DateTime? completedAt\n    }\n    class QuestClaimed {\n      +int finalXp\n      +DateTime? claimedAt\n    }\n    PlayerQuestLifecycle <|-- QuestLocked\n    PlayerQuestLifecycle <|-- QuestAvailable\n    PlayerQuestLifecycle <|-- QuestCompletedPendingClaim\n    PlayerQuestLifecycle <|-- QuestClaimed\n    note for PlayerQuestLifecycle \"EngineQuestProgress.lifecycle derives this from existing flags. Precedence: Locked > Claimed > PendingClaim > Available.\""
     },
     {
+      "id": "player-quest",
+      "title": "PlayerQuest (read projection unit)",
+      "category": "Player",
+      "file": "lib/domain/progression/player/player_quest.dart",
+      "summary": "Phase 7 immutable value object binding a typed QuestId, a sealed PlayerQuestLifecycle, a DateTime evaluatedAt. Projection unit of PlayerQuestCatalog. Value-based equals + copyWith. Proposal §2.4 specifies `PlayerQuest { Quest quest; ... }`, ale Quest catalog row pořád žije v lib/features/progression_engine/ a lib/domain/ ho nemůže importovat (purity guard); narrower QuestId reference je dnešní proposal-aligned substitut. Konzumenty application + presentation vrstvy resolvují plný Quest catalog row přes ProgressionEntryCatalog.definitionForId(...). Shape se rozšíří až Quest přejde do lib/domain/progression/catalog/.",
+      "diagram": "classDiagram\n    class PlayerQuest {\n      <<immutable VO>>\n      +QuestId id\n      +PlayerQuestLifecycle lifecycle\n      +DateTime evaluatedAt\n      +PlayerQuest copyWith(...)\n    }\n    PlayerQuest --> QuestId\n    PlayerQuest --> PlayerQuestLifecycle"
+    },
+    {
+      "id": "player-quest-catalog",
+      "title": "PlayerQuestCatalog (read projection collection)",
+      "category": "Player",
+      "file": "lib/domain/progression/player/player_quest_catalog.dart",
+      "summary": "Phase 7 read projection: Map<QuestId, PlayerQuest> wrapped immutably (entries jsou Map.unmodifiable). Konzumenty: ProgressionEngineProvider.playerQuestCatalog getter (lazy cache klíčovaná identityHashCode(_ledger) + _devDayOffset), screen filter expressions. Accessors: byId / all / length / isEmpty / contains; lifecycle filters locked / available / pendingClaim / claimed; bucket slice among(ids); ad-hoc where(predicate). PlayerQuestCatalog.empty sentinel pro pre-first-evaluation state — screen consumeři čtou bez null guard. Insertion-order preserving. Phase 8 (PlayerAchievementShelf) + Phase 13 (ChapterLifecycle) build na stejném vzoru.",
+      "diagram": "classDiagram\n    class PlayerQuestCatalog {\n      <<immutable>>\n      -Map~QuestId, PlayerQuest~ _entries\n      +PlayerQuestCatalog.fromEntries(Iterable~PlayerQuest~)$\n      +PlayerQuestCatalog empty$\n      +PlayerQuest? byId(QuestId)\n      +Iterable~PlayerQuest~ all\n      +Iterable~PlayerQuest~ locked\n      +Iterable~PlayerQuest~ available\n      +Iterable~PlayerQuest~ pendingClaim\n      +Iterable~PlayerQuest~ claimed\n      +Iterable~PlayerQuest~ among(Iterable~QuestId~)\n      +Iterable~PlayerQuest~ where(predicate)\n    }\n    PlayerQuestCatalog o-- PlayerQuest\n    note for PlayerQuestCatalog \"Provider caches by (identityHashCode(ledger), devDayOffset). PlayerQuestCatalogService builds it from EngineQuestProgress entries via Phase 6 lifecycle bridge.\""
+    },
+    {
       "id": "backfill-models",
       "title": "DailyBackfillEntry & claim items",
       "category": "Progression",
