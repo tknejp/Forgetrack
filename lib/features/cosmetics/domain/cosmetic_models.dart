@@ -50,15 +50,24 @@ enum CosmeticUnlockSource {
 /// Static definition of a cosmetic. Lives in [CosmeticCatalog]; never mutated
 /// at runtime.
 ///
+/// Sealed hierarchy with one concrete subtype per [CosmeticType] slot:
+/// [Frame], [Background], [Companion], [RelicCosmetic], [Emblem],
+/// [TitleFlair], [MapEffect]. Discrimination is by pattern match
+/// (`cosmetic is Companion`), not by an enum field.
+///
+/// The [CosmeticType] enum is retained for slot identification — equipped
+/// state keys by slot ([EquippedCosmetics.slotId]) and the relic catalog
+/// disambiguates `Relic` (progression catalog gating node) from
+/// [RelicCosmetic] (cosmetic-side visual asset).
+///
 /// Player-facing text ([name], [description], [unlockHint]) is provided as a
 /// closure that pulls the localized string from [AppLocalizations]. Each
 /// catalog entry inlines its own `(l) => l.cosmeticXxx` resolver — there is
 /// no separate id-to-key switch table. Adding a cosmetic touches the catalog
 /// and the `.arb` files, nothing else.
-class Cosmetic {
+sealed class Cosmetic {
   const Cosmetic({
     required this.id,
-    required this.type,
     required this.rarity,
     required this.region,
     required this.name,
@@ -73,7 +82,6 @@ class Cosmetic {
   });
 
   final CosmeticId id;
-  final CosmeticType type;
   final Rarity rarity;
   final CosmeticRegion region;
 
@@ -102,6 +110,156 @@ class Cosmetic {
 
   /// Free-form bag for feature-specific overrides (e.g. animation flags).
   final Map<String, Object?> metadata;
+
+  /// Slot identifier. Derived from the concrete subtype — there is no
+  /// runtime field; pattern matching (`cosmetic is Companion`) is the
+  /// canonical way to discriminate. This getter exists so callers that pass
+  /// the slot as a [CosmeticType] value (e.g. `EquippedCosmetics.slotId`,
+  /// `unequip(definition.type)`) stay terse.
+  CosmeticType get type;
+}
+
+class Frame extends Cosmetic {
+  const Frame({
+    required super.id,
+    required super.rarity,
+    required super.region,
+    required super.name,
+    required super.description,
+    super.assetKey,
+    super.previewAssetKey,
+    super.sortOrder,
+    super.isPremium,
+    super.isEnabled,
+    super.unlockHint,
+    super.metadata,
+  });
+
+  @override
+  CosmeticType get type => CosmeticType.frame;
+}
+
+class Background extends Cosmetic {
+  const Background({
+    required super.id,
+    required super.rarity,
+    required super.region,
+    required super.name,
+    required super.description,
+    super.assetKey,
+    super.previewAssetKey,
+    super.sortOrder,
+    super.isPremium,
+    super.isEnabled,
+    super.unlockHint,
+    super.metadata,
+  });
+
+  @override
+  CosmeticType get type => CosmeticType.background;
+}
+
+class Companion extends Cosmetic {
+  const Companion({
+    required super.id,
+    required super.rarity,
+    required super.region,
+    required super.name,
+    required super.description,
+    super.assetKey,
+    super.previewAssetKey,
+    super.sortOrder,
+    super.isPremium,
+    super.isEnabled,
+    super.unlockHint,
+    super.metadata,
+  });
+
+  @override
+  CosmeticType get type => CosmeticType.companion;
+}
+
+/// Cosmetic-side relic (visual asset). Disambiguated from
+/// `Relic` (progression catalog gating node) — both ship under id `relic_*`
+/// but represent different concerns. References between them are by id.
+class RelicCosmetic extends Cosmetic {
+  const RelicCosmetic({
+    required super.id,
+    required super.rarity,
+    required super.region,
+    required super.name,
+    required super.description,
+    super.assetKey,
+    super.previewAssetKey,
+    super.sortOrder,
+    super.isPremium,
+    super.isEnabled,
+    super.unlockHint,
+    super.metadata,
+  });
+
+  @override
+  CosmeticType get type => CosmeticType.relic;
+}
+
+class Emblem extends Cosmetic {
+  const Emblem({
+    required super.id,
+    required super.rarity,
+    required super.region,
+    required super.name,
+    required super.description,
+    super.assetKey,
+    super.previewAssetKey,
+    super.sortOrder,
+    super.isPremium,
+    super.isEnabled,
+    super.unlockHint,
+    super.metadata,
+  });
+
+  @override
+  CosmeticType get type => CosmeticType.emblem;
+}
+
+class TitleFlair extends Cosmetic {
+  const TitleFlair({
+    required super.id,
+    required super.rarity,
+    required super.region,
+    required super.name,
+    required super.description,
+    super.assetKey,
+    super.previewAssetKey,
+    super.sortOrder,
+    super.isPremium,
+    super.isEnabled,
+    super.unlockHint,
+    super.metadata,
+  });
+
+  @override
+  CosmeticType get type => CosmeticType.titleFlair;
+}
+
+class MapEffect extends Cosmetic {
+  const MapEffect({
+    required super.id,
+    required super.rarity,
+    required super.region,
+    required super.name,
+    required super.description,
+    super.assetKey,
+    super.previewAssetKey,
+    super.sortOrder,
+    super.isPremium,
+    super.isEnabled,
+    super.unlockHint,
+    super.metadata,
+  });
+
+  @override
+  CosmeticType get type => CosmeticType.mapEffect;
 }
 
 /// Per-user unlock record. Immutable.

@@ -75,7 +75,7 @@ class CosmeticRevealEvaluator {
     //    layout that drops the only summary of the unlock chain.
     if (ownedIds.contains(def.id)) {
       List<CosmeticRevealConditionRow>? conditionRows;
-      if (def.type == CosmeticType.companion) {
+      if (def is Companion) {
         for (final rule in rules) {
           if (rule.cosmeticId != def.id) continue;
           conditionRows = _buildConditionRows(rule, snapshot);
@@ -136,7 +136,7 @@ class CosmeticRevealEvaluator {
     if (bestSatisfied == 0) {
       // Companion-specific teaser: reveal name + checklist once player is
       // within 10 levels of the companion's level gate.
-      if (def.type == CosmeticType.companion && bestRule != null) {
+      if (def is Companion && bestRule != null) {
         final minLevel = _extractMinLevel(bestRule);
         if (minLevel != null && snapshot.level >= minLevel - 10) {
           return CosmeticRevealResult(
@@ -157,7 +157,7 @@ class CosmeticRevealEvaluator {
       state: CosmeticRevealState.partial,
       satisfiedConditions: bestSatisfied,
       totalConditions: bestTotal,
-      conditionRows: def.type == CosmeticType.companion && bestRule != null
+      conditionRows: def is Companion && bestRule != null
           ? _buildConditionRows(bestRule, snapshot)
           : null,
     );

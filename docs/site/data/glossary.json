@@ -173,8 +173,16 @@
       "title": "CosmeticType / Region / UnlockSource",
       "category": "Cosmetics",
       "file": "lib/features/cosmetics/domain/cosmetic_models.dart",
-      "summary": "Enumy popisující kosmetiku — typ slotu, narativní region, zdroj unlocku. Rarity je definovaná zvlášť v shared/domain/rarity.dart.",
-      "diagram": "classDiagram\n    class CosmeticType {\n      <<enum>>\n      frame\n      relic\n      background\n      emblem\n      companion\n      titleFlair\n      mapEffect\n    }\n    class CosmeticRegion {\n      <<enum>>\n      forestTrail\n      ruinedPass\n      …\n    }\n    class CosmeticUnlockSource {\n      <<enum>>\n      defaultBaseline\n      progressionLevel\n      achievement\n      quest\n      manual\n      promotional\n    }\n    class Rarity {\n      <<enum>>\n      common\n      rare\n      epic\n      legendary\n      mythic\n    }"
+      "summary": "Enumy popisující kosmetiku — region a zdroj unlocku. CosmeticType zůstává po Phase 9 sealed-catalog refactoru jen jako slot identifier (klíče v EquippedCosmetics / Loadout, parametr u repository.equipCosmetic). Discriminace mezi typy cosmeticu už enum nedělá — to je práce sealed Cosmetic hierarchie níž. Rarity je definovaná zvlášť v shared/domain/rarity.dart.",
+      "diagram": "classDiagram\n    class CosmeticType {\n      <<enum, slot-only>>\n      frame\n      relic\n      background\n      emblem\n      companion\n      titleFlair\n      mapEffect\n    }\n    class CosmeticRegion {\n      <<enum>>\n      forestTrail\n      ruinedPass\n      …\n    }\n    class CosmeticUnlockSource {\n      <<enum>>\n      defaultBaseline\n      progressionLevel\n      achievement\n      quest\n      manual\n      promotional\n    }\n    class Rarity {\n      <<enum>>\n      common\n      rare\n      epic\n      legendary\n      mythic\n    }"
+    },
+    {
+      "id": "cosmetic-sealed",
+      "title": "Cosmetic sealed (7 subtypů)",
+      "category": "Cosmetics",
+      "file": "lib/features/cosmetics/domain/cosmetic_models.dart",
+      "summary": "Catalog row pro kosmetiku. Phase 9 přepsala single class s `CosmeticType type` enum-diskriminátorem na sealed hierarchii: Frame, Background, Companion, RelicCosmetic, Emblem, TitleFlair, MapEffect. Discriminace přes `cosmetic is Companion` pattern matching, ne enum equality. `RelicCosmetic` je úmyslně přejmenovaný (vs. `Relic` v progression catalogu) — oba živé typy s reference přes id. `CosmeticType` enum zůstává pro slot-key identification (Loadout, EquippedCosmetics.slotId). Catalog factory accessory per-typ: `catalog.frames`, `.companions`, `.relics` (vrací typed lists přes whereType<T>()).",
+      "diagram": "classDiagram\n    class Cosmetic {\n      <<sealed>>\n      +CosmeticId id\n      +Rarity rarity\n      +CosmeticRegion region\n      +CosmeticText name\n      +CosmeticText description\n      +CosmeticType get type\n    }\n    class Frame\n    class Background\n    class Companion\n    class RelicCosmetic\n    class Emblem\n    class TitleFlair\n    class MapEffect\n    Cosmetic <|-- Frame\n    Cosmetic <|-- Background\n    Cosmetic <|-- Companion\n    Cosmetic <|-- RelicCosmetic\n    Cosmetic <|-- Emblem\n    Cosmetic <|-- TitleFlair\n    Cosmetic <|-- MapEffect"
     }
   ]
 }

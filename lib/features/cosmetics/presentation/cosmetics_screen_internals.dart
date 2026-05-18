@@ -44,7 +44,7 @@ class CosmeticBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isFrame = definition.type == CosmeticType.frame;
+    final isFrame = definition is Frame;
     final effectiveFit = fit ?? (isFrame ? BoxFit.contain : BoxFit.cover);
 
     final content = assetPath == null

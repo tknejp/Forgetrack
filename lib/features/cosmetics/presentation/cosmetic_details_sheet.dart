@@ -10,7 +10,12 @@ import '../application/companions_registry.dart';
 import '../application/cosmetics_provider.dart';
 import '../domain/companion_state.dart';
 import '../domain/cosmetic_catalog.dart';
-import '../domain/cosmetic_models.dart';
+import '../domain/cosmetic_models.dart' hide Companion;
+// Disambiguate: `Companion` is both the new sealed cosmetic subtype
+// (cosmetic_models) and the legacy view-model bundle (companions_registry).
+// Until Phase 11 deletes the view-model, the sealed subtype is reached via
+// the `cm.` prefix for `is` checks.
+import '../domain/cosmetic_models.dart' as cm show Companion;
 import '../domain/cosmetic_reveal_state.dart';
 import '../domain/cosmetic_unlock_rule.dart';
 import '../domain/cosmetic_unlock_rules.dart';
@@ -152,7 +157,7 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
     // is a snapshot from the parent's last build; if the player
     // claimed mid-sheet, the providers above already notified and
     // the fresh resolution flips us from `claimable` to `claimed`.
-    final companion = devTools || definition.type != CosmeticType.companion
+    final companion = devTools || definition is! cm.Companion
         ? null
         : const CompanionsRegistry().byId(
             definition.id,
@@ -233,7 +238,7 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                 children: [
                   if (isHidden)
                     _HiddenBadgeLarge(color: hiddenColor)
-                  else if (definition.type == CosmeticType.companion)
+                  else if (definition is cm.Companion)
                     CompanionFakeIdlePreview(
                       width: 128,
                       height: 128,
@@ -355,7 +360,7 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
               // they used while progressing — just fully ticked.
               if (!devTools &&
                   !isHidden &&
-                  definition.type == CosmeticType.companion &&
+                  definition is cm.Companion &&
                   revealResult?.conditionRows != null) ...[
                 const SizedBox(height: 18),
                 _CompanionChecklist(

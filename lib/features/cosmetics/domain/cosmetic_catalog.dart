@@ -25,9 +25,8 @@ class CosmeticCatalog {
     // Frames — Journey milestone set
     // -------------------------------------------------------------------------
 
-    Cosmetic(
+    Frame(
       id: const CosmeticId('frame_pilgrim'),
-      type: CosmeticType.frame,
       rarity: Rarity.common,
       region: CosmeticRegion.forestTrail,
       name: (l10n) => l10n.cosmeticFramePilgrimName,
@@ -37,9 +36,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.frames.pilgrim',
       sortOrder: 100,
     ),
-    Cosmetic(
+    Frame(
       id: const CosmeticId('frame_wildwood'),
-      type: CosmeticType.frame,
       rarity: Rarity.common,
       region: CosmeticRegion.forestTrail,
       name: (l10n) => l10n.cosmeticFrameWildwoodName,
@@ -49,9 +47,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.frames.wildwood',
       sortOrder: 110,
     ),
-    Cosmetic(
+    Frame(
       id: const CosmeticId('frame_ruins'),
-      type: CosmeticType.frame,
       rarity: Rarity.rare,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticFrameRuinsName,
@@ -61,9 +58,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.frames.ruins',
       sortOrder: 120,
     ),
-    Cosmetic(
+    Frame(
       id: const CosmeticId('frame_dwarven'),
-      type: CosmeticType.frame,
       rarity: Rarity.rare,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticFrameDwarvenName,
@@ -73,9 +69,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.frames.dwarven',
       sortOrder: 125,
     ),
-    Cosmetic(
+    Frame(
       id: const CosmeticId('frame_underways'),
-      type: CosmeticType.frame,
       rarity: Rarity.rare,
       region: CosmeticRegion.dwarvenMines,
       name: (l10n) => l10n.cosmeticFrameUnderwaysName,
@@ -85,9 +80,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.frames.underways',
       sortOrder: 140,
     ),
-    Cosmetic(
+    Frame(
       id: const CosmeticId('frame_frost'),
-      type: CosmeticType.frame,
       rarity: Rarity.epic,
       region: CosmeticRegion.frostlands,
       name: (l10n) => l10n.cosmeticFrameFrostName,
@@ -97,9 +91,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.frames.frost',
       sortOrder: 160,
     ),
-    Cosmetic(
+    Frame(
       id: const CosmeticId('frame_mountain'),
-      type: CosmeticType.frame,
       rarity: Rarity.legendary,
       region: CosmeticRegion.dragonMountains,
       name: (l10n) => l10n.cosmeticFrameMountainName,
@@ -109,9 +102,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.frames.mountain',
       sortOrder: 180,
     ),
-    Cosmetic(
+    Frame(
       id: const CosmeticId('frame_dragonrock'),
-      type: CosmeticType.frame,
       rarity: Rarity.mythic,
       region: CosmeticRegion.dragonrockFortress,
       name: (l10n) => l10n.cosmeticFrameDragonrockName,
@@ -121,9 +113,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.frames.dragonrock',
       sortOrder: 200,
     ),
-    Cosmetic(
+    Frame(
       id: const CosmeticId('frame_developer_tom'),
-      type: CosmeticType.frame,
       rarity: Rarity.mythic,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticFrameDeveloperTomName,
@@ -142,9 +133,8 @@ class CosmeticCatalog {
     // Backgrounds — Journey map regions (camp → dragonrock fortress)
     // -------------------------------------------------------------------------
 
-    Cosmetic(
+    Background(
       id: const CosmeticId('background_camp'),
-      type: CosmeticType.background,
       rarity: Rarity.common,
       region: CosmeticRegion.forestTrail,
       name: (l10n) => l10n.cosmeticBackgroundCampName,
@@ -154,9 +144,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.backgrounds.camp',
       sortOrder: 400,
     ),
-    Cosmetic(
+    Background(
       id: const CosmeticId('background_forest_trail'),
-      type: CosmeticType.background,
       rarity: Rarity.uncommon,
       region: CosmeticRegion.forestTrail,
       name: (l10n) => l10n.cosmeticBackgroundForestTrailName,
@@ -166,9 +155,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.backgrounds.forest_trail',
       sortOrder: 410,
     ),
-    Cosmetic(
+    Background(
       id: const CosmeticId('background_ravine'),
-      type: CosmeticType.background,
       rarity: Rarity.uncommon,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticBackgroundRavineName,
@@ -178,9 +166,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.backgrounds.ravine',
       sortOrder: 420,
     ),
-    Cosmetic(
+    Background(
       id: const CosmeticId('background_ruins'),
-      type: CosmeticType.background,
       rarity: Rarity.uncommon,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticBackgroundRuinsName,
@@ -190,9 +177,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.backgrounds.ruins',
       sortOrder: 430,
     ),
-    Cosmetic(
+    Background(
       id: const CosmeticId('background_bridge_crossing'),
-      type: CosmeticType.background,
       rarity: Rarity.rare,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticBackgroundBridgeCrossingName,
@@ -202,9 +188,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.backgrounds.bridge_crossing',
       sortOrder: 440,
     ),
-    Cosmetic(
+    Background(
       id: const CosmeticId('background_mines'),
-      type: CosmeticType.background,
       rarity: Rarity.rare,
       region: CosmeticRegion.dwarvenMines,
       name: (l10n) => l10n.cosmeticBackgroundMinesName,
@@ -214,9 +199,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.backgrounds.mines',
       sortOrder: 450,
     ),
-    Cosmetic(
+    Background(
       id: const CosmeticId('background_frostlands'),
-      type: CosmeticType.background,
       rarity: Rarity.epic,
       region: CosmeticRegion.frostlands,
       name: (l10n) => l10n.cosmeticBackgroundFrostlandsName,
@@ -226,9 +210,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.backgrounds.frostlands',
       sortOrder: 460,
     ),
-    Cosmetic(
+    Background(
       id: const CosmeticId('background_frozen_lake'),
-      type: CosmeticType.background,
       rarity: Rarity.epic,
       region: CosmeticRegion.frostlands,
       name: (l10n) => l10n.cosmeticBackgroundFrozenLakeName,
@@ -238,9 +221,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.backgrounds.frozen_lake',
       sortOrder: 470,
     ),
-    Cosmetic(
+    Background(
       id: const CosmeticId('background_rocky_mountains'),
-      type: CosmeticType.background,
       rarity: Rarity.legendary,
       region: CosmeticRegion.dragonMountains,
       name: (l10n) => l10n.cosmeticBackgroundRockyMountainsName,
@@ -250,9 +232,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.backgrounds.rocky_mountains',
       sortOrder: 480,
     ),
-    Cosmetic(
+    Background(
       id: const CosmeticId('background_dragonrock_fortress'),
-      type: CosmeticType.background,
       rarity: Rarity.mythic,
       region: CosmeticRegion.dragonrockFortress,
       name: (l10n) => l10n.cosmeticBackgroundDragonrockFortressName,
@@ -267,9 +248,8 @@ class CosmeticCatalog {
     // Backgrounds — Developer-only (grant via DevTools only)
     // -------------------------------------------------------------------------
 
-    Cosmetic(
+    Background(
       id: const CosmeticId('background_dev_altar'),
-      type: CosmeticType.background,
       rarity: Rarity.mythic,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticBackgroundDevAltarName,
@@ -279,9 +259,8 @@ class CosmeticCatalog {
       sortOrder: 9010,
       metadata: <String, Object?>{'devOnly': true},
     ),
-    Cosmetic(
+    Background(
       id: const CosmeticId('background_dev_camp'),
-      type: CosmeticType.background,
       rarity: Rarity.mythic,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticBackgroundDevCampName,
@@ -291,9 +270,8 @@ class CosmeticCatalog {
       sortOrder: 9020,
       metadata: <String, Object?>{'devOnly': true},
     ),
-    Cosmetic(
+    Background(
       id: const CosmeticId('background_dev_hacker'),
-      type: CosmeticType.background,
       rarity: Rarity.mythic,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticBackgroundDevHackerName,
@@ -303,9 +281,8 @@ class CosmeticCatalog {
       sortOrder: 9030,
       metadata: <String, Object?>{'devOnly': true},
     ),
-    Cosmetic(
+    Background(
       id: const CosmeticId('background_dev_lord'),
-      type: CosmeticType.background,
       rarity: Rarity.mythic,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticBackgroundDevLordName,
@@ -315,9 +292,8 @@ class CosmeticCatalog {
       sortOrder: 9040,
       metadata: <String, Object?>{'devOnly': true},
     ),
-    Cosmetic(
+    Background(
       id: const CosmeticId('background_dev_mines'),
-      type: CosmeticType.background,
       rarity: Rarity.mythic,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticBackgroundDevMinesName,
@@ -327,9 +303,8 @@ class CosmeticCatalog {
       sortOrder: 9050,
       metadata: <String, Object?>{'devOnly': true},
     ),
-    Cosmetic(
+    Background(
       id: const CosmeticId('background_dev_throne'),
-      type: CosmeticType.background,
       rarity: Rarity.mythic,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticBackgroundDevThroneName,
@@ -344,9 +319,8 @@ class CosmeticCatalog {
     // Emblems — Journey badges (insignia of crossed milestones)
     // -------------------------------------------------------------------------
 
-    Cosmetic(
+    Emblem(
       id: const CosmeticId('emblem_pilgrim_mark'),
-      type: CosmeticType.emblem,
       rarity: Rarity.common,
       region: CosmeticRegion.forestTrail,
       name: (l10n) => l10n.cosmeticEmblemPilgrimMarkName,
@@ -356,9 +330,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.emblems.pilgrim_mark',
       sortOrder: 500,
     ),
-    Cosmetic(
+    Emblem(
       id: const CosmeticId('emblem_forest_mark'),
-      type: CosmeticType.emblem,
       rarity: Rarity.uncommon,
       region: CosmeticRegion.forestTrail,
       name: (l10n) => l10n.cosmeticEmblemForestMarkName,
@@ -368,9 +341,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.emblems.forest_mark',
       sortOrder: 510,
     ),
-    Cosmetic(
+    Emblem(
       id: const CosmeticId('emblem_ruin_sigil'),
-      type: CosmeticType.emblem,
       rarity: Rarity.uncommon,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticEmblemRuinSigilName,
@@ -380,9 +352,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.emblems.ruin_sigil',
       sortOrder: 520,
     ),
-    Cosmetic(
+    Emblem(
       id: const CosmeticId('emblem_gatekeeper_mark'),
-      type: CosmeticType.emblem,
       rarity: Rarity.rare,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticEmblemGatekeeperMarkName,
@@ -392,9 +363,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.emblems.gatekeeper_mark',
       sortOrder: 530,
     ),
-    Cosmetic(
+    Emblem(
       id: const CosmeticId('emblem_mine_crest'),
-      type: CosmeticType.emblem,
       rarity: Rarity.rare,
       region: CosmeticRegion.dwarvenMines,
       name: (l10n) => l10n.cosmeticEmblemMineCrestName,
@@ -404,9 +374,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.emblems.mine_crest',
       sortOrder: 540,
     ),
-    Cosmetic(
+    Emblem(
       id: const CosmeticId('emblem_underways_mark'),
-      type: CosmeticType.emblem,
       rarity: Rarity.epic,
       region: CosmeticRegion.dwarvenMines,
       name: (l10n) => l10n.cosmeticEmblemUnderwaysMarkName,
@@ -416,9 +385,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.emblems.underways_mark',
       sortOrder: 550,
     ),
-    Cosmetic(
+    Emblem(
       id: const CosmeticId('emblem_frost_sigil'),
-      type: CosmeticType.emblem,
       rarity: Rarity.epic,
       region: CosmeticRegion.frostlands,
       name: (l10n) => l10n.cosmeticEmblemFrostSigilName,
@@ -428,9 +396,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.emblems.frost_sigil',
       sortOrder: 560,
     ),
-    Cosmetic(
+    Emblem(
       id: const CosmeticId('emblem_icewalker_mark'),
-      type: CosmeticType.emblem,
       rarity: Rarity.epic,
       region: CosmeticRegion.frostlands,
       name: (l10n) => l10n.cosmeticEmblemIcewalkerMarkName,
@@ -440,9 +407,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.emblems.icewalker_mark',
       sortOrder: 570,
     ),
-    Cosmetic(
+    Emblem(
       id: const CosmeticId('emblem_mountain_crest'),
-      type: CosmeticType.emblem,
       rarity: Rarity.legendary,
       region: CosmeticRegion.dragonMountains,
       name: (l10n) => l10n.cosmeticEmblemMountainCrestName,
@@ -452,9 +418,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.emblems.mountain_crest',
       sortOrder: 580,
     ),
-    Cosmetic(
+    Emblem(
       id: const CosmeticId('emblem_dragon_mark'),
-      type: CosmeticType.emblem,
       rarity: Rarity.legendary,
       region: CosmeticRegion.dragonMountains,
       name: (l10n) => l10n.cosmeticEmblemDragonMarkName,
@@ -464,9 +429,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.emblems.dragon_mark',
       sortOrder: 590,
     ),
-    Cosmetic(
+    Emblem(
       id: const CosmeticId('emblem_dragonrock_emblem'),
-      type: CosmeticType.emblem,
       rarity: Rarity.mythic,
       region: CosmeticRegion.dragonrockFortress,
       name: (l10n) => l10n.cosmeticEmblemDragonrockEmblemName,
@@ -481,9 +445,8 @@ class CosmeticCatalog {
     // Relics — Journey-earned tokens (quests, streaks, step totals, prestige)
     // -------------------------------------------------------------------------
 
-    Cosmetic(
+    RelicCosmetic(
       id: const CosmeticId('relic_campfire_spark'),
-      type: CosmeticType.relic,
       rarity: Rarity.common,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticRelicCampfireSparkName,
@@ -493,9 +456,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.relics.campfire_spark',
       sortOrder: 320,
     ),
-    Cosmetic(
+    RelicCosmetic(
       id: const CosmeticId('relic_warm_kindling'),
-      type: CosmeticType.relic,
       rarity: Rarity.common,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticRelicWarmKindlingName,
@@ -505,9 +467,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.relics.warm_kindling',
       sortOrder: 325,
     ),
-    Cosmetic(
+    RelicCosmetic(
       id: const CosmeticId('relic_ancient_root'),
-      type: CosmeticType.relic,
       rarity: Rarity.uncommon,
       region: CosmeticRegion.forestTrail,
       name: (l10n) => l10n.cosmeticRelicAncientRootName,
@@ -517,9 +478,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.relics.ancient_root',
       sortOrder: 350,
     ),
-    Cosmetic(
+    RelicCosmetic(
       id: const CosmeticId('relic_moonlit_foxglove'),
-      type: CosmeticType.relic,
       rarity: Rarity.uncommon,
       region: CosmeticRegion.forestTrail,
       name: (l10n) => l10n.cosmeticRelicMoonlitFoxgloveName,
@@ -529,9 +489,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.relics.moonlit_foxglove',
       sortOrder: 355,
     ),
-    Cosmetic(
+    RelicCosmetic(
       id: const CosmeticId('relic_wildwood_charm'),
-      type: CosmeticType.relic,
       rarity: Rarity.uncommon,
       region: CosmeticRegion.forestTrail,
       name: (l10n) => l10n.cosmeticRelicWildwoodCharmName,
@@ -541,9 +500,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.relics.wildwood_charm',
       sortOrder: 358,
     ),
-    Cosmetic(
+    RelicCosmetic(
       id: const CosmeticId('relic_ravine_stone'),
-      type: CosmeticType.relic,
       rarity: Rarity.uncommon,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticRelicRavineStoneName,
@@ -553,9 +511,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.relics.ravine_stone',
       sortOrder: 360,
     ),
-    Cosmetic(
+    RelicCosmetic(
       id: const CosmeticId('relic_ruin_seal'),
-      type: CosmeticType.relic,
       rarity: Rarity.uncommon,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticRelicRuinSealName,
@@ -565,9 +522,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.relics.ruin_seal',
       sortOrder: 370,
     ),
-    Cosmetic(
+    RelicCosmetic(
       id: const CosmeticId('relic_ashen_omen'),
-      type: CosmeticType.relic,
       rarity: Rarity.uncommon,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticRelicAshenOmenName,
@@ -577,9 +533,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.relics.ashen_omen',
       sortOrder: 375,
     ),
-    Cosmetic(
+    RelicCosmetic(
       id: const CosmeticId('relic_oathbound_mark'),
-      type: CosmeticType.relic,
       rarity: Rarity.rare,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticRelicOathboundMarkName,
@@ -589,9 +544,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.relics.oathbound_mark',
       sortOrder: 378,
     ),
-    Cosmetic(
+    RelicCosmetic(
       id: const CosmeticId('relic_bridge_key'),
-      type: CosmeticType.relic,
       rarity: Rarity.rare,
       region: CosmeticRegion.dwarvenMines,
       name: (l10n) => l10n.cosmeticRelicBridgeKeyName,
@@ -601,9 +555,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.relics.bridge_key',
       sortOrder: 380,
     ),
-    Cosmetic(
+    RelicCosmetic(
       id: const CosmeticId('relic_deep_ember_core'),
-      type: CosmeticType.relic,
       rarity: Rarity.rare,
       region: CosmeticRegion.dwarvenMines,
       name: (l10n) => l10n.cosmeticRelicDeepEmberCoreName,
@@ -613,9 +566,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.relics.deep_ember_core',
       sortOrder: 385,
     ),
-    Cosmetic(
+    RelicCosmetic(
       id: const CosmeticId('relic_miners_lantern'),
-      type: CosmeticType.relic,
       rarity: Rarity.epic,
       region: CosmeticRegion.dwarvenMines,
       name: (l10n) => l10n.cosmeticRelicMinersLanternName,
@@ -625,9 +577,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.relics.miners_lantern',
       sortOrder: 390,
     ),
-    Cosmetic(
+    RelicCosmetic(
       id: const CosmeticId('relic_polar_lantern'),
-      type: CosmeticType.relic,
       rarity: Rarity.epic,
       region: CosmeticRegion.frostlands,
       name: (l10n) => l10n.cosmeticRelicPolarLanternName,
@@ -636,9 +587,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.relics.polar_lantern',
       sortOrder: 392,
     ),
-    Cosmetic(
+    RelicCosmetic(
       id: const CosmeticId('relic_frost_shard'),
-      type: CosmeticType.relic,
       rarity: Rarity.epic,
       region: CosmeticRegion.frostlands,
       name: (l10n) => l10n.cosmeticRelicFrostShardName,
@@ -647,9 +597,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.relics.frost_shard',
       sortOrder: 394,
     ),
-    Cosmetic(
+    RelicCosmetic(
       id: const CosmeticId('relic_aurora_thread'),
-      type: CosmeticType.relic,
       rarity: Rarity.epic,
       region: CosmeticRegion.frostlands,
       name: (l10n) => l10n.cosmeticRelicAuroraThreadName,
@@ -659,9 +608,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.relics.aurora_thread',
       sortOrder: 395,
     ),
-    Cosmetic(
+    RelicCosmetic(
       id: const CosmeticId('relic_frozen_lake_heart'),
-      type: CosmeticType.relic,
       rarity: Rarity.legendary,
       region: CosmeticRegion.frostlands,
       name: (l10n) => l10n.cosmeticRelicFrozenLakeHeartName,
@@ -671,9 +619,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.relics.frozen_lake_heart',
       sortOrder: 396,
     ),
-    Cosmetic(
+    RelicCosmetic(
       id: const CosmeticId('relic_dragon_scale'),
-      type: CosmeticType.relic,
       rarity: Rarity.legendary,
       region: CosmeticRegion.dragonMountains,
       name: (l10n) => l10n.cosmeticRelicDragonScaleName,
@@ -682,9 +629,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.relics.dragon_scale',
       sortOrder: 397,
     ),
-    Cosmetic(
+    RelicCosmetic(
       id: const CosmeticId('relic_summit_feather'),
-      type: CosmeticType.relic,
       rarity: Rarity.legendary,
       region: CosmeticRegion.dragonMountains,
       name: (l10n) => l10n.cosmeticRelicSummitFeatherName,
@@ -694,9 +640,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.relics.summit_feather',
       sortOrder: 400,
     ),
-    Cosmetic(
+    RelicCosmetic(
       id: const CosmeticId('relic_stormcrest_plume'),
-      type: CosmeticType.relic,
       rarity: Rarity.legendary,
       region: CosmeticRegion.dragonMountains,
       name: (l10n) => l10n.cosmeticRelicStormcrestPlumeName,
@@ -706,9 +651,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.relics.stormcrest_plume',
       sortOrder: 405,
     ),
-    Cosmetic(
+    RelicCosmetic(
       id: const CosmeticId('relic_dragonrock_heart'),
-      type: CosmeticType.relic,
       rarity: Rarity.mythic,
       region: CosmeticRegion.dragonrockFortress,
       name: (l10n) => l10n.cosmeticRelicDragonrockHeartName,
@@ -723,9 +667,8 @@ class CosmeticCatalog {
     // Frames — Discipline / streak / prestige rewards
     // -------------------------------------------------------------------------
 
-    Cosmetic(
+    Frame(
       id: const CosmeticId('frame_discipline'),
-      type: CosmeticType.frame,
       rarity: Rarity.uncommon,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticFrameDisciplineName,
@@ -735,9 +678,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.frames.discipline',
       sortOrder: 220,
     ),
-    Cosmetic(
+    Frame(
       id: const CosmeticId('frame_endurance'),
-      type: CosmeticType.frame,
       rarity: Rarity.rare,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticFrameEnduranceName,
@@ -747,9 +689,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.frames.endurance',
       sortOrder: 230,
     ),
-    Cosmetic(
+    Frame(
       id: const CosmeticId('frame_steel'),
-      type: CosmeticType.frame,
       rarity: Rarity.epic,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticFrameSteelName,
@@ -759,9 +700,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.frames.steel',
       sortOrder: 240,
     ),
-    Cosmetic(
+    Frame(
       id: const CosmeticId('frame_eternal_flame'),
-      type: CosmeticType.frame,
       rarity: Rarity.legendary,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticFrameEternalFlameName,
@@ -771,9 +711,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.frames.eternal_flame',
       sortOrder: 250,
     ),
-    Cosmetic(
+    Frame(
       id: const CosmeticId('frame_balance'),
-      type: CosmeticType.frame,
       rarity: Rarity.rare,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticFrameBalanceName,
@@ -783,9 +722,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.frames.balance',
       sortOrder: 260,
     ),
-    Cosmetic(
+    Frame(
       id: const CosmeticId('frame_master_routine'),
-      type: CosmeticType.frame,
       rarity: Rarity.legendary,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticFrameMasterRoutineName,
@@ -795,9 +733,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.frames.master_routine',
       sortOrder: 270,
     ),
-    Cosmetic(
+    Frame(
       id: const CosmeticId('frame_endless_trail'),
-      type: CosmeticType.frame,
       rarity: Rarity.legendary,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticFrameEndlessTrailName,
@@ -807,9 +744,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.frames.endless_trail',
       sortOrder: 280,
     ),
-    Cosmetic(
+    Frame(
       id: const CosmeticId('frame_worldwalker'),
-      type: CosmeticType.frame,
       rarity: Rarity.mythic,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticFrameWorldwalkerName,
@@ -824,9 +760,8 @@ class CosmeticCatalog {
     // Companions
     // -------------------------------------------------------------------------
 
-    Cosmetic(
+    Companion(
       id: const CosmeticId('companion_ember_sprite'),
-      type: CosmeticType.companion,
       rarity: Rarity.common,
       region: CosmeticRegion.forestTrail,
       name: (l10n) => l10n.cosmeticCompanionEmberSpriteName,
@@ -836,9 +771,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.companions.ember_sprite',
       sortOrder: 700,
     ),
-    Cosmetic(
+    Companion(
       id: const CosmeticId('companion_forest_fox'),
-      type: CosmeticType.companion,
       rarity: Rarity.uncommon,
       region: CosmeticRegion.forestTrail,
       name: (l10n) => l10n.cosmeticCompanionForestFoxName,
@@ -848,9 +782,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.companions.forest_fox',
       sortOrder: 710,
     ),
-    Cosmetic(
+    Companion(
       id: const CosmeticId('companion_ruin_raven'),
-      type: CosmeticType.companion,
       rarity: Rarity.uncommon,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticCompanionRuinRavenName,
@@ -860,9 +793,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.companions.ruin_raven',
       sortOrder: 720,
     ),
-    Cosmetic(
+    Companion(
       id: const CosmeticId('companion_bridge_gargoyle'),
-      type: CosmeticType.companion,
       rarity: Rarity.rare,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticCompanionBridgeGargoyleName,
@@ -872,9 +804,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.companions.bridge_gargoyle',
       sortOrder: 725,
     ),
-    Cosmetic(
+    Companion(
       id: const CosmeticId('companion_lantern_golem'),
-      type: CosmeticType.companion,
       rarity: Rarity.rare,
       region: CosmeticRegion.dwarvenMines,
       name: (l10n) => l10n.cosmeticCompanionLanternGolemName,
@@ -884,9 +815,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.companions.lantern_golem',
       sortOrder: 730,
     ),
-    Cosmetic(
+    Companion(
       id: const CosmeticId('companion_cave_lynx'),
-      type: CosmeticType.companion,
       rarity: Rarity.epic,
       region: CosmeticRegion.dwarvenMines,
       name: (l10n) => l10n.cosmeticCompanionCaveLynxName,
@@ -896,9 +826,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.companions.cave_lynx',
       sortOrder: 735,
     ),
-    Cosmetic(
+    Companion(
       id: const CosmeticId('companion_aurora_stag'),
-      type: CosmeticType.companion,
       rarity: Rarity.epic,
       region: CosmeticRegion.frostlands,
       name: (l10n) => l10n.cosmeticCompanionAuroraStagName,
@@ -908,9 +837,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.companions.aurora_stag',
       sortOrder: 738,
     ),
-    Cosmetic(
+    Companion(
       id: const CosmeticId('companion_ice_wisp'),
-      type: CosmeticType.companion,
       rarity: Rarity.legendary,
       region: CosmeticRegion.frostlands,
       name: (l10n) => l10n.cosmeticCompanionIceWispName,
@@ -920,9 +848,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.companions.ice_wisp',
       sortOrder: 740,
     ),
-    Cosmetic(
+    Companion(
       id: const CosmeticId('companion_mountain_gryphon'),
-      type: CosmeticType.companion,
       rarity: Rarity.legendary,
       region: CosmeticRegion.dragonMountains,
       name: (l10n) => l10n.cosmeticCompanionMountainGryphonName,
@@ -932,9 +859,8 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.companions.mountain_gryphon',
       sortOrder: 750,
     ),
-    Cosmetic(
+    Companion(
       id: const CosmeticId('companion_dragonling'),
-      type: CosmeticType.companion,
       rarity: Rarity.mythic,
       region: CosmeticRegion.dragonrockFortress,
       name: (l10n) => l10n.cosmeticCompanionDragonlingName,
@@ -949,9 +875,8 @@ class CosmeticCatalog {
     // Companions — Developer-only (grant via DevTools only)
     // -------------------------------------------------------------------------
 
-    Cosmetic(
+    Companion(
       id: const CosmeticId('companion_monster_energy'),
-      type: CosmeticType.companion,
       rarity: Rarity.mythic,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticCompanionMonsterEnergyName,
@@ -975,6 +900,21 @@ class CosmeticCatalog {
   List<Cosmetic> byType(CosmeticType type) {
     return definitions.where((d) => d.type == type).toList(growable: false);
   }
+
+  List<Frame> get frames =>
+      definitions.whereType<Frame>().toList(growable: false);
+  List<Background> get backgrounds =>
+      definitions.whereType<Background>().toList(growable: false);
+  List<Companion> get companions =>
+      definitions.whereType<Companion>().toList(growable: false);
+  List<RelicCosmetic> get relics =>
+      definitions.whereType<RelicCosmetic>().toList(growable: false);
+  List<Emblem> get emblems =>
+      definitions.whereType<Emblem>().toList(growable: false);
+  List<TitleFlair> get titleFlairs =>
+      definitions.whereType<TitleFlair>().toList(growable: false);
+  List<MapEffect> get mapEffects =>
+      definitions.whereType<MapEffect>().toList(growable: false);
 
   List<Cosmetic> byRegion(CosmeticRegion region) {
     return definitions.where((d) => d.region == region).toList(growable: false);

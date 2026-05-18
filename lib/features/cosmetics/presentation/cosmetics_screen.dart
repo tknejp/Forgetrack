@@ -10,7 +10,12 @@ import '../../progression_engine/application/progression_engine_provider.dart';
 import '../application/companions_registry.dart';
 import '../application/cosmetics_provider.dart';
 import '../domain/companion_state.dart';
-import '../domain/cosmetic_models.dart';
+import '../domain/cosmetic_models.dart' hide Companion;
+// Disambiguate: `Companion` is both the new sealed cosmetic subtype
+// (cosmetic_models) and the legacy view-model bundle (companions_registry).
+// The view-model wins the unprefixed name until Phase 11 deletes it; the
+// sealed subtype is accessed via the `cm.` prefix for `is` checks.
+import '../domain/cosmetic_models.dart' as cm show Companion;
 import '../domain/cosmetic_reveal_state.dart';
 import '../domain/cosmetic_unlock_rules.dart';
 import '../domain/consumed_relics.dart';
@@ -153,7 +158,7 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
             final r = revealResults[def.id];
             if (r == null) return false;
             if (r.state == CosmeticRevealState.unlocked) return true;
-            if (def.type == CosmeticType.companion) {
+            if (def is cm.Companion) {
               final c = companions[def.id];
               return c != null && c.state != CompanionState.hidden;
             }
@@ -329,11 +334,11 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
     // object to the sheet — state, reveal-result rows and the
     // availability node travel together so the sheet has no need to
     // do its own engine introspection.
-    final companion = !devTools && definition.type == CosmeticType.companion
+    final companion = !devTools && definition is cm.Companion
         ? companions[definition.id]
         : null;
     final isRelicConsumed = !devTools &&
-        definition.type == CosmeticType.relic &&
+        definition is RelicCosmetic &&
         consumedRelicIdSet.contains(definition.id);
     showModalBottomSheet<void>(
       context: context,
@@ -568,12 +573,11 @@ class _CategoryGrid extends StatelessWidget {
                 final def = defs[index];
                 final isUnlocked = state.unlocked.containsKey(def.id);
                 final revealResult = revealResults[def.id];
-                final companion =
-                    !devTools && def.type == CosmeticType.companion
-                        ? companions[def.id]
-                        : null;
+                final companion = !devTools && def is cm.Companion
+                    ? companions[def.id]
+                    : null;
                 final isRelicConsumed = !devTools &&
-                    def.type == CosmeticType.relic &&
+                    def is RelicCosmetic &&
                     consumedRelicIds.contains(def.id);
                 return _CosmeticCard(
                   definition: def,
