@@ -11,10 +11,10 @@ import '../../../../shared/theme/design_tokens.dart';
 import '../../../../shared/widgets/ft_back_button.dart';
 import '../../../../shared/widgets/screen_header.dart';
 import '../../../cosmetics/application/cosmetics_provider.dart';
+import '../../../cosmetics/application/emblem_board_provider.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
 import '../../../cosmetics/presentation/widgets/cosmetic_equipped_chip.dart';
 import '../../../cosmetics/presentation/widgets/cosmetics_inventory_section.dart';
-import '../../application/pinned_emblems_store.dart';
 import '../../application/social_provider.dart';
 import '../../domain/social_models.dart';
 import '../social_profile_utils.dart';
@@ -164,7 +164,7 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
 
   /// Resolves the 11 grid slots → emblem definition map for the own
   /// profile. Combines:
-  ///   * The user's saved pin layout (from [PinnedEmblemsStore]) —
+  ///   * The user's saved pin layout (from [EmblemBoardProvider]) —
   ///     auto-filled from unlock order on first render.
   ///   * The unlocked emblem catalogue from [CosmeticsProvider].
   ///
@@ -175,14 +175,12 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
     List<Cosmetic> unlocked,
     String uid,
   ) {
-    final pins = context
-        .watch<PinnedEmblemsStore>()
-        .pinsForUserOrAutoFill(
+    final board = context.watch<EmblemBoardProvider>().boardForUserOrAutoFill(
           uid,
           unlocked.map((def) => def.id).toList(growable: false),
         );
     final byId = {for (final def in unlocked) def.id: def};
-    return [for (final id in pins) id == null ? null : byId[id]];
+    return [for (final id in board.slots) id == null ? null : byId[id]];
   }
 
   Future<void> _openEmblemSlotSheet({
@@ -203,7 +201,7 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
       isOwner: isOwner,
     );
     if (result == null || !isOwner || !mounted) return;
-    await context.read<PinnedEmblemsStore>().setPin(
+    await context.read<EmblemBoardProvider>().setPin(
           uid: uid,
           slotIndex: result.slotIndex,
           cosmeticId: result.cosmeticId,

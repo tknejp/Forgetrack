@@ -167,7 +167,7 @@ class InMemoryCosmeticsRepository implements CosmeticsRepository {
     final now = _clock();
     _states[uid] = state.copyWith(
       unlocked: const <String, UnlockedCosmetic>{},
-      equipped: const EquippedCosmetics.empty(),
+      equipped: const Loadout.empty(),
       updatedAt: now,
     );
     return removed;

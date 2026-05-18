@@ -75,6 +75,17 @@
       "dependsOn": ["AuthProvider"]
     },
     {
+      "id": "EmblemBoardProvider",
+      "displayName": "Emblem Board",
+      "feature": "cosmetics",
+      "group": "gameplay",
+      "kind": "ChangeNotifierProvider",
+      "eager": true,
+      "file": "lib/features/cosmetics/application/emblem_board_provider.dart",
+      "summary": "Phase 12 relokace: per-user 11-slotový profile-header showcase. Persistence v SharedPreferences `pinned_emblems_{uid}` (per-device, comma-joined wire format zachovaný z legacy PinnedEmblemsStore). Vystavuje immutable EmblemBoard VO + setPin / clearForUser write ops. Dříve žila ve features/social/ — relokace fixuje boundary (cosmetic-collection state patří cosmetics/).",
+      "dependsOn": []
+    },
+    {
       "id": "ProgressionEngineProvider",
       "displayName": "Progression Engine",
       "feature": "progression_engine",

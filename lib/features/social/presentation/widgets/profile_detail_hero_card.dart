@@ -72,14 +72,14 @@ class ProfileDetailHeroCard extends StatelessWidget {
   final bool photoBusy;
 
   /// Total emblem slots in the collection grid. Mirrors
-  /// `PinnedEmblemsStore.slotCount` so the data model and the visual
-  /// grid stay aligned.
+  /// `EmblemBoard.slotCount` so the data model and the visual grid
+  /// stay aligned.
   static const int kEmblemSlotCount = 11;
 
   // Resolves what each of the 11 grid slots actually shows.
   //
   // * Own profile: caller passes `emblemSlots` (length 11) from the
-  //   PinnedEmblemsStore — that's the source of truth.
+  //   `EmblemBoardProvider` — that's the source of truth.
   // * Friend profile: caller has no slot map, so we fabricate one
   //   from the single `equipped.emblemId` so slot 0 shows their
   //   current emblem and the rest stay locked.

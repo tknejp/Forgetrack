@@ -92,7 +92,7 @@ lib/features/cosmetics/
 | `CosmeticUnlockSource` | enum — defaultBaseline, progressionLevel, achievement, quest, manual, promotional, other (open-set; sourceType on records is a free string) |
 | `Cosmetic` | static metadata for one cosmetic — id, type, rarity, region, localized text resolvers, asset keys, flags, `metadata` bag |
 | `UnlockedCosmetic`   | per-user unlock record — id, timestamp, source        |
-| `EquippedCosmetics`  | snapshot of equipped slots; one nullable id per slot  |
+| `Loadout`            | snapshot of equipped slots; one nullable id per slot   |
 | `UserCosmeticsState` | uid + unlocked map + equipped + updatedAt             |
 | `CanEquipResult`     | `{ok, reason}` for non-throwing UI checks             |
 | `CosmeticsException` | typed exception with stable `code` + human `message`  |
@@ -195,7 +195,7 @@ For non-throwing pre-checks (e.g. greying out a tile in a grid), use
 ## How to add a new cosmetic type
 
 1. Add a case to the `CosmeticType` enum in `cosmetic_models.dart`.
-2. Add a corresponding nullable id field to `EquippedCosmetics`, plus a
+2. Add a corresponding nullable id field to `Loadout`, plus a
    branch in `slotId` and `copyWithSlot`.
 3. Add the type to `CosmeticsConfig.standard()`'s `allowedSlots` (or gate
    it behind a flag like `mapEffect`).

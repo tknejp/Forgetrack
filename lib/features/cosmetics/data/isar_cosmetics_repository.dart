@@ -293,9 +293,9 @@ class IsarCosmeticsRepository implements CosmeticsRepository {
     return false;
   }
 
-  EquippedCosmetics _equippedFromRecord(CosmeticsUserStateRecord? r) {
+  Loadout _equippedFromRecord(CosmeticsUserStateRecord? r) {
     if (r == null) return _config.defaultEquipped;
-    return EquippedCosmetics(
+    return Loadout(
       frameId: r.frameId,
       relicId: r.relicId,
       backgroundId: r.backgroundId,

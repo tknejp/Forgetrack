@@ -56,7 +56,7 @@ enum CosmeticUnlockSource {
 /// (`cosmetic is Companion`), not by an enum field.
 ///
 /// The [CosmeticType] enum is retained for slot identification — equipped
-/// state keys by slot ([EquippedCosmetics.slotId]) and the relic catalog
+/// state keys by slot ([Loadout.slotId]) and the relic catalog
 /// disambiguates `Relic` (progression catalog gating node) from
 /// [RelicCosmetic] (cosmetic-side visual asset).
 ///
@@ -114,7 +114,7 @@ sealed class Cosmetic {
   /// Slot identifier. Derived from the concrete subtype — there is no
   /// runtime field; pattern matching (`cosmetic is Companion`) is the
   /// canonical way to discriminate. This getter exists so callers that pass
-  /// the slot as a [CosmeticType] value (e.g. `EquippedCosmetics.slotId`,
+  /// the slot as a [CosmeticType] value (e.g. `Loadout.slotId`,
   /// `unequip(definition.type)`) stay terse.
   CosmeticType get type;
 }
@@ -283,8 +283,13 @@ class UnlockedCosmetic {
 
 /// Snapshot of which cosmetic id is equipped in each slot. Null = nothing
 /// equipped in that slot.
-class EquippedCosmetics {
-  const EquippedCosmetics({
+///
+/// **Phase 12 rename** from `EquippedCosmetics` per proposal §2.4. The
+/// new name reads as a first-class noun ("the player's loadout") and
+/// matches the term every consumer already uses verbally. Same shape,
+/// same persistence — the rename is purely lexical.
+class Loadout {
+  const Loadout({
     this.frameId,
     this.relicId,
     this.backgroundId,
@@ -294,7 +299,7 @@ class EquippedCosmetics {
     this.mapEffectId,
   });
 
-  const EquippedCosmetics.empty()
+  const Loadout.empty()
       : frameId = null,
         relicId = null,
         backgroundId = null,
@@ -330,7 +335,7 @@ class EquippedCosmetics {
     }
   }
 
-  EquippedCosmetics copyWithSlot(CosmeticType type, String? cosmeticId) {
+  Loadout copyWithSlot(CosmeticType type, String? cosmeticId) {
     switch (type) {
       case CosmeticType.frame:
         return copyWith(frameId: cosmeticId, clearFrame: cosmeticId == null);
@@ -361,7 +366,7 @@ class EquippedCosmetics {
     }
   }
 
-  EquippedCosmetics copyWith({
+  Loadout copyWith({
     String? frameId,
     String? relicId,
     String? backgroundId,
@@ -377,7 +382,7 @@ class EquippedCosmetics {
     bool clearTitleFlair = false,
     bool clearMapEffect = false,
   }) {
-    return EquippedCosmetics(
+    return Loadout(
       frameId: clearFrame ? null : (frameId ?? this.frameId),
       relicId: clearRelic ? null : (relicId ?? this.relicId),
       backgroundId:
@@ -392,7 +397,7 @@ class EquippedCosmetics {
 
   @override
   bool operator ==(Object other) {
-    return other is EquippedCosmetics &&
+    return other is Loadout &&
         other.frameId == frameId &&
         other.relicId == relicId &&
         other.backgroundId == backgroundId &&
@@ -428,14 +433,14 @@ class UserCosmeticsState {
 
   /// Keyed by cosmetic id for O(1) membership checks.
   final Map<String, UnlockedCosmetic> unlocked;
-  final EquippedCosmetics equipped;
+  final Loadout equipped;
   final DateTime updatedAt;
 
   bool isUnlocked(String cosmeticId) => unlocked.containsKey(cosmeticId);
 
   UserCosmeticsState copyWith({
     Map<String, UnlockedCosmetic>? unlocked,
-    EquippedCosmetics? equipped,
+    Loadout? equipped,
     DateTime? updatedAt,
   }) {
     return UserCosmeticsState(

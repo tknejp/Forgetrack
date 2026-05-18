@@ -23,7 +23,7 @@ class CosmeticsConfig {
   /// custom config.
   factory CosmeticsConfig.standard() {
     return const CosmeticsConfig(
-      defaultEquipped: EquippedCosmetics.empty(),
+      defaultEquipped: Loadout.empty(),
       allowedSlots: <CosmeticType>{
         CosmeticType.frame,
         CosmeticType.relic,
@@ -52,7 +52,7 @@ class CosmeticsConfig {
     );
   }
 
-  final EquippedCosmetics defaultEquipped;
+  final Loadout defaultEquipped;
   final Set<CosmeticType> allowedSlots;
   final List<Rarity> rarityDisplayOrder;
   final List<CosmeticRegion> regionDisplayOrder;
