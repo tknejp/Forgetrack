@@ -406,6 +406,43 @@ Tyto věci původně vznikly jako "follow-ups", ale uživatel se rozhodl zapojit
 
 ---
 
+### 2.23 PlayerQuest full `Quest quest` reference (deferred from Phase 7)
+
+**Phase 7 status:** Proposal §2.4 spec specifies `PlayerQuest { Quest quest; PlayerQuestLifecycle lifecycle; DateTime evaluatedAt; }`. Phase 7 (`lib/domain/progression/player/player_quest.dart`) shipped with a narrower **`final QuestId id`** field instead of `Quest quest`.
+
+**Důvod:** Same root cause as [§2.21 `ChapterLocked.gate`](#221-chapterlockedgate-field-phase-13-spec-deferral) and the parallel for `QuestLocked.remaining` / `AchievementLocked.remaining` — `Quest` catalog row sealed hierarchy lives in `lib/features/progression_engine/domain/models/progression_node_definition.dart`; `lib/domain/progression/player/` cannot import features per architecture rule §3 + the `test/domain_purity_test.dart` guard. `QuestId` reference is proposal-aligned minimum until Quest itself moves.
+
+**Cílový stav:** When `Quest` migrates to `lib/domain/progression/catalog/` (part of the broader catalog rename, separate phase from any individual Stage A-E entry), replace the `id` field with `final Quest quest` per proposal. Consumers stop doing the `ProgressionEntryCatalog.definitionForId(...)` lookup dance.
+
+**Co dnes funguje bez plné Quest reference:** Application + presentation consumers resolve the full row via `ProgressionEntryCatalog.definitionForId(playerQuest.id.value) as Quest`. Phase 7 ADR `player-quest-catalog-projection` alternative (A) documents this explicitly. PlayerQuest API stays stable across the future migration — adding a `final Quest quest` field next to the existing `final QuestId id` is non-breaking.
+
+**Kdy to řešit:** Pre-condition: Quest sealed hierarchy migrate do `lib/domain/progression/catalog/`. Same migration scope as [§2.21](#221-chapterlockedgate-field-phase-13-spec-deferral) and Phase 6 `QuestLocked.remaining` — bundle all three at once. Velikost: ~10 sealed Quest subtypes + ~30 catalog content files referencing them.
+
+**Není blocking pro:** Stage C / D / E phases. PlayerQuestCatalog accessors (`byId`, `available`, `pendingClaim`, `claimed`, `locked`, `among`, `where`) work without the field.
+
+---
+
+### 2.24 PlayerQuestLifecycle timestamp enrichment (`completedAt` / `claimedAt`, deferred from Phase 6 + Phase 7)
+
+**Phase 6 + 7 status:** Phase 6 defined `QuestCompletedPendingClaim({ required int previewXp, DateTime? completedAt })` and `QuestClaimed({ required int finalXp, DateTime? claimedAt })`. The nullable timestamps are explicitly placeholders — proposal §4.1 spec carries them on the subtype, Phase 6 left them as `null` because the bridge getter on `EngineQuestProgress` doesn't have ledger access. Phase 7 `PlayerQuestCatalogService.build` doesn't populate them either — service still routes through the same Phase 6 bridge, only the projection shape changed.
+
+**Cílový stav:** `PlayerQuestCatalogService` reads the Journal's `NodeCompletionEvent.timestamp` and `NodeClaimEvent.timestamp` for each PlayerQuest entry. UI could then render relative-time hints ("claimed 2h ago", "completed today at 14:32") that today's view-models lack — `EngineCompletedQuestCard` shows `entry.lastEventAt` from a different code path (the completed-section rollup), which could route through the same source.
+
+**Co dnes funguje bez timestamps:** Lifecycle discrimination (Locked / Available / PendingClaim / Claimed) drives every Phase 6+ widget switch. Timestamps were never read — `null` is a no-op for UI today. Phase 6 widget tests + Phase 7 service tests pin the lifecycle payload shape with `evaluatedAt` on the wrapping `PlayerQuest`; per-event timestamps are not on the test surface yet.
+
+**Možná řešení:**
+
+- (a) `PlayerQuestCatalogService` ingests `LedgerSnapshot` alongside `Iterable<EngineQuestProgress>` and indexes `nodeCompletions` + `nodeClaims` by nodeId for O(1) lookup during build. ~30 LoC service change + 1 plumbing tweak in the provider getter.
+- (b) Lazy: `QuestClaimed.claimedAt` becomes a getter computed from a `Journal` reference held on `PlayerQuest`. Cleaner per-quest API, but ties PlayerQuest to a live Journal which contradicts the immutable VO shape.
+
+**Proč deferred:** Phase 6 scope discipline (sealed type + widget pattern-match, no Journal read). Phase 7 scope discipline (read projection shape, no payload enrichment). Both phases kept the surface small; timestamps are additive and can land independently when a UI surface actually consumes them.
+
+**Kdy to řešit:** When a UI feature requests relative-time hints on quest cards, or when `EngineCompletedQuestCard`'s standalone `lastEventAt` source consolidates through the catalog. Velikost: ~30-50 LoC service + test update.
+
+**Není blocking pro:** Stage C / D / E phases. The `null` timestamps are a stable contract; consumers reading them today must already null-check.
+
+---
+
 ## 3. Audit findings že NEJSOU folded ani deferred
 
 Tyto byly raised v audit reportu, ale nepřevedeny na action item — buď jsou false positive nebo z natury povahy doménového refactoru řeší.
