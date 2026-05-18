@@ -329,6 +329,83 @@ Tyto věci původně vznikly jako "follow-ups", ale uživatel se rozhodl zapojit
 
 ---
 
+### 2.19 Phase 13.b — Chapter widget migration (deferred from Phase 13)
+
+**Phase 13 status:** Phase 13 (`b0f982b`, 2026-05-18) shipla read projection foundation: `ChapterLifecycle` sealed (4 stavy), `PlayerChapter` VO, `PlayerChapterProgress` collection, `Chapter` catalog wrapper, `ChapterCatalogBuilder`, `PlayerChapterProgressService`, `ProgressionEngineProvider.playerChapterProgress` lazy getter. Migration plan §Phase 13 'Files touched' list zahrnoval **'Modify: chapter screens, journey map, hero map screen'** — to Phase 13 NEsmysmela.
+
+**Co dnes funguje bez Phase 13.b:** Chapter screens (`engine_chapter_card.dart`, `quests_screen.dart`) čtou pořád z `EngineQuestProgress.state` per-node, derivují chain state ad-hoc. Funkční, ale propaguje chain-state-derivation logic napříč view modely. Provider getter `playerChapterProgress` existuje a je usable opportunisticky kdykoli.
+
+**Co Phase 13.b udělá:** Migrate consumer surfaces na `progression.playerChapterProgress.byId(chapterId).lifecycle` pattern-match + drop redundant chain-derivation utilities ve view modelech. Files identified:
+
+- `lib/features/progression_engine/presentation/widgets/engine_chapter_card.dart` (752 LoC) — hlavní chapter card view, derives ChapterInProgress numerics inline.
+- `lib/features/progression_engine/presentation/quests_screen.dart` (907 LoC) — `_ChapterSection` lists chapters; would consume `progress.inProgress / progress.completed` accessors.
+- `lib/features/journey/presentation/widgets/journey_interactive_map.dart` — chapter anchors derived from completed-node set. Per [§2.18 deferred Phase 19.c](#218-phase-19-leftovers--journey-map--health-connect-screens-deferred-from-phase-19) journey map needs bigger architectural pass; chapter consumption migration is natural part of that scope.
+
+**Proč deferred:** Phase 7 precedent — `PlayerQuestCatalog` shipped jako read projection v Phase 7; quest widget migration se rozjela opportunisticky later. Phase 13 honors stejný "foundation first, consumer migration opportunistic" pattern. User feedback z Phase 19 ("time-box max 3 features") signalizuje že full-sweep widget migrations stojí samostatnou time-box.
+
+**Kdy to řešit:** Volitelně. Pokud Phase 19.c (journey map sweep) landne, fold chapter consumption tam. Nebo dedikovaná Phase 13.b ~2-3 dny solo.
+
+**Není blocking pro:** Phase 14+ (Stage D), Phase 20 (JournalProjection).
+
+---
+
+### 2.20 NodeState enum eliminace (deferred to Phase 16+ engine signature refactor)
+
+**Phase 13 status:** Phase 13 inlinovala `NodeState` enum (locked / available / completed) z `lib/features/progression_engine/domain/models/node_state.dart` přímo do `progression_node_resolver.dart`. Soubor smazán, enum žije dál jako resolver-internal vocabulary. Engine consumer (`progression_engine.dart`) používá `r.state.name == 'completed'` string compare, takže typ unchanged.
+
+**Co Phase 13 NEzkusila:** Nahradit enum sealed `NodeResolution` hierarchií (Locked / Available / Completed) nebo redukovat na booleany `(eligible, objectiveCompleted, alreadyCompleted, alreadyClaimed)`. Důvod: engine consumer's string-compare už detachly Phase 6 + Phase 8 groundwork; refactoring resolveru je samostatná scope, která zaslouží Phase 16+ engine signature refactor (proposal §16 — `EngineEvaluationInput` → explicit args).
+
+**Co dnes funguje bez Phase 16 changes:** Resolver enum produkuje 3 hodnoty s named string compare. Engine matchuje. Žádný cross-feature import problem (enum žije v resolver file, nikdo nimprtuje).
+
+**Možné cílové stavy:**
+- (a) `enum NodeState` → `sealed class NodeResolution` s 3 subtypy v resolver file. Engine consumer přejde z `.name ==` na is-checks.
+- (b) Smazat enum úplně, `NodeResolution` value class má jen `(eligibleByConditions, objectiveCompleted, alreadyCompleted, alreadyClaimed)` booleany; engine derivuje completion/availability transitions inline.
+
+**Kdy to řešit:** Phase 16 (engine signature refactor) — natural place where resolver internals get a rework anyway.
+
+**Není blocking pro:** Stage C / D / E phases. Phase 13 DoD ('node_state.dart deleted') splněna; enum jako resolver-internal symbol není 'domain model' anymore.
+
+---
+
+### 2.21 `ChapterLocked.gate` field (Phase 13 spec deferral)
+
+**Phase 13 status:** Proposal §4.4 specifikuje `ChapterLocked(gate: UnlockCondition)` field. Phase 13 ShipLA `ChapterLocked` **parameterless** (žádný field).
+
+**Důvod:** Stejný cross-feature import problem jako Phase 6 `QuestLocked.remaining` a Phase 8 `AchievementLocked.remaining`. `UnlockCondition` sealed hierarchy žije v `lib/features/progression_engine/domain/models/unlock_condition.dart`; `lib/domain/progression/player/` ho nemůže importovat (architecture rule §3).
+
+**Cílový stav:** Až `UnlockCondition` migruje do `lib/domain/progression/catalog/` (separate phase), pridat `gate` field na `ChapterLocked`. Mirror pattern bude aplikován také na `QuestLocked.remaining` a `AchievementLocked.remaining`.
+
+**Co dnes funguje bez gate field:** UI hint pro Locked chapter je v EngineQuestProgress view model (`titleKey`, `descriptionKey`, `lockedHintKey`) — chrome cesta. Lifecycle drží jen 'I'm locked', což stačí na branching.
+
+**Kdy to řešit:** Pre-condition: `UnlockCondition` migrace do `lib/domain/progression/catalog/`. Velikost: 11 subtypů sealed + ~30 call sites where UnlockCondition is constructed. Standalone sub-phase candidate.
+
+**Není blocking pro:** Stage D / E. Lifecycle discrimination funguje bez gate detail.
+
+---
+
+### 2.22 Phase 9-13 manuální smoke checks (deferred from každé fáze)
+
+**Stage C status:** Phase 9 (Cosmetic sealed) / Phase 10 (PlayerCosmeticLifecycle) / Phase 11 (companion merge) / Phase 12 (Loadout + EmblemBoard) / Phase 13 (ChapterLifecycle) shipped pure refactors — code path topology beze změny. Unit + service-level tests pokrývají derivation matrix (576 tests pass at Phase 13 close). **Žádný end-to-end smoke check UI flows nebyl proveden v rámci žádné z fází.**
+
+**Co konkrétně nebylo ověřeno:**
+
+- **Phase 9 (Cosmetic sealed):** Cosmetics screen tabs render (Rámečky / Pozadí / Reliky / Emblems / Companions / Titulky / Map effects); devtools cosmetic matrix.
+- **Phase 10 (PlayerCosmeticLifecycle):** Companion claim journey end-to-end (Hidden → progress → claimable → claimed UI transitions); cosmetic_details_sheet partial-progress chip + checklist render.
+- **Phase 11 (companion merge):** Companion details sheet alternate bodies (Hidden / Teased / Claimable / Owned); devtools companion matrix transitions; identity-hide rule before claim.
+- **Phase 12 (Loadout + EmblemBoard):** Profile header 11-slot grid render; drag-to-pin / emblem-slot-sheet write flow; cross-user emblem isolation (sign out + sign in jiný uid); legacy `pinned_emblems_<uid>` wire format roll-forward na existing devices.
+- **Phase 13 (ChapterLifecycle):** Žádná widget consumption Phase 13 lifecycle, takže smoke check není actionable do Phase 13.b. Provider getter return value nicméně neexerciseed v UI tree.
+
+**Proč deferred:** User explicit pattern napříč Phase 9-13: ship refactor + tests, smoke check deferred na manual dev pass. Phase 11 high-risk byl mitigated by sealed switch (compile-time exhaustive coverage), takže behavior parity je structurally guaranteed; smoke check je validation, ne discovery.
+
+**Možná řešení:**
+- (a) Dev smoke pass napříč Phase 9-13 surface area najednou (~1-2 hod). Doporučeno před Phase 14 start.
+- (b) Per-area smoke when first user-visible regression report lands. Reactive.
+- (c) Phase 13.b widget migration zahrne smoke jako součást migration validation.
+
+**Není blocking pro:** Phase 14+ technicky. Doporučení: smoke pass před Stage D (Phase 14-19) protože Phase 14 GoalBoard / Phase 15 HealthSnapshot začnou shipping new domain types; pokud Phase 9-13 mají hidden regrese, smoke je odhalí teď než se kupí další vrstvy.
+
+---
+
 ## 3. Audit findings že NEJSOU folded ani deferred
 
 Tyto byly raised v audit reportu, ale nepřevedeny na action item — buď jsou false positive nebo z natury povahy doménového refactoru řeší.
