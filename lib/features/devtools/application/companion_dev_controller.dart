@@ -1,22 +1,39 @@
-import '../../cosmetics/application/companions_registry.dart';
 import '../../cosmetics/application/cosmetics_provider.dart';
-import '../../cosmetics/domain/companion_state.dart';
+import '../../cosmetics/domain/companion_availability_lookup.dart';
 import '../../cosmetics/domain/consumed_relics.dart';
-import '../../cosmetics/domain/cosmetic_unlock_rules.dart';
+import '../../cosmetics/domain/player_cosmetic_lifecycle.dart';
 import '../../progression_engine/application/progression_engine_provider.dart';
 import '../../progression_engine/domain/models/progression_node_definition.dart';
 import '../../progression_engine/domain/models/unlock_condition.dart';
 import '../../progression_engine/domain/policy/level_policy.dart';
 
-/// Devtools shim around [Companion] for the state matrix. Reuses the
-/// canonical [CompanionState] (hidden / partial / claimable / claimed)
-/// — devtools just adds the transition machinery on top.
+/// DevTools-only target state for the companion matrix. Drives the
+/// per-row "Hidden / Partial / Claimable / Claimed" button strip and
+/// maps onto a write recipe in [CompanionDevController.applyState].
 ///
-/// Detection composes [CompanionsRegistry.byId] so the matrix sees
-/// **exactly** what the inventory grid sees. There is no second source
-/// of truth here; the matrix only differs from the player-facing UI in
-/// that it can drive state changes through engine + cosmetics
-/// primitives.
+/// This is **not** a domain type. The player-facing lifecycle lives
+/// in [PlayerCosmeticLifecycle] (4 sealed states); this enum just
+/// names the transitions devtools can drive. Phase 11 deleted the
+/// shared `CompanionState` enum; the matrix kept its target-button
+/// vocabulary because the transitions remain useful for testing.
+enum CompanionDevTarget { hidden, partial, claimable, claimed }
+
+/// Devtools controller for the companion state matrix. Reads the
+/// canonical [PlayerCosmeticLifecycle] from [CosmeticsProvider]'s
+/// inventory projection so the matrix sees exactly what the inventory
+/// grid sees — no second source of truth.
+///
+/// The "write" side composes the existing engine + cosmetics
+/// primitives:
+///
+///   * `cosmetics.debugGrantCosmetic` / `debugRevokeCosmetic`
+///   * `progression.devToolsAddXp` / `devToolsForceCompleteNode`
+///
+/// The engine has no "uncomplete" primitive — once a gating
+/// achievement is in the ledger it cannot be erased non-destructively.
+/// So downward transitions (claimed → partial, claimable → hidden) are
+/// best-effort. [detect] re-reads after the call so the matrix always
+/// shows the **actual** outcome.
 class CompanionDevController {
   CompanionDevController({
     required this.cosmetics,
@@ -28,9 +45,9 @@ class CompanionDevController {
 
   /// Returns every authored `CompanionAvailability`, in catalog
   /// order. Used by the matrix UI to enumerate rows even before any
-  /// player state has loaded — see [CompanionsRegistry.allNodes].
+  /// player state has loaded.
   static List<CompanionAvailability> allCompanions() =>
-      CompanionsRegistry.allNodes;
+      allCompanionAvailabilities;
 
   /// `LevelAtLeast` requirement parsed off the companion's V2 unlock
   /// conditions — companions always carry exactly one (see
@@ -51,45 +68,30 @@ class CompanionDevController {
     ];
   }
 
-  /// Live snapshot of the companion's lifecycle state — same
-  /// resolution path the inventory grid uses, no devtools-only
-  /// branch. Returns [CompanionState.hidden] as a safe fallback
-  /// when cosmetics state hasn't bound yet.
-  CompanionState detect(CompanionAvailability node) {
+  /// Live snapshot of the companion's lifecycle — same projection the
+  /// inventory grid uses, no devtools-only branch. Returns
+  /// [CosmeticHidden] as a safe fallback when cosmetics state hasn't
+  /// bound yet.
+  PlayerCosmeticLifecycle detect(CompanionAvailability node) {
     final state = cosmetics.state;
-    if (state == null) return CompanionState.hidden;
-    final revealResults =
-        cosmetics.computeRevealResults(kCosmeticUnlockRules);
-    final companion = const CompanionsRegistry().byId(
-      node.companionId,
-      unlockedCosmeticIds: state.unlocked.keys.toSet(),
-      availableNodeIds: progression.availableNodeIds,
-      revealResults: revealResults,
+    if (state == null) return const CosmeticHidden();
+    final inventory = cosmetics.buildInventory(
+      claimableNodeIds: progression.availableNodeIds,
     );
-    return companion?.state ?? CompanionState.hidden;
+    return inventory.byIdString(node.companionId)?.lifecycle ??
+        const CosmeticHidden();
   }
 
   /// Best-effort transition from the companion's current state to
   /// [target].
   ///
   /// Truth lives in three stores (cosmetics repo, engine ledger,
-  /// reveal evaluator); the controller can only write through the
-  /// available primitives:
-  ///
-  ///   * `cosmetics.debugGrantCosmetic` / `debugRevokeCosmetic`
-  ///   * `progression.devToolsAddXp` / `devToolsForceCompleteNode`
-  ///
-  /// The engine has no "uncomplete" primitive — once a gating
-  /// achievement is in the ledger it cannot be erased non-
-  /// destructively. So downward transitions (claimed → partial,
-  /// claimable → hidden) are best-effort: the cosmetics side is
-  /// reset cleanly, the engine side may keep the companion in
-  /// `available`. [detect] re-reads after the call so the matrix
-  /// always shows the **actual** outcome — never the requested
-  /// target unless they coincide.
+  /// reveal evaluator); the controller writes through the available
+  /// primitives only. The engine has no "uncomplete" primitive so
+  /// downward transitions may not fully reset.
   Future<void> applyState(
     CompanionAvailability node,
-    CompanionState target,
+    CompanionDevTarget target,
   ) async {
     final gate = gateLevelFor(node) ?? 1;
     final relicIds = companionRelicGateIds(node.companionId);
@@ -106,8 +108,8 @@ class CompanionDevController {
     }
 
     switch (target) {
-      case CompanionState.hidden:
-      case CompanionState.partial:
+      case CompanionDevTarget.hidden:
+      case CompanionDevTarget.partial:
         // Cosmetics-only transition. Lowering the engine level is
         // intentionally NOT attempted — the only available primitive
         // (`devToolsSetLevel`) wipes the ledger via
@@ -121,13 +123,13 @@ class CompanionDevController {
         // as `partial` even when "Hidden" was selected. [detect]
         // re-reads the actual state after the transition so the
         // UI reflects the real outcome.
-        if (target == CompanionState.partial && relicIds.isNotEmpty) {
+        if (target == CompanionDevTarget.partial && relicIds.isNotEmpty) {
           // Grant exactly one gating relic so the reveal evaluator
           // reports `partial` with one tick on the requirements
           // checklist.
           await cosmetics.debugGrantCosmetic(relicIds.first);
         }
-      case CompanionState.claimable:
+      case CompanionDevTarget.claimable:
         // Two requirements for `claimable`:
         //   1. Engine level ≥ gate so `LevelAtLeast(gate)` resolves
         //      true. We add XP additively — never wipe — so existing
@@ -150,7 +152,7 @@ class CompanionDevController {
           if (completedIds.contains(nodeId)) continue;
           await progression.devToolsForceCompleteNode(nodeId);
         }
-      case CompanionState.claimed:
+      case CompanionDevTarget.claimed:
         // Bypass the claim animation entirely — devtools cares about
         // the resulting state, not the moment. The cosmetic provider
         // marks the companion as unlocked which causes the reveal

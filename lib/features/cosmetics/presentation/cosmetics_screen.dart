@@ -7,15 +7,9 @@ import '../../../shared/theme/design_tokens.dart';
 import '../../../shared/widgets/ft_back_button.dart';
 import '../../../shared/widgets/screen_header.dart';
 import '../../progression_engine/application/progression_engine_provider.dart';
-import '../application/companions_registry.dart';
 import '../application/cosmetics_provider.dart';
-import '../domain/companion_state.dart';
-import '../domain/cosmetic_models.dart' hide Companion;
-// Disambiguate: `Companion` is both the new sealed cosmetic subtype
-// (cosmetic_models) and the legacy view-model bundle (companions_registry).
-// The view-model wins the unprefixed name until Phase 11 deletes it; the
-// sealed subtype is accessed via the `cm.` prefix for `is` checks.
-import '../domain/cosmetic_models.dart' as cm show Companion;
+import '../domain/cosmetic_lifecycle_helpers.dart';
+import '../domain/cosmetic_models.dart';
 import '../domain/cosmetic_reveal_state.dart';
 import '../domain/cosmetic_unlock_rules.dart';
 import '../domain/consumed_relics.dart';
@@ -131,17 +125,8 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
     // Phase 10 read projection: every enabled cosmetic + its
     // [PlayerCosmeticLifecycle]. Built once per build from the
     // CosmeticsProvider, threaded into cards so they pattern-match
-    // on the lifecycle subtype instead of reading
-    // [CosmeticRevealState] directly (DoD §Phase 10).
+    // on the lifecycle subtype.
     Inventory inventory = Inventory.empty;
-    // Map of companion id → resolved [Companion] view object. Built
-    // once per build from canonical sources (cosmetics state +
-    // progression availability + reveal evaluator) by
-    // [CompanionsRegistry] and threaded down to cards / details
-    // sheet so every surface renders from the same snapshot. Phase
-    // 11 will delete this map once every consumer reads lifecycle
-    // instead.
-    Map<String, Companion> companions = const {};
 
     if (devTools) {
       displayDefs = cosmetics.service.catalog.all.toList()
@@ -152,12 +137,6 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
       inventory = cosmetics.buildInventory(
         claimableNodeIds: progression.availableNodeIds,
       );
-      final list = const CompanionsRegistry().snapshot(
-        unlockedCosmeticIds: state.unlocked.keys.toSet(),
-        availableNodeIds: progression.availableNodeIds,
-        revealResults: revealResults,
-      );
-      companions = {for (final c in list) c.id: c};
       // Display policy: owned items always show. Companions
       // additionally surface for `teased` and `claimable` states so
       // the player sees what's brewing and can claim it. `hidden`
@@ -171,7 +150,7 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
             final lifecycle = inventory.byIdString(def.id)?.lifecycle;
             if (lifecycle == null) return false;
             if (lifecycle is CosmeticOwned) return true;
-            if (def is cm.Companion) {
+            if (def is Companion) {
               return lifecycle is! CosmeticHidden;
             }
             return false;
@@ -239,7 +218,6 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
             l10n: l10n,
             devTools: devTools,
             revealResult: revealResults[def.id],
-            companions: companions,
             consumedRelicIdSet: consumedIds,
           );
         });
@@ -267,7 +245,6 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
               l10n: l10n,
               devTools: devTools,
               revealResult: revealResults[definition.id],
-              companions: companions,
               consumedRelicIdSet: consumedIds,
             ),
           ),
@@ -304,7 +281,6 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
                 inventory: inventory,
                 devTools: devTools,
                 l10n: l10n,
-                companions: companions,
                 consumedRelicIds: consumedIds,
                 onTap: (definition) => _showDetails(
                   context,
@@ -314,7 +290,6 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
                   l10n: l10n,
                   devTools: devTools,
                   revealResult: revealResults[definition.id],
-                  companions: companions,
                   consumedRelicIdSet: consumedIds,
                 ),
               );
@@ -333,7 +308,6 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
     required AppLocalizations l10n,
     bool devTools = false,
     CosmeticRevealResult? revealResult,
-    Map<String, Companion> companions = const {},
     Set<String> consumedRelicIdSet = const {},
   }) {
     final isLocked = !state.unlocked.containsKey(definition.id);
@@ -341,13 +315,6 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
         ? kCosmeticUnlockRules
             .where((r) => r.cosmeticId == definition.id)
             .toList()
-        : null;
-    // For companion cosmetics we hand the entire [Companion] view
-    // object to the sheet — state, reveal-result rows and the
-    // availability node travel together so the sheet has no need to
-    // do its own engine introspection.
-    final companion = !devTools && definition is cm.Companion
-        ? companions[definition.id]
         : null;
     final isRelicConsumed = !devTools &&
         definition is RelicCosmetic &&
@@ -365,7 +332,6 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
         devToolsUnlockRules: rules,
         devToolsMode: devTools,
         revealResult: devTools ? null : revealResult,
-        companion: companion,
         isRelicConsumed: isRelicConsumed,
       ),
     );
@@ -541,7 +507,6 @@ class _CategoryGrid extends StatelessWidget {
     required this.devTools,
     required this.l10n,
     required this.onTap,
-    this.companions = const {},
     this.consumedRelicIds = const {},
   });
 
@@ -554,7 +519,6 @@ class _CategoryGrid extends StatelessWidget {
   final bool devTools;
   final AppLocalizations l10n;
   final ValueChanged<Cosmetic> onTap;
-  final Map<String, Companion> companions;
   final Set<String> consumedRelicIds;
 
   @override
@@ -588,9 +552,6 @@ class _CategoryGrid extends StatelessWidget {
                 final isUnlocked = state.unlocked.containsKey(def.id);
                 final lifecycle =
                     devTools ? null : inventory.byIdString(def.id)?.lifecycle;
-                final companion = !devTools && def is cm.Companion
-                    ? companions[def.id]
-                    : null;
                 final isRelicConsumed = !devTools &&
                     def is RelicCosmetic &&
                     consumedRelicIds.contains(def.id);
@@ -601,7 +562,6 @@ class _CategoryGrid extends StatelessWidget {
                   showMissingAsset: devTools,
                   lifecycle: lifecycle,
                   l10n: l10n,
-                  companion: companion,
                   isRelicConsumed: isRelicConsumed,
                   onTap: () => onTap(def),
                 );
@@ -620,7 +580,6 @@ class _CosmeticCard extends StatelessWidget {
     this.isLocked = false,
     this.showMissingAsset = false,
     this.lifecycle,
-    this.companion,
     this.isRelicConsumed = false,
   });
 
@@ -633,11 +592,6 @@ class _CosmeticCard extends StatelessWidget {
   /// devTools mode (devTools renders every catalog row regardless of
   /// player state).
   final PlayerCosmeticLifecycle? lifecycle;
-  /// Resolved [Companion] view when [definition] is a Companion and
-  /// the card is rendered outside devTools mode. Null for every
-  /// other cosmetic type and inside devTools mode. Phase 11 deletes
-  /// this in favour of pattern-matching on (definition, lifecycle).
-  final Companion? companion;
   /// True for a relic that has been "consumed" by a companion claim —
   /// stays in inventory but dim + "Použito" pill.
   final bool isRelicConsumed;
@@ -646,21 +600,19 @@ class _CosmeticCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Companion cards branch on the strict four-state lifecycle —
-    // identity (asset + name) stays hidden for every non-`claimed`
-    // state. The lifecycle's `Teased(hasProgress)` / `Claimable`
-    // signals feed the badge (progress chip vs READY pill); they no
-    // longer leak the companion's artwork.
-    final cState = companion?.state;
-    final isCompanionLocked = cState != null && !cState.isClaimed;
+    // Phase 11: the card branches purely on (definition, lifecycle).
+    // For Companion catalog rows, [hidesIdentity] gates the silhouette
+    // + mystery name presentation; non-companion locked rows show
+    // their real identity in every state except CosmeticHidden.
     final teased = lifecycle is CosmeticTeased
         ? lifecycle! as CosmeticTeased
         : null;
-    final isHiddenCard = isCompanionLocked ||
-        (cState == null && lifecycle is CosmeticHidden);
-    final isPartialCard = cState == CompanionState.partial ||
-        (cState == null && teased != null && teased.hasProgress);
-    final isClaimableCompanion = cState == CompanionState.claimable;
+    final hidesCompanion = lifecycle != null &&
+        hidesIdentity(definition, lifecycle!);
+    final isHiddenCard = hidesCompanion || lifecycle is CosmeticHidden;
+    final isClaimableCompanion = definition is Companion &&
+        lifecycle is CosmeticClaimable;
+    final isPartialCard = teased != null && teased.hasProgress;
     final isVisibleLocked = teased != null && !teased.hasProgress;
     final isNormalLocked = isLocked || isVisibleLocked;
 
@@ -677,7 +629,7 @@ class _CosmeticCard extends StatelessWidget {
             .resolveAssetPath(definition.previewAssetKey ?? definition.assetKey);
     final hasAsset = definition.assetKey != null;
 
-    final displayName = isCompanionLocked
+    final displayName = hidesCompanion
         ? l10n.cosmeticCompanionClaimableHiddenName
         : isHiddenCard
             ? l10n.cosmeticHiddenName
@@ -795,7 +747,7 @@ class _CosmeticCard extends StatelessWidget {
               // evaluator, then yields to the READY pill once the
               // engine flips the companion availability node into
               // `claimable`.
-              if (isPartialCard && !isClaimableCompanion && teased != null)
+              if (isPartialCard && !isClaimableCompanion)
                 Positioned(
                   bottom: 5,
                   right: 5,

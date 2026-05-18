@@ -262,6 +262,27 @@ Tyto věci původně vznikly jako "follow-ups", ale uživatel se rozhodl zapojit
 
 ---
 
+### 2.16 Companions bez `CompanionAvailability` gate (Phase 11 audit gap)
+
+**Phase 11 status:** Phase 11 zrušila `CompanionsRegistry` a zavedla `companionAvailabilityFor(String id)` lookup v `lib/features/cosmetics/domain/companion_availability_lookup.dart`. Reverse parity test (každý node → catalog companion) prošel zelený, ale forward parity (každý cosmetic-side Companion → node) odhalil 3 companions bez explicit gating node:
+
+- `companion_bridge_gargoyle`
+- `companion_cave_lynx`
+- `companion_aurora_stag`
+
+**Současný stav:** Tyto 3 companions claimují přes `RewardGrant(CosmeticReward)` v reward tables jiných progression nodes, ne přes vlastní `CompanionAvailability` row. Phase 11 to neopravuje protože není to regression — je to authoring-style choice z předchozího catalog designu.
+
+**Možná řešení:**
+- (a) Přidat explicit `CompanionAvailability` row pro každý companion → uniformní claim flow přes claimNode pro všechny.
+- (b) Označit chybějící 3 companions jako "instant-claim" v `cosmetic_models.dart` metadata flag → matrice + claim sheet by je skipovala.
+- (c) Status quo: nechat reward-tabular claim model pro tyto 3, dokumentovat v companions_content.dart.
+
+**Proč deferred:** Phase 11 mandate byl symbol delete (CompanionState/CompanionsRegistry), ne catalog refactor. Audit gap je content-side concern, ne refactor.
+
+**Kdy to řešit:** Před Phase 13 (Chapter catalog wrapper) — pokud chapter chain references companions, uniformní claim flow se hodí. Jinak deferable indefinitely.
+
+---
+
 ## 3. Audit findings že NEJSOU folded ani deferred
 
 Tyto byly raised v audit reportu, ale nepřevedeny na action item — buď jsou false positive nebo z natury povahy doménového refactoru řeší.
