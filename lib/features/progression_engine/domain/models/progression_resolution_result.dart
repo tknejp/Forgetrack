@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../evaluator/objective_evaluator.dart' show ObjectiveOutcome;
-import 'engine_evaluation_input.dart';
+import 'engine_evaluation_context.dart';
 import 'package:forgetrack/domain/journal/journal_event.dart';
 import 'progression_resolution_reason.dart';
 
@@ -22,7 +22,7 @@ class ProgressionResolutionResult {
     required this.grantedRewards,
     required this.skippedEvents,
     required this.warnings,
-    required this.inputSnapshot,
+    required this.contextSnapshot,
     this.allObjectiveOutcomes = const [],
     this.newlyAvailableNodes = const [],
     this.lockedNodeIds = const {},
@@ -88,10 +88,15 @@ class ProgressionResolutionResult {
   /// throw; warnings flow through.
   final List<ResolutionWarning> warnings;
 
-  /// The input the engine evaluated against. Useful for devtools
-  /// dumps and cloud sync (so we can re-execute with the same input
-  /// later if needed).
-  final EngineEvaluationInput inputSnapshot;
+  /// The structured context the engine evaluated against. Useful for
+  /// devtools dumps and cloud sync (so we can re-execute with the
+  /// same context later if needed). Phase 16 replaced the
+  /// flat `inputSnapshot: EngineEvaluationInput` field with a bundle
+  /// of structured VOs (`Player` + snapshots + `GoalBoard` +
+  /// `Journal` + `LedgerCounters` + `EvaluationOverrides` +
+  /// `evaluatedAt`) — every field is a focused domain type, no flat
+  /// record left.
+  final EngineEvaluationContext contextSnapshot;
 
   bool get isEmpty =>
       completedObjectives.isEmpty &&

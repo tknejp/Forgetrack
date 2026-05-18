@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '../models/engine_evaluation_input.dart';
+import '../models/engine_evaluation_context.dart';
 import 'package:forgetrack/domain/journal/journal_event.dart';
 import '../models/progression_node_definition.dart';
 import '../models/reward_definition.dart';
@@ -42,7 +42,7 @@ class RewardGrantPlanner {
     required Iterable<ProgressionEntry> completedNodes,
     required LedgerSnapshot ledger,
     required Map<String, String?> periodKeyByNodeId,
-    required EngineEvaluationInput input,
+    required EngineEvaluationContext context,
   }) {
     final out = <PlannedRewardGrant>[];
     for (final node in completedNodes) {
@@ -54,7 +54,7 @@ class RewardGrantPlanner {
         // little, etc. No ledger event is emitted; the bonus just
         // doesn't happen this time. The next claim re-evaluates.
         if (reward is BonusXpReward &&
-            !_bonusConditionMet(reward.condition, input)) {
+            !_bonusConditionMet(reward.condition, context)) {
           continue;
         }
         final eventKey = ProgressionNodeResolver.rewardEventKey(
@@ -77,12 +77,13 @@ class RewardGrantPlanner {
 
   bool _bonusConditionMet(
     BonusXpCondition condition,
-    EngineEvaluationInput input,
+    EngineEvaluationContext context,
   ) {
     return switch (condition) {
       CompletedBeforeHour(:final hour) =>
-        input.evaluatedAt.toLocal().hour < hour,
-      SleepAtLeast(:final minutes) => input.sleepMinutesToday >= minutes,
+        context.evaluatedAt.toLocal().hour < hour,
+      SleepAtLeast(:final minutes) =>
+        context.healthSnapshot.sleepMinutesToday >= minutes,
     };
   }
 }

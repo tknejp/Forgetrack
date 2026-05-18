@@ -6,10 +6,12 @@ import 'package:forgetrack/features/progression_engine/domain/catalog/catalog_va
 import 'package:forgetrack/features/progression_engine/domain/catalog/engine_catalog_context.dart';
 import 'package:forgetrack/features/progression_engine/domain/catalog/objective_catalog.dart';
 import 'package:forgetrack/features/progression_engine/domain/catalog/progression_node_catalog.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/engine_evaluation_input.dart';
+import 'package:forgetrack/features/progression_engine/domain/models/engine_evaluation_context.dart';
 import 'package:forgetrack/domain/journal/journal_event.dart';
 
-EngineEvaluationInput _ambitiousPlayerInput() => EngineEvaluationInput(
+import '_engine_test_helpers.dart';
+
+EngineEvaluationContext _ambitiousPlayerInput() => buildTestContext(
       evaluatedAt: DateTime(2026, 5, 10, 18),
       // Hit the daily fitness goals.
       stepsToday: 10500,
@@ -48,7 +50,7 @@ void main() {
         runIdGenerator: () => 'pilot-run',
       );
 
-      final result = await engine.evaluate(input: _ambitiousPlayerInput());
+      final result = await evaluateWithContext(engine, _ambitiousPlayerInput());
 
       // Four core objectives complete (welcome_to_journey is
       // condition-driven only — no objective).
@@ -114,18 +116,27 @@ void main() {
         repository: repo,
         runIdGenerator: () => 'pilot-claim',
       );
-      final input = _ambitiousPlayerInput();
+      final ctx = _ambitiousPlayerInput();
 
       // Initial eval: quest available but not granted.
-      final pre = await engine.evaluate(input: input);
+      final pre = await evaluateWithContext(engine, ctx);
       expect(
         pre.availableNodes.map((a) => a.nodeId),
         contains('daily_steps_today'),
       );
 
       // Player claims.
-      final post =
-          await engine.claim(nodeId: 'daily_steps_today', input: input);
+      final post = await engine.claim(
+        nodeId: 'daily_steps_today',
+        player: ctx.player,
+        healthSnapshot: ctx.healthSnapshot,
+        nutritionSnapshot: ctx.nutritionSnapshot,
+        goalBoard: ctx.goalBoard,
+        journal: ctx.journal,
+        counters: ctx.counters,
+        overrides: ctx.overrides,
+        evaluatedAt: ctx.evaluatedAt,
+      );
       expect(
         post.completedNodes.map((n) => n.nodeId),
         contains('daily_steps_today'),
@@ -143,12 +154,12 @@ void main() {
         repository: repo,
         runIdGenerator: () => 'pilot-rerun',
       );
-      final input = _ambitiousPlayerInput();
+      final ctx = _ambitiousPlayerInput();
 
-      final first = await engine.evaluate(input: input);
+      final first = await evaluateWithContext(engine, ctx);
       expect(first.completedNodes, isNotEmpty);
 
-      final second = await engine.evaluate(input: input);
+      final second = await evaluateWithContext(engine, ctx);
       expect(second.completedObjectives, isEmpty);
       expect(second.completedNodes, isEmpty);
       expect(second.grantedRewards, isEmpty);
@@ -162,14 +173,13 @@ void main() {
         runIdGenerator: () => 'pilot-beginner',
       );
 
-      final result = await engine.evaluate(
-        input: EngineEvaluationInput(
+      final result = await evaluateWithContext(
+        engine,
+        buildTestContext(
           evaluatedAt: DateTime(2026, 5, 10, 9),
           stepsToday: 4500,
-          proteinGramsToday: 0,
           stepsLifetime: 4500,
           level: 1,
-          totalXp: 0,
         ),
       );
 
@@ -200,13 +210,13 @@ void main() {
         runIdGenerator: () => 'pilot-custom-goal',
       );
 
-      final result = await engine.evaluate(
-        input: EngineEvaluationInput(
+      final result = await evaluateWithContext(
+        engine,
+        buildTestContext(
           evaluatedAt: DateTime(2026, 5, 10, 9),
           stepsToday: 4500,
           stepsLifetime: 4500,
           level: 1,
-          totalXp: 0,
         ),
         catalogContext: const EngineCatalogContext(
           goals: EngineGoalSet(dailySteps: 3000),

@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../models/activation_policy.dart';
 import '../models/claim_policy.dart';
-import '../models/engine_evaluation_input.dart';
+import '../models/engine_evaluation_context.dart';
 import '../models/progression_node_definition.dart';
 import '../repository/ledger_snapshot.dart';
 import 'objective_evaluator.dart';
@@ -83,7 +83,7 @@ class ProgressionNodeResolver {
     required ProgressionEntry node,
     required ObjectiveOutcome? objectiveOutcome,
     required bool eligibleByConditions,
-    required EngineEvaluationInput input,
+    required EngineEvaluationContext context,
     required LedgerSnapshot ledger,
   }) {
     final periodKey = objectiveOutcome?.periodKey;
@@ -91,7 +91,7 @@ class ProgressionNodeResolver {
     // RPG-gated nodes: hidden when RPG off (engine treats as locked
     // and skips evaluation).
     final rpgGated = node.activationPolicy != ActivationPolicy.always;
-    if (rpgGated && !input.rpgModeEnabled) {
+    if (rpgGated && !context.player.rpgModeEnabled) {
       return NodeResolution(
         node: node,
         state: NodeState.locked,

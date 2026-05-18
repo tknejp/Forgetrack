@@ -82,7 +82,7 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
     Offset? from,
   }) async {
     final provider = context.read<ProgressionEngineProvider>();
-    if (provider.currentInput == null) return;
+    if (provider.currentContext == null) return;
 
     final origin = from ?? _centerOfKey(_pillKeyFor(quest.nodeId));
     if (origin != null) {
@@ -98,7 +98,7 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
 
   Future<void> _claimAll(List<EngineQuestProgress> claimable) async {
     final provider = context.read<ProgressionEngineProvider>();
-    if (provider.currentInput == null || claimable.isEmpty) return;
+    if (provider.currentContext == null || claimable.isEmpty) return;
 
     final origins = [
       for (final q in claimable) _centerOfKey(_pillKeyFor(q.nodeId)),

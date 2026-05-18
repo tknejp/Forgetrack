@@ -23,7 +23,9 @@ import '../domain/catalog/progression_node_catalog.dart';
 import '../domain/evaluator/engine_streak_source.dart';
 import '../domain/evaluator/progression_node_resolver.dart';
 import '../domain/models/claim_policy.dart';
-import '../domain/models/engine_evaluation_input.dart';
+import '../domain/models/engine_evaluation_context.dart';
+import '../domain/models/evaluation_overrides.dart';
+import '../domain/models/ledger_counters.dart';
 import 'package:forgetrack/domain/journal/journal_event.dart';
 import 'package:forgetrack/domain/player/player.dart';
 import 'package:forgetrack/domain/progression/catalog/chapter.dart';
@@ -1137,21 +1139,56 @@ class ProgressionEngineProvider extends ChangeNotifier {
   List<ProgressionResolutionResult> get pendingCelebrations =>
       List.unmodifiable(_pendingCelebrations);
 
-  /// Latest [EngineEvaluationInput] derived from the bound source
-  /// providers, with ledger totals (totalXp, level) filled in. Returns
-  /// null when no source has been bound yet (headless tests, devtools
-  /// before init).
+  /// Latest [EngineEvaluationContext] derived from the bound source
+  /// providers, with ledger-derived counters + Player aggregate
+  /// resolved. Returns null when no source has been bound yet
+  /// (headless tests, devtools before init).
   ///
-  /// UI claim handlers read this so they don't have to assemble an
-  /// input themselves — `provider.currentInput` then
-  /// `provider.claimNode(nodeId: ..., input: input)`.
-  EngineEvaluationInput? get currentInput {
+  /// Phase 16 of the domain refactor replaces the flat
+  /// `EngineEvaluationInput` record with this structured context.
+  /// Internal call sites build the context here once; the engine
+  /// boundary receives it through named structured args.
+  EngineEvaluationContext? get currentContext {
     final source = _source;
     if (source == null) return null;
+    return source.buildContext(
+      player: _buildPlayer(),
+      events: _ledger?.all.toList() ?? const [],
+      counters: _buildLedgerCounters(),
+      overrides: EvaluationOverrides(
+        objectiveActualOverrides: _objectiveActualOverridesFromLedger(),
+      ),
+    );
+  }
+
+  /// Resolves the current [Player] aggregate from the loaded ledger.
+  /// Mirrors `EngineProfile.level` / `.totalXp` computation but uses
+  /// the canonical `Player.fromJournal` factory so the level / XP
+  /// derivation is shared with the rest of the app (per Phase 5 ADR
+  /// `player-from-journal-canonical`).
+  Player _buildPlayer() {
+    final l = _ledger;
+    if (l == null) {
+      return Player(
+        uid: _boundCloudUid ?? '',
+        level: 1,
+        totalXp: 0,
+        joinedAt: joinedAt,
+      );
+    }
+    return Player.fromJournal(
+      uid: _boundCloudUid ?? '',
+      rewardGrants: l.rewardGrants,
+      levelCurve: _levelPolicy,
+      joinedAt: joinedAt,
+    );
+  }
+
+  /// Bundles every journal-derived counter the engine consumes into a
+  /// single [LedgerCounters] VO.
+  LedgerCounters _buildLedgerCounters() {
     final quests = _questCompletionsFromLedger();
-    return source.buildInput(
-      totalXpFromLedger: totalXp,
-      levelFromLedger: level,
+    return LedgerCounters(
       totalRewardCount: _totalRewardCountFromLedger(),
       rewardCountByDomain: _rewardCountByDomainFromLedger(),
       nodeCompletionCounts: _nodeCompletionCountsFromLedger(),
@@ -1162,7 +1199,6 @@ class ProgressionEngineProvider extends ChangeNotifier {
       distinctActiveDays: _distinctActiveDaysFromLedger(),
       nodesCompletedToday: _nodesCompletedTodayFromLedger(),
       comboPoolCompletionCounts: _comboPoolCompletionCountsFromLedger(),
-      objectiveActualOverrides: _objectiveActualOverridesFromLedger(),
     );
   }
 
@@ -1900,25 +1936,10 @@ class ProgressionEngineProvider extends ChangeNotifier {
       return;
     }
 
-    final context = source.currentContext();
-    final quests = _questCompletionsFromLedger();
-    final input = source.buildInput(
-      totalXpFromLedger: totalXp,
-      levelFromLedger: level,
-      totalRewardCount: _totalRewardCountFromLedger(),
-      rewardCountByDomain: _rewardCountByDomainFromLedger(),
-      nodeCompletionCounts: _nodeCompletionCountsFromLedger(),
-      bestStreakByRule: _bestStreakByRuleFromLedger(),
-      bestStreakByDomain: _bestStreakByDomainFromLedger(),
-      totalQuestCompletions: quests.total,
-      questCompletionsByBucket: quests.byBucket,
-      distinctActiveDays: _distinctActiveDaysFromLedger(),
-      nodesCompletedToday: _nodesCompletedTodayFromLedger(),
-      comboPoolCompletionCounts: _comboPoolCompletionCountsFromLedger(),
-      objectiveActualOverrides: _objectiveActualOverridesFromLedger(),
-    );
+    final catalogContext = source.currentContext();
+    final evalContext = currentContext!;
     _lastEvaluatedSignature = signature;
-    await evaluateWith(input: input, catalogContext: context);
+    await evaluateWith(context: evalContext, catalogContext: catalogContext);
 
     if (_evaluateQueued) {
       _evaluateQueued = false;
@@ -1932,7 +1953,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
   // ── Engine entry points ──────────────────────────────────────────
 
   Future<ProgressionResolutionResult?> evaluateWith({
-    required EngineEvaluationInput input,
+    required EngineEvaluationContext context,
     EngineCatalogContext catalogContext = const EngineCatalogContext(),
     ProgressionResolutionReason reason =
         ProgressionResolutionReason.liveUpdate,
@@ -1944,7 +1965,14 @@ class ProgressionEngineProvider extends ChangeNotifier {
 
     try {
       final result = await _engine.evaluate(
-        input: input,
+        player: context.player,
+        healthSnapshot: context.healthSnapshot,
+        nutritionSnapshot: context.nutritionSnapshot,
+        goalBoard: context.goalBoard,
+        journal: context.journal,
+        counters: context.counters,
+        overrides: context.overrides,
+        evaluatedAt: context.evaluatedAt,
         catalogContext: catalogContext,
         reason: reason,
       );
@@ -1978,18 +2006,17 @@ class ProgressionEngineProvider extends ChangeNotifier {
 
   /// Claim a manual-claim node and re-evaluate.
   ///
-  /// `input` is treated as a hint, not authoritative — the provider
-  /// always rebuilds [currentInput] from the latest ledger before the
-  /// engine runs so per-claim counters (totalRewardCount,
-  /// nodeCompletionCounts, etc.) reflect every prior claim in the same
-  /// loop. Without this rebuild, a sequential claim-all that captures
-  /// `input` once at the start ends with a stale resolution result and
-  /// can leave nodes hanging in `availableNodes` (e.g. the
-  /// reward_count_first quest that only becomes satisfied after the
-  /// earlier claims appended reward grants).
+  /// The provider always rebuilds [currentContext] from the latest
+  /// ledger before the engine runs so per-claim counters
+  /// (totalRewardCount, nodeCompletionCounts, etc.) reflect every
+  /// prior claim in the same loop. Without this rebuild, a sequential
+  /// claim-all that captures context once at the start ends with a
+  /// stale resolution result and can leave nodes hanging in
+  /// `availableNodes` (e.g. the reward_count_first quest that only
+  /// becomes satisfied after the earlier claims appended reward
+  /// grants).
   Future<ProgressionResolutionResult?> claimNode({
     required String nodeId,
-    EngineEvaluationInput? input,
     EngineCatalogContext? catalogContext,
   }) async {
     if (_isEvaluating) return null;
@@ -1998,8 +2025,8 @@ class ProgressionEngineProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final freshInput = currentInput ?? input;
-      if (freshInput == null) {
+      final freshContext = currentContext;
+      if (freshContext == null) {
         _error = 'claimNode called before sources were bound';
         return null;
       }
@@ -2007,7 +2034,14 @@ class ProgressionEngineProvider extends ChangeNotifier {
           catalogContext ?? currentCatalogContext ?? const EngineCatalogContext();
       final result = await _engine.claim(
         nodeId: nodeId,
-        input: freshInput,
+        player: freshContext.player,
+        healthSnapshot: freshContext.healthSnapshot,
+        nutritionSnapshot: freshContext.nutritionSnapshot,
+        goalBoard: freshContext.goalBoard,
+        journal: freshContext.journal,
+        counters: freshContext.counters,
+        overrides: freshContext.overrides,
+        evaluatedAt: freshContext.evaluatedAt,
         catalogContext: ctx,
       );
       _lastResult = result;
@@ -3118,15 +3152,22 @@ class ProgressionEngineProvider extends ChangeNotifier {
     if (node == null) return;
     final source = _source;
     if (source == null) return;
-    final input = currentInput;
-    if (input == null) return;
+    final ctx = currentContext;
+    if (ctx == null) return;
 
     _isEvaluating = true;
     notifyListeners();
     try {
       final result = await _engine.simulateClaim(
         nodeId: nodeId,
-        input: input,
+        player: ctx.player,
+        healthSnapshot: ctx.healthSnapshot,
+        nutritionSnapshot: ctx.nutritionSnapshot,
+        goalBoard: ctx.goalBoard,
+        journal: ctx.journal,
+        counters: ctx.counters,
+        overrides: ctx.overrides,
+        evaluatedAt: ctx.evaluatedAt,
         levelAtGrant: level,
         catalogContext: source.currentContext(),
       );
@@ -3162,15 +3203,22 @@ class ProgressionEngineProvider extends ChangeNotifier {
     if (node == null) return;
     final source = _source;
     if (source == null) return;
-    final input = currentInput;
-    if (input == null) return;
+    final ctx = currentContext;
+    if (ctx == null) return;
 
     _isEvaluating = true;
     notifyListeners();
     try {
       final result = await _engine.simulateObjectiveMet(
         nodeId: nodeId,
-        input: input,
+        player: ctx.player,
+        healthSnapshot: ctx.healthSnapshot,
+        nutritionSnapshot: ctx.nutritionSnapshot,
+        goalBoard: ctx.goalBoard,
+        journal: ctx.journal,
+        counters: ctx.counters,
+        overrides: ctx.overrides,
+        evaluatedAt: ctx.evaluatedAt,
         catalogContext: source.currentContext(),
       );
       _lastResult = result;

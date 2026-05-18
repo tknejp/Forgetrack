@@ -1,4 +1,4 @@
-import '../models/engine_evaluation_input.dart';
+import '../models/engine_evaluation_context.dart';
 import '../models/unlock_condition.dart';
 import '../repository/ledger_snapshot.dart';
 
@@ -36,7 +36,7 @@ class UnlockConditionResolver {
     required Set<String> claimedNodesLifetime,
     required Set<String> unlockedChapterIds,
     required Set<String> availableCompanionIds,
-    required EngineEvaluationInput input,
+    required EngineEvaluationContext context,
     required LedgerSnapshot ledger,
   }) {
     if (conditions.isEmpty) return true;
@@ -48,7 +48,7 @@ class UnlockConditionResolver {
         claimedNodesLifetime: claimedNodesLifetime,
         unlockedChapterIds: unlockedChapterIds,
         availableCompanionIds: availableCompanionIds,
-        input: input,
+        context: context,
         ledger: ledger,
       )) {
         return false;
@@ -64,11 +64,11 @@ class UnlockConditionResolver {
     required Set<String> claimedNodesLifetime,
     required Set<String> unlockedChapterIds,
     required Set<String> availableCompanionIds,
-    required EngineEvaluationInput input,
+    required EngineEvaluationContext context,
     required LedgerSnapshot ledger,
   }) {
     return switch (condition) {
-      LevelAtLeast(:final level) => input.level >= level,
+      LevelAtLeast(:final level) => context.player.level >= level,
       ObjectiveCompleted(:final objectiveId) =>
         completedObjectiveIds.contains(objectiveId),
       // Lifetime semantic: the target has been completed at any point
@@ -77,9 +77,9 @@ class UnlockConditionResolver {
         completedNodesLifetime.contains(nodeId),
       NodeCompletedBeforeToday(:final nodeId) => () {
         final todayStart = DateTime(
-          input.evaluatedAt.year,
-          input.evaluatedAt.month,
-          input.evaluatedAt.day,
+          context.evaluatedAt.year,
+          context.evaluatedAt.month,
+          context.evaluatedAt.day,
         );
         for (final e in ledger.nodeCompletions) {
           if (e.nodeId != nodeId) continue;
@@ -96,7 +96,7 @@ class UnlockConditionResolver {
             !completedNodesLifetime.contains('${chapterId}_finale'),
       CompanionAvailable(:final companionId) =>
         availableCompanionIds.contains(companionId),
-      RpgModeEnabled() => input.rpgModeEnabled,
+      RpgModeEnabled() => context.player.rpgModeEnabled,
       AllOf(:final conditions) => conditions.every((c) => _resolve(
             c,
             completedObjectiveIds: completedObjectiveIds,
@@ -104,7 +104,7 @@ class UnlockConditionResolver {
             claimedNodesLifetime: claimedNodesLifetime,
             unlockedChapterIds: unlockedChapterIds,
             availableCompanionIds: availableCompanionIds,
-            input: input,
+            context: context,
             ledger: ledger,
           )),
       AnyOf(:final conditions) => conditions.any((c) => _resolve(
@@ -114,7 +114,7 @@ class UnlockConditionResolver {
             claimedNodesLifetime: claimedNodesLifetime,
             unlockedChapterIds: unlockedChapterIds,
             availableCompanionIds: availableCompanionIds,
-            input: input,
+            context: context,
             ledger: ledger,
           )),
     };

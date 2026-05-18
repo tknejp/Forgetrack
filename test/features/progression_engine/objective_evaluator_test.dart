@@ -2,13 +2,15 @@ import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:forgetrack/features/progression_engine/domain/evaluator/objective_evaluator.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/engine_evaluation_input.dart';
+import 'package:forgetrack/features/progression_engine/domain/models/engine_evaluation_context.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/objective_definition.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/objective_metric.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/objective_operator.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/objective_scope.dart';
 
-EngineEvaluationInput _input({
+import '_engine_test_helpers.dart';
+
+EngineEvaluationContext _input({
   int stepsToday = 0,
   int stepsThisWeek = 0,
   int stepsLifetime = 0,
@@ -18,7 +20,7 @@ EngineEvaluationInput _input({
   Map<String, int> nodeCompletionCounts = const {},
   Map<String, int> comboPoolCompletionCounts = const {},
 }) =>
-    EngineEvaluationInput(
+    buildTestContext(
       evaluatedAt: DateTime(2026, 5, 10, 12),
       stepsToday: stepsToday,
       stepsThisWeek: stepsThisWeek,

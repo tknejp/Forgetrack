@@ -3,9 +3,9 @@
 /// switch is exhaustive — adding a new condition forces every
 /// consumer to acknowledge it.
 ///
-/// Conditions read from the current [EngineEvaluationInput], not the
-/// ledger — they're "claim-moment" predicates, evaluated when the
-/// engine plans rewards for a newly-completed node.
+/// Conditions read from the current `EngineEvaluationContext`, not
+/// the ledger — they're "claim-moment" predicates, evaluated when
+/// the engine plans rewards for a newly-completed node.
 sealed class BonusXpCondition {
   const BonusXpCondition();
 }
@@ -23,7 +23,7 @@ class CompletedBeforeHour extends BonusXpCondition {
 }
 
 /// Bonus fires only when the player logged at least [minutes] of
-/// sleep last night (read from `EngineEvaluationInput.sleepMinutesToday`).
+/// sleep last night (read from `HealthSnapshot.sleepMinutesToday`).
 /// Useful for sleep-themed daily goals where "hitting the goal" is
 /// the minimum and "sleeping well" is the bonus.
 class SleepAtLeast extends BonusXpCondition {

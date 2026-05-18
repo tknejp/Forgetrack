@@ -5,8 +5,15 @@ import '../domain/evaluator/objective_evaluator.dart';
 import '../domain/evaluator/progression_node_resolver.dart';
 import '../domain/evaluator/reward_grant_planner.dart';
 import '../domain/evaluator/unlock_condition_resolver.dart';
-import '../domain/models/engine_evaluation_input.dart';
+import '../domain/models/engine_evaluation_context.dart';
+import '../domain/models/evaluation_overrides.dart';
+import '../domain/models/ledger_counters.dart';
+import 'package:forgetrack/domain/journal/journal.dart';
 import 'package:forgetrack/domain/journal/journal_event.dart';
+import 'package:forgetrack/domain/player/player.dart';
+import '../../health_connect/domain/goal_board.dart';
+import '../../health_connect/domain/health_snapshot.dart';
+import '../../nutrition/domain/nutrition_snapshot.dart';
 import '../domain/models/claim_policy.dart';
 import '../domain/models/progression_node_definition.dart';
 import '../domain/models/progression_resolution_reason.dart';
@@ -75,16 +82,45 @@ class ProgressionEngine {
   ///   6. Append all new events.
   ///   7. Return canonical result.
   Future<ProgressionResolutionResult> evaluate({
-    required EngineEvaluationInput input,
+    required Player player,
+    required HealthSnapshot healthSnapshot,
+    required NutritionSnapshot nutritionSnapshot,
+    required GoalBoard goalBoard,
+    required Journal journal,
+    required LedgerCounters counters,
+    required EvaluationOverrides overrides,
+    required DateTime evaluatedAt,
     EngineCatalogContext catalogContext = const EngineCatalogContext(),
     ProgressionResolutionReason reason =
         ProgressionResolutionReason.liveUpdate,
+  }) async {
+    final context = EngineEvaluationContext(
+      player: player,
+      healthSnapshot: healthSnapshot,
+      nutritionSnapshot: nutritionSnapshot,
+      goalBoard: goalBoard,
+      journal: journal,
+      counters: counters,
+      overrides: overrides,
+      evaluatedAt: evaluatedAt,
+    );
+    return _evaluateWithContext(
+      context: context,
+      catalogContext: catalogContext,
+      reason: reason,
+    );
+  }
+
+  Future<ProgressionResolutionResult> _evaluateWithContext({
+    required EngineEvaluationContext context,
+    required EngineCatalogContext catalogContext,
+    required ProgressionResolutionReason reason,
   }) async {
     final runId = _runIdGenerator();
     final ledger = await _repository.loadLedger();
     final objectives = _objectiveCatalog.build(catalogContext);
     final nodes = _nodeCatalog.build(catalogContext);
-    final timestamp = input.evaluatedAt;
+    final timestamp = context.evaluatedAt;
 
     // Step 2: evaluate objectives in memory. Writing the persisted
     // `ObjectiveCompletionEvent` is deferred until step 4 (after the
@@ -96,7 +132,7 @@ class ProgressionEngine {
     // and the resolver would short-circuit to in-progress.
     final outcomes = <String, ObjectiveOutcome>{};
     for (final o in objectives) {
-      var outcome = _objectiveEvaluator.evaluate(o, input);
+      var outcome = _objectiveEvaluator.evaluate(o, context);
       final key = ProgressionNodeResolver.objectiveCompletionEventKey(
         o.id,
         outcome.periodKey,
@@ -163,7 +199,7 @@ class ProgressionEngine {
     // satisfy (full_plate, nutri_triple, balanced) and surfaced
     // them all as claimable rewards the player never opted into.
     final dailyChallengePicks =
-        _computeDailyChallengePicks(nodes, ledger, input.evaluatedAt);
+        _computeDailyChallengePicks(nodes, ledger, context.evaluatedAt);
 
     final resolutions = <NodeResolution>[];
     for (final node in nodes) {
@@ -174,7 +210,7 @@ class ProgressionEngine {
         claimedNodesLifetime: priorClaimedNodeIds,
         unlockedChapterIds: unlockedChapterIds,
         availableCompanionIds: availableCompanionIds,
-        input: input,
+        context: context,
         ledger: ledger,
       );
       if (eligible &&
@@ -192,7 +228,7 @@ class ProgressionEngine {
         node: node,
         objectiveOutcome: _outcomeForNode(node, outcomes),
         eligibleByConditions: eligible,
-        input: input,
+        context: context,
         ledger: ledger,
       );
       resolutions.add(resolution);
@@ -354,7 +390,7 @@ class ProgressionEngine {
       completedNodes: newlyCompletedNodes,
       ledger: ledger,
       periodKeyByNodeId: periodKeyByNodeId,
-      input: input,
+      context: context,
     );
 
     final runningXp = _runningClaimedXp(ledger);
@@ -386,7 +422,7 @@ class ProgressionEngine {
       grantedRewards: [for (final e in built.events) RewardGrant(event: e)],
       skippedEvents: const [],
       warnings: const [],
-      inputSnapshot: input,
+      contextSnapshot: context,
       allObjectiveOutcomes: outcomes.values.toList(growable: false),
       lockedNodeIds: lockedNodeIds,
     );
@@ -399,9 +435,26 @@ class ProgressionEngine {
   /// Returns the resolution result of the post-claim evaluation.
   Future<ProgressionResolutionResult> claim({
     required String nodeId,
-    required EngineEvaluationInput input,
+    required Player player,
+    required HealthSnapshot healthSnapshot,
+    required NutritionSnapshot nutritionSnapshot,
+    required GoalBoard goalBoard,
+    required Journal journal,
+    required LedgerCounters counters,
+    required EvaluationOverrides overrides,
+    required DateTime evaluatedAt,
     EngineCatalogContext catalogContext = const EngineCatalogContext(),
   }) async {
+    final context = EngineEvaluationContext(
+      player: player,
+      healthSnapshot: healthSnapshot,
+      nutritionSnapshot: nutritionSnapshot,
+      goalBoard: goalBoard,
+      journal: journal,
+      counters: counters,
+      overrides: overrides,
+      evaluatedAt: evaluatedAt,
+    );
     final ledger = await _repository.loadLedger();
     final node =
         _nodeCatalog.build(catalogContext).firstWhere((n) => n.id == nodeId);
@@ -415,7 +468,7 @@ class ProgressionEngine {
       final objective = _objectiveCatalog
           .build(catalogContext)
           .firstWhere((o) => o.id == boundObjectiveId);
-      periodKey = _objectiveEvaluator.evaluate(objective, input).periodKey;
+      periodKey = _objectiveEvaluator.evaluate(objective, context).periodKey;
     }
 
     final claimKey = ProgressionNodeResolver.claimEventKey(nodeId, periodKey);
@@ -423,14 +476,14 @@ class ProgressionEngine {
       await _repository.appendEvents([
         NodeClaimEvent(
           eventKey: claimKey,
-          timestamp: input.evaluatedAt,
+          timestamp: evaluatedAt,
           nodeId: nodeId,
           periodKey: periodKey,
         ),
       ]);
     }
-    return evaluate(
-      input: input,
+    return _evaluateWithContext(
+      context: context,
       catalogContext: catalogContext,
       reason: ProgressionResolutionReason.claim,
     );
@@ -470,9 +523,26 @@ class ProgressionEngine {
   /// a normal claim.
   Future<ProgressionResolutionResult> simulateObjectiveMet({
     required String nodeId,
-    required EngineEvaluationInput input,
+    required Player player,
+    required HealthSnapshot healthSnapshot,
+    required NutritionSnapshot nutritionSnapshot,
+    required GoalBoard goalBoard,
+    required Journal journal,
+    required LedgerCounters counters,
+    required EvaluationOverrides overrides,
+    required DateTime evaluatedAt,
     EngineCatalogContext catalogContext = const EngineCatalogContext(),
   }) async {
+    final context = EngineEvaluationContext(
+      player: player,
+      healthSnapshot: healthSnapshot,
+      nutritionSnapshot: nutritionSnapshot,
+      goalBoard: goalBoard,
+      journal: journal,
+      counters: counters,
+      overrides: overrides,
+      evaluatedAt: evaluatedAt,
+    );
     final node = _nodeCatalog
         .build(catalogContext)
         .firstWhere((n) => n.id == nodeId);
@@ -481,8 +551,8 @@ class ProgressionEngine {
       // Condition-only node (welcome flow, content unlock). Nothing
       // to seed; just re-evaluate so the resolver picks up whatever
       // changed externally.
-      return evaluate(
-        input: input,
+      return _evaluateWithContext(
+        context: context,
         catalogContext: catalogContext,
         reason: ProgressionResolutionReason.liveUpdate,
       );
@@ -490,21 +560,21 @@ class ProgressionEngine {
     final objective = _objectiveCatalog
         .build(catalogContext)
         .firstWhere((o) => o.id == objectiveId);
-    final outcome = _objectiveEvaluator.evaluate(objective, input);
+    final outcome = _objectiveEvaluator.evaluate(objective, context);
     await _repository.appendEvents([
       ObjectiveCompletionEvent(
         eventKey: ProgressionNodeResolver.objectiveCompletionEventKey(
           objective.id,
           outcome.periodKey,
         ),
-        timestamp: input.evaluatedAt,
+        timestamp: evaluatedAt,
         objectiveId: objective.id,
         actualValue: objective.targetValue,
         periodKey: outcome.periodKey,
       ),
     ]);
-    return evaluate(
-      input: input,
+    return _evaluateWithContext(
+      context: context,
       catalogContext: catalogContext,
       reason: ProgressionResolutionReason.liveUpdate,
     );
@@ -525,10 +595,27 @@ class ProgressionEngine {
   /// Returns the post-write evaluation result.
   Future<ProgressionResolutionResult> simulateClaim({
     required String nodeId,
-    required EngineEvaluationInput input,
+    required Player player,
+    required HealthSnapshot healthSnapshot,
+    required NutritionSnapshot nutritionSnapshot,
+    required GoalBoard goalBoard,
+    required Journal journal,
+    required LedgerCounters counters,
+    required EvaluationOverrides overrides,
+    required DateTime evaluatedAt,
     int levelAtGrant = 1,
     EngineCatalogContext catalogContext = const EngineCatalogContext(),
   }) async {
+    final context = EngineEvaluationContext(
+      player: player,
+      healthSnapshot: healthSnapshot,
+      nutritionSnapshot: nutritionSnapshot,
+      goalBoard: goalBoard,
+      journal: journal,
+      counters: counters,
+      overrides: overrides,
+      evaluatedAt: evaluatedAt,
+    );
     final ledger = await _repository.loadLedger();
     final node = _nodeCatalog
         .build(catalogContext)
@@ -539,7 +626,7 @@ class ProgressionEngine {
       final objective = _objectiveCatalog
           .build(catalogContext)
           .firstWhere((o) => o.id == objectiveId);
-      periodKey = _objectiveEvaluator.evaluate(objective, input).periodKey;
+      periodKey = _objectiveEvaluator.evaluate(objective, context).periodKey;
     }
 
     final events = <JournalEvent>[];
@@ -552,7 +639,7 @@ class ProgressionEngine {
           objective.id,
           periodKey,
         ),
-        timestamp: input.evaluatedAt,
+        timestamp: evaluatedAt,
         objectiveId: objective.id,
         actualValue: objective.targetValue,
         periodKey: periodKey,
@@ -561,7 +648,7 @@ class ProgressionEngine {
     if (node.claimPolicy == ClaimPolicy.manual) {
       events.add(NodeClaimEvent(
         eventKey: ProgressionNodeResolver.claimEventKey(nodeId, periodKey),
-        timestamp: input.evaluatedAt,
+        timestamp: evaluatedAt,
         nodeId: nodeId,
         periodKey: periodKey,
       ));
@@ -571,7 +658,7 @@ class ProgressionEngine {
           nodeId,
           periodKey,
         ),
-        timestamp: input.evaluatedAt,
+        timestamp: evaluatedAt,
         nodeId: nodeId,
         periodKey: periodKey,
       ));
@@ -584,7 +671,7 @@ class ProgressionEngine {
               rewardOrdinal: grantOrdinal,
               periodKey: periodKey,
             ),
-            timestamp: input.evaluatedAt,
+            timestamp: evaluatedAt,
             nodeId: nodeId,
             rewardOrdinal: grantOrdinal,
             rewardKind: RewardGrantKind.xp,
@@ -601,7 +688,7 @@ class ProgressionEngine {
               rewardOrdinal: grantOrdinal,
               periodKey: periodKey,
             ),
-            timestamp: input.evaluatedAt,
+            timestamp: evaluatedAt,
             nodeId: nodeId,
             rewardOrdinal: grantOrdinal,
             rewardKind: RewardGrantKind.cosmetic,
@@ -618,8 +705,8 @@ class ProgressionEngine {
       }
     }
     await _repository.appendEvents(events);
-    return evaluate(
-      input: input,
+    return _evaluateWithContext(
+      context: context,
       catalogContext: catalogContext,
       reason: ProgressionResolutionReason.claim,
     );

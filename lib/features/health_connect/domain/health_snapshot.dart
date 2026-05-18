@@ -7,9 +7,9 @@ import 'package:meta/meta.dart';
 /// §Phase 15) introduces this snapshot so the engine input builder
 /// stops reaching into `FitnessProvider` field-by-field. Engine /
 /// objective evaluators read fields here; provider stays the
-/// fabrication site. Phase 16 will replace the flat
-/// [EngineEvaluationInput] entirely with the snapshot + [Player] +
-/// [GoalBoard] arg list.
+/// fabrication site. Phase 16 has now landed: the engine consumes
+/// this snapshot directly via structured named args on `evaluate()`;
+/// the flat `EngineEvaluationInput` record is gone.
 ///
 /// **Date semantics.** `<metric>Today` fields are scoped to
 /// [evaluatedDate] — they are *not* "now" reads; they are the

@@ -54,10 +54,11 @@ class Player {
   final DateTime joinedAt;
 
   /// View-layer filter toggle (proposal §10 Q7). Engine evaluator
-  /// receives this through `EngineEvaluationInput.rpgModeEnabled`;
-  /// presentation surfaces hide cosmetic / RPG framing when false.
-  /// Defaults to `true` — no settings surface persists this yet,
-  /// matching the engine's existing default.
+  /// reads this directly off `Player.rpgModeEnabled` (Phase 16 of the
+  /// domain refactor — the flag was previously copied onto
+  /// `EngineEvaluationInput`); presentation surfaces hide cosmetic /
+  /// RPG framing when false. Defaults to `true` — no settings surface
+  /// persists this yet, matching the engine's existing default.
   final bool rpgModeEnabled;
 
   /// Optional profile-chrome fields mirrored from [Identity]. Null

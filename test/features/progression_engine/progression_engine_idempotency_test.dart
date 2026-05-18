@@ -7,8 +7,10 @@ import 'package:forgetrack/features/progression_engine/domain/catalog/engine_cat
 import 'package:forgetrack/features/progression_engine/domain/catalog/objective_catalog.dart';
 import 'package:forgetrack/features/progression_engine/domain/catalog/progression_node_catalog.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/claim_policy.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/engine_evaluation_input.dart';
+import 'package:forgetrack/features/progression_engine/domain/models/engine_evaluation_context.dart';
 import 'package:forgetrack/domain/journal/journal_event.dart';
+
+import '_engine_test_helpers.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/objective_definition.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/objective_metric.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/objective_operator.dart';
@@ -65,8 +67,12 @@ Quest _quest({
       claimPolicy: claimPolicy ?? ClaimPolicy.automatic,
     );
 
-EngineEvaluationInput _input({int steps = 1500, int level = 1, int totalXp = 0}) =>
-    EngineEvaluationInput(
+EngineEvaluationContext _context({
+  int steps = 1500,
+  int level = 1,
+  int totalXp = 0,
+}) =>
+    buildTestContext(
       evaluatedAt: DateTime(2026, 5, 10, 12),
       stepsToday: steps,
       level: level,
@@ -98,7 +104,7 @@ void main() {
         repository: repo,
       );
 
-      final result = await engine.evaluate(input: _input(steps: 1500));
+      final result = await evaluateWithContext(engine, _context(steps: 1500));
 
       expect(result.completedObjectives, hasLength(1));
       expect(result.completedNodes, hasLength(1));
@@ -124,7 +130,7 @@ void main() {
         repository: repo,
       );
 
-      final result = await engine.evaluate(input: _input(steps: 500));
+      final result = await evaluateWithContext(engine, _context(steps: 500));
 
       expect(result.completedObjectives, isEmpty);
       expect(result.completedNodes, isEmpty);
@@ -144,8 +150,8 @@ void main() {
         repository: repo,
       );
 
-      final first = await engine.evaluate(input: _input(steps: 1500));
-      final second = await engine.evaluate(input: _input(steps: 1500));
+      final first = await evaluateWithContext(engine, _context(steps: 1500));
+      final second = await evaluateWithContext(engine, _context(steps: 1500));
 
       expect(first.completedNodes, hasLength(1));
       expect(second.completedNodes, isEmpty);
@@ -181,7 +187,7 @@ void main() {
         repository: repo,
       );
 
-      final first = await engine.evaluate(input: _input(steps: 1500));
+      final first = await evaluateWithContext(engine, _context(steps: 1500));
       expect(first.completedObjectives, hasLength(1));
       expect(first.completedNodes, hasLength(2));
       expect(first.grantedRewards, hasLength(2));
@@ -190,7 +196,7 @@ void main() {
       expect(kinds, {RewardGrantKind.xp, RewardGrantKind.cosmetic});
 
       // Re-run is idempotent.
-      final second = await engine.evaluate(input: _input(steps: 1500));
+      final second = await evaluateWithContext(engine, _context(steps: 1500));
       expect(second.completedNodes, isEmpty);
       expect(second.grantedRewards, isEmpty);
     });
@@ -219,20 +225,30 @@ void main() {
       );
 
       // Objective satisfied → node available, NOT completed.
-      final first = await engine.evaluate(input: _input(steps: 1500));
+      final first = await evaluateWithContext(engine, _context(steps: 1500));
       expect(first.completedNodes, isEmpty);
       expect(first.availableNodes, hasLength(1));
       expect(first.grantedRewards, isEmpty);
 
       // Player claims.
-      final claimed =
-          await engine.claim(nodeId: 'manual_node', input: _input(steps: 1500));
+      final claimCtx = _context(steps: 1500);
+      final claimed = await engine.claim(
+        nodeId: 'manual_node',
+        player: claimCtx.player,
+        healthSnapshot: claimCtx.healthSnapshot,
+        nutritionSnapshot: claimCtx.nutritionSnapshot,
+        goalBoard: claimCtx.goalBoard,
+        journal: claimCtx.journal,
+        counters: claimCtx.counters,
+        overrides: claimCtx.overrides,
+        evaluatedAt: claimCtx.evaluatedAt,
+      );
       expect(claimed.completedNodes, hasLength(1));
       expect(claimed.grantedRewards, hasLength(1));
       expect(claimed.grantedRewards.single.event.xpAmount, isPositive);
 
       // Re-run is idempotent post-claim.
-      final after = await engine.evaluate(input: _input(steps: 1500));
+      final after = await evaluateWithContext(engine, _context(steps: 1500));
       expect(after.completedNodes, isEmpty);
       expect(after.grantedRewards, isEmpty);
     });
