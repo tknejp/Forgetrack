@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:forgetrack/features/progression/domain/models/core_models.dart';
 import 'package:forgetrack/features/progression_engine/application/progression_engine_provider.dart';
+import 'package:forgetrack/features/progression_engine/domain/progression_domain.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/claim_policy.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/progression_node_definition.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/reward_definition.dart';

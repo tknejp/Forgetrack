@@ -1,5 +1,12 @@
 # Progression Engine V2 — Phase 8 + Phase 9 handoff
 
+> **Archived 2026-05-19.** Phase 9 (V1 delete) shipped as domain
+> refactor Phase 22. Phase 8 (RPG mode readiness) was extracted into
+> a standalone, phase-free spec at
+> [`../rpg_mode_readiness.md`](../rpg_mode_readiness.md). This
+> handoff is kept as a permanent record of how the two phases were
+> framed at hand-off time.
+
 Cold-start brief for the two remaining V2 phases. Authoritative plan
 + full design context: [v2_phased_plan.md](v2_phased_plan.md).
 Everything before Phase 8 has shipped on `main`.

@@ -1,20 +1,29 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../../core/logging/app_log.dart';
-import '../../../progression/data/firestore/firestore_progression_gateway.dart';
+import '../../../progression_engine/data/firestore_progression_engine_gateway.dart';
 
 /// Deletes the Firestore docs Forgetrack writes under a user's namespace.
 ///
-/// Scope:
-/// - `users/{uid}/progressionClaims/*`
-/// - `users/{uid}/achievementUnlocks/*`
-/// - `users/{uid}/progression/state` (doc)
+/// Scope (V2 progression — V1 was removed in Phase 22, 2026-05-19):
+/// - `users/{uid}/engineObjectiveCompletions/*`
+/// - `users/{uid}/engineNodeCompletions/*`
+/// - `users/{uid}/engineNodeClaims/*`
+/// - `users/{uid}/engineNodeAnnouncements/*`
+/// - `users/{uid}/engineRewardGrants/*`
+/// - `users/{uid}/engineQuestOfferings/*`
 /// - `users/{uid}/cosmeticEntitlements/*`
 /// - `users/{uid}/notifications/*`
 ///
 /// Explicitly NOT touched (would mutate other users' state):
 /// - `users/{uid}` (the social profile doc — referenced by friendships)
 /// - `friend_requests`, `friendships`, `achievement_shares`, `handles`
+///
+/// Note on legacy V1 docs: pre-Phase-22 collections
+/// (`progressionClaims`, `achievementUnlocks`, `progression/state`) are
+/// no longer wiped — the V1 module that wrote them was deleted, and
+/// any leftover docs orphan harmlessly per V2 plan §11.1 ("Social
+/// Firestore data referencing old node ids is acceptable to break").
 ///
 /// Idempotent: missing collections/docs are silently skipped. Deletes are
 /// batched in groups of 500 (Firestore WriteBatch limit). Best-effort: if
@@ -23,13 +32,13 @@ import '../../../progression/data/firestore/firestore_progression_gateway.dart';
 class DevToolsUserDataPurgeService {
   DevToolsUserDataPurgeService({
     FirebaseFirestore? firestore,
-    FirestoreProgressionGateway? progressionGateway,
+    FirestoreProgressionEngineGateway? progressionGateway,
   })  : _firestore = firestore ?? FirebaseFirestore.instance,
         _progressionGateway =
-            progressionGateway ?? FirestoreProgressionGateway();
+            progressionGateway ?? FirestoreProgressionEngineGateway();
 
   final FirebaseFirestore _firestore;
-  final FirestoreProgressionGateway _progressionGateway;
+  final FirestoreProgressionEngineGateway _progressionGateway;
 
   Future<UserDataPurgeReport> purgeForUid(String uid) async {
     AppLog.reset.info('firestore-purge: start uid=$uid');
@@ -37,7 +46,7 @@ class DevToolsUserDataPurgeService {
 
     // 1. Progression claims + achievement unlocks + progression/state doc.
     try {
-      await _progressionGateway.wipeAllRemoteData(uid);
+      await _progressionGateway.wipeAll(uid);
       AppLog.reset.success('firestore-purge: progression wiped');
     } catch (e, st) {
       stepErrors['progression'] = e.toString();

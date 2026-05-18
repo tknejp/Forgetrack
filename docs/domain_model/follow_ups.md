@@ -471,6 +471,39 @@ Tyto věci původně vznikly jako "follow-ups", ale uživatel se rozhodl zapojit
 
 **Není blocking pro:** Phase 22 (V1 cleanup), or any future feature work. The ratchet is silent until violations grow.
 
+**Update 2026-05-19 (post-Phase-22):** baselines lowered as a side-effect of the V1 delete:
+
+| Rule slug | Scope | Old baseline | New baseline | Delta |
+|---|---|---|---|---|
+| `domain-purity` | `lib/features/*/domain/` | 35 | 33 | -2 |
+| `untyped-id` | `lib/features/*/domain/` | 72 | 58 | -14 |
+| `l10n-literal` | `lib/features/*/presentation/` | 29 | 19 | -10 |
+| `widget-no-logic` | `lib/features/*/presentation/` | 60 | 46 | -14 |
+
+V1 deletion alone wiped ~30% of the typed-id + l10n debt + ~23% of the widget-logic debt. Remaining hot spots are now squarely in V2 progression-engine + cosmetics + social.
+
+---
+
+### 2.26 V2 background quest + achievement notifications (deferred from Phase 22)
+
+**Phase 22 status:** V1 progression module deleted 2026-05-19. As part of that cleanup, `lib/core/services/background_sync_service.dart` lost its `engine.sync(source)` + quest/achievement notification block — the V1 engine had been writing to a divergent ledger ever since V2 plan Phase 6 made V2 the canonical foreground engine, so those background notifications had been firing off stale state (or not firing at all for V2-completed quests).
+
+**Cílový stav:** WorkManager background sync detects newly-granted quest rewards + newly-unlocked achievements via the V2 engine and pushes push-style notifications (`NotificationService.showQuestCompleted` / `showAchievementUnlocked`).
+
+**Co dnes funguje bez tohoto featuru:** HC + KT data refresh + daily goal reminder still fire from background sync. Quest/achievement state updates the moment the user opens the app (V2 engine evaluates on bind). Background notifications were always best-effort — WorkManager only runs every ~15 min on a battery-friendly schedule, so the gap is small in practice.
+
+**Možná řešení:**
+
+- (a) **Direct V2 engine bootstrap in the WorkManager isolate.** Construct `ProgressionEngineDatabase` + `ProgressionEngineRepository` + `ProgressionEngine`, build `EngineEvaluationContext` from in-process HC + KT + Goals state, call `engine.evaluate()`, diff `result.grantedRewards` against the pre-sync snapshot by event key, push notifications. Sizing: ~150-200 LoC. Risk: need to also derive `LedgerCounters` + `Player.fromJournal` in the isolate (`ProgressionEngineProvider` does both for free in the foreground, but the headless isolate can't reuse a ChangeNotifier graph).
+- (b) **Lift only the diff out to a separate service.** Run the existing foreground `ProgressionEngineProvider` cold (without listeners) in the isolate, treating it as a one-shot evaluator. Less code duplication but heavier per-tick cost.
+- (c) **Skip the feature.** Push notifications for in-flight quests are a delight, not a contract. If product feedback doesn't ask for them, leave the background sync at HC/KT/goal-reminder scope.
+
+**Proč deferred:** Phase 22 scope was "delete V1", not "build a V2 background notification pipeline." The migration plan's original Phase 22 spec ("Modify `background_sync_service.dart` — migrate na V2 ProgressionEngineProvider") underestimated the bootstrap cost in the WorkManager headless isolate — proper V2 wiring needs more design than the cleanup deserved. Decoupling unblocks the V1 delete; the notification feature itself is its own scoped story.
+
+**Kdy to řešit:** When product feedback asks for it, or when a related feature (e.g. scheduled daily reminders driven by completion state) needs the same pipeline. Velikost: ~150-200 LoC + a headless-isolate integration test.
+
+**Není blocking pro:** any current refactor or feature work. The push-notification surface (`NotificationService.showQuestCompleted` / `showAchievementUnlocked`) is untouched and ready to receive calls from a future V2 publisher.
+
 ---
 
 ## 3. Audit findings že NEJSOU folded ani deferred

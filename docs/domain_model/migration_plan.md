@@ -833,7 +833,9 @@ Stage E (Hardening) opens with Phase 20 (JournalProjection); deferred sub-phases
 
 ### Stage E — Hardening
 
-**Status (2026-05-19):** Phase 20 + Phase 21 shipped (see commit log). Phase 21 lint matchers ratchet existing violations (baselines documented in [follow_ups.md §2.25](follow_ups.md#225-phase-21-lint-baseline-cleanup-queue-deferred-from-phase-21)). Phase 22 (legacy V1 progression cleanup) remains — non-blocking, can land opportunistically.
+**Status (2026-05-19):** ✅ closed. Phase 20 (JournalProjection) + Phase 21 (lint matchers + ratchet) + Phase 22 (V1 progression cleanup) all shipped. Phase 21 lint matchers ratchet existing violations (baselines lowered post-Phase-22, tracked in [follow_ups.md §2.25](follow_ups.md#225-phase-21-lint-baseline-cleanup-queue-deferred-from-phase-21)). V1 progression module deleted; HeroScreen + ProgressionOverviewSection relocated to V2; background sync detached from V1 (V2 background notifications deferred per [follow_ups.md §2.26](follow_ups.md#226-v2-background-quest--achievement-notifications-deferred-from-phase-22)).
+
+**Refactor complete.** All 22 phases shipped on `refactor/domain-model-design`. Stage A → E acceptance criteria (§4) met. The remaining open work tracked in [follow_ups.md §2](follow_ups.md) is opportunistic cleanup + Phase 21 lint baseline reduction.
 
 ---
 
@@ -908,36 +910,38 @@ Stage E (Hardening) opens with Phase 20 (JournalProjection); deferred sub-phases
 
 ---
 
-### Phase 22 — Legacy V1 progression cleanup (deferred)
+### Phase 22 — Legacy V1 progression cleanup ✅
 
 **Goal:** Delete `lib/features/progression/`. Migrate `background_sync_service.dart` to V2 engine. Migrate devtools sections. Delete legacy tests.
 
-**Pre-conditions:** Phases 0-21 done. Out of scope této session.
+**Pre-conditions:** Phases 0-21 done.
 
 **Files touched:**
-- Delete: `lib/features/progression/` (full folder, 30+ files).
-- Modify: `lib/core/services/background_sync_service.dart` — migrate na V2 ProgressionEngineProvider.
-- Modify: 3 devtools sections.
-- Delete: `test/features/progression/` (5 files).
+- Delete: `lib/features/progression/` (46 files).
+- Delete: `test/features/progression/` (8 files).
+- Delete: 3 orphaned V1-coupled devtools sections (`devtools_progression_section.dart`, `devtools_provider_section.dart`, `devtools_unlock_inventory_section.dart`) — already disconnected from the devtools screen since V2 plan Phase 6.
+- Modify: `lib/core/services/background_sync_service.dart` — detach V1 progression block; quest/achievement notification path deferred per [follow_ups.md §2.26](follow_ups.md#226-v2-background-quest--achievement-notifications-deferred-from-phase-22).
+- Relocate: `hero_screen.dart` + `progression_overview_section.dart` from V1 → `lib/features/progression_engine/presentation/` (they were already V2-backed internally; only the folder location was V1).
+- Modify: `lib/features/app_shell/presentation/main_shell.dart`, `lib/features/social/presentation/widgets/hero_progression_header.dart` — drop V1 import paths, swap `ProgressionDomainTheme.colorFor(d)` / `iconFor(d)` for V2's `d.color` / `d.icon` (V2 ProgressionDomain has the design-token getters native to the enum).
+- Modify: `lib/features/devtools/application/factory_reset/devtools_user_data_purge_service.dart` — swap `FirestoreProgressionGateway.wipeAllRemoteData` for V2's `FirestoreProgressionEngineGateway.wipeAll`. Legacy V1 Firestore subcollections (`progressionClaims`, `achievementUnlocks`, `progression/state`) orphan per V2 plan §11.1.
+- Modify: `test/features/progression_engine/quest_section_panel_test.dart` — drop stale `progression/domain/models/core_models.dart` import (V2 has its own `ProgressionDomain`).
+- Modify: `test/lint/production_scan_test.dart` — Phase 21 ratchet baselines lowered (domain-purity feature-domain 35→33, untyped-id feature-domain 72→58, raw-Text-literal 29→19, widget-collection-logic 60→46) — cleanup the V1 delete naturally produced.
 
-**Implementation steps:**
-1. Migrate background sync to V2.
-2. Migrate devtools to V2.
-3. Verify zero remaining imports from `features/progression/`.
-4. Delete folder.
-
-**Test plan:**
-- Background sync runs successfully (manual + integration test).
-- Devtools sections work.
-- Test suite passes without legacy folder.
+**Implementation notes:**
+- The migration plan + V2 phased plan both anticipated a heavier "migrate background sync to V2" + "migrate devtools sections to V2" effort. Reality: the 3 devtools sections were already orphaned (not imported anywhere) — just deletable. Background sync's V1 path had been writing to a divergent ledger since V2 plan Phase 6 made V2 the canonical foreground engine — its quest/achievement notifications had been stale for that entire window. Detaching the V1 block (rather than porting to V2) ships the cleanup; a separate scoped feature can add V2-backed background notifications later when there's actual product demand.
 
 **DoD:**
-- [ ] `lib/features/progression/` deleted.
-- [ ] No regressions.
+- [x] `lib/features/progression/` deleted.
+- [x] `test/features/progression/` deleted.
+- [x] Zero remaining imports of `features/progression/` from production code.
+- [x] `flutter analyze` clean (same 77 pre-existing `unnecessary_const` infos as before).
+- [x] Core test suite passes (`test/features/progression_engine/`, `test/features/social/`, `test/features/cosmetics/`, `test/lint/`, `test/domain_purity_test.dart`).
+- [x] Hero tab still renders in the main shell (HeroScreen relocated, not deleted).
+- [x] Factory reset still wipes Firestore engine data (purge service swapped to V2 gateway).
 
-**Rizika:** Mitigation: separate PR, deferred until other phases stable.
+**Rizika:** Mitigation: HeroScreen + ProgressionOverviewSection had hidden V1-folder-path dependencies the original plan didn't anticipate. Recovered both from `git show HEAD:...` after the initial folder delete, relocated to V2 presentation/, fixed up imports. No behavior change.
 
-**Rollback:** revert + restore folder.
+**Rollback:** `git revert`. V1 folder restorable from git history if a regression surfaces.
 
 ---
 

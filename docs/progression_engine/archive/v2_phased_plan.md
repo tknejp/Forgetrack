@@ -1,5 +1,15 @@
 # Progression Engine — Phased Implementation Plan
 
+> **Archived 2026-05-19.** All phases shipped — V2 is canonical on
+> every UI surface, the legacy `lib/features/progression/` was
+> deleted under domain refactor Phase 22. This document is kept as a
+> permanent design record: it explains *why* the V2 module looks the
+> way it does. Live open work tracks under
+> [`../rpg_mode_readiness.md`](../rpg_mode_readiness.md) (the
+> standalone successor to Phase 8). The companion
+> [`phase_8_9_handoff.md`](phase_8_9_handoff.md) brief is also
+> archived here — its scope closed when Phase 9 (V1 delete) shipped.
+>
 > **Module name decision (post-revision):** the new module is `lib/features/progression_engine/`. The legacy module stays at `lib/features/progression/` until Phase 9, then is deleted entirely. No rename of the new folder needed afterwards.
 >
 > **Class-name conflict during coexistence:** both modules contain a class named `ProgressionEngine` (legacy in `progression/application/progression_engine.dart`, new in `progression_engine/application/progression_engine.dart`). Files that need to import both must use a prefixed import: `import '.../features/progression/application/progression_engine.dart' as legacy;` and refer to `legacy.ProgressionEngine`. After Phase 9 the legacy file is gone and the prefix can be dropped.

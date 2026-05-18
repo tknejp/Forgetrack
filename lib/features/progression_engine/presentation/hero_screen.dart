@@ -2,20 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../domain/progression/player/player_achievement_lifecycle.dart';
-import '../../../cosmetics/presentation/widgets/cosmetics_inventory_section.dart';
-import '../../../journey/presentation/widgets/journey_preview_card.dart';
-import '../../../progression_engine/application/progression_engine_provider.dart';
-import '../../../progression_engine/application/adapters/engine_achievement_view.dart';
-import '../../../social/application/social_provider.dart';
-import '../../../social/domain/social_models.dart';
-import '../../../progression_engine/presentation/widgets/progression_primitives.dart';
-import '../widgets/progression_overview_section.dart';
-import '../../../../l10n/app_localizations.dart';
-import '../../../../l10n/l10n.dart';
-import '../../../../shared/theme/design_tokens.dart';
-import '../../../../shared/widgets/progress_bar.dart';
-import '../../../../shared/widgets/tiny_pill.dart';
+import '../../../domain/progression/player/player_achievement_lifecycle.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../l10n/l10n.dart';
+import '../../../shared/theme/design_tokens.dart';
+import '../../../shared/widgets/progress_bar.dart';
+import '../../../shared/widgets/tiny_pill.dart';
+import '../../cosmetics/presentation/widgets/cosmetics_inventory_section.dart';
+import '../../journey/presentation/widgets/journey_preview_card.dart';
+import '../../social/application/social_provider.dart';
+import '../../social/domain/social_models.dart';
+import '../application/adapters/engine_achievement_view.dart';
+import '../application/progression_engine_provider.dart';
+import 'widgets/progression_overview_section.dart';
+import 'widgets/progression_primitives.dart';
 
 class HeroScreen extends StatefulWidget {
   const HeroScreen({

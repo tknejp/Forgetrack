@@ -11,9 +11,8 @@ import '../../../cosmetics/config/cosmetics_config.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
 import '../../../cosmetics/presentation/widgets/companion_fake_idle_preview.dart';
 import '../../../cosmetics/presentation/widgets/cosmetic_frame_preview.dart';
-import '../../../progression/domain/progression_models.dart' show ProgressionDomain;
-import '../../../progression/presentation/widgets/progression_domain_theme.dart';
 import '../../../progression_engine/application/progression_engine_provider.dart';
+import '../../../progression_engine/domain/progression_domain.dart';
 import '../../../progression_engine/domain/display/progression_display_resolver.dart';
 import '../../../progression_engine/presentation/widgets/level_badge.dart';
 import '../../application/social_provider.dart';
@@ -505,7 +504,7 @@ class _MiniQuestRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final domain = quest.domain ?? ProgressionDomain.activity;
-    final color = ProgressionDomainTheme.colorFor(domain);
+    final color = domain.color;
     final rawPct = quest.progress * 100;
     final pct =
         (rawPct.isNaN || rawPct.isInfinite) ? 0 : rawPct.clamp(0, 100).round();
@@ -612,7 +611,7 @@ class _QuestThumb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = ProgressionDomainTheme.colorFor(domain);
+    final color = domain.color;
     Widget fallback() {
       return Container(
         width: size,
@@ -623,7 +622,7 @@ class _QuestThumb extends StatelessWidget {
           border: Border.all(color: color.withValues(alpha: 0.30)),
         ),
         child: Icon(
-          ProgressionDomainTheme.iconFor(domain),
+          domain.icon,
           color: color,
           size: size * 0.55,
         ),

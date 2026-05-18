@@ -6,9 +6,8 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../../shared/widgets/ft_expand_chevron.dart';
-import '../../../progression_engine/application/progression_engine_provider.dart';
-import '../../domain/progression_models.dart' show ProgressionDomain;
-import 'progression_domain_theme.dart';
+import '../../application/progression_engine_provider.dart';
+import '../../domain/progression_domain.dart';
 
 /// Compact, expandable progression overview rendered on the Hero tab.
 ///
@@ -480,7 +479,7 @@ class _DomainSummaryPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = domain == null
         ? fallbackColor
-        : ProgressionDomainTheme.colorFor(domain!);
+        : domain!.color;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 11),

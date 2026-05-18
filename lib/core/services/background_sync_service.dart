@@ -20,12 +20,7 @@ import '../../features/nutrition/application/kaloricke_tabulky_provider.dart';
 import '../../features/nutrition/application/kaloricke_tabulky_provider/kt_sync_coordinator.dart';
 import '../../features/nutrition/data/kaloricke_tabulky_service.dart';
 import '../../features/nutrition/data/local/kt_nutrition_database.dart';
-import '../../features/progression/application/progression_engine.dart';
-import '../../features/progression/data/local/progression_database.dart';
-import '../../features/progression/data/progression_repository_impl.dart';
-import '../../features/progression/data/provider_progression_source.dart';
 import '../../firebase_options.dart';
-import '../../l10n/app_localizations.dart';
 import '../../features/health_connect/application/goals_provider.dart';
 import 'notification_preferences.dart';
 import 'notification_service.dart';
@@ -38,8 +33,15 @@ const _prefLastReminderKey = 'last_goal_reminder_date';
 // Reálně to Android může spustit později podle baterie, Doze režimu a systému.
 const _syncInterval = Duration(minutes: 15);
 
-const _maxQuestNotificationsPerRun = 3;
-const _maxAchievementNotificationsPerRun = 3;
+// Phase 22 (legacy V1 progression cleanup, 2026-05-19): the V1
+// engine.sync(source) + quest/achievement notification flow was
+// removed when lib/features/progression/ was deleted. The V2 engine
+// (lib/features/progression_engine/) is the canonical progression
+// system on every UI surface since V2 plan Phase 6 — the V1
+// background-sync path had been writing to a divergent ledger and
+// surfacing stale notifications. Bringing V2 progression
+// notifications back is a scoped future feature, tracked in
+// docs/domain_model/follow_ups.md §2.26.
 
 /// Entry point volaný WorkManagerem v background isolatu.
 @pragma('vm:entry-point')
@@ -47,7 +49,6 @@ void backgroundSyncCallback() {
   Workmanager().executeTask((taskName, inputData) async {
     HealthDatabase? healthDb;
     KtNutritionDatabase? ktDb;
-    ProgressionDatabase? progressionDb;
     bool sendDebugNotifs = false;
 
     final bgSyncStart = DateTime.now();
@@ -86,9 +87,6 @@ void backgroundSyncCallback() {
 
       ktDb = KtNutritionDatabase();
       await ktDb.open();
-
-      progressionDb = ProgressionDatabase();
-      await progressionDb.open();
 
       // ── Health Connect: background-safe refresh ───────────────────────────
       final fitnessProvider = FitnessProvider(
@@ -132,77 +130,8 @@ void backgroundSyncCallback() {
       final goalsProvider = GoalsProvider();
       await goalsProvider.init();
 
-      // ── Progression: stav před synchem ────────────────────────────────────
-      final engine = ProgressionEngine(
-        repository: ProgressionRepositoryImpl(progressionDb),
-      );
-
-      final stateBefore = await engine.load();
-
-      final prevGrantKeys =
-          stateBefore.questRewardGrants.map((g) => g.rewardKey).toSet();
-
-      final prevAchievementIds = stateBefore.achievements
-          .where((a) => a.unlocked)
-          .map((a) => a.id)
-          .toSet();
-
-      // ── Progression sync ──────────────────────────────────────────────────
-      final source = ProviderProgressionSource(
-        goalsProvider: goalsProvider,
-        fitnessProvider: fitnessProvider,
-        nutritionProvider: ktProvider,
-      );
-
-      final stateAfter = await engine.sync(source);
-
-      // ── Lokalizace notifikací ─────────────────────────────────────────────
-      final prefs = await SharedPreferences.getInstance();
-      final langCode = prefs.getString('selected_language_code') ?? 'cs';
-
-      final l10n = await AppLocalizations.delegate.load(
-        Locale(langCode),
-      );
-      // ── Notifikace: nové questy ───────────────────────────────────────────
-      final newGrants = stateAfter.questRewardGrants
-          .where((g) => !prevGrantKeys.contains(g.rewardKey))
-          .take(_maxQuestNotificationsPerRun)
-          .toList();
-
-      for (var i = 0; i < newGrants.length; i++) {
-        final grant = newGrants[i];
-
-        final quest =
-            stateAfter.quests.where((q) => q.id == grant.questId).firstOrNull;
-
-        final title = quest != null
-            ? quest.title(l10n)
-            : l10n.progQuestFallbackTitle;
-
-        await NotificationService.instance.showQuestCompleted(
-          title,
-          grant.xpGranted,
-          index: i,
-        );
-      }
-
-      // ── Notifikace: nové achievementy ─────────────────────────────────────
-      final newAchievements = stateAfter.achievements
-          .where((a) => a.unlocked && !prevAchievementIds.contains(a.id))
-          .take(_maxAchievementNotificationsPerRun)
-          .toList();
-
-      for (var i = 0; i < newAchievements.length; i++) {
-        final achievement = newAchievements[i];
-
-        await NotificationService.instance.showAchievementUnlocked(
-          achievement.title(l10n),
-          achievement.description(l10n),
-          index: i,
-        );
-      }
-
       // ── Denní připomínka cílů ─────────────────────────────────────────────
+      final prefs = await SharedPreferences.getInstance();
       //
       // Pozor:
       // Tohle není přesné plánování. WorkManager nemusí běžet mezi 18–20.
@@ -288,7 +217,6 @@ void backgroundSyncCallback() {
       await _closeDatabases(
         healthDb: healthDb,
         ktDb: ktDb,
-        progressionDb: progressionDb,
       );
     }
   });
@@ -351,7 +279,6 @@ String _dateKey(DateTime date) {
 Future<void> _closeDatabases({
   required HealthDatabase? healthDb,
   required KtNutritionDatabase? ktDb,
-  required ProgressionDatabase? progressionDb,
 }) async {
   try {
     await healthDb?.close(clearMemoryCache: true);
@@ -368,16 +295,6 @@ Future<void> _closeDatabases({
   } catch (e, st) {
     AppLog.app.error(
       'BackgroundSyncService: failed to close KtNutritionDatabase',
-      err: e,
-      stackTrace: st,
-    );
-  }
-
-  try {
-    await progressionDb?.close();
-  } catch (e, st) {
-    AppLog.app.error(
-      'BackgroundSyncService: failed to close ProgressionDatabase',
       err: e,
       stackTrace: st,
     );

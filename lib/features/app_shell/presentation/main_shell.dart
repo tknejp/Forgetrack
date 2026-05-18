@@ -16,7 +16,7 @@ import '../../health_connect/presentation/sleep_screen.dart';
 import '../../health_connect/presentation/steps_screen.dart';
 import '../../home/presentation/overview_screen.dart';
 import '../../nutrition/presentation/nutrition_screen.dart';
-import '../../progression/presentation/hero/hero_screen.dart';
+import '../../progression_engine/presentation/hero_screen.dart';
 import '../../progression_engine/application/progression_engine_provider.dart';
 import '../../progression_engine/presentation/quests_screen.dart';
 import '../../settings/presentation/settings_screen.dart';
