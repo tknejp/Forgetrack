@@ -7,10 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../core/logging/app_log.dart';
 import '../../auth/application/auth_provider.dart';
 import '../../cosmetics/application/cosmetics_provider.dart';
-import '../../progression_engine/domain/progression_domain.dart' show ProgressionDomain;
 import '../../progression_engine/application/progression_engine_provider.dart';
-import 'package:forgetrack/domain/journal/journal_event.dart'
-    show RewardGrantKind;
 import '../../progression_engine/domain/catalog/progression_node_catalog.dart';
 import '../../progression_engine/domain/models/progression_node_definition.dart'
     show Achievement;
@@ -20,6 +17,7 @@ import '../domain/social_models.dart';
 import '../domain/social_presence.dart';
 import '../domain/social_presence_repository.dart';
 import 'profile_photo_precache.dart';
+import 'social_profile_projection.dart';
 
 class SocialProvider extends ChangeNotifier {
   SocialProvider({
@@ -28,11 +26,17 @@ class SocialProvider extends ChangeNotifier {
     required SocialBackendState backendState,
   })  : _repository = repository,
         _session = session,
-        _backendState = backendState;
+        _backendState = backendState {
+    _profileProjection = SocialProfileProjection(
+      repository: repository,
+      inputsGetter: _collectProfileInputs,
+    );
+  }
 
   final SocialPresenceRepository _repository;
   final SocialFirebaseSession _session;
   final SocialBackendState _backendState;
+  late final SocialProfileProjection _profileProjection;
 
   AuthProvider? _authProvider;
   ProgressionEngineProvider? _progressionProvider;
@@ -702,7 +706,7 @@ class SocialProvider extends ChangeNotifier {
       return;
     }
 
-    final payload = _buildSyncPayload();
+    final payload = _profileProjection.buildPayload();
     if (payload == null) return;
 
     final signature = _buildProfileSignature(payload);
@@ -738,7 +742,12 @@ class SocialProvider extends ChangeNotifier {
     }
   }
 
-  SocialProfileSyncPayload? _buildSyncPayload() {
+  /// Assemble the canonical inputs the [SocialProfileProjection]
+  /// denormalises into a [SocialProfileSyncPayload].
+  ///
+  /// Returns null when the social session isn't ready to publish —
+  /// the projection treats that as a no-op.
+  SocialProfileInputs? _collectProfileInputs() {
     final authProvider = _authProvider;
     final progressionProvider = _progressionProvider;
 
@@ -752,92 +761,25 @@ class SocialProvider extends ChangeNotifier {
     }
 
     final user = authProvider.user!;
-
-    final unlockedAchievements =
-        _buildUnlockedAchievementsFromEngine(progressionProvider);
-
     final displayName = user.displayName?.trim().isNotEmpty == true
         ? user.displayName!.trim()
         : user.email.split('@').first;
-
     final handle = buildDefaultSocialHandle(
       uid: user.id,
       email: user.email,
       displayName: user.displayName,
     );
 
-    return SocialProfileSyncPayload(
+    return SocialProfileInputs(
       uid: user.id,
       displayName: displayName,
       email: user.email,
       handle: handle,
       photoUrl: user.photoUrl,
       socialEnabled: true,
-      stats: SocialUserStats(
-        level: progressionProvider.profile.level,
-        totalXp: progressionProvider.profile.totalXp,
-        unlockedAchievementCount: unlockedAchievements.length,
-        grantedRewardCount: _grantedRewardCount(progressionProvider),
-        bestStepsStreak:
-            progressionProvider.streakForObjective('daily_steps').bestStreak,
-        bestNutritionStreak: progressionProvider
-            .streakForDomain(ProgressionDomain.nutrition)
-            .bestStreak,
-        updatedAt: progressionProvider.lastEvaluatedAt ?? DateTime.now(),
-      ),
-      unlockedAchievements: unlockedAchievements,
+      engine: progressionProvider,
       equippedCosmetics: _buildEquippedCosmeticsSnapshot(),
     );
-  }
-
-  /// Builds the cloud-snapshot achievement list from the V2 ledger +
-  /// catalog. The published `rarity` field is the shared [Rarity] enum
-  /// (`rarity.name` on the wire); receivers with the achievement id in
-  /// their local catalog still resolve display through the V2 display
-  /// resolver — the cloud-side rarity is the unknown-id colour fallback.
-  List<SocialUnlockedAchievement> _buildUnlockedAchievementsFromEngine(
-    ProgressionEngineProvider engine,
-  ) {
-    final ledger = engine.ledger;
-    if (ledger == null) return const [];
-
-    final latestByNode = <String, DateTime>{};
-    final nodes = <String, Achievement>{};
-    for (final e in ledger.nodeCompletions) {
-      final node = engine.nodeById(e.nodeId);
-      if (node is! Achievement) continue;
-      nodes[e.nodeId] = node;
-      final existing = latestByNode[e.nodeId];
-      if (existing == null || e.timestamp.isAfter(existing)) {
-        latestByNode[e.nodeId] = e.timestamp;
-      }
-    }
-    if (latestByNode.isEmpty) return const [];
-
-    return [
-      for (final entry in latestByNode.entries)
-        SocialUnlockedAchievement(
-          achievementId: entry.key,
-          title: entry.key,
-          description: '',
-          rarity: nodes[entry.key]!.rarity,
-          domain: engine.domainForNodeId(entry.key).name,
-          unlockedAt: entry.value,
-        ),
-    ];
-  }
-
-  /// Total XP grant rows in the V2 ledger. V2 grants rewards
-  /// immediately at evaluation time — there is no claimed vs pending
-  /// split, so this single number stands in for both legacy counters.
-  int _grantedRewardCount(ProgressionEngineProvider engine) {
-    final ledger = engine.ledger;
-    if (ledger == null) return 0;
-    var count = 0;
-    for (final g in ledger.rewardGrants) {
-      if (g.rewardKind == RewardGrantKind.xp) count++;
-    }
-    return count;
   }
 
   SocialEquippedCosmetics _buildEquippedCosmeticsSnapshot() {

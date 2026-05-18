@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:forgetrack/domain/journal/journal_projection.dart';
 import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -1921,7 +1922,10 @@ class ProgressionEngineProvider extends ChangeNotifier {
       // engine.evaluate() will not re-emit them (the events are already
       // in the ledger), so without this call a second device sees the
       // engine state restored but the cosmetics inventory empty.
-      await _cosmeticBridge.reapplyHistoricalCosmetics(merged);
+      await _cosmeticBridge.rebuildFromJournal(
+        events: merged.all,
+        reason: RebuildFromJournalReason.pullAndMerge,
+      );
       // Force re-evaluation: the cloud may have brought new claims
       // that change available / completed sets.
       _lastEvaluatedSignature = null;

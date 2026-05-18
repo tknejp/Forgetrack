@@ -833,6 +833,8 @@ Stage E (Hardening) opens with Phase 20 (JournalProjection); deferred sub-phases
 
 ### Stage E — Hardening
 
+**Status (2026-05-19):** Phase 20 shipped (see commit log). Phases 21 (lint rules / review checklist) and 22 (legacy V1 progression cleanup) remain — both non-blocking, can land opportunistically.
+
 ---
 
 ### Phase 20 — Cache rebuild paths + JournalProjection interface
@@ -856,9 +858,9 @@ Stage E (Hardening) opens with Phase 20 (JournalProjection); deferred sub-phases
 - Pull-and-merge → projections reapply historical data.
 
 **DoD:**
-- [ ] JournalProjection interface exists.
-- [ ] Both caches use it.
-- [ ] Rebuild scenarios documented + tested.
+- [x] JournalProjection interface exists (`lib/domain/journal/journal_projection.dart`).
+- [x] Both caches use it — `CosmeticUnlockBridge implements JournalProjection<int>`, `SocialProfileProjection implements JournalProjection<SocialProfileSyncPayload?>`.
+- [x] Rebuild scenarios documented (glossary entry `journal-projection`, ADR `journal-projection-cache-rebuild-contract`, dataflow `journal-projection-rebuild`) + tested (`test/features/progression_engine/cosmetic_unlock_bridge_projection_test.dart`: factory reset, pull-and-merge, idempotency, no-binding safe).
 
 **Rizika:** Nízké.
 
