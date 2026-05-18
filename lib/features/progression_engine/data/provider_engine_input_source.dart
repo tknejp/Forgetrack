@@ -1,6 +1,8 @@
 import '../../health_connect/application/fitness_provider.dart';
 import '../../health_connect/application/goals_provider.dart';
+import '../../health_connect/domain/health_snapshot.dart';
 import '../../nutrition/application/kaloricke_tabulky_provider.dart';
+import '../../nutrition/domain/nutrition_snapshot.dart';
 import '../domain/catalog/engine_catalog_context.dart';
 import '../domain/models/engine_evaluation_input.dart';
 
@@ -59,22 +61,23 @@ class ProviderEngineInputSource {
     Map<String, double> objectiveActualOverrides = const {},
   }) {
     final today = _today();
+    final health = fitness.snapshotForDate(today);
+    final nutritionSnap = nutrition.snapshotForDate(today);
     return EngineEvaluationInput(
       evaluatedAt: _clock(),
       totalXp: totalXpFromLedger,
       level: levelFromLedger,
-      stepsToday: fitness.stepsForDate(today),
-      stepsThisWeek: _stepsThisWeek(today),
-      stepsLifetime: _stepsLifetime(),
-      caloriesToday: nutrition.todayCalories.toDouble(),
-      proteinGramsToday: nutrition.todayProtein.toDouble(),
-      carbsGramsToday: nutrition.todayCarbs.toDouble(),
-      fatGramsToday: nutrition.todayFat.toDouble(),
-      fiberGramsToday: nutrition.todayFiber.toDouble(),
-      sleepMinutesToday:
-          fitness.sleepForDate(today)?.totalDuration.inMinutes ?? 0,
-      activityMinutesToday: _activityMinutesForDay(today),
-      weightLoggedToday: fitness.weightForDate(today) != null,
+      stepsToday: health.stepsToday,
+      stepsThisWeek: health.stepsThisWeek,
+      stepsLifetime: health.stepsLifetime,
+      caloriesToday: nutritionSnap.caloriesToday,
+      proteinGramsToday: nutritionSnap.proteinGramsToday,
+      carbsGramsToday: nutritionSnap.carbsGramsToday,
+      fatGramsToday: nutritionSnap.fatGramsToday,
+      fiberGramsToday: nutritionSnap.fiberGramsToday,
+      sleepMinutesToday: health.sleepMinutesToday,
+      activityMinutesToday: health.activityMinutesToday,
+      weightLoggedToday: health.weightLoggedToday,
       totalRewardCount: totalRewardCount,
       rewardCountByRule: rewardCountByRule,
       rewardCountByDomain: rewardCountByDomain,
@@ -97,54 +100,29 @@ class ProviderEngineInputSource {
   /// just on app restart.
   String auditSignature() {
     final today = _today();
+    final health = fitness.snapshotForDate(today);
+    final nutritionSnap = nutrition.snapshotForDate(today);
     return [
       goals.dailySteps,
       goals.dailyCalories,
       goals.dailyProtein,
       goals.sleepHours,
       goals.weeklyActivityMins,
-      fitness.stepsForDate(today),
-      _stepsThisWeek(today),
-      _stepsLifetime(),
-      nutrition.todayCalories,
-      nutrition.todayProtein,
-      fitness.sleepForDate(today)?.totalDuration.inMinutes ?? 0,
-      _activityMinutesForDay(today),
-      fitness.weightForDate(today) != null ? 1 : 0,
+      health.signature,
+      nutritionSnap.signature,
     ].join('|');
   }
 
-  /// Sum of all step records the FitnessProvider has loaded. Acts as a
-  /// pragmatic lifetime total — bounded by the user's Health Connect
-  /// history retention. Pre-tracking days simply do not contribute.
-  int _stepsLifetime() {
-    return fitness.stepsHistory.fold<int>(0, (sum, r) => sum + r.steps);
-  }
+  /// Builds a [HealthSnapshot] anchored at the engine's current
+  /// "today" without paying for [EngineEvaluationInput] construction.
+  /// Exposed for Phase 16 prep — callers that only need snapshot data
+  /// can read it without going through `buildInput`.
+  HealthSnapshot currentHealthSnapshot() => fitness.snapshotForDate(_today());
 
-  /// Sum of steps from Monday (start of ISO week) up to and including
-  /// `today`. Drives weekly-scoped step objectives.
-  int _stepsThisWeek(DateTime today) {
-    final monday = DateTime(today.year, today.month, today.day)
-        .subtract(Duration(days: today.weekday - 1));
-    var sum = 0;
-    for (final r in fitness.stepsHistory) {
-      final d = DateTime(r.date.year, r.date.month, r.date.day);
-      if (!d.isBefore(monday) && !d.isAfter(today)) sum += r.steps;
-    }
-    return sum;
-  }
-
-  int _activityMinutesForDay(DateTime day) {
-    return fitness.activities.fold<int>(0, (sum, activity) {
-      final activityDay = DateTime(
-        activity.startTime.year,
-        activity.startTime.month,
-        activity.startTime.day,
-      );
-      if (activityDay != day) return sum;
-      return sum + activity.duration.inMinutes;
-    });
-  }
+  /// Builds a [NutritionSnapshot] anchored at the engine's current
+  /// "today". Symmetrical convenience to [currentHealthSnapshot].
+  NutritionSnapshot currentNutritionSnapshot() =>
+      nutrition.snapshotForDate(_today());
 
   DateTime _today() {
     final now = _clock();
