@@ -1,6 +1,9 @@
 import 'dart:async';
 
+import '../../../core/errors/app_error.dart';
+import '../../../core/errors/firebase_error_classifier.dart';
 import '../../../core/logging/app_log.dart';
+import '../../../core/result/result.dart';
 import 'package:forgetrack/domain/journal/journal_event.dart';
 import '../domain/repository/ledger_snapshot.dart';
 import '../domain/repository/progression_engine_repository.dart';
@@ -92,51 +95,111 @@ class HybridProgressionEngineRepository
   Future<LedgerSnapshot> pullAndMerge(String uid) async {
     if (uid.isEmpty) return _local.loadLedger();
 
-    LedgerSnapshot cloud;
-    try {
-      cloud = await _cloud.pullEvents(uid);
-    } catch (error, stackTrace) {
-      AppLog.sync.warn(
-        'engine ledger pull failed',
-        payload: 'uid=$uid error=$error',
-      );
-      AppLog.sync.debug('engine ledger pull stack', payload: stackTrace);
-      return _local.loadLedger();
+    final cloud = await pullEventsClassified(uid);
+    switch (cloud) {
+      case Failure(error: final e):
+        _logSyncFailure('engine ledger pull failed', uid, e);
+        return _local.loadLedger();
+      case Success(value: final snapshot):
+        final all = <JournalEvent>[
+          ...snapshot.objectiveCompletions,
+          ...snapshot.nodeCompletions,
+          ...snapshot.nodeClaims,
+          ...snapshot.nodeAnnouncements,
+          ...snapshot.rewardGrants,
+          ...snapshot.questOfferings,
+        ];
+        if (all.isEmpty) return _local.loadLedger();
+        return _local.appendEvents(all);
     }
+  }
 
-    final all = <JournalEvent>[
-      ...cloud.objectiveCompletions,
-      ...cloud.nodeCompletions,
-      ...cloud.nodeClaims,
-      ...cloud.nodeAnnouncements,
-      ...cloud.rewardGrants,
-      ...cloud.questOfferings,
-    ];
-    if (all.isEmpty) return _local.loadLedger();
-    return _local.appendEvents(all);
+  /// Result-typed pull. Exposed for tests + future consumers that
+  /// want to pattern-match on error severity rather than collapse to
+  /// the local snapshot.
+  Future<Result<LedgerSnapshot, AppError>> pullEventsClassified(
+    String uid,
+  ) async {
+    try {
+      final snapshot = await _cloud.pullEvents(uid);
+      return Success(snapshot);
+    } catch (error, stackTrace) {
+      return Failure(classifyFirebaseError(
+        error,
+        stackTrace,
+        endpoint: 'engine.pullEvents',
+      ));
+    }
   }
 
   Future<void> _pushSafely(String uid, List<JournalEvent> events) async {
+    final result = await _pushEventsClassified(uid, events);
+    if (result case Failure(error: final e)) {
+      _logSyncFailure(
+        'engine ledger push failed',
+        uid,
+        e,
+        extra: 'count=${events.length}',
+      );
+    }
+  }
+
+  Future<Result<void, AppError>> _pushEventsClassified(
+    String uid,
+    List<JournalEvent> events,
+  ) async {
     try {
       await _cloud.pushEvents(uid, events);
+      return const Success(null);
     } catch (error, stackTrace) {
-      AppLog.sync.warn(
-        'engine ledger push failed',
-        payload: 'uid=$uid count=${events.length} error=$error',
-      );
-      AppLog.sync.debug('engine ledger push stack', payload: stackTrace);
+      return Failure(classifyFirebaseError(
+        error,
+        stackTrace,
+        endpoint: 'engine.pushEvents',
+      ));
     }
   }
 
   Future<void> _wipeSafely(String uid) async {
+    final result = await _wipeClassified(uid);
+    if (result case Failure(error: final e)) {
+      _logSyncFailure('engine ledger wipe failed', uid, e);
+    }
+  }
+
+  Future<Result<void, AppError>> _wipeClassified(String uid) async {
     try {
       await _cloud.wipeAll(uid);
+      return const Success(null);
     } catch (error, stackTrace) {
-      AppLog.sync.warn(
-        'engine ledger wipe failed',
-        payload: 'uid=$uid error=$error',
-      );
-      AppLog.sync.debug('engine ledger wipe stack', payload: stackTrace);
+      return Failure(classifyFirebaseError(
+        error,
+        stackTrace,
+        endpoint: 'engine.wipeAll',
+      ));
+    }
+  }
+
+  void _logSyncFailure(
+    String summary,
+    String uid,
+    AppError error, {
+    String? extra,
+  }) {
+    final payload = [
+      'uid=$uid',
+      if (extra != null) extra,
+      'error=${error.label}',
+      'cause=${error.originalError}',
+    ].join(' ');
+    if (error.isTransient) {
+      AppLog.sync.warn(summary, payload: payload);
+    } else {
+      AppLog.sync.error(summary, payload: payload);
+    }
+    final st = error.stackTrace;
+    if (st != null) {
+      AppLog.sync.debug('$summary stack', payload: st);
     }
   }
 }

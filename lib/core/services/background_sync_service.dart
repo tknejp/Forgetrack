@@ -7,6 +7,9 @@ import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 
+import '../errors/app_error.dart';
+import '../errors/firebase_error_classifier.dart';
+import '../errors/kt_error_classifier.dart';
 import '../logging/app_log.dart';
 import '../../features/devtools/application/devtools_sync_logger.dart';
 import '../../features/devtools/domain/devtools_sync_event.dart';
@@ -230,11 +233,32 @@ void backgroundSyncCallback() {
 
       return true;
     } catch (e, st) {
-      AppLog.app.error(
-        'BackgroundSyncService: task failed task=$taskName',
-        err: e,
-        stackTrace: st,
-      );
+      // Phase 18 of the domain refactor (`docs/domain_model/
+      // migration_plan.md` §Phase 18) replaces the previous blanket
+      // `return true` with typed `AppError` classification:
+      //
+      //   - Transient → return true so WorkManager schedules a retry.
+      //   - Permanent → return false so WorkManager skips the retry
+      //     window (we'd just burn another cycle on the same broken
+      //     state). Logged at `error` level so the failure is
+      //     visible in DevTools / crash reports instead of being
+      //     silently swallowed.
+      final error = _classifyBackgroundSyncError(e, st);
+
+      if (error.isTransient) {
+        AppLog.app.warn(
+          'BackgroundSyncService: transient failure '
+          'task=$taskName error=${error.label}',
+          payload: e.toString(),
+        );
+      } else {
+        AppLog.app.error(
+          'BackgroundSyncService: permanent failure '
+          'task=$taskName error=${error.label}',
+          err: e,
+          stackTrace: st,
+        );
+      }
 
       await DevToolsSyncLogger.instance.record(DevToolsSyncEvent(
         timestamp: bgSyncStart,
@@ -242,23 +266,24 @@ void backgroundSyncCallback() {
         feature: 'all',
         result: 'failure',
         durationMs: DateTime.now().difference(bgSyncStart).inMilliseconds,
-        errorMessage: e.toString(),
+        errorMessage: '${error.label}: ${e.toString()}',
       ));
 
       if (sendDebugNotifs) {
-        final err = e.toString();
+        final errMsg = '${error.isTransient ? "transient" : "permanent"}: '
+            '${error.label}';
         await NotificationService.instance.showDebugNotification(
           title: '[DevTools] BG sync failed',
-          body: err.length > 80 ? '${err.substring(0, 80)}…' : err,
+          body:
+              errMsg.length > 80 ? '${errMsg.substring(0, 80)}…' : errMsg,
         );
       }
 
-      // Záměrně true:
-      // - WorkManager nebude točit retry loop.
-      // - Pro testovací/soukromou appku je to bezpečnější.
-      //
-      // Do budoucna můžeš vracet false jen pro dočasné síťové chyby.
-      return true;
+      // Result-based decision: transient → WorkManager retries on its
+      // own backoff schedule. Permanent → skip; nothing we can do this
+      // window. Old behaviour was unconditional `return true` which hid
+      // permanent failures behind silent retries.
+      return error.isTransient;
     } finally {
       await _closeDatabases(
         healthDb: healthDb,
@@ -267,6 +292,32 @@ void backgroundSyncCallback() {
       );
     }
   });
+}
+
+/// Classifies an exception caught by [backgroundSyncCallback] into
+/// the typed [AppError] hierarchy so the WorkManager retry decision
+/// becomes pattern-matchable on `isTransient`.
+///
+/// Order of dispatch:
+///   1. KT-specific exceptions ([KtAuthException], [KtApiException])
+///      — classified by [classifyKtError].
+///   2. Firebase / Firestore exceptions — classified by
+///      [classifyFirebaseError].
+///   3. Anything else → catch-all [UpstreamError] (`isTransient:
+///      true` so WorkManager retries — unknown failures are assumed
+///      worth one more attempt before we silently give up).
+AppError _classifyBackgroundSyncError(Object error, StackTrace stackTrace) {
+  if (error is KtAuthException || error is KtApiException) {
+    return classifyKtError(error, stackTrace, endpoint: 'bg.sync');
+  }
+  if (error is FirebaseException) {
+    return classifyFirebaseError(error, stackTrace, endpoint: 'bg.sync');
+  }
+  return UpstreamError(
+    originalError: error,
+    stackTrace: stackTrace,
+    context: 'bg.sync',
+  );
 }
 
 Future<void> _maybeShowGoalReminder(SharedPreferences prefs) async {
