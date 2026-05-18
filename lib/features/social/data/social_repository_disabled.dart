@@ -1,7 +1,7 @@
 import '../domain/social_models.dart';
-import '../domain/social_repository.dart';
+import '../domain/social_presence_repository.dart';
 
-class DisabledSocialRepository implements SocialRepository {
+class DisabledSocialRepository implements SocialPresenceRepository {
   const DisabledSocialRepository({
     required this.reason,
   });

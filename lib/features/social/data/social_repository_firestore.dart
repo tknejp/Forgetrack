@@ -4,9 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../shared/domain/rarity.dart';
 import '../domain/social_models.dart';
-import '../domain/social_repository.dart';
+import '../domain/social_presence_repository.dart';
 
-class FirestoreSocialRepository implements SocialRepository {
+class FirestoreSocialRepository implements SocialPresenceRepository {
   FirestoreSocialRepository({
     FirebaseFirestore? firestore,
   }) : _firestore = firestore ?? FirebaseFirestore.instance;

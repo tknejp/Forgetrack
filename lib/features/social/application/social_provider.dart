@@ -17,19 +17,20 @@ import '../../progression_engine/domain/models/progression_node_definition.dart'
 import '../data/social_firebase_bootstrap.dart';
 import '../data/social_firebase_session.dart';
 import '../domain/social_models.dart';
-import '../domain/social_repository.dart';
+import '../domain/social_presence.dart';
+import '../domain/social_presence_repository.dart';
 import 'profile_photo_precache.dart';
 
 class SocialProvider extends ChangeNotifier {
   SocialProvider({
-    required SocialRepository repository,
+    required SocialPresenceRepository repository,
     required SocialFirebaseSession session,
     required SocialBackendState backendState,
   })  : _repository = repository,
         _session = session,
         _backendState = backendState;
 
-  final SocialRepository _repository;
+  final SocialPresenceRepository _repository;
   final SocialFirebaseSession _session;
   final SocialBackendState _backendState;
 
@@ -97,6 +98,33 @@ class SocialProvider extends ChangeNotifier {
 
   int get unreadNotificationCount =>
       _notifications.where((n) => !n.read).length;
+
+  /// Aggregated read view of every social state surface for the
+  /// signed-in user. Phase 17 of the domain refactor introduces this
+  /// as the forward-compatible read shape — widgets can incrementally
+  /// migrate from per-getter reads (`socialProvider.friendships`,
+  /// `.recentShares`, `.notifications`) to a single
+  /// `socialProvider.presence` read. Phase 19 will sweep widgets.
+  ///
+  /// `ownProfile` is null today because the provider doesn't track
+  /// the signed-in user's published profile snapshot locally — it
+  /// only *writes* it (`publishProfile`). A follow-up will hydrate
+  /// own profile via `watchProfilesByIds([_activeUid])` so the
+  /// aggregate can drive the header without an extra round-trip.
+  SocialPresence get presence {
+    final uid = _activeUid;
+    if (uid == null || uid.isEmpty) return SocialPresence.anonymous;
+    return SocialPresence(
+      uid: uid,
+      ownProfile: null,
+      incomingRequests: incomingRequests,
+      outgoingRequests: outgoingRequests,
+      friendships: _friendships,
+      friends: _friends,
+      recentShares: _recentShares,
+      notifications: _notifications,
+    );
+  }
 
   void bind({
     required AuthProvider authProvider,
