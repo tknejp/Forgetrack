@@ -144,22 +144,23 @@ Plán dodržuje 5 pravidel, která jsou silnější než cokoliv v jednotlivých
 
 **Implementation steps:**
 1. Vytvořit `Journal` interface + 4 VO.
-2. Implementovat `IsarJournalAdapter` v `lib/features/progression_engine/data/` — wraps existující collections.
+2. ~~Implementovat `IsarJournalAdapter` v `lib/features/progression_engine/data/` — wraps existující collections.~~ **Deferred** — see `follow_ups.md §2.13`. Stage A landed Journal as a standalone interface without concrete implementation; consumer migration happens incrementally per strangler-fig, so the adapter can be written when the first consumer needs it.
 3. Rename `LedgerEvent` → `JournalEvent` + move.
-4. Existující `HybridProgressionEngineRepository` implementuje `Journal` (extends abstract class).
-5. Postupně migrate consumery — místo `repository.queryRewardGrants(...)` zavolají `journal.eventsForNode(id).whereType<RewardGrantEvent>()`.
+4. ~~Existující `HybridProgressionEngineRepository` implementuje `Journal` (extends abstract class).~~ **Deferred** alongside IsarJournalAdapter — same reason.
+5. Postupně migrate consumery — místo `repository.queryRewardGrants(...)` zavolají `journal.eventsForNode(id).whereType<RewardGrantEvent>()`. **Deferred** — first consumer wave happens in Stage B+.
 
 **Test plan:**
 - `flutter analyze` clean.
 - `flutter test test/features/progression/` + `test/features/progression_engine/` passes — existující testy pokrývají ledger reads.
-- New test `test/domain/journal/journal_adapter_test.dart` — IsarJournalAdapter vrátí stejné events jako přímý Isar read pro stejný `uid`. Golden test.
+- ~~New test `test/domain/journal/journal_adapter_test.dart`~~ — Deferred with the adapter itself (see follow_ups.md §2.13).
 - New test `test/domain/journal/period_key_test.dart` — `PeriodKey.day(localDateTime)` z různých timezone vrátí stejnou hodnotu pro stejný UTC den. Cross-TZ collision test.
 
-**DoD:**
-- [ ] `LedgerEvent` symbol mrtvý.
-- [ ] `Journal` interface žije v `lib/domain/journal/`, implementace v progression_engine/data/.
-- [ ] Všichni konzumenti (engine, daily_section_resolver, cosmetic_unlock_bridge, social) čtou přes `Journal` interface, ne přes raw Isar.
-- [ ] Tests pass + manuální evaluation cycle smoke check.
+**DoD (Stage-A-landing scope, partial):**
+
+- [x] `LedgerEvent` symbol mrtvý (renamed `JournalEvent`).
+- [x] `Journal` interface žije v `lib/domain/journal/`. ~~Implementace v progression_engine/data/.~~ **Deferred — see follow_ups.md §2.13.** Interface scaffolded as standalone abstraction; concrete adapter ships when first consumer migrates.
+- [ ] ~~Všichni konzumenti čtou přes `Journal` interface, ne přes raw Isar.~~ **Deferred — incremental consumer migration starts Stage B+.**
+- [x] Tests pass + manuální evaluation cycle smoke check.
 
 **Rizika:** Některé call sajty mají ledger-specific query API (`queryRewardGrants(domain: X)`), které není v generic `Journal` interface. Mitigation: rozšířit interface o tyto query metody nebo mapovat via `events.whereType<RewardGrantEvent>().where((e) => …)`. Pokud query je hot-path (např. evaluator volá per-tick), zachovat indexované metody na interface.
 
@@ -179,9 +180,10 @@ Plán dodržuje 5 pravidel, která jsou silnější než cokoliv v jednotlivých
 
 **Sub-fáze (rozdělit na sub-PR pokud roste přes ~300 LoC):**
 
-- **3.a:** Mechanický class rename (Node suffix drop + Definition drop).
-- **3.b:** Typed identifier introduction — definice extension types + rollout v catalog + repository contracts.
-- **3.c:** UI + provider call sajt sweep — passing `QuestId.value` jen na boundary do Isar / Firestore, jinde čistě typed.
+- **3.a:** Mechanický class rename (Node suffix drop + Definition drop). ✓ landed.
+- **3.b.1:** Typed identifier definitions (lib/domain/progression/catalog/ids.dart) + Journal interface adoption. ✓ landed.
+- **3.b.2:** Field signature migration (ProgressionEntry.id, Objective.id, Cosmetic.id) + catalog literal wraps. ✓ landed.
+- **3.c:** UI + provider call site sweep. **Effectively no-op** — the Phase 3.b.2 design refinement (`implements String` rather than `implements Object`) made typed ids auto-coerce into String parameters, so no cascade sweep was needed for compilation. Stylistic refinements (e.g. wrapping `quest.id == 'literal'` equality checks with `const ProgressionEntryId('literal')`) are opt-in and **deferred — see follow_ups.md §2.14.** Inner-catalog reference fields (Quest.objectiveId / chainId / chapterId / comboPoolId / prerequisiteNodeIds / nextNodeIds) stay String — **see follow_ups.md §2.15.**
 
 **Files touched:**
 

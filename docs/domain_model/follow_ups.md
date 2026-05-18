@@ -207,6 +207,61 @@ Tyto věci původně vznikly jako "follow-ups", ale uživatel se rozhodl zapojit
 
 ---
 
+### 2.13 Concrete IsarJournalAdapter (deferred from Phase 2)
+
+**Stage A status:** Phase 2 landed the `Journal` abstract interface in `lib/domain/journal/journal.dart` but **did not** ship the concrete `IsarJournalAdapter` that the migration plan originally listed. The interface is currently standalone — no production code calls it yet.
+
+**Cílový stav:** `IsarJournalAdapter` implementuje `Journal` interface a forwarduje na existující `ProgressionEngineDatabase` reads. `HybridProgressionEngineRepository` může implementovat `Journal` přímo (composition) nebo expozovat adapter. First consumer migrates a hot-path read (e.g. cosmetic_unlock_bridge's `eventsForCosmetic`) to use the adapter.
+
+**Proč deferred:** Stage A scope discipline — adapter without a consumer is dead code. Strangler-fig pattern (migration_plan.md §0): write the adapter when the first consumer needs it, not preemptively.
+
+**Kdy to řešit:** Když Stage B nebo C první consumer (typicky `PlayerQuestCatalog` service nebo `cosmetic_unlock_bridge`) potřebuje Journal-style read. Velikost: ~100-150 LoC + integration test.
+
+**Související:** [migration_plan.md Phase 2](migration_plan.md#phase-2--journal-infrastructure-ledgerevent--journalevent).
+
+---
+
+### 2.14 Phase 3.c stylistic refinements (UI / equality)
+
+**Stage A status:** Phase 3.c byla v migration plánu jako "UI + provider call site sweep", ale Phase 3.b.2 design refinement (`implements String` rather than `implements Object`) made typed ids auto-coerce — žádný compile-error cascade nebyl. Sweep tedy efektivně rozpuštěn.
+
+**Co zbývá:** Stylistic improvements:
+
+- `quest.id == 'literal_string'` equality checks → `quest.id == const ProgressionEntryId('literal_string')` pro type-safe comparison.
+- `nodeId: someVariable` arguments kde caller drží `String` ale callee chce typed id — explicit wrap `const ProgressionEntryId(someVariable)` pro self-documenting intent.
+- `Map<String, X>` → `Map<ProgressionEntryId, X>` v doménových collections kde key reprezentuje catalog row.
+
+**Proč deferred:** Žádný compile error → žádný blocker. `implements String` znamená že existing String-typed code funguje. Refinement je čistě o čitelnosti a explicit typing intent.
+
+**Kdy to řešit:** Lze dělat opportunistic-PR (when touching a file for other reasons, tighten its id types). Nebo dedicated cleanup sweep před Phase 21 (lint rules) — lint pak může enforce "no raw String literals where typed id is appropriate".
+
+---
+
+### 2.15 Inner-catalog reference fields stay String
+
+**Stage A status:** Phase 3.b.2 migrated **primary** catalog row id fields (`ProgressionEntry.id`, `Objective.id`, `Cosmetic.id`) na typed wrappers. **Cross-reference fields uvnitř catalog rows zůstaly String:**
+
+- `Quest.objectiveId` — should be `ObjectiveId`.
+- `Quest.chainId` — chain identifier (could be new `ChainId` extension type, or `String`).
+- `Quest.chapterId` — should be `ChapterId`.
+- `Quest.comboPoolId` — could be `ComboPoolId`.
+- `Quest.prerequisiteNodeIds`, `Quest.nextNodeIds` — should be `List<ProgressionEntryId>`.
+- `Quest.dailyTierGroupId` — could be typed.
+- `AchievementNode.objectiveId` — should be `ObjectiveId?`.
+- `Milestone.objectiveId` — should be `ObjectiveId`.
+- `ChapterCompletion.chapterId` — should be `ChapterId`.
+- `CompanionAvailability.companionId` — should be `CosmeticId` (companion is a Cosmetic).
+- `Relic.relicId` — should be `CosmeticId`.
+- `RewardGrantEvent.cosmeticId / chapterId / companionId / titleId / emblemId / relicId` — should be typed.
+
+**Cílový stav:** Cross-reference fields use the appropriate typed wrapper for compile-time discrimination.
+
+**Proč deferred:** Phase 3.b.2 scope discipline — primary `.id` field migration was already ~30 catalog files + cascade. Cross-references touch the same files but add another ~50 wrapper insertions. Doable mechanically, but a separate PR keeps blast radius small.
+
+**Kdy to řešit:** Standalone sub-phase 3.b.3 anytime — no Stage B dependency. Or fold into the catalog rollout when touching catalog content files for unrelated reasons.
+
+---
+
 ## 3. Audit findings že NEJSOU folded ani deferred
 
 Tyto byly raised v audit reportu, ale nepřevedeny na action item — buď jsou false positive nebo z natury povahy doménového refactoru řeší.
