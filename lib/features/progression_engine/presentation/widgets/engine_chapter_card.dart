@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../domain/progression/player/player_quest_lifecycle.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../../shared/widgets/ft_expand_chevron.dart';
@@ -261,16 +262,18 @@ class EngineChapterCard extends StatelessWidget {
   }
 
   XpClaimPillData _pillData() {
-    if (quest.isCompleted) {
-      return XpClaimPillData.claimed(quest.previewXp);
-    }
-    if (quest.isAvailableForClaim && enabled) {
-      return XpClaimPillData.claimable(
-        quest.previewXp,
-        onTap: (center) => onClaim(quest, from: center),
-      );
-    }
-    return XpClaimPillData.locked(quest.previewXp);
+    return switch (quest.lifecycle) {
+      QuestClaimed(:final finalXp) => XpClaimPillData.claimed(finalXp),
+      QuestCompletedPendingClaim(:final previewXp) when enabled =>
+        XpClaimPillData.claimable(
+          previewXp,
+          onTap: (center) => onClaim(quest, from: center),
+        ),
+      QuestCompletedPendingClaim(:final previewXp) =>
+        XpClaimPillData.locked(previewXp),
+      QuestAvailable() || QuestLocked() =>
+        XpClaimPillData.locked(quest.previewXp),
+    };
   }
 }
 
@@ -372,7 +375,7 @@ class _ProgressRow extends StatelessWidget {
     // the card kept showing a full progress bar + "1 / 1" label
     // after claim, which read like the chain was still actively
     // tracking instead of resting on its claimed step.
-    if (quest.isCompleted) {
+    if (quest.lifecycle is QuestClaimed) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
@@ -504,7 +507,7 @@ class _ChainNode extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final completed = quest.isCompleted;
+    final completed = quest.lifecycle is QuestClaimed;
     // "Locked future" = not completed AND not the currently active step.
     // These render a lock glyph in place of any label so the player
     // doesn't read distant milestones (1M / 5M) as actionable. Explicit

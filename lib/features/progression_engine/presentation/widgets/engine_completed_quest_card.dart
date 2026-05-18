@@ -2,6 +2,7 @@
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../domain/progression/player/player_quest_lifecycle.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../../shared/widgets/ft_expand_chevron.dart';
@@ -202,7 +203,7 @@ class EngineCompletedQuestCard extends StatelessWidget {
       final claimable = entry.chainQuests.isEmpty
           ? entry.representative
           : entry.chainQuests.firstWhere(
-              (q) => q.isAvailableForClaim && !q.isCompleted,
+              (q) => q.lifecycle is QuestCompletedPendingClaim,
               orElse: () => entry.representative,
             );
       return XpClaimPillData.claimable(
@@ -326,7 +327,13 @@ class _ExpandedBody extends StatelessWidget {
   EngineQuestProgress? _nextLockedStep() {
     if (!entry.isChain) return null;
     for (final q in entry.chainQuests) {
-      if (!q.isCompleted && !q.isAvailableForClaim) return q;
+      // Anything that isn't claimed yet AND isn't already pending
+      // claim is the "next locked step" — covers both
+      // QuestLocked (gates unmet) and QuestAvailable (in progress).
+      final lifecycle = q.lifecycle;
+      if (lifecycle is QuestLocked || lifecycle is QuestAvailable) {
+        return q;
+      }
     }
     return null;
   }

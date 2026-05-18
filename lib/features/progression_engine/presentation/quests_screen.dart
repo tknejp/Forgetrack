@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../domain/progression/player/player_quest_lifecycle.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/l10n.dart';
 import '../../../shared/theme/design_tokens.dart';
@@ -162,21 +163,25 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
       );
     }
 
-    final dailyClaimable = daily.where((q) => q.isAvailableForClaim).toList();
+    final dailyClaimable =
+        daily.where((q) => q.lifecycle is QuestCompletedPendingClaim).toList();
     final weeklyClaimable =
-        weekly.where((q) => q.isAvailableForClaim).toList();
+        weekly.where((q) => q.lifecycle is QuestCompletedPendingClaim).toList();
     // Daily slot is sticky for the whole day: claimed cards stay in the
     // section reading as "done" until midnight rolls a new rotation, so
-    // we pass the full list (no `!isCompleted` filter). The count label
+    // we pass the full list (no QuestClaimed filter). The count label
     // uses unclaimed quests only.
-    final dailyUnclaimed = daily.where((q) => !q.isCompleted).toList();
+    final dailyUnclaimed = daily.where((q) => q.lifecycle is! QuestClaimed).toList();
     // Weekly section now mirrors long-term / chapter rules: a quest
     // that's claimable-but-not-claimed moves to DOKONČENÉ so the row
     // doesn't double-list. Daily stays as-is (claimable still shows
     // in the daily section so the player can claim from the active
     // surface).
     final weeklyActive = weekly
-        .where((q) => !q.isCompleted && !q.isAvailableForClaim)
+        .where((q) => switch (q.lifecycle) {
+              QuestAvailable() || QuestLocked() => true,
+              QuestCompletedPendingClaim() || QuestClaimed() => false,
+            })
         .toList();
     final chapters = provider.currentChapterQuests;
     final longTerm = provider.currentLongTermQuests;
@@ -727,7 +732,7 @@ class _CompletedSection extends StatelessWidget {
     for (final e in entries) {
       final source = e.chainQuests.isEmpty ? [e.representative] : e.chainQuests;
       for (final q in source) {
-        if (q.isAvailableForClaim && !q.isCompleted) out.add(q);
+        if (q.lifecycle is QuestCompletedPendingClaim) out.add(q);
       }
     }
     return out;

@@ -57,6 +57,14 @@
       "diagram": "classDiagram\n    class ProgressionLevelPolicy {\n      +int baseDailyRewardXp\n      +int baseWeeklyRewardXp\n      +double level30RewardMultiplier\n      +double rewardMultiplierForLevel(int)\n      +int scaledRewardXp(baseXp, level)\n      +int levelForXp(int)\n      +LevelResolution resolve(int)\n    }\n    class LevelResolution {\n      +int totalXp\n      +int level\n      +int levelFloorXp\n      +int nextLevelXp\n      +int xpIntoLevel\n    }\n    ProgressionLevelPolicy ..> LevelResolution : produces\n    note for ProgressionLevelPolicy \"typedef LevelCurve = ProgressionLevelPolicy\""
     },
     {
+      "id": "player-quest-lifecycle",
+      "title": "PlayerQuestLifecycle (sealed)",
+      "category": "Player",
+      "file": "lib/domain/progression/player/player_quest_lifecycle.dart",
+      "summary": "Phase 6 zavedla sealed lifecycle pro Quest catalog rows: 4 podtypy (QuestLocked / QuestAvailable / QuestCompletedPendingClaim / QuestClaimed) místo bag-of-booleans (isCompleted / isAvailableForClaim / isLockedByConditions) na EngineQuestProgress. Widget consumeři (engine_quest_card, engine_completed_quest_card, engine_chapter_card, engine_long_term_card, quests_screen filters) pattern-matchují přes exhaustive switch — compiler vynutí pokrytí všech 4 stavů a budoucí 5. podtyp ihned chytne každý widget. Bridge mezi old flags a new sealed type je getter EngineQuestProgress.lifecycle; precedence (Locked > Claimed > PendingClaim > Available) je pinned tabulkou v test/domain/progression/player/player_quest_lifecycle_test.dart pokrývající všech 2^3=8 boolean kombinací. NodeState enum + Achievement / Chapter cesty zůstávají beze změny (Phase 8 / 13). QuestLocked.remaining payload je v Phase 6 prázdný (UnlockCondition zatím žije v features/, nikoliv v lib/domain/, takže by porušil layering rule); plný condition slice landne až s catalog rename do domain.",
+      "diagram": "classDiagram\n    class PlayerQuestLifecycle {\n      <<sealed>>\n    }\n    class QuestLocked {\n      +const ctor (no payload v Phase 6)\n    }\n    class QuestAvailable {\n      +double actual\n      +double target\n      +double progress\n    }\n    class QuestCompletedPendingClaim {\n      +int previewXp\n      +DateTime? completedAt\n    }\n    class QuestClaimed {\n      +int finalXp\n      +DateTime? claimedAt\n    }\n    PlayerQuestLifecycle <|-- QuestLocked\n    PlayerQuestLifecycle <|-- QuestAvailable\n    PlayerQuestLifecycle <|-- QuestCompletedPendingClaim\n    PlayerQuestLifecycle <|-- QuestClaimed\n    note for PlayerQuestLifecycle \"EngineQuestProgress.lifecycle derives this from existing flags. Precedence: Locked > Claimed > PendingClaim > Available.\""
+    },
+    {
       "id": "backfill-models",
       "title": "DailyBackfillEntry & claim items",
       "category": "Progression",

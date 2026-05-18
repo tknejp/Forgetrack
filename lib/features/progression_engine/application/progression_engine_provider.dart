@@ -26,6 +26,7 @@ import '../domain/models/claim_policy.dart';
 import '../domain/models/engine_evaluation_input.dart';
 import 'package:forgetrack/domain/journal/journal_event.dart';
 import 'package:forgetrack/domain/player/player.dart';
+import 'package:forgetrack/domain/progression/player/player_quest_lifecycle.dart';
 import '../domain/models/objective_definition.dart';
 import '../domain/models/objective_metric.dart';
 import '../domain/models/objective_operator.dart';
@@ -145,6 +146,39 @@ class EngineQuestProgress {
   final bool isLockedByConditions;
 
   String get nodeId => node.id;
+
+  /// Phase 6 bridge: derives the [PlayerQuestLifecycle] sealed
+  /// discriminator from the three engine-output booleans. Widgets
+  /// pattern-match on the sealed type instead of inspecting flags
+  /// directly. Mapping pinned by
+  /// `test/domain/progression/player/player_quest_lifecycle_test.dart`:
+  ///
+  ///   - `isLockedByConditions == true` → [QuestLocked]
+  ///   - `isCompleted == true`          → [QuestClaimed]
+  ///   - `isAvailableForClaim == true`  → [QuestCompletedPendingClaim]
+  ///   - otherwise                       → [QuestAvailable]
+  ///
+  /// Precedence matters: `isLockedByConditions` wins over claim flags
+  /// because the daily resolver still rolls up locked side-quests for
+  /// the chapter rollup, where the boolean coincidence (`isCompleted`
+  /// could be true on a locked-by-conditions side-quest that the
+  /// player already finished before the chapter closed) would
+  /// otherwise misclassify the row.
+  ///
+  /// Phase 7 retires the flags and moves authority into
+  /// `PlayerQuestCatalogService`; this getter goes away with them.
+  PlayerQuestLifecycle get lifecycle {
+    if (isLockedByConditions) return const QuestLocked();
+    if (isCompleted) return QuestClaimed(finalXp: previewXp);
+    if (isAvailableForClaim) {
+      return QuestCompletedPendingClaim(previewXp: previewXp);
+    }
+    return QuestAvailable(
+      actual: actualValue,
+      target: targetValue,
+      progress: progress,
+    );
+  }
 }
 
 /// Player profile derived from the ledger — total XP plus the

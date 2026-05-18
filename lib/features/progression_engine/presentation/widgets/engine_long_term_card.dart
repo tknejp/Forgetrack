@@ -2,6 +2,7 @@
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../domain/progression/player/player_quest_lifecycle.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../../shared/widgets/progress_bar.dart';
@@ -83,7 +84,10 @@ class EngineLongTermCard extends StatelessWidget {
     // long-term quests never look stuck without explanation.
     EngineQuestProgress? nextLockedStep;
     for (final q in chain) {
-      if (!q.isCompleted && !q.isAvailableForClaim && q.nodeId != quest.nodeId) {
+      final lifecycle = q.lifecycle;
+      final isUntouched =
+          lifecycle is QuestLocked || lifecycle is QuestAvailable;
+      if (isUntouched && q.nodeId != quest.nodeId) {
         nextLockedStep = q;
         break;
       }
@@ -267,14 +271,18 @@ class EngineLongTermCard extends StatelessWidget {
 
   XpClaimPillData _pillData() {
     final quest = entry.quest;
-    if (quest.isCompleted) return XpClaimPillData.claimed(quest.previewXp);
-    if (quest.isAvailableForClaim && enabled) {
-      return XpClaimPillData.claimable(
-        quest.previewXp,
-        onTap: (center) => onClaim(quest, from: center),
-      );
-    }
-    return XpClaimPillData.locked(quest.previewXp);
+    return switch (quest.lifecycle) {
+      QuestClaimed(:final finalXp) => XpClaimPillData.claimed(finalXp),
+      QuestCompletedPendingClaim(:final previewXp) when enabled =>
+        XpClaimPillData.claimable(
+          previewXp,
+          onTap: (center) => onClaim(quest, from: center),
+        ),
+      QuestCompletedPendingClaim(:final previewXp) =>
+        XpClaimPillData.locked(previewXp),
+      QuestAvailable() || QuestLocked() =>
+        XpClaimPillData.locked(quest.previewXp),
+    };
   }
 }
 
