@@ -9,8 +9,11 @@ import '../domain/cosmetic_models.dart';
 import '../domain/cosmetic_reveal_evaluator.dart';
 import '../domain/cosmetic_reveal_state.dart';
 import '../domain/cosmetic_unlock_rule.dart';
+import '../domain/cosmetic_unlock_rules.dart';
 import '../domain/cosmetic_unlock_snapshot.dart';
+import '../domain/inventory.dart';
 import 'cosmetics_service.dart';
+import 'player_cosmetic_lifecycle_service.dart';
 
 const _log = AppLogger('COSMETICS', scope: 'provider');
 
@@ -90,6 +93,42 @@ class CosmeticsProvider extends ChangeNotifier {
       rules: rules,
       snapshot: snapshot,
       ownedIds: ownedIds,
+    );
+  }
+
+  static const PlayerCosmeticLifecycleService _lifecycleService =
+      PlayerCosmeticLifecycleService();
+
+  /// Build an [Inventory] read projection of every enabled cosmetic.
+  ///
+  /// Phase 10 surface for the cosmetic lifecycle (`docs/domain_model
+  /// /migration_plan.md` §Phase 10). The widget tree calls this once
+  /// per build with the engine-surfaced manually-claimable node ids
+  /// (`ProgressionEngineProvider.availableNodeIds`) so the Inventory
+  /// captures `CosmeticClaimable` for companions whose availability
+  /// gate fired. Returns [Inventory.empty] when the provider has no
+  /// loaded state yet (pre-bind / pre-first-load).
+  ///
+  /// Not cached: the inputs (`_state`, `_revealSnapshot`,
+  /// `claimableNodeIds` from a peer provider) change with every
+  /// progression dispatch, and the build is O(catalog size) — well
+  /// inside the same budget as [computeRevealResults] which the
+  /// inventory builds on top of. A cache layer can land later if a
+  /// profiler flags it (proposal §Phase 20 JournalProjection makes
+  /// caching uniform across all read projections).
+  Inventory buildInventory({
+    required Set<String> claimableNodeIds,
+    DateTime? evaluatedAt,
+  }) {
+    final currentState = _state;
+    if (currentState == null) return Inventory.empty;
+    final revealResults = computeRevealResults(kCosmeticUnlockRules);
+    return _lifecycleService.build(
+      catalog: _service.catalog,
+      unlocked: currentState.unlocked,
+      revealResults: revealResults,
+      claimableNodeIds: claimableNodeIds,
+      evaluatedAt: evaluatedAt ?? DateTime.now(),
     );
   }
 

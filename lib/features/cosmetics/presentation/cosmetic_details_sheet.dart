@@ -20,6 +20,7 @@ import '../domain/cosmetic_reveal_state.dart';
 import '../domain/cosmetic_unlock_rule.dart';
 import '../domain/cosmetic_unlock_rules.dart';
 import '../domain/consumed_relics.dart';
+import '../domain/player_cosmetic_lifecycle.dart';
 import 'cosmetics_screen_internals.dart';
 import 'widgets/companion_claim_reveal.dart';
 import 'widgets/companion_fake_idle_preview.dart';
@@ -167,11 +168,20 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
           );
     final isRelicConsumed = widget.isRelicConsumed;
 
-    // Determine effective reveal state for normal mode.
-    final revealState = devTools ? null : revealResult?.state;
-    final isHidden = revealState == CosmeticRevealState.hidden;
-    final isPartial = revealState == CosmeticRevealState.partial;
-    final isVisibleLocked = revealState == CosmeticRevealState.visibleLocked;
+    // Phase 10: pattern-match on PlayerCosmeticLifecycle instead of
+    // CosmeticRevealState directly. The inventory carries the same
+    // mapping the reveal evaluator computes, plus the
+    // [CosmeticClaimable] surface for companion availability gates.
+    final lifecycle = devTools
+        ? null
+        : cosmeticsProvider
+            .buildInventory(claimableNodeIds: progression.availableNodeIds)
+            .byIdString(definition.id)
+            ?.lifecycle;
+    final teased = lifecycle is CosmeticTeased ? lifecycle : null;
+    final isHidden = lifecycle is CosmeticHidden;
+    final isPartial = teased != null && teased.hasProgress;
+    final isVisibleLocked = teased != null && !teased.hasProgress;
     final effectiveLocked = devTools ? isLocked : (isVisibleLocked || isPartial || isHidden);
 
     // Hidden cards show a mystery header instead of the real cosmetic.
@@ -324,10 +334,11 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                           ],
                         ),
                         // partial progress indicator
-                        if (isPartial && revealResult != null) ...[
+                        if (isPartial) ...[
                           const SizedBox(height: 8),
                           _PartialProgressRow(
-                            result: revealResult,
+                            satisfied: teased.satisfiedConditions,
+                            total: teased.totalConditions,
                             l10n: l10n,
                             color: color,
                           ),
@@ -643,12 +654,14 @@ class _HiddenBadgeLarge extends StatelessWidget {
 
 class _PartialProgressRow extends StatelessWidget {
   const _PartialProgressRow({
-    required this.result,
+    required this.satisfied,
+    required this.total,
     required this.l10n,
     required this.color,
   });
 
-  final CosmeticRevealResult result;
+  final int satisfied;
+  final int total;
   final AppLocalizations l10n;
   final Color color;
 
@@ -660,10 +673,7 @@ class _PartialProgressRow extends StatelessWidget {
             size: 13, color: color.withValues(alpha: 0.8)),
         const SizedBox(width: 5),
         Text(
-          l10n.cosmeticPartialProgress(
-            result.satisfiedConditions,
-            result.totalConditions,
-          ),
+          l10n.cosmeticPartialProgress(satisfied, total),
           style: TextStyle(
             color: color.withValues(alpha: 0.8),
             fontSize: Tokens.fontSizeCaption,
