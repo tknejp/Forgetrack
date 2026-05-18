@@ -3,6 +3,22 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../domain/goal_board.dart';
+import '../domain/player_goal.dart';
+
+/// Persistence façade + `ChangeNotifier` adapter over [GoalBoard].
+///
+/// Phase 14 of the domain refactor (`docs/domain_model/migration_plan.md`
+/// §Phase 14) extracted the goal value objects out of this file into
+/// `lib/features/health_connect/domain/`. The provider keeps the same
+/// public API every screen already consumes (`dailySteps`,
+/// `setDailyCalories`, `progressionDailyStepsForDate`, …) so consumer
+/// migration to the [board] aggregate can happen incrementally —
+/// nothing in this phase is breaking for callers.
+///
+/// **Persistence shape (unchanged).** SharedPreferences keys
+/// `goal_<metric>` (scalar target) + `goal_<metric>_history` (JSON
+/// revisions) match the pre-extraction wire format byte-for-byte.
 class GoalsProvider extends ChangeNotifier {
   static const _kDailySteps = 'goal_daily_steps';
   static const _kTargetWeight = 'goal_target_weight';
@@ -22,220 +38,101 @@ class GoalsProvider extends ChangeNotifier {
   static const _kSleepHoursHistory = 'goal_sleep_hours_history';
   static const _kWeeklyActivityMinsHistory = 'goal_weekly_activity_history';
 
-  int _dailySteps = 10000;
-  double _targetWeight = 75.0;
-  double _dailyCalories = 2000;
-  double _dailyProtein = 150;
-  double _dailyFat = 65;
-  double _dailyCarbs = 250;
-  double _dailyFiber = 30;
-  double _sleepHours = 8.0;
-  int _weeklyActivityMins = 150;
-  List<_GoalHistoryEntry> _dailyStepsHistory = const [];
-  List<_GoalHistoryEntry> _dailyCaloriesHistory = const [];
-  List<_GoalHistoryEntry> _dailyProteinHistory = const [];
-  List<_GoalHistoryEntry> _dailyFatHistory = const [];
-  List<_GoalHistoryEntry> _dailyCarbsHistory = const [];
-  List<_GoalHistoryEntry> _dailyFiberHistory = const [];
-  List<_GoalHistoryEntry> _sleepHoursHistory = const [];
-  List<_GoalHistoryEntry> _weeklyActivityMinsHistory = const [];
+  static const Map<GoalMetric, String> _scalarKey = {
+    GoalMetric.dailySteps: _kDailySteps,
+    GoalMetric.targetWeight: _kTargetWeight,
+    GoalMetric.dailyCalories: _kDailyCalories,
+    GoalMetric.dailyProtein: _kDailyProtein,
+    GoalMetric.dailyFat: _kDailyFat,
+    GoalMetric.dailyCarbs: _kDailyCarbs,
+    GoalMetric.dailyFiber: _kDailyFiber,
+    GoalMetric.sleepHours: _kSleepHours,
+    GoalMetric.weeklyActivityMins: _kWeeklyActivityMins,
+  };
 
-  int get dailySteps => _dailySteps;
-  double get targetWeight => _targetWeight;
-  double get dailyCalories => _dailyCalories;
-  double get dailyProtein => _dailyProtein;
-  double get dailyFat => _dailyFat;
-  double get dailyCarbs => _dailyCarbs;
-  double get dailyFiber => _dailyFiber;
-  double get sleepHours => _sleepHours;
-  int get weeklyActivityMins => _weeklyActivityMins;
-  String get progressionHistorySignature => [
-        _historySignature(_dailyStepsHistory),
-        _historySignature(_dailyCaloriesHistory),
-        _historySignature(_dailyProteinHistory),
-        _historySignature(_dailyFatHistory),
-        _historySignature(_dailyCarbsHistory),
-        _historySignature(_dailyFiberHistory),
-        _historySignature(_sleepHoursHistory),
-        _historySignature(_weeklyActivityMinsHistory),
-      ].join('|');
+  static const Map<GoalMetric, String> _historyKey = {
+    GoalMetric.dailySteps: _kDailyStepsHistory,
+    GoalMetric.dailyCalories: _kDailyCaloriesHistory,
+    GoalMetric.dailyProtein: _kDailyProteinHistory,
+    GoalMetric.dailyFat: _kDailyFatHistory,
+    GoalMetric.dailyCarbs: _kDailyCarbsHistory,
+    GoalMetric.dailyFiber: _kDailyFiberHistory,
+    GoalMetric.sleepHours: _kSleepHoursHistory,
+    GoalMetric.weeklyActivityMins: _kWeeklyActivityMinsHistory,
+  };
+
+  static const Map<GoalMetric, double> _defaults = {
+    GoalMetric.dailySteps: 10000,
+    GoalMetric.targetWeight: 75.0,
+    GoalMetric.dailyCalories: 2000,
+    GoalMetric.dailyProtein: 150,
+    GoalMetric.dailyFat: 65,
+    GoalMetric.dailyCarbs: 250,
+    GoalMetric.dailyFiber: 30,
+    GoalMetric.sleepHours: 8.0,
+    GoalMetric.weeklyActivityMins: 150,
+  };
+
+  GoalBoard _board = GoalBoard.empty;
+
+  GoalBoard get board => _board;
+
+  int get dailySteps => _board.goalFor(GoalMetric.dailySteps).target.round();
+  double get targetWeight => _board.goalFor(GoalMetric.targetWeight).target;
+  double get dailyCalories => _board.goalFor(GoalMetric.dailyCalories).target;
+  double get dailyProtein => _board.goalFor(GoalMetric.dailyProtein).target;
+  double get dailyFat => _board.goalFor(GoalMetric.dailyFat).target;
+  double get dailyCarbs => _board.goalFor(GoalMetric.dailyCarbs).target;
+  double get dailyFiber => _board.goalFor(GoalMetric.dailyFiber).target;
+  double get sleepHours => _board.goalFor(GoalMetric.sleepHours).target;
+  int get weeklyActivityMins =>
+      _board.goalFor(GoalMetric.weeklyActivityMins).target.round();
+
+  String get progressionHistorySignature => _board.progressionHistorySignature;
 
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
-    _dailySteps = prefs.getInt(_kDailySteps) ?? 10000;
-    _targetWeight = prefs.getDouble(_kTargetWeight) ?? 75.0;
-    _dailyCalories = prefs.getDouble(_kDailyCalories) ?? 2000;
-    _dailyProtein = prefs.getDouble(_kDailyProtein) ?? 150;
-    _dailyFat = prefs.getDouble(_kDailyFat) ?? 65;
-    _dailyCarbs = prefs.getDouble(_kDailyCarbs) ?? 250;
-    _dailyFiber = prefs.getDouble(_kDailyFiber) ?? 30;
-    _sleepHours = prefs.getDouble(_kSleepHours) ?? 8.0;
-    _weeklyActivityMins = prefs.getInt(_kWeeklyActivityMins) ?? 150;
-    _dailyStepsHistory = _loadHistory(
-      prefs: prefs,
-      key: _kDailyStepsHistory,
-      fallbackValue: _dailySteps.toDouble(),
-    );
-    _dailyCaloriesHistory = _loadHistory(
-      prefs: prefs,
-      key: _kDailyCaloriesHistory,
-      fallbackValue: _dailyCalories,
-    );
-    _dailyProteinHistory = _loadHistory(
-      prefs: prefs,
-      key: _kDailyProteinHistory,
-      fallbackValue: _dailyProtein,
-    );
-    _dailyFatHistory = _loadHistory(
-      prefs: prefs,
-      key: _kDailyFatHistory,
-      fallbackValue: _dailyFat,
-    );
-    _dailyCarbsHistory = _loadHistory(
-      prefs: prefs,
-      key: _kDailyCarbsHistory,
-      fallbackValue: _dailyCarbs,
-    );
-    _dailyFiberHistory = _loadHistory(
-      prefs: prefs,
-      key: _kDailyFiberHistory,
-      fallbackValue: _dailyFiber,
-    );
-    _sleepHoursHistory = _loadHistory(
-      prefs: prefs,
-      key: _kSleepHoursHistory,
-      fallbackValue: _sleepHours,
-    );
-    _weeklyActivityMinsHistory = _loadHistory(
-      prefs: prefs,
-      key: _kWeeklyActivityMinsHistory,
-      fallbackValue: _weeklyActivityMins.toDouble(),
-    );
+
+    final goals = <GoalMetric, PlayerGoal>{};
+    for (final metric in GoalMetric.values) {
+      final target = _readScalar(prefs, metric);
+      final history = _historyKey.containsKey(metric)
+          ? _loadHistory(
+              prefs: prefs,
+              key: _historyKey[metric]!,
+              fallbackValue: target,
+            )
+          : const <GoalRevision>[];
+      goals[metric] = PlayerGoal(
+        metric: metric,
+        target: target,
+        history: history,
+      );
+    }
+    _board = GoalBoard(goals: goals);
+
     final today = progressionDate(DateTime.now());
     final currentWeekStart = startOfProgressionWeek(today);
     var historyChanged = false;
 
-    final migratedDailyStepsHistory = _ensureRevisionForAnchor(
-      entries: _dailyStepsHistory,
-      anchor: today,
-      currentValue: _dailySteps.toDouble(),
-    );
-    if (!_sameHistory(_dailyStepsHistory, migratedDailyStepsHistory)) {
-      _dailyStepsHistory = migratedDailyStepsHistory;
-      historyChanged = true;
-      await _saveHistory(
-        prefs: prefs,
-        key: _kDailyStepsHistory,
-        entries: _dailyStepsHistory,
+    for (final metric in _historyKey.keys) {
+      final anchor = metric == GoalMetric.weeklyActivityMins
+          ? currentWeekStart
+          : today;
+      final original = _board.goalFor(metric);
+      final migrated = original.ensureRevisionAt(
+        anchor: anchor,
+        currentValue: original.target,
       );
-    }
-
-    final migratedDailyCaloriesHistory = _ensureRevisionForAnchor(
-      entries: _dailyCaloriesHistory,
-      anchor: today,
-      currentValue: _dailyCalories,
-    );
-    if (!_sameHistory(_dailyCaloriesHistory, migratedDailyCaloriesHistory)) {
-      _dailyCaloriesHistory = migratedDailyCaloriesHistory;
-      historyChanged = true;
-      await _saveHistory(
-        prefs: prefs,
-        key: _kDailyCaloriesHistory,
-        entries: _dailyCaloriesHistory,
-      );
-    }
-
-    final migratedDailyProteinHistory = _ensureRevisionForAnchor(
-      entries: _dailyProteinHistory,
-      anchor: today,
-      currentValue: _dailyProtein,
-    );
-    if (!_sameHistory(_dailyProteinHistory, migratedDailyProteinHistory)) {
-      _dailyProteinHistory = migratedDailyProteinHistory;
-      historyChanged = true;
-      await _saveHistory(
-        prefs: prefs,
-        key: _kDailyProteinHistory,
-        entries: _dailyProteinHistory,
-      );
-    }
-
-    final migratedDailyFatHistory = _ensureRevisionForAnchor(
-      entries: _dailyFatHistory,
-      anchor: today,
-      currentValue: _dailyFat,
-    );
-    if (!_sameHistory(_dailyFatHistory, migratedDailyFatHistory)) {
-      _dailyFatHistory = migratedDailyFatHistory;
-      historyChanged = true;
-      await _saveHistory(
-        prefs: prefs,
-        key: _kDailyFatHistory,
-        entries: _dailyFatHistory,
-      );
-    }
-
-    final migratedDailyCarbsHistory = _ensureRevisionForAnchor(
-      entries: _dailyCarbsHistory,
-      anchor: today,
-      currentValue: _dailyCarbs,
-    );
-    if (!_sameHistory(_dailyCarbsHistory, migratedDailyCarbsHistory)) {
-      _dailyCarbsHistory = migratedDailyCarbsHistory;
-      historyChanged = true;
-      await _saveHistory(
-        prefs: prefs,
-        key: _kDailyCarbsHistory,
-        entries: _dailyCarbsHistory,
-      );
-    }
-
-    final migratedDailyFiberHistory = _ensureRevisionForAnchor(
-      entries: _dailyFiberHistory,
-      anchor: today,
-      currentValue: _dailyFiber,
-    );
-    if (!_sameHistory(_dailyFiberHistory, migratedDailyFiberHistory)) {
-      _dailyFiberHistory = migratedDailyFiberHistory;
-      historyChanged = true;
-      await _saveHistory(
-        prefs: prefs,
-        key: _kDailyFiberHistory,
-        entries: _dailyFiberHistory,
-      );
-    }
-
-    final migratedSleepHoursHistory = _ensureRevisionForAnchor(
-      entries: _sleepHoursHistory,
-      anchor: today,
-      currentValue: _sleepHours,
-    );
-    if (!_sameHistory(_sleepHoursHistory, migratedSleepHoursHistory)) {
-      _sleepHoursHistory = migratedSleepHoursHistory;
-      historyChanged = true;
-      await _saveHistory(
-        prefs: prefs,
-        key: _kSleepHoursHistory,
-        entries: _sleepHoursHistory,
-      );
-    }
-
-    final migratedWeeklyActivityHistory = _ensureRevisionForAnchor(
-      entries: _weeklyActivityMinsHistory,
-      anchor: currentWeekStart,
-      currentValue: _weeklyActivityMins.toDouble(),
-    );
-    if (!_sameHistory(
-      _weeklyActivityMinsHistory,
-      migratedWeeklyActivityHistory,
-    )) {
-      _weeklyActivityMinsHistory = migratedWeeklyActivityHistory;
-      historyChanged = true;
-      await _saveHistory(
-        prefs: prefs,
-        key: _kWeeklyActivityMinsHistory,
-        entries: _weeklyActivityMinsHistory,
-      );
+      if (!identical(migrated, original)) {
+        _board = _board.withGoal(migrated);
+        historyChanged = true;
+        await _saveHistory(
+          prefs: prefs,
+          key: _historyKey[metric]!,
+          entries: migrated.history,
+        );
+      }
     }
 
     if (historyChanged) {
@@ -245,310 +142,156 @@ class GoalsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setDailySteps(int v) async {
-    _dailySteps = v;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_kDailySteps, v);
-    _dailyStepsHistory = _withRevision(
-      entries: _dailyStepsHistory,
-      effectiveFrom: progressionDate(DateTime.now()),
-      value: v.toDouble(),
-    );
-    await _saveHistory(
-      prefs: prefs,
-      key: _kDailyStepsHistory,
-      entries: _dailyStepsHistory,
-    );
-  }
+  Future<void> setDailySteps(int v) =>
+      _setIntGoal(GoalMetric.dailySteps, v, anchor: progressionDate);
 
   Future<void> setTargetWeight(double v) async {
-    _targetWeight = v;
+    _board = _board.withGoal(PlayerGoal(metric: GoalMetric.targetWeight, target: v));
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(_kTargetWeight, v);
   }
 
-  Future<void> setDailyCalories(double v) async {
-    _dailyCalories = v;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble(_kDailyCalories, v);
-    _dailyCaloriesHistory = _withRevision(
-      entries: _dailyCaloriesHistory,
-      effectiveFrom: progressionDate(DateTime.now()),
-      value: v,
-    );
-    await _saveHistory(
-      prefs: prefs,
-      key: _kDailyCaloriesHistory,
-      entries: _dailyCaloriesHistory,
-    );
-  }
+  Future<void> setDailyCalories(double v) =>
+      _setDoubleGoal(GoalMetric.dailyCalories, v, anchor: progressionDate);
 
-  Future<void> setDailyProtein(double v) async {
-    _dailyProtein = v;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble(_kDailyProtein, v);
-    _dailyProteinHistory = _withRevision(
-      entries: _dailyProteinHistory,
-      effectiveFrom: progressionDate(DateTime.now()),
-      value: v,
-    );
-    await _saveHistory(
-      prefs: prefs,
-      key: _kDailyProteinHistory,
-      entries: _dailyProteinHistory,
-    );
-  }
+  Future<void> setDailyProtein(double v) =>
+      _setDoubleGoal(GoalMetric.dailyProtein, v, anchor: progressionDate);
 
-  Future<void> setDailyFat(double v) async {
-    _dailyFat = v;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble(_kDailyFat, v);
-    _dailyFatHistory = _withRevision(
-      entries: _dailyFatHistory,
-      effectiveFrom: progressionDate(DateTime.now()),
-      value: v,
-    );
-    await _saveHistory(
-      prefs: prefs,
-      key: _kDailyFatHistory,
-      entries: _dailyFatHistory,
-    );
-  }
+  Future<void> setDailyFat(double v) =>
+      _setDoubleGoal(GoalMetric.dailyFat, v, anchor: progressionDate);
 
-  Future<void> setDailyCarbs(double v) async {
-    _dailyCarbs = v;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble(_kDailyCarbs, v);
-    _dailyCarbsHistory = _withRevision(
-      entries: _dailyCarbsHistory,
-      effectiveFrom: progressionDate(DateTime.now()),
-      value: v,
-    );
-    await _saveHistory(
-      prefs: prefs,
-      key: _kDailyCarbsHistory,
-      entries: _dailyCarbsHistory,
-    );
-  }
+  Future<void> setDailyCarbs(double v) =>
+      _setDoubleGoal(GoalMetric.dailyCarbs, v, anchor: progressionDate);
 
-  Future<void> setDailyFiber(double v) async {
-    _dailyFiber = v;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble(_kDailyFiber, v);
-    _dailyFiberHistory = _withRevision(
-      entries: _dailyFiberHistory,
-      effectiveFrom: progressionDate(DateTime.now()),
-      value: v,
-    );
-    await _saveHistory(
-      prefs: prefs,
-      key: _kDailyFiberHistory,
-      entries: _dailyFiberHistory,
-    );
-  }
+  Future<void> setDailyFiber(double v) =>
+      _setDoubleGoal(GoalMetric.dailyFiber, v, anchor: progressionDate);
 
-  Future<void> setSleepHours(double v) async {
-    _sleepHours = v;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble(_kSleepHours, v);
-    _sleepHoursHistory = _withRevision(
-      entries: _sleepHoursHistory,
-      effectiveFrom: progressionDate(DateTime.now()),
-      value: v,
-    );
-    await _saveHistory(
-      prefs: prefs,
-      key: _kSleepHoursHistory,
-      entries: _sleepHoursHistory,
-    );
-  }
+  Future<void> setSleepHours(double v) =>
+      _setDoubleGoal(GoalMetric.sleepHours, v, anchor: progressionDate);
 
-  Future<void> setWeeklyActivityMins(int v) async {
-    _weeklyActivityMins = v;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_kWeeklyActivityMins, v);
-    _weeklyActivityMinsHistory = _withRevision(
-      entries: _weeklyActivityMinsHistory,
-      effectiveFrom: startOfProgressionWeek(DateTime.now()),
-      value: v.toDouble(),
-    );
-    await _saveHistory(
-      prefs: prefs,
-      key: _kWeeklyActivityMinsHistory,
-      entries: _weeklyActivityMinsHistory,
-    );
-  }
+  Future<void> setWeeklyActivityMins(int v) => _setIntGoal(
+        GoalMetric.weeklyActivityMins,
+        v,
+        anchor: startOfProgressionWeek,
+      );
 
   int progressionDailyStepsForDate(DateTime day) =>
-      _resolveValue(_dailyStepsHistory, progressionDate(day)).round();
+      _board.goalFor(GoalMetric.dailySteps).resolveForDate(day).round();
 
   double progressionDailyCaloriesForDate(DateTime day) =>
-      _resolveValue(_dailyCaloriesHistory, progressionDate(day));
+      _board.goalFor(GoalMetric.dailyCalories).resolveForDate(day);
 
   double progressionDailyProteinForDate(DateTime day) =>
-      _resolveValue(_dailyProteinHistory, progressionDate(day));
+      _board.goalFor(GoalMetric.dailyProtein).resolveForDate(day);
 
   double progressionDailyFatForDate(DateTime day) =>
-      _resolveValue(_dailyFatHistory, progressionDate(day));
+      _board.goalFor(GoalMetric.dailyFat).resolveForDate(day);
 
   double progressionDailyCarbsForDate(DateTime day) =>
-      _resolveValue(_dailyCarbsHistory, progressionDate(day));
+      _board.goalFor(GoalMetric.dailyCarbs).resolveForDate(day);
 
   double progressionDailyFiberForDate(DateTime day) =>
-      _resolveValue(_dailyFiberHistory, progressionDate(day));
+      _board.goalFor(GoalMetric.dailyFiber).resolveForDate(day);
 
   double progressionSleepHoursForDate(DateTime day) =>
-      _resolveValue(_sleepHoursHistory, progressionDate(day));
+      _board.goalFor(GoalMetric.sleepHours).resolveForDate(day);
 
-  int progressionWeeklyActivityMinsForWeek(DateTime weekStart) => _resolveValue(
-        _weeklyActivityMinsHistory,
-        startOfProgressionWeek(weekStart),
-      ).round();
+  int progressionWeeklyActivityMinsForWeek(DateTime weekStart) => _board
+      .goalFor(GoalMetric.weeklyActivityMins)
+      .resolveForDate(weekStart)
+      .round();
 
-  List<_GoalHistoryEntry> _loadHistory({
+  Future<void> _setDoubleGoal(
+    GoalMetric metric,
+    double value, {
+    required DateTime Function(DateTime) anchor,
+  }) async {
+    final updated = _board.goalFor(metric).withRevision(
+          effectiveFrom: anchor(DateTime.now()),
+          value: value,
+        );
+    _board = _board.withGoal(updated);
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_scalarKey[metric]!, value);
+    await _saveHistory(
+      prefs: prefs,
+      key: _historyKey[metric]!,
+      entries: updated.history,
+    );
+  }
+
+  Future<void> _setIntGoal(
+    GoalMetric metric,
+    int value, {
+    required DateTime Function(DateTime) anchor,
+  }) async {
+    final updated = _board.goalFor(metric).withRevision(
+          effectiveFrom: anchor(DateTime.now()),
+          value: value.toDouble(),
+        );
+    _board = _board.withGoal(updated);
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_scalarKey[metric]!, value);
+    await _saveHistory(
+      prefs: prefs,
+      key: _historyKey[metric]!,
+      entries: updated.history,
+    );
+  }
+
+  double _readScalar(SharedPreferences prefs, GoalMetric metric) {
+    final key = _scalarKey[metric]!;
+    final fallback = _defaults[metric]!;
+    if (metric == GoalMetric.dailySteps ||
+        metric == GoalMetric.weeklyActivityMins) {
+      return (prefs.getInt(key) ?? fallback.toInt()).toDouble();
+    }
+    return prefs.getDouble(key) ?? fallback;
+  }
+
+  List<GoalRevision> _loadHistory({
     required SharedPreferences prefs,
     required String key,
     required double fallbackValue,
   }) {
     final raw = prefs.getString(key);
-    if (raw == null || raw.isEmpty) {
-      return [
-        _GoalHistoryEntry(
-          effectiveFrom: DateTime(1970, 1, 1),
-          value: fallbackValue,
-        ),
-      ];
-    }
+    final fallback = [
+      GoalRevision(
+        effectiveFrom: DateTime(1970, 1, 1),
+        value: fallbackValue,
+      ),
+    ];
+    if (raw == null || raw.isEmpty) return fallback;
 
     final decoded = jsonDecode(raw);
-    if (decoded is! List) {
-      return [
-        _GoalHistoryEntry(
-          effectiveFrom: DateTime(1970, 1, 1),
-          value: fallbackValue,
-        ),
-      ];
-    }
+    if (decoded is! List) return fallback;
 
     final entries = decoded
         .whereType<Map>()
         .map(
-          (entry) => _GoalHistoryEntry.fromJson(
-            entry.map(
-              (key, value) => MapEntry(key.toString(), value),
-            ),
+          (entry) => GoalRevision.fromJson(
+            entry.map((k, v) => MapEntry(k.toString(), v)),
           ),
         )
         .toList()
       ..sort((a, b) => a.effectiveFrom.compareTo(b.effectiveFrom));
 
-    if (entries.isEmpty) {
-      return [
-        _GoalHistoryEntry(
-          effectiveFrom: DateTime(1970, 1, 1),
-          value: fallbackValue,
-        ),
-      ];
-    }
-
+    if (entries.isEmpty) return fallback;
     return entries;
   }
 
   Future<void> _saveHistory({
     required SharedPreferences prefs,
     required String key,
-    required List<_GoalHistoryEntry> entries,
+    required List<GoalRevision> entries,
   }) {
     return prefs.setString(
       key,
-      jsonEncode([
-        for (final entry in entries) entry.toJson(),
-      ]),
+      jsonEncode([for (final entry in entries) entry.toJson()]),
     );
-  }
-
-  List<_GoalHistoryEntry> _withRevision({
-    required List<_GoalHistoryEntry> entries,
-    required DateTime effectiveFrom,
-    required double value,
-  }) {
-    final normalized = progressionDate(effectiveFrom);
-    final nextEntries = entries
-        .where((entry) => progressionDate(entry.effectiveFrom) != normalized)
-        .toList()
-      ..add(_GoalHistoryEntry(effectiveFrom: normalized, value: value))
-      ..sort((a, b) => a.effectiveFrom.compareTo(b.effectiveFrom));
-    return nextEntries;
-  }
-
-  List<_GoalHistoryEntry> _ensureRevisionForAnchor({
-    required List<_GoalHistoryEntry> entries,
-    required DateTime anchor,
-    required double currentValue,
-  }) {
-    final normalizedAnchor = progressionDate(anchor);
-    final resolved = _resolveValue(entries, normalizedAnchor);
-    if (resolved == currentValue) {
-      return entries;
-    }
-
-    return _withRevision(
-      entries: entries,
-      effectiveFrom: normalizedAnchor,
-      value: currentValue,
-    );
-  }
-
-  bool _sameHistory(
-    List<_GoalHistoryEntry> left,
-    List<_GoalHistoryEntry> right,
-  ) {
-    if (left.length != right.length) return false;
-
-    for (var index = 0; index < left.length; index++) {
-      if (progressionDate(left[index].effectiveFrom) !=
-          progressionDate(right[index].effectiveFrom)) {
-        return false;
-      }
-      if (left[index].value != right[index].value) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  double _resolveValue(List<_GoalHistoryEntry> entries, DateTime effectiveDay) {
-    final normalizedDay = progressionDate(effectiveDay);
-    _GoalHistoryEntry? match;
-
-    for (final entry in entries) {
-      final entryDay = progressionDate(entry.effectiveFrom);
-      if (entryDay.isAfter(normalizedDay)) {
-        break;
-      }
-      match = entry;
-    }
-
-    return match?.value ?? entries.first.value;
-  }
-
-  String _historySignature(List<_GoalHistoryEntry> entries) {
-    return entries
-        .map(
-          (entry) =>
-              '${progressionDate(entry.effectiveFrom).toIso8601String()}:${entry.value}',
-        )
-        .join(',');
   }
 
   DateTime progressionDate(DateTime value) =>
@@ -559,26 +302,4 @@ class GoalsProvider extends ChangeNotifier {
     return normalized
         .subtract(Duration(days: normalized.weekday - DateTime.monday));
   }
-}
-
-class _GoalHistoryEntry {
-  const _GoalHistoryEntry({
-    required this.effectiveFrom,
-    required this.value,
-  });
-
-  factory _GoalHistoryEntry.fromJson(Map<String, dynamic> json) {
-    return _GoalHistoryEntry(
-      effectiveFrom: DateTime.parse(json['effectiveFrom'] as String),
-      value: (json['value'] as num).toDouble(),
-    );
-  }
-
-  final DateTime effectiveFrom;
-  final double value;
-
-  Map<String, dynamic> toJson() => {
-        'effectiveFrom': effectiveFrom.toIso8601String(),
-        'value': value,
-      };
 }
