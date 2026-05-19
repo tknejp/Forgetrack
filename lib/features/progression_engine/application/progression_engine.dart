@@ -90,6 +90,7 @@ class ProgressionEngine {
     required LedgerCounters counters,
     required EvaluationOverrides overrides,
     required DateTime evaluatedAt,
+    Set<String> ownedCosmeticIds = const <String>{},
     EngineCatalogContext catalogContext = const EngineCatalogContext(),
     ProgressionResolutionReason reason =
         ProgressionResolutionReason.liveUpdate,
@@ -103,6 +104,7 @@ class ProgressionEngine {
       counters: counters,
       overrides: overrides,
       evaluatedAt: evaluatedAt,
+      ownedCosmeticIds: ownedCosmeticIds,
     );
     return _evaluateWithContext(
       context: context,
@@ -456,6 +458,7 @@ class ProgressionEngine {
     required LedgerCounters counters,
     required EvaluationOverrides overrides,
     required DateTime evaluatedAt,
+    Set<String> ownedCosmeticIds = const <String>{},
     EngineCatalogContext catalogContext = const EngineCatalogContext(),
   }) async {
     final context = EngineEvaluationContext(
@@ -467,6 +470,7 @@ class ProgressionEngine {
       counters: counters,
       overrides: overrides,
       evaluatedAt: evaluatedAt,
+      ownedCosmeticIds: ownedCosmeticIds,
     );
     final ledger = await _repository.loadLedger();
     final node =
@@ -544,6 +548,7 @@ class ProgressionEngine {
     required LedgerCounters counters,
     required EvaluationOverrides overrides,
     required DateTime evaluatedAt,
+    Set<String> ownedCosmeticIds = const <String>{},
     EngineCatalogContext catalogContext = const EngineCatalogContext(),
   }) async {
     final context = EngineEvaluationContext(
@@ -555,6 +560,7 @@ class ProgressionEngine {
       counters: counters,
       overrides: overrides,
       evaluatedAt: evaluatedAt,
+      ownedCosmeticIds: ownedCosmeticIds,
     );
     final node = _nodeCatalog
         .build(catalogContext)
@@ -617,6 +623,7 @@ class ProgressionEngine {
     required EvaluationOverrides overrides,
     required DateTime evaluatedAt,
     int levelAtGrant = 1,
+    Set<String> ownedCosmeticIds = const <String>{},
     EngineCatalogContext catalogContext = const EngineCatalogContext(),
   }) async {
     final context = EngineEvaluationContext(
@@ -628,6 +635,7 @@ class ProgressionEngine {
       counters: counters,
       overrides: overrides,
       evaluatedAt: evaluatedAt,
+      ownedCosmeticIds: ownedCosmeticIds,
     );
     final ledger = await _repository.loadLedger();
     final node = _nodeCatalog

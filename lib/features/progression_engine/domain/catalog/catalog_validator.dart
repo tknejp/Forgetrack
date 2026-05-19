@@ -197,15 +197,16 @@ class CatalogValidator {
             );
           }
         // Other condition types (LevelAtLeast, ObjectiveCompleted,
-        // ChapterUnlocked, CompanionAvailable, RpgModeEnabled) need
-        // catalog lookups (chapter catalog, companion id lists) that
-        // land in Phase 3. For now these conditions pass without
-        // cross-checking.
+        // ChapterUnlocked, CompanionAvailable, OwnsCosmetic,
+        // RpgModeEnabled) need catalog lookups (chapter catalog,
+        // companion id lists, cosmetics catalog) that land in Phase 3.
+        // For now these conditions pass without cross-checking.
         case LevelAtLeast():
         case ObjectiveCompleted():
         case ChapterUnlocked():
         case ChapterActive():
         case CompanionAvailable():
+        case OwnsCosmetic():
         case RpgModeEnabled():
           break;
       }
@@ -269,6 +270,7 @@ class CatalogValidator {
         case ChapterUnlocked():
         case ChapterActive():
         case CompanionAvailable():
+        case OwnsCosmetic():
         case RpgModeEnabled():
           break;
       }

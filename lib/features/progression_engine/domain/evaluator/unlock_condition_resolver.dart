@@ -134,6 +134,8 @@ class UnlockConditionResolver {
             !completedNodesLifetime.contains('${chapterId}_finale'),
       CompanionAvailable(:final companionId) =>
         availableCompanionIds.contains(companionId),
+      OwnsCosmetic(:final cosmeticId) =>
+        context.ownedCosmeticIds.contains(cosmeticId),
       RpgModeEnabled() => context.player.rpgModeEnabled,
       AllOf(:final conditions) => conditions.every((c) => _resolve(
             c,

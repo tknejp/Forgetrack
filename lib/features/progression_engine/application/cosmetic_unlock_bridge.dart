@@ -44,6 +44,17 @@ class CosmeticUnlockBridge implements JournalProjection<int> {
     _cosmetics = provider;
   }
 
+  /// Cosmetic ids the bound cosmetics provider currently has in its
+  /// `unlocked` map. Empty until binding lands or when no user is bound.
+  /// Read by `ProgressionEngineProvider.currentContext` to feed the
+  /// engine's `OwnsCosmetic` unlock-condition resolver from the same
+  /// source of truth the reveal evaluator uses.
+  Set<String> get ownedCosmeticIds {
+    final state = _cosmetics?.state;
+    if (state == null) return const <String>{};
+    return state.unlocked.keys.toSet();
+  }
+
   /// Dispatch every cosmetic-kind reward grant in [result] to the
   /// cosmetics provider, then refresh the cosmetics reveal snapshot
   /// from the engine's ledger so the partial-reveal UI sees the just-

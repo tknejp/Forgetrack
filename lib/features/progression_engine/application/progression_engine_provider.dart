@@ -1236,6 +1236,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
       overrides: EvaluationOverrides(
         objectiveActualOverrides: _objectiveActualOverridesFromLedger(),
       ),
+      ownedCosmeticIds: _cosmeticBridge.ownedCosmeticIds,
     );
   }
 
@@ -2054,6 +2055,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
         counters: context.counters,
         overrides: context.overrides,
         evaluatedAt: context.evaluatedAt,
+        ownedCosmeticIds: context.ownedCosmeticIds,
         catalogContext: catalogContext,
         reason: reason,
       );
@@ -2123,6 +2125,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
         counters: freshContext.counters,
         overrides: freshContext.overrides,
         evaluatedAt: freshContext.evaluatedAt,
+        ownedCosmeticIds: freshContext.ownedCosmeticIds,
         catalogContext: ctx,
       );
       _lastResult = result;
@@ -3250,6 +3253,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
         overrides: ctx.overrides,
         evaluatedAt: ctx.evaluatedAt,
         levelAtGrant: level,
+        ownedCosmeticIds: ctx.ownedCosmeticIds,
         catalogContext: source.currentContext(),
       );
       _lastResult = result;
@@ -3300,6 +3304,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
         counters: ctx.counters,
         overrides: ctx.overrides,
         evaluatedAt: ctx.evaluatedAt,
+        ownedCosmeticIds: ctx.ownedCosmeticIds,
         catalogContext: source.currentContext(),
       );
       _lastResult = result;

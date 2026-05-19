@@ -60,6 +60,29 @@ class CompanionAvailable extends UnlockCondition {
   final CosmeticId companionId;
 }
 
+/// True when the player currently owns the named cosmetic (i.e., the
+/// cosmetic id is in the cosmetics inventory's `unlocked` map).
+///
+/// Used by `CompanionAvailability` gates whose semantics are "player
+/// owns relic X" (e.g. forest fox requires `relic_moonlit_foxglove` +
+/// `relic_ancient_root`). The relic-ownership semantic matches the
+/// reveal evaluator's `Cond.ownsCosmetic` so both surfaces (the
+/// engine's claim CTA + the reveal UI's partial-progress checklist)
+/// read from the same source of truth — the cosmetics inventory.
+///
+/// The previous condition shape used `NodeCompleted(<achievement_id>)`
+/// where the achievement was the one that granted the relic; in normal
+/// production flow those two are equivalent (achievement complete →
+/// reward grant → bridge unlocks relic), but they diverge whenever
+/// the cosmetics inventory gets mutated through a side channel
+/// (devtools `debugGrantCosmetic`, "Unlock all cosmetics", a partial
+/// cloud-pull merge). `OwnsCosmetic` closes that divergence by
+/// reading the inventory directly.
+class OwnsCosmetic extends UnlockCondition {
+  const OwnsCosmetic(this.cosmeticId);
+  final CosmeticId cosmeticId;
+}
+
 /// True when the player has RPG mode enabled. Lets RPG-only nodes
 /// declare the dependency explicitly, in addition to (or instead of)
 /// the [ActivationPolicy] axis on the node itself.
