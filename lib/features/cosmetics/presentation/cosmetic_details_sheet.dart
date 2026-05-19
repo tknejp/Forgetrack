@@ -82,48 +82,81 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
   Future<void> _devGrant() async {
     if (_devBusy || _equipBusy) return;
     setState(() => _devBusy = true);
+    // Capture our sheet's route + Navigator BEFORE the await so a
+    // celebration overlay pushed mid-await (the engine path fires
+    // achievement / cosmetic celebrations on the same run as the
+    // grant) doesn't intercept the closing pop and leave the sheet
+    // stuck in the loading state.
+    final navigator = Navigator.of(context);
+    final sheetRoute = ModalRoute.of(context);
     final cosmeticId = widget.definition.id;
     final grantingNodeId = grantingNodeForCosmetic(cosmeticId);
     _log.info('devGrant start',
         payload: 'id=$cosmeticId grantingNode=${grantingNodeId ?? "<none>"}');
-    if (grantingNodeId != null) {
-      // Route through the engine so the granting node's
-      // NodeCompletionEvent + RewardGrantEvent(cosmetic) series lands
-      // in the ledger; the cosmetic-unlock bridge then flips the
-      // cosmetic in inventory via the production path. This keeps
-      // the engine ledger + cosmetics inventory in lockstep — without
-      // it, devtools-granting a relic leaves the corresponding
-      // CompanionAvailability node permanently un-claimable because
-      // its `OwnsCosmetic(relic)` gate holds while its parent
-      // achievement's NodeCompletion is absent from the journal
-      // (Trello #76 sub-issue 1).
-      await context
-          .read<ProgressionEngineProvider>()
-          .devToolsForceCompleteNode(grantingNodeId);
-      _log.info('devGrant via engine completed',
-          payload: 'id=$cosmeticId grantingNode=$grantingNodeId');
-    } else {
-      // Cosmetic with no catalog-side granting node (e.g. premium
-      // unlocks, content that ships pre-unlocked, dev-only items).
-      // Falls back to the direct cosmetics-inventory grant.
-      await context
-          .read<CosmeticsProvider>()
-          .debugGrantCosmetic(cosmeticId);
-      _log.info('devGrant via cosmetics debugGrant completed',
-          payload: 'id=$cosmeticId');
+    try {
+      if (grantingNodeId != null) {
+        // Route through the engine so the granting node's
+        // NodeCompletionEvent + RewardGrantEvent(cosmetic) series
+        // lands in the ledger; the cosmetic-unlock bridge then flips
+        // the cosmetic in inventory via the production path. This
+        // keeps the engine ledger + cosmetics inventory in lockstep —
+        // without it, devtools-granting a relic leaves the
+        // corresponding CompanionAvailability node permanently
+        // un-claimable because its `OwnsCosmetic(relic)` gate holds
+        // while its parent achievement's NodeCompletion is absent
+        // from the journal (Trello #76 sub-issue 1).
+        await context
+            .read<ProgressionEngineProvider>()
+            .devToolsForceCompleteNode(grantingNodeId);
+        _log.info('devGrant via engine completed',
+            payload: 'id=$cosmeticId grantingNode=$grantingNodeId');
+      } else {
+        // Cosmetic with no catalog-side granting node (e.g. premium
+        // unlocks, content that ships pre-unlocked, dev-only items).
+        // Falls back to the direct cosmetics-inventory grant.
+        await context
+            .read<CosmeticsProvider>()
+            .debugGrantCosmetic(cosmeticId);
+        _log.info('devGrant via cosmetics debugGrant completed',
+            payload: 'id=$cosmeticId');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _devBusy = false);
+      }
     }
     if (!mounted) return;
-    Navigator.of(context).pop();
+    _closeSheet(navigator, sheetRoute);
   }
 
   Future<void> _devRevoke() async {
     if (_devBusy || _equipBusy) return;
     setState(() => _devBusy = true);
-    await context
-        .read<CosmeticsProvider>()
-        .debugRevokeCosmetic(widget.definition.id);
+    final navigator = Navigator.of(context);
+    final sheetRoute = ModalRoute.of(context);
+    try {
+      await context
+          .read<CosmeticsProvider>()
+          .debugRevokeCosmetic(widget.definition.id);
+    } finally {
+      if (mounted) {
+        setState(() => _devBusy = false);
+      }
+    }
     if (!mounted) return;
-    Navigator.of(context).pop();
+    _closeSheet(navigator, sheetRoute);
+  }
+
+  /// Removes the sheet's specific route from the Navigator stack.
+  /// Using `removeRoute` (rather than `pop`) protects against an
+  /// overlay route (celebration, dialog) being pushed mid-await and
+  /// stealing the pop, which would leave the sheet stuck open.
+  void _closeSheet(NavigatorState navigator, ModalRoute<Object?>? sheetRoute) {
+    if (sheetRoute != null && sheetRoute.isActive) {
+      navigator.removeRoute(sheetRoute);
+    } else {
+      navigator.maybePop();
+    }
   }
 
   @override
