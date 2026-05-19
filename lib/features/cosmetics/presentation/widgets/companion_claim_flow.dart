@@ -93,26 +93,31 @@ class _CompanionClaimFlowState extends State<CompanionClaimFlow>
     duration: const Duration(milliseconds: 2600),
   )..repeat(reverse: true);
 
-  /// Holds the forging fullscreen overlay so we can remove it
-  /// from the [Overlay] in [dispose] if the parent sheet rebuilds
-  /// away from us mid-ritual (e.g. engine grant flips the
-  /// cosmetic to Owned before the visual settle finishes).
+  /// Re-entry guard: non-null once the overlay has been inserted,
+  /// so a stray rebuild that re-enters [_startForging] does not
+  /// double-insert. **Not cleared on dispose** — see [dispose].
   OverlayEntry? _forgingEntry;
 
   @override
   void dispose() {
     _idle.dispose();
-    _removeForging();
+    // Intentionally do NOT remove [_forgingEntry] here.
+    //
+    // The engine claim fires at the reveal frame (t=4700), which
+    // flips the cosmetic to Owned. The surrounding details sheet
+    // watches [CosmeticsProvider] and rebuilds its body away from
+    // [_ClaimableCompanionBody] as soon as the grant lands —
+    // disposing this state mid-ritual. If we yanked the overlay
+    // here the forging settle (4800–5400) and the morph handoff
+    // (1150 ms) would never play. The overlay's own widget owns
+    // its lifecycle from this point on and removes itself via the
+    // `onComplete` callback wired below.
     super.dispose();
-  }
-
-  void _removeForging() {
-    _forgingEntry?.remove();
-    _forgingEntry = null;
   }
 
   void _startForging() {
     if (_phase != CompanionClaimPhase.ready) return;
+    if (_forgingEntry != null) return;
     HapticFeedback.mediumImpact();
     final overlay = Overlay.of(context, rootOverlay: true);
     final assetPath = context
@@ -122,22 +127,27 @@ class _CompanionClaimFlowState extends State<CompanionClaimFlow>
         .resolveAssetPath(
           widget.companion.previewAssetKey ?? widget.companion.assetKey,
         );
+    // Cache the destSlotKey + hideCompanion locally so the
+    // OverlayEntry's builder doesn't reach back into `widget`
+    // after this state disposes (the engine claim rebuilds the
+    // sheet away from us a few hundred ms before the morph runs).
+    final destSlotKey = widget.destSlotKey;
+    final hideCompanion = widget.hideCompanion;
+    final companion = widget.companion;
+    final relicIds = widget.relicIds;
+    final color = widget.color;
+    final onReveal = widget.onClaim;
     late OverlayEntry entry;
     entry = OverlayEntry(
       builder: (_) => CompanionClaimForging(
-        companion: widget.companion,
+        companion: companion,
         assetPath: assetPath,
-        relicIds: widget.relicIds,
-        color: widget.color,
-        onReveal: widget.onClaim,
-        destSlotKey: widget.destSlotKey,
-        hideCompanion: widget.hideCompanion,
-        onComplete: () {
-          if (_forgingEntry == entry) {
-            entry.remove();
-            _forgingEntry = null;
-          }
-        },
+        relicIds: relicIds,
+        color: color,
+        onReveal: onReveal,
+        destSlotKey: destSlotKey,
+        hideCompanion: hideCompanion,
+        onComplete: entry.remove,
       ),
     );
     _forgingEntry = entry;
