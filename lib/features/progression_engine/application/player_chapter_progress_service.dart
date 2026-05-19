@@ -31,7 +31,7 @@ import 'package:forgetrack/domain/progression/player/player_chapter_progress.dar
 ///      is. Pairs with the opener's earliest completion timestamp.
 ///   4. **Locked** — the opener is not completed AND it lives in
 ///      `lockedNodeIds` (the resolver classified it as
-///      `NodeState.locked`).
+///      locked — its unlock conditions were not satisfied).
 ///   5. **Default** — neither completed nor locked: treat as Locked
 ///      (defensive — the resolver always returns a classification
 ///      for every node, but we don't synthesise a fallthrough state
@@ -54,7 +54,7 @@ class PlayerChapterProgressService {
   ///     in the ledger. Drives the chain-step counter and the
   ///     Completed branch.
   ///   - [lockedNodeIds]: node ids the resolver classified as
-  ///     `NodeState.locked`. Drives the Locked branch.
+  ///     locked (unlock conditions failed). Drives the Locked branch.
   ///   - [earliestCompletionAt]: closure returning the earliest
   ///     ledger completion timestamp for a node id, or null when
   ///     the node has no completion event yet. Stamped on

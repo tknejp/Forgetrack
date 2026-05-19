@@ -11,7 +11,7 @@ import '../catalog/unlock_condition.dart';
 /// (`docs/domain_model/proposal.md` §4.2):
 ///
 ///   - [AchievementLocked] — unlock conditions not met (engine resolved
-///     the node to `NodeState.locked`). The achievement is hidden /
+///     the node as locked). The achievement is hidden /
 ///     greyed in the catalog grid.
 ///   - [AchievementInProgress] — eligible (conditions met), the bound
 ///     objective tracks `actual / target` toward unlock. Progress bar

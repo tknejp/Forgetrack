@@ -60,7 +60,7 @@ class EngineAchievementView {
   final int? levelTarget;
 
   /// Phase 8 bridge field â€” true when the engine resolved this
-  /// achievement to `NodeState.locked` (unlock conditions failed).
+  /// achievement as locked (unlock conditions failed).
   /// Distinguishes locked-by-conditions rows from in-progress rows
   /// so the [lifecycle] getter can route to [AchievementLocked]
   /// instead of [AchievementInProgress]. Defaults to false for
@@ -163,7 +163,7 @@ List<EngineAchievementView> buildEngineAchievementViews(
     // Phase 8 bridge wiring. The catalog row's first XpReward drives
     // the previewXp value through the provider's public level-scaling
     // helper â€” same math the engine uses for quest preview pills. The
-    // locked set comes from the engine resolver's NodeState classification
+    // locked set comes from the engine resolver's classification
     // (a node failing its unlock conditions lands in [lockedNodeIds]).
     final baseXp = node.rewards
         .whereType<XpReward>()

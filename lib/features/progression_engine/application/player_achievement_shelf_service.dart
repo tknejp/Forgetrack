@@ -40,7 +40,7 @@ class PlayerAchievementShelfService {
   ///   - [completedNodeIds]: node ids with a `NodeCompletionEvent` in
   ///     the ledger. Backs the [AchievementUnlocked] branch.
   ///   - [lockedNodeIds]: node ids the resolver classified as
-  ///     `NodeState.locked` (unlock conditions failed). Backs the
+  ///     locked (unlock conditions failed). Backs the
   ///     [AchievementLocked] branch.
   ///   - [earliestCompletionAt]: closure returning the earliest ledger
   ///     completion timestamp for a node id, or null when not yet

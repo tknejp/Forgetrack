@@ -90,28 +90,22 @@ Po dokončení Track A je doménový refactor **permanently closed**. Žádné n
 
 ---
 
-### R.2 NodeState resolver-internal cleanup
+### ~~R.2 NodeState resolver-internal cleanup~~ ✅ Done 2026-05-19
 
-**Why:** Phase 13 inlinovala `NodeState` enum do `progression_node_resolver.dart` jako resolver-internal vocabulary. Engine consumer matches via `r.state.name == 'completed'` string compare. To je remnant z V2 origin design — když existing PlayerXxxLifecycle hierarchy už pokrývá player-facing state, resolver-internal enum je perpetuated technical debt.
+**Shipped** as `R.2: NodeState → NodeResolution cleanup` (commit lands with this entry). Chose the **boolean-derived alternative** over a sealed `NodeResolution` hierarchy after reading the resolver — only one real consumer (`progression_engine.dart`); `reward_grant_planner.dart` doesn't read state, `progression_display_resolver.dart` doesn't use NodeResolution at all. Sealed subtypes for a 6-line consumer would have mirrored the boolean combinations and reintroduced proposal §7 anti-pattern #6 at the type level. See ADR `r2-noderesolution-cleanup` in [docs/site/data/decisions.json](../site/data/decisions.json) for full context + decision + consequences + alternatives.
 
-**Scope:**
+**What changed:**
 
-- Convert `enum NodeState` → sealed `NodeResolution` hierarchy uvnitř `progression_node_resolver.dart`:
-  - `NodeResolutionLocked(eligibleByConditions: false, ...)`
-  - `NodeResolutionAvailable(eligibleByConditions: true, objectiveCompleted: false/true, ...)`
-  - `NodeResolutionCompleted(eligibleByConditions: true, alreadyCompleted: true, ...)`
-- Engine consumer (`progression_engine.dart`) přechodí z `r.state.name == 'completed'` na `r is NodeResolutionCompleted` is-checks (exhaustive `switch`).
-- Alternative if sealed is overkill: drop enum, derive transitions inline from `(eligibleByConditions, objectiveCompleted, alreadyCompleted, alreadyClaimed)` booleans on `NodeResolution`.
+- `enum NodeState { locked, available, completed }` deleted.
+- `NodeResolution.state: NodeState` replaced with `NodeResolution.completed: bool` (completion-event candidate this run).
+- Engine consumer's `switch (r.state) { case _ when r.state.name == 'completed' … }` collapses to a flat `if (r.completed && !ledger.hasEventKey) … else if (!r.completed && r.eligibleByConditions && r.objectiveCompleted == true && r.node.claimPolicy == ClaimPolicy.manual) …`. The `claimPolicy.name == 'manual'` string compare also replaced with `== ClaimPolicy.manual`.
+- Stale `NodeState.locked` doc-comment references in `player_chapter_progress_service.dart`, `player_achievement_shelf_service.dart`, `engine_achievement_view.dart`, `player_achievement_lifecycle.dart`, and one test header rephrased to "resolver classified the node as locked".
 
 **DoD:**
 
-- [ ] `enum NodeState` smazán; `NodeResolution` carries discrimination via subtypes (or via boolean fields if alternative chosen).
-- [ ] Engine consumer + reward grant planner + display resolver all migrated.
-- [ ] `flutter analyze` clean, `flutter test` pass.
-
-**Risk:** Střední. Resolver internals — well-tested by existing engine idempotency suite.
-
-**Estimated size:** ~200-300 LoC, 1 day solo. Can fold into R.1 if appetite allows.
+- [x] `enum NodeState` smazán; `NodeResolution` discriminates via the `completed` boolean field (alternative chosen).
+- [x] Engine consumer migrated (`progression_engine.dart`); reward grant planner + display resolver verified unaffected (neither read `NodeState`).
+- [x] `flutter analyze` clean (77 issues, baseline preserved), `flutter test` pass (514 tests).
 
 ---
 
@@ -273,7 +267,7 @@ Drobnosti, které stojí samostatně, ale fit do jednoho PR pokud appetite:
 | Item | Estimated size | Risk | Bundled with |
 |---|---|---|---|
 | ~~R.1 Catalog migration + typed cross-references~~ | ✅ 2026-05-19 (`537335b` + `da44091`) | High | — |
-| R.2 NodeState cleanup | 1 day | Medium | Optionally R.1 |
+| ~~R.2 NodeState cleanup~~ | ✅ 2026-05-19 | Medium | — |
 | R.3 Widget consumer migration (a/b/c) | 5-6 days total | Medium | Split into 3 PRs |
 | R.4 Repository contracts Result hardening | 2-3 days | High | — |
 | R.5 Test pyramid hardening (a/b/c) | 3-4 days total | Low | Split into 3 PRs |

@@ -7,7 +7,7 @@
 //   1. Empty catalog â†’ empty shelf.
 //   2. Completed nodes map to AchievementUnlocked carrying the scaled
 //      XP and the earliest-completion timestamp.
-//   3. Locked nodes (NodeState.locked) map to AchievementLocked even
+//   3. Locked nodes (resolver classified locked) map to AchievementLocked even
 //      when the objective has measurable progress â€” the locked branch
 //      wins because the unlock-conditions gate hasn't fired.
 //   4. Otherwise â†’ AchievementInProgress carrying the objective's

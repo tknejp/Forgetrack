@@ -321,47 +321,44 @@ class ProgressionEngine {
       // matching reward grant), which broke devtools day-advance
       // workflows for daily goals and would have broken real
       // post-midnight rotation too.
-      switch (r.state) {
-        case _ when r.state.name == 'completed' &&
-              !ledger.hasEventKey(completionKey):
-          final event = NodeCompletionEvent(
-            eventKey: completionKey,
+      if (r.completed && !ledger.hasEventKey(completionKey)) {
+        final event = NodeCompletionEvent(
+          eventKey: completionKey,
+          timestamp: timestamp,
+          nodeId: r.node.id,
+          periodKey: r.periodKey,
+        );
+        newCompletionEvents.add(event);
+        newCompletions.add(NodeCompletion(nodeId: r.node.id, event: event));
+      } else if (!r.completed &&
+          r.eligibleByConditions &&
+          r.objectiveCompleted == true &&
+          r.node.claimPolicy == ClaimPolicy.manual) {
+        // Manual-claim node whose objective just satisfied. Surface
+        // as available; the player's claim action will trigger a
+        // second evaluation that produces the completion.
+        availability.add(NodeAvailability(nodeId: r.node.id));
+        // Persisted first-time announcement marker: if the ledger
+        // has no NodeAnnouncedEvent for this (node, period), we
+        // flag this resolution as `newlyAvailable` and queue the
+        // marker event. The celebration adapter reads this delta
+        // to fire a "company unlocked" overlay exactly once, even
+        // across app restarts.
+        final announceKey = ProgressionNodeResolver.announcementEventKey(
+          r.node.id,
+          r.periodKey,
+        );
+        if (!ledger.hasEventKey(announceKey)) {
+          newlyAvailable.add(NodeAvailability(nodeId: r.node.id));
+          newAnnouncementEvents.add(NodeAnnouncedEvent(
+            eventKey: announceKey,
             timestamp: timestamp,
             nodeId: r.node.id,
             periodKey: r.periodKey,
-          );
-          newCompletionEvents.add(event);
-          newCompletions.add(NodeCompletion(nodeId: r.node.id, event: event));
-        case _ when r.state.name == 'available' &&
-              r.objectiveCompleted == true &&
-              r.node.claimPolicy.name == 'manual':
-          // Manual-claim node whose objective just satisfied. Surface
-          // as available; the player's claim action will trigger a
-          // second evaluation that produces the completion.
-          availability.add(NodeAvailability(nodeId: r.node.id));
-          // Persisted first-time announcement marker: if the ledger
-          // has no NodeAnnouncedEvent for this (node, period), we
-          // flag this resolution as `newlyAvailable` and queue the
-          // marker event. The celebration adapter reads this delta
-          // to fire a "company unlocked" overlay exactly once, even
-          // across app restarts.
-          final announceKey = ProgressionNodeResolver.announcementEventKey(
-            r.node.id,
-            r.periodKey,
-          );
-          if (!ledger.hasEventKey(announceKey)) {
-            newlyAvailable.add(NodeAvailability(nodeId: r.node.id));
-            newAnnouncementEvents.add(NodeAnnouncedEvent(
-              eventKey: announceKey,
-              timestamp: timestamp,
-              nodeId: r.node.id,
-              periodKey: r.periodKey,
-            ));
-          }
-        default:
-          // Locked or in-progress; nothing to emit.
-          break;
+          ));
+        }
       }
+      // Locked or in-progress: nothing to emit.
     }
 
     // Orphan objectives â€” no node binds their `objectiveId`, so the
