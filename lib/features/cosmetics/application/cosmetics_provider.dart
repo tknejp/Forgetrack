@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../../../core/logging/app_log.dart';
+import '../../../core/result/result.dart';
 import '../data/cosmetic_entitlements_source.dart';
 import '../domain/cosmetic_catalog.dart';
 import '../domain/cosmetic_models.dart';
@@ -576,19 +577,31 @@ class CosmeticsProvider extends ChangeNotifier {
     String uid,
     UserCosmeticsState state,
   ) async {
-    List<CosmeticEntitlement> entitlements;
-    try {
-      entitlements = await _entitlementsSource.loadForUser(uid);
-    } catch (error, st) {
-      _log.warn(
-        'entitlement load skipped',
-        payload: 'uid=$uid error=$error',
-      );
-      _log.debug(
-        'entitlement load details',
-        payload: st.toString(),
-      );
-      return state;
+    final loadResult = await _entitlementsSource.loadForUser(uid);
+    final List<CosmeticEntitlement> entitlements;
+    switch (loadResult) {
+      case Success(value: final v):
+        entitlements = v;
+      case Failure(error: final e):
+        // R.4 (2026-05-19): typed failure surfacing. Transient Firestore
+        // outages stay at `warn` so AppLog stops bleeding red — they
+        // self-heal on the next bind. Permanent failures (permission
+        // denied, schema-drift validation) log at `error` so devtools /
+        // crash reports surface them.
+        if (e.isTransient) {
+          _log.warn(
+            'entitlement load skipped (transient)',
+            payload: 'uid=$uid error=${e.label}',
+          );
+        } else {
+          _log.error(
+            'entitlement load skipped (permanent)',
+            payload: 'uid=$uid error=${e.label}',
+            err: e.originalError,
+            stackTrace: e.stackTrace,
+          );
+        }
+        return state;
     }
 
     var nextState = state;

@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../../core/errors/app_error.dart';
+import '../../../core/errors/firebase_error_classifier.dart';
+import '../../../core/result/result.dart';
 import '../../../shared/domain/rarity.dart';
 import '../domain/social_models.dart';
 import '../domain/social_presence_repository.dart';
@@ -12,6 +15,28 @@ class FirestoreSocialRepository implements SocialPresenceRepository {
   }) : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
+
+  /// Wraps a Firestore call in the typed [Result] envelope so callers
+  /// pattern-match on [AppError] severity instead of catching `Object`.
+  /// Every social-repo method funnels through here — keeps the classify
+  /// call site uniform and makes the per-call `endpoint` tag visible
+  /// in AppLog dumps (`error=permission|social.sendFriendRequest`).
+  Future<Result<T, AppError>> _classify<T>(
+    String endpoint,
+    Future<T> Function() action,
+  ) async {
+    try {
+      return Success<T, AppError>(await action());
+    } catch (error, stackTrace) {
+      return Failure<T, AppError>(
+        classifyFirebaseError(
+          error,
+          stackTrace,
+          endpoint: 'social.$endpoint',
+        ),
+      );
+    }
+  }
 
   CollectionReference<Map<String, dynamic>> get _users =>
       _firestore.collection('users');
@@ -137,66 +162,72 @@ class FirestoreSocialRepository implements SocialPresenceRepository {
   }
 
   @override
-  Future<List<SocialUserProfile>> fetchProfilesByIds(
+  Future<Result<List<SocialUserProfile>, AppError>> fetchProfilesByIds(
     Iterable<String> uids,
-  ) async {
-    final ids = uids.toSet().where((uid) => uid.isNotEmpty).toList();
-    if (ids.isEmpty) return const [];
+  ) =>
+      _classify('fetchProfilesByIds', () async {
+        final ids = uids.toSet().where((uid) => uid.isNotEmpty).toList();
+        if (ids.isEmpty) return const <SocialUserProfile>[];
 
-    final profiles = <SocialUserProfile>[];
-    for (final chunk in _chunk(ids, 10)) {
-      final snapshot =
-          await _users.where(FieldPath.documentId, whereIn: chunk).get();
-      profiles.addAll(snapshot.docs.map(_mapUserProfile));
-    }
+        final profiles = <SocialUserProfile>[];
+        for (final chunk in _chunk(ids, 10)) {
+          final snapshot =
+              await _users.where(FieldPath.documentId, whereIn: chunk).get();
+          profiles.addAll(snapshot.docs.map(_mapUserProfile));
+        }
 
-    profiles.sort((a, b) => a.displayName.compareTo(b.displayName));
-    return profiles;
-  }
+        profiles.sort((a, b) => a.displayName.compareTo(b.displayName));
+        return profiles;
+      });
 
   @override
-  Future<List<SocialUserProfile>> searchProfilesByHandle(
+  Future<Result<List<SocialUserProfile>, AppError>> searchProfilesByHandle(
     String query, {
     required String excludeUid,
     int limit = 8,
-  }) async {
-    final normalized = normalizeSocialHandle(query);
-    if (normalized.isEmpty) return const [];
+  }) =>
+      _classify('searchProfilesByHandle', () async {
+        final normalized = normalizeSocialHandle(query);
+        if (normalized.isEmpty) return const <SocialUserProfile>[];
 
-    final snapshot = await _users
-        .where('handleSearchTokens', arrayContains: normalized)
-        .limit(limit + 4)
-        .get();
+        final snapshot = await _users
+            .where('handleSearchTokens', arrayContains: normalized)
+            .limit(limit + 4)
+            .get();
 
-    final results = snapshot.docs
-        .map(_mapUserProfile)
-        .where((profile) => profile.uid != excludeUid && profile.socialEnabled)
-        .toList();
+        final results = snapshot.docs
+            .map(_mapUserProfile)
+            .where((profile) =>
+                profile.uid != excludeUid && profile.socialEnabled)
+            .toList();
 
-    results.sort((a, b) => a.handle.compareTo(b.handle));
-    return results.take(limit).toList(growable: false);
-  }
+        results.sort((a, b) => a.handle.compareTo(b.handle));
+        return results.take(limit).toList(growable: false);
+      });
 
   @override
-  Future<List<SocialAchievementShare>> fetchRecentAchievementShares({
+  Future<Result<List<SocialAchievementShare>, AppError>>
+      fetchRecentAchievementShares({
     required Iterable<String> actorUids,
     int limit = 20,
-  }) async {
-    final ids = actorUids.toSet().where((uid) => uid.isNotEmpty).toList();
-    if (ids.isEmpty) return const [];
+  }) =>
+          _classify('fetchRecentAchievementShares', () async {
+            final ids =
+                actorUids.toSet().where((uid) => uid.isNotEmpty).toList();
+            if (ids.isEmpty) return const <SocialAchievementShare>[];
 
-    final shares = <SocialAchievementShare>[];
-    for (final chunk in _chunk(ids, 10)) {
-      final snapshot = await _achievementShares
-          .where('actorUid', whereIn: chunk)
-          .limit(limit)
-          .get();
-      shares.addAll(snapshot.docs.map(_mapAchievementShare));
-    }
+            final shares = <SocialAchievementShare>[];
+            for (final chunk in _chunk(ids, 10)) {
+              final snapshot = await _achievementShares
+                  .where('actorUid', whereIn: chunk)
+                  .limit(limit)
+                  .get();
+              shares.addAll(snapshot.docs.map(_mapAchievementShare));
+            }
 
-    shares.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    return shares.take(limit).toList(growable: false);
-  }
+            shares.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+            return shares.take(limit).toList(growable: false);
+          });
 
   @override
   Stream<List<SocialAchievementShare>> watchRecentAchievementShares({
@@ -265,63 +296,68 @@ class FirestoreSocialRepository implements SocialPresenceRepository {
   }
 
   @override
-  Future<void> upsertProfile(SocialProfileSyncPayload payload) async {
-    final doc = _users.doc(payload.uid);
+  Future<Result<void, AppError>> upsertProfile(
+    SocialProfileSyncPayload payload,
+  ) =>
+      _classify('upsertProfile', () async {
+        final doc = _users.doc(payload.uid);
 
-    await _firestore.runTransaction((transaction) async {
-      final userSnapshot = await transaction.get(doc);
-      final existingData = userSnapshot.data();
-      final existingHandle =
-          normalizeSocialHandle(existingData?['handle'] as String? ?? '');
-      final existingPhotoUrl = (existingData?['photoUrl'] as String?)?.trim();
-      final effectivePhotoUrl = existingPhotoUrl?.isNotEmpty == true
-          ? existingPhotoUrl
-          : payload.photoUrl;
+        await _firestore.runTransaction((transaction) async {
+          final userSnapshot = await transaction.get(doc);
+          final existingData = userSnapshot.data();
+          final existingHandle =
+              normalizeSocialHandle(existingData?['handle'] as String? ?? '');
+          final existingPhotoUrl =
+              (existingData?['photoUrl'] as String?)?.trim();
+          final effectivePhotoUrl = existingPhotoUrl?.isNotEmpty == true
+              ? existingPhotoUrl
+              : payload.photoUrl;
 
-      final handleReservation = await _reserveHandleInTransaction(
-        transaction: transaction,
-        uid: payload.uid,
-        desiredHandle: payload.handle,
-        existingHandle: existingHandle,
-      );
+          final handleReservation = await _reserveHandleInTransaction(
+            transaction: transaction,
+            uid: payload.uid,
+            desiredHandle: payload.handle,
+            existingHandle: existingHandle,
+          );
 
-      transaction.set(
-        handleReservation.ref,
-        {
-          'uid': payload.uid,
-          'handle': handleReservation.handle,
-          'baseHandle': normalizeSocialHandle(payload.handle),
-          'updatedAt': FieldValue.serverTimestamp(),
-          if (!handleReservation.exists)
-            'createdAt': FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
+          transaction.set(
+            handleReservation.ref,
+            {
+              'uid': payload.uid,
+              'handle': handleReservation.handle,
+              'baseHandle': normalizeSocialHandle(payload.handle),
+              'updatedAt': FieldValue.serverTimestamp(),
+              if (!handleReservation.exists)
+                'createdAt': FieldValue.serverTimestamp(),
+            },
+            SetOptions(merge: true),
+          );
 
-      transaction.set(
-        doc,
-        _profileData(
-          payload: payload.copyWith(photoUrl: effectivePhotoUrl),
-          handle: handleReservation.handle,
-          includeCreatedAt: !userSnapshot.exists,
-        ),
-        SetOptions(merge: true),
-      );
-    });
-  }
+          transaction.set(
+            doc,
+            _profileData(
+              payload: payload.copyWith(photoUrl: effectivePhotoUrl),
+              handle: handleReservation.handle,
+              includeCreatedAt: !userSnapshot.exists,
+            ),
+            SetOptions(merge: true),
+          );
+        });
+      });
 
   @override
-  Future<String> updateProfileHandle({
+  Future<Result<String, AppError>> updateProfileHandle({
     required String uid,
     required String desiredHandle,
-  }) async {
-    final doc = _users.doc(uid);
-    final normalizedDesired = normalizeSocialHandle(desiredHandle);
-    if (normalizedDesired.isEmpty) {
-      throw ArgumentError('Social ID cannot be empty.');
-    }
+  }) =>
+      _classify('updateProfileHandle', () async {
+        final doc = _users.doc(uid);
+        final normalizedDesired = normalizeSocialHandle(desiredHandle);
+        if (normalizedDesired.isEmpty) {
+          throw ArgumentError('Social ID cannot be empty.');
+        }
 
-    return _firestore.runTransaction<String>((transaction) async {
+        return _firestore.runTransaction<String>((transaction) async {
       final userSnapshot = await transaction.get(doc);
       final existingData = userSnapshot.data();
       final existingHandle =
@@ -388,42 +424,44 @@ class FirestoreSocialRepository implements SocialPresenceRepository {
 
       return selectedHandle;
     });
-  }
+      });
 
   @override
-  Future<void> updateProfilePhotoUrl({
+  Future<Result<void, AppError>> updateProfilePhotoUrl({
     required String uid,
     required String? photoUrl,
-  }) async {
-    final normalized = photoUrl?.trim();
-    await _users.doc(uid).set(
-      {
-        'photoUrl': normalized?.isEmpty == true ? null : normalized,
-        'updatedAt': FieldValue.serverTimestamp(),
-      },
-      SetOptions(merge: true),
-    );
-  }
+  }) =>
+      _classify('updateProfilePhotoUrl', () async {
+        final normalized = photoUrl?.trim();
+        await _users.doc(uid).set(
+          {
+            'photoUrl': normalized?.isEmpty == true ? null : normalized,
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true),
+        );
+      });
 
   @override
-  Future<void> updatePinnedAchievement({
+  Future<Result<void, AppError>> updatePinnedAchievement({
     required String uid,
     required String achievementId,
     required bool pinned,
-  }) async {
-    final normalizedId = achievementId.trim();
-    if (normalizedId.isEmpty) return;
+  }) =>
+      _classify('updatePinnedAchievement', () async {
+        final normalizedId = achievementId.trim();
+        if (normalizedId.isEmpty) return;
 
-    await _users.doc(uid).set(
-      {
-        'pinnedAchievementIds': pinned
-            ? FieldValue.arrayUnion([normalizedId])
-            : FieldValue.arrayRemove([normalizedId]),
-        'updatedAt': FieldValue.serverTimestamp(),
-      },
-      SetOptions(merge: true),
-    );
-  }
+        await _users.doc(uid).set(
+          {
+            'pinnedAchievementIds': pinned
+                ? FieldValue.arrayUnion([normalizedId])
+                : FieldValue.arrayRemove([normalizedId]),
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true),
+        );
+      });
 
   Future<
       ({
@@ -510,126 +548,135 @@ class FirestoreSocialRepository implements SocialPresenceRepository {
   }
 
   @override
-  Future<void> sendFriendRequest({
+  Future<Result<void, AppError>> sendFriendRequest({
     required String fromUid,
     required String toUid,
-  }) async {
-    if (fromUid == toUid) {
-      throw ArgumentError(
-        'A user cannot send a friend request to themselves.',
-      );
-    }
+  }) =>
+      _classify('sendFriendRequest', () async {
+        if (fromUid == toUid) {
+          throw ArgumentError(
+            'A user cannot send a friend request to themselves.',
+          );
+        }
 
-    final friendshipId = buildSocialFriendshipId(fromUid, toUid);
-    final participantsKey = buildSocialParticipantsKey(fromUid, toUid);
-    final friendshipRef = _friendships.doc(friendshipId);
+        final friendshipId = buildSocialFriendshipId(fromUid, toUid);
+        final participantsKey = buildSocialParticipantsKey(fromUid, toUid);
+        final friendshipRef = _friendships.doc(friendshipId);
 
-    await _firestore.runTransaction((transaction) async {
-      final friendshipSnapshot = await transaction.get(friendshipRef);
-      if (friendshipSnapshot.exists) {
-        return;
-      }
+        await _firestore.runTransaction((transaction) async {
+          final friendshipSnapshot = await transaction.get(friendshipRef);
+          if (friendshipSnapshot.exists) {
+            return;
+          }
 
-      final duplicateSnapshot = await _friendRequests
-          .where('participantsKey', isEqualTo: participantsKey)
-          .where('status', isEqualTo: SocialFriendRequestStatus.pending.name)
-          .limit(1)
-          .get();
+          final duplicateSnapshot = await _friendRequests
+              .where('participantsKey', isEqualTo: participantsKey)
+              .where('status',
+                  isEqualTo: SocialFriendRequestStatus.pending.name)
+              .limit(1)
+              .get();
 
-      if (duplicateSnapshot.docs.isNotEmpty) {
-        return;
-      }
+          if (duplicateSnapshot.docs.isNotEmpty) {
+            return;
+          }
 
-      final newRequestRef = _friendRequests.doc();
-      transaction.set(newRequestRef, {
-        'fromUid': fromUid,
-        'toUid': toUid,
-        'participantsKey': participantsKey,
-        'status': SocialFriendRequestStatus.pending.name,
-        'createdAt': FieldValue.serverTimestamp(),
-        'respondedAt': null,
-      });
-    });
-  }
-
-  @override
-  Future<void> acceptFriendRequest({
-    required String requestId,
-  }) async {
-    final requestRef = _friendRequests.doc(requestId);
-    await _firestore.runTransaction((transaction) async {
-      final requestSnapshot = await transaction.get(requestRef);
-      if (!requestSnapshot.exists) {
-        throw StateError('Friend request not found.');
-      }
-
-      final data = requestSnapshot.data();
-      if (data == null) {
-        throw StateError('Friend request payload is empty.');
-      }
-
-      if (data['status'] != SocialFriendRequestStatus.pending.name) {
-        return;
-      }
-
-      final fromUid = data['fromUid'] as String? ?? '';
-      final toUid = data['toUid'] as String? ?? '';
-      final friendshipId = buildSocialFriendshipId(fromUid, toUid);
-
-      transaction.set(
-          _friendships.doc(friendshipId),
-          {
-            'members': [fromUid, toUid]..sort(),
+          final newRequestRef = _friendRequests.doc();
+          transaction.set(newRequestRef, {
+            'fromUid': fromUid,
+            'toUid': toUid,
+            'participantsKey': participantsKey,
+            'status': SocialFriendRequestStatus.pending.name,
             'createdAt': FieldValue.serverTimestamp(),
-            'sourceRequestId': requestId,
-          },
-          SetOptions(merge: true));
-
-      transaction.update(requestRef, {
-        'status': SocialFriendRequestStatus.accepted.name,
-        'respondedAt': FieldValue.serverTimestamp(),
+            'respondedAt': null,
+          });
+        });
       });
-    });
-  }
 
   @override
-  Future<void> declineFriendRequest({
+  Future<Result<void, AppError>> acceptFriendRequest({
     required String requestId,
-  }) async {
-    await _friendRequests.doc(requestId).update({
-      'status': SocialFriendRequestStatus.declined.name,
-      'respondedAt': FieldValue.serverTimestamp(),
-    });
-  }
+  }) =>
+      _classify('acceptFriendRequest', () async {
+        final requestRef = _friendRequests.doc(requestId);
+        await _firestore.runTransaction((transaction) async {
+          final requestSnapshot = await transaction.get(requestRef);
+          if (!requestSnapshot.exists) {
+            throw StateError('Friend request not found.');
+          }
+
+          final data = requestSnapshot.data();
+          if (data == null) {
+            throw StateError('Friend request payload is empty.');
+          }
+
+          if (data['status'] != SocialFriendRequestStatus.pending.name) {
+            return;
+          }
+
+          final fromUid = data['fromUid'] as String? ?? '';
+          final toUid = data['toUid'] as String? ?? '';
+          final friendshipId = buildSocialFriendshipId(fromUid, toUid);
+
+          transaction.set(
+              _friendships.doc(friendshipId),
+              {
+                'members': [fromUid, toUid]..sort(),
+                'createdAt': FieldValue.serverTimestamp(),
+                'sourceRequestId': requestId,
+              },
+              SetOptions(merge: true));
+
+          transaction.update(requestRef, {
+            'status': SocialFriendRequestStatus.accepted.name,
+            'respondedAt': FieldValue.serverTimestamp(),
+          });
+        });
+      });
 
   @override
-  Future<List<RemoteEngineNodeCompletion>> fetchEngineNodeCompletions(
-    String uid,
-  ) async {
-    final snapshot = await _engineNodeCompletions(uid).get();
-    return snapshot.docs.map(_mapEngineNodeCompletion).toList(growable: false);
-  }
+  Future<Result<void, AppError>> declineFriendRequest({
+    required String requestId,
+  }) =>
+      _classify('declineFriendRequest', () async {
+        await _friendRequests.doc(requestId).update({
+          'status': SocialFriendRequestStatus.declined.name,
+          'respondedAt': FieldValue.serverTimestamp(),
+        });
+      });
 
   @override
-  Future<void> shareAchievement(SocialAchievementShare share) async {
-    await _achievementShares.add({
-      'actorUid': share.actorUid,
-      'achievementId': share.achievementId,
-      'createdAt': FieldValue.serverTimestamp(),
-      'message': share.message,
-      'visibility': share.visibility.name,
-      'actorSnapshot': {
-        'displayName': share.actorSnapshot.displayName,
-        'photoUrl': share.actorSnapshot.photoUrl,
-      },
-      'achievementSnapshot': {
-        'title': share.achievementSnapshot.title,
-        'description': share.achievementSnapshot.description,
-        'rarity': share.achievementSnapshot.rarity.name,
-        'domain': share.achievementSnapshot.domain,
-      },
-    });
-  }
+  Future<Result<List<RemoteEngineNodeCompletion>, AppError>>
+      fetchEngineNodeCompletions(String uid) =>
+          _classify('fetchEngineNodeCompletions', () async {
+            final snapshot = await _engineNodeCompletions(uid).get();
+            return snapshot.docs
+                .map(_mapEngineNodeCompletion)
+                .toList(growable: false);
+          });
+
+  @override
+  Future<Result<void, AppError>> shareAchievement(
+    SocialAchievementShare share,
+  ) =>
+      _classify('shareAchievement', () async {
+        await _achievementShares.add({
+          'actorUid': share.actorUid,
+          'achievementId': share.achievementId,
+          'createdAt': FieldValue.serverTimestamp(),
+          'message': share.message,
+          'visibility': share.visibility.name,
+          'actorSnapshot': {
+            'displayName': share.actorSnapshot.displayName,
+            'photoUrl': share.actorSnapshot.photoUrl,
+          },
+          'achievementSnapshot': {
+            'title': share.achievementSnapshot.title,
+            'description': share.achievementSnapshot.description,
+            'rarity': share.achievementSnapshot.rarity.name,
+            'domain': share.achievementSnapshot.domain,
+          },
+        });
+      });
 
   @override
   Stream<List<RemoteEngineNodeCompletion>> watchEngineNodeCompletions(
@@ -764,12 +811,15 @@ class FirestoreSocialRepository implements SocialPresenceRepository {
   }
 
   @override
-  Future<void> removeFriend({required String friendshipId}) async {
-    await _friendships.doc(friendshipId).delete();
-  }
+  Future<Result<void, AppError>> removeFriend({
+    required String friendshipId,
+  }) =>
+      _classify('removeFriend', () async {
+        await _friendships.doc(friendshipId).delete();
+      });
 
   @override
-  Future<void> addReaction({
+  Future<Result<void, AppError>> addReaction({
     required String shareId,
     required String actorUid,
     required String actorName,
@@ -777,63 +827,65 @@ class FirestoreSocialRepository implements SocialPresenceRepository {
     required String emoji,
     required String shareOwnerUid,
     required String achievementTitle,
-  }) async {
-    final shareRef = _achievementShares.doc(shareId);
-    final isSelfReaction = actorUid == shareOwnerUid;
+  }) =>
+      _classify('addReaction', () async {
+        final shareRef = _achievementShares.doc(shareId);
+        final isSelfReaction = actorUid == shareOwnerUid;
 
-    final notifRef = _users
-        .doc(shareOwnerUid)
-        .collection('notifications')
-        .doc('${shareId}_$actorUid');
+        final notifRef = _users
+            .doc(shareOwnerUid)
+            .collection('notifications')
+            .doc('${shareId}_$actorUid');
 
-    await _firestore.runTransaction((transaction) async {
-      // Firestore transactions require all reads before writes.
-      final notifSnapshot =
-          isSelfReaction ? null : await transaction.get(notifRef);
+        await _firestore.runTransaction((transaction) async {
+          // Firestore transactions require all reads before writes.
+          final notifSnapshot =
+              isSelfReaction ? null : await transaction.get(notifRef);
 
-      transaction.update(shareRef, {
-        'reactions.$actorUid': emoji,
-        'reactorSnapshots.$actorUid': {
-          'displayName': actorName,
-          'photoUrl': actorPhoto,
-        },
+          transaction.update(shareRef, {
+            'reactions.$actorUid': emoji,
+            'reactorSnapshots.$actorUid': {
+              'displayName': actorName,
+              'photoUrl': actorPhoto,
+            },
+          });
+
+          if (isSelfReaction) {
+            return;
+          }
+
+          if (notifSnapshot != null && notifSnapshot.exists) {
+            return;
+          }
+
+          transaction.set(notifRef, {
+            'type': 'reaction',
+            'actorUid': actorUid,
+            'actorName': actorName,
+            'actorPhoto': actorPhoto,
+            'shareId': shareId,
+            'achievementTitle': achievementTitle,
+            'emoji': emoji,
+            'createdAt': FieldValue.serverTimestamp(),
+            'read': false,
+          });
+        });
       });
-
-      if (isSelfReaction) {
-        return;
-      }
-
-      if (notifSnapshot != null && notifSnapshot.exists) {
-        return;
-      }
-
-      transaction.set(notifRef, {
-        'type': 'reaction',
-        'actorUid': actorUid,
-        'actorName': actorName,
-        'actorPhoto': actorPhoto,
-        'shareId': shareId,
-        'achievementTitle': achievementTitle,
-        'emoji': emoji,
-        'createdAt': FieldValue.serverTimestamp(),
-        'read': false,
-      });
-    });
-  }
 
   @override
-  Future<void> removeReaction({
+  Future<Result<void, AppError>> removeReaction({
     required String shareId,
     required String actorUid,
     required String shareOwnerUid,
-  }) async {
-    final shareRef = _achievementShares.doc(shareId);
+  }) =>
+      _classify('removeReaction', () async {
+        final shareRef = _achievementShares.doc(shareId);
 
-    await shareRef.update({
-      'reactions.$actorUid': FieldValue.delete(),
-      'reactorSnapshots.$actorUid': FieldValue.delete(),
-    });
-  }
+        await shareRef.update({
+          'reactions.$actorUid': FieldValue.delete(),
+          'reactorSnapshots.$actorUid': FieldValue.delete(),
+        });
+      });
 
   @override
   Stream<List<SocialNotification>> watchNotifications(String uid) {
@@ -847,19 +899,20 @@ class FirestoreSocialRepository implements SocialPresenceRepository {
   }
 
   @override
-  Future<void> markNotificationsRead(String uid) async {
-    final snapshot = await _users
-        .doc(uid)
-        .collection('notifications')
-        .where('read', isEqualTo: false)
-        .get();
-    if (snapshot.docs.isEmpty) return;
-    final batch = _firestore.batch();
-    for (final doc in snapshot.docs) {
-      batch.update(doc.reference, {'read': true});
-    }
-    await batch.commit();
-  }
+  Future<Result<void, AppError>> markNotificationsRead(String uid) =>
+      _classify('markNotificationsRead', () async {
+        final snapshot = await _users
+            .doc(uid)
+            .collection('notifications')
+            .where('read', isEqualTo: false)
+            .get();
+        if (snapshot.docs.isEmpty) return;
+        final batch = _firestore.batch();
+        for (final doc in snapshot.docs) {
+          batch.update(doc.reference, {'read': true});
+        }
+        await batch.commit();
+      });
 
   SocialNotification _mapNotification(
     QueryDocumentSnapshot<Map<String, dynamic>> doc,

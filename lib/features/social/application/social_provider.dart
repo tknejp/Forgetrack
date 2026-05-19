@@ -4,7 +4,10 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../core/errors/app_error.dart';
+import '../../../core/errors/firebase_error_classifier.dart';
 import '../../../core/logging/app_log.dart';
+import '../../../core/result/result.dart';
 import '../../auth/application/auth_provider.dart';
 import '../../cosmetics/application/cosmetics_provider.dart';
 import '../../progression_engine/application/progression_engine_provider.dart';
@@ -66,6 +69,12 @@ class SocialProvider extends ChangeNotifier {
 
   String? _activeUid;
   String? _error;
+  // R.4: typed counterpart to [_error]. UI surfaces continue to read
+  // [error] for the existing Czech message strings; consumers that
+  // want to pattern-match on severity (transient retry vs permanent
+  // banner, scope-specific PermissionError → re-auth prompt) read
+  // [lastError] instead.
+  AppError? _lastError;
   String? _lastAuthSignature;
   String? _lastProfileSignature;
   String _friendIdsSignature = '';
@@ -86,6 +95,14 @@ class SocialProvider extends ChangeNotifier {
   bool get isReady => _isReady;
   bool get isSearching => _isSearching;
   String? get error => _error;
+
+  /// Typed counterpart to [error]. R.4 (2026-05-19): widgets that want
+  /// transient/permanent classification or scope-specific recovery
+  /// (re-auth on [PermissionError], re-login banner on KT-equivalent
+  /// transient [NetworkError]) read this; the legacy Czech message
+  /// surface continues to flow through [error].
+  AppError? get lastError => _lastError;
+
   String? get currentUid => _activeUid;
 
   List<SocialFriendRequest> get incomingRequests =>
@@ -170,20 +187,22 @@ class SocialProvider extends ChangeNotifier {
     }
 
     _isSearching = true;
-    _error = null;
+    _clearError();
     notifyListeners();
 
-    try {
-      _searchResults = await _repository.searchProfilesByHandle(
-        normalized,
-        excludeUid: uid,
-      );
-    } catch (error, stackTrace) {
-      _recordError('searchUsers', error, stackTrace);
-    } finally {
-      _isSearching = false;
-      notifyListeners();
+    final result = await _repository.searchProfilesByHandle(
+      normalized,
+      excludeUid: uid,
+    );
+    switch (result) {
+      case Success(value: final profiles):
+        _searchResults = profiles;
+      case Failure(error: final e):
+        _searchResults = const [];
+        _recordAppError('searchUsers', e);
     }
+    _isSearching = false;
+    notifyListeners();
   }
 
   void clearSearchResults() {
@@ -197,19 +216,20 @@ class SocialProvider extends ChangeNotifier {
     final uid = _activeUid;
     if (uid == null) return null;
 
-    try {
-      final handle = await _repository.updateProfileHandle(
-        uid: uid,
-        desiredHandle: desiredHandle,
-      );
-      _lastProfileSignature = null;
-      _error = null;
-      notifyListeners();
-      return handle;
-    } catch (error, stackTrace) {
-      _recordError('updateCurrentHandle', error, stackTrace);
-      notifyListeners();
-      return null;
+    final result = await _repository.updateProfileHandle(
+      uid: uid,
+      desiredHandle: desiredHandle,
+    );
+    switch (result) {
+      case Success(value: final handle):
+        _lastProfileSignature = null;
+        _clearError();
+        notifyListeners();
+        return handle;
+      case Failure(error: final e):
+        _recordAppError('updateCurrentHandle', e);
+        notifyListeners();
+        return null;
     }
   }
 
@@ -217,15 +237,16 @@ class SocialProvider extends ChangeNotifier {
     final uid = _activeUid;
     if (uid == null) return;
 
-    try {
-      await _repository.updateProfilePhotoUrl(
-        uid: uid,
-        photoUrl: photoUrl,
-      );
-      _lastProfileSignature = null;
-      _error = null;
-    } catch (error, stackTrace) {
-      _recordError('updateCurrentPhotoUrl', error, stackTrace);
+    final result = await _repository.updateProfilePhotoUrl(
+      uid: uid,
+      photoUrl: photoUrl,
+    );
+    switch (result) {
+      case Success():
+        _lastProfileSignature = null;
+        _clearError();
+      case Failure(error: final e):
+        _recordAppError('updateCurrentPhotoUrl', e);
     }
 
     notifyListeners();
@@ -269,12 +290,22 @@ class SocialProvider extends ChangeNotifier {
       );
 
       final url = await ref.getDownloadURL();
-      await _repository.updateProfilePhotoUrl(uid: uid, photoUrl: url);
-      _lastProfileSignature = null;
-      _error = null;
-      notifyListeners();
-      return url;
+      final updateResult =
+          await _repository.updateProfilePhotoUrl(uid: uid, photoUrl: url);
+      switch (updateResult) {
+        case Success():
+          _lastProfileSignature = null;
+          _clearError();
+          notifyListeners();
+          return url;
+        case Failure(error: final e):
+          _recordAppError('uploadCurrentProfilePhoto', e);
+          notifyListeners();
+          return null;
+      }
     } catch (error, stackTrace) {
+      // Storage upload (FirebaseStorage.putData / readAsBytes) raises
+      // outside the repository contract, so classify inline.
       _recordError('uploadCurrentProfilePhoto', error, stackTrace);
       notifyListeners();
       return null;
@@ -285,49 +316,75 @@ class SocialProvider extends ChangeNotifier {
     final uid = _activeUid;
     if (uid == null) return;
 
-    try {
-      await _repository.sendFriendRequest(fromUid: uid, toUid: toUid);
-      _error = null;
-      clearSearchResults();
-    } catch (error, stackTrace) {
-      _recordError('sendFriendRequest', error, stackTrace);
+    final result =
+        await _repository.sendFriendRequest(fromUid: uid, toUid: toUid);
+    switch (result) {
+      case Success():
+        _clearError();
+        clearSearchResults();
+      case Failure(error: final e):
+        _recordAppError('sendFriendRequest', e);
     }
 
     notifyListeners();
   }
 
   Future<void> acceptFriendRequest(String requestId) async {
-    try {
-      await _repository.acceptFriendRequest(requestId: requestId);
-      _error = null;
-    } catch (error, stackTrace) {
-      _recordError('acceptFriendRequest', error, stackTrace);
+    final result =
+        await _repository.acceptFriendRequest(requestId: requestId);
+    switch (result) {
+      case Success():
+        _clearError();
+      case Failure(error: final e):
+        _recordAppError('acceptFriendRequest', e);
     }
 
     notifyListeners();
   }
 
   Future<void> declineFriendRequest(String requestId) async {
-    try {
-      await _repository.declineFriendRequest(requestId: requestId);
-      _error = null;
-    } catch (error, stackTrace) {
-      _recordError('declineFriendRequest', error, stackTrace);
+    final result =
+        await _repository.declineFriendRequest(requestId: requestId);
+    switch (result) {
+      case Success():
+        _clearError();
+      case Failure(error: final e):
+        _recordAppError('declineFriendRequest', e);
     }
 
     notifyListeners();
   }
 
   Future<SocialUserProfile?> fetchProfileById(String uid) async {
-    final results = await _repository.fetchProfilesByIds([uid]);
-    return results.firstOrNull;
+    final result = await _repository.fetchProfilesByIds([uid]);
+    return switch (result) {
+      Success(value: final profiles) => profiles.firstOrNull,
+      // Surface the failure on `lastError` so the screen can react;
+      // collapse to null so the existing caller keeps its empty-state
+      // rendering.
+      Failure(error: final e) =>
+        () {
+          _recordAppError('fetchProfileById', e);
+          notifyListeners();
+          return null;
+        }(),
+    };
   }
 
   Future<List<SocialUnlockedAchievement>> fetchFriendAchievements(
     String uid,
   ) async {
-    final completions = await _repository.fetchEngineNodeCompletions(uid);
-    return _buildUnlockedAchievementsFromRemote(completions);
+    final result = await _repository.fetchEngineNodeCompletions(uid);
+    return switch (result) {
+      Success(value: final completions) =>
+        _buildUnlockedAchievementsFromRemote(completions),
+      Failure(error: final e) =>
+        () {
+          _recordAppError('fetchFriendAchievements', e);
+          notifyListeners();
+          return const <SocialUnlockedAchievement>[];
+        }(),
+    };
   }
 
   Stream<SocialUserProfile?> watchProfileById(String uid) {
@@ -409,7 +466,19 @@ class SocialProvider extends ChangeNotifier {
         ..sort();
 
       if (friendIds.isEmpty) return const <SocialUserProfile>[];
-      return _repository.fetchProfilesByIds(friendIds);
+      final result = await _repository.fetchProfilesByIds(friendIds);
+      return switch (result) {
+        Success(value: final profiles) => profiles,
+        // Stream consumer can't easily signal an error mid-flight;
+        // record on `lastError` and emit empty so the UI continues to
+        // render. The stream resubscribes when friendships change.
+        Failure(error: final e) =>
+          () {
+            _recordAppError('watchFriendProfilesForUser', e);
+            notifyListeners();
+            return const <SocialUserProfile>[];
+          }(),
+      };
     });
   }
 
@@ -420,15 +489,16 @@ class SocialProvider extends ChangeNotifier {
     final uid = _activeUid;
     if (uid == null) return;
 
-    try {
-      await _repository.updatePinnedAchievement(
-        uid: uid,
-        achievementId: achievementId,
-        pinned: pinned,
-      );
-      _error = null;
-    } catch (error, stackTrace) {
-      _recordError('setCurrentAchievementPinned', error, stackTrace);
+    final result = await _repository.updatePinnedAchievement(
+      uid: uid,
+      achievementId: achievementId,
+      pinned: pinned,
+    );
+    switch (result) {
+      case Success():
+        _clearError();
+      case Failure(error: final e):
+        _recordAppError('setCurrentAchievementPinned', e);
     }
 
     notifyListeners();
@@ -468,11 +538,12 @@ class SocialProvider extends ChangeNotifier {
       );
     }
 
-    try {
-      await _repository.removeFriend(friendshipId: friendship.id);
-      _error = null;
-    } catch (error, stackTrace) {
-      _recordError('removeFriend', error, stackTrace);
+    final result = await _repository.removeFriend(friendshipId: friendship.id);
+    switch (result) {
+      case Success():
+        _clearError();
+      case Failure(error: final e):
+        _recordAppError('removeFriend', e);
     }
 
     notifyListeners();
@@ -559,11 +630,12 @@ class SocialProvider extends ChangeNotifier {
       ),
     );
 
-    try {
-      await _repository.shareAchievement(share);
-      _error = null;
-    } catch (error, stackTrace) {
-      _recordError('shareAchievement', error, stackTrace);
+    final result = await _repository.shareAchievement(share);
+    switch (result) {
+      case Success():
+        _clearError();
+      case Failure(error: final e):
+        _recordAppError('shareAchievement', e);
     }
 
     notifyListeners();
@@ -597,19 +669,20 @@ class SocialProvider extends ChangeNotifier {
       fallbackPhotoUrl: user.photoUrl,
     );
 
-    try {
-      await _repository.addReaction(
-        shareId: shareId,
-        actorUid: uid,
-        actorName: actorSnapshot.displayName,
-        actorPhoto: actorSnapshot.photoUrl,
-        emoji: emoji,
-        shareOwnerUid: share.actorUid,
-        achievementTitle: share.achievementSnapshot.title,
-      );
-      _error = null;
-    } catch (error, stackTrace) {
-      _recordError('addReaction', error, stackTrace);
+    final result = await _repository.addReaction(
+      shareId: shareId,
+      actorUid: uid,
+      actorName: actorSnapshot.displayName,
+      actorPhoto: actorSnapshot.photoUrl,
+      emoji: emoji,
+      shareOwnerUid: share.actorUid,
+      achievementTitle: share.achievementSnapshot.title,
+    );
+    switch (result) {
+      case Success():
+        _clearError();
+      case Failure(error: final e):
+        _recordAppError('addReaction', e);
     }
 
     notifyListeners();
@@ -622,15 +695,16 @@ class SocialProvider extends ChangeNotifier {
     final share = _recentShares.where((s) => s.id == shareId).firstOrNull;
     if (share == null) return;
 
-    try {
-      await _repository.removeReaction(
-        shareId: shareId,
-        actorUid: uid,
-        shareOwnerUid: share.actorUid,
-      );
-      _error = null;
-    } catch (error, stackTrace) {
-      _recordError('removeReaction', error, stackTrace);
+    final result = await _repository.removeReaction(
+      shareId: shareId,
+      actorUid: uid,
+      shareOwnerUid: share.actorUid,
+    );
+    switch (result) {
+      case Success():
+        _clearError();
+      case Failure(error: final e):
+        _recordAppError('removeReaction', e);
     }
 
     notifyListeners();
@@ -640,10 +714,9 @@ class SocialProvider extends ChangeNotifier {
     final uid = _activeUid;
     if (uid == null) return;
 
-    try {
-      await _repository.markNotificationsRead(uid);
-    } catch (error, stackTrace) {
-      _recordError('markNotificationsRead', error, stackTrace);
+    final result = await _repository.markNotificationsRead(uid);
+    if (result case Failure(error: final e)) {
+      _recordAppError('markNotificationsRead', e);
     }
   }
 
@@ -677,7 +750,7 @@ class SocialProvider extends ChangeNotifier {
 
       _activeUid = uid;
       _isReady = true;
-      _error = null;
+      _clearError();
 
       if (shouldResubscribe) {
         AppLog.social.info('Subscribing social streams', payload: 'uid=$uid');
@@ -714,27 +787,26 @@ class SocialProvider extends ChangeNotifier {
 
     _isSyncingProfile = true;
 
-    try {
-      await _repository.upsertProfile(payload);
+    final result = await _repository.upsertProfile(payload);
+    switch (result) {
+      case Success():
+        _lastProfileSignature = signature;
+        _clearError();
 
-      _lastProfileSignature = signature;
-      _error = null;
+        // Once the Firestore profile is the source of truth for the
+        // hero header's photoUrl, prime the image cache with it so the
+        // first widget mount renders without a placeholder frame.
+        precacheProfilePhoto(payload.photoUrl);
 
-      // Once the Firestore profile is the source of truth for the
-      // hero header's photoUrl, prime the image cache with it so the
-      // first widget mount renders without a placeholder frame.
-      precacheProfilePhoto(payload.photoUrl);
-
-      AppLog.social.debug(
-        'Profile synced',
-        payload: 'uid=${payload.uid} xp=${payload.stats.totalXp}',
-      );
-    } catch (error, stackTrace) {
-      _recordError('syncProfile', error, stackTrace);
-    } finally {
-      _isSyncingProfile = false;
-      notifyListeners();
+        AppLog.social.debug(
+          'Profile synced',
+          payload: 'uid=${payload.uid} xp=${payload.stats.totalXp}',
+        );
+      case Failure(error: final e):
+        _recordAppError('syncProfile', e);
     }
+    _isSyncingProfile = false;
+    notifyListeners();
 
     if (_profileSyncQueued) {
       _profileSyncQueued = false;
@@ -955,7 +1027,7 @@ class SocialProvider extends ChangeNotifier {
         _repository.watchProfilesByIds(friendIds).listen(
       (profiles) {
         _friends = profiles;
-        _error = null;
+        _clearError();
         notifyListeners();
       },
       onError: (error, stackTrace) {
@@ -984,7 +1056,7 @@ class SocialProvider extends ChangeNotifier {
         _repository.watchRecentAchievementShares(actorUids: actorUids).listen(
       (shares) {
         _recentShares = shares;
-        _error = null;
+        _clearError();
         notifyListeners();
       },
       onError: (error, stackTrace) {
@@ -1105,7 +1177,16 @@ class SocialProvider extends ChangeNotifier {
     required String? fallbackPhotoUrl,
   }) async {
     try {
-      final profile = (await _repository.fetchProfilesByIds([uid])).firstOrNull;
+      final result = await _repository.fetchProfilesByIds([uid]);
+      final profile = switch (result) {
+        Success(value: final profiles) => profiles.firstOrNull,
+        // Best-effort actor snapshot — the share/react flow falls back
+        // to the Auth display name + photo if the Firestore profile
+        // lookup fails. Don't surface on lastError to avoid a
+        // misleading red banner when the user's own share still
+        // succeeds with the fallback identity.
+        Failure() => null,
+      };
       final displayName = profile?.displayName.trim().isNotEmpty == true
           ? profile!.displayName.trim()
           : fallbackDisplayName;
@@ -1141,14 +1222,42 @@ class SocialProvider extends ChangeNotifier {
     _notificationsSubscription = null;
   }
 
+  /// Records a raw exception caught outside of a Result-returning
+  /// repository call (Firebase Storage upload, Auth session reconcile,
+  /// stream `onError:`). The error is classified into the typed
+  /// [AppError] hierarchy so `lastError` stays uniform; the legacy
+  /// Czech display string flows through [_describeError] unchanged.
   void _recordError(String operation, Object error, StackTrace stackTrace) {
-    _error = _describeError(error);
+    final classified = classifyFirebaseError(
+      error,
+      stackTrace,
+      endpoint: 'social.$operation',
+    );
+    _recordAppError(operation, classified);
+  }
+
+  /// Records a typed [AppError] produced by a `Failure` arm of a
+  /// `Result`. Preserves the original error + stack trace for AppLog
+  /// while still surfacing the Czech display message via
+  /// [_describeError] for backwards compatibility with the existing
+  /// widget consumers.
+  void _recordAppError(String operation, AppError error) {
+    _lastError = error;
+    final originalForDescribe = error.originalError ?? error;
+    _error = _describeError(originalForDescribe);
 
     AppLog.social.error(
       operation,
-      err: error,
-      stackTrace: stackTrace,
+      err: error.originalError ?? error,
+      stackTrace: error.stackTrace ?? StackTrace.current,
     );
+  }
+
+  /// Clears the success/failure state on a successful call. Both the
+  /// typed [_lastError] and the legacy Czech [_error] reset.
+  void _clearError() {
+    _error = null;
+    _lastError = null;
   }
 
   String _describeError(Object error) {

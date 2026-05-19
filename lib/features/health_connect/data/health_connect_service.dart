@@ -15,6 +15,20 @@ import 'health_connect_service/hc_workout_service.dart';
 ///
 /// Delegates all feature reads to focused internal collaborators while keeping
 /// the public API identical to the original monolithic implementation.
+///
+/// **R.4 (2026-05-19) — stays bare (no [Result] wrap).** Method
+/// returns are `Future<T>` rather than `Future<Result<T, AppError>>`
+/// because the failure boundary is **inside** the `health` plugin, not
+/// at this facade: quota-exceeded / permission-denied / IO faults all
+/// raise as platform exceptions which [FitnessProvider] (and
+/// `BackgroundSyncService` via `classifyFirebaseError` /
+/// `_classifyBackgroundSyncError`) already catches + classifies. Force-
+/// wrapping every getter here (50+ methods) would push duplicate
+/// switch boilerplate onto every consumer for a classification that
+/// already lands at the orchestrating provider. Health Connect quota
+/// errors must preserve DB state (see docs/architecture.md §Health
+/// Connect rules); that rule lives at the orchestrator, not this
+/// adapter.
 class HealthConnectService {
   HealthConnectService({Health? health}) {
     _client = HcReadClient(health: health);

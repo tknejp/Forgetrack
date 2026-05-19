@@ -133,33 +133,28 @@ Po dokončení Track A je doménový refactor **permanently closed**. Žádné n
 
 ---
 
-### R.4 Repository contracts hardening
+### ~~R.4 Repository contracts hardening~~ ✅ Done 2026-05-19
 
-**Why:** Phase 18 shipla `Result<T, AppError>` foundation + outermost data layer wrappy (hybrid progression repo + BackgroundSync). Repository **interfaces** (`SocialPresenceRepository`, `PlayerRepository`, `InventoryRepository`, gateway services) zůstaly s `Future<T>` return types. Cascade do ~12 widget consumers byla vědomě deferred. R.4 to dokončí.
+**Shipped** as `R.4: repository contracts Result hardening` (single commit, no a/b/c split — SocialPresenceRepository alone landed ~250 LoC, total R.4 ~600 LoC, well under the 800 LoC STOP threshold). See ADRs `r4-repository-result-hardening` + `r4-isar-journal-adapter` in [docs/site/data/decisions.json](../site/data/decisions.json) for full context + decision + consequences + alternatives.
 
-**Scope:**
+**What changed:**
 
-- Migrate repository interface methods returning `Future<T>` (where failure is meaningful) na `Future<Result<T, AppError>>`:
-  - `SocialPresenceRepository` (16 methods × 12 SocialProvider call sites + downstream widget readers — biggest cascade).
-  - `KalorickeTabulkyService` HTTP methods.
-  - `HealthConnectService` quota-prone methods.
-  - `FirestoreCosmeticEntitlementsSource.loadForUser`.
-  - `ProgressionEngineRepository.loadLedger` / `appendEvents` hot-path — verify performance acceptable with Result wrapping.
-- Provider consumer migration: pattern-match on Result, expose `.error` for widget UX where needed.
-- Concrete `IsarJournalAdapter` (was §2.13): write the adapter when first consumer (cosmetic_unlock_bridge or PlayerQuestCatalogService) routes through Journal. Phase 20 `JournalProjection<T>` framework is the natural caller — but its existing implementations (`CosmeticUnlockBridge`, `SocialProfileProjection`) read from `LedgerSnapshot` directly. Decision: keep direct LedgerSnapshot reads (Journal interface remains a documented capability, not a forced abstraction) OR introduce adapter + migrate the two existing projections.
+- `SocialPresenceRepository` (16 Future-returning methods) → `Future<Result<T, AppError>>`. FirestoreSocialRepository wraps every call in a shared `_classify('endpoint', () => ...)` helper that routes Firestore failures through `classifyFirebaseError`; DisabledSocialRepository returns `Failure(PermissionError(scope: 'social.<method>'))` for mutating methods + `Success(empty list)` for reads.
+- `CosmeticEntitlementsSource.loadForUser` → `Future<Result<List<CosmeticEntitlement>, AppError>>`. CosmeticsProvider's `_applyEntitlements` pattern-matches on the result: transient outage logs `warn` (self-heal on next bind), permanent failure logs `error` with full payload.
+- `SocialProvider.lastError: AppError?` added as typed counterpart to the legacy `error: String?` (Czech UI strings unchanged). `_recordError(operation, Object, StackTrace)` now classifies via `classifyFirebaseError` before storing on `_lastError`; `_recordAppError(operation, AppError)` is the direct path for Result.Failure call sites. `_clearError()` resets both surfaces uniformly.
+- Stream methods (6 in SocialPresenceRepository) stay raw — `onError:` callbacks already feed `_recordError` which now classifies, so `lastError` populates for stream failures without wrapping every emit in `Success(...)`.
+- `ProgressionEngineRepository.loadLedger / appendEvents`, `HealthConnectService` (50+ methods), `KalorickeTabulkyService` HTTP methods — **stay bare** with per-class `// R.4:` rationale comments. Local progression repo never produces a meaningful failure (cloud is wrapped at hybrid outer layer); HC + KT raise typed exceptions classified at the orchestrating provider (FitnessProvider, BackgroundSyncService).
+- **IsarJournalAdapter decision: retired.** `LedgerSnapshot` is documented as the canonical Journal-read API for projections + bridges; the abstract `Journal` interface stays as a single-callsite argument shape for `engine.evaluate(InMemoryJournal(ledger.all))`. No new adapter, no migration of existing JournalProjection callers.
 
 **DoD:**
 
-- [ ] Repository interfaces return `Future<Result<T, AppError>>` where failure is non-trivial. Sign-out happy-path methods (e.g., `PlayerRepository.load` returns `Player.anonymous`) stay un-wrapped.
-- [ ] All provider consumers handle Result via exhaustive switch or `Result.when(success, failure)`.
-- [ ] Widget UX surfaces error states via `provider.lastError: AppError?` getter or equivalent.
-- [ ] Decision on IsarJournalAdapter: either ship adapter + migrate 2 existing projections, or document `LedgerSnapshot` as the canonical Journal-read API and retire the Journal interface goal.
-- [ ] Phase 21 lint baseline `domain-purity` snížený (typed errors live in `lib/core/`, not feature `domain/`).
-- [ ] `flutter analyze` clean, `flutter test` pass.
-
-**Risk:** Vysoké. Repository contracts touch every provider method that returns data. Off-by-one in Result mapping silently propagates. Mitigation: side-by-side fixture comparison.
-
-**Estimated size:** 600-800 LoC, 2-3 days solo. Largest after R.1.
+- [x] Repository interfaces return `Future<Result<T, AppError>>` where failure is non-trivial. Sign-out happy-path / pure-domain construction methods stay un-wrapped (documented per-class with `// R.4:` comments — ProgressionEngineRepository, HealthConnectService, KalorickeTabulkyService).
+- [x] All provider consumers handle Result via exhaustive `switch`. Result.when() not added — switch pattern matching is the idiomatic Dart 3 form; `if (result case Failure(error: final e))` covers the void-success cases concisely.
+- [x] Widget UX surfaces error states via `SocialProvider.lastError: AppError?` getter; existing `error: String?` (Czech messages) continues to flow through `_describeError(originalError)` for backwards compat. CosmeticsProvider doesn't add a typed surface (single internal call site, no widget consumer reads it).
+- [x] IsarJournalAdapter decision landed: **retired** per ADR `r4-isar-journal-adapter`. LedgerSnapshot is canonical Journal-read; Journal interface stays for engine.evaluate() argument shape only.
+- [x] `flutter analyze` clean (77 issues, baseline preserved), `flutter test` pass (514 tests).
+- [x] Lint baselines unchanged — domain-purity / untyped-id / l10n-literal / widget-no-logic all match their 2026-05-19 calibration. The DoD-anticipated drop in `lib/features/*/domain/` domain-purity (25 → ?) doesn't materialise because typed errors already lived in `lib/core/`; R.4 didn't move anything out of feature domain/. R.6 remains the home for the 25 remaining hits.
+- [ ] Manual smoke check (airplane mode mid-sync transient failure + revoked Firestore rule permanent failure) is the operator's verification step — code-level wiring verified via tests + the AppError classifier round-trip; the smoke run happens on a debug build before the next session opens.
 
 ---
 
@@ -261,7 +256,7 @@ Drobnosti, které stojí samostatně, ale fit do jednoho PR pokud appetite:
 | ~~R.1 Catalog migration + typed cross-references~~ | ✅ 2026-05-19 (`537335b` + `da44091`) | High | — |
 | ~~R.2 NodeState cleanup~~ | ✅ 2026-05-19 | Medium | — |
 | ~~R.3 Widget consumer migration (a/b/c)~~ | ✅ 2026-05-19 (a, b shipped; c was already shipped via Phase 13 + Phase 19) | Medium | — |
-| R.4 Repository contracts Result hardening | 2-3 days | High | — |
+| ~~R.4 Repository contracts Result hardening~~ | ✅ 2026-05-19 (single commit, ~600 LoC, no a/b/c split) | High | — |
 | R.5 Test pyramid hardening (a/b/c) | 3-4 days total | Low | Split into 3 PRs |
 | R.6 Lint baseline cleanup | 2 days | Low | After R.1, R.3, R.4 |
 | R.7 Companion catalog audit | ½ day | Low | — |

@@ -1,6 +1,16 @@
+import '../../../core/errors/app_error.dart';
+import '../../../core/result/result.dart';
 import '../domain/social_models.dart';
 import '../domain/social_presence_repository.dart';
 
+/// Drop-in [SocialPresenceRepository] used when the social Firebase
+/// backend is unavailable (firebase init failed, social backend
+/// disabled in build config, anonymous session). Read methods return
+/// empty Success payloads so the UI renders an empty state; mutating
+/// methods return `Failure(PermissionError(scope: 'social.disabled'))`
+/// so consumers can pattern-match on the typed reason via
+/// `SocialProvider.lastError` without falling through to a stringly
+/// "unknown error" banner.
 class DisabledSocialRepository implements SocialPresenceRepository {
   const DisabledSocialRepository({
     required this.reason,
@@ -8,23 +18,33 @@ class DisabledSocialRepository implements SocialPresenceRepository {
 
   final String reason;
 
-  @override
-  Future<void> acceptFriendRequest({required String requestId}) {
-    throw StateError(reason);
-  }
+  Failure<T, AppError> _disabled<T>(String scope) => Failure(
+        PermissionError(
+          scope: 'social.$scope',
+          originalError: StateError(reason),
+        ),
+      );
 
   @override
-  Future<void> declineFriendRequest({required String requestId}) {
-    throw StateError(reason);
-  }
+  Future<Result<void, AppError>> acceptFriendRequest({
+    required String requestId,
+  }) async =>
+      _disabled<void>('acceptFriendRequest');
 
   @override
-  Future<List<SocialAchievementShare>> fetchRecentAchievementShares({
+  Future<Result<void, AppError>> declineFriendRequest({
+    required String requestId,
+  }) async =>
+      _disabled<void>('declineFriendRequest');
+
+  @override
+  Future<Result<List<SocialAchievementShare>, AppError>>
+      fetchRecentAchievementShares({
     required Iterable<String> actorUids,
     int limit = 20,
-  }) async {
-    return const [];
-  }
+  }) async =>
+          const Success<List<SocialAchievementShare>, AppError>(
+              <SocialAchievementShare>[]);
 
   @override
   Stream<List<SocialAchievementShare>> watchRecentAchievementShares({
@@ -35,63 +55,59 @@ class DisabledSocialRepository implements SocialPresenceRepository {
   }
 
   @override
-  Future<List<SocialUserProfile>> fetchProfilesByIds(
+  Future<Result<List<SocialUserProfile>, AppError>> fetchProfilesByIds(
     Iterable<String> uids,
-  ) async {
-    return const [];
-  }
+  ) async =>
+      const Success<List<SocialUserProfile>, AppError>(<SocialUserProfile>[]);
 
   @override
-  Future<List<SocialUserProfile>> searchProfilesByHandle(
+  Future<Result<List<SocialUserProfile>, AppError>> searchProfilesByHandle(
     String query, {
     required String excludeUid,
     int limit = 8,
-  }) async {
-    return const [];
-  }
+  }) async =>
+      const Success<List<SocialUserProfile>, AppError>(<SocialUserProfile>[]);
 
   @override
-  Future<void> sendFriendRequest({
+  Future<Result<void, AppError>> sendFriendRequest({
     required String fromUid,
     required String toUid,
-  }) {
-    throw StateError(reason);
-  }
+  }) async =>
+      _disabled<void>('sendFriendRequest');
 
   @override
-  Future<void> shareAchievement(SocialAchievementShare share) {
-    throw StateError(reason);
-  }
+  Future<Result<void, AppError>> shareAchievement(
+    SocialAchievementShare share,
+  ) async =>
+      _disabled<void>('shareAchievement');
 
   @override
-  Future<void> upsertProfile(SocialProfileSyncPayload payload) {
-    throw StateError(reason);
-  }
+  Future<Result<void, AppError>> upsertProfile(
+    SocialProfileSyncPayload payload,
+  ) async =>
+      _disabled<void>('upsertProfile');
 
   @override
-  Future<String> updateProfileHandle({
+  Future<Result<String, AppError>> updateProfileHandle({
     required String uid,
     required String desiredHandle,
-  }) {
-    throw StateError(reason);
-  }
+  }) async =>
+      _disabled<String>('updateProfileHandle');
 
   @override
-  Future<void> updateProfilePhotoUrl({
+  Future<Result<void, AppError>> updateProfilePhotoUrl({
     required String uid,
     required String? photoUrl,
-  }) {
-    throw StateError(reason);
-  }
+  }) async =>
+      _disabled<void>('updateProfilePhotoUrl');
 
   @override
-  Future<void> updatePinnedAchievement({
+  Future<Result<void, AppError>> updatePinnedAchievement({
     required String uid,
     required String achievementId,
     required bool pinned,
-  }) {
-    throw StateError(reason);
-  }
+  }) async =>
+      _disabled<void>('updatePinnedAchievement');
 
   @override
   Stream<List<SocialFriendRequest>> watchIncomingFriendRequests({
@@ -125,19 +141,19 @@ class DisabledSocialRepository implements SocialPresenceRepository {
   }
 
   @override
-  Future<List<RemoteEngineNodeCompletion>> fetchEngineNodeCompletions(
-    String uid,
-  ) async {
-    return const [];
-  }
+  Future<Result<List<RemoteEngineNodeCompletion>, AppError>>
+      fetchEngineNodeCompletions(String uid) async =>
+          const Success<List<RemoteEngineNodeCompletion>, AppError>(
+              <RemoteEngineNodeCompletion>[]);
 
   @override
-  Future<void> removeFriend({required String friendshipId}) {
-    throw StateError(reason);
-  }
+  Future<Result<void, AppError>> removeFriend({
+    required String friendshipId,
+  }) async =>
+      _disabled<void>('removeFriend');
 
   @override
-  Future<void> addReaction({
+  Future<Result<void, AppError>> addReaction({
     required String shareId,
     required String actorUid,
     required String actorName,
@@ -145,18 +161,16 @@ class DisabledSocialRepository implements SocialPresenceRepository {
     required String emoji,
     required String shareOwnerUid,
     required String achievementTitle,
-  }) {
-    throw StateError(reason);
-  }
+  }) async =>
+      _disabled<void>('addReaction');
 
   @override
-  Future<void> removeReaction({
+  Future<Result<void, AppError>> removeReaction({
     required String shareId,
     required String actorUid,
     required String shareOwnerUid,
-  }) {
-    throw StateError(reason);
-  }
+  }) async =>
+      _disabled<void>('removeReaction');
 
   @override
   Stream<List<SocialNotification>> watchNotifications(String uid) {
@@ -164,5 +178,6 @@ class DisabledSocialRepository implements SocialPresenceRepository {
   }
 
   @override
-  Future<void> markNotificationsRead(String uid) async {}
+  Future<Result<void, AppError>> markNotificationsRead(String uid) async =>
+      const Success<void, AppError>(null);
 }
