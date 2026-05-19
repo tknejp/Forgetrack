@@ -6,7 +6,7 @@ Flutter fitness/RPG tracking app. Feature-first architecture under `lib/features
 
 - **Architecture, layering rules, design tokens, dependency rules, HC / KT / progression invariants:** [docs/architecture.md](docs/architecture.md)
 - **Progression Engine V2:** the V2 migration shipped 2026-05-19. Live open work is [docs/progression_engine/rpg_mode_readiness.md](docs/progression_engine/rpg_mode_readiness.md). Completed plans (V2 phased migration, Phase 8/9 handoff, quest history refactor) are permanent design records under [docs/progression_engine/archive/](docs/progression_engine/archive/).
-- **Domain model refactor:** also shipped (2026-05-19). Permanent design record in [docs/domain_model/](docs/domain_model/) — `proposal.md` (target shape), `migration_plan.md` (the 22-phase plan), `follow_ups.md` (live cleanup queue + deferred items). Architectural decisions land as ADRs in `docs/site/data/decisions.json`.
+- **Domain model refactor:** shipped (2026-05-19) and the Track A close-out round (R.1–R.8) shipped the same day. Permanent design records in [docs/domain_model/](docs/domain_model/) — `proposal.md` (target shape) — plus archived plans under [docs/domain_model/archive/](docs/domain_model/archive/) — `migration_plan.md` (the 22-phase plan) and `follow_ups.md` (Track A bounded round + Track B/C/D parking lots). Architectural decisions land as ADRs in `docs/site/data/decisions.json` (see `track-a-closed` for the umbrella close-out).
 - **Feature designs:** [docs/features/](docs/features/) — coach log export, Firestore sync.
 - **External API capture:** [docs/integrations/](docs/integrations/) — Kalorické Tabulky.
 - **Feature internals:** READMEs in `lib/features/<feature>/`.

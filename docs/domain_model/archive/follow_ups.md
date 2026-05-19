@@ -251,9 +251,22 @@ Per-screen checklist derived from the Test plan + DoD blocks in [archive/migrati
 
 ---
 
-### R.6 Phase 21 lint baseline cleanup
+### ~~R.6 Phase 21 lint baseline cleanup~~ ✅ Done 2026-05-19
 
-**Why:** Phase 21 shipla matchers + ratchet but pre-existing violations (post-V1-delete baselines: `domain-purity` 33, `untyped-id` 7+58, `l10n-literal` 19, `widget-no-logic` 46) zůstávají. R.1, R.3, R.4 sníží některé naturally; R.6 dorazí zbytek nebo intentionally-acknowledge přes `lint-ignore` markers.
+**Shipped** as `R.6: Phase 21 lint baseline cleanup — all five ratchets to zero` (commit `5345888`). Approach mixed mechanical fixes with documented `lint-ignore` markers. Final baselines: `domain-purity` (lib/domain/) 0 | `domain-purity` (features/domain/) 25 → 0 | `untyped-id` (lib/domain/) 7 → 0 | `untyped-id` (features/domain/) 36 → 0 | `l10n-literal` 19 → 0 | `widget-no-logic` 29 → 0. Aim from §2 R.6 DoD was "≤ 5"; landed at 0 across the board. See ADR `r6-lint-baselines-to-zero` in [docs/site/data/decisions.json](../site/data/decisions.json) for the per-category split (fix vs marker) and the rationale for each marker pattern.
+
+**What changed:**
+
+- 18 files mechanically swapped `package:flutter/foundation.dart` → `package:meta/meta.dart` — every one of them used `@immutable` as the only foundation symbol; `meta` is already a direct dep precisely for this.
+- 7 legitimate boundary imports kept with `lint-ignore: domain-purity` markers (firebase_auth + google_sign_in in `identity.dart`, `Color` / `IconData` in three progression-display files, `HealthWorkoutActivityType` in `activity_record.dart`).
+- 43 `untyped-id` violations marked with one-line reasons grouped into three recurring patterns: storage-boundary raw strings, author-supplied opaque keys, producer-namespaced widget keys.
+- 19 `l10n-literal` violations: 16 devtools/debug English copies + 3 emoji symbol literals — all marked with `lint-ignore: l10n-literal — <reason>`.
+- 29 `widget-no-logic` violations marked per line with the filter's purpose (UI period slice / devtools matrix / display-only filter over provider-built collections).
+- `test/lint/production_scan_test.dart` baselines all lowered to 0; the ratchet now enforces "fix or document" for every new violation.
+
+**Why this scope is enough:**
+
+The original DoD wording ("baselines ≤ 5") assumed a mix of fixes + markers with a few stubborn cases left as the residual. The actual ratio came out 18:88 (mechanical fix to documented marker) and the residual category (real cleanup that would change semantics) is empty — every remaining violation either (a) holds a value that genuinely lives at a platform / storage / catalog boundary and would be wrong to type, or (b) is intentionally English-only debug surface, or (c) is a display-time slice over a provider-built collection that the original anti-pattern guidance was never meant to forbid. Going below zero on the markers would require relaxing the matcher patterns themselves, which is a different decision (matcher precision, not codebase cleanup).
 
 **Scope:**
 
@@ -275,9 +288,16 @@ Per-screen checklist derived from the Test plan + DoD blocks in [archive/migrati
 
 ---
 
-### R.7 Companion catalog audit closure
+### ~~R.7 Companion catalog audit closure~~ ✅ Done 2026-05-19
 
-**Why:** Phase 11 reverse-parity test odhalil 3 companions claim via `RewardGrant(CosmeticReward)` from other progression nodes (not via dedicated `CompanionAvailability` row): `companion_bridge_gargoyle`, `companion_cave_lynx`, `companion_aurora_stag`. To je content-authoring inconsistency, ne regression — ale necháno nedořešené.
+**Shipped** as `R.7: companion catalog audit — option (c) + forward parity test` (commit `f9acd45`). Picked option (c) from the original scope: status quo with an explicit whitelist + a forward-parity test that fails the build if a future Companion lands without picking a claim path. See ADR `r7-companion-catalog-audit` in [docs/site/data/decisions.json](../site/data/decisions.json) for the rejection rationale for options (a) and (b).
+
+**What changed:**
+
+- New const `companionsClaimedViaUnlockRules` in `lib/features/cosmetics/domain/companion_availability_lookup.dart` lists the three companions that ship without a `CompanionAvailability` node by design — `companion_bridge_gargoyle`, `companion_cave_lynx`, `companion_aurora_stag`. Doc comment explains the two claim paths and how to extend.
+- Forward-parity test in `test/features/cosmetics/companion_availability_lookup_test.dart` walks every catalog Companion and asserts it is either gated by an availability node or listed in the whitelist (or `metadata['devOnly'] == true`, the existing dev-only exemption). Reverse parity test left intact.
+- Total catalog change: zero. The three companions still claim via their existing `CosmeticUnlockRule` (level gate + two-relic ownership); the audit only adds the doc + the test that prevents future drift.
+- Test count: 520 → 521.
 
 **Scope:** Pick one of:
 
@@ -297,19 +317,15 @@ Per-screen checklist derived from the Test plan + DoD blocks in [archive/migrati
 
 ---
 
-### R.8 Periphery cleanup bundle
+### ~~R.8 Periphery cleanup bundle~~ ✅ Closed 2026-05-19 — all three items "won't do — not actionable"
 
-Drobnosti, které stojí samostatně, ale fit do jednoho PR pokud appetite:
+Per the original DoD ("Each item either landed (with PR commit) or explicitly documented as 'won't do — not actionable until a concrete trigger fires'"), all three items are recorded as **won't do, with their concrete trigger**. None ships as code in Track A. See ADR `r8-periphery-bundle-wont-do` in [docs/site/data/decisions.json](../site/data/decisions.json) for the per-item rationale.
 
-- **§2.12 Daily quest periodKey legacy data audit:** Phase 2 UTC enforcement applies to new code. Existing Firestore `engineQuestOfferings` + `engineObjectiveCompletions` documents may carry pre-UTC periodKeys. Devtools "ledger consistency check" panel: walk per-user collections, flag entries whose periodKey doesn't match `PeriodKey.fromRaw(stored).raw`. Manual cleanup tooling if drift entries exist.
-- **§2.14 Phase 3.c stylistic refinements:** `quest.id == 'literal'` → `quest.id == const ProgressionEntryId('literal')`. Opportunistic, not a sweep — fix at file-touch time. R.6 lint cleanup naturally surfaces remaining hot spots.
-- **§2.24 PlayerQuestLifecycle timestamp enrichment:** `QuestCompletedPendingClaim.completedAt` + `QuestClaimed.claimedAt` populated by `PlayerQuestCatalogService` from ledger event timestamps. Only do this when a UI surface actually requests relative-time hints ("claimed 2h ago"); otherwise the `null` placeholder is fine.
+- **§2.12 Daily quest periodKey legacy data audit — won't do.** No drift has been observed in practice. Phase 2's UTC enforcement applies to new writes, and the only persisted pre-UTC documents would be on devices that ran the pre-Phase-2 build of `refactor/domain-model-design`, which never shipped past the local dev branch. **Concrete trigger:** an in-the-wild user reports daily-quest periodKey mismatches OR a devtools snapshot shows entries whose `periodKey != PeriodKey.fromRaw(stored).raw`. Until then, the audit panel is dead weight.
+- **§2.14 Phase 3.c stylistic refinements (`quest.id == 'literal'` → typed) — won't do as a sweep.** R.6 documented every remaining `untyped-id` site with a `lint-ignore` marker explaining the boundary rationale; that closes the loop on visibility. The comparator-form (`quest.id == 'literal'`) was the secondary-priority part of §2.14 and is now subsumed by the typed `ProgressionEntryId` rollout that R.1 already shipped — the call sites that needed it were caught by the typed-id ratchet. **Concrete trigger:** a new untyped-id site appears at a file-touch boundary and the ratchet flags it; fix at that point. No standalone sweep.
+- **§2.24 PlayerQuestLifecycle timestamp enrichment — won't do.** Original scope was conditional on a UI surface requesting relative-time hints ("claimed 2h ago"). No surface in the current quests / cosmetics / chapter screens asks for that. The `null` placeholder on `QuestCompletedPendingClaim.completedAt` + `QuestClaimed.claimedAt` is fine until one does. **Concrete trigger:** a design ask for relative-time copy on a quest claim card or chapter completion summary.
 
-**DoD:** Each item either landed (with PR commit) or explicitly documented as "won't do — not actionable until a concrete trigger fires".
-
-**Risk:** Nízké. Mechanical or skip-if-not-needed.
-
-**Estimated size:** ~1 day if all three done; less if any skipped.
+**DoD: ✅ closed.** All three items have a written "won't do" plus an explicit concrete trigger that would justify revisiting.
 
 ---
 
@@ -322,9 +338,11 @@ Drobnosti, které stojí samostatně, ale fit do jednoho PR pokud appetite:
 | ~~R.3 Widget consumer migration (a/b/c)~~ | ✅ 2026-05-19 (a, b shipped; c was already shipped via Phase 13 + Phase 19) | Medium | — |
 | ~~R.4 Repository contracts Result hardening~~ | ✅ 2026-05-19 (single commit, ~600 LoC, no a/b/c split) | High | — |
 | ~~R.5 Test pyramid hardening (a/b/c)~~ | ✅ 2026-05-19 (`67f24a3` + `d1b03a9` + `1d964cc`; test count 514 → 520) | Low | Split into 3 sub-PRs |
-| R.6 Lint baseline cleanup | 2 days | Low | After R.1, R.3, R.4 |
-| R.7 Companion catalog audit | ½ day | Low | — |
-| R.8 Periphery bundle | 1 day | Low | Optional |
+| ~~R.6 Lint baseline cleanup~~ | ✅ 2026-05-19 (`5345888`; all 5 baselines → 0) | Low | — |
+| ~~R.7 Companion catalog audit~~ | ✅ 2026-05-19 (`f9acd45`; option (c) + forward parity test) | Low | — |
+| ~~R.8 Periphery bundle~~ | ✅ 2026-05-19 (all 3 items "won't do — not actionable", documented with triggers) | Low | — |
+
+**Track A: ✅ permanently closed 2026-05-19.** All eight items (R.1 → R.8) shipped or recorded as won't-do. This document moves into `archive/` alongside `migration_plan.md` in the same commit that adds the close-out ADRs.
 
 **Total realistic time-frame:** 3-4 týdny part-time (mirrors original Stage estimate proportionally). After Track A closes, this document moves alongside `migration_plan.md` into `archive/`.
 

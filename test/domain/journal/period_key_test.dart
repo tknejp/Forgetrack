@@ -1,6 +1,6 @@
 // Cross-timezone UTC normalisation tests for PeriodKey.
 //
-// Audit finding (docs/domain_model/follow_ups.md §1 + §2.12): the
+// Audit finding (docs/domain_model/archive/follow_ups.md §1 + §2.12): the
 // long-offline + cross-TZ scenario could produce duplicate periodKey
 // claims for the same calendar day if the device clock was in a
 // different timezone when the second write happened. PeriodKey is

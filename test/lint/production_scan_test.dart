@@ -19,7 +19,7 @@
 //   domain-purity, untyped-id, l10n-literal, widget-no-logic.
 //
 // Existing-violation cleanup tracker:
-//   docs/domain_model/follow_ups.md §Phase 21 cleanup queue.
+//   docs/domain_model/archive/follow_ups.md §Phase 21 cleanup queue.
 
 import 'dart:io';
 

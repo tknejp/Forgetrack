@@ -30,7 +30,7 @@ import 'player_quest_lifecycle.dart';
 ///
 /// See:
 ///   - `docs/domain_model/proposal.md` §2.4 (PlayerQuest).
-///   - `docs/domain_model/follow_ups.md` §R.1 (catalog migration).
+///   - `docs/domain_model/archive/follow_ups.md` §R.1 (catalog migration).
 ///   - ADR `player-quest-catalog-projection` in
 ///     `docs/site/data/decisions.json`.
 @immutable

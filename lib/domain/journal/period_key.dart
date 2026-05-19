@@ -17,7 +17,7 @@
 ///
 /// See:
 ///   - docs/domain_model/migration_plan.md Phase 2 (UTC enforcement).
-///   - docs/domain_model/follow_ups.md §2.12 (post-Phase 2 audit of
+///   - docs/domain_model/archive/follow_ups.md §2.12 (post-Phase 2 audit of
 ///     existing ledger records for legacy drift).
 class PeriodKey {
   /// Private — external code must go through the named factories so

@@ -16,7 +16,7 @@
 ///
 /// See:
 ///   - `docs/domain_model/proposal.md` §2.3 (Objective.domain).
-///   - `docs/domain_model/follow_ups.md` R.1 (catalog migration).
+///   - `docs/domain_model/archive/follow_ups.md` R.1 (catalog migration).
 enum ProgressionDomain {
   steps,
   nutrition,

@@ -58,7 +58,7 @@ CompanionAvailability? companionAvailabilityFor(String cosmeticId) {
 /// availability node OR listed here.
 ///
 /// Reason for the split (option c in
-/// `docs/domain_model/follow_ups.md` §2 R.7): the three companions
+/// `docs/domain_model/archive/follow_ups.md` §2 R.7): the three companions
 /// are mid-late rarity rewards whose gating is already fully
 /// expressed by their relic prerequisites
 /// (`relic_oathbound_mark` + `relic_bridge_key`, etc., see

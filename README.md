@@ -273,5 +273,7 @@ follow-ups.
 
 The V2 progression engine is now the only progression workstream — see
 [`docs/progression_engine/`](docs/progression_engine/) for engine-specific
-notes and [`docs/domain_model/follow_ups.md`](docs/domain_model/follow_ups.md)
-for the bounded list of work that closes the refactor.
+notes. The Track A close-out round (R.1–R.8) shipped 2026-05-19; the
+archived plan lives at
+[`docs/domain_model/archive/follow_ups.md`](docs/domain_model/archive/follow_ups.md)
+alongside `migration_plan.md`.

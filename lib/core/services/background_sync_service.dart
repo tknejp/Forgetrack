@@ -41,7 +41,7 @@ const _syncInterval = Duration(minutes: 15);
 // background-sync path had been writing to a divergent ledger and
 // surfacing stale notifications. Bringing V2 progression
 // notifications back is a scoped future feature, tracked in
-// docs/domain_model/follow_ups.md §2.26.
+// docs/domain_model/archive/follow_ups.md §2.26.
 
 /// Entry point volaný WorkManagerem v background isolatu.
 @pragma('vm:entry-point')

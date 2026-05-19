@@ -16,7 +16,7 @@ import '../../../shared/theme/design_tokens.dart';
 /// the domain / presentation boundary per
 /// `docs/architecture.md` §Dependency rules.
 ///
-/// See R.1 in `docs/domain_model/follow_ups.md` and ADR
+/// See R.1 in `docs/domain_model/archive/follow_ups.md` and ADR
 /// `r1-catalog-domain-migration` in `docs/site/data/decisions.json`.
 extension ProgressionDomainChrome on ProgressionDomain {
   /// Design-token pairing (color + dim variant) for this domain.
