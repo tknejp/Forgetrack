@@ -1,5 +1,7 @@
 import 'package:meta/meta.dart';
 
+import '../catalog/unlock_condition.dart';
+
 /// Player-side lifecycle of one Achievement catalog row.
 ///
 /// Phase 8 of the domain refactor introduces this sealed hierarchy as
@@ -64,18 +66,34 @@ sealed class PlayerAchievementLifecycle {
 /// Unlock conditions failed. The achievement is hidden / greyed in the
 /// grid; the player cannot make progress toward it until the gating
 /// node fires.
+///
+/// **[remaining]** carries the catalog [UnlockCondition]s that haven't
+/// evaluated to `true` for this player. R.1 wired this in per
+/// proposal §4.2: an empty list means the achievement is locked by
+/// `ActivationPolicy` alone (e.g. RPG mode off) rather than an
+/// explicit condition. Producer: `PlayerAchievementShelfService`.
 @immutable
 class AchievementLocked extends PlayerAchievementLifecycle {
-  const AchievementLocked();
+  const AchievementLocked({this.remaining = const []});
+
+  final List<UnlockCondition> remaining;
 
   @override
-  bool operator ==(Object other) => other is AchievementLocked;
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! AchievementLocked) return false;
+    if (other.remaining.length != remaining.length) return false;
+    for (var i = 0; i < remaining.length; i++) {
+      if (other.remaining[i] != remaining[i]) return false;
+    }
+    return true;
+  }
 
   @override
-  int get hashCode => (AchievementLocked).hashCode;
+  int get hashCode => Object.hashAll([AchievementLocked, ...remaining]);
 
   @override
-  String toString() => 'AchievementLocked()';
+  String toString() => 'AchievementLocked(remaining: $remaining)';
 }
 
 /// Eligible (conditions met); the bound objective is in progress.

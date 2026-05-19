@@ -1,4 +1,3 @@
-import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:forgetrack/domain/progression/player/player_quest.dart';
 import 'package:forgetrack/domain/progression/player/player_quest_catalog.dart';
 
@@ -42,7 +41,7 @@ class PlayerQuestCatalogService {
     final entries = <PlayerQuest>[
       for (final progress in questProgressEntries)
         PlayerQuest(
-          id: QuestId(progress.node.id.value),
+          quest: progress.node,
           lifecycle: progress.lifecycle,
           evaluatedAt: evaluatedAt,
         ),

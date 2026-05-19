@@ -259,11 +259,26 @@ class ProgressionEngine {
     final newlyAvailable = <NodeAvailability>[];
     final newAnnouncementEvents = <NodeAnnouncedEvent>[];
     final lockedNodeIds = <String>{};
+    final lockedNodeRemainingConditions = <String, List<UnlockCondition>>{};
     final periodKeyByNodeId = <String, String?>{};
     for (final r in resolutions) {
       periodKeyByNodeId[r.node.id] = r.periodKey;
       if (!r.eligibleByConditions) {
         lockedNodeIds.add(r.node.id);
+        // R.1: surface the specific gates that failed so the screen
+        // can render "Vyžaduje dokončení X" / "Vyžaduje úroveň Y"
+        // instead of a generic "Zamčeno" hint.
+        lockedNodeRemainingConditions[r.node.id] =
+            _unlockConditionResolver.unsatisfied(
+          conditions: _conditionsFor(r.node),
+          completedObjectiveIds: completedObjectiveIds,
+          completedNodesLifetime: priorCompletedNodeIds,
+          claimedNodesLifetime: priorClaimedNodeIds,
+          unlockedChapterIds: unlockedChapterIds,
+          availableCompanionIds: availableCompanionIds,
+          context: context,
+          ledger: ledger,
+        );
       } else {
         final boundObjectiveId = _objectiveIdOf(r.node);
         if (boundObjectiveId != null &&
@@ -425,6 +440,7 @@ class ProgressionEngine {
       contextSnapshot: context,
       allObjectiveOutcomes: outcomes.values.toList(growable: false),
       lockedNodeIds: lockedNodeIds,
+      lockedNodeRemainingConditions: lockedNodeRemainingConditions,
     );
   }
 

@@ -1,4 +1,5 @@
 import 'package:forgetrack/domain/progression/catalog/chapter.dart';
+import 'package:forgetrack/domain/progression/catalog/unlock_condition.dart';
 import 'package:forgetrack/domain/progression/player/chapter_lifecycle.dart';
 import 'package:forgetrack/domain/progression/player/player_chapter.dart';
 import 'package:forgetrack/domain/progression/player/player_chapter_progress.dart';
@@ -66,6 +67,8 @@ class PlayerChapterProgressService {
     required Set<String> lockedNodeIds,
     required DateTime? Function(String nodeId) earliestCompletionAt,
     required DateTime evaluatedAt,
+    Map<String, List<UnlockCondition>> lockedNodeRemainingConditions =
+        const {},
   }) {
     final entries = <PlayerChapter>[
       for (final chapter in chapters.all)
@@ -76,6 +79,7 @@ class PlayerChapterProgressService {
             completedNodeIds: completedNodeIds,
             lockedNodeIds: lockedNodeIds,
             earliestCompletionAt: earliestCompletionAt,
+            lockedNodeRemainingConditions: lockedNodeRemainingConditions,
           ),
           evaluatedAt: evaluatedAt,
         ),
@@ -88,6 +92,8 @@ class PlayerChapterProgressService {
     required Set<String> completedNodeIds,
     required Set<String> lockedNodeIds,
     required DateTime? Function(String nodeId) earliestCompletionAt,
+    required Map<String, List<UnlockCondition>>
+        lockedNodeRemainingConditions,
   }) {
     // 1. Completed — completion node fired (or, when no completion
     //    node, the finale fired).
@@ -104,9 +110,20 @@ class PlayerChapterProgressService {
     //    (resolver says so) or defensive-Locked (no classification).
     final openerCompleted = completedNodeIds.contains(chapter.opener.value);
     if (!openerCompleted) {
-      // Locked: the opener is the chapter's gateway. If it's locked
-      // by conditions, the chapter is locked.
-      return const ChapterLocked();
+      // Locked: the opener is the chapter's gateway. R.1 surfaces the
+      // specific gate (typically a `NodeCompleted` on the previous
+      // chapter's finale + a `LevelAtLeast` from the chapter level).
+      // When the engine reported multiple top-level unsatisfied
+      // conditions, we wrap them in `AllOf` so [ChapterLocked.gate]
+      // remains a single value matching proposal §4.4's shape.
+      final remaining =
+          lockedNodeRemainingConditions[chapter.opener.value] ?? const [];
+      final UnlockCondition? gate = switch (remaining.length) {
+        0 => null,
+        1 => remaining.first,
+        _ => AllOf(List<UnlockCondition>.unmodifiable(remaining)),
+      };
+      return ChapterLocked(gate: gate);
     }
 
     final stepsCompleted = [

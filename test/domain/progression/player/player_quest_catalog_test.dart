@@ -9,6 +9,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import 'package:forgetrack/domain/progression/player/player_quest.dart';
 import 'package:forgetrack/domain/progression/player/player_quest_catalog.dart';
 import 'package:forgetrack/domain/progression/player/player_quest_lifecycle.dart';
@@ -16,12 +17,20 @@ import 'package:forgetrack/domain/progression/player/player_quest_lifecycle.dart
 void main() {
   final evaluatedAt = DateTime.utc(2026, 5, 18, 12);
 
+  DailyQuest fakeQuest(String id) => DailyQuest(
+        id: ProgressionEntryId(id),
+        objectiveId: ObjectiveId('${id}_obj'),
+        titleKey: (_) => 'Title $id',
+        descriptionKey: (_) => 'Desc $id',
+        rewards: const [],
+      );
+
   PlayerQuest entry(
     String id,
     PlayerQuestLifecycle lifecycle,
   ) {
     return PlayerQuest(
-      id: QuestId(id),
+      quest: fakeQuest(id),
       lifecycle: lifecycle,
       evaluatedAt: evaluatedAt,
     );

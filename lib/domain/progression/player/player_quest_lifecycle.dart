@@ -1,5 +1,7 @@
 import 'package:meta/meta.dart';
 
+import '../catalog/unlock_condition.dart';
+
 /// Player-side lifecycle of one Quest catalog row.
 ///
 /// Phase 6 of the domain refactor introduces this sealed hierarchy as
@@ -50,18 +52,37 @@ sealed class PlayerQuestLifecycle {
 /// Unlock conditions or activation policy block this quest. The player
 /// cannot interact with it; the UI surface renders the locked-row
 /// variant (greyed asset, "Reach level X" / "Complete chapter Y" copy).
+///
+/// **[remaining]** carries the catalog [UnlockCondition]s that have
+/// not yet evaluated to `true` for this player. R.1 wired this in
+/// per proposal §4.1: an empty list means the quest is locked by
+/// `ActivationPolicy` alone (e.g. RPG mode off) rather than by an
+/// explicit condition. Producer:
+/// `PlayerQuestCatalogService` reads them from the quest catalog row
+/// and feeds the condition slice through the engine resolver's
+/// `UnlockConditionResolver`.
 @immutable
 class QuestLocked extends PlayerQuestLifecycle {
-  const QuestLocked();
+  const QuestLocked({this.remaining = const []});
+
+  final List<UnlockCondition> remaining;
 
   @override
-  bool operator ==(Object other) => other is QuestLocked;
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! QuestLocked) return false;
+    if (other.remaining.length != remaining.length) return false;
+    for (var i = 0; i < remaining.length; i++) {
+      if (other.remaining[i] != remaining[i]) return false;
+    }
+    return true;
+  }
 
   @override
-  int get hashCode => (QuestLocked).hashCode;
+  int get hashCode => Object.hashAll([QuestLocked, ...remaining]);
 
   @override
-  String toString() => 'QuestLocked()';
+  String toString() => 'QuestLocked(remaining: $remaining)';
 }
 
 /// Eligible to claim once the objective hits its target. Holds the

@@ -93,6 +93,7 @@ class EngineQuestProgress {
     this.prereqGateNodeId,
     this.valueUnit = EngineQuestValueUnit.count,
     this.isLockedByConditions = false,
+    this.remainingUnlockConditions = const [],
   });
 
   final Quest node;
@@ -156,6 +157,16 @@ class EngineQuestProgress {
   /// chapter's side quests don't keep leaking into DENNÃ ÃšKOLY.
   final bool isLockedByConditions;
 
+  /// R.1 wiring: the top-level [UnlockCondition]s that still evaluated
+  /// to false this run. Populated from
+  /// [ProgressionResolutionResult.lockedNodeRemainingConditions] so
+  /// `QuestLocked.remaining` carries the specific blockers (a
+  /// `LevelAtLeast(20)`, a `NodeCompleted('chapter_X_finale')`, an
+  /// `AllOf([...])` composite gate). Empty when the quest is not
+  /// locked or when its lock state derives from
+  /// [ActivationPolicy] alone.
+  final List<UnlockCondition> remainingUnlockConditions;
+
   String get nodeId => node.id;
 
   /// Phase 6 bridge: derives the [PlayerQuestLifecycle] sealed
@@ -179,7 +190,9 @@ class EngineQuestProgress {
   /// Phase 7 retires the flags and moves authority into
   /// `PlayerQuestCatalogService`; this getter goes away with them.
   PlayerQuestLifecycle get lifecycle {
-    if (isLockedByConditions) return const QuestLocked();
+    if (isLockedByConditions) {
+      return QuestLocked(remaining: remainingUnlockConditions);
+    }
     if (isCompleted) return QuestClaimed(finalXp: previewXp);
     if (isAvailableForClaim) {
       return QuestCompletedPendingClaim(previewXp: previewXp);
@@ -615,6 +628,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
       lockedNodeIds: lockedNodeIds,
       earliestCompletionAt: earliestCompletionAt,
       evaluatedAt: _lastEvaluatedAt ?? _engineNow(),
+      lockedNodeRemainingConditions: lockedNodeRemainingConditions,
     );
     _cachedPlayerChapterProgress = progress;
     _playerChapterProgressCacheKey = cacheKey;
@@ -679,6 +693,18 @@ class ProgressionEngineProvider extends ChangeNotifier {
     final r = _lastResult;
     if (r == null) return const {};
     return r.lockedNodeIds;
+  }
+
+  /// Per-node unsatisfied [UnlockCondition]s for [lockedNodeIds]. Read
+  /// by the per-bucket builders so [EngineQuestProgress] and
+  /// [EngineAchievementView] can route the specific blockers into the
+  /// sealed `*Locked.remaining` field. Empty map before the first
+  /// evaluation; per-id lookup returns `const []` when the engine
+  /// has no entry for the node.
+  Map<String, List<UnlockCondition>> get lockedNodeRemainingConditions {
+    final r = _lastResult;
+    if (r == null) return const {};
+    return r.lockedNodeRemainingConditions;
   }
 
   /// All [Achievement]s from the catalog. Cached on first access
@@ -3488,6 +3514,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
     final completed = completedNodeIds;
     final available = availableNodeIds;
     final locked = lockedNodeIds;
+    final remainingConditions = lockedNodeRemainingConditions;
 
     final out = <EngineQuestProgress>[];
     for (final node in _nodeCatalog.build()) {
@@ -3568,6 +3595,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
         }
       }
 
+      final isLocked = locked.contains(node.id);
       out.add(EngineQuestProgress(
         node: node,
         actualValue: actual,
@@ -3587,7 +3615,9 @@ class ProgressionEngineProvider extends ChangeNotifier {
         valueUnit: objective.metric is SleepMinutesMetric
             ? EngineQuestValueUnit.minutes
             : EngineQuestValueUnit.count,
-        isLockedByConditions: locked.contains(node.id),
+        isLockedByConditions: isLocked,
+        remainingUnlockConditions:
+            isLocked ? (remainingConditions[node.id] ?? const []) : const [],
       ));
     }
     return out;

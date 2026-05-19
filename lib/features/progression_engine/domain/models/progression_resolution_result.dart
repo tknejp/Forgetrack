@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../evaluator/objective_evaluator.dart' show ObjectiveOutcome;
 import 'engine_evaluation_context.dart';
 import 'package:forgetrack/domain/journal/journal_event.dart';
+import 'package:forgetrack/domain/progression/catalog/unlock_condition.dart';
 import 'progression_resolution_reason.dart';
 
 export '../evaluator/objective_evaluator.dart' show ObjectiveOutcome;
@@ -26,6 +27,7 @@ class ProgressionResolutionResult {
     this.allObjectiveOutcomes = const [],
     this.newlyAvailableNodes = const [],
     this.lockedNodeIds = const {},
+    this.lockedNodeRemainingConditions = const {},
   });
 
   final String runId;
@@ -63,6 +65,20 @@ class ProgressionResolutionResult {
   /// quest whose chapter has finished (`ChapterActive` false) was
   /// otherwise indistinguishable from an in-progress one.
   final Set<String> lockedNodeIds;
+
+  /// For each locked node id, the **top-level** unlock conditions that
+  /// still evaluated to false this run. Populated alongside
+  /// [lockedNodeIds] by the engine resolver. Consumers (player-side
+  /// catalog services) read this to populate
+  /// `QuestLocked.remaining` / `AchievementLocked.remaining` so the
+  /// screen can render the specific blocker rather than a generic
+  /// "Zamčeno" message.
+  ///
+  /// Composite conditions ([AllOf] / [AnyOf]) appear as a single
+  /// list entry; the screen renders them as one composite gate.
+  /// Nodes locked by [ActivationPolicy] alone (e.g. RPG mode off
+  /// without an explicit `RpgModeEnabled` gate) have an empty list.
+  final Map<String, List<UnlockCondition>> lockedNodeRemainingConditions;
 
   /// **Delta** subset of [availableNodes]: nodes that are surfacing
   /// as available for the first time, tracked via a persisted

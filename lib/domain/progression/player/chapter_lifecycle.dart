@@ -1,6 +1,7 @@
 import 'package:meta/meta.dart';
 
 import '../catalog/ids.dart';
+import '../catalog/unlock_condition.dart';
 
 /// Player-side lifecycle of one Chapter catalog row.
 ///
@@ -57,18 +58,35 @@ sealed class ChapterLifecycle {
 
 /// Gating unlock conditions not yet satisfied. The chapter is hidden
 /// or shown with a "Zamčeno" hint on the journey map.
+///
+/// **[gate]** carries the catalog [UnlockCondition] that still
+/// evaluates to `false` for this player — typically a
+/// [NodeCompleted] on the previous chapter's finale or a
+/// [LevelAtLeast] on the chapter opener. R.1 wired this in per
+/// proposal §4.4. Producer: `PlayerChapterProgressService`.
+/// When a chapter declares multiple gating conditions the service
+/// wraps them in an [AllOf] so [gate] stays a single value.
 @immutable
 class ChapterLocked extends ChapterLifecycle {
-  const ChapterLocked();
+  const ChapterLocked({this.gate});
+
+  /// Catalog condition still unsatisfied. Nullable when the chapter
+  /// is locked by [ActivationPolicy] (e.g. RPG mode off) or by an
+  /// implicit gate the service does not surface — the screen falls
+  /// back to a generic "Zamčeno" message in that case.
+  final UnlockCondition? gate;
 
   @override
-  bool operator ==(Object other) => other is ChapterLocked;
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ChapterLocked && other.gate == gate;
+  }
 
   @override
-  int get hashCode => (ChapterLocked).hashCode;
+  int get hashCode => Object.hash(ChapterLocked, gate);
 
   @override
-  String toString() => 'ChapterLocked()';
+  String toString() => 'ChapterLocked(gate: $gate)';
 }
 
 /// Opener is auto-claimable but no chain step has been completed yet.

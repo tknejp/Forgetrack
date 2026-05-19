@@ -6,6 +6,7 @@ import '../../domain/display/progression_display_models.dart';
 import '../../domain/display/progression_display_resolver.dart';
 import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/unlock_condition.dart';
 import '../progression_engine_provider.dart';
 
 /// Display-ready view of a V2 [Achievement] paired with the
@@ -29,6 +30,7 @@ class EngineAchievementView {
     required this.levelTarget,
     this.isLockedByConditions = false,
     this.previewXp = 0,
+    this.remainingUnlockConditions = const [],
   });
 
   /// Catalog entry this view wraps.
@@ -75,6 +77,15 @@ class EngineAchievementView {
   /// reward XP yet.
   final int previewXp;
 
+  /// R.1 wiring: the top-level [UnlockCondition]s that still evaluated
+  /// to false this run. Populated from
+  /// [ProgressionResolutionResult.lockedNodeRemainingConditions] so
+  /// `AchievementLocked.remaining` carries the specific blockers (a
+  /// `LevelAtLeast(20)`, a `NodeCompleted(...)`). Empty list when the
+  /// achievement is not locked or when its lock state derives from
+  /// [ActivationPolicy] alone.
+  final List<UnlockCondition> remainingUnlockConditions;
+
   String get id => node.id;
 
   /// Phase 8 bridge: derives the [PlayerAchievementLifecycle] sealed
@@ -103,7 +114,9 @@ class EngineAchievementView {
         unlockedAt: unlockedAt,
       );
     }
-    if (isLockedByConditions) return const AchievementLocked();
+    if (isLockedByConditions) {
+      return AchievementLocked(remaining: remainingUnlockConditions);
+    }
     return AchievementInProgress(
       actual: currentValue.toDouble(),
       target: targetValue.toDouble(),
@@ -122,6 +135,7 @@ List<EngineAchievementView> buildEngineAchievementViews(
   const resolver = ProgressionDisplayResolver();
   final completed = provider.completedNodeIds;
   final locked = provider.lockedNodeIds;
+  final remainingConditions = provider.lockedNodeRemainingConditions;
 
   final out = <EngineAchievementView>[];
   for (final node in provider.achievements) {
@@ -156,6 +170,7 @@ List<EngineAchievementView> buildEngineAchievementViews(
         .fold<int>(0, (sum, r) => sum + r.amount);
     final previewXp = provider.scaledRewardXp(baseXp: baseXp);
 
+    final isLocked = !unlocked && locked.contains(node.id);
     out.add(EngineAchievementView(
       node: node,
       display: display,
@@ -165,8 +180,10 @@ List<EngineAchievementView> buildEngineAchievementViews(
       targetValue: target,
       progress: progress,
       levelTarget: _levelTargetFromId(node.id),
-      isLockedByConditions: !unlocked && locked.contains(node.id),
+      isLockedByConditions: isLocked,
       previewXp: previewXp,
+      remainingUnlockConditions:
+          isLocked ? (remainingConditions[node.id] ?? const []) : const [],
     ));
   }
   return out;

@@ -57,6 +57,44 @@ class UnlockConditionResolver {
     return true;
   }
 
+  /// Returns the **top-level** unlock conditions that did not evaluate
+  /// to `true`. Used by the player-side `*Locked.remaining` /
+  /// `*Locked.gate` fields so the screen can render the specific
+  /// blocker rather than a generic "Zamčeno" hint.
+  ///
+  /// Composite conditions ([AllOf] / [AnyOf]) are surfaced as a single
+  /// list entry — the screen renders them as one composite gate; it
+  /// does not need the per-leaf breakdown to read "Vyžaduje dokončení
+  /// X nebo Y".
+  List<UnlockCondition> unsatisfied({
+    required List<UnlockCondition> conditions,
+    required Set<String> completedObjectiveIds,
+    required Set<String> completedNodesLifetime,
+    required Set<String> claimedNodesLifetime,
+    required Set<String> unlockedChapterIds,
+    required Set<String> availableCompanionIds,
+    required EngineEvaluationContext context,
+    required LedgerSnapshot ledger,
+  }) {
+    if (conditions.isEmpty) return const [];
+    final out = <UnlockCondition>[];
+    for (final c in conditions) {
+      if (!_resolve(
+        c,
+        completedObjectiveIds: completedObjectiveIds,
+        completedNodesLifetime: completedNodesLifetime,
+        claimedNodesLifetime: claimedNodesLifetime,
+        unlockedChapterIds: unlockedChapterIds,
+        availableCompanionIds: availableCompanionIds,
+        context: context,
+        ledger: ledger,
+      )) {
+        out.add(c);
+      }
+    }
+    return out;
+  }
+
   bool _resolve(
     UnlockCondition condition, {
     required Set<String> completedObjectiveIds,
