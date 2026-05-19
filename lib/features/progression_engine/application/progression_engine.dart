@@ -18,7 +18,6 @@ import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';
 import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import '../domain/models/progression_resolution_reason.dart';
 import 'package:forgetrack/domain/progression/catalog/quest_policies.dart';
-import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import 'package:forgetrack/domain/progression/catalog/unlock_condition.dart';
 import '../domain/models/progression_resolution_result.dart';
 import '../domain/repository/ledger_snapshot.dart';
@@ -605,11 +604,16 @@ class ProgressionEngine {
   ///   + the claim event. The resolver sees `alreadyClaimed`, emits
   ///   `NodeCompletionEvent` on this run, and the reward planner
   ///   grants whatever the node carries.
-  /// * For **auto-claim** nodes: writes the objective completion +
-  ///   the node completion + every XP/cosmetic reward event directly.
-  ///   No celebration fires (the node is already in
-  ///   `priorCompletedNodeIds` on the next eval) but XP and any
-  ///   downstream unlocks pick up correctly.
+  /// * For **auto-claim** nodes: writes only the objective completion
+  ///   event. The resolver sees the forced-true objective outcome and
+  ///   classifies the node as freshly completed, so the engine's
+  ///   standard pipeline fires the `NodeCompletionEvent` + reward
+  ///   grants on the same run — including populating
+  ///   `result.grantedRewards` so the cosmetic-unlock bridge dispatches
+  ///   any cosmetic rewards on the achievement (the earlier design
+  ///   pre-wrote everything directly and then re-evaluated, which left
+  ///   the bridge with an empty `grantedRewards` list and silently
+  ///   skipped relic / emblem unlocks — see Trello #76 sub-issue 1).
   ///
   /// Returns the post-write evaluation result.
   Future<ProgressionResolutionResult> simulateClaim({
@@ -637,7 +641,6 @@ class ProgressionEngine {
       evaluatedAt: evaluatedAt,
       ownedCosmeticIds: ownedCosmeticIds,
     );
-    final ledger = await _repository.loadLedger();
     final node = _nodeCatalog
         .build(catalogContext)
         .firstWhere((n) => n.id == nodeId);
@@ -667,13 +670,33 @@ class ProgressionEngine {
       ));
     }
     if (node.claimPolicy == ClaimPolicy.manual) {
+      // Manual-claim: write the claim event so the resolver sees
+      // `alreadyClaimed=true` on the next eval and the engine fires
+      // the completion + reward grants naturally.
       events.add(NodeClaimEvent(
         eventKey: ProgressionNodeResolver.claimEventKey(nodeId, periodKey),
         timestamp: evaluatedAt,
         nodeId: nodeId,
         periodKey: periodKey,
       ));
-    } else {
+    }
+    // Auto-claim: nothing else to pre-write. The forced-true objective
+    // outcome (from the ObjectiveCompletionEvent above) is enough for
+    // the resolver to classify the node as freshly completed; the
+    // engine's standard pipeline fires the `NodeCompletionEvent` +
+    // every reward in `node.rewards` on this run, populating
+    // `result.grantedRewards` so the cosmetic-unlock bridge can
+    // dispatch cosmetic grants. `levelAtGrant` is left as the default
+    // (`1`) because the engine's reward grant service derives it from
+    // the running ledger XP.
+    if (objectiveId == null && node.claimPolicy != ClaimPolicy.manual) {
+      // Condition-only auto-claim nodes (rare — would fire when both
+      // `objectiveId == null` AND `claimPolicy == automatic`; none of
+      // today's catalog hits this, but the guard keeps the engine's
+      // re-eval path well-defined: with no ObjectiveCompletionEvent
+      // and no pre-written NodeCompletionEvent the resolver would
+      // never see the node as completed). Fall back to the
+      // pre-Phase-22 direct-write so this edge keeps working.
       events.add(NodeCompletionEvent(
         eventKey: ProgressionNodeResolver.completionEventKey(
           nodeId,
@@ -683,48 +706,15 @@ class ProgressionEngine {
         nodeId: nodeId,
         periodKey: periodKey,
       ));
-      var grantOrdinal = ledger.rewardGrants.length;
-      for (final reward in node.rewards) {
-        if (reward is XpReward) {
-          events.add(RewardGrantEvent(
-            eventKey: ProgressionNodeResolver.rewardEventKey(
-              nodeId: nodeId,
-              rewardOrdinal: grantOrdinal,
-              periodKey: periodKey,
-            ),
-            timestamp: evaluatedAt,
-            nodeId: nodeId,
-            rewardOrdinal: grantOrdinal,
-            rewardKind: RewardGrantKind.xp,
-            xpAmount: reward.amount,
-            periodKey: periodKey,
-            levelAtGrant: levelAtGrant,
-            multiplierAtGrant: 1.0,
-          ));
-          grantOrdinal++;
-        } else if (reward is CosmeticReward) {
-          events.add(RewardGrantEvent(
-            eventKey: ProgressionNodeResolver.rewardEventKey(
-              nodeId: nodeId,
-              rewardOrdinal: grantOrdinal,
-              periodKey: periodKey,
-            ),
-            timestamp: evaluatedAt,
-            nodeId: nodeId,
-            rewardOrdinal: grantOrdinal,
-            rewardKind: RewardGrantKind.cosmetic,
-            cosmeticId: reward.cosmeticId,
-            periodKey: periodKey,
-            levelAtGrant: levelAtGrant,
-            multiplierAtGrant: 1.0,
-          ));
-          grantOrdinal++;
-        }
-        // Other reward kinds (relic, companion availability, chapter
-        // unlock) auto-flow from the node completion on the next
-        // evaluate pass; no explicit grant event needed here.
-      }
     }
+    // `levelAtGrant` retained on the API for backwards compatibility
+    // with the manual-claim path that previously wrote synthetic
+    // reward grants directly. The auto-claim path now lets the engine
+    // derive the level from the running ledger XP via
+    // `RewardGrantService.build`, so the parameter is unused on this
+    // branch. Keep the signature stable for the provider call site.
+    // ignore: unused_local_variable
+    final _ = levelAtGrant;
     await _repository.appendEvents(events);
     return _evaluateWithContext(
       context: context,

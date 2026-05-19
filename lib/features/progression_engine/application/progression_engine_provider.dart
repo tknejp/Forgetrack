@@ -3232,12 +3232,26 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// `TodayCompletionsAmongMetric` see the new completion on the
   /// same turn.
   Future<void> devToolsForceCompleteNode(String nodeId) async {
+    AppLog.app.info('devtools/forceCompleteNode start',
+        payload: 'node=$nodeId');
     final node = ProgressionEntryCatalog.definitionForId(nodeId);
-    if (node == null) return;
+    if (node == null) {
+      AppLog.app.warn('devtools/forceCompleteNode aborted',
+          payload: 'node=$nodeId reason=node_not_in_catalog');
+      return;
+    }
     final source = _source;
-    if (source == null) return;
+    if (source == null) {
+      AppLog.app.warn('devtools/forceCompleteNode aborted',
+          payload: 'node=$nodeId reason=source_not_bound');
+      return;
+    }
     final ctx = currentContext;
-    if (ctx == null) return;
+    if (ctx == null) {
+      AppLog.app.warn('devtools/forceCompleteNode aborted',
+          payload: 'node=$nodeId reason=context_null');
+      return;
+    }
 
     _isEvaluating = true;
     notifyListeners();
@@ -3260,9 +3274,31 @@ class ProgressionEngineProvider extends ChangeNotifier {
       _ledger = await _repository.loadLedger();
       _recomputeStreaks();
       if (!result.isEmpty) _pendingCelebrations.add(result);
+      AppLog.app.info('devtools/forceCompleteNode eval',
+          payload: 'node=$nodeId completed=${result.completedNodes.length} '
+              'available=${result.availableNodes.length} '
+              'newlyAvailable=${result.newlyAvailableNodes.length} '
+              'grants=${result.grantedRewards.length}');
+      // Dispatch the just-produced reward grants to the cosmetics
+      // bridge so any CosmeticReward on the force-completed node
+      // (e.g. relic on an Achievement) lands in the cosmetics
+      // inventory. The follow-up `refresh()` below runs a second
+      // engine.evaluate which sees everything as already-in-ledger
+      // and produces empty `grantedRewards` — so the bridge MUST run
+      // here, on the first-pass result, or the cosmetic is silently
+      // dropped (Trello #76 sub-issue 1 follow-on).
+      await _cosmeticBridge.dispatch(
+        result,
+        ledger: _ledger,
+        level: profile.level,
+      );
+      AppLog.app.info('devtools/forceCompleteNode dispatched',
+          payload: 'node=$nodeId grants=${result.grantedRewards.length}');
       _error = null;
-    } catch (e) {
+    } catch (e, st) {
       _error = e.toString();
+      AppLog.app.error('devtools/forceCompleteNode crashed',
+          payload: 'node=$nodeId', err: e, stackTrace: st);
     } finally {
       _isEvaluating = false;
       notifyListeners();

@@ -84,6 +84,8 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
     setState(() => _devBusy = true);
     final cosmeticId = widget.definition.id;
     final grantingNodeId = grantingNodeForCosmetic(cosmeticId);
+    _log.info('devGrant start',
+        payload: 'id=$cosmeticId grantingNode=${grantingNodeId ?? "<none>"}');
     if (grantingNodeId != null) {
       // Route through the engine so the granting node's
       // NodeCompletionEvent + RewardGrantEvent(cosmetic) series lands
@@ -98,6 +100,8 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
       await context
           .read<ProgressionEngineProvider>()
           .devToolsForceCompleteNode(grantingNodeId);
+      _log.info('devGrant via engine completed',
+          payload: 'id=$cosmeticId grantingNode=$grantingNodeId');
     } else {
       // Cosmetic with no catalog-side granting node (e.g. premium
       // unlocks, content that ships pre-unlocked, dev-only items).
@@ -105,6 +109,8 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
       await context
           .read<CosmeticsProvider>()
           .debugGrantCosmetic(cosmeticId);
+      _log.info('devGrant via cosmetics debugGrant completed',
+          payload: 'id=$cosmeticId');
     }
     if (!mounted) return;
     Navigator.of(context).pop();
