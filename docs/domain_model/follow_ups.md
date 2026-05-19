@@ -39,7 +39,9 @@
 
 Po dokončení Track A je doménový refactor **permanently closed**. Žádné nové sub-phases nebudou added during implementation; pokud něco vznikne, řeší se v rámci téhož PR nebo eskaluje k uživateli.
 
-### R.1 Catalog migration do `lib/domain/` + typed cross-references
+### ~~R.1 Catalog migration do `lib/domain/` + typed cross-references~~ ✅ Done 2026-05-19
+
+**Shipped** in commits `537335b` (R.1.a — move + cross-reference typing) and `da44091` (R.1.b — lifecycle field enrichment + `PlayerQuest.quest` accessor). See ADR `r1-catalog-domain-migration` in [docs/site/data/decisions.json](../site/data/decisions.json) for the full context + decision + consequences + alternatives. Lint baselines lowered: `domain-purity` (lib/features/*/domain/) 33→25; `untyped-id` (lib/features/*/domain/) 58→36.
 
 **Why:** Phase 3.b.2 migrated **primary** catalog `.id` fields to typed wrappers, ale catalog row classes (Quest, Achievement, Milestone, ChapterCompletion, CompanionAvailability, Relic, ContentUnlock, UnlockCondition) i jejich cross-reference fields zůstaly v `lib/features/progression_engine/domain/`. Proposal §6 vocabulary chce `Quest` v `lib/domain/progression/catalog/`; Phase 6/8/13 zanechaly tři placeholder DoD items (`QuestLocked.remaining`, `AchievementLocked.remaining`, `ChapterLocked.gate`) které nemůžou landnout bez UnlockCondition migration. Tady to uzavřeme jednou pro vždy.
 
@@ -75,12 +77,12 @@ Po dokončení Track A je doménový refactor **permanently closed**. Žádné n
 
 **DoD:**
 
-- [ ] Žádný progression catalog symbol v `lib/features/progression_engine/domain/models/` ani `domain/catalog/` (kromě catalog content `content/*.dart` files které zůstávají feature-scoped assembly).
-- [ ] All cross-reference fields are typed (`ObjectiveId`, `ChapterId`, `CosmeticId`, `ProgressionEntryId`, `ChainId`, `ComboPoolId`, `DailyTierGroupId`).
-- [ ] `QuestLocked.remaining`, `AchievementLocked.remaining`, `ChapterLocked.gate` populated by their respective services.
-- [ ] `PlayerQuest.quest: Quest` accessor available; `id` getter remains for backwards compat or is removed entirely.
-- [ ] Lint baseline `untyped-id` v `lib/features/*/domain/` snížený.
-- [ ] `flutter analyze` clean, `flutter test` pass.
+- [x] Žádný progression catalog symbol v `lib/features/progression_engine/domain/models/` ani `domain/catalog/` (kromě catalog content `content/*.dart` files které zůstávají feature-scoped assembly).
+- [x] All cross-reference fields are typed (`ObjectiveId`, `ChapterId`, `CosmeticId`, `ProgressionEntryId`, `ChainId`, `ComboPoolId`, `DailyTierGroupId`).
+- [x] `QuestLocked.remaining`, `AchievementLocked.remaining`, `ChapterLocked.gate` populated by their respective services.
+- [x] `PlayerQuest.quest: Quest` accessor available; `id` getter remains for backwards compat (forwarded as `QuestId(quest.id.value)`).
+- [x] Lint baseline `untyped-id` v `lib/features/*/domain/` snížený (58 → 36).
+- [x] `flutter analyze` clean (77 issues, baseline), `flutter test` pass (514 tests).
 
 **Risk:** Vysoké. Touches sealed hierarchy + ~30 catalog content files + ~20 widget readers. Doporučení: split do R.1.a (move + cross-reference typing) and R.1.b (lifecycle field enrichment + PlayerQuest.quest accessor). Side-by-side test: existing test fixtures must produce identical evaluation outcomes pre/post migration.
 
@@ -270,7 +272,7 @@ Drobnosti, které stojí samostatně, ale fit do jednoho PR pokud appetite:
 
 | Item | Estimated size | Risk | Bundled with |
 |---|---|---|---|
-| R.1 Catalog migration + typed cross-references | 2-3 days | High | — |
+| ~~R.1 Catalog migration + typed cross-references~~ | ✅ 2026-05-19 (`537335b` + `da44091`) | High | — |
 | R.2 NodeState cleanup | 1 day | Medium | Optionally R.1 |
 | R.3 Widget consumer migration (a/b/c) | 5-6 days total | Medium | Split into 3 PRs |
 | R.4 Repository contracts Result hardening | 2-3 days | High | — |
