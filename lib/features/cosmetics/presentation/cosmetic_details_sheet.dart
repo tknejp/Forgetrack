@@ -1324,7 +1324,14 @@ class _ClaimableCompanionBody extends StatelessWidget {
                 l10n.cosmeticCompanionClaimableBadge,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Tokens.accent,
+                  // Tied to the companion's rarity color (passed in by
+                  // the sheet) so the claimable badge in the details
+                  // sheet reads as belonging to *this* companion —
+                  // matches the rarity-color border + glow pulse on
+                  // the inventory card (phase C). The generic
+                  // `Tokens.accent` here used to clash with the
+                  // rarity-tinted card the player just tapped through.
+                  color: color,
                   fontSize: 11,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 2.0,
