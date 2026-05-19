@@ -29,34 +29,31 @@ void main() {
       );
     });
 
-    test('every catalog Companion is either gated by an availability '
-        'node or listed in companionsClaimedViaUnlockRules (forward id '
-        'parity)', () {
-      // Track A R.7 invariant — a new companion must pick one of the
-      // two claim paths and stick to it. The whitelist documents the
-      // intentional unlock-rule path; everything else routes through
-      // engine.claimNode via CompanionAvailability. Devtools-only and
-      // dev-tagged companions (marked `metadata['devOnly'] == true`)
-      // are exempt — they're not claimable through either pipeline.
+    test('every catalog Companion is gated by an availability node '
+        '(forward id parity)', () {
+      // R.7 correction — every non-devOnly companion must claim
+      // through engine.claimNode via CompanionAvailability. The earlier
+      // "claimed-via-unlock-rules" whitelist branch was removed once
+      // the dead CosmeticUnlockEvaluator was deleted; the three
+      // companions previously listed there (bridge_gargoyle / cave_lynx
+      // / aurora_stag) now have first-class CompanionAvailability
+      // nodes in companions_content.dart. Devtools-only and dev-tagged
+      // companions (`metadata['devOnly'] == true`) stay exempt — they
+      // are not claimable through any production pipeline.
       final catalog = CosmeticCatalog();
       final orphans = <String>[];
       for (final companion in catalog.companions) {
         final id = companion.id.value;
         if (companion.metadata['devOnly'] == true) continue;
-        final hasNode = companionAvailabilityFor(id) != null;
-        final whitelisted = companionsClaimedViaUnlockRules.contains(id);
-        if (!hasNode && !whitelisted) {
+        if (companionAvailabilityFor(id) == null) {
           orphans.add(id);
         }
       }
       expect(
         orphans,
         isEmpty,
-        reason: 'Companions with no claim path: $orphans. '
-            'Either add a CompanionAvailability node in '
-            'companions_content.dart or list the id in '
-            'companionsClaimedViaUnlockRules in '
-            'companion_availability_lookup.dart.',
+        reason: 'Companions with no CompanionAvailability node: $orphans. '
+            'Add one in companions_content.dart.',
       );
     });
 

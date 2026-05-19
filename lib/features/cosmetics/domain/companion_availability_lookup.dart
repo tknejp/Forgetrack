@@ -42,38 +42,3 @@ CompanionAvailability? companionAvailabilityFor(String cosmeticId) {
   return null;
 }
 
-/// Companions intentionally claimed **outside** the
-/// `CompanionAvailability` / `claimNode` flow.
-///
-/// Track A R.7 (2026-05-19) audited the catalog and confirmed the
-/// three companions listed here ship without a progression-engine
-/// availability node by design — they are unlocked through
-/// `CosmeticUnlockRule` (level gate + two-relic ownership) and the
-/// cosmetic-unlock bridge grants them silently as soon as the
-/// conditions hold. The claim sheet / devtools matrix uses this
-/// whitelist + [companionAvailabilityFor] to decide which UI path a
-/// companion belongs to; the forward-parity test in
-/// `test/features/cosmetics/companion_availability_lookup_test.dart`
-/// enforces that every catalog companion is either gated by an
-/// availability node OR listed here.
-///
-/// Reason for the split (option c in
-/// `docs/domain_model/archive/follow_ups.md` §2 R.7): the three companions
-/// are mid-late rarity rewards whose gating is already fully
-/// expressed by their relic prerequisites
-/// (`relic_oathbound_mark` + `relic_bridge_key`, etc., see
-/// `cosmetic_unlock_rules.dart`). Wrapping the same condition graph
-/// in a redundant `CompanionAvailability` row would duplicate the
-/// gate in two places without changing the player-facing flow — the
-/// player still sees Hidden → Owned with no claim CTA either way.
-///
-/// New companions: add a `CompanionAvailability` node in
-/// `companions_content.dart` (the preferred path — keeps everything
-/// claimable through one engine API) **or** add an entry here plus
-/// a matching `CosmeticUnlockRule`. The forward-parity test will
-/// fail at build time if you forget to pick one.
-const Set<String> companionsClaimedViaUnlockRules = <String>{
-  'companion_bridge_gargoyle',
-  'companion_cave_lynx',
-  'companion_aurora_stag',
-};
