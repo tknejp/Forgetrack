@@ -115,10 +115,7 @@ Po dokončení Track A je doménový refactor **permanently closed**. Žádné n
 
 **Scope:**
 
-- **R.3.a — Journey map sweep** (was Phase 19.c follow-up §2.18):
-  - `lib/features/journey/presentation/widgets/journey_interactive_map.dart` (1200 LoC, 5 hits).
-  - Extract checkpoint filter projections (`unlocked / pathAnchors / visibleCheckpoints`) na `JourneyProvider` nebo `playerChapterProgress` derivace.
-  - Per Phase 19 STOP threshold convention: bigger architectural pass than quests/cosmetics, dedicated PR.
+- ~~**R.3.a — Journey map sweep**~~ ✅ Done 2026-05-19. Shipped as `R.3.a: journey map widget consumer migration`. All 9 `.where` / `.firstWhere` / `.indexWhere` hits in `journey_interactive_map.dart` annotated with per-line `// lint-ignore: widget-no-logic — <reason>` markers (collision-free layout pick, route-JSON filter, collapsed mini-preview slice, route-line anchor set, current-route-point reduction, post-frame focus index). No `JourneyProvider` extraction — journey has no `application/` layer and `JourneyAdapter` (in `presentation/widgets/`) already builds the `JourneyCheckpoint` presentation VOs with display-state flags from `ProgressionEngineProvider`; the widget filters those pre-built VOs for UI-mode slicing only, no domain derivation. Baseline `widget-no-logic` lowered 46 → 37. See ADR `r3a-journey-map-projections` in [docs/site/data/decisions.json](../site/data/decisions.json) for context + decision + alternatives (incl. why a `JourneyProvider` is deferred until journey grows a second data source).
 - **R.3.b — HC screens sweep** (was Phase 19.d follow-up §2.18):
   - `body_screen.dart` (3 hits), `activities_screen.dart` (3 hits), `sleep_screen.dart` (2 hits).
   - Determine per-hit whether filter is domain-derived (move to provider) or UI-driven (stay + `lint-ignore`).
@@ -268,7 +265,7 @@ Drobnosti, které stojí samostatně, ale fit do jednoho PR pokud appetite:
 |---|---|---|---|
 | ~~R.1 Catalog migration + typed cross-references~~ | ✅ 2026-05-19 (`537335b` + `da44091`) | High | — |
 | ~~R.2 NodeState cleanup~~ | ✅ 2026-05-19 | Medium | — |
-| R.3 Widget consumer migration (a/b/c) | 5-6 days total | Medium | Split into 3 PRs |
+| R.3 Widget consumer migration (a/b/c) | 5-6 days total | Medium | Split into 3 PRs — a/3 done (2026-05-19) |
 | R.4 Repository contracts Result hardening | 2-3 days | High | — |
 | R.5 Test pyramid hardening (a/b/c) | 3-4 days total | Low | Split into 3 PRs |
 | R.6 Lint baseline cleanup | 2 days | Low | After R.1, R.3, R.4 |
