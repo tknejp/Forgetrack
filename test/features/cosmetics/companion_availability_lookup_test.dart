@@ -15,10 +15,6 @@ void main() {
       // Phase 11 invariant — every gating node must resolve to a
       // catalog companion or the matrix renders an empty row + the
       // claim flow crashes when the sheet looks up rarity / asset.
-      // The forward direction (catalog companion → node) intentionally
-      // is not asserted here: a handful of companions ship without
-      // progression gates today (granted via reward tables / devtools)
-      // and that's by design, not a Phase 11 regression.
       final catalog = CosmeticCatalog();
       final dangling = <String>[];
       for (final node in allCompanionAvailabilities) {
@@ -30,6 +26,37 @@ void main() {
         dangling,
         isEmpty,
         reason: 'Availability nodes without a matching cosmetic: $dangling',
+      );
+    });
+
+    test('every catalog Companion is either gated by an availability '
+        'node or listed in companionsClaimedViaUnlockRules (forward id '
+        'parity)', () {
+      // Track A R.7 invariant — a new companion must pick one of the
+      // two claim paths and stick to it. The whitelist documents the
+      // intentional unlock-rule path; everything else routes through
+      // engine.claimNode via CompanionAvailability. Devtools-only and
+      // dev-tagged companions (marked `metadata['devOnly'] == true`)
+      // are exempt — they're not claimable through either pipeline.
+      final catalog = CosmeticCatalog();
+      final orphans = <String>[];
+      for (final companion in catalog.companions) {
+        final id = companion.id.value;
+        if (companion.metadata['devOnly'] == true) continue;
+        final hasNode = companionAvailabilityFor(id) != null;
+        final whitelisted = companionsClaimedViaUnlockRules.contains(id);
+        if (!hasNode && !whitelisted) {
+          orphans.add(id);
+        }
+      }
+      expect(
+        orphans,
+        isEmpty,
+        reason: 'Companions with no claim path: $orphans. '
+            'Either add a CompanionAvailability node in '
+            'companions_content.dart or list the id in '
+            'companionsClaimedViaUnlockRules in '
+            'companion_availability_lookup.dart.',
       );
     });
 
