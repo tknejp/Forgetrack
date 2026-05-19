@@ -5,6 +5,7 @@ import '../../cosmetics/domain/player_cosmetic_lifecycle.dart';
 import '../../progression_engine/application/progression_engine_provider.dart';
 import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import 'package:forgetrack/domain/progression/catalog/unlock_condition.dart';
+import '../../progression_engine/domain/catalog/granting_achievement_lookup.dart';
 import '../../progression_engine/domain/policy/level_policy.dart';
 
 /// DevTools-only target state for the companion matrix. Drives the
@@ -59,13 +60,27 @@ class CompanionDevController {
     return null;
   }
 
-  /// Achievement node ids that gate the companion (each grants one
-  /// of the relic cosmetics through its reward table).
+  /// Progression node ids whose completion grants the relic cosmetics
+  /// that gate this companion's claim. Walks the companion's
+  /// `OwnsCosmetic(relic_id)` unlock conditions (the canonical gate
+  /// shape since the Trello #76 phase-A `OwnsCosmetic` refactor, commit
+  /// `185971a`) and maps each relic id back to the catalog node whose
+  /// reward table produces it via [grantingNodeForCosmetic] (typically
+  /// an Achievement granting the relic via its `CosmeticReward`).
+  ///
+  /// Relics with no catalog-side granting node (devtools-only relics,
+  /// shipped pre-unlocked content) drop silently — the matrix's
+  /// `claimable` target then can't force-complete them through the
+  /// engine, and falls back to leaving the cosmetics inventory as the
+  /// only path to "owned" for those entries.
   static List<String> gatingNodeIds(CompanionAvailability node) {
-    return [
-      for (final c in node.unlockConditions)
-        if (c is NodeCompleted) c.nodeId,
-    ];
+    final out = <String>[];
+    for (final c in node.unlockConditions) {
+      if (c is! OwnsCosmetic) continue;
+      final grantingNode = grantingNodeForCosmetic(c.cosmeticId);
+      if (grantingNode != null) out.add(grantingNode);
+    }
+    return out;
   }
 
   /// Live snapshot of the companion's lifecycle â€” same projection the
