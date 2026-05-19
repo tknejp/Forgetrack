@@ -240,23 +240,27 @@ claimed quest per call (catch-up semantics), so a new mapping is granted
 retroactively on the next sync without a migration script. Idempotency
 at the repository layer keeps repeat passes a no-op.
 
-### Tier 2 — Rule evaluator
+### Tier 2 — Compound condition declarations (display-only)
 
-For conditions the achievement engine cannot express directly:
-compound conditions like "owns relic_X AND owns relic_Y AND
-level ≥ N" (used by every companion). Lives entirely in
-`cosmetics/domain` so progression doesn't grow rule-evaluation logic.
+Compound conditions like "owns relic_X AND owns relic_Y AND level ≥ N"
+(used by every companion). Lives entirely in `cosmetics/domain` so
+progression doesn't grow rule-evaluation logic.
 
 * Rules: `lib/features/cosmetics/domain/cosmetic_unlock_rules.dart`
   exposes `kCosmeticUnlockRules` — a declarative `List<CosmeticUnlockRule>`.
   Each rule has 1-N named `CosmeticUnlockCondition`s joined with logical
   AND. OR is expressed by registering two rules with the same `cosmeticId`.
-* Evaluator: `cosmetic_unlock_evaluator.dart` walks the rule list and
-  returns tuples for cosmetics whose conditions are met. Pure, no I/O.
 * Snapshot: `cosmetic_unlock_snapshot.dart` is the read-only DTO the rules
-  inspect. Built per dispatch by
-  `progression/application/cosmetic_unlock_snapshot_extractor.dart` from
-  the durable progression ledger.
+  inspect.
+* **Consumer:** `CosmeticRevealEvaluator` (in the same folder). The rules
+  drive the partial-reveal hint checklist UI (rows like "Owns Oathbound
+  Mark — ✓" on the companion details sheet); they no longer trigger
+  unlocks themselves. Actual companion claims route through
+  `CompanionAvailability` progression-engine nodes in
+  `progression_engine/domain/catalog/content/companions_content.dart`
+  → `engine.claimNode`. The standalone `CosmeticUnlockEvaluator` class
+  that previously walked these rules was removed once it became clear
+  it had no production callers post-Phase-11.
 
 ### Dispatcher
 

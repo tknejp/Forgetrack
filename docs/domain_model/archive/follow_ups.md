@@ -317,6 +317,27 @@ The original DoD wording ("baselines ≤ 5") assumed a mix of fixes + markers wi
 
 ---
 
+### R.7 correction — Companion catalog audit revised to option (a) + every-10 ladder
+
+**Shipped** post-Track-A on branch `fix/companion-unlock-cleanup` (Trello card [#77](https://trello.com/c/d2GYcOum)). The original R.7 ADR (`r7-companion-catalog-audit`) misread the situation — see ADR `r7-companion-catalog-audit-correction` in [docs/site/data/decisions.json](../../site/data/decisions.json) for the full context + decision + consequences + alternatives. Original R.7 ADR marked `Superseded by r7-companion-catalog-audit-correction`; the R.7 row in §1 above stays ✅ because the round closed at the time, with the correction tracked here as a follow-on.
+
+**What was wrong with R.7:** the rejection of option (a) rested on the premise that `CosmeticUnlockEvaluator` walks `kCosmeticUnlockRules` and grants the three whitelisted companions (`bridge_gargoyle`, `cave_lynx`, `aurora_stag`). A second-pass grep across `lib/` finds zero production callers — the dispatcher pipeline that originally consumed it was deleted alongside the V1 progression module in Phase 22. The three companions had no production code path to a claim; the reveal checklist surfaced them as partial / claimable but the claim CTA never appeared because `companionAvailabilityFor(id)` returned null.
+
+Parallel finding: three of the seven "working" companions had a level mismatch between the `CompanionAvailability` gate and the matching `CosmeticUnlockRule` — forest_fox 10 vs 15, ice_wisp 65 vs 75, dragonling 100 vs 95. The reveal hint showed one number; the claim CTA unlocked at a different one.
+
+**What changed:**
+
+- Three new `CompanionAvailability` nodes added in `lib/features/progression_engine/domain/catalog/content/companions_content.dart` (bridge_gargoyle@35 rare, cave_lynx@55 epic, aurora_stag@65 epic), referencing the achievements that grant the matching relics. The catalog ladder is now every-10 levels from 5: 5 / 15 / 25 / 35 / 45 / 55 / 65 / 75 / 85 / 95.
+- Three existing nodes (forest_fox / ice_wisp / dragonling) re-aligned to the ladder; `cosmetic_unlock_rules.dart` already had the correct ladder values, so only the availability nodes moved.
+- `CosmeticUnlockEvaluator` class + its test deleted (zero production callers confirmed). `kCosmeticUnlockRules` kept intact — it still drives the partial-reveal hint checklist via `CosmeticRevealEvaluator`, which has its own dedicated test.
+- `companionsClaimedViaUnlockRules` const Set + doc paragraph deleted from `companion_availability_lookup.dart`. Forward-parity test tightened: every non-devOnly Companion must have a `CompanionAvailability` node. One path, one invariant.
+- Cosmetics README "Tier-2 Rule evaluator" section rewritten to reflect that the rule list is display-only. The V1 dispatcher subsection further down is left as pre-existing rot for a separate cleanup.
+- Test count 521 → 484 (the deleted evaluator test contained 37 tests for an SUT that no longer exists; reveal-side coverage stays in `cosmetic_reveal_evaluator_test.dart`).
+
+**Lesson:** when a follow-up records an "intentional split" with one branch resting on a supposed live consumer, verify the consumer is actually live before ratifying the split. R.7's option (c) added test infrastructure to enforce a contract that — in practice — protected nothing, while letting three companions ship unobtainable.
+
+---
+
 ### ~~R.8 Periphery cleanup bundle~~ ✅ Closed 2026-05-19 — all three items "won't do — not actionable"
 
 Per the original DoD ("Each item either landed (with PR commit) or explicitly documented as 'won't do — not actionable until a concrete trigger fires'"), all three items are recorded as **won't do, with their concrete trigger**. None ships as code in Track A. See ADR `r8-periphery-bundle-wont-do` in [docs/site/data/decisions.json](../site/data/decisions.json) for the per-item rationale.
@@ -339,7 +360,7 @@ Per the original DoD ("Each item either landed (with PR commit) or explicitly do
 | ~~R.4 Repository contracts Result hardening~~ | ✅ 2026-05-19 (single commit, ~600 LoC, no a/b/c split) | High | — |
 | ~~R.5 Test pyramid hardening (a/b/c)~~ | ✅ 2026-05-19 (`67f24a3` + `d1b03a9` + `1d964cc`; test count 514 → 520) | Low | Split into 3 sub-PRs |
 | ~~R.6 Lint baseline cleanup~~ | ✅ 2026-05-19 (`5345888`; all 5 baselines → 0) | Low | — |
-| ~~R.7 Companion catalog audit~~ | ✅ 2026-05-19 (`f9acd45`; option (c) + forward parity test) | Low | — |
+| ~~R.7 Companion catalog audit~~ | ✅ 2026-05-19 (`f9acd45`; option (c) + forward parity test). Superseded post-Track-A by the R.7 correction round on `fix/companion-unlock-cleanup` — see the §"R.7 correction" subsection above + ADR `r7-companion-catalog-audit-correction`. | Low | — |
 | ~~R.8 Periphery bundle~~ | ✅ 2026-05-19 (all 3 items "won't do — not actionable", documented with triggers) | Low | — |
 
 **Track A: ✅ permanently closed 2026-05-19.** All eight items (R.1 → R.8) shipped or recorded as won't-do. This document moves into `archive/` alongside `migration_plan.md` in the same commit that adds the close-out ADRs.
