@@ -6,7 +6,10 @@ import '../../../l10n/app_localizations.dart';
 import '../../../shared/domain/rarity.dart';
 import 'package:forgetrack/domain/progression/catalog/ids.dart';
 
+import 'companion_buff.dart';
+
 export '../../../shared/domain/rarity.dart' show Rarity;
+export 'companion_buff.dart';
 
 /// Resolves a localized string from the active [AppLocalizations]. Used by
 /// [Cosmetic] for player-facing text (name / description / unlock
@@ -173,7 +176,14 @@ class Companion extends Cosmetic {
     super.isEnabled,
     super.unlockHint,
     super.metadata,
+    this.buff,
   });
+
+  /// Passive XP buff this companion grants while equipped in the
+  /// active loadout slot. Null when the catalog row has not been
+  /// assigned a buff yet (the runtime coverage test
+  /// `companion_buff_coverage_test` flags missing assignments).
+  final CompanionBuff? buff;
 
   @override
   CosmeticType get type => CosmeticType.companion;

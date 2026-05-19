@@ -770,6 +770,11 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.companions.ember_sprite',
       previewAssetKey: 'cosmetics.companions.ember_sprite',
       sortOrder: 700,
+      // "Small spark … steady-footed" — flame as a metaphor for
+      // streak length. Floor +3 % so a fresh reset still beats no
+      // buff; cap +12 % keeps the uncommon-tier buff from
+      // overshadowing rare / epic flat buffs at long streaks.
+      buff: const StreakLengthCompanionBuff(),
     ),
     Companion(
       id: const CosmeticId('companion_forest_fox'),
@@ -781,6 +786,12 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.companions.forest_fox',
       previewAssetKey: 'cosmetics.companions.forest_fox',
       sortOrder: 710,
+      // "Quiet wildwood fox" — forager. +8 % on every nutrition
+      // daily-goal claim.
+      buff: const FlatCompanionBuff(
+        kind: RewardSourceKind.nutritionXp,
+        percent: 8,
+      ),
     ),
     Companion(
       id: const CosmeticId('companion_ruin_raven'),
@@ -792,6 +803,10 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.companions.ruin_raven',
       previewAssetKey: 'cosmetics.companions.ruin_raven',
       sortOrder: 720,
+      // "Seen most often after a weekly quest is closed" — flavor
+      // points directly at weekly cadence. Dampened daily so the
+      // weekly close lands as a satisfying spike.
+      buff: const WeeklyEmphasisCompanionBuff(),
     ),
     Companion(
       id: const CosmeticId('companion_bridge_gargoyle'),
@@ -803,6 +818,12 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.companions.bridge_gargoyle',
       previewAssetKey: 'cosmetics.companions.bridge_gargoyle',
       sortOrder: 725,
+      // Guards the bridge — bridge-walker, movement-themed. +8 % on
+      // activity-domain XP (incl. steps + per-recorded-activity).
+      buff: const FlatCompanionBuff(
+        kind: RewardSourceKind.activityXp,
+        percent: 8,
+      ),
     ),
     Companion(
       id: const CosmeticId('companion_lantern_golem'),
@@ -814,6 +835,12 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.companions.lantern_golem',
       previewAssetKey: 'cosmetics.companions.lantern_golem',
       sortOrder: 730,
+      // "Flickering lantern in chest" — persistent inner flame.
+      // Flat +16 % streakXp (mid-game upgrade over Ember's dynamic).
+      buff: const FlatCompanionBuff(
+        kind: RewardSourceKind.streakXp,
+        percent: 16,
+      ),
     ),
     Companion(
       id: const CosmeticId('companion_cave_lynx'),
@@ -825,6 +852,11 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.companions.cave_lynx',
       previewAssetKey: 'cosmetics.companions.cave_lynx',
       sortOrder: 735,
+      // "Lynx … follows walkers carrying scent of distant forests
+      // and ravines" — goes deeper with the player. Bonus scales
+      // with chapter chain position; resets when a new chapter
+      // chain begins.
+      buff: const ChapterDepthCompanionBuff(),
     ),
     Companion(
       id: const CosmeticId('companion_aurora_stag'),
@@ -836,6 +868,13 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.companions.aurora_stag',
       previewAssetKey: 'cosmetics.companions.aurora_stag',
       sortOrder: 738,
+      // "Ice plain … living aurora" — calm of night. +26 % on the
+      // sleep daily-goal claim (only 1×/day so the per-claim %
+      // can be loud without disturbing daily total balance).
+      buff: const FlatCompanionBuff(
+        kind: RewardSourceKind.sleepXp,
+        percent: 26,
+      ),
     ),
     Companion(
       id: const CosmeticId('companion_ice_wisp'),
@@ -847,6 +886,13 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.companions.ice_wisp',
       previewAssetKey: 'cosmetics.companions.ice_wisp',
       sortOrder: 740,
+      // "Pale spark drawn out" — drawn to signals / tasks.
+      // +17 % on every quest claim (daily + weekly + combo +
+      // long-term + daily-challenge).
+      buff: const FlatCompanionBuff(
+        kind: RewardSourceKind.questXp,
+        percent: 17,
+      ),
     ),
     Companion(
       id: const CosmeticId('companion_mountain_gryphon'),
@@ -858,6 +904,12 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.companions.mountain_gryphon',
       previewAssetKey: 'cosmetics.companions.mountain_gryphon',
       sortOrder: 750,
+      // "Rides high ridges with chosen walker" — strong walker
+      // companion. +14 % activityXp (incl. steps).
+      buff: const FlatCompanionBuff(
+        kind: RewardSourceKind.activityXp,
+        percent: 14,
+      ),
     ),
     Companion(
       id: const CosmeticId('companion_dragonling'),
@@ -869,6 +921,12 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.companions.dragonling',
       previewAssetKey: 'cosmetics.companions.dragonling',
       sortOrder: 760,
+      // Endgame mistr všeho — +7 % on every XP grant regardless of
+      // source. The only `allXp` companion.
+      buff: const FlatCompanionBuff(
+        kind: RewardSourceKind.allXp,
+        percent: 7,
+      ),
     ),
 
     // -------------------------------------------------------------------------
