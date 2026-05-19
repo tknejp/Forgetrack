@@ -2207,6 +2207,8 @@
   "@cosmeticCompanionClaimStepAwakening": { "description": "Status label shown while the companion sprite materializes (2900 ≤ t < 4700ms)." },
   "cosmeticCompanionClaimRevealSubtitle": "Your new companion",
   "@cosmeticCompanionClaimRevealSubtitle": { "description": "Subtitle shown beneath the companion name at the reveal moment (t ≥ 4700ms)." },
+  "cosmeticCompanionClaimTapToContinue": "Tap anywhere to continue",
+  "@cosmeticCompanionClaimTapToContinue": { "description": "Hint shown at the bottom of the reveal hold screen — instructs the player to tap to advance into the morph handoff." },
   "cosmeticRelicConsumedBadge": "Used",
   "@cosmeticRelicConsumedBadge": { "description": "Pill shown on a relic that has been used to summon a companion." },
   "cosmeticRelicConsumedHint": "Used to summon a companion.",

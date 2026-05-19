@@ -4299,6 +4299,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cosmeticCompanionClaimRevealSubtitle => 'Your new companion';
 
   @override
+  String get cosmeticCompanionClaimTapToContinue => 'Tap anywhere to continue';
+
+  @override
   String get cosmeticRelicConsumedBadge => 'Used';
 
   @override

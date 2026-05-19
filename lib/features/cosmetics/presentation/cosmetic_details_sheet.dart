@@ -78,9 +78,18 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
   /// false once it reaches the destination.
   final ValueNotifier<bool> _hideCompanion = ValueNotifier(false);
 
+  /// Cross-state owner for the ritual's fullscreen [OverlayEntry].
+  /// The flow widget can't clean the entry up in its own dispose
+  /// (the morph still needs the overlay to be alive after the
+  /// sheet body rebuilds away from the Claimable branch), so the
+  /// sheet keeps a reference here and yanks it on real route
+  /// teardown — system back gesture, dismiss, etc.
+  final ClaimOverlayHandle _claimOverlay = ClaimOverlayHandle();
+
   @override
   void dispose() {
     _hideCompanion.dispose();
+    _claimOverlay.removeIfActive();
     super.dispose();
   }
 
@@ -264,6 +273,7 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
           bottomPad: bottomPad,
           destSlotKey: _companionSlotKey,
           hideCompanion: _hideCompanion,
+          overlayHandle: _claimOverlay,
         );
       }
       return _LockedCompanionBody(
@@ -1533,6 +1543,7 @@ class _ClaimableCompanionBody extends StatelessWidget {
     required this.bottomPad,
     required this.destSlotKey,
     required this.hideCompanion,
+    required this.overlayHandle,
   });
 
   final Cosmetic definition;
@@ -1541,6 +1552,7 @@ class _ClaimableCompanionBody extends StatelessWidget {
   final double bottomPad;
   final GlobalKey destSlotKey;
   final ValueNotifier<bool> hideCompanion;
+  final ClaimOverlayHandle overlayHandle;
 
   @override
   Widget build(BuildContext context) {
@@ -1620,6 +1632,7 @@ class _ClaimableCompanionBody extends StatelessWidget {
                 onClaim: () => _runClaim(context),
                 destSlotKey: destSlotKey,
                 hideCompanion: hideCompanion,
+                overlayHandle: overlayHandle,
               ),
               const SizedBox(height: 12),
             ],

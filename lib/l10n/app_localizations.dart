@@ -7593,6 +7593,12 @@ abstract class AppLocalizations {
   /// **'Your new companion'**
   String get cosmeticCompanionClaimRevealSubtitle;
 
+  /// Hint shown at the bottom of the reveal hold screen — instructs the player to tap to advance into the morph handoff.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap anywhere to continue'**
+  String get cosmeticCompanionClaimTapToContinue;
+
   /// Pill shown on a relic that has been used to summon a companion.
   ///
   /// In en, this message translates to:

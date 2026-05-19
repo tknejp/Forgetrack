@@ -112,11 +112,18 @@ const int _kSettleStartMs = 4800;
 /// Status-text crossfade boundaries (ms) — matches design spec §"Stav 2".
 const int _kStatusBindingEndMs = 2400;
 const int _kStatusHideEndMs = 2900;
-const int _kStatusAwakeningEndMs = 4700;
+// Awakening label clears 400 ms BEFORE the reveal frame so its
+// fade-out (520 ms in [_ForgingStatusText]) finishes before the
+// name + subtitle start their own entry. Without this gap the
+// awakening label was sliding down while the reveal name slid up
+// at the same screen position — both visible at once, both with
+// text shadows. The lead-in is a silent pause that lets the
+// sprite materialize uncluttered, then the name surfaces clean.
+const int _kStatusAwakeningEndMs = 4200;
 const int _kRevealMs = 4700;
 
 class _CompanionClaimForgingState extends State<CompanionClaimForging>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final AnimationController _ctrl = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: _kDurationMs),
@@ -125,6 +132,7 @@ class _CompanionClaimForgingState extends State<CompanionClaimForging>
   bool _burstHapticFired = false;
   bool _revealFired = false;
   bool _completed = false;
+  bool _awaitingTap = false;
   bool _morphing = false;
 
   /// Where the companion sprite sits at end-of-settle — captured so
@@ -135,6 +143,14 @@ class _CompanionClaimForgingState extends State<CompanionClaimForging>
   @override
   void initState() {
     super.initState();
+    // [WidgetsBindingObserver.didPopRoute] catches the system back
+    // gesture even though our OverlayEntry isn't a route. We
+    // intercept it so back behaves like tap-anywhere during the
+    // ritual — without this the back gesture would pop the
+    // underlying sheet (and any other route below) while our
+    // overlay stays mounted, stranding the sprite on whatever
+    // screen lies behind it.
+    WidgetsBinding.instance.addObserver(this);
     _ctrl.addListener(_onTick);
     _ctrl.addStatusListener(_onStatus);
     _ctrl.forward();
@@ -142,10 +158,26 @@ class _CompanionClaimForgingState extends State<CompanionClaimForging>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _ctrl.removeListener(_onTick);
     _ctrl.removeStatusListener(_onStatus);
     _ctrl.dispose();
     super.dispose();
+  }
+
+  /// Fires when the platform (Android back gesture, iOS swipe-back
+  /// equivalent, hardware ESC on desktop) attempts to pop a route.
+  /// Returning true marks the event as handled, so no underlying
+  /// route is popped.
+  @override
+  Future<bool> didPopRoute() async {
+    if (_morphing) {
+      // Let the 1.15 s morph finish; consume the back so it does
+      // not pop the host sheet underneath.
+      return true;
+    }
+    _onTap();
+    return true;
   }
 
   int get _tMs => (_ctrl.value * _kDurationMs).round();
@@ -177,9 +209,10 @@ class _CompanionClaimForgingState extends State<CompanionClaimForging>
     if (status == AnimationStatus.completed && !_completed) {
       _completed = true;
       if (widget.destSlotKey != null) {
-        // Hand off to the morph layer; [_finalize] runs when the
-        // morph reaches the destination.
-        setState(() => _morphing = true);
+        // Hold on the reveal frame until the player taps. They
+        // need a moment to read the companion's name + flavor
+        // before the morph yanks the sprite into the small slot.
+        setState(() => _awaitingTap = true);
       } else {
         // No destination → straight dismissal (kept for parity with
         // hosts that don't need the handoff, e.g. devtools previews).
@@ -193,11 +226,20 @@ class _CompanionClaimForgingState extends State<CompanionClaimForging>
     widget.onComplete();
   }
 
-  void _skip() {
-    // Decision #1: tap-anywhere skip (including production).
-    // Snap to the settle end; the listeners fire reveal +
-    // complete on the next ticks.
+  void _onTap() {
+    if (_morphing) return;
+    if (_awaitingTap) {
+      // Player acknowledged the reveal → kick off the morph.
+      setState(() {
+        _awaitingTap = false;
+        _morphing = true;
+      });
+      return;
+    }
     if (_completed) return;
+    // Decision #1: tap-anywhere skip during the forging timeline
+    // (including production). Snap to the settle end; the listeners
+    // fire reveal + the hold-screen swap on the next ticks.
     _ctrl.value = 1.0;
   }
 
@@ -226,26 +268,246 @@ class _CompanionClaimForgingState extends State<CompanionClaimForging>
       type: MaterialType.transparency,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: _skip,
-        child: AnimatedBuilder(
-          animation: _ctrl,
-          builder: (context, _) {
-            final t = _tMs;
-            return _ForgingScene(
-              t: t,
-              cx: cx,
-              cy: cy,
-              screen: screen,
-              companion: widget.companion,
-              assetPath: widget.assetPath,
-              relicIds: widget.relicIds,
-              relicColors: widget.relicColors,
-              color: widget.color,
-              l10n: l10n,
-            );
-          },
+        onTap: _onTap,
+        child: Stack(
+          children: [
+            // Scene: ticks during forging, frozen at t=_kDurationMs
+            // once we're holding for the tap acknowledgement.
+            AnimatedBuilder(
+              animation: _ctrl,
+              builder: (context, _) {
+                final t = _awaitingTap ? _kDurationMs : _tMs;
+                return _ForgingScene(
+                  t: t,
+                  cx: cx,
+                  cy: cy,
+                  screen: screen,
+                  companion: widget.companion,
+                  assetPath: widget.assetPath,
+                  relicIds: widget.relicIds,
+                  relicColors: widget.relicColors,
+                  color: widget.color,
+                  l10n: l10n,
+                );
+              },
+            ),
+            if (_awaitingTap)
+              _RevealHoldDetails(
+                companion: widget.companion,
+                color: widget.color,
+                cx: cx,
+                cy: cy,
+                screen: screen,
+                l10n: l10n,
+              ),
+          ],
         ),
       ),
+    );
+  }
+}
+
+/// Hold-screen overlay shown after the forging timeline finishes
+/// and before the morph handoff. Renders the companion description
+/// underneath the reveal name/subtitle (the [_ForgingStatusText]
+/// already shows those at t ≥ 4700) and a tap-to-continue hint near
+/// the bottom of the screen.
+///
+/// Both pieces animate in on a single 900 ms controller:
+///   * description fades + slides up over 0–520 ms
+///   * tap-hint fades + slides up over 400–900 ms
+/// Staggering them this way keeps the hold frame from popping all
+/// at once — the description "joins" the already-revealed name,
+/// then the hint surfaces a beat later to invite the tap.
+class _RevealHoldDetails extends StatefulWidget {
+  const _RevealHoldDetails({
+    required this.companion,
+    required this.color,
+    required this.cx,
+    required this.cy,
+    required this.screen,
+    required this.l10n,
+  });
+
+  final Cosmetic companion;
+  final Color color;
+  final double cx;
+  final double cy;
+  final Size screen;
+  final AppLocalizations l10n;
+
+  @override
+  State<_RevealHoldDetails> createState() => _RevealHoldDetailsState();
+}
+
+class _RevealHoldDetailsState extends State<_RevealHoldDetails>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _entry = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..forward();
+
+  late final Animation<double> _descFade = CurvedAnimation(
+    parent: _entry,
+    curve: const Interval(0.0, 0.58, curve: Curves.easeOutCubic),
+  );
+  late final Animation<double> _hintFade = CurvedAnimation(
+    parent: _entry,
+    curve: const Interval(0.44, 1.0, curve: Curves.easeOutCubic),
+  );
+
+  @override
+  void dispose() {
+    _entry.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final description = widget.companion.description(widget.l10n);
+    return Stack(
+      children: [
+        // Description — placed below the name/subtitle block
+        // (status text anchored at top: cy + 130). Allow up to
+        // 80% of screen width so multi-line copy doesn't crowd
+        // the sprite's silhouette.
+        Positioned(
+          left: widget.screen.width * 0.1,
+          right: widget.screen.width * 0.1,
+          top: widget.cy + 230,
+          child: IgnorePointer(
+            child: _RisingFade(
+              animation: _descFade,
+              child: Text(
+                description,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Tokens.onSurface,
+                  fontSize: 15,
+                  height: 1.45,
+                  fontWeight: FontWeight.w500,
+                  shadows: [
+                    Shadow(color: Color(0xCC000000), blurRadius: 12),
+                  ],
+                  letterSpacing: 0.1,
+                ),
+              ),
+            ),
+          ),
+        ),
+        // Tap-to-continue hint — anchored near the bottom safe
+        // area so it sits outside the reveal composition.
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: widget.screen.height * 0.07,
+          child: IgnorePointer(
+            child: _RisingFade(
+              animation: _hintFade,
+              child: _PulsingTapHint(
+                label: widget.l10n.cosmeticCompanionClaimTapToContinue,
+                color: widget.color,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Fade + small upward slide (+ optional scale-up) driven by an
+/// externally-staggered animation. Kept generic so the reveal name,
+/// description and tap-hint can share one motion family without
+/// each spinning up its own controller.
+class _RisingFade extends StatelessWidget {
+  const _RisingFade({
+    required this.animation,
+    required this.child,
+    this.translateFrom = 14,
+    this.scaleFrom = 1.0,
+  });
+
+  final Animation<double> animation;
+  final Widget child;
+
+  /// Initial y-offset (px) the child starts at, lerped to 0.
+  final double translateFrom;
+
+  /// Initial scale the child starts at, lerped to 1.0. Use values
+  /// slightly below 1 (e.g. 0.88) for hero text that should feel
+  /// like it grows into place; leave at 1.0 for plain fades.
+  final double scaleFrom;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, c) {
+        final t = animation.value;
+        final scale = scaleFrom + (1.0 - scaleFrom) * t;
+        return Opacity(
+          opacity: t.clamp(0.0, 1.0),
+          child: Transform.translate(
+            offset: Offset(0, (1 - t) * translateFrom),
+            child: Transform.scale(
+              scale: scale,
+              child: c,
+            ),
+          ),
+        );
+      },
+      child: child,
+    );
+  }
+}
+
+class _PulsingTapHint extends StatefulWidget {
+  const _PulsingTapHint({required this.label, required this.color});
+  final String label;
+  final Color color;
+  @override
+  State<_PulsingTapHint> createState() => _PulsingTapHintState();
+}
+
+class _PulsingTapHintState extends State<_PulsingTapHint>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1400),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _pulse,
+      builder: (context, _) {
+        final v = _pulse.value;
+        final alpha = 0.55 + 0.4 * v;
+        return Text(
+          widget.label,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Tokens.onSurface.withValues(alpha: alpha),
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.4,
+            shadows: [
+              Shadow(
+                color: widget.color.withValues(alpha: 0.4 * v),
+                blurRadius: 16,
+              ),
+              const Shadow(color: Color(0xCC000000), blurRadius: 10),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -277,7 +539,12 @@ class _ForgingScene extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Backdrop dim ramps to 55% alpha over the first 500ms.
+    // Backdrop fades to fully opaque over the first 500 ms. The
+    // ritual is its own composition — the inventory grid + the
+    // claimable body of the bottom sheet behind it should not
+    // bleed through at all. Anything less than full alpha lets
+    // the sheet's light CTA + silhouette ghost into the frame
+    // (visible at 92 % alpha during device review).
     final dim = (t / 500).clamp(0.0, 1.0);
 
     final fly = _frac(t, 0, _kFlyInEndMs);
@@ -300,10 +567,10 @@ class _ForgingScene extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        // Backdrop dim.
+        // Backdrop dim — fully opaque once the ritual is in flight.
         Positioned.fill(
           child: ColoredBox(
-            color: Tokens.bg.withValues(alpha: 0.55 * dim),
+            color: Tokens.bg.withValues(alpha: dim),
           ),
         ),
         // Soft scene-wide glow under the eventual sprite. Inner
@@ -418,11 +685,15 @@ class _ForgingScene extends StatelessWidget {
               ),
             ),
           ),
-        // Status text crossfade.
+        // Status text crossfade. Anchored just below the companion
+        // sprite (cy + 130 ≈ sprite bottom + 20) so the label sits
+        // in the gap between the sprite and the rising bottom
+        // sheet, instead of overlapping the sheet's drag-handle
+        // area at the bottom of the screen.
         Positioned(
           left: 0,
           right: 0,
-          bottom: screen.height * 0.18,
+          top: cy + 130,
           child: IgnorePointer(
             child: _ForgingStatusText(t: t, companion: companion, l10n: l10n),
           ),
@@ -613,67 +884,172 @@ class _ForgingStatusText extends StatelessWidget {
   final Cosmetic companion;
   final AppLocalizations l10n;
 
+  /// Phase identifier driving the [AnimatedSwitcher] key. The
+  /// previous implementation derived the key from `t ~/ 100`, which
+  /// caused the switcher to swap the SAME label every 100 ms — the
+  /// labels jittered instead of crossfading. Phase-based keys mean
+  /// the switcher fires exactly four times across the timeline:
+  /// once per label change.
+  String _phaseOf(int t) {
+    if (t < _kFlyInEndMs) return 'ritual';
+    if (t < _kStatusBindingEndMs) return 'binding';
+    if (t < _kStatusHideEndMs) return 'hidden';
+    if (t < _kStatusAwakeningEndMs) return 'awakening';
+    // 4200–4700 ms: silent lead-in to the reveal so the
+    // awakening label fully clears before the name surfaces.
+    if (t < _kRevealMs) return 'preReveal';
+    return 'reveal';
+  }
+
   @override
   Widget build(BuildContext context) {
-    String label;
-    String? sub;
-    final isReveal = t >= _kStatusAwakeningEndMs;
-    if (t < _kFlyInEndMs) {
-      label = l10n.cosmeticCompanionClaimStepRitual;
-    } else if (t < _kStatusBindingEndMs) {
-      label = l10n.cosmeticCompanionClaimStepBinding;
-    } else if (t < _kStatusHideEndMs) {
-      label = '';
-    } else if (t < _kStatusAwakeningEndMs) {
-      label = l10n.cosmeticCompanionClaimStepAwakening;
-    } else {
-      label = companion.name(l10n);
-      sub = l10n.cosmeticCompanionClaimRevealSubtitle;
-    }
+    final phase = _phaseOf(t);
+    final statusLabel = switch (phase) {
+      'ritual' => l10n.cosmeticCompanionClaimStepRitual,
+      'binding' => l10n.cosmeticCompanionClaimStepBinding,
+      'awakening' => l10n.cosmeticCompanionClaimStepAwakening,
+      _ => '',
+    };
 
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 380),
-      child: label.isEmpty
-          ? const SizedBox.shrink(key: ValueKey('hide'))
-          : Column(
-              key: ValueKey('label-${isReveal ? 'reveal' : t ~/ 100}'),
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  label,
+    // Status label (ritual / binding / awakening) lives in an
+    // AnimatedSwitcher so phase transitions crossfade in-place.
+    // The reveal name + subtitle deliberately do NOT ride this
+    // switcher — they need their own staggered fade-up (see
+    // [_RevealNameBlock]) so the name doesn't slam in at fontSize
+    // 30 the moment "Probouzím společníka…" exits.
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 520),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          transitionBuilder: (child, anim) {
+            final slide = Tween<Offset>(
+              begin: const Offset(0, 0.25),
+              end: Offset.zero,
+            ).animate(anim);
+            return FadeTransition(
+              opacity: anim,
+              child: SlideTransition(position: slide, child: child),
+            );
+          },
+          layoutBuilder: (current, previous) => Stack(
+            alignment: Alignment.center,
+            children: [...previous, if (current != null) current],
+          ),
+          child: statusLabel.isEmpty
+              ? const SizedBox.shrink(key: ValueKey('label-hidden'))
+              : Text(
+                  statusLabel,
+                  key: ValueKey('label-$phase'),
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: isReveal
-                        ? Tokens.onSurface
-                        : Tokens.onSurfaceMuted,
-                    fontSize: isReveal ? 30 : 15,
-                    fontWeight:
-                        isReveal ? FontWeight.w700 : FontWeight.w500,
-                    letterSpacing: isReveal ? 0 : 0.3,
-                    shadows: isReveal
-                        ? const [
-                            Shadow(
-                              color: Color(0x66FFB450),
-                              blurRadius: 20,
-                            ),
-                          ]
-                        : null,
+                  style: const TextStyle(
+                    color: Tokens.onSurface,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.4,
+                    shadows: [
+                      Shadow(color: Color(0xCC000000), blurRadius: 12),
+                    ],
                   ),
                 ),
-                if (sub != null) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    sub,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Tokens.onSurfaceMuted,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
+        ),
+        if (phase == 'reveal')
+          _RevealNameBlock(
+            name: companion.name(l10n),
+            subtitle: l10n.cosmeticCompanionClaimRevealSubtitle,
+          ),
+      ],
+    );
+  }
+}
+
+/// Companion name + subtitle revealed via a staggered own-controller
+/// fade + slide-up. The name leads (0–600 ms over the 1100 ms
+/// entry) and the subtitle joins partway through (440–1100 ms).
+/// Kept out of the surrounding [AnimatedSwitcher] so the name
+/// doesn't pop in at fontSize 30 the moment "Probouzím společníka…"
+/// finishes its swap-out — instead it surfaces gently, well after
+/// the previous label has cleared.
+class _RevealNameBlock extends StatefulWidget {
+  const _RevealNameBlock({required this.name, required this.subtitle});
+
+  final String name;
+  final String subtitle;
+
+  @override
+  State<_RevealNameBlock> createState() => _RevealNameBlockState();
+}
+
+class _RevealNameBlockState extends State<_RevealNameBlock>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _entry = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1200),
+  )..forward();
+
+  // Slower easeOutQuart curve + a touch of scale-up gives the name
+  // a sense of "emerging" rather than appearing fully formed. The
+  // subtitle picks up the same easeOut but waits past the name's
+  // halfway mark so the two are perceived as a duet, not a unit.
+  late final Animation<double> _nameAnim = CurvedAnimation(
+    parent: _entry,
+    curve: const Interval(0.0, 0.60, curve: Curves.easeOutQuart),
+  );
+  late final Animation<double> _subAnim = CurvedAnimation(
+    parent: _entry,
+    curve: const Interval(0.45, 1.0, curve: Curves.easeOutCubic),
+  );
+
+  @override
+  void dispose() {
+    _entry.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _RisingFade(
+          animation: _nameAnim,
+          scaleFrom: 0.88,
+          translateFrom: 18,
+          child: Text(
+            widget.name,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Tokens.onSurface,
+              fontSize: 30,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0,
+              shadows: [
+                Shadow(color: Color(0x99FFB450), blurRadius: 24),
+                Shadow(color: Color(0xCC000000), blurRadius: 12),
               ],
             ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        _RisingFade(
+          animation: _subAnim,
+          child: Text(
+            widget.subtitle,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Tokens.onSurface.withValues(alpha: 0.85),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.2,
+              shadows: const [
+                Shadow(color: Color(0xCC000000), blurRadius: 10),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

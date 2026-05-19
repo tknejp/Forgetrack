@@ -28,6 +28,32 @@ import 'cosmetic_asset_thumb.dart';
 /// phase. The overlay self-dismisses at t ≥ 5400 ms via the host's
 /// [OverlayEntry] lifecycle. The morphing handoff (C3) and in-flow
 /// detail body (C4) plug into the remaining branches.
+/// Cross-state owner for the fullscreen claim [OverlayEntry].
+///
+/// Created by [CosmeticDetailsSheet]'s State and passed down to
+/// [CompanionClaimFlow]. The flow widget stores the active entry
+/// on [entry] when it inserts the overlay; the sheet calls
+/// [removeIfActive] from its `dispose` to guarantee the overlay
+/// never outlives the route (system back gesture, dismiss, etc.).
+///
+/// The flow widget can't own this cleanup itself: its `dispose`
+/// runs as soon as the Claimable → Owned rebuild swaps in the
+/// unlocked sheet body, which happens hundreds of ms before the
+/// morph handoff finishes — so we deliberately keep the flow's
+/// dispose silent on the overlay and route cleanup through here
+/// instead.
+class ClaimOverlayHandle {
+  OverlayEntry? entry;
+
+  void removeIfActive() {
+    final e = entry;
+    if (e != null) {
+      e.remove();
+      entry = null;
+    }
+  }
+}
+
 enum CompanionClaimPhase {
   /// Resting state: silhouette + relic tiles + primary CTA.
   ready,
@@ -52,6 +78,7 @@ class CompanionClaimFlow extends StatefulWidget {
     required this.onClaim,
     this.destSlotKey,
     this.hideCompanion,
+    this.overlayHandle,
   });
 
   /// Companion catalog row — drives the silhouette → real-asset
@@ -81,6 +108,16 @@ class CompanionClaimFlow extends StatefulWidget {
   /// native rendering during the morph handoff.
   final ValueNotifier<bool>? hideCompanion;
 
+  /// Cross-state owner for the active ritual [OverlayEntry]. The
+  /// surrounding sheet's State holds the same handle so that — if
+  /// the route pops mid-ritual (system back gesture, dismiss
+  /// gesture) — the sheet's `dispose` can yank any still-mounted
+  /// overlay. Without this the sprite would orphan on top of the
+  /// app forever, since the flow widget's own dispose has to leave
+  /// the entry alone to keep the morph alive through the
+  /// Claimable → Owned rebuild.
+  final ClaimOverlayHandle? overlayHandle;
+
   @override
   State<CompanionClaimFlow> createState() => _CompanionClaimFlowState();
 }
@@ -98,6 +135,8 @@ class _CompanionClaimFlowState extends State<CompanionClaimFlow>
   /// Re-entry guard: non-null once the overlay has been inserted,
   /// so a stray rebuild that re-enters [_startForging] does not
   /// double-insert. **Not cleared on dispose** — see [dispose].
+  /// The cross-state cleanup path lives on [ClaimOverlayHandle],
+  /// owned by the surrounding details sheet.
   OverlayEntry? _forgingEntry;
 
   @override
@@ -150,6 +189,7 @@ class _CompanionClaimFlowState extends State<CompanionClaimFlow>
             ? cosmeticRarityColor(catalog.byId(id)!.rarity)
             : color,
     ];
+    final handle = widget.overlayHandle;
     late OverlayEntry entry;
     entry = OverlayEntry(
       builder: (_) => CompanionClaimForging(
@@ -161,10 +201,19 @@ class _CompanionClaimFlowState extends State<CompanionClaimFlow>
         onReveal: onReveal,
         destSlotKey: destSlotKey,
         hideCompanion: hideCompanion,
-        onComplete: entry.remove,
+        onComplete: () {
+          // Normal completion path: morph finished, remove the
+          // entry + clear the sheet's tracked reference so its
+          // dispose does not double-remove.
+          if (handle?.entry == entry) {
+            handle!.entry = null;
+          }
+          entry.remove();
+        },
       ),
     );
     _forgingEntry = entry;
+    handle?.entry = entry;
     overlay.insert(entry);
     setState(() => _phase = CompanionClaimPhase.forging);
   }

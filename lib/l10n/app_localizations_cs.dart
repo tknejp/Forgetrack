@@ -4293,6 +4293,10 @@ class AppLocalizationsCs extends AppLocalizations {
   String get cosmeticCompanionClaimRevealSubtitle => 'Tvůj nový společník';
 
   @override
+  String get cosmeticCompanionClaimTapToContinue =>
+      'Klepni kdekoliv pro pokračování';
+
+  @override
   String get cosmeticRelicConsumedBadge => 'Použito';
 
   @override
