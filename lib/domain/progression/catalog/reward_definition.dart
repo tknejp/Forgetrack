@@ -1,16 +1,13 @@
 import 'bonus_xp_condition.dart';
 import 'content_tag.dart';
+import 'ids.dart';
 
 export 'bonus_xp_condition.dart';
 
-/// One concrete reward attached to a [ProgressionNode]. Sealed so the
+/// One concrete reward attached to a [ProgressionEntry]. Sealed so the
 /// dispatcher and celebration mapper get exhaustive switch checking
 /// — adding a new reward type cannot silently slip past the consumer
 /// list.
-///
-/// Q4 / Q5 decisions: there is no `Difficulty` reward — the
-/// `difficultyScore` field is dropped. Rarity is the single grading
-/// axis, carried on the node itself, not on individual rewards.
 sealed class RewardDefinition {
   const RewardDefinition({this.contentTags = const []});
 
@@ -33,9 +30,7 @@ class XpReward extends RewardDefinition {
 ///
 /// The planner filters bonus grants whose condition fails; failed
 /// bonuses leave no trace in the ledger (no "unclaimed bonus"
-/// event), they simply never happen. Per-period rewards (daily
-/// quests) embed their period key into the grant event so each
-/// day's potential bonus is its own idempotency-distinct event.
+/// event), they simply never happen.
 class BonusXpReward extends RewardDefinition {
   const BonusXpReward({
     required this.amount,
@@ -52,13 +47,13 @@ class BonusXpReward extends RewardDefinition {
 /// engine just hands the id to the dispatcher.
 class CosmeticReward extends RewardDefinition {
   const CosmeticReward({required this.cosmeticId, super.contentTags});
-  final String cosmeticId;
+  final CosmeticId cosmeticId;
 }
 
 /// Unlocks a chapter so its quests / nodes become available.
 class ChapterUnlockReward extends RewardDefinition {
   const ChapterUnlockReward({required this.chapterId, super.contentTags});
-  final String chapterId;
+  final ChapterId chapterId;
 }
 
 /// Marks a companion as **available**. The actual equip step is a
@@ -69,25 +64,25 @@ class CompanionAvailabilityReward extends RewardDefinition {
     required this.companionId,
     super.contentTags,
   });
-  final String companionId;
+  final CosmeticId companionId;
 }
 
 /// Player-facing title (e.g. "Pathfinder", "Iron Warden"). Currently
 /// shown on the hero card and journey screen.
 class TitleReward extends RewardDefinition {
   const TitleReward({required this.titleId, super.contentTags});
-  final String titleId;
+  final TitleId titleId;
 }
 
 /// Emblem / badge reward — small icon shown on profile / feed.
 class EmblemReward extends RewardDefinition {
   const EmblemReward({required this.emblemId, super.contentTags});
-  final String emblemId;
+  final EmblemId emblemId;
 }
 
 /// Relic reward — auto-unlocked passive RPG item (Q3 decision: relics
 /// are 2-state, no manual claim).
 class RelicReward extends RewardDefinition {
   const RelicReward({required this.relicId, super.contentTags});
-  final String relicId;
+  final CosmeticId relicId;
 }

@@ -1,16 +1,16 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 
-import '../models/activation_policy.dart';
-import '../models/claim_policy.dart';
+import 'package:forgetrack/domain/progression/catalog/activation_policy.dart';
+import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';
 import '../models/engine_evaluation_context.dart';
-import '../models/progression_node_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import '../repository/ledger_snapshot.dart';
 import 'objective_evaluator.dart';
 
 /// Internal classification the resolver assigns to a node on a
 /// single evaluation pass. Phase 13 inlined this enum (formerly
 /// `lib/features/progression_engine/domain/models/node_state.dart`)
-/// into the resolver file — every player-facing surface that used to
+/// into the resolver file â€” every player-facing surface that used to
 /// pattern-match on it has migrated to per-aggregate sealed
 /// lifecycles (`PlayerQuestLifecycle` / `PlayerAchievementLifecycle`
 /// / `ChapterLifecycle`). The enum survives only as resolver-internal
@@ -32,7 +32,7 @@ enum NodeState {
   /// for a manual-claim node awaiting the user's tap).
   available,
 
-  /// Objective complete and rewards granted (automatic claim) — or
+  /// Objective complete and rewards granted (automatic claim) â€” or
   /// player tapped to claim (manual claim).
   completed,
 }
@@ -163,7 +163,7 @@ class ProgressionNodeResolver {
     );
   }
 
-  // ── Event key helpers ────────────────────────────────────────────
+  // â”€â”€ Event key helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // These are also used by the engine when appending events; kept
   // here so resolver and engine agree on the format.
 

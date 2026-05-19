@@ -1,11 +1,11 @@
-// Phase 8 view-model bridge pin: EngineAchievementView.lifecycle
+﻿// Phase 8 view-model bridge pin: EngineAchievementView.lifecycle
 // precedence table.
 //
 // The bridge getter routes the view's flags (unlocked,
 // isLockedByConditions) to the sealed PlayerAchievementLifecycle.
 // Precedence: Unlocked > Locked > InProgress. Different from Phase 6
 // quests where Locked > Claimed (a side-quest of a closed chapter
-// must stay locked even after the player finished it) — achievements
+// must stay locked even after the player finished it) â€” achievements
 // never re-lock, so once the completion event is in the ledger the
 // row idempotently stays Unlocked.
 //
@@ -18,8 +18,8 @@ import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:forgetrack/domain/progression/player/player_achievement_lifecycle.dart';
 import 'package:forgetrack/features/progression_engine/application/adapters/engine_achievement_view.dart';
 import 'package:forgetrack/features/progression_engine/domain/display/progression_display_models.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/progression_node_definition.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/reward_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
+import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import 'package:flutter/material.dart' show Colors;
 
 void main() {
@@ -37,10 +37,10 @@ void main() {
         titleKey: _titleStub,
         descriptionKey: _descStub,
         rewards: const [XpReward(amount: 115)],
-        objectiveId: 'obj',
+        objectiveId: ObjectiveId('obj'),
       ),
       display: NodeDisplay(
-        nodeId: 'a',
+        nodeId: ProgressionEntryId('a'),
         kind: NodeDisplayKind.achievement,
         title: _titleStub,
         description: _descStub,
@@ -60,7 +60,7 @@ void main() {
     );
   }
 
-  test('(unlocked=F, locked=F) → AchievementInProgress with actual/target', () {
+  test('(unlocked=F, locked=F) â†’ AchievementInProgress with actual/target', () {
     final lc = view().lifecycle;
     expect(lc, isA<AchievementInProgress>());
     final progress = lc as AchievementInProgress;
@@ -68,12 +68,12 @@ void main() {
     expect(progress.target, 10000);
   });
 
-  test('(unlocked=F, locked=T) → AchievementLocked', () {
+  test('(unlocked=F, locked=T) â†’ AchievementLocked', () {
     final lc = view(isLockedByConditions: true).lifecycle;
     expect(lc, const AchievementLocked());
   });
 
-  test('(unlocked=T, locked=F) → AchievementUnlocked(previewXp, unlockedAt)',
+  test('(unlocked=T, locked=F) â†’ AchievementUnlocked(previewXp, unlockedAt)',
       () {
     final at = DateTime.utc(2026, 5, 18, 10);
     final lc =
@@ -82,7 +82,7 @@ void main() {
     expect(lc.unlockedAt, at);
   });
 
-  test('(unlocked=T, locked=T) → AchievementUnlocked wins (never re-locks)',
+  test('(unlocked=T, locked=T) â†’ AchievementUnlocked wins (never re-locks)',
       () {
     // Defensive precedence: even if the engine resolver and the
     // completed set disagree, an unlocked achievement stays Unlocked.

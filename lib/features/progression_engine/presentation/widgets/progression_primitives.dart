@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../../shared/widgets/section_head.dart';
-import '../../domain/progression_domain.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_domain.dart';
+import 'package:forgetrack/features/progression_engine/domain/progression_domain_chrome.dart';
 
 export '../../../../shared/widgets/section_head.dart' show SectionHead;
 
@@ -60,7 +61,7 @@ class ProgressionScaffold extends StatelessWidget {
   }
 }
 
-/// Compact "nothing to show" line — title + caption — rendered inside
+/// Compact "nothing to show" line â€” title + caption â€” rendered inside
 /// sections that have no data yet.
 class ProgressionEmptyLine extends StatelessWidget {
   const ProgressionEmptyLine({
@@ -164,7 +165,7 @@ class ProgressionLoadingBlock extends StatelessWidget {
   }
 }
 
-/// "d MMM · HH:mm" formatter shared by hero / journey / quest views.
+/// "d MMM Â· HH:mm" formatter shared by hero / journey / quest views.
 String progressionFormatDateTime(DateTime value, String locale) {
-  return DateFormat('d MMM · HH:mm', locale).format(value);
+  return DateFormat('d MMM Â· HH:mm', locale).format(value);
 }

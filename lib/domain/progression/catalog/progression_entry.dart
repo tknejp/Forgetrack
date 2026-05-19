@@ -1,4 +1,4 @@
-// `type_init_formals` fires on every `required String super.chapterId`
+// `type_init_formals` fires on every `required ChapterId super.chapterId`
 // in the subtypes below. The annotation is deliberate — it narrows
 // the base's nullable `chapterId` / `chainId` / `comboPoolId` fields
 // to non-null at the subtype's constructor surface (ChapterStep
@@ -7,15 +7,14 @@
 // and silently break catalog authoring.
 // ignore_for_file: type_init_formals
 
-import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart' show IconData;
-import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:meta/meta.dart';
 
-import '../../../../shared/domain/rarity.dart';
-import '../localized_text.dart';
+import '../../../shared/domain/rarity.dart';
 import 'activation_policy.dart';
 import 'claim_policy.dart';
 import 'content_tag.dart';
+import 'ids.dart';
+import 'localized_text.dart';
 import 'progress_start_policy.dart';
 import 'quest_display_bucket.dart';
 import 'quest_policies.dart';
@@ -69,18 +68,6 @@ sealed class ProgressionEntry {
 
 /// Sealed base for every "quest" — the progress + claim primitive
 /// the player sees on screen.
-///
-/// Phase 1 of the subtype refactor: concrete subtypes carry an
-/// implicit `displayBucket` and tighten the constructor surface for
-/// catalog authors. Behavioural policies (slot persistence, gate
-/// cooldown, celebration variant) currently live in providers and
-/// the adapter as ad-hoc checks; Phase 2 moves them onto these
-/// subtypes as declarative fields so the rules live exactly once.
-///
-/// The base constructor stays wide enough for the existing catalog
-/// content to migrate mechanically — only the class name changes
-/// per node. Subtypes that don't use a given field (e.g. a
-/// standalone daily quest has no `chainId`) simply omit it.
 sealed class Quest extends ProgressionEntry {
   const Quest({
     required super.id,
@@ -113,7 +100,7 @@ sealed class Quest extends ProgressionEntry {
     super.sortOrder,
   });
 
-  final String objectiveId;
+  final ObjectiveId objectiveId;
   final QuestDisplayBucket displayBucket;
 
   /// How this quest shows up in the daily / weekly / chapter
@@ -132,11 +119,11 @@ sealed class Quest extends ProgressionEntry {
   /// type-based branching.
   final CelebrationPolicy celebrationPolicy;
 
-  final String? chainId;
+  final ChainId? chainId;
   final int? chainOrder;
-  final String? chapterId;
-  final String? comboPoolId;
-  final String? dailyTierGroupId;
+  final ChapterId? chapterId;
+  final ComboPoolId? comboPoolId;
+  final DailyTierGroupId? dailyTierGroupId;
   final int? dailyTier;
   final ProgressStartPolicy progressStartPolicy;
 
@@ -144,38 +131,28 @@ sealed class Quest extends ProgressionEntry {
   /// auto-extends [unlockConditions] with one [NodeCompleted] per id —
   /// authors keep the list ergonomic without learning the
   /// UnlockCondition vocabulary.
-  final List<String> prerequisiteNodeIds;
+  final List<ProgressionEntryId> prerequisiteNodeIds;
 
   /// Quest ids that follow this one in the same chain. UI-only — the
   /// chain preview walks `nextNodeIds` to render the "open → step →
   /// step → finale" row beneath the active card.
-  final List<String> nextNodeIds;
+  final List<ProgressionEntryId> nextNodeIds;
 
   /// Optional one-character / short chain step label. Mirrors V1's
   /// `chainStepLabel` used by the chain preview row ("1", "2", "🛡").
   final LocalizedText? chainStepLabelKey;
 
-  /// Optional Material icon for the chain preview dot. When set, the
-  /// chapter card chain row renders this glyph instead of the
-  /// [chainStepLabelKey] text — used for "open" (play arrow) and
-  /// "finale" (shield) markers where a word would be noisier than an
+  /// Optional named glyph for the chain preview dot. When set, the
+  /// chapter card chain row renders the glyph the presentation layer
+  /// maps for this enum (Icons.play_arrow_rounded for opener,
+  /// Icons.shield_rounded for finale, Icons.flag_rounded for
+  /// comboFlag) instead of the [chainStepLabelKey] text — used for
+  /// "open" / "finale" markers where a word would be noisier than an
   /// icon.
-  final IconData? chainStepIcon;
+  final ChainStepIcon? chainStepIcon;
 }
 
 // ── Quest subtypes ──────────────────────────────────────────────────
-//
-// Each subtype:
-// * Locks `displayBucket` to one value so authors stop having to
-//   spell it, and so `switch (node)` on the catalog is exhaustive
-//   instead of branching on a stringly-typed enum.
-// * Restricts the constructor to the fields that actually make
-//   sense for that flavour (e.g. a standalone daily quest can't
-//   carry a `chainId` — the constructor doesn't expose it).
-// * Acts as the type identity that Phase 2 will hang slot /
-//   celebration / cooldown policies on, eliminating the ad-hoc
-//   `displayBucket == ...` / `chainOrder == 0` / `nextNodeIds.isEmpty`
-//   checks scattered across the provider, adapter, and resolver.
 
 /// Standalone daily quest — e.g. `daily_steps_today`. Lives in the
 /// daily section with the rotation-sticky-until-midnight slot rule.
@@ -240,9 +217,9 @@ class ChapterOpener extends Quest {
     required super.descriptionKey,
     required super.rewards,
     required super.objectiveId,
-    required String super.chapterId,
-    required String super.chainId,
-    required List<String> super.nextNodeIds,
+    required ChapterId super.chapterId,
+    required ChainId super.chainId,
+    required List<ProgressionEntryId> super.nextNodeIds,
     super.prerequisiteNodeIds,
     super.unlockConditions,
     super.activationPolicy,
@@ -263,9 +240,7 @@ class ChapterOpener extends Quest {
 }
 
 /// Mid-chain chapter step. Manual claim — `nextNodeIds` is non-empty
-/// so the chain has at least one step after it. Silent on claim
-/// (Phase 2 will say so via [CelebrationPolicy]); the player sees
-/// the XP pill flip state on the chapter card.
+/// so the chain has at least one step after it.
 class ChapterStep extends Quest {
   const ChapterStep({
     required super.id,
@@ -273,10 +248,10 @@ class ChapterStep extends Quest {
     required super.descriptionKey,
     required super.rewards,
     required super.objectiveId,
-    required String super.chapterId,
-    required String super.chainId,
+    required ChapterId super.chapterId,
+    required ChainId super.chainId,
     required int super.chainOrder,
-    required List<String> super.nextNodeIds,
+    required List<ProgressionEntryId> super.nextNodeIds,
     super.prerequisiteNodeIds,
     super.unlockConditions,
     super.activationPolicy,
@@ -306,8 +281,8 @@ class ChapterFinale extends Quest {
     required super.descriptionKey,
     required super.rewards,
     required super.objectiveId,
-    required String super.chapterId,
-    required String super.chainId,
+    required ChapterId super.chapterId,
+    required ChainId super.chainId,
     required int super.chainOrder,
     super.prerequisiteNodeIds,
     super.unlockConditions,
@@ -333,8 +308,7 @@ class ChapterFinale extends Quest {
 /// while `ChapterActive(chapterId)` is true; the daily section's
 /// surprise slot picks one at a time. Once-and-done (`LifetimeScope`
 /// objective). Carries a cooldown so it doesn't unlock the same day
-/// its gating chapter step was completed (Phase 2 will encode this
-/// as `CooldownDays(1)` instead of explicit unlock conditions).
+/// its gating chapter step was completed.
 class ChapterSideQuest extends Quest {
   const ChapterSideQuest({
     required super.id,
@@ -342,7 +316,7 @@ class ChapterSideQuest extends Quest {
     required super.descriptionKey,
     required super.rewards,
     required super.objectiveId,
-    required String super.chapterId,
+    required ChapterId super.chapterId,
     super.chainId,
     super.chainOrder,
     super.nextNodeIds,
@@ -375,10 +349,10 @@ class ComboStep extends Quest {
     required super.descriptionKey,
     required super.rewards,
     required super.objectiveId,
-    required String super.chainId,
+    required ChainId super.chainId,
     required int super.chainOrder,
-    required String super.comboPoolId,
-    required List<String> super.nextNodeIds,
+    required ComboPoolId super.comboPoolId,
+    required List<ProgressionEntryId> super.nextNodeIds,
     super.prerequisiteNodeIds,
     super.unlockConditions,
     super.activationPolicy,
@@ -398,8 +372,7 @@ class ComboStep extends Quest {
 }
 
 /// Final step of a daily combo chain. Same gating rules as
-/// [ComboStep] but `nextNodeIds` is empty. Phase 2 will give
-/// this a louder celebration than mid-chain steps.
+/// [ComboStep] but `nextNodeIds` is empty.
 class ComboFinale extends Quest {
   const ComboFinale({
     required super.id,
@@ -407,9 +380,9 @@ class ComboFinale extends Quest {
     required super.descriptionKey,
     required super.rewards,
     required super.objectiveId,
-    required String super.chainId,
+    required ChainId super.chainId,
     required int super.chainOrder,
-    required String super.comboPoolId,
+    required ComboPoolId super.comboPoolId,
     super.prerequisiteNodeIds,
     super.unlockConditions,
     super.activationPolicy,
@@ -439,7 +412,7 @@ class DailyChallenge extends Quest {
     required super.descriptionKey,
     required super.rewards,
     required super.objectiveId,
-    required String super.comboPoolId,
+    required ComboPoolId super.comboPoolId,
     super.unlockConditions,
     super.claimPolicy,
     super.activationPolicy,
@@ -508,7 +481,7 @@ class Achievement extends ProgressionEntry {
   /// achievements, level milestones, anything satisfied by unlock
   /// conditions alone). When set, references an [Objective]
   /// in [ObjectiveCatalog].
-  final String? objectiveId;
+  final ObjectiveId? objectiveId;
   final String badgeEmoji;
 }
 
@@ -528,7 +501,7 @@ class Milestone extends ProgressionEntry {
     super.sortOrder,
   }) : super(claimPolicy: ClaimPolicy.automatic);
 
-  final String objectiveId;
+  final ObjectiveId objectiveId;
   final bool journeyMapAnchor;
 }
 
@@ -566,7 +539,7 @@ class ChapterCompletion extends ProgressionEntry {
     super.rarity,
   }) : super(claimPolicy: ClaimPolicy.automatic);
 
-  final String chapterId;
+  final ChapterId chapterId;
 }
 
 class CompanionAvailability extends ProgressionEntry {
@@ -582,7 +555,7 @@ class CompanionAvailability extends ProgressionEntry {
     super.lockedHintKey,
   }) : super(claimPolicy: ClaimPolicy.manual);
 
-  final String companionId;
+  final CosmeticId companionId;
 }
 
 class Relic extends ProgressionEntry {
@@ -597,7 +570,7 @@ class Relic extends ProgressionEntry {
     super.rarity,
   }) : super(claimPolicy: ClaimPolicy.automatic);
 
-  final String relicId;
+  final CosmeticId relicId;
 }
 
 class ContentUnlock extends ProgressionEntry {

@@ -1,4 +1,4 @@
-import '../domain/catalog/engine_catalog_context.dart';
+﻿import '../domain/catalog/engine_catalog_context.dart';
 import '../domain/catalog/objective_catalog.dart';
 import '../domain/catalog/progression_node_catalog.dart';
 import '../domain/evaluator/objective_evaluator.dart';
@@ -14,12 +14,12 @@ import 'package:forgetrack/domain/player/player.dart';
 import '../../health_connect/domain/goal_board.dart';
 import '../../health_connect/domain/health_snapshot.dart';
 import '../../nutrition/domain/nutrition_snapshot.dart';
-import '../domain/models/claim_policy.dart';
-import '../domain/models/progression_node_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import '../domain/models/progression_resolution_reason.dart';
-import '../domain/models/quest_policies.dart';
-import '../domain/models/reward_definition.dart';
-import '../domain/models/unlock_condition.dart';
+import 'package:forgetrack/domain/progression/catalog/quest_policies.dart';
+import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/unlock_condition.dart';
 import '../domain/models/progression_resolution_result.dart';
 import '../domain/repository/ledger_snapshot.dart';
 import '../domain/repository/progression_engine_repository.dart';
@@ -29,8 +29,8 @@ import 'reward_grant_service.dart';
 ///
 /// Composes the four evaluators (objective, unlock, node, reward
 /// planner) plus the [RewardGrantService] over a
-/// [ProgressionEngineRepository]. One canonical method —
-/// [evaluate] — produces a [ProgressionResolutionResult] for one
+/// [ProgressionEngineRepository]. One canonical method â€”
+/// [evaluate] â€” produces a [ProgressionResolutionResult] for one
 /// run. The result is the only thing downstream consumers consume;
 /// nobody else looks at the ledger directly.
 ///
@@ -124,10 +124,10 @@ class ProgressionEngine {
 
     // Step 2: evaluate objectives in memory. Writing the persisted
     // `ObjectiveCompletionEvent` is deferred until step 4 (after the
-    // node resolver has decided eligibility) — see the long comment
+    // node resolver has decided eligibility) â€” see the long comment
     // there for why. We still read any pre-existing persisted event
     // here so devtools shortcuts that wrote only the objective event
-    // (`devToolsMarkObjectiveMet`) keep surfacing the claim pill —
+    // (`devToolsMarkObjectiveMet`) keep surfacing the claim pill â€”
     // without the carry-forward the live metric would say "not yet"
     // and the resolver would short-circuit to in-progress.
     final outcomes = <String, ObjectiveOutcome>{};
@@ -178,7 +178,7 @@ class ProgressionEngine {
     };
 
     // Pre-compute the set of objectives that any catalog node binds to.
-    // Objectives outside this set ("orphans" — typically tracker-only
+    // Objectives outside this set ("orphans" â€” typically tracker-only
     // objectives such as `level_xp_5`, paired with a `LevelMilestone`
     // that carries no `objectiveId`) get unconditional event emission
     // after the resolution loop. Inside the loop, bound objectives
@@ -189,9 +189,9 @@ class ProgressionEngine {
     };
 
     // Today's deterministic daily-challenge pick per pool. A daily
-    // challenge that isn't today's pick is treated as locked — the
+    // challenge that isn't today's pick is treated as locked â€” the
     // engine doesn't fire its objective, doesn't surface it as
-    // available, doesn't let it pollute DOKONČENÉ. Mirrors the
+    // available, doesn't let it pollute DOKONÄŒENÃ‰. Mirrors the
     // `DailySectionResolver._pickChallenge` algorithm so the daily
     // section's "today's pick" and the engine's "eligible-by-pick"
     // always agree. Without this gate, a single tick of nutrition
@@ -241,14 +241,14 @@ class ProgressionEngine {
     // Objective events are gated on at least one binding node being
     // eligible. Today-bound combo metrics (`TodayCompletionsAmong`)
     // used to write a permanent `ObjectiveCompletionEvent` the instant
-    // today's daily count met step N+1's target — even while step N+1
+    // today's daily count met step N+1's target â€” even while step N+1
     // was cooldown-locked behind step N. That permanent event then
     // re-asserted the satisfied outcome tomorrow, surfacing step N+1
     // as a 0/0 free claim the player had done nothing to earn. By
     // emitting only when an eligible binding exists, an objective's
     // persisted state can never outrun any node that's actually ready
     // to claim it. For objectives whose only binding node is locked
-    // this run, the engine just re-evaluates next tick — live metric
+    // this run, the engine just re-evaluates next tick â€” live metric
     // values aren't lost, only the durable shortcut event.
     final newObjectiveEvents = <ObjectiveCompletionEvent>[];
     final completedObjectives = <ObjectiveCompletion>[];
@@ -299,7 +299,7 @@ class ProgressionEngine {
         r.periodKey,
       );
       // Periodic quests (daily / weekly) need a NodeCompletionEvent
-      // every period they're satisfied — yesterday's completion has
+      // every period they're satisfied â€” yesterday's completion has
       // a different periodKey, so dedup by the period-aware event
       // key, not by raw node id. The old node-id dedup quietly
       // suppressed every subsequent day's completion (and the
@@ -349,7 +349,7 @@ class ProgressionEngine {
       }
     }
 
-    // Orphan objectives — no node binds their `objectiveId`, so the
+    // Orphan objectives â€” no node binds their `objectiveId`, so the
     // eligibility-gated emission inside the resolution loop never
     // touches them. Tracker objectives like `level_xp_5` (paired with
     // a `LevelMilestone`, which carries no `objectiveId`) fall
@@ -502,14 +502,14 @@ class ProgressionEngine {
     };
   }
 
-  // ── Authoring / devtools API ────────────────────────────────────
+  // â”€â”€ Authoring / devtools API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   //
   // Two narrow primitives the devtools layer used to do by hand,
   // moved inside the engine so it stays the single source of ledger
   // writes. Both go through the same period-key resolution +
   // idempotent appendEvents path the production `claim` / `evaluate`
   // flows use; the only difference is that the metric doesn't have
-  // to actually satisfy — the engine seeds the events directly and
+  // to actually satisfy â€” the engine seeds the events directly and
   // re-evaluates so the rest of the pipeline (resolver, reward
   // planner, celebration adapter) reacts normally.
 
@@ -712,7 +712,7 @@ class ProgressionEngine {
     );
   }
 
-  // ── Helpers ─────────────────────────────────────────────────────
+  // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   ObjectiveOutcome? _outcomeForNode(
     ProgressionEntry node,
@@ -740,14 +740,14 @@ class ProgressionEngine {
   /// conditions from [Quest.prerequisiteNodeIds] and the node's
   /// [Quest.gatePolicy].
   ///
-  /// `prerequisiteNodeIds` always expand to `NodeCompleted(pid)` —
+  /// `prerequisiteNodeIds` always expand to `NodeCompleted(pid)` â€”
   /// catalog authors keep the list ergonomic without learning the
   /// UnlockCondition vocabulary. On top of that, [GatePolicy] adds
   /// time-based gates: a [CooldownDays] of 1 day pins a
   /// `NodeCompletedBeforeToday(pid)` for every prereq so combo
   /// chains advance one step per day and chapter side quests reveal
   /// the day after their gating chapter step lands. Catalog content
-  /// therefore stops spelling out `NodeCompletedBeforeToday` — the
+  /// therefore stops spelling out `NodeCompletedBeforeToday` â€” the
   /// subtype declares the cadence and the engine wires the gate.
   List<UnlockCondition> _conditionsFor(ProgressionEntry node) {
     if (node is! Quest || node.prerequisiteNodeIds.isEmpty) {
@@ -768,7 +768,7 @@ class ProgressionEngine {
     ];
   }
 
-  /// `comboPoolId → picked node id` for the daily-challenge templates.
+  /// `comboPoolId â†’ picked node id` for the daily-challenge templates.
   /// Mirrors `DailySectionResolver._pickChallenge`: if any template in
   /// the pool was claimed today (NodeCompletionEvent landing on the
   /// local date), pin it; otherwise FNV-1a hash today's local date

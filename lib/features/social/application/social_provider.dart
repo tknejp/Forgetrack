@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
@@ -9,7 +9,7 @@ import '../../auth/application/auth_provider.dart';
 import '../../cosmetics/application/cosmetics_provider.dart';
 import '../../progression_engine/application/progression_engine_provider.dart';
 import '../../progression_engine/domain/catalog/progression_node_catalog.dart';
-import '../../progression_engine/domain/models/progression_node_definition.dart'
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart'
     show Achievement;
 import '../data/social_firebase_bootstrap.dart';
 import '../data/social_firebase_session.dart';
@@ -105,13 +105,13 @@ class SocialProvider extends ChangeNotifier {
 
   /// Aggregated read view of every social state surface for the
   /// signed-in user. Phase 17 of the domain refactor introduces this
-  /// as the forward-compatible read shape — widgets can incrementally
+  /// as the forward-compatible read shape â€” widgets can incrementally
   /// migrate from per-getter reads (`socialProvider.friendships`,
   /// `.recentShares`, `.notifications`) to a single
   /// `socialProvider.presence` read. Phase 19 will sweep widgets.
   ///
   /// `ownProfile` is null today because the provider doesn't track
-  /// the signed-in user's published profile snapshot locally — it
+  /// the signed-in user's published profile snapshot locally â€” it
   /// only *writes* it (`publishProfile`). A follow-up will hydrate
   /// own profile via `watchProfilesByIds([_activeUid])` so the
   /// aggregate can drive the header without an extra round-trip.
@@ -144,7 +144,7 @@ class SocialProvider extends ChangeNotifier {
       _lastAuthSignature = authSignature;
       // Warm the image cache with the Auth photoUrl as soon as the user
       // is known. This URL is the hero header's fallback before the
-      // Firestore profile arrives — precaching here means the avatar
+      // Firestore profile arrives â€” precaching here means the avatar
       // paints synchronously on first navigate to the home screen.
       precacheProfilePhoto(authProvider.user?.photoUrl);
       unawaited(_reconcileSession());
@@ -344,13 +344,13 @@ class SocialProvider extends ChangeNotifier {
   /// Maps raw V2 ledger completions read from `users/{uid}/engineNodeCompletions`
   /// into the friend-view achievement list.
   ///
-  /// Filters to [Achievement] ids — quest / milestone completions are
+  /// Filters to [Achievement] ids â€” quest / milestone completions are
   /// in the same collection but live elsewhere in the UI. Per-node we
   /// keep the earliest completion timestamp (engine ledger may have
   /// multiple period rows for repeating nodes; achievements are
   /// once-and-done so this is mostly a guard).
   ///
-  /// Catalog metadata (rarity, domain) comes from the LOCAL catalog —
+  /// Catalog metadata (rarity, domain) comes from the LOCAL catalog â€”
   /// every device runs the same compiled app version, so the catalog
   /// is the right source even for someone else's data.
   List<SocialUnlockedAchievement> _buildUnlockedAchievementsFromRemote(
@@ -464,7 +464,7 @@ class SocialProvider extends ChangeNotifier {
       );
 
       throw StateError(
-        'Přátelství nebylo nalezeno (friendships=${_friendships.length}).',
+        'PÅ™Ã¡telstvÃ­ nebylo nalezeno (friendships=${_friendships.length}).',
       );
     }
 
@@ -745,7 +745,7 @@ class SocialProvider extends ChangeNotifier {
   /// Assemble the canonical inputs the [SocialProfileProjection]
   /// denormalises into a [SocialProfileSyncPayload].
   ///
-  /// Returns null when the social session isn't ready to publish —
+  /// Returns null when the social session isn't ready to publish â€”
   /// the projection treats that as a no-op.
   SocialProfileInputs? _collectProfileInputs() {
     final authProvider = _authProvider;
@@ -1160,17 +1160,17 @@ class SocialProvider extends ChangeNotifier {
         case 'unauthorized':
           return 'Profilovou fotku nejde nahrat. Zkontroluj Firebase Storage pravidla.';
         case 'failed-precondition':
-          return 'Sociální data se ještě připravují. Zkus to prosím za chvíli znovu.';
+          return 'SociÃ¡lnÃ­ data se jeÅ¡tÄ› pÅ™ipravujÃ­. Zkus to prosÃ­m za chvÃ­li znovu.';
         case 'permission-denied':
-          return 'Přístup k sociálním datům byl zamítnut. Zkus se znovu přihlásit.';
+          return 'PÅ™Ã­stup k sociÃ¡lnÃ­m datÅ¯m byl zamÃ­tnut. Zkus se znovu pÅ™ihlÃ¡sit.';
         case 'unauthenticated':
-          return 'Pro sociální funkce je potřeba být přihlášený.';
+          return 'Pro sociÃ¡lnÃ­ funkce je potÅ™eba bÃ½t pÅ™ihlÃ¡Å¡enÃ½.';
         case 'unavailable':
-          return 'Sociální backend je dočasně nedostupný. Zkus to prosím později.';
+          return 'SociÃ¡lnÃ­ backend je doÄasnÄ› nedostupnÃ½. Zkus to prosÃ­m pozdÄ›ji.';
         case 'not-found':
-          return 'Požadovaná sociální položka nebyla nalezena.';
+          return 'PoÅ¾adovanÃ¡ sociÃ¡lnÃ­ poloÅ¾ka nebyla nalezena.';
         case 'already-exists':
-          return 'Tahle položka už v sociální části existuje.';
+          return 'Tahle poloÅ¾ka uÅ¾ v sociÃ¡lnÃ­ ÄÃ¡sti existuje.';
       }
     }
 
@@ -1178,31 +1178,31 @@ class SocialProvider extends ChangeNotifier {
 
     if (raw.contains('requires an index') ||
         raw.contains('failed-precondition')) {
-      return 'Sociální data se ještě připravují. Zkus to prosím za chvíli znovu.';
+      return 'SociÃ¡lnÃ­ data se jeÅ¡tÄ› pÅ™ipravujÃ­. Zkus to prosÃ­m za chvÃ­li znovu.';
     }
 
     if (raw.contains('permission-denied')) {
-      return 'Přístup k sociálním datům byl zamítnut. Zkus se znovu přihlásit.';
+      return 'PÅ™Ã­stup k sociÃ¡lnÃ­m datÅ¯m byl zamÃ­tnut. Zkus se znovu pÅ™ihlÃ¡sit.';
     }
 
     if (raw.contains('unauthenticated')) {
-      return 'Pro sociální funkce je potřeba být přihlášený.';
+      return 'Pro sociÃ¡lnÃ­ funkce je potÅ™eba bÃ½t pÅ™ihlÃ¡Å¡enÃ½.';
     }
 
     if (raw.contains('google sign-in did not return an id token')) {
-      return 'Google přihlášení se nepodařilo dokončit. Zkus to prosím znovu.';
+      return 'Google pÅ™ihlÃ¡Å¡enÃ­ se nepodaÅ™ilo dokonÄit. Zkus to prosÃ­m znovu.';
     }
 
     if (raw.contains('friend request not found')) {
-      return 'Žádost o přátelství už není dostupná.';
+      return 'Å½Ã¡dost o pÅ™Ã¡telstvÃ­ uÅ¾ nenÃ­ dostupnÃ¡.';
     }
 
     if (raw.contains('payload is empty')) {
-      return 'Sociální data dorazila nekompletní. Zkus to prosím znovu.';
+      return 'SociÃ¡lnÃ­ data dorazila nekompletnÃ­. Zkus to prosÃ­m znovu.';
     }
 
     if (raw.contains('a user cannot send a friend request to themselves')) {
-      return 'Sám sobě žádost o přátelství poslat nejde.';
+      return 'SÃ¡m sobÄ› Å¾Ã¡dost o pÅ™Ã¡telstvÃ­ poslat nejde.';
     }
 
     if (error is ArgumentError || error is StateError) {
@@ -1210,7 +1210,7 @@ class SocialProvider extends ChangeNotifier {
       if (message.isNotEmpty) return message;
     }
 
-    return 'V sociální části se něco nepovedlo. Zkus to prosím znovu.';
+    return 'V sociÃ¡lnÃ­ ÄÃ¡sti se nÄ›co nepovedlo. Zkus to prosÃ­m znovu.';
   }
 
   @override

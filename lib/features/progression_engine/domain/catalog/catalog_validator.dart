@@ -1,10 +1,10 @@
-import '../models/activation_policy.dart';
-import '../models/claim_policy.dart';
-import '../models/content_tag.dart';
-import '../models/objective_definition.dart';
-import '../models/progression_node_definition.dart';
-import '../models/reward_definition.dart';
-import '../models/unlock_condition.dart';
+﻿import 'package:forgetrack/domain/progression/catalog/activation_policy.dart';
+import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';
+import 'package:forgetrack/domain/progression/catalog/content_tag.dart';
+import 'package:forgetrack/domain/progression/catalog/objective.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
+import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/unlock_condition.dart';
 import 'engine_catalog_context.dart';
 import 'objective_catalog.dart';
 import 'progression_node_catalog.dart';
@@ -24,7 +24,7 @@ class CatalogValidationIssue {
   final String message;
 
   @override
-  String toString() => '[${severity.name.toUpperCase()}] $path — $message';
+  String toString() => '[${severity.name.toUpperCase()}] $path â€” $message';
 }
 
 enum CatalogValidationSeverity { error, warning }
@@ -38,7 +38,7 @@ class CatalogValidationException implements Exception {
 
   @override
   String toString() {
-    final lines = ['CatalogValidationException — ${issues.length} issue(s):'];
+    final lines = ['CatalogValidationException â€” ${issues.length} issue(s):'];
     for (final issue in issues) {
       lines.add('  $issue');
     }
@@ -52,7 +52,7 @@ class CatalogValidationException implements Exception {
 /// further checks land alongside the features that need them
 /// (chapters in Phase 3, RPG content tag coherence in Phase 8).
 ///
-/// The validator is pure / deterministic — give it the same catalogs,
+/// The validator is pure / deterministic â€” give it the same catalogs,
 /// get the same issue list, in the same order.
 class CatalogValidator {
   const CatalogValidator({
@@ -102,7 +102,7 @@ class CatalogValidator {
     if (hasError) throw CatalogValidationException(issues);
   }
 
-  // ── Objective checks ────────────────────────────────────────────
+  // â”€â”€ Objective checks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Iterable<CatalogValidationIssue> _checkObjectiveIdentity(
     List<Objective> objectives,
@@ -119,7 +119,7 @@ class CatalogValidator {
     }
   }
 
-  // ── Node checks ─────────────────────────────────────────────────
+  // â”€â”€ Node checks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Iterable<CatalogValidationIssue> _checkNodeIdentity(
     List<ProgressionEntry> nodes,
@@ -221,7 +221,7 @@ class CatalogValidator {
           severity: CatalogValidationSeverity.warning,
           path: 'nodes[${n.id}]',
           message:
-              'Manual-claim node has no lockedHintKey — player may not know what to do.',
+              'Manual-claim node has no lockedHintKey â€” player may not know what to do.',
         );
       }
     }
@@ -247,7 +247,7 @@ class CatalogValidator {
           severity: CatalogValidationSeverity.error,
           path: 'nodes[${n.id}].unlockConditions',
           message:
-              'LevelMilestone level=${n.level} unlock conditions reference $levels — none match.',
+              'LevelMilestone level=${n.level} unlock conditions reference $levels â€” none match.',
         );
       }
     }
@@ -292,13 +292,13 @@ class CatalogValidator {
           severity: CatalogValidationSeverity.warning,
           path: 'nodes[${n.id}]',
           message:
-              'Activation policy ${n.activationPolicy.name} but no RPG-flavored ContentTag — drift risk.',
+              'Activation policy ${n.activationPolicy.name} but no RPG-flavored ContentTag â€” drift risk.',
         );
       }
     }
   }
 
-  // ── Helpers ─────────────────────────────────────────────────────
+  // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   /// Returns the `objectiveId` field on the node when present, null
   /// for node types that are unlock-condition-only.
@@ -316,7 +316,7 @@ class CatalogValidator {
   }
 }
 
-// Currently unused — keeps the analyzer happy when a future check
+// Currently unused â€” keeps the analyzer happy when a future check
 // needs to introspect rewards by type.
 // ignore: unused_element
 List<RewardDefinition> _allRewards(List<ProgressionEntry> nodes) =>

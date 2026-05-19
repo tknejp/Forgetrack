@@ -1,4 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 
 import 'package:forgetrack/features/progression_engine/application/progression_engine.dart';
 import 'package:forgetrack/features/progression_engine/data/in_memory_progression_engine_repository.dart';
@@ -31,7 +32,7 @@ Future<void> _seedPilgrimComplete(
     NodeCompletionEvent(
       eventKey: 'node|pilgrim_path_finale|lifetime|complete',
       timestamp: DateTime(2026, 5, 10, 12),
-      nodeId: 'pilgrim_path_finale',
+      nodeId: ProgressionEntryId('pilgrim_path_finale'),
     ),
   ]);
 }
@@ -54,13 +55,13 @@ void main() {
       final availableIds =
           result.availableNodes.map((a) => a.nodeId).toSet();
 
-      // Open is auto-claim with LevelMetric >= 10 → completes
+      // Open is auto-claim with LevelMetric >= 10 â†’ completes
       // immediately and grants its XP.
       expect(completedIds, contains('forest_trial_open'));
 
       // Steps remain hidden until their objectives accumulate AND
       // their prereq is complete. No daily quest completions in the
-      // input → none should be available yet.
+      // input â†’ none should be available yet.
       expect(availableIds.contains('forest_trial_daily_wins_5'), isFalse);
       expect(availableIds.contains('forest_trial_steps_5'), isFalse);
       expect(availableIds.contains('forest_trial_recovery_3'), isFalse);
@@ -113,14 +114,14 @@ void main() {
       );
 
       // First evaluate: open auto-fires (lands in the ledger). Step
-      // 1's prereq isn't yet visible to the resolver — it walks the
+      // 1's prereq isn't yet visible to the resolver â€” it walks the
       // ledger snapshot taken before this run, not after.
       await evaluateWithContext(engine, _context());
 
       // Second evaluate with all backing objective values seeded.
       // Step 1 (`DaysWithAtLeastKAmongMetric`) and step 3
       // (`DaysWithAtLeastKAmongMetric` for steps+sleep) read from
-      // `objectiveActualOverrides` — the provider's ledger producer
+      // `objectiveActualOverrides` â€” the provider's ledger producer
       // is bypassed in this unit test. Step 2 is the only single-
       // node `NodeCompletionsMetric` left in the chain.
       final result = await evaluateWithContext(

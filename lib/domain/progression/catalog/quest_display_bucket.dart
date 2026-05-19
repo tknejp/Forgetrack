@@ -1,4 +1,4 @@
-/// Where a [QuestNode] surfaces in the quest screen.
+/// Where a [Quest] surfaces in the quest screen.
 enum QuestDisplayBucket {
   /// Daily-rotating slots — refresh every day.
   daily,

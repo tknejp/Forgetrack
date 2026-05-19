@@ -1,8 +1,8 @@
-import 'package:forgetrack/domain/progression/catalog/chapter.dart';
+﻿import 'package:forgetrack/domain/progression/catalog/chapter.dart';
 import 'package:forgetrack/domain/progression/catalog/ids.dart';
 
 import '../domain/catalog/progression_node_catalog.dart';
-import '../domain/models/progression_node_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 
 /// Walks [ProgressionEntryCatalog] once and produces a
 /// [ChapterCatalog] aggregating every authored chapter's chain
@@ -14,7 +14,7 @@ import '../domain/models/progression_node_definition.dart';
 /// `lib/features/progression_engine/`) and the pure-domain
 /// [Chapter] / [ChapterCatalog] wrappers (in
 /// `lib/domain/progression/catalog/`). The wrapper holds typed-id
-/// references only — see the Chapter doc comment for the dependency
+/// references only â€” see the Chapter doc comment for the dependency
 /// rationale.
 ///
 /// **Chain ordering.** `ChapterStep` rows carry `chainOrder` (1-based
@@ -25,7 +25,7 @@ import '../domain/models/progression_node_definition.dart';
 ///
 /// **Completion node lookup.** `ChapterCompletion` rows carry
 /// `chapterId` directly. The builder picks the first match per
-/// chapter id — there is exactly one per chapter today (chapter
+/// chapter id â€” there is exactly one per chapter today (chapter
 /// content invariant; the validator enforces it elsewhere).
 ///
 /// **Side-quests.** `ChapterSideQuest` `Quest` rows carry

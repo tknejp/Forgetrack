@@ -1,10 +1,10 @@
-import '../../cosmetics/application/cosmetics_provider.dart';
+﻿import '../../cosmetics/application/cosmetics_provider.dart';
 import '../../cosmetics/domain/companion_availability_lookup.dart';
 import '../../cosmetics/domain/consumed_relics.dart';
 import '../../cosmetics/domain/player_cosmetic_lifecycle.dart';
 import '../../progression_engine/application/progression_engine_provider.dart';
-import '../../progression_engine/domain/models/progression_node_definition.dart';
-import '../../progression_engine/domain/models/unlock_condition.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
+import 'package:forgetrack/domain/progression/catalog/unlock_condition.dart';
 import '../../progression_engine/domain/policy/level_policy.dart';
 
 /// DevTools-only target state for the companion matrix. Drives the
@@ -21,7 +21,7 @@ enum CompanionDevTarget { hidden, partial, claimable, claimed }
 /// Devtools controller for the companion state matrix. Reads the
 /// canonical [PlayerCosmeticLifecycle] from [CosmeticsProvider]'s
 /// inventory projection so the matrix sees exactly what the inventory
-/// grid sees — no second source of truth.
+/// grid sees â€” no second source of truth.
 ///
 /// The "write" side composes the existing engine + cosmetics
 /// primitives:
@@ -29,9 +29,9 @@ enum CompanionDevTarget { hidden, partial, claimable, claimed }
 ///   * `cosmetics.debugGrantCosmetic` / `debugRevokeCosmetic`
 ///   * `progression.devToolsAddXp` / `devToolsForceCompleteNode`
 ///
-/// The engine has no "uncomplete" primitive — once a gating
+/// The engine has no "uncomplete" primitive â€” once a gating
 /// achievement is in the ledger it cannot be erased non-destructively.
-/// So downward transitions (claimed → partial, claimable → hidden) are
+/// So downward transitions (claimed â†’ partial, claimable â†’ hidden) are
 /// best-effort. [detect] re-reads after the call so the matrix always
 /// shows the **actual** outcome.
 class CompanionDevController {
@@ -50,7 +50,7 @@ class CompanionDevController {
       allCompanionAvailabilities;
 
   /// `LevelAtLeast` requirement parsed off the companion's V2 unlock
-  /// conditions — companions always carry exactly one (see
+  /// conditions â€” companions always carry exactly one (see
   /// `companions_content.dart`).
   static int? gateLevelFor(CompanionAvailability node) {
     for (final c in node.unlockConditions) {
@@ -68,7 +68,7 @@ class CompanionDevController {
     ];
   }
 
-  /// Live snapshot of the companion's lifecycle — same projection the
+  /// Live snapshot of the companion's lifecycle â€” same projection the
   /// inventory grid uses, no devtools-only branch. Returns
   /// [CosmeticHidden] as a safe fallback when cosmetics state hasn't
   /// bound yet.
@@ -100,7 +100,7 @@ class CompanionDevController {
     // Always clean-slate the cosmetics side so the reveal
     // evaluator's "satisfied conditions" count reflects the target
     // rather than the previous state. Engine state stays untouched
-    // on this pre-pass — see the per-target branches below for the
+    // on this pre-pass â€” see the per-target branches below for the
     // narrow engine writes.
     await cosmetics.debugRevokeCosmetic(node.companionId);
     for (final relicId in relicIds) {
@@ -111,14 +111,14 @@ class CompanionDevController {
       case CompanionDevTarget.hidden:
       case CompanionDevTarget.partial:
         // Cosmetics-only transition. Lowering the engine level is
-        // intentionally NOT attempted — the only available primitive
+        // intentionally NOT attempted â€” the only available primitive
         // (`devToolsSetLevel`) wipes the ledger via
         // [devToolsSetTotalXp] and replays every prior celebration
         // on the next refresh, which is far worse UX than letting
         // the reveal evaluator's best effort apply. The evaluator
         // branches on:
-        //   • owned relics → satisfied-count
-        //   • current level vs `gate − 10` → hidden vs teaser
+        //   â€¢ owned relics â†’ satisfied-count
+        //   â€¢ current level vs `gate âˆ’ 10` â†’ hidden vs teaser
         // so at high player levels the requested state may resolve
         // as `partial` even when "Hidden" was selected. [detect]
         // re-reads the actual state after the transition so the
@@ -131,8 +131,8 @@ class CompanionDevController {
         }
       case CompanionDevTarget.claimable:
         // Two requirements for `claimable`:
-        //   1. Engine level ≥ gate so `LevelAtLeast(gate)` resolves
-        //      true. We add XP additively — never wipe — so existing
+        //   1. Engine level â‰¥ gate so `LevelAtLeast(gate)` resolves
+        //      true. We add XP additively â€” never wipe â€” so existing
         //      pending celebrations / completion history stay intact.
         //   2. Both gating achievement nodes completed. Only force-
         //      complete the ones the player hasn't already cleared
@@ -153,7 +153,7 @@ class CompanionDevController {
           await progression.devToolsForceCompleteNode(nodeId);
         }
       case CompanionDevTarget.claimed:
-        // Bypass the claim animation entirely — devtools cares about
+        // Bypass the claim animation entirely â€” devtools cares about
         // the resulting state, not the moment. The cosmetic provider
         // marks the companion as unlocked which causes the reveal
         // evaluator to report `unlocked` and `consumedRelicIds` to

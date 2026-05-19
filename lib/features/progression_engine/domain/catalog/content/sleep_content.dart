@@ -1,17 +1,17 @@
-import 'package:forgetrack/domain/progression/catalog/ids.dart';
+﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import '../../../../../shared/domain/rarity.dart';
-import '../../models/claim_policy.dart';
-import '../../models/content_tag.dart';
-import '../../models/objective_definition.dart';
-import '../../models/objective_metric.dart';
-import '../../models/objective_operator.dart';
-import '../../models/objective_scope.dart';
-import '../../models/progression_node_definition.dart';
-import '../../models/reward_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';
+import 'package:forgetrack/domain/progression/catalog/content_tag.dart';
+import 'package:forgetrack/domain/progression/catalog/objective.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_metric.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_operator.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_scope.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
+import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import '../engine_catalog_context.dart';
 import 'quest_assets.dart';
 
-/// Sleep domain — daily sleep quest + lifetime mastery + rolling-window
+/// Sleep domain â€” daily sleep quest + lifetime mastery + rolling-window
 /// mastery achievements. Mirrors V1: rule `daily_sleep`,
 /// `sleep_total_250h`/`1000h`, `sleep_month_225h`/`240h`.
 
@@ -66,7 +66,7 @@ List<ProgressionEntry> sleepNodes() {
   return [
     DailyQuest(
       id: const ProgressionEntryId('daily_sleep_today'),
-      objectiveId: 'daily_sleep',
+      objectiveId: ObjectiveId('daily_sleep'),
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.progRuleDailySleepDesc,
       titleKey: (l) => l.progRuleDailySleep,
@@ -78,7 +78,7 @@ List<ProgressionEntry> sleepNodes() {
     ),
     Achievement(
       id: const ProgressionEntryId('sleep_total_250h'),
-      objectiveId: 'lifetime_sleep_250h',
+      objectiveId: ObjectiveId('lifetime_sleep_250h'),
       badgeEmoji: '\u{1F6CC}',
       titleKey: (l) => l.progAchievementSleep250hTitle,
       descriptionKey: (l) => l.progAchievementSleep250hDesc,
@@ -88,7 +88,7 @@ List<ProgressionEntry> sleepNodes() {
     ),
     Achievement(
       id: const ProgressionEntryId('sleep_total_1000h'),
-      objectiveId: 'lifetime_sleep_1000h',
+      objectiveId: ObjectiveId('lifetime_sleep_1000h'),
       badgeEmoji: '\u{1F48E}',
       titleKey: (l) => l.progAchievementSleep1000hTitle,
       descriptionKey: (l) => l.progAchievementSleep1000hDesc,
@@ -98,7 +98,7 @@ List<ProgressionEntry> sleepNodes() {
     ),
     Achievement(
       id: const ProgressionEntryId('sleep_month_225h'),
-      objectiveId: 'rolling_sleep_30d_225h',
+      objectiveId: ObjectiveId('rolling_sleep_30d_225h'),
       badgeEmoji: '\u{1F31C}',
       titleKey: (l) => l.progAchievementSleepMonth225hTitle,
       descriptionKey: (l) => l.progAchievementSleepMonth225hDesc,
@@ -108,7 +108,7 @@ List<ProgressionEntry> sleepNodes() {
     ),
     Achievement(
       id: const ProgressionEntryId('sleep_month_240h'),
-      objectiveId: 'rolling_sleep_30d_240h',
+      objectiveId: ObjectiveId('rolling_sleep_30d_240h'),
       badgeEmoji: '\u{1F451}',
       titleKey: (l) => l.progAchievementSleepMonth240hTitle,
       descriptionKey: (l) => l.progAchievementSleepMonth240hDesc,

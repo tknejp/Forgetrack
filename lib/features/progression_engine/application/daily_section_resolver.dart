@@ -1,11 +1,11 @@
-import 'package:forgetrack/domain/journal/journal_event.dart';
-import '../domain/models/quest_display_bucket.dart';
-import '../domain/models/quest_policies.dart';
+﻿import 'package:forgetrack/domain/journal/journal_event.dart';
+import 'package:forgetrack/domain/progression/catalog/quest_display_bucket.dart';
+import 'package:forgetrack/domain/progression/catalog/quest_policies.dart';
 import '../domain/repository/ledger_snapshot.dart';
 import 'progression_engine_provider.dart' show EngineQuestProgress;
 
 /// Output of [DailySectionResolver.resolve]. Carries the picks plus any
-/// freshly-planned [QuestOfferedEvent]s the caller should persist —
+/// freshly-planned [QuestOfferedEvent]s the caller should persist â€”
 /// the resolver itself stays pure / read-only so it's safe to call on
 /// every UI rebuild.
 class DailySectionResolution {
@@ -14,23 +14,23 @@ class DailySectionResolution {
     required this.plannedOfferings,
   });
 
-  /// Quest progress entries surfaced in the "DENNÍ ÚKOLY" section,
+  /// Quest progress entries surfaced in the "DENNÃ ÃšKOLY" section,
   /// in display order.
   final List<EngineQuestProgress> slots;
 
   /// `QuestOfferedEvent`s the resolver decided to record for today.
-  /// May overlap with events already in the ledger — the provider
+  /// May overlap with events already in the ledger â€” the provider
   /// diffs by eventKey before appending. Empty when the ledger
   /// already covers every slot for today.
   final List<QuestOfferedEvent> plannedOfferings;
 }
 
-/// Picks the quests that appear in the quests-tab "DENNÍ ÚKOLY"
-/// section — the **bonus** daily quests layered on top of the
+/// Picks the quests that appear in the quests-tab "DENNÃ ÃšKOLY"
+/// section â€” the **bonus** daily quests layered on top of the
 /// per-metric daily goals.
 ///
 /// Scope: combo chain steps, daily challenges, and chapter side
-/// quests. Per-metric daily-goal atoms (`QuestDisplayBucket.daily` —
+/// quests. Per-metric daily-goal atoms (`QuestDisplayBucket.daily` â€”
 /// steps / calories / macros / sleep / activity / weight) are
 /// filtered out at the top of [resolve] because they have their own
 /// per-metric claim affordances on the home screen's stat cards (see
@@ -45,20 +45,20 @@ class DailySectionResolution {
 /// rebuilds.
 ///
 /// **Tier order** (the order in which empty slots are filled):
-/// 1. *Pinned chapter side quest* — first eligible (un-claimed,
+/// 1. *Pinned chapter side quest* â€” first eligible (un-claimed,
 ///    ungated) side quest from the active chapter.
-/// 2. *Active combo chain step* — first ungated step across all
+/// 2. *Active combo chain step* â€” first ungated step across all
 ///    active chains. Falls back to the just-completed step when the
 ///    chain's next step is gated by a same-day cooldown the player
 ///    only just cleared, so the slot reads "done for today" instead
 ///    of going empty.
-/// 3. *Daily challenge / hash-rotation pick* — pulls from the daily
+/// 3. *Daily challenge / hash-rotation pick* â€” pulls from the daily
 ///    challenge pool, filtered by [offeredCooldownDays] so a
 ///    challenge that was offered in the last N days doesn't repeat
 ///    back-to-back.
 ///
 /// Quests with `Persistent`, `ChapterCardSticky`, or
-/// `HiddenFromSections` slot policies never appear here — they have
+/// `HiddenFromSections` slot policies never appear here â€” they have
 /// their own surfaces (long-term / chapter / hidden).
 class DailySectionResolver {
   const DailySectionResolver({
@@ -72,7 +72,7 @@ class DailySectionResolver {
   /// Anti-repeat window for tier-3 picks. A daily challenge with a
   /// [QuestOfferedEvent] in the last `offeredCooldownDays` calendar
   /// days (excluding today) is filtered out of the pool. Defaults to
-  /// 2 — challenge can't appear the day after today, but is eligible
+  /// 2 â€” challenge can't appear the day after today, but is eligible
   /// again two days out.
   final int offeredCooldownDays;
 
@@ -146,7 +146,7 @@ class DailySectionResolver {
       plannedOfferings.add(_offering(q.nodeId, now, todayKey));
     }
 
-    // ── Step 1: honour today's existing offerings ──────────────────
+    // â”€â”€ Step 1: honour today's existing offerings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // Iterate the canonical tier order to keep display order stable
     // even when the ledger returns offerings in insertion order. A
     // node that's already on the ledger gets the slot it would have
@@ -165,7 +165,7 @@ class DailySectionResolver {
       }
     }
 
-    // ── Step 2: fill remaining slots with fresh picks ──────────────
+    // â”€â”€ Step 2: fill remaining slots with fresh picks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (slots.length < slotCount) {
       // Tier 1: chapter side quest. Skip any node already locked in
       // via today's offering (above) so it doesn't double-fire a
@@ -180,7 +180,7 @@ class DailySectionResolver {
       // Tier 3: hash-rotation pool. Cooldown filter excludes daily
       // challenges (and hypothetical hash-pool entries) offered in
       // the last [offeredCooldownDays] days. Pinned chapter side
-      // quests + chain steps deliberately bypass this — their own
+      // quests + chain steps deliberately bypass this â€” their own
       // gating handles rotation.
       if (slots.length < slotCount) {
         final remaining = slotCount - slots.length;
@@ -221,11 +221,11 @@ class DailySectionResolver {
         dayKey: dayKey,
       );
 
-  // ── Tier 1: Fresh-pick chapter side quest ─────────────────────────
+  // â”€â”€ Tier 1: Fresh-pick chapter side quest â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   //
   // Returns the first eligible un-claimed side quest. The
   // "claimed today sticky" rule from before is no longer needed
-  // here — today's QuestOfferedEvent (read in Step 1 above) pins the
+  // here â€” today's QuestOfferedEvent (read in Step 1 above) pins the
   // slot regardless of completion state. We only fall through to
   // this branch when no offering covers today yet.
   EngineQuestProgress? _pickPinnedFresh(
@@ -239,7 +239,7 @@ class DailySectionResolver {
       if (q.isCompleted) continue;
       if (q.levelGate != null) continue;
       if (q.prereqGateNodeId != null) continue;
-      // Same-day cooldown check — the engine derives a
+      // Same-day cooldown check â€” the engine derives a
       // NodeCompletedBeforeToday gate from `gatePolicy +
       // prerequisiteNodeIds`. We re-check here so a side quest whose
       // gating chapter step was just claimed today doesn't pop into
@@ -250,7 +250,7 @@ class DailySectionResolver {
     return null;
   }
 
-  // ── Tier 2: Active chain step (combo) ─────────────────────────────
+  // â”€â”€ Tier 2: Active chain step (combo) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   //
   // Walks each chain by `chainOrder`. The active slot is the first
   // step that's neither completed nor blocked by an unmet gate
@@ -325,11 +325,11 @@ class DailySectionResolver {
     return false;
   }
 
-  // ── Tier 3: Hash rotation (daily challenge) ───────────────────────
+  // â”€â”€ Tier 3: Hash rotation (daily challenge) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   /// Daily-challenge fresh pick. Cooldown filter removes any
   /// challenge offered in the last [offeredCooldownDays] days. The
-  /// "completed today sticky" rule from before is gone — today's
+  /// "completed today sticky" rule from before is gone â€” today's
   /// QuestOfferedEvent already pins the slot in Step 1.
   List<EngineQuestProgress> _pickChallengeFresh(
     List<EngineQuestProgress> pool,

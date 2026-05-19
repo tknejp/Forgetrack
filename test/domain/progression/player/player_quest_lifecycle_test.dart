@@ -1,4 +1,4 @@
-// Phase 6 sealed lifecycle + bridge mapping pin.
+﻿// Phase 6 sealed lifecycle + bridge mapping pin.
 //
 // Two guarantees to keep tight:
 //
@@ -10,7 +10,7 @@
 // 2. **Bridge mapping.** EngineQuestProgress.lifecycle derives the
 //    sealed discriminator from the existing engine flags
 //    (`isCompleted`, `isAvailableForClaim`, `isLockedByConditions`).
-//    Phase 6 is a UI-behavior-preserving migration — any drift
+//    Phase 6 is a UI-behavior-preserving migration â€” any drift
 //    between the old flag-based widget code and the new pattern-
 //    matched widget code shows up here first. The mapping table
 //    covers all 2^3 = 8 flag combinations so unintended precedence
@@ -20,8 +20,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:forgetrack/domain/progression/player/player_quest_lifecycle.dart';
 import 'package:forgetrack/features/progression_engine/application/progression_engine_provider.dart';
-import 'package:forgetrack/features/progression_engine/domain/progression_domain.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/progression_node_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_domain.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 
 void main() {
   group('PlayerQuestLifecycle equality', () {
@@ -95,7 +95,7 @@ void main() {
           id: QuestId('q'),
           titleKey: _titleStub,
           descriptionKey: _descStub,
-          objectiveId: 'obj',
+          objectiveId: ObjectiveId('obj'),
           rewards: [],
         ),
         actualValue: 3,
@@ -110,7 +110,7 @@ void main() {
       );
     }
 
-    test('(F,F,F) → QuestAvailable carrying live progress numbers', () {
+    test('(F,F,F) â†’ QuestAvailable carrying live progress numbers', () {
       final p = progress();
       final lc = p.lifecycle;
       expect(lc, isA<QuestAvailable>());
@@ -120,35 +120,35 @@ void main() {
       expect(available.progress, 0.3);
     });
 
-    test('(F,T,F) → QuestCompletedPendingClaim(previewXp)', () {
+    test('(F,T,F) â†’ QuestCompletedPendingClaim(previewXp)', () {
       final p = progress(isAvailableForClaim: true);
       final lc = p.lifecycle;
       expect(lc, isA<QuestCompletedPendingClaim>());
       expect((lc as QuestCompletedPendingClaim).previewXp, 230);
     });
 
-    test('(T,F,F) → QuestClaimed(finalXp == previewXp)', () {
+    test('(T,F,F) â†’ QuestClaimed(finalXp == previewXp)', () {
       final p = progress(isCompleted: true);
       final lc = p.lifecycle;
       expect(lc, isA<QuestClaimed>());
       expect((lc as QuestClaimed).finalXp, 230);
     });
 
-    test('(T,T,F) → QuestClaimed wins over claim-pending', () {
+    test('(T,T,F) â†’ QuestClaimed wins over claim-pending', () {
       // isCompleted means the ledger has the completion event; the
       // claim-pending bit is a stale read in this combo. Bridge
-      // resolves to Claimed so widgets show the muted "splněno"
+      // resolves to Claimed so widgets show the muted "splnÄ›no"
       // pill, not the gold "vyzvednout" pill.
       final p = progress(isCompleted: true, isAvailableForClaim: true);
       expect(p.lifecycle, isA<QuestClaimed>());
     });
 
-    test('(F,F,T) → QuestLocked', () {
+    test('(F,F,T) â†’ QuestLocked', () {
       final p = progress(isLockedByConditions: true);
       expect(p.lifecycle, const QuestLocked());
     });
 
-    test('(F,T,T) → QuestLocked wins over claim-pending', () {
+    test('(F,T,T) â†’ QuestLocked wins over claim-pending', () {
       // Locked-by-conditions wins because the row is no longer
       // claimable from the player's perspective (e.g. chapter window
       // closed mid-claim). Drop the gold pill.
@@ -159,7 +159,7 @@ void main() {
       expect(p.lifecycle, const QuestLocked());
     });
 
-    test('(T,F,T) → QuestLocked wins over completed', () {
+    test('(T,F,T) â†’ QuestLocked wins over completed', () {
       // The chapter rollup + daily resolver rely on Locked taking
       // precedence so a finished side-quest of a closed chapter
       // doesn't keep advertising itself as completed in the active
@@ -168,7 +168,7 @@ void main() {
       expect(p.lifecycle, const QuestLocked());
     });
 
-    test('(T,T,T) → QuestLocked wins over both', () {
+    test('(T,T,T) â†’ QuestLocked wins over both', () {
       final p = progress(
         isCompleted: true,
         isAvailableForClaim: true,
@@ -208,7 +208,7 @@ void main() {
 // Test-local localisation stubs. LocalizedText is
 // `String Function(AppLocalizations l10n)`; the AppLocalizations
 // import would drag flutter_localizations into the domain-side test,
-// so we accept Object? and ignore it — the catalog row's title /
+// so we accept Object? and ignore it â€” the catalog row's title /
 // description closures aren't exercised by the lifecycle tests.
 String _titleStub(Object? _) => 'q';
 String _descStub(Object? _) => 'q-desc';

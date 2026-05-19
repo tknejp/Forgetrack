@@ -1,4 +1,4 @@
-// Phase 7 adapter contract pin for PlayerQuestCatalogService.
+﻿// Phase 7 adapter contract pin for PlayerQuestCatalogService.
 //
 // The service is the bridge between the engine's per-evaluation
 // `EngineQuestProgress` view-model list and the pure-domain
@@ -9,7 +9,7 @@
 //
 // These tests verify:
 //   1. The service produces a catalog with the right size + entries.
-//   2. Lifecycle is preserved through the projection — flag-derived
+//   2. Lifecycle is preserved through the projection â€” flag-derived
 //      states on the input show up as the matching sealed subtypes
 //      on the output.
 //   3. evaluatedAt is stamped on every entry.
@@ -20,8 +20,8 @@ import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:forgetrack/domain/progression/player/player_quest_lifecycle.dart';
 import 'package:forgetrack/features/progression_engine/application/player_quest_catalog_service.dart';
 import 'package:forgetrack/features/progression_engine/application/progression_engine_provider.dart';
-import 'package:forgetrack/features/progression_engine/domain/progression_domain.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/progression_node_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_domain.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 
 void main() {
   final evaluatedAt = DateTime.utc(2026, 5, 18, 12);
@@ -37,7 +37,7 @@ void main() {
         id: QuestId(id),
         titleKey: _titleStub,
         descriptionKey: _descStub,
-        objectiveId: 'obj',
+        objectiveId: ObjectiveId('obj'),
         rewards: const [],
       ),
       actualValue: 3000,

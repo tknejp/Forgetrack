@@ -14,6 +14,7 @@ import '../../social/application/social_provider.dart';
 import '../../social/domain/social_models.dart';
 import '../application/adapters/engine_achievement_view.dart';
 import '../application/progression_engine_provider.dart';
+import '../domain/progression_domain_chrome.dart';
 import 'widgets/progression_overview_section.dart';
 import 'widgets/progression_primitives.dart';
 

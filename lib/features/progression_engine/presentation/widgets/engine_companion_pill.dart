@@ -10,8 +10,8 @@ import '../../../cosmetics/domain/cosmetic_catalog.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
 import '../../../cosmetics/presentation/cosmetic_details_sheet.dart';
 import '../../../cosmetics/presentation/widgets/cosmetic_asset_thumb.dart';
-import '../../domain/models/progression_node_definition.dart';
-import '../../domain/models/reward_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
+import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 
 /// Compact pill rendered beneath the XP pill on quest cards that have
 /// a companion node (achievement / milestone sharing the same

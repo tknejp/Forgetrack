@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../l10n/l10n.dart';
@@ -12,7 +12,8 @@ import '../../../cosmetics/domain/cosmetic_models.dart';
 import '../../../cosmetics/presentation/widgets/companion_fake_idle_preview.dart';
 import '../../../cosmetics/presentation/widgets/cosmetic_frame_preview.dart';
 import '../../../progression_engine/application/progression_engine_provider.dart';
-import '../../../progression_engine/domain/progression_domain.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_domain.dart';
+import 'package:forgetrack/features/progression_engine/domain/progression_domain_chrome.dart';
 import '../../../progression_engine/domain/display/progression_display_resolver.dart';
 import '../../../progression_engine/presentation/widgets/level_badge.dart';
 import '../../application/social_provider.dart';
@@ -23,12 +24,12 @@ import 'social_avatar.dart';
 /// Unified hero/progression header used across all top-level tabs.
 ///
 /// Goals:
-///   * Single widget across all tabs → no height swap during PageView swipes.
+///   * Single widget across all tabs â†’ no height swap during PageView swipes.
 ///   * Always shows: avatar, display name, muted `@handle`, level orb,
 ///     level title, XP bar, XP ratio.
-///   * Tap on avatar → opens [SocialUserProfileSheet] (which owns editing
+///   * Tap on avatar â†’ opens [SocialUserProfileSheet] (which owns editing
 ///     of photo + handle for the signed-in user).
-///   * Tap on the rest of the header → toggles an expanded panel revealing
+///   * Tap on the rest of the header â†’ toggles an expanded panel revealing
 ///     pending reward count, current streak and unlocked achievement count.
 class HeroProgressionHeader extends StatefulWidget {
   const HeroProgressionHeader({
@@ -371,7 +372,7 @@ class _ProgressionRow extends StatelessWidget {
   final double xpProgress;
   final GlobalKey? barKey;
 
-  /// Right-side gutter the bar + label must avoid — set to the companion
+  /// Right-side gutter the bar + label must avoid â€” set to the companion
   /// reserved width when one is equipped, 0 otherwise so the bar runs
   /// full-width and the section feels right with an empty corner.
   final double reservedRight;
@@ -543,7 +544,7 @@ class _MiniQuestRow extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Text(
-            quest.isAvailableForClaim ? '✓' : '$pct%',
+            quest.isAvailableForClaim ? 'âœ“' : '$pct%',
             style: TextStyle(
               fontSize: Tokens.fontSizeCaption,
               fontWeight: FontWeight.w900,
@@ -556,7 +557,7 @@ class _MiniQuestRow extends StatelessWidget {
   }
 }
 
-/// Renders a cosmetic's preview asset as a plain image with no chrome —
+/// Renders a cosmetic's preview asset as a plain image with no chrome â€”
 /// used for companion + emblem on hero/profile cards. Falls back to a
 /// type-appropriate icon when the asset is missing or fails to decode.
 class CompanionAsset extends StatelessWidget {

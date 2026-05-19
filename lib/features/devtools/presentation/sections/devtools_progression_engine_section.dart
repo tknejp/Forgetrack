@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../features/progression_engine/application/progression_engine_provider.dart';
 import '../../../../features/progression_engine/domain/catalog/progression_node_catalog.dart';
-import '../../../../features/progression_engine/domain/models/progression_node_definition.dart';
-import '../../../../features/progression_engine/domain/models/quest_display_bucket.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
+import 'package:forgetrack/domain/progression/catalog/quest_display_bucket.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../widgets/devtools_action_tile.dart';
 import '../widgets/devtools_collapsible_card.dart';
@@ -17,23 +17,23 @@ import '../widgets/devtools_status_tile.dart';
 /// human actually uses every test session and tucks the rare ones
 /// into collapsibles:
 ///
-/// 1. *Quick state* — single status strip (level, XP, day offset,
+/// 1. *Quick state* â€” single status strip (level, XP, day offset,
 ///    ledger size) + inline day-shift controls. The day knob lands
 ///    in the most-clicked corner, no scrolling required.
-/// 2. *Player presets* — one-tap jumps to canonical save states
+/// 2. *Player presets* â€” one-tap jumps to canonical save states
 ///    (Fresh / Early / Mid / Late / Endgame). Replaces what used to
-///    be a multi-step "wipe → set level → run evaluation" dance.
-/// 3. *Quick claim* — the three claim shortcuts a tester reaches for
+///    be a multi-step "wipe â†’ set level â†’ run evaluation" dance.
+/// 3. *Quick claim* â€” the three claim shortcuts a tester reaches for
 ///    when running through the daily / chapter flow.
-/// 4. *Daily goals* — one chip per daily node, tap-to-satisfy.
-/// 5. *XP / level overrides* (collapsible) — set total, add delta,
+/// 4. *Daily goals* â€” one chip per daily node, tap-to-satisfy.
+/// 5. *XP / level overrides* (collapsible) â€” set total, add delta,
 ///    set level. Was three separate panels; now a tabbed panel.
-/// 6. *Catalog search* (collapsible) — force-complete any node by id.
-/// 7. *Inspect* (collapsible) — ledger counters + last-result
+/// 6. *Catalog search* (collapsible) â€” force-complete any node by id.
+/// 7. *Inspect* (collapsible) â€” ledger counters + last-result
 ///    diagnostics. Rarely needed mid-test, off by default.
-/// 8. *Danger zone* — wipe ledger.
+/// 8. *Danger zone* â€” wipe ledger.
 ///
-/// "Run V2 evaluation (ambitious-player input)" was removed — that
+/// "Run V2 evaluation (ambitious-player input)" was removed â€” that
 /// tile sent a fake input through the engine, but the rest of the
 /// devtools talks to the real input source. The presets cover
 /// everything the synthetic input used to.
@@ -88,7 +88,7 @@ class _DevToolsProgressionEngineSectionState
           label: 'Claim all available quests',
           subtitle:
               'Iterates `pendingClaimNodeIds` and calls engine.claim on '
-              'each — XP for every Vyzvednout pill lands at once.',
+              'each â€” XP for every Vyzvednout pill lands at once.',
           icon: Icons.redeem_rounded,
           isLoading: _isClaiming,
           isDisabled: (busy && !_isClaiming) ||
@@ -100,7 +100,7 @@ class _DevToolsProgressionEngineSectionState
           label: 'Mark active chapter step as met',
           subtitle:
               'Writes only the chapter step\'s ObjectiveCompletionEvent so '
-              'the chapter card surfaces the normal Vyzvednout pill — '
+              'the chapter card surfaces the normal Vyzvednout pill â€” '
               'tap the pill to fire the real claim flow + celebration.',
           icon: Icons.flag_rounded,
           isLoading: _isCompletingChapter,
@@ -116,7 +116,7 @@ class _DevToolsProgressionEngineSectionState
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
           child: DevToolsCollapsibleCard(
             title: 'XP / level overrides',
-            subtitle: 'Set total · Add delta · Set level',
+            subtitle: 'Set total Â· Add delta Â· Set level',
             leadingIcon: Icons.bolt_rounded,
             children: [_XpLevelTabsPanel(isBusy: busy)],
           ),
@@ -158,7 +158,7 @@ class _DevToolsProgressionEngineSectionState
     );
   }
 
-  // ── Action handlers ────────────────────────────────────────────────
+  // â”€â”€ Action handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Future<void> _confirmAndWipe(BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
@@ -240,7 +240,7 @@ class _DevToolsProgressionEngineSectionState
       messenger.showSnackBar(
         SnackBar(
           content: Text(
-            'Marked objective met for $marked chapter step(s) — '
+            'Marked objective met for $marked chapter step(s) â€” '
             'tap the Vyzvednout pill on the chapter card to claim.',
           ),
         ),
@@ -293,11 +293,11 @@ class _DevToolsProgressionEngineSectionState
   }
 }
 
-// ── Quick state header ────────────────────────────────────────────────
+// â”€â”€ Quick state header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /// Top-of-page strip: profile vitals (level / XP / day offset / ledger
 /// size) + the day-shift controls inline. Putting the clock buttons
-/// next to the day-offset readout makes the cause/effect obvious —
+/// next to the day-offset readout makes the cause/effect obvious â€”
 /// the number you're nudging is right there.
 class _QuickStatePanel extends StatelessWidget {
   const _QuickStatePanel({required this.busy});
@@ -323,7 +323,7 @@ class _QuickStatePanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Vitals row — small caps stat block.
+          // Vitals row â€” small caps stat block.
           Wrap(
             spacing: 14,
             runSpacing: 6,
@@ -496,10 +496,10 @@ class _StatChip extends StatelessWidget {
   }
 }
 
-// ── Player presets ────────────────────────────────────────────────────
+// â”€â”€ Player presets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /// One-tap shortcuts to canonical player states. The pattern was: wipe
-/// ledger → set level → claim some quests → advance day. Presets fold
+/// ledger â†’ set level â†’ claim some quests â†’ advance day. Presets fold
 /// that into a single button so a fresh test reaches "Late game"
 /// without typing.
 class _PresetsPanel extends StatelessWidget {
@@ -567,7 +567,7 @@ class _PlayerPreset {
   final String hint;
 }
 
-// ── Inspect (collapsible diagnostics) ─────────────────────────────────
+// â”€â”€ Inspect (collapsible diagnostics) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _InspectPanel extends StatelessWidget {
   const _InspectPanel({required this.provider});
@@ -612,17 +612,17 @@ class _InspectPanel extends StatelessWidget {
         ),
         const DevToolsSectionDivider(),
         DevToolsStatusTile(
-          label: 'Last result — completed nodes',
+          label: 'Last result â€” completed nodes',
           value: '${last?.completedNodes.length ?? 0}',
         ),
         const DevToolsSectionDivider(),
         DevToolsStatusTile(
-          label: 'Last result — newly available nodes',
+          label: 'Last result â€” newly available nodes',
           value: '${last?.newlyAvailableNodes.length ?? 0}',
         ),
         const DevToolsSectionDivider(),
         DevToolsStatusTile(
-          label: 'Last result — granted rewards',
+          label: 'Last result â€” granted rewards',
           value: '${last?.grantedRewards.length ?? 0}',
         ),
       ],
@@ -630,10 +630,10 @@ class _InspectPanel extends StatelessWidget {
   }
 }
 
-// ── XP / level tabs panel ─────────────────────────────────────────────
+// â”€â”€ XP / level tabs panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /// Tabbed shell that replaces the three separate XP/Level panels.
-/// Behaviour is unchanged per tab — the user wanted them grouped
+/// Behaviour is unchanged per tab â€” the user wanted them grouped
 /// because they're conceptually one knob ("override the profile").
 class _XpLevelTabsPanel extends StatefulWidget {
   const _XpLevelTabsPanel({required this.isBusy});
@@ -948,7 +948,7 @@ class _NumericApplyRow extends StatelessWidget {
   }
 }
 
-// ── Daily goal chips ──────────────────────────────────────────────────
+// â”€â”€ Daily goal chips â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /// One-tap chips for each `QuestDisplayBucket.daily` node.
 class _DailyGoalChipsPanel extends StatefulWidget {
@@ -984,7 +984,7 @@ class _DailyGoalChipsPanelState extends State<_DailyGoalChipsPanel> {
       messenger.showSnackBar(
         SnackBar(
           content: Text(
-            'Marked "${node.id}" met for today — tap Vyzvednout on the card to claim.',
+            'Marked "${node.id}" met for today â€” tap Vyzvednout on the card to claim.',
           ),
         ),
       );
@@ -1009,7 +1009,7 @@ class _DailyGoalChipsPanelState extends State<_DailyGoalChipsPanel> {
           const SizedBox(height: 4),
           Text(
             'Writes the objective-met event for today. Card surfaces the '
-            'Vyzvednout pill — tap to claim like a real player would.',
+            'Vyzvednout pill â€” tap to claim like a real player would.',
             style: tt.bodySmall?.copyWith(
               color: cs.onSurfaceVariant.withValues(alpha: 0.7),
             ),
@@ -1049,9 +1049,9 @@ class _DailyGoalChipsPanelState extends State<_DailyGoalChipsPanel> {
   }
 }
 
-// ── Catalog search ────────────────────────────────────────────────────
+// â”€â”€ Catalog search â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-/// Searchable node picker — typeahead filter over every node id in
+/// Searchable node picker â€” typeahead filter over every node id in
 /// the catalog, with a "Complete" button on each row.
 class _NodePickerPanel extends StatefulWidget {
   const _NodePickerPanel({required this.isBusy});
@@ -1085,7 +1085,7 @@ class _NodePickerPanelState extends State<_NodePickerPanel> {
   }
 
   String _kindLabelFor(ProgressionEntry node) => switch (node) {
-        Quest(:final displayBucket) => 'quest · ${displayBucket.name}',
+        Quest(:final displayBucket) => 'quest Â· ${displayBucket.name}',
         Achievement() => 'achievement',
         Milestone() => 'milestone',
         LevelMilestone(:final level) => 'level $level',

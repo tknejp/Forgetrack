@@ -1,12 +1,12 @@
-import 'package:forgetrack/domain/progression/catalog/ids.dart';
+﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:forgetrack/features/progression_engine/domain/evaluator/objective_evaluator.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/engine_evaluation_context.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/objective_definition.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/objective_metric.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/objective_operator.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/objective_scope.dart';
+import 'package:forgetrack/domain/progression/catalog/objective.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_metric.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_operator.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_scope.dart';
 
 import '_engine_test_helpers.dart';
 
@@ -54,7 +54,7 @@ Objective _objective({
 void main() {
   const evaluator = ObjectiveEvaluator();
 
-  group('ObjectiveEvaluator — operators', () {
+  group('ObjectiveEvaluator â€” operators', () {
     test('atLeast completes when value >= target', () {
       final outcome =
           evaluator.evaluate(_objective(targetValue: 100), _input(stepsToday: 100));
@@ -98,7 +98,7 @@ void main() {
     });
   });
 
-  group('ObjectiveEvaluator — metrics', () {
+  group('ObjectiveEvaluator â€” metrics', () {
     test('StepsMetric reads the right field per scope', () {
       final today = _objective(metric: const StepsMetric(), scope: const TodayScope());
       final week = _objective(metric: const StepsMetric(), scope: const ThisWeekScope());
@@ -123,7 +123,7 @@ void main() {
 
     test('NodeCompletionsMetric reads count by id', () {
       final spec = _objective(
-        metric: const NodeCompletionsMetric(nodeId: 'q1'),
+        metric: const NodeCompletionsMetric(nodeId: ProgressionEntryId('q1')),
         targetValue: 3,
       );
       expect(
@@ -138,7 +138,7 @@ void main() {
 
     test('ComboPoolCompletionsMetric reads count by pool id', () {
       final spec = _objective(
-        metric: const ComboPoolCompletionsMetric(poolId: 'p1'),
+        metric: const ComboPoolCompletionsMetric(poolId: ComboPoolId('p1')),
         targetValue: 2,
       );
       expect(
@@ -148,7 +148,7 @@ void main() {
     });
   });
 
-  group('ObjectiveEvaluator — period keys', () {
+  group('ObjectiveEvaluator â€” period keys', () {
     test('TodayScope produces a yyyy-MM-dd key', () {
       final outcome = evaluator.evaluate(_objective(), _input(stepsToday: 10));
       expect(outcome.periodKey, '2026-05-10');
@@ -159,7 +159,7 @@ void main() {
         _objective(scope: const ThisWeekScope()),
         _input(stepsThisWeek: 10),
       );
-      // 2026-05-10 is a Sunday → ISO week starts the previous Monday (May 4).
+      // 2026-05-10 is a Sunday â†’ ISO week starts the previous Monday (May 4).
       expect(outcome.periodKey, 'w-2026-05-04');
     });
 

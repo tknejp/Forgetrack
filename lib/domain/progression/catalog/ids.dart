@@ -77,3 +77,60 @@ extension type const ChapterId(String value) implements String {
 extension type const ObjectiveId(String value) implements String {
   String get raw => value;
 }
+
+/// Id for a *quest chain* — a linear sequence of quests that share a
+/// chain id and are ordered by `chainOrder`. Used by chapter chains
+/// (opener → step → step → finale) and combo chains. Like
+/// [ChapterId], a chain is not itself a catalog row — it's an
+/// aggregating concept tying multiple Quest rows together. R.1
+/// introduces this wrapper so `Quest.chainId` cannot be confused
+/// with a quest id or a chapter id at the type level.
+extension type const ChainId(String value) implements String {
+  String get raw => value;
+}
+
+/// Id for a *combo pool* — a shared completion pool that combo quests
+/// and combo achievements ride on. ComboStep / ComboFinale / DailyChallenge
+/// rows declare a `comboPoolId`; achievements with
+/// [ComboPoolCompletionsMetric] reference the same pool. R.1 typed
+/// wrapper to keep the namespace separate from quest / chain ids.
+extension type const ComboPoolId(String value) implements String {
+  String get raw => value;
+}
+
+/// Id for a *daily-tier group* — groups daily-quest variants that
+/// share rotation slots so the picker can keep one quest per tier in
+/// view at a time (e.g. "steps-easy / steps-medium / steps-hard"
+/// rotate as one group). R.1 typed wrapper.
+extension type const DailyTierGroupId(String value) implements String {
+  String get raw => value;
+}
+
+/// Id for a *cosmetic* catalog row (Frame / Background / Companion /
+/// Relic / Emblem / TitleFlair / MapEffect). Lives in
+/// [lib/features/cosmetics/domain/] as the cosmetic catalog itself
+/// stays feature-scoped per proposal §6, but the id wrapper lives
+/// here so catalog rows in `lib/domain/progression/catalog/` that
+/// reference cosmetics (CompanionAvailability, Relic, ContentUnlock,
+/// CosmeticReward) can do so with a typed cross-reference without
+/// pulling the cosmetics catalog into the domain layer.
+extension type const CosmeticId(String value) implements String {
+  String get raw => value;
+}
+
+/// Id for a player-facing *title* reward. Today titles live as their
+/// own grant rows (`TitleReward`) and surface on hero card / journey
+/// screen. R.1 typed wrapper keeps title ids namespaced separately
+/// from cosmetic ids even though the storage shape overlaps.
+extension type const TitleId(String value) implements String {
+  String get raw => value;
+}
+
+/// Id for an *emblem* reward — small badge / icon that shows on
+/// profile / feed. Wraps the storage string at the typed boundary;
+/// emblem ids historically share namespace with cosmetic ids in the
+/// authoring catalog but the proposal treats them as a distinct
+/// grant kind.
+extension type const EmblemId(String value) implements String {
+  String get raw => value;
+}

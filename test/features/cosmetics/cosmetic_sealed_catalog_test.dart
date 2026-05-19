@@ -1,7 +1,7 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
 import 'package:forgetrack/features/cosmetics/domain/cosmetic_catalog.dart';
 import 'package:forgetrack/features/cosmetics/domain/cosmetic_models.dart';
-import 'package:forgetrack/features/cosmetics/domain/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 
 void main() {
   group('Cosmetic sealed hierarchy', () {
@@ -71,7 +71,7 @@ void main() {
       expect(upcast is Frame, isTrue);
       expect(upcast is Background, isFalse);
       // Disambiguation: `RelicCosmetic` is intentionally distinct from the
-      // progression catalog's `Relic` gating node — references are by id.
+      // progression catalog's `Relic` gating node â€” references are by id.
     });
 
     test('CosmeticCatalog rows are well-typed per subtype', () {

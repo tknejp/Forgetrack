@@ -1,4 +1,4 @@
-/// When does counting toward the objective start for a [QuestNode]?
+/// When does counting toward the objective start for a [Quest]?
 enum ProgressStartPolicy {
   /// Player lifetime — counts from the very beginning.
   lifetime,

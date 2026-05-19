@@ -1,4 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:forgetrack/features/cosmetics/application/emblem_board_provider.dart';
 import 'package:forgetrack/features/cosmetics/domain/emblem_board.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -66,7 +67,7 @@ void main() {
     });
 
     test('autoFillWith is suppressed when board has any explicit pin', () {
-      // User explicitly pinned to slot 5 — auto-fill must NOT overwrite
+      // User explicitly pinned to slot 5 â€” auto-fill must NOT overwrite
       // the leading nulls because the explicit layout (even with null
       // slots) is the player's intent.
       final pinned = EmblemBoard.empty.withPin(5, 'x');
@@ -99,8 +100,8 @@ void main() {
         () async {
       final p1 = EmblemBoardProvider();
       await p1.init();
-      await p1.setPin(uid: 'uid_a', slotIndex: 0, cosmeticId: 'frame_a');
-      await p1.setPin(uid: 'uid_a', slotIndex: 3, cosmeticId: 'relic_b');
+      await p1.setPin(uid: 'uid_a', slotIndex: 0, cosmeticId: CosmeticId('frame_a'));
+      await p1.setPin(uid: 'uid_a', slotIndex: 3, cosmeticId: CosmeticId('relic_b'));
 
       // Fresh provider re-reads SharedPreferences.
       final p2 = EmblemBoardProvider();
@@ -115,7 +116,7 @@ void main() {
       final provider = EmblemBoardProvider();
       await provider.init();
 
-      // First render — auto-fill from unlock order.
+      // First render â€” auto-fill from unlock order.
       final autoFill = provider.boardForUserOrAutoFill(
         'uid_a',
         ['a', 'b', 'c'],
@@ -124,7 +125,7 @@ void main() {
       expect(autoFill.slotAt(1), 'b');
 
       // After an explicit pin, auto-fill is suppressed for the user.
-      await provider.setPin(uid: 'uid_a', slotIndex: 7, cosmeticId: 'x');
+      await provider.setPin(uid: 'uid_a', slotIndex: 7, cosmeticId: CosmeticId('x'));
       final explicit = provider.boardForUserOrAutoFill(
         'uid_a',
         ['a', 'b', 'c'],
@@ -136,8 +137,8 @@ void main() {
     test('setPin clears duplicate slots across the same user', () async {
       final provider = EmblemBoardProvider();
       await provider.init();
-      await provider.setPin(uid: 'uid_a', slotIndex: 0, cosmeticId: 'x');
-      await provider.setPin(uid: 'uid_a', slotIndex: 5, cosmeticId: 'x');
+      await provider.setPin(uid: 'uid_a', slotIndex: 0, cosmeticId: CosmeticId('x'));
+      await provider.setPin(uid: 'uid_a', slotIndex: 5, cosmeticId: CosmeticId('x'));
       final board = await provider.loadForUser('uid_a');
       expect(board.slotAt(0), isNull);
       expect(board.slotAt(5), 'x');
@@ -146,8 +147,8 @@ void main() {
     test('clearForUser drops all pins for that uid only', () async {
       final provider = EmblemBoardProvider();
       await provider.init();
-      await provider.setPin(uid: 'uid_a', slotIndex: 0, cosmeticId: 'a');
-      await provider.setPin(uid: 'uid_b', slotIndex: 0, cosmeticId: 'b');
+      await provider.setPin(uid: 'uid_a', slotIndex: 0, cosmeticId: CosmeticId('a'));
+      await provider.setPin(uid: 'uid_b', slotIndex: 0, cosmeticId: CosmeticId('b'));
       await provider.clearForUser('uid_a');
 
       expect(provider.boardForUser('uid_a'), EmblemBoard.empty);

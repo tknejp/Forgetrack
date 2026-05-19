@@ -1,4 +1,4 @@
-/// Declarative policies that hang on a [QuestNode] subtype and tell
+/// Declarative policies that hang on a [Quest] subtype and tell
 /// the rest of the engine how it should behave. The point of moving
 /// these onto the type is to *eliminate* ad-hoc branching:
 ///
@@ -19,13 +19,6 @@
 ///   when to fire silently vs fullscreen, with chapter icon vs
 ///   without, folded into a goal bucket vs solo. [CelebrationPolicy]
 ///   makes that a single property the adapter consults.
-///
-/// Phase 2 (this file) just *declares* the policies and wires them
-/// into subtype defaults; only [GatePolicy] is consumed by the
-/// engine right now (it derives `NodeCompletedBeforeToday` from the
-/// cooldown so catalog content can drop the explicit conditions).
-/// [SlotPolicy] and [CelebrationPolicy] are read by the provider /
-/// adapter in Phase 3 and 4.
 library;
 
 /// How a quest behaves inside the screen surfaces that pick what to
@@ -45,8 +38,7 @@ class HashRotationStickyUntilMidnight extends SlotPolicy {
 /// Chapter side-quest pattern. One slot, one quest. While the player
 /// has a side quest *claimed today*, it stays pinned to the slot
 /// (reads as "Splněno") until midnight; otherwise the slot looks for
-/// a new eligible side quest. Replaces the ad-hoc "claimed today"
-/// timestamp scan in the provider.
+/// a new eligible side quest.
 class PinClaimedTodayUntilMidnight extends SlotPolicy {
   const PinClaimedTodayUntilMidnight();
 }
@@ -97,10 +89,7 @@ class HiddenFromSections extends SlotPolicy {
 /// Today only [CooldownDays(1)] is concrete — it instructs the engine
 /// to derive a `NodeCompletedBeforeToday(prereq)` for every
 /// `prerequisiteNodeIds` entry the node carries, on top of the
-/// implicit `NodeCompleted(prereq)`. Catalog content can therefore
-/// drop the explicit `NodeCompletedBeforeToday` spellings — the
-/// subtype declares "this is the kind of thing that paces one step
-/// per day" and the engine wires the gate.
+/// implicit `NodeCompleted(prereq)`.
 sealed class GatePolicy {
   const GatePolicy();
 }
@@ -123,9 +112,7 @@ class CooldownDays extends GatePolicy {
 
 // ── CelebrationPolicy ───────────────────────────────────────────────
 
-/// How a quest claim / completion should be announced. The adapter
-/// reads this in Phase 4 to replace its current branchy fold passes
-/// with a single declarative dispatch.
+/// How a quest claim / completion should be announced.
 sealed class CelebrationPolicy {
   const CelebrationPolicy();
 }
@@ -149,4 +136,26 @@ class ChapterOpenedCelebration extends CelebrationPolicy {
 /// [ChapterFinale].
 class ChapterCompletedCelebration extends CelebrationPolicy {
   const ChapterCompletedCelebration();
+}
+
+// ── ChainStepIcon ───────────────────────────────────────────────────
+
+/// Pure-domain enumeration of the chain-step glyphs a [Quest] can ask
+/// the presentation layer to render in the chain preview row of the
+/// chapter / combo card.
+///
+/// R.1 removed the previous `IconData? chainStepIcon` field because
+/// [IconData] is a Flutter / Material type and would have dragged the
+/// presentation layer into `lib/domain/`. Catalog content now picks a
+/// named glyph; the chapter card extension in `presentation/` maps
+/// each enum to an `Icons.…` constant.
+enum ChainStepIcon {
+  /// Play-arrow marker — used for chain openers ("start here").
+  opener,
+
+  /// Shield marker — used for chain finales ("boss" / "wrap-up").
+  finale,
+
+  /// Flag marker — used for combo chain steps / finales.
+  comboFlag,
 }

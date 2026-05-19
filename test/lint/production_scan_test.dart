@@ -34,9 +34,9 @@ import 'lint_matchers.dart';
 // ---------------------------------------------------------------------------
 
 const int _baselineDomainPurityLibDomain = 0;
-const int _baselineDomainPurityFeatureDomain = 33;
+const int _baselineDomainPurityFeatureDomain = 25;
 const int _baselineUntypedIdLibDomain = 7;
-const int _baselineUntypedIdFeatureDomain = 58;
+const int _baselineUntypedIdFeatureDomain = 36;
 const int _baselineRawTextLiteral = 19;
 const int _baselineWidgetCollectionLogic = 46;
 

@@ -1,4 +1,4 @@
-// Phase 5 source-of-truth verification for Player.fromJournal.
+﻿// Phase 5 source-of-truth verification for Player.fromJournal.
 //
 // Three guarantees we want pinned by tests:
 //
@@ -6,7 +6,7 @@
 //    Player.fromJournal yields the same level + totalXp that
 //    LevelCurve.resolve(sum) would produce directly. Non-XP grants
 //    (cosmetic / chapter unlock / etc.) must NOT contribute to the
-//    XP total — the rewardKind discriminator is load-bearing.
+//    XP total â€” the rewardKind discriminator is load-bearing.
 //
 // 2. **Side-by-side parity with the engine's derivation.** Before
 //    Phase 5, ProgressionEngineProvider summed XP and resolved a
@@ -18,11 +18,12 @@
 //    someone restructures the XP sum.
 //
 // 3. **Performance gate.** 1000 RewardGrantEvents must resolve to a
-//    Player in well under 10ms — the Phase 5 DoD bullet. The fold +
+//    Player in well under 10ms â€” the Phase 5 DoD bullet. The fold +
 //    resolve is O(n); blowing past 10ms means something accidentally
 //    quadratic has been introduced.
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:forgetrack/domain/journal/journal_event.dart';
 import 'package:forgetrack/domain/player/level_curve.dart';
 import 'package:forgetrack/domain/player/player.dart';
@@ -39,7 +40,7 @@ void main() {
     return RewardGrantEvent(
       eventKey: key,
       timestamp: timestamp ?? DateTime.utc(2026, 1, 2),
-      nodeId: 'node-$key',
+      nodeId: ProgressionEntryId('node-$key'),
       rewardOrdinal: 0,
       rewardKind: RewardGrantKind.xp,
       xpAmount: amount,
@@ -50,10 +51,10 @@ void main() {
     return RewardGrantEvent(
       eventKey: key,
       timestamp: DateTime.utc(2026, 1, 2),
-      nodeId: 'node-$key',
+      nodeId: ProgressionEntryId('node-$key'),
       rewardOrdinal: 0,
       rewardKind: RewardGrantKind.cosmetic,
-      cosmeticId: 'cos-$key',
+      cosmeticId: CosmeticId('cos-$key'),
     );
   }
 
@@ -77,7 +78,7 @@ void main() {
         RewardGrantEvent(
           eventKey: 'k',
           timestamp: DateTime.utc(2026, 1, 2),
-          nodeId: 'n',
+          nodeId: ProgressionEntryId('n'),
           rewardOrdinal: 0,
           rewardKind: RewardGrantKind.xp,
           // xpAmount intentionally omitted
@@ -88,7 +89,7 @@ void main() {
     });
   });
 
-  group('Player.fromJournal — golden states', () {
+  group('Player.fromJournal â€” golden states', () {
     test('zero XP yields level 1 totalXp 0', () {
       final player = Player.fromJournal(
         uid: 'u',
@@ -101,7 +102,7 @@ void main() {
     });
 
     test('XP under first threshold stays at level 1', () {
-      // levelCurve.xpRequiredForLevel(2) is the first threshold —
+      // levelCurve.xpRequiredForLevel(2) is the first threshold â€”
       // anything strictly below keeps the player at level 1.
       final threshold = levelCurve.xpRequiredForLevel(2);
       final justBelow = threshold - 1;
@@ -224,7 +225,7 @@ void main() {
         for (var i = 0; i < 1000; i++) xpGrant(key: 'g$i', amount: 230),
       ];
 
-      // Warm-up — first call pays for any JIT / class-init cost we
+      // Warm-up â€” first call pays for any JIT / class-init cost we
       // do not want polluting the measurement.
       Player.fromJournal(
         uid: 'u',
@@ -245,7 +246,7 @@ void main() {
       // 10ms is the DoD bullet; we expect well under 1ms in practice
       // on a fold of 1000 ints + a level resolve. The looser ceiling
       // keeps the test stable on slow CI runners without losing the
-      // regression signal — if this blows past 10ms, something
+      // regression signal â€” if this blows past 10ms, something
       // accidentally quadratic has been introduced.
       expect(sw.elapsedMilliseconds, lessThan(10),
           reason: 'Player.fromJournal must stay O(n) over rewardGrants');

@@ -1,4 +1,4 @@
-// Integration tests for PlayerProvider.
+﻿// Integration tests for PlayerProvider.
 //
 // PlayerProvider is wired into the MultiProvider tree as a
 // `ChangeNotifierProxyProvider2<AuthProvider, ProgressionEngineProvider,
@@ -12,11 +12,11 @@
 //   - rebuild + notify when chrome-only fields change (auth notify)
 //   - cache short-circuit when the same upstream snapshot is replayed
 //     (notifyListeners must not fire)
-//   - rebuild on sign-out → anonymous shape
+//   - rebuild on sign-out â†’ anonymous shape
 //   - rpgModeEnabled passthrough
 //
 // Tests deliberately do not instantiate the live AuthProvider or
-// ProgressionEngineProvider — those drag in Firebase / Isar setup
+// ProgressionEngineProvider â€” those drag in Firebase / Isar setup
 // that belongs to their own provider-level tests. PlayerProvider's
 // input surface is primitives + an iterable, so the rebuild seam is
 // exercised directly.
@@ -24,9 +24,10 @@
 // See:
 //   - lib/app/player_provider.dart
 //   - lib/main.dart (proxy wiring)
-//   - docs/domain_model/migration_plan.md §Phase 5.
+//   - docs/domain_model/migration_plan.md Â§Phase 5.
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:forgetrack/app/player_provider.dart';
 import 'package:forgetrack/domain/journal/journal_event.dart';
 import 'package:forgetrack/domain/player/level_curve.dart';
@@ -44,7 +45,7 @@ void main() {
     return RewardGrantEvent(
       eventKey: eventKey,
       timestamp: timestamp ?? DateTime.utc(2026, 1, 2),
-      nodeId: 'node-$eventKey',
+      nodeId: ProgressionEntryId('node-$eventKey'),
       rewardOrdinal: 0,
       rewardKind: RewardGrantKind.xp,
       xpAmount: amount,

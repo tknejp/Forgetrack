@@ -1,4 +1,4 @@
-import '../models/progression_node_definition.dart';
+﻿import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import 'content/activity_content.dart';
 import 'content/body_content.dart';
 import 'content/chapter_content.dart';

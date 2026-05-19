@@ -1,22 +1,22 @@
-import 'package:flutter/material.dart' show Icons;
-import 'package:forgetrack/domain/progression/catalog/ids.dart';
+﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/quest_policies.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../shared/domain/rarity.dart';
-import '../../models/content_tag.dart';
-import '../../models/objective_definition.dart';
-import '../../models/objective_metric.dart';
-import '../../models/objective_operator.dart';
-import '../../models/objective_scope.dart';
-import '../../models/progression_node_definition.dart';
-import '../../models/reward_definition.dart';
-import '../../models/unlock_condition.dart';
+import 'package:forgetrack/domain/progression/catalog/content_tag.dart';
+import 'package:forgetrack/domain/progression/catalog/objective.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_metric.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_operator.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_scope.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
+import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/unlock_condition.dart';
 import 'quest_assets.dart';
 
 /// Chapter quests 2-10, ported from the V1 monolith
 /// `progression/domain/catalog/quest_catalog.dart` (the "journey
 /// chapter" specs). Forest Trial lives in its own file as the pilot;
-/// this aggregator covers Ruins of Discipline → Dragonrock Sovereign
+/// this aggregator covers Ruins of Discipline â†’ Dragonrock Sovereign
 /// using a single shared shape so the catalog stays scannable.
 ///
 /// Each chapter has five nodes: an auto-claim **open** gated by
@@ -26,56 +26,56 @@ import 'quest_assets.dart';
 ///
 /// Step objectives use [Objective.baselineFromNodeId] so
 /// progress counts only what the player does *after* the previous
-/// step completed — keeps a high-level player from auto-finishing a
+/// step completed â€” keeps a high-level player from auto-finishing a
 /// late chapter on day one just because their lifetime ledger is
 /// already past the threshold. The override path supports
 /// [NodeCompletionsMetric] and [RewardCountMetric] today; the few
 /// [StepsMetric]-based steps (mine_descent_steps_250k,
-/// icewalker_route_steps_500k) fall back to lifetime semantics — the
+/// icewalker_route_steps_500k) fall back to lifetime semantics â€” the
 /// chain prereq still enforces sequential ordering.
 ///
 /// Step criterion mapping from V1:
-/// - `ruleCompletionsAtLeast(daily_X, day)` → `NodeCompletionsMetric('daily_X_today')`
-/// - `ruleCompletionsAtLeast(weekly_activity, week)` → `NodeCompletionsMetric('weekly_activity')`
-/// - `totalRuleValueAtLeast(daily_steps)` → `StepsMetric` lifetime (no baseline)
-/// - `ruleSetCompletionsAtLeast(reqCount, related[])` →
+/// - `ruleCompletionsAtLeast(daily_X, day)` â†’ `NodeCompletionsMetric('daily_X_today')`
+/// - `ruleCompletionsAtLeast(weekly_activity, week)` â†’ `NodeCompletionsMetric('weekly_activity')`
+/// - `totalRuleValueAtLeast(daily_steps)` â†’ `StepsMetric` lifetime (no baseline)
+/// - `ruleSetCompletionsAtLeast(reqCount, related[])` â†’
 ///   `DaysWithAtLeastKAmongMetric(related, atLeast: reqCount)`. Counts
 ///   distinct days on which at least `reqCount` of the listed daily
 ///   atoms were done (goal met or claimed) since the chain step's
-///   baseline. Preserves V1's "K of M rules per day" semantics —
-///   "splň všechny 4 denní cíle 5krát" means 5 days with ≥4 daily
+///   baseline. Preserves V1's "K of M rules per day" semantics â€”
+///   "splÅˆ vÅ¡echny 4 dennÃ­ cÃ­le 5krÃ¡t" means 5 days with â‰¥4 daily
 ///   goals met, not 5 step-quest completions.
-/// - `rewardCountAtLeast` → `RewardCountMetric()` since baseline
-/// - `domainRewardCountAtLeast(domain)` → `RewardCountMetric(domain: …)` since baseline
+/// - `rewardCountAtLeast` â†’ `RewardCountMetric()` since baseline
+/// - `domainRewardCountAtLeast(domain)` â†’ `RewardCountMetric(domain: â€¦)` since baseline
 
 /// The full set of daily-quest node ids that the "four pillars"
 /// chapter steps gate against. Steps that ask for "all 4 daily
-/// goals" check for at least 4 of these on the same day — matches
+/// goals" check for at least 4 of these on the same day â€” matches
 /// the `daily_challenge_balanced` pool semantic the player already
 /// sees in the daily-challenge tier.
-const _allDailyAtoms = <String>[
-  'daily_steps_today',
-  'daily_calories_today',
-  'daily_protein_today',
-  'daily_carbs_today',
-  'daily_fat_today',
-  'daily_fiber_today',
-  'daily_sleep_today',
-  'daily_activity_today',
+const _allDailyAtoms = <ProgressionEntryId>[
+  ProgressionEntryId('daily_steps_today'),
+  ProgressionEntryId('daily_calories_today'),
+  ProgressionEntryId('daily_protein_today'),
+  ProgressionEntryId('daily_carbs_today'),
+  ProgressionEntryId('daily_fat_today'),
+  ProgressionEntryId('daily_fiber_today'),
+  ProgressionEntryId('daily_sleep_today'),
+  ProgressionEntryId('daily_activity_today'),
 ];
 
 /// Calories + protein paired-day check used by mid-chapter nutrition
-/// steps ("splň cíl kalorií i bílkovin").
-const _calorieAndProtein = <String>[
-  'daily_calories_today',
-  'daily_protein_today',
+/// steps ("splÅˆ cÃ­l kaloriÃ­ i bÃ­lkovin").
+const _calorieAndProtein = <ProgressionEntryId>[
+  ProgressionEntryId('daily_calories_today'),
+  ProgressionEntryId('daily_protein_today'),
 ];
 
 /// Steps + sleep paired-day check used by recovery-themed steps
-/// ("splň cíl kroků i spánku ve stejný den").
-const _stepsAndSleep = <String>[
-  'daily_steps_today',
-  'daily_sleep_today',
+/// ("splÅˆ cÃ­l krokÅ¯ i spÃ¡nku ve stejnÃ½ den").
+const _stepsAndSleep = <ProgressionEntryId>[
+  ProgressionEntryId('daily_steps_today'),
+  ProgressionEntryId('daily_sleep_today'),
 ];
 
 class _ChapterSpec {
@@ -93,7 +93,7 @@ class _ChapterSpec {
     required this.steps,
   });
 
-  final String id;
+  final ChapterId id;
   final int level;
   final int sortOrder;
   final String iconAsset;
@@ -103,7 +103,7 @@ class _ChapterSpec {
   final String Function(AppLocalizations) finaleDescKey;
 
   /// Cosmetic id awarded by the finale step.
-  final String finaleEmblemId;
+  final CosmeticId finaleEmblemId;
 
   /// XP rewards in chain order: [open, step1, step2, step3, finale].
   final List<int> rewards;
@@ -122,7 +122,7 @@ class _StepSpec {
     this.domain,
   });
 
-  final String id;
+  final ProgressionEntryId id;
   final String Function(AppLocalizations) titleKey;
   final String Function(AppLocalizations) descriptionKey;
   final ObjectiveMetric metric;
@@ -134,7 +134,7 @@ class _StepSpec {
 List<_ChapterSpec> _chapters() {
   return [
     _ChapterSpec(
-      id: const ProgressionEntryId('ruins_discipline'),
+      id: const ChapterId('ruins_discipline'),
       level: 20,
       sortOrder: 320,
       iconAsset: questAssetRuinsDisciplineIcon,
@@ -142,14 +142,14 @@ List<_ChapterSpec> _chapters() {
       openDescKey: (l) => l.progQuestRuinsDisciplineOpenDesc,
       finaleTitleKey: (l) => l.progQuestRuinsDisciplineFinaleTitle,
       finaleDescKey: (l) => l.progQuestRuinsDisciplineFinaleDesc,
-      finaleEmblemId: 'emblem_ruin_sigil',
+      finaleEmblemId: const CosmeticId('emblem_ruin_sigil'),
       rewards: const [180, 260, 280, 320, 450],
       steps: [
         _StepSpec(
           id: const ProgressionEntryId('ruins_discipline_nutrition_7'),
           titleKey: (l) => l.progQuestRuinsDisciplineNutrition7Title,
           descriptionKey: (l) => l.progQuestRuinsDisciplineNutrition7Desc,
-          // "splň cíl kalorií i bílkovin 7krát" — needs both nodes
+          // "splÅˆ cÃ­l kaloriÃ­ i bÃ­lkovin 7krÃ¡t" â€” needs both nodes
           // on the same day, 7 days total. Old single-node calories
           // check let any 7 calorie days satisfy the step regardless
           // of protein.
@@ -165,7 +165,7 @@ List<_ChapterSpec> _chapters() {
           id: const ProgressionEntryId('ruins_discipline_weekly_2'),
           titleKey: (l) => l.progQuestRuinsDisciplineWeekly2Title,
           descriptionKey: (l) => l.progQuestRuinsDisciplineWeekly2Desc,
-          metric: const NodeCompletionsMetric(nodeId: 'weekly_activity'),
+          metric: const NodeCompletionsMetric(nodeId: ProgressionEntryId('weekly_activity')),
           targetValue: 2,
           chainStepLabel: '2',
           domain: ProgressionDomain.activity,
@@ -174,7 +174,7 @@ List<_ChapterSpec> _chapters() {
           id: const ProgressionEntryId('ruins_discipline_steps_10'),
           titleKey: (l) => l.progQuestRuinsDisciplineSteps10Title,
           descriptionKey: (l) => l.progQuestRuinsDisciplineSteps10Desc,
-          metric: const NodeCompletionsMetric(nodeId: 'daily_steps_today'),
+          metric: const NodeCompletionsMetric(nodeId: ProgressionEntryId('daily_steps_today')),
           targetValue: 10,
           chainStepLabel: '10',
           domain: ProgressionDomain.steps,
@@ -182,7 +182,7 @@ List<_ChapterSpec> _chapters() {
       ],
     ),
     _ChapterSpec(
-      id: const ProgressionEntryId('mine_descent'),
+      id: const ChapterId('mine_descent'),
       level: 30,
       sortOrder: 340,
       iconAsset: questAssetMineDescentIcon,
@@ -190,14 +190,14 @@ List<_ChapterSpec> _chapters() {
       openDescKey: (l) => l.progQuestMineDescentOpenDesc,
       finaleTitleKey: (l) => l.progQuestMineDescentFinaleTitle,
       finaleDescKey: (l) => l.progQuestMineDescentFinaleDesc,
-      finaleEmblemId: 'emblem_gatekeeper_mark',
+      finaleEmblemId: const CosmeticId('emblem_gatekeeper_mark'),
       rewards: const [240, 380, 420, 420, 600],
       steps: [
         _StepSpec(
           id: const ProgressionEntryId('mine_descent_steps_250k'),
           titleKey: (l) => l.progQuestMineDescentSteps250kTitle,
           descriptionKey: (l) => l.progQuestMineDescentSteps250kDesc,
-          // StepsMetric lifetime — no baseline override today; chain
+          // StepsMetric lifetime â€” no baseline override today; chain
           // prereq still enforces ordering. Players past 250k at
           // unlock will see this satisfied immediately.
           metric: const StepsMetric(),
@@ -219,7 +219,7 @@ List<_ChapterSpec> _chapters() {
           id: const ProgressionEntryId('mine_descent_protein_10'),
           titleKey: (l) => l.progQuestMineDescentProtein10Title,
           descriptionKey: (l) => l.progQuestMineDescentProtein10Desc,
-          metric: const NodeCompletionsMetric(nodeId: 'daily_protein_today'),
+          metric: const NodeCompletionsMetric(nodeId: ProgressionEntryId('daily_protein_today')),
           targetValue: 10,
           chainStepLabel: '10',
           domain: ProgressionDomain.nutrition,
@@ -227,7 +227,7 @@ List<_ChapterSpec> _chapters() {
       ],
     ),
     _ChapterSpec(
-      id: const ProgressionEntryId('forge_momentum'),
+      id: const ChapterId('forge_momentum'),
       level: 40,
       sortOrder: 360,
       iconAsset: questAssetForgeMomentumIcon,
@@ -235,14 +235,14 @@ List<_ChapterSpec> _chapters() {
       openDescKey: (l) => l.progQuestForgeMomentumOpenDesc,
       finaleTitleKey: (l) => l.progQuestForgeMomentumFinaleTitle,
       finaleDescKey: (l) => l.progQuestForgeMomentumFinaleDesc,
-      finaleEmblemId: 'emblem_mine_crest',
+      finaleEmblemId: const CosmeticId('emblem_mine_crest'),
       rewards: const [300, 480, 520, 560, 750],
       steps: [
         _StepSpec(
           id: const ProgressionEntryId('forge_momentum_weekly_4'),
           titleKey: (l) => l.progQuestForgeMomentumWeekly4Title,
           descriptionKey: (l) => l.progQuestForgeMomentumWeekly4Desc,
-          metric: const NodeCompletionsMetric(nodeId: 'weekly_activity'),
+          metric: const NodeCompletionsMetric(nodeId: ProgressionEntryId('weekly_activity')),
           targetValue: 4,
           chainStepLabel: '4',
           domain: ProgressionDomain.activity,
@@ -251,7 +251,7 @@ List<_ChapterSpec> _chapters() {
           id: const ProgressionEntryId('forge_momentum_steps_20'),
           titleKey: (l) => l.progQuestForgeMomentumSteps20Title,
           descriptionKey: (l) => l.progQuestForgeMomentumSteps20Desc,
-          metric: const NodeCompletionsMetric(nodeId: 'daily_steps_today'),
+          metric: const NodeCompletionsMetric(nodeId: ProgressionEntryId('daily_steps_today')),
           targetValue: 20,
           chainStepLabel: '20',
           domain: ProgressionDomain.steps,
@@ -260,7 +260,7 @@ List<_ChapterSpec> _chapters() {
           id: const ProgressionEntryId('forge_momentum_nutrition_15'),
           titleKey: (l) => l.progQuestForgeMomentumNutrition15Title,
           descriptionKey: (l) => l.progQuestForgeMomentumNutrition15Desc,
-          // "splň cíl kalorií i bílkovin 15krát" — paired-day check.
+          // "splÅˆ cÃ­l kaloriÃ­ i bÃ­lkovin 15krÃ¡t" â€” paired-day check.
           metric: const DaysWithAtLeastKAmongMetric(
             nodeIds: _calorieAndProtein,
             atLeast: 2,
@@ -272,7 +272,7 @@ List<_ChapterSpec> _chapters() {
       ],
     ),
     _ChapterSpec(
-      id: const ProgressionEntryId('underway_pact'),
+      id: const ChapterId('underway_pact'),
       level: 50,
       sortOrder: 380,
       iconAsset: questAssetUnderwayPactIcon,
@@ -280,14 +280,14 @@ List<_ChapterSpec> _chapters() {
       openDescKey: (l) => l.progQuestUnderwayPactOpenDesc,
       finaleTitleKey: (l) => l.progQuestUnderwayPactFinaleTitle,
       finaleDescKey: (l) => l.progQuestUnderwayPactFinaleDesc,
-      finaleEmblemId: 'emblem_underways_mark',
+      finaleEmblemId: const CosmeticId('emblem_underways_mark'),
       rewards: const [360, 600, 620, 680, 900],
       steps: [
         _StepSpec(
           id: const ProgressionEntryId('underway_pact_four_pillars_5'),
           titleKey: (l) => l.progQuestUnderwayPactFourPillars5Title,
           descriptionKey: (l) => l.progQuestUnderwayPactFourPillars5Desc,
-          // "splň všechny 4 denní cíle 5krát" — 5 days with ≥4 of
+          // "splÅˆ vÅ¡echny 4 dennÃ­ cÃ­le 5krÃ¡t" â€” 5 days with â‰¥4 of
           // the 8 daily atoms done. Restored from the V1 four-pillars
           // intent; the previous single-node proxy gave the player
           // a free pass on every other daily goal.
@@ -303,7 +303,7 @@ List<_ChapterSpec> _chapters() {
           id: const ProgressionEntryId('underway_pact_sleep_14'),
           titleKey: (l) => l.progQuestUnderwayPactSleep14Title,
           descriptionKey: (l) => l.progQuestUnderwayPactSleep14Desc,
-          metric: const NodeCompletionsMetric(nodeId: 'daily_sleep_today'),
+          metric: const NodeCompletionsMetric(nodeId: ProgressionEntryId('daily_sleep_today')),
           targetValue: 14,
           chainStepLabel: '14',
           domain: ProgressionDomain.sleep,
@@ -312,7 +312,7 @@ List<_ChapterSpec> _chapters() {
           id: const ProgressionEntryId('underway_pact_recovery_10'),
           titleKey: (l) => l.progQuestUnderwayPactRecovery10Title,
           descriptionKey: (l) => l.progQuestUnderwayPactRecovery10Desc,
-          // "splň cíl kroků i spánku ve stejný den 10krát" —
+          // "splÅˆ cÃ­l krokÅ¯ i spÃ¡nku ve stejnÃ½ den 10krÃ¡t" â€”
           // paired-day check on steps + sleep.
           metric: const DaysWithAtLeastKAmongMetric(
             nodeIds: _stepsAndSleep,
@@ -325,7 +325,7 @@ List<_ChapterSpec> _chapters() {
       ],
     ),
     _ChapterSpec(
-      id: const ProgressionEntryId('frostbound_oath'),
+      id: const ChapterId('frostbound_oath'),
       level: 60,
       sortOrder: 400,
       iconAsset: questAssetFrostboundOathIcon,
@@ -333,14 +333,14 @@ List<_ChapterSpec> _chapters() {
       openDescKey: (l) => l.progQuestFrostboundOathOpenDesc,
       finaleTitleKey: (l) => l.progQuestFrostboundOathFinaleTitle,
       finaleDescKey: (l) => l.progQuestFrostboundOathFinaleDesc,
-      finaleEmblemId: 'emblem_frost_sigil',
+      finaleEmblemId: const CosmeticId('emblem_frost_sigil'),
       rewards: const [420, 720, 760, 800, 1100],
       steps: [
         _StepSpec(
           id: const ProgressionEntryId('frostbound_oath_steps_21'),
           titleKey: (l) => l.progQuestFrostboundOathSteps21Title,
           descriptionKey: (l) => l.progQuestFrostboundOathSteps21Desc,
-          metric: const NodeCompletionsMetric(nodeId: 'daily_steps_today'),
+          metric: const NodeCompletionsMetric(nodeId: ProgressionEntryId('daily_steps_today')),
           targetValue: 21,
           chainStepLabel: '21',
           domain: ProgressionDomain.steps,
@@ -349,7 +349,7 @@ List<_ChapterSpec> _chapters() {
           id: const ProgressionEntryId('frostbound_oath_sleep_21'),
           titleKey: (l) => l.progQuestFrostboundOathSleep21Title,
           descriptionKey: (l) => l.progQuestFrostboundOathSleep21Desc,
-          metric: const NodeCompletionsMetric(nodeId: 'daily_sleep_today'),
+          metric: const NodeCompletionsMetric(nodeId: ProgressionEntryId('daily_sleep_today')),
           targetValue: 21,
           chainStepLabel: '21',
           domain: ProgressionDomain.sleep,
@@ -358,7 +358,7 @@ List<_ChapterSpec> _chapters() {
           id: const ProgressionEntryId('frostbound_oath_weekly_6'),
           titleKey: (l) => l.progQuestFrostboundOathWeekly6Title,
           descriptionKey: (l) => l.progQuestFrostboundOathWeekly6Desc,
-          metric: const NodeCompletionsMetric(nodeId: 'weekly_activity'),
+          metric: const NodeCompletionsMetric(nodeId: ProgressionEntryId('weekly_activity')),
           targetValue: 6,
           chainStepLabel: '6',
           domain: ProgressionDomain.activity,
@@ -366,7 +366,7 @@ List<_ChapterSpec> _chapters() {
       ],
     ),
     _ChapterSpec(
-      id: const ProgressionEntryId('icewalker_route'),
+      id: const ChapterId('icewalker_route'),
       level: 70,
       sortOrder: 420,
       iconAsset: questAssetIcewalkerRouteIcon,
@@ -374,7 +374,7 @@ List<_ChapterSpec> _chapters() {
       openDescKey: (l) => l.progQuestIcewalkerRouteOpenDesc,
       finaleTitleKey: (l) => l.progQuestIcewalkerRouteFinaleTitle,
       finaleDescKey: (l) => l.progQuestIcewalkerRouteFinaleDesc,
-      finaleEmblemId: 'emblem_icewalker_mark',
+      finaleEmblemId: const CosmeticId('emblem_icewalker_mark'),
       rewards: const [500, 850, 900, 950, 1300],
       steps: [
         _StepSpec(
@@ -399,7 +399,7 @@ List<_ChapterSpec> _chapters() {
           id: const ProgressionEntryId('icewalker_route_protein_30'),
           titleKey: (l) => l.progQuestIcewalkerRouteProtein30Title,
           descriptionKey: (l) => l.progQuestIcewalkerRouteProtein30Desc,
-          metric: const NodeCompletionsMetric(nodeId: 'daily_protein_today'),
+          metric: const NodeCompletionsMetric(nodeId: ProgressionEntryId('daily_protein_today')),
           targetValue: 30,
           chainStepLabel: '30',
           domain: ProgressionDomain.nutrition,
@@ -407,7 +407,7 @@ List<_ChapterSpec> _chapters() {
       ],
     ),
     _ChapterSpec(
-      id: const ProgressionEntryId('mountain_ascent'),
+      id: const ChapterId('mountain_ascent'),
       level: 80,
       sortOrder: 440,
       iconAsset: questAssetMountainAscentIcon,
@@ -415,14 +415,14 @@ List<_ChapterSpec> _chapters() {
       openDescKey: (l) => l.progQuestMountainAscentOpenDesc,
       finaleTitleKey: (l) => l.progQuestMountainAscentFinaleTitle,
       finaleDescKey: (l) => l.progQuestMountainAscentFinaleDesc,
-      finaleEmblemId: 'emblem_mountain_crest',
+      finaleEmblemId: const CosmeticId('emblem_mountain_crest'),
       rewards: const [600, 1000, 1100, 1150, 1600],
       steps: [
         _StepSpec(
           id: const ProgressionEntryId('mountain_ascent_four_pillars_15'),
           titleKey: (l) => l.progQuestMountainAscentFourPillars15Title,
           descriptionKey: (l) => l.progQuestMountainAscentFourPillars15Desc,
-          // "splň všechny 4 denní cíle 15krát" — four-pillars check.
+          // "splÅˆ vÅ¡echny 4 dennÃ­ cÃ­le 15krÃ¡t" â€” four-pillars check.
           metric: const DaysWithAtLeastKAmongMetric(
             nodeIds: _allDailyAtoms,
             atLeast: 4,
@@ -435,7 +435,7 @@ List<_ChapterSpec> _chapters() {
           id: const ProgressionEntryId('mountain_ascent_steps_30'),
           titleKey: (l) => l.progQuestMountainAscentSteps30Title,
           descriptionKey: (l) => l.progQuestMountainAscentSteps30Desc,
-          metric: const NodeCompletionsMetric(nodeId: 'daily_steps_today'),
+          metric: const NodeCompletionsMetric(nodeId: ProgressionEntryId('daily_steps_today')),
           targetValue: 30,
           chainStepLabel: '30',
           domain: ProgressionDomain.steps,
@@ -444,7 +444,7 @@ List<_ChapterSpec> _chapters() {
           id: const ProgressionEntryId('mountain_ascent_weekly_10'),
           titleKey: (l) => l.progQuestMountainAscentWeekly10Title,
           descriptionKey: (l) => l.progQuestMountainAscentWeekly10Desc,
-          metric: const NodeCompletionsMetric(nodeId: 'weekly_activity'),
+          metric: const NodeCompletionsMetric(nodeId: ProgressionEntryId('weekly_activity')),
           targetValue: 10,
           chainStepLabel: '10',
           domain: ProgressionDomain.activity,
@@ -452,7 +452,7 @@ List<_ChapterSpec> _chapters() {
       ],
     ),
     _ChapterSpec(
-      id: const ProgressionEntryId('dragonroad'),
+      id: const ChapterId('dragonroad'),
       level: 90,
       sortOrder: 460,
       iconAsset: questAssetDragonroadIcon,
@@ -460,7 +460,7 @@ List<_ChapterSpec> _chapters() {
       openDescKey: (l) => l.progQuestDragonroadOpenDesc,
       finaleTitleKey: (l) => l.progQuestDragonroadFinaleTitle,
       finaleDescKey: (l) => l.progQuestDragonroadFinaleDesc,
-      finaleEmblemId: 'emblem_dragon_mark',
+      finaleEmblemId: const CosmeticId('emblem_dragon_mark'),
       rewards: const [750, 1250, 1350, 1400, 2000],
       steps: [
         _StepSpec(
@@ -476,7 +476,7 @@ List<_ChapterSpec> _chapters() {
           id: const ProgressionEntryId('dragonroad_four_pillars_25'),
           titleKey: (l) => l.progQuestDragonroadFourPillars25Title,
           descriptionKey: (l) => l.progQuestDragonroadFourPillars25Desc,
-          // "splň všechny 4 denní cíle 25krát" — four-pillars check.
+          // "splÅˆ vÅ¡echny 4 dennÃ­ cÃ­le 25krÃ¡t" â€” four-pillars check.
           metric: const DaysWithAtLeastKAmongMetric(
             nodeIds: _allDailyAtoms,
             atLeast: 4,
@@ -489,7 +489,7 @@ List<_ChapterSpec> _chapters() {
           id: const ProgressionEntryId('dragonroad_weekly_12'),
           titleKey: (l) => l.progQuestDragonroadWeekly12Title,
           descriptionKey: (l) => l.progQuestDragonroadWeekly12Desc,
-          metric: const NodeCompletionsMetric(nodeId: 'weekly_activity'),
+          metric: const NodeCompletionsMetric(nodeId: ProgressionEntryId('weekly_activity')),
           targetValue: 12,
           chainStepLabel: '12',
           domain: ProgressionDomain.activity,
@@ -497,7 +497,7 @@ List<_ChapterSpec> _chapters() {
       ],
     ),
     _ChapterSpec(
-      id: const ProgressionEntryId('dragonrock_sovereign'),
+      id: const ChapterId('dragonrock_sovereign'),
       level: 100,
       sortOrder: 480,
       iconAsset: questAssetDragonrockSovereignIcon,
@@ -505,7 +505,7 @@ List<_ChapterSpec> _chapters() {
       openDescKey: (l) => l.progQuestDragonrockSovereignOpenDesc,
       finaleTitleKey: (l) => l.progQuestDragonrockSovereignFinaleTitle,
       finaleDescKey: (l) => l.progQuestDragonrockSovereignFinaleDesc,
-      finaleEmblemId: 'emblem_dragonrock_emblem',
+      finaleEmblemId: const CosmeticId('emblem_dragonrock_emblem'),
       rewards: const [900, 1500, 1600, 1800, 2600],
       steps: [
         _StepSpec(
@@ -513,7 +513,7 @@ List<_ChapterSpec> _chapters() {
           titleKey: (l) => l.progQuestDragonrockSovereignFourPillars30Title,
           descriptionKey: (l) =>
               l.progQuestDragonrockSovereignFourPillars30Desc,
-          // "splň všechny 4 denní cíle 30krát" — four-pillars check.
+          // "splÅˆ vÅ¡echny 4 dennÃ­ cÃ­le 30krÃ¡t" â€” four-pillars check.
           metric: const DaysWithAtLeastKAmongMetric(
             nodeIds: _allDailyAtoms,
             atLeast: 4,
@@ -526,7 +526,7 @@ List<_ChapterSpec> _chapters() {
           id: const ProgressionEntryId('dragonrock_sovereign_weekly_16'),
           titleKey: (l) => l.progQuestDragonrockSovereignWeekly16Title,
           descriptionKey: (l) => l.progQuestDragonrockSovereignWeekly16Desc,
-          metric: const NodeCompletionsMetric(nodeId: 'weekly_activity'),
+          metric: const NodeCompletionsMetric(nodeId: ProgressionEntryId('weekly_activity')),
           targetValue: 16,
           chainStepLabel: '16',
           domain: ProgressionDomain.activity,
@@ -535,7 +535,7 @@ List<_ChapterSpec> _chapters() {
           id: const ProgressionEntryId('dragonrock_sovereign_steps_50'),
           titleKey: (l) => l.progQuestDragonrockSovereignSteps50Title,
           descriptionKey: (l) => l.progQuestDragonrockSovereignSteps50Desc,
-          metric: const NodeCompletionsMetric(nodeId: 'daily_steps_today'),
+          metric: const NodeCompletionsMetric(nodeId: ProgressionEntryId('daily_steps_today')),
           targetValue: 50,
           chainStepLabel: '50',
           domain: ProgressionDomain.steps,
@@ -569,7 +569,7 @@ List<Objective> chapterObjectives() {
       scope: const LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: c.level.toDouble(),
-      debugLabel: '${c.id} open — level >= ${c.level}',
+      debugLabel: '${c.id} open â€” level >= ${c.level}',
     ));
     // Steps with baselines wired so each step's progress starts at the
     // previous step's completion.
@@ -583,7 +583,7 @@ List<Objective> chapterObjectives() {
         operator: ObjectiveOperator.atLeast,
         targetValue: s.targetValue,
         baselineFromNodeId: prevNodeId,
-        debugLabel: '${c.id} ${s.id} — since $prevNodeId',
+        debugLabel: '${c.id} ${s.id} â€” since $prevNodeId',
       ));
       prevNodeId = ProgressionEntryId(s.id);
     }
@@ -595,7 +595,7 @@ List<Objective> chapterObjectives() {
       scope: const LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: c.level.toDouble(),
-      debugLabel: '${c.id} finale — level gate (prereqs gate the chain)',
+      debugLabel: '${c.id} finale â€” level gate (prereqs gate the chain)',
     ));
   }
   return out;
@@ -603,18 +603,27 @@ List<Objective> chapterObjectives() {
 
 // Cross-chapter chain: each chapter's open auto-claims only once the
 // previous chapter's finale is in the ledger. Order matches the spec
-// list above (Ruins → … → Dragonrock); Forest Trail still chains off
+// list above (Ruins â†’ â€¦ â†’ Dragonrock); Forest Trail still chains off
 // pilgrim_path_finale (declared in its own content file).
-const _chapterPrereqByOpenId = <String, String>{
-  'ruins_discipline_open': 'forest_trial_finale',
-  'mine_descent_open': 'ruins_discipline_finale',
-  'forge_momentum_open': 'mine_descent_finale',
-  'underway_pact_open': 'forge_momentum_finale',
-  'frostbound_oath_open': 'underway_pact_finale',
-  'icewalker_route_open': 'frostbound_oath_finale',
-  'mountain_ascent_open': 'icewalker_route_finale',
-  'dragonroad_open': 'mountain_ascent_finale',
-  'dragonrock_sovereign_open': 'dragonroad_finale',
+const _chapterPrereqByOpenId = <ProgressionEntryId, ProgressionEntryId>{
+  ProgressionEntryId('ruins_discipline_open'):
+      ProgressionEntryId('forest_trial_finale'),
+  ProgressionEntryId('mine_descent_open'):
+      ProgressionEntryId('ruins_discipline_finale'),
+  ProgressionEntryId('forge_momentum_open'):
+      ProgressionEntryId('mine_descent_finale'),
+  ProgressionEntryId('underway_pact_open'):
+      ProgressionEntryId('forge_momentum_finale'),
+  ProgressionEntryId('frostbound_oath_open'):
+      ProgressionEntryId('underway_pact_finale'),
+  ProgressionEntryId('icewalker_route_open'):
+      ProgressionEntryId('frostbound_oath_finale'),
+  ProgressionEntryId('mountain_ascent_open'):
+      ProgressionEntryId('icewalker_route_finale'),
+  ProgressionEntryId('dragonroad_open'):
+      ProgressionEntryId('mountain_ascent_finale'),
+  ProgressionEntryId('dragonrock_sovereign_open'):
+      ProgressionEntryId('dragonroad_finale'),
 };
 
 List<ProgressionEntry> chapterNodes() {
@@ -639,9 +648,9 @@ List<ProgressionEntry> chapterNodes() {
       rarity: Rarity.rare,
       assetKey: c.iconAsset,
       chapterId: c.id,
-      chainId: c.id,
+      chainId: ChainId(c.id.raw),
       nextNodeIds: [firstStepId],
-      chainStepIcon: Icons.play_arrow_rounded,
+      chainStepIcon: ChainStepIcon.opener,
       sortOrder: c.sortOrder,
     ));
 
@@ -660,7 +669,7 @@ List<ProgressionEntry> chapterNodes() {
         rarity: Rarity.rare,
         assetKey: c.iconAsset,
         chapterId: c.id,
-        chainId: c.id,
+        chainId: ChainId(c.id.raw),
         chainOrder: i + 1,
         prerequisiteNodeIds: [prevId],
         nextNodeIds: [nextId],
@@ -683,11 +692,11 @@ List<ProgressionEntry> chapterNodes() {
       rarity: Rarity.epic,
       assetKey: c.iconAsset,
       chapterId: c.id,
-      chainId: c.id,
+      chainId: ChainId(c.id.raw),
       chainOrder: c.steps.length + 1,
       prerequisiteNodeIds: [lastStepId],
       unlockConditions: [LevelAtLeast(c.level)],
-      chainStepIcon: Icons.shield_rounded,
+      chainStepIcon: ChainStepIcon.finale,
       sortOrder: c.sortOrder + c.steps.length + 1,
     ));
   }

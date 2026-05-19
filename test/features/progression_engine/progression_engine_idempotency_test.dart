@@ -1,4 +1,4 @@
-import 'package:forgetrack/domain/progression/catalog/ids.dart';
+﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:forgetrack/features/progression_engine/application/progression_engine.dart';
@@ -6,17 +6,17 @@ import 'package:forgetrack/features/progression_engine/data/in_memory_progressio
 import 'package:forgetrack/features/progression_engine/domain/catalog/engine_catalog_context.dart';
 import 'package:forgetrack/features/progression_engine/domain/catalog/objective_catalog.dart';
 import 'package:forgetrack/features/progression_engine/domain/catalog/progression_node_catalog.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/claim_policy.dart';
+import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';
 import 'package:forgetrack/features/progression_engine/domain/models/engine_evaluation_context.dart';
 import 'package:forgetrack/domain/journal/journal_event.dart';
 
 import '_engine_test_helpers.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/objective_definition.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/objective_metric.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/objective_operator.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/objective_scope.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/progression_node_definition.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/reward_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/objective.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_metric.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_operator.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_scope.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
+import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import 'package:forgetrack/shared/domain/rarity.dart';
 
 class _FakeObjectiveCatalog extends ObjectiveCatalog {
@@ -59,7 +59,7 @@ Quest _quest({
 }) =>
     DailyQuest(
       id: ProgressionEntryId(id),
-      objectiveId: objectiveId,
+      objectiveId: ObjectiveId(objectiveId),
       titleKey: (_) => 'Title',
       descriptionKey: (_) => 'Desc',
       rewards: rewards ?? [XpReward(amount: xp)],
@@ -93,7 +93,7 @@ ProgressionEngine _newEngine({
     );
 
 void main() {
-  group('ProgressionEngine — happy path', () {
+  group('ProgressionEngine â€” happy path', () {
     test('emits objective + node + reward events on first run', () async {
       final repo = InMemoryProgressionEngineRepository();
       final engine = _newEngine(
@@ -138,7 +138,7 @@ void main() {
     });
   });
 
-  group('ProgressionEngine — idempotency', () {
+  group('ProgressionEngine â€” idempotency', () {
     test('second run with same input emits no new completions or grants',
         () async {
       final repo = InMemoryProgressionEngineRepository();
@@ -180,7 +180,7 @@ void main() {
             objectiveId: objective.id,
             titleKey: (_) => 'Achievement',
             descriptionKey: (_) => 'Same objective',
-            rewards: const [CosmeticReward(cosmeticId: 'frame_test')],
+            rewards: const [CosmeticReward(cosmeticId: CosmeticId('frame_test'))],
             rarity: Rarity.uncommon,
           ),
         ]),
@@ -202,7 +202,7 @@ void main() {
     });
   });
 
-  group('ProgressionEngine — manual claim', () {
+  group('ProgressionEngine â€” manual claim', () {
     test('manual node enters availability, claim then completes + grants',
         () async {
       final repo = InMemoryProgressionEngineRepository();
@@ -224,7 +224,7 @@ void main() {
         repository: repo,
       );
 
-      // Objective satisfied → node available, NOT completed.
+      // Objective satisfied â†’ node available, NOT completed.
       final first = await evaluateWithContext(engine, _context(steps: 1500));
       expect(first.completedNodes, isEmpty);
       expect(first.availableNodes, hasLength(1));
@@ -233,7 +233,7 @@ void main() {
       // Player claims.
       final claimCtx = _context(steps: 1500);
       final claimed = await engine.claim(
-        nodeId: 'manual_node',
+        nodeId: ProgressionEntryId('manual_node'),
         player: claimCtx.player,
         healthSnapshot: claimCtx.healthSnapshot,
         nutritionSnapshot: claimCtx.nutritionSnapshot,

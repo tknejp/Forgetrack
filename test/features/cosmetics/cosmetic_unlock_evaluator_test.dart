@@ -1,4 +1,4 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
 import 'package:forgetrack/features/cosmetics/domain/cosmetic_unlock_evaluator.dart';
 import 'package:forgetrack/features/cosmetics/domain/cosmetic_unlock_rules.dart';
 import 'package:forgetrack/features/cosmetics/domain/cosmetic_unlock_snapshot.dart';
@@ -310,7 +310,7 @@ void main() {
       final granted = _unlock(snap);
 
       expect(granted, contains('companion_ember_sprite'));
-      // Relics are still in the snapshot — not consumed.
+      // Relics are still in the snapshot â€” not consumed.
       expect(snap.ownedCosmeticIds, containsAll(relics));
     });
   });
@@ -318,8 +318,8 @@ void main() {
   group('Fixed-point simulation (multi-pass chain)', () {
     // Simulates the dispatcher's Tier-2 fixed-point loop:
     //   pass 1: relics granted via Tier-1 (mocked by pre-populating owned)
-    //   pass 2: evaluator runs with relics in owned → companion fires
-    //   pass 3: evaluator runs with companion in owned → no new unlocks
+    //   pass 2: evaluator runs with relics in owned â†’ companion fires
+    //   pass 3: evaluator runs with companion in owned â†’ no new unlocks
     test('relic grant in pass 1 causes companion unlock in pass 2', () {
       final evaluator = CosmeticUnlockEvaluator(kCosmeticUnlockRules);
 
@@ -327,7 +327,7 @@ void main() {
       var owned = <String>{'relic_campfire_spark', 'relic_warm_kindling'};
       final snap = _snap(level: 5, owned: owned);
 
-      // Pass 2 — companion fires.
+      // Pass 2 â€” companion fires.
       final pass2 = evaluator.evaluate(snap, owned);
       expect(pass2.map((t) => t.cosmeticId), contains('companion_ember_sprite'));
 

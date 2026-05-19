@@ -1,21 +1,21 @@
-// Phase 8 adapter contract pin for PlayerAchievementShelfService.
+﻿// Phase 8 adapter contract pin for PlayerAchievementShelfService.
 //
 // The service takes engine primitives (catalog rows + completed/locked
 // sets + objective outcome lookups + XP scaling closure) and produces
 // a PlayerAchievementShelf. Tests verify:
 //
-//   1. Empty catalog → empty shelf.
+//   1. Empty catalog â†’ empty shelf.
 //   2. Completed nodes map to AchievementUnlocked carrying the scaled
 //      XP and the earliest-completion timestamp.
 //   3. Locked nodes (NodeState.locked) map to AchievementLocked even
-//      when the objective has measurable progress — the locked branch
+//      when the objective has measurable progress â€” the locked branch
 //      wins because the unlock-conditions gate hasn't fired.
-//   4. Otherwise → AchievementInProgress carrying the objective's
+//   4. Otherwise â†’ AchievementInProgress carrying the objective's
 //      actual / target values.
 //   5. Precedence: Unlocked > Locked > InProgress. An achievement
 //      idempotently in `completedNodeIds` stays Unlocked even when
 //      flagged in `lockedNodeIds` simultaneously (defensive
-//      precedence — achievements never re-lock).
+//      precedence â€” achievements never re-lock).
 //   6. evaluatedAt is stamped on every entry.
 //   7. Duplicate catalog ids fold last-wins (defensive contract;
 //      shouldn't happen in production).
@@ -24,8 +24,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:forgetrack/domain/progression/player/player_achievement_lifecycle.dart';
 import 'package:forgetrack/features/progression_engine/application/player_achievement_shelf_service.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/progression_node_definition.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/reward_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
+import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 
 void main() {
   final evaluatedAt = DateTime.utc(2026, 5, 18, 12);
@@ -41,11 +41,11 @@ void main() {
       titleKey: _titleStub,
       descriptionKey: _descStub,
       rewards: [XpReward(amount: xpAmount)],
-      objectiveId: objectiveId,
+      objectiveId: objectiveId == null ? null : ObjectiveId(objectiveId),
     );
   }
 
-  // Default lookup helpers — tests override by id where needed.
+  // Default lookup helpers â€” tests override by id where needed.
   DateTime? earliest(String id) =>
       id == 'unlocked' ? unlockedAtFixture : null;
   double actual(String? id) => id == 'obj_steps_lifetime' ? 5000 : 0;
@@ -54,7 +54,7 @@ void main() {
 
   const service = PlayerAchievementShelfService();
 
-  test('empty catalog → empty shelf', () {
+  test('empty catalog â†’ empty shelf', () {
     final shelf = service.build(
       achievements: const [],
       completedNodeIds: const {},
@@ -68,7 +68,7 @@ void main() {
     expect(shelf.isEmpty, isTrue);
   });
 
-  test('completed node → AchievementUnlocked(finalXp scaled, unlockedAt)', () {
+  test('completed node â†’ AchievementUnlocked(finalXp scaled, unlockedAt)', () {
     final shelf = service.build(
       achievements: [node(id: 'unlocked')],
       completedNodeIds: const {'unlocked'},
@@ -82,11 +82,11 @@ void main() {
     final lifecycle =
         shelf.byId(const AchievementId('unlocked'))!.lifecycle
             as AchievementUnlocked;
-    expect(lifecycle.finalXp, 460); // 230 base × 2
+    expect(lifecycle.finalXp, 460); // 230 base Ã— 2
     expect(lifecycle.unlockedAt, unlockedAtFixture);
   });
 
-  test('locked node (not completed) → AchievementLocked', () {
+  test('locked node (not completed) â†’ AchievementLocked', () {
     final shelf = service.build(
       achievements: [node(id: 'gated')],
       completedNodeIds: const {},
@@ -103,7 +103,7 @@ void main() {
     );
   });
 
-  test('eligible + objective in progress → AchievementInProgress', () {
+  test('eligible + objective in progress â†’ AchievementInProgress', () {
     final shelf = service.build(
       achievements: [node(id: 'walking')],
       completedNodeIds: const {},
@@ -121,13 +121,13 @@ void main() {
     expect(lifecycle.target, 10000);
   });
 
-  test('condition-only achievement (objective null) → InProgress with 0/0', () {
+  test('condition-only achievement (objective null) â†’ InProgress with 0/0', () {
     final shelf = service.build(
       achievements: [node(id: 'welcome', objectiveId: null)],
       completedNodeIds: const {},
       lockedNodeIds: const {},
       earliestCompletionAt: (_) => null,
-      // Closures return 0 for unknown ids — matches the provider's
+      // Closures return 0 for unknown ids â€” matches the provider's
       // behaviour: `objectiveActualValue(null)` and the null-fallback
       // on `objectiveById(null)` both yield 0.
       objectiveActual: (_) => 0,
@@ -176,9 +176,9 @@ void main() {
     }
   });
 
-  test('zero-XP catalog row → AchievementUnlocked(finalXp 0)', () {
+  test('zero-XP catalog row â†’ AchievementUnlocked(finalXp 0)', () {
     // Some condition-driven achievements (welcome) carry no XP reward.
-    // The bridge sums XpReward.amount → 0 → scaledXp(0) → 0.
+    // The bridge sums XpReward.amount â†’ 0 â†’ scaledXp(0) â†’ 0.
     final shelf = service.build(
       achievements: [node(id: 'welcome', xpAmount: 0)],
       completedNodeIds: const {'welcome'},

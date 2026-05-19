@@ -1,20 +1,20 @@
-import 'package:forgetrack/domain/progression/catalog/ids.dart';
+﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:forgetrack/features/progression_engine/domain/catalog/catalog_validator.dart';
 import 'package:forgetrack/features/progression_engine/domain/catalog/engine_catalog_context.dart';
 import 'package:forgetrack/features/progression_engine/domain/catalog/objective_catalog.dart';
 import 'package:forgetrack/features/progression_engine/domain/catalog/progression_node_catalog.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/activation_policy.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/claim_policy.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/content_tag.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/objective_definition.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/objective_metric.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/objective_operator.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/objective_scope.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/progression_node_definition.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/reward_definition.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/unlock_condition.dart';
+import 'package:forgetrack/domain/progression/catalog/activation_policy.dart';
+import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';
+import 'package:forgetrack/domain/progression/catalog/content_tag.dart';
+import 'package:forgetrack/domain/progression/catalog/objective.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_metric.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_operator.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_scope.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
+import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/unlock_condition.dart';
 import 'package:forgetrack/shared/domain/rarity.dart';
 
 class _FakeObjectiveCatalog extends ObjectiveCatalog {
@@ -57,7 +57,7 @@ Quest _quest({
 }) =>
     DailyQuest(
       id: ProgressionEntryId(id),
-      objectiveId: objectiveId,
+      objectiveId: ObjectiveId(objectiveId),
       titleKey: (_) => 'Title $id',
       descriptionKey: (_) => 'Desc $id',
       rewards: const [XpReward(amount: 10)],
@@ -69,7 +69,7 @@ Quest _quest({
     );
 
 void main() {
-  group('CatalogValidator — identity', () {
+  group('CatalogValidator â€” identity', () {
     test('flags duplicate objective ids as errors', () {
       final validator = CatalogValidator(
         objectiveCatalog: _FakeObjectiveCatalog([
@@ -91,8 +91,8 @@ void main() {
       final validator = CatalogValidator(
         objectiveCatalog: _FakeObjectiveCatalog([_objective('o1')]),
         nodeCatalog: _FakeEntryCatalog([
-          _quest(id: 'dup', objectiveId: 'o1'),
-          _quest(id: 'dup', objectiveId: 'o1'),
+          _quest(id: 'dup', objectiveId: ObjectiveId('o1')),
+          _quest(id: 'dup', objectiveId: ObjectiveId('o1')),
         ]),
       );
       final issues = validator.validate();
@@ -121,8 +121,8 @@ void main() {
         nodeCatalog: _FakeEntryCatalog([
           _quest(
             id: 'q1',
-            objectiveId: 'o1',
-            // Manual without lockedHintKey → warning, not error.
+            objectiveId: ObjectiveId('o1'),
+            // Manual without lockedHintKey â†’ warning, not error.
             claimPolicy: ClaimPolicy.manual,
           ),
         ]),
@@ -131,12 +131,12 @@ void main() {
     });
   });
 
-  group('CatalogValidator — references', () {
+  group('CatalogValidator â€” references', () {
     test('flags node referencing unknown objective', () {
       final validator = CatalogValidator(
         objectiveCatalog: const _FakeObjectiveCatalog([]),
         nodeCatalog: _FakeEntryCatalog([
-          _quest(id: 'q1', objectiveId: 'does_not_exist'),
+          _quest(id: 'q1', objectiveId: ObjectiveId('does_not_exist')),
         ]),
       );
       final issues = validator.validate();
@@ -154,8 +154,8 @@ void main() {
         nodeCatalog: _FakeEntryCatalog([
           _quest(
             id: 'q1',
-            objectiveId: 'o1',
-            unlockConditions: const [NodeCompleted('phantom_node')],
+            objectiveId: ObjectiveId('o1'),
+            unlockConditions: const [NodeCompleted(ProgressionEntryId('phantom_node'))],
           ),
         ]),
       );
@@ -167,12 +167,12 @@ void main() {
     });
   });
 
-  group('CatalogValidator — coherence warnings', () {
+  group('CatalogValidator â€” coherence warnings', () {
     test('warns on manual claim node missing lockedHintKey', () {
       final validator = CatalogValidator(
         objectiveCatalog: _FakeObjectiveCatalog([_objective('o1')]),
         nodeCatalog: _FakeEntryCatalog([
-          _quest(id: 'q1', objectiveId: 'o1', claimPolicy: ClaimPolicy.manual),
+          _quest(id: 'q1', objectiveId: ObjectiveId('o1'), claimPolicy: ClaimPolicy.manual),
         ]),
       );
       final issues = validator.validate();
@@ -190,7 +190,7 @@ void main() {
         nodeCatalog: _FakeEntryCatalog([
           _quest(
             id: 'q1',
-            objectiveId: 'o1',
+            objectiveId: ObjectiveId('o1'),
             activationPolicy: ActivationPolicy.onlyWhenRpgEnabled,
             contentTags: const [ContentTag.fitness],
           ),
@@ -211,7 +211,7 @@ void main() {
         nodeCatalog: _FakeEntryCatalog([
           _quest(
             id: 'q1',
-            objectiveId: 'o1',
+            objectiveId: ObjectiveId('o1'),
             activationPolicy: ActivationPolicy.onlyWhenRpgEnabled,
             contentTags: const [ContentTag.rpg],
           ),
@@ -225,7 +225,7 @@ void main() {
     });
   });
 
-  group('CatalogValidator — real catalogs', () {
+  group('CatalogValidator â€” real catalogs', () {
     test('the shipped sample catalogs validate cleanly', () {
       const validator = CatalogValidator();
       expect(validator.validateOrThrow, returnsNormally);

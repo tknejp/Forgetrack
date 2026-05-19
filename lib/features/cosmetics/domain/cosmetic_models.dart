@@ -1,17 +1,17 @@
-// Domain models for the cosmetics feature: enums and immutable data classes
+﻿// Domain models for the cosmetics feature: enums and immutable data classes
 // used by the catalog, repository and service layers. The cosmetics feature
 // is intentionally decoupled from `progression` and `social`.
 
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/domain/rarity.dart';
-import 'ids.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 
 export '../../../shared/domain/rarity.dart' show Rarity;
 
 /// Resolves a localized string from the active [AppLocalizations]. Used by
 /// [Cosmetic] for player-facing text (name / description / unlock
 /// hint) so the catalog itself is the single mapping from cosmetic id to
-/// generated `.arb` getter — no separate switch table to maintain.
+/// generated `.arb` getter â€” no separate switch table to maintain.
 typedef CosmeticText = String Function(AppLocalizations l10n);
 
 enum CosmeticType {
@@ -35,7 +35,7 @@ enum CosmeticRegion {
 }
 
 /// Where an unlock came from. Stored as part of [UnlockedCosmetic] for audit.
-/// Open-set on purpose — features that unlock cosmetics may add their own
+/// Open-set on purpose â€” features that unlock cosmetics may add their own
 /// values; consumers should treat unknown values as informational only.
 enum CosmeticUnlockSource {
   defaultBaseline,
@@ -55,14 +55,14 @@ enum CosmeticUnlockSource {
 /// [TitleFlair], [MapEffect]. Discrimination is by pattern match
 /// (`cosmetic is Companion`), not by an enum field.
 ///
-/// The [CosmeticType] enum is retained for slot identification — equipped
+/// The [CosmeticType] enum is retained for slot identification â€” equipped
 /// state keys by slot ([Loadout.slotId]) and the relic catalog
 /// disambiguates `Relic` (progression catalog gating node) from
 /// [RelicCosmetic] (cosmetic-side visual asset).
 ///
 /// Player-facing text ([name], [description], [unlockHint]) is provided as a
 /// closure that pulls the localized string from [AppLocalizations]. Each
-/// catalog entry inlines its own `(l) => l.cosmeticXxx` resolver — there is
+/// catalog entry inlines its own `(l) => l.cosmeticXxx` resolver â€” there is
 /// no separate id-to-key switch table. Adding a cosmetic touches the catalog
 /// and the `.arb` files, nothing else.
 sealed class Cosmetic {
@@ -111,7 +111,7 @@ sealed class Cosmetic {
   /// Free-form bag for feature-specific overrides (e.g. animation flags).
   final Map<String, Object?> metadata;
 
-  /// Slot identifier. Derived from the concrete subtype — there is no
+  /// Slot identifier. Derived from the concrete subtype â€” there is no
   /// runtime field; pattern matching (`cosmetic is Companion`) is the
   /// canonical way to discriminate. This getter exists so callers that pass
   /// the slot as a [CosmeticType] value (e.g. `Loadout.slotId`,
@@ -180,7 +180,7 @@ class Companion extends Cosmetic {
 }
 
 /// Cosmetic-side relic (visual asset). Disambiguated from
-/// `Relic` (progression catalog gating node) — both ship under id `relic_*`
+/// `Relic` (progression catalog gating node) â€” both ship under id `relic_*`
 /// but represent different concerns. References between them are by id.
 class RelicCosmetic extends Cosmetic {
   const RelicCosmetic({
@@ -284,10 +284,10 @@ class UnlockedCosmetic {
 /// Snapshot of which cosmetic id is equipped in each slot. Null = nothing
 /// equipped in that slot.
 ///
-/// **Phase 12 rename** from `EquippedCosmetics` per proposal §2.4. The
+/// **Phase 12 rename** from `EquippedCosmetics` per proposal Â§2.4. The
 /// new name reads as a first-class noun ("the player's loadout") and
 /// matches the term every consumer already uses verbally. Same shape,
-/// same persistence — the rename is purely lexical.
+/// same persistence â€” the rename is purely lexical.
 class Loadout {
   const Loadout({
     this.frameId,

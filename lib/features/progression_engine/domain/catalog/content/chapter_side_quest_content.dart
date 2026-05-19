@@ -1,20 +1,20 @@
-import 'package:forgetrack/domain/progression/catalog/ids.dart';
+﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import '../../../../../shared/domain/rarity.dart';
 import '../../localized_text.dart';
-import '../../models/claim_policy.dart';
-import '../../models/content_tag.dart';
-import '../../models/objective_definition.dart';
-import '../../models/objective_metric.dart';
-import '../../models/objective_operator.dart';
-import '../../models/objective_scope.dart';
-import '../../models/progression_node_definition.dart';
-import '../../models/reward_definition.dart';
-import '../../models/unlock_condition.dart';
+import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';
+import 'package:forgetrack/domain/progression/catalog/content_tag.dart';
+import 'package:forgetrack/domain/progression/catalog/objective.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_metric.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_operator.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_scope.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
+import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/unlock_condition.dart';
 import '../engine_catalog_context.dart';
 import 'quest_assets.dart';
 
 /// **Chapter side quests.** Narrative bonus content tied to the
-/// active chapter — surfaces only while `ChapterActive(chapterId)`
+/// active chapter â€” surfaces only while `ChapterActive(chapterId)`
 /// is true (chapter's `_open` quest done, `_finale` not yet).
 ///
 /// **Pool shape varies per chapter.** Early chapters offer simple
@@ -22,44 +22,44 @@ import 'quest_assets.dart';
 /// XP conditions; late chapters introduce sequential **combo
 /// chains** (one step claimable per day via
 /// `NodeCompletedBeforeToday`) that build toward a chapter-defining
-/// finale. Not every late chapter has a chain — variety is the
+/// finale. Not every late chapter has a chain â€” variety is the
 /// point, the pool reads as themed content not a uniform grid.
 ///
 /// **Chain placement** (deliberately staggered, not every chapter):
-/// - `icewalker_route` — 2-step chain (chain debut).
-/// - `mountain_ascent` — no chain, three standalone side quests.
-/// - `dragonroad` — 2-step chain.
-/// - `dragonrock_sovereign` — 4-step apex chain culminating in a
+/// - `icewalker_route` â€” 2-step chain (chain debut).
+/// - `mountain_ascent` â€” no chain, three standalone side quests.
+/// - `dragonroad` â€” 2-step chain.
+/// - `dragonrock_sovereign` â€” 4-step apex chain culminating in a
 ///   true perfect day (8/8 daily goals + stacked bonuses for
-///   pre-18:00 finish and ≥ 7 h sleep).
+///   pre-18:00 finish and â‰¥ 7 h sleep).
 ///
 /// **XP scaling.** Base XP grows with chapter level, then the engine
-/// multiplies by `rewardMultiplierForLevel` at claim time (×62.5 at
-/// lvl 50, ×150 at lvl 100). A 1500-base apex finale at lvl 100
-/// awards ≈ 225 000 XP — significant but well under the ~778 000-XP
+/// multiplies by `rewardMultiplierForLevel` at claim time (Ã—62.5 at
+/// lvl 50, Ã—150 at lvl 100). A 1500-base apex finale at lvl 100
+/// awards â‰ˆ 225 000 XP â€” significant but well under the ~778 000-XP
 /// level boundary at that tier. Stacked bonuses on the apex push
 /// the perfect-day claim toward ~375 000 XP, still under half a
-/// level — a real summit, but not level-skipping.
+/// level â€” a real summit, but not level-skipping.
 ///
 /// **Retirement.** All side quests use `LifetimeScope`. When the
 /// chapter finale lands, `ChapterActive` flips false and any unmet
-/// steps quietly retire — the player moves on with the journey.
+/// steps quietly retire â€” the player moves on with the journey.
 
-const _pilgrimPath = 'pilgrim_path';
-const _forestTrial = 'forest_trial';
-const _ruinsDiscipline = 'ruins_discipline';
-const _mineDescent = 'mine_descent';
-const _forgeMomentum = 'forge_momentum';
-const _underwayPact = 'underway_pact';
-const _frostboundOath = 'frostbound_oath';
-const _icewalkerRoute = 'icewalker_route';
-const _mountainAscent = 'mountain_ascent';
-const _dragonroad = 'dragonroad';
-const _dragonrockSovereign = 'dragonrock_sovereign';
+const _pilgrimPath = ChapterId('pilgrim_path');
+const _forestTrial = ChapterId('forest_trial');
+const _ruinsDiscipline = ChapterId('ruins_discipline');
+const _mineDescent = ChapterId('mine_descent');
+const _forgeMomentum = ChapterId('forge_momentum');
+const _underwayPact = ChapterId('underway_pact');
+const _frostboundOath = ChapterId('frostbound_oath');
+const _icewalkerRoute = ChapterId('icewalker_route');
+const _mountainAscent = ChapterId('mountain_ascent');
+const _dragonroad = ChapterId('dragonroad');
+const _dragonrockSovereign = ChapterId('dragonrock_sovereign');
 
 Objective _amongObjective(
   String id,
-  List<String> nodeIds,
+  List<ProgressionEntryId> nodeIds,
   int target,
 ) {
   return Objective(
@@ -75,352 +75,352 @@ List<Objective> chapterSideQuestObjectives(
   EngineCatalogContext context,
 ) {
   return [
-    // ── Pilgrim Path ───────────────────────────────────────────
+    // â”€â”€ Pilgrim Path â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     _amongObjective(
       'side_pilgrim_morning_walk_obj',
-      const ['daily_steps_today', 'daily_activity_today'],
+      const [ProgressionEntryId('daily_steps_today'), ProgressionEntryId('daily_activity_today')],
       2,
     ),
     _amongObjective(
       'side_pilgrim_quiet_rest_obj',
-      const ['daily_sleep_today', 'daily_protein_today'],
+      const [ProgressionEntryId('daily_sleep_today'), ProgressionEntryId('daily_protein_today')],
       2,
     ),
 
-    // ── Forest Trial (lv 10) — 1 standalone + 2-step chain ─────
+    // â”€â”€ Forest Trial (lv 10) â€” 1 standalone + 2-step chain â”€â”€â”€â”€â”€
     _amongObjective(
       'side_forest_briskwalk_obj',
-      const ['daily_steps_today', 'daily_activity_today'],
+      const [ProgressionEntryId('daily_steps_today'), ProgressionEntryId('daily_activity_today')],
       2,
     ),
     _amongObjective(
       'side_forest_camp_obj',
       const [
-        'daily_sleep_today',
-        'daily_protein_today',
-        'daily_calories_today',
+        ProgressionEntryId('daily_sleep_today'),
+        ProgressionEntryId('daily_protein_today'),
+        ProgressionEntryId('daily_calories_today'),
       ],
       3,
     ),
     _amongObjective(
       'side_forest_clearing_obj',
       const [
-        'daily_steps_today',
-        'daily_activity_today',
-        'daily_sleep_today',
-        'daily_protein_today',
+        ProgressionEntryId('daily_steps_today'),
+        ProgressionEntryId('daily_activity_today'),
+        ProgressionEntryId('daily_sleep_today'),
+        ProgressionEntryId('daily_protein_today'),
       ],
       4,
     ),
 
-    // ── Ruins of Discipline ────────────────────────────────────
+    // â”€â”€ Ruins of Discipline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     _amongObjective(
       'side_ruins_steady_dawn_obj',
       const [
-        'daily_steps_today',
-        'daily_sleep_today',
-        'daily_protein_today',
+        ProgressionEntryId('daily_steps_today'),
+        ProgressionEntryId('daily_sleep_today'),
+        ProgressionEntryId('daily_protein_today'),
       ],
       3,
     ),
     _amongObjective(
       'side_ruins_iron_intake_obj',
       const [
-        'daily_calories_today',
-        'daily_protein_today',
-        'daily_carbs_today',
-        'daily_fat_today',
-        'daily_fiber_today',
+        ProgressionEntryId('daily_calories_today'),
+        ProgressionEntryId('daily_protein_today'),
+        ProgressionEntryId('daily_carbs_today'),
+        ProgressionEntryId('daily_fat_today'),
+        ProgressionEntryId('daily_fiber_today'),
       ],
       3,
     ),
 
-    // ── Mine Descent ───────────────────────────────────────────
+    // â”€â”€ Mine Descent â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     _amongObjective(
       'side_mine_torchbearer_obj',
-      const ['daily_steps_today', 'daily_activity_today'],
+      const [ProgressionEntryId('daily_steps_today'), ProgressionEntryId('daily_activity_today')],
       2,
     ),
     _amongObjective(
       'side_mine_long_haul_obj',
       const [
-        'daily_steps_today',
-        'daily_activity_today',
-        'daily_sleep_today',
+        ProgressionEntryId('daily_steps_today'),
+        ProgressionEntryId('daily_activity_today'),
+        ProgressionEntryId('daily_sleep_today'),
       ],
       3,
     ),
 
-    // ── Mine Descent combo chain ───────────────────────────────
+    // â”€â”€ Mine Descent combo chain â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     _amongObjective(
       'side_mine_deep_shaft_obj',
       const [
-        'daily_steps_today',
-        'daily_activity_today',
-        'daily_sleep_today',
+        ProgressionEntryId('daily_steps_today'),
+        ProgressionEntryId('daily_activity_today'),
+        ProgressionEntryId('daily_sleep_today'),
       ],
       3,
     ),
     _amongObjective(
       'side_mine_forge_finale_obj',
       const [
-        'daily_steps_today',
-        'daily_activity_today',
-        'daily_sleep_today',
-        'daily_calories_today',
-        'daily_protein_today',
+        ProgressionEntryId('daily_steps_today'),
+        ProgressionEntryId('daily_activity_today'),
+        ProgressionEntryId('daily_sleep_today'),
+        ProgressionEntryId('daily_calories_today'),
+        ProgressionEntryId('daily_protein_today'),
       ],
       5,
     ),
 
-    // ── Forge Momentum ─────────────────────────────────────────
+    // â”€â”€ Forge Momentum â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     _amongObjective(
       'side_forge_morning_anvil_obj',
-      const ['daily_steps_today', 'daily_activity_today'],
+      const [ProgressionEntryId('daily_steps_today'), ProgressionEntryId('daily_activity_today')],
       2,
     ),
     _amongObjective(
       'side_forge_full_furnace_obj',
       const [
-        'daily_calories_today',
-        'daily_protein_today',
-        'daily_carbs_today',
-        'daily_fat_today',
+        ProgressionEntryId('daily_calories_today'),
+        ProgressionEntryId('daily_protein_today'),
+        ProgressionEntryId('daily_carbs_today'),
+        ProgressionEntryId('daily_fat_today'),
       ],
       4,
     ),
 
-    // ── Underway Pact ──────────────────────────────────────────
+    // â”€â”€ Underway Pact â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     _amongObjective(
       'side_underway_warm_camp_obj',
       const [
-        'daily_sleep_today',
-        'daily_protein_today',
-        'daily_calories_today',
+        ProgressionEntryId('daily_sleep_today'),
+        ProgressionEntryId('daily_protein_today'),
+        ProgressionEntryId('daily_calories_today'),
       ],
       3,
     ),
     _amongObjective(
       'side_underway_long_watch_obj',
       const [
-        'daily_steps_today',
-        'daily_activity_today',
-        'daily_sleep_today',
+        ProgressionEntryId('daily_steps_today'),
+        ProgressionEntryId('daily_activity_today'),
+        ProgressionEntryId('daily_sleep_today'),
       ],
       3,
     ),
 
-    // ── Underway Pact combo chain ──────────────────────────────
+    // â”€â”€ Underway Pact combo chain â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     _amongObjective(
       'side_pact_march_obj',
       const [
-        'daily_steps_today',
-        'daily_activity_today',
-        'daily_sleep_today',
-        'daily_calories_today',
+        ProgressionEntryId('daily_steps_today'),
+        ProgressionEntryId('daily_activity_today'),
+        ProgressionEntryId('daily_sleep_today'),
+        ProgressionEntryId('daily_calories_today'),
       ],
       4,
     ),
     _amongObjective(
       'side_pact_finale_obj',
       const [
-        'daily_steps_today',
-        'daily_activity_today',
-        'daily_sleep_today',
-        'daily_protein_today',
-        'daily_calories_today',
-        'daily_carbs_today',
-        'daily_fat_today',
+        ProgressionEntryId('daily_steps_today'),
+        ProgressionEntryId('daily_activity_today'),
+        ProgressionEntryId('daily_sleep_today'),
+        ProgressionEntryId('daily_protein_today'),
+        ProgressionEntryId('daily_calories_today'),
+        ProgressionEntryId('daily_carbs_today'),
+        ProgressionEntryId('daily_fat_today'),
       ],
       6,
     ),
 
-    // ── Frostbound Oath ────────────────────────────────────────
+    // â”€â”€ Frostbound Oath â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     _amongObjective(
       'side_frostbound_first_light_obj',
-      const ['daily_steps_today', 'daily_activity_today'],
+      const [ProgressionEntryId('daily_steps_today'), ProgressionEntryId('daily_activity_today')],
       2,
     ),
     _amongObjective(
       'side_frostbound_long_oath_obj',
       const [
-        'daily_steps_today',
-        'daily_sleep_today',
-        'daily_protein_today',
-        'daily_calories_today',
+        ProgressionEntryId('daily_steps_today'),
+        ProgressionEntryId('daily_sleep_today'),
+        ProgressionEntryId('daily_protein_today'),
+        ProgressionEntryId('daily_calories_today'),
       ],
       4,
     ),
 
-    // ── Icewalker Route (1 standalone + 2-step chain) ──────────
+    // â”€â”€ Icewalker Route (1 standalone + 2-step chain) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     _amongObjective(
       'side_icewalker_dawn_march_obj',
       const [
-        'daily_steps_today',
-        'daily_activity_today',
-        'daily_calories_today',
+        ProgressionEntryId('daily_steps_today'),
+        ProgressionEntryId('daily_activity_today'),
+        ProgressionEntryId('daily_calories_today'),
       ],
       3,
     ),
     _amongObjective(
       'side_icewalker_provisioner_obj',
       const [
-        'daily_calories_today',
-        'daily_protein_today',
-        'daily_carbs_today',
-        'daily_fat_today',
-        'daily_fiber_today',
+        ProgressionEntryId('daily_calories_today'),
+        ProgressionEntryId('daily_protein_today'),
+        ProgressionEntryId('daily_carbs_today'),
+        ProgressionEntryId('daily_fat_today'),
+        ProgressionEntryId('daily_fiber_today'),
       ],
       5,
     ),
     _amongObjective(
       'side_icewalker_finale_obj',
       const [
-        'daily_steps_today',
-        'daily_activity_today',
-        'daily_sleep_today',
-        'daily_calories_today',
-        'daily_protein_today',
-        'daily_carbs_today',
+        ProgressionEntryId('daily_steps_today'),
+        ProgressionEntryId('daily_activity_today'),
+        ProgressionEntryId('daily_sleep_today'),
+        ProgressionEntryId('daily_calories_today'),
+        ProgressionEntryId('daily_protein_today'),
+        ProgressionEntryId('daily_carbs_today'),
       ],
       6,
     ),
 
-    // ── Mountain Ascent (3 standalone, no chain — variety) ─────
+    // â”€â”€ Mountain Ascent (3 standalone, no chain â€” variety) â”€â”€â”€â”€â”€
     _amongObjective(
       'side_mountain_steep_morning_obj',
       const [
-        'daily_steps_today',
-        'daily_activity_today',
-        'daily_sleep_today',
+        ProgressionEntryId('daily_steps_today'),
+        ProgressionEntryId('daily_activity_today'),
+        ProgressionEntryId('daily_sleep_today'),
       ],
       3,
     ),
     _amongObjective(
       'side_mountain_full_ridge_obj',
       const [
-        'daily_steps_today',
-        'daily_activity_today',
-        'daily_sleep_today',
-        'daily_protein_today',
-        'daily_calories_today',
+        ProgressionEntryId('daily_steps_today'),
+        ProgressionEntryId('daily_activity_today'),
+        ProgressionEntryId('daily_sleep_today'),
+        ProgressionEntryId('daily_protein_today'),
+        ProgressionEntryId('daily_calories_today'),
       ],
       5,
     ),
 
-    // ── Dragonroad (1 standalone + 2-step chain) ───────────────
+    // â”€â”€ Dragonroad (1 standalone + 2-step chain) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     _amongObjective(
       'side_dragonroad_warden_dawn_obj',
       const [
-        'daily_steps_today',
-        'daily_activity_today',
-        'daily_calories_today',
-        'daily_protein_today',
+        ProgressionEntryId('daily_steps_today'),
+        ProgressionEntryId('daily_activity_today'),
+        ProgressionEntryId('daily_calories_today'),
+        ProgressionEntryId('daily_protein_today'),
       ],
       4,
     ),
     _amongObjective(
       'side_dragonroad_iron_appetite_obj',
       const [
-        'daily_calories_today',
-        'daily_protein_today',
-        'daily_carbs_today',
-        'daily_fat_today',
-        'daily_fiber_today',
+        ProgressionEntryId('daily_calories_today'),
+        ProgressionEntryId('daily_protein_today'),
+        ProgressionEntryId('daily_carbs_today'),
+        ProgressionEntryId('daily_fat_today'),
+        ProgressionEntryId('daily_fiber_today'),
       ],
       5,
     ),
     _amongObjective(
       'side_dragonroad_finale_obj',
       const [
-        'daily_steps_today',
-        'daily_activity_today',
-        'daily_sleep_today',
-        'daily_calories_today',
-        'daily_protein_today',
-        'daily_carbs_today',
-        'daily_fat_today',
+        ProgressionEntryId('daily_steps_today'),
+        ProgressionEntryId('daily_activity_today'),
+        ProgressionEntryId('daily_sleep_today'),
+        ProgressionEntryId('daily_calories_today'),
+        ProgressionEntryId('daily_protein_today'),
+        ProgressionEntryId('daily_carbs_today'),
+        ProgressionEntryId('daily_fat_today'),
       ],
       7,
     ),
 
-    // ── Dragonrock Sovereign (1 standalone + 4-step apex chain) ─
+    // â”€â”€ Dragonrock Sovereign (1 standalone + 4-step apex chain) â”€
     _amongObjective(
       'side_dragonrock_sovereign_dawn_obj',
       const [
-        'daily_steps_today',
-        'daily_calories_today',
-        'daily_protein_today',
-        'daily_carbs_today',
-        'daily_fat_today',
+        ProgressionEntryId('daily_steps_today'),
+        ProgressionEntryId('daily_calories_today'),
+        ProgressionEntryId('daily_protein_today'),
+        ProgressionEntryId('daily_carbs_today'),
+        ProgressionEntryId('daily_fat_today'),
       ],
       5,
     ),
     _amongObjective(
       'side_dragonrock_sovereign_vigil_obj',
       const [
-        'daily_steps_today',
-        'daily_activity_today',
-        'daily_sleep_today',
-        'daily_calories_today',
-        'daily_protein_today',
-        'daily_carbs_today',
+        ProgressionEntryId('daily_steps_today'),
+        ProgressionEntryId('daily_activity_today'),
+        ProgressionEntryId('daily_sleep_today'),
+        ProgressionEntryId('daily_calories_today'),
+        ProgressionEntryId('daily_protein_today'),
+        ProgressionEntryId('daily_carbs_today'),
       ],
       6,
     ),
     _amongObjective(
       'side_dragonrock_sovereign_throne_obj',
       const [
-        'daily_steps_today',
-        'daily_activity_today',
-        'daily_sleep_today',
-        'daily_calories_today',
-        'daily_protein_today',
-        'daily_carbs_today',
-        'daily_fat_today',
+        ProgressionEntryId('daily_steps_today'),
+        ProgressionEntryId('daily_activity_today'),
+        ProgressionEntryId('daily_sleep_today'),
+        ProgressionEntryId('daily_calories_today'),
+        ProgressionEntryId('daily_protein_today'),
+        ProgressionEntryId('daily_carbs_today'),
+        ProgressionEntryId('daily_fat_today'),
       ],
       7,
     ),
     _amongObjective(
       'side_dragonrock_sovereign_crown_obj',
       const [
-        'daily_steps_today',
-        'daily_activity_today',
-        'daily_sleep_today',
-        'daily_calories_today',
-        'daily_protein_today',
-        'daily_carbs_today',
-        'daily_fat_today',
-        'daily_fiber_today',
+        ProgressionEntryId('daily_steps_today'),
+        ProgressionEntryId('daily_activity_today'),
+        ProgressionEntryId('daily_sleep_today'),
+        ProgressionEntryId('daily_calories_today'),
+        ProgressionEntryId('daily_protein_today'),
+        ProgressionEntryId('daily_carbs_today'),
+        ProgressionEntryId('daily_fat_today'),
+        ProgressionEntryId('daily_fiber_today'),
       ],
       7,
     ),
-    // Apex finale — 8/8 daily goals = a literal perfect day.
+    // Apex finale â€” 8/8 daily goals = a literal perfect day.
     _amongObjective(
       'side_dragonrock_sovereign_finale_obj',
       const [
-        'daily_steps_today',
-        'daily_activity_today',
-        'daily_sleep_today',
-        'daily_calories_today',
-        'daily_protein_today',
-        'daily_carbs_today',
-        'daily_fat_today',
-        'daily_fiber_today',
+        ProgressionEntryId('daily_steps_today'),
+        ProgressionEntryId('daily_activity_today'),
+        ProgressionEntryId('daily_sleep_today'),
+        ProgressionEntryId('daily_calories_today'),
+        ProgressionEntryId('daily_protein_today'),
+        ProgressionEntryId('daily_carbs_today'),
+        ProgressionEntryId('daily_fat_today'),
+        ProgressionEntryId('daily_fiber_today'),
       ],
       8,
     ),
   ];
 }
 
-/// **Standalone side quest** — ungated by other side quests, just
+/// **Standalone side quest** â€” ungated by other side quests, just
 /// gated by the chapter being active + an early chapter chain step
 /// being done. The default everywhere except chain steps.
 Quest _standalone({
   required String id,
   required String objectiveId,
-  required String chapterId,
-  required String chapterEntryGateNodeId,
+  required ChapterId chapterId,
+  required ProgressionEntryId chapterEntryGateNodeId,
   required LocalizedText titleKey,
   required LocalizedText descriptionKey,
   required int baseXp,
@@ -430,9 +430,9 @@ Quest _standalone({
 }) {
   return ChapterSideQuest(
     id: ProgressionEntryId(id),
-    objectiveId: objectiveId,
+    objectiveId: ObjectiveId(objectiveId),
     claimPolicy: ClaimPolicy.manual,
-    // ChapterActive is the only "soft" gate — it filters by the
+    // ChapterActive is the only "soft" gate â€” it filters by the
     // active chapter window. The "must be completed" + "must be at
     // least a day old" gates derive from the prereq + the subtype's
     // CooldownDays(1) policy.
@@ -448,7 +448,7 @@ Quest _standalone({
   );
 }
 
-/// **Chain step** — sequential side quest. First step gates on the
+/// **Chain step** â€” sequential side quest. First step gates on the
 /// chapter entry node; subsequent steps gate on the prior step.
 /// The `CooldownDays(1)` policy on [ChapterSideQuest] adds the
 /// "wait until tomorrow" rule, so the catalog only declares the
@@ -456,13 +456,13 @@ Quest _standalone({
 Quest _chainStep({
   required String id,
   required String objectiveId,
-  required String chapterId,
-  required String chainId,
+  required ChapterId chapterId,
+  required ChainId chainId,
   required int chainOrder,
   required String chainStepLabel,
-  required String chapterEntryGateNodeId,
-  required String? prerequisiteNodeId,
-  required String? nextNodeId,
+  required ProgressionEntryId chapterEntryGateNodeId,
+  required ProgressionEntryId? prerequisiteNodeId,
+  required ProgressionEntryId? nextNodeId,
   required LocalizedText titleKey,
   required LocalizedText descriptionKey,
   required int baseXp,
@@ -477,7 +477,7 @@ Quest _chainStep({
   final prereqId = prerequisiteNodeId ?? chapterEntryGateNodeId;
   return ChapterSideQuest(
     id: ProgressionEntryId(id),
-    objectiveId: objectiveId,
+    objectiveId: ObjectiveId(objectiveId),
     claimPolicy: ClaimPolicy.manual,
     unlockConditions: [ChapterActive(chapterId)],
     prerequisiteNodeIds: [prereqId],
@@ -497,12 +497,12 @@ Quest _chainStep({
 
 List<ProgressionEntry> chapterSideQuests() {
   return [
-    // ── Pilgrim Path (2 standalone) ────────────────────────────
+    // â”€â”€ Pilgrim Path (2 standalone) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     _standalone(
       id: const ProgressionEntryId('side_pilgrim_morning_walk'),
-      objectiveId: 'side_pilgrim_morning_walk_obj',
+      objectiveId: ObjectiveId('side_pilgrim_morning_walk_obj'),
       chapterId: _pilgrimPath,
-      chapterEntryGateNodeId: 'pilgrim_path_first_steps',
+      chapterEntryGateNodeId: const ProgressionEntryId('pilgrim_path_first_steps'),
       titleKey: (l) => l.progSidePilgrimMorningWalkTitle,
       descriptionKey: (l) => l.progSidePilgrimMorningWalkDesc,
       baseXp: 80,
@@ -511,9 +511,9 @@ List<ProgressionEntry> chapterSideQuests() {
     ),
     _standalone(
       id: const ProgressionEntryId('side_pilgrim_quiet_rest'),
-      objectiveId: 'side_pilgrim_quiet_rest_obj',
+      objectiveId: ObjectiveId('side_pilgrim_quiet_rest_obj'),
       chapterId: _pilgrimPath,
-      chapterEntryGateNodeId: 'pilgrim_path_first_reward',
+      chapterEntryGateNodeId: const ProgressionEntryId('pilgrim_path_first_reward'),
       titleKey: (l) => l.progSidePilgrimQuietRestTitle,
       descriptionKey: (l) => l.progSidePilgrimQuietRestDesc,
       baseXp: 110,
@@ -521,12 +521,12 @@ List<ProgressionEntry> chapterSideQuests() {
       assetKey: questAssetPilgrimPathIcon,
     ),
 
-    // ── Forest Trial (1 standalone + 2-step chain) ─────────────
+    // â”€â”€ Forest Trial (1 standalone + 2-step chain) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     _standalone(
       id: const ProgressionEntryId('side_forest_briskwalk'),
-      objectiveId: 'side_forest_briskwalk_obj',
+      objectiveId: ObjectiveId('side_forest_briskwalk_obj'),
       chapterId: _forestTrial,
-      chapterEntryGateNodeId: 'forest_trial_daily_wins_5',
+      chapterEntryGateNodeId: const ProgressionEntryId('forest_trial_daily_wins_5'),
       titleKey: (l) => l.progSideForestBriskwalkTitle,
       descriptionKey: (l) => l.progSideForestBriskwalkDesc,
       baseXp: 100,
@@ -535,14 +535,14 @@ List<ProgressionEntry> chapterSideQuests() {
     ),
     _chainStep(
       id: const ProgressionEntryId('side_forest_camp'),
-      objectiveId: 'side_forest_camp_obj',
+      objectiveId: ObjectiveId('side_forest_camp_obj'),
       chapterId: _forestTrial,
-      chainId: 'forest_trial_side',
+      chainId: ChainId('forest_trial_side'),
       chainOrder: 0,
       chainStepLabel: '1',
-      chapterEntryGateNodeId: 'forest_trial_steps_5',
+      chapterEntryGateNodeId: const ProgressionEntryId('forest_trial_steps_5'),
       prerequisiteNodeId: null,
-      nextNodeId: 'side_forest_clearing',
+      nextNodeId: const ProgressionEntryId('side_forest_clearing'),
       titleKey: (l) => l.progSideForestCampTitle,
       descriptionKey: (l) => l.progSideForestCampDesc,
       baseXp: 130,
@@ -551,13 +551,13 @@ List<ProgressionEntry> chapterSideQuests() {
     ),
     _chainStep(
       id: const ProgressionEntryId('side_forest_clearing'),
-      objectiveId: 'side_forest_clearing_obj',
+      objectiveId: ObjectiveId('side_forest_clearing_obj'),
       chapterId: _forestTrial,
-      chainId: 'forest_trial_side',
+      chainId: ChainId('forest_trial_side'),
       chainOrder: 1,
-      chainStepLabel: '🛡',
-      chapterEntryGateNodeId: 'forest_trial_steps_5',
-      prerequisiteNodeId: 'side_forest_camp',
+      chainStepLabel: 'ðŸ›¡',
+      chapterEntryGateNodeId: const ProgressionEntryId('forest_trial_steps_5'),
+      prerequisiteNodeId: const ProgressionEntryId('side_forest_camp'),
       nextNodeId: null,
       titleKey: (l) => l.progSideForestClearingTitle,
       descriptionKey: (l) => l.progSideForestClearingDesc,
@@ -569,12 +569,12 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
 
-    // ── Ruins of Discipline (2 standalone) ─────────────────────
+    // â”€â”€ Ruins of Discipline (2 standalone) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     _standalone(
       id: const ProgressionEntryId('side_ruins_steady_dawn'),
-      objectiveId: 'side_ruins_steady_dawn_obj',
+      objectiveId: ObjectiveId('side_ruins_steady_dawn_obj'),
       chapterId: _ruinsDiscipline,
-      chapterEntryGateNodeId: 'ruins_discipline_nutrition_7',
+      chapterEntryGateNodeId: const ProgressionEntryId('ruins_discipline_nutrition_7'),
       titleKey: (l) => l.progSideRuinsSteadyDawnTitle,
       descriptionKey: (l) => l.progSideRuinsSteadyDawnDesc,
       baseXp: 140,
@@ -583,9 +583,9 @@ List<ProgressionEntry> chapterSideQuests() {
     ),
     _standalone(
       id: const ProgressionEntryId('side_ruins_iron_intake'),
-      objectiveId: 'side_ruins_iron_intake_obj',
+      objectiveId: ObjectiveId('side_ruins_iron_intake_obj'),
       chapterId: _ruinsDiscipline,
-      chapterEntryGateNodeId: 'ruins_discipline_weekly_2',
+      chapterEntryGateNodeId: const ProgressionEntryId('ruins_discipline_weekly_2'),
       titleKey: (l) => l.progSideRuinsIronIntakeTitle,
       descriptionKey: (l) => l.progSideRuinsIronIntakeDesc,
       baseXp: 200,
@@ -596,12 +596,12 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
 
-    // ── Mine Descent (2 standalone) ────────────────────────────
+    // â”€â”€ Mine Descent (2 standalone) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     _standalone(
       id: const ProgressionEntryId('side_mine_torchbearer'),
-      objectiveId: 'side_mine_torchbearer_obj',
+      objectiveId: ObjectiveId('side_mine_torchbearer_obj'),
       chapterId: _mineDescent,
-      chapterEntryGateNodeId: 'mine_descent_steps_250k',
+      chapterEntryGateNodeId: const ProgressionEntryId('mine_descent_steps_250k'),
       titleKey: (l) => l.progSideMineTorchbearerTitle,
       descriptionKey: (l) => l.progSideMineTorchbearerDesc,
       baseXp: 220,
@@ -610,9 +610,9 @@ List<ProgressionEntry> chapterSideQuests() {
     ),
     _standalone(
       id: const ProgressionEntryId('side_mine_long_haul'),
-      objectiveId: 'side_mine_long_haul_obj',
+      objectiveId: ObjectiveId('side_mine_long_haul_obj'),
       chapterId: _mineDescent,
-      chapterEntryGateNodeId: 'mine_descent_activity_rewards_12',
+      chapterEntryGateNodeId: const ProgressionEntryId('mine_descent_activity_rewards_12'),
       titleKey: (l) => l.progSideMineLongHaulTitle,
       descriptionKey: (l) => l.progSideMineLongHaulDesc,
       baseXp: 300,
@@ -623,17 +623,17 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
 
-    // ── Mine Descent combo chain (2-step, gates on chain step 3) ─
+    // â”€â”€ Mine Descent combo chain (2-step, gates on chain step 3) â”€
     _chainStep(
       id: const ProgressionEntryId('side_mine_deep_shaft'),
-      objectiveId: 'side_mine_deep_shaft_obj',
+      objectiveId: ObjectiveId('side_mine_deep_shaft_obj'),
       chapterId: _mineDescent,
-      chainId: 'mine_descent_side',
+      chainId: ChainId('mine_descent_side'),
       chainOrder: 0,
       chainStepLabel: '1',
-      chapterEntryGateNodeId: 'mine_descent_protein_10',
+      chapterEntryGateNodeId: const ProgressionEntryId('mine_descent_protein_10'),
       prerequisiteNodeId: null,
-      nextNodeId: 'side_mine_forge_finale',
+      nextNodeId: const ProgressionEntryId('side_mine_forge_finale'),
       titleKey: (l) => l.progSideMineDeepShaftTitle,
       descriptionKey: (l) => l.progSideMineDeepShaftDesc,
       baseXp: 280,
@@ -645,13 +645,13 @@ List<ProgressionEntry> chapterSideQuests() {
     ),
     _chainStep(
       id: const ProgressionEntryId('side_mine_forge_finale'),
-      objectiveId: 'side_mine_forge_finale_obj',
+      objectiveId: ObjectiveId('side_mine_forge_finale_obj'),
       chapterId: _mineDescent,
-      chainId: 'mine_descent_side',
+      chainId: ChainId('mine_descent_side'),
       chainOrder: 1,
-      chainStepLabel: '🛡',
-      chapterEntryGateNodeId: 'mine_descent_protein_10',
-      prerequisiteNodeId: 'side_mine_deep_shaft',
+      chainStepLabel: 'ðŸ›¡',
+      chapterEntryGateNodeId: const ProgressionEntryId('mine_descent_protein_10'),
+      prerequisiteNodeId: const ProgressionEntryId('side_mine_deep_shaft'),
       nextNodeId: null,
       titleKey: (l) => l.progSideMineForgeFinaleTitle,
       descriptionKey: (l) => l.progSideMineForgeFinaleDesc,
@@ -663,12 +663,12 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
 
-    // ── Forge Momentum (2 standalone) ──────────────────────────
+    // â”€â”€ Forge Momentum (2 standalone) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     _standalone(
       id: const ProgressionEntryId('side_forge_morning_anvil'),
-      objectiveId: 'side_forge_morning_anvil_obj',
+      objectiveId: ObjectiveId('side_forge_morning_anvil_obj'),
       chapterId: _forgeMomentum,
-      chapterEntryGateNodeId: 'forge_momentum_weekly_4',
+      chapterEntryGateNodeId: const ProgressionEntryId('forge_momentum_weekly_4'),
       titleKey: (l) => l.progSideForgeMorningAnvilTitle,
       descriptionKey: (l) => l.progSideForgeMorningAnvilDesc,
       baseXp: 320,
@@ -680,9 +680,9 @@ List<ProgressionEntry> chapterSideQuests() {
     ),
     _standalone(
       id: const ProgressionEntryId('side_forge_full_furnace'),
-      objectiveId: 'side_forge_full_furnace_obj',
+      objectiveId: ObjectiveId('side_forge_full_furnace_obj'),
       chapterId: _forgeMomentum,
-      chapterEntryGateNodeId: 'forge_momentum_steps_20',
+      chapterEntryGateNodeId: const ProgressionEntryId('forge_momentum_steps_20'),
       titleKey: (l) => l.progSideForgeFullFurnaceTitle,
       descriptionKey: (l) => l.progSideForgeFullFurnaceDesc,
       baseXp: 420,
@@ -693,12 +693,12 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
 
-    // ── Underway Pact (2 standalone) ───────────────────────────
+    // â”€â”€ Underway Pact (2 standalone) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     _standalone(
       id: const ProgressionEntryId('side_underway_warm_camp'),
-      objectiveId: 'side_underway_warm_camp_obj',
+      objectiveId: ObjectiveId('side_underway_warm_camp_obj'),
       chapterId: _underwayPact,
-      chapterEntryGateNodeId: 'underway_pact_four_pillars_5',
+      chapterEntryGateNodeId: const ProgressionEntryId('underway_pact_four_pillars_5'),
       titleKey: (l) => l.progSideUnderwayWarmCampTitle,
       descriptionKey: (l) => l.progSideUnderwayWarmCampDesc,
       baseXp: 460,
@@ -710,9 +710,9 @@ List<ProgressionEntry> chapterSideQuests() {
     ),
     _standalone(
       id: const ProgressionEntryId('side_underway_long_watch'),
-      objectiveId: 'side_underway_long_watch_obj',
+      objectiveId: ObjectiveId('side_underway_long_watch_obj'),
       chapterId: _underwayPact,
-      chapterEntryGateNodeId: 'underway_pact_sleep_14',
+      chapterEntryGateNodeId: const ProgressionEntryId('underway_pact_sleep_14'),
       titleKey: (l) => l.progSideUnderwayLongWatchTitle,
       descriptionKey: (l) => l.progSideUnderwayLongWatchDesc,
       baseXp: 560,
@@ -723,17 +723,17 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
 
-    // ── Underway Pact combo chain (2-step, gates on chain step 3) ─
+    // â”€â”€ Underway Pact combo chain (2-step, gates on chain step 3) â”€
     _chainStep(
       id: const ProgressionEntryId('side_pact_march'),
-      objectiveId: 'side_pact_march_obj',
+      objectiveId: ObjectiveId('side_pact_march_obj'),
       chapterId: _underwayPact,
-      chainId: 'underway_pact_side',
+      chainId: ChainId('underway_pact_side'),
       chainOrder: 0,
       chainStepLabel: '1',
-      chapterEntryGateNodeId: 'underway_pact_recovery_10',
+      chapterEntryGateNodeId: const ProgressionEntryId('underway_pact_recovery_10'),
       prerequisiteNodeId: null,
-      nextNodeId: 'side_pact_finale',
+      nextNodeId: const ProgressionEntryId('side_pact_finale'),
       titleKey: (l) => l.progSidePactMarchTitle,
       descriptionKey: (l) => l.progSidePactMarchDesc,
       baseXp: 600,
@@ -745,13 +745,13 @@ List<ProgressionEntry> chapterSideQuests() {
     ),
     _chainStep(
       id: const ProgressionEntryId('side_pact_finale'),
-      objectiveId: 'side_pact_finale_obj',
+      objectiveId: ObjectiveId('side_pact_finale_obj'),
       chapterId: _underwayPact,
-      chainId: 'underway_pact_side',
+      chainId: ChainId('underway_pact_side'),
       chainOrder: 1,
-      chainStepLabel: '🛡',
-      chapterEntryGateNodeId: 'underway_pact_recovery_10',
-      prerequisiteNodeId: 'side_pact_march',
+      chainStepLabel: 'ðŸ›¡',
+      chapterEntryGateNodeId: const ProgressionEntryId('underway_pact_recovery_10'),
+      prerequisiteNodeId: const ProgressionEntryId('side_pact_march'),
       nextNodeId: null,
       titleKey: (l) => l.progSidePactFinaleTitle,
       descriptionKey: (l) => l.progSidePactFinaleDesc,
@@ -763,12 +763,12 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
 
-    // ── Frostbound Oath (2 standalone) ─────────────────────────
+    // â”€â”€ Frostbound Oath (2 standalone) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     _standalone(
       id: const ProgressionEntryId('side_frostbound_first_light'),
-      objectiveId: 'side_frostbound_first_light_obj',
+      objectiveId: ObjectiveId('side_frostbound_first_light_obj'),
       chapterId: _frostboundOath,
-      chapterEntryGateNodeId: 'frostbound_oath_steps_21',
+      chapterEntryGateNodeId: const ProgressionEntryId('frostbound_oath_steps_21'),
       titleKey: (l) => l.progSideFrostboundFirstLightTitle,
       descriptionKey: (l) => l.progSideFrostboundFirstLightDesc,
       baseXp: 600,
@@ -780,9 +780,9 @@ List<ProgressionEntry> chapterSideQuests() {
     ),
     _standalone(
       id: const ProgressionEntryId('side_frostbound_long_oath'),
-      objectiveId: 'side_frostbound_long_oath_obj',
+      objectiveId: ObjectiveId('side_frostbound_long_oath_obj'),
       chapterId: _frostboundOath,
-      chapterEntryGateNodeId: 'frostbound_oath_sleep_21',
+      chapterEntryGateNodeId: const ProgressionEntryId('frostbound_oath_sleep_21'),
       titleKey: (l) => l.progSideFrostboundLongOathTitle,
       descriptionKey: (l) => l.progSideFrostboundLongOathDesc,
       baseXp: 720,
@@ -793,12 +793,12 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
 
-    // ── Icewalker Route (1 standalone + 2-step chain) ──────────
+    // â”€â”€ Icewalker Route (1 standalone + 2-step chain) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     _standalone(
       id: const ProgressionEntryId('side_icewalker_dawn_march'),
-      objectiveId: 'side_icewalker_dawn_march_obj',
+      objectiveId: ObjectiveId('side_icewalker_dawn_march_obj'),
       chapterId: _icewalkerRoute,
-      chapterEntryGateNodeId: 'icewalker_route_steps_500k',
+      chapterEntryGateNodeId: const ProgressionEntryId('icewalker_route_steps_500k'),
       titleKey: (l) => l.progSideIcewalkerDawnMarchTitle,
       descriptionKey: (l) => l.progSideIcewalkerDawnMarchDesc,
       baseXp: 760,
@@ -810,14 +810,14 @@ List<ProgressionEntry> chapterSideQuests() {
     ),
     _chainStep(
       id: const ProgressionEntryId('side_icewalker_provisioner'),
-      objectiveId: 'side_icewalker_provisioner_obj',
+      objectiveId: ObjectiveId('side_icewalker_provisioner_obj'),
       chapterId: _icewalkerRoute,
-      chainId: 'icewalker_route_side',
+      chainId: ChainId('icewalker_route_side'),
       chainOrder: 0,
       chainStepLabel: '1',
-      chapterEntryGateNodeId: 'icewalker_route_rewards_150',
+      chapterEntryGateNodeId: const ProgressionEntryId('icewalker_route_rewards_150'),
       prerequisiteNodeId: null,
-      nextNodeId: 'side_icewalker_finale',
+      nextNodeId: const ProgressionEntryId('side_icewalker_finale'),
       titleKey: (l) => l.progSideIcewalkerProvisionerTitle,
       descriptionKey: (l) => l.progSideIcewalkerProvisionerDesc,
       baseXp: 700,
@@ -829,13 +829,13 @@ List<ProgressionEntry> chapterSideQuests() {
     ),
     _chainStep(
       id: const ProgressionEntryId('side_icewalker_finale'),
-      objectiveId: 'side_icewalker_finale_obj',
+      objectiveId: ObjectiveId('side_icewalker_finale_obj'),
       chapterId: _icewalkerRoute,
-      chainId: 'icewalker_route_side',
+      chainId: ChainId('icewalker_route_side'),
       chainOrder: 1,
-      chainStepLabel: '🛡',
-      chapterEntryGateNodeId: 'icewalker_route_rewards_150',
-      prerequisiteNodeId: 'side_icewalker_provisioner',
+      chainStepLabel: 'ðŸ›¡',
+      chapterEntryGateNodeId: const ProgressionEntryId('icewalker_route_rewards_150'),
+      prerequisiteNodeId: const ProgressionEntryId('side_icewalker_provisioner'),
       nextNodeId: null,
       titleKey: (l) => l.progSideIcewalkerFinaleTitle,
       descriptionKey: (l) => l.progSideIcewalkerFinaleDesc,
@@ -847,12 +847,12 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
 
-    // ── Mountain Ascent (2 standalone, deliberately no chain) ──
+    // â”€â”€ Mountain Ascent (2 standalone, deliberately no chain) â”€â”€
     _standalone(
       id: const ProgressionEntryId('side_mountain_steep_morning'),
-      objectiveId: 'side_mountain_steep_morning_obj',
+      objectiveId: ObjectiveId('side_mountain_steep_morning_obj'),
       chapterId: _mountainAscent,
-      chapterEntryGateNodeId: 'mountain_ascent_four_pillars_15',
+      chapterEntryGateNodeId: const ProgressionEntryId('mountain_ascent_four_pillars_15'),
       titleKey: (l) => l.progSideMountainSteepMorningTitle,
       descriptionKey: (l) => l.progSideMountainSteepMorningDesc,
       baseXp: 880,
@@ -864,9 +864,9 @@ List<ProgressionEntry> chapterSideQuests() {
     ),
     _standalone(
       id: const ProgressionEntryId('side_mountain_full_ridge'),
-      objectiveId: 'side_mountain_full_ridge_obj',
+      objectiveId: ObjectiveId('side_mountain_full_ridge_obj'),
       chapterId: _mountainAscent,
-      chapterEntryGateNodeId: 'mountain_ascent_steps_30',
+      chapterEntryGateNodeId: const ProgressionEntryId('mountain_ascent_steps_30'),
       titleKey: (l) => l.progSideMountainFullRidgeTitle,
       descriptionKey: (l) => l.progSideMountainFullRidgeDesc,
       baseXp: 1000,
@@ -877,12 +877,12 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
 
-    // ── Dragonroad (1 standalone + 2-step chain) ───────────────
+    // â”€â”€ Dragonroad (1 standalone + 2-step chain) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     _standalone(
       id: const ProgressionEntryId('side_dragonroad_warden_dawn'),
-      objectiveId: 'side_dragonroad_warden_dawn_obj',
+      objectiveId: ObjectiveId('side_dragonroad_warden_dawn_obj'),
       chapterId: _dragonroad,
-      chapterEntryGateNodeId: 'dragonroad_rewards_250',
+      chapterEntryGateNodeId: const ProgressionEntryId('dragonroad_rewards_250'),
       titleKey: (l) => l.progSideDragonroadWardenDawnTitle,
       descriptionKey: (l) => l.progSideDragonroadWardenDawnDesc,
       baseXp: 1100,
@@ -894,14 +894,14 @@ List<ProgressionEntry> chapterSideQuests() {
     ),
     _chainStep(
       id: const ProgressionEntryId('side_dragonroad_iron_appetite'),
-      objectiveId: 'side_dragonroad_iron_appetite_obj',
+      objectiveId: ObjectiveId('side_dragonroad_iron_appetite_obj'),
       chapterId: _dragonroad,
-      chainId: 'dragonroad_side',
+      chainId: ChainId('dragonroad_side'),
       chainOrder: 0,
       chainStepLabel: '1',
-      chapterEntryGateNodeId: 'dragonroad_four_pillars_25',
+      chapterEntryGateNodeId: const ProgressionEntryId('dragonroad_four_pillars_25'),
       prerequisiteNodeId: null,
-      nextNodeId: 'side_dragonroad_finale',
+      nextNodeId: const ProgressionEntryId('side_dragonroad_finale'),
       titleKey: (l) => l.progSideDragonroadIronAppetiteTitle,
       descriptionKey: (l) => l.progSideDragonroadIronAppetiteDesc,
       baseXp: 1000,
@@ -913,13 +913,13 @@ List<ProgressionEntry> chapterSideQuests() {
     ),
     _chainStep(
       id: const ProgressionEntryId('side_dragonroad_finale'),
-      objectiveId: 'side_dragonroad_finale_obj',
+      objectiveId: ObjectiveId('side_dragonroad_finale_obj'),
       chapterId: _dragonroad,
-      chainId: 'dragonroad_side',
+      chainId: ChainId('dragonroad_side'),
       chainOrder: 1,
-      chainStepLabel: '🛡',
-      chapterEntryGateNodeId: 'dragonroad_four_pillars_25',
-      prerequisiteNodeId: 'side_dragonroad_iron_appetite',
+      chainStepLabel: 'ðŸ›¡',
+      chapterEntryGateNodeId: const ProgressionEntryId('dragonroad_four_pillars_25'),
+      prerequisiteNodeId: const ProgressionEntryId('side_dragonroad_iron_appetite'),
       nextNodeId: null,
       titleKey: (l) => l.progSideDragonroadFinaleTitle,
       descriptionKey: (l) => l.progSideDragonroadFinaleDesc,
@@ -931,12 +931,12 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
 
-    // ── Dragonrock Sovereign (1 standalone + 4-step apex) ──────
+    // â”€â”€ Dragonrock Sovereign (1 standalone + 4-step apex) â”€â”€â”€â”€â”€â”€
     _standalone(
       id: const ProgressionEntryId('side_dragonrock_sovereign_dawn'),
-      objectiveId: 'side_dragonrock_sovereign_dawn_obj',
+      objectiveId: ObjectiveId('side_dragonrock_sovereign_dawn_obj'),
       chapterId: _dragonrockSovereign,
-      chapterEntryGateNodeId: 'dragonrock_sovereign_four_pillars_30',
+      chapterEntryGateNodeId: const ProgressionEntryId('dragonrock_sovereign_four_pillars_30'),
       titleKey: (l) => l.progSideDragonrockSovereignDawnTitle,
       descriptionKey: (l) => l.progSideDragonrockSovereignDawnDesc,
       baseXp: 1200,
@@ -948,14 +948,14 @@ List<ProgressionEntry> chapterSideQuests() {
     ),
     _chainStep(
       id: const ProgressionEntryId('side_dragonrock_sovereign_vigil'),
-      objectiveId: 'side_dragonrock_sovereign_vigil_obj',
+      objectiveId: ObjectiveId('side_dragonrock_sovereign_vigil_obj'),
       chapterId: _dragonrockSovereign,
-      chainId: 'dragonrock_sovereign_side',
+      chainId: ChainId('dragonrock_sovereign_side'),
       chainOrder: 0,
       chainStepLabel: '1',
-      chapterEntryGateNodeId: 'dragonrock_sovereign_weekly_16',
+      chapterEntryGateNodeId: const ProgressionEntryId('dragonrock_sovereign_weekly_16'),
       prerequisiteNodeId: null,
-      nextNodeId: 'side_dragonrock_sovereign_throne',
+      nextNodeId: const ProgressionEntryId('side_dragonrock_sovereign_throne'),
       titleKey: (l) => l.progSideDragonrockSovereignVigilTitle,
       descriptionKey: (l) => l.progSideDragonrockSovereignVigilDesc,
       baseXp: 1100,
@@ -967,14 +967,14 @@ List<ProgressionEntry> chapterSideQuests() {
     ),
     _chainStep(
       id: const ProgressionEntryId('side_dragonrock_sovereign_throne'),
-      objectiveId: 'side_dragonrock_sovereign_throne_obj',
+      objectiveId: ObjectiveId('side_dragonrock_sovereign_throne_obj'),
       chapterId: _dragonrockSovereign,
-      chainId: 'dragonrock_sovereign_side',
+      chainId: ChainId('dragonrock_sovereign_side'),
       chainOrder: 1,
       chainStepLabel: '2',
-      chapterEntryGateNodeId: 'dragonrock_sovereign_weekly_16',
-      prerequisiteNodeId: 'side_dragonrock_sovereign_vigil',
-      nextNodeId: 'side_dragonrock_sovereign_crown',
+      chapterEntryGateNodeId: const ProgressionEntryId('dragonrock_sovereign_weekly_16'),
+      prerequisiteNodeId: const ProgressionEntryId('side_dragonrock_sovereign_vigil'),
+      nextNodeId: const ProgressionEntryId('side_dragonrock_sovereign_crown'),
       titleKey: (l) => l.progSideDragonrockSovereignThroneTitle,
       descriptionKey: (l) => l.progSideDragonrockSovereignThroneDesc,
       baseXp: 1250,
@@ -986,14 +986,14 @@ List<ProgressionEntry> chapterSideQuests() {
     ),
     _chainStep(
       id: const ProgressionEntryId('side_dragonrock_sovereign_crown'),
-      objectiveId: 'side_dragonrock_sovereign_crown_obj',
+      objectiveId: ObjectiveId('side_dragonrock_sovereign_crown_obj'),
       chapterId: _dragonrockSovereign,
-      chainId: 'dragonrock_sovereign_side',
+      chainId: ChainId('dragonrock_sovereign_side'),
       chainOrder: 2,
       chainStepLabel: '3',
-      chapterEntryGateNodeId: 'dragonrock_sovereign_weekly_16',
-      prerequisiteNodeId: 'side_dragonrock_sovereign_throne',
-      nextNodeId: 'side_dragonrock_sovereign_finale',
+      chapterEntryGateNodeId: const ProgressionEntryId('dragonrock_sovereign_weekly_16'),
+      prerequisiteNodeId: const ProgressionEntryId('side_dragonrock_sovereign_throne'),
+      nextNodeId: const ProgressionEntryId('side_dragonrock_sovereign_finale'),
       titleKey: (l) => l.progSideDragonrockSovereignCrownTitle,
       descriptionKey: (l) => l.progSideDragonrockSovereignCrownDesc,
       baseXp: 1400,
@@ -1003,18 +1003,18 @@ List<ProgressionEntry> chapterSideQuests() {
         BonusXpReward(amount: 460, condition: SleepAtLeast(minutes: 420)),
       ],
     ),
-    // **Apex finale.** A literal perfect day — every one of the 8
-    // daily goals met — with two stacked bonuses (≥ 7 h sleep AND
+    // **Apex finale.** A literal perfect day â€” every one of the 8
+    // daily goals met â€” with two stacked bonuses (â‰¥ 7 h sleep AND
     // finished before 18:00). Highest base XP in the catalog.
     _chainStep(
       id: const ProgressionEntryId('side_dragonrock_sovereign_finale'),
-      objectiveId: 'side_dragonrock_sovereign_finale_obj',
+      objectiveId: ObjectiveId('side_dragonrock_sovereign_finale_obj'),
       chapterId: _dragonrockSovereign,
-      chainId: 'dragonrock_sovereign_side',
+      chainId: ChainId('dragonrock_sovereign_side'),
       chainOrder: 3,
-      chainStepLabel: '👑',
-      chapterEntryGateNodeId: 'dragonrock_sovereign_weekly_16',
-      prerequisiteNodeId: 'side_dragonrock_sovereign_crown',
+      chainStepLabel: 'ðŸ‘‘',
+      chapterEntryGateNodeId: const ProgressionEntryId('dragonrock_sovereign_weekly_16'),
+      prerequisiteNodeId: const ProgressionEntryId('side_dragonrock_sovereign_crown'),
       nextNodeId: null,
       titleKey: (l) => l.progSideDragonrockSovereignFinaleTitle,
       descriptionKey: (l) => l.progSideDragonrockSovereignFinaleDesc,

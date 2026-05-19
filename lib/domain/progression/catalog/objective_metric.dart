@@ -1,12 +1,9 @@
+import 'ids.dart';
 import 'quest_display_bucket.dart';
 
 /// What an objective measures. Sealed so the evaluator gets exhaustive
 /// switch checking and adding a new metric is one case + one resolver
 /// branch.
-///
-/// Phase 1 only declares the shape and a representative subset; the
-/// full metric library lands during the catalog port (Phase 3) as
-/// real objectives need each branch.
 sealed class ObjectiveMetric {
   const ObjectiveMetric();
 }
@@ -92,7 +89,7 @@ class StreakDaysMetric extends ObjectiveMetric {
 class NodeCompletionsMetric extends ObjectiveMetric {
   const NodeCompletionsMetric({required this.nodeId});
 
-  final String nodeId;
+  final ProgressionEntryId nodeId;
 }
 
 /// Combo-pool completions — Q1 decision: combo achievements reference
@@ -100,10 +97,10 @@ class NodeCompletionsMetric extends ObjectiveMetric {
 class ComboPoolCompletionsMetric extends ObjectiveMetric {
   const ComboPoolCompletionsMetric({required this.poolId});
 
-  final String poolId;
+  final ComboPoolId poolId;
 }
 
-/// Number of [QuestNode] completions across the catalog. When [bucket]
+/// Number of [Quest] completions across the catalog. When [bucket]
 /// is set, only quests with that [QuestDisplayBucket] are counted
 /// (e.g. `daily` for "complete 3 daily quests"). When null, every
 /// quest counts (the V1 `totalQuestsCompletedAtLeast` semantic).
@@ -130,19 +127,19 @@ class DistinctActiveDaysMetric extends ObjectiveMetric {
 class TodayCompletionsAmongMetric extends ObjectiveMetric {
   const TodayCompletionsAmongMetric({required this.nodeIds});
 
-  final List<String> nodeIds;
+  final List<ProgressionEntryId> nodeIds;
 }
 
 /// Total lifetime completion count summed across a list of node ids.
 /// Use when an objective counts across several quest variants that
-/// can't share a [comboPoolId] (each [QuestNode] declares at most one
+/// can't share a [comboPoolId] (each [Quest] declares at most one
 /// pool today, so achievements like "25 triple-or-higher combos"
 /// that span `daily_triple_win_today` + `daily_four_pillars_today`
 /// reach for this metric instead).
 class LifetimeCompletionsAmongMetric extends ObjectiveMetric {
   const LifetimeCompletionsAmongMetric({required this.nodeIds});
 
-  final List<String> nodeIds;
+  final List<ProgressionEntryId> nodeIds;
 }
 
 /// Number of distinct calendar days on which at least [atLeast] of the
@@ -150,19 +147,12 @@ class LifetimeCompletionsAmongMetric extends ObjectiveMetric {
 /// reads as "complete at least K daily goals on N different days"
 /// (`atLeast=K`, `targetValue=N`) or "complete both X and Y on the
 /// same day, N times" (`nodeIds=[X, Y], atLeast=2, targetValue=N`).
-///
-/// Always paired with [Objective.baselineFromNodeId] today —
-/// the provider's `objectiveActualOverrides` path computes the day
-/// count from the ledger, restricted to days after the baseline node
-/// first completed. Without per-event history a non-baselined
-/// lifetime count isn't meaningful: chapter steps that use this
-/// must declare their baseline.
 class DaysWithAtLeastKAmongMetric extends ObjectiveMetric {
   const DaysWithAtLeastKAmongMetric({
     required this.nodeIds,
     required this.atLeast,
   });
 
-  final List<String> nodeIds;
+  final List<ProgressionEntryId> nodeIds;
   final int atLeast;
 }

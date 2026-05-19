@@ -1,20 +1,20 @@
-import 'package:forgetrack/domain/progression/catalog/ids.dart';
+﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import '../../../../../shared/domain/rarity.dart';
-import '../../models/claim_policy.dart';
-import '../../models/content_tag.dart';
-import '../../models/objective_definition.dart';
-import '../../models/objective_metric.dart';
-import '../../models/objective_operator.dart';
-import '../../models/objective_scope.dart';
-import '../../models/progression_node_definition.dart';
-import '../../models/reward_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';
+import 'package:forgetrack/domain/progression/catalog/content_tag.dart';
+import 'package:forgetrack/domain/progression/catalog/objective.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_metric.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_operator.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_scope.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
+import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import '../engine_catalog_context.dart';
 import 'quest_assets.dart';
 
-/// **Denní quest** templates — one rotating themed bonus quest per
+/// **DennÃ­ quest** templates â€” one rotating themed bonus quest per
 /// day, picked deterministically from this pool by a date hash.
-/// Higher XP than the simple "DENNÍ CÍLE" tier (those are pure
-/// metric thresholds — steps, calories, etc.); this tier is the
+/// Higher XP than the simple "DENNÃ CÃLE" tier (those are pure
+/// metric thresholds â€” steps, calories, etc.); this tier is the
 /// flavour layer that asks for *combinations* of daily atoms with
 /// a small narrative twist.
 ///
@@ -22,10 +22,10 @@ import 'quest_assets.dart';
 /// - Every template uses [TodayCompletionsAmongMetric] against the
 ///   existing daily-atom node ids so no new metric kind / engine
 ///   plumbing is needed.
-/// - All templates share `comboPoolId: 'daily_combo_pool'` so they
+/// - All templates share `comboPoolId: ComboPoolId('daily_combo_pool')` so they
 ///   feed the `combo_victory_10` achievement alongside the combo
 ///   chain.
-/// - `LifetimeScope` so completion is once-and-done per template —
+/// - `LifetimeScope` so completion is once-and-done per template â€”
 ///   the daily *picker* (provider) rotates which template surfaces
 ///   today, not the engine's per-period reset. If a template
 ///   resurfaces months later, the player can claim it again only
@@ -33,25 +33,25 @@ import 'quest_assets.dart';
 ///   "Completed quests" archive.
 /// - Manual claim (the player taps "Vyzvednout" to confirm).
 
-const _comboPoolId = 'daily_combo_pool';
+const _comboPoolId = ComboPoolId('daily_combo_pool');
 
-const _nutriAtoms = <String>[
-  'daily_calories_today',
-  'daily_protein_today',
-  'daily_carbs_today',
-  'daily_fat_today',
-  'daily_fiber_today',
+const _nutriAtoms = <ProgressionEntryId>[
+  ProgressionEntryId('daily_calories_today'),
+  ProgressionEntryId('daily_protein_today'),
+  ProgressionEntryId('daily_carbs_today'),
+  ProgressionEntryId('daily_fat_today'),
+  ProgressionEntryId('daily_fiber_today'),
 ];
 
-const _allDailyAtoms = <String>[
-  'daily_steps_today',
-  'daily_calories_today',
-  'daily_protein_today',
-  'daily_carbs_today',
-  'daily_fat_today',
-  'daily_fiber_today',
-  'daily_sleep_today',
-  'daily_activity_today',
+const _allDailyAtoms = <ProgressionEntryId>[
+  ProgressionEntryId('daily_steps_today'),
+  ProgressionEntryId('daily_calories_today'),
+  ProgressionEntryId('daily_protein_today'),
+  ProgressionEntryId('daily_carbs_today'),
+  ProgressionEntryId('daily_fat_today'),
+  ProgressionEntryId('daily_fiber_today'),
+  ProgressionEntryId('daily_sleep_today'),
+  ProgressionEntryId('daily_activity_today'),
 ];
 
 List<Objective> dailyChallengeObjectives(
@@ -68,7 +68,7 @@ List<Objective> dailyChallengeObjectives(
     Objective(
       id: const ObjectiveId('daily_challenge_active_day_obj'),
       metric: TodayCompletionsAmongMetric(
-        nodeIds: ['daily_steps_today', 'daily_activity_today'],
+        nodeIds: [ProgressionEntryId('daily_steps_today'), ProgressionEntryId('daily_activity_today')],
       ),
       scope: TodayScope(),
       operator: ObjectiveOperator.atLeast,
@@ -84,7 +84,7 @@ List<Objective> dailyChallengeObjectives(
     Objective(
       id: const ObjectiveId('daily_challenge_recovery_obj'),
       metric: TodayCompletionsAmongMetric(
-        nodeIds: ['daily_sleep_today', 'daily_protein_today'],
+        nodeIds: [ProgressionEntryId('daily_sleep_today'), ProgressionEntryId('daily_protein_today')],
       ),
       scope: TodayScope(),
       operator: ObjectiveOperator.atLeast,
@@ -94,9 +94,9 @@ List<Objective> dailyChallengeObjectives(
       id: const ObjectiveId('daily_challenge_triple_combo_obj'),
       metric: TodayCompletionsAmongMetric(
         nodeIds: [
-          'daily_steps_today',
-          'daily_sleep_today',
-          'daily_protein_today',
+          ProgressionEntryId('daily_steps_today'),
+          ProgressionEntryId('daily_sleep_today'),
+          ProgressionEntryId('daily_protein_today'),
         ],
       ),
       scope: TodayScope(),
@@ -117,7 +117,7 @@ List<ProgressionEntry> dailyChallenges() {
   return [
     DailyChallenge(
       id: const ProgressionEntryId('daily_challenge_nutri_triple'),
-      objectiveId: 'daily_challenge_nutri_triple_obj',
+      objectiveId: ObjectiveId('daily_challenge_nutri_triple_obj'),
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progDailyChallengeNutriTripleTitle,
       descriptionKey: (l) => l.progDailyChallengeNutriTripleDesc,
@@ -129,7 +129,7 @@ List<ProgressionEntry> dailyChallenges() {
     ),
     DailyChallenge(
       id: const ProgressionEntryId('daily_challenge_active_day'),
-      objectiveId: 'daily_challenge_active_day_obj',
+      objectiveId: ObjectiveId('daily_challenge_active_day_obj'),
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progDailyChallengeActiveDayTitle,
       descriptionKey: (l) => l.progDailyChallengeActiveDayDesc,
@@ -141,7 +141,7 @@ List<ProgressionEntry> dailyChallenges() {
     ),
     DailyChallenge(
       id: const ProgressionEntryId('daily_challenge_full_plate'),
-      objectiveId: 'daily_challenge_full_plate_obj',
+      objectiveId: ObjectiveId('daily_challenge_full_plate_obj'),
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progDailyChallengeFullPlateTitle,
       descriptionKey: (l) => l.progDailyChallengeFullPlateDesc,
@@ -153,7 +153,7 @@ List<ProgressionEntry> dailyChallenges() {
     ),
     DailyChallenge(
       id: const ProgressionEntryId('daily_challenge_recovery'),
-      objectiveId: 'daily_challenge_recovery_obj',
+      objectiveId: ObjectiveId('daily_challenge_recovery_obj'),
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progDailyChallengeRecoveryTitle,
       descriptionKey: (l) => l.progDailyChallengeRecoveryDesc,
@@ -165,7 +165,7 @@ List<ProgressionEntry> dailyChallenges() {
     ),
     DailyChallenge(
       id: const ProgressionEntryId('daily_challenge_triple_combo'),
-      objectiveId: 'daily_challenge_triple_combo_obj',
+      objectiveId: ObjectiveId('daily_challenge_triple_combo_obj'),
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progDailyChallengeTripleComboTitle,
       descriptionKey: (l) => l.progDailyChallengeTripleComboDesc,
@@ -177,7 +177,7 @@ List<ProgressionEntry> dailyChallenges() {
     ),
     DailyChallenge(
       id: const ProgressionEntryId('daily_challenge_balanced'),
-      objectiveId: 'daily_challenge_balanced_obj',
+      objectiveId: ObjectiveId('daily_challenge_balanced_obj'),
       claimPolicy: ClaimPolicy.manual,
       titleKey: (l) => l.progDailyChallengeBalancedTitle,
       descriptionKey: (l) => l.progDailyChallengeBalancedDesc,

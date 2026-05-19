@@ -1,3 +1,5 @@
+import 'ids.dart';
+
 /// Composable predicate gating whether a node becomes available,
 /// active, completable, or claimable.
 ///
@@ -16,12 +18,12 @@ class LevelAtLeast extends UnlockCondition {
 
 class ObjectiveCompleted extends UnlockCondition {
   const ObjectiveCompleted(this.objectiveId);
-  final String objectiveId;
+  final ObjectiveId objectiveId;
 }
 
 class NodeCompleted extends UnlockCondition {
   const NodeCompleted(this.nodeId);
-  final String nodeId;
+  final ProgressionEntryId nodeId;
 }
 
 /// The named node has a completion event whose timestamp is **strictly
@@ -31,12 +33,12 @@ class NodeCompleted extends UnlockCondition {
 /// satisfy step N+1's objective.
 class NodeCompletedBeforeToday extends UnlockCondition {
   const NodeCompletedBeforeToday(this.nodeId);
-  final String nodeId;
+  final ProgressionEntryId nodeId;
 }
 
 class ChapterUnlocked extends UnlockCondition {
   const ChapterUnlocked(this.chapterId);
-  final String chapterId;
+  final ChapterId chapterId;
 }
 
 /// Chapter is **currently active** — the player has cleared the
@@ -50,12 +52,12 @@ class ChapterUnlocked extends UnlockCondition {
 /// evaluate; no engine input wiring needed.
 class ChapterActive extends UnlockCondition {
   const ChapterActive(this.chapterId);
-  final String chapterId;
+  final ChapterId chapterId;
 }
 
 class CompanionAvailable extends UnlockCondition {
   const CompanionAvailable(this.companionId);
-  final String companionId;
+  final CosmeticId companionId;
 }
 
 /// True when the player has RPG mode enabled. Lets RPG-only nodes

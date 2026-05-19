@@ -1,15 +1,15 @@
-import '../domain/evaluator/reward_grant_planner.dart';
+﻿import '../domain/evaluator/reward_grant_planner.dart';
 import 'package:forgetrack/domain/journal/journal_event.dart';
-import '../domain/models/reward_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import '../domain/policy/level_policy.dart';
 
 /// Builds [RewardGrantEvent]s from planned grants. XP rewards are
-/// scaled at append time using the running level — the same logic
+/// scaled at append time using the running level â€” the same logic
 /// the legacy engine applies, lifted here so V2 stays compatible
 /// with the existing level / multiplier curve.
 ///
 /// During Phase 2 the legacy [ProgressionLevelPolicy] is reused as
-/// the source of truth for the XP↔level table; replacing it is a
+/// the source of truth for the XPâ†”level table; replacing it is a
 /// Phase 3+ task if the curve ever changes.
 class RewardGrantService {
   const RewardGrantService({

@@ -1,15 +1,15 @@
-import 'package:flutter/foundation.dart';
-import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:meta/meta.dart';
 
-import '../progression_domain.dart' show ProgressionDomain;
+import 'ids.dart';
 import 'objective_metric.dart';
 import 'objective_operator.dart';
 import 'objective_scope.dart';
+import 'progression_domain.dart';
 
-export '../progression_domain.dart' show ProgressionDomain;
+export 'progression_domain.dart' show ProgressionDomain;
 
 /// Pure machine-readable condition. **No UI, no rewards, no rarity, no
-/// display strings.** Display lives on [ProgressionNode], rewards live
+/// display strings.** Display lives on [ProgressionEntry], rewards live
 /// on the node that references this objective.
 ///
 /// Multiple nodes may reference the same objective id — that is the
@@ -50,7 +50,7 @@ class Objective {
   final double toleranceRatio;
 
   /// Human-readable label for debug overlays / catalog listings. NEVER
-  /// shown to the player — that is what `ProgressionNode.titleKey` is
+  /// shown to the player — that is what `ProgressionEntry.titleKey` is
   /// for. Optional; falls back to [id] when null.
   final String? debugLabel;
 
@@ -59,8 +59,5 @@ class Objective {
   /// [NodeCompletionsMetric] supports this baseline — chapter step
   /// objectives use it so e.g. `daily_steps_today` completions counted
   /// before a chapter step unlocked don't auto-satisfy the new step.
-  /// The provider precomputes the override and pipes it into
-  /// `EngineEvaluationInput.objectiveActualOverrides`; the evaluator
-  /// just reads the override when present.
-  final String? baselineFromNodeId;
+  final ProgressionEntryId? baselineFromNodeId;
 }
