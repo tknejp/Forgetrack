@@ -1,22 +1,27 @@
-﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import '../../../../../shared/domain/rarity.dart';
 import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import 'package:forgetrack/domain/progression/catalog/unlock_condition.dart';
 
-/// Companion availability nodes â€” port of the chapter-themed companion
+/// Companion availability nodes — port of the chapter-themed companion
 /// unlock chains spec'd in `lib/features/cosmetics/domain/plan.md`
 /// (Phase 5 of the cosmetics refactor). Each companion is gated on a
 /// player level + completion of the two relic-granting achievements
 /// from the matching chapter.
 ///
+/// Level ladder: every 10 levels from 5 to 95 — 5 / 15 / 25 / 35 / 45 /
+/// 55 / 65 / 75 / 85 / 95. Lvl 100 is a quiet cap with no companion
+/// unlock. The same ladder is mirrored in `cosmetic_unlock_rules.dart`
+/// (must stay in lockstep).
+///
 /// Unlock condition shape: `[LevelAtLeast(N), NodeCompleted(relic1_ach),
 /// NodeCompleted(relic2_ach)]`. The relics themselves are
 /// `CosmeticReward`s on achievement nodes (V2 doesn't have standalone
-/// Relic entries for them) â€” so the gate references the *granting*
+/// Relic entries for them) — so the gate references the *granting*
 /// achievement's id, not the relic id.
 ///
-/// All seven nodes use `ClaimPolicy.manual` (inherited from
+/// All ten nodes use `ClaimPolicy.manual` (inherited from
 /// CompanionAvailability). The celebration adapter folds the
 /// reveal into the achievement event that granted the final relic
 /// via the companion-availability fold pass (`adapter.convert`
@@ -53,11 +58,11 @@ List<ProgressionEntry> companionNodes() {
         CompanionAvailabilityReward(companionId: CosmeticId('companion_forest_fox')),
       ],
       unlockConditions: const [
-        LevelAtLeast(10),
+        LevelAtLeast(15),
         NodeCompleted(ProgressionEntryId('active_days_7')),
         NodeCompleted(ProgressionEntryId('weekly_activity_mastery')),
       ],
-      lockedHintKey: (l) => l.cosmeticCompanionLevelGate(10),
+      lockedHintKey: (l) => l.cosmeticCompanionLevelGate(15),
       rarity: Rarity.rare,
     ),
     CompanionAvailability(
@@ -77,6 +82,24 @@ List<ProgressionEntry> companionNodes() {
       rarity: Rarity.rare,
     ),
     CompanionAvailability(
+      id: const ProgressionEntryId('companion_bridge_gargoyle'),
+      companionId: CosmeticId('companion_bridge_gargoyle'),
+      titleKey: (l) => l.cosmeticCompanionBridgeGargoyleName,
+      descriptionKey: (l) => l.cosmeticCompanionBridgeGargoyleDesc,
+      rewards: const [
+        CompanionAvailabilityReward(
+          companionId: CosmeticId('companion_bridge_gargoyle'),
+        ),
+      ],
+      unlockConditions: const [
+        LevelAtLeast(35),
+        NodeCompleted(ProgressionEntryId('combo_victory_10')),
+        NodeCompleted(ProgressionEntryId('reward_hunter_100')),
+      ],
+      lockedHintKey: (l) => l.cosmeticCompanionLevelGate(35),
+      rarity: Rarity.rare,
+    ),
+    CompanionAvailability(
       id: const ProgressionEntryId('companion_lantern_golem'),
       companionId: CosmeticId('companion_lantern_golem'),
       titleKey: (l) => l.cosmeticCompanionLanternGolemName,
@@ -93,6 +116,38 @@ List<ProgressionEntry> companionNodes() {
       rarity: Rarity.epic,
     ),
     CompanionAvailability(
+      id: const ProgressionEntryId('companion_cave_lynx'),
+      companionId: CosmeticId('companion_cave_lynx'),
+      titleKey: (l) => l.cosmeticCompanionCaveLynxName,
+      descriptionKey: (l) => l.cosmeticCompanionCaveLynxDesc,
+      rewards: const [
+        CompanionAvailabilityReward(companionId: CosmeticId('companion_cave_lynx')),
+      ],
+      unlockConditions: const [
+        LevelAtLeast(55),
+        NodeCompleted(ProgressionEntryId('active_days_90')),
+        NodeCompleted(ProgressionEntryId('steps_total_2_5m')),
+      ],
+      lockedHintKey: (l) => l.cosmeticCompanionLevelGate(55),
+      rarity: Rarity.epic,
+    ),
+    CompanionAvailability(
+      id: const ProgressionEntryId('companion_aurora_stag'),
+      companionId: CosmeticId('companion_aurora_stag'),
+      titleKey: (l) => l.cosmeticCompanionAuroraStagName,
+      descriptionKey: (l) => l.cosmeticCompanionAuroraStagDesc,
+      rewards: const [
+        CompanionAvailabilityReward(companionId: CosmeticId('companion_aurora_stag')),
+      ],
+      unlockConditions: const [
+        LevelAtLeast(65),
+        NodeCompleted(ProgressionEntryId('quest_hunter_250')),
+        NodeCompleted(ProgressionEntryId('weekly_activity_36')),
+      ],
+      lockedHintKey: (l) => l.cosmeticCompanionLevelGate(65),
+      rarity: Rarity.epic,
+    ),
+    CompanionAvailability(
       id: const ProgressionEntryId('companion_ice_wisp'),
       companionId: CosmeticId('companion_ice_wisp'),
       titleKey: (l) => l.cosmeticCompanionIceWispName,
@@ -101,11 +156,11 @@ List<ProgressionEntry> companionNodes() {
         CompanionAvailabilityReward(companionId: CosmeticId('companion_ice_wisp')),
       ],
       unlockConditions: const [
-        LevelAtLeast(65),
+        LevelAtLeast(75),
         NodeCompleted(ProgressionEntryId('weekly_activity_24')),
         NodeCompleted(ProgressionEntryId('quest_hunter_250')),
       ],
-      lockedHintKey: (l) => l.cosmeticCompanionLevelGate(65),
+      lockedHintKey: (l) => l.cosmeticCompanionLevelGate(75),
       rarity: Rarity.legendary,
     ),
     CompanionAvailability(
@@ -135,11 +190,11 @@ List<ProgressionEntry> companionNodes() {
         CompanionAvailabilityReward(companionId: CosmeticId('companion_dragonling')),
       ],
       unlockConditions: const [
-        LevelAtLeast(100),
+        LevelAtLeast(95),
         NodeCompleted(ProgressionEntryId('steps_total_10000000')),
         NodeCompleted(ProgressionEntryId('dragonrock_trial')),
       ],
-      lockedHintKey: (l) => l.cosmeticCompanionLevelGate(100),
+      lockedHintKey: (l) => l.cosmeticCompanionLevelGate(95),
       rarity: Rarity.mythic,
     ),
   ];
