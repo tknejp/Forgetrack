@@ -17,7 +17,7 @@ import '../domain/cosmetic_unlock_rules.dart';
 import '../domain/consumed_relics.dart';
 import '../domain/player_cosmetic_lifecycle.dart';
 import 'cosmetics_screen_internals.dart';
-import 'widgets/companion_claim_reveal.dart';
+import 'widgets/companion_claim_flow.dart';
 import 'widgets/companion_fake_idle_preview.dart';
 import 'widgets/cosmetic_asset_thumb.dart';
 
@@ -166,7 +166,7 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
     final l10n = widget.l10n;
     final color = cosmeticRarityColor(definition.rarity);
     // Watch the cosmetics provider so a successful claim from the
-    // embedded [CompanionClaimReveal] flips this sheet from the
+    // embedded [CompanionClaimFlow] flips this sheet from the
     // claim-flow layout into the normal unlocked layout without
     // requiring the player to re-open the sheet. Watching progression
     // alongside catches the case where the engine finished the manual
@@ -1479,7 +1479,7 @@ class _TinyPill extends StatelessWidget {
 
 /// Claim-flow body shown in place of the regular details layout when a
 /// companion's `CompanionAvailability` is in `available` state. The
-/// player taps "Vyzvedni společníka" inside the [CompanionClaimReveal]
+/// player taps "Vyzvedni společníka" inside the [CompanionClaimFlow]
 /// stage — that triggers the relic-fusing animation and, on completion,
 /// calls `progression.claimNode` which grants the cosmetic. The
 /// surrounding [CosmeticDetailsSheet] watches `CosmeticsProvider`, so
@@ -1569,7 +1569,7 @@ class _ClaimableCompanionBody extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 18),
-              CompanionClaimReveal(
+              CompanionClaimFlow(
                 companion: definition,
                 relicIds: relicIds,
                 color: color,
