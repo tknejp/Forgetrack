@@ -64,6 +64,26 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
   bool _equipBusy = false;
   bool _devBusy = false;
 
+  /// Attached to the unlocked-layout companion avatar; the morph
+  /// layer reads its absolute position to land the sprite exactly
+  /// over the slot. Lives on this state — the sheet widget is the
+  /// same instance across the Claimable → Owned rebuild, so the key
+  /// keeps pointing at the avatar from one frame to the next.
+  final GlobalKey _companionSlotKey = GlobalKey();
+
+  /// Notifier the avatar slot watches — true during the morph
+  /// handoff. The forging overlay flips it true at the reveal
+  /// frame so the rebuild triggered by the engine grant doesn't
+  /// flash a second sprite, and the morph layer flips it back to
+  /// false once it reaches the destination.
+  final ValueNotifier<bool> _hideCompanion = ValueNotifier(false);
+
+  @override
+  void dispose() {
+    _hideCompanion.dispose();
+    super.dispose();
+  }
+
   Future<void> _toggleEquipped() async {
     if (_equipBusy || _devBusy) return;
     setState(() => _equipBusy = true);
@@ -242,6 +262,8 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
           l10n: l10n,
           color: color,
           bottomPad: bottomPad,
+          destSlotKey: _companionSlotKey,
+          hideCompanion: _hideCompanion,
         );
       }
       return _LockedCompanionBody(
@@ -289,23 +311,41 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                   if (isHidden)
                     _HiddenBadgeLarge(color: hiddenColor)
                   else if (definition is Companion)
-                    CompanionFakeIdlePreview(
+                    SizedBox(
+                      key: _companionSlotKey,
                       width: 128,
                       height: 128,
-                      glowColor: color,
-                      enableGlow: false,
-                      floatDistance: 2.5,
-                      minScale: 0.995,
-                      maxScale: 1.008,
-                      child: CosmeticBadge(
-                        definition: definition,
-                        assetPath: assetPath,
-                        color: color,
-                        size: 128,
-                        framed: false,
-                        glow: true,
-                        fit: BoxFit.contain,
-                        contentScale: 1.25,
+                      child: ValueListenableBuilder<bool>(
+                        valueListenable: _hideCompanion,
+                        builder: (context, hidden, child) {
+                          // While the morph layer owns the sprite,
+                          // we render an empty box at the same size
+                          // so layout / position of the slot do not
+                          // shift mid-handoff.
+                          return Opacity(
+                            opacity: hidden ? 0.0 : 1.0,
+                            child: child,
+                          );
+                        },
+                        child: CompanionFakeIdlePreview(
+                          width: 128,
+                          height: 128,
+                          glowColor: color,
+                          enableGlow: false,
+                          floatDistance: 2.5,
+                          minScale: 0.995,
+                          maxScale: 1.008,
+                          child: CosmeticBadge(
+                            definition: definition,
+                            assetPath: assetPath,
+                            color: color,
+                            size: 128,
+                            framed: false,
+                            glow: true,
+                            fit: BoxFit.contain,
+                            contentScale: 1.25,
+                          ),
+                        ),
                       ),
                     )
                   else
@@ -1491,12 +1531,16 @@ class _ClaimableCompanionBody extends StatelessWidget {
     required this.l10n,
     required this.color,
     required this.bottomPad,
+    required this.destSlotKey,
+    required this.hideCompanion,
   });
 
   final Cosmetic definition;
   final AppLocalizations l10n;
   final Color color;
   final double bottomPad;
+  final GlobalKey destSlotKey;
+  final ValueNotifier<bool> hideCompanion;
 
   @override
   Widget build(BuildContext context) {
@@ -1574,6 +1618,8 @@ class _ClaimableCompanionBody extends StatelessWidget {
                 relicIds: relicIds,
                 color: color,
                 onClaim: () => _runClaim(context),
+                destSlotKey: destSlotKey,
+                hideCompanion: hideCompanion,
               ),
               const SizedBox(height: 12),
             ],

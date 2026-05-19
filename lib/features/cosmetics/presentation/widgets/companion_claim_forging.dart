@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../domain/cosmetic_models.dart';
+import 'companion_claim_morph.dart';
 import 'cosmetic_asset_thumb.dart';
 
 /// Fullscreen Orbita-variant forging overlay (5.4 s).
@@ -40,6 +41,8 @@ class CompanionClaimForging extends StatefulWidget {
     required this.color,
     required this.onReveal,
     required this.onComplete,
+    this.destSlotKey,
+    this.hideCompanion,
   });
 
   /// Companion catalog row — drives the reveal text + sprite asset.
@@ -60,9 +63,22 @@ class CompanionClaimForging extends StatefulWidget {
   /// Engine-write hook — fires once at t ≈ [_kRevealMs].
   final Future<void> Function() onReveal;
 
-  /// Host-side teardown — fires once at t ≥ [_kDurationMs] (or
-  /// immediately after a tap-to-skip).
+  /// Host-side teardown — fires once at t ≥ [_kDurationMs] +
+  /// morph (or immediately after a tap-to-skip).
   final VoidCallback onComplete;
+
+  /// GlobalKey attached to the unlocked-layout avatar slot in
+  /// [CosmeticDetailsSheet]. When provided the overlay transitions
+  /// to a [CompanionClaimMorph] handoff at t = [_kDurationMs] before
+  /// firing [onComplete]; when null the overlay just dismisses.
+  final GlobalKey? destSlotKey;
+
+  /// Notifier the unlocked-layout avatar slot watches to hide its
+  /// native rendering while the morph layer owns the companion.
+  /// Set to true at the reveal frame (so the sheet rebuild from the
+  /// engine grant doesn't show a duplicate avatar in the slot) and
+  /// reset to false once the morph reaches the destination.
+  final ValueNotifier<bool>? hideCompanion;
 
   @override
   State<CompanionClaimForging> createState() => _CompanionClaimForgingState();
@@ -98,6 +114,12 @@ class _CompanionClaimForgingState extends State<CompanionClaimForging>
   bool _burstHapticFired = false;
   bool _revealFired = false;
   bool _completed = false;
+  bool _morphing = false;
+
+  /// Where the companion sprite sits at end-of-settle — captured so
+  /// the morph layer starts exactly where the forging timeline left
+  /// off rather than reading the controller value mid-flight.
+  Offset? _spriteCenter;
 
   @override
   void initState() {
@@ -126,10 +148,16 @@ class _CompanionClaimForgingState extends State<CompanionClaimForging>
     if (!_revealFired && t >= _kRevealMs) {
       _revealFired = true;
       HapticFeedback.mediumImpact();
+      // Hide the sheet's native avatar BEFORE the engine write so
+      // the rebuild triggered by the cosmetic flipping to Owned
+      // (a frame or two later) does not flash a second sprite at
+      // the destination slot. The morph layer un-hides it again
+      // when the handoff completes.
+      widget.hideCompanion?.value = true;
       // Fire engine write at the visual reveal point; the host
       // re-renders away from us once the cosmetic lands in
       // inventory but our OverlayEntry persists until [_onStatus]
-      // calls [onComplete].
+      // / the morph layer call [onComplete].
       widget.onReveal();
     }
   }
@@ -137,12 +165,21 @@ class _CompanionClaimForgingState extends State<CompanionClaimForging>
   void _onStatus(AnimationStatus status) {
     if (status == AnimationStatus.completed && !_completed) {
       _completed = true;
-      // Defer one frame so any in-flight reveal/haptic finishes
-      // before the host tears down the overlay.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        widget.onComplete();
-      });
+      if (widget.destSlotKey != null) {
+        // Hand off to the morph layer; [_finalize] runs when the
+        // morph reaches the destination.
+        setState(() => _morphing = true);
+      } else {
+        // No destination → straight dismissal (kept for parity with
+        // hosts that don't need the handoff, e.g. devtools previews).
+        WidgetsBinding.instance.addPostFrameCallback((_) => _finalize());
+      }
     }
+  }
+
+  void _finalize() {
+    widget.hideCompanion?.value = false;
+    widget.onComplete();
   }
 
   void _skip() {
@@ -160,6 +197,20 @@ class _CompanionClaimForgingState extends State<CompanionClaimForging>
     final screen = mq.size;
     final cx = screen.width / 2;
     final cy = screen.height * 0.45;
+    // Account for the settle phase wobble so the morph hands off
+    // from the actual visible position rather than the nominal
+    // center.
+    _spriteCenter ??= Offset(cx, cy - 30);
+
+    if (_morphing && widget.destSlotKey != null) {
+      return CompanionClaimMorph(
+        assetPath: widget.assetPath,
+        color: widget.color,
+        sourceCenter: _spriteCenter!,
+        destSlotKey: widget.destSlotKey!,
+        onComplete: _finalize,
+      );
+    }
     return Material(
       type: MaterialType.transparency,
       child: GestureDetector(

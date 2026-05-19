@@ -48,6 +48,8 @@ class CompanionClaimFlow extends StatefulWidget {
     required this.relicIds,
     required this.color,
     required this.onClaim,
+    this.destSlotKey,
+    this.hideCompanion,
   });
 
   /// Companion catalog row — drives the silhouette → real-asset
@@ -65,6 +67,17 @@ class CompanionClaimFlow extends StatefulWidget {
   /// reveal frame lands (t ≈ 4700 ms). Parent should call
   /// `progression.claimNode(...)`.
   final Future<void> Function() onClaim;
+
+  /// GlobalKey attached to the unlocked-layout companion avatar
+  /// slot on [CosmeticDetailsSheet]. Lets the forging overlay morph
+  /// the sprite into the sheet's slot at the end of the ritual. The
+  /// surrounding sheet survives the rebuild from Claimable to Owned
+  /// so the key remains valid through the handoff.
+  final GlobalKey? destSlotKey;
+
+  /// Notifier the unlocked-layout avatar slot watches to hide its
+  /// native rendering during the morph handoff.
+  final ValueNotifier<bool>? hideCompanion;
 
   @override
   State<CompanionClaimFlow> createState() => _CompanionClaimFlowState();
@@ -117,6 +130,8 @@ class _CompanionClaimFlowState extends State<CompanionClaimFlow>
         relicIds: widget.relicIds,
         color: widget.color,
         onReveal: widget.onClaim,
+        destSlotKey: widget.destSlotKey,
+        hideCompanion: widget.hideCompanion,
         onComplete: () {
           if (_forgingEntry == entry) {
             entry.remove();
