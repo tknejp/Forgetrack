@@ -100,15 +100,19 @@ Built with Flutter, fully localized in **Czech and English**.
 
 ## Architecture
 
-Feature-first layering. 15 features under `lib/features/`, each split
-into the four standard layers:
+Hybrid layering: cross-aggregate domain types in `lib/domain/`,
+feature-first composition for everything else.
 
 ```text
 lib/
-├── core/                 # logging, services, navigation, errors
+├── core/                 # logging, services, navigation, errors (AppError + Result)
 ├── shared/               # design tokens, formatters, reusable widgets
+├── domain/               # cross-aggregate pure-Dart domain layer
+│   ├── journal/          # JournalEvent + JournalProjection + EventKey / PeriodKey
+│   ├── player/           # Player aggregate root + LevelCurve
+│   └── progression/      # catalog ids + per-aggregate sealed lifecycles + read projections
 ├── features/<feature>/
-│   ├── domain/           # pure Dart: entities, value objects, sealed types
+│   ├── domain/           # feature-internal entities, value objects, sealed types
 │   ├── data/             # repositories, API adapters, Isar / Firestore
 │   ├── application/      # providers, orchestration, use-cases
 │   └── presentation/     # screens, widgets, navigation
@@ -117,9 +121,12 @@ lib/
 ```
 
 Hard rules: `shared/` must not import `features/*`, `application/` must
-not import `presentation/`, `domain/` stays pure (no Flutter, no I/O).
-See [`docs/architecture.md`](docs/architecture.md) for the full
-layering contract and feature index.
+not import `presentation/`, `domain/` (both top-level and feature) stays
+pure (no Flutter, no I/O) — enforced by
+[`test/domain_purity_test.dart`](test/domain_purity_test.dart) + Phase 21
+ratchet lints. See [`docs/architecture.md`](docs/architecture.md) for the
+full layering contract, feature index, and the domain layer convention
+(sealed catalog rows + sealed lifecycles + read projections).
 
 For an **interactive view** of the architecture (feature map, provider
 DI graph, data flows, storage layout, RPG layer, ADRs), open
@@ -253,6 +260,18 @@ Forgetrack is **personal-use software** under active development. There
 are no public users yet, so the app may be reset during development and
 no schema migrations are written until needed.
 
-The V2 progression engine is the active workstream — see
-[`docs/progression_engine/session_handoff.md`](docs/progression_engine/session_handoff.md)
-for the current phase status.
+The doménový refactor (22 phases, May 17–19 2026) finished on branch
+`refactor/domain-model-design` and landed the canonical RPG domain model:
+`Player` aggregate root, sealed per-aggregate lifecycles
+(`PlayerQuestLifecycle`, `PlayerAchievementLifecycle`,
+`PlayerCosmeticLifecycle`, `ChapterLifecycle`), `JournalEvent` /
+`JournalProjection<T>`, `Result<T, AppError>` for typed sync errors, and
+the legacy V1 progression module deletion. See
+[`docs/domain_model/`](docs/domain_model/) for the proposal (target
+model), the archived migration plan, and the structured next-round
+follow-ups.
+
+The V2 progression engine is now the only progression workstream — see
+[`docs/progression_engine/`](docs/progression_engine/) for engine-specific
+notes and [`docs/domain_model/follow_ups.md`](docs/domain_model/follow_ups.md)
+for the bounded list of work that closes the refactor.

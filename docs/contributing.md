@@ -19,7 +19,7 @@ All four matchers live in
 are pure-Dart grep-based functions — no custom_lint plugin, no
 analyzer plugin, no codegen — so they add **zero dev dependencies +
 zero build-time impact**. The rationale is in
-[docs/domain_model/migration_plan.md §Phase 21](domain_model/migration_plan.md).
+[docs/domain_model/archive/migration_plan.md §Phase 21](domain_model/migration_plan.md).
 
 Each matcher has a one-line predicate
 (`isXxxViolation(String line) -> bool`) covered by inline fixtures in

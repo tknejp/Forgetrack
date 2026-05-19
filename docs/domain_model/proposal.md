@@ -644,7 +644,7 @@ Per handoff §10 a §11.
 ## 12. Next steps
 
 1. **User odsouhlasí** tento proposal (s případnými ručními revisemi sekcí 1-10).
-2. **Next session:** Převod proposalu na **phased migration plan** v `docs/domain_model/migration_plan.md`. Pro každý aggregate:
+2. **Next session:** Převod proposalu na **phased migration plan** v `docs/domain_model/archive/migration_plan.md`. Pro každý aggregate:
    - Konkrétní soubory pro rename / move / delete.
    - Závislosti mezi fázemi (Player aggregate first, pak Journal, pak per-typové collections).
    - Test plan po každé fázi.
