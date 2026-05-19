@@ -41,6 +41,12 @@ import 'ledger_counters.dart';
 ///     baseline values that bypass the metric switch).
 ///   - [evaluatedAt] — anchor timestamp for period-key derivation +
 ///     unlock-condition date logic + bonus-XP timing rules.
+///   - [ownedCosmeticIds] — cosmetic ids currently in the cosmetics
+///     inventory's `unlocked` map. Read by `OwnsCosmetic` unlock
+///     conditions so the engine evaluates relic-ownership gates from
+///     the same source of truth as the reveal evaluator. Defaults to
+///     the empty set so tests + non-companion evaluations stay
+///     unaffected.
 @immutable
 class EngineEvaluationContext {
   const EngineEvaluationContext({
@@ -52,6 +58,7 @@ class EngineEvaluationContext {
     required this.counters,
     required this.overrides,
     required this.evaluatedAt,
+    this.ownedCosmeticIds = const <String>{},
   });
 
   final Player player;
@@ -62,6 +69,7 @@ class EngineEvaluationContext {
   final LedgerCounters counters;
   final EvaluationOverrides overrides;
   final DateTime evaluatedAt;
+  final Set<String> ownedCosmeticIds;
 
   EngineEvaluationContext copyWith({
     Player? player,
@@ -72,6 +80,7 @@ class EngineEvaluationContext {
     LedgerCounters? counters,
     EvaluationOverrides? overrides,
     DateTime? evaluatedAt,
+    Set<String>? ownedCosmeticIds,
   }) {
     return EngineEvaluationContext(
       player: player ?? this.player,
@@ -82,6 +91,7 @@ class EngineEvaluationContext {
       counters: counters ?? this.counters,
       overrides: overrides ?? this.overrides,
       evaluatedAt: evaluatedAt ?? this.evaluatedAt,
+      ownedCosmeticIds: ownedCosmeticIds ?? this.ownedCosmeticIds,
     );
   }
 }

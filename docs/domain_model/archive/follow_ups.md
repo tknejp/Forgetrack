@@ -336,6 +336,22 @@ Parallel finding: three of the seven "working" companions had a level mismatch b
 
 **Lesson:** when a follow-up records an "intentional split" with one branch resting on a supposed live consumer, verify the consumer is actually live before ratifying the split. R.7's option (c) added test infrastructure to enforce a contract that — in practice — protected nothing, while letting three companions ship unobtainable.
 
+### R.7 correction follow-on — companion gates read relic ownership directly (`OwnsCosmetic`)
+
+**Shipped** on the same branch immediately after the R.7 correction landed, on top of Trello [#76](https://trello.com/c/dpLm2EKM) sub-issue 1. See ADR `companion-availability-owns-cosmetic` in [docs/site/data/decisions.json](../../site/data/decisions.json) for the full context + decision + consequences + alternatives.
+
+**Why this was still needed after the R.7 correction:** the correction shipped first-class `CompanionAvailability` nodes for all 10 companions with `[LevelAtLeast(N), NodeCompleted(<ach_id>), NodeCompleted(<ach_id>)]` gates — the achievements being the ones that grant the matching relics. The reveal evaluator (driving the partial-progress checklist UI) used a different shape: `[Cond.atLevel(N), Cond.ownsCosmetic(<relic_id>), Cond.ownsCosmetic(<relic_id>)]`. In production flow they stay aligned through the cosmetics-unlock bridge (achievement completes → reward grant → relic in inventory), but any side-channel mutation of the cosmetics inventory (devtools `debugGrantCosmetic`, "Unlock all cosmetics", a partial cloud-pull merge in which cosmetics state arrives before the engine ledger) leaves the two surfaces with different answers — the details sheet says "3/3 splněno" but the engine keeps the companion locked.
+
+**What changed:**
+
+- New sealed `UnlockCondition` case `OwnsCosmetic(CosmeticId cosmeticId)` + `ownedCosmeticIds: Set<String>` on `EngineEvaluationContext`. The resolver reads from the set; the provider plumbs it from the bound `CosmeticsProvider` via a new getter on the existing `CosmeticUnlockBridge` (single binding point, no new architecture surface).
+- All four engine entry points (`evaluate`, `claim`, `simulateClaim`, `simulateObjectiveMet`) carry the field through. All four provider call sites forward `context.ownedCosmeticIds`.
+- 10 `CompanionAvailability` nodes in `companions_content.dart` swap `NodeCompleted(<ach_id>)` → `OwnsCosmetic(<relic_id>)` with the same relic ids the reveal evaluator's rules use. Both surfaces now read the same source of truth.
+- Devtools cosmetic-details sheet's `_devGrant` routes through `progression.devToolsForceCompleteNode(<granting_node_id>)` (via a new `grantingNodeForCosmetic` catalog helper) whenever a granting node exists. The engine ledger stays in sync with anything the sheet grants; cosmetics with no granting node still use the direct `debugGrantCosmetic` fallback.
+- 4 late-gate regression tests + 6 granting-node lookup tests added. Test count 484 → 491. Lint ratchets stay at 0.
+
+**Lesson #2:** "the production flow keeps them aligned" is a runtime invariant, not a design invariant. Two surfaces that need to agree on a fact should read the same store; relying on a chained side effect to keep two stores in lockstep is a divergence waiting for the first side channel.
+
 ---
 
 ### ~~R.8 Periphery cleanup bundle~~ ✅ Closed 2026-05-19 — all three items "won't do — not actionable"

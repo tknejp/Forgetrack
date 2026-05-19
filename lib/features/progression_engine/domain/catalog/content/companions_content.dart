@@ -7,19 +7,27 @@ import 'package:forgetrack/domain/progression/catalog/unlock_condition.dart';
 /// Companion availability nodes — port of the chapter-themed companion
 /// unlock chains spec'd in `lib/features/cosmetics/domain/plan.md`
 /// (Phase 5 of the cosmetics refactor). Each companion is gated on a
-/// player level + completion of the two relic-granting achievements
-/// from the matching chapter.
+/// player level + ownership of the two themed relics from the
+/// matching chapter.
 ///
 /// Level ladder: every 10 levels from 5 to 95 — 5 / 15 / 25 / 35 / 45 /
 /// 55 / 65 / 75 / 85 / 95. Lvl 100 is a quiet cap with no companion
 /// unlock. The same ladder is mirrored in `cosmetic_unlock_rules.dart`
-/// (must stay in lockstep).
+/// (must stay in lockstep — the reveal evaluator reads its conditions
+/// for the partial-progress checklist, the engine reads ours for the
+/// claim CTA, and both rely on the relic-ownership semantic below to
+/// stay aligned).
 ///
-/// Unlock condition shape: `[LevelAtLeast(N), NodeCompleted(relic1_ach),
-/// NodeCompleted(relic2_ach)]`. The relics themselves are
-/// `CosmeticReward`s on achievement nodes (V2 doesn't have standalone
-/// Relic entries for them) — so the gate references the *granting*
-/// achievement's id, not the relic id.
+/// Unlock condition shape: `[LevelAtLeast(N), OwnsCosmetic(relic_a),
+/// OwnsCosmetic(relic_b)]`. Relics themselves are `CosmeticReward`s on
+/// achievement nodes; the engine reads the cosmetics inventory's
+/// `unlocked` map (via `EngineEvaluationContext.ownedCosmeticIds`) so
+/// the gate evaluates the same way the reveal evaluator does. The
+/// previous condition shape used `NodeCompleted(<granting_achievement>)`
+/// which is equivalent in normal production flow but diverged whenever
+/// the cosmetics inventory got mutated through a side channel
+/// (devtools `debugGrantCosmetic`, "Unlock all cosmetics", a partial
+/// cloud-pull merge) — see ADR `companion-availability-owns-cosmetic`.
 ///
 /// All ten nodes use `ClaimPolicy.manual` (inherited from
 /// CompanionAvailability). The celebration adapter folds the
@@ -43,8 +51,8 @@ List<ProgressionEntry> companionNodes() {
       ],
       unlockConditions: const [
         LevelAtLeast(5),
-        NodeCompleted(ProgressionEntryId('first_reward')),
-        NodeCompleted(ProgressionEntryId('daily_quest_3')),
+        OwnsCosmetic(CosmeticId('relic_campfire_spark')),
+        OwnsCosmetic(CosmeticId('relic_warm_kindling')),
       ],
       lockedHintKey: (l) => l.cosmeticCompanionLevelGate(5),
       rarity: Rarity.uncommon,
@@ -59,8 +67,8 @@ List<ProgressionEntry> companionNodes() {
       ],
       unlockConditions: const [
         LevelAtLeast(15),
-        NodeCompleted(ProgressionEntryId('active_days_7')),
-        NodeCompleted(ProgressionEntryId('weekly_activity_mastery')),
+        OwnsCosmetic(CosmeticId('relic_moonlit_foxglove')),
+        OwnsCosmetic(CosmeticId('relic_ancient_root')),
       ],
       lockedHintKey: (l) => l.cosmeticCompanionLevelGate(15),
       rarity: Rarity.rare,
@@ -75,8 +83,8 @@ List<ProgressionEntry> companionNodes() {
       ],
       unlockConditions: const [
         LevelAtLeast(25),
-        NodeCompleted(ProgressionEntryId('steps_streak_7')),
-        NodeCompleted(ProgressionEntryId('weekly_activity_4')),
+        OwnsCosmetic(CosmeticId('relic_ruin_seal')),
+        OwnsCosmetic(CosmeticId('relic_ashen_omen')),
       ],
       lockedHintKey: (l) => l.cosmeticCompanionLevelGate(25),
       rarity: Rarity.rare,
@@ -93,8 +101,8 @@ List<ProgressionEntry> companionNodes() {
       ],
       unlockConditions: const [
         LevelAtLeast(35),
-        NodeCompleted(ProgressionEntryId('combo_victory_10')),
-        NodeCompleted(ProgressionEntryId('reward_hunter_100')),
+        OwnsCosmetic(CosmeticId('relic_oathbound_mark')),
+        OwnsCosmetic(CosmeticId('relic_bridge_key')),
       ],
       lockedHintKey: (l) => l.cosmeticCompanionLevelGate(35),
       rarity: Rarity.rare,
@@ -109,8 +117,8 @@ List<ProgressionEntry> companionNodes() {
       ],
       unlockConditions: const [
         LevelAtLeast(45),
-        NodeCompleted(ProgressionEntryId('steps_total_1000000')),
-        NodeCompleted(ProgressionEntryId('combo_triple_victory_25')),
+        OwnsCosmetic(CosmeticId('relic_deep_ember_core')),
+        OwnsCosmetic(CosmeticId('relic_miners_lantern')),
       ],
       lockedHintKey: (l) => l.cosmeticCompanionLevelGate(45),
       rarity: Rarity.epic,
@@ -125,8 +133,8 @@ List<ProgressionEntry> companionNodes() {
       ],
       unlockConditions: const [
         LevelAtLeast(55),
-        NodeCompleted(ProgressionEntryId('active_days_90')),
-        NodeCompleted(ProgressionEntryId('steps_total_2_5m')),
+        OwnsCosmetic(CosmeticId('relic_wildwood_charm')),
+        OwnsCosmetic(CosmeticId('relic_ravine_stone')),
       ],
       lockedHintKey: (l) => l.cosmeticCompanionLevelGate(55),
       rarity: Rarity.epic,
@@ -141,8 +149,8 @@ List<ProgressionEntry> companionNodes() {
       ],
       unlockConditions: const [
         LevelAtLeast(65),
-        NodeCompleted(ProgressionEntryId('quest_hunter_250')),
-        NodeCompleted(ProgressionEntryId('weekly_activity_36')),
+        OwnsCosmetic(CosmeticId('relic_frozen_lake_heart')),
+        OwnsCosmetic(CosmeticId('relic_aurora_thread')),
       ],
       lockedHintKey: (l) => l.cosmeticCompanionLevelGate(65),
       rarity: Rarity.epic,
@@ -157,8 +165,8 @@ List<ProgressionEntry> companionNodes() {
       ],
       unlockConditions: const [
         LevelAtLeast(75),
-        NodeCompleted(ProgressionEntryId('weekly_activity_24')),
-        NodeCompleted(ProgressionEntryId('quest_hunter_250')),
+        OwnsCosmetic(CosmeticId('relic_polar_lantern')),
+        OwnsCosmetic(CosmeticId('relic_frost_shard')),
       ],
       lockedHintKey: (l) => l.cosmeticCompanionLevelGate(75),
       rarity: Rarity.legendary,
@@ -175,8 +183,8 @@ List<ProgressionEntry> companionNodes() {
       ],
       unlockConditions: const [
         LevelAtLeast(85),
-        NodeCompleted(ProgressionEntryId('combo_triple_victory_100')),
-        NodeCompleted(ProgressionEntryId('weekly_activity_52')),
+        OwnsCosmetic(CosmeticId('relic_summit_feather')),
+        OwnsCosmetic(CosmeticId('relic_stormcrest_plume')),
       ],
       lockedHintKey: (l) => l.cosmeticCompanionLevelGate(85),
       rarity: Rarity.legendary,
@@ -191,8 +199,8 @@ List<ProgressionEntry> companionNodes() {
       ],
       unlockConditions: const [
         LevelAtLeast(95),
-        NodeCompleted(ProgressionEntryId('steps_total_10000000')),
-        NodeCompleted(ProgressionEntryId('dragonrock_trial')),
+        OwnsCosmetic(CosmeticId('relic_dragon_scale')),
+        OwnsCosmetic(CosmeticId('relic_dragonrock_heart')),
       ],
       lockedHintKey: (l) => l.cosmeticCompanionLevelGate(95),
       rarity: Rarity.mythic,

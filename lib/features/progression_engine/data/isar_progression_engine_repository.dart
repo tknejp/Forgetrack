@@ -125,6 +125,32 @@ class IsarProgressionEngineRepository
     });
   }
 
+  @override
+  Future<void> clearEventsForNode(String nodeId) async {
+    await _isar.writeTxn(() async {
+      await _isar.engineNodeCompletionRecords
+          .filter()
+          .nodeIdEqualTo(nodeId)
+          .deleteAll();
+      await _isar.engineNodeClaimRecords
+          .filter()
+          .nodeIdEqualTo(nodeId)
+          .deleteAll();
+      await _isar.engineNodeAnnouncementRecords
+          .filter()
+          .nodeIdEqualTo(nodeId)
+          .deleteAll();
+      await _isar.engineRewardGrantRecords
+          .filter()
+          .nodeIdEqualTo(nodeId)
+          .deleteAll();
+      await _isar.engineQuestOfferingRecords
+          .filter()
+          .nodeIdEqualTo(nodeId)
+          .deleteAll();
+    });
+  }
+
   // ── Domain → Isar ────────────────────────────────────────────────
 
   EngineObjectiveCompletionRecord _fromObjectiveCompletion(

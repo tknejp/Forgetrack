@@ -65,6 +65,7 @@ class ProviderEngineInputSource {
     required List<JournalEvent> events,
     LedgerCounters counters = LedgerCounters.empty,
     EvaluationOverrides overrides = EvaluationOverrides.empty,
+    Set<String> ownedCosmeticIds = const <String>{},
   }) {
     final today = _today();
     final health = fitness.snapshotForDate(today);
@@ -78,6 +79,7 @@ class ProviderEngineInputSource {
       counters: counters,
       overrides: overrides,
       evaluatedAt: _clock(),
+      ownedCosmeticIds: ownedCosmeticIds,
     );
   }
 

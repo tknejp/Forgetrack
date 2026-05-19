@@ -5,6 +5,7 @@ import '../../cosmetics/domain/player_cosmetic_lifecycle.dart';
 import '../../progression_engine/application/progression_engine_provider.dart';
 import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import 'package:forgetrack/domain/progression/catalog/unlock_condition.dart';
+import '../../progression_engine/domain/catalog/granting_achievement_lookup.dart';
 import '../../progression_engine/domain/policy/level_policy.dart';
 
 /// DevTools-only target state for the companion matrix. Drives the
@@ -59,13 +60,27 @@ class CompanionDevController {
     return null;
   }
 
-  /// Achievement node ids that gate the companion (each grants one
-  /// of the relic cosmetics through its reward table).
+  /// Progression node ids whose completion grants the relic cosmetics
+  /// that gate this companion's claim. Walks the companion's
+  /// `OwnsCosmetic(relic_id)` unlock conditions (the canonical gate
+  /// shape since the Trello #76 phase-A `OwnsCosmetic` refactor, commit
+  /// `185971a`) and maps each relic id back to the catalog node whose
+  /// reward table produces it via [grantingNodeForCosmetic] (typically
+  /// an Achievement granting the relic via its `CosmeticReward`).
+  ///
+  /// Relics with no catalog-side granting node (devtools-only relics,
+  /// shipped pre-unlocked content) drop silently — the matrix's
+  /// `claimable` target then can't force-complete them through the
+  /// engine, and falls back to leaving the cosmetics inventory as the
+  /// only path to "owned" for those entries.
   static List<String> gatingNodeIds(CompanionAvailability node) {
-    return [
-      for (final c in node.unlockConditions)
-        if (c is NodeCompleted) c.nodeId,
-    ];
+    final out = <String>[];
+    for (final c in node.unlockConditions) {
+      if (c is! OwnsCosmetic) continue;
+      final grantingNode = grantingNodeForCosmetic(c.cosmeticId);
+      if (grantingNode != null) out.add(grantingNode);
+    }
+    return out;
   }
 
   /// Live snapshot of the companion's lifecycle â€” same projection the
@@ -102,14 +117,25 @@ class CompanionDevController {
     // rather than the previous state. Engine state stays untouched
     // on this pre-pass â€” see the per-target branches below for the
     // narrow engine writes.
+    // The companion itself is always revoked first — every target
+    // except `claimed` wants the player to NOT own the companion.
+    // Relic mutations live inside the per-target switch because
+    // each target wants a different inventory shape; with the
+    // OwnsCosmetic refactor (Trello #76 phase A) the engine reads
+    // relic ownership directly from the cosmetics inventory, so a
+    // pre-pass that revoked relics for every target wiped the very
+    // condition we were about to verify on the `claimable` path
+    // (Trello #92 root cause).
     await cosmetics.debugRevokeCosmetic(node.companionId);
-    for (final relicId in relicIds) {
-      await cosmetics.debugRevokeCosmetic(relicId);
-    }
 
     switch (target) {
       case CompanionDevTarget.hidden:
       case CompanionDevTarget.partial:
+        // Revoke all gating relics — Hidden wants zero owned;
+        // Partial wants exactly one (granted below).
+        for (final relicId in relicIds) {
+          await cosmetics.debugRevokeCosmetic(relicId);
+        }
         // Cosmetics-only transition. Lowering the engine level is
         // intentionally NOT attempted â€” the only available primitive
         // (`devToolsSetLevel`) wipes the ledger via
@@ -130,15 +156,26 @@ class CompanionDevController {
           await cosmetics.debugGrantCosmetic(relicIds.first);
         }
       case CompanionDevTarget.claimable:
+        // Step 0 — clear the companion's own engine events first. If
+        // the companion was previously claimed, the ledger holds a
+        // NodeClaimEvent (and NodeCompletionEvent +
+        // RewardGrantEvent(companionAvailability)) for it. The
+        // resolver returns `r.completed=true` for an already-claimed
+        // manual-claim node and the engine skips re-adding it to
+        // `availability`, so the lifecycle service can never surface
+        // it as Claimable. No production "unclaim" primitive exists
+        // (events are append-only); devtools writes straight to the
+        // local repo via `devToolsClearNode` to reset the node's
+        // engine state. Cloud mirror is intentionally untouched — a
+        // subsequent cloud pull-and-merge restores the events
+        // (separate architectural follow-up on Trello #92).
+        await progression.devToolsClearNode(node.id);
         // Two requirements for `claimable`:
-        //   1. Engine level â‰¥ gate so `LevelAtLeast(gate)` resolves
-        //      true. We add XP additively â€” never wipe â€” so existing
+        //   1. Engine level >= gate so `LevelAtLeast(gate)` resolves
+        //      true. We add XP additively — never wipe — so existing
         //      pending celebrations / completion history stay intact.
-        //   2. Both gating achievement nodes completed. Only force-
-        //      complete the ones the player hasn't already cleared
-        //      organically; force-completing an already-completed
-        //      node is a no-op at the engine layer but still costs
-        //      a refresh, and we'd rather skip the churn.
+        //   2. Both gating relics in the cosmetics inventory so the
+        //      `OwnsCosmetic` gates resolve true.
         if (progression.level < gate) {
           const policy = ProgressionLevelPolicy();
           final targetXp = policy.xpRequiredForLevel(gate);
@@ -151,6 +188,23 @@ class CompanionDevController {
         for (final nodeId in gatingNodes) {
           if (completedIds.contains(nodeId)) continue;
           await progression.devToolsForceCompleteNode(nodeId);
+        }
+        // Fallback: when the granting achievement is already in the
+        // ledger from prior testing, `simulateClaim` writes an
+        // idempotent `ObjectiveCompletionEvent`, the engine sees the
+        // existing `NodeCompletionEvent` and emits no new reward
+        // grants, the bridge dispatch sees an empty
+        // `result.grantedRewards`, and the relic stays absent from
+        // the inventory — companion lands in Partial 1/3 (level
+        // only) instead of Claimable. Sweep the inventory after the
+        // engine-routed path and `debugGrantCosmetic` any relic the
+        // dispatch missed. Idempotent on relics that did land
+        // naturally.
+        final ownedNow =
+            cosmetics.state?.unlocked.keys.toSet() ?? const <String>{};
+        for (final relicId in relicIds) {
+          if (ownedNow.contains(relicId)) continue;
+          await cosmetics.debugGrantCosmetic(relicId);
         }
       case CompanionDevTarget.claimed:
         // Bypass the claim animation entirely â€” devtools cares about

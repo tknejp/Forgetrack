@@ -2147,6 +2147,8 @@
   "@cosmeticPartialProgress": { "placeholders": { "completed": { "type": "int" }, "total": { "type": "int" } } },
   "cosmeticCompanionLevelGate": "Reach level {level}",
   "@cosmeticCompanionLevelGate": { "placeholders": { "level": { "type": "int" } } },
+  "cosmeticCompanionLevelBadge": "Lv {level}",
+  "@cosmeticCompanionLevelBadge": { "placeholders": { "level": { "type": "int" } } },
 
   "cosmeticRarityCommon": "Common",
   "cosmeticRarityUncommon": "Uncommon",

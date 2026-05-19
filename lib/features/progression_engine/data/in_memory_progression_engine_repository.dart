@@ -56,6 +56,30 @@ class InMemoryProgressionEngineRepository
     _seenKeys.clear();
   }
 
+  @override
+  Future<void> clearEventsForNode(String nodeId) async {
+    // Drop every node-keyed event for [nodeId]. Also evict their
+    // event keys from `_seenKeys` so a later `appendEvents` with
+    // the same keys is allowed through (mirrors the Isar side
+    // where deleting the row releases the unique-eventKey index).
+    void purge<T extends JournalEvent>(
+      List<T> list,
+      bool Function(T) match,
+    ) {
+      list.removeWhere((e) {
+        if (!match(e)) return false;
+        _seenKeys.remove(e.eventKey);
+        return true;
+      });
+    }
+
+    purge<NodeCompletionEvent>(_nodeCompletions, (e) => e.nodeId == nodeId);
+    purge<NodeClaimEvent>(_nodeClaims, (e) => e.nodeId == nodeId);
+    purge<NodeAnnouncedEvent>(_nodeAnnouncements, (e) => e.nodeId == nodeId);
+    purge<RewardGrantEvent>(_rewardGrants, (e) => e.nodeId == nodeId);
+    purge<QuestOfferedEvent>(_questOfferings, (e) => e.nodeId == nodeId);
+  }
+
   LedgerSnapshot _snapshot() => LedgerSnapshot(
         objectiveCompletions: List.unmodifiable(_objectiveCompletions),
         nodeCompletions: List.unmodifiable(_nodeCompletions),

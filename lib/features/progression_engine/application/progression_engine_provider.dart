@@ -1236,6 +1236,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
       overrides: EvaluationOverrides(
         objectiveActualOverrides: _objectiveActualOverridesFromLedger(),
       ),
+      ownedCosmeticIds: _cosmeticBridge.ownedCosmeticIds,
     );
   }
 
@@ -2054,6 +2055,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
         counters: context.counters,
         overrides: context.overrides,
         evaluatedAt: context.evaluatedAt,
+        ownedCosmeticIds: context.ownedCosmeticIds,
         catalogContext: catalogContext,
         reason: reason,
       );
@@ -2123,6 +2125,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
         counters: freshContext.counters,
         overrides: freshContext.overrides,
         evaluatedAt: freshContext.evaluatedAt,
+        ownedCosmeticIds: freshContext.ownedCosmeticIds,
         catalogContext: ctx,
       );
       _lastResult = result;
@@ -3229,12 +3232,26 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// `TodayCompletionsAmongMetric` see the new completion on the
   /// same turn.
   Future<void> devToolsForceCompleteNode(String nodeId) async {
+    AppLog.app.info('devtools/forceCompleteNode start',
+        payload: 'node=$nodeId');
     final node = ProgressionEntryCatalog.definitionForId(nodeId);
-    if (node == null) return;
+    if (node == null) {
+      AppLog.app.warn('devtools/forceCompleteNode aborted',
+          payload: 'node=$nodeId reason=node_not_in_catalog');
+      return;
+    }
     final source = _source;
-    if (source == null) return;
+    if (source == null) {
+      AppLog.app.warn('devtools/forceCompleteNode aborted',
+          payload: 'node=$nodeId reason=source_not_bound');
+      return;
+    }
     final ctx = currentContext;
-    if (ctx == null) return;
+    if (ctx == null) {
+      AppLog.app.warn('devtools/forceCompleteNode aborted',
+          payload: 'node=$nodeId reason=context_null');
+      return;
+    }
 
     _isEvaluating = true;
     notifyListeners();
@@ -3250,15 +3267,38 @@ class ProgressionEngineProvider extends ChangeNotifier {
         overrides: ctx.overrides,
         evaluatedAt: ctx.evaluatedAt,
         levelAtGrant: level,
+        ownedCosmeticIds: ctx.ownedCosmeticIds,
         catalogContext: source.currentContext(),
       );
       _lastResult = result;
       _ledger = await _repository.loadLedger();
       _recomputeStreaks();
       if (!result.isEmpty) _pendingCelebrations.add(result);
+      AppLog.app.info('devtools/forceCompleteNode eval',
+          payload: 'node=$nodeId completed=${result.completedNodes.length} '
+              'available=${result.availableNodes.length} '
+              'newlyAvailable=${result.newlyAvailableNodes.length} '
+              'grants=${result.grantedRewards.length}');
+      // Dispatch the just-produced reward grants to the cosmetics
+      // bridge so any CosmeticReward on the force-completed node
+      // (e.g. relic on an Achievement) lands in the cosmetics
+      // inventory. The follow-up `refresh()` below runs a second
+      // engine.evaluate which sees everything as already-in-ledger
+      // and produces empty `grantedRewards` — so the bridge MUST run
+      // here, on the first-pass result, or the cosmetic is silently
+      // dropped (Trello #76 sub-issue 1 follow-on).
+      await _cosmeticBridge.dispatch(
+        result,
+        ledger: _ledger,
+        level: profile.level,
+      );
+      AppLog.app.info('devtools/forceCompleteNode dispatched',
+          payload: 'node=$nodeId grants=${result.grantedRewards.length}');
       _error = null;
-    } catch (e) {
+    } catch (e, st) {
       _error = e.toString();
+      AppLog.app.error('devtools/forceCompleteNode crashed',
+          payload: 'node=$nodeId', err: e, stackTrace: st);
     } finally {
       _isEvaluating = false;
       notifyListeners();
@@ -3300,6 +3340,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
         counters: ctx.counters,
         overrides: ctx.overrides,
         evaluatedAt: ctx.evaluatedAt,
+        ownedCosmeticIds: ctx.ownedCosmeticIds,
         catalogContext: source.currentContext(),
       );
       _lastResult = result;
@@ -3367,6 +3408,46 @@ class ProgressionEngineProvider extends ChangeNotifier {
       _isEvaluating = false;
       notifyListeners();
     }
+  }
+
+  /// Devtools — clears every node-keyed event (claim, completion,
+  /// announcement, reward grant, quest offering) for [nodeId] from
+  /// the engine ledger so the engine treats the node as fresh on
+  /// the next evaluation. Used by the companion-state matrix to
+  /// reset a previously-claimed `CompanionAvailability` node back
+  /// to its claimable state without nuking the entire ledger via
+  /// [devToolsWipeLedger]. No engine "unclaim" primitive exists in
+  /// production flows — this devtools route is the only writer.
+  ///
+  /// Repository contract: the bound local repo (or hybrid wrapper)
+  /// is responsible for propagating the clear to both the local
+  /// Isar store AND the Firestore mirror — `HybridProgressionEngine
+  /// Repository.clearEventsForNode` forwards to both so the revoke
+  /// survives the next cloud pull-and-merge. Cloud-side delete is
+  /// best-effort; failures land in the sync log via the existing
+  /// classifier.
+  Future<void> devToolsClearNode(String nodeId) async {
+    final repo = _repository;
+    if (repo is! ProgressionEngineLocalRepository) return;
+    AppLog.app.info('devtools/clearNode start', payload: 'node=$nodeId');
+    _isEvaluating = true;
+    notifyListeners();
+    try {
+      await repo.clearEventsForNode(nodeId);
+      _ledger = await _repository.loadLedger();
+      _recomputeStreaks();
+      _lastEvaluatedSignature = null;
+      _error = null;
+      AppLog.app.info('devtools/clearNode done', payload: 'node=$nodeId');
+    } catch (e, st) {
+      _error = e.toString();
+      AppLog.app.error('devtools/clearNode crashed',
+          payload: 'node=$nodeId', err: e, stackTrace: st);
+    } finally {
+      _isEvaluating = false;
+      notifyListeners();
+    }
+    await refresh();
   }
 
   // â”€â”€ Internals â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

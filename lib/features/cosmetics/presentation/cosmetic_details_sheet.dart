@@ -6,6 +6,7 @@ import '../../../core/logging/app_log.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/theme/design_tokens.dart';
 import '../../progression_engine/application/progression_engine_provider.dart';
+import '../../progression_engine/domain/catalog/granting_achievement_lookup.dart';
 import '../application/cosmetics_provider.dart';
 import '../domain/cosmetic_catalog.dart';
 import '../domain/cosmetic_lifecycle_helpers.dart';
@@ -18,6 +19,7 @@ import '../domain/player_cosmetic_lifecycle.dart';
 import 'cosmetics_screen_internals.dart';
 import 'widgets/companion_claim_reveal.dart';
 import 'widgets/companion_fake_idle_preview.dart';
+import 'widgets/cosmetic_asset_thumb.dart';
 
 const _log = AppLogger('COSMETICS', scope: 'details_sheet');
 
@@ -81,21 +83,81 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
   Future<void> _devGrant() async {
     if (_devBusy || _equipBusy) return;
     setState(() => _devBusy = true);
-    await context
-        .read<CosmeticsProvider>()
-        .debugGrantCosmetic(widget.definition.id);
+    // Capture our sheet's route + Navigator BEFORE the await so a
+    // celebration overlay pushed mid-await (the engine path fires
+    // achievement / cosmetic celebrations on the same run as the
+    // grant) doesn't intercept the closing pop and leave the sheet
+    // stuck in the loading state.
+    final navigator = Navigator.of(context);
+    final sheetRoute = ModalRoute.of(context);
+    final cosmeticId = widget.definition.id;
+    final grantingNodeId = grantingNodeForCosmetic(cosmeticId);
+    _log.info('devGrant start',
+        payload: 'id=$cosmeticId grantingNode=${grantingNodeId ?? "<none>"}');
+    try {
+      if (grantingNodeId != null) {
+        // Route through the engine so the granting node's
+        // NodeCompletionEvent + RewardGrantEvent(cosmetic) series
+        // lands in the ledger; the cosmetic-unlock bridge then flips
+        // the cosmetic in inventory via the production path. This
+        // keeps the engine ledger + cosmetics inventory in lockstep —
+        // without it, devtools-granting a relic leaves the
+        // corresponding CompanionAvailability node permanently
+        // un-claimable because its `OwnsCosmetic(relic)` gate holds
+        // while its parent achievement's NodeCompletion is absent
+        // from the journal (Trello #76 sub-issue 1).
+        await context
+            .read<ProgressionEngineProvider>()
+            .devToolsForceCompleteNode(grantingNodeId);
+        _log.info('devGrant via engine completed',
+            payload: 'id=$cosmeticId grantingNode=$grantingNodeId');
+      } else {
+        // Cosmetic with no catalog-side granting node (e.g. premium
+        // unlocks, content that ships pre-unlocked, dev-only items).
+        // Falls back to the direct cosmetics-inventory grant.
+        await context
+            .read<CosmeticsProvider>()
+            .debugGrantCosmetic(cosmeticId);
+        _log.info('devGrant via cosmetics debugGrant completed',
+            payload: 'id=$cosmeticId');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _devBusy = false);
+      }
+    }
     if (!mounted) return;
-    Navigator.of(context).pop();
+    _closeSheet(navigator, sheetRoute);
   }
 
   Future<void> _devRevoke() async {
     if (_devBusy || _equipBusy) return;
     setState(() => _devBusy = true);
-    await context
-        .read<CosmeticsProvider>()
-        .debugRevokeCosmetic(widget.definition.id);
+    final navigator = Navigator.of(context);
+    final sheetRoute = ModalRoute.of(context);
+    try {
+      await context
+          .read<CosmeticsProvider>()
+          .debugRevokeCosmetic(widget.definition.id);
+    } finally {
+      if (mounted) {
+        setState(() => _devBusy = false);
+      }
+    }
     if (!mounted) return;
-    Navigator.of(context).pop();
+    _closeSheet(navigator, sheetRoute);
+  }
+
+  /// Removes the sheet's specific route from the Navigator stack.
+  /// Using `removeRoute` (rather than `pop`) protects against an
+  /// overlay route (celebration, dialog) being pushed mid-await and
+  /// stealing the pop, which would leave the sheet stuck open.
+  void _closeSheet(NavigatorState navigator, ModalRoute<Object?>? sheetRoute) {
+    if (sheetRoute != null && sheetRoute.isActive) {
+      navigator.removeRoute(sheetRoute);
+    } else {
+      navigator.maybePop();
+    }
   }
 
   @override
@@ -667,6 +729,25 @@ class _PartialProgressRow extends StatelessWidget {
 // Companion requirements checklist
 // ─────────────────────────────────────────────────────────────────────────────
 
+/// Renders the companion's unlock requirements as a horizontal row of
+/// tiles: a level badge on the left + one tile per `OwnsCosmetic`
+/// gate (typically two relics) on the right.
+///
+/// Trello #76 phase F (sub-issue 6): the prior text-only checklist
+/// (`✓ Dosáhni úrovně 15 / Měsíční náprsník / Kořen starého lesa`)
+/// was deliberately replaced — relics are visual content with their
+/// own assets + rarity, and surfacing them as tappable thumbnails
+/// (tap → open the relic's own details sheet) reads as a "you'll
+/// need these" treasure hunt rather than a homework list. The
+/// level badge anchors the gate on the left so the player still
+/// sees the level requirement at a glance.
+///
+/// Parses `conditionRows.conditionId` for the two known prefixes
+/// (`level_at_least_` and `owns_`); any other condition id falls
+/// back to the legacy text label so we don't silently swallow new
+/// gate kinds. All current companion gates use exactly one level
+/// row + two relic rows so the resulting layout is a clean
+/// 1 + 2 split.
 class _CompanionChecklist extends StatelessWidget {
   const _CompanionChecklist({
     required this.conditionRows,
@@ -678,8 +759,27 @@ class _CompanionChecklist extends StatelessWidget {
   final Color color;
   final AppLocalizations l10n;
 
+  static const _levelPrefix = 'level_at_least_';
+  static const _ownsPrefix = 'owns_';
+
   @override
   Widget build(BuildContext context) {
+    CosmeticRevealConditionRow? levelRow;
+    int? levelTarget;
+    final relicRows = <CosmeticRevealConditionRow>[];
+    final otherRows = <CosmeticRevealConditionRow>[];
+    for (final row in conditionRows) {
+      final id = row.conditionId;
+      if (id.startsWith(_levelPrefix)) {
+        levelRow = row;
+        levelTarget = int.tryParse(id.substring(_levelPrefix.length));
+      } else if (id.startsWith(_ownsPrefix)) {
+        relicRows.add(row);
+      } else {
+        otherRows.add(row);
+      }
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -699,16 +799,204 @@ class _CompanionChecklist extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        for (final row in conditionRows)
-          _ChecklistRow(row: row, color: color, l10n: l10n),
+        const SizedBox(height: 10),
+        // `IntrinsicHeight` resolves the circular constraint of
+        // `Row(crossAxisAlignment: stretch)` inside a parent
+        // `Column(mainAxisSize: min)` — without it Flutter asserts on
+        // `RenderBox was not laid out` because the row's cross-axis
+        // (height) and its stretched children's heights both depend on
+        // each other with no fallback. Wrapping in `IntrinsicHeight`
+        // forces the row to size to its tallest child first, then
+        // stretches the rest to match.
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (levelRow != null && levelTarget != null)
+                Expanded(
+                  child: _LevelGateTile(
+                    level: levelTarget,
+                    met: levelRow.met,
+                    color: color,
+                    l10n: l10n,
+                  ),
+                ),
+              for (final row in relicRows) ...[
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _RelicGateTile(
+                    conditionRow: row,
+                    color: color,
+                    l10n: l10n,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (otherRows.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          for (final row in otherRows)
+            _LegacyTextRow(row: row, color: color, l10n: l10n),
+        ],
       ],
     );
   }
 }
 
-class _ChecklistRow extends StatelessWidget {
-  const _ChecklistRow({
+/// Level-gate tile: left cell of the requirements row. Shows the
+/// target level as `Lv N`. Met → rarity color + checkmark; unmet →
+/// muted + lock icon. Not tappable (the player can't "open" a
+/// level the way they can open a relic).
+class _LevelGateTile extends StatelessWidget {
+  const _LevelGateTile({
+    required this.level,
+    required this.met,
+    required this.color,
+    required this.l10n,
+  });
+
+  final int level;
+  final bool met;
+  final Color color;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = met ? color : Tokens.onSurfaceMuted;
+    final alpha = met ? 0.9 : 0.55;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(Tokens.radiusInner),
+        border: Border.all(color: accent.withValues(alpha: 0.22)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            met ? Icons.workspace_premium_rounded : Icons.lock_rounded,
+            size: 26,
+            color: accent.withValues(alpha: alpha),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            l10n.cosmeticCompanionLevelBadge(level),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: accent.withValues(alpha: alpha),
+              fontSize: Tokens.fontSizeSmall,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.6,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Relic-gate tile: shows the relic's asset thumb + name. Met →
+/// rarity color + full asset; unmet → muted + dimmed asset (still
+/// rendered — relics are `visibleLocked` in the reveal evaluator,
+/// so the player can already see what they're hunting for). Tap
+/// opens the relic's own [CosmeticDetailsSheet] on top of the
+/// current modal — the player can inspect each gating relic
+/// without backing out to the inventory grid.
+class _RelicGateTile extends StatelessWidget {
+  const _RelicGateTile({
+    required this.conditionRow,
+    required this.color,
+    required this.l10n,
+  });
+
+  final CosmeticRevealConditionRow conditionRow;
+  final Color color;
+  final AppLocalizations l10n;
+
+  static const _ownsPrefix = 'owns_';
+  static const _catalog = CosmeticCatalog();
+
+  @override
+  Widget build(BuildContext context) {
+    final met = conditionRow.met;
+    final relicId =
+        conditionRow.conditionId.substring(_ownsPrefix.length);
+    final relic = _catalog.byId(relicId);
+    final accent = met ? color : Tokens.onSurfaceMuted;
+    final alpha = met ? 0.9 : 0.55;
+    final label = relic == null
+        ? conditionRow.conditionId
+        : relic.name(l10n);
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: relic == null
+          ? null
+          : () => _openRelicDetails(context, relic),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
+        decoration: BoxDecoration(
+          color: accent.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(Tokens.radiusInner),
+          border: Border.all(color: accent.withValues(alpha: 0.22)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CosmeticAssetThumb(
+              cosmeticId: relicId,
+              size: 44,
+              dimmed: !met,
+              fallbackColor: accent,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: accent.withValues(alpha: alpha),
+                fontSize: Tokens.fontSizeTiny,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.2,
+                height: 1.15,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openRelicDetails(BuildContext context, Cosmetic relic) {
+    final cosmetics = context.read<CosmeticsProvider>();
+    final state = cosmetics.state;
+    if (state == null) return;
+    final revealResults =
+        cosmetics.computeRevealResults(kCosmeticUnlockRules);
+    final revealResult = revealResults[relic.id];
+    showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => CosmeticDetailsSheet(
+        definition: relic,
+        state: state,
+        l10n: l10n,
+        revealResult: revealResult,
+      ),
+    );
+  }
+}
+
+/// Fallback for any condition id that isn't a known `level_at_least_`
+/// or `owns_` gate. Renders the legacy text row so a future
+/// condition kind shows up rather than disappearing silently.
+class _LegacyTextRow extends StatelessWidget {
+  const _LegacyTextRow({
     required this.row,
     required this.color,
     required this.l10n,
@@ -717,24 +1005,6 @@ class _ChecklistRow extends StatelessWidget {
   final CosmeticRevealConditionRow row;
   final Color color;
   final AppLocalizations l10n;
-
-  static const _catalog = CosmeticCatalog();
-  static const _levelPrefix = 'level_at_least_';
-  static const _ownsPrefix = 'owns_';
-
-  String _label() {
-    final id = row.conditionId;
-    if (id.startsWith(_levelPrefix)) {
-      final level = int.tryParse(id.substring(_levelPrefix.length));
-      if (level != null) return l10n.cosmeticCompanionLevelGate(level);
-    }
-    if (id.startsWith(_ownsPrefix)) {
-      final cosmeticId = id.substring(_ownsPrefix.length);
-      final name = _catalog.byId(cosmeticId)?.name(l10n);
-      if (name != null) return name;
-    }
-    return id.replaceAll('_', ' ');
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -753,7 +1023,7 @@ class _ChecklistRow extends StatelessWidget {
           const SizedBox(width: 7),
           Expanded(
             child: Text(
-              _label(),
+              row.conditionId.replaceAll('_', ' '),
               style: TextStyle(
                 color: metColor.withValues(alpha: row.met ? 0.9 : 0.6),
                 fontSize: Tokens.fontSizeCaption,
@@ -1263,7 +1533,14 @@ class _ClaimableCompanionBody extends StatelessWidget {
                 l10n.cosmeticCompanionClaimableBadge,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Tokens.accent,
+                  // Tied to the companion's rarity color (passed in by
+                  // the sheet) so the claimable badge in the details
+                  // sheet reads as belonging to *this* companion —
+                  // matches the rarity-color border + glow pulse on
+                  // the inventory card (phase C). The generic
+                  // `Tokens.accent` here used to clash with the
+                  // rarity-tinted card the player just tapped through.
+                  color: color,
                   fontSize: 11,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 2.0,
