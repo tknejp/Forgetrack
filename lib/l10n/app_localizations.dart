@@ -7569,6 +7569,30 @@ abstract class AppLocalizations {
   /// **'Forging companion…'**
   String get cosmeticCompanionClaimingFlavor;
 
+  /// Status label shown during the opening fly-in phase of the companion claim ritual (t < 600ms).
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing the ritual…'**
+  String get cosmeticCompanionClaimStepRitual;
+
+  /// Status label shown while the relics orbit and pull to the center (600 ≤ t < 2400ms).
+  ///
+  /// In en, this message translates to:
+  /// **'Binding the relics…'**
+  String get cosmeticCompanionClaimStepBinding;
+
+  /// Status label shown while the companion sprite materializes (2900 ≤ t < 4700ms).
+  ///
+  /// In en, this message translates to:
+  /// **'Awakening your companion…'**
+  String get cosmeticCompanionClaimStepAwakening;
+
+  /// Subtitle shown beneath the companion name at the reveal moment (t ≥ 4700ms).
+  ///
+  /// In en, this message translates to:
+  /// **'Your new companion'**
+  String get cosmeticCompanionClaimRevealSubtitle;
+
   /// Pill shown on a relic that has been used to summon a companion.
   ///
   /// In en, this message translates to:

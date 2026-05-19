@@ -4281,6 +4281,18 @@ class AppLocalizationsCs extends AppLocalizations {
   String get cosmeticCompanionClaimingFlavor => 'Spojuji relikvie…';
 
   @override
+  String get cosmeticCompanionClaimStepRitual => 'Připravuji rituál…';
+
+  @override
+  String get cosmeticCompanionClaimStepBinding => 'Spojuji relikvie…';
+
+  @override
+  String get cosmeticCompanionClaimStepAwakening => 'Probouzím společníka…';
+
+  @override
+  String get cosmeticCompanionClaimRevealSubtitle => 'Tvůj nový společník';
+
+  @override
   String get cosmeticRelicConsumedBadge => 'Použito';
 
   @override

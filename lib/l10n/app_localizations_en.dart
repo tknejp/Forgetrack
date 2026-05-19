@@ -4287,6 +4287,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cosmeticCompanionClaimingFlavor => 'Forging companion…';
 
   @override
+  String get cosmeticCompanionClaimStepRitual => 'Preparing the ritual…';
+
+  @override
+  String get cosmeticCompanionClaimStepBinding => 'Binding the relics…';
+
+  @override
+  String get cosmeticCompanionClaimStepAwakening => 'Awakening your companion…';
+
+  @override
+  String get cosmeticCompanionClaimRevealSubtitle => 'Your new companion';
+
+  @override
   String get cosmeticRelicConsumedBadge => 'Used';
 
   @override
