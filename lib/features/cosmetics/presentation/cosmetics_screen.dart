@@ -555,7 +555,7 @@ class _CategoryGrid extends StatelessWidget {
   }
 }
 
-class _CosmeticCard extends StatelessWidget {
+class _CosmeticCard extends StatefulWidget {
   const _CosmeticCard({
     required this.definition,
     required this.isEquipped,
@@ -583,16 +583,70 @@ class _CosmeticCard extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
+  State<_CosmeticCard> createState() => _CosmeticCardState();
+}
+
+class _CosmeticCardState extends State<_CosmeticCard>
+    with SingleTickerProviderStateMixin {
+  AnimationController? _pulseCtrl;
+
+  bool get _isClaimableCompanion =>
+      widget.definition is Companion &&
+      widget.lifecycle is CosmeticClaimable;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isClaimableCompanion) {
+      _startPulse();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _CosmeticCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_isClaimableCompanion && _pulseCtrl == null) {
+      _startPulse();
+    } else if (!_isClaimableCompanion && _pulseCtrl != null) {
+      _pulseCtrl?.dispose();
+      _pulseCtrl = null;
+    }
+  }
+
+  void _startPulse() {
+    // Synced with `_ReadyPill` (1400 ms reverse-repeat) so the card
+    // border / glow pulse + the corner pill pulse in lockstep — the
+    // player sees one cohesive "PŘIPRAVEN" beat rather than two
+    // out-of-phase animations.
+    _pulseCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _pulseCtrl?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final definition = widget.definition;
+    final lifecycle = widget.lifecycle;
+    final isEquipped = widget.isEquipped;
+    final isLocked = widget.isLocked;
+    final showMissingAsset = widget.showMissingAsset;
+    final isRelicConsumed = widget.isRelicConsumed;
+    final l10n = widget.l10n;
+    final onTap = widget.onTap;
     // Phase 11: the card branches purely on (definition, lifecycle).
     // For Companion catalog rows, [hidesIdentity] gates the silhouette
     // + mystery name presentation; non-companion locked rows show
     // their real identity in every state except CosmeticHidden.
-    final teased = lifecycle is CosmeticTeased
-        ? lifecycle! as CosmeticTeased
-        : null;
-    final hidesCompanion = lifecycle != null &&
-        hidesIdentity(definition, lifecycle!);
+    final teased = lifecycle is CosmeticTeased ? lifecycle : null;
+    final hidesCompanion =
+        lifecycle != null && hidesIdentity(definition, lifecycle);
     final isHiddenCard = hidesCompanion || lifecycle is CosmeticHidden;
     final isClaimableCompanion = definition is Companion &&
         lifecycle is CosmeticClaimable;
@@ -628,32 +682,92 @@ class _CosmeticCard extends StatelessWidget {
                     ? 0.35
                     : 1.0;
 
+    BoxDecoration decorationFor(double pulse) {
+      // Sub-issue 2 of Trello #76: the whole claimable companion card
+      // breathes in lockstep with `_ReadyPill` so a single claimable
+      // card stands out across a 20-card grid. `pulse` is in [0, 1]
+      // and is driven by `_pulseCtrl` (1400 ms reverse-repeat) when
+      // `_isClaimableCompanion`; it stays 0 for every other lifecycle
+      // state so the static cards keep their identical decoration
+      // (no idle animation cost, no flicker on rebuild).
+      return BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            color.withValues(alpha: 0.13),
+            color.withValues(alpha: 0.03),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(Tokens.radiusInner),
+        border: Border.all(
+          color: color.withValues(alpha: 0.27 + 0.10 * pulse),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.16 + 0.10 * pulse),
+            blurRadius: 12 + 4 * pulse,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      );
+    }
+
+    final pulseCtrl = _pulseCtrl;
+    Widget buildCardBody(double pulse) => Container(
+          decoration: decorationFor(pulse),
+          child: _cardStack(
+            color: color,
+            assetPath: assetPath,
+            hasAsset: hasAsset,
+            displayName: displayName,
+            isHiddenCard: isHiddenCard,
+            isEquipped: isEquipped,
+            isLocked: isLocked,
+            isNormalLocked: isNormalLocked,
+            isPartialCard: isPartialCard,
+            isClaimableCompanion: isClaimableCompanion,
+            isRelicConsumed: isRelicConsumed,
+            showMissingAsset: showMissingAsset,
+            teased: teased,
+            l10n: l10n,
+            definition: definition,
+          ),
+        );
+
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Opacity(
         opacity: cardOpacity,
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                color.withValues(alpha: 0.13),
-                color.withValues(alpha: 0.03),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(Tokens.radiusInner),
-            border: Border.all(color: color.withValues(alpha: 0.27)),
-            boxShadow: [
-              BoxShadow(
-                color: color.withValues(alpha: 0.16),
-                blurRadius: 12,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Stack(
+        child: pulseCtrl != null
+            ? AnimatedBuilder(
+                animation: pulseCtrl,
+                builder: (_, __) => buildCardBody(pulseCtrl.value),
+              )
+            : buildCardBody(0),
+      ),
+    );
+  }
+
+  Widget _cardStack({
+    required Color color,
+    required String? assetPath,
+    required bool hasAsset,
+    required String displayName,
+    required bool isHiddenCard,
+    required bool isEquipped,
+    required bool isLocked,
+    required bool isNormalLocked,
+    required bool isPartialCard,
+    required bool isClaimableCompanion,
+    required bool isRelicConsumed,
+    required bool showMissingAsset,
+    required CosmeticTeased? teased,
+    required AppLocalizations l10n,
+    required Cosmetic definition,
+  }) {
+    return Stack(
             children: [
               Positioned.fill(
                 child: Padding(
@@ -731,7 +845,7 @@ class _CosmeticCard extends StatelessWidget {
               // evaluator, then yields to the READY pill once the
               // engine flips the companion availability node into
               // `claimable`.
-              if (isPartialCard && !isClaimableCompanion)
+              if (isPartialCard && !isClaimableCompanion && teased != null)
                 Positioned(
                   bottom: 5,
                   right: 5,
@@ -783,10 +897,7 @@ class _CosmeticCard extends StatelessWidget {
                     ),
                   ),
                 ),
-            ],
-          ),
-        ),
-      ),
+      ],
     );
   }
 }
