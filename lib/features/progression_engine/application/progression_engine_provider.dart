@@ -1229,7 +1229,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
   EngineEvaluationContext? get currentContext {
     final source = _source;
     if (source == null) return null;
-    return source.buildContext(
+    final base = source.buildContext(
       player: _buildPlayer(),
       events: _ledger?.all.toList() ?? const [],
       counters: _buildLedgerCounters(),
@@ -1238,6 +1238,26 @@ class ProgressionEngineProvider extends ChangeNotifier {
       ),
       ownedCosmeticIds: _cosmeticBridge.ownedCosmeticIds,
     );
+    return base.copyWith(
+      equippedCompanionBuff: _cosmeticBridge.equippedCompanionBuff,
+      maxCurrentStreak: _resolveMaxCurrentStreak(),
+    );
+  }
+
+  /// The player's longest currently-active streak across every
+  /// tracked objective + domain summary. Read by the
+  /// streak-scaling companion buff (Ember Sprite). Picks the max so
+  /// the buff rewards the player's strongest active streak even when
+  /// other streaks are dormant.
+  int _resolveMaxCurrentStreak() {
+    var best = 0;
+    for (final s in _objectiveStreaks.values) {
+      if (s.currentStreak > best) best = s.currentStreak;
+    }
+    for (final s in _domainStreaks.values) {
+      if (s.currentStreak > best) best = s.currentStreak;
+    }
+    return best;
   }
 
   /// Resolves the current [Player] aggregate from the loaded ledger.

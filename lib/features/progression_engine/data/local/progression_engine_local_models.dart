@@ -122,6 +122,10 @@ class EngineRewardGrantRecord {
   // XP-scaling capture, only populated for kind == xp.
   int? levelAtGrant;
   double? multiplierAtGrant;
+
+  /// Companion-buff bonus portion of [xpAmount], populated only for
+  /// kind == xp. Read by the engine's daily-softcap accountant.
+  int? companionBuffBonusXp;
 }
 
 /// Per-day record that a daily-section slot picked this node on

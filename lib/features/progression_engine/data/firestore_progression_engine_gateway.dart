@@ -300,6 +300,7 @@ class FirestoreProgressionEngineGateway {
           'relicId': event.relicId,
           'levelAtGrant': event.levelAtGrant,
           'multiplierAtGrant': event.multiplierAtGrant,
+          'companionBuffBonusXp': event.companionBuffBonusXp,
         },
       QuestOfferedEvent() => {
           ...base,
@@ -423,6 +424,7 @@ class FirestoreProgressionEngineGateway {
       relicId: _readNullableString(data['relicId']),
       levelAtGrant: _readNullableInt(data['levelAtGrant']),
       multiplierAtGrant: _readNullableDouble(data['multiplierAtGrant']),
+      companionBuffBonusXp: _readNullableInt(data['companionBuffBonusXp']),
     );
   }
 

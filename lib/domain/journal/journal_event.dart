@@ -131,6 +131,7 @@ class RewardGrantEvent extends JournalEvent {
     this.relicId,
     this.levelAtGrant,
     this.multiplierAtGrant,
+    this.companionBuffBonusXp,
   });
 
   final String nodeId; // lint-ignore: untyped-id — JournalEvent fields are storage-boundary raw strings
@@ -151,6 +152,13 @@ class RewardGrantEvent extends JournalEvent {
   // XP-scaling fields, only populated for [RewardGrantKind.xp].
   final int? levelAtGrant;
   final double? multiplierAtGrant;
+
+  /// Companion-buff bonus XP included inside [xpAmount]. Recorded
+  /// separately so the daily-softcap accountant can read prior
+  /// buff-contribution from the ledger without re-deriving it from
+  /// the multiplier. Null on pre-buff events (older ledgers) and on
+  /// non-XP grants.
+  final int? companionBuffBonusXp;
 }
 
 /// Discriminator on [RewardGrantEvent] so the same record table can

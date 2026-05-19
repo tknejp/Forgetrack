@@ -200,7 +200,8 @@ class IsarProgressionEngineRepository
         ..emblemId = e.emblemId
         ..relicId = e.relicId
         ..levelAtGrant = e.levelAtGrant
-        ..multiplierAtGrant = e.multiplierAtGrant;
+        ..multiplierAtGrant = e.multiplierAtGrant
+        ..companionBuffBonusXp = e.companionBuffBonusXp;
 
   EngineQuestOfferingRecord _fromQuestOffered(QuestOfferedEvent e) =>
       EngineQuestOfferingRecord()
@@ -277,6 +278,7 @@ class IsarProgressionEngineRepository
       relicId: r.relicId,
       levelAtGrant: r.levelAtGrant,
       multiplierAtGrant: r.multiplierAtGrant,
+      companionBuffBonusXp: r.companionBuffBonusXp,
     );
   }
 }

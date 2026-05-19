@@ -411,6 +411,7 @@ class ProgressionEngine {
       planned: planned,
       runningClaimedXp: runningXp,
       timestamp: timestamp,
+      context: context,
     );
 
     // Step 6: append.

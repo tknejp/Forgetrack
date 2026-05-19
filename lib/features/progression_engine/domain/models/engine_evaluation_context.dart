@@ -2,6 +2,7 @@ import 'package:meta/meta.dart';
 
 import '../../../../domain/journal/journal.dart';
 import '../../../../domain/player/player.dart';
+import '../../../cosmetics/domain/companion_buff.dart';
 import '../../../health_connect/domain/goal_board.dart';
 import '../../../health_connect/domain/health_snapshot.dart';
 import '../../../nutrition/domain/nutrition_snapshot.dart';
@@ -47,6 +48,14 @@ import 'ledger_counters.dart';
 ///     the same source of truth as the reveal evaluator. Defaults to
 ///     the empty set so tests + non-companion evaluations stay
 ///     unaffected.
+///   - [equippedCompanionBuff] — buff carried by the companion in
+///     the active loadout slot, or `null` when no companion is
+///     equipped. Read by the [RewardGrantService] to scale XP grants
+///     at append time per the equipped companion's [RewardSourceKind].
+///   - [maxCurrentStreak] — the player's longest currently-active
+///     daily streak (across any tracked objective or domain). Read
+///     by dynamic streak-scaling buffs (Ember Sprite). Defaults to 0
+///     when no streak is active.
 @immutable
 class EngineEvaluationContext {
   const EngineEvaluationContext({
@@ -59,6 +68,8 @@ class EngineEvaluationContext {
     required this.overrides,
     required this.evaluatedAt,
     this.ownedCosmeticIds = const <String>{},
+    this.equippedCompanionBuff,
+    this.maxCurrentStreak = 0,
   });
 
   final Player player;
@@ -70,6 +81,8 @@ class EngineEvaluationContext {
   final EvaluationOverrides overrides;
   final DateTime evaluatedAt;
   final Set<String> ownedCosmeticIds;
+  final CompanionBuff? equippedCompanionBuff;
+  final int maxCurrentStreak;
 
   EngineEvaluationContext copyWith({
     Player? player,
@@ -81,6 +94,8 @@ class EngineEvaluationContext {
     EvaluationOverrides? overrides,
     DateTime? evaluatedAt,
     Set<String>? ownedCosmeticIds,
+    CompanionBuff? equippedCompanionBuff,
+    int? maxCurrentStreak,
   }) {
     return EngineEvaluationContext(
       player: player ?? this.player,
@@ -92,6 +107,9 @@ class EngineEvaluationContext {
       overrides: overrides ?? this.overrides,
       evaluatedAt: evaluatedAt ?? this.evaluatedAt,
       ownedCosmeticIds: ownedCosmeticIds ?? this.ownedCosmeticIds,
+      equippedCompanionBuff:
+          equippedCompanionBuff ?? this.equippedCompanionBuff,
+      maxCurrentStreak: maxCurrentStreak ?? this.maxCurrentStreak,
     );
   }
 }

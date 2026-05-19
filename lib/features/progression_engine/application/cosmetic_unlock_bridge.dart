@@ -2,6 +2,8 @@ import 'dart:async';
 
 import '../../../core/logging/app_log.dart';
 import '../../cosmetics/application/cosmetics_provider.dart';
+import '../../cosmetics/domain/cosmetic_catalog.dart';
+import '../../cosmetics/domain/cosmetic_models.dart';
 import 'package:forgetrack/domain/journal/journal_event.dart';
 import 'package:forgetrack/domain/journal/journal_projection.dart';
 import '../domain/models/progression_resolution_result.dart';
@@ -53,6 +55,24 @@ class CosmeticUnlockBridge implements JournalProjection<int> {
     final state = _cosmetics?.state;
     if (state == null) return const <String>{};
     return state.unlocked.keys.toSet();
+  }
+
+  /// Buff carried by the companion currently equipped in the active
+  /// loadout slot, resolved through the catalog. Null when no
+  /// companion is equipped, the equipped id resolves to a non-
+  /// Companion cosmetic, or the catalog row has no buff assigned.
+  /// Read by `ProgressionEngineProvider.currentContext` so the
+  /// engine's [RewardGrantService] can apply the multiplier at grant
+  /// time without cosmetics knowing about the engine.
+  CompanionBuff? get equippedCompanionBuff {
+    final state = _cosmetics?.state;
+    if (state == null) return null;
+    final equippedId = state.equipped.companionId;
+    if (equippedId == null) return null;
+    const catalog = CosmeticCatalog();
+    final cosmetic = catalog.byId(equippedId);
+    if (cosmetic is! Companion) return null;
+    return cosmetic.buff;
   }
 
   /// Dispatch every cosmetic-kind reward grant in [result] to the

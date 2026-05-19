@@ -5166,73 +5166,78 @@ const EngineRewardGrantRecordSchema = CollectionSchema(
       name: r'chapterId',
       type: IsarType.string,
     ),
-    r'companionId': PropertySchema(
+    r'companionBuffBonusXp': PropertySchema(
       id: 1,
+      name: r'companionBuffBonusXp',
+      type: IsarType.long,
+    ),
+    r'companionId': PropertySchema(
+      id: 2,
       name: r'companionId',
       type: IsarType.string,
     ),
     r'cosmeticId': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'cosmeticId',
       type: IsarType.string,
     ),
     r'emblemId': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'emblemId',
       type: IsarType.string,
     ),
     r'eventKey': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'eventKey',
       type: IsarType.string,
     ),
     r'levelAtGrant': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'levelAtGrant',
       type: IsarType.long,
     ),
     r'multiplierAtGrant': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'multiplierAtGrant',
       type: IsarType.double,
     ),
     r'nodeId': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'nodeId',
       type: IsarType.string,
     ),
     r'periodKey': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'periodKey',
       type: IsarType.string,
     ),
     r'relicId': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'relicId',
       type: IsarType.string,
     ),
     r'rewardKindName': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'rewardKindName',
       type: IsarType.string,
     ),
     r'rewardOrdinal': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'rewardOrdinal',
       type: IsarType.long,
     ),
     r'timestamp': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'timestamp',
       type: IsarType.dateTime,
     ),
     r'titleId': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'titleId',
       type: IsarType.string,
     ),
     r'xpAmount': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'xpAmount',
       type: IsarType.long,
     )
@@ -5352,20 +5357,21 @@ void _engineRewardGrantRecordSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeString(offsets[0], object.chapterId);
-  writer.writeString(offsets[1], object.companionId);
-  writer.writeString(offsets[2], object.cosmeticId);
-  writer.writeString(offsets[3], object.emblemId);
-  writer.writeString(offsets[4], object.eventKey);
-  writer.writeLong(offsets[5], object.levelAtGrant);
-  writer.writeDouble(offsets[6], object.multiplierAtGrant);
-  writer.writeString(offsets[7], object.nodeId);
-  writer.writeString(offsets[8], object.periodKey);
-  writer.writeString(offsets[9], object.relicId);
-  writer.writeString(offsets[10], object.rewardKindName);
-  writer.writeLong(offsets[11], object.rewardOrdinal);
-  writer.writeDateTime(offsets[12], object.timestamp);
-  writer.writeString(offsets[13], object.titleId);
-  writer.writeLong(offsets[14], object.xpAmount);
+  writer.writeLong(offsets[1], object.companionBuffBonusXp);
+  writer.writeString(offsets[2], object.companionId);
+  writer.writeString(offsets[3], object.cosmeticId);
+  writer.writeString(offsets[4], object.emblemId);
+  writer.writeString(offsets[5], object.eventKey);
+  writer.writeLong(offsets[6], object.levelAtGrant);
+  writer.writeDouble(offsets[7], object.multiplierAtGrant);
+  writer.writeString(offsets[8], object.nodeId);
+  writer.writeString(offsets[9], object.periodKey);
+  writer.writeString(offsets[10], object.relicId);
+  writer.writeString(offsets[11], object.rewardKindName);
+  writer.writeLong(offsets[12], object.rewardOrdinal);
+  writer.writeDateTime(offsets[13], object.timestamp);
+  writer.writeString(offsets[14], object.titleId);
+  writer.writeLong(offsets[15], object.xpAmount);
 }
 
 EngineRewardGrantRecord _engineRewardGrantRecordDeserialize(
@@ -5376,21 +5382,22 @@ EngineRewardGrantRecord _engineRewardGrantRecordDeserialize(
 ) {
   final object = EngineRewardGrantRecord();
   object.chapterId = reader.readStringOrNull(offsets[0]);
-  object.companionId = reader.readStringOrNull(offsets[1]);
-  object.cosmeticId = reader.readStringOrNull(offsets[2]);
-  object.emblemId = reader.readStringOrNull(offsets[3]);
-  object.eventKey = reader.readString(offsets[4]);
+  object.companionBuffBonusXp = reader.readLongOrNull(offsets[1]);
+  object.companionId = reader.readStringOrNull(offsets[2]);
+  object.cosmeticId = reader.readStringOrNull(offsets[3]);
+  object.emblemId = reader.readStringOrNull(offsets[4]);
+  object.eventKey = reader.readString(offsets[5]);
   object.id = id;
-  object.levelAtGrant = reader.readLongOrNull(offsets[5]);
-  object.multiplierAtGrant = reader.readDoubleOrNull(offsets[6]);
-  object.nodeId = reader.readString(offsets[7]);
-  object.periodKey = reader.readStringOrNull(offsets[8]);
-  object.relicId = reader.readStringOrNull(offsets[9]);
-  object.rewardKindName = reader.readString(offsets[10]);
-  object.rewardOrdinal = reader.readLong(offsets[11]);
-  object.timestamp = reader.readDateTime(offsets[12]);
-  object.titleId = reader.readStringOrNull(offsets[13]);
-  object.xpAmount = reader.readLongOrNull(offsets[14]);
+  object.levelAtGrant = reader.readLongOrNull(offsets[6]);
+  object.multiplierAtGrant = reader.readDoubleOrNull(offsets[7]);
+  object.nodeId = reader.readString(offsets[8]);
+  object.periodKey = reader.readStringOrNull(offsets[9]);
+  object.relicId = reader.readStringOrNull(offsets[10]);
+  object.rewardKindName = reader.readString(offsets[11]);
+  object.rewardOrdinal = reader.readLong(offsets[12]);
+  object.timestamp = reader.readDateTime(offsets[13]);
+  object.titleId = reader.readStringOrNull(offsets[14]);
+  object.xpAmount = reader.readLongOrNull(offsets[15]);
   return object;
 }
 
@@ -5404,32 +5411,34 @@ P _engineRewardGrantRecordDeserializeProp<P>(
     case 0:
       return (reader.readStringOrNull(offset)) as P;
     case 1:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 2:
       return (reader.readStringOrNull(offset)) as P;
     case 3:
       return (reader.readStringOrNull(offset)) as P;
     case 4:
-      return (reader.readString(offset)) as P;
-    case 5:
-      return (reader.readLongOrNull(offset)) as P;
-    case 6:
-      return (reader.readDoubleOrNull(offset)) as P;
-    case 7:
-      return (reader.readString(offset)) as P;
-    case 8:
       return (reader.readStringOrNull(offset)) as P;
+    case 5:
+      return (reader.readString(offset)) as P;
+    case 6:
+      return (reader.readLongOrNull(offset)) as P;
+    case 7:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 8:
+      return (reader.readString(offset)) as P;
     case 9:
       return (reader.readStringOrNull(offset)) as P;
     case 10:
-      return (reader.readString(offset)) as P;
-    case 11:
-      return (reader.readLong(offset)) as P;
-    case 12:
-      return (reader.readDateTime(offset)) as P;
-    case 13:
       return (reader.readStringOrNull(offset)) as P;
+    case 11:
+      return (reader.readString(offset)) as P;
+    case 12:
+      return (reader.readLong(offset)) as P;
+    case 13:
+      return (reader.readDateTime(offset)) as P;
     case 14:
+      return (reader.readStringOrNull(offset)) as P;
+    case 15:
       return (reader.readLongOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -5936,6 +5945,80 @@ extension EngineRewardGrantRecordQueryFilter on QueryBuilder<
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'chapterId',
         value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<EngineRewardGrantRecord, EngineRewardGrantRecord,
+      QAfterFilterCondition> companionBuffBonusXpIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'companionBuffBonusXp',
+      ));
+    });
+  }
+
+  QueryBuilder<EngineRewardGrantRecord, EngineRewardGrantRecord,
+      QAfterFilterCondition> companionBuffBonusXpIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'companionBuffBonusXp',
+      ));
+    });
+  }
+
+  QueryBuilder<EngineRewardGrantRecord, EngineRewardGrantRecord,
+      QAfterFilterCondition> companionBuffBonusXpEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'companionBuffBonusXp',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineRewardGrantRecord, EngineRewardGrantRecord,
+      QAfterFilterCondition> companionBuffBonusXpGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'companionBuffBonusXp',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineRewardGrantRecord, EngineRewardGrantRecord,
+      QAfterFilterCondition> companionBuffBonusXpLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'companionBuffBonusXp',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<EngineRewardGrantRecord, EngineRewardGrantRecord,
+      QAfterFilterCondition> companionBuffBonusXpBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'companionBuffBonusXp',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
       ));
     });
   }
@@ -7714,6 +7797,20 @@ extension EngineRewardGrantRecordQuerySortBy
   }
 
   QueryBuilder<EngineRewardGrantRecord, EngineRewardGrantRecord, QAfterSortBy>
+      sortByCompanionBuffBonusXp() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'companionBuffBonusXp', Sort.asc);
+    });
+  }
+
+  QueryBuilder<EngineRewardGrantRecord, EngineRewardGrantRecord, QAfterSortBy>
+      sortByCompanionBuffBonusXpDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'companionBuffBonusXp', Sort.desc);
+    });
+  }
+
+  QueryBuilder<EngineRewardGrantRecord, EngineRewardGrantRecord, QAfterSortBy>
       sortByCompanionId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'companionId', Sort.asc);
@@ -7923,6 +8020,20 @@ extension EngineRewardGrantRecordQuerySortThenBy on QueryBuilder<
       thenByChapterIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'chapterId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<EngineRewardGrantRecord, EngineRewardGrantRecord, QAfterSortBy>
+      thenByCompanionBuffBonusXp() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'companionBuffBonusXp', Sort.asc);
+    });
+  }
+
+  QueryBuilder<EngineRewardGrantRecord, EngineRewardGrantRecord, QAfterSortBy>
+      thenByCompanionBuffBonusXpDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'companionBuffBonusXp', Sort.desc);
     });
   }
 
@@ -8147,6 +8258,13 @@ extension EngineRewardGrantRecordQueryWhereDistinct on QueryBuilder<
   }
 
   QueryBuilder<EngineRewardGrantRecord, EngineRewardGrantRecord, QDistinct>
+      distinctByCompanionBuffBonusXp() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'companionBuffBonusXp');
+    });
+  }
+
+  QueryBuilder<EngineRewardGrantRecord, EngineRewardGrantRecord, QDistinct>
       distinctByCompanionId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'companionId', caseSensitive: caseSensitive);
@@ -8258,6 +8376,13 @@ extension EngineRewardGrantRecordQueryProperty on QueryBuilder<
       chapterIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'chapterId');
+    });
+  }
+
+  QueryBuilder<EngineRewardGrantRecord, int?, QQueryOperations>
+      companionBuffBonusXpProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'companionBuffBonusXp');
     });
   }
 
