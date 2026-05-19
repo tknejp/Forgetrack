@@ -6,6 +6,7 @@ import '../../../core/logging/app_log.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/theme/design_tokens.dart';
 import '../../progression_engine/application/progression_engine_provider.dart';
+import '../../progression_engine/domain/catalog/granting_achievement_lookup.dart';
 import '../application/cosmetics_provider.dart';
 import '../domain/cosmetic_catalog.dart';
 import '../domain/cosmetic_lifecycle_helpers.dart';
@@ -81,9 +82,30 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
   Future<void> _devGrant() async {
     if (_devBusy || _equipBusy) return;
     setState(() => _devBusy = true);
-    await context
-        .read<CosmeticsProvider>()
-        .debugGrantCosmetic(widget.definition.id);
+    final cosmeticId = widget.definition.id;
+    final grantingNodeId = grantingNodeForCosmetic(cosmeticId);
+    if (grantingNodeId != null) {
+      // Route through the engine so the granting node's
+      // NodeCompletionEvent + RewardGrantEvent(cosmetic) series lands
+      // in the ledger; the cosmetic-unlock bridge then flips the
+      // cosmetic in inventory via the production path. This keeps
+      // the engine ledger + cosmetics inventory in lockstep — without
+      // it, devtools-granting a relic leaves the corresponding
+      // CompanionAvailability node permanently un-claimable because
+      // its `OwnsCosmetic(relic)` gate holds while its parent
+      // achievement's NodeCompletion is absent from the journal
+      // (Trello #76 sub-issue 1).
+      await context
+          .read<ProgressionEngineProvider>()
+          .devToolsForceCompleteNode(grantingNodeId);
+    } else {
+      // Cosmetic with no catalog-side granting node (e.g. premium
+      // unlocks, content that ships pre-unlocked, dev-only items).
+      // Falls back to the direct cosmetics-inventory grant.
+      await context
+          .read<CosmeticsProvider>()
+          .debugGrantCosmetic(cosmeticId);
+    }
     if (!mounted) return;
     Navigator.of(context).pop();
   }
