@@ -85,7 +85,7 @@ These are everything the hi-fi spec asks for that today's code does not deliver.
 ## What NOT to do
 
 - ❌ Build the morphing handoff or fullscreen overlay before the aggregate exists. It will leak into the bridge code and we'll repeat the previous bugs.
-- ❌ Introduce per-companion perk authoring into `CosmeticDefinition` today. Wait for the catalog-consolidation decision in the domain proposal.
+- ❌ Introduce per-companion perk authoring into `Cosmetic` today. Wait for the catalog-consolidation decision in the domain proposal.
 - ❌ Author additional companion artwork before the design tech choice is made (PNG vs vector — different export pipelines).
 
 ---

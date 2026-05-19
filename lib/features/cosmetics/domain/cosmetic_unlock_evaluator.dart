@@ -9,9 +9,9 @@ class CosmeticUnlockTuple {
     required this.sourceId,
   });
 
-  final String cosmeticId;
+  final String cosmeticId; // lint-ignore: untyped-id — mirrors CosmeticId in the evaluator tuple
   final String sourceType;
-  final String sourceId;
+  final String sourceId; // lint-ignore: untyped-id — opaque rule-author-supplied source key (quest/achievement/level/...)
 
   @override
   bool operator ==(Object other) =>

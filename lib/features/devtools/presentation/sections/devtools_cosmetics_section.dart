@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../features/cosmetics/application/cosmetics_provider.dart';
-import '../../../../features/cosmetics/domain/companion_state.dart';
 import '../../../../features/cosmetics/domain/cosmetic_catalog.dart';
 import '../../../../features/cosmetics/domain/cosmetic_models.dart';
+import '../../../../features/cosmetics/domain/player_cosmetic_lifecycle.dart';
 import '../../../../features/cosmetics/presentation/cosmetics_screen.dart';
 import '../../../../features/progression_engine/application/progression_engine_provider.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -40,7 +40,7 @@ class _DevToolsCosmmeticsSectionState
     final totalCount = CosmeticCatalog.definitions.length;
     final unlockedCount = state?.unlocked.length ?? 0;
     final equippedSlots = CosmeticType.values
-        .where((t) => state?.equipped.slotId(t) != null)
+        .where((t) => state?.equipped.slotId(t) != null) // lint-ignore: widget-no-logic — devtools equipped-slot count
         .length;
     final isBusy = _isClearing ||
         _isGrantingAll ||
@@ -150,7 +150,7 @@ class _DevToolsCosmmeticsSectionState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Clear all cosmetics?'),
+        title: const Text('Clear all cosmetics?'), // lint-ignore: l10n-literal — devtools, intentionally English
         content: const Text(
           'Removes every unlock and clears all equipped slots for the '
           'signed-in user. Cannot be undone.',
@@ -158,14 +158,14 @@ class _DevToolsCosmmeticsSectionState
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: const Text('Cancel'), // lint-ignore: l10n-literal — devtools, intentionally English
           ),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error,
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Clear all'),
+            child: const Text('Clear all'), // lint-ignore: l10n-literal — devtools, intentionally English
           ),
         ],
       ),
@@ -281,11 +281,11 @@ class _CompanionRow extends StatelessWidget {
   // Imported via the controller's catalog snapshot — using the
   // progression-engine type directly avoids re-exporting it from
   // application/.
-  final dynamic node; // CompanionAvailabilityNode (dynamic to avoid extra import)
-  final CompanionState current;
+  final dynamic node; // CompanionAvailability (dynamic to avoid extra import)
+  final PlayerCosmeticLifecycle current;
   final bool isBusy;
   final bool isRowBusy;
-  final ValueChanged<CompanionState> onSelect;
+  final ValueChanged<CompanionDevTarget> onSelect;
   final AppLocalizations l10n;
 
   @override
@@ -293,6 +293,7 @@ class _CompanionRow extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final gate = CompanionDevController.gateLevelFor(node) ?? 1;
+    final currentTarget = _lifecycleToTarget(current);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -325,7 +326,7 @@ class _CompanionRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              _StateChip(state: current),
+              _StateChip(lifecycle: current),
               if (isRowBusy) ...[
                 const SizedBox(width: 6),
                 SizedBox(
@@ -344,12 +345,12 @@ class _CompanionRow extends StatelessWidget {
             spacing: 6,
             runSpacing: 6,
             children: [
-              for (final s in CompanionState.values)
+              for (final t in CompanionDevTarget.values)
                 _StateButton(
-                  label: _stateLabel(s),
-                  isCurrent: s == current,
+                  label: _targetLabel(t),
+                  isCurrent: t == currentTarget,
                   isDisabled: isBusy,
-                  onTap: () => onSelect(s),
+                  onTap: () => onSelect(t),
                 ),
             ],
           ),
@@ -358,34 +359,49 @@ class _CompanionRow extends StatelessWidget {
     );
   }
 
-  static String _stateLabel(CompanionState s) {
-    switch (s) {
-      case CompanionState.hidden:
-        return 'Hidden';
-      case CompanionState.partial:
-        return 'Partial';
-      case CompanionState.claimable:
-        return 'Claimable';
-      case CompanionState.claimed:
-        return 'Claimed';
-    }
+  /// Map the canonical lifecycle to the closest matrix target for
+  /// the "is current" highlight. `CosmeticTeased` with no progress
+  /// (the old visibleLocked flavour) maps to `hidden` because the
+  /// matrix's "Hidden" button is the recipe that lands there at
+  /// high level (gate − 10 fallback).
+  static CompanionDevTarget _lifecycleToTarget(
+      PlayerCosmeticLifecycle l) {
+    return switch (l) {
+      CosmeticOwned() => CompanionDevTarget.claimed,
+      CosmeticClaimable() => CompanionDevTarget.claimable,
+      CosmeticTeased(:final totalConditions) when totalConditions > 0 =>
+        CompanionDevTarget.partial,
+      CosmeticTeased() || CosmeticHidden() => CompanionDevTarget.hidden,
+    };
+  }
+
+  static String _targetLabel(CompanionDevTarget t) {
+    return switch (t) {
+      CompanionDevTarget.hidden => 'Hidden',
+      CompanionDevTarget.partial => 'Partial',
+      CompanionDevTarget.claimable => 'Claimable',
+      CompanionDevTarget.claimed => 'Claimed',
+    };
   }
 }
 
 class _StateChip extends StatelessWidget {
-  const _StateChip({required this.state});
+  const _StateChip({required this.lifecycle});
 
-  final CompanionState state;
+  final PlayerCosmeticLifecycle lifecycle;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final (color, label) = switch (state) {
-      CompanionState.hidden =>
+    final (color, label) = switch (lifecycle) {
+      CosmeticHidden() =>
         (cs.onSurfaceVariant.withValues(alpha: 0.6), 'HIDDEN'),
-      CompanionState.partial => (cs.secondary, 'PARTIAL'),
-      CompanionState.claimable => (Colors.greenAccent, 'CLAIMABLE'),
-      CompanionState.claimed => (cs.primary, 'CLAIMED'),
+      CosmeticTeased(:final totalConditions) when totalConditions > 0 =>
+        (cs.secondary, 'PARTIAL'),
+      CosmeticTeased() =>
+        (cs.onSurfaceVariant.withValues(alpha: 0.6), 'TEASED'),
+      CosmeticClaimable() => (Colors.greenAccent, 'CLAIMABLE'),
+      CosmeticOwned() => (cs.primary, 'CLAIMED'),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),

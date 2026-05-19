@@ -30,5 +30,17 @@ linter:
     # avoid_print: false  # Uncomment to disable the `avoid_print` rule
     # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
 
+    # Phase 21 — sealed exhaustive switch enforcement.
+    #
+    # Dart 3 auto-enforces exhaustiveness on switch statements +
+    # expressions whose subject is a sealed class — non-exhaustive
+    # switches are a compile error, not a lint warning. For enums
+    # (which are not sealed) the analyzer needs `exhaustive_cases`
+    # turned on, otherwise a missing case silently falls through.
+    #
+    # See docs/contributing.md §Sealed exhaustive switch + migration
+    # plan §Phase 21.
+    exhaustive_cases: true
+
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

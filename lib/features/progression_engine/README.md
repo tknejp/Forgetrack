@@ -25,7 +25,10 @@ domain/
 ├── evaluator/                   # Pure evaluators (no I/O, no Flutter)
 │   ├── objective_evaluator.dart       # metric × scope × operator → outcome
 │   ├── unlock_condition_resolver.dart # recursive AllOf / AnyOf
-│   ├── progression_node_resolver.dart # objective + unlock + claim + ledger → NodeState
+│   ├── progression_node_resolver.dart # objective + unlock + claim + ledger →
+│   │                                  #   resolver-internal NodeState enum
+│   │                                  #   (Phase 13 inlined the enum here;
+│   │                                  #    domain/models/node_state.dart deleted)
 │   ├── reward_grant_planner.dart      # newly completed nodes → planned grants
 │   └── engine_streak_source.dart      # derives streak summaries from the ledger
 ├── models/                      # Sealed hierarchies: ProgressionNode,
@@ -39,12 +42,22 @@ domain/
     └── progression_engine_repository.dart
 
 application/
-├── progression_engine.dart           # Orchestrator. Single entry: evaluate(input, reason)
-├── progression_engine_provider.dart  # ChangeNotifier the UI binds to
-├── reward_grant_service.dart         # Builds reward events with XP scaling
-├── daily_section_resolver.dart       # Builds daily section view-model
-├── cosmetic_unlock_bridge.dart       # Engine grants → cosmetics unlocks
-└── cosmetic_reveal_snapshot_builder.dart  # Builds the reveal-state snapshot
+├── progression_engine.dart                 # Orchestrator. Single entry: evaluate(input, reason)
+├── progression_engine_provider.dart        # ChangeNotifier the UI binds to —
+│                                           #   exposes playerQuestCatalog (Phase 7),
+│                                           #   playerAchievementShelf (Phase 8),
+│                                           #   playerChapterProgress (Phase 13)
+├── reward_grant_service.dart               # Builds reward events with XP scaling
+├── daily_section_resolver.dart             # Builds daily section view-model
+├── cosmetic_unlock_bridge.dart             # Engine grants → cosmetics unlocks
+├── cosmetic_reveal_snapshot_builder.dart   # Builds the reveal-state snapshot
+├── player_quest_catalog_service.dart       # Builds PlayerQuestCatalog (Phase 7)
+├── player_achievement_shelf_service.dart   # Builds PlayerAchievementShelf (Phase 8)
+├── player_chapter_progress_service.dart    # Builds PlayerChapterProgress (Phase 13)
+├── chapter_catalog_builder.dart            # Walks ProgressionEntryCatalog → ChapterCatalog
+│                                           #   wrapper (chain entries grouped by chapterId)
+└── adapters/                               # View-model adapters (no Flutter UI)
+    └── engine_achievement_view.dart        # Engine state → AchievementView (Phase 8)
 
 data/
 ├── isar_progression_engine_repository.dart    # Local persistence
@@ -78,7 +91,7 @@ presentation/
 ## How to extend
 
 - **Add a new objective** (a new metric / scope / operator combination):
-  define an `ObjectiveDefinition` in
+  define an `Objective` in
   `domain/catalog/content/<domain>_content.dart`.
 - **Add a new node** (quest / achievement / milestone): define a
   `ProgressionNodeDefinition` referencing one or more objectives.

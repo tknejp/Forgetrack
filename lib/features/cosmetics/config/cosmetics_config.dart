@@ -23,7 +23,7 @@ class CosmeticsConfig {
   /// custom config.
   factory CosmeticsConfig.standard() {
     return const CosmeticsConfig(
-      defaultEquipped: EquippedCosmetics.empty(),
+      defaultEquipped: Loadout.empty(),
       allowedSlots: <CosmeticType>{
         CosmeticType.frame,
         CosmeticType.relic,
@@ -52,7 +52,7 @@ class CosmeticsConfig {
     );
   }
 
-  final EquippedCosmetics defaultEquipped;
+  final Loadout defaultEquipped;
   final Set<CosmeticType> allowedSlots;
   final List<Rarity> rarityDisplayOrder;
   final List<CosmeticRegion> regionDisplayOrder;
@@ -77,7 +77,7 @@ class CosmeticsConfig {
   /// True if a cosmetic is currently usable given config flags. Catalog
   /// `isEnabled` is the static gate; this layer adds runtime gating
   /// (premium, experimental, slot availability).
-  bool isUsable(CosmeticDefinition definition) {
+  bool isUsable(Cosmetic definition) {
     if (!definition.isEnabled) return false;
     if (definition.isPremium && !premiumEnabled) return false;
     if (!_slotEnabled(definition.type)) return false;

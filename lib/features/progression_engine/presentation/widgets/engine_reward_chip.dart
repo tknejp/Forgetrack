@@ -1,7 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 
 import '../../../../shared/theme/design_tokens.dart';
-import '../../domain/models/reward_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 
 /// Compact horizontal strip of icon-only chips, one per non-XP
 /// reward on a node. Communicates "there's also a cosmetic / item /

@@ -1,19 +1,19 @@
-import '../../cosmetics/domain/cosmetic_unlock_snapshot.dart';
+﻿import '../../cosmetics/domain/cosmetic_unlock_snapshot.dart';
 import '../domain/catalog/progression_node_catalog.dart';
-import '../domain/models/progression_node_definition.dart';
-import '../domain/models/quest_display_bucket.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
+import 'package:forgetrack/domain/progression/catalog/quest_display_bucket.dart';
 import '../domain/repository/ledger_snapshot.dart';
 
-/// V2 → [CosmeticUnlockSnapshot] adapter.
+/// V2 â†’ [CosmeticUnlockSnapshot] adapter.
 ///
 /// Drives the cosmetics inventory's partial-reveal UI (the
 /// "still locked, X/Y conditions met" hints rendered by
-/// `CosmeticRevealEvaluator`). Cosmetics own the *unlock state* — V2
+/// `CosmeticRevealEvaluator`). Cosmetics own the *unlock state* â€” V2
 /// is the source of truth for the *counters* the reveal evaluator reads.
 ///
 /// Counters are derived from the engine ledger plus the static catalog:
 /// quest counts walk [LedgerSnapshot.nodeCompletions] filtered to
-/// [QuestNode] ids, "active days" is the distinct calendar-day count
+/// [Quest] ids, "active days" is the distinct calendar-day count
 /// across every ledger event, and level comes from the resolved
 /// profile.
 ///
@@ -82,10 +82,10 @@ class CosmeticRevealSnapshotBuilder {
   static DateTime _dateOf(DateTime value) =>
       DateTime(value.year, value.month, value.day);
 
-  /// Quest id → display bucket. Computed once from the static catalog
+  /// Quest id â†’ display bucket. Computed once from the static catalog
   /// since the catalog is const.
   static final Map<String, QuestDisplayBucket> _bucketByQuestId = {
-    for (final node in const ProgressionNodeCatalog().build())
-      if (node is QuestNode) node.id: node.displayBucket,
+    for (final node in const ProgressionEntryCatalog().build())
+      if (node is Quest) node.id: node.displayBucket,
   };
 }

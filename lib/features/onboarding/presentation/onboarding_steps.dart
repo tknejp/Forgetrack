@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
@@ -11,14 +11,14 @@ import '../../nutrition/application/kaloricke_tabulky_provider.dart';
 import '../../progression_engine/application/progression_engine_provider.dart';
 import '../../progression_engine/domain/catalog/level_milestone_specs.dart';
 import '../../progression_engine/domain/catalog/progression_node_catalog.dart';
-import '../../progression_engine/domain/models/progression_node_definition.dart';
-import '../../progression_engine/domain/models/reward_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
+import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import '../widgets/integration_toggle_row.dart';
 import '../widgets/kt_login_sheet.dart';
 import '../widgets/onboarding_primitives.dart';
 import '../widgets/onboarding_theme.dart';
 
-// ─── Step 1 — Vítej ──────────────────────────────────────────────────────
+// â”€â”€â”€ Step 1 â€” VÃ­tej â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class StepWelcome extends StatelessWidget {
   const StepWelcome({super.key});
@@ -28,7 +28,7 @@ class StepWelcome extends StatelessWidget {
     final progression = context.watch<ProgressionEngineProvider>();
     final l10n = context.l10n;
     // V2 [EngineProfile] is always resolved through [ProgressionLevelPolicy]
-    // (see [ProgressionEngineProvider.profile]) — the pre-hydration zero
+    // (see [ProgressionEngineProvider.profile]) â€” the pre-hydration zero
     // profile and a populated ledger both go through the same policy, so
     // reading the provider directly is now safe.
     final profile = progression.profile;
@@ -91,7 +91,7 @@ class _Step1Subtitle extends StatelessWidget {
     );
     final idx = full.indexOf(accent);
     if (idx < 0) {
-      // Translator dropped the accent phrase — render plain.
+      // Translator dropped the accent phrase â€” render plain.
       return Text(full, textAlign: TextAlign.center, style: baseStyle);
     }
     return Text.rich(
@@ -109,9 +109,9 @@ class _Step1Subtitle extends StatelessWidget {
   }
 }
 
-/// Step 1 hero illustration — the Forgetrack app icon floating on a
+/// Step 1 hero illustration â€” the Forgetrack app icon floating on a
 /// double-layered purple glow with four staggered twinkling sparkles
-/// around the periphery. No outer frame, no border, no inner disc —
+/// around the periphery. No outer frame, no border, no inner disc â€”
 /// just logo + glow + sparks.
 class _SigilCluster extends StatefulWidget {
   const _SigilCluster();
@@ -127,7 +127,7 @@ class _SigilClusterState extends State<_SigilCluster>
   @override
   void initState() {
     super.initState();
-    // 2.4s full cycle — matches the `wm-spark` keyframe period from the
+    // 2.4s full cycle â€” matches the `wm-spark` keyframe period from the
     // design. One ticker drives all four sparkles.
     _controller = AnimationController(
       duration: const Duration(milliseconds: 2400),
@@ -342,7 +342,7 @@ class _HeroPreviewCard extends StatelessWidget {
   }
 }
 
-// ─── Step 2 — Účet ───────────────────────────────────────────────────────
+// â”€â”€â”€ Step 2 â€” ÃšÄet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class StepAccount extends StatelessWidget {
   const StepAccount({super.key});
@@ -478,7 +478,7 @@ class _GoogleGGlyph extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // The asset folder already contains the official 4-color G as SVG —
+    // The asset folder already contains the official 4-color G as SVG â€”
     // reuse it instead of inlining the path data.
     return SvgPicture.asset(
       'assets/icons/google/google_logo.svg',
@@ -552,7 +552,7 @@ class _AccountBenefitsCard extends StatelessWidget {
   }
 }
 
-// ─── Step 3 — Zdraví ─────────────────────────────────────────────────────
+// â”€â”€â”€ Step 3 â€” ZdravÃ­ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class StepHealth extends StatefulWidget {
   const StepHealth({super.key});
@@ -616,19 +616,19 @@ class _DataIconGrid extends StatelessWidget {
     final l10n = context.l10n;
     final items = [
       _DataChip(
-          emoji: '👣',
+          emoji: 'ðŸ‘£',
           label: l10n.welcomeStep3DataSteps,
           color: OnboardingTheme.green),
       _DataChip(
-          emoji: '🔥',
+          emoji: 'ðŸ”¥',
           label: l10n.welcomeStep3DataCalories,
           color: const Color(0xFFFBBF24)),
       _DataChip(
-          emoji: '😴',
+          emoji: 'ðŸ˜´',
           label: l10n.welcomeStep3DataSleep,
           color: const Color(0xFFA89BFF)),
       _DataChip(
-          emoji: '⚔️',
+          emoji: 'âš”ï¸',
           label: l10n.welcomeStep3DataActivity,
           color: const Color(0xFF2DD4BF)),
     ];
@@ -789,7 +789,7 @@ class _HealthPrivacyHint extends StatelessWidget {
   }
 }
 
-// ─── Step 4 — Hotovo ─────────────────────────────────────────────────────
+// â”€â”€â”€ Step 4 â€” Hotovo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class StepFinal extends StatefulWidget {
   const StepFinal({super.key});
@@ -859,7 +859,7 @@ class _StepFinalState extends State<StepFinal> {
             tint: OnboardingTheme.purpleAccent,
             active: notifPrefs.notificationsEnabled,
             onTap: _handleNotifTap,
-            icon: '🔔',
+            icon: 'ðŸ””',
           ),
           const SizedBox(height: 18),
           const _FirstQuestsCard(),
@@ -888,8 +888,8 @@ class _FirstQuestsCard extends StatelessWidget {
     final l10n = context.l10n;
     final rows = <_QuestRow>[];
     for (final id in _starterQuestNodeIds) {
-      final node = ProgressionNodeCatalog.definitionForId(id);
-      if (node is! QuestNode) continue;
+      final node = ProgressionEntryCatalog.definitionForId(id);
+      if (node is! Quest) continue;
       var rewardXp = 0;
       for (final reward in node.rewards) {
         if (reward is XpReward) rewardXp += reward.amount;

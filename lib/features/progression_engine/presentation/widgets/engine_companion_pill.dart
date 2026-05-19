@@ -10,8 +10,8 @@ import '../../../cosmetics/domain/cosmetic_catalog.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
 import '../../../cosmetics/presentation/cosmetic_details_sheet.dart';
 import '../../../cosmetics/presentation/widgets/cosmetic_asset_thumb.dart';
-import '../../domain/models/progression_node_definition.dart';
-import '../../domain/models/reward_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
+import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 
 /// Compact pill rendered beneath the XP pill on quest cards that have
 /// a companion node (achievement / milestone sharing the same
@@ -34,8 +34,8 @@ class EngineCompanionPill extends StatelessWidget {
     this.accent = Tokens.accent,
   });
 
-  /// Single-glyph badge (typically an emoji from AchievementNode /
-  /// LevelMilestoneNode; defaults to 🎁 for non-emoji extras).
+  /// Single-glyph badge (typically an emoji from Achievement /
+  /// LevelMilestone; defaults to 🎁 for non-emoji extras).
   final String badge;
 
   /// Drives the chevron rotation â€” true when the parent card is
@@ -82,10 +82,10 @@ class EngineCompanionPill extends StatelessWidget {
 /// carry an emoji explicitly; level milestones carry their level emoji;
 /// everything else falls back to 🎁 so the player still gets a visual
 /// "this is an extra reward" hint.
-String badgeForCompanion(ProgressionNode node) {
+String badgeForCompanion(ProgressionEntry node) {
   return switch (node) {
-    AchievementNode(:final badgeEmoji) => badgeEmoji,
-    LevelMilestoneNode(:final emoji) => emoji,
+    Achievement(:final badgeEmoji) => badgeEmoji,
+    LevelMilestone(:final emoji) => emoji,
     _ => '🎁',
   };
 }
@@ -112,7 +112,7 @@ String badgeForReward(RewardDefinition reward) {
 /// a companion row in the long-term card's expanded panel.
 ///
 /// Differences from the legacy V1 sheet:
-/// - Reads V2 [ProgressionNode] + the bound objective's actual /
+/// - Reads V2 [ProgressionEntry] + the bound objective's actual /
 ///   target / progress passed in by the caller (companion shares the
 ///   long-term quest's objective).
 /// - Resolves each non-XP reward against [CosmeticCatalog] so the row
@@ -123,7 +123,7 @@ String badgeForReward(RewardDefinition reward) {
 ///   companion unlocks.
 Future<void> showEngineCompanionDetailSheet(
   BuildContext context, {
-  required ProgressionNode node,
+  required ProgressionEntry node,
   required double actualValue,
   required double targetValue,
   required double progress,
@@ -158,7 +158,7 @@ class _CompanionDetailSheet extends StatelessWidget {
     required this.l10n,
   });
 
-  final ProgressionNode node;
+  final ProgressionEntry node;
   final double actualValue;
   final double targetValue;
   final double progress;
@@ -610,7 +610,7 @@ class EngineRewardDetailRow extends StatelessWidget {
     };
   }
 
-  CosmeticDefinition? _lookupCosmetic(RewardDefinition r) {
+  Cosmetic? _lookupCosmetic(RewardDefinition r) {
     final id = switch (r) {
       CosmeticReward(:final cosmeticId) => cosmeticId,
       EmblemReward(:final emblemId) => emblemId,

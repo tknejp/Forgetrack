@@ -36,7 +36,7 @@ class CosmeticRevealConditionRow {
     required this.met,
   });
 
-  final String conditionId;
+  final String conditionId; // lint-ignore: untyped-id — opaque rule-author-supplied condition key, no typed VO
   final bool met;
 }
 
@@ -57,7 +57,7 @@ class CosmeticRevealResult {
     this.conditionRows,
   });
 
-  final String cosmeticId;
+  final String cosmeticId; // lint-ignore: untyped-id — CosmeticRevealResult mirrors CosmeticId from evaluator output
   final CosmeticRevealState state;
 
   /// Number of conditions already satisfied. Only meaningful for [CosmeticRevealState.partial].

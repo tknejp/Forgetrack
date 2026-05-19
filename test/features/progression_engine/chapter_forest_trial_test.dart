@@ -1,22 +1,23 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 
 import 'package:forgetrack/features/progression_engine/application/progression_engine.dart';
 import 'package:forgetrack/features/progression_engine/data/in_memory_progression_engine_repository.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/engine_evaluation_input.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/ledger_event.dart';
+import 'package:forgetrack/features/progression_engine/domain/models/engine_evaluation_context.dart';
+import 'package:forgetrack/domain/journal/journal_event.dart';
 
-EngineEvaluationInput _input({
+import '_engine_test_helpers.dart';
+
+EngineEvaluationContext _context({
   int level = 10,
   int totalXp = 5000,
   Map<String, int> nodeCompletionCounts = const {},
   Map<String, double> objectiveActualOverrides = const {},
 }) =>
-    EngineEvaluationInput(
+    buildTestContext(
       evaluatedAt: DateTime(2026, 5, 11, 12),
       level: level,
       totalXp: totalXp,
-      stepsToday: 0,
-      proteinGramsToday: 0,
       nodeCompletionCounts: nodeCompletionCounts,
       objectiveActualOverrides: objectiveActualOverrides,
     );
@@ -31,7 +32,7 @@ Future<void> _seedPilgrimComplete(
     NodeCompletionEvent(
       eventKey: 'node|pilgrim_path_finale|lifetime|complete',
       timestamp: DateTime(2026, 5, 10, 12),
-      nodeId: 'pilgrim_path_finale',
+      nodeId: ProgressionEntryId('pilgrim_path_finale'),
     ),
   ]);
 }
@@ -47,20 +48,20 @@ void main() {
         runIdGenerator: () => 'forest-trial-1',
       );
 
-      final result = await engine.evaluate(input: _input());
+      final result = await evaluateWithContext(engine, _context());
 
       final completedIds =
           result.completedNodes.map((n) => n.nodeId).toSet();
       final availableIds =
           result.availableNodes.map((a) => a.nodeId).toSet();
 
-      // Open is auto-claim with LevelMetric >= 10 → completes
+      // Open is auto-claim with LevelMetric >= 10 â†’ completes
       // immediately and grants its XP.
       expect(completedIds, contains('forest_trial_open'));
 
       // Steps remain hidden until their objectives accumulate AND
       // their prereq is complete. No daily quest completions in the
-      // input → none should be available yet.
+      // input â†’ none should be available yet.
       expect(availableIds.contains('forest_trial_daily_wins_5'), isFalse);
       expect(availableIds.contains('forest_trial_steps_5'), isFalse);
       expect(availableIds.contains('forest_trial_recovery_3'), isFalse);
@@ -78,15 +79,16 @@ void main() {
       );
 
       // First run: open auto-completes (gates the chain).
-      await engine.evaluate(input: _input());
+      await evaluateWithContext(engine, _context());
 
       // Second run: provider would derive
       // `forest_trial_daily_wins_5_objective = 5` from the ledger
       // once 5 distinct days banked at least 2 daily completions
       // each. Seed the override directly so the engine test stays
       // independent of the ledger-history producer in the provider.
-      final result = await engine.evaluate(
-        input: _input(
+      final result = await evaluateWithContext(
+        engine,
+        _context(
           objectiveActualOverrides: const {
             'forest_trial_daily_wins_5_objective': 5.0,
           },
@@ -112,18 +114,19 @@ void main() {
       );
 
       // First evaluate: open auto-fires (lands in the ledger). Step
-      // 1's prereq isn't yet visible to the resolver — it walks the
+      // 1's prereq isn't yet visible to the resolver â€” it walks the
       // ledger snapshot taken before this run, not after.
-      await engine.evaluate(input: _input());
+      await evaluateWithContext(engine, _context());
 
       // Second evaluate with all backing objective values seeded.
       // Step 1 (`DaysWithAtLeastKAmongMetric`) and step 3
       // (`DaysWithAtLeastKAmongMetric` for steps+sleep) read from
-      // `objectiveActualOverrides` — the provider's ledger producer
+      // `objectiveActualOverrides` â€” the provider's ledger producer
       // is bypassed in this unit test. Step 2 is the only single-
       // node `NodeCompletionsMetric` left in the chain.
-      final result = await engine.evaluate(
-        input: _input(
+      final result = await evaluateWithContext(
+        engine,
+        _context(
           nodeCompletionCounts: const {'daily_steps_today': 5},
           objectiveActualOverrides: const {
             'forest_trial_daily_wins_5_objective': 5.0,

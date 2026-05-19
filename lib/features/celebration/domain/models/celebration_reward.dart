@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; // lint-ignore: domain-purity — IconData is the celebration reward's optional icon override token
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/domain/rarity.dart';
@@ -96,7 +96,7 @@ class CelebrationReward {
   /// Stable id within the celebration (e.g. cosmetic id, achievement id, or
   /// `xp:${rewardKey}` for a quest grant). Used as a Flutter widget key when
   /// listed.
-  final String id;
+  final String id; // lint-ignore: untyped-id — reward widget-key, namespaced by producer (`cosmetic-<id>`, `companion-<id>`, `xp:<rewardKey>`)
 
   /// Player-facing reward name (e.g. "Rám horského vyzyvatele").
   final CelebrationText name;

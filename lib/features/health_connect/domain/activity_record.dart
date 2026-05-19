@@ -1,4 +1,4 @@
-import 'package:health/health.dart';
+import 'package:health/health.dart'; // lint-ignore: domain-purity — HealthWorkoutActivityType is the platform boundary token for activity classification
 import 'package:intl/intl.dart';
 
 class StepsRecord {
@@ -7,6 +7,10 @@ class StepsRecord {
 
   const StepsRecord({required this.date, required this.steps});
 
+  // TODO(domain-model): export concern leaking into domain entity. Move
+  // formatting to a mapper in sheets_export/data/ or coach_log_export/data/.
+  // Out of scope for the active domain-model refactor — see
+  // docs/domain_model/proposal.md §1.1 + §7 anti-pattern #10.
   List<Object?> toSheetRow() => [
         DateFormat('yyyy-MM-dd').format(date),
         steps,
@@ -51,6 +55,10 @@ class ActivityRecord {
     );
   }
 
+  // TODO(domain-model): export concern leaking into domain entity. Move
+  // formatting to a mapper in sheets_export/data/ or coach_log_export/data/.
+  // Out of scope for the active domain-model refactor — see
+  // docs/domain_model/proposal.md §1.1 + §7 anti-pattern #10.
   List<Object?> toSheetRow() {
     final fmt = DateFormat('yyyy-MM-dd HH:mm');
     return [

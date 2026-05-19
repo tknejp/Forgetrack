@@ -5,7 +5,8 @@ Flutter fitness/RPG tracking app. Feature-first architecture under `lib/features
 ## Where to look
 
 - **Architecture, layering rules, design tokens, dependency rules, HC / KT / progression invariants:** [docs/architecture.md](docs/architecture.md)
-- **Progression Engine V2:** plan + live phase status in [docs/progression_engine/](docs/progression_engine/). Read the per-handoff doc for the open phases first (currently `phase_8_9_handoff.md`); fall back to `v2_phased_plan.md` for the full spec, `archive/` for completed sub-plans.
+- **Progression Engine V2:** the V2 migration shipped 2026-05-19. Live open work is [docs/progression_engine/rpg_mode_readiness.md](docs/progression_engine/rpg_mode_readiness.md). Completed plans (V2 phased migration, Phase 8/9 handoff, quest history refactor) are permanent design records under [docs/progression_engine/archive/](docs/progression_engine/archive/).
+- **Domain model refactor:** shipped (2026-05-19) and the Track A close-out round (R.1–R.8) shipped the same day. Permanent design records in [docs/domain_model/](docs/domain_model/) — `proposal.md` (target shape) — plus archived plans under [docs/domain_model/archive/](docs/domain_model/archive/) — `migration_plan.md` (the 22-phase plan) and `follow_ups.md` (Track A bounded round + Track B/C/D parking lots). Architectural decisions land as ADRs in `docs/site/data/decisions.json` (see `track-a-closed` for the umbrella close-out).
 - **Feature designs:** [docs/features/](docs/features/) — coach log export, Firestore sync.
 - **External API capture:** [docs/integrations/](docs/integrations/) — Kalorické Tabulky.
 - **Feature internals:** READMEs in `lib/features/<feature>/`.
@@ -46,7 +47,7 @@ Flutter fitness/RPG tracking app. Feature-first architecture under `lib/features
 When every phase of a `docs/<area>/*_refactor.md` (or similar plan doc) has shipped, treat it as a permanent design record and clean up the surrounding docs in the same commit:
 
 1. **Archive, don't delete.** Move the plan to `docs/<area>/archive/<plan>.md` (create `archive/` if it doesn't exist). It stays as a permanent design record — future maintainers should be able to read why the system looks the way it does.
-2. **Update the working-state doc** in the same area (per-handoff doc focused on the open phases — currently `docs/progression_engine/phase_8_9_handoff.md`). Add a dated block summarising the outcomes + linking to the archived plan, so a cold-start session sees the latest state without reading the whole archive. Once the handoff's own scope closes, retire it too — don't accumulate stale handoffs.
+2. **Update the working-state doc** in the same area (per-handoff doc focused on the open phases — e.g. `docs/progression_engine/rpg_mode_readiness.md` for the V2 successor work). Add a dated block summarising the outcomes + linking to the archived plan, so a cold-start session sees the latest state without reading the whole archive. Once the handoff's own scope closes, retire it too — don't accumulate stale handoffs.
 3. **Update the interactive architecture site JSONs** per the table above for every architectural change the plan introduced — new collections / providers / sealed types / data flows / external integrations.
 4. **Add ADRs** to `docs/site/data/decisions.json` for non-trivial design decisions the plan landed (context + decision + consequences + alternatives). The code says HOW; the ADR says WHY.
 5. **Surface user-visible features** in the top-level `README.md` so the project description reflects what the app actually does today.

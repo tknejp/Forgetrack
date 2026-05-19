@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../l10n/l10n.dart';
@@ -11,9 +11,9 @@ import '../../../cosmetics/config/cosmetics_config.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
 import '../../../cosmetics/presentation/widgets/companion_fake_idle_preview.dart';
 import '../../../cosmetics/presentation/widgets/cosmetic_frame_preview.dart';
-import '../../../progression/domain/progression_models.dart' show ProgressionDomain;
-import '../../../progression/presentation/widgets/progression_domain_theme.dart';
 import '../../../progression_engine/application/progression_engine_provider.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_domain.dart';
+import 'package:forgetrack/features/progression_engine/domain/progression_domain_chrome.dart';
 import '../../../progression_engine/domain/display/progression_display_resolver.dart';
 import '../../../progression_engine/presentation/widgets/level_badge.dart';
 import '../../application/social_provider.dart';
@@ -24,12 +24,12 @@ import 'social_avatar.dart';
 /// Unified hero/progression header used across all top-level tabs.
 ///
 /// Goals:
-///   * Single widget across all tabs → no height swap during PageView swipes.
+///   * Single widget across all tabs â†’ no height swap during PageView swipes.
 ///   * Always shows: avatar, display name, muted `@handle`, level orb,
 ///     level title, XP bar, XP ratio.
-///   * Tap on avatar → opens [SocialUserProfileSheet] (which owns editing
+///   * Tap on avatar â†’ opens [SocialUserProfileSheet] (which owns editing
 ///     of photo + handle for the signed-in user).
-///   * Tap on the rest of the header → toggles an expanded panel revealing
+///   * Tap on the rest of the header â†’ toggles an expanded panel revealing
 ///     pending reward count, current streak and unlocked achievement count.
 class HeroProgressionHeader extends StatefulWidget {
   const HeroProgressionHeader({
@@ -155,9 +155,9 @@ class _HeaderBody extends StatelessWidget {
   final String displayName;
   final String handle;
   final String? photoUrl;
-  final CosmeticDefinition? equippedFrame;
-  final CosmeticDefinition? equippedBackground;
-  final CosmeticDefinition? equippedCompanion;
+  final Cosmetic? equippedFrame;
+  final Cosmetic? equippedBackground;
+  final Cosmetic? equippedCompanion;
   final bool expanded;
   final VoidCallback onToggleExpanded;
   final VoidCallback onOpenProfile;
@@ -292,7 +292,7 @@ class _IdentityRow extends StatelessWidget {
   final String displayName;
   final String handle;
   final String? photoUrl;
-  final CosmeticDefinition? equippedFrame;
+  final Cosmetic? equippedFrame;
   final VoidCallback onTapAvatar;
 
   @override
@@ -372,7 +372,7 @@ class _ProgressionRow extends StatelessWidget {
   final double xpProgress;
   final GlobalKey? barKey;
 
-  /// Right-side gutter the bar + label must avoid — set to the companion
+  /// Right-side gutter the bar + label must avoid â€” set to the companion
   /// reserved width when one is equipped, 0 otherwise so the bar runs
   /// full-width and the section feels right with an empty corner.
   final double reservedRight;
@@ -505,7 +505,7 @@ class _MiniQuestRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final domain = quest.domain ?? ProgressionDomain.activity;
-    final color = ProgressionDomainTheme.colorFor(domain);
+    final color = domain.color;
     final rawPct = quest.progress * 100;
     final pct =
         (rawPct.isNaN || rawPct.isInfinite) ? 0 : rawPct.clamp(0, 100).round();
@@ -544,7 +544,7 @@ class _MiniQuestRow extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Text(
-            quest.isAvailableForClaim ? '✓' : '$pct%',
+            quest.isAvailableForClaim ? 'âœ“' : '$pct%',
             style: TextStyle(
               fontSize: Tokens.fontSizeCaption,
               fontWeight: FontWeight.w900,
@@ -557,7 +557,7 @@ class _MiniQuestRow extends StatelessWidget {
   }
 }
 
-/// Renders a cosmetic's preview asset as a plain image with no chrome —
+/// Renders a cosmetic's preview asset as a plain image with no chrome â€”
 /// used for companion + emblem on hero/profile cards. Falls back to a
 /// type-appropriate icon when the asset is missing or fails to decode.
 class CompanionAsset extends StatelessWidget {
@@ -568,7 +568,7 @@ class CompanionAsset extends StatelessWidget {
     this.fallbackIcon = Icons.pets_rounded,
   });
 
-  final CosmeticDefinition definition;
+  final Cosmetic definition;
   final double size;
   final IconData fallbackIcon;
 
@@ -612,7 +612,7 @@ class _QuestThumb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = ProgressionDomainTheme.colorFor(domain);
+    final color = domain.color;
     Widget fallback() {
       return Container(
         width: size,
@@ -623,7 +623,7 @@ class _QuestThumb extends StatelessWidget {
           border: Border.all(color: color.withValues(alpha: 0.30)),
         ),
         child: Icon(
-          ProgressionDomainTheme.iconFor(domain),
+          domain.icon,
           color: color,
           size: size * 0.55,
         ),
@@ -654,7 +654,7 @@ class _HeaderFrame extends StatelessWidget {
   });
 
   final Widget child;
-  final CosmeticDefinition? backgroundDefinition;
+  final Cosmetic? backgroundDefinition;
   final VoidCallback? onTap;
 
   @override
@@ -772,7 +772,7 @@ class _SignedOutAvatar extends StatelessWidget {
   }
 }
 
-CosmeticDefinition? _resolveEquippedFrame(CosmeticsProvider cosmetics) {
+Cosmetic? _resolveEquippedFrame(CosmeticsProvider cosmetics) {
   final state = cosmetics.state;
   if (state == null) return null;
   final catalog = cosmetics.service.catalog;
@@ -791,7 +791,7 @@ CosmeticDefinition? _resolveEquippedFrame(CosmeticsProvider cosmetics) {
   return null;
 }
 
-CosmeticDefinition? _resolveEquippedCompanion(CosmeticsProvider cosmetics) {
+Cosmetic? _resolveEquippedCompanion(CosmeticsProvider cosmetics) {
   final state = cosmetics.state;
   if (state == null) return null;
   final catalog = cosmetics.service.catalog;
@@ -802,7 +802,7 @@ CosmeticDefinition? _resolveEquippedCompanion(CosmeticsProvider cosmetics) {
   return def;
 }
 
-CosmeticDefinition? _resolveEquippedBackground(CosmeticsProvider cosmetics) {
+Cosmetic? _resolveEquippedBackground(CosmeticsProvider cosmetics) {
   final state = cosmetics.state;
   if (state == null) return null;
   final catalog = cosmetics.service.catalog;

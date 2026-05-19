@@ -1,3 +1,4 @@
+﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:forgetrack/features/progression_engine/application/progression_engine.dart';
@@ -5,58 +6,60 @@ import 'package:forgetrack/features/progression_engine/data/in_memory_progressio
 import 'package:forgetrack/features/progression_engine/domain/catalog/engine_catalog_context.dart';
 import 'package:forgetrack/features/progression_engine/domain/catalog/objective_catalog.dart';
 import 'package:forgetrack/features/progression_engine/domain/catalog/progression_node_catalog.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/claim_policy.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/engine_evaluation_input.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/ledger_event.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/objective_definition.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/objective_metric.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/objective_operator.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/objective_scope.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/progression_node_definition.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/reward_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';
+import 'package:forgetrack/features/progression_engine/domain/models/engine_evaluation_context.dart';
+import 'package:forgetrack/domain/journal/journal_event.dart';
+
+import '_engine_test_helpers.dart';
+import 'package:forgetrack/domain/progression/catalog/objective.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_metric.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_operator.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_scope.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
+import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import 'package:forgetrack/shared/domain/rarity.dart';
 
 class _FakeObjectiveCatalog extends ObjectiveCatalog {
   const _FakeObjectiveCatalog(this._defs);
-  final List<ObjectiveDefinition> _defs;
+  final List<Objective> _defs;
 
   @override
-  List<ObjectiveDefinition> build([
+  List<Objective> build([
     EngineCatalogContext context = const EngineCatalogContext(),
   ]) =>
       _defs;
 }
 
-class _FakeNodeCatalog extends ProgressionNodeCatalog {
+class _FakeNodeCatalog extends ProgressionEntryCatalog {
   const _FakeNodeCatalog(this._nodes);
-  final List<ProgressionNode> _nodes;
+  final List<ProgressionEntry> _nodes;
 
   @override
-  List<ProgressionNode> build([
+  List<ProgressionEntry> build([
     EngineCatalogContext context = const EngineCatalogContext(),
   ]) =>
       _nodes;
 }
 
-ObjectiveDefinition _stepsTodayObjective({double target = 1000}) =>
-    ObjectiveDefinition(
-      id: 'steps_today_$target',
+Objective _stepsTodayObjective({double target = 1000}) =>
+    Objective(
+      id: ObjectiveId('steps_today_$target'),
       metric: const StepsMetric(),
       scope: const TodayScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: target,
     );
 
-QuestNode _quest({
+Quest _quest({
   required String id,
   required String objectiveId,
   int xp = 100,
   ClaimPolicy? claimPolicy,
   List<RewardDefinition>? rewards,
 }) =>
-    DailyQuestNode(
-      id: id,
-      objectiveId: objectiveId,
+    DailyQuest(
+      id: ProgressionEntryId(id),
+      objectiveId: ObjectiveId(objectiveId),
       titleKey: (_) => 'Title',
       descriptionKey: (_) => 'Desc',
       rewards: rewards ?? [XpReward(amount: xp)],
@@ -64,8 +67,12 @@ QuestNode _quest({
       claimPolicy: claimPolicy ?? ClaimPolicy.automatic,
     );
 
-EngineEvaluationInput _input({int steps = 1500, int level = 1, int totalXp = 0}) =>
-    EngineEvaluationInput(
+EngineEvaluationContext _context({
+  int steps = 1500,
+  int level = 1,
+  int totalXp = 0,
+}) =>
+    buildTestContext(
       evaluatedAt: DateTime(2026, 5, 10, 12),
       stepsToday: steps,
       level: level,
@@ -74,7 +81,7 @@ EngineEvaluationInput _input({int steps = 1500, int level = 1, int totalXp = 0})
 
 ProgressionEngine _newEngine({
   required ObjectiveCatalog objectives,
-  required ProgressionNodeCatalog nodes,
+  required ProgressionEntryCatalog nodes,
   required InMemoryProgressionEngineRepository repository,
   String runId = 'test-run',
 }) =>
@@ -86,7 +93,7 @@ ProgressionEngine _newEngine({
     );
 
 void main() {
-  group('ProgressionEngine — happy path', () {
+  group('ProgressionEngine â€” happy path', () {
     test('emits objective + node + reward events on first run', () async {
       final repo = InMemoryProgressionEngineRepository();
       final engine = _newEngine(
@@ -97,7 +104,7 @@ void main() {
         repository: repo,
       );
 
-      final result = await engine.evaluate(input: _input(steps: 1500));
+      final result = await evaluateWithContext(engine, _context(steps: 1500));
 
       expect(result.completedObjectives, hasLength(1));
       expect(result.completedNodes, hasLength(1));
@@ -123,7 +130,7 @@ void main() {
         repository: repo,
       );
 
-      final result = await engine.evaluate(input: _input(steps: 500));
+      final result = await evaluateWithContext(engine, _context(steps: 500));
 
       expect(result.completedObjectives, isEmpty);
       expect(result.completedNodes, isEmpty);
@@ -131,7 +138,7 @@ void main() {
     });
   });
 
-  group('ProgressionEngine — idempotency', () {
+  group('ProgressionEngine â€” idempotency', () {
     test('second run with same input emits no new completions or grants',
         () async {
       final repo = InMemoryProgressionEngineRepository();
@@ -143,8 +150,8 @@ void main() {
         repository: repo,
       );
 
-      final first = await engine.evaluate(input: _input(steps: 1500));
-      final second = await engine.evaluate(input: _input(steps: 1500));
+      final first = await evaluateWithContext(engine, _context(steps: 1500));
+      final second = await evaluateWithContext(engine, _context(steps: 1500));
 
       expect(first.completedNodes, hasLength(1));
       expect(second.completedNodes, isEmpty);
@@ -168,19 +175,19 @@ void main() {
         objectives: _FakeObjectiveCatalog([objective]),
         nodes: _FakeNodeCatalog([
           _quest(id: 'quest', objectiveId: objective.id, xp: 50),
-          LongTermQuestNode(
-            id: 'achievement_like',
+          LongTermQuest(
+            id: const ProgressionEntryId('achievement_like'),
             objectiveId: objective.id,
             titleKey: (_) => 'Achievement',
             descriptionKey: (_) => 'Same objective',
-            rewards: const [CosmeticReward(cosmeticId: 'frame_test')],
+            rewards: const [CosmeticReward(cosmeticId: CosmeticId('frame_test'))],
             rarity: Rarity.uncommon,
           ),
         ]),
         repository: repo,
       );
 
-      final first = await engine.evaluate(input: _input(steps: 1500));
+      final first = await evaluateWithContext(engine, _context(steps: 1500));
       expect(first.completedObjectives, hasLength(1));
       expect(first.completedNodes, hasLength(2));
       expect(first.grantedRewards, hasLength(2));
@@ -189,13 +196,13 @@ void main() {
       expect(kinds, {RewardGrantKind.xp, RewardGrantKind.cosmetic});
 
       // Re-run is idempotent.
-      final second = await engine.evaluate(input: _input(steps: 1500));
+      final second = await evaluateWithContext(engine, _context(steps: 1500));
       expect(second.completedNodes, isEmpty);
       expect(second.grantedRewards, isEmpty);
     });
   });
 
-  group('ProgressionEngine — manual claim', () {
+  group('ProgressionEngine â€” manual claim', () {
     test('manual node enters availability, claim then completes + grants',
         () async {
       final repo = InMemoryProgressionEngineRepository();
@@ -203,8 +210,8 @@ void main() {
       final engine = _newEngine(
         objectives: _FakeObjectiveCatalog([objective]),
         nodes: _FakeNodeCatalog([
-          LongTermQuestNode(
-            id: 'manual_node',
+          LongTermQuest(
+            id: const ProgressionEntryId('manual_node'),
             objectiveId: objective.id,
             titleKey: (_) => 'Manual',
             descriptionKey: (_) => 'Desc',
@@ -217,21 +224,31 @@ void main() {
         repository: repo,
       );
 
-      // Objective satisfied → node available, NOT completed.
-      final first = await engine.evaluate(input: _input(steps: 1500));
+      // Objective satisfied â†’ node available, NOT completed.
+      final first = await evaluateWithContext(engine, _context(steps: 1500));
       expect(first.completedNodes, isEmpty);
       expect(first.availableNodes, hasLength(1));
       expect(first.grantedRewards, isEmpty);
 
       // Player claims.
-      final claimed =
-          await engine.claim(nodeId: 'manual_node', input: _input(steps: 1500));
+      final claimCtx = _context(steps: 1500);
+      final claimed = await engine.claim(
+        nodeId: ProgressionEntryId('manual_node'),
+        player: claimCtx.player,
+        healthSnapshot: claimCtx.healthSnapshot,
+        nutritionSnapshot: claimCtx.nutritionSnapshot,
+        goalBoard: claimCtx.goalBoard,
+        journal: claimCtx.journal,
+        counters: claimCtx.counters,
+        overrides: claimCtx.overrides,
+        evaluatedAt: claimCtx.evaluatedAt,
+      );
       expect(claimed.completedNodes, hasLength(1));
       expect(claimed.grantedRewards, hasLength(1));
       expect(claimed.grantedRewards.single.event.xpAmount, isPositive);
 
       // Re-run is idempotent post-claim.
-      final after = await engine.evaluate(input: _input(steps: 1500));
+      final after = await evaluateWithContext(engine, _context(steps: 1500));
       expect(after.completedNodes, isEmpty);
       expect(after.grantedRewards, isEmpty);
     });

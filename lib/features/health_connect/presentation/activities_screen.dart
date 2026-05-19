@@ -251,7 +251,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
     // ── Today (period-independent) ──────────────────────────────────────
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final todayActivities = fitness.activities.where((a) {
+    final todayActivities = fitness.activities.where((a) { // lint-ignore: widget-no-logic — UI date filter (today) for "today's totals" tile rendering
       final day =
           DateTime(a.startTime.year, a.startTime.month, a.startTime.day);
       return day == today;
@@ -264,7 +264,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
     );
 
     // ── Period-driven aggregates ────────────────────────────────────────
-    final periodActivities = fitness.activities.where((a) {
+    final periodActivities = fitness.activities.where((a) { // lint-ignore: widget-no-logic — UI date-range filter driven by on-screen period selector
       final day =
           DateTime(a.startTime.year, a.startTime.month, a.startTime.day);
       return !day.isBefore(_period.start) && !day.isAfter(_period.end);
@@ -291,7 +291,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
     // backfill section, so this screen doesn't need its own window
     // computation anymore.
     final listClaimable = recentActivities
-        .where((a) => progression.activityClaim(a).isClaimable)
+        .where((a) => progression.activityClaim(a).isClaimable) // lint-ignore: widget-no-logic — bulk-claim pill needs the subset visible in the on-screen period; per-activity claim eligibility is a domain method invoked once per row
         .toList();
     final listTotalXp = listClaimable.fold<int>(
       0,
@@ -561,7 +561,7 @@ class _WorkoutPermissionBanner extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Text('⚡', style: TextStyle(fontSize: 16)),
+            const Text('⚡', style: TextStyle(fontSize: 16)), // lint-ignore: l10n-literal — emoji symbol, locale-invariant
             const SizedBox(width: 10),
             Expanded(
               child: Text(

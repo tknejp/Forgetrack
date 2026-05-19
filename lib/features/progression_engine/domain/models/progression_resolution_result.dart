@@ -1,8 +1,9 @@
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 
 import '../evaluator/objective_evaluator.dart' show ObjectiveOutcome;
-import 'engine_evaluation_input.dart';
-import 'ledger_event.dart';
+import 'engine_evaluation_context.dart';
+import 'package:forgetrack/domain/journal/journal_event.dart';
+import 'package:forgetrack/domain/progression/catalog/unlock_condition.dart';
 import 'progression_resolution_reason.dart';
 
 export '../evaluator/objective_evaluator.dart' show ObjectiveOutcome;
@@ -22,13 +23,14 @@ class ProgressionResolutionResult {
     required this.grantedRewards,
     required this.skippedEvents,
     required this.warnings,
-    required this.inputSnapshot,
+    required this.contextSnapshot,
     this.allObjectiveOutcomes = const [],
     this.newlyAvailableNodes = const [],
     this.lockedNodeIds = const {},
+    this.lockedNodeRemainingConditions = const {},
   });
 
-  final String runId;
+  final String runId; // lint-ignore: untyped-id — UUID-shaped diagnostic id for one engine.evaluate() invocation
   final ProgressionResolutionReason reason;
 
   /// Objectives that newly completed during this run. Pre-existing
@@ -64,6 +66,20 @@ class ProgressionResolutionResult {
   /// otherwise indistinguishable from an in-progress one.
   final Set<String> lockedNodeIds;
 
+  /// For each locked node id, the **top-level** unlock conditions that
+  /// still evaluated to false this run. Populated alongside
+  /// [lockedNodeIds] by the engine resolver. Consumers (player-side
+  /// catalog services) read this to populate
+  /// `QuestLocked.remaining` / `AchievementLocked.remaining` so the
+  /// screen can render the specific blocker rather than a generic
+  /// "Zamčeno" message.
+  ///
+  /// Composite conditions ([AllOf] / [AnyOf]) appear as a single
+  /// list entry; the screen renders them as one composite gate.
+  /// Nodes locked by [ActivationPolicy] alone (e.g. RPG mode off
+  /// without an explicit `RpgModeEnabled` gate) have an empty list.
+  final Map<String, List<UnlockCondition>> lockedNodeRemainingConditions;
+
   /// **Delta** subset of [availableNodes]: nodes that are surfacing
   /// as available for the first time, tracked via a persisted
   /// `NodeAnnouncedEvent` in the ledger. Survives app restarts —
@@ -88,10 +104,15 @@ class ProgressionResolutionResult {
   /// throw; warnings flow through.
   final List<ResolutionWarning> warnings;
 
-  /// The input the engine evaluated against. Useful for devtools
-  /// dumps and cloud sync (so we can re-execute with the same input
-  /// later if needed).
-  final EngineEvaluationInput inputSnapshot;
+  /// The structured context the engine evaluated against. Useful for
+  /// devtools dumps and cloud sync (so we can re-execute with the
+  /// same context later if needed). Phase 16 replaced the
+  /// flat `inputSnapshot: EngineEvaluationInput` field with a bundle
+  /// of structured VOs (`Player` + snapshots + `GoalBoard` +
+  /// `Journal` + `LedgerCounters` + `EvaluationOverrides` +
+  /// `evaluatedAt`) — every field is a focused domain type, no flat
+  /// record left.
+  final EngineEvaluationContext contextSnapshot;
 
   bool get isEmpty =>
       completedObjectives.isEmpty &&
@@ -108,7 +129,7 @@ class ObjectiveCompletion {
     required this.event,
   });
 
-  final String objectiveId;
+  final String objectiveId; // lint-ignore: untyped-id — resolution result mirrors ObjectiveId from catalog
   final double actualValue;
 
   /// The ledger event that was appended.
@@ -122,7 +143,7 @@ class NodeCompletion {
     required this.event,
   });
 
-  final String nodeId;
+  final String nodeId; // lint-ignore: untyped-id — resolution result mirrors ProgressionEntryId from catalog
   final NodeCompletionEvent event;
 }
 
@@ -132,7 +153,7 @@ class NodeAvailability {
     required this.nodeId,
   });
 
-  final String nodeId;
+  final String nodeId; // lint-ignore: untyped-id — resolution result mirrors ProgressionEntryId from catalog
 }
 
 @immutable

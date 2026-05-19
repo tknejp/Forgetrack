@@ -1,10 +1,12 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/features/progression_engine/domain/progression_domain_chrome.dart';
 
 import 'package:forgetrack/features/progression_engine/domain/catalog/level_milestone_specs.dart';
 import 'package:forgetrack/features/progression_engine/domain/catalog/progression_node_catalog.dart';
 import 'package:forgetrack/features/progression_engine/domain/display/progression_display_models.dart';
 import 'package:forgetrack/features/progression_engine/domain/display/progression_display_resolver.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/progression_node_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import 'package:forgetrack/l10n/app_localizations_en.dart';
 
 void main() {
@@ -12,7 +14,7 @@ void main() {
   final l10n = AppLocalizationsEn();
   const locale = 'en';
 
-  group('ProgressionDisplayResolver — levels', () {
+  group('ProgressionDisplayResolver â€” levels', () {
     test('levelDisplay returns tier metadata for a known level', () {
       final display = resolver.levelDisplay(5);
       expect(display.level, 5);
@@ -34,10 +36,10 @@ void main() {
 
     test('levelDisplay between milestones inherits the governing breakpoint',
         () {
-      // Levels 2-4 don't have their own milestone spec — they should keep
+      // Levels 2-4 don't have their own milestone spec â€” they should keep
       // the level-1 (Pilgrim) title + common rarity until the next
       // breakpoint at level 5 fires. Regression guard for the screen
-      // header showing "Level 2 ⚔ LEVEL 2" with the default accent.
+      // header showing "Level 2 âš” LEVEL 2" with the default accent.
       for (final mid in [2, 3, 4]) {
         final display = resolver.levelDisplay(mid);
         final governing = kLevelMilestones.first;
@@ -61,7 +63,7 @@ void main() {
     });
   });
 
-  group('ProgressionDisplayResolver — nodes', () {
+  group('ProgressionDisplayResolver â€” nodes', () {
     test('nodeDisplay resolves a level milestone id', () {
       final display = resolver.nodeDisplay('level_10', l10n);
       expect(display, isNotNull);
@@ -82,8 +84,8 @@ void main() {
     test('nodeDisplay populates accentColor for every V2 achievement node', () {
       // Smoke test: accentColor is required on NodeDisplay; if a future
       // resolver branch forgets to set it, this catches it.
-      for (final node in const ProgressionNodeCatalog().build()) {
-        if (node is! AchievementNode) continue;
+      for (final node in const ProgressionEntryCatalog().build()) {
+        if (node is! Achievement) continue;
         final display = resolver.nodeDisplay(node.id, l10n);
         expect(display, isNotNull, reason: 'no display for id=${node.id}');
         expect(display!.accentColor, isNotNull);
@@ -100,21 +102,21 @@ void main() {
     test('unknownNodeDisplay builds a synthetic display from snapshot data', () {
       final unlockedAt = DateTime(2026, 4, 15, 10);
       final display = resolver.unknownNodeDisplay(
-        nodeId: 'mystery_id_42',
+        nodeId: ProgressionEntryId('mystery_id_42'),
         fallbackTitle: 'Mystery achievement',
         fallbackDescription: 'A test description',
-        badgeEmoji: '🔮',
+        badgeEmoji: 'ðŸ”®',
         unlockedAt: unlockedAt,
       );
       expect(display.nodeId, 'mystery_id_42');
       expect(display.title(l10n), 'Mystery achievement');
       expect(display.description(l10n), 'A test description');
-      expect(display.badgeEmoji, '🔮');
+      expect(display.badgeEmoji, 'ðŸ”®');
       expect(display.unlockedAt, unlockedAt);
     });
   });
 
-  group('ProgressionDisplayResolver — friendDisplayLabel', () {
+  group('ProgressionDisplayResolver â€” friendDisplayLabel', () {
     test('returns LEVEL N (uppercase) for level milestone ids', () {
       final display = resolver.nodeDisplay('level_25', l10n)!;
       final label = resolver.friendDisplayLabel(display, l10n);
@@ -128,7 +130,7 @@ void main() {
     });
   });
 
-  group('ProgressionDisplayResolver — compactSummary', () {
+  group('ProgressionDisplayResolver â€” compactSummary', () {
     test('returns a level label for level milestone ids', () {
       expect(
         resolver.compactSummary('level_20', l10n, locale),
@@ -139,10 +141,10 @@ void main() {
     test(
       'returns a non-null formatted string for every V2 achievement node',
       () {
-        // Smoke test: every real V2 AchievementNode must produce a summary
+        // Smoke test: every real V2 Achievement must produce a summary
         // so friend cards never crash when rendering an unknown metric.
-        for (final node in const ProgressionNodeCatalog().build()) {
-          if (node is! AchievementNode) continue;
+        for (final node in const ProgressionEntryCatalog().build()) {
+          if (node is! Achievement) continue;
           final summary = resolver.compactSummary(node.id, l10n, locale);
           expect(
             summary,
@@ -162,7 +164,7 @@ void main() {
     });
   });
 
-  group('ProgressionDisplayResolver — domains', () {
+  group('ProgressionDisplayResolver â€” domains', () {
     test('domainDisplay carries the legacy domain visuals through', () {
       final display = resolver.domainDisplay(ProgressionDomain.steps);
       expect(display.domain, ProgressionDomain.steps);

@@ -1,10 +1,10 @@
-import '../models/activation_policy.dart';
-import '../models/claim_policy.dart';
-import '../models/content_tag.dart';
-import '../models/objective_definition.dart';
-import '../models/progression_node_definition.dart';
-import '../models/reward_definition.dart';
-import '../models/unlock_condition.dart';
+﻿import 'package:forgetrack/domain/progression/catalog/activation_policy.dart';
+import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';
+import 'package:forgetrack/domain/progression/catalog/content_tag.dart';
+import 'package:forgetrack/domain/progression/catalog/objective.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
+import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/unlock_condition.dart';
 import 'engine_catalog_context.dart';
 import 'objective_catalog.dart';
 import 'progression_node_catalog.dart';
@@ -24,7 +24,7 @@ class CatalogValidationIssue {
   final String message;
 
   @override
-  String toString() => '[${severity.name.toUpperCase()}] $path — $message';
+  String toString() => '[${severity.name.toUpperCase()}] $path â€” $message';
 }
 
 enum CatalogValidationSeverity { error, warning }
@@ -38,7 +38,7 @@ class CatalogValidationException implements Exception {
 
   @override
   String toString() {
-    final lines = ['CatalogValidationException — ${issues.length} issue(s):'];
+    final lines = ['CatalogValidationException â€” ${issues.length} issue(s):'];
     for (final issue in issues) {
       lines.add('  $issue');
     }
@@ -52,16 +52,16 @@ class CatalogValidationException implements Exception {
 /// further checks land alongside the features that need them
 /// (chapters in Phase 3, RPG content tag coherence in Phase 8).
 ///
-/// The validator is pure / deterministic — give it the same catalogs,
+/// The validator is pure / deterministic â€” give it the same catalogs,
 /// get the same issue list, in the same order.
 class CatalogValidator {
   const CatalogValidator({
     this.objectiveCatalog = const ObjectiveCatalog(),
-    this.nodeCatalog = const ProgressionNodeCatalog(),
+    this.nodeCatalog = const ProgressionEntryCatalog(),
   });
 
   final ObjectiveCatalog objectiveCatalog;
-  final ProgressionNodeCatalog nodeCatalog;
+  final ProgressionEntryCatalog nodeCatalog;
 
   /// Returns every issue found, errors and warnings mixed. Order is
   /// stable: objectives first, then nodes in catalog order, with
@@ -102,10 +102,10 @@ class CatalogValidator {
     if (hasError) throw CatalogValidationException(issues);
   }
 
-  // ── Objective checks ────────────────────────────────────────────
+  // â”€â”€ Objective checks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Iterable<CatalogValidationIssue> _checkObjectiveIdentity(
-    List<ObjectiveDefinition> objectives,
+    List<Objective> objectives,
   ) sync* {
     final seen = <String>{};
     for (final o in objectives) {
@@ -119,10 +119,10 @@ class CatalogValidator {
     }
   }
 
-  // ── Node checks ─────────────────────────────────────────────────
+  // â”€â”€ Node checks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Iterable<CatalogValidationIssue> _checkNodeIdentity(
-    List<ProgressionNode> nodes,
+    List<ProgressionEntry> nodes,
   ) sync* {
     final seen = <String>{};
     for (final n in nodes) {
@@ -137,7 +137,7 @@ class CatalogValidator {
   }
 
   Iterable<CatalogValidationIssue> _checkNodeReferences(
-    List<ProgressionNode> nodes,
+    List<ProgressionEntry> nodes,
     Set<String> knownObjectiveIds,
   ) sync* {
     final knownNodeIds = {for (final n in nodes) n.id};
@@ -213,7 +213,7 @@ class CatalogValidator {
   }
 
   Iterable<CatalogValidationIssue> _checkClaimPolicyCoherence(
-    List<ProgressionNode> nodes,
+    List<ProgressionEntry> nodes,
   ) sync* {
     for (final n in nodes) {
       if (n.claimPolicy == ClaimPolicy.manual && n.lockedHintKey == null) {
@@ -221,24 +221,24 @@ class CatalogValidator {
           severity: CatalogValidationSeverity.warning,
           path: 'nodes[${n.id}]',
           message:
-              'Manual-claim node has no lockedHintKey — player may not know what to do.',
+              'Manual-claim node has no lockedHintKey â€” player may not know what to do.',
         );
       }
     }
   }
 
   Iterable<CatalogValidationIssue> _checkLevelMilestoneCoherence(
-    List<ProgressionNode> nodes,
+    List<ProgressionEntry> nodes,
   ) sync* {
     for (final n in nodes) {
-      if (n is! LevelMilestoneNode) continue;
+      if (n is! LevelMilestone) continue;
       final levels = _flattenLevelAtLeast(n.unlockConditions);
       if (levels.isEmpty) {
         yield CatalogValidationIssue(
           severity: CatalogValidationSeverity.error,
           path: 'nodes[${n.id}].unlockConditions',
           message:
-              'LevelMilestoneNode level=${n.level} has no LevelAtLeast unlock condition.',
+              'LevelMilestone level=${n.level} has no LevelAtLeast unlock condition.',
         );
         continue;
       }
@@ -247,7 +247,7 @@ class CatalogValidator {
           severity: CatalogValidationSeverity.error,
           path: 'nodes[${n.id}].unlockConditions',
           message:
-              'LevelMilestoneNode level=${n.level} unlock conditions reference $levels — none match.',
+              'LevelMilestone level=${n.level} unlock conditions reference $levels â€” none match.',
         );
       }
     }
@@ -277,7 +277,7 @@ class CatalogValidator {
   }
 
   Iterable<CatalogValidationIssue> _checkActivationContentTagCoherence(
-    List<ProgressionNode> nodes,
+    List<ProgressionEntry> nodes,
   ) sync* {
     for (final n in nodes) {
       final isRpgPolicy =
@@ -292,32 +292,32 @@ class CatalogValidator {
           severity: CatalogValidationSeverity.warning,
           path: 'nodes[${n.id}]',
           message:
-              'Activation policy ${n.activationPolicy.name} but no RPG-flavored ContentTag — drift risk.',
+              'Activation policy ${n.activationPolicy.name} but no RPG-flavored ContentTag â€” drift risk.',
         );
       }
     }
   }
 
-  // ── Helpers ─────────────────────────────────────────────────────
+  // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   /// Returns the `objectiveId` field on the node when present, null
   /// for node types that are unlock-condition-only.
-  String? _objectiveIdOf(ProgressionNode node) {
+  String? _objectiveIdOf(ProgressionEntry node) {
     return switch (node) {
-      QuestNode(:final objectiveId) => objectiveId,
-      AchievementNode(:final objectiveId) => objectiveId,
-      MilestoneNode(:final objectiveId) => objectiveId,
-      LevelMilestoneNode() => null,
-      ChapterCompletionNode() => null,
-      CompanionAvailabilityNode() => null,
-      RelicNode() => null,
-      ContentUnlockNode() => null,
+      Quest(:final objectiveId) => objectiveId,
+      Achievement(:final objectiveId) => objectiveId,
+      Milestone(:final objectiveId) => objectiveId,
+      LevelMilestone() => null,
+      ChapterCompletion() => null,
+      CompanionAvailability() => null,
+      Relic() => null,
+      ContentUnlock() => null,
     };
   }
 }
 
-// Currently unused — keeps the analyzer happy when a future check
+// Currently unused â€” keeps the analyzer happy when a future check
 // needs to introspect rewards by type.
 // ignore: unused_element
-List<RewardDefinition> _allRewards(List<ProgressionNode> nodes) =>
+List<RewardDefinition> _allRewards(List<ProgressionEntry> nodes) =>
     nodes.expand((n) => n.rewards).toList(growable: false);

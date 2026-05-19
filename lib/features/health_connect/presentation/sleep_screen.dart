@@ -232,7 +232,7 @@ class _SleepScreenState extends State<SleepScreen> {
     FitnessProvider fitness,
     _SleepPeriod period,
   ) {
-    return fitness.sleepHistory.where(
+    return fitness.sleepHistory.where( // lint-ignore: widget-no-logic — UI date-range slice driven by on-screen period selector
       (r) =>
           !r.wakeTime.isBefore(period.start) &&
           !r.wakeTime.isAfter(_endOfDay(period.end)),
@@ -295,7 +295,7 @@ class _SleepScreenState extends State<SleepScreen> {
     _SleepPeriod period,
   ) {
     final records =
-        _recordsInPeriod(fitness, period).where((r) => r.hasStageData).toList();
+        _recordsInPeriod(fitness, period).where((r) => r.hasStageData).toList(); // lint-ignore: widget-no-logic — drops records missing stage telemetry for stage-breakdown chart
     if (records.isEmpty) {
       return const {
         SleepStage.deep: Duration.zero,

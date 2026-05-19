@@ -1,8 +1,10 @@
+﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
+
 import 'cosmetic_unlock_rule.dart';
 
 /// Baseline unlock rules used when a fresh user state is created.
 ///
-/// This file deliberately knows nothing about progression/social features —
+/// This file deliberately knows nothing about progression/social features â€”
 /// other features call into the cosmetics service to grant unlocks; cosmetics
 /// never reaches into them.
 class CosmeticUnlockRules {
@@ -20,7 +22,7 @@ class CosmeticUnlockRules {
 
 /// Tier-2 unlock rules: companion unlocks gated on level + two relic ownership
 /// conditions. Relics themselves flow exclusively from Tier-1 (achievement
-/// reward table) — there are no Tier-2 relic rules.
+/// reward table) â€” there are no Tier-2 relic rules.
 ///
 /// Pattern for every companion:
 ///   Cond.atLevel(N) + Cond.ownsCosmetic(relic_a) + Cond.ownsCosmetic(relic_b)
@@ -35,12 +37,12 @@ final List<CosmeticUnlockRule> kCosmeticUnlockRules = <CosmeticUnlockRule>[
   // -- Companions: relic gate + level gate, idempotent, no consumption -------
   //
   // Companion ladder is paced every 10 levels from 5 to 95 and mapped to the
-  // journey environment progression: camp (5) → forest end (15) → ruins (25)
-  // → bridge (35) → mines (45) → rocky descent (55) → ice plain (65) →
-  // ice lake (75) → end-game climb (85) → pre-dragonrock (95). Lvl 100 is a
+  // journey environment progression: camp (5) â†’ forest end (15) â†’ ruins (25)
+  // â†’ bridge (35) â†’ mines (45) â†’ rocky descent (55) â†’ ice plain (65) â†’
+  // ice lake (75) â†’ end-game climb (85) â†’ pre-dragonrock (95). Lvl 100 is a
   // quiet cap with no companion unlock.
   CosmeticUnlockRule(
-    cosmeticId: 'companion_ember_sprite',
+    cosmeticId: CosmeticId('companion_ember_sprite'),
     sourceType: 'compound',
     sourceId: 'compound_jiskricka',
     conditions: [
@@ -51,7 +53,7 @@ final List<CosmeticUnlockRule> kCosmeticUnlockRules = <CosmeticUnlockRule>[
     isHidden: true,
   ),
   CosmeticUnlockRule(
-    cosmeticId: 'companion_forest_fox',
+    cosmeticId: CosmeticId('companion_forest_fox'),
     sourceType: 'compound',
     sourceId: 'compound_lesni_liska',
     conditions: [
@@ -62,7 +64,7 @@ final List<CosmeticUnlockRule> kCosmeticUnlockRules = <CosmeticUnlockRule>[
     isHidden: true,
   ),
   CosmeticUnlockRule(
-    cosmeticId: 'companion_ruin_raven',
+    cosmeticId: CosmeticId('companion_ruin_raven'),
     sourceType: 'compound',
     sourceId: 'compound_havran_ruin',
     conditions: [
@@ -73,7 +75,7 @@ final List<CosmeticUnlockRule> kCosmeticUnlockRules = <CosmeticUnlockRule>[
     isHidden: true,
   ),
   CosmeticUnlockRule(
-    cosmeticId: 'companion_bridge_gargoyle',
+    cosmeticId: CosmeticId('companion_bridge_gargoyle'),
     sourceType: 'compound',
     sourceId: 'compound_mostni_gargoyle',
     conditions: [
@@ -84,7 +86,7 @@ final List<CosmeticUnlockRule> kCosmeticUnlockRules = <CosmeticUnlockRule>[
     isHidden: true,
   ),
   CosmeticUnlockRule(
-    cosmeticId: 'companion_lantern_golem',
+    cosmeticId: CosmeticId('companion_lantern_golem'),
     sourceType: 'compound',
     sourceId: 'compound_lucernovy_golem',
     conditions: [
@@ -95,7 +97,7 @@ final List<CosmeticUnlockRule> kCosmeticUnlockRules = <CosmeticUnlockRule>[
     isHidden: true,
   ),
   CosmeticUnlockRule(
-    cosmeticId: 'companion_cave_lynx',
+    cosmeticId: CosmeticId('companion_cave_lynx'),
     sourceType: 'compound',
     sourceId: 'compound_jeskynni_rys',
     conditions: [
@@ -106,7 +108,7 @@ final List<CosmeticUnlockRule> kCosmeticUnlockRules = <CosmeticUnlockRule>[
     isHidden: true,
   ),
   CosmeticUnlockRule(
-    cosmeticId: 'companion_aurora_stag',
+    cosmeticId: CosmeticId('companion_aurora_stag'),
     sourceType: 'compound',
     sourceId: 'compound_polarni_jelen',
     conditions: [
@@ -117,7 +119,7 @@ final List<CosmeticUnlockRule> kCosmeticUnlockRules = <CosmeticUnlockRule>[
     isHidden: true,
   ),
   CosmeticUnlockRule(
-    cosmeticId: 'companion_ice_wisp',
+    cosmeticId: CosmeticId('companion_ice_wisp'),
     sourceType: 'compound',
     sourceId: 'compound_ledovy_prizrak',
     conditions: [
@@ -128,7 +130,7 @@ final List<CosmeticUnlockRule> kCosmeticUnlockRules = <CosmeticUnlockRule>[
     isHidden: true,
   ),
   CosmeticUnlockRule(
-    cosmeticId: 'companion_mountain_gryphon',
+    cosmeticId: CosmeticId('companion_mountain_gryphon'),
     sourceType: 'compound',
     sourceId: 'compound_horsky_gryf',
     conditions: [
@@ -139,7 +141,7 @@ final List<CosmeticUnlockRule> kCosmeticUnlockRules = <CosmeticUnlockRule>[
     isHidden: true,
   ),
   CosmeticUnlockRule(
-    cosmeticId: 'companion_dragonling',
+    cosmeticId: CosmeticId('companion_dragonling'),
     sourceType: 'compound',
     sourceId: 'compound_draci_mlade',
     conditions: [

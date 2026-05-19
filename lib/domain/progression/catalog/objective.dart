@@ -1,0 +1,63 @@
+import 'package:meta/meta.dart';
+
+import 'ids.dart';
+import 'objective_metric.dart';
+import 'objective_operator.dart';
+import 'objective_scope.dart';
+import 'progression_domain.dart';
+
+export 'progression_domain.dart' show ProgressionDomain;
+
+/// Pure machine-readable condition. **No UI, no rewards, no rarity, no
+/// display strings.** Display lives on [ProgressionEntry], rewards live
+/// on the node that references this objective.
+///
+/// Multiple nodes may reference the same objective id — that is the
+/// whole point: "lifetime steps >= 10M" is one condition; the quest
+/// reward, the achievement unlock and the milestone are three nodes
+/// pointing at it. The evaluator computes the outcome once.
+@immutable
+class Objective {
+  const Objective({
+    required this.id,
+    required this.metric,
+    required this.scope,
+    required this.operator,
+    required this.targetValue,
+    this.domain,
+    this.upperTargetValue,
+    this.toleranceRatio = 0,
+    this.debugLabel,
+    this.baselineFromNodeId,
+  });
+
+  final ObjectiveId id;
+  final ObjectiveMetric metric;
+  final ObjectiveScope scope;
+  final ObjectiveOperator operator;
+  final double targetValue;
+
+  /// Optional domain tag (steps / nutrition / sleep / activity /
+  /// body). Used by streak-by-domain aggregation and by display
+  /// helpers that want to colour or icon objectives consistently.
+  /// Cross-domain objectives (totalXp, rewardCount) leave this null.
+  final ProgressionDomain? domain;
+
+  /// Required for [ObjectiveOperator.betweenInclusive], otherwise null.
+  final double? upperTargetValue;
+
+  /// Required for the tolerance operators, otherwise 0.
+  final double toleranceRatio;
+
+  /// Human-readable label for debug overlays / catalog listings. NEVER
+  /// shown to the player — that is what `ProgressionEntry.titleKey` is
+  /// for. Optional; falls back to [id] when null.
+  final String? debugLabel;
+
+  /// When set, the objective's measured value is "since the named
+  /// node's first completion" rather than lifetime. Today only
+  /// [NodeCompletionsMetric] supports this baseline — chapter step
+  /// objectives use it so e.g. `daily_steps_today` completions counted
+  /// before a chapter step unlocked don't auto-satisfy the new step.
+  final ProgressionEntryId? baselineFromNodeId;
+}

@@ -1,15 +1,15 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../../cosmetics/application/cosmetics_provider.dart';
 import '../../cosmetics/domain/cosmetic_models.dart';
 import '../../progression_engine/domain/catalog/content/quest_assets.dart';
 import '../../progression_engine/domain/catalog/progression_node_catalog.dart';
-import '../../progression_engine/domain/models/ledger_event.dart';
-import '../../progression_engine/domain/models/progression_node_definition.dart';
+import 'package:forgetrack/domain/journal/journal_event.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import '../../progression_engine/domain/models/progression_resolution_reason.dart';
 import '../../progression_engine/domain/models/progression_resolution_result.dart';
-import '../../progression_engine/domain/models/quest_policies.dart';
-import '../../progression_engine/domain/models/unlock_condition.dart';
+import 'package:forgetrack/domain/progression/catalog/quest_policies.dart';
+import 'package:forgetrack/domain/progression/catalog/unlock_condition.dart';
 import '../domain/models/celebration_event.dart';
 import '../domain/models/celebration_reward.dart';
 
@@ -21,12 +21,12 @@ import '../domain/models/celebration_reward.dart';
 /// 1. Bulk reasons (factoryResetSeed / historicalResync) collapse into a
 ///    single "welcome back" summary so the player is not buried under N
 ///    popups.
-/// 2. Level milestones always render solo — they are the moment.
+/// 2. Level milestones always render solo â€” they are the moment.
 /// 3. Chapter completions bundle the immediately-unlocked next chapter
 ///    (when present in the same result) into one celebration.
 /// 4. Quest + achievement + milestone nodes sharing an `objectiveId` are
 ///    merged into a single "goal complete" celebration so the player sees
-///    "10M steps · achievement Vzestupný · 1 reward" in one card stack
+///    "10M steps Â· achievement VzestupnÃ½ Â· 1 reward" in one card stack
 ///    instead of three popups.
 /// 5. Achievement / relic / content-unlock nodes that don't fit any
 ///    bucket render solo.
@@ -35,17 +35,17 @@ import '../domain/models/celebration_reward.dart';
 /// 7. Any cosmetic grant that didn't piggyback on a node celebration
 ///    surfaces as an orphan "reward from your progress" event.
 ///
-/// The adapter is pure — same input, same output, no diffing. Diff
+/// The adapter is pure â€” same input, same output, no diffing. Diff
 /// already happened inside the engine; this layer is purely a view
 /// mapping.
 class ProgressionEngineCelebrationAdapter {
   const ProgressionEngineCelebrationAdapter({
     required this.cosmetics,
-    this.nodeCatalog = const ProgressionNodeCatalog(),
+    this.nodeCatalog = const ProgressionEntryCatalog(),
   });
 
   final CosmeticsProvider cosmetics;
-  final ProgressionNodeCatalog nodeCatalog;
+  final ProgressionEntryCatalog nodeCatalog;
 
   List<CelebrationEvent> convert(ProgressionResolutionResult result) {
     if (result.isEmpty) return const [];
@@ -57,23 +57,23 @@ class ProgressionEngineCelebrationAdapter {
 
     final completions = <_NodeCompletionPair>[];
     for (final c in result.completedNodes) {
-      final node = ProgressionNodeCatalog.definitionForId(c.nodeId);
+      final node = ProgressionEntryCatalog.definitionForId(c.nodeId);
       if (node == null) continue;
       completions.add(_NodeCompletionPair(c, node));
     }
 
-    // ── Fold pre-pass ─────────────────────────────────────────────
+    // â”€â”€ Fold pre-pass â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     //
     // The catalog frequently authors a relic + a companion + a level
     // milestone gated on the same `LevelAtLeast(N)`. Without folding
     // they fire as three separate overlays, two of which share a
-    // placeholder title (e.g. "Vítej na cestě"). Fold them into the
+    // placeholder title (e.g. "VÃ­tej na cestÄ›"). Fold them into the
     // level milestone celebration so the player sees one cohesive
-    // moment: "Level N · here are the things you just unlocked."
+    // moment: "Level N Â· here are the things you just unlocked."
     final levelHostByLevel = <int, _NodeCompletionPair>{};
     for (final p in completions) {
-      if (p.node is LevelMilestoneNode) {
-        levelHostByLevel[(p.node as LevelMilestoneNode).level] = p;
+      if (p.node is LevelMilestone) {
+        levelHostByLevel[(p.node as LevelMilestone).level] = p;
       }
     }
     final completionByNodeId = {
@@ -88,7 +88,7 @@ class ProgressionEngineCelebrationAdapter {
     // Fold gateless relics into their matching level milestone.
     for (final p in completions) {
       final node = p.node;
-      if (node is! RelicNode) continue;
+      if (node is! Relic) continue;
       final host = _hostFromLevelOnly(
         node.unlockConditions,
         levelHostByLevel,
@@ -104,10 +104,10 @@ class ProgressionEngineCelebrationAdapter {
     // or matching level milestone (fallback). Reads `newlyAvailableNodes`
     // (engine delta backed by NodeAnnouncedEvent in the ledger) so
     // the fold fires the first time the companion surfaces and
-    // never again — including across app restarts.
+    // never again â€” including across app restarts.
     for (final availability in result.newlyAvailableNodes) {
-      final node = ProgressionNodeCatalog.definitionForId(availability.nodeId);
-      if (node is! CompanionAvailabilityNode) continue;
+      final node = ProgressionEntryCatalog.definitionForId(availability.nodeId);
+      if (node is! CompanionAvailability) continue;
       final completedHost = _findNodeCompletedHost(
         node.unlockConditions,
         completionByNodeId,
@@ -124,9 +124,9 @@ class ProgressionEngineCelebrationAdapter {
     final events = <CelebrationEvent>[];
     final consumed = <String>{};
 
-    // 1. Level milestones — always solo, always first.
+    // 1. Level milestones â€” always solo, always first.
     for (final pair in completions) {
-      if (pair.node is! LevelMilestoneNode) continue;
+      if (pair.node is! LevelMilestone) continue;
       events.add(_withExtras(
         _buildLevelEvent(pair, result),
         pair.node.id,
@@ -138,11 +138,11 @@ class ProgressionEngineCelebrationAdapter {
 
     // 2. Chapter completion + bundled next-chapter unlock.
     final contentUnlocks = completions
-        .where((p) => p.node is ContentUnlockNode)
+        .where((p) => p.node is ContentUnlock)
         .toList(growable: false);
     final bundledUnlockIds = <String>{};
     for (final pair in completions) {
-      if (pair.node is! ChapterCompletionNode) continue;
+      if (pair.node is! ChapterCompletion) continue;
       final ev = _buildChapterEvent(
         pair,
         contentUnlocks,
@@ -156,7 +156,7 @@ class ProgressionEngineCelebrationAdapter {
     }
     consumed.addAll(bundledUnlockIds);
 
-    // 3. Goal completions — bundle by objectiveId.
+    // 3. Goal completions â€” bundle by objectiveId.
     final byObjective = <String, List<_NodeCompletionPair>>{};
     final unbound = <_NodeCompletionPair>[];
     for (final pair in completions) {
@@ -172,7 +172,7 @@ class ProgressionEngineCelebrationAdapter {
     for (final bucket in byObjective.values) {
       final ev = _buildGoalEvent(bucket, result);
       if (ev != null) {
-        // Extras can land on any node in the bucket — usually they
+        // Extras can land on any node in the bucket â€” usually they
         // hit the face (first by quest > achievement > milestone),
         // but be defensive and merge across all bucket members.
         var merged = ev;
@@ -207,9 +207,9 @@ class ProgressionEngineCelebrationAdapter {
       consumed.add(pair.node.id);
     }
 
-    // 5. Un-folded companion availabilities — emit as their own
+    // 5. Un-folded companion availabilities â€” emit as their own
     //    fullscreen celebration with the companion as a single reward
-    //    card. The fullscreen's secondary CTA ("Otevřít inventář →")
+    //    card. The fullscreen's secondary CTA ("OtevÅ™Ã­t inventÃ¡Å™ â†’")
     //    is how the player actually unlocks the companion; there is
     //    no inline claim button.
     //
@@ -219,8 +219,8 @@ class ProgressionEngineCelebrationAdapter {
     //    marker tracking it across app restarts.
     for (final availability in result.newlyAvailableNodes) {
       if (foldedAvailabilityIds.contains(availability.nodeId)) continue;
-      final node = ProgressionNodeCatalog.definitionForId(availability.nodeId);
-      if (node is! CompanionAvailabilityNode) continue;
+      final node = ProgressionEntryCatalog.definitionForId(availability.nodeId);
+      if (node is! CompanionAvailability) continue;
       events.add(_buildStandaloneCompanionEvent(node));
     }
 
@@ -236,11 +236,11 @@ class ProgressionEngineCelebrationAdapter {
       events.add(_buildOrphanCosmeticEvent(orphanIds));
     }
 
-    // ── Final pass: bundle solo achievements into a moment pack ──
+    // â”€â”€ Final pass: bundle solo achievements into a moment pack â”€â”€
     //
-    // When ≥2 plain `CelebrationType.achievement` events remain after
-    // all earlier fold passes — typical case: welcome flow fires
-    // `welcome_to_journey` + `first_reward` together — fan them into
+    // When â‰¥2 plain `CelebrationType.achievement` events remain after
+    // all earlier fold passes â€” typical case: welcome flow fires
+    // `welcome_to_journey` + `first_reward` together â€” fan them into
     // a single fullscreen card stack so the player sees one cohesive
     // "moment" instead of N popups in a row. Levels, chapters,
     // goal-bucket merges, and companion-folded events stay distinct.
@@ -282,7 +282,7 @@ class ProgressionEngineCelebrationAdapter {
     }
 
     // Sum XP from any source achievement events that carried one
-    // (rare today — achievements granting XP directly — but defensive).
+    // (rare today â€” achievements granting XP directly â€” but defensive).
     var xpTotal = 0;
     for (final ev in achievements) {
       final award = ev.xpAward;
@@ -302,7 +302,7 @@ class ProgressionEngineCelebrationAdapter {
         return achievements
             .map((ev) => ev.title(l))
             .where((s) => s.isNotEmpty)
-            .join(' · ');
+            .join(' Â· ');
       },
       rewards: mergedRewards,
       headRarity: headRarity,
@@ -344,10 +344,10 @@ class ProgressionEngineCelebrationAdapter {
     );
   }
 
-  /// Returns the [LevelMilestoneNode] completion that gates `conds`,
+  /// Returns the [LevelMilestone] completion that gates `conds`,
   /// but only when the conditions are *exactly* one or more
   /// [LevelAtLeast] entries. Any other condition kind disqualifies the
-  /// fold — we don't want to assume a node belongs to the level
+  /// fold â€” we don't want to assume a node belongs to the level
   /// milestone if it also has a [NodeCompleted] or RPG gate.
   _NodeCompletionPair? _hostFromLevelOnly(
     List<UnlockCondition> conds,
@@ -380,13 +380,13 @@ class ProgressionEngineCelebrationAdapter {
   }
 
   /// Reward card for a not-yet-claimed companion. We intentionally hide
-  /// the companion's real name + art on the celebration surface — the
+  /// the companion's real name + art on the celebration surface â€” the
   /// claim flow inside the inventory's details sheet is what actually
   /// reveals the companion (with its forging animation). Until then the
   /// card reads as a generic "mysterious companion" preview so the
   /// reveal moment lands in one place, not split between celebration
   /// and claim.
-  CelebrationReward _companionPreviewCard(CompanionAvailabilityNode node) {
+  CelebrationReward _companionPreviewCard(CompanionAvailability node) {
     return CelebrationReward(
       id: 'companion-${node.companionId}',
       name: (l) => l.cosmeticCompanionClaimableHiddenName,
@@ -398,7 +398,7 @@ class ProgressionEngineCelebrationAdapter {
     );
   }
 
-  /// Header reward card for a chapter — uses `chapterIconAssetFor`
+  /// Header reward card for a chapter â€” uses `chapterIconAssetFor`
   /// from the catalog so the celebration ties visually to the chapter
   /// art the player already saw on the chapter card. Rendered as a
   /// `location` kind so the celebration UI uses the map glyph as a
@@ -419,7 +419,7 @@ class ProgressionEngineCelebrationAdapter {
     );
   }
 
-  CelebrationReward _relicPreviewCard(RelicNode node) {
+  CelebrationReward _relicPreviewCard(Relic node) {
     final def = cosmetics.service.catalog.byId(node.relicId);
     return CelebrationReward(
       id: 'relic-${node.relicId}',
@@ -436,16 +436,16 @@ class ProgressionEngineCelebrationAdapter {
 
   /// Standalone fullscreen for an un-folded companion availability.
   /// The companion appears as a single reward card and the fullscreen's
-  /// existing "Open inventory →" CTA is how the player completes the
+  /// existing "Open inventory â†’" CTA is how the player completes the
   /// activation.
   /// Standalone fullscreen for an un-folded companion availability.
-  /// Title + description are kept neutral — the real reveal happens in
+  /// Title + description are kept neutral â€” the real reveal happens in
   /// the inventory claim flow, not on this screen. Without this swap
   /// the celebration would spoil the companion's name (and the asset
   /// path on `_companionPreviewCard` would leak the artwork) before
   /// the player even reaches the forging animation.
   CelebrationEvent _buildStandaloneCompanionEvent(
-    CompanionAvailabilityNode node,
+    CompanionAvailability node,
   ) {
     final card = _companionPreviewCard(node);
     return CelebrationEvent(
@@ -460,13 +460,13 @@ class ProgressionEngineCelebrationAdapter {
     );
   }
 
-  // ── Level ─────────────────────────────────────────────────────
+  // â”€â”€ Level â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   CelebrationEvent _buildLevelEvent(
     _NodeCompletionPair pair,
     ProgressionResolutionResult result,
   ) {
-    final node = pair.node as LevelMilestoneNode;
+    final node = pair.node as LevelMilestone;
     final completion = pair.completion;
     final cosmeticIds = _cosmeticIdsForNode(node.id, result);
     final rewards = _cosmeticsToRewards(cosmeticIds);
@@ -499,7 +499,7 @@ class ProgressionEngineCelebrationAdapter {
     );
   }
 
-  // ── Chapter (with bundled next-chapter unlock) ───────────────
+  // â”€â”€ Chapter (with bundled next-chapter unlock) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   CelebrationEvent? _buildChapterEvent(
     _NodeCompletionPair chapterPair,
@@ -507,12 +507,12 @@ class ProgressionEngineCelebrationAdapter {
     ProgressionResolutionResult result,
     Set<String> bundledUnlockIds,
   ) {
-    final node = chapterPair.node as ChapterCompletionNode;
+    final node = chapterPair.node as ChapterCompletion;
     final completion = chapterPair.completion;
     final cosmeticIds = _cosmeticIdsForNode(node.id, result);
     final rewards = _cosmeticsToRewards(cosmeticIds);
 
-    // Heuristic: if any ContentUnlockNode completed in the same result,
+    // Heuristic: if any ContentUnlock completed in the same result,
     // treat the first un-bundled one as the next-chapter unlock.
     _NodeCompletionPair? unlockPair;
     for (final p in contentUnlocks) {
@@ -537,12 +537,12 @@ class ProgressionEngineCelebrationAdapter {
             final suffix =
                 l.celebrationChapterUnlockedSuffix(unlockNode.titleKey(l));
             if (chapterDescription.isEmpty) return suffix;
-            return '$chapterDescription · $suffix';
+            return '$chapterDescription Â· $suffix';
           };
 
     // Prepend the chapter icon as the headliner card so the
     // celebration ties visually to the chapter art the player just
-    // finished. Always force fullscreen — finishing a chapter is a
+    // finished. Always force fullscreen â€” finishing a chapter is a
     // narrative beat that deserves the big-reveal treatment.
     final allRewards = <CelebrationReward>[
       _chapterIconCard(
@@ -569,7 +569,7 @@ class ProgressionEngineCelebrationAdapter {
     );
   }
 
-  // ── Goal (quest + achievement + milestone sharing objectiveId) ─
+  // â”€â”€ Goal (quest + achievement + milestone sharing objectiveId) â”€
 
   CelebrationEvent? _buildGoalEvent(
     List<_NodeCompletionPair> bucket,
@@ -583,11 +583,11 @@ class ProgressionEngineCelebrationAdapter {
     _NodeCompletionPair? milestonePair;
     for (final p in bucket) {
       switch (p.node) {
-        case QuestNode():
+        case Quest():
           questPair ??= p;
-        case AchievementNode():
+        case Achievement():
           achievementPair ??= p;
-        case MilestoneNode():
+        case Milestone():
           milestonePair ??= p;
         default:
           break;
@@ -639,18 +639,18 @@ class ProgressionEngineCelebrationAdapter {
     );
   }
 
-  // ── Solo (quest / achievement / milestone / relic) ────────────
+  // â”€â”€ Solo (quest / achievement / milestone / relic) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   CelebrationEvent? _buildSoloEvent(
     _NodeCompletionPair pair,
     ProgressionResolutionResult result,
   ) {
     return switch (pair.node) {
-      QuestNode() => _buildQuestEvent(pair, result),
-      AchievementNode() => _buildAchievementEvent(pair, result),
-      MilestoneNode() => _buildMilestoneEvent(pair, result),
-      RelicNode() => _buildRelicEvent(pair, result),
-      ContentUnlockNode() => _buildContentUnlockEvent(pair, result),
+      Quest() => _buildQuestEvent(pair, result),
+      Achievement() => _buildAchievementEvent(pair, result),
+      Milestone() => _buildMilestoneEvent(pair, result),
+      Relic() => _buildRelicEvent(pair, result),
+      ContentUnlock() => _buildContentUnlockEvent(pair, result),
       _ => null,
     };
   }
@@ -666,7 +666,7 @@ class ProgressionEngineCelebrationAdapter {
     _NodeCompletionPair pair,
     ProgressionResolutionResult result,
   ) {
-    final node = pair.node as QuestNode;
+    final node = pair.node as Quest;
     return switch (node.celebrationPolicy) {
       SilentCelebration() => null,
       ChapterOpenedCelebration() => _buildChapterEventForQuest(
@@ -694,7 +694,7 @@ class ProgressionEngineCelebrationAdapter {
     required String idPrefix,
     required CelebrationText eyebrow,
   }) {
-    final node = pair.node as QuestNode;
+    final node = pair.node as Quest;
     final completion = pair.completion;
     final cosmeticIds = _cosmeticIdsForNode(node.id, result);
     final rewards = _cosmeticsToRewards(cosmeticIds);
@@ -726,7 +726,7 @@ class ProgressionEngineCelebrationAdapter {
     _NodeCompletionPair pair,
     ProgressionResolutionResult result,
   ) {
-    final node = pair.node as AchievementNode;
+    final node = pair.node as Achievement;
     final completion = pair.completion;
     final cosmeticIds = _cosmeticIdsForNode(node.id, result);
     final rewards = _cosmeticsToRewards(cosmeticIds);
@@ -755,7 +755,7 @@ class ProgressionEngineCelebrationAdapter {
     _NodeCompletionPair pair,
     ProgressionResolutionResult result,
   ) {
-    final node = pair.node as MilestoneNode;
+    final node = pair.node as Milestone;
     final completion = pair.completion;
     final cosmeticIds = _cosmeticIdsForNode(node.id, result);
     final rewards = _cosmeticsToRewards(cosmeticIds);
@@ -784,7 +784,7 @@ class ProgressionEngineCelebrationAdapter {
     _NodeCompletionPair pair,
     ProgressionResolutionResult result,
   ) {
-    final node = pair.node as RelicNode;
+    final node = pair.node as Relic;
     final completion = pair.completion;
     final cosmeticIds = _cosmeticIdsForNode(node.id, result);
     final rewards = _cosmeticsToRewards(cosmeticIds);
@@ -806,7 +806,7 @@ class ProgressionEngineCelebrationAdapter {
     _NodeCompletionPair pair,
     ProgressionResolutionResult result,
   ) {
-    final node = pair.node as ContentUnlockNode;
+    final node = pair.node as ContentUnlock;
     final completion = pair.completion;
     final cosmeticIds = _cosmeticIdsForNode(node.id, result);
     final rewards = _cosmeticsToRewards(cosmeticIds);
@@ -824,7 +824,7 @@ class ProgressionEngineCelebrationAdapter {
     );
   }
 
-  // ── Orphan cosmetic + welcome-back summary ────────────────────
+  // â”€â”€ Orphan cosmetic + welcome-back summary â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   CelebrationEvent _buildOrphanCosmeticEvent(List<String> cosmeticIds) {
     final rewards = _cosmeticsToRewards(cosmeticIds);
@@ -868,14 +868,14 @@ class ProgressionEngineCelebrationAdapter {
     );
   }
 
-  // ── Helpers ───────────────────────────────────────────────────
+  // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   /// Extracts the objectiveId from nodes that have one, so the goal-bucket
   /// pre-pass can group siblings tracking the same condition.
-  String? _objectiveIdOf(ProgressionNode node) => switch (node) {
-        QuestNode(:final objectiveId) => objectiveId,
-        AchievementNode(:final objectiveId) => objectiveId,
-        MilestoneNode(:final objectiveId) => objectiveId,
+  String? _objectiveIdOf(ProgressionEntry node) => switch (node) {
+        Quest(:final objectiveId) => objectiveId,
+        Achievement(:final objectiveId) => objectiveId,
+        Milestone(:final objectiveId) => objectiveId,
         _ => null,
       };
 
@@ -918,11 +918,11 @@ class ProgressionEngineCelebrationAdapter {
     return null;
   }
 
-  List<CosmeticDefinition> _resolveCosmetics(List<String> ids) {
+  List<Cosmetic> _resolveCosmetics(List<String> ids) {
     final catalog = cosmetics.service.catalog;
     return ids
         .map(catalog.byId)
-        .whereType<CosmeticDefinition>()
+        .whereType<Cosmetic>()
         .toList(growable: false);
   }
 
@@ -966,5 +966,5 @@ class ProgressionEngineCelebrationAdapter {
 class _NodeCompletionPair {
   const _NodeCompletionPair(this.completion, this.node);
   final NodeCompletion completion;
-  final ProgressionNode node;
+  final ProgressionEntry node;
 }

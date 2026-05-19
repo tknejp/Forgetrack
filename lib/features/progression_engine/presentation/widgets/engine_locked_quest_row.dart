@@ -2,11 +2,11 @@
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
-import '../../domain/progression_domain.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_domain.dart';
 import '../widgets/progression_primitives.dart';
 import '../../application/progression_engine_provider.dart';
 import '../../domain/catalog/progression_node_catalog.dart';
-import '../../domain/models/progression_node_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 
 /// Compact row used inside the "ZAMÄŒENÃ‰ QUESTY" section.
 ///
@@ -33,7 +33,7 @@ class EngineLockedQuestRow extends StatelessWidget {
   String _resolveSubtitle(AppLocalizations l10n) {
     final prereqId = quest.prereqGateNodeId;
     if (prereqId != null) {
-      final prereqNode = ProgressionNodeCatalog.definitionForId(prereqId);
+      final prereqNode = ProgressionEntryCatalog.definitionForId(prereqId);
       final title = _titleForNode(prereqNode, l10n);
       if (title != null && title.isNotEmpty) {
         return l10n.progQuestDetailCompleteQuest(title);
@@ -42,12 +42,12 @@ class EngineLockedQuestRow extends StatelessWidget {
     return l10n.progQuestDetailRequiresLevel(quest.levelGate ?? 0);
   }
 
-  static String? _titleForNode(ProgressionNode? node, AppLocalizations l10n) {
+  static String? _titleForNode(ProgressionEntry? node, AppLocalizations l10n) {
     return switch (node) {
-      QuestNode(:final titleKey) => titleKey(l10n),
-      AchievementNode(:final titleKey) => titleKey(l10n),
-      MilestoneNode(:final titleKey) => titleKey(l10n),
-      LevelMilestoneNode(:final titleKey) => titleKey(l10n),
+      Quest(:final titleKey) => titleKey(l10n),
+      Achievement(:final titleKey) => titleKey(l10n),
+      Milestone(:final titleKey) => titleKey(l10n),
+      LevelMilestone(:final titleKey) => titleKey(l10n),
       _ => null,
     };
   }

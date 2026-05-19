@@ -46,7 +46,7 @@ class _HeroJourneyMapScreenState extends State<HeroJourneyMapScreen> {
     final checkpoints = JourneyAdapter.buildMilestoneMap(progression, l10n);
     final feed = JourneyAdapter.buildFeed(progression, l10n);
     final filteredFeedCount = feed
-        .where((e) => journeyFeedMatchesFilter(_selectedFeedFilter, e))
+        .where((e) => journeyFeedMatchesFilter(_selectedFeedFilter, e)) // lint-ignore: widget-no-logic — UI feed-filter count, no domain derivation
         .length;
 
     final screenH = MediaQuery.of(context).size.height;

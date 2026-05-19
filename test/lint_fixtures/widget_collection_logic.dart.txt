@@ -1,0 +1,17 @@
+// Phase 21 lint fixture — widget-no-logic violation.
+
+import 'package:flutter/material.dart';
+
+class BadWidget extends StatelessWidget {
+  const BadWidget({super.key, required this.items});
+  final List<int> items;
+
+  @override
+  Widget build(BuildContext context) {
+    // Filtering in build() — belongs in a provider/derivation.
+    final big = items.where((x) => x > 10).toList();
+    final first = items.firstWhere((x) => x.isEven, orElse: () => -1);
+    final ignored = items.where((x) => x.isOdd); // lint-ignore: widget-no-logic
+    return Text('${big.length} / $first / ${ignored.length}');
+  }
+}

@@ -23,7 +23,7 @@ class CosmeticsDebugScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cosmetics — debug'),
+        title: const Text('Cosmetics — debug'), // lint-ignore: l10n-literal — debug screen, intentionally English
       ),
       body: _Body(cosmetics: cosmetics, l10n: l10n),
     );
@@ -64,7 +64,7 @@ class _Body extends StatelessWidget {
       children: [
         _StatusRow(cosmetics: cosmetics),
         const SizedBox(height: 16),
-        Text('Equipped', style: theme.textTheme.titleMedium),
+        Text('Equipped', style: theme.textTheme.titleMedium), // lint-ignore: l10n-literal — debug screen, intentionally English
         const SizedBox(height: 8),
         _EquippedRow(
           cosmetics: cosmetics,
@@ -172,7 +172,7 @@ class _UnequipChip extends StatelessWidget {
     required this.onUnequip,
   });
 
-  final CosmeticDefinition definition;
+  final Cosmetic definition;
   final AppLocalizations? l10n;
   final VoidCallback onUnequip;
 
@@ -204,7 +204,7 @@ class _TypeSection extends StatelessWidget {
   });
 
   final CosmeticType type;
-  final List<CosmeticDefinition> definitions;
+  final List<Cosmetic> definitions;
   final UserCosmeticsState state;
   final CosmeticsProvider cosmetics;
   final AppLocalizations? l10n;
@@ -215,7 +215,7 @@ class _TypeSection extends StatelessWidget {
     final theme = Theme.of(context);
     final equippedId = state.equipped.slotId(type);
     final unlockedInType =
-        definitions.where((d) => state.unlocked.containsKey(d.id)).length;
+        definitions.where((d) => state.unlocked.containsKey(d.id)).length; // lint-ignore: widget-no-logic — debug screen count, no provider
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,7 +275,7 @@ class _Tile extends StatelessWidget {
     required this.cosmetics,
   });
 
-  final CosmeticDefinition definition;
+  final Cosmetic definition;
   final bool isUnlocked;
   final bool isEquipped;
   final AppLocalizations? l10n;

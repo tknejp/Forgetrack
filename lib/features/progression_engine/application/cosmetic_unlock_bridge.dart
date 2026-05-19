@@ -2,7 +2,8 @@ import 'dart:async';
 
 import '../../../core/logging/app_log.dart';
 import '../../cosmetics/application/cosmetics_provider.dart';
-import '../domain/models/ledger_event.dart';
+import 'package:forgetrack/domain/journal/journal_event.dart';
+import 'package:forgetrack/domain/journal/journal_projection.dart';
 import '../domain/models/progression_resolution_result.dart';
 import '../domain/repository/ledger_snapshot.dart';
 import 'cosmetic_reveal_snapshot_builder.dart';
@@ -24,7 +25,13 @@ const _log = AppLogger('ENGINE', scope: 'cosmeticBridge');
 ///
 /// Idempotent at the cosmetics layer (re-unlocking is a no-op).
 /// Until bound the bridge silently drops events.
-class CosmeticUnlockBridge {
+///
+/// Implements [JournalProjection] (Phase 20) so the bulk rebuild
+/// path — replaying historical `RewardGrantEvent`s into the
+/// cosmetics inventory after a factory reset, cloud pull, or
+/// devtools wipe — is invoked through a uniform contract shared with
+/// `SocialProfileProjection`.
+class CosmeticUnlockBridge implements JournalProjection<int> {
   CosmeticUnlockBridge({
     CosmeticRevealSnapshotBuilder snapshotBuilder =
         const CosmeticRevealSnapshotBuilder(),
@@ -103,41 +110,55 @@ class CosmeticUnlockBridge {
     }
   }
 
-  /// Walks the entire ledger and re-applies every cosmetic reward grant
-  /// to the bound CosmeticsProvider.
+  /// Walks [events] and re-applies every cosmetic reward grant to the
+  /// bound CosmeticsProvider. Returns the number of grants that
+  /// actually flipped a cosmetic from locked to unlocked.
   ///
-  /// Use this after a cloud pull-and-merge: the engine's `evaluate()`
-  /// only emits grants for events it just produced, so historical
-  /// cosmetic grants that arrived in the merged ledger never reach the
-  /// CosmeticsProvider via the normal [dispatch] path. Without this
-  /// step a fresh install or second device would have the engine
-  /// ledger restored but the cosmetics inventory still empty.
+  /// Use this after a cloud pull-and-merge ([RebuildFromJournalReason.pullAndMerge]):
+  /// the engine's `evaluate()` only emits grants for events it just
+  /// produced, so historical cosmetic grants that arrived in the
+  /// merged ledger never reach the CosmeticsProvider via the normal
+  /// [dispatch] path. Without this rebuild a fresh install or second
+  /// device would have the engine ledger restored but the cosmetics
+  /// inventory still empty.
+  ///
+  /// Also covers [RebuildFromJournalReason.factoryReset] (empty
+  /// journal → no-op) and [RebuildFromJournalReason.devToolsWipe].
   ///
   /// Idempotent — `cosmetics.unlock` is a no-op when the cosmetic is
-  /// already in the unlocked set.
-  Future<void> reapplyHistoricalCosmetics(LedgerSnapshot ledger) async {
+  /// already in the unlocked set, and the pre-check on
+  /// `cosmetics.state?.unlocked` skips the round-trip.
+  @override
+  Future<int> rebuildFromJournal({
+    required Iterable<JournalEvent> events,
+    required RebuildFromJournalReason reason,
+  }) async {
     final cosmetics = _cosmetics;
     if (cosmetics == null || cosmetics.currentUid == null) {
-      _log.debug('reapplyHistoricalCosmetics skipped — no cosmetics binding');
-      return;
+      _log.debug('rebuildFromJournal skipped — no cosmetics binding',
+          payload: 'reason=${reason.name}');
+      return 0;
     }
 
     var applied = 0;
-    for (final grant in ledger.rewardGrants) {
-      final cosmeticId = _cosmeticIdForUnlock(grant);
+    var total = 0;
+    for (final event in events) {
+      if (event is! RewardGrantEvent) continue;
+      total++;
+      final cosmeticId = _cosmeticIdForUnlock(event);
       if (cosmeticId == null) continue;
       if (cosmetics.state?.unlocked.containsKey(cosmeticId) ?? false) continue;
       try {
         await cosmetics.unlock(
           cosmeticId,
           sourceType: 'engineNode',
-          sourceId: grant.nodeId,
+          sourceId: event.nodeId,
         );
         applied++;
       } catch (e, st) {
         _log.error(
-          'reapply unlock crashed',
-          payload: 'id=$cosmeticId node=${grant.nodeId}',
+          'rebuild unlock crashed',
+          payload: 'id=$cosmeticId node=${event.nodeId} reason=${reason.name}',
           err: e,
           stackTrace: st,
         );
@@ -146,9 +167,10 @@ class CosmeticUnlockBridge {
     if (applied > 0) {
       _log.info(
         'historical cosmetic grants reapplied',
-        payload: 'applied=$applied total=${ledger.rewardGrants.length}',
+        payload: 'applied=$applied total=$total reason=${reason.name}',
       );
     }
+    return applied;
   }
 
   /// Returns the cosmetic id to unlock for a reward grant, or null when

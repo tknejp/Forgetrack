@@ -1,17 +1,18 @@
-import 'package:flutter/material.dart' show Icons;
+﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/quest_policies.dart';
 
 import '../../../../../shared/domain/rarity.dart';
-import '../../models/content_tag.dart';
-import '../../models/objective_definition.dart';
-import '../../models/objective_metric.dart';
-import '../../models/objective_operator.dart';
-import '../../models/objective_scope.dart';
-import '../../models/progression_node_definition.dart';
-import '../../models/reward_definition.dart';
-import '../../models/unlock_condition.dart';
+import 'package:forgetrack/domain/progression/catalog/content_tag.dart';
+import 'package:forgetrack/domain/progression/catalog/objective.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_metric.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_operator.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_scope.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
+import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/unlock_condition.dart';
 import 'quest_assets.dart';
 
-/// Pilgrim's Path — the level-1 starter chapter.
+/// Pilgrim's Path â€” the level-1 starter chapter.
 ///
 /// Onboarding chapter that mirrors V1's "starter quest" set
 /// (`kProgressionStarterQuestIds` = daily_steps_today + daily_sleep_today
@@ -20,80 +21,81 @@ import 'quest_assets.dart';
 /// Forest Trial unlocks at level 10. Finale drops `emblem_pilgrim_mark`,
 /// which the cosmetic catalog already ships with art.
 ///
-/// Step semantics use [ObjectiveDefinition.baselineFromNodeId] so each
+/// Step semantics use [Objective.baselineFromNodeId] so each
 /// step starts counting from the moment the chain step actually
-/// unlocked — a returning player who already has 100 daily completions
+/// unlocked â€” a returning player who already has 100 daily completions
 /// banked still has to walk / sleep / earn once after touching this
 /// chapter to clear the steps.
 
-const _chapterId = 'pilgrim_path';
+const _chapterId = ChapterId('pilgrim_path');
+const _chainId = ChainId('pilgrim_path');
 
-List<ObjectiveDefinition> pilgrimPathObjectives() {
+List<Objective> pilgrimPathObjectives() {
   return const [
-    ObjectiveDefinition(
-      id: 'pilgrim_path_open_objective',
+    Objective(
+      id: const ObjectiveId('pilgrim_path_open_objective'),
       domain: ProgressionDomain.activity,
       metric: LevelMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 1,
-      debugLabel: 'Pilgrim Path open — level >= 1 (auto-unlocked)',
+      debugLabel: 'Pilgrim Path open â€” level >= 1 (auto-unlocked)',
     ),
-    ObjectiveDefinition(
-      id: 'pilgrim_path_first_steps_objective',
+    Objective(
+      id: const ObjectiveId('pilgrim_path_first_steps_objective'),
       domain: ProgressionDomain.steps,
-      metric: NodeCompletionsMetric(nodeId: 'daily_steps_today'),
+      metric: NodeCompletionsMetric(nodeId: ProgressionEntryId('daily_steps_today')),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 1,
-      baselineFromNodeId: 'pilgrim_path_open',
-      debugLabel: 'Pilgrim Path step 1 — daily steps since open',
+      baselineFromNodeId: ProgressionEntryId('pilgrim_path_open'),
+      debugLabel: 'Pilgrim Path step 1 â€” daily steps since open',
     ),
-    ObjectiveDefinition(
-      id: 'pilgrim_path_first_sleep_objective',
+    Objective(
+      id: const ObjectiveId('pilgrim_path_first_sleep_objective'),
       domain: ProgressionDomain.sleep,
-      metric: NodeCompletionsMetric(nodeId: 'daily_sleep_today'),
+      metric: NodeCompletionsMetric(nodeId: ProgressionEntryId('daily_sleep_today')),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 1,
-      baselineFromNodeId: 'pilgrim_path_first_steps',
-      debugLabel: 'Pilgrim Path step 2 — daily sleep since step 1',
+      baselineFromNodeId: ProgressionEntryId('pilgrim_path_first_steps'),
+      debugLabel: 'Pilgrim Path step 2 â€” daily sleep since step 1',
     ),
     // Step 3 used to be `RewardCountMetric()` baselined on step 2,
     // but that self-fulfils: claiming step 2 grants XP, which lands
-    // a reward event the same tick — step 3 reads 100% the instant
+    // a reward event the same tick â€” step 3 reads 100% the instant
     // step 2 finishes. Replaced with a "complete daily protein once
     // since unlock" check. Narratively this introduces the third
     // daily-loop pillar (steps + sleep already taught by steps 1 and
-    // 2) — a fitting send-off before the player heads into the
+    // 2) â€” a fitting send-off before the player heads into the
     // Forest Trial chapter at level 10.
-    ObjectiveDefinition(
-      id: 'pilgrim_path_first_reward_objective',
+    Objective(
+      id: const ObjectiveId('pilgrim_path_first_reward_objective'),
       domain: ProgressionDomain.nutrition,
-      metric: NodeCompletionsMetric(nodeId: 'daily_protein_today'),
+      metric: NodeCompletionsMetric(nodeId: ProgressionEntryId('daily_protein_today')),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 1,
-      baselineFromNodeId: 'pilgrim_path_first_sleep',
-      debugLabel: 'Pilgrim Path step 3 — daily protein since step 2',
+      baselineFromNodeId: ProgressionEntryId('pilgrim_path_first_sleep'),
+      debugLabel: 'Pilgrim Path step 3 â€” daily protein since step 2',
     ),
-    ObjectiveDefinition(
-      id: 'pilgrim_path_finale_objective',
+    Objective(
+      id: const ObjectiveId('pilgrim_path_finale_objective'),
       domain: ProgressionDomain.activity,
       metric: LevelMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 1,
-      debugLabel: 'Pilgrim Path finale — level gate (prereqs gate the chain)',
+      debugLabel: 'Pilgrim Path finale â€” level gate (prereqs gate the chain)',
     ),
   ];
 }
 
-List<ProgressionNode> pilgrimPathNodes() {
+List<ProgressionEntry> pilgrimPathNodes() {
   return [
-    ChapterOpenerNode(
-      id: 'pilgrim_path_open',
-      objectiveId: 'pilgrim_path_open_objective',
+    ChapterOpener(
+      id: const ProgressionEntryId('pilgrim_path_open'),
+      objectiveId: ObjectiveId('pilgrim_path_open_objective'),
       unlockConditions: const [LevelAtLeast(1)],
       titleKey: (l) => l.progQuestPilgrimPathOpenTitle,
       descriptionKey: (l) => l.progQuestPilgrimPathOpenDesc,
@@ -102,14 +104,14 @@ List<ProgressionNode> pilgrimPathNodes() {
       rarity: Rarity.common,
       assetKey: questAssetPilgrimPathIcon,
       chapterId: _chapterId,
-      chainId: _chapterId,
-      nextNodeIds: const ['pilgrim_path_first_steps'],
-      chainStepIcon: Icons.play_arrow_rounded,
+      chainId: _chainId,
+      nextNodeIds: const [ProgressionEntryId('pilgrim_path_first_steps')],
+      chainStepIcon: ChainStepIcon.opener,
       sortOrder: 200,
     ),
-    ChapterStepNode(
-      id: 'pilgrim_path_first_steps',
-      objectiveId: 'pilgrim_path_first_steps_objective',
+    ChapterStep(
+      id: const ProgressionEntryId('pilgrim_path_first_steps'),
+      objectiveId: ObjectiveId('pilgrim_path_first_steps_objective'),
       titleKey: (l) => l.progQuestPilgrimPathFirstStepsTitle,
       descriptionKey: (l) => l.progQuestPilgrimPathFirstStepsDesc,
       rewards: const [XpReward(amount: 60)],
@@ -117,16 +119,16 @@ List<ProgressionNode> pilgrimPathNodes() {
       rarity: Rarity.common,
       assetKey: questAssetPilgrimPathIcon,
       chapterId: _chapterId,
-      chainId: _chapterId,
+      chainId: _chainId,
       chainOrder: 1,
-      prerequisiteNodeIds: const ['pilgrim_path_open'],
-      nextNodeIds: const ['pilgrim_path_first_sleep'],
+      prerequisiteNodeIds: const [ProgressionEntryId('pilgrim_path_open')],
+      nextNodeIds: const [ProgressionEntryId('pilgrim_path_first_sleep')],
       chainStepLabelKey: (_) => '1',
       sortOrder: 201,
     ),
-    ChapterStepNode(
-      id: 'pilgrim_path_first_sleep',
-      objectiveId: 'pilgrim_path_first_sleep_objective',
+    ChapterStep(
+      id: const ProgressionEntryId('pilgrim_path_first_sleep'),
+      objectiveId: ObjectiveId('pilgrim_path_first_sleep_objective'),
       titleKey: (l) => l.progQuestPilgrimPathFirstSleepTitle,
       descriptionKey: (l) => l.progQuestPilgrimPathFirstSleepDesc,
       rewards: const [XpReward(amount: 60)],
@@ -134,16 +136,16 @@ List<ProgressionNode> pilgrimPathNodes() {
       rarity: Rarity.common,
       assetKey: questAssetPilgrimPathIcon,
       chapterId: _chapterId,
-      chainId: _chapterId,
+      chainId: _chainId,
       chainOrder: 2,
-      prerequisiteNodeIds: const ['pilgrim_path_first_steps'],
-      nextNodeIds: const ['pilgrim_path_first_reward'],
+      prerequisiteNodeIds: const [ProgressionEntryId('pilgrim_path_first_steps')],
+      nextNodeIds: const [ProgressionEntryId('pilgrim_path_first_reward')],
       chainStepLabelKey: (_) => '1',
       sortOrder: 202,
     ),
-    ChapterStepNode(
-      id: 'pilgrim_path_first_reward',
-      objectiveId: 'pilgrim_path_first_reward_objective',
+    ChapterStep(
+      id: const ProgressionEntryId('pilgrim_path_first_reward'),
+      objectiveId: ObjectiveId('pilgrim_path_first_reward_objective'),
       titleKey: (l) => l.progQuestPilgrimPathFirstRewardTitle,
       descriptionKey: (l) => l.progQuestPilgrimPathFirstRewardDesc,
       rewards: const [XpReward(amount: 80)],
@@ -151,30 +153,30 @@ List<ProgressionNode> pilgrimPathNodes() {
       rarity: Rarity.common,
       assetKey: questAssetPilgrimPathIcon,
       chapterId: _chapterId,
-      chainId: _chapterId,
+      chainId: _chainId,
       chainOrder: 3,
-      prerequisiteNodeIds: const ['pilgrim_path_first_sleep'],
-      nextNodeIds: const ['pilgrim_path_finale'],
+      prerequisiteNodeIds: const [ProgressionEntryId('pilgrim_path_first_sleep')],
+      nextNodeIds: const [ProgressionEntryId('pilgrim_path_finale')],
       chainStepLabelKey: (_) => '1',
       sortOrder: 203,
     ),
-    ChapterFinaleNode(
-      id: 'pilgrim_path_finale',
-      objectiveId: 'pilgrim_path_finale_objective',
+    ChapterFinale(
+      id: const ProgressionEntryId('pilgrim_path_finale'),
+      objectiveId: ObjectiveId('pilgrim_path_finale_objective'),
       titleKey: (l) => l.progQuestPilgrimPathFinaleTitle,
       descriptionKey: (l) => l.progQuestPilgrimPathFinaleDesc,
       rewards: const [
         XpReward(amount: 120),
-        CosmeticReward(cosmeticId: 'emblem_pilgrim_mark'),
+        CosmeticReward(cosmeticId: CosmeticId('emblem_pilgrim_mark')),
       ],
       contentTags: const [ContentTag.core],
       rarity: Rarity.uncommon,
       assetKey: questAssetPilgrimPathIcon,
       chapterId: _chapterId,
-      chainId: _chapterId,
+      chainId: _chainId,
       chainOrder: 4,
-      prerequisiteNodeIds: const ['pilgrim_path_first_reward'],
-      chainStepIcon: Icons.shield_rounded,
+      prerequisiteNodeIds: const [ProgressionEntryId('pilgrim_path_first_reward')],
+      chainStepIcon: ChainStepIcon.finale,
       sortOrder: 204,
     ),
   ];

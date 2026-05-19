@@ -42,7 +42,7 @@ extension MealTypeLabel on MealType {
 }
 
 class CalorieEntry {
-  final String id;
+  final String id; // lint-ignore: untyped-id — calorie-entry primary key persisted to KT and storage
   final DateTime date;
   final MealType meal;
   final FoodItem food;

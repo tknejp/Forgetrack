@@ -1,7 +1,8 @@
+import '../../../../domain/progression/player/player_achievement_lifecycle.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../progression_engine/application/progression_engine_provider.dart';
 import '../../../progression_engine/domain/catalog/level_milestone_specs.dart';
-import '../../../progression_engine/presentation/adapters/engine_achievement_view.dart';
+import '../../../progression_engine/application/adapters/engine_achievement_view.dart';
 import '../../domain/journey_levels.dart';
 import '../../domain/journey_models.dart';
 
@@ -131,7 +132,10 @@ abstract final class JourneyAdapter {
 
     // Achievements, excluding level achievements.
     for (final view in achievementViews) {
-      if (!view.unlocked || view.unlockedAt == null) continue;
+      if (view.lifecycle is! AchievementUnlocked ||
+          view.unlockedAt == null) {
+        continue;
+      }
       if (view.levelTarget != null) continue;
 
       dated.add(
@@ -214,7 +218,10 @@ abstract final class JourneyAdapter {
     for (final view in achievementViews) {
       final lvl = view.levelTarget;
       if (lvl == null) continue;
-      if (!view.unlocked || view.unlockedAt == null) continue;
+      if (view.lifecycle is! AchievementUnlocked ||
+          view.unlockedAt == null) {
+        continue;
+      }
 
       // Multiple achievements may map to the same level defensively; keep the
       // earliest known timestamp.
@@ -265,7 +272,10 @@ abstract final class JourneyAdapter {
     final dated = <_DatedCp>[];
 
     for (final view in achievementViews) {
-      if (!view.unlocked || view.unlockedAt == null) continue;
+      if (view.lifecycle is! AchievementUnlocked ||
+          view.unlockedAt == null) {
+        continue;
+      }
 
       // Level achievements are already represented by the static title path.
       if (view.levelTarget != null) continue;
@@ -441,11 +451,11 @@ abstract final class JourneyAdapter {
       indexes.add(index);
     }
 
-    final currentIndex = map.indexWhere((cp) => cp.isCurrent);
+    final currentIndex = map.indexWhere((cp) => cp.isCurrent); // lint-ignore: widget-no-logic — focus anchor over pre-built JourneyCheckpoint list
     final focusIndex = currentIndex >= 0
         ? currentIndex
-        : map.indexWhere((cp) => cp.isPathAnchor && cp.isUnlocked);
-    final nextIndex = map.indexWhere((cp) => cp.isPathAnchor && cp.isNext);
+        : map.indexWhere((cp) => cp.isPathAnchor && cp.isUnlocked); // lint-ignore: widget-no-logic — focus fallback over pre-built JourneyCheckpoint list
+    final nextIndex = map.indexWhere((cp) => cp.isPathAnchor && cp.isNext); // lint-ignore: widget-no-logic — next-anchor index over pre-built JourneyCheckpoint list
 
     addIndex(nextIndex);
     addIndex(focusIndex);

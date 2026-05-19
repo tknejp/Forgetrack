@@ -1,27 +1,28 @@
+﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import '../../../../../shared/domain/rarity.dart';
-import '../../models/claim_policy.dart';
-import '../../models/content_tag.dart';
-import '../../models/objective_definition.dart';
-import '../../models/objective_metric.dart';
-import '../../models/objective_operator.dart';
-import '../../models/objective_scope.dart';
-import '../../models/progression_node_definition.dart';
-import '../../models/reward_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';
+import 'package:forgetrack/domain/progression/catalog/content_tag.dart';
+import 'package:forgetrack/domain/progression/catalog/objective.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_metric.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_operator.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_scope.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
+import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import '../engine_catalog_context.dart';
 import 'quest_assets.dart';
 
-/// Steps domain — daily walking quest, lifetime mastery achievements,
+/// Steps domain â€” daily walking quest, lifetime mastery achievements,
 /// best-rolling-window achievements, and per-rule streak achievements.
 ///
 /// Mirrors V1 entries: rule `daily_steps`, achievements
 /// `steps_total_100k`/`500k`/`1M`/`5M`/`10M`, `steps_month_300k`/`600k`,
 /// `steps_streak_3`/`7`/`30`/`50`/`100`.
 
-List<ObjectiveDefinition> stepsObjectives(EngineCatalogContext context) {
+List<Objective> stepsObjectives(EngineCatalogContext context) {
   final goals = context.goals;
   return [
-    ObjectiveDefinition(
-      id: 'daily_steps',
+    Objective(
+      id: const ObjectiveId('daily_steps'),
       domain: ProgressionDomain.steps,
       metric: const StepsMetric(),
       scope: const TodayScope(),
@@ -29,104 +30,104 @@ List<ObjectiveDefinition> stepsObjectives(EngineCatalogContext context) {
       targetValue: goals.dailySteps.toDouble(),
       debugLabel: 'Steps today >= dailyStepsGoal',
     ),
-    const ObjectiveDefinition(
-      id: 'lifetime_steps_100k',
+    const Objective(
+      id: const ObjectiveId('lifetime_steps_100k'),
       domain: ProgressionDomain.steps,
       metric: StepsMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 100000,
     ),
-    const ObjectiveDefinition(
-      id: 'lifetime_steps_500k',
+    const Objective(
+      id: const ObjectiveId('lifetime_steps_500k'),
       domain: ProgressionDomain.steps,
       metric: StepsMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 500000,
     ),
-    const ObjectiveDefinition(
-      id: 'lifetime_steps_1m',
+    const Objective(
+      id: const ObjectiveId('lifetime_steps_1m'),
       domain: ProgressionDomain.steps,
       metric: StepsMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 1000000,
     ),
-    const ObjectiveDefinition(
-      id: 'lifetime_steps_2_5m',
+    const Objective(
+      id: const ObjectiveId('lifetime_steps_2_5m'),
       domain: ProgressionDomain.steps,
       metric: StepsMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 2500000,
     ),
-    const ObjectiveDefinition(
-      id: 'lifetime_steps_5m',
+    const Objective(
+      id: const ObjectiveId('lifetime_steps_5m'),
       domain: ProgressionDomain.steps,
       metric: StepsMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 5000000,
     ),
-    const ObjectiveDefinition(
-      id: 'lifetime_steps_10m',
+    const Objective(
+      id: const ObjectiveId('lifetime_steps_10m'),
       domain: ProgressionDomain.steps,
       metric: StepsMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 10000000,
     ),
-    const ObjectiveDefinition(
-      id: 'rolling_steps_30d_300k',
+    const Objective(
+      id: const ObjectiveId('rolling_steps_30d_300k'),
       domain: ProgressionDomain.steps,
       metric: StepsMetric(),
       scope: RollingWindowScope(days: 30),
       operator: ObjectiveOperator.atLeast,
       targetValue: 300000,
     ),
-    const ObjectiveDefinition(
-      id: 'rolling_steps_30d_600k',
+    const Objective(
+      id: const ObjectiveId('rolling_steps_30d_600k'),
       domain: ProgressionDomain.steps,
       metric: StepsMetric(),
       scope: RollingWindowScope(days: 30),
       operator: ObjectiveOperator.atLeast,
       targetValue: 600000,
     ),
-    const ObjectiveDefinition(
-      id: 'streak_steps_3',
+    const Objective(
+      id: const ObjectiveId('streak_steps_3'),
       domain: ProgressionDomain.steps,
       metric: StreakDaysMetric.byRule('daily_steps'),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 3,
     ),
-    const ObjectiveDefinition(
-      id: 'streak_steps_7',
+    const Objective(
+      id: const ObjectiveId('streak_steps_7'),
       domain: ProgressionDomain.steps,
       metric: StreakDaysMetric.byRule('daily_steps'),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 7,
     ),
-    const ObjectiveDefinition(
-      id: 'streak_steps_30',
+    const Objective(
+      id: const ObjectiveId('streak_steps_30'),
       domain: ProgressionDomain.steps,
       metric: StreakDaysMetric.byRule('daily_steps'),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 30,
     ),
-    const ObjectiveDefinition(
-      id: 'streak_steps_50',
+    const Objective(
+      id: const ObjectiveId('streak_steps_50'),
       domain: ProgressionDomain.steps,
       metric: StreakDaysMetric.byRule('daily_steps'),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 50,
     ),
-    const ObjectiveDefinition(
-      id: 'streak_steps_100',
+    const Objective(
+      id: const ObjectiveId('streak_steps_100'),
       domain: ProgressionDomain.steps,
       metric: StreakDaysMetric.byRule('daily_steps'),
       scope: LifetimeScope(),
@@ -136,18 +137,18 @@ List<ObjectiveDefinition> stepsObjectives(EngineCatalogContext context) {
   ];
 }
 
-List<ProgressionNode> stepsNodes() {
+List<ProgressionEntry> stepsNodes() {
   return [
-    // Daily quest — manual claim so the player taps "Vyzvednout"
+    // Daily quest â€” manual claim so the player taps "Vyzvednout"
     // to grant XP, matching V1 UX.
-    DailyQuestNode(
-      id: 'daily_steps_today',
-      objectiveId: 'daily_steps',
+    DailyQuest(
+      id: const ProgressionEntryId('daily_steps_today'),
+      objectiveId: ObjectiveId('daily_steps'),
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.progRuleDailyStepsDesc,
       titleKey: (l) => l.progRuleDailySteps,
       descriptionKey: (l) => l.progRuleDailyStepsHintedDesc,
-      // Base 80 XP, +80 bonus when claimed before 18:00 (2× total).
+      // Base 80 XP, +80 bonus when claimed before 18:00 (2Ã— total).
       // Rewards on-the-day completion vs. last-minute claims.
       rewards: const [
         XpReward(amount: 80),
@@ -162,9 +163,9 @@ List<ProgressionNode> stepsNodes() {
     ),
 
     // Lifetime mastery achievements.
-    AchievementNode(
-      id: 'steps_total_100k',
-      objectiveId: 'lifetime_steps_100k',
+    Achievement(
+      id: const ProgressionEntryId('steps_total_100k'),
+      objectiveId: ObjectiveId('lifetime_steps_100k'),
       badgeEmoji: '\u{1F97E}',
       titleKey: (l) => l.progAchievementSteps100kTitle,
       descriptionKey: (l) => l.progAchievementSteps100kDesc,
@@ -174,9 +175,9 @@ List<ProgressionNode> stepsNodes() {
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.common,
     ),
-    AchievementNode(
-      id: 'steps_total_500k',
-      objectiveId: 'lifetime_steps_500k',
+    Achievement(
+      id: const ProgressionEntryId('steps_total_500k'),
+      objectiveId: ObjectiveId('lifetime_steps_500k'),
       badgeEmoji: '\u{1F97E}',
       titleKey: (l) => l.progAchievementSteps500kTitle,
       descriptionKey: (l) => l.progAchievementSteps500kDesc,
@@ -184,56 +185,56 @@ List<ProgressionNode> stepsNodes() {
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.uncommon,
     ),
-    AchievementNode(
-      id: 'steps_total_1000000',
-      objectiveId: 'lifetime_steps_1m',
+    Achievement(
+      id: const ProgressionEntryId('steps_total_1000000'),
+      objectiveId: ObjectiveId('lifetime_steps_1m'),
       badgeEmoji: '\u{1F97E}',
       titleKey: (l) => l.progAchievementSteps1000000Title,
       descriptionKey: (l) => l.progAchievementSteps1000000Desc,
-      rewards: const [CosmeticReward(cosmeticId: 'relic_deep_ember_core')],
+      rewards: const [CosmeticReward(cosmeticId: CosmeticId('relic_deep_ember_core'))],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.epic,
     ),
-    AchievementNode(
-      id: 'steps_total_2_5m',
-      objectiveId: 'lifetime_steps_2_5m',
+    Achievement(
+      id: const ProgressionEntryId('steps_total_2_5m'),
+      objectiveId: ObjectiveId('lifetime_steps_2_5m'),
       badgeEmoji: '\u{1F97E}',
       titleKey: (l) => l.progAchievementSteps2500000Title,
       descriptionKey: (l) => l.progAchievementSteps2500000Desc,
-      // Sources relic_ravine_stone — mid-game (~8–9 months) ingredient for
+      // Sources relic_ravine_stone â€” mid-game (~8â€“9 months) ingredient for
       // the Cave Lynx (lvl 55) companion pair.
-      rewards: const [CosmeticReward(cosmeticId: 'relic_ravine_stone')],
+      rewards: const [CosmeticReward(cosmeticId: CosmeticId('relic_ravine_stone'))],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.epic,
     ),
-    AchievementNode(
-      id: 'steps_total_5000000',
-      objectiveId: 'lifetime_steps_5m',
+    Achievement(
+      id: const ProgressionEntryId('steps_total_5000000'),
+      objectiveId: ObjectiveId('lifetime_steps_5m'),
       badgeEmoji: '\u{1F48E}',
       titleKey: (l) => l.progAchievementSteps5000000Title,
       descriptionKey: (l) => l.progAchievementSteps5000000Desc,
-      rewards: const [CosmeticReward(cosmeticId: 'relic_frost_shard')],
+      rewards: const [CosmeticReward(cosmeticId: CosmeticId('relic_frost_shard'))],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.legendary,
     ),
-    AchievementNode(
-      id: 'steps_total_10000000',
-      objectiveId: 'lifetime_steps_10m',
+    Achievement(
+      id: const ProgressionEntryId('steps_total_10000000'),
+      objectiveId: ObjectiveId('lifetime_steps_10m'),
       badgeEmoji: '\u{1F3D4}\u{FE0F}',
       titleKey: (l) => l.progAchievementSteps10000000Title,
       descriptionKey: (l) => l.progAchievementSteps10000000Desc,
       rewards: const [
-        CosmeticReward(cosmeticId: 'relic_dragon_scale'),
-        CosmeticReward(cosmeticId: 'frame_worldwalker'),
+        CosmeticReward(cosmeticId: CosmeticId('relic_dragon_scale')),
+        CosmeticReward(cosmeticId: CosmeticId('frame_worldwalker')),
       ],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.legendary,
     ),
 
     // Rolling-window mastery achievements.
-    AchievementNode(
-      id: 'steps_month_300k',
-      objectiveId: 'rolling_steps_30d_300k',
+    Achievement(
+      id: const ProgressionEntryId('steps_month_300k'),
+      objectiveId: ObjectiveId('rolling_steps_30d_300k'),
       badgeEmoji: '\u{1F5FA}\u{FE0F}',
       titleKey: (l) => l.progAchievementStepsMonth300kTitle,
       descriptionKey: (l) => l.progAchievementStepsMonth300kDesc,
@@ -241,21 +242,21 @@ List<ProgressionNode> stepsNodes() {
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.uncommon,
     ),
-    AchievementNode(
-      id: 'steps_month_600k',
-      objectiveId: 'rolling_steps_30d_600k',
+    Achievement(
+      id: const ProgressionEntryId('steps_month_600k'),
+      objectiveId: ObjectiveId('rolling_steps_30d_600k'),
       badgeEmoji: '\u{1F30D}',
       titleKey: (l) => l.progAchievementStepsMonth600kTitle,
       descriptionKey: (l) => l.progAchievementStepsMonth600kDesc,
-      rewards: const [CosmeticReward(cosmeticId: 'frame_endless_trail')],
+      rewards: const [CosmeticReward(cosmeticId: CosmeticId('frame_endless_trail'))],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.epic,
     ),
 
     // Streak achievements.
-    AchievementNode(
-      id: 'steps_streak_3',
-      objectiveId: 'streak_steps_3',
+    Achievement(
+      id: const ProgressionEntryId('steps_streak_3'),
+      objectiveId: ObjectiveId('streak_steps_3'),
       badgeEmoji: '\u{1F525}',
       titleKey: (l) => l.progAchievementStepChainTitle,
       descriptionKey: (l) => l.progAchievementStepChainDesc,
@@ -263,46 +264,46 @@ List<ProgressionNode> stepsNodes() {
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.common,
     ),
-    AchievementNode(
-      id: 'steps_streak_7',
-      objectiveId: 'streak_steps_7',
+    Achievement(
+      id: const ProgressionEntryId('steps_streak_7'),
+      objectiveId: ObjectiveId('streak_steps_7'),
       badgeEmoji: '\u{1F525}',
       titleKey: (l) => l.progAchievementStepDisciplineTitle,
       descriptionKey: (l) => l.progAchievementStepDisciplineDesc,
       rewards: const [
-        CosmeticReward(cosmeticId: 'relic_ruin_seal'),
-        CosmeticReward(cosmeticId: 'frame_discipline'),
+        CosmeticReward(cosmeticId: CosmeticId('relic_ruin_seal')),
+        CosmeticReward(cosmeticId: CosmeticId('frame_discipline')),
       ],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.uncommon,
     ),
-    AchievementNode(
-      id: 'steps_streak_30',
-      objectiveId: 'streak_steps_30',
+    Achievement(
+      id: const ProgressionEntryId('steps_streak_30'),
+      objectiveId: ObjectiveId('streak_steps_30'),
       badgeEmoji: '\u{1F525}',
       titleKey: (l) => l.progAchievementStepSovereignTitle,
       descriptionKey: (l) => l.progAchievementStepSovereignDesc,
-      rewards: const [CosmeticReward(cosmeticId: 'frame_endurance')],
+      rewards: const [CosmeticReward(cosmeticId: CosmeticId('frame_endurance'))],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.epic,
     ),
-    AchievementNode(
-      id: 'steps_streak_50',
-      objectiveId: 'streak_steps_50',
+    Achievement(
+      id: const ProgressionEntryId('steps_streak_50'),
+      objectiveId: ObjectiveId('streak_steps_50'),
       badgeEmoji: '\u{1F525}',
       titleKey: (l) => l.progAchievementStepsStreak50Title,
       descriptionKey: (l) => l.progAchievementStepsStreak50Desc,
-      rewards: const [CosmeticReward(cosmeticId: 'frame_steel')],
+      rewards: const [CosmeticReward(cosmeticId: CosmeticId('frame_steel'))],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.epic,
     ),
-    AchievementNode(
-      id: 'steps_streak_100',
-      objectiveId: 'streak_steps_100',
+    Achievement(
+      id: const ProgressionEntryId('steps_streak_100'),
+      objectiveId: ObjectiveId('streak_steps_100'),
       badgeEmoji: '\u{26D3}\u{FE0F}',
       titleKey: (l) => l.progAchievementStepCenturionTitle,
       descriptionKey: (l) => l.progAchievementStepCenturionDesc,
-      rewards: const [CosmeticReward(cosmeticId: 'frame_eternal_flame')],
+      rewards: const [CosmeticReward(cosmeticId: CosmeticId('frame_eternal_flame'))],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.legendary,
     ),

@@ -113,7 +113,7 @@ class _ActivitiesContent extends StatelessWidget {
         final monthStart = today.subtract(const Duration(days: 29));
         final monthStepsHistory =
             fitness.stepsHistoryForRange(monthStart, today);
-        final monthActivities = fitness.activities.where((activity) {
+        final monthActivities = fitness.activities.where((activity) { // lint-ignore: widget-no-logic — UI period slice (month) for chart rendering
           final day = DateTime(
             activity.startTime.year,
             activity.startTime.month,

@@ -1,18 +1,25 @@
-import '../domain/catalog/engine_catalog_context.dart';
+﻿import '../domain/catalog/engine_catalog_context.dart';
 import '../domain/catalog/objective_catalog.dart';
 import '../domain/catalog/progression_node_catalog.dart';
 import '../domain/evaluator/objective_evaluator.dart';
 import '../domain/evaluator/progression_node_resolver.dart';
 import '../domain/evaluator/reward_grant_planner.dart';
 import '../domain/evaluator/unlock_condition_resolver.dart';
-import '../domain/models/engine_evaluation_input.dart';
-import '../domain/models/ledger_event.dart';
-import '../domain/models/claim_policy.dart';
-import '../domain/models/progression_node_definition.dart';
+import '../domain/models/engine_evaluation_context.dart';
+import '../domain/models/evaluation_overrides.dart';
+import '../domain/models/ledger_counters.dart';
+import 'package:forgetrack/domain/journal/journal.dart';
+import 'package:forgetrack/domain/journal/journal_event.dart';
+import 'package:forgetrack/domain/player/player.dart';
+import '../../health_connect/domain/goal_board.dart';
+import '../../health_connect/domain/health_snapshot.dart';
+import '../../nutrition/domain/nutrition_snapshot.dart';
+import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import '../domain/models/progression_resolution_reason.dart';
-import '../domain/models/quest_policies.dart';
-import '../domain/models/reward_definition.dart';
-import '../domain/models/unlock_condition.dart';
+import 'package:forgetrack/domain/progression/catalog/quest_policies.dart';
+import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/unlock_condition.dart';
 import '../domain/models/progression_resolution_result.dart';
 import '../domain/repository/ledger_snapshot.dart';
 import '../domain/repository/progression_engine_repository.dart';
@@ -22,8 +29,8 @@ import 'reward_grant_service.dart';
 ///
 /// Composes the four evaluators (objective, unlock, node, reward
 /// planner) plus the [RewardGrantService] over a
-/// [ProgressionEngineRepository]. One canonical method —
-/// [evaluate] — produces a [ProgressionResolutionResult] for one
+/// [ProgressionEngineRepository]. One canonical method â€”
+/// [evaluate] â€” produces a [ProgressionResolutionResult] for one
 /// run. The result is the only thing downstream consumers consume;
 /// nobody else looks at the ledger directly.
 ///
@@ -35,7 +42,7 @@ class ProgressionEngine {
   ProgressionEngine({
     required ProgressionEngineRepository repository,
     ObjectiveCatalog objectiveCatalog = const ObjectiveCatalog(),
-    ProgressionNodeCatalog nodeCatalog = const ProgressionNodeCatalog(),
+    ProgressionEntryCatalog nodeCatalog = const ProgressionEntryCatalog(),
     ObjectiveEvaluator objectiveEvaluator = const ObjectiveEvaluator(),
     UnlockConditionResolver unlockConditionResolver =
         const UnlockConditionResolver(),
@@ -55,7 +62,7 @@ class ProgressionEngine {
 
   final ProgressionEngineRepository _repository;
   final ObjectiveCatalog _objectiveCatalog;
-  final ProgressionNodeCatalog _nodeCatalog;
+  final ProgressionEntryCatalog _nodeCatalog;
   final ObjectiveEvaluator _objectiveEvaluator;
   final UnlockConditionResolver _unlockConditionResolver;
   final ProgressionNodeResolver _nodeResolver;
@@ -75,28 +82,57 @@ class ProgressionEngine {
   ///   6. Append all new events.
   ///   7. Return canonical result.
   Future<ProgressionResolutionResult> evaluate({
-    required EngineEvaluationInput input,
+    required Player player,
+    required HealthSnapshot healthSnapshot,
+    required NutritionSnapshot nutritionSnapshot,
+    required GoalBoard goalBoard,
+    required Journal journal,
+    required LedgerCounters counters,
+    required EvaluationOverrides overrides,
+    required DateTime evaluatedAt,
     EngineCatalogContext catalogContext = const EngineCatalogContext(),
     ProgressionResolutionReason reason =
         ProgressionResolutionReason.liveUpdate,
+  }) async {
+    final context = EngineEvaluationContext(
+      player: player,
+      healthSnapshot: healthSnapshot,
+      nutritionSnapshot: nutritionSnapshot,
+      goalBoard: goalBoard,
+      journal: journal,
+      counters: counters,
+      overrides: overrides,
+      evaluatedAt: evaluatedAt,
+    );
+    return _evaluateWithContext(
+      context: context,
+      catalogContext: catalogContext,
+      reason: reason,
+    );
+  }
+
+  Future<ProgressionResolutionResult> _evaluateWithContext({
+    required EngineEvaluationContext context,
+    required EngineCatalogContext catalogContext,
+    required ProgressionResolutionReason reason,
   }) async {
     final runId = _runIdGenerator();
     final ledger = await _repository.loadLedger();
     final objectives = _objectiveCatalog.build(catalogContext);
     final nodes = _nodeCatalog.build(catalogContext);
-    final timestamp = input.evaluatedAt;
+    final timestamp = context.evaluatedAt;
 
     // Step 2: evaluate objectives in memory. Writing the persisted
     // `ObjectiveCompletionEvent` is deferred until step 4 (after the
-    // node resolver has decided eligibility) — see the long comment
+    // node resolver has decided eligibility) â€” see the long comment
     // there for why. We still read any pre-existing persisted event
     // here so devtools shortcuts that wrote only the objective event
-    // (`devToolsMarkObjectiveMet`) keep surfacing the claim pill —
+    // (`devToolsMarkObjectiveMet`) keep surfacing the claim pill â€”
     // without the carry-forward the live metric would say "not yet"
     // and the resolver would short-circuit to in-progress.
     final outcomes = <String, ObjectiveOutcome>{};
     for (final o in objectives) {
-      var outcome = _objectiveEvaluator.evaluate(o, input);
+      var outcome = _objectiveEvaluator.evaluate(o, context);
       final key = ProgressionNodeResolver.objectiveCompletionEventKey(
         o.id,
         outcome.periodKey,
@@ -142,8 +178,8 @@ class ProgressionEngine {
     };
 
     // Pre-compute the set of objectives that any catalog node binds to.
-    // Objectives outside this set ("orphans" — typically tracker-only
-    // objectives such as `level_xp_5`, paired with a `LevelMilestoneNode`
+    // Objectives outside this set ("orphans" â€” typically tracker-only
+    // objectives such as `level_xp_5`, paired with a `LevelMilestone`
     // that carries no `objectiveId`) get unconditional event emission
     // after the resolution loop. Inside the loop, bound objectives
     // wait for an eligible binding before persisting.
@@ -153,9 +189,9 @@ class ProgressionEngine {
     };
 
     // Today's deterministic daily-challenge pick per pool. A daily
-    // challenge that isn't today's pick is treated as locked — the
+    // challenge that isn't today's pick is treated as locked â€” the
     // engine doesn't fire its objective, doesn't surface it as
-    // available, doesn't let it pollute DOKONČENÉ. Mirrors the
+    // available, doesn't let it pollute DOKONÄŒENÃ‰. Mirrors the
     // `DailySectionResolver._pickChallenge` algorithm so the daily
     // section's "today's pick" and the engine's "eligible-by-pick"
     // always agree. Without this gate, a single tick of nutrition
@@ -163,7 +199,7 @@ class ProgressionEngine {
     // satisfy (full_plate, nutri_triple, balanced) and surfaced
     // them all as claimable rewards the player never opted into.
     final dailyChallengePicks =
-        _computeDailyChallengePicks(nodes, ledger, input.evaluatedAt);
+        _computeDailyChallengePicks(nodes, ledger, context.evaluatedAt);
 
     final resolutions = <NodeResolution>[];
     for (final node in nodes) {
@@ -174,11 +210,11 @@ class ProgressionEngine {
         claimedNodesLifetime: priorClaimedNodeIds,
         unlockedChapterIds: unlockedChapterIds,
         availableCompanionIds: availableCompanionIds,
-        input: input,
+        context: context,
         ledger: ledger,
       );
       if (eligible &&
-          node is QuestNode &&
+          node is Quest &&
           node.slotPolicy is DailyChallengeHashPick) {
         final poolId = node.comboPoolId;
         if (poolId != null) {
@@ -192,7 +228,7 @@ class ProgressionEngine {
         node: node,
         objectiveOutcome: _outcomeForNode(node, outcomes),
         eligibleByConditions: eligible,
-        input: input,
+        context: context,
         ledger: ledger,
       );
       resolutions.add(resolution);
@@ -205,14 +241,14 @@ class ProgressionEngine {
     // Objective events are gated on at least one binding node being
     // eligible. Today-bound combo metrics (`TodayCompletionsAmong`)
     // used to write a permanent `ObjectiveCompletionEvent` the instant
-    // today's daily count met step N+1's target — even while step N+1
+    // today's daily count met step N+1's target â€” even while step N+1
     // was cooldown-locked behind step N. That permanent event then
     // re-asserted the satisfied outcome tomorrow, surfacing step N+1
     // as a 0/0 free claim the player had done nothing to earn. By
     // emitting only when an eligible binding exists, an objective's
     // persisted state can never outrun any node that's actually ready
     // to claim it. For objectives whose only binding node is locked
-    // this run, the engine just re-evaluates next tick — live metric
+    // this run, the engine just re-evaluates next tick â€” live metric
     // values aren't lost, only the durable shortcut event.
     final newObjectiveEvents = <ObjectiveCompletionEvent>[];
     final completedObjectives = <ObjectiveCompletion>[];
@@ -223,11 +259,26 @@ class ProgressionEngine {
     final newlyAvailable = <NodeAvailability>[];
     final newAnnouncementEvents = <NodeAnnouncedEvent>[];
     final lockedNodeIds = <String>{};
+    final lockedNodeRemainingConditions = <String, List<UnlockCondition>>{};
     final periodKeyByNodeId = <String, String?>{};
     for (final r in resolutions) {
       periodKeyByNodeId[r.node.id] = r.periodKey;
       if (!r.eligibleByConditions) {
         lockedNodeIds.add(r.node.id);
+        // R.1: surface the specific gates that failed so the screen
+        // can render "Vyžaduje dokončení X" / "Vyžaduje úroveň Y"
+        // instead of a generic "Zamčeno" hint.
+        lockedNodeRemainingConditions[r.node.id] =
+            _unlockConditionResolver.unsatisfied(
+          conditions: _conditionsFor(r.node),
+          completedObjectiveIds: completedObjectiveIds,
+          completedNodesLifetime: priorCompletedNodeIds,
+          claimedNodesLifetime: priorClaimedNodeIds,
+          unlockedChapterIds: unlockedChapterIds,
+          availableCompanionIds: availableCompanionIds,
+          context: context,
+          ledger: ledger,
+        );
       } else {
         final boundObjectiveId = _objectiveIdOf(r.node);
         if (boundObjectiveId != null &&
@@ -263,60 +314,57 @@ class ProgressionEngine {
         r.periodKey,
       );
       // Periodic quests (daily / weekly) need a NodeCompletionEvent
-      // every period they're satisfied — yesterday's completion has
+      // every period they're satisfied â€” yesterday's completion has
       // a different periodKey, so dedup by the period-aware event
       // key, not by raw node id. The old node-id dedup quietly
       // suppressed every subsequent day's completion (and the
       // matching reward grant), which broke devtools day-advance
       // workflows for daily goals and would have broken real
       // post-midnight rotation too.
-      switch (r.state) {
-        case _ when r.state.name == 'completed' &&
-              !ledger.hasEventKey(completionKey):
-          final event = NodeCompletionEvent(
-            eventKey: completionKey,
+      if (r.completed && !ledger.hasEventKey(completionKey)) {
+        final event = NodeCompletionEvent(
+          eventKey: completionKey,
+          timestamp: timestamp,
+          nodeId: r.node.id,
+          periodKey: r.periodKey,
+        );
+        newCompletionEvents.add(event);
+        newCompletions.add(NodeCompletion(nodeId: r.node.id, event: event));
+      } else if (!r.completed &&
+          r.eligibleByConditions &&
+          r.objectiveCompleted == true &&
+          r.node.claimPolicy == ClaimPolicy.manual) {
+        // Manual-claim node whose objective just satisfied. Surface
+        // as available; the player's claim action will trigger a
+        // second evaluation that produces the completion.
+        availability.add(NodeAvailability(nodeId: r.node.id));
+        // Persisted first-time announcement marker: if the ledger
+        // has no NodeAnnouncedEvent for this (node, period), we
+        // flag this resolution as `newlyAvailable` and queue the
+        // marker event. The celebration adapter reads this delta
+        // to fire a "company unlocked" overlay exactly once, even
+        // across app restarts.
+        final announceKey = ProgressionNodeResolver.announcementEventKey(
+          r.node.id,
+          r.periodKey,
+        );
+        if (!ledger.hasEventKey(announceKey)) {
+          newlyAvailable.add(NodeAvailability(nodeId: r.node.id));
+          newAnnouncementEvents.add(NodeAnnouncedEvent(
+            eventKey: announceKey,
             timestamp: timestamp,
             nodeId: r.node.id,
             periodKey: r.periodKey,
-          );
-          newCompletionEvents.add(event);
-          newCompletions.add(NodeCompletion(nodeId: r.node.id, event: event));
-        case _ when r.state.name == 'available' &&
-              r.objectiveCompleted == true &&
-              r.node.claimPolicy.name == 'manual':
-          // Manual-claim node whose objective just satisfied. Surface
-          // as available; the player's claim action will trigger a
-          // second evaluation that produces the completion.
-          availability.add(NodeAvailability(nodeId: r.node.id));
-          // Persisted first-time announcement marker: if the ledger
-          // has no NodeAnnouncedEvent for this (node, period), we
-          // flag this resolution as `newlyAvailable` and queue the
-          // marker event. The celebration adapter reads this delta
-          // to fire a "company unlocked" overlay exactly once, even
-          // across app restarts.
-          final announceKey = ProgressionNodeResolver.announcementEventKey(
-            r.node.id,
-            r.periodKey,
-          );
-          if (!ledger.hasEventKey(announceKey)) {
-            newlyAvailable.add(NodeAvailability(nodeId: r.node.id));
-            newAnnouncementEvents.add(NodeAnnouncedEvent(
-              eventKey: announceKey,
-              timestamp: timestamp,
-              nodeId: r.node.id,
-              periodKey: r.periodKey,
-            ));
-          }
-        default:
-          // Locked or in-progress; nothing to emit.
-          break;
+          ));
+        }
       }
+      // Locked or in-progress: nothing to emit.
     }
 
-    // Orphan objectives — no node binds their `objectiveId`, so the
+    // Orphan objectives â€” no node binds their `objectiveId`, so the
     // eligibility-gated emission inside the resolution loop never
     // touches them. Tracker objectives like `level_xp_5` (paired with
-    // a `LevelMilestoneNode`, which carries no `objectiveId`) fall
+    // a `LevelMilestone`, which carries no `objectiveId`) fall
     // here, and downstream consumers (journey hooks, tests) still
     // expect the completion event to land. Emit them unconditionally,
     // matching the pre-refactor behaviour.
@@ -354,7 +402,7 @@ class ProgressionEngine {
       completedNodes: newlyCompletedNodes,
       ledger: ledger,
       periodKeyByNodeId: periodKeyByNodeId,
-      input: input,
+      context: context,
     );
 
     final runningXp = _runningClaimedXp(ledger);
@@ -386,9 +434,10 @@ class ProgressionEngine {
       grantedRewards: [for (final e in built.events) RewardGrant(event: e)],
       skippedEvents: const [],
       warnings: const [],
-      inputSnapshot: input,
+      contextSnapshot: context,
       allObjectiveOutcomes: outcomes.values.toList(growable: false),
       lockedNodeIds: lockedNodeIds,
+      lockedNodeRemainingConditions: lockedNodeRemainingConditions,
     );
   }
 
@@ -399,9 +448,26 @@ class ProgressionEngine {
   /// Returns the resolution result of the post-claim evaluation.
   Future<ProgressionResolutionResult> claim({
     required String nodeId,
-    required EngineEvaluationInput input,
+    required Player player,
+    required HealthSnapshot healthSnapshot,
+    required NutritionSnapshot nutritionSnapshot,
+    required GoalBoard goalBoard,
+    required Journal journal,
+    required LedgerCounters counters,
+    required EvaluationOverrides overrides,
+    required DateTime evaluatedAt,
     EngineCatalogContext catalogContext = const EngineCatalogContext(),
   }) async {
+    final context = EngineEvaluationContext(
+      player: player,
+      healthSnapshot: healthSnapshot,
+      nutritionSnapshot: nutritionSnapshot,
+      goalBoard: goalBoard,
+      journal: journal,
+      counters: counters,
+      overrides: overrides,
+      evaluatedAt: evaluatedAt,
+    );
     final ledger = await _repository.loadLedger();
     final node =
         _nodeCatalog.build(catalogContext).firstWhere((n) => n.id == nodeId);
@@ -415,7 +481,7 @@ class ProgressionEngine {
       final objective = _objectiveCatalog
           .build(catalogContext)
           .firstWhere((o) => o.id == boundObjectiveId);
-      periodKey = _objectiveEvaluator.evaluate(objective, input).periodKey;
+      periodKey = _objectiveEvaluator.evaluate(objective, context).periodKey;
     }
 
     final claimKey = ProgressionNodeResolver.claimEventKey(nodeId, periodKey);
@@ -423,40 +489,40 @@ class ProgressionEngine {
       await _repository.appendEvents([
         NodeClaimEvent(
           eventKey: claimKey,
-          timestamp: input.evaluatedAt,
+          timestamp: evaluatedAt,
           nodeId: nodeId,
           periodKey: periodKey,
         ),
       ]);
     }
-    return evaluate(
-      input: input,
+    return _evaluateWithContext(
+      context: context,
       catalogContext: catalogContext,
       reason: ProgressionResolutionReason.claim,
     );
   }
 
-  String? _objectiveIdOf(ProgressionNode node) {
+  String? _objectiveIdOf(ProgressionEntry node) {
     return switch (node) {
-      QuestNode(:final objectiveId) => objectiveId,
-      AchievementNode(:final objectiveId) => objectiveId,
-      MilestoneNode(:final objectiveId) => objectiveId,
-      LevelMilestoneNode() => null,
-      ChapterCompletionNode() => null,
-      CompanionAvailabilityNode() => null,
-      RelicNode() => null,
-      ContentUnlockNode() => null,
+      Quest(:final objectiveId) => objectiveId,
+      Achievement(:final objectiveId) => objectiveId,
+      Milestone(:final objectiveId) => objectiveId,
+      LevelMilestone() => null,
+      ChapterCompletion() => null,
+      CompanionAvailability() => null,
+      Relic() => null,
+      ContentUnlock() => null,
     };
   }
 
-  // ── Authoring / devtools API ────────────────────────────────────
+  // â”€â”€ Authoring / devtools API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   //
   // Two narrow primitives the devtools layer used to do by hand,
   // moved inside the engine so it stays the single source of ledger
   // writes. Both go through the same period-key resolution +
   // idempotent appendEvents path the production `claim` / `evaluate`
   // flows use; the only difference is that the metric doesn't have
-  // to actually satisfy — the engine seeds the events directly and
+  // to actually satisfy â€” the engine seeds the events directly and
   // re-evaluates so the rest of the pipeline (resolver, reward
   // planner, celebration adapter) reacts normally.
 
@@ -470,9 +536,26 @@ class ProgressionEngine {
   /// a normal claim.
   Future<ProgressionResolutionResult> simulateObjectiveMet({
     required String nodeId,
-    required EngineEvaluationInput input,
+    required Player player,
+    required HealthSnapshot healthSnapshot,
+    required NutritionSnapshot nutritionSnapshot,
+    required GoalBoard goalBoard,
+    required Journal journal,
+    required LedgerCounters counters,
+    required EvaluationOverrides overrides,
+    required DateTime evaluatedAt,
     EngineCatalogContext catalogContext = const EngineCatalogContext(),
   }) async {
+    final context = EngineEvaluationContext(
+      player: player,
+      healthSnapshot: healthSnapshot,
+      nutritionSnapshot: nutritionSnapshot,
+      goalBoard: goalBoard,
+      journal: journal,
+      counters: counters,
+      overrides: overrides,
+      evaluatedAt: evaluatedAt,
+    );
     final node = _nodeCatalog
         .build(catalogContext)
         .firstWhere((n) => n.id == nodeId);
@@ -481,8 +564,8 @@ class ProgressionEngine {
       // Condition-only node (welcome flow, content unlock). Nothing
       // to seed; just re-evaluate so the resolver picks up whatever
       // changed externally.
-      return evaluate(
-        input: input,
+      return _evaluateWithContext(
+        context: context,
         catalogContext: catalogContext,
         reason: ProgressionResolutionReason.liveUpdate,
       );
@@ -490,21 +573,21 @@ class ProgressionEngine {
     final objective = _objectiveCatalog
         .build(catalogContext)
         .firstWhere((o) => o.id == objectiveId);
-    final outcome = _objectiveEvaluator.evaluate(objective, input);
+    final outcome = _objectiveEvaluator.evaluate(objective, context);
     await _repository.appendEvents([
       ObjectiveCompletionEvent(
         eventKey: ProgressionNodeResolver.objectiveCompletionEventKey(
           objective.id,
           outcome.periodKey,
         ),
-        timestamp: input.evaluatedAt,
+        timestamp: evaluatedAt,
         objectiveId: objective.id,
         actualValue: objective.targetValue,
         periodKey: outcome.periodKey,
       ),
     ]);
-    return evaluate(
-      input: input,
+    return _evaluateWithContext(
+      context: context,
       catalogContext: catalogContext,
       reason: ProgressionResolutionReason.liveUpdate,
     );
@@ -525,10 +608,27 @@ class ProgressionEngine {
   /// Returns the post-write evaluation result.
   Future<ProgressionResolutionResult> simulateClaim({
     required String nodeId,
-    required EngineEvaluationInput input,
+    required Player player,
+    required HealthSnapshot healthSnapshot,
+    required NutritionSnapshot nutritionSnapshot,
+    required GoalBoard goalBoard,
+    required Journal journal,
+    required LedgerCounters counters,
+    required EvaluationOverrides overrides,
+    required DateTime evaluatedAt,
     int levelAtGrant = 1,
     EngineCatalogContext catalogContext = const EngineCatalogContext(),
   }) async {
+    final context = EngineEvaluationContext(
+      player: player,
+      healthSnapshot: healthSnapshot,
+      nutritionSnapshot: nutritionSnapshot,
+      goalBoard: goalBoard,
+      journal: journal,
+      counters: counters,
+      overrides: overrides,
+      evaluatedAt: evaluatedAt,
+    );
     final ledger = await _repository.loadLedger();
     final node = _nodeCatalog
         .build(catalogContext)
@@ -539,10 +639,10 @@ class ProgressionEngine {
       final objective = _objectiveCatalog
           .build(catalogContext)
           .firstWhere((o) => o.id == objectiveId);
-      periodKey = _objectiveEvaluator.evaluate(objective, input).periodKey;
+      periodKey = _objectiveEvaluator.evaluate(objective, context).periodKey;
     }
 
-    final events = <LedgerEvent>[];
+    final events = <JournalEvent>[];
     if (objectiveId != null) {
       final objective = _objectiveCatalog
           .build(catalogContext)
@@ -552,7 +652,7 @@ class ProgressionEngine {
           objective.id,
           periodKey,
         ),
-        timestamp: input.evaluatedAt,
+        timestamp: evaluatedAt,
         objectiveId: objective.id,
         actualValue: objective.targetValue,
         periodKey: periodKey,
@@ -561,7 +661,7 @@ class ProgressionEngine {
     if (node.claimPolicy == ClaimPolicy.manual) {
       events.add(NodeClaimEvent(
         eventKey: ProgressionNodeResolver.claimEventKey(nodeId, periodKey),
-        timestamp: input.evaluatedAt,
+        timestamp: evaluatedAt,
         nodeId: nodeId,
         periodKey: periodKey,
       ));
@@ -571,7 +671,7 @@ class ProgressionEngine {
           nodeId,
           periodKey,
         ),
-        timestamp: input.evaluatedAt,
+        timestamp: evaluatedAt,
         nodeId: nodeId,
         periodKey: periodKey,
       ));
@@ -584,7 +684,7 @@ class ProgressionEngine {
               rewardOrdinal: grantOrdinal,
               periodKey: periodKey,
             ),
-            timestamp: input.evaluatedAt,
+            timestamp: evaluatedAt,
             nodeId: nodeId,
             rewardOrdinal: grantOrdinal,
             rewardKind: RewardGrantKind.xp,
@@ -601,7 +701,7 @@ class ProgressionEngine {
               rewardOrdinal: grantOrdinal,
               periodKey: periodKey,
             ),
-            timestamp: input.evaluatedAt,
+            timestamp: evaluatedAt,
             nodeId: nodeId,
             rewardOrdinal: grantOrdinal,
             rewardKind: RewardGrantKind.cosmetic,
@@ -618,23 +718,23 @@ class ProgressionEngine {
       }
     }
     await _repository.appendEvents(events);
-    return evaluate(
-      input: input,
+    return _evaluateWithContext(
+      context: context,
       catalogContext: catalogContext,
       reason: ProgressionResolutionReason.claim,
     );
   }
 
-  // ── Helpers ─────────────────────────────────────────────────────
+  // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   ObjectiveOutcome? _outcomeForNode(
-    ProgressionNode node,
+    ProgressionEntry node,
     Map<String, ObjectiveOutcome> outcomes,
   ) {
     return switch (node) {
-      QuestNode(:final objectiveId) => outcomes[objectiveId],
-      AchievementNode(:final objectiveId) => outcomes[objectiveId],
-      MilestoneNode(:final objectiveId) => outcomes[objectiveId],
+      Quest(:final objectiveId) => outcomes[objectiveId],
+      Achievement(:final objectiveId) => outcomes[objectiveId],
+      Milestone(:final objectiveId) => outcomes[objectiveId],
       _ => null,
     };
   }
@@ -649,21 +749,21 @@ class ProgressionEngine {
     return sum;
   }
 
-  /// Combines [ProgressionNode.unlockConditions] with derived
-  /// conditions from [QuestNode.prerequisiteNodeIds] and the node's
-  /// [QuestNode.gatePolicy].
+  /// Combines [ProgressionEntry.unlockConditions] with derived
+  /// conditions from [Quest.prerequisiteNodeIds] and the node's
+  /// [Quest.gatePolicy].
   ///
-  /// `prerequisiteNodeIds` always expand to `NodeCompleted(pid)` —
+  /// `prerequisiteNodeIds` always expand to `NodeCompleted(pid)` â€”
   /// catalog authors keep the list ergonomic without learning the
   /// UnlockCondition vocabulary. On top of that, [GatePolicy] adds
   /// time-based gates: a [CooldownDays] of 1 day pins a
   /// `NodeCompletedBeforeToday(pid)` for every prereq so combo
   /// chains advance one step per day and chapter side quests reveal
   /// the day after their gating chapter step lands. Catalog content
-  /// therefore stops spelling out `NodeCompletedBeforeToday` — the
+  /// therefore stops spelling out `NodeCompletedBeforeToday` â€” the
   /// subtype declares the cadence and the engine wires the gate.
-  List<UnlockCondition> _conditionsFor(ProgressionNode node) {
-    if (node is! QuestNode || node.prerequisiteNodeIds.isEmpty) {
+  List<UnlockCondition> _conditionsFor(ProgressionEntry node) {
+    if (node is! Quest || node.prerequisiteNodeIds.isEmpty) {
       return node.unlockConditions;
     }
     final gate = node.gatePolicy;
@@ -681,7 +781,7 @@ class ProgressionEngine {
     ];
   }
 
-  /// `comboPoolId → picked node id` for the daily-challenge templates.
+  /// `comboPoolId â†’ picked node id` for the daily-challenge templates.
   /// Mirrors `DailySectionResolver._pickChallenge`: if any template in
   /// the pool was claimed today (NodeCompletionEvent landing on the
   /// local date), pin it; otherwise FNV-1a hash today's local date
@@ -690,13 +790,13 @@ class ProgressionEngine {
   /// daily section's "today's pick" and the engine's "eligible by
   /// pick" agree node-for-node.
   Map<String, String> _computeDailyChallengePicks(
-    List<ProgressionNode> nodes,
+    List<ProgressionEntry> nodes,
     LedgerSnapshot ledger,
     DateTime evaluatedAt,
   ) {
-    final poolMembers = <String, List<QuestNode>>{};
+    final poolMembers = <String, List<Quest>>{};
     for (final n in nodes) {
-      if (n is! QuestNode) continue;
+      if (n is! Quest) continue;
       if (n.slotPolicy is! DailyChallengeHashPick) continue;
       final poolId = n.comboPoolId;
       if (poolId == null) continue;
@@ -721,7 +821,7 @@ class ProgressionEngine {
       final members = entry.value;
 
       // Pinned: any pool member claimed today wins regardless of hash.
-      QuestNode? pinned;
+      Quest? pinned;
       for (final m in members) {
         if (claimedToday.contains(m.id)) {
           pinned = m;

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart'; // lint-ignore: domain-purity — UI display models carry Color tokens for chrome-coherent rendering
 
 import '../../../../l10n/app_localizations.dart';
 
@@ -6,19 +6,19 @@ import '../../../../l10n/app_localizations.dart';
 // DomainDisplay without importing from the legacy progression module
 // directly. When Phase 7 swaps the resolver's backing data source these
 // re-exports either stay (the new engine reuses the same enum) or change to
-// point at the new module — call sites are unaffected either way.
+// point at the new module â€” call sites are unaffected either way.
 export '../../../../shared/domain/rarity.dart' show Rarity;
-export '../progression_domain.dart' show ProgressionDomain;
+export 'package:forgetrack/domain/progression/catalog/progression_domain.dart' show ProgressionDomain;
 
 import '../../../../shared/domain/rarity.dart';
-import '../progression_domain.dart' show ProgressionDomain;
+import 'package:forgetrack/domain/progression/catalog/progression_domain.dart' show ProgressionDomain;
 
 /// Closure returning a localised string. Same shape as the legacy
 /// `ProgressionLocalizedText` typedef; defined here so the display module
 /// is the single import path for downstream consumers.
 typedef LocalizedText = String Function(AppLocalizations l10n);
 
-/// Coarse classification of a progression node — drives display routing
+/// Coarse classification of a progression node â€” drives display routing
 /// (icon, kicker label, celebration variant) but not behaviour.
 enum NodeDisplayKind {
   achievement,
@@ -32,7 +32,7 @@ enum NodeDisplayKind {
 }
 
 /// Display payload for one progression node (achievement, quest, milestone,
-/// level, …). The resolver returns this; consumers render it.
+/// level, â€¦). The resolver returns this; consumers render it.
 @immutable
 class NodeDisplay {
   const NodeDisplay({
@@ -51,7 +51,7 @@ class NodeDisplay {
     this.currentValue,
   });
 
-  final String nodeId;
+  final String nodeId; // lint-ignore: untyped-id — display VO mirrors ProgressionEntryId from resolver output
   final NodeDisplayKind kind;
   final LocalizedText title;
   final LocalizedText description;
@@ -59,7 +59,7 @@ class NodeDisplay {
 
   /// Drives the tile background gradient + accent stripes. Today
   /// derived from the legacy `Difficulty` enum colour; when the new
-  /// engine lands the value is sourced from a `Rarity → Color` token
+  /// engine lands the value is sourced from a `Rarity â†’ Color` token
   /// map (Q5 decision: drop `Difficulty`, keep `Rarity`).
   final Color accentColor;
 
@@ -71,7 +71,7 @@ class NodeDisplay {
   /// [ProgressionDisplayResolver.domainDisplay] for full visuals.
   final ProgressionDomain? domain;
 
-  /// Optional secondary label — typically the rule title for
+  /// Optional secondary label â€” typically the rule title for
   /// rule-bound achievements (e.g. "Daily steps") or the domain label
   /// otherwise. Encapsulates the rule-vs-domain branching so consumers
   /// just render `display.subjectLabel?.call(l10n)` as a pill.
@@ -81,7 +81,7 @@ class NodeDisplay {
   final int? currentValue;
 }
 
-/// Display payload for the player's current level — title + emoji + rarity
+/// Display payload for the player's current level â€” title + emoji + rarity
 /// + accent color (used by level badges, accents on hero card, etc.).
 @immutable
 class LevelDisplay {
@@ -100,12 +100,12 @@ class LevelDisplay {
 
   /// Drives badge fill / glow / accent stripes. Today derived from the
   /// legacy `tier.difficulty.color`; in the new engine this becomes a
-  /// `Rarity → Color` mapping in design tokens. The value is the same
+  /// `Rarity â†’ Color` mapping in design tokens. The value is the same
   /// either way for a given level.
   final Color accentColor;
 }
 
-/// Display payload for one level tier — what the journey map and the
+/// Display payload for one level tier â€” what the journey map and the
 /// social profile header render. Includes the cosmetic ids so consumers
 /// can preview "what you got at this level" without hitting the cosmetics
 /// catalog directly.
@@ -132,8 +132,8 @@ class LevelMilestoneDisplay {
   final bool isTitleBreakpoint;
 }
 
-/// Display payload for a progression domain (steps, nutrition, sleep, …)
-/// — colour, icon, localised label. Consumers render chips, badges, and
+/// Display payload for a progression domain (steps, nutrition, sleep, â€¦)
+/// â€” colour, icon, localised label. Consumers render chips, badges, and
 /// section headers off this.
 @immutable
 class DomainDisplay {

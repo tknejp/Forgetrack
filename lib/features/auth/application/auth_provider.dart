@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-import 'auth_user.dart';
+import '../domain/identity.dart';
 import '../data/google_auth_service.dart';
 
 enum AuthSessionState { checking, signedIn, signedOut }
@@ -13,14 +13,14 @@ class AuthProvider extends ChangeNotifier {
   final GoogleAuthService _auth = GoogleAuthService.instance;
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
-  AuthUser? _user;
+  Identity? _user;
   StreamSubscription<GoogleSignInAccount?>? _authSubscription;
   StreamSubscription<User?>? _firebaseSubscription;
   AuthSessionState _sessionState = AuthSessionState.checking;
   bool _isLoading = false;
   String? _error;
 
-  AuthUser? get user => _user;
+  Identity? get user => _user;
   AuthSessionState get sessionState => _sessionState;
   bool get isSignedIn =>
       _sessionState == AuthSessionState.signedIn && _user != null;
@@ -122,14 +122,14 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  AuthUser? _composeUser({
+  Identity? _composeUser({
     GoogleSignInAccount? googleAccount,
     User? firebaseUser,
   }) {
     final firebaseIdentity =
-        firebaseUser == null ? null : AuthUser.fromFirebase(firebaseUser);
+        firebaseUser == null ? null : Identity.fromFirebase(firebaseUser);
     if (googleAccount != null) {
-      return (firebaseIdentity ?? AuthUser.fromGoogle(googleAccount))
+      return (firebaseIdentity ?? Identity.fromGoogle(googleAccount))
           .mergeGoogle(googleAccount);
     }
     return firebaseIdentity;

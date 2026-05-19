@@ -6,15 +6,15 @@ import '../../../core/logging/app_log.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/theme/design_tokens.dart';
 import '../../progression_engine/application/progression_engine_provider.dart';
-import '../application/companions_registry.dart';
 import '../application/cosmetics_provider.dart';
-import '../domain/companion_state.dart';
 import '../domain/cosmetic_catalog.dart';
+import '../domain/cosmetic_lifecycle_helpers.dart';
 import '../domain/cosmetic_models.dart';
 import '../domain/cosmetic_reveal_state.dart';
 import '../domain/cosmetic_unlock_rule.dart';
 import '../domain/cosmetic_unlock_rules.dart';
 import '../domain/consumed_relics.dart';
+import '../domain/player_cosmetic_lifecycle.dart';
 import 'cosmetics_screen_internals.dart';
 import 'widgets/companion_claim_reveal.dart';
 import 'widgets/companion_fake_idle_preview.dart';
@@ -31,11 +31,10 @@ class CosmeticDetailsSheet extends StatefulWidget {
     this.devToolsUnlockRules,
     this.devToolsMode = false,
     this.revealResult,
-    this.companion,
     this.isRelicConsumed = false,
   });
 
-  final CosmeticDefinition definition;
+  final Cosmetic definition;
   final UserCosmeticsState state;
   final AppLocalizations l10n;
 
@@ -44,16 +43,11 @@ class CosmeticDetailsSheet extends StatefulWidget {
   final List<CosmeticUnlockRule>? devToolsUnlockRules;
   final bool devToolsMode;
 
-  /// Normal-mode reveal result. Null in devTools mode.
+  /// Normal-mode reveal result. Null in devTools mode. Phase 11 keeps
+  /// this only as a fallback when the inventory's lifecycle hasn't
+  /// surfaced rows yet (cold first build); the body re-derives the
+  /// lifecycle from the provider on every build.
   final CosmeticRevealResult? revealResult;
-
-  /// Resolved companion view (state + node + cosmetic) when the
-  /// sheet renders a companion outside devTools mode. The sheet
-  /// refreshes its own copy off the providers on every build so a
-  /// claim that lands mid-sheet immediately flips the layout —
-  /// this prop is the **initial** state only, useful when the
-  /// providers haven't notified yet.
-  final Companion? companion;
 
   /// True for a relic that has already been consumed by a companion
   /// claim. Adds a "Použito" pill + replaces the unlock-source hint
@@ -147,26 +141,23 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
         ? null
         : (revealResults[definition.id] ?? widget.revealResult);
 
-    // Re-derive the companion view from the current canonical
-    // sources rather than trusting [widget.companion]. The latter
-    // is a snapshot from the parent's last build; if the player
-    // claimed mid-sheet, the providers above already notified and
-    // the fresh resolution flips us from `claimable` to `claimed`.
-    final companion = devTools || definition.type != CosmeticType.companion
-        ? null
-        : const CompanionsRegistry().byId(
-            definition.id,
-            unlockedCosmeticIds: cosmeticsState.unlocked.keys.toSet(),
-            availableNodeIds: progression.availableNodeIds,
-            revealResults: revealResults,
-          );
     final isRelicConsumed = widget.isRelicConsumed;
 
-    // Determine effective reveal state for normal mode.
-    final revealState = devTools ? null : revealResult?.state;
-    final isHidden = revealState == CosmeticRevealState.hidden;
-    final isPartial = revealState == CosmeticRevealState.partial;
-    final isVisibleLocked = revealState == CosmeticRevealState.visibleLocked;
+    // Phase 10: pattern-match on PlayerCosmeticLifecycle instead of
+    // CosmeticRevealState directly. The inventory carries the same
+    // mapping the reveal evaluator computes, plus the
+    // [CosmeticClaimable] surface for companion availability gates.
+    final lifecycle = devTools
+        ? null
+        : cosmeticsProvider
+                .buildInventory(claimableNodeIds: progression.availableNodeIds)
+                .byIdString(definition.id)
+                ?.lifecycle ??
+            const CosmeticHidden();
+    final teased = lifecycle is CosmeticTeased ? lifecycle : null;
+    final isHidden = lifecycle is CosmeticHidden;
+    final isPartial = teased != null && teased.hasProgress;
+    final isVisibleLocked = teased != null && !teased.hasProgress;
     final effectiveLocked = devTools ? isLocked : (isVisibleLocked || isPartial || isHidden);
 
     // Hidden cards show a mystery header instead of the real cosmetic.
@@ -175,14 +166,15 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
         ? Tokens.onSurfaceMuted
         : color;
 
-    // Companion lifecycle: identity (asset + name) is concealed for
-    // every state except `claimed`. The four-state model maps to
-    // three distinct sheet bodies:
-    //   * claimable  → forging animation + "Vyzvedni" CTA
-    //   * partial / hidden → mystery sheet with optional checklist
-    //   * claimed    → fall through to the regular cosmetic layout
-    if (companion != null && !companion.state.isClaimed) {
-      if (companion.state == CompanionState.claimable) {
+    // Companion identity-hide rule (proposal §4.3): when [hidesIdentity]
+    // says we must conceal the companion (i.e. it's a Companion catalog
+    // row and the lifecycle is anything except Owned), the sheet shows
+    // one of two alternate bodies in place of the regular layout:
+    //   * Claimable → forging animation + "Vyzvedni" CTA
+    //   * Hidden / Teased → mystery body with optional checklist
+    // Non-companion cosmetics never hit this branch.
+    if (!devTools && hidesIdentity(definition, lifecycle!)) {
+      if (lifecycle is CosmeticClaimable) {
         return _ClaimableCompanionBody(
           definition: definition,
           l10n: l10n,
@@ -191,7 +183,8 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
         );
       }
       return _LockedCompanionBody(
-        companion: companion,
+        definition: definition,
+        teased: teased,
         l10n: l10n,
         bottomPad: bottomPad,
       );
@@ -233,7 +226,7 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                 children: [
                   if (isHidden)
                     _HiddenBadgeLarge(color: hiddenColor)
-                  else if (definition.type == CosmeticType.companion)
+                  else if (definition is Companion)
                     CompanionFakeIdlePreview(
                       width: 128,
                       height: 128,
@@ -319,10 +312,11 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                           ],
                         ),
                         // partial progress indicator
-                        if (isPartial && revealResult != null) ...[
+                        if (isPartial) ...[
                           const SizedBox(height: 8),
                           _PartialProgressRow(
-                            result: revealResult,
+                            satisfied: teased.satisfiedConditions,
+                            total: teased.totalConditions,
                             l10n: l10n,
                             color: color,
                           ),
@@ -355,7 +349,7 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
               // they used while progressing — just fully ticked.
               if (!devTools &&
                   !isHidden &&
-                  definition.type == CosmeticType.companion &&
+                  definition is Companion &&
                   revealResult?.conditionRows != null) ...[
                 const SizedBox(height: 18),
                 _CompanionChecklist(
@@ -638,12 +632,14 @@ class _HiddenBadgeLarge extends StatelessWidget {
 
 class _PartialProgressRow extends StatelessWidget {
   const _PartialProgressRow({
-    required this.result,
+    required this.satisfied,
+    required this.total,
     required this.l10n,
     required this.color,
   });
 
-  final CosmeticRevealResult result;
+  final int satisfied;
+  final int total;
   final AppLocalizations l10n;
   final Color color;
 
@@ -655,10 +651,7 @@ class _PartialProgressRow extends StatelessWidget {
             size: 13, color: color.withValues(alpha: 0.8)),
         const SizedBox(width: 5),
         Text(
-          l10n.cosmeticPartialProgress(
-            result.satisfiedConditions,
-            result.totalConditions,
-          ),
+          l10n.cosmeticPartialProgress(satisfied, total),
           style: TextStyle(
             color: color.withValues(alpha: 0.8),
             fontSize: Tokens.fontSizeCaption,
@@ -785,7 +778,7 @@ class _DebugDetailsSection extends StatelessWidget {
     required this.color,
   });
 
-  final CosmeticDefinition definition;
+  final Cosmetic definition;
   final UnlockedCosmetic? unlock;
   final Color color;
 
@@ -1215,7 +1208,7 @@ class _TinyPill extends StatelessWidget {
 }
 
 /// Claim-flow body shown in place of the regular details layout when a
-/// companion's `CompanionAvailabilityNode` is in `available` state. The
+/// companion's `CompanionAvailability` is in `available` state. The
 /// player taps "Vyzvedni společníka" inside the [CompanionClaimReveal]
 /// stage — that triggers the relic-fusing animation and, on completion,
 /// calls `progression.claimNode` which grants the cosmetic. The
@@ -1230,7 +1223,7 @@ class _ClaimableCompanionBody extends StatelessWidget {
     required this.bottomPad,
   });
 
-  final CosmeticDefinition definition;
+  final Cosmetic definition;
   final AppLocalizations l10n;
   final Color color;
   final double bottomPad;
@@ -1314,7 +1307,7 @@ class _ClaimableCompanionBody extends StatelessWidget {
   }
 
   /// Calls `progression.claimNode` for the matching
-  /// `CompanionAvailabilityNode` (id == cosmetic id, see
+  /// `CompanionAvailability` (id == cosmetic id, see
   /// `companions_content.dart`). Logged so resets / sync flows can
   /// be correlated to the moment the player tapped Vyzvedni.
   Future<void> _runClaim(BuildContext context) async {
@@ -1343,22 +1336,36 @@ class _ClaimableCompanionBody extends StatelessWidget {
 /// the parent sheet rebuilds.
 class _LockedCompanionBody extends StatelessWidget {
   const _LockedCompanionBody({
-    required this.companion,
+    required this.definition,
+    required this.teased,
     required this.l10n,
     required this.bottomPad,
   });
 
-  final Companion companion;
+  /// The companion catalog row. Carries rarity / name / asset; the
+  /// body intentionally renders the silhouette + mystery name in this
+  /// state, so [definition] feeds rarity-coloured chrome only.
+  final Cosmetic definition;
+
+  /// The Teased payload (`satisfied / total / rows`) when the
+  /// lifecycle is `CosmeticTeased`. Null when the lifecycle is
+  /// `CosmeticHidden` — in which case no progress chip or checklist
+  /// renders (the mystery body collapses to a single hint).
+  final CosmeticTeased? teased;
+
   final AppLocalizations l10n;
   final double bottomPad;
 
   @override
   Widget build(BuildContext context) {
-    final color = cosmeticRarityColor(companion.cosmetic.rarity);
+    final color = cosmeticRarityColor(definition.rarity);
     final hiddenColor = Tokens.onSurfaceMuted;
-    final satisfied = companion.satisfiedConditions;
-    final total = companion.totalConditions;
-    final rows = companion.conditionRows;
+    final satisfied = teased?.hasProgress == true
+        ? teased!.satisfiedConditions
+        : null;
+    final total =
+        teased?.hasProgress == true ? teased!.totalConditions : null;
+    final rows = teased?.conditionRows;
 
     return ConstrainedBox(
       constraints: BoxConstraints(

@@ -247,7 +247,7 @@ class _DevToolsBottomJumpBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final ft = context.ft;
     final priority = sections
-        .where((s) =>
+        .where((s) => // lint-ignore: widget-no-logic — devtools section-priority filter over static list
             const {'Progression', 'Cosmetics', 'Sync'}.contains(s.label))
         .toList(growable: false);
 

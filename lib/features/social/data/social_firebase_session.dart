@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../core/logging/app_log.dart';
-import '../../auth/application/auth_user.dart';
+import '../../auth/domain/identity.dart';
 
 class SocialFirebaseSession {
   SocialFirebaseSession({
@@ -12,7 +12,7 @@ class SocialFirebaseSession {
   final FirebaseAuth _auth;
   final bool isEnabled;
 
-  Future<void> ensureSignedInWithGoogle(AuthUser user) async {
+  Future<void> ensureSignedInWithGoogle(Identity user) async {
     if (!isEnabled) return;
 
     final currentUser = _auth.currentUser;

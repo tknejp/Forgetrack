@@ -9,6 +9,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'app.dart';
 import 'core/logging/app_log.dart';
 import 'app/notification_preferences_provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' show FirebaseFirestore, Settings;
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -51,7 +52,7 @@ import 'features/nutrition/data/kaloricke_tabulky_service.dart';
 import 'features/nutrition/data/local/kt_nutrition_database.dart';
 import 'features/health_connect/application/fitness_provider.dart';
 import 'features/home/application/home_card_order_provider.dart';
-import 'features/social/application/pinned_emblems_store.dart';
+import 'features/cosmetics/application/emblem_board_provider.dart';
 import 'features/health_connect/data/health_connect_service.dart';
 import 'features/health_connect/data/local/health_database.dart';
 import 'features/health_connect/application/goals_provider.dart';
@@ -59,6 +60,9 @@ import 'features/devtools/application/devtools_provider.dart';
 import 'features/devtools/application/factory_reset/factory_reset_service.dart';
 import 'features/onboarding/application/onboarding_provider.dart';
 import 'app/locale_provider.dart';
+import 'app/player_provider.dart';
+import 'domain/journal/journal_event.dart';
+import 'domain/player/level_curve.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -117,13 +121,21 @@ Future<void> main() async {
 
   final homeCardOrderProvider = HomeCardOrderProvider();
   await homeCardOrderProvider.init();
-  final pinnedEmblemsStore = PinnedEmblemsStore();
-  await pinnedEmblemsStore.init();
+  final emblemBoardProvider = EmblemBoardProvider();
+  await emblemBoardProvider.init();
   final socialBackendState = await SocialFirebaseBootstrap.ensureInitialized();
   // Once Firebase is up, gate Firestore's network on real connectivity so
   // the SDK doesn't burn battery retrying gRPC streams under Doze / airplane
   // mode / dead Wi-Fi. Reads still serve from cache while offline.
   if (Firebase.apps.isNotEmpty) {
+    // Defensively explicit: persistence is on by default on iOS/Android but
+    // off on web. Setting it here documents the intent and survives any
+    // future platform expansion. Must be set before the first Firestore
+    // read/write (FirestoreNetworkGate is the first consumer below).
+    FirebaseFirestore.instance.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    );
     unawaited(FirestoreNetworkGate().start());
   }
   // Musí být registrován před runApp – top-level handler pro FCM v background/terminated stavu
@@ -243,7 +255,7 @@ Future<void> main() async {
         ChangeNotifierProvider.value(value: ktProvider),
         ChangeNotifierProvider.value(value: connectivityProvider),
         ChangeNotifierProvider.value(value: homeCardOrderProvider),
-        ChangeNotifierProvider.value(value: pinnedEmblemsStore),
+        ChangeNotifierProvider.value(value: emblemBoardProvider),
         ChangeNotifierProvider(create: (_) => SheetsExportProvider()),
         ChangeNotifierProvider.value(value: bushidoExportProvider),
         ChangeNotifierProvider.value(value: devToolsProvider),
@@ -287,6 +299,34 @@ Future<void> main() async {
               nutritionProvider: kt,
               cosmeticsProvider: cosmetics,
               authUid: auth.isSignedIn ? auth.user?.id : null,
+            );
+            return provider;
+          },
+        ),
+        // Phase 5 of the domain refactor: Player is computed from
+        // the Journal via Player.fromJournal, not read-through over
+        // the engine's pre-computed profile. The proxy passes the
+        // ledger's reward grants + the LevelCurve so the provider's
+        // applySnapshot routes through the canonical derivation.
+        // ProgressionEngineProvider's EngineProfile getter runs the
+        // same XP sum (via Player.totalXpFromGrants) so the two
+        // consumers stay in lockstep without a provider cycle.
+        ChangeNotifierProxyProvider2<AuthProvider, ProgressionEngineProvider,
+            PlayerProvider>(
+          // Lazy: no Phase 5 consumer reads PlayerProvider yet, so
+          // deferring creation until first read keeps startup cost
+          // flat while the scaffolding is in place.
+          create: (_) => PlayerProvider(),
+          update: (_, auth, engine, provider) {
+            final identity = auth.user;
+            provider!.applySnapshot(
+              uid: identity?.id ?? '',
+              rewardGrants:
+                  engine.ledger?.rewardGrants ?? const <RewardGrantEvent>[],
+              levelCurve: const LevelCurve(),
+              joinedAt: engine.joinedAt,
+              displayName: identity?.displayName,
+              photoUrl: identity?.photoUrl,
             );
             return provider;
           },

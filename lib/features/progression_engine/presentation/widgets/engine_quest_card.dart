@@ -1,15 +1,17 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../domain/progression/player/player_quest_lifecycle.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../../shared/widgets/progress_bar.dart';
 import '../../../../shared/widgets/xp_claim_pill.dart';
-import '../../domain/progression_domain.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_domain.dart';
+import 'package:forgetrack/features/progression_engine/domain/progression_domain_chrome.dart';
 import '../widgets/progression_primitives.dart';
 import '../../application/progression_engine_provider.dart';
-import '../../domain/models/progression_node_definition.dart';
-import '../../domain/models/reward_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
+import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import 'engine_chapter_card.dart' show EngineChapterChainPreview;
 import 'engine_companion_pill.dart';
 
@@ -177,7 +179,8 @@ class EngineQuestCard extends StatelessWidget {
                         const SizedBox(height: 6),
                         _StreakChip(days: streakValue, accent: accent),
                       ],
-                      if (showCompletedTodayBadge && quest.isCompleted) ...[
+                      if (showCompletedTodayBadge &&
+                          quest.lifecycle is QuestClaimed) ...[
                         const SizedBox(height: 6),
                         _CompletedTodayBadge(
                           label: l10n.progDailyQuestCompletedTodayBadge,
@@ -262,20 +265,30 @@ class EngineQuestCard extends StatelessWidget {
   }
 
   XpClaimPillData _pillData() {
-    if (quest.isCompleted) {
-      // After a successful claim the ledger has the actually-granted
-      // XP; the pill mirrors V1 (greyed-out check + final XP value).
-      return XpClaimPillData.claimed(quest.previewXp);
-    }
-    if (quest.isAvailableForClaim && enabled) {
-      return XpClaimPillData.claimable(
-        quest.previewXp,
-        onTap: (center) => onClaim(quest, from: center),
-      );
-    }
-    // Either the objective isn't satisfied yet, or a refresh/claim is
-    // in flight â€” show the locked pill with the would-be XP.
-    return XpClaimPillData.locked(quest.previewXp);
+    // Exhaustive switch on the sealed PlayerQuestLifecycle keeps the
+    // four UI states aligned with the engine's resolution output and
+    // forces a compiler error if a future subtype is added without
+    // updating this card.
+    return switch (quest.lifecycle) {
+      QuestClaimed(:final finalXp) =>
+        // After a successful claim the ledger has the actually-granted
+        // XP; the pill mirrors V1 (greyed-out check + final XP value).
+        XpClaimPillData.claimed(finalXp),
+      QuestCompletedPendingClaim(:final previewXp) when enabled =>
+        XpClaimPillData.claimable(
+          previewXp,
+          onTap: (center) => onClaim(quest, from: center),
+        ),
+      QuestCompletedPendingClaim(:final previewXp) =>
+        // Claim pending but a refresh / claim is in flight — show the
+        // locked pill so the player can't double-tap.
+        XpClaimPillData.locked(previewXp),
+      QuestAvailable() || QuestLocked() =>
+        // Objective not yet satisfied (or the row is locked outright)
+        // — show the locked pill with the would-be XP at the current
+        // level multiplier so the player can preview the reward.
+        XpClaimPillData.locked(quest.previewXp),
+    };
   }
 }
 
@@ -334,7 +347,7 @@ class _StreakChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('🔥', style: TextStyle(fontSize: 11)),
+          const Text('🔥', style: TextStyle(fontSize: 11)), // lint-ignore: l10n-literal — emoji symbol, locale-invariant
           const SizedBox(width: 3),
           Text(
             '$days',
@@ -486,7 +499,7 @@ class _ProgressRow extends StatelessWidget {
     // already met the target. Swap the bar + raw label for a single
     // "Splněno" line so the card visibly settles into a done state
     // instead of looking like it's still tracking.
-    if (quest.isCompleted) {
+    if (quest.lifecycle is QuestClaimed) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
@@ -570,7 +583,7 @@ class _ProgressRow extends StatelessWidget {
   }
 }
 
-/// Leading visual on a quest card. Renders [QuestNode.assetKey] when set,
+/// Leading visual on a quest card. Renders [Quest.assetKey] when set,
 /// falling back to [ProgDomIco] (the domain icon tile) when the node
 /// doesn't carry one. Asset failure (missing PNG, decode error) also
 /// degrades to the icon — the screen never goes blank because of a
@@ -587,7 +600,7 @@ class EngineQuestLeading extends StatelessWidget {
     required this.size,
   });
 
-  final QuestNode node;
+  final Quest node;
   final ProgressionDomain domain;
   final double size;
 

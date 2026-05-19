@@ -1,0 +1,204 @@
+/// XP-curve math for the player level system. Pure functions — no
+/// state, no I/O. Lives in the domain layer so anything (engine
+/// evaluator, UI preview pills, Player aggregate derivations) can call
+/// the same canonical curve without depending on a feature folder.
+///
+/// **History.** Phase 4 of the domain refactor moved this class from
+/// `lib/features/progression_engine/domain/policy/level_policy.dart`
+/// to its current home. The old path now re-exports these symbols so
+/// existing call sites keep compiling unchanged — see
+/// `docs/domain_model/migration_plan.md` §Phase 4.
+///
+/// **Naming.** The proposal (`docs/domain_model/proposal.md` §2.1)
+/// names this value object `LevelCurve`; the concrete class retains
+/// the legacy `ProgressionLevelPolicy` name to avoid a churning
+/// rename across ~40 call sites. The [LevelCurve] typedef is the
+/// proposal-aligned alias and is the name the [Player] aggregate
+/// holds onto. Either symbol resolves to the same class.
+library;
+
+/// Domain alias matching the proposal's vocabulary. Prefer this name
+/// in new code in `lib/domain/`; legacy call sites under
+/// `lib/features/progression_engine/` keep using
+/// [ProgressionLevelPolicy] until the catalog rename pass.
+typedef LevelCurve = ProgressionLevelPolicy;
+
+class ProgressionLevelPolicy {
+  const ProgressionLevelPolicy({
+    this.baseDailyRewardXp = 230,
+    this.baseWeeklyRewardXp = 120,
+    this.level30RewardMultiplier = 12.5,
+    this.level50RewardMultiplier = 62.5,
+    this.level100RewardMultiplier = 150.0,
+    this.level1DaysToAdvance = 1.15,
+    this.level10DaysToAdvance = 2.45,
+    this.level30DaysToAdvance = 6.2,
+    this.level50DaysToAdvance = 11.8,
+    this.level100DaysToAdvance = 21.0,
+  })  : assert(baseDailyRewardXp > 0, 'baseDailyRewardXp must be positive'),
+        assert(
+          baseWeeklyRewardXp >= 0,
+          'baseWeeklyRewardXp must be non-negative',
+        ),
+        assert(
+          level30RewardMultiplier >= 1,
+          'level30RewardMultiplier must be at least 1',
+        ),
+        assert(
+          level50RewardMultiplier >= level30RewardMultiplier,
+          'level50RewardMultiplier must be >= level30RewardMultiplier',
+        ),
+        assert(
+          level100RewardMultiplier >= level50RewardMultiplier,
+          'level100RewardMultiplier must be >= level50RewardMultiplier',
+        );
+
+  final int baseDailyRewardXp;
+  final int baseWeeklyRewardXp;
+  final double level30RewardMultiplier;
+  final double level50RewardMultiplier;
+  final double level100RewardMultiplier;
+  final double level1DaysToAdvance;
+  final double level10DaysToAdvance;
+  final double level30DaysToAdvance;
+  final double level50DaysToAdvance;
+  final double level100DaysToAdvance;
+
+  double rewardMultiplierForLevel(int level) {
+    final safeLevel = level.clamp(1, 100);
+    if (safeLevel <= 30) {
+      return _lerp(
+        1,
+        level30RewardMultiplier,
+        (safeLevel - 1) / 29,
+      );
+    }
+    if (safeLevel <= 50) {
+      return _lerp(
+        level30RewardMultiplier,
+        level50RewardMultiplier,
+        (safeLevel - 30) / 20,
+      );
+    }
+    return _lerp(
+      level50RewardMultiplier,
+      level100RewardMultiplier,
+      (safeLevel - 50) / 50,
+    );
+  }
+
+  int scaledRewardXp({
+    required int baseXp,
+    required int level,
+  }) {
+    final scaled = baseXp * rewardMultiplierForLevel(level);
+    return _roundToNearest(scaled, 5);
+  }
+
+  double perfectDailyXpForLevel(int level) {
+    final multiplier = rewardMultiplierForLevel(level);
+    return (baseDailyRewardXp + (baseWeeklyRewardXp / 7)) * multiplier;
+  }
+
+  double targetDaysForLevel(int level) {
+    final safeLevel = level.clamp(1, 100);
+    if (safeLevel <= 10) {
+      return _lerp(
+        level1DaysToAdvance,
+        level10DaysToAdvance,
+        (safeLevel - 1) / 9,
+      );
+    }
+    if (safeLevel <= 30) {
+      return _lerp(
+        level10DaysToAdvance,
+        level30DaysToAdvance,
+        (safeLevel - 10) / 20,
+      );
+    }
+    if (safeLevel <= 50) {
+      return _lerp(
+        level30DaysToAdvance,
+        level50DaysToAdvance,
+        (safeLevel - 30) / 20,
+      );
+    }
+    return _lerp(
+      level50DaysToAdvance,
+      level100DaysToAdvance,
+      (safeLevel - 50) / 50,
+    );
+  }
+
+  int levelForXp(int totalXp) {
+    final safeXp = totalXp < 0 ? 0 : totalXp;
+    var level = 1;
+
+    while (xpRequiredForLevel(level + 1) <= safeXp) {
+      level += 1;
+    }
+
+    return level;
+  }
+
+  int xpRequiredForLevel(int level) {
+    if (level <= 1) return 0;
+
+    var total = 0;
+    for (var currentLevel = 1; currentLevel < level; currentLevel += 1) {
+      total += xpToAdvanceFromLevel(currentLevel);
+    }
+    return total;
+  }
+
+  int xpToAdvanceFromLevel(int level) {
+    final safeLevel = level < 1 ? 1 : level;
+    final xpBudget =
+        perfectDailyXpForLevel(safeLevel) * targetDaysForLevel(safeLevel);
+    return _roundToNearest(xpBudget, 25);
+  }
+
+  /// Resolves [totalXp] to a [LevelResolution] — level + level-floor /
+  /// next-level XP totals + xp-into-level.
+  LevelResolution resolve(int totalXp) {
+    final safeXp = totalXp < 0 ? 0 : totalXp;
+    final level = levelForXp(safeXp);
+    final levelFloorXp = xpRequiredForLevel(level);
+    final nextLevelXp = xpRequiredForLevel(level + 1);
+
+    return LevelResolution(
+      totalXp: safeXp,
+      level: level,
+      levelFloorXp: levelFloorXp,
+      nextLevelXp: nextLevelXp,
+      xpIntoLevel: safeXp - levelFloorXp,
+    );
+  }
+
+  double _lerp(double start, double end, double t) => start + (end - start) * t;
+
+  int _roundToNearest(double value, int step) {
+    if (step <= 1) return value.round();
+    return ((value / step).round()) * step;
+  }
+}
+
+/// Result of [ProgressionLevelPolicy.resolve]. Carries everything UI
+/// surfaces need to render the level / XP-into-level state. Replaces
+/// V1's `ProgressionProfile` as the policy-output type; the V2
+/// `EngineProfile` mirrors the same shape and consumes this directly.
+class LevelResolution {
+  const LevelResolution({
+    required this.totalXp,
+    required this.level,
+    required this.levelFloorXp,
+    required this.nextLevelXp,
+    required this.xpIntoLevel,
+  });
+
+  final int totalXp;
+  final int level;
+  final int levelFloorXp;
+  final int nextLevelXp;
+  final int xpIntoLevel;
+}

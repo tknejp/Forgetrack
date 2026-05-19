@@ -1,4 +1,4 @@
-import '../models/progression_node_definition.dart';
+﻿import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import 'content/activity_content.dart';
 import 'content/body_content.dart';
 import 'content/chapter_content.dart';
@@ -25,16 +25,16 @@ import 'engine_catalog_context.dart';
 /// Adding a new domain: create `content/<domain>_content.dart` with
 /// a top-level `<domain>Nodes()` function and add it to the spread
 /// below.
-class ProgressionNodeCatalog {
-  const ProgressionNodeCatalog();
+class ProgressionEntryCatalog {
+  const ProgressionEntryCatalog();
 
-  static ProgressionNode? definitionForId(String id) => _byId[id];
+  static ProgressionEntry? definitionForId(String id) => _byId[id];
 
-  static final Map<String, ProgressionNode> _byId = {
-    for (final def in const ProgressionNodeCatalog().build()) def.id: def,
+  static final Map<String, ProgressionEntry> _byId = {
+    for (final def in const ProgressionEntryCatalog().build()) def.id: def,
   };
 
-  List<ProgressionNode> build([
+  List<ProgressionEntry> build([
     EngineCatalogContext context = const EngineCatalogContext(),
   ]) {
     return [
@@ -45,14 +45,14 @@ class ProgressionNodeCatalog {
       ...bodyNodes(),
       ...metaNodes(),
       ...welcomeNodes(),
-      ...levelMilestoneNodes(),
+      ...levelMilestones(),
       ...pilgrimPathNodes(),
       ...forestTrialNodes(),
       ...chapterNodes(),
       ...comboNodes(),
       ...companionNodes(),
-      ...dailyChallengeNodes(),
-      ...chapterSideQuestNodes(),
+      ...dailyChallenges(),
+      ...chapterSideQuests(),
       ...longTermNodes(),
     ];
   }

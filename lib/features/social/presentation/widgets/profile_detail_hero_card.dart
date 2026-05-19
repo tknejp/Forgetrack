@@ -35,7 +35,7 @@ class ProfileDetailHeroCard extends StatelessWidget {
     required this.photoUrl,
     required this.profile,
     required this.isMe,
-    this.emblemSlots = const <CosmeticDefinition?>[],
+    this.emblemSlots = const <Cosmetic?>[],
     this.unlockedCount = 0,
     this.onTapEmblemSlot,
     this.onEditPhoto,
@@ -54,7 +54,7 @@ class ProfileDetailHeroCard extends StatelessWidget {
   /// "empty slot". Slots beyond `unlockedCount - 1` render as locked
   /// dashed squares even if they happen to hold an emblem in the data
   /// (defensive against stale local pins after a slot-count change).
-  final List<CosmeticDefinition?> emblemSlots;
+  final List<Cosmetic?> emblemSlots;
 
   /// How many of the 11 grid slots are unlocked — capped by how many
   /// distinct emblems the user has earned. Slots beyond this index
@@ -72,26 +72,26 @@ class ProfileDetailHeroCard extends StatelessWidget {
   final bool photoBusy;
 
   /// Total emblem slots in the collection grid. Mirrors
-  /// `PinnedEmblemsStore.slotCount` so the data model and the visual
-  /// grid stay aligned.
+  /// `EmblemBoard.slotCount` so the data model and the visual grid
+  /// stay aligned.
   static const int kEmblemSlotCount = 11;
 
   // Resolves what each of the 11 grid slots actually shows.
   //
   // * Own profile: caller passes `emblemSlots` (length 11) from the
-  //   PinnedEmblemsStore — that's the source of truth.
+  //   `EmblemBoardProvider` — that's the source of truth.
   // * Friend profile: caller has no slot map, so we fabricate one
   //   from the single `equipped.emblemId` so slot 0 shows their
   //   current emblem and the rest stay locked.
-  List<CosmeticDefinition?> _resolveSlots(CosmeticDefinition? equipped) {
+  List<Cosmetic?> _resolveSlots(Cosmetic? equipped) {
     if (emblemSlots.length == kEmblemSlotCount) return emblemSlots;
-    return <CosmeticDefinition?>[
+    return <Cosmetic?>[
       equipped,
       for (var i = 1; i < kEmblemSlotCount; i++) null,
     ];
   }
 
-  int _resolveUnlockedCount(CosmeticDefinition? equipped) {
+  int _resolveUnlockedCount(Cosmetic? equipped) {
     if (unlockedCount > 0) return unlockedCount;
     return equipped == null ? 0 : 1;
   }
@@ -228,7 +228,7 @@ class ProfileDetailHeroCard extends StatelessWidget {
 class _BackgroundLayer extends StatelessWidget {
   const _BackgroundLayer({required this.definition});
 
-  final CosmeticDefinition? definition;
+  final Cosmetic? definition;
 
   @override
   Widget build(BuildContext context) {
@@ -310,7 +310,7 @@ class _FramedAvatar extends StatelessWidget {
   final double tiltDegrees;
   final String displayName;
   final String? photoUrl;
-  final CosmeticDefinition? frame;
+  final Cosmetic? frame;
 
   @override
   Widget build(BuildContext context) {
@@ -673,7 +673,7 @@ class _CompanionStandee extends StatelessWidget {
     required this.size,
   });
 
-  final CosmeticDefinition definition;
+  final Cosmetic definition;
   final double size;
 
   @override
@@ -749,7 +749,7 @@ class _EmblemCollection extends StatelessWidget {
   /// entries render as either "empty unlocked slot" (if index <
   /// [unlockedCount]) or "locked dashed square" (if index >=
   /// [unlockedCount]).
-  final List<CosmeticDefinition?> slots;
+  final List<Cosmetic?> slots;
 
   /// How many of the 11 slots are currently unlocked. Anything at or
   /// above this index always renders locked, even if the data passed
@@ -829,7 +829,7 @@ class _SlotData {
   });
 
   final int index;
-  final CosmeticDefinition? emblem;
+  final Cosmetic? emblem;
   final bool unlocked;
   final bool pinned;
   final bool endGame;

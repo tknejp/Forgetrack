@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "forgetracker-493415"
-  }
+    "default": "forgetracker-493415",
+    "forgetrack": "forgetracker-493415"
+  },
+  "targets": {},
+  "etags": {}
 }

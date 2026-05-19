@@ -3,7 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forgetrack/features/progression_engine/application/progression_engine.dart';
 import 'package:forgetrack/features/progression_engine/application/progression_engine_provider.dart';
 import 'package:forgetrack/features/progression_engine/data/in_memory_progression_engine_repository.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/engine_evaluation_input.dart';
+import 'package:forgetrack/features/progression_engine/domain/models/engine_evaluation_context.dart';
+
+import '_engine_test_helpers.dart';
 
 ProgressionEngineProvider _provider() {
   final repo = InMemoryProgressionEngineRepository();
@@ -14,13 +16,8 @@ ProgressionEngineProvider _provider() {
   return ProgressionEngineProvider(engine: engine, repository: repo);
 }
 
-EngineEvaluationInput _input() => EngineEvaluationInput(
-      evaluatedAt: DateTime(2026, 5, 11, 12),
-      stepsToday: 0,
-      proteinGramsToday: 0,
-      level: 1,
-      totalXp: 0,
-    );
+EngineEvaluationContext _context() =>
+    buildTestContext(evaluatedAt: DateTime(2026, 5, 11, 12));
 
 void main() {
   group('Daily quest pick', () {
@@ -28,7 +25,7 @@ void main() {
         () async {
       final provider = _provider();
       // Force one evaluation so the provider has a result + ledger.
-      await provider.evaluateWith(input: _input());
+      await provider.evaluateWith(context: _context());
 
       final picks = provider.currentDailyQuests;
       expect(picks.length, ProgressionEngineProvider.dailyQuestPickCount);
@@ -37,7 +34,7 @@ void main() {
     test('all daily quests in the catalog are larger than the pick',
         () async {
       final provider = _provider();
-      await provider.evaluateWith(input: _input());
+      await provider.evaluateWith(context: _context());
 
       // Sanity: there are more daily quests in the catalog than we
       // surface — otherwise the rotation is moot.
@@ -50,7 +47,7 @@ void main() {
     test('the same provider returns the same picks across calls in one day',
         () async {
       final provider = _provider();
-      await provider.evaluateWith(input: _input());
+      await provider.evaluateWith(context: _context());
 
       final firstCall =
           provider.currentDailyQuests.map((q) => q.nodeId).toSet();
@@ -63,7 +60,7 @@ void main() {
         'evaluateWith persists a QuestOfferedEvent for every slot, '
         'idempotent on repeat calls', () async {
       final provider = _provider();
-      await provider.evaluateWith(input: _input());
+      await provider.evaluateWith(context: _context());
 
       final picks =
           provider.currentDailyQuests.map((q) => q.nodeId).toSet();
@@ -77,7 +74,7 @@ void main() {
       expect(dayKeys, hasLength(1));
 
       // Second evaluation on the same day must not duplicate.
-      await provider.evaluateWith(input: _input());
+      await provider.evaluateWith(context: _context());
       final secondLedger = provider.ledger!;
       expect(
         secondLedger.questOfferings.length,
@@ -91,7 +88,7 @@ void main() {
       bool isChallenge(String nodeId) => nodeId.startsWith('daily_challenge_');
 
       final provider = _provider();
-      await provider.evaluateWith(input: _input());
+      await provider.evaluateWith(context: _context());
       final ledgerDay0 = provider.ledger!;
       final day0Key = ledgerDay0.questOfferings.isEmpty
           ? null
@@ -102,7 +99,7 @@ void main() {
           .toSet();
 
       await provider.devToolsAdvanceDay();
-      await provider.evaluateWith(input: _input());
+      await provider.evaluateWith(context: _context());
 
       final ledgerDay1 = provider.ledger!;
       final day1Challenges = ledgerDay1.questOfferings

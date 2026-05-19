@@ -1,0 +1,10 @@
+// Phase 21 lint fixture — deliberate domain-purity violation.
+// Stored as .dart.txt so the analyzer ignores it.
+// Used by test/lint/lint_fixtures_test.dart.
+
+import 'package:flutter/material.dart';
+
+class BadDomainType {
+  const BadDomainType(this.color);
+  final Color color;
+}

@@ -1,16 +1,17 @@
-// Domain models for the cosmetics feature: enums and immutable data classes
+﻿// Domain models for the cosmetics feature: enums and immutable data classes
 // used by the catalog, repository and service layers. The cosmetics feature
 // is intentionally decoupled from `progression` and `social`.
 
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/domain/rarity.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 
 export '../../../shared/domain/rarity.dart' show Rarity;
 
 /// Resolves a localized string from the active [AppLocalizations]. Used by
-/// [CosmeticDefinition] for player-facing text (name / description / unlock
+/// [Cosmetic] for player-facing text (name / description / unlock
 /// hint) so the catalog itself is the single mapping from cosmetic id to
-/// generated `.arb` getter — no separate switch table to maintain.
+/// generated `.arb` getter â€” no separate switch table to maintain.
 typedef CosmeticText = String Function(AppLocalizations l10n);
 
 enum CosmeticType {
@@ -34,7 +35,7 @@ enum CosmeticRegion {
 }
 
 /// Where an unlock came from. Stored as part of [UnlockedCosmetic] for audit.
-/// Open-set on purpose — features that unlock cosmetics may add their own
+/// Open-set on purpose â€” features that unlock cosmetics may add their own
 /// values; consumers should treat unknown values as informational only.
 enum CosmeticUnlockSource {
   defaultBaseline,
@@ -49,15 +50,24 @@ enum CosmeticUnlockSource {
 /// Static definition of a cosmetic. Lives in [CosmeticCatalog]; never mutated
 /// at runtime.
 ///
+/// Sealed hierarchy with one concrete subtype per [CosmeticType] slot:
+/// [Frame], [Background], [Companion], [RelicCosmetic], [Emblem],
+/// [TitleFlair], [MapEffect]. Discrimination is by pattern match
+/// (`cosmetic is Companion`), not by an enum field.
+///
+/// The [CosmeticType] enum is retained for slot identification â€” equipped
+/// state keys by slot ([Loadout.slotId]) and the relic catalog
+/// disambiguates `Relic` (progression catalog gating node) from
+/// [RelicCosmetic] (cosmetic-side visual asset).
+///
 /// Player-facing text ([name], [description], [unlockHint]) is provided as a
 /// closure that pulls the localized string from [AppLocalizations]. Each
-/// catalog entry inlines its own `(l) => l.cosmeticXxx` resolver — there is
+/// catalog entry inlines its own `(l) => l.cosmeticXxx` resolver â€” there is
 /// no separate id-to-key switch table. Adding a cosmetic touches the catalog
 /// and the `.arb` files, nothing else.
-class CosmeticDefinition {
-  const CosmeticDefinition({
+sealed class Cosmetic {
+  const Cosmetic({
     required this.id,
-    required this.type,
     required this.rarity,
     required this.region,
     required this.name,
@@ -71,8 +81,7 @@ class CosmeticDefinition {
     this.metadata = const <String, Object?>{},
   });
 
-  final String id;
-  final CosmeticType type;
+  final CosmeticId id;
   final Rarity rarity;
   final CosmeticRegion region;
 
@@ -101,6 +110,156 @@ class CosmeticDefinition {
 
   /// Free-form bag for feature-specific overrides (e.g. animation flags).
   final Map<String, Object?> metadata;
+
+  /// Slot identifier. Derived from the concrete subtype â€” there is no
+  /// runtime field; pattern matching (`cosmetic is Companion`) is the
+  /// canonical way to discriminate. This getter exists so callers that pass
+  /// the slot as a [CosmeticType] value (e.g. `Loadout.slotId`,
+  /// `unequip(definition.type)`) stay terse.
+  CosmeticType get type;
+}
+
+class Frame extends Cosmetic {
+  const Frame({
+    required super.id,
+    required super.rarity,
+    required super.region,
+    required super.name,
+    required super.description,
+    super.assetKey,
+    super.previewAssetKey,
+    super.sortOrder,
+    super.isPremium,
+    super.isEnabled,
+    super.unlockHint,
+    super.metadata,
+  });
+
+  @override
+  CosmeticType get type => CosmeticType.frame;
+}
+
+class Background extends Cosmetic {
+  const Background({
+    required super.id,
+    required super.rarity,
+    required super.region,
+    required super.name,
+    required super.description,
+    super.assetKey,
+    super.previewAssetKey,
+    super.sortOrder,
+    super.isPremium,
+    super.isEnabled,
+    super.unlockHint,
+    super.metadata,
+  });
+
+  @override
+  CosmeticType get type => CosmeticType.background;
+}
+
+class Companion extends Cosmetic {
+  const Companion({
+    required super.id,
+    required super.rarity,
+    required super.region,
+    required super.name,
+    required super.description,
+    super.assetKey,
+    super.previewAssetKey,
+    super.sortOrder,
+    super.isPremium,
+    super.isEnabled,
+    super.unlockHint,
+    super.metadata,
+  });
+
+  @override
+  CosmeticType get type => CosmeticType.companion;
+}
+
+/// Cosmetic-side relic (visual asset). Disambiguated from
+/// `Relic` (progression catalog gating node) â€” both ship under id `relic_*`
+/// but represent different concerns. References between them are by id.
+class RelicCosmetic extends Cosmetic {
+  const RelicCosmetic({
+    required super.id,
+    required super.rarity,
+    required super.region,
+    required super.name,
+    required super.description,
+    super.assetKey,
+    super.previewAssetKey,
+    super.sortOrder,
+    super.isPremium,
+    super.isEnabled,
+    super.unlockHint,
+    super.metadata,
+  });
+
+  @override
+  CosmeticType get type => CosmeticType.relic;
+}
+
+class Emblem extends Cosmetic {
+  const Emblem({
+    required super.id,
+    required super.rarity,
+    required super.region,
+    required super.name,
+    required super.description,
+    super.assetKey,
+    super.previewAssetKey,
+    super.sortOrder,
+    super.isPremium,
+    super.isEnabled,
+    super.unlockHint,
+    super.metadata,
+  });
+
+  @override
+  CosmeticType get type => CosmeticType.emblem;
+}
+
+class TitleFlair extends Cosmetic {
+  const TitleFlair({
+    required super.id,
+    required super.rarity,
+    required super.region,
+    required super.name,
+    required super.description,
+    super.assetKey,
+    super.previewAssetKey,
+    super.sortOrder,
+    super.isPremium,
+    super.isEnabled,
+    super.unlockHint,
+    super.metadata,
+  });
+
+  @override
+  CosmeticType get type => CosmeticType.titleFlair;
+}
+
+class MapEffect extends Cosmetic {
+  const MapEffect({
+    required super.id,
+    required super.rarity,
+    required super.region,
+    required super.name,
+    required super.description,
+    super.assetKey,
+    super.previewAssetKey,
+    super.sortOrder,
+    super.isPremium,
+    super.isEnabled,
+    super.unlockHint,
+    super.metadata,
+  });
+
+  @override
+  CosmeticType get type => CosmeticType.mapEffect;
 }
 
 /// Per-user unlock record. Immutable.
@@ -112,7 +271,7 @@ class UnlockedCosmetic {
     this.sourceId,
   });
 
-  final String cosmeticId;
+  final String cosmeticId; // lint-ignore: untyped-id — UnlockedCosmetic.cosmeticId mirrors CosmeticId; persisted as raw string in Firestore subcollection
   final DateTime unlockedAt;
 
   /// Free-form string so callers from any feature can attribute the unlock
@@ -124,8 +283,13 @@ class UnlockedCosmetic {
 
 /// Snapshot of which cosmetic id is equipped in each slot. Null = nothing
 /// equipped in that slot.
-class EquippedCosmetics {
-  const EquippedCosmetics({
+///
+/// **Phase 12 rename** from `EquippedCosmetics` per proposal Â§2.4. The
+/// new name reads as a first-class noun ("the player's loadout") and
+/// matches the term every consumer already uses verbally. Same shape,
+/// same persistence â€” the rename is purely lexical.
+class Loadout {
+  const Loadout({
     this.frameId,
     this.relicId,
     this.backgroundId,
@@ -135,7 +299,7 @@ class EquippedCosmetics {
     this.mapEffectId,
   });
 
-  const EquippedCosmetics.empty()
+  const Loadout.empty()
       : frameId = null,
         relicId = null,
         backgroundId = null,
@@ -171,7 +335,7 @@ class EquippedCosmetics {
     }
   }
 
-  EquippedCosmetics copyWithSlot(CosmeticType type, String? cosmeticId) {
+  Loadout copyWithSlot(CosmeticType type, String? cosmeticId) {
     switch (type) {
       case CosmeticType.frame:
         return copyWith(frameId: cosmeticId, clearFrame: cosmeticId == null);
@@ -202,7 +366,7 @@ class EquippedCosmetics {
     }
   }
 
-  EquippedCosmetics copyWith({
+  Loadout copyWith({
     String? frameId,
     String? relicId,
     String? backgroundId,
@@ -218,7 +382,7 @@ class EquippedCosmetics {
     bool clearTitleFlair = false,
     bool clearMapEffect = false,
   }) {
-    return EquippedCosmetics(
+    return Loadout(
       frameId: clearFrame ? null : (frameId ?? this.frameId),
       relicId: clearRelic ? null : (relicId ?? this.relicId),
       backgroundId:
@@ -233,7 +397,7 @@ class EquippedCosmetics {
 
   @override
   bool operator ==(Object other) {
-    return other is EquippedCosmetics &&
+    return other is Loadout &&
         other.frameId == frameId &&
         other.relicId == relicId &&
         other.backgroundId == backgroundId &&
@@ -265,18 +429,18 @@ class UserCosmeticsState {
     required this.updatedAt,
   });
 
-  final String uid;
+  final String uid; // lint-ignore: untyped-id — Firebase Auth uid is a platform-boundary raw string
 
   /// Keyed by cosmetic id for O(1) membership checks.
   final Map<String, UnlockedCosmetic> unlocked;
-  final EquippedCosmetics equipped;
+  final Loadout equipped;
   final DateTime updatedAt;
 
   bool isUnlocked(String cosmeticId) => unlocked.containsKey(cosmeticId);
 
   UserCosmeticsState copyWith({
     Map<String, UnlockedCosmetic>? unlocked,
-    EquippedCosmetics? equipped,
+    Loadout? equipped,
     DateTime? updatedAt,
   }) {
     return UserCosmeticsState(

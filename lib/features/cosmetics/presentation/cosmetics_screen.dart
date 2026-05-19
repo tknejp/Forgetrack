@@ -7,13 +7,14 @@ import '../../../shared/theme/design_tokens.dart';
 import '../../../shared/widgets/ft_back_button.dart';
 import '../../../shared/widgets/screen_header.dart';
 import '../../progression_engine/application/progression_engine_provider.dart';
-import '../application/companions_registry.dart';
 import '../application/cosmetics_provider.dart';
-import '../domain/companion_state.dart';
+import '../domain/cosmetic_lifecycle_helpers.dart';
 import '../domain/cosmetic_models.dart';
 import '../domain/cosmetic_reveal_state.dart';
 import '../domain/cosmetic_unlock_rules.dart';
 import '../domain/consumed_relics.dart';
+import '../domain/inventory.dart';
+import '../domain/player_cosmetic_lifecycle.dart';
 import 'cosmetic_details_sheet.dart';
 import 'cosmetics_screen_internals.dart';
 
@@ -119,55 +120,34 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
     final devTools = widget.devToolsMode;
     final consumedIds = consumedRelicIds(state);
 
-    final List<CosmeticDefinition> displayDefs;
+    // Phase 19 of the domain refactor moved the lifecycle-aware
+    // display filter + sort off this widget and onto
+    // `CosmeticsProvider.displayCosmeticsForGrid`. The widget reads
+    // the projection + the inventory it derived from; cards
+    // pattern-match on lifecycle for per-card rendering only.
     final Map<String, CosmeticRevealResult> revealResults;
-    // Map of companion id → resolved [Companion] view object. Built
-    // once per build from canonical sources (cosmetics state +
-    // progression availability + reveal evaluator) by
-    // [CompanionsRegistry] and threaded down to cards / details
-    // sheet so every surface renders from the same snapshot.
-    Map<String, Companion> companions = const {};
-
+    final Inventory inventory;
+    final List<Cosmetic> displayDefs;
     if (devTools) {
-      displayDefs = cosmetics.service.catalog.all.toList()
-        ..sort(_byTypeThenSortOrder);
       revealResults = const {};
+      inventory = Inventory.empty;
     } else {
       revealResults = cosmetics.computeRevealResults(kCosmeticUnlockRules);
-      final list = const CompanionsRegistry().snapshot(
-        unlockedCosmeticIds: state.unlocked.keys.toSet(),
-        availableNodeIds: progression.availableNodeIds,
-        revealResults: revealResults,
+      inventory = cosmetics.buildInventory(
+        claimableNodeIds: progression.availableNodeIds,
       );
-      companions = {for (final c in list) c.id: c};
-      // Display policy: unlocked items always show. Companions
-      // additionally surface for `partial` and `claimable` states so
-      // the player sees what's brewing and can claim it. `hidden`
-      // companions stay off the grid — once the player meets the
-      // first prerequisite the card materialises in `partial`.
-      // Frames, relics, backgrounds and emblems stay out of the
-      // inventory until owned — they're Tier-1 rewards where a
-      // locked preview would just be clutter.
-      displayDefs = cosmetics.service.catalog.enabled
-          .where((def) {
-            final r = revealResults[def.id];
-            if (r == null) return false;
-            if (r.state == CosmeticRevealState.unlocked) return true;
-            if (def.type == CosmeticType.companion) {
-              final c = companions[def.id];
-              return c != null && c.state != CompanionState.hidden;
-            }
-            return false;
-          })
-          .toList()
-        ..sort((a, b) => _sortRevealDefs(a, b, state, revealResults));
     }
+    displayDefs = cosmetics.displayCosmeticsForGrid(
+      claimableNodeIds: progression.availableNodeIds,
+      devTools: devTools,
+      inventory: inventory,
+    );
 
     final equippedDefs = cosmetics.service.getEquippedDefinitions(state);
     final presentTypes = devTools
         ? CosmeticType.values.toList()
         : CosmeticType.values
-            .where((type) => displayDefs.any((def) => def.type == type))
+            .where((type) => displayDefs.any((def) => def.type == type)) // lint-ignore: widget-no-logic — tab-presence filter over pre-built displayDefs
             .toList(growable: false);
 
     // Tab layout: index 0 = "Vše" (null type, shows every displayDef),
@@ -222,7 +202,6 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
             l10n: l10n,
             devTools: devTools,
             revealResult: revealResults[def.id],
-            companions: companions,
             consumedRelicIdSet: consumedIds,
           );
         });
@@ -250,7 +229,6 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
               l10n: l10n,
               devTools: devTools,
               revealResult: revealResults[definition.id],
-              companions: companions,
               consumedRelicIdSet: consumedIds,
             ),
           ),
@@ -278,16 +256,15 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
               final pageDefs = type == null
                   ? displayDefs
                   : displayDefs
-                      .where((def) => def.type == type)
+                      .where((def) => def.type == type) // lint-ignore: widget-no-logic — page-by-tab slice of pre-built displayDefs
                       .toList(growable: false);
               return _CategoryGrid(
                 defs: pageDefs,
                 cosmetics: cosmetics,
                 state: state,
-                revealResults: revealResults,
+                inventory: inventory,
                 devTools: devTools,
                 l10n: l10n,
-                companions: companions,
                 consumedRelicIds: consumedIds,
                 onTap: (definition) => _showDetails(
                   context,
@@ -297,7 +274,6 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
                   l10n: l10n,
                   devTools: devTools,
                   revealResult: revealResults[definition.id],
-                  companions: companions,
                   consumedRelicIdSet: consumedIds,
                 ),
               );
@@ -312,28 +288,20 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
     BuildContext context, {
     required CosmeticsProvider cosmetics,
     required UserCosmeticsState state,
-    required CosmeticDefinition definition,
+    required Cosmetic definition,
     required AppLocalizations l10n,
     bool devTools = false,
     CosmeticRevealResult? revealResult,
-    Map<String, Companion> companions = const {},
     Set<String> consumedRelicIdSet = const {},
   }) {
     final isLocked = !state.unlocked.containsKey(definition.id);
     final rules = devTools
         ? kCosmeticUnlockRules
-            .where((r) => r.cosmeticId == definition.id)
+            .where((r) => r.cosmeticId == definition.id) // lint-ignore: widget-no-logic — devtools-only matrix view, static catalog rules
             .toList()
         : null;
-    // For companion cosmetics we hand the entire [Companion] view
-    // object to the sheet — state, reveal-result rows and the
-    // availability node travel together so the sheet has no need to
-    // do its own engine introspection.
-    final companion = !devTools && definition.type == CosmeticType.companion
-        ? companions[definition.id]
-        : null;
     final isRelicConsumed = !devTools &&
-        definition.type == CosmeticType.relic &&
+        definition is RelicCosmetic &&
         consumedRelicIdSet.contains(definition.id);
     showModalBottomSheet<void>(
       context: context,
@@ -348,7 +316,6 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
         devToolsUnlockRules: rules,
         devToolsMode: devTools,
         revealResult: devTools ? null : revealResult,
-        companion: companion,
         isRelicConsumed: isRelicConsumed,
       ),
     );
@@ -363,10 +330,10 @@ class _EquippedSection extends StatelessWidget {
     required this.onTap,
   });
 
-  final List<CosmeticDefinition> definitions;
+  final List<Cosmetic> definitions;
   final UserCosmeticsState state;
   final AppLocalizations l10n;
-  final ValueChanged<CosmeticDefinition> onTap;
+  final ValueChanged<Cosmetic> onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -520,22 +487,22 @@ class _CategoryGrid extends StatelessWidget {
     required this.defs,
     required this.cosmetics,
     required this.state,
-    required this.revealResults,
+    required this.inventory,
     required this.devTools,
     required this.l10n,
     required this.onTap,
-    this.companions = const {},
     this.consumedRelicIds = const {},
   });
 
-  final List<CosmeticDefinition> defs;
+  final List<Cosmetic> defs;
   final CosmeticsProvider cosmetics;
   final UserCosmeticsState state;
-  final Map<String, CosmeticRevealResult> revealResults;
+  /// Phase 10 read projection. Cards pattern-match on lifecycle
+  /// instead of reading `CosmeticRevealState` directly.
+  final Inventory inventory;
   final bool devTools;
   final AppLocalizations l10n;
-  final ValueChanged<CosmeticDefinition> onTap;
-  final Map<String, Companion> companions;
+  final ValueChanged<Cosmetic> onTap;
   final Set<String> consumedRelicIds;
 
   @override
@@ -567,22 +534,18 @@ class _CategoryGrid extends StatelessWidget {
               itemBuilder: (context, index) {
                 final def = defs[index];
                 final isUnlocked = state.unlocked.containsKey(def.id);
-                final revealResult = revealResults[def.id];
-                final companion =
-                    !devTools && def.type == CosmeticType.companion
-                        ? companions[def.id]
-                        : null;
+                final lifecycle =
+                    devTools ? null : inventory.byIdString(def.id)?.lifecycle;
                 final isRelicConsumed = !devTools &&
-                    def.type == CosmeticType.relic &&
+                    def is RelicCosmetic &&
                     consumedRelicIds.contains(def.id);
                 return _CosmeticCard(
                   definition: def,
                   isEquipped: state.equipped.slotId(def.type) == def.id,
                   isLocked: devTools && !isUnlocked,
                   showMissingAsset: devTools,
-                  revealResult: devTools ? null : revealResult,
+                  lifecycle: lifecycle,
                   l10n: l10n,
-                  companion: companion,
                   isRelicConsumed: isRelicConsumed,
                   onTap: () => onTap(def),
                 );
@@ -600,24 +563,19 @@ class _CosmeticCard extends StatelessWidget {
     required this.onTap,
     this.isLocked = false,
     this.showMissingAsset = false,
-    this.revealResult,
-    this.companion,
+    this.lifecycle,
     this.isRelicConsumed = false,
   });
 
-  final CosmeticDefinition definition;
+  final Cosmetic definition;
   final bool isEquipped;
   // devTools-only: shows lock icon + dim
   final bool isLocked;
   final bool showMissingAsset;
-  /// Non-null in normal (non-devTools) mode; null in devTools mode.
-  final CosmeticRevealResult? revealResult;
-  /// Resolved [Companion] view when [definition.type] == companion
-  /// and the card is rendered outside devTools mode. Null for every
-  /// other cosmetic type (frames / relics / backgrounds / emblems …)
-  /// and inside devTools mode — those paths fall back to the
-  /// reveal-evaluator output.
-  final Companion? companion;
+  /// Phase 10 player-side state. Non-null in normal mode; null in
+  /// devTools mode (devTools renders every catalog row regardless of
+  /// player state).
+  final PlayerCosmeticLifecycle? lifecycle;
   /// True for a relic that has been "consumed" by a companion claim —
   /// stays in inventory but dim + "Použito" pill.
   final bool isRelicConsumed;
@@ -626,21 +584,20 @@ class _CosmeticCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final revealState = revealResult?.state;
-    // Companion cards branch on the strict four-state lifecycle —
-    // identity (asset + name) stays hidden for every non-`claimed`
-    // state. The reveal evaluator's `partial` / `visibleLocked`
-    // signals only feed the badge (progress chip vs READY pill);
-    // they no longer leak the companion's artwork.
-    final cState = companion?.state;
-    final isCompanionLocked = cState != null && !cState.isClaimed;
-    final isHiddenCard = isCompanionLocked ||
-        (cState == null && revealState == CosmeticRevealState.hidden);
-    final isPartialCard = cState == CompanionState.partial ||
-        (cState == null &&
-            revealState == CosmeticRevealState.partial);
-    final isClaimableCompanion = cState == CompanionState.claimable;
-    final isVisibleLocked = revealState == CosmeticRevealState.visibleLocked;
+    // Phase 11: the card branches purely on (definition, lifecycle).
+    // For Companion catalog rows, [hidesIdentity] gates the silhouette
+    // + mystery name presentation; non-companion locked rows show
+    // their real identity in every state except CosmeticHidden.
+    final teased = lifecycle is CosmeticTeased
+        ? lifecycle! as CosmeticTeased
+        : null;
+    final hidesCompanion = lifecycle != null &&
+        hidesIdentity(definition, lifecycle!);
+    final isHiddenCard = hidesCompanion || lifecycle is CosmeticHidden;
+    final isClaimableCompanion = definition is Companion &&
+        lifecycle is CosmeticClaimable;
+    final isPartialCard = teased != null && teased.hasProgress;
+    final isVisibleLocked = teased != null && !teased.hasProgress;
     final isNormalLocked = isLocked || isVisibleLocked;
 
     final color = isHiddenCard
@@ -656,7 +613,7 @@ class _CosmeticCard extends StatelessWidget {
             .resolveAssetPath(definition.previewAssetKey ?? definition.assetKey);
     final hasAsset = definition.assetKey != null;
 
-    final displayName = isCompanionLocked
+    final displayName = hidesCompanion
         ? l10n.cosmeticCompanionClaimableHiddenName
         : isHiddenCard
             ? l10n.cosmeticHiddenName
@@ -767,21 +724,20 @@ class _CosmeticCard extends StatelessWidget {
                     color: color.withValues(alpha: 0.55),
                   ),
                 ),
-              // partial progress chip — only when there's a real
-              // partial reveal result attached. For companions, the
-              // chip surfaces in `partial` state with the snapshot
-              // numbers from the evaluator, then yields to the READY
-              // pill once the engine flips the companion availability
-              // node into `claimable`.
-              if (isPartialCard &&
-                  !isClaimableCompanion &&
-                  revealResult != null)
+              // partial progress chip — only when the lifecycle
+              // carries real progress numbers (`CosmeticTeased` with
+              // `hasProgress`). For companions, the chip surfaces in
+              // the partial state with snapshot numbers from the
+              // evaluator, then yields to the READY pill once the
+              // engine flips the companion availability node into
+              // `claimable`.
+              if (isPartialCard && !isClaimableCompanion)
                 Positioned(
                   bottom: 5,
                   right: 5,
                   child: _ProgressChip(
-                    satisfied: revealResult!.satisfiedConditions,
-                    total: revealResult!.totalConditions,
+                    satisfied: teased.satisfiedConditions,
+                    total: teased.totalConditions,
                     color: color,
                   ),
                 ),
@@ -1113,64 +1069,9 @@ double _cardBadgeSize(CosmeticType type) {
   }
 }
 
-int _byTypeThenSortOrder(CosmeticDefinition a, CosmeticDefinition b) {
-  final typeRank = CosmeticType.values.indexOf(a.type)
-      .compareTo(CosmeticType.values.indexOf(b.type));
-  if (typeRank != 0) return typeRank;
-  return a.sortOrder.compareTo(b.sortOrder);
-}
-
-/// Sort order for normal (non-devTools) mode:
-/// 1. Unlocked items (existing sort: rarity desc → unlockedAt desc → sortOrder)
-/// 2. Partial items (by sortOrder — discovered rewards the player is progressing toward)
-/// 3. VisibleLocked items (by sortOrder)
-int _sortRevealDefs(
-  CosmeticDefinition a,
-  CosmeticDefinition b,
-  UserCosmeticsState state,
-  Map<String, CosmeticRevealResult> revealResults,
-) {
-  final stateA = revealResults[a.id]?.state ?? CosmeticRevealState.visibleLocked;
-  final stateB = revealResults[b.id]?.state ?? CosmeticRevealState.visibleLocked;
-
-  final rankA = _revealSortRank(stateA);
-  final rankB = _revealSortRank(stateB);
-  if (rankA != rankB) return rankA.compareTo(rankB);
-
-  if (stateA == CosmeticRevealState.unlocked) {
-    return _compareUnlockedCosmetics(a, b, state);
-  }
-  return a.sortOrder.compareTo(b.sortOrder);
-}
-
-int _revealSortRank(CosmeticRevealState state) {
-  switch (state) {
-    case CosmeticRevealState.unlocked:
-      return 0;
-    case CosmeticRevealState.partial:
-      return 1;
-    case CosmeticRevealState.visibleLocked:
-      return 2;
-    case CosmeticRevealState.hidden:
-      return 3;
-  }
-}
-
-int _compareUnlockedCosmetics(
-  CosmeticDefinition a,
-  CosmeticDefinition b,
-  UserCosmeticsState state,
-) {
-  final rarity = b.rarity.index.compareTo(a.rarity.index);
-  if (rarity != 0) return rarity;
-  final unlockedAtA = state.unlocked[a.id]?.unlockedAt;
-  final unlockedAtB = state.unlocked[b.id]?.unlockedAt;
-  if (unlockedAtA != null && unlockedAtB != null) {
-    final unlockedAt = unlockedAtB.compareTo(unlockedAtA);
-    if (unlockedAt != 0) return unlockedAt;
-  }
-  final sortOrder = a.sortOrder.compareTo(b.sortOrder);
-  if (sortOrder != 0) return sortOrder;
-  return a.id.compareTo(b.id);
-}
+// Phase 19 of the domain refactor moved the grid filter + sort
+// helpers (`_byTypeThenSortOrder`, `_sortByLifecycle`,
+// `_lifecycleSortRank`, `_compareUnlockedCosmetics`) onto
+// `CosmeticsProvider.displayCosmeticsForGrid`. Widget no longer
+// composes domain logic.
 

@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart' show Color;
+﻿import 'package:flutter/material.dart' show Color; // lint-ignore: domain-purity — Color is the chrome-token type for display VOs
+import 'package:forgetrack/features/progression_engine/domain/progression_domain_chrome.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../shared/theme/design_tokens.dart';
@@ -7,17 +8,17 @@ import '../catalog/content/daily_rule_display.dart';
 import '../catalog/level_milestone_specs.dart';
 import '../catalog/objective_catalog.dart';
 import '../catalog/progression_node_catalog.dart';
-import '../models/objective_definition.dart';
-import '../models/objective_metric.dart';
-import '../models/progression_node_definition.dart';
-import '../models/quest_display_bucket.dart';
+import 'package:forgetrack/domain/progression/catalog/objective.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_metric.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
+import 'package:forgetrack/domain/progression/catalog/quest_display_bucket.dart';
 import '../policy/level_policy.dart';
 import 'progression_display_models.dart';
 
 /// Public, feature-neutral facade over the V2 progression catalog and
 /// level data.
 ///
-/// Phase 9a (current): fully V2-backed. Reads [ProgressionNodeCatalog]
+/// Phase 9a (current): fully V2-backed. Reads [ProgressionEntryCatalog]
 /// + [ObjectiveCatalog] for node displays, [kLevelMilestones] for level
 /// metadata, [DailyRuleDisplay] for rule-bound subject labels and unit
 /// suffixes.
@@ -30,12 +31,12 @@ class ProgressionDisplayResolver {
   static const _levelPolicy = ProgressionLevelPolicy();
   static final _levelIdPattern = RegExp(r'^level_(\d+)$');
 
-  // ── Levels ───────────────────────────────────────────────────────────
+  // â”€â”€ Levels â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   /// Display payload for the player's current level. Always returns a
   /// non-null value; for levels that are not themselves a milestone in
-  /// [kLevelMilestones] (e.g. 2, 3, 4, 6, 7, …) we surface the *governing*
-  /// spec — the highest milestone whose level is ≤ [level]. That keeps the
+  /// [kLevelMilestones] (e.g. 2, 3, 4, 6, 7, â€¦) we surface the *governing*
+  /// spec â€” the highest milestone whose level is â‰¤ [level]. That keeps the
   /// player wearing the previous breakpoint's title + rarity colour until
   /// the next breakpoint fires, instead of falling back to a generic
   /// "Level N" label and the default accent.
@@ -54,7 +55,7 @@ class ProgressionDisplayResolver {
   /// map and the social profile header iterate this.
   ///
   /// `isJourneyMapAnchor` mirrors [LevelMilestoneSpec.isTitleBreakpoint]
-  /// — journey-display feature owns the actual map-anchor set in
+  /// â€” journey-display feature owns the actual map-anchor set in
   /// [lib/features/journey/domain/journey_levels.dart]; consumers that
   /// need the visual map spine should read `kJourneyMapAnchors`
   /// directly. The flag stays on the display model for backwards-
@@ -74,19 +75,19 @@ class ProgressionDisplayResolver {
     );
   }
 
-  // ── Nodes ────────────────────────────────────────────────────────────
+  // â”€â”€ Nodes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   /// Looks up display metadata for any V2 progression node id.
   ///
   /// Returns:
   /// - Level milestone display for ids matching `level_<N>` (resolved
-  ///   from [ProgressionNodeCatalog] or synthesised from the tier table
+  ///   from [ProgressionEntryCatalog] or synthesised from the tier table
   ///   for ids the catalog hasn't materialised, e.g. level 1 origin).
-  /// - Achievement display for ids registered as [AchievementNode] in
-  ///   [ProgressionNodeCatalog].
+  /// - Achievement display for ids registered as [Achievement] in
+  ///   [ProgressionEntryCatalog].
   /// - Milestone / chapter completion / content unlock displays for the
   ///   corresponding V2 node kinds.
-  /// - `null` for unknown ids — caller decides whether to render an
+  /// - `null` for unknown ids â€” caller decides whether to render an
   ///   "unknown" tile or skip the entry entirely.
   NodeDisplay? nodeDisplay(String nodeId, AppLocalizations l10n) {
     final levelMatch = _levelIdPattern.firstMatch(nodeId);
@@ -95,7 +96,7 @@ class ProgressionDisplayResolver {
       return _levelMilestoneDisplay(level, nodeId);
     }
 
-    final node = ProgressionNodeCatalog.definitionForId(nodeId);
+    final node = ProgressionEntryCatalog.definitionForId(nodeId);
     if (node == null) return null;
     return _displayForNode(node);
   }
@@ -113,12 +114,12 @@ class ProgressionDisplayResolver {
       return l10n.socialLevelLabel(level);
     }
 
-    final node = ProgressionNodeCatalog.definitionForId(nodeId);
+    final node = ProgressionEntryCatalog.definitionForId(nodeId);
     if (node == null) return null;
     return _compactSummaryForNode(node, l10n, locale);
   }
 
-  // ── Domains ──────────────────────────────────────────────────────────
+  // â”€â”€ Domains â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   /// Display payload (icon, colour, label) for one progression domain.
   DomainDisplay domainDisplay(ProgressionDomain domain) {
@@ -141,9 +142,9 @@ class ProgressionDisplayResolver {
     return null;
   }
 
-  // ── Internals ────────────────────────────────────────────────────────
+  // â”€â”€ Internals â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-  /// Accent colour for a rarity. Drops V1's `Difficulty → Color` mapping
+  /// Accent colour for a rarity. Drops V1's `Difficulty â†’ Color` mapping
   /// per Q5; the per-rarity colour table lives in design tokens. Unknown
   /// rarities (null) fall back to the design-token accent.
   Color _accentForRarity(Rarity? rarity) =>
@@ -163,9 +164,9 @@ class ProgressionDisplayResolver {
     );
   }
 
-  NodeDisplay _displayForNode(ProgressionNode node) {
+  NodeDisplay _displayForNode(ProgressionEntry node) {
     return switch (node) {
-      LevelMilestoneNode() => NodeDisplay(
+      LevelMilestone() => NodeDisplay(
           nodeId: node.id,
           kind: NodeDisplayKind.levelMilestone,
           title: node.titleKey,
@@ -175,8 +176,8 @@ class ProgressionDisplayResolver {
           badgeEmoji: node.emoji,
           targetValue: _levelPolicy.xpRequiredForLevel(node.level),
         ),
-      AchievementNode() => _achievementDisplay(node),
-      MilestoneNode() => NodeDisplay(
+      Achievement() => _achievementDisplay(node),
+      Milestone() => NodeDisplay(
           nodeId: node.id,
           kind: NodeDisplayKind.milestone,
           title: node.titleKey,
@@ -186,7 +187,7 @@ class ProgressionDisplayResolver {
           domain: _objectiveDomain(node.objectiveId),
           targetValue: _objectiveTargetInt(node.objectiveId),
         ),
-      ChapterCompletionNode() => NodeDisplay(
+      ChapterCompletion() => NodeDisplay(
           nodeId: node.id,
           kind: NodeDisplayKind.chapterCompletion,
           title: node.titleKey,
@@ -194,7 +195,7 @@ class ProgressionDisplayResolver {
           rarity: node.rarity,
           accentColor: _accentForRarity(node.rarity),
         ),
-      ContentUnlockNode() => NodeDisplay(
+      ContentUnlock() => NodeDisplay(
           nodeId: node.id,
           kind: NodeDisplayKind.contentUnlock,
           title: node.titleKey,
@@ -202,7 +203,7 @@ class ProgressionDisplayResolver {
           rarity: node.rarity,
           accentColor: _accentForRarity(node.rarity),
         ),
-      CompanionAvailabilityNode() => NodeDisplay(
+      CompanionAvailability() => NodeDisplay(
           nodeId: node.id,
           kind: NodeDisplayKind.companionAvailability,
           title: node.titleKey,
@@ -210,7 +211,7 @@ class ProgressionDisplayResolver {
           rarity: node.rarity,
           accentColor: _accentForRarity(node.rarity),
         ),
-      RelicNode() => NodeDisplay(
+      Relic() => NodeDisplay(
           nodeId: node.id,
           kind: NodeDisplayKind.relic,
           title: node.titleKey,
@@ -218,7 +219,7 @@ class ProgressionDisplayResolver {
           rarity: node.rarity,
           accentColor: _accentForRarity(node.rarity),
         ),
-      QuestNode() => NodeDisplay(
+      Quest() => NodeDisplay(
           nodeId: node.id,
           kind: NodeDisplayKind.quest,
           title: node.titleKey,
@@ -233,7 +234,7 @@ class ProgressionDisplayResolver {
     };
   }
 
-  NodeDisplay _achievementDisplay(AchievementNode node) {
+  NodeDisplay _achievementDisplay(Achievement node) {
     return NodeDisplay(
       nodeId: node.id,
       kind: NodeDisplayKind.achievement,
@@ -249,7 +250,7 @@ class ProgressionDisplayResolver {
     );
   }
 
-  ObjectiveDefinition? _objectiveById(String? id) {
+  Objective? _objectiveById(String? id) {
     if (id == null) return null;
     return ObjectiveCatalog.definitionForId(id);
   }
@@ -263,7 +264,7 @@ class ProgressionDisplayResolver {
     return value.isFinite ? value.toInt() : null;
   }
 
-  /// Pill-friendly secondary label for an objective — rule title for
+  /// Pill-friendly secondary label for an objective â€” rule title for
   /// rule-bound `RewardCountMetric` / `StreakDaysMetric`, domain label
   /// otherwise, null when neither applies.
   LocalizedText? _subjectLabelForObjective(String? objectiveId) {
@@ -317,7 +318,7 @@ class ProgressionDisplayResolver {
     );
   }
 
-  /// "Friendly" display label for a node — uppercase title, with a
+  /// "Friendly" display label for a node â€” uppercase title, with a
   /// special-case for level-milestone ids that show e.g. `LEVEL 25`
   /// instead of the tier title (matches V1 behaviour for friend cards).
   String friendDisplayLabel(NodeDisplay display, AppLocalizations l10n) {
@@ -330,15 +331,15 @@ class ProgressionDisplayResolver {
   }
 
   String? _compactSummaryForNode(
-    ProgressionNode node,
+    ProgressionEntry node,
     AppLocalizations l10n,
     String locale,
   ) {
-    // Composite achievements (multiple unlock-condition gates) — V2
+    // Composite achievements (multiple unlock-condition gates) â€” V2
     // models these via [unlockConditions] rather than the V1
     // `compositeAllOf` criterion. Render the same generic label so the
     // social card copy stays stable.
-    if (node is AchievementNode && node.unlockConditions.length > 1) {
+    if (node is Achievement && node.unlockConditions.length > 1) {
       return l10n.progAchievementSummaryComposite;
     }
 
@@ -355,11 +356,11 @@ class ProgressionDisplayResolver {
     return _compactSummaryForObjective(objective, l10n, locale);
   }
 
-  String? _objectiveIdOf(ProgressionNode node) {
+  String? _objectiveIdOf(ProgressionEntry node) {
     return switch (node) {
-      AchievementNode() => node.objectiveId,
-      QuestNode() => node.objectiveId,
-      MilestoneNode() => node.objectiveId,
+      Achievement() => node.objectiveId,
+      Quest() => node.objectiveId,
+      Milestone() => node.objectiveId,
       _ => null,
     };
   }
@@ -368,7 +369,7 @@ class ProgressionDisplayResolver {
   /// shape so friend cards keep their label format (e.g. "10k XP",
   /// "30 steps streak", "5 daily quests").
   String _compactSummaryForObjective(
-    ObjectiveDefinition objective,
+    Objective objective,
     AppLocalizations l10n,
     String locale,
   ) {
@@ -478,7 +479,7 @@ class ProgressionDisplayResolver {
   }
 
   String _ruleScaledSummary({
-    required ObjectiveDefinition objective,
+    required Objective objective,
     required int targetValue,
     required AppLocalizations l10n,
     required String locale,
@@ -499,11 +500,11 @@ class ProgressionDisplayResolver {
     required int target,
     required AppLocalizations l10n,
   }) {
-    final referenced = ProgressionNodeCatalog.definitionForId(metric.nodeId);
-    if (referenced is QuestNode) {
+    final referenced = ProgressionEntryCatalog.definitionForId(metric.nodeId);
+    if (referenced is Quest) {
       switch (referenced.displayBucket) {
         case _:
-          // Display bucket → friend summary label.
+          // Display bucket â†’ friend summary label.
         }
       // Note: switch above is intentionally exhaustive in the next block
       // to give a labelled summary per quest bucket.

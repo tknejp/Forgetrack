@@ -6,6 +6,7 @@ import '../domain/weight_card_data.dart';
 import '../data/health_connect_service.dart';
 import '../data/local/health_database.dart';
 import '../domain/activity_record.dart';
+import '../domain/health_snapshot.dart';
 import '../domain/sleep_record.dart';
 import '../domain/weight_record.dart';
 import 'fitness_provider/fitness_queries.dart';
@@ -300,6 +301,51 @@ class FitnessProvider extends ChangeNotifier {
 
   SleepRecord? sleepForDate(DateTime date) =>
       FitnessQueries.sleepForDate(_sleepHistory, date);
+
+  /// Builds a [HealthSnapshot] anchored at [date] for the progression
+  /// engine. Phase 15 entry point — engine input source reads through
+  /// this instead of pulling individual `stepsForDate` /
+  /// `sleepForDate` / `weightForDate` calls field-by-field. The
+  /// snapshot bundles every metric the engine evaluator needs for
+  /// `date`, including the weekly + lifetime step aggregates which
+  /// previously required helper closures inside the input source.
+  HealthSnapshot snapshotForDate(DateTime date) {
+    final day = DateTime(date.year, date.month, date.day);
+    return HealthSnapshot(
+      evaluatedDate: day,
+      stepsToday: stepsForDate(day),
+      stepsThisWeek: _stepsForWeekContaining(day),
+      stepsLifetime: _stepsLifetime(),
+      sleepMinutesToday: sleepForDate(day)?.totalDuration.inMinutes ?? 0,
+      activityMinutesToday: _activityMinutesForDay(day),
+      weightLoggedToday: weightForDate(day) != null,
+    );
+  }
+
+  int _stepsLifetime() =>
+      _stepsHistory.fold<int>(0, (sum, r) => sum + r.steps);
+
+  int _stepsForWeekContaining(DateTime day) {
+    final monday = day.subtract(Duration(days: day.weekday - 1));
+    var sum = 0;
+    for (final r in _stepsHistory) {
+      final d = DateTime(r.date.year, r.date.month, r.date.day);
+      if (!d.isBefore(monday) && !d.isAfter(day)) sum += r.steps;
+    }
+    return sum;
+  }
+
+  int _activityMinutesForDay(DateTime day) {
+    return _activities.fold<int>(0, (sum, activity) {
+      final activityDay = DateTime(
+        activity.startTime.year,
+        activity.startTime.month,
+        activity.startTime.day,
+      );
+      if (activityDay != day) return sum;
+      return sum + activity.duration.inMinutes;
+    });
+  }
 
   // --- Weight aggregation (delegated to FitnessQueries) ---------------------
 

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../../../core/logging/app_log.dart';
 import '../data/kaloricke_tabulky_service.dart';
 import '../data/local/kt_nutrition_database.dart';
+import '../domain/nutrition_snapshot.dart';
 import 'kaloricke_tabulky_provider/kt_nutrition_queries.dart';
 import 'kaloricke_tabulky_provider/kt_sync_coordinator.dart';
 import '../../devtools/application/devtools_sync_logger.dart';
@@ -121,6 +122,30 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
   // ─── History getters ───────────────────────────────────────────────────────
 
   KtDayNutrition? nutritionForDate(DateTime date) => _db.getDay(date);
+
+  /// Builds a [NutritionSnapshot] anchored at [date] for the
+  /// progression engine. Phase 15 entry point — engine input source
+  /// reads through this instead of pulling individual `todayCalories`
+  /// / `todayProtein` / ... getters field-by-field. Reads
+  /// [nutritionForDate] for the requested day; falls back to the
+  /// in-memory `_today` cache when the requested date matches the
+  /// active day and the DB has not yet been written (e.g. between a
+  /// session warm-up and the first sync).
+  NutritionSnapshot snapshotForDate(DateTime date) {
+    final day = DateTime(date.year, date.month, date.day);
+    final cached = _db.getDay(day) ?? _today;
+    if (cached == null) {
+      return NutritionSnapshot(evaluatedDate: day);
+    }
+    return NutritionSnapshot(
+      evaluatedDate: day,
+      caloriesToday: cached.calories,
+      proteinGramsToday: cached.protein,
+      carbsGramsToday: cached.carbs,
+      fatGramsToday: cached.fat,
+      fiberGramsToday: cached.fiber,
+    );
+  }
 
   Map<String, KtDayNutrition> nutritionRange(DateTime start, DateTime end) =>
       _db.getRange(start, end);

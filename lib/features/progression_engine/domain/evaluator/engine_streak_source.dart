@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:meta/meta.dart';
 
-import '../models/objective_definition.dart';
-import '../models/objective_scope.dart';
+import 'package:forgetrack/domain/progression/catalog/objective.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_scope.dart';
 import '../repository/ledger_snapshot.dart';
 
 /// Streak summary for one objective or one domain. Same shape as
@@ -42,12 +42,12 @@ class EngineStreakSummary {
 ///
 /// Streaks count consecutive days where an objective with
 /// [TodayScope] completed for that day. ObjectiveCompletionEvents
-/// have periodKey `yyyy-MM-dd` for daily-scoped objectives — those
+/// have periodKey `yyyy-MM-dd` for daily-scoped objectives â€” those
 /// are the only events that contribute. Other scopes (week, lifetime,
 /// rolling, chapter) are ignored.
 ///
 /// Domain streaks combine every objective tagged with the same
-/// [ProgressionDomain] — a day "counts" if at least one objective in
+/// [ProgressionDomain] â€” a day "counts" if at least one objective in
 /// that domain completed.
 class EngineStreakSource {
   const EngineStreakSource({DateTime Function()? clock})
@@ -55,12 +55,12 @@ class EngineStreakSource {
 
   final DateTime Function() _clock;
 
-  /// `objectiveId → streak summary`. Only daily-scoped objectives
+  /// `objectiveId â†’ streak summary`. Only daily-scoped objectives
   /// appear; objectives with non-daily scopes get an empty summary
   /// (caller can ignore them).
   Map<String, EngineStreakSummary> summarizeByObjective({
     required LedgerSnapshot ledger,
-    required List<ObjectiveDefinition> objectives,
+    required List<Objective> objectives,
   }) {
     final today = _today();
     final dailyObjectiveIds = {
@@ -82,11 +82,11 @@ class EngineStreakSource {
     };
   }
 
-  /// `domain → streak summary`. A day counts if any objective tagged
+  /// `domain â†’ streak summary`. A day counts if any objective tagged
   /// with that domain (and with [TodayScope]) completed that day.
   Map<ProgressionDomain, EngineStreakSummary> summarizeByDomain({
     required LedgerSnapshot ledger,
-    required List<ObjectiveDefinition> objectives,
+    required List<Objective> objectives,
   }) {
     final today = _today();
     final domainByObjective = <String, ProgressionDomain>{};
@@ -141,7 +141,7 @@ class EngineStreakSource {
     }
 
     // Current streak: count consecutive days ending today (or
-    // yesterday — a day counts as "still alive" if the player has
+    // yesterday â€” a day counts as "still alive" if the player has
     // not yet had a chance to log today).
     var current = 0;
     for (final cursor in [today, today.subtract(const Duration(days: 1))]) {

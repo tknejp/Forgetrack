@@ -349,7 +349,7 @@ class JourneyInteractiveMap extends StatefulWidget {
               mapHeight: mapHeight,
               inset: radius + _JourneyMapLayout.collisionGap,
             ))
-        .firstWhere(
+        .firstWhere( // lint-ignore: widget-no-logic — collision-free pick over generated layout offsets, no domain state
           (candidate) => !_collides(
             candidate,
             radius: radius,
@@ -413,7 +413,7 @@ class JourneyInteractiveMap extends StatefulWidget {
     required Animation<double> pulseAnimation,
   }) {
     final points = route.points
-        .where(
+        .where( // lint-ignore: widget-no-logic — filters route JSON points (asset), not a domain collection
           (point) =>
               point.id >= _JourneyMapLayout.routePointMinLevel &&
               point.id <= _JourneyMapLayout.routePointMaxLevel &&
@@ -472,21 +472,23 @@ class JourneyInteractiveMap extends StatefulWidget {
   ) {
     if (checkpoints.isEmpty) return const [];
 
+    // Collapsed-mode UI slice — picks ≤2 anchors from the pre-built
+    // checkpoint VOs for the mini-preview header; no domain derivation.
     final pathCheckpoints =
-        checkpoints.where((cp) => cp.isPathAnchor).toList(growable: false);
-    final currentIndex = pathCheckpoints.indexWhere(
+        checkpoints.where((cp) => cp.isPathAnchor).toList(growable: false); // lint-ignore: widget-no-logic — UI slice of pre-built JourneyCheckpoint VOs for collapsed mini-preview
+    final currentIndex = pathCheckpoints.indexWhere( // lint-ignore: widget-no-logic — see _collapsedPreviewCheckpoints doc above
       (cp) => cp.isCurrent && cp.isUnlocked,
     );
     final focusIndex = currentIndex >= 0
         ? currentIndex
-        : pathCheckpoints.indexWhere((cp) => cp.isUnlocked);
+        : pathCheckpoints.indexWhere((cp) => cp.isUnlocked); // lint-ignore: widget-no-logic — collapsed preview focus fallback
 
     if (focusIndex < 0) {
       return pathCheckpoints.take(2).toList(growable: false);
     }
 
     final indexes = <int>[focusIndex];
-    final nextIndex = pathCheckpoints.indexWhere((cp) => cp.isNext);
+    final nextIndex = pathCheckpoints.indexWhere((cp) => cp.isNext); // lint-ignore: widget-no-logic — collapsed preview "next anchor" pick
 
     if (nextIndex >= 0 && nextIndex != focusIndex) {
       indexes.add(nextIndex);
@@ -594,7 +596,7 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
               interactive: widget.interactive,
             );
             final pathCheckpoints = visibleCheckpoints
-                .where((cp) => cp.isPathAnchor)
+                .where((cp) => cp.isPathAnchor) // lint-ignore: widget-no-logic — picks anchor VOs (display-state flag) to drive route-line rendering + hidden-dot set
                 .toList(growable: false);
             final currentRoutePointId = _currentRoutePointId(pathCheckpoints);
             final hiddenDotPointIds = {
@@ -834,7 +836,7 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
   }
 
   int _currentRoutePointId(List<JourneyCheckpoint> checkpoints) {
-    final unlocked = checkpoints.where((cp) => cp.isUnlocked).map((cp) =>
+    final unlocked = checkpoints.where((cp) => cp.isUnlocked).map((cp) => // lint-ignore: widget-no-logic — reduces over pre-built VO display-state flag to find highest unlocked route point for path-line rendering
         cp.mapUnlockedThroughPointId ?? cp.mapPointId ?? cp.levelNumber ?? 0);
 
     if (unlocked.isEmpty) return _JourneyMapLayout.routePointStart;
@@ -857,7 +859,7 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
       return;
     }
 
-    final focusIndex = checkpoints.indexWhere((cp) => cp.isCurrent);
+    final focusIndex = checkpoints.indexWhere((cp) => cp.isCurrent); // lint-ignore: widget-no-logic — finds rendered-list index for post-frame scroll positioning, not domain derivation
     if (focusIndex < 0) return;
 
     final focusKey = checkpoints[focusIndex].id;

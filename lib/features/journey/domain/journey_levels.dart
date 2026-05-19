@@ -7,7 +7,7 @@ import '../../progression_engine/domain/catalog/level_milestone_specs.dart';
 /// title" feed event, and the decorative emojis for intermediate
 /// visual nodes that don't carry rewards.
 ///
-/// The engine catalog ([LevelMilestoneSpec] + `LevelMilestoneNode`)
+/// The engine catalog ([LevelMilestoneSpec] + `LevelMilestone`)
 /// remains the source of truth for *what rewards exist at a level*;
 /// this file only adds the journey-specific display rules.
 

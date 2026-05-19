@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:forgetrack/features/progression_engine/domain/progression_domain_chrome.dart';
 import 'package:intl/intl.dart';
 
 import '../../../l10n/app_localizations.dart';
@@ -10,7 +11,7 @@ import 'widgets/social_user_profile_screen.dart';
 
 const _resolver = ProgressionDisplayResolver();
 
-// ── Level / domain helpers ────────────────────────────────────────────────────
+// â”€â”€ Level / domain helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 Domain socialDomainFor(String? domain) =>
     (_resolver.parseDomain(domain) ?? ProgressionDomain.activity).token;
@@ -34,7 +35,7 @@ String socialFmtXp(int xp) {
   return NumberFormat('#,##0').format(xp);
 }
 
-// ── Rarity → color / label ───────────────────────────────────────────────────
+// â”€â”€ Rarity â†’ color / label â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //
 // Social snapshots store rarity directly (shared [Rarity] enum). Friend
 // feed cards and unknown-id fallbacks both colour and label off the same
@@ -45,7 +46,7 @@ Color colorForRarity(Rarity rarity) => RarityPalette.forRarity(rarity).color;
 String socialRarityLabel(Rarity rarity, AppLocalizations l10n) =>
     rarity.label(l10n);
 
-// ── Achievement → display mapping ────────────────────────────────────────────
+// â”€â”€ Achievement â†’ display mapping â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /// Maps cloud-shaped friend achievement records into [NodeDisplay] payloads
 /// for rendering. For each record:
@@ -53,7 +54,7 @@ String socialRarityLabel(Rarity rarity, AppLocalizations l10n) =>
 /// - If the local catalog knows the id, returns the resolver's display
 ///   with the cloud `unlockedAt` carried over.
 /// - Otherwise (renamed / removed / future-build id), builds a synthetic
-///   display from the snapshot strings — friend cards stay informative
+///   display from the snapshot strings â€” friend cards stay informative
 ///   even when the local app does not know the achievement.
 ///
 /// Sorted newest-unlocked-first; ties broken by node id for stability.
@@ -103,7 +104,7 @@ NodeDisplay _withUnlockedAt(NodeDisplay display, DateTime unlockedAt) {
   );
 }
 
-// ── Achievement display helpers ──────────────────────────────────────────────
+// â”€â”€ Achievement display helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 String friendAchievementDisplayLabel(
   NodeDisplay display,
@@ -129,7 +130,7 @@ String formatAchievementDateTime(DateTime value, String locale) {
   return DateFormat('d MMM, HH:mm', locale).format(value);
 }
 
-// ── Navigation ────────────────────────────────────────────────────────────────
+// â”€â”€ Navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 void openUserProfile(
   BuildContext context, {

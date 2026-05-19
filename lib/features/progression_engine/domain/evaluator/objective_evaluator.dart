@@ -1,11 +1,11 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:meta/meta.dart';
 import 'package:intl/intl.dart';
 
-import '../models/engine_evaluation_input.dart';
-import '../models/objective_definition.dart';
-import '../models/objective_metric.dart';
-import '../models/objective_operator.dart';
-import '../models/objective_scope.dart';
+import '../models/engine_evaluation_context.dart';
+import 'package:forgetrack/domain/progression/catalog/objective.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_metric.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_operator.dart';
+import 'package:forgetrack/domain/progression/catalog/objective_scope.dart';
 
 /// Outcome of one objective on one evaluation pass.
 @immutable
@@ -17,7 +17,7 @@ class ObjectiveOutcome {
     required this.periodKey,
   });
 
-  final String objectiveId;
+  final String objectiveId; // lint-ignore: untyped-id — ObjectiveResolution mirrors ObjectiveId from catalog
   final double actualValue;
   final bool completed;
 
@@ -33,20 +33,21 @@ class ObjectiveOutcome {
 /// Phase 2 implements the metrics needed to demonstrate the design
 /// end-to-end (steps, calories, level, totalXp, reward count, node
 /// completions, combo pool completions); the rest land alongside
-/// real catalog entries during Phase 3 — adding a metric is one
+/// real catalog entries during Phase 3 â€” adding a metric is one
 /// switch case.
 class ObjectiveEvaluator {
   const ObjectiveEvaluator();
 
   ObjectiveOutcome evaluate(
-    ObjectiveDefinition objective,
-    EngineEvaluationInput input,
+    Objective objective,
+    EngineEvaluationContext context,
   ) {
-    // Provider-supplied override wins — used for objectives whose
+    // Provider-supplied override wins â€” used for objectives whose
     // actual value depends on ledger history (e.g. chapter step
     // `baselineFromNodeId` counters "since this chain step unlocked").
-    final override = input.objectiveActualOverrides[objective.id];
-    final actual = override ?? _readMetric(objective.metric, objective.scope, input);
+    final override = context.overrides.objectiveActualOverrides[objective.id];
+    final actual =
+        override ?? _readMetric(objective.metric, objective.scope, context);
     final completed = _matches(
       operator: objective.operator,
       value: actual,
@@ -58,104 +59,108 @@ class ObjectiveEvaluator {
       objectiveId: objective.id,
       actualValue: actual,
       completed: completed,
-      periodKey: _periodKey(objective.scope, input),
+      periodKey: _periodKey(objective.scope, context),
     );
   }
 
-  // ── Metric → input field ─────────────────────────────────────────
+  // â”€â”€ Metric â†’ context field â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   double _readMetric(
     ObjectiveMetric metric,
     ObjectiveScope scope,
-    EngineEvaluationInput input,
+    EngineEvaluationContext context,
   ) {
+    final player = context.player;
+    final health = context.healthSnapshot;
+    final nutrition = context.nutritionSnapshot;
+    final counters = context.counters;
     return switch (metric) {
       StepsMetric() => switch (scope) {
-          TodayScope() => input.stepsToday.toDouble(),
-          ThisWeekScope() => input.stepsThisWeek.toDouble(),
-          LifetimeScope() => input.stepsLifetime.toDouble(),
+          TodayScope() => health.stepsToday.toDouble(),
+          ThisWeekScope() => health.stepsThisWeek.toDouble(),
+          LifetimeScope() => health.stepsLifetime.toDouble(),
           RollingWindowScope(:final days) =>
-            (input.bestRollingStepsByDays[days] ?? 0).toDouble(),
+            (counters.bestRollingStepsByDays[days] ?? 0).toDouble(),
           CurrentChapterScope() => 0,
         },
       CaloriesMetric() => switch (scope) {
-          TodayScope() => input.caloriesToday,
+          TodayScope() => nutrition.caloriesToday,
           _ => 0,
         },
       ProteinGramsMetric() => switch (scope) {
-          TodayScope() => input.proteinGramsToday,
+          TodayScope() => nutrition.proteinGramsToday,
           _ => 0,
         },
       CarbsGramsMetric() => switch (scope) {
-          TodayScope() => input.carbsGramsToday,
+          TodayScope() => nutrition.carbsGramsToday,
           _ => 0,
         },
       FatGramsMetric() => switch (scope) {
-          TodayScope() => input.fatGramsToday,
+          TodayScope() => nutrition.fatGramsToday,
           _ => 0,
         },
       FiberGramsMetric() => switch (scope) {
-          TodayScope() => input.fiberGramsToday,
+          TodayScope() => nutrition.fiberGramsToday,
           _ => 0,
         },
       SleepMinutesMetric() => switch (scope) {
-          TodayScope() => input.sleepMinutesToday.toDouble(),
+          TodayScope() => health.sleepMinutesToday.toDouble(),
           RollingWindowScope(:final days) =>
-            (input.bestRollingSleepMinutesByDays[days] ?? 0).toDouble(),
+            (counters.bestRollingSleepMinutesByDays[days] ?? 0).toDouble(),
           _ => 0,
         },
       ActivityMinutesMetric() => switch (scope) {
-          TodayScope() => input.activityMinutesToday.toDouble(),
+          TodayScope() => health.activityMinutesToday.toDouble(),
           _ => 0,
         },
       WeightLoggedTodayMetric() => switch (scope) {
-          TodayScope() => input.weightLoggedToday ? 1.0 : 0.0,
+          TodayScope() => health.weightLoggedToday ? 1.0 : 0.0,
           _ => 0,
         },
-      LevelMetric() => input.level.toDouble(),
-      TotalXpMetric() => input.totalXp.toDouble(),
+      LevelMetric() => player.level.toDouble(),
+      TotalXpMetric() => player.totalXp.toDouble(),
       RewardCountMetric(:final ruleId, :final domain) => () {
           if (ruleId != null) {
-            return (input.rewardCountByRule[ruleId] ?? 0).toDouble();
+            return (counters.rewardCountByRule[ruleId] ?? 0).toDouble();
           }
           if (domain != null) {
-            return (input.rewardCountByDomain[domain] ?? 0).toDouble();
+            return (counters.rewardCountByDomain[domain] ?? 0).toDouble();
           }
-          return input.totalRewardCount.toDouble();
+          return counters.totalRewardCount.toDouble();
         }(),
       StreakDaysMetric(:final ruleId, :final domain) => () {
           if (ruleId != null) {
-            return (input.bestStreakByRule[ruleId] ?? 0).toDouble();
+            return (counters.bestStreakByRule[ruleId] ?? 0).toDouble();
           }
           if (domain != null) {
-            return (input.bestStreakByDomain[domain] ?? 0).toDouble();
+            return (counters.bestStreakByDomain[domain] ?? 0).toDouble();
           }
           return 0.0;
         }(),
       NodeCompletionsMetric(:final nodeId) =>
-        (input.nodeCompletionCounts[nodeId] ?? 0).toDouble(),
+        (counters.nodeCompletionCounts[nodeId] ?? 0).toDouble(),
       ComboPoolCompletionsMetric(:final poolId) =>
-        (input.comboPoolCompletionCounts[poolId] ?? 0).toDouble(),
+        (counters.comboPoolCompletionCounts[poolId] ?? 0).toDouble(),
       QuestCompletionsByBucketMetric(:final bucket) => bucket == null
-          ? input.totalQuestCompletions.toDouble()
-          : (input.questCompletionsByBucket[bucket.name] ?? 0).toDouble(),
-      DistinctActiveDaysMetric() => input.distinctActiveDays.toDouble(),
+          ? counters.totalQuestCompletions.toDouble()
+          : (counters.questCompletionsByBucket[bucket.name] ?? 0).toDouble(),
+      DistinctActiveDaysMetric() => counters.distinctActiveDays.toDouble(),
       TodayCompletionsAmongMetric(:final nodeIds) => () {
         var n = 0;
         for (final id in nodeIds) {
-          if (input.nodesCompletedToday.contains(id)) n++;
+          if (counters.nodesCompletedToday.contains(id)) n++;
         }
         return n.toDouble();
       }(),
       LifetimeCompletionsAmongMetric(:final nodeIds) => () {
         var n = 0;
         for (final id in nodeIds) {
-          n += input.nodeCompletionCounts[id] ?? 0;
+          n += counters.nodeCompletionCounts[id] ?? 0;
         }
         return n.toDouble();
       }(),
       // Per-day "at least K of these nodes were done" requires the
-      // ledger to reconstruct daily groupings — that's done in the
+      // ledger to reconstruct daily groupings â€” that's done in the
       // provider and surfaced through `objectiveActualOverrides`.
       // The evaluator returns 0 by default so an objective with no
       // override registered (no baseline node yet completed) reads
@@ -164,7 +169,7 @@ class ObjectiveEvaluator {
     };
   }
 
-  // ── Operator comparison ───────────────────────────────────────────
+  // â”€â”€ Operator comparison â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   bool _matches({
     required ObjectiveOperator operator,
@@ -191,10 +196,10 @@ class ObjectiveEvaluator {
     }
   }
 
-  // ── Period keying ─────────────────────────────────────────────────
+  // â”€â”€ Period keying â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-  String? _periodKey(ObjectiveScope scope, EngineEvaluationInput input) {
-    final dt = input.evaluatedAt;
+  String? _periodKey(ObjectiveScope scope, EngineEvaluationContext context) {
+    final dt = context.evaluatedAt;
     return switch (scope) {
       TodayScope() => DateFormat('yyyy-MM-dd').format(_dateOnly(dt)),
       ThisWeekScope() =>

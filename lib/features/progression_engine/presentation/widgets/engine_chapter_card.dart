@@ -1,17 +1,37 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../domain/progression/player/player_quest_lifecycle.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../../shared/widgets/ft_expand_chevron.dart';
 import '../../../../shared/widgets/progress_bar.dart';
 import '../../../../shared/widgets/xp_claim_pill.dart';
-import '../../domain/progression_domain.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_domain.dart';
+import 'package:forgetrack/features/progression_engine/domain/progression_domain_chrome.dart';
 import '../../application/progression_engine_provider.dart';
 import '../../domain/catalog/content/quest_assets.dart';
-import '../../domain/models/progression_node_definition.dart';
-import '../../domain/models/reward_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
+import 'package:forgetrack/domain/progression/catalog/quest_policies.dart';
+import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import 'engine_companion_pill.dart';
+
+/// Maps the pure-domain [ChainStepIcon] enum to the Material `Icons.…`
+/// constant the chain preview row renders. The enum lives in
+/// `lib/domain/progression/catalog/quest_policies.dart` so the Quest
+/// catalog row can stay free of [IconData] (a Flutter type).
+IconData? _chainStepIconData(ChainStepIcon? icon) {
+  switch (icon) {
+    case null:
+      return null;
+    case ChainStepIcon.opener:
+      return Icons.play_arrow_rounded;
+    case ChainStepIcon.finale:
+      return Icons.shield_rounded;
+    case ChainStepIcon.comboFlag:
+      return Icons.flag_rounded;
+  }
+}
 
 /// Chapter quest card with parallax-style background, large chapter
 /// icon, and a horizontal chain preview row beneath the progress bar.
@@ -261,16 +281,18 @@ class EngineChapterCard extends StatelessWidget {
   }
 
   XpClaimPillData _pillData() {
-    if (quest.isCompleted) {
-      return XpClaimPillData.claimed(quest.previewXp);
-    }
-    if (quest.isAvailableForClaim && enabled) {
-      return XpClaimPillData.claimable(
-        quest.previewXp,
-        onTap: (center) => onClaim(quest, from: center),
-      );
-    }
-    return XpClaimPillData.locked(quest.previewXp);
+    return switch (quest.lifecycle) {
+      QuestClaimed(:final finalXp) => XpClaimPillData.claimed(finalXp),
+      QuestCompletedPendingClaim(:final previewXp) when enabled =>
+        XpClaimPillData.claimable(
+          previewXp,
+          onTap: (center) => onClaim(quest, from: center),
+        ),
+      QuestCompletedPendingClaim(:final previewXp) =>
+        XpClaimPillData.locked(previewXp),
+      QuestAvailable() || QuestLocked() =>
+        XpClaimPillData.locked(quest.previewXp),
+    };
   }
 }
 
@@ -319,7 +341,7 @@ class _LockChip extends StatelessWidget {
 class _ChapterIcon extends StatelessWidget {
   const _ChapterIcon({required this.node, required this.size});
 
-  final QuestNode node;
+  final Quest node;
   final double size;
 
   @override
@@ -372,7 +394,7 @@ class _ProgressRow extends StatelessWidget {
     // the card kept showing a full progress bar + "1 / 1" label
     // after claim, which read like the chain was still actively
     // tracking instead of resting on its claimed step.
-    if (quest.isCompleted) {
+    if (quest.lifecycle is QuestClaimed) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
@@ -504,7 +526,7 @@ class _ChainNode extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final completed = quest.isCompleted;
+    final completed = quest.lifecycle is QuestClaimed;
     // "Locked future" = not completed AND not the currently active step.
     // These render a lock glyph in place of any label so the player
     // doesn't read distant milestones (1M / 5M) as actionable. Explicit
@@ -522,7 +544,7 @@ class _ChainNode extends StatelessWidget {
             ? accent.withValues(alpha: 0.16)
             : Colors.white.withValues(alpha: 0.05);
 
-    final iconForStep = quest.node.chainStepIcon;
+    final iconForStep = _chainStepIconData(quest.node.chainStepIcon);
     final label = quest.node.chainStepLabelKey?.call(l10n);
     final glyphColor =
         isCurrent ? Colors.white : Colors.white.withValues(alpha: 0.72);

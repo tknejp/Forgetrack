@@ -156,7 +156,7 @@ For each candidate entity, the existing truth surfaces (catalog | runtime | hist
 - **History:** `NodeCompletionEvent`, `NodeClaimEvent`, `QuestOfferedEvent`, `ObjectiveCompletionEvent` in ledger.
 
 ### Achievement
-- **Catalog:** `AchievementNode` (sub of `ProgressionNode`).
+- **Catalog:** `Achievement` (sub of `ProgressionNode`).
 - **Runtime:** derived. "Unlocked when?" from ledger NodeCompletionEvent. `SocialUnlockedAchievement` in Firestore mirrors it (denormalized).
 - **History:** ledger.
 
@@ -166,17 +166,17 @@ For each candidate entity, the existing truth surfaces (catalog | runtime | hist
 - **History:** `ObjectiveCompletionEvent` per period.
 
 ### Item (Cosmetic)
-- **Catalog:** `CosmeticDefinition` in `cosmetic_catalog.dart` (single class for all 7 types — Frame, Relic, Background, Emblem, Companion, TitleFlair, MapEffect).
+- **Catalog:** `Cosmetic` in `cosmetic_catalog.dart` (single class for all 7 types — Frame, Relic, Background, Emblem, Companion, TitleFlair, MapEffect).
 - **Runtime:** `UnlockedCosmetic` + `EquippedCosmetics` in cosmetics Isar.
 - **History:** unlock timestamp + sourceType/sourceId on `UnlockedCosmetic`. Granular reward grants in ledger.
 
 ### Companion (currently the most fragmented)
-- **Catalog:** **3 places** — `CosmeticDefinition`, `CompanionAvailabilityNode`, `CosmeticUnlockRule` (Tier-2).
+- **Catalog:** **3 places** — `Cosmetic`, `CompanionAvailability`, `CosmeticUnlockRule` (Tier-2).
 - **Runtime:** **3 stores** — `cosmetics.unlocked`, `progression.availableNodeIds`, reveal evaluator.
 - **History:** `NodeClaimEvent`, `RewardGrantEvent(companionAvailability)` in ledger.
 
 ### Relic
-- **Catalog:** `CosmeticDefinition` + `RelicNode` (older path, may be partially dead — verify) + relics granted as `CosmeticReward` from achievement nodes.
+- **Catalog:** `Cosmetic` + `Relic` (older path, may be partially dead — verify) + relics granted as `CosmeticReward` from achievement nodes.
 - **Runtime:** `UnlockedCosmetic` in cosmetics Isar.
 - **History:** ledger reward grants.
 
@@ -187,7 +187,7 @@ For each candidate entity, the existing truth surfaces (catalog | runtime | hist
 
 ### Chapter
 - **Catalog:** sealed chapter content in `progression_engine/domain/catalog/content/chapter_*.dart`.
-- **Runtime:** `ChapterCompletionNode` state derived from ledger.
+- **Runtime:** `ChapterCompletion` state derived from ledger.
 - **History:** ledger + `ChapterUnlockReward` events.
 
 ### Activity (workout)

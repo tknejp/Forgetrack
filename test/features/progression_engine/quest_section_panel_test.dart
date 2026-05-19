@@ -1,18 +1,19 @@
+﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:forgetrack/features/progression/domain/models/core_models.dart';
 import 'package:forgetrack/features/progression_engine/application/progression_engine_provider.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/claim_policy.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/progression_node_definition.dart';
-import 'package:forgetrack/features/progression_engine/domain/models/reward_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_domain.dart';
+import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
+import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import 'package:forgetrack/features/progression_engine/presentation/quests_screen.dart';
 import 'package:forgetrack/l10n/app_localizations.dart';
 
-QuestNode _node(String id, int xp) => DailyQuestNode(
-      id: id,
-      objectiveId: '${id}_objective',
+Quest _node(String id, int xp) => DailyQuest(
+      id: ProgressionEntryId(id),
+      objectiveId: ObjectiveId('${id}_objective'),
       claimPolicy: ClaimPolicy.manual,
       titleKey: (_) => 'Title $id',
       descriptionKey: (_) => 'Desc $id',
@@ -165,7 +166,7 @@ void main() {
         ),
       );
 
-      // Card present but no separate "Claim all" affordance — the
+      // Card present but no separate "Claim all" affordance â€” the
       // single-quest case relies on the card's pill.
       expect(find.text('Title q1'), findsOneWidget);
       final l10n = AppLocalizations.of(

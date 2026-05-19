@@ -14,17 +14,29 @@ lib/
   app/                      # App bootstrap wiring (providers, lifecycle, root widget)
   core/                     # Cross-feature technical infrastructure
     config/                 # Environment constants, feature flags
-    errors/                 # Typed error hierarchy, result types
+    errors/                 # AppError sealed hierarchy + Firebase / KT classifiers
     logging/                # AppLog, logging setup
     navigation/             # Navigator key, route helpers
+    result/                 # Sealed Result<T, E> + Success / Failure
     services/               # Platform services with no single-feature owner
     storage/                # Generic local persistence helpers
     utils/                  # Pure, stateless utility functions
+  domain/                   # Cross-aggregate domain layer (pure Dart, no Flutter/I/O)
+    journal/                # JournalEvent sealed hierarchy + JournalProjection<T>
+                            #   + EventKey / PeriodKey value objects
+    player/                 # Player aggregate root + LevelCurve policy
+    progression/
+      catalog/              # ProgressionEntryId family + EngineEvaluationContext
+                            #   + LedgerCounters + EvaluationOverrides
+      player/               # Per-aggregate sealed lifecycles + read projections
+                            #   (PlayerQuestLifecycle, PlayerQuestCatalog,
+                            #   PlayerAchievementLifecycle, PlayerAchievementShelf,
+                            #   ChapterLifecycle, PlayerChapterProgress)
   features/                 # One subfolder per product feature
     <feature>/
       application/          # Providers / state notifiers; orchestrate domain + data
       data/                 # Repositories, data sources, API/database adapters
-      domain/               # Entities, value objects, repository interfaces
+      domain/               # Feature-internal entities, value objects, repository interfaces
       presentation/         # Screens, widgets, navigation wired to this feature
   shared/
     branding/               # App logo, splash, identity assets
@@ -36,6 +48,21 @@ lib/
   firebase_options.dart
   main.dart
 ```
+
+### Domain layer (`lib/domain/`)
+
+Cross-aggregate doménové typy žijí v `lib/domain/`, ne v jednotlivých feature složkách. Patří sem aggregaty / value objects / sealed lifecycles, které se chovají jako cross-cutting kontrakt (Player level/XP, Journal event log, per-aggregate lifecycles read by both progression engine and UI).
+
+Hard rule: **`lib/domain/` se musí dát kompilovat bez Flutter SDK**. Žádný `package:flutter/`, `package:provider/`, `package:firebase_*/`, `package:isar/`, `package:health/`, `package:shared_preferences/`. Vynuceno [`test/domain_purity_test.dart`](../test/domain_purity_test.dart) — strict ratchet (any violation fails the test suite). Feature-internal `lib/features/<f>/domain/` má volnější ratchet (numeric baseline, gradual cleanup).
+
+Per-aggregate convention (proposal §2):
+
+- **Sealed catalog row** (e.g. `ProgressionEntry`, `Cosmetic`) — immutable definition data with subtypes for each kind.
+- **Player-side aggregate** (e.g. `Player`, `Inventory`, `EmblemBoard`, `GoalBoard`) — per-user state, immutable VO.
+- **Sealed lifecycle** (e.g. `PlayerQuestLifecycle`, `PlayerAchievementLifecycle`, `PlayerCosmeticLifecycle`, `ChapterLifecycle`) — exhaustive states each aggregate can be in; pattern-matched at every consumer (compile-time `switch` exhaustiveness for Dart 3 sealed types).
+- **Read projection** (e.g. `PlayerQuestCatalog`, `PlayerAchievementShelf`, `PlayerChapterProgress`) — immutable snapshot built by `ProgressionEngineProvider` once per evaluation; widgets read from the snapshot, never derive lifecycle inline.
+
+Typed identifiers (proposal §3.b, ADR `typed-identifiers`): catalog row ids use Dart 3 extension types declared `implements String` — `QuestId`, `AchievementId`, `MilestoneId`, `ChapterId`, `ObjectiveId`, `CosmeticId`, `ProgressionEntryId`, `EventKey`, `PeriodKey`. Zero runtime cost; compiler refuses construction from raw String at authoring sites, but typed ids auto-coerce into String parameters (so consumer code doesn't cascade-rewrite).
 
 ## Feature layer responsibilities
 
@@ -50,22 +77,23 @@ lib/
 
 | Feature folder | What it owns |
 |---|---|
-| `auth/` | Sign-in, sign-out, session state, `AuthProvider`, `AuthUser` |
-| `health_connect/` | Steps, sleep, body weight, activities; `FitnessProvider`; Health Connect adapter |
-| `nutrition/` | Kaloricke Tabulky sync, calorie + macro tracking; `KalorickeTabulkyProvider` |
-| `progression/` | Legacy XP engine, quests, achievements, level policy (being retired) |
-| `progression_engine/` | V2 progression engine — see [progression_engine/](progression_engine/) |
+| `auth/` | Sign-in, sign-out, session state, `AuthProvider`, `Identity` value object |
+| `health_connect/` | Steps, sleep, body weight, activities; `FitnessProvider`; Health Connect adapter; `GoalBoard` + `PlayerGoal` |
+| `nutrition/` | Kaloricke Tabulky sync, calorie + macro tracking; `KalorickeTabulkyProvider`; `NutritionSnapshot` |
+| `progression_engine/` | V2 progression engine — sealed `ProgressionEntry` catalog, `ProgressionEngineProvider`, evaluator + reward planner, hybrid Isar+Firestore ledger repository. See [progression_engine/README.md](../lib/features/progression_engine/README.md). |
 | `journey/` | Hero journey map, chapter/node display |
 | `celebration/` | Reward celebration screens and orchestration |
-| `cosmetics/` | Cosmetic catalog, inventory, equipped slots |
+| `cosmetics/` | Sealed `Cosmetic` catalog (7 subtypes), `Inventory`, `Loadout`, `EmblemBoard` |
 | `coach_log_export/` | Bushido / coach log Sheets export — see [features/coach_log_export.md](features/coach_log_export.md) |
 | `sheets_export/` | Raw Google Sheets date-merge export pipeline |
-| `social/` | Friends, leaderboard, profile, push notifications; Firestore backend |
+| `social/` | `SocialPresence` aggregate (friends, friendships, requests, shares, notifications); Firestore backend |
 | `home/` | `OverviewScreen` — main dashboard |
 | `settings/` | `SettingsScreen` and all settings sections/widgets/dialogs |
 | `app_shell/` | `MainShell` — root shell with page controller, bottom nav, top chrome |
 | `onboarding/` | First-run flow |
 | `devtools/` | Debug panels, internal diagnostics; never shipped to users |
+
+> The V1 `lib/features/progression/` module was deleted in Phase 22 of the doménový refactor (commit `20f7ea7`, 2026-05-19). All reads + writes now route through the V2 engine.
 
 ---
 

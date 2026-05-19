@@ -71,8 +71,19 @@
       "kind": "ChangeNotifierProxyProvider",
       "eager": true,
       "file": "lib/features/cosmetics/application/cosmetics_provider.dart",
-      "summary": "Katalog kosmetiky + per-user unlock & equip stav. Bindne uid z Authu, hydratuje Isar + Firestore entitlements.",
+      "summary": "Katalog kosmetiky + per-user unlock & equip stav. Bindne uid z Authu, hydratuje Isar + Firestore entitlements. R.4 (2026-05-19): entitlement load pattern-matchuje na Result<List<CosmeticEntitlement>, AppError> — transient outage loguje warn (self-heal next bind), permanent failure (permission-denied, validation) error.",
       "dependsOn": ["AuthProvider"]
+    },
+    {
+      "id": "EmblemBoardProvider",
+      "displayName": "Emblem Board",
+      "feature": "cosmetics",
+      "group": "gameplay",
+      "kind": "ChangeNotifierProvider",
+      "eager": true,
+      "file": "lib/features/cosmetics/application/emblem_board_provider.dart",
+      "summary": "Phase 12 relokace: per-user 11-slotový profile-header showcase. Persistence v SharedPreferences `pinned_emblems_{uid}` (per-device, comma-joined wire format zachovaný z legacy PinnedEmblemsStore). Vystavuje immutable EmblemBoard VO + setPin / clearForUser write ops. Dříve žila ve features/social/ — relokace fixuje boundary (cosmetic-collection state patří cosmetics/).",
+      "dependsOn": []
     },
     {
       "id": "ProgressionEngineProvider",
@@ -86,6 +97,16 @@
       "dependsOn": ["AuthProvider", "GoalsProvider", "FitnessProvider", "KalorickeTabulkyProvider", "CosmeticsProvider"]
     },
     {
+      "id": "PlayerProvider",
+      "displayName": "Player",
+      "feature": "domain",
+      "group": "gameplay",
+      "kind": "ChangeNotifierProxyProvider",
+      "file": "lib/app/player_provider.dart",
+      "summary": "Player aggregate read-through wrapper nad AuthProvider + ProgressionEngineProvider. Phase 4 scaffolding — žádný consumer zatím nečte přes Player; Phase 5 přepojí level/XP/joinedAt na Journal jako source-of-truth.",
+      "dependsOn": ["AuthProvider", "ProgressionEngineProvider"]
+    },
+    {
       "id": "SocialProvider",
       "displayName": "Social",
       "feature": "social",
@@ -93,7 +114,7 @@
       "kind": "ChangeNotifierProxyProvider",
       "eager": true,
       "file": "lib/features/social/application/social_provider.dart",
-      "summary": "Přátelé, leaderboard, profile snapshot do Firestoru. Čte level + achievement summary z progression engine.",
+      "summary": "Přátelé, leaderboard, profile snapshot do Firestoru. Čte level + achievement summary z progression engine. R.4 (2026-05-19): pattern-matchuje na Result<T, AppError> z SocialPresenceRepository; vystavuje lastError: AppError? jako typed counterpart k legacy error: String? (Czech UI strings) — widgets čtoucí .error nadále vidí stejné copy, .lastError je nový opt-in surface pro transient/permanent klasifikaci.",
       "dependsOn": ["AuthProvider", "ProgressionEngineProvider", "CosmeticsProvider"]
     },
     {

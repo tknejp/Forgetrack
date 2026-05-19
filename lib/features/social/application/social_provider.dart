@@ -1,37 +1,45 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../core/errors/app_error.dart';
+import '../../../core/errors/firebase_error_classifier.dart';
 import '../../../core/logging/app_log.dart';
+import '../../../core/result/result.dart';
 import '../../auth/application/auth_provider.dart';
 import '../../cosmetics/application/cosmetics_provider.dart';
-import '../../progression_engine/domain/progression_domain.dart' show ProgressionDomain;
 import '../../progression_engine/application/progression_engine_provider.dart';
-import '../../progression_engine/domain/models/ledger_event.dart'
-    show RewardGrantKind;
 import '../../progression_engine/domain/catalog/progression_node_catalog.dart';
-import '../../progression_engine/domain/models/progression_node_definition.dart'
-    show AchievementNode;
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart'
+    show Achievement;
 import '../data/social_firebase_bootstrap.dart';
 import '../data/social_firebase_session.dart';
 import '../domain/social_models.dart';
-import '../domain/social_repository.dart';
+import '../domain/social_presence.dart';
+import '../domain/social_presence_repository.dart';
 import 'profile_photo_precache.dart';
+import 'social_profile_projection.dart';
 
 class SocialProvider extends ChangeNotifier {
   SocialProvider({
-    required SocialRepository repository,
+    required SocialPresenceRepository repository,
     required SocialFirebaseSession session,
     required SocialBackendState backendState,
   })  : _repository = repository,
         _session = session,
-        _backendState = backendState;
+        _backendState = backendState {
+    _profileProjection = SocialProfileProjection(
+      repository: repository,
+      inputsGetter: _collectProfileInputs,
+    );
+  }
 
-  final SocialRepository _repository;
+  final SocialPresenceRepository _repository;
   final SocialFirebaseSession _session;
   final SocialBackendState _backendState;
+  late final SocialProfileProjection _profileProjection;
 
   AuthProvider? _authProvider;
   ProgressionEngineProvider? _progressionProvider;
@@ -61,6 +69,12 @@ class SocialProvider extends ChangeNotifier {
 
   String? _activeUid;
   String? _error;
+  // R.4: typed counterpart to [_error]. UI surfaces continue to read
+  // [error] for the existing Czech message strings; consumers that
+  // want to pattern-match on severity (transient retry vs permanent
+  // banner, scope-specific PermissionError → re-auth prompt) read
+  // [lastError] instead.
+  AppError? _lastError;
   String? _lastAuthSignature;
   String? _lastProfileSignature;
   String _friendIdsSignature = '';
@@ -81,6 +95,14 @@ class SocialProvider extends ChangeNotifier {
   bool get isReady => _isReady;
   bool get isSearching => _isSearching;
   String? get error => _error;
+
+  /// Typed counterpart to [error]. R.4 (2026-05-19): widgets that want
+  /// transient/permanent classification or scope-specific recovery
+  /// (re-auth on [PermissionError], re-login banner on KT-equivalent
+  /// transient [NetworkError]) read this; the legacy Czech message
+  /// surface continues to flow through [error].
+  AppError? get lastError => _lastError;
+
   String? get currentUid => _activeUid;
 
   List<SocialFriendRequest> get incomingRequests =>
@@ -98,6 +120,33 @@ class SocialProvider extends ChangeNotifier {
   int get unreadNotificationCount =>
       _notifications.where((n) => !n.read).length;
 
+  /// Aggregated read view of every social state surface for the
+  /// signed-in user. Phase 17 of the domain refactor introduces this
+  /// as the forward-compatible read shape â€” widgets can incrementally
+  /// migrate from per-getter reads (`socialProvider.friendships`,
+  /// `.recentShares`, `.notifications`) to a single
+  /// `socialProvider.presence` read. Phase 19 will sweep widgets.
+  ///
+  /// `ownProfile` is null today because the provider doesn't track
+  /// the signed-in user's published profile snapshot locally â€” it
+  /// only *writes* it (`publishProfile`). A follow-up will hydrate
+  /// own profile via `watchProfilesByIds([_activeUid])` so the
+  /// aggregate can drive the header without an extra round-trip.
+  SocialPresence get presence {
+    final uid = _activeUid;
+    if (uid == null || uid.isEmpty) return SocialPresence.anonymous;
+    return SocialPresence(
+      uid: uid,
+      ownProfile: null,
+      incomingRequests: incomingRequests,
+      outgoingRequests: outgoingRequests,
+      friendships: _friendships,
+      friends: _friends,
+      recentShares: _recentShares,
+      notifications: _notifications,
+    );
+  }
+
   void bind({
     required AuthProvider authProvider,
     required ProgressionEngineProvider progressionProvider,
@@ -112,7 +161,7 @@ class SocialProvider extends ChangeNotifier {
       _lastAuthSignature = authSignature;
       // Warm the image cache with the Auth photoUrl as soon as the user
       // is known. This URL is the hero header's fallback before the
-      // Firestore profile arrives — precaching here means the avatar
+      // Firestore profile arrives â€” precaching here means the avatar
       // paints synchronously on first navigate to the home screen.
       precacheProfilePhoto(authProvider.user?.photoUrl);
       unawaited(_reconcileSession());
@@ -138,20 +187,22 @@ class SocialProvider extends ChangeNotifier {
     }
 
     _isSearching = true;
-    _error = null;
+    _clearError();
     notifyListeners();
 
-    try {
-      _searchResults = await _repository.searchProfilesByHandle(
-        normalized,
-        excludeUid: uid,
-      );
-    } catch (error, stackTrace) {
-      _recordError('searchUsers', error, stackTrace);
-    } finally {
-      _isSearching = false;
-      notifyListeners();
+    final result = await _repository.searchProfilesByHandle(
+      normalized,
+      excludeUid: uid,
+    );
+    switch (result) {
+      case Success(value: final profiles):
+        _searchResults = profiles;
+      case Failure(error: final e):
+        _searchResults = const [];
+        _recordAppError('searchUsers', e);
     }
+    _isSearching = false;
+    notifyListeners();
   }
 
   void clearSearchResults() {
@@ -165,19 +216,20 @@ class SocialProvider extends ChangeNotifier {
     final uid = _activeUid;
     if (uid == null) return null;
 
-    try {
-      final handle = await _repository.updateProfileHandle(
-        uid: uid,
-        desiredHandle: desiredHandle,
-      );
-      _lastProfileSignature = null;
-      _error = null;
-      notifyListeners();
-      return handle;
-    } catch (error, stackTrace) {
-      _recordError('updateCurrentHandle', error, stackTrace);
-      notifyListeners();
-      return null;
+    final result = await _repository.updateProfileHandle(
+      uid: uid,
+      desiredHandle: desiredHandle,
+    );
+    switch (result) {
+      case Success(value: final handle):
+        _lastProfileSignature = null;
+        _clearError();
+        notifyListeners();
+        return handle;
+      case Failure(error: final e):
+        _recordAppError('updateCurrentHandle', e);
+        notifyListeners();
+        return null;
     }
   }
 
@@ -185,15 +237,16 @@ class SocialProvider extends ChangeNotifier {
     final uid = _activeUid;
     if (uid == null) return;
 
-    try {
-      await _repository.updateProfilePhotoUrl(
-        uid: uid,
-        photoUrl: photoUrl,
-      );
-      _lastProfileSignature = null;
-      _error = null;
-    } catch (error, stackTrace) {
-      _recordError('updateCurrentPhotoUrl', error, stackTrace);
+    final result = await _repository.updateProfilePhotoUrl(
+      uid: uid,
+      photoUrl: photoUrl,
+    );
+    switch (result) {
+      case Success():
+        _lastProfileSignature = null;
+        _clearError();
+      case Failure(error: final e):
+        _recordAppError('updateCurrentPhotoUrl', e);
     }
 
     notifyListeners();
@@ -237,12 +290,22 @@ class SocialProvider extends ChangeNotifier {
       );
 
       final url = await ref.getDownloadURL();
-      await _repository.updateProfilePhotoUrl(uid: uid, photoUrl: url);
-      _lastProfileSignature = null;
-      _error = null;
-      notifyListeners();
-      return url;
+      final updateResult =
+          await _repository.updateProfilePhotoUrl(uid: uid, photoUrl: url);
+      switch (updateResult) {
+        case Success():
+          _lastProfileSignature = null;
+          _clearError();
+          notifyListeners();
+          return url;
+        case Failure(error: final e):
+          _recordAppError('uploadCurrentProfilePhoto', e);
+          notifyListeners();
+          return null;
+      }
     } catch (error, stackTrace) {
+      // Storage upload (FirebaseStorage.putData / readAsBytes) raises
+      // outside the repository contract, so classify inline.
       _recordError('uploadCurrentProfilePhoto', error, stackTrace);
       notifyListeners();
       return null;
@@ -253,49 +316,75 @@ class SocialProvider extends ChangeNotifier {
     final uid = _activeUid;
     if (uid == null) return;
 
-    try {
-      await _repository.sendFriendRequest(fromUid: uid, toUid: toUid);
-      _error = null;
-      clearSearchResults();
-    } catch (error, stackTrace) {
-      _recordError('sendFriendRequest', error, stackTrace);
+    final result =
+        await _repository.sendFriendRequest(fromUid: uid, toUid: toUid);
+    switch (result) {
+      case Success():
+        _clearError();
+        clearSearchResults();
+      case Failure(error: final e):
+        _recordAppError('sendFriendRequest', e);
     }
 
     notifyListeners();
   }
 
   Future<void> acceptFriendRequest(String requestId) async {
-    try {
-      await _repository.acceptFriendRequest(requestId: requestId);
-      _error = null;
-    } catch (error, stackTrace) {
-      _recordError('acceptFriendRequest', error, stackTrace);
+    final result =
+        await _repository.acceptFriendRequest(requestId: requestId);
+    switch (result) {
+      case Success():
+        _clearError();
+      case Failure(error: final e):
+        _recordAppError('acceptFriendRequest', e);
     }
 
     notifyListeners();
   }
 
   Future<void> declineFriendRequest(String requestId) async {
-    try {
-      await _repository.declineFriendRequest(requestId: requestId);
-      _error = null;
-    } catch (error, stackTrace) {
-      _recordError('declineFriendRequest', error, stackTrace);
+    final result =
+        await _repository.declineFriendRequest(requestId: requestId);
+    switch (result) {
+      case Success():
+        _clearError();
+      case Failure(error: final e):
+        _recordAppError('declineFriendRequest', e);
     }
 
     notifyListeners();
   }
 
   Future<SocialUserProfile?> fetchProfileById(String uid) async {
-    final results = await _repository.fetchProfilesByIds([uid]);
-    return results.firstOrNull;
+    final result = await _repository.fetchProfilesByIds([uid]);
+    return switch (result) {
+      Success(value: final profiles) => profiles.firstOrNull,
+      // Surface the failure on `lastError` so the screen can react;
+      // collapse to null so the existing caller keeps its empty-state
+      // rendering.
+      Failure(error: final e) =>
+        () {
+          _recordAppError('fetchProfileById', e);
+          notifyListeners();
+          return null;
+        }(),
+    };
   }
 
   Future<List<SocialUnlockedAchievement>> fetchFriendAchievements(
     String uid,
   ) async {
-    final completions = await _repository.fetchEngineNodeCompletions(uid);
-    return _buildUnlockedAchievementsFromRemote(completions);
+    final result = await _repository.fetchEngineNodeCompletions(uid);
+    return switch (result) {
+      Success(value: final completions) =>
+        _buildUnlockedAchievementsFromRemote(completions),
+      Failure(error: final e) =>
+        () {
+          _recordAppError('fetchFriendAchievements', e);
+          notifyListeners();
+          return const <SocialUnlockedAchievement>[];
+        }(),
+    };
   }
 
   Stream<SocialUserProfile?> watchProfileById(String uid) {
@@ -312,13 +401,13 @@ class SocialProvider extends ChangeNotifier {
   /// Maps raw V2 ledger completions read from `users/{uid}/engineNodeCompletions`
   /// into the friend-view achievement list.
   ///
-  /// Filters to [AchievementNode] ids — quest / milestone completions are
+  /// Filters to [Achievement] ids â€” quest / milestone completions are
   /// in the same collection but live elsewhere in the UI. Per-node we
   /// keep the earliest completion timestamp (engine ledger may have
   /// multiple period rows for repeating nodes; achievements are
   /// once-and-done so this is mostly a guard).
   ///
-  /// Catalog metadata (rarity, domain) comes from the LOCAL catalog —
+  /// Catalog metadata (rarity, domain) comes from the LOCAL catalog â€”
   /// every device runs the same compiled app version, so the catalog
   /// is the right source even for someone else's data.
   List<SocialUnlockedAchievement> _buildUnlockedAchievementsFromRemote(
@@ -327,10 +416,10 @@ class SocialProvider extends ChangeNotifier {
     if (completions.isEmpty) return const [];
 
     final earliestByNode = <String, DateTime>{};
-    final nodes = <String, AchievementNode>{};
+    final nodes = <String, Achievement>{};
     for (final c in completions) {
-      final def = ProgressionNodeCatalog.definitionForId(c.nodeId);
-      if (def is! AchievementNode) continue;
+      final def = ProgressionEntryCatalog.definitionForId(c.nodeId);
+      if (def is! Achievement) continue;
       nodes[c.nodeId] = def;
       final existing = earliestByNode[c.nodeId];
       if (existing == null || c.completedAt.isBefore(existing)) {
@@ -377,7 +466,19 @@ class SocialProvider extends ChangeNotifier {
         ..sort();
 
       if (friendIds.isEmpty) return const <SocialUserProfile>[];
-      return _repository.fetchProfilesByIds(friendIds);
+      final result = await _repository.fetchProfilesByIds(friendIds);
+      return switch (result) {
+        Success(value: final profiles) => profiles,
+        // Stream consumer can't easily signal an error mid-flight;
+        // record on `lastError` and emit empty so the UI continues to
+        // render. The stream resubscribes when friendships change.
+        Failure(error: final e) =>
+          () {
+            _recordAppError('watchFriendProfilesForUser', e);
+            notifyListeners();
+            return const <SocialUserProfile>[];
+          }(),
+      };
     });
   }
 
@@ -388,15 +489,16 @@ class SocialProvider extends ChangeNotifier {
     final uid = _activeUid;
     if (uid == null) return;
 
-    try {
-      await _repository.updatePinnedAchievement(
-        uid: uid,
-        achievementId: achievementId,
-        pinned: pinned,
-      );
-      _error = null;
-    } catch (error, stackTrace) {
-      _recordError('setCurrentAchievementPinned', error, stackTrace);
+    final result = await _repository.updatePinnedAchievement(
+      uid: uid,
+      achievementId: achievementId,
+      pinned: pinned,
+    );
+    switch (result) {
+      case Success():
+        _clearError();
+      case Failure(error: final e):
+        _recordAppError('setCurrentAchievementPinned', e);
     }
 
     notifyListeners();
@@ -432,15 +534,16 @@ class SocialProvider extends ChangeNotifier {
       );
 
       throw StateError(
-        'Přátelství nebylo nalezeno (friendships=${_friendships.length}).',
+        'PÅ™Ã¡telstvÃ­ nebylo nalezeno (friendships=${_friendships.length}).',
       );
     }
 
-    try {
-      await _repository.removeFriend(friendshipId: friendship.id);
-      _error = null;
-    } catch (error, stackTrace) {
-      _recordError('removeFriend', error, stackTrace);
+    final result = await _repository.removeFriend(friendshipId: friendship.id);
+    switch (result) {
+      case Success():
+        _clearError();
+      case Failure(error: final e):
+        _recordAppError('removeFriend', e);
     }
 
     notifyListeners();
@@ -489,14 +592,14 @@ class SocialProvider extends ChangeNotifier {
     }
 
     final node = progressionProvider.nodeById(achievementId);
-    final isUnlockedAchievement = node is AchievementNode &&
+    final isUnlockedAchievement = node is Achievement &&
         progressionProvider.completedNodeIds.contains(achievementId);
     if (!isUnlockedAchievement) {
       _error = 'Achievement $achievementId is not unlocked yet.';
       notifyListeners();
       return;
     }
-    final achievementNode = node;
+    final achievement = node;
 
     final user = authProvider!.user!;
     final displayName = user.displayName?.trim().isNotEmpty == true
@@ -511,7 +614,7 @@ class SocialProvider extends ChangeNotifier {
     final share = SocialAchievementShare(
       id: '',
       actorUid: uid,
-      achievementId: achievementNode.id,
+      achievementId: achievement.id,
       createdAt: DateTime.now(),
       message: message?.trim().isEmpty ?? true ? null : message!.trim(),
       visibility: SocialShareVisibility.friends,
@@ -520,18 +623,19 @@ class SocialProvider extends ChangeNotifier {
         photoUrl: actorSnapshot.photoUrl,
       ),
       achievementSnapshot: SocialAchievementSnapshot(
-        title: resolvedTitle ?? achievementNode.id,
+        title: resolvedTitle ?? achievement.id,
         description: resolvedDescription ?? '',
-        rarity: achievementNode.rarity,
-        domain: progressionProvider.domainForNodeId(achievementNode.id).name,
+        rarity: achievement.rarity,
+        domain: progressionProvider.domainForNodeId(achievement.id).name,
       ),
     );
 
-    try {
-      await _repository.shareAchievement(share);
-      _error = null;
-    } catch (error, stackTrace) {
-      _recordError('shareAchievement', error, stackTrace);
+    final result = await _repository.shareAchievement(share);
+    switch (result) {
+      case Success():
+        _clearError();
+      case Failure(error: final e):
+        _recordAppError('shareAchievement', e);
     }
 
     notifyListeners();
@@ -565,19 +669,20 @@ class SocialProvider extends ChangeNotifier {
       fallbackPhotoUrl: user.photoUrl,
     );
 
-    try {
-      await _repository.addReaction(
-        shareId: shareId,
-        actorUid: uid,
-        actorName: actorSnapshot.displayName,
-        actorPhoto: actorSnapshot.photoUrl,
-        emoji: emoji,
-        shareOwnerUid: share.actorUid,
-        achievementTitle: share.achievementSnapshot.title,
-      );
-      _error = null;
-    } catch (error, stackTrace) {
-      _recordError('addReaction', error, stackTrace);
+    final result = await _repository.addReaction(
+      shareId: shareId,
+      actorUid: uid,
+      actorName: actorSnapshot.displayName,
+      actorPhoto: actorSnapshot.photoUrl,
+      emoji: emoji,
+      shareOwnerUid: share.actorUid,
+      achievementTitle: share.achievementSnapshot.title,
+    );
+    switch (result) {
+      case Success():
+        _clearError();
+      case Failure(error: final e):
+        _recordAppError('addReaction', e);
     }
 
     notifyListeners();
@@ -590,15 +695,16 @@ class SocialProvider extends ChangeNotifier {
     final share = _recentShares.where((s) => s.id == shareId).firstOrNull;
     if (share == null) return;
 
-    try {
-      await _repository.removeReaction(
-        shareId: shareId,
-        actorUid: uid,
-        shareOwnerUid: share.actorUid,
-      );
-      _error = null;
-    } catch (error, stackTrace) {
-      _recordError('removeReaction', error, stackTrace);
+    final result = await _repository.removeReaction(
+      shareId: shareId,
+      actorUid: uid,
+      shareOwnerUid: share.actorUid,
+    );
+    switch (result) {
+      case Success():
+        _clearError();
+      case Failure(error: final e):
+        _recordAppError('removeReaction', e);
     }
 
     notifyListeners();
@@ -608,10 +714,9 @@ class SocialProvider extends ChangeNotifier {
     final uid = _activeUid;
     if (uid == null) return;
 
-    try {
-      await _repository.markNotificationsRead(uid);
-    } catch (error, stackTrace) {
-      _recordError('markNotificationsRead', error, stackTrace);
+    final result = await _repository.markNotificationsRead(uid);
+    if (result case Failure(error: final e)) {
+      _recordAppError('markNotificationsRead', e);
     }
   }
 
@@ -645,7 +750,7 @@ class SocialProvider extends ChangeNotifier {
 
       _activeUid = uid;
       _isReady = true;
-      _error = null;
+      _clearError();
 
       if (shouldResubscribe) {
         AppLog.social.info('Subscribing social streams', payload: 'uid=$uid');
@@ -674,7 +779,7 @@ class SocialProvider extends ChangeNotifier {
       return;
     }
 
-    final payload = _buildSyncPayload();
+    final payload = _profileProjection.buildPayload();
     if (payload == null) return;
 
     final signature = _buildProfileSignature(payload);
@@ -682,27 +787,26 @@ class SocialProvider extends ChangeNotifier {
 
     _isSyncingProfile = true;
 
-    try {
-      await _repository.upsertProfile(payload);
+    final result = await _repository.upsertProfile(payload);
+    switch (result) {
+      case Success():
+        _lastProfileSignature = signature;
+        _clearError();
 
-      _lastProfileSignature = signature;
-      _error = null;
+        // Once the Firestore profile is the source of truth for the
+        // hero header's photoUrl, prime the image cache with it so the
+        // first widget mount renders without a placeholder frame.
+        precacheProfilePhoto(payload.photoUrl);
 
-      // Once the Firestore profile is the source of truth for the
-      // hero header's photoUrl, prime the image cache with it so the
-      // first widget mount renders without a placeholder frame.
-      precacheProfilePhoto(payload.photoUrl);
-
-      AppLog.social.debug(
-        'Profile synced',
-        payload: 'uid=${payload.uid} xp=${payload.stats.totalXp}',
-      );
-    } catch (error, stackTrace) {
-      _recordError('syncProfile', error, stackTrace);
-    } finally {
-      _isSyncingProfile = false;
-      notifyListeners();
+        AppLog.social.debug(
+          'Profile synced',
+          payload: 'uid=${payload.uid} xp=${payload.stats.totalXp}',
+        );
+      case Failure(error: final e):
+        _recordAppError('syncProfile', e);
     }
+    _isSyncingProfile = false;
+    notifyListeners();
 
     if (_profileSyncQueued) {
       _profileSyncQueued = false;
@@ -710,7 +814,12 @@ class SocialProvider extends ChangeNotifier {
     }
   }
 
-  SocialProfileSyncPayload? _buildSyncPayload() {
+  /// Assemble the canonical inputs the [SocialProfileProjection]
+  /// denormalises into a [SocialProfileSyncPayload].
+  ///
+  /// Returns null when the social session isn't ready to publish â€”
+  /// the projection treats that as a no-op.
+  SocialProfileInputs? _collectProfileInputs() {
     final authProvider = _authProvider;
     final progressionProvider = _progressionProvider;
 
@@ -724,92 +833,25 @@ class SocialProvider extends ChangeNotifier {
     }
 
     final user = authProvider.user!;
-
-    final unlockedAchievements =
-        _buildUnlockedAchievementsFromEngine(progressionProvider);
-
     final displayName = user.displayName?.trim().isNotEmpty == true
         ? user.displayName!.trim()
         : user.email.split('@').first;
-
     final handle = buildDefaultSocialHandle(
       uid: user.id,
       email: user.email,
       displayName: user.displayName,
     );
 
-    return SocialProfileSyncPayload(
+    return SocialProfileInputs(
       uid: user.id,
       displayName: displayName,
       email: user.email,
       handle: handle,
       photoUrl: user.photoUrl,
       socialEnabled: true,
-      stats: SocialUserStats(
-        level: progressionProvider.profile.level,
-        totalXp: progressionProvider.profile.totalXp,
-        unlockedAchievementCount: unlockedAchievements.length,
-        grantedRewardCount: _grantedRewardCount(progressionProvider),
-        bestStepsStreak:
-            progressionProvider.streakForObjective('daily_steps').bestStreak,
-        bestNutritionStreak: progressionProvider
-            .streakForDomain(ProgressionDomain.nutrition)
-            .bestStreak,
-        updatedAt: progressionProvider.lastEvaluatedAt ?? DateTime.now(),
-      ),
-      unlockedAchievements: unlockedAchievements,
+      engine: progressionProvider,
       equippedCosmetics: _buildEquippedCosmeticsSnapshot(),
     );
-  }
-
-  /// Builds the cloud-snapshot achievement list from the V2 ledger +
-  /// catalog. The published `rarity` field is the shared [Rarity] enum
-  /// (`rarity.name` on the wire); receivers with the achievement id in
-  /// their local catalog still resolve display through the V2 display
-  /// resolver — the cloud-side rarity is the unknown-id colour fallback.
-  List<SocialUnlockedAchievement> _buildUnlockedAchievementsFromEngine(
-    ProgressionEngineProvider engine,
-  ) {
-    final ledger = engine.ledger;
-    if (ledger == null) return const [];
-
-    final latestByNode = <String, DateTime>{};
-    final nodes = <String, AchievementNode>{};
-    for (final e in ledger.nodeCompletions) {
-      final node = engine.nodeById(e.nodeId);
-      if (node is! AchievementNode) continue;
-      nodes[e.nodeId] = node;
-      final existing = latestByNode[e.nodeId];
-      if (existing == null || e.timestamp.isAfter(existing)) {
-        latestByNode[e.nodeId] = e.timestamp;
-      }
-    }
-    if (latestByNode.isEmpty) return const [];
-
-    return [
-      for (final entry in latestByNode.entries)
-        SocialUnlockedAchievement(
-          achievementId: entry.key,
-          title: entry.key,
-          description: '',
-          rarity: nodes[entry.key]!.rarity,
-          domain: engine.domainForNodeId(entry.key).name,
-          unlockedAt: entry.value,
-        ),
-    ];
-  }
-
-  /// Total XP grant rows in the V2 ledger. V2 grants rewards
-  /// immediately at evaluation time — there is no claimed vs pending
-  /// split, so this single number stands in for both legacy counters.
-  int _grantedRewardCount(ProgressionEngineProvider engine) {
-    final ledger = engine.ledger;
-    if (ledger == null) return 0;
-    var count = 0;
-    for (final g in ledger.rewardGrants) {
-      if (g.rewardKind == RewardGrantKind.xp) count++;
-    }
-    return count;
   }
 
   SocialEquippedCosmetics _buildEquippedCosmeticsSnapshot() {
@@ -985,7 +1027,7 @@ class SocialProvider extends ChangeNotifier {
         _repository.watchProfilesByIds(friendIds).listen(
       (profiles) {
         _friends = profiles;
-        _error = null;
+        _clearError();
         notifyListeners();
       },
       onError: (error, stackTrace) {
@@ -1014,7 +1056,7 @@ class SocialProvider extends ChangeNotifier {
         _repository.watchRecentAchievementShares(actorUids: actorUids).listen(
       (shares) {
         _recentShares = shares;
-        _error = null;
+        _clearError();
         notifyListeners();
       },
       onError: (error, stackTrace) {
@@ -1135,7 +1177,16 @@ class SocialProvider extends ChangeNotifier {
     required String? fallbackPhotoUrl,
   }) async {
     try {
-      final profile = (await _repository.fetchProfilesByIds([uid])).firstOrNull;
+      final result = await _repository.fetchProfilesByIds([uid]);
+      final profile = switch (result) {
+        Success(value: final profiles) => profiles.firstOrNull,
+        // Best-effort actor snapshot — the share/react flow falls back
+        // to the Auth display name + photo if the Firestore profile
+        // lookup fails. Don't surface on lastError to avoid a
+        // misleading red banner when the user's own share still
+        // succeeds with the fallback identity.
+        Failure() => null,
+      };
       final displayName = profile?.displayName.trim().isNotEmpty == true
           ? profile!.displayName.trim()
           : fallbackDisplayName;
@@ -1171,14 +1222,42 @@ class SocialProvider extends ChangeNotifier {
     _notificationsSubscription = null;
   }
 
+  /// Records a raw exception caught outside of a Result-returning
+  /// repository call (Firebase Storage upload, Auth session reconcile,
+  /// stream `onError:`). The error is classified into the typed
+  /// [AppError] hierarchy so `lastError` stays uniform; the legacy
+  /// Czech display string flows through [_describeError] unchanged.
   void _recordError(String operation, Object error, StackTrace stackTrace) {
-    _error = _describeError(error);
+    final classified = classifyFirebaseError(
+      error,
+      stackTrace,
+      endpoint: 'social.$operation',
+    );
+    _recordAppError(operation, classified);
+  }
+
+  /// Records a typed [AppError] produced by a `Failure` arm of a
+  /// `Result`. Preserves the original error + stack trace for AppLog
+  /// while still surfacing the Czech display message via
+  /// [_describeError] for backwards compatibility with the existing
+  /// widget consumers.
+  void _recordAppError(String operation, AppError error) {
+    _lastError = error;
+    final originalForDescribe = error.originalError ?? error;
+    _error = _describeError(originalForDescribe);
 
     AppLog.social.error(
       operation,
-      err: error,
-      stackTrace: stackTrace,
+      err: error.originalError ?? error,
+      stackTrace: error.stackTrace ?? StackTrace.current,
     );
+  }
+
+  /// Clears the success/failure state on a successful call. Both the
+  /// typed [_lastError] and the legacy Czech [_error] reset.
+  void _clearError() {
+    _error = null;
+    _lastError = null;
   }
 
   String _describeError(Object error) {
@@ -1190,17 +1269,17 @@ class SocialProvider extends ChangeNotifier {
         case 'unauthorized':
           return 'Profilovou fotku nejde nahrat. Zkontroluj Firebase Storage pravidla.';
         case 'failed-precondition':
-          return 'Sociální data se ještě připravují. Zkus to prosím za chvíli znovu.';
+          return 'SociÃ¡lnÃ­ data se jeÅ¡tÄ› pÅ™ipravujÃ­. Zkus to prosÃ­m za chvÃ­li znovu.';
         case 'permission-denied':
-          return 'Přístup k sociálním datům byl zamítnut. Zkus se znovu přihlásit.';
+          return 'PÅ™Ã­stup k sociÃ¡lnÃ­m datÅ¯m byl zamÃ­tnut. Zkus se znovu pÅ™ihlÃ¡sit.';
         case 'unauthenticated':
-          return 'Pro sociální funkce je potřeba být přihlášený.';
+          return 'Pro sociÃ¡lnÃ­ funkce je potÅ™eba bÃ½t pÅ™ihlÃ¡Å¡enÃ½.';
         case 'unavailable':
-          return 'Sociální backend je dočasně nedostupný. Zkus to prosím později.';
+          return 'SociÃ¡lnÃ­ backend je doÄasnÄ› nedostupnÃ½. Zkus to prosÃ­m pozdÄ›ji.';
         case 'not-found':
-          return 'Požadovaná sociální položka nebyla nalezena.';
+          return 'PoÅ¾adovanÃ¡ sociÃ¡lnÃ­ poloÅ¾ka nebyla nalezena.';
         case 'already-exists':
-          return 'Tahle položka už v sociální části existuje.';
+          return 'Tahle poloÅ¾ka uÅ¾ v sociÃ¡lnÃ­ ÄÃ¡sti existuje.';
       }
     }
 
@@ -1208,31 +1287,31 @@ class SocialProvider extends ChangeNotifier {
 
     if (raw.contains('requires an index') ||
         raw.contains('failed-precondition')) {
-      return 'Sociální data se ještě připravují. Zkus to prosím za chvíli znovu.';
+      return 'SociÃ¡lnÃ­ data se jeÅ¡tÄ› pÅ™ipravujÃ­. Zkus to prosÃ­m za chvÃ­li znovu.';
     }
 
     if (raw.contains('permission-denied')) {
-      return 'Přístup k sociálním datům byl zamítnut. Zkus se znovu přihlásit.';
+      return 'PÅ™Ã­stup k sociÃ¡lnÃ­m datÅ¯m byl zamÃ­tnut. Zkus se znovu pÅ™ihlÃ¡sit.';
     }
 
     if (raw.contains('unauthenticated')) {
-      return 'Pro sociální funkce je potřeba být přihlášený.';
+      return 'Pro sociÃ¡lnÃ­ funkce je potÅ™eba bÃ½t pÅ™ihlÃ¡Å¡enÃ½.';
     }
 
     if (raw.contains('google sign-in did not return an id token')) {
-      return 'Google přihlášení se nepodařilo dokončit. Zkus to prosím znovu.';
+      return 'Google pÅ™ihlÃ¡Å¡enÃ­ se nepodaÅ™ilo dokonÄit. Zkus to prosÃ­m znovu.';
     }
 
     if (raw.contains('friend request not found')) {
-      return 'Žádost o přátelství už není dostupná.';
+      return 'Å½Ã¡dost o pÅ™Ã¡telstvÃ­ uÅ¾ nenÃ­ dostupnÃ¡.';
     }
 
     if (raw.contains('payload is empty')) {
-      return 'Sociální data dorazila nekompletní. Zkus to prosím znovu.';
+      return 'SociÃ¡lnÃ­ data dorazila nekompletnÃ­. Zkus to prosÃ­m znovu.';
     }
 
     if (raw.contains('a user cannot send a friend request to themselves')) {
-      return 'Sám sobě žádost o přátelství poslat nejde.';
+      return 'SÃ¡m sobÄ› Å¾Ã¡dost o pÅ™Ã¡telstvÃ­ poslat nejde.';
     }
 
     if (error is ArgumentError || error is StateError) {
@@ -1240,7 +1319,7 @@ class SocialProvider extends ChangeNotifier {
       if (message.isNotEmpty) return message;
     }
 
-    return 'V sociální části se něco nepovedlo. Zkus to prosím znovu.';
+    return 'V sociÃ¡lnÃ­ ÄÃ¡sti se nÄ›co nepovedlo. Zkus to prosÃ­m znovu.';
   }
 
   @override

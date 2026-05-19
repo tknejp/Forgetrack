@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/domain/rarity.dart';
@@ -81,7 +81,7 @@ class CelebrationEvent {
 
   /// Stable id used as a Flutter widget key and as a dedupe token in the
   /// queue. Pattern: `<source>|<entity-id>|<microsSinceEpoch>`.
-  final String id;
+  final String id; // lint-ignore: untyped-id — celebration queue dedupe token, composed at the producer (`<source>|<entity-id>|<micros>`)
 
   final CelebrationType type;
 

@@ -1,18 +1,31 @@
+import 'package:forgetrack/domain/journal/in_memory_journal.dart';
+import 'package:forgetrack/domain/journal/journal.dart';
+import 'package:forgetrack/domain/journal/journal_event.dart';
+import 'package:forgetrack/domain/player/player.dart';
+
 import '../../health_connect/application/fitness_provider.dart';
 import '../../health_connect/application/goals_provider.dart';
+import '../../health_connect/domain/goal_board.dart';
+import '../../health_connect/domain/health_snapshot.dart';
 import '../../nutrition/application/kaloricke_tabulky_provider.dart';
+import '../../nutrition/domain/nutrition_snapshot.dart';
 import '../domain/catalog/engine_catalog_context.dart';
-import '../domain/models/engine_evaluation_input.dart';
+import '../domain/models/engine_evaluation_context.dart';
+import '../domain/models/evaluation_overrides.dart';
+import '../domain/models/ledger_counters.dart';
 
-/// Builds [EngineEvaluationInput] + [EngineCatalogContext] from the
-/// app's live source providers. Equivalent role to V1's
-/// `ProviderProgressionSource` but produces the V2-shaped input.
+/// Builds [EngineEvaluationContext] + [EngineCatalogContext] from the
+/// app's live source providers.
 ///
-/// Today the source pulls "today" metrics + a coarse audit signature
-/// so the engine can detect when a recompute is needed. Lifetime
-/// totals, streaks, and rolling-window data are not yet derived from
-/// the live history — those land as the corresponding V2 metrics
-/// reach UI consumers.
+/// Phase 16 replaced the flat `EngineEvaluationInput` record with a
+/// bundle of structured VOs (`Player` + snapshots + `GoalBoard` +
+/// `Journal` + `LedgerCounters` + `EvaluationOverrides` +
+/// `evaluatedAt`). The provider keeps the same per-tick counter
+/// derivation it had pre-extraction (`_rewardCountByDomainFromLedger`
+/// etc. on the provider side) and passes the resulting maps as
+/// `LedgerCounters`. Phase 20 (`JournalProjection`) will move the
+/// derivation into the Journal aggregate itself; until then this
+/// source bridges the gap.
 class ProviderEngineInputSource {
   ProviderEngineInputSource({
     required this.goals,
@@ -42,109 +55,61 @@ class ProviderEngineInputSource {
     );
   }
 
-  EngineEvaluationInput buildInput({
-    required int totalXpFromLedger,
-    required int levelFromLedger,
-    int totalRewardCount = 0,
-    Map<String, int> rewardCountByRule = const {},
-    Map<String, int> rewardCountByDomain = const {},
-    Map<String, int> bestStreakByRule = const {},
-    Map<String, int> bestStreakByDomain = const {},
-    Map<String, int> nodeCompletionCounts = const {},
-    int totalQuestCompletions = 0,
-    Map<String, int> questCompletionsByBucket = const {},
-    int distinctActiveDays = 0,
-    Set<String> nodesCompletedToday = const {},
-    Map<String, int> comboPoolCompletionCounts = const {},
-    Map<String, double> objectiveActualOverrides = const {},
+  /// Assembles the engine's per-evaluation context. Caller-supplied
+  /// values cover the journal-derived counters + runtime overrides +
+  /// player snapshot (level / totalXp / rpgModeEnabled); the source
+  /// fabricates the health / nutrition snapshots and wraps the
+  /// caller-supplied event list as a [Journal].
+  EngineEvaluationContext buildContext({
+    required Player player,
+    required List<JournalEvent> events,
+    LedgerCounters counters = LedgerCounters.empty,
+    EvaluationOverrides overrides = EvaluationOverrides.empty,
   }) {
     final today = _today();
-    return EngineEvaluationInput(
+    final health = fitness.snapshotForDate(today);
+    final nutritionSnap = nutrition.snapshotForDate(today);
+    return EngineEvaluationContext(
+      player: player,
+      healthSnapshot: health,
+      nutritionSnapshot: nutritionSnap,
+      goalBoard: goals.board,
+      journal: InMemoryJournal(events),
+      counters: counters,
+      overrides: overrides,
       evaluatedAt: _clock(),
-      totalXp: totalXpFromLedger,
-      level: levelFromLedger,
-      stepsToday: fitness.stepsForDate(today),
-      stepsThisWeek: _stepsThisWeek(today),
-      stepsLifetime: _stepsLifetime(),
-      caloriesToday: nutrition.todayCalories.toDouble(),
-      proteinGramsToday: nutrition.todayProtein.toDouble(),
-      carbsGramsToday: nutrition.todayCarbs.toDouble(),
-      fatGramsToday: nutrition.todayFat.toDouble(),
-      fiberGramsToday: nutrition.todayFiber.toDouble(),
-      sleepMinutesToday:
-          fitness.sleepForDate(today)?.totalDuration.inMinutes ?? 0,
-      activityMinutesToday: _activityMinutesForDay(today),
-      weightLoggedToday: fitness.weightForDate(today) != null,
-      totalRewardCount: totalRewardCount,
-      rewardCountByRule: rewardCountByRule,
-      rewardCountByDomain: rewardCountByDomain,
-      bestStreakByRule: bestStreakByRule,
-      bestStreakByDomain: bestStreakByDomain,
-      nodeCompletionCounts: nodeCompletionCounts,
-      totalQuestCompletions: totalQuestCompletions,
-      questCompletionsByBucket: questCompletionsByBucket,
-      distinctActiveDays: distinctActiveDays,
-      nodesCompletedToday: nodesCompletedToday,
-      comboPoolCompletionCounts: comboPoolCompletionCounts,
-      objectiveActualOverrides: objectiveActualOverrides,
     );
   }
 
-  /// Stable signature for change detection. Matches V1's pattern —
-  /// when this string changes, the engine re-evaluates. Includes the
-  /// lifetime / week-rolling step totals so long-term objectives bound
-  /// to LifetimeScope progress bars refresh as the player walks, not
-  /// just on app restart.
+  /// Stable signature for change detection. Matches the pre-refactor
+  /// pattern — when this string changes, the engine re-evaluates.
   String auditSignature() {
     final today = _today();
+    final health = fitness.snapshotForDate(today);
+    final nutritionSnap = nutrition.snapshotForDate(today);
     return [
       goals.dailySteps,
       goals.dailyCalories,
       goals.dailyProtein,
       goals.sleepHours,
       goals.weeklyActivityMins,
-      fitness.stepsForDate(today),
-      _stepsThisWeek(today),
-      _stepsLifetime(),
-      nutrition.todayCalories,
-      nutrition.todayProtein,
-      fitness.sleepForDate(today)?.totalDuration.inMinutes ?? 0,
-      _activityMinutesForDay(today),
-      fitness.weightForDate(today) != null ? 1 : 0,
+      health.signature,
+      nutritionSnap.signature,
     ].join('|');
   }
 
-  /// Sum of all step records the FitnessProvider has loaded. Acts as a
-  /// pragmatic lifetime total — bounded by the user's Health Connect
-  /// history retention. Pre-tracking days simply do not contribute.
-  int _stepsLifetime() {
-    return fitness.stepsHistory.fold<int>(0, (sum, r) => sum + r.steps);
-  }
+  /// Builds a [HealthSnapshot] anchored at the engine's current
+  /// "today". Used by callers that need snapshot data without
+  /// constructing a full evaluation context.
+  HealthSnapshot currentHealthSnapshot() => fitness.snapshotForDate(_today());
 
-  /// Sum of steps from Monday (start of ISO week) up to and including
-  /// `today`. Drives weekly-scoped step objectives.
-  int _stepsThisWeek(DateTime today) {
-    final monday = DateTime(today.year, today.month, today.day)
-        .subtract(Duration(days: today.weekday - 1));
-    var sum = 0;
-    for (final r in fitness.stepsHistory) {
-      final d = DateTime(r.date.year, r.date.month, r.date.day);
-      if (!d.isBefore(monday) && !d.isAfter(today)) sum += r.steps;
-    }
-    return sum;
-  }
+  /// Builds a [NutritionSnapshot] anchored at the engine's current
+  /// "today". Symmetrical convenience to [currentHealthSnapshot].
+  NutritionSnapshot currentNutritionSnapshot() =>
+      nutrition.snapshotForDate(_today());
 
-  int _activityMinutesForDay(DateTime day) {
-    return fitness.activities.fold<int>(0, (sum, activity) {
-      final activityDay = DateTime(
-        activity.startTime.year,
-        activity.startTime.month,
-        activity.startTime.day,
-      );
-      if (activityDay != day) return sum;
-      return sum + activity.duration.inMinutes;
-    });
-  }
+  /// Builds a [GoalBoard] snapshot from the bound [GoalsProvider].
+  GoalBoard currentGoalBoard() => goals.board;
 
   DateTime _today() {
     final now = _clock();

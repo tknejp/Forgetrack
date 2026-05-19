@@ -1,4 +1,4 @@
-import '../domain/models/ledger_event.dart';
+import 'package:forgetrack/domain/journal/journal_event.dart';
 import '../domain/repository/ledger_snapshot.dart';
 import '../domain/repository/progression_engine_repository.dart';
 
@@ -24,7 +24,7 @@ class InMemoryProgressionEngineRepository
   Future<LedgerSnapshot> loadLedger() async => _snapshot();
 
   @override
-  Future<LedgerSnapshot> appendEvents(List<LedgerEvent> events) async {
+  Future<LedgerSnapshot> appendEvents(List<JournalEvent> events) async {
     for (final e in events) {
       if (!_seenKeys.add(e.eventKey)) continue;
       switch (e) {

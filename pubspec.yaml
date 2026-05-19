@@ -14,6 +14,11 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
 
+  # Transitive via Flutter SDK; promoted to a direct dep so lib/domain/
+  # can use @immutable without importing package:flutter/foundation.dart
+  # (forbidden in pure-domain files by test/domain_purity_test.dart).
+  meta: ^1.11.0
+
   # --- Fitness data (Health Connect na Androidu) ---
   health: ^13.3.1
 
@@ -74,6 +79,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   isar_generator: ^3.1.0+1
   build_runner: ^2.4.8
+  fake_cloud_firestore: ^4.1.1
 
 flutter:
   uses-material-design: true

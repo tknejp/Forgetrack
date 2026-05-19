@@ -183,7 +183,7 @@
         { "id": "pref-joined-at", "name": "forgetrack_joined_at_iso", "role": "ISO timestamp prvního dne v appce — floor pro retroactive claim window. Reseeds z nejstaršího ledger eventu po pullAndMerge, takže cross-device se chová správně i bez explicitního sync.", "writers": ["ProgressionEngineProvider._resolveJoinedAt"], "readers": ["ProgressionEngineProvider.joinedAt"] },
         { "id": "pref-card-order", "name": "home_card_order", "role": "Pořadí dashboard karet (drag-and-drop).", "writers": ["HomeCardOrderProvider"], "readers": ["HomeCardOrderProvider"] },
         { "id": "pref-devtools", "name": "devtools_debug_mode / devtools_bg_debug_notifications_enabled / devtools_access_granted_last_known / devtools_overrides", "role": "DevTools state a overrides.", "writers": ["DevToolsProvider"], "readers": ["DevToolsProvider", "BackgroundSyncService"] },
-        { "id": "pref-pinned-emblems", "name": "pinned_emblems_{uid}", "role": "Per-user vybrané emblems na profil.", "writers": ["PinnedEmblemsStore"], "readers": ["PinnedEmblemsStore"] },
+        { "id": "pref-pinned-emblems", "name": "pinned_emblems_{uid}", "role": "Per-user 11-slotový EmblemBoard pro profile-header showcase. Wire format zachován z Phase 12 (comma-joined string) — devices roll forward bez migrace.", "writers": ["EmblemBoardProvider"], "readers": ["EmblemBoardProvider"] },
         { "id": "pref-theme", "name": "forgetrack-theme (jen docs site)", "role": "Téma docs (light / dark). Není součástí appky.", "writers": ["docs/site/js/app.js"], "readers": ["docs/site/js/app.js"] }
       ]
     },

@@ -26,7 +26,7 @@ class SocialAvatar extends StatelessWidget {
     final initials = name
         .trim()
         .split(RegExp(r'\s+'))
-        .where((w) => w.isNotEmpty)
+        .where((w) => w.isNotEmpty) // lint-ignore: widget-no-logic — initials derivation from display-name string
         .map((w) => w[0].toUpperCase())
         .take(2)
         .join();

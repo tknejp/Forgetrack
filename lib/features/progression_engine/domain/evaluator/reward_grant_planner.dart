@@ -1,9 +1,9 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:meta/meta.dart';
 
-import '../models/engine_evaluation_input.dart';
-import '../models/ledger_event.dart';
-import '../models/progression_node_definition.dart';
-import '../models/reward_definition.dart';
+import '../models/engine_evaluation_context.dart';
+import 'package:forgetrack/domain/journal/journal_event.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
+import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import '../repository/ledger_snapshot.dart';
 import 'progression_node_resolver.dart';
 
@@ -21,7 +21,7 @@ class PlannedRewardGrant {
   });
 
   final String eventKey;
-  final ProgressionNode node;
+  final ProgressionEntry node;
   final int rewardOrdinal;
   final RewardDefinition reward;
   final String? periodKey;
@@ -32,17 +32,17 @@ class PlannedRewardGrant {
 /// returns the list of reward grants the engine should attempt to
 /// append.
 ///
-/// The planner does not touch the ledger and does not scale XP — XP
+/// The planner does not touch the ledger and does not scale XP â€” XP
 /// scaling happens in the [RewardGrantService] at append time using
 /// the running level. The planner only builds keys + payloads.
 class RewardGrantPlanner {
   const RewardGrantPlanner();
 
   List<PlannedRewardGrant> plan({
-    required Iterable<ProgressionNode> completedNodes,
+    required Iterable<ProgressionEntry> completedNodes,
     required LedgerSnapshot ledger,
     required Map<String, String?> periodKeyByNodeId,
-    required EngineEvaluationInput input,
+    required EngineEvaluationContext context,
   }) {
     final out = <PlannedRewardGrant>[];
     for (final node in completedNodes) {
@@ -50,11 +50,11 @@ class RewardGrantPlanner {
       for (var i = 0; i < node.rewards.length; i++) {
         final reward = node.rewards[i];
         // Conditional bonus rewards drop out silently when their
-        // condition fails — the player claimed too late, slept too
+        // condition fails â€” the player claimed too late, slept too
         // little, etc. No ledger event is emitted; the bonus just
         // doesn't happen this time. The next claim re-evaluates.
         if (reward is BonusXpReward &&
-            !_bonusConditionMet(reward.condition, input)) {
+            !_bonusConditionMet(reward.condition, context)) {
           continue;
         }
         final eventKey = ProgressionNodeResolver.rewardEventKey(
@@ -77,12 +77,13 @@ class RewardGrantPlanner {
 
   bool _bonusConditionMet(
     BonusXpCondition condition,
-    EngineEvaluationInput input,
+    EngineEvaluationContext context,
   ) {
     return switch (condition) {
       CompletedBeforeHour(:final hour) =>
-        input.evaluatedAt.toLocal().hour < hour,
-      SleepAtLeast(:final minutes) => input.sleepMinutesToday >= minutes,
+        context.evaluatedAt.toLocal().hour < hour,
+      SleepAtLeast(:final minutes) =>
+        context.healthSnapshot.sleepMinutesToday >= minutes,
     };
   }
 }

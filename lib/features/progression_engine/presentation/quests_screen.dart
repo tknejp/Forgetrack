@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../domain/progression/player/player_quest_lifecycle.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/l10n.dart';
 import '../../../shared/theme/design_tokens.dart';
@@ -80,7 +81,7 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
     Offset? from,
   }) async {
     final provider = context.read<ProgressionEngineProvider>();
-    if (provider.currentInput == null) return;
+    if (provider.currentContext == null) return;
 
     final origin = from ?? _centerOfKey(_pillKeyFor(quest.nodeId));
     if (origin != null) {
@@ -96,7 +97,7 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
 
   Future<void> _claimAll(List<EngineQuestProgress> claimable) async {
     final provider = context.read<ProgressionEngineProvider>();
-    if (provider.currentInput == null || claimable.isEmpty) return;
+    if (provider.currentContext == null || claimable.isEmpty) return;
 
     final origins = [
       for (final q in claimable) _centerOfKey(_pillKeyFor(q.nodeId)),
@@ -141,7 +142,6 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
     final l10n = context.l10n;
     final provider = context.watch<ProgressionEngineProvider>();
     final daily = provider.currentDailyQuests;
-    final weekly = provider.currentWeeklyQuests;
 
     if (provider.isLoading && provider.ledger == null) {
       return Scaffold(
@@ -162,22 +162,18 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
       );
     }
 
-    final dailyClaimable = daily.where((q) => q.isAvailableForClaim).toList();
-    final weeklyClaimable =
-        weekly.where((q) => q.isAvailableForClaim).toList();
-    // Daily slot is sticky for the whole day: claimed cards stay in the
-    // section reading as "done" until midnight rolls a new rotation, so
-    // we pass the full list (no `!isCompleted` filter). The count label
-    // uses unclaimed quests only.
-    final dailyUnclaimed = daily.where((q) => !q.isCompleted).toList();
-    // Weekly section now mirrors long-term / chapter rules: a quest
-    // that's claimable-but-not-claimed moves to DOKONČENÉ so the row
-    // doesn't double-list. Daily stays as-is (claimable still shows
-    // in the daily section so the player can claim from the active
-    // surface).
-    final weeklyActive = weekly
-        .where((q) => !q.isCompleted && !q.isAvailableForClaim)
-        .toList();
+    // Phase 19 of the domain refactor moved lifecycle filtering off
+    // this build() and into the provider as per-bucket projections:
+    // `currentDailyClaimableQuests`, `currentDailyUnclaimedQuests`,
+    // `currentWeeklyClaimableQuests`, `currentWeeklyActiveQuests`.
+    // The widget now reads hot lists and only switches on
+    // `q.lifecycle` for per-card rendering. Domain semantics
+    // (which lifecycle stays in the daily slot, which weekly moves
+    // to DOKONČENÉ) are documented on the provider getters.
+    final dailyClaimable = provider.currentDailyClaimableQuests;
+    final weeklyClaimable = provider.currentWeeklyClaimableQuests;
+    final dailyUnclaimed = provider.currentDailyUnclaimedQuests;
+    final weeklyActive = provider.currentWeeklyActiveQuests;
     final chapters = provider.currentChapterQuests;
     final longTerm = provider.currentLongTermQuests;
     final locked = provider.lockedQuests;
@@ -727,7 +723,7 @@ class _CompletedSection extends StatelessWidget {
     for (final e in entries) {
       final source = e.chainQuests.isEmpty ? [e.representative] : e.chainQuests;
       for (final q in source) {
-        if (q.isAvailableForClaim && !q.isCompleted) out.add(q);
+        if (q.lifecycle is QuestCompletedPendingClaim) out.add(q);
       }
     }
     return out;

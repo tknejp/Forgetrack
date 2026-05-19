@@ -1,26 +1,38 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:meta/meta.dart';
 
-import '../models/activation_policy.dart';
-import '../models/claim_policy.dart';
-import '../models/engine_evaluation_input.dart';
-import '../models/node_state.dart';
-import '../models/progression_node_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/activation_policy.dart';
+import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';
+import '../models/engine_evaluation_context.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import '../repository/ledger_snapshot.dart';
 import 'objective_evaluator.dart';
 
 /// What the node resolver decides for one node on this evaluation.
+///
+/// Classification is derived from the booleans, not stored as a
+/// separate enum tag (R.2 cleanup, 2026-05-19):
+///   * **locked** = `!eligibleByConditions`
+///   * **completed** = `eligibleByConditions && completed`
+///   * **available** = otherwise (eligible but not yet a completion
+///     event candidate — objective in progress, or manual-claim node
+///     waiting on the player's tap)
+///
+/// Consumers pattern-match on the booleans directly. The legacy
+/// `NodeState` enum was a resolver-internal remnant of the V2 origin
+/// design; player-facing surfaces use per-aggregate sealed lifecycles
+/// (`PlayerQuestLifecycle` / `PlayerAchievementLifecycle` /
+/// `ChapterLifecycle`) instead.
 @immutable
 class NodeResolution {
   const NodeResolution({
     required this.node,
-    required this.state,
     required this.eligibleByConditions,
     required this.objectiveCompleted,
+    required this.completed,
     required this.periodKey,
   });
 
-  final ProgressionNode node;
-  final NodeState state;
+  final ProgressionEntry node;
 
   /// Were the unlock conditions satisfied? Distinct from completion:
   /// a node may be eligible (conditions met) but not yet completed
@@ -31,12 +43,19 @@ class NodeResolution {
   /// `objectiveId` (chapter completions, content unlocks).
   final bool? objectiveCompleted;
 
+  /// True iff the resolver classifies this node as a completion event
+  /// candidate this run — either already in the ledger (idempotent
+  /// re-emit suppressed by the engine's event-key dedup) or
+  /// freshly completed (auto-claim objective just satisfied, or
+  /// manual-claim already claimed).
+  final bool completed;
+
   /// Period anchor used for ledger key composition. May be null for
   /// lifetime-scoped nodes.
   final String? periodKey;
 }
 
-/// Pure resolver. Decides each node's [NodeState] from:
+/// Pure resolver. Classifies each node from:
 ///   - the bound objective's outcome,
 ///   - unlock conditions,
 ///   - claim policy,
@@ -51,10 +70,10 @@ class ProgressionNodeResolver {
   /// Resolves one node. The caller is responsible for passing the
   /// objective outcome map and the appropriate eligibility sets.
   NodeResolution resolve({
-    required ProgressionNode node,
+    required ProgressionEntry node,
     required ObjectiveOutcome? objectiveOutcome,
     required bool eligibleByConditions,
-    required EngineEvaluationInput input,
+    required EngineEvaluationContext context,
     required LedgerSnapshot ledger,
   }) {
     final periodKey = objectiveOutcome?.periodKey;
@@ -62,12 +81,12 @@ class ProgressionNodeResolver {
     // RPG-gated nodes: hidden when RPG off (engine treats as locked
     // and skips evaluation).
     final rpgGated = node.activationPolicy != ActivationPolicy.always;
-    if (rpgGated && !input.rpgModeEnabled) {
+    if (rpgGated && !context.player.rpgModeEnabled) {
       return NodeResolution(
         node: node,
-        state: NodeState.locked,
         eligibleByConditions: false,
         objectiveCompleted: null,
+        completed: false,
         periodKey: periodKey,
       );
     }
@@ -75,9 +94,9 @@ class ProgressionNodeResolver {
     if (!eligibleByConditions) {
       return NodeResolution(
         node: node,
-        state: NodeState.locked,
         eligibleByConditions: false,
         objectiveCompleted: objectiveOutcome?.completed,
+        completed: false,
         periodKey: periodKey,
       );
     }
@@ -95,9 +114,9 @@ class ProgressionNodeResolver {
     if (alreadyCompleted || (node.claimPolicy == ClaimPolicy.manual && alreadyClaimed)) {
       return NodeResolution(
         node: node,
-        state: NodeState.completed,
         eligibleByConditions: true,
         objectiveCompleted: objectiveCompleted,
+        completed: true,
         periodKey: periodKey,
       );
     }
@@ -107,9 +126,9 @@ class ProgressionNodeResolver {
       // a granting event.
       return NodeResolution(
         node: node,
-        state: NodeState.available,
         eligibleByConditions: true,
         objectiveCompleted: false,
+        completed: false,
         periodKey: periodKey,
       );
     }
@@ -119,22 +138,22 @@ class ProgressionNodeResolver {
       // Player must claim before completion lands in the ledger.
       return NodeResolution(
         node: node,
-        state: NodeState.available,
         eligibleByConditions: true,
         objectiveCompleted: true,
+        completed: false,
         periodKey: periodKey,
       );
     }
     return NodeResolution(
       node: node,
-      state: NodeState.completed,
       eligibleByConditions: true,
       objectiveCompleted: true,
+      completed: true,
       periodKey: periodKey,
     );
   }
 
-  // ── Event key helpers ────────────────────────────────────────────
+  // â”€â”€ Event key helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // These are also used by the engine when appending events; kept
   // here so resolver and engine agree on the format.
 

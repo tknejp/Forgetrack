@@ -2,14 +2,16 @@
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../domain/progression/player/player_quest_lifecycle.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../../shared/widgets/ft_expand_chevron.dart';
 import '../../../../shared/widgets/xp_claim_pill.dart';
-import '../../domain/progression_domain.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_domain.dart';
+import 'package:forgetrack/features/progression_engine/domain/progression_domain_chrome.dart';
 import '../widgets/progression_primitives.dart';
 import '../../application/progression_engine_provider.dart';
-import '../../domain/models/progression_node_definition.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import 'engine_chapter_card.dart' show EngineChapterChainPreview;
 import 'engine_companion_pill.dart';
 
@@ -201,8 +203,8 @@ class EngineCompletedQuestCard extends StatelessWidget {
       // step by step.
       final claimable = entry.chainQuests.isEmpty
           ? entry.representative
-          : entry.chainQuests.firstWhere(
-              (q) => q.isAvailableForClaim && !q.isCompleted,
+          : entry.chainQuests.firstWhere( // lint-ignore: widget-no-logic — earliest-claimable step pick on the provider-built chain list
+              (q) => q.lifecycle is QuestCompletedPendingClaim,
               orElse: () => entry.representative,
             );
       return XpClaimPillData.claimable(
@@ -232,7 +234,7 @@ class _Leading extends StatelessWidget {
     required this.dimmed,
   });
 
-  final QuestNode node;
+  final Quest node;
   final ProgressionDomain domain;
   final double size;
   final bool dimmed;
@@ -326,7 +328,13 @@ class _ExpandedBody extends StatelessWidget {
   EngineQuestProgress? _nextLockedStep() {
     if (!entry.isChain) return null;
     for (final q in entry.chainQuests) {
-      if (!q.isCompleted && !q.isAvailableForClaim) return q;
+      // Anything that isn't claimed yet AND isn't already pending
+      // claim is the "next locked step" — covers both
+      // QuestLocked (gates unmet) and QuestAvailable (in progress).
+      final lifecycle = q.lifecycle;
+      if (lifecycle is QuestLocked || lifecycle is QuestAvailable) {
+        return q;
+      }
     }
     return null;
   }
@@ -335,7 +343,7 @@ class _ExpandedBody extends StatelessWidget {
 class _NextStepHint extends StatelessWidget {
   const _NextStepHint({required this.node, required this.l10n});
 
-  final QuestNode node;
+  final Quest node;
   final AppLocalizations l10n;
 
   @override
@@ -405,7 +413,7 @@ class _Companions extends StatelessWidget {
     required this.l10n,
   });
 
-  final List<ProgressionNode> companions;
+  final List<ProgressionEntry> companions;
   final EngineQuestProgress quest;
   final Color accent;
   final AppLocalizations l10n;
@@ -456,7 +464,7 @@ class _CompanionRow extends StatelessWidget {
     required this.l10n,
   });
 
-  final ProgressionNode node;
+  final ProgressionEntry node;
   final EngineQuestProgress quest;
   final Color accent;
   final AppLocalizations l10n;

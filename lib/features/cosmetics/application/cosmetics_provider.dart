@@ -3,14 +3,19 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../../../core/logging/app_log.dart';
+import '../../../core/result/result.dart';
 import '../data/cosmetic_entitlements_source.dart';
 import '../domain/cosmetic_catalog.dart';
 import '../domain/cosmetic_models.dart';
 import '../domain/cosmetic_reveal_evaluator.dart';
 import '../domain/cosmetic_reveal_state.dart';
 import '../domain/cosmetic_unlock_rule.dart';
+import '../domain/cosmetic_unlock_rules.dart';
 import '../domain/cosmetic_unlock_snapshot.dart';
+import '../domain/inventory.dart';
+import '../domain/player_cosmetic_lifecycle.dart';
 import 'cosmetics_service.dart';
+import 'player_cosmetic_lifecycle_service.dart';
 
 const _log = AppLogger('COSMETICS', scope: 'provider');
 
@@ -91,6 +96,155 @@ class CosmeticsProvider extends ChangeNotifier {
       snapshot: snapshot,
       ownedIds: ownedIds,
     );
+  }
+
+  static const PlayerCosmeticLifecycleService _lifecycleService =
+      PlayerCosmeticLifecycleService();
+
+  /// Build an [Inventory] read projection of every enabled cosmetic.
+  ///
+  /// Phase 10 surface for the cosmetic lifecycle (`docs/domain_model
+  /// /migration_plan.md` §Phase 10). The widget tree calls this once
+  /// per build with the engine-surfaced manually-claimable node ids
+  /// (`ProgressionEngineProvider.availableNodeIds`) so the Inventory
+  /// captures `CosmeticClaimable` for companions whose availability
+  /// gate fired. Returns [Inventory.empty] when the provider has no
+  /// loaded state yet (pre-bind / pre-first-load).
+  ///
+  /// Not cached: the inputs (`_state`, `_revealSnapshot`,
+  /// `claimableNodeIds` from a peer provider) change with every
+  /// progression dispatch, and the build is O(catalog size) — well
+  /// inside the same budget as [computeRevealResults] which the
+  /// inventory builds on top of. A cache layer can land later if a
+  /// profiler flags it (proposal §Phase 20 JournalProjection makes
+  /// caching uniform across all read projections).
+  Inventory buildInventory({
+    required Set<String> claimableNodeIds,
+    DateTime? evaluatedAt,
+  }) {
+    final currentState = _state;
+    if (currentState == null) return Inventory.empty;
+    final revealResults = computeRevealResults(kCosmeticUnlockRules);
+    return _lifecycleService.build(
+      catalog: _service.catalog,
+      unlocked: currentState.unlocked,
+      revealResults: revealResults,
+      claimableNodeIds: claimableNodeIds,
+      evaluatedAt: evaluatedAt ?? DateTime.now(),
+    );
+  }
+
+  /// Returns the ordered list of [Cosmetic] entries the cosmetics
+  /// grid should display, with the same filter + sort policy the
+  /// pre-extraction `cosmetics_screen.build()` applied inline.
+  ///
+  /// Phase 19 of the domain refactor moved this off the widget into
+  /// the provider per proposal §7 anti-pattern #1 — `build()` must
+  /// not run domain logic. The widget now reads the projection +
+  /// renders cards; lifecycle-based decisions stay here.
+  ///
+  /// **Display policy (non-devtools).**
+  ///   - Owned cosmetics always show.
+  ///   - [Companion] cosmetics surface for `teased` + `claimable` too
+  ///     so the player sees what's brewing.
+  ///   - Frames / relics / backgrounds / emblems stay hidden until
+  ///     owned (Tier-1 rewards where a locked preview would be
+  ///     clutter).
+  ///   - Hidden lifecycles are always culled.
+  ///
+  /// **Sort policy (non-devtools).**
+  ///   - Sorted by lifecycle precedence: Owned < Claimable < Teased
+  ///     (with progress) < Teased (no progress) < Hidden.
+  ///   - Within Owned: rarity desc → unlockedAt desc → sortOrder asc
+  ///     → id asc.
+  ///   - Within Teased / others: by sortOrder asc.
+  ///
+  /// **Devtools mode** bypasses the filter (every catalog entry
+  /// surfaces) and sorts by [CosmeticType] index → sortOrder.
+  List<Cosmetic> displayCosmeticsForGrid({
+    required Set<String> claimableNodeIds,
+    required bool devTools,
+    Inventory? inventory,
+  }) {
+    final currentState = _state;
+    if (currentState == null) return const [];
+
+    if (devTools) {
+      return _service.catalog.all.toList()
+        ..sort(_byTypeThenSortOrder);
+    }
+
+    final inv = inventory ??
+        buildInventory(claimableNodeIds: claimableNodeIds);
+
+    return _service.catalog.enabled
+        .where((def) {
+          final lifecycle = inv.byIdString(def.id)?.lifecycle;
+          if (lifecycle == null) return false;
+          if (lifecycle is CosmeticOwned) return true;
+          if (def is Companion) {
+            return lifecycle is! CosmeticHidden;
+          }
+          return false;
+        })
+        .toList()
+      ..sort((a, b) => _sortByLifecycle(a, b, currentState, inv));
+  }
+
+  static int _byTypeThenSortOrder(Cosmetic a, Cosmetic b) {
+    final typeRank = CosmeticType.values
+        .indexOf(a.type)
+        .compareTo(CosmeticType.values.indexOf(b.type));
+    if (typeRank != 0) return typeRank;
+    return a.sortOrder.compareTo(b.sortOrder);
+  }
+
+  static int _sortByLifecycle(
+    Cosmetic a,
+    Cosmetic b,
+    UserCosmeticsState state,
+    Inventory inventory,
+  ) {
+    final lifecycleA = inventory.byIdString(a.id)?.lifecycle;
+    final lifecycleB = inventory.byIdString(b.id)?.lifecycle;
+
+    final rankA = _lifecycleSortRank(lifecycleA);
+    final rankB = _lifecycleSortRank(lifecycleB);
+    if (rankA != rankB) return rankA.compareTo(rankB);
+
+    if (lifecycleA is CosmeticOwned) {
+      return _compareUnlockedCosmetics(a, b, state);
+    }
+    return a.sortOrder.compareTo(b.sortOrder);
+  }
+
+  static int _lifecycleSortRank(PlayerCosmeticLifecycle? lifecycle) {
+    return switch (lifecycle) {
+      CosmeticOwned() => 0,
+      CosmeticClaimable() => 1,
+      CosmeticTeased(:final totalConditions) when totalConditions > 0 => 2,
+      CosmeticTeased() => 3,
+      CosmeticHidden() => 4,
+      null => 3,
+    };
+  }
+
+  static int _compareUnlockedCosmetics(
+    Cosmetic a,
+    Cosmetic b,
+    UserCosmeticsState state,
+  ) {
+    final rarity = b.rarity.index.compareTo(a.rarity.index);
+    if (rarity != 0) return rarity;
+    final unlockedAtA = state.unlocked[a.id]?.unlockedAt;
+    final unlockedAtB = state.unlocked[b.id]?.unlockedAt;
+    if (unlockedAtA != null && unlockedAtB != null) {
+      final unlockedAt = unlockedAtB.compareTo(unlockedAtA);
+      if (unlockedAt != 0) return unlockedAt;
+    }
+    final sortOrder = a.sortOrder.compareTo(b.sortOrder);
+    if (sortOrder != 0) return sortOrder;
+    return a.id.compareTo(b.id);
   }
 
   static CosmeticUnlockSnapshot _minimalSnapshot(Set<String> ownedIds) {
@@ -423,19 +577,31 @@ class CosmeticsProvider extends ChangeNotifier {
     String uid,
     UserCosmeticsState state,
   ) async {
-    List<CosmeticEntitlement> entitlements;
-    try {
-      entitlements = await _entitlementsSource.loadForUser(uid);
-    } catch (error, st) {
-      _log.warn(
-        'entitlement load skipped',
-        payload: 'uid=$uid error=$error',
-      );
-      _log.debug(
-        'entitlement load details',
-        payload: st.toString(),
-      );
-      return state;
+    final loadResult = await _entitlementsSource.loadForUser(uid);
+    final List<CosmeticEntitlement> entitlements;
+    switch (loadResult) {
+      case Success(value: final v):
+        entitlements = v;
+      case Failure(error: final e):
+        // R.4 (2026-05-19): typed failure surfacing. Transient Firestore
+        // outages stay at `warn` so AppLog stops bleeding red — they
+        // self-heal on the next bind. Permanent failures (permission
+        // denied, schema-drift validation) log at `error` so devtools /
+        // crash reports surface them.
+        if (e.isTransient) {
+          _log.warn(
+            'entitlement load skipped (transient)',
+            payload: 'uid=$uid error=${e.label}',
+          );
+        } else {
+          _log.error(
+            'entitlement load skipped (permanent)',
+            payload: 'uid=$uid error=${e.label}',
+            err: e.originalError,
+            stackTrace: e.stackTrace,
+          );
+        }
+        return state;
     }
 
     var nextState = state;

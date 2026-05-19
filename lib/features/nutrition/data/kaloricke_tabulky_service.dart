@@ -17,6 +17,20 @@ const _ktBaseUrl = 'https://www.kaloricketabulky.cz';
 const _ktEmailKey = 'kt_email';
 const _ktPasswordHashKey = 'kt_pwd_hash';
 
+/// Auth-layer failure from KalorickeTabulky (cookie expired, 401,
+/// re-login required). Treated as a transient [NetworkError] by
+/// [classifyKtError]; consumers that want to pattern-match on severity
+/// route the caught exception through the classifier.
+///
+/// **R.4 (2026-05-19) — KT methods stay bare (no [Result] wrap).** The
+/// service already throws typed exceptions ([KtAuthException],
+/// [KtApiException]) which `classifyKtError` maps to [AppError] at the
+/// outermost boundary ([BackgroundSyncService] callback,
+/// [KtSyncCoordinator] for foreground syncs). Migrating every method
+/// to `Future<Result<T, AppError>>` would double the classification
+/// surface for no consumer benefit — the typed exception IS the
+/// boundary contract, the classifier maps it to the typed [AppError]
+/// hierarchy exactly once.
 class KtAuthException implements Exception {
   final String message;
   const KtAuthException(this.message);

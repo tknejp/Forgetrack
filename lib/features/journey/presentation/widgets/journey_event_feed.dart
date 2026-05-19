@@ -25,7 +25,7 @@ class JourneyEventFeed extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final filtered = events
-        .where((e) => journeyFeedMatchesFilter(selectedFilter, e))
+        .where((e) => journeyFeedMatchesFilter(selectedFilter, e)) // lint-ignore: widget-no-logic — UI feed filter, no domain derivation
         .toList(growable: false);
 
     return Column(

@@ -59,19 +59,32 @@ the catalog can grow independently of gameplay, and a future feature
 ```
 lib/features/cosmetics/
 ├── domain/
-│   ├── cosmetic_models.dart       # enums + immutable data classes
-│   ├── cosmetic_catalog.dart      # static seed definitions + helpers
-│   └── cosmetic_unlock_rules.dart # baseline unlock set
+│   ├── cosmetic_models.dart                 # sealed Cosmetic + 7 subtypes,
+│   │                                        # enums, Loadout, UnlockedCosmetic,
+│   │                                        # UserCosmeticsState
+│   ├── cosmetic_catalog.dart                # static seed definitions + helpers
+│   ├── cosmetic_unlock_rules.dart           # baseline unlock set
+│   ├── ids.dart                             # CosmeticId extension type
+│   ├── player_cosmetic_lifecycle.dart       # sealed 4-state lifecycle (Phase 10)
+│   ├── player_cosmetic.dart                 # CosmeticId + lifecycle VO
+│   ├── inventory.dart                       # Map<CosmeticId, PlayerCosmetic> projection
+│   ├── cosmetic_lifecycle_helpers.dart      # hidesIdentity + showsChecklist (proposal §4.3)
+│   ├── companion_availability_lookup.dart   # cosmeticId → CompanionAvailability node (Phase 11)
+│   ├── emblem_board.dart                    # 11-slot profile showcase VO (Phase 12)
+│   ├── cosmetic_reveal_state.dart           # evaluator output enum + checklist row VO
+│   └── consumed_relics.dart                 # relic-by-companion derivation
 ├── data/
-│   ├── cosmetics_repository.dart           # abstract persistence interface
-│   ├── in_memory_cosmetics_repository.dart # test/dev implementation
-│   ├── isar_cosmetics_repository.dart      # production local persistence
+│   ├── cosmetics_repository.dart            # abstract persistence interface
+│   ├── in_memory_cosmetics_repository.dart  # test/dev implementation
+│   ├── isar_cosmetics_repository.dart       # production local persistence
 │   └── local/
-│       ├── cosmetics_database.dart         # Isar instance owner
-│       └── cosmetics_local_models.dart     # @Collection records (+ .g.dart)
+│       ├── cosmetics_database.dart          # Isar instance owner
+│       └── cosmetics_local_models.dart      # @Collection records (+ .g.dart)
 ├── application/
-│   ├── cosmetics_service.dart  # business layer (no Flutter dependency)
-│   └── cosmetics_provider.dart # ChangeNotifier for UI binding
+│   ├── cosmetics_service.dart                  # business layer (no Flutter dependency)
+│   ├── cosmetics_provider.dart                 # ChangeNotifier for UI binding
+│   ├── player_cosmetic_lifecycle_service.dart  # builds Inventory from primitives (Phase 10)
+│   └── emblem_board_provider.dart              # 11-slot showcase persistence (Phase 12)
 ├── config/
 │   └── cosmetics_config.dart   # asset resolver, slots, flags, validation
 ├── presentation/
@@ -90,10 +103,14 @@ lib/features/cosmetics/
 | `CosmeticRarity`     | enum — common / rare / epic / legendary               |
 | `CosmeticRegion`     | enum — narrative region (forestTrail, ruinedPass, …)  |
 | `CosmeticUnlockSource` | enum — defaultBaseline, progressionLevel, achievement, quest, manual, promotional, other (open-set; sourceType on records is a free string) |
-| `CosmeticDefinition` | static metadata for one cosmetic — id, type, rarity, region, localized text resolvers, asset keys, flags, `metadata` bag |
+| `Cosmetic` | **sealed** parent (Phase 9) — id, rarity, region, localized text resolvers, asset keys, flags, `metadata` bag, derived `CosmeticType get type` |
+| `Frame / Background / Companion / RelicCosmetic / Emblem / TitleFlair / MapEffect` | 7 concrete subtypes of `Cosmetic` — pattern-match discriminator (`def is Companion`) replaces the legacy `cosmetic.type ==` enum check |
 | `UnlockedCosmetic`   | per-user unlock record — id, timestamp, source        |
-| `EquippedCosmetics`  | snapshot of equipped slots; one nullable id per slot  |
-| `UserCosmeticsState` | uid + unlocked map + equipped + updatedAt             |
+| `Loadout` (Phase 12 rename ex-`EquippedCosmetics`) | snapshot of 7 worn cosmetic slots; one nullable id per slot |
+| `UserCosmeticsState` | uid + unlocked map + equipped Loadout + updatedAt     |
+| `PlayerCosmetic` + `PlayerCosmeticLifecycle` (Phase 10) | sealed 4-state lifecycle (Hidden / Teased / Claimable / Owned) + immutable VO carrying CosmeticId + lifecycle |
+| `Inventory` (Phase 10) | per-user `Map<CosmeticId, PlayerCosmetic>` read projection — `CosmeticsProvider.buildInventory(claimableNodeIds:)` |
+| `EmblemBoard` + `EmblemBoardProvider` (Phase 12) | 11-slot profile-header showcase VO + per-device SharedPrefs persistence (`pinned_emblems_{uid}`); distinct from `Loadout.emblemId` (worn) |
 | `CanEquipResult`     | `{ok, reason}` for non-throwing UI checks             |
 | `CosmeticsException` | typed exception with stable `code` + human `message`  |
 
@@ -178,7 +195,7 @@ For non-throwing pre-checks (e.g. greying out a tile in a grid), use
 
 ## How to add a new cosmetic
 
-1. Append a `CosmeticDefinition` to `CosmeticCatalog.definitions` with a
+1. Append a `Cosmetic` to `CosmeticCatalog.definitions` with a
    unique `id` and the right `type` / `rarity` / `region`.
 2. Add the artwork file under
    `assets/cosmetics/<bucket>/<id-without-prefix>.png` (see
@@ -195,7 +212,7 @@ For non-throwing pre-checks (e.g. greying out a tile in a grid), use
 ## How to add a new cosmetic type
 
 1. Add a case to the `CosmeticType` enum in `cosmetic_models.dart`.
-2. Add a corresponding nullable id field to `EquippedCosmetics`, plus a
+2. Add a corresponding nullable id field to `Loadout`, plus a
    branch in `slotId` and `copyWithSlot`.
 3. Add the type to `CosmeticsConfig.standard()`'s `allowedSlots` (or gate
    it behind a flag like `mapEffect`).
