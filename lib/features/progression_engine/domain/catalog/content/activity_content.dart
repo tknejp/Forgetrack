@@ -99,8 +99,9 @@ List<ProgressionEntry> activityNodes() {
       descriptionKey: (l) => l.progRuleDailyActivityHintedDesc,
       // Base 50 XP, +50 bonus when claimed before 12:00 (morning).
       rewards: const [
-        XpReward(amount: 50),
+        XpReward(sourceKind: RewardSourceKind.activityXp, amount: 50),
         BonusXpReward(
+          sourceKind: RewardSourceKind.activityXp,
           amount: 50,
           condition: CompletedBeforeHour(12),
         ),
@@ -116,7 +117,7 @@ List<ProgressionEntry> activityNodes() {
       lockedHintKey: (l) => l.progRuleWeeklyActivityDesc,
       titleKey: (l) => l.progRuleWeeklyActivity,
       descriptionKey: (l) => l.progRuleWeeklyActivityDesc,
-      rewards: const [XpReward(amount: 120)],
+      rewards: const [XpReward(sourceKind: RewardSourceKind.questXp, amount: 120)],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.uncommon,
       assetKey: questAssetActivity,

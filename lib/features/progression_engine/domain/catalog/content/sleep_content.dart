@@ -71,7 +71,7 @@ List<ProgressionEntry> sleepNodes() {
       lockedHintKey: (l) => l.progRuleDailySleepDesc,
       titleKey: (l) => l.progRuleDailySleep,
       descriptionKey: (l) => l.progRuleDailySleepDesc,
-      rewards: const [XpReward(amount: 50)],
+      rewards: const [XpReward(sourceKind: RewardSourceKind.sleepXp, amount: 50)],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.common,
       assetKey: questAssetStreak,

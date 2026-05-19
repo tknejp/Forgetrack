@@ -440,7 +440,7 @@ Quest _standalone({
     prerequisiteNodeIds: [chapterEntryGateNodeId],
     titleKey: titleKey,
     descriptionKey: descriptionKey,
-    rewards: [XpReward(amount: baseXp), ...bonusRewards],
+    rewards: [XpReward(sourceKind: RewardSourceKind.chapterXp, amount: baseXp), ...bonusRewards],
     contentTags: const [ContentTag.core, ContentTag.fitness],
     rarity: rarity,
     assetKey: assetKey,
@@ -483,7 +483,7 @@ Quest _chainStep({
     prerequisiteNodeIds: [prereqId],
     titleKey: titleKey,
     descriptionKey: descriptionKey,
-    rewards: [XpReward(amount: baseXp), ...bonusRewards],
+    rewards: [XpReward(sourceKind: RewardSourceKind.chapterXp, amount: baseXp), ...bonusRewards],
     contentTags: const [ContentTag.core, ContentTag.fitness],
     rarity: rarity,
     assetKey: assetKey,
@@ -565,7 +565,7 @@ List<ProgressionEntry> chapterSideQuests() {
       rarity: Rarity.uncommon,
       assetKey: questAssetForestTrialIcon,
       bonusRewards: const [
-        BonusXpReward(amount: 60, condition: CompletedBeforeHour(18)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 60, condition: CompletedBeforeHour(18)),
       ],
     ),
 
@@ -592,7 +592,7 @@ List<ProgressionEntry> chapterSideQuests() {
       rarity: Rarity.uncommon,
       assetKey: questAssetRuinsDisciplineIcon,
       bonusRewards: const [
-        BonusXpReward(amount: 60, condition: CompletedBeforeHour(18)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 60, condition: CompletedBeforeHour(18)),
       ],
     ),
 
@@ -619,7 +619,7 @@ List<ProgressionEntry> chapterSideQuests() {
       rarity: Rarity.uncommon,
       assetKey: questAssetMineDescentIcon,
       bonusRewards: const [
-        BonusXpReward(amount: 90, condition: CompletedBeforeHour(18)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 90, condition: CompletedBeforeHour(18)),
       ],
     ),
 
@@ -640,7 +640,7 @@ List<ProgressionEntry> chapterSideQuests() {
       rarity: Rarity.uncommon,
       assetKey: questAssetMineDescentIcon,
       bonusRewards: const [
-        BonusXpReward(amount: 100, condition: CompletedBeforeHour(14)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 100, condition: CompletedBeforeHour(14)),
       ],
     ),
     _chainStep(
@@ -659,7 +659,7 @@ List<ProgressionEntry> chapterSideQuests() {
       rarity: Rarity.rare,
       assetKey: questAssetMineDescentIcon,
       bonusRewards: const [
-        BonusXpReward(amount: 140, condition: SleepAtLeast(minutes: 420)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 140, condition: SleepAtLeast(minutes: 420)),
       ],
     ),
 
@@ -675,7 +675,7 @@ List<ProgressionEntry> chapterSideQuests() {
       rarity: Rarity.uncommon,
       assetKey: questAssetForgeMomentumIcon,
       bonusRewards: const [
-        BonusXpReward(amount: 120, condition: CompletedBeforeHour(12)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 120, condition: CompletedBeforeHour(12)),
       ],
     ),
     _standalone(
@@ -689,7 +689,7 @@ List<ProgressionEntry> chapterSideQuests() {
       rarity: Rarity.rare,
       assetKey: questAssetForgeMomentumIcon,
       bonusRewards: const [
-        BonusXpReward(amount: 140, condition: CompletedBeforeHour(18)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 140, condition: CompletedBeforeHour(18)),
       ],
     ),
 
@@ -705,7 +705,7 @@ List<ProgressionEntry> chapterSideQuests() {
       rarity: Rarity.rare,
       assetKey: questAssetUnderwayPactIcon,
       bonusRewards: const [
-        BonusXpReward(amount: 150, condition: SleepAtLeast(minutes: 420)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 150, condition: SleepAtLeast(minutes: 420)),
       ],
     ),
     _standalone(
@@ -719,7 +719,7 @@ List<ProgressionEntry> chapterSideQuests() {
       rarity: Rarity.rare,
       assetKey: questAssetUnderwayPactIcon,
       bonusRewards: const [
-        BonusXpReward(amount: 180, condition: CompletedBeforeHour(14)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 180, condition: CompletedBeforeHour(14)),
       ],
     ),
 
@@ -740,7 +740,7 @@ List<ProgressionEntry> chapterSideQuests() {
       rarity: Rarity.rare,
       assetKey: questAssetUnderwayPactIcon,
       bonusRewards: const [
-        BonusXpReward(amount: 200, condition: CompletedBeforeHour(14)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 200, condition: CompletedBeforeHour(14)),
       ],
     ),
     _chainStep(
@@ -759,7 +759,7 @@ List<ProgressionEntry> chapterSideQuests() {
       rarity: Rarity.rare,
       assetKey: questAssetUnderwayPactIcon,
       bonusRewards: const [
-        BonusXpReward(amount: 280, condition: SleepAtLeast(minutes: 420)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 280, condition: SleepAtLeast(minutes: 420)),
       ],
     ),
 
@@ -775,7 +775,7 @@ List<ProgressionEntry> chapterSideQuests() {
       rarity: Rarity.rare,
       assetKey: questAssetFrostboundOathIcon,
       bonusRewards: const [
-        BonusXpReward(amount: 200, condition: CompletedBeforeHour(12)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 200, condition: CompletedBeforeHour(12)),
       ],
     ),
     _standalone(
@@ -789,7 +789,7 @@ List<ProgressionEntry> chapterSideQuests() {
       rarity: Rarity.rare,
       assetKey: questAssetFrostboundOathIcon,
       bonusRewards: const [
-        BonusXpReward(amount: 240, condition: SleepAtLeast(minutes: 420)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 240, condition: SleepAtLeast(minutes: 420)),
       ],
     ),
 
@@ -805,7 +805,7 @@ List<ProgressionEntry> chapterSideQuests() {
       rarity: Rarity.rare,
       assetKey: questAssetIcewalkerRouteIcon,
       bonusRewards: const [
-        BonusXpReward(amount: 260, condition: CompletedBeforeHour(12)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 260, condition: CompletedBeforeHour(12)),
       ],
     ),
     _chainStep(
@@ -824,7 +824,7 @@ List<ProgressionEntry> chapterSideQuests() {
       rarity: Rarity.rare,
       assetKey: questAssetIcewalkerRouteIcon,
       bonusRewards: const [
-        BonusXpReward(amount: 220, condition: CompletedBeforeHour(18)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 220, condition: CompletedBeforeHour(18)),
       ],
     ),
     _chainStep(
@@ -843,7 +843,7 @@ List<ProgressionEntry> chapterSideQuests() {
       rarity: Rarity.epic,
       assetKey: questAssetIcewalkerRouteIcon,
       bonusRewards: const [
-        BonusXpReward(amount: 320, condition: SleepAtLeast(minutes: 420)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 320, condition: SleepAtLeast(minutes: 420)),
       ],
     ),
 
@@ -859,7 +859,7 @@ List<ProgressionEntry> chapterSideQuests() {
       rarity: Rarity.rare,
       assetKey: questAssetMountainAscentIcon,
       bonusRewards: const [
-        BonusXpReward(amount: 300, condition: CompletedBeforeHour(14)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 300, condition: CompletedBeforeHour(14)),
       ],
     ),
     _standalone(
@@ -873,7 +873,7 @@ List<ProgressionEntry> chapterSideQuests() {
       rarity: Rarity.epic,
       assetKey: questAssetMountainAscentIcon,
       bonusRewards: const [
-        BonusXpReward(amount: 340, condition: SleepAtLeast(minutes: 420)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 340, condition: SleepAtLeast(minutes: 420)),
       ],
     ),
 
@@ -889,7 +889,7 @@ List<ProgressionEntry> chapterSideQuests() {
       rarity: Rarity.epic,
       assetKey: questAssetDragonroadIcon,
       bonusRewards: const [
-        BonusXpReward(amount: 360, condition: CompletedBeforeHour(14)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 360, condition: CompletedBeforeHour(14)),
       ],
     ),
     _chainStep(
@@ -908,7 +908,7 @@ List<ProgressionEntry> chapterSideQuests() {
       rarity: Rarity.epic,
       assetKey: questAssetDragonroadIcon,
       bonusRewards: const [
-        BonusXpReward(amount: 320, condition: CompletedBeforeHour(14)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 320, condition: CompletedBeforeHour(14)),
       ],
     ),
     _chainStep(
@@ -927,7 +927,7 @@ List<ProgressionEntry> chapterSideQuests() {
       rarity: Rarity.epic,
       assetKey: questAssetDragonroadIcon,
       bonusRewards: const [
-        BonusXpReward(amount: 420, condition: SleepAtLeast(minutes: 420)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 420, condition: SleepAtLeast(minutes: 420)),
       ],
     ),
 
@@ -943,7 +943,7 @@ List<ProgressionEntry> chapterSideQuests() {
       rarity: Rarity.epic,
       assetKey: questAssetDragonrockSovereignIcon,
       bonusRewards: const [
-        BonusXpReward(amount: 400, condition: CompletedBeforeHour(18)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 400, condition: CompletedBeforeHour(18)),
       ],
     ),
     _chainStep(
@@ -962,7 +962,7 @@ List<ProgressionEntry> chapterSideQuests() {
       rarity: Rarity.epic,
       assetKey: questAssetDragonrockSovereignIcon,
       bonusRewards: const [
-        BonusXpReward(amount: 360, condition: SleepAtLeast(minutes: 420)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 360, condition: SleepAtLeast(minutes: 420)),
       ],
     ),
     _chainStep(
@@ -981,7 +981,7 @@ List<ProgressionEntry> chapterSideQuests() {
       rarity: Rarity.epic,
       assetKey: questAssetDragonrockSovereignIcon,
       bonusRewards: const [
-        BonusXpReward(amount: 420, condition: CompletedBeforeHour(14)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 420, condition: CompletedBeforeHour(14)),
       ],
     ),
     _chainStep(
@@ -1000,7 +1000,7 @@ List<ProgressionEntry> chapterSideQuests() {
       rarity: Rarity.epic,
       assetKey: questAssetDragonrockSovereignIcon,
       bonusRewards: const [
-        BonusXpReward(amount: 460, condition: SleepAtLeast(minutes: 420)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 460, condition: SleepAtLeast(minutes: 420)),
       ],
     ),
     // **Apex finale.** A literal perfect day â€” every one of the 8
@@ -1022,8 +1022,8 @@ List<ProgressionEntry> chapterSideQuests() {
       rarity: Rarity.legendary,
       assetKey: questAssetDragonrockSovereignIcon,
       bonusRewards: const [
-        BonusXpReward(amount: 500, condition: SleepAtLeast(minutes: 420)),
-        BonusXpReward(amount: 500, condition: CompletedBeforeHour(18)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 500, condition: SleepAtLeast(minutes: 420)),
+        BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 500, condition: CompletedBeforeHour(18)),
       ],
     ),
   ];

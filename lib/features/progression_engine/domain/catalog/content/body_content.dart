@@ -40,7 +40,7 @@ List<ProgressionEntry> bodyNodes() {
       lockedHintKey: (l) => l.progRuleDailyWeightLogDesc,
       titleKey: (l) => l.progRuleDailyWeightLog,
       descriptionKey: (l) => l.progRuleDailyWeightLogDesc,
-      rewards: const [XpReward(amount: 20)],
+      rewards: const [XpReward(sourceKind: RewardSourceKind.activityXp, amount: 20)],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.common,
       assetKey: questAssetActivity,

@@ -151,8 +151,9 @@ List<ProgressionEntry> stepsNodes() {
       // Base 80 XP, +80 bonus when claimed before 18:00 (2Ã— total).
       // Rewards on-the-day completion vs. last-minute claims.
       rewards: const [
-        XpReward(amount: 80),
+        XpReward(sourceKind: RewardSourceKind.activityXp, amount: 80),
         BonusXpReward(
+          sourceKind: RewardSourceKind.activityXp,
           amount: 80,
           condition: CompletedBeforeHour(18),
         ),

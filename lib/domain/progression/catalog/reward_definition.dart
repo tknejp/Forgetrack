@@ -1,8 +1,10 @@
 import 'bonus_xp_condition.dart';
 import 'content_tag.dart';
 import 'ids.dart';
+import 'reward_source_kind.dart';
 
 export 'bonus_xp_condition.dart';
+export 'reward_source_kind.dart';
 
 /// One concrete reward attached to a [ProgressionEntry]. Sealed so the
 /// dispatcher and celebration mapper get exhaustive switch checking
@@ -17,9 +19,21 @@ sealed class RewardDefinition {
 /// XP reward — the only reward that flows through the level / scaling
 /// policy. Amount is the *base* XP; the engine scales at claim time
 /// using the running level and the multiplier table.
+///
+/// [sourceKind] tags which companion-buff bucket the reward feeds.
+/// Required so the engine can apply the equipped companion's buff
+/// multiplicatively at grant time. Optional only to keep the
+/// constructor backwards-compatible during the catalog audit roll-
+/// out — the lint test [reward_source_kind_coverage_test] asserts
+/// that every catalog `XpReward` has a non-null [sourceKind].
 class XpReward extends RewardDefinition {
-  const XpReward({required this.amount, super.contentTags});
+  const XpReward({
+    required this.amount,
+    this.sourceKind,
+    super.contentTags,
+  });
   final int amount;
+  final RewardSourceKind? sourceKind;
 }
 
 /// Conditional XP bonus — only fires when the attached
@@ -31,15 +45,20 @@ class XpReward extends RewardDefinition {
 /// The planner filters bonus grants whose condition fails; failed
 /// bonuses leave no trace in the ledger (no "unclaimed bonus"
 /// event), they simply never happen.
+///
+/// [sourceKind] mirrors the [XpReward] tagging — bonus XP feeds
+/// the same buff bucket as the base reward it accompanies.
 class BonusXpReward extends RewardDefinition {
   const BonusXpReward({
     required this.amount,
     required this.condition,
+    this.sourceKind,
     super.contentTags,
   });
 
   final int amount;
   final BonusXpCondition condition;
+  final RewardSourceKind? sourceKind;
 }
 
 /// Cosmetic unlock — frame, background, emblem, title flair, map
