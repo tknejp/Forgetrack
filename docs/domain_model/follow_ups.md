@@ -116,13 +116,8 @@ Po dokončení Track A je doménový refactor **permanently closed**. Žádné n
 **Scope:**
 
 - ~~**R.3.a — Journey map sweep**~~ ✅ Done 2026-05-19. Shipped as `R.3.a: journey map widget consumer migration`. All 9 `.where` / `.firstWhere` / `.indexWhere` hits in `journey_interactive_map.dart` annotated with per-line `// lint-ignore: widget-no-logic — <reason>` markers (collision-free layout pick, route-JSON filter, collapsed mini-preview slice, route-line anchor set, current-route-point reduction, post-frame focus index). No `JourneyProvider` extraction — journey has no `application/` layer and `JourneyAdapter` (in `presentation/widgets/`) already builds the `JourneyCheckpoint` presentation VOs with display-state flags from `ProgressionEngineProvider`; the widget filters those pre-built VOs for UI-mode slicing only, no domain derivation. Baseline `widget-no-logic` lowered 46 → 37. See ADR `r3a-journey-map-projections` in [docs/site/data/decisions.json](../site/data/decisions.json) for context + decision + alternatives (incl. why a `JourneyProvider` is deferred until journey grows a second data source).
-- **R.3.b — HC screens sweep** (was Phase 19.d follow-up §2.18):
-  - `body_screen.dart` (3 hits), `activities_screen.dart` (3 hits), `sleep_screen.dart` (2 hits).
-  - Determine per-hit whether filter is domain-derived (move to provider) or UI-driven (stay + `lint-ignore`).
-- **R.3.c — Chapter widget migration** (was §2.19, Phase 13.b):
-  - `engine_chapter_card.dart` (752 LoC) consume `playerChapterProgress.byId(chapterId).lifecycle` instead of deriving inline.
-  - `quests_screen.dart` `_ChapterSection` consume `progress.inProgress / progress.completed` accessors.
-  - Drop redundant chain-derivation utilities from view models.
+- ~~**R.3.b — HC screens sweep**~~ ✅ Done 2026-05-19. Shipped as `R.3.b: health-connect screens widget consumer migration`. All 8 hits annotated with `// lint-ignore: widget-no-logic — <reason>`: `body_screen.dart` × 3 (drops records missing optional `bodyFat`/`bodyWater` columns for chart aggregation), `activities_screen.dart` × 3 (UI date filters for today / period selector + bulk-claim eligibility subset), `sleep_screen.dart` × 2 (UI period range + stage-data display filter). Per-hit decision: every filter is either an on-screen period selector slice or a missing-data display skip — no domain state derivation in widgets. Baseline `widget-no-logic` lowered 37 → 29. See ADR `r3b-hc-screens-display-filters` in [docs/site/data/decisions.json](../site/data/decisions.json).
+- ~~**R.3.c — Chapter widget migration**~~ ✅ Already shipped (no-op for R.3.c sub-PR). Phase 13 introduced the `playerChapterProgress` read projection (`ProgressionEngineProvider.playerChapterProgress`); Phase 19 (UI sweep) moved chapter quest filtering off `quests_screen.dart` into provider projections `currentChapterQuests` + `nextLockedChapter` (see Phase 19 comment at quests_screen.dart:165-172). `_ChapterSection` consumes the pre-built `chapters` list with zero inline derivation; `EngineChapterCard` reads its `EngineQuestProgress` shape directly with no `.where` hits. Re-verified during R.3.b — `lib/features/progression_engine/presentation/widgets/engine_chapter_card.dart` (752 LoC) and `quests_screen.dart` `_ChapterSection` carry **0 widget-no-logic violations**. The redundant chain-derivation cleanup from the original §2.19 scope landed alongside the Phase 19 sweep (chain quests come from `provider.chainQuestsFor(chainId)`). No additional code change needed; this sub-PR closes by acknowledgement.
 - Update Phase 21 lint baselines — expect `widget-no-logic` baseline drop to <20.
 
 **DoD:**
@@ -265,7 +260,7 @@ Drobnosti, které stojí samostatně, ale fit do jednoho PR pokud appetite:
 |---|---|---|---|
 | ~~R.1 Catalog migration + typed cross-references~~ | ✅ 2026-05-19 (`537335b` + `da44091`) | High | — |
 | ~~R.2 NodeState cleanup~~ | ✅ 2026-05-19 | Medium | — |
-| R.3 Widget consumer migration (a/b/c) | 5-6 days total | Medium | Split into 3 PRs — a/3 done (2026-05-19) |
+| ~~R.3 Widget consumer migration (a/b/c)~~ | ✅ 2026-05-19 (a, b shipped; c was already shipped via Phase 13 + Phase 19) | Medium | — |
 | R.4 Repository contracts Result hardening | 2-3 days | High | — |
 | R.5 Test pyramid hardening (a/b/c) | 3-4 days total | Low | Split into 3 PRs |
 | R.6 Lint baseline cleanup | 2 days | Low | After R.1, R.3, R.4 |

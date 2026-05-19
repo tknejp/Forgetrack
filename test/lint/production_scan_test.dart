@@ -38,7 +38,7 @@ const int _baselineDomainPurityFeatureDomain = 25;
 const int _baselineUntypedIdLibDomain = 7;
 const int _baselineUntypedIdFeatureDomain = 36;
 const int _baselineRawTextLiteral = 19;
-const int _baselineWidgetCollectionLogic = 37;
+const int _baselineWidgetCollectionLogic = 29;
 
 void main() {
   group('Lint ratchets — production scan', () {
