@@ -198,3 +198,28 @@ flutter gen-l10n             # only if ARB files changed
 When you touched UI: actually drive the screen in a debug build (the
 PR description's test plan section is where you record what you
 poked).
+
+### Integration tests
+
+`test/integration/` holds repository-level integration tests that
+exercise the hybrid local + cloud paths against a `fake_cloud_firestore`
+backing plus the in-memory progression engine repository. They run as
+part of the regular `flutter test` invocation — no Node.js, no Firebase
+CLI, no emulator process required.
+
+```sh
+flutter test test/integration/       # run only the integration suite
+```
+
+Adding a new integration test:
+
+- prefer `FakeFirebaseFirestore` over wiring a real Firebase Emulator —
+  it covers the same wire codec without the CI tax;
+- use `InMemoryProgressionEngineRepository` for the local backing rather
+  than spinning up an Isar instance — the local repo's contract is
+  identical (eventKey dedupe, append-only), so an Isar-specific bug is
+  out of scope for these tests.
+
+The ADR `r5c-emulator-integration-tests` documents the choice; revisit
+it if a wire-format regression slips past `fake_cloud_firestore` and a
+real emulator becomes the only way to catch it.
