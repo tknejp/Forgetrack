@@ -171,8 +171,8 @@ class _CompanionClaimFlowState extends State<CompanionClaimFlow>
 
 /// `ready` phase body: outer breathing ring + silhouette + the two
 /// gating relic thumbs floating either side + primary CTA. Visual
-/// shape matches the prior `CompanionClaimReveal` idle frame so
-/// C1's no-visual-diff promise survives the C2 swap.
+/// shape matches the prior placeholder reveal so C1's no-visual-diff
+/// promise survives the C2 swap.
 class _ReadyBody extends StatelessWidget {
   const _ReadyBody({
     required this.companion,

@@ -313,8 +313,8 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                   else if (definition is Companion)
                     SizedBox(
                       key: _companionSlotKey,
-                      width: 128,
-                      height: 128,
+                      width: 130,
+                      height: 130,
                       child: ValueListenableBuilder<bool>(
                         valueListenable: _hideCompanion,
                         builder: (context, hidden, child) {
@@ -328,8 +328,8 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                           );
                         },
                         child: CompanionFakeIdlePreview(
-                          width: 128,
-                          height: 128,
+                          width: 130,
+                          height: 130,
                           glowColor: color,
                           enableGlow: false,
                           floatDistance: 2.5,
@@ -339,7 +339,7 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                             definition: definition,
                             assetPath: assetPath,
                             color: color,
-                            size: 128,
+                            size: 130,
                             framed: false,
                             glow: true,
                             fit: BoxFit.contain,
