@@ -4302,6 +4302,50 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cosmeticCompanionClaimTapToContinue => 'Tap anywhere to continue';
 
   @override
+  String get cosmeticBuffSectionTitle => 'XP bonus';
+
+  @override
+  String cosmeticBuffFlat(int percent, String source) {
+    return '+$percent% XP $source';
+  }
+
+  @override
+  String cosmeticBuffEmber(int min, int max) {
+    return '+$min–$max% XP from streak (grows with flame)';
+  }
+
+  @override
+  String cosmeticBuffRaven(int daily, int weekly) {
+    return '+$daily% daily / +$weekly% weekly quest XP';
+  }
+
+  @override
+  String cosmeticBuffLynx(int opener, int deep) {
+    return '+$opener–$deep% chapter XP (grows with chain depth)';
+  }
+
+  @override
+  String get cosmeticBuffSourceActivityXp => 'from activities';
+
+  @override
+  String get cosmeticBuffSourceNutritionXp => 'from nutrition';
+
+  @override
+  String get cosmeticBuffSourceSleepXp => 'from sleep';
+
+  @override
+  String get cosmeticBuffSourceStreakXp => 'from streak';
+
+  @override
+  String get cosmeticBuffSourceQuestXp => 'from quests';
+
+  @override
+  String get cosmeticBuffSourceChapterXp => 'from chapter quests';
+
+  @override
+  String get cosmeticBuffSourceAllXp => 'from all XP';
+
+  @override
   String get cosmeticRelicConsumedBadge => 'Used';
 
   @override

@@ -6,6 +6,7 @@ import '../../../../l10n/l10n.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../cosmetics/config/cosmetics_config.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
+import '../../../cosmetics/presentation/widgets/companion_buff_chip.dart';
 import '../../../cosmetics/presentation/widgets/companion_fake_idle_preview.dart';
 import '../../../progression_engine/domain/display/progression_display_resolver.dart';
 import '../../../progression_engine/domain/policy/level_policy.dart';
@@ -184,6 +185,10 @@ class ProfileDetailHeroCard extends StatelessWidget {
           ),
           // Companion standee — warm radial glow on the ground + asset on
           // top. Centered roughly at right:6 / bottom:14 per the spec.
+          // When the catalog row carries an XP buff (every player-facing
+          // Companion does today), a compact buff chip sits above the
+          // standee so the player reads the mechanical effect alongside
+          // the sprite.
           if (companion != null) ...[
             const Positioned(
               right: 20,
@@ -193,9 +198,26 @@ class ProfileDetailHeroCard extends StatelessWidget {
             Positioned(
               right: _kCompanionRight,
               bottom: _kCompanionBottom,
-              child: _CompanionStandee(
-                definition: companion,
-                size: _kCompanionSize,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (companion is Companion && companion.buff != null)
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 150),
+                      child: CompanionBuffChip(
+                        buff: companion.buff!,
+                        color:
+                            RarityPalette.forRarity(companion.rarity).color,
+                        compact: true,
+                      ),
+                    ),
+                  const SizedBox(height: 4),
+                  _CompanionStandee(
+                    definition: companion,
+                    size: _kCompanionSize,
+                  ),
+                ],
               ),
             ),
           ],

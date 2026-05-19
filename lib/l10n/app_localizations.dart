@@ -7599,6 +7599,78 @@ abstract class AppLocalizations {
   /// **'Tap anywhere to continue'**
   String get cosmeticCompanionClaimTapToContinue;
 
+  /// Header above the companion XP buff chip in the details sheet + hero card.
+  ///
+  /// In en, this message translates to:
+  /// **'XP bonus'**
+  String get cosmeticBuffSectionTitle;
+
+  /// Flat companion buff label. {percent} is integer; {source} is one of the cosmeticBuffSource* strings.
+  ///
+  /// In en, this message translates to:
+  /// **'+{percent}% XP {source}'**
+  String cosmeticBuffFlat(int percent, String source);
+
+  /// Ember Sprite dynamic buff — streak-length tier range.
+  ///
+  /// In en, this message translates to:
+  /// **'+{min}–{max}% XP from streak (grows with flame)'**
+  String cosmeticBuffEmber(int min, int max);
+
+  /// Ruin Raven dynamic buff — daily vs weekly quest emphasis.
+  ///
+  /// In en, this message translates to:
+  /// **'+{daily}% daily / +{weekly}% weekly quest XP'**
+  String cosmeticBuffRaven(int daily, int weekly);
+
+  /// Cave Lynx dynamic buff — chapter chain depth range.
+  ///
+  /// In en, this message translates to:
+  /// **'+{opener}–{deep}% chapter XP (grows with chain depth)'**
+  String cosmeticBuffLynx(int opener, int deep);
+
+  /// No description provided for @cosmeticBuffSourceActivityXp.
+  ///
+  /// In en, this message translates to:
+  /// **'from activities'**
+  String get cosmeticBuffSourceActivityXp;
+
+  /// No description provided for @cosmeticBuffSourceNutritionXp.
+  ///
+  /// In en, this message translates to:
+  /// **'from nutrition'**
+  String get cosmeticBuffSourceNutritionXp;
+
+  /// No description provided for @cosmeticBuffSourceSleepXp.
+  ///
+  /// In en, this message translates to:
+  /// **'from sleep'**
+  String get cosmeticBuffSourceSleepXp;
+
+  /// No description provided for @cosmeticBuffSourceStreakXp.
+  ///
+  /// In en, this message translates to:
+  /// **'from streak'**
+  String get cosmeticBuffSourceStreakXp;
+
+  /// No description provided for @cosmeticBuffSourceQuestXp.
+  ///
+  /// In en, this message translates to:
+  /// **'from quests'**
+  String get cosmeticBuffSourceQuestXp;
+
+  /// No description provided for @cosmeticBuffSourceChapterXp.
+  ///
+  /// In en, this message translates to:
+  /// **'from chapter quests'**
+  String get cosmeticBuffSourceChapterXp;
+
+  /// No description provided for @cosmeticBuffSourceAllXp.
+  ///
+  /// In en, this message translates to:
+  /// **'from all XP'**
+  String get cosmeticBuffSourceAllXp;
+
   /// Pill shown on a relic that has been used to summon a companion.
   ///
   /// In en, this message translates to:

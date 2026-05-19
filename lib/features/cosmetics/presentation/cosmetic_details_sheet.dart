@@ -17,6 +17,7 @@ import '../domain/cosmetic_unlock_rules.dart';
 import '../domain/consumed_relics.dart';
 import '../domain/player_cosmetic_lifecycle.dart';
 import 'cosmetics_screen_internals.dart';
+import 'widgets/companion_buff_chip.dart';
 import 'widgets/companion_claim_flow.dart';
 import 'widgets/companion_fake_idle_preview.dart';
 import 'widgets/cosmetic_asset_thumb.dart';
@@ -449,6 +450,26 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                     fontSize: 13,
                     height: 1.45,
                     fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+
+              // Companion XP buff — surfaced below the description
+              // so the player can read the flavor first, then the
+              // mechanical effect. Only renders when the catalog
+              // row carries a buff and the companion is unlocked
+              // (hidden / claimable bodies have their own surfaces).
+              if (!devTools &&
+                  !isHidden &&
+                  !effectiveLocked &&
+                  definition is Companion &&
+                  definition.buff != null) ...[
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: CompanionBuffChip(
+                    buff: definition.buff!,
+                    color: color,
                   ),
                 ),
               ],

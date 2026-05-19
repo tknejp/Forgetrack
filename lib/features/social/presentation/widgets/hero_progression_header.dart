@@ -9,6 +9,7 @@ import '../../../auth/application/auth_provider.dart';
 import '../../../cosmetics/application/cosmetics_provider.dart';
 import '../../../cosmetics/config/cosmetics_config.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
+import '../../../cosmetics/presentation/widgets/companion_buff_chip.dart';
 import '../../../cosmetics/presentation/widgets/companion_fake_idle_preview.dart';
 import '../../../cosmetics/presentation/widgets/cosmetic_frame_preview.dart';
 import '../../../progression_engine/application/progression_engine_provider.dart';
@@ -265,7 +266,25 @@ class _HeaderBody extends StatelessWidget {
                           top: 12,
                           right: reservedRight,
                         ),
-                        child: _DailyQuestsPreview(quests: dailyQuests),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (equippedCompanion is Companion &&
+                                (equippedCompanion as Companion).buff !=
+                                    null) ...[
+                              CompanionBuffChip(
+                                buff:
+                                    (equippedCompanion as Companion).buff!,
+                                color: RarityPalette.forRarity(
+                                  equippedCompanion!.rarity,
+                                ).color,
+                                compact: true,
+                              ),
+                              const SizedBox(height: 10),
+                            ],
+                            _DailyQuestsPreview(quests: dailyQuests),
+                          ],
+                        ),
                       )
                     : const SizedBox(
                         key: ValueKey('hero-header-collapsed'),

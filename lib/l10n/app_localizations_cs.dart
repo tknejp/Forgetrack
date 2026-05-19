@@ -4297,6 +4297,50 @@ class AppLocalizationsCs extends AppLocalizations {
       'Klepni kdekoliv pro pokračování';
 
   @override
+  String get cosmeticBuffSectionTitle => 'Bonus XP';
+
+  @override
+  String cosmeticBuffFlat(int percent, String source) {
+    return '+$percent % XP $source';
+  }
+
+  @override
+  String cosmeticBuffEmber(int min, int max) {
+    return '+$min–$max % XP ze streaku (roste s plamenem)';
+  }
+
+  @override
+  String cosmeticBuffRaven(int daily, int weekly) {
+    return '+$daily % denní / +$weekly % týdenní quest XP';
+  }
+
+  @override
+  String cosmeticBuffLynx(int opener, int deep) {
+    return '+$opener–$deep % XP z chapter questů (roste s hloubkou řetězce)';
+  }
+
+  @override
+  String get cosmeticBuffSourceActivityXp => 'z aktivit';
+
+  @override
+  String get cosmeticBuffSourceNutritionXp => 'z nutrice';
+
+  @override
+  String get cosmeticBuffSourceSleepXp => 'ze spánku';
+
+  @override
+  String get cosmeticBuffSourceStreakXp => 'ze streaku';
+
+  @override
+  String get cosmeticBuffSourceQuestXp => 'z questů';
+
+  @override
+  String get cosmeticBuffSourceChapterXp => 'z chapter questů';
+
+  @override
+  String get cosmeticBuffSourceAllXp => 'ze všeho XP';
+
+  @override
   String get cosmeticRelicConsumedBadge => 'Použito';
 
   @override
