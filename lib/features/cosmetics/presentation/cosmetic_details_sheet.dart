@@ -800,29 +800,39 @@ class _CompanionChecklist extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 10),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (levelRow != null && levelTarget != null)
-              Expanded(
-                child: _LevelGateTile(
-                  level: levelTarget,
-                  met: levelRow.met,
-                  color: color,
-                  l10n: l10n,
+        // `IntrinsicHeight` resolves the circular constraint of
+        // `Row(crossAxisAlignment: stretch)` inside a parent
+        // `Column(mainAxisSize: min)` — without it Flutter asserts on
+        // `RenderBox was not laid out` because the row's cross-axis
+        // (height) and its stretched children's heights both depend on
+        // each other with no fallback. Wrapping in `IntrinsicHeight`
+        // forces the row to size to its tallest child first, then
+        // stretches the rest to match.
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (levelRow != null && levelTarget != null)
+                Expanded(
+                  child: _LevelGateTile(
+                    level: levelTarget,
+                    met: levelRow.met,
+                    color: color,
+                    l10n: l10n,
+                  ),
                 ),
-              ),
-            for (final row in relicRows) ...[
-              const SizedBox(width: 8),
-              Expanded(
-                child: _RelicGateTile(
-                  conditionRow: row,
-                  color: color,
-                  l10n: l10n,
+              for (final row in relicRows) ...[
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _RelicGateTile(
+                    conditionRow: row,
+                    color: color,
+                    l10n: l10n,
+                  ),
                 ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
         if (otherRows.isNotEmpty) ...[
           const SizedBox(height: 8),
