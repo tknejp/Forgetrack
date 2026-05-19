@@ -864,6 +864,7 @@ class _CosmeticCardState extends State<_CosmeticCard>
                   right: 5,
                   child: _ReadyPill(
                     label: l10n.cosmeticCompanionClaimableBadge,
+                    color: color,
                   ),
                 ),
               // consumed relic: "Použito" pill in the bottom-right
@@ -960,11 +961,16 @@ class _ProgressChip extends StatelessWidget {
 }
 
 /// Pulsing "PŘIPRAVEN" pill for a claimable companion card. Uses the
-/// brand accent so it pops against the muted hidden-state palette.
+/// companion's rarity color so the pill reads as belonging to *this*
+/// companion — matches the rarity-tinted border + glow pulse on the
+/// surrounding card (phase C). Previously used `Tokens.accent` which
+/// painted every claimable companion's pill purple regardless of
+/// rarity and clashed with the card's rarity-color treatment.
 class _ReadyPill extends StatefulWidget {
-  const _ReadyPill({required this.label});
+  const _ReadyPill({required this.label, required this.color});
 
   final String label;
+  final Color color;
 
   @override
   State<_ReadyPill> createState() => _ReadyPillState();
@@ -989,25 +995,26 @@ class _ReadyPillState extends State<_ReadyPill>
       animation: _ctrl,
       builder: (context, _) {
         final t = _ctrl.value;
+        final color = widget.color;
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
           decoration: BoxDecoration(
-            color: Tokens.accent.withValues(alpha: 0.18 + 0.18 * t),
+            color: color.withValues(alpha: 0.18 + 0.18 * t),
             borderRadius: BorderRadius.circular(4),
             border: Border.all(
-              color: Tokens.accent.withValues(alpha: 0.5 + 0.3 * t),
+              color: color.withValues(alpha: 0.5 + 0.3 * t),
             ),
           ),
           child: Text(
             widget.label,
             style: TextStyle(
-              color: Tokens.accent,
+              color: color,
               fontSize: 7,
               fontWeight: FontWeight.w900,
               letterSpacing: 0.6,
               shadows: [
                 Shadow(
-                  color: Tokens.accent.withValues(alpha: 0.4 * t),
+                  color: color.withValues(alpha: 0.4 * t),
                   blurRadius: 6,
                 ),
               ],
