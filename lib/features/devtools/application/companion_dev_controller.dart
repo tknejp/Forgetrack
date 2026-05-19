@@ -156,15 +156,26 @@ class CompanionDevController {
           await cosmetics.debugGrantCosmetic(relicIds.first);
         }
       case CompanionDevTarget.claimable:
+        // Step 0 — clear the companion's own engine events first. If
+        // the companion was previously claimed, the ledger holds a
+        // NodeClaimEvent (and NodeCompletionEvent +
+        // RewardGrantEvent(companionAvailability)) for it. The
+        // resolver returns `r.completed=true` for an already-claimed
+        // manual-claim node and the engine skips re-adding it to
+        // `availability`, so the lifecycle service can never surface
+        // it as Claimable. No production "unclaim" primitive exists
+        // (events are append-only); devtools writes straight to the
+        // local repo via `devToolsClearNode` to reset the node's
+        // engine state. Cloud mirror is intentionally untouched — a
+        // subsequent cloud pull-and-merge restores the events
+        // (separate architectural follow-up on Trello #92).
+        await progression.devToolsClearNode(node.id);
         // Two requirements for `claimable`:
-        //   1. Engine level â‰¥ gate so `LevelAtLeast(gate)` resolves
-        //      true. We add XP additively â€” never wipe â€” so existing
+        //   1. Engine level >= gate so `LevelAtLeast(gate)` resolves
+        //      true. We add XP additively — never wipe — so existing
         //      pending celebrations / completion history stay intact.
-        //   2. Both gating achievement nodes completed. Only force-
-        //      complete the ones the player hasn't already cleared
-        //      organically; force-completing an already-completed
-        //      node is a no-op at the engine layer but still costs
-        //      a refresh, and we'd rather skip the churn.
+        //   2. Both gating relics in the cosmetics inventory so the
+        //      `OwnsCosmetic` gates resolve true.
         if (progression.level < gate) {
           const policy = ProgressionLevelPolicy();
           final targetXp = policy.xpRequiredForLevel(gate);

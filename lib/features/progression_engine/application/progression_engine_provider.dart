@@ -3410,6 +3410,40 @@ class ProgressionEngineProvider extends ChangeNotifier {
     }
   }
 
+  /// Devtools — clears every node-keyed event (claim, completion,
+  /// announcement, reward grant, quest offering) for [nodeId] from
+  /// the local engine ledger so the engine treats the node as
+  /// fresh on the next evaluation. Used by the companion-state
+  /// matrix to reset a previously-claimed `CompanionAvailability`
+  /// node back to its claimable state without nuking the entire
+  /// ledger via [devToolsWipeLedger]. No engine "unclaim" primitive
+  /// exists in production flows — this devtools route writes
+  /// straight to the local repository's storage. Cloud mirror is
+  /// intentionally untouched (see Trello #92).
+  Future<void> devToolsClearNode(String nodeId) async {
+    final repo = _repository;
+    if (repo is! ProgressionEngineLocalRepository) return;
+    AppLog.app.info('devtools/clearNode start', payload: 'node=$nodeId');
+    _isEvaluating = true;
+    notifyListeners();
+    try {
+      await repo.clearEventsForNode(nodeId);
+      _ledger = await _repository.loadLedger();
+      _recomputeStreaks();
+      _lastEvaluatedSignature = null;
+      _error = null;
+      AppLog.app.info('devtools/clearNode done', payload: 'node=$nodeId');
+    } catch (e, st) {
+      _error = e.toString();
+      AppLog.app.error('devtools/clearNode crashed',
+          payload: 'node=$nodeId', err: e, stackTrace: st);
+    } finally {
+      _isEvaluating = false;
+      notifyListeners();
+    }
+    await refresh();
+  }
+
   // â”€â”€ Internals â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Future<void> _hydrate() async {

@@ -32,4 +32,19 @@ abstract class ProgressionEngineRepository {
 abstract class ProgressionEngineLocalRepository
     implements ProgressionEngineRepository {
   Future<void> wipeAll();
+
+  /// Devtools-only: removes every node-keyed event (claim,
+  /// completion, announcement, reward grant) for [nodeId] from the
+  /// local ledger. Used to reset a single node's state in the
+  /// companion-state matrix without nuking the entire ledger via
+  /// [wipeAll]. Production code never calls this — the engine has no
+  /// "unclaim" primitive in normal flows.
+  ///
+  /// Cloud mirror is intentionally NOT touched here — the local
+  /// clear is enough for the next engine evaluation to surface the
+  /// node correctly in `availability`. A subsequent cloud
+  /// pull-and-merge will re-introduce the cleared events; that's the
+  /// separate "auto-claim on refresh" symptom on Trello #92 (needs
+  /// its own architectural fix, options A/B/C/D on the card).
+  Future<void> clearEventsForNode(String nodeId);
 }

@@ -86,6 +86,17 @@ class HybridProgressionEngineRepository
     }
   }
 
+  @override
+  Future<void> clearEventsForNode(String nodeId) async {
+    // Local-only — the cloud mirror intentionally keeps the events
+    // so a subsequent pull-and-merge can either restore the prior
+    // state (Trello #92 second-half symptom) or, after the
+    // architectural fix on that card lands, be filtered by a
+    // sentinel event. This devtools-routed clear is a single
+    // refresh-cycle reset, not a permanent revoke.
+    await _local.clearEventsForNode(nodeId);
+  }
+
   /// Pulls every ledger event from Firestore for [uid] and merges them
   /// into the local Isar store. Called on user bind so a fresh install
   /// or second device converges to the cloud's authoritative state.
