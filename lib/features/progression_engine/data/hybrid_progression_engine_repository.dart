@@ -88,13 +88,31 @@ class HybridProgressionEngineRepository
 
   @override
   Future<void> clearEventsForNode(String nodeId) async {
-    // Local-only — the cloud mirror intentionally keeps the events
-    // so a subsequent pull-and-merge can either restore the prior
-    // state (Trello #92 second-half symptom) or, after the
-    // architectural fix on that card lands, be filtered by a
-    // sentinel event. This devtools-routed clear is a single
-    // refresh-cycle reset, not a permanent revoke.
+    // Devtools-only revoke: delete the node's events from both the
+    // local Isar store and the Firestore mirror. The cloud delete is
+    // best-effort (errors are logged + swallowed via the same
+    // classifier the wipe path uses) — the local clear is the
+    // user-visible signal; the cloud mirror catches up on the next
+    // successful sync. Without the cloud-side delete the next
+    // pull-and-merge would replay the historical grant events and
+    // undo the revoke (Trello #92 "auto-claim on refresh").
     await _local.clearEventsForNode(nodeId);
+    final uid = _uid;
+    if (uid != null && uid.isNotEmpty) {
+      unawaited(_clearNodeSafely(uid, nodeId));
+    }
+  }
+
+  Future<void> _clearNodeSafely(String uid, String nodeId) async {
+    try {
+      await _cloud.clearEventsForNode(uid, nodeId);
+    } catch (e, st) {
+      _logSyncFailure(
+        'engine ledger clearNode failed',
+        uid,
+        classifyFirebaseError(e, st, endpoint: 'engine.clearNode'),
+      );
+    }
   }
 
   /// Pulls every ledger event from Firestore for [uid] and merges them

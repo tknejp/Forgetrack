@@ -155,6 +155,53 @@ class FirestoreProgressionEngineGateway {
     AppLog.sync.info('engine ledger wipe', payload: 'uid=$uid');
   }
 
+  /// Devtools-only — deletes every node-keyed Firestore document
+  /// (`nodeCompletion`, `nodeClaim`, `nodeAnnouncement`, `rewardGrant`,
+  /// `questOffering`) for [nodeId] in the user's cloud ledger.
+  /// `objectiveCompletion` is intentionally skipped — those documents
+  /// key off `objectiveId`, not `nodeId`, and the engine treats them
+  /// as the source of truth for "objective satisfied" independently
+  /// of any one node's lifecycle.
+  ///
+  /// Pairs with [IsarProgressionEngineRepository.clearEventsForNode]
+  /// so a devtools-driven "reset this node" survives the next
+  /// cloud pull-and-merge — without it, `rebuildFromJournal` would
+  /// re-apply the historical grant events on the next bind and undo
+  /// the revoke (Trello #92 "auto-claim on refresh").
+  Future<void> clearEventsForNode(String uid, String nodeId) async {
+    if (uid.isEmpty || nodeId.isEmpty) return;
+    await Future.wait([
+      _deleteByNodeId(_userCol(uid, _nodeCompletionCollection), nodeId),
+      _deleteByNodeId(_userCol(uid, _nodeClaimCollection), nodeId),
+      _deleteByNodeId(_userCol(uid, _nodeAnnouncementCollection), nodeId),
+      _deleteByNodeId(_userCol(uid, _rewardGrantCollection), nodeId),
+      _deleteByNodeId(_userCol(uid, _questOfferingCollection), nodeId),
+    ]);
+    AppLog.sync.info('engine ledger clearNode',
+        payload: 'uid=$uid node=$nodeId');
+  }
+
+  Future<void> _deleteByNodeId(
+    CollectionReference<Map<String, dynamic>> col,
+    String nodeId,
+  ) async {
+    final snap = await col.where('nodeId', isEqualTo: nodeId).get();
+    if (snap.docs.isEmpty) return;
+
+    var batch = _firestore.batch();
+    var opsInBatch = 0;
+    for (final doc in snap.docs) {
+      batch.delete(doc.reference);
+      opsInBatch++;
+      if (opsInBatch >= _maxBatchOps) {
+        await batch.commit();
+        batch = _firestore.batch();
+        opsInBatch = 0;
+      }
+    }
+    if (opsInBatch > 0) await batch.commit();
+  }
+
   Future<void> _wipeCollection(
     CollectionReference<Map<String, dynamic>> col,
   ) async {

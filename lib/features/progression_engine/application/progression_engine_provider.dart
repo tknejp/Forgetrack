@@ -3412,14 +3412,20 @@ class ProgressionEngineProvider extends ChangeNotifier {
 
   /// Devtools — clears every node-keyed event (claim, completion,
   /// announcement, reward grant, quest offering) for [nodeId] from
-  /// the local engine ledger so the engine treats the node as
-  /// fresh on the next evaluation. Used by the companion-state
-  /// matrix to reset a previously-claimed `CompanionAvailability`
-  /// node back to its claimable state without nuking the entire
-  /// ledger via [devToolsWipeLedger]. No engine "unclaim" primitive
-  /// exists in production flows — this devtools route writes
-  /// straight to the local repository's storage. Cloud mirror is
-  /// intentionally untouched (see Trello #92).
+  /// the engine ledger so the engine treats the node as fresh on
+  /// the next evaluation. Used by the companion-state matrix to
+  /// reset a previously-claimed `CompanionAvailability` node back
+  /// to its claimable state without nuking the entire ledger via
+  /// [devToolsWipeLedger]. No engine "unclaim" primitive exists in
+  /// production flows — this devtools route is the only writer.
+  ///
+  /// Repository contract: the bound local repo (or hybrid wrapper)
+  /// is responsible for propagating the clear to both the local
+  /// Isar store AND the Firestore mirror — `HybridProgressionEngine
+  /// Repository.clearEventsForNode` forwards to both so the revoke
+  /// survives the next cloud pull-and-merge. Cloud-side delete is
+  /// best-effort; failures land in the sync log via the existing
+  /// classifier.
   Future<void> devToolsClearNode(String nodeId) async {
     final repo = _repository;
     if (repo is! ProgressionEngineLocalRepository) return;
