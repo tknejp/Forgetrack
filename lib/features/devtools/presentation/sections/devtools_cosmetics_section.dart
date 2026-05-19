@@ -40,7 +40,7 @@ class _DevToolsCosmmeticsSectionState
     final totalCount = CosmeticCatalog.definitions.length;
     final unlockedCount = state?.unlocked.length ?? 0;
     final equippedSlots = CosmeticType.values
-        .where((t) => state?.equipped.slotId(t) != null)
+        .where((t) => state?.equipped.slotId(t) != null) // lint-ignore: widget-no-logic — devtools equipped-slot count
         .length;
     final isBusy = _isClearing ||
         _isGrantingAll ||
@@ -150,7 +150,7 @@ class _DevToolsCosmmeticsSectionState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Clear all cosmetics?'),
+        title: const Text('Clear all cosmetics?'), // lint-ignore: l10n-literal — devtools, intentionally English
         content: const Text(
           'Removes every unlock and clears all equipped slots for the '
           'signed-in user. Cannot be undone.',
@@ -158,14 +158,14 @@ class _DevToolsCosmmeticsSectionState
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: const Text('Cancel'), // lint-ignore: l10n-literal — devtools, intentionally English
           ),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error,
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Clear all'),
+            child: const Text('Clear all'), // lint-ignore: l10n-literal — devtools, intentionally English
           ),
         ],
       ),

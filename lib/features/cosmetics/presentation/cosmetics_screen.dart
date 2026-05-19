@@ -147,7 +147,7 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
     final presentTypes = devTools
         ? CosmeticType.values.toList()
         : CosmeticType.values
-            .where((type) => displayDefs.any((def) => def.type == type))
+            .where((type) => displayDefs.any((def) => def.type == type)) // lint-ignore: widget-no-logic — tab-presence filter over pre-built displayDefs
             .toList(growable: false);
 
     // Tab layout: index 0 = "Vše" (null type, shows every displayDef),
@@ -256,7 +256,7 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
               final pageDefs = type == null
                   ? displayDefs
                   : displayDefs
-                      .where((def) => def.type == type)
+                      .where((def) => def.type == type) // lint-ignore: widget-no-logic — page-by-tab slice of pre-built displayDefs
                       .toList(growable: false);
               return _CategoryGrid(
                 defs: pageDefs,
@@ -297,7 +297,7 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
     final isLocked = !state.unlocked.containsKey(definition.id);
     final rules = devTools
         ? kCosmeticUnlockRules
-            .where((r) => r.cosmeticId == definition.id)
+            .where((r) => r.cosmeticId == definition.id) // lint-ignore: widget-no-logic — devtools-only matrix view, static catalog rules
             .toList()
         : null;
     final isRelicConsumed = !devTools &&

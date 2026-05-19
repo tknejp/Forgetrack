@@ -30,7 +30,7 @@ class ObjectiveCompletionEvent extends JournalEvent {
     this.periodKey,
   });
 
-  final String objectiveId;
+  final String objectiveId; // lint-ignore: untyped-id — JournalEvent fields are storage-boundary raw strings
   final double actualValue;
   final String? periodKey;
 }
@@ -46,7 +46,7 @@ class NodeCompletionEvent extends JournalEvent {
     this.periodKey,
   });
 
-  final String nodeId;
+  final String nodeId; // lint-ignore: untyped-id — JournalEvent fields are storage-boundary raw strings
   final String? periodKey;
 }
 
@@ -69,7 +69,7 @@ class NodeAnnouncedEvent extends JournalEvent {
     this.periodKey,
   });
 
-  final String nodeId;
+  final String nodeId; // lint-ignore: untyped-id — JournalEvent fields are storage-boundary raw strings
   final String? periodKey;
 }
 
@@ -90,7 +90,7 @@ class QuestOfferedEvent extends JournalEvent {
     required this.dayKey,
   });
 
-  final String nodeId;
+  final String nodeId; // lint-ignore: untyped-id — JournalEvent fields are storage-boundary raw strings
   final String dayKey;
 }
 
@@ -105,7 +105,7 @@ class NodeClaimEvent extends JournalEvent {
     this.periodKey,
   });
 
-  final String nodeId;
+  final String nodeId; // lint-ignore: untyped-id — JournalEvent fields are storage-boundary raw strings
   final String? periodKey;
 }
 
@@ -133,7 +133,7 @@ class RewardGrantEvent extends JournalEvent {
     this.multiplierAtGrant,
   });
 
-  final String nodeId;
+  final String nodeId; // lint-ignore: untyped-id — JournalEvent fields are storage-boundary raw strings
   final int rewardOrdinal;
   final RewardGrantKind rewardKind;
   final String? periodKey;

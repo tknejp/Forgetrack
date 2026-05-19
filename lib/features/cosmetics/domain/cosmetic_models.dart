@@ -271,7 +271,7 @@ class UnlockedCosmetic {
     this.sourceId,
   });
 
-  final String cosmeticId;
+  final String cosmeticId; // lint-ignore: untyped-id — UnlockedCosmetic.cosmeticId mirrors CosmeticId; persisted as raw string in Firestore subcollection
   final DateTime unlockedAt;
 
   /// Free-form string so callers from any feature can attribute the unlock
@@ -429,7 +429,7 @@ class UserCosmeticsState {
     required this.updatedAt,
   });
 
-  final String uid;
+  final String uid; // lint-ignore: untyped-id — Firebase Auth uid is a platform-boundary raw string
 
   /// Keyed by cosmetic id for O(1) membership checks.
   final Map<String, UnlockedCosmetic> unlocked;

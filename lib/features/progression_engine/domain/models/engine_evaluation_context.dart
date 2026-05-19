@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 
 import '../../../../domain/journal/journal.dart';
 import '../../../../domain/player/player.dart';

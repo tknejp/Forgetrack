@@ -41,7 +41,7 @@ class Player {
   /// when no user is signed in — providers fabricate a "no-player"
   /// instance rather than nulling the whole aggregate, so widgets that
   /// read a single field don't need a null check at every site.
-  final String uid;
+  final String uid; // lint-ignore: untyped-id — Firebase Auth uid is a platform-boundary raw string
 
   final int level;
   final int totalXp;

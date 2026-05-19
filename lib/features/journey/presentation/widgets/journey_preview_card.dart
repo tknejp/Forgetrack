@@ -110,7 +110,7 @@ class _MiniMap extends StatelessWidget {
         final width = constraints.maxWidth;
         final height = constraints.maxHeight;
         final ordered = checkpoints
-            .where((checkpoint) => checkpoint.isPathAnchor)
+            .where((checkpoint) => checkpoint.isPathAnchor) // lint-ignore: widget-no-logic — preview slices the pre-built JourneyCheckpoint list
             .toList(growable: false)
           ..sort(
             (a, b) => _journeyProgress(a).compareTo(_journeyProgress(b)),
@@ -270,7 +270,7 @@ class _MiniMap extends StatelessWidget {
   }
 
   static int _focusIndex(List<JourneyCheckpoint> ordered) {
-    final currentIndex = ordered.indexWhere((cp) => cp.isCurrent);
+    final currentIndex = ordered.indexWhere((cp) => cp.isCurrent); // lint-ignore: widget-no-logic — focus-index over pre-built JourneyCheckpoint list
     if (currentIndex >= 0) return currentIndex;
 
     final unlockedIndex = ordered.lastIndexWhere((cp) => cp.isUnlocked);
@@ -347,7 +347,7 @@ class _SummaryRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final ordered = preview
-        .where((checkpoint) => checkpoint.isPathAnchor)
+        .where((checkpoint) => checkpoint.isPathAnchor) // lint-ignore: widget-no-logic — mini-map slices the pre-built JourneyCheckpoint list
         .toList(growable: false)
       ..sort(
         (a, b) => _MiniMap._journeyProgress(a).compareTo(
@@ -364,7 +364,7 @@ class _SummaryRow extends StatelessWidget {
         isUnlocked: false,
       ),
     );
-    final nextLocked = ordered.firstWhere(
+    final nextLocked = ordered.firstWhere( // lint-ignore: widget-no-logic — first-locked anchor on pre-built JourneyCheckpoint list
       (checkpoint) => !checkpoint.isUnlocked,
       orElse: () => const JourneyCheckpoint(
         id: '_none',

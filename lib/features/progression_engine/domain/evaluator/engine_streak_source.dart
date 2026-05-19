@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+﻿import 'package:meta/meta.dart';
 
 import 'package:forgetrack/domain/progression/catalog/objective.dart';
 import 'package:forgetrack/domain/progression/catalog/objective_scope.dart';

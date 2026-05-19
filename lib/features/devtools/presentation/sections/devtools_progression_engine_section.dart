@@ -168,7 +168,7 @@ class _DevToolsProgressionEngineSectionState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Wipe V2 ledger?'),
+        title: const Text('Wipe V2 ledger?'), // lint-ignore: l10n-literal — devtools, intentionally English
         content: const Text(
           'Clears every progression_engine Isar collection. '
           'Legacy progression is untouched.',
@@ -176,12 +176,12 @@ class _DevToolsProgressionEngineSectionState
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: const Text('Cancel'), // lint-ignore: l10n-literal — devtools, intentionally English
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: errorColor),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Wipe'),
+            child: const Text('Wipe'), // lint-ignore: l10n-literal — devtools, intentionally English
           ),
         ],
       ),
@@ -193,7 +193,7 @@ class _DevToolsProgressionEngineSectionState
       await provider.devToolsWipeLedger();
       if (!mounted) return;
       messenger.showSnackBar(
-        const SnackBar(content: Text('V2 ledger wiped')),
+        const SnackBar(content: Text('V2 ledger wiped')), // lint-ignore: l10n-literal — devtools, intentionally English
       );
     } finally {
       if (mounted) setState(() => _isWiping = false);
@@ -351,7 +351,7 @@ class _QuickStatePanel extends StatelessWidget {
                 child: FilledButton.tonalIcon(
                   onPressed: busy ? null : () => _advance(context),
                   icon: const Icon(Icons.skip_next_rounded, size: 18),
-                  label: const Text('Advance day +1'),
+                  label: const Text('Advance day +1'), // lint-ignore: l10n-literal — devtools, intentionally English
                 ),
               ),
               if (dayOffset > 0) ...[
@@ -359,7 +359,7 @@ class _QuickStatePanel extends StatelessWidget {
                 OutlinedButton.icon(
                   onPressed: busy ? null : () => _resetDay(context),
                   icon: const Icon(Icons.replay_rounded, size: 18),
-                  label: const Text('Reset'),
+                  label: const Text('Reset'), // lint-ignore: l10n-literal — devtools, intentionally English
                 ),
               ],
             ],
@@ -384,7 +384,7 @@ class _QuickStatePanel extends StatelessWidget {
                 onPressed:
                     busy ? null : () => _reseedJoinedAt(context, provider),
                 icon: const Icon(Icons.refresh_rounded, size: 18),
-                label: const Text('Reseed'),
+                label: const Text('Reseed'), // lint-ignore: l10n-literal — devtools, intentionally English
               ),
             ],
           ),
@@ -416,7 +416,7 @@ class _QuickStatePanel extends StatelessWidget {
     await provider.devToolsResetDayOffset();
     if (!context.mounted) return;
     messenger.showSnackBar(
-      const SnackBar(content: Text('Day offset reset to 0')),
+      const SnackBar(content: Text('Day offset reset to 0')), // lint-ignore: l10n-literal — devtools, intentionally English
     );
   }
 
@@ -1117,7 +1117,7 @@ class _NodePickerPanelState extends State<_NodePickerPanel> {
     final filtered = filter.isEmpty
         ? const <_NodeEntry>[]
         : _entries
-            .where((e) =>
+            .where((e) => // lint-ignore: widget-no-logic — devtools node-id/kind search filter
                 e.id.toLowerCase().contains(filter) ||
                 e.kind.toLowerCase().contains(filter))
             .take(40)
@@ -1189,7 +1189,7 @@ class _NodePickerPanelState extends State<_NodePickerPanel> {
                               child: CircularProgressIndicator(
                                   strokeWidth: 2),
                             )
-                          : const Text('Complete'),
+                          : const Text('Complete'), // lint-ignore: l10n-literal — devtools, intentionally English
                     ),
                   );
                 },

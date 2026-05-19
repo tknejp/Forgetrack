@@ -43,7 +43,7 @@ class JourneyCheckpoint {
     this.mapSide,
   });
 
-  final String id;
+  final String id; // lint-ignore: untyped-id — journey-feed dedupe token composed by the producer
   final JourneyEventType type;
 
   /// Primary display text (achievement name, level title, …).

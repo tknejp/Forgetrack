@@ -105,7 +105,7 @@ class _EngineBackfillSectionState extends State<EngineBackfillSection> {
 
     final entries = provider
         .dailyBackfillForRange(startDay: startDay, endDay: today)
-        .where((e) => e.hasAnyContent)
+        .where((e) => e.hasAnyContent) // lint-ignore: widget-no-logic — drop empty days from the provider-built backfill range
         .toList(growable: false);
 
     final totalPending = entries.fold<int>(0, (sum, e) => sum + e.pendingCount);

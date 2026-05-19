@@ -1,4 +1,4 @@
-import 'package:health/health.dart';
+import 'package:health/health.dart'; // lint-ignore: domain-purity — HealthWorkoutActivityType is the platform boundary token for activity classification
 import 'package:intl/intl.dart';
 
 class StepsRecord {

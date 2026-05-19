@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 
 /// Player-configurable goal targets that the catalog reads when
 /// constructing daily / weekly objectives. Same role as the legacy

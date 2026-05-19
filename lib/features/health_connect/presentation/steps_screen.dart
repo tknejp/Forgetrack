@@ -105,7 +105,7 @@ class _StepsScreenState extends State<StepsScreen> {
       final all = fitness.stepsHistory;
       records = all.length > 14 ? all.sublist(all.length - 14) : List.of(all);
     } else {
-      records = fitness.stepsHistory.where((r) {
+      records = fitness.stepsHistory.where((r) { // lint-ignore: widget-no-logic — UI period range slice for the steps chart
         final day = DateTime(r.date.year, r.date.month, r.date.day);
         return !day.isBefore(period.start) && !day.isAfter(period.end);
       }).toList()

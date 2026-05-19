@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+﻿import 'package:meta/meta.dart';
 
 import 'package:forgetrack/domain/progression/catalog/activation_policy.dart';
 import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';

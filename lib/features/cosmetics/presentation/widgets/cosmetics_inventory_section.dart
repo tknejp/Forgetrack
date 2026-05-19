@@ -98,7 +98,7 @@ class CosmeticsInventorySection extends StatelessWidget {
 
     final unlocked = catalog
         .byType(type)
-        .where((def) => def.isEnabled && state.unlocked.containsKey(def.id))
+        .where((def) => def.isEnabled && state.unlocked.containsKey(def.id)) // lint-ignore: widget-no-logic — inventory display-slice over pre-built catalog
         .toList()
       ..sort((a, b) {
         final aAt = state.unlocked[a.id]!.unlockedAt;

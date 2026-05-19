@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart'; // lint-ignore: domain-purity — UI display models carry Color tokens for chrome-coherent rendering
 
 import '../../../../l10n/app_localizations.dart';
 
@@ -51,7 +51,7 @@ class NodeDisplay {
     this.currentValue,
   });
 
-  final String nodeId;
+  final String nodeId; // lint-ignore: untyped-id — display VO mirrors ProgressionEntryId from resolver output
   final NodeDisplayKind kind;
   final LocalizedText title;
   final LocalizedText description;

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+﻿import 'package:meta/meta.dart';
 import 'package:intl/intl.dart';
 
 import '../models/engine_evaluation_context.dart';
@@ -17,7 +17,7 @@ class ObjectiveOutcome {
     required this.periodKey,
   });
 
-  final String objectiveId;
+  final String objectiveId; // lint-ignore: untyped-id — ObjectiveResolution mirrors ObjectiveId from catalog
   final double actualValue;
   final bool completed;
 

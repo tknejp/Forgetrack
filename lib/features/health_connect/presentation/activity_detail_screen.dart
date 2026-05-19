@@ -311,7 +311,7 @@ class _ComparisonCard extends StatelessWidget {
     final locale = Localizations.localeOf(context).toString();
 
     final sameType = fitness.activities
-        .where((a) =>
+        .where((a) => // lint-ignore: widget-no-logic — same-type history slice for the detail-screen chart
             a.type.toUpperCase() == current.type.toUpperCase() &&
             !a.endTime.isAfter(current.endTime))
         .toList()

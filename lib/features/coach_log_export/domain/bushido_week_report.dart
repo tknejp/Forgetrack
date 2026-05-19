@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 
 import 'bushido_day_row.dart';
 import 'iso_week.dart';

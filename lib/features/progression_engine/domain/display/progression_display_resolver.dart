@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart' show Color;
+﻿import 'package:flutter/material.dart' show Color; // lint-ignore: domain-purity — Color is the chrome-token type for display VOs
 import 'package:forgetrack/features/progression_engine/domain/progression_domain_chrome.dart';
 import 'package:intl/intl.dart';
 

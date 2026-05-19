@@ -13,7 +13,7 @@ class CosmeticUnlockCondition {
     this.descriptionKey,
   });
 
-  final String id;
+  final String id; // lint-ignore: untyped-id — author-supplied condition key inside a CosmeticUnlockRule
   final String? descriptionKey;
   final bool Function(CosmeticUnlockSnapshot snapshot) test;
 }
@@ -33,9 +33,9 @@ class CosmeticUnlockRule {
     this.isHidden = false,
   });
 
-  final String cosmeticId;
+  final String cosmeticId; // lint-ignore: untyped-id — mirrors CosmeticId in the unlock rule
   final String sourceType;
-  final String sourceId;
+  final String sourceId; // lint-ignore: untyped-id — opaque rule-author-supplied source key (quest/achievement/level/...)
   final List<CosmeticUnlockCondition> conditions;
 
   /// When true, partial-progress UI should not surface this rule even if it

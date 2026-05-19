@@ -114,7 +114,7 @@ class _DevToolsHealthPipelineSectionState
         _postSyncTodaySteps! != _postSyncDateMatch!;
 
     final preview = f.debugStepRecordsPreview;
-    final previewTodayRecords = preview.where((r) => r.dateKey == todayKey).toList();
+    final previewTodayRecords = preview.where((r) => r.dateKey == todayKey).toList(); // lint-ignore: widget-no-logic — devtools today-slice over debug preview
     final duplicateTodayInPreview = previewTodayRecords.length > 1;
     final zeroAndNonZeroToday = previewTodayRecords.isNotEmpty &&
         previewTodayRecords.any((r) => r.steps == 0) &&

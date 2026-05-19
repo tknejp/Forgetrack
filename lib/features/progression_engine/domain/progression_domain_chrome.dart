@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; // lint-ignore: domain-purity — ProgressionDomainChrome maps each ProgressionDomain to its Color + IconData tokens
 import 'package:forgetrack/domain/progression/catalog/progression_domain.dart';
 
 import '../../../l10n/app_localizations.dart';

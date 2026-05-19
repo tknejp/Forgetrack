@@ -203,7 +203,7 @@ class EngineCompletedQuestCard extends StatelessWidget {
       // step by step.
       final claimable = entry.chainQuests.isEmpty
           ? entry.representative
-          : entry.chainQuests.firstWhere(
+          : entry.chainQuests.firstWhere( // lint-ignore: widget-no-logic — earliest-claimable step pick on the provider-built chain list
               (q) => q.lifecycle is QuestCompletedPendingClaim,
               orElse: () => entry.representative,
             );

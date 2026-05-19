@@ -65,7 +65,7 @@ class SocialUserProfile {
     this.equippedCosmetics = const SocialEquippedCosmetics.empty(),
   });
 
-  final String uid;
+  final String uid; // lint-ignore: untyped-id — Firebase Auth uid is a platform-boundary raw string
   final String displayName;
   final String handle;
   final String email;
@@ -137,7 +137,7 @@ class SocialProfileSyncPayload {
     required this.equippedCosmetics,
   });
 
-  final String uid;
+  final String uid; // lint-ignore: untyped-id — Firebase Auth uid is a platform-boundary raw string
   final String displayName;
   final String email;
   final String handle;

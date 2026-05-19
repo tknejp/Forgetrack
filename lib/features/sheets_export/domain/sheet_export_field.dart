@@ -5,7 +5,7 @@
 // Future fix: either move this catalog to `application/`, or refactor
 // `SheetExportField.resolve` to take HealthSnapshot + NutritionSnapshot
 // arguments instead of provider handles.
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../health_connect/application/fitness_provider.dart';

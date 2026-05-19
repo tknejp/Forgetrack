@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 
 import 'package:forgetrack/domain/journal/journal_event.dart';
 

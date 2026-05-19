@@ -103,7 +103,7 @@ class _DevToolsFactoryResetSectionState
         CheckboxListTile(
           dense: true,
           contentPadding: const EdgeInsets.symmetric(horizontal: 10),
-          title: const Text('Also delete my Firestore data'),
+          title: const Text('Also delete my Firestore data'), // lint-ignore: l10n-literal — devtools, intentionally English
           subtitle: const Text(
             'Deletes progressionClaims, achievementUnlocks, progression/state, '
             'cosmeticEntitlements, notifications under users/{uid}. '
@@ -118,7 +118,7 @@ class _DevToolsFactoryResetSectionState
         CheckboxListTile(
           dense: true,
           contentPadding: const EdgeInsets.symmetric(horizontal: 10),
-          title: const Text('Open Android app settings at the end'),
+          title: const Text('Open Android app settings at the end'), // lint-ignore: l10n-literal — devtools, intentionally English
           subtitle: const Text(
             'Lets you verify or manually revoke Health Connect permissions.',
             style: TextStyle(fontSize: 11),

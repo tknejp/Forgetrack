@@ -6,7 +6,7 @@ class SocialFriendship {
     this.sourceRequestId,
   });
 
-  final String id;
+  final String id; // lint-ignore: untyped-id — Firestore document id, persisted as raw string
   final List<String> memberUids;
   final DateTime createdAt;
   final String? sourceRequestId;

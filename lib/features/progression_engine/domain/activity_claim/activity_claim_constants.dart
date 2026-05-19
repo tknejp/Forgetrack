@@ -12,4 +12,4 @@
 /// level / streaks / XP curves identically to catalog-quest claims.
 library;
 
-const String kActivityWorkoutClaimNodeId = 'daily_activity_claim_workout';
+const String kActivityWorkoutClaimNodeId = 'daily_activity_claim_workout'; // lint-ignore: untyped-id — synthetic node id, persisted as raw string in RewardGrantEvent.nodeId

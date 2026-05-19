@@ -14,9 +14,9 @@ class SocialFriendRequest {
     this.respondedAt,
   });
 
-  final String id;
-  final String fromUid;
-  final String toUid;
+  final String id; // lint-ignore: untyped-id — Firestore document id, persisted as raw string
+  final String fromUid; // lint-ignore: untyped-id — Firebase Auth uid is a platform-boundary raw string
+  final String toUid; // lint-ignore: untyped-id — Firebase Auth uid is a platform-boundary raw string
   final SocialFriendRequestStatus status;
   final DateTime createdAt;
   final DateTime? respondedAt;

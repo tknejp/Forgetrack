@@ -451,11 +451,11 @@ abstract final class JourneyAdapter {
       indexes.add(index);
     }
 
-    final currentIndex = map.indexWhere((cp) => cp.isCurrent);
+    final currentIndex = map.indexWhere((cp) => cp.isCurrent); // lint-ignore: widget-no-logic — focus anchor over pre-built JourneyCheckpoint list
     final focusIndex = currentIndex >= 0
         ? currentIndex
-        : map.indexWhere((cp) => cp.isPathAnchor && cp.isUnlocked);
-    final nextIndex = map.indexWhere((cp) => cp.isPathAnchor && cp.isNext);
+        : map.indexWhere((cp) => cp.isPathAnchor && cp.isUnlocked); // lint-ignore: widget-no-logic — focus fallback over pre-built JourneyCheckpoint list
+    final nextIndex = map.indexWhere((cp) => cp.isPathAnchor && cp.isNext); // lint-ignore: widget-no-logic — next-anchor index over pre-built JourneyCheckpoint list
 
     addIndex(nextIndex);
     addIndex(focusIndex);

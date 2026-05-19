@@ -11,11 +11,11 @@ class SocialNotification {
     this.actorPhoto,
   });
 
-  final String id;
-  final String actorUid;
+  final String id; // lint-ignore: untyped-id — notification dedupe token, persisted as raw string
+  final String actorUid; // lint-ignore: untyped-id — Firebase Auth uid is a platform-boundary raw string
   final String actorName;
   final String? actorPhoto;
-  final String shareId;
+  final String shareId; // lint-ignore: untyped-id — share document id reference, persisted as raw string
   final String achievementTitle;
   final String emoji;
   final DateTime createdAt;

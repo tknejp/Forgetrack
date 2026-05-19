@@ -945,7 +945,7 @@ class _MealsCard extends StatelessWidget {
     final ft = context.ft;
     final l10n = context.l10n;
     final domain = Tokens.calories;
-    final loggedMeals = meals.where((m) => m.hasFood).toList();
+    final loggedMeals = meals.where((m) => m.hasFood).toList(); // lint-ignore: widget-no-logic — empty-meal display filter
 
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 6),
@@ -1881,7 +1881,7 @@ class _NotConnectedState extends StatelessWidget {
             Center(
               child: Column(
                 children: [
-                  const Text('🍽', style: TextStyle(fontSize: 48)),
+                  const Text('🍽', style: TextStyle(fontSize: 48)), // lint-ignore: l10n-literal — emoji symbol, locale-invariant
                   const SizedBox(height: Tokens.spaceLg),
                   Text(
                     l10n.ktLoginPrompt,

@@ -561,7 +561,7 @@ class _WorkoutPermissionBanner extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Text('⚡', style: TextStyle(fontSize: 16)),
+            const Text('⚡', style: TextStyle(fontSize: 16)), // lint-ignore: l10n-literal — emoji symbol, locale-invariant
             const SizedBox(width: 10),
             Expanded(
               child: Text(

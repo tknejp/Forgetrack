@@ -517,7 +517,7 @@ class _DayContent extends StatelessWidget {
         ? (sleepDuration.inMinutes / sleepGoalMinutes).clamp(0.0, 1.0)
         : 0.0;
 
-    final periodActivities = fitness.activities.where((activity) {
+    final periodActivities = fitness.activities.where((activity) { // lint-ignore: widget-no-logic — UI period slice for overview chart aggregates
       final start = activity.startTime;
       final day = DateTime(start.year, start.month, start.day);
       return !day.isBefore(period.start) && !day.isAfter(period.end);

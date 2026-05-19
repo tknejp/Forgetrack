@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 
 // const instances are not possible at call sites because DateTime has no const
 // constructor, but the declaration satisfies @immutable requirements.

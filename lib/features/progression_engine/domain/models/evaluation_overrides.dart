@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 
 /// Bundle of runtime overrides the engine evaluator consumes during
 /// one evaluation pass, sourced from `ProgressionEngineProvider`

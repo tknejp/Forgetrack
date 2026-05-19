@@ -1,5 +1,5 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // lint-ignore: domain-purity — auth boundary, Identity wraps the platform User
+import 'package:google_sign_in/google_sign_in.dart'; // lint-ignore: domain-purity — auth boundary, Identity.fromGoogle reads the platform account
 
 class Identity {
   const Identity({
@@ -11,7 +11,7 @@ class Identity {
     this.firebaseUid,
   });
 
-  final String id;
+  final String id; // lint-ignore: untyped-id — Identity.id wraps the auth-platform user id (Google sub / Firebase uid)
   final String email;
   final String? displayName;
   final String? photoUrl;

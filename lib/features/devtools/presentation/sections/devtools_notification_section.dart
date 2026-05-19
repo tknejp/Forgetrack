@@ -76,7 +76,7 @@ class _DevToolsNotificationSectionState
       final events = results[2] as List;
       final lastFcm = events
           .cast<dynamic>()
-          .where((e) => e.source == 'appStart' && e.feature == 'social')
+          .where((e) => e.source == 'appStart' && e.feature == 'social') // lint-ignore: widget-no-logic — devtools last-FCM lookup
           .firstOrNull;
       if (mounted) {
         setState(() {

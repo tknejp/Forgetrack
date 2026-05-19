@@ -48,9 +48,9 @@ class SocialAchievementShare {
     this.reactorSnapshots = const {},
   });
 
-  final String id;
-  final String actorUid;
-  final String achievementId;
+  final String id; // lint-ignore: untyped-id — Firestore document id, persisted as raw string
+  final String actorUid; // lint-ignore: untyped-id — Firebase Auth uid is a platform-boundary raw string
+  final String achievementId; // lint-ignore: untyped-id — mirrors AchievementId; persisted as raw string in Firestore
   final DateTime createdAt;
   final String? message;
   final SocialShareVisibility visibility;
@@ -74,7 +74,7 @@ class SocialUnlockedAchievement {
     this.domain,
   });
 
-  final String achievementId;
+  final String achievementId; // lint-ignore: untyped-id — mirrors AchievementId; persisted as raw string in Firestore
   final String title;
   final String description;
   final Rarity rarity;
@@ -97,7 +97,7 @@ class RemoteEngineNodeCompletion {
     this.periodKey,
   });
 
-  final String nodeId;
+  final String nodeId; // lint-ignore: untyped-id — RemoteEngineNodeCompletion mirrors persisted ledger string
   final DateTime completedAt;
   final String? periodKey;
 }

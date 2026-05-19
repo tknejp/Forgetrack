@@ -347,7 +347,7 @@ class _StreakChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('🔥', style: TextStyle(fontSize: 11)),
+          const Text('🔥', style: TextStyle(fontSize: 11)), // lint-ignore: l10n-literal — emoji symbol, locale-invariant
           const SizedBox(width: 3),
           Text(
             '$days',

@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 
 import '../evaluator/objective_evaluator.dart' show ObjectiveOutcome;
 import 'engine_evaluation_context.dart';
@@ -30,7 +30,7 @@ class ProgressionResolutionResult {
     this.lockedNodeRemainingConditions = const {},
   });
 
-  final String runId;
+  final String runId; // lint-ignore: untyped-id — UUID-shaped diagnostic id for one engine.evaluate() invocation
   final ProgressionResolutionReason reason;
 
   /// Objectives that newly completed during this run. Pre-existing
@@ -129,7 +129,7 @@ class ObjectiveCompletion {
     required this.event,
   });
 
-  final String objectiveId;
+  final String objectiveId; // lint-ignore: untyped-id — resolution result mirrors ObjectiveId from catalog
   final double actualValue;
 
   /// The ledger event that was appended.
@@ -143,7 +143,7 @@ class NodeCompletion {
     required this.event,
   });
 
-  final String nodeId;
+  final String nodeId; // lint-ignore: untyped-id — resolution result mirrors ProgressionEntryId from catalog
   final NodeCompletionEvent event;
 }
 
@@ -153,7 +153,7 @@ class NodeAvailability {
     required this.nodeId,
   });
 
-  final String nodeId;
+  final String nodeId; // lint-ignore: untyped-id — resolution result mirrors ProgressionEntryId from catalog
 }
 
 @immutable

@@ -64,7 +64,7 @@ class SocialPresence {
   );
 
   /// Active social user id. Empty string when no one is signed in.
-  final String uid;
+  final String uid; // lint-ignore: untyped-id — Firebase Auth uid is a platform-boundary raw string
 
   /// Own published profile snapshot mirrored from Firestore. Null
   /// before the first profile pull lands (cold start) or when the
