@@ -7341,6 +7341,12 @@ abstract class AppLocalizations {
   /// **'Reach level {level}'**
   String cosmeticCompanionLevelGate(int level);
 
+  /// No description provided for @cosmeticCompanionLevelBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Lv {level}'**
+  String cosmeticCompanionLevelBadge(int level);
+
   /// No description provided for @cosmeticRarityCommon.
   ///
   /// In en, this message translates to:

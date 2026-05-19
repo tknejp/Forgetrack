@@ -1388,6 +1388,8 @@
   "@cosmeticPartialProgress": { "placeholders": { "completed": { "type": "int" }, "total": { "type": "int" } } },
   "cosmeticCompanionLevelGate": "Dosáhni úrovně {level}",
   "@cosmeticCompanionLevelGate": { "placeholders": { "level": { "type": "int" } } },
+  "cosmeticCompanionLevelBadge": "Úr. {level}",
+  "@cosmeticCompanionLevelBadge": { "placeholders": { "level": { "type": "int" } } },
 
   "cosmeticRarityCommon": "Běžné",
   "cosmeticRarityUncommon": "Neobvyklé",

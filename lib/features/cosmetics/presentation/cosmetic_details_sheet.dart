@@ -19,6 +19,7 @@ import '../domain/player_cosmetic_lifecycle.dart';
 import 'cosmetics_screen_internals.dart';
 import 'widgets/companion_claim_reveal.dart';
 import 'widgets/companion_fake_idle_preview.dart';
+import 'widgets/cosmetic_asset_thumb.dart';
 
 const _log = AppLogger('COSMETICS', scope: 'details_sheet');
 
@@ -728,6 +729,25 @@ class _PartialProgressRow extends StatelessWidget {
 // Companion requirements checklist
 // ─────────────────────────────────────────────────────────────────────────────
 
+/// Renders the companion's unlock requirements as a horizontal row of
+/// tiles: a level badge on the left + one tile per `OwnsCosmetic`
+/// gate (typically two relics) on the right.
+///
+/// Trello #76 phase F (sub-issue 6): the prior text-only checklist
+/// (`✓ Dosáhni úrovně 15 / Měsíční náprsník / Kořen starého lesa`)
+/// was deliberately replaced — relics are visual content with their
+/// own assets + rarity, and surfacing them as tappable thumbnails
+/// (tap → open the relic's own details sheet) reads as a "you'll
+/// need these" treasure hunt rather than a homework list. The
+/// level badge anchors the gate on the left so the player still
+/// sees the level requirement at a glance.
+///
+/// Parses `conditionRows.conditionId` for the two known prefixes
+/// (`level_at_least_` and `owns_`); any other condition id falls
+/// back to the legacy text label so we don't silently swallow new
+/// gate kinds. All current companion gates use exactly one level
+/// row + two relic rows so the resulting layout is a clean
+/// 1 + 2 split.
 class _CompanionChecklist extends StatelessWidget {
   const _CompanionChecklist({
     required this.conditionRows,
@@ -739,8 +759,27 @@ class _CompanionChecklist extends StatelessWidget {
   final Color color;
   final AppLocalizations l10n;
 
+  static const _levelPrefix = 'level_at_least_';
+  static const _ownsPrefix = 'owns_';
+
   @override
   Widget build(BuildContext context) {
+    CosmeticRevealConditionRow? levelRow;
+    int? levelTarget;
+    final relicRows = <CosmeticRevealConditionRow>[];
+    final otherRows = <CosmeticRevealConditionRow>[];
+    for (final row in conditionRows) {
+      final id = row.conditionId;
+      if (id.startsWith(_levelPrefix)) {
+        levelRow = row;
+        levelTarget = int.tryParse(id.substring(_levelPrefix.length));
+      } else if (id.startsWith(_ownsPrefix)) {
+        relicRows.add(row);
+      } else {
+        otherRows.add(row);
+      }
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -760,16 +799,194 @@ class _CompanionChecklist extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        for (final row in conditionRows)
-          _ChecklistRow(row: row, color: color, l10n: l10n),
+        const SizedBox(height: 10),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (levelRow != null && levelTarget != null)
+              Expanded(
+                child: _LevelGateTile(
+                  level: levelTarget,
+                  met: levelRow.met,
+                  color: color,
+                  l10n: l10n,
+                ),
+              ),
+            for (final row in relicRows) ...[
+              const SizedBox(width: 8),
+              Expanded(
+                child: _RelicGateTile(
+                  conditionRow: row,
+                  color: color,
+                  l10n: l10n,
+                ),
+              ),
+            ],
+          ],
+        ),
+        if (otherRows.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          for (final row in otherRows)
+            _LegacyTextRow(row: row, color: color, l10n: l10n),
+        ],
       ],
     );
   }
 }
 
-class _ChecklistRow extends StatelessWidget {
-  const _ChecklistRow({
+/// Level-gate tile: left cell of the requirements row. Shows the
+/// target level as `Lv N`. Met → rarity color + checkmark; unmet →
+/// muted + lock icon. Not tappable (the player can't "open" a
+/// level the way they can open a relic).
+class _LevelGateTile extends StatelessWidget {
+  const _LevelGateTile({
+    required this.level,
+    required this.met,
+    required this.color,
+    required this.l10n,
+  });
+
+  final int level;
+  final bool met;
+  final Color color;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = met ? color : Tokens.onSurfaceMuted;
+    final alpha = met ? 0.9 : 0.55;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(Tokens.radiusInner),
+        border: Border.all(color: accent.withValues(alpha: 0.22)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            met ? Icons.workspace_premium_rounded : Icons.lock_rounded,
+            size: 26,
+            color: accent.withValues(alpha: alpha),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            l10n.cosmeticCompanionLevelBadge(level),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: accent.withValues(alpha: alpha),
+              fontSize: Tokens.fontSizeSmall,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.6,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Relic-gate tile: shows the relic's asset thumb + name. Met →
+/// rarity color + full asset; unmet → muted + dimmed asset (still
+/// rendered — relics are `visibleLocked` in the reveal evaluator,
+/// so the player can already see what they're hunting for). Tap
+/// opens the relic's own [CosmeticDetailsSheet] on top of the
+/// current modal — the player can inspect each gating relic
+/// without backing out to the inventory grid.
+class _RelicGateTile extends StatelessWidget {
+  const _RelicGateTile({
+    required this.conditionRow,
+    required this.color,
+    required this.l10n,
+  });
+
+  final CosmeticRevealConditionRow conditionRow;
+  final Color color;
+  final AppLocalizations l10n;
+
+  static const _ownsPrefix = 'owns_';
+  static const _catalog = CosmeticCatalog();
+
+  @override
+  Widget build(BuildContext context) {
+    final met = conditionRow.met;
+    final relicId =
+        conditionRow.conditionId.substring(_ownsPrefix.length);
+    final relic = _catalog.byId(relicId);
+    final accent = met ? color : Tokens.onSurfaceMuted;
+    final alpha = met ? 0.9 : 0.55;
+    final label = relic == null
+        ? conditionRow.conditionId
+        : relic.name(l10n);
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: relic == null
+          ? null
+          : () => _openRelicDetails(context, relic),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
+        decoration: BoxDecoration(
+          color: accent.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(Tokens.radiusInner),
+          border: Border.all(color: accent.withValues(alpha: 0.22)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CosmeticAssetThumb(
+              cosmeticId: relicId,
+              size: 44,
+              dimmed: !met,
+              fallbackColor: accent,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: accent.withValues(alpha: alpha),
+                fontSize: Tokens.fontSizeTiny,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.2,
+                height: 1.15,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openRelicDetails(BuildContext context, Cosmetic relic) {
+    final cosmetics = context.read<CosmeticsProvider>();
+    final state = cosmetics.state;
+    if (state == null) return;
+    final revealResults =
+        cosmetics.computeRevealResults(kCosmeticUnlockRules);
+    final revealResult = revealResults[relic.id];
+    showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => CosmeticDetailsSheet(
+        definition: relic,
+        state: state,
+        l10n: l10n,
+        revealResult: revealResult,
+      ),
+    );
+  }
+}
+
+/// Fallback for any condition id that isn't a known `level_at_least_`
+/// or `owns_` gate. Renders the legacy text row so a future
+/// condition kind shows up rather than disappearing silently.
+class _LegacyTextRow extends StatelessWidget {
+  const _LegacyTextRow({
     required this.row,
     required this.color,
     required this.l10n,
@@ -778,24 +995,6 @@ class _ChecklistRow extends StatelessWidget {
   final CosmeticRevealConditionRow row;
   final Color color;
   final AppLocalizations l10n;
-
-  static const _catalog = CosmeticCatalog();
-  static const _levelPrefix = 'level_at_least_';
-  static const _ownsPrefix = 'owns_';
-
-  String _label() {
-    final id = row.conditionId;
-    if (id.startsWith(_levelPrefix)) {
-      final level = int.tryParse(id.substring(_levelPrefix.length));
-      if (level != null) return l10n.cosmeticCompanionLevelGate(level);
-    }
-    if (id.startsWith(_ownsPrefix)) {
-      final cosmeticId = id.substring(_ownsPrefix.length);
-      final name = _catalog.byId(cosmeticId)?.name(l10n);
-      if (name != null) return name;
-    }
-    return id.replaceAll('_', ' ');
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -814,7 +1013,7 @@ class _ChecklistRow extends StatelessWidget {
           const SizedBox(width: 7),
           Expanded(
             child: Text(
-              _label(),
+              row.conditionId.replaceAll('_', ' '),
               style: TextStyle(
                 color: metColor.withValues(alpha: row.met ? 0.9 : 0.6),
                 fontSize: Tokens.fontSizeCaption,

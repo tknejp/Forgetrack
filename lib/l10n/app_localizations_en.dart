@@ -4143,6 +4143,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String cosmeticCompanionLevelBadge(int level) {
+    return 'Lv $level';
+  }
+
+  @override
   String get cosmeticRarityCommon => 'Common';
 
   @override
