@@ -164,9 +164,7 @@ Po dokončení Track A je doménový refactor **permanently closed**. Žádné n
 
 **Scope:**
 
-- **R.5.a — Phase 9-13 retroactive smoke check** (was §2.22):
-  - Dev pass through Cosmetics screen tabs / companion claim journey / cosmetic_details_sheet checklist / Loadout slot equip / EmblemBoard 11-slot grid / chapter screens. Validate behavior parity against pre-refactor expectations. ~1-2 hod manual work.
-  - Document outcomes in this file under "completed" once done.
+- **R.5.a — Phase 9-13 retroactive smoke check** (was §2.22) — see rubric below. Operator pass on debug build; outcomes recorded inline.
 - **R.5.b — Celebration widget golden tests** (was §2.5):
   - 3 golden tests: topsheet (single XP), fullscreen (chapter completion legendary), companion claim reveal (fullscreen with animation final frame).
   - Adopt `golden_toolkit` or `flutter_test` built-in matchers.
@@ -184,6 +182,52 @@ Po dokončení Track A je doménový refactor **permanently closed**. Žádné n
 **Risk:** Nízké. Test addition can't regress existing behavior.
 
 **Estimated size:** R.5.a ~½ den, R.5.b ~1 den, R.5.c ~2 dny. Total ~3-4 days.
+
+#### R.5.a Smoke check rubric — Phase 9-13 retroactive verification
+
+Per-screen checklist derived from the Test plan + DoD blocks in [archive/migration_plan.md](archive/migration_plan.md) Phase 9-13. Operator pass on a debug build; tick each row as **PASS** / **FAIL — &lt;note&gt;**. Any FAIL with a domain root cause is fixed in the same sub-PR; UI polish regressions get bullet-listed in the closing block (no new follow-ups, per Track A discipline §2 intro).
+
+**Phase 9 — Cosmetic sealed catalog (7 subtypes)** — Cosmetics screen
+
+- [ ] All 7 tabs render without crash: Frame / Background / Companion / Relic / Emblem / TitleFlair / MapEffect.
+- [ ] Tab swap is instant; catalog count per tab matches devtools matrix.
+- [ ] Inspect any single cosmetic — `is Frame` / `is Companion` / etc. pattern-matched UI (rarity badge + type tag) renders the correct subtype label, **not** the old enum value.
+
+**Phase 10 — PlayerCosmeticLifecycle + Inventory** — `cosmetic_details_sheet`
+
+- [ ] `CosmeticHidden` — sheet refuses to open (or renders the silhouette-only placeholder, per current UX). No name, no portrait, no rarity badge.
+- [ ] `CosmeticTeased(rows)` — checklist rows match what the pre-refactor `CosmeticRevealState.rows` would have produced for the same input (no row drift). Identity stays hidden for companions.
+- [ ] `CosmeticClaimable(claimVia)` — claim CTA present; "available via &lt;source&gt;" hint shows the resolver's claimVia label.
+- [ ] `CosmeticOwned` — claim CTA gone; full identity visible; equip / inspect buttons present per type's loadout slot.
+
+**Phase 11 — Companion lifecycle merge** — companion claim journey
+
+- [ ] Open devtools companion matrix; pick a Hidden companion → details sheet shows silhouette only (`hidesIdentity == true`).
+- [ ] Transition the companion to Teased — checklist sheet opens; identity still hidden.
+- [ ] Meet the listed requirements; sheet flips to Claimable — claim button enables; identity still hidden.
+- [ ] Tap claim — reveal animation plays; sheet ends in Owned; **identity (name + portrait) now visible**.
+- [ ] No leftover references to `CompanionState` or `CompanionsRegistry` in the visible UI strings / log payloads.
+
+**Phase 12 — Loadout + EmblemBoard relocation**
+
+- [ ] Loadout: each of 7 slots (frame / relic / background / emblem / companion / titleFlair / mapEffect) accepts an Owned cosmetic of the matching subtype and rejects mismatched types.
+- [ ] Swap an equipped cosmetic; profile header / avatar preview updates without a manual refresh.
+- [ ] EmblemBoard: 11-slot grid renders in 4+4+3 layout on profile header; pin / unpin an emblem; verify SharedPreferences key `pinned_emblems_{uid}` persists across app restart (sign out + back in is acceptable proxy).
+
+**Phase 13 — ChapterLifecycle + Chapter catalog wrapper** — `_ChapterSection` in `quests_screen.dart` + `EngineChapterCard`
+
+- [ ] `ChapterLocked(gate)` — chapter card shows the locked state with the gate's `UnlockCondition` summary; no underlying quest rows leak through.
+- [ ] `ChapterUnlockedNotStarted` — chapter card shows opener entry as next action; no in-progress badge.
+- [ ] `ChapterInProgress` — current step quest highlighted; chain progress (X / Y) accurate.
+- [ ] `ChapterCompleted` — finale + completion node display as done; side-quests (if any remain unclaimed) still shown as auxiliary.
+
+**Operator outcomes (R.5.a closing block):** *to be filled in after the pass.*
+
+- Pass date: *yyyy-mm-dd*
+- Build: *debug, branch `refactor/domain-model-design` @ &lt;sha&gt;*
+- Result: *PASS overall* / *FAIL — see fixes below*
+- Fixes landed in this sub-PR: *list*
+- Code-driven smoke supplement: **none.** Doc-only variant chosen — the lifecycle-state pattern-matching widget tests that would constitute the code-driven smoke layer naturally arrive in R.5.b (celebration reward states) and the existing per-lifecycle widget tests under `test/widgets/`. Adding a parallel smoke layer here would duplicate that coverage for no orthogonal signal.
 
 ---
 
