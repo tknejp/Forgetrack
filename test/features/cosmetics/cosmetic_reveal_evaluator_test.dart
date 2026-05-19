@@ -88,11 +88,13 @@ void main() {
       expect(result.satisfiedConditions, 0);
     });
 
-    test('companion_ember_sprite returns visibleLocked at level 0 (always in teaser range)', () {
-      // atLevel(5): teaser threshold = 5-10 = -5. Level 0 â‰¥ -5 â†’ visibleLocked.
+    test('companion_ember_sprite returns hidden at level 0 (no condition met yet)', () {
+      // Sub-issue 5: companion stays hidden until at least one condition
+      // fires. ember_sprite gate is 5; at level 0 with no relics, zero
+      // of the 3 conditions are met → hidden (no teaser surfaced).
       const id = 'companion_ember_sprite';
       final results = _evaluate(owned: {});
-      expect(results[id]?.state, CosmeticRevealState.visibleLocked);
+      expect(results[id]?.state, CosmeticRevealState.hidden);
     });
 
     test('hidden item does not surface name, asset, or unlock hint via state', () {
@@ -142,46 +144,56 @@ void main() {
       expect(results[id]?.state, CosmeticRevealState.visibleLocked);
     });
 
-    test('companion teaser: visibleLocked once level reaches minLevel-10', () {
-      // companion_ruin_raven: minLevel=25, teaser threshold=15.
-      // At level 15, 0 conditions met but level >= 15 â†’ visibleLocked.
+    test('companion at gate level − 1 with 0 conditions met stays hidden '
+        '(sub-issue 5: level proximity alone no longer reveals teaser)', () {
+      // companion_ruin_raven: gate 25. Level 24, no relics.
       const id = 'companion_ruin_raven';
-      final results = _evaluate(snapshot: _snapshot(level: 15), owned: {});
-      expect(results[id]?.state, CosmeticRevealState.visibleLocked);
-    });
-
-    test('companion teaser: hidden one level below teaser threshold', () {
-      // companion_ruin_raven: teaser threshold=15. Level 14 â†’ still hidden.
-      const id = 'companion_ruin_raven';
-      final results = _evaluate(snapshot: _snapshot(level: 14), owned: {});
+      final results = _evaluate(snapshot: _snapshot(level: 24), owned: {});
       expect(results[id]?.state, CosmeticRevealState.hidden);
     });
+  });
 
-    test('companion teaser has conditionRows populated', () {
-      // At teaser threshold, conditionRows must list all 3 conditions.
+  group('CosmeticRevealEvaluator — companion teaser (sub-issue 5)', () {
+    test('crossing the level gate alone surfaces the partial teaser', () {
+      // companion_ruin_raven: gate 25. At level 25 with no relics,
+      // 1 of 3 conditions fires (the level) → partial teaser appears.
       const id = 'companion_ruin_raven';
-      final results = _evaluate(snapshot: _snapshot(level: 15), owned: {});
-      final rows = results[id]?.conditionRows;
-      expect(rows, isNotNull);
-      expect(rows!.length, 3);
-      expect(rows[0].conditionId, 'level_at_least_25');
-      expect(rows[0].met, isFalse);
-      expect(rows[1].met, isFalse);
-      expect(rows[2].met, isFalse);
+      final results = _evaluate(snapshot: _snapshot(level: 25), owned: {});
+      final result = results[id]!;
+      expect(result.state, CosmeticRevealState.partial);
+      expect(result.satisfiedConditions, 1);
+      expect(result.totalConditions, 3);
     });
 
-    test('companion teaser conditionRows reflect owned relic', () {
-      // If player owns relic_ruin_seal, that condition row must be met=true.
+    test('owning a single relic alone surfaces the partial teaser, '
+        'even below gate level', () {
+      // companion_ruin_raven below gate but owns one relic → 1/3 → partial.
       const id = 'companion_ruin_raven';
       const relic = 'relic_ruin_seal';
       final results = _evaluate(
-        snapshot: _snapshot(level: 15, owned: {relic}),
+        snapshot: _snapshot(level: 1, owned: {relic}),
         owned: {relic},
       );
-      final rows = results[id]?.conditionRows;
+      final result = results[id]!;
+      expect(result.state, CosmeticRevealState.partial);
+      expect(result.satisfiedConditions, 1);
+    });
+
+    test('teaser conditionRows reflect owned relic when partially revealed', () {
+      const id = 'companion_ruin_raven';
+      const relic = 'relic_ruin_seal';
+      final results = _evaluate(
+        snapshot: _snapshot(level: 25, owned: {relic}),
+        owned: {relic},
+      );
+      final result = results[id]!;
+      expect(result.state, CosmeticRevealState.partial);
+      final rows = result.conditionRows;
       expect(rows, isNotNull);
-      // owns_relic_ruin_seal row should be met
-      final relicRow = rows!.firstWhere((r) => r.conditionId == 'owns_$relic');
+      final levelRow = rows!.firstWhere(
+          (r) => r.conditionId == 'level_at_least_25');
+      expect(levelRow.met, isTrue);
+      final relicRow = rows.firstWhere((r) => r.conditionId == 'owns_$relic');
       expect(relicRow.met, isTrue);
     });
   });
