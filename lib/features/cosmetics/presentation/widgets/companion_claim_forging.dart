@@ -41,6 +41,7 @@ class CompanionClaimForging extends StatefulWidget {
     required this.color,
     required this.onReveal,
     required this.onComplete,
+    this.relicColors = const [],
     this.destSlotKey,
     this.hideCompanion,
   });
@@ -57,7 +58,17 @@ class CompanionClaimForging extends StatefulWidget {
   /// back gracefully (the missing slots simply do not render).
   final List<String> relicIds;
 
-  /// Accent color (typically companion rarity color).
+  /// Per-relic rarity colors, parallel to [relicIds]. Drives the
+  /// orbit-time drop shadow so each relic glows in its own rarity
+  /// tint. Defaults to empty, in which case each relic falls back
+  /// to [color] (the companion's rarity).
+  final List<Color> relicColors;
+
+  /// Companion rarity color — used for the scene-wide outer glow,
+  /// aura bloom inner tint, particle burst / wisps / reveal sparks,
+  /// and the sprite drop-shadow. The bright "hot core" of every
+  /// gradient stays white-gold so the rarity tint reads as the
+  /// halo around the reveal, not as a flat repaint.
   final Color color;
 
   /// Engine-write hook — fires once at t ≈ [_kRevealMs].
@@ -228,6 +239,7 @@ class _CompanionClaimForgingState extends State<CompanionClaimForging>
               companion: widget.companion,
               assetPath: widget.assetPath,
               relicIds: widget.relicIds,
+              relicColors: widget.relicColors,
               color: widget.color,
               l10n: l10n,
             );
@@ -247,6 +259,7 @@ class _ForgingScene extends StatelessWidget {
     required this.companion,
     required this.assetPath,
     required this.relicIds,
+    required this.relicColors,
     required this.color,
     required this.l10n,
   });
@@ -258,6 +271,7 @@ class _ForgingScene extends StatelessWidget {
   final Cosmetic companion;
   final String? assetPath;
   final List<String> relicIds;
+  final List<Color> relicColors;
   final Color color;
   final AppLocalizations l10n;
 
@@ -292,9 +306,11 @@ class _ForgingScene extends StatelessWidget {
             color: Tokens.bg.withValues(alpha: 0.55 * dim),
           ),
         ),
-        // Soft scene-wide glow under the eventual sprite. Composed
-        // from two radial layers so the warm ember tone reads on
-        // dark surface without blowing out at full opacity.
+        // Soft scene-wide glow under the eventual sprite. Inner
+        // stop stays warm white-gold (so the core reads as a
+        // luminous hot spot regardless of rarity); the mid stop
+        // adopts the companion's rarity tint so the halo
+        // colour-codes the reveal.
         Positioned(
           left: cx - 220,
           top: cy - 220,
@@ -306,9 +322,9 @@ class _ForgingScene extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFFFFC850)
-                        .withValues(alpha: 0.35 * aura.clamp(0.0, 1.0)),
-                    Tokens.accent.withValues(alpha: 0.15 * sprite),
+                    const Color(0xFFFFE9A8)
+                        .withValues(alpha: 0.32 * aura.clamp(0.0, 1.0)),
+                    color.withValues(alpha: 0.22 * sprite),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.35, 0.7],
@@ -330,8 +346,9 @@ class _ForgingScene extends StatelessWidget {
             ),
           ),
         ),
-        // Aura bloom — small focused white-gold disc that grows
-        // before the sprite settles in.
+        // Aura bloom — small focused disc that grows before the
+        // sprite settles in. Hot white-gold core fades into the
+        // companion's rarity tint at the edge.
         if (aura > 0 && sprite < 1)
           Positioned(
             left: cx,
@@ -346,15 +363,15 @@ class _ForgingScene extends StatelessWidget {
                     child: Container(
                       width: 1,
                       height: 1,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
                           colors: [
-                            Color(0xFFFFDC8C),
-                            Color(0x66FFA03C),
-                            Color(0x00000000),
+                            const Color(0xFFFFEFC2),
+                            color.withValues(alpha: 0.40),
+                            const Color(0x00000000),
                           ],
-                          stops: [0.0, 0.4, 0.7],
+                          stops: const [0.0, 0.4, 0.7],
                         ),
                       ),
                     ),
@@ -363,13 +380,17 @@ class _ForgingScene extends StatelessWidget {
               ),
             ),
           ),
-        // Relics (orbit + spiral). Hidden after pull.
+        // Relics (orbit + spiral). Hidden after pull. Each relic
+        // glows in its own rarity color; missing entries fall back
+        // to the companion's rarity color.
         if (t < _kPullEndMs)
           for (var i = 0; i < relicGeoms.length && i < relicIds.length; i++)
             _PositionedRelic(
               geom: relicGeoms[i],
               relicId: relicIds[i],
-              color: color,
+              glowColor:
+                  i < relicColors.length ? relicColors[i] : color,
+              fallbackColor: color,
             ),
         // Companion sprite — fades in for the reveal.
         if (sprite > 0)
@@ -486,12 +507,19 @@ class _PositionedRelic extends StatelessWidget {
   const _PositionedRelic({
     required this.geom,
     required this.relicId,
-    required this.color,
+    required this.glowColor,
+    required this.fallbackColor,
   });
 
   final _RelicGeom geom;
   final String relicId;
-  final Color color;
+
+  /// Drop-shadow color — the relic's own rarity tint.
+  final Color glowColor;
+
+  /// Tint used by [CosmeticAssetThumb] when the relic has no
+  /// resolvable asset.
+  final Color fallbackColor;
 
   @override
   Widget build(BuildContext context) {
@@ -511,8 +539,8 @@ class _PositionedRelic extends StatelessWidget {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFFF8C2A).withValues(
-                      alpha: (0.5 + 0.5 * geom.glow).clamp(0.0, 1.0),
+                    color: glowColor.withValues(
+                      alpha: (0.45 + 0.45 * geom.glow).clamp(0.0, 1.0),
                     ),
                     blurRadius: 12 + 16 * geom.glow,
                     spreadRadius: 1,
@@ -524,7 +552,7 @@ class _PositionedRelic extends StatelessWidget {
                   cosmeticId: relicId,
                   size: size,
                   borderRadius: 18,
-                  fallbackColor: color,
+                  fallbackColor: fallbackColor,
                 ),
               ),
             ),
@@ -554,7 +582,7 @@ class _CompanionSprite extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFF8C2A).withValues(alpha: shadowAlpha),
+            color: color.withValues(alpha: shadowAlpha),
             blurRadius: 32,
             offset: const Offset(0, 12),
           ),
@@ -699,7 +727,10 @@ class _ForgingParticlesPainter extends CustomPainter {
       final y = cy + math.sin(ang) * dist * ageFrac + 20 * ageFrac * ageFrac;
       final opacity = (1 - ageFrac).clamp(0.0, 1.0);
       final s = 4 * (0.6 + 0.8 * math.sin(ageFrac * math.pi));
-      paint.color = const Color(0xFFFFD166).withValues(alpha: opacity);
+      // Younger particles read as hot-white sparks; as they fade
+      // outward they pick up the rarity tint so the burst plume
+      // colour-codes the reveal.
+      paint.color = _spark(opacity, ageFrac);
       canvas.drawCircle(Offset(x, y), s / 2, paint);
     }
   }
@@ -721,7 +752,10 @@ class _ForgingParticlesPainter extends CustomPainter {
       final y = cy + math.sin(ang) * r * 0.7;
       final opacity = math.sin(ageFrac * math.pi).clamp(0.0, 1.0);
       final s = 3 * (0.7 + 0.6 * (1 - ageFrac));
-      paint.color = const Color(0xFFFFD166).withValues(alpha: opacity);
+      // Wisps converge inward and grow into the sprite — fade
+      // them from the rarity tint at the outer edge toward
+      // hot-white at the convergence point.
+      paint.color = _spark(opacity, 1 - ageFrac);
       canvas.drawCircle(Offset(x, y), s / 2, paint);
     }
   }
@@ -746,9 +780,22 @@ class _ForgingParticlesPainter extends CustomPainter {
           15 * ageFrac * ageFrac;
       final opacity = (1 - ageFrac).clamp(0.0, 1.0);
       final s = 2.5 * (0.6 + 0.8 * math.sin(ageFrac * math.pi));
-      paint.color = const Color(0xFFFFD166).withValues(alpha: opacity * 0.9);
+      paint.color = _spark(opacity * 0.9, ageFrac);
       canvas.drawCircle(Offset(x, y), s / 2, paint);
     }
+  }
+
+  /// Picks a per-particle tint along the white-gold → rarity ramp.
+  /// `mix` of 0 keeps the spark hot-white; 1 fully adopts the
+  /// companion's rarity color. Alpha is multiplied onto the result.
+  Color _spark(double alpha, double mix) {
+    final tinted = Color.lerp(
+          const Color(0xFFFFE9A8),
+          color,
+          mix.clamp(0.0, 1.0),
+        ) ??
+        color;
+    return tinted.withValues(alpha: alpha.clamp(0.0, 1.0));
   }
 
   static double _hash(double v) {

@@ -183,7 +183,7 @@ class _MorphSprite extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFF8C2A).withValues(alpha: shadowAlpha),
+            color: color.withValues(alpha: shadowAlpha),
             blurRadius: shadowBlur,
             offset: Offset(0, shadowOffset),
           ),

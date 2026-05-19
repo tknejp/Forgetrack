@@ -7,7 +7,9 @@ import 'package:provider/provider.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../application/cosmetics_provider.dart';
+import '../../domain/cosmetic_catalog.dart';
 import '../../domain/cosmetic_models.dart';
+import '../cosmetics_screen_internals.dart' show cosmeticRarityColor;
 import 'companion_claim_forging.dart';
 import 'cosmetic_asset_thumb.dart';
 
@@ -137,12 +139,24 @@ class _CompanionClaimFlowState extends State<CompanionClaimFlow>
     final relicIds = widget.relicIds;
     final color = widget.color;
     final onReveal = widget.onClaim;
+    // Resolve each relic's rarity color so the orbit glow matches
+    // the relic itself instead of always reading as ember orange.
+    // Missing catalog entries (orphan ids) fall back to the
+    // companion's rarity color so the visual never goes plain.
+    const catalog = CosmeticCatalog();
+    final relicColors = [
+      for (final id in relicIds)
+        catalog.byId(id)?.rarity != null
+            ? cosmeticRarityColor(catalog.byId(id)!.rarity)
+            : color,
+    ];
     late OverlayEntry entry;
     entry = OverlayEntry(
       builder: (_) => CompanionClaimForging(
         companion: companion,
         assetPath: assetPath,
         relicIds: relicIds,
+        relicColors: relicColors,
         color: color,
         onReveal: onReveal,
         destSlotKey: destSlotKey,
