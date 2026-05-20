@@ -284,6 +284,8 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                         onClaim: _claimQuest,
                         expandedNodeId: _expandedNodeId,
                         onToggleExpanded: _toggleExpanded,
+                        companionBuffBonusFor: (q) =>
+                            provider.projectedCompanionBuffBonusFor(q.node),
                       ),
                     ],
                     if (locked.isNotEmpty) ...[
@@ -666,6 +668,7 @@ class _LongTermSection extends StatelessWidget {
     required this.onClaim,
     required this.expandedNodeId,
     required this.onToggleExpanded,
+    this.companionBuffBonusFor,
   });
 
   final List<EngineLongTermEntry> entries;
@@ -677,6 +680,11 @@ class _LongTermSection extends StatelessWidget {
       onClaim;
   final String? expandedNodeId;
   final void Function(String nodeId) onToggleExpanded;
+
+  /// Resolves the projected companion-buff bonus per long-term
+  /// quest. Wired from the screen the same way the chapter section
+  /// and quest panels do.
+  final int Function(EngineQuestProgress quest)? companionBuffBonusFor;
 
   @override
   Widget build(BuildContext context) {
@@ -703,6 +711,8 @@ class _LongTermSection extends StatelessWidget {
             onClaim: onClaim,
             isExpanded: expandedNodeId == entries[i].quest.nodeId,
             onToggle: () => onToggleExpanded(entries[i].quest.nodeId),
+            companionBuffBonus:
+                companionBuffBonusFor?.call(entries[i].quest) ?? 0,
           ),
         ],
       ],

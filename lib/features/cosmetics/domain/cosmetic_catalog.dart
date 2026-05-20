@@ -786,11 +786,11 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.companions.forest_fox',
       previewAssetKey: 'cosmetics.companions.forest_fox',
       sortOrder: 710,
-      // "Quiet wildwood fox" — forager. +8 % on every nutrition
+      // "Quiet wildwood fox" — forager. +10 % on every nutrition
       // daily-goal claim.
       buff: const FlatCompanionBuff(
         kind: RewardSourceKind.nutritionXp,
-        percent: 8,
+        percent: CompanionBuffPercents.forestFoxNutrition,
       ),
     ),
     Companion(
@@ -822,7 +822,7 @@ class CosmeticCatalog {
       // activity-domain XP (incl. steps + per-recorded-activity).
       buff: const FlatCompanionBuff(
         kind: RewardSourceKind.activityXp,
-        percent: 8,
+        percent: CompanionBuffPercents.bridgeGargoyleActivity,
       ),
     ),
     Companion(
@@ -836,10 +836,10 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.companions.lantern_golem',
       sortOrder: 730,
       // "Flickering lantern in chest" — persistent inner flame.
-      // Flat +16 % streakXp (mid-game upgrade over Ember's dynamic).
+      // Flat +25 % streakXp (mid-game upgrade over Ember's dynamic).
       buff: const FlatCompanionBuff(
         kind: RewardSourceKind.streakXp,
-        percent: 16,
+        percent: CompanionBuffPercents.lanternGolemStreak,
       ),
     ),
     Companion(
@@ -870,14 +870,14 @@ class CosmeticCatalog {
       sortOrder: 738,
       // "Ice plain … living aurora" — calm of night. sleepXp fires
       // exactly 1×/day on the sleep daily-goal claim — the narrowest
-      // source in the taxonomy. Bumped to +45 % so the per-claim
+      // source in the taxonomy. Bumped to +80 % so the per-claim
       // payoff feels worth dedicating the slot to (otherwise a flat
       // mid-tier % loses to broader companions that hit 3-5 claims
       // daily). Daily total contribution still lands well under the
       // 25 % daily share cap because it's a single grant.
       buff: const FlatCompanionBuff(
         kind: RewardSourceKind.sleepXp,
-        percent: 45,
+        percent: CompanionBuffPercents.auroraStagSleep,
       ),
     ),
     Companion(
@@ -891,11 +891,11 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.companions.ice_wisp',
       sortOrder: 740,
       // "Pale spark drawn out" — drawn to signals / tasks.
-      // +17 % on every quest claim (daily + weekly + combo +
+      // +30 % on every quest claim (daily + weekly + combo +
       // long-term + daily-challenge).
       buff: const FlatCompanionBuff(
         kind: RewardSourceKind.questXp,
-        percent: 17,
+        percent: CompanionBuffPercents.iceWispQuest,
       ),
     ),
     Companion(
@@ -909,10 +909,10 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.companions.mountain_gryphon',
       sortOrder: 750,
       // "Rides high ridges with chosen walker" — strong walker
-      // companion. +14 % activityXp (incl. steps).
+      // companion. +50 % activityXp (incl. steps).
       buff: const FlatCompanionBuff(
         kind: RewardSourceKind.activityXp,
-        percent: 14,
+        percent: CompanionBuffPercents.mountainGryphonActivity,
       ),
     ),
     Companion(
@@ -925,16 +925,16 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.companions.dragonling',
       previewAssetKey: 'cosmetics.companions.dragonling',
       sortOrder: 760,
-      // Endgame mistr všeho — +7 % on every XP grant regardless of
+      // Endgame mistr všeho — +15 % on every XP grant regardless of
       // source. The only `allXp` companion.
       buff: const FlatCompanionBuff(
         kind: RewardSourceKind.allXp,
-        percent: 7,
+        percent: CompanionBuffPercents.dragonlingAll,
       ),
     ),
 
     // -------------------------------------------------------------------------
-    // Companions â€” Developer-only (grant via DevTools only)
+    // Companions — Developer-only (grant via DevTools only)
     // -------------------------------------------------------------------------
 
     Companion(

@@ -43,6 +43,7 @@ class EngineLongTermCard extends StatelessWidget {
     required this.onClaim,
     this.isExpanded = false,
     this.onToggle,
+    this.companionBuffBonus = 0,
   });
 
   final EngineLongTermEntry entry;
@@ -60,6 +61,11 @@ class EngineLongTermCard extends StatelessWidget {
       onClaim;
   final bool isExpanded;
   final VoidCallback? onToggle;
+
+  /// Projected companion-buff bonus surfaced as a chip beside the
+  /// headline pill. Defaults to 0 (chip hidden). Owner: parent
+  /// screen, mirroring the quest + chapter card pattern.
+  final int companionBuffBonus;
 
   @override
   Widget build(BuildContext context) {
@@ -178,7 +184,10 @@ class EngineLongTermCard extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    XpClaimPill(key: pillKey, data: _pillData()),
+                    XpClaimPill(
+                      key: pillKey,
+                      data: _pillData(companionBonus: companionBuffBonus),
+                    ),
                     if (canExpand) ...[
                       const SizedBox(height: 4),
                       ..._buildCompanionPills(
@@ -270,7 +279,7 @@ class EngineLongTermCard extends StatelessWidget {
     return pills;
   }
 
-  XpClaimPillData _pillData() {
+  XpClaimPillData _pillData({required int companionBonus}) {
     final quest = entry.quest;
     return switch (quest.lifecycle) {
       QuestClaimed(:final finalXp) => XpClaimPillData.claimed(finalXp),
@@ -278,11 +287,13 @@ class EngineLongTermCard extends StatelessWidget {
         XpClaimPillData.claimable(
           previewXp,
           onTap: (center) => onClaim(quest, from: center),
+          companionBonus: companionBonus,
         ),
       QuestCompletedPendingClaim(:final previewXp) =>
-        XpClaimPillData.locked(previewXp),
+        XpClaimPillData.locked(previewXp, companionBonus: companionBonus),
       QuestAvailable() || QuestLocked() =>
-        XpClaimPillData.locked(quest.previewXp),
+        XpClaimPillData.locked(quest.previewXp,
+            companionBonus: companionBonus),
     };
   }
 }

@@ -218,7 +218,10 @@ void main() {
         timestamp: timestamp,
         context: _context(buff: buff, maxStreak: 0),
       );
-      expect(floor.events.single.companionBuffBonusXp, 3);
+      expect(
+        floor.events.single.companionBuffBonusXp,
+        CompanionBuffPercents.emberFloor,
+      );
 
       final cap = service.build(
         planned: [_planFromNode(streakNode())],
@@ -226,7 +229,10 @@ void main() {
         timestamp: timestamp,
         context: _context(buff: buff, maxStreak: 50),
       );
-      expect(cap.events.single.companionBuffBonusXp, 12);
+      expect(
+        cap.events.single.companionBuffBonusXp,
+        CompanionBuffPercents.emberLong,
+      );
     });
 
     test('Raven weekly emphasis: daily vs weekly quest', () {
@@ -240,8 +246,11 @@ void main() {
         timestamp: timestamp,
         context: _context(buff: buff),
       );
-      // WeeklyQuest with questXp source + weekly bucket → 30 %
-      expect(result.events.single.companionBuffBonusXp, 30);
+      // WeeklyQuest with questXp source + weekly bucket → ravenWeekly.
+      expect(
+        result.events.single.companionBuffBonusXp,
+        CompanionBuffPercents.ravenWeekly,
+      );
     });
 
     test('Cave Lynx depth: chain position drives percent', () {
@@ -260,13 +269,13 @@ void main() {
         );
         return result.events.single.companionBuffBonusXp ?? 0;
       }
-      // Opener tier (25 %) sits under the single-grant cap and
-      // applies raw. Mid (40 %) and deep (65 %) tiers both blow
-      // through the 25 % share cap on a 100-base grant and read
-      // back at the cap value (33). The buff resolution itself is
-      // covered exhaustively in `companion_buff_test.dart`; here we
-      // just verify the engine pipes chain position into the rule.
-      expect(bonusForChainOrder(0), 25);
+      // Opener tier sits under the single-grant cap and applies raw;
+      // mid + deep tiers blow through the 25 % share cap on a 100-base
+      // grant and read back at the cap value (33). The buff resolution
+      // itself is covered exhaustively in `companion_buff_test.dart`;
+      // here we just verify the engine pipes chain position into the
+      // rule. (Single-grant cap = floor(0.25 × 100 / 0.75) = 33.)
+      expect(bonusForChainOrder(0), CompanionBuffPercents.lynxOpener);
       expect(bonusForChainOrder(2), 33);
       expect(bonusForChainOrder(5), 33);
     });

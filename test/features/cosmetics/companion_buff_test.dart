@@ -46,7 +46,7 @@ void main() {
               currentStreak: s,
             ),
           ),
-          3,
+          CompanionBuffPercents.emberFloor,
           reason: 'streak=$s should hit floor',
         );
       }
@@ -59,12 +59,12 @@ void main() {
               currentStreak: s,
             ),
           );
-      expect(forStreak(4), 6);
-      expect(forStreak(7), 6);
-      expect(forStreak(8), 9);
-      expect(forStreak(14), 9);
-      expect(forStreak(15), 12);
-      expect(forStreak(100), 12);
+      expect(forStreak(4), CompanionBuffPercents.emberShort);
+      expect(forStreak(7), CompanionBuffPercents.emberShort);
+      expect(forStreak(8), CompanionBuffPercents.emberMedium);
+      expect(forStreak(14), CompanionBuffPercents.emberMedium);
+      expect(forStreak(15), CompanionBuffPercents.emberLong);
+      expect(forStreak(100), CompanionBuffPercents.emberLong);
     });
   });
 
@@ -82,7 +82,7 @@ void main() {
             rewardSourceKind: RewardSourceKind.questXp,
           ),
         ),
-        5,
+        CompanionBuffPercents.ravenDaily,
       );
       expect(
         buff.resolvePercent(
@@ -91,7 +91,7 @@ void main() {
             isWeeklyQuestSource: true,
           ),
         ),
-        30,
+        CompanionBuffPercents.ravenWeekly,
       );
     });
   });
@@ -111,16 +111,16 @@ void main() {
             ),
           );
       // Null position falls back to opener tier.
-      expect(forPos(null), 25);
+      expect(forPos(null), CompanionBuffPercents.lynxOpener);
       // 0–1 → opener.
-      expect(forPos(0), 25);
-      expect(forPos(1), 25);
+      expect(forPos(0), CompanionBuffPercents.lynxOpener);
+      expect(forPos(1), CompanionBuffPercents.lynxOpener);
       // 2–3 → mid.
-      expect(forPos(2), 40);
-      expect(forPos(3), 40);
+      expect(forPos(2), CompanionBuffPercents.lynxMid);
+      expect(forPos(3), CompanionBuffPercents.lynxMid);
       // 4+ → deep.
-      expect(forPos(4), 65);
-      expect(forPos(7), 65);
+      expect(forPos(4), CompanionBuffPercents.lynxDeep);
+      expect(forPos(7), CompanionBuffPercents.lynxDeep);
     });
   });
 }

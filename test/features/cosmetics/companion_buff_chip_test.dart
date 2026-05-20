@@ -39,7 +39,7 @@ void main() {
         color: Color(0xFFFF8C2A),
       )));
       expect(
-        find.text('+3–12 % XP ze streaku (roste s plamenem)'),
+        find.text('+5–20 % XP ze streaku (roste s plamenem)'),
         findsOneWidget,
       );
     });
@@ -62,7 +62,7 @@ void main() {
       )));
       expect(
         find.text(
-            '+25–65 % XP za chapter questy (roste s hloubkou řetězce)'),
+            '+20–80 % XP za chapter questy (roste s hloubkou řetězce)'),
         findsOneWidget,
       );
     });
@@ -83,10 +83,10 @@ void main() {
       );
       // The live ARB key renders the resolved tier inline.
       expect(
-        find.textContaining('65'),
+        find.textContaining('80'),
         findsWidgets,
         reason:
-            'Banner should headline the deep-tier live percent (65) when '
+            'Banner should headline the deep-tier live percent (80) when '
             'the player is at or past chain position 4.',
       );
     });
@@ -103,8 +103,8 @@ void main() {
         ),
       );
       // No active chain → range headline still mentions both ends.
-      expect(find.textContaining('25'), findsWidgets);
-      expect(find.textContaining('65'), findsWidgets);
+      expect(find.textContaining('20'), findsWidgets);
+      expect(find.textContaining('80'), findsWidgets);
     });
   });
 }

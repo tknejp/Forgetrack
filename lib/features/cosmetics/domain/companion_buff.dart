@@ -1,5 +1,8 @@
 import 'package:forgetrack/domain/progression/catalog/reward_source_kind.dart';
 
+import 'companion_buff_config.dart';
+
+export 'companion_buff_config.dart';
 export 'package:forgetrack/domain/progression/catalog/reward_source_kind.dart'
     show RewardSourceKind;
 
@@ -82,10 +85,10 @@ final class FlatCompanionBuff extends CompanionBuff {
 /// overshadowing rare / epic flat buffs at higher tiers.
 final class StreakLengthCompanionBuff extends CompanionBuff {
   const StreakLengthCompanionBuff({
-    this.floorPercent = 3,
-    this.shortStreakPercent = 6,
-    this.mediumStreakPercent = 9,
-    this.longStreakPercent = 12,
+    this.floorPercent = CompanionBuffPercents.emberFloor,
+    this.shortStreakPercent = CompanionBuffPercents.emberShort,
+    this.mediumStreakPercent = CompanionBuffPercents.emberMedium,
+    this.longStreakPercent = CompanionBuffPercents.emberLong,
   });
 
   @override
@@ -120,8 +123,8 @@ final class StreakLengthCompanionBuff extends CompanionBuff {
 /// "seen most often after a weekly quest is closed".
 final class WeeklyEmphasisCompanionBuff extends CompanionBuff {
   const WeeklyEmphasisCompanionBuff({
-    this.dailyPercent = 5,
-    this.weeklyPercent = 30,
+    this.dailyPercent = CompanionBuffPercents.ravenDaily,
+    this.weeklyPercent = CompanionBuffPercents.ravenWeekly,
   });
 
   @override
@@ -144,9 +147,9 @@ final class WeeklyEmphasisCompanionBuff extends CompanionBuff {
 /// arc per chapter rather than a single permanent ramp.
 final class ChapterDepthCompanionBuff extends CompanionBuff {
   const ChapterDepthCompanionBuff({
-    this.openerPercent = 25,
-    this.midPercent = 40,
-    this.deepPercent = 65,
+    this.openerPercent = CompanionBuffPercents.lynxOpener,
+    this.midPercent = CompanionBuffPercents.lynxMid,
+    this.deepPercent = CompanionBuffPercents.lynxDeep,
   });
 
   @override
