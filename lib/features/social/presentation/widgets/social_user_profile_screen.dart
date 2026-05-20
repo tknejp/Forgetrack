@@ -273,8 +273,13 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
                         i++)
                       null,
                   ];
+            // Owner always gets slot 0 as a live entry point — even
+            // with zero unlocks, tapping it opens the picker (which
+            // surfaces the "Zatím nemáš odemčený žádný znak." empty
+            // state) instead of leaving a fresh player with no path
+            // into the emblem system from the profile.
             final unlockedCount = isMe
-                ? ownUnlockedEmblems.length
+                ? (ownUnlockedEmblems.isEmpty ? 1 : ownUnlockedEmblems.length)
                 : (profile?.equippedCosmetics.emblemId == null ? 0 : 1);
 
             // The top app bar is rendered as a transparent overlay on

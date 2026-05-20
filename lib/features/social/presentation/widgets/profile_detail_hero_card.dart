@@ -903,6 +903,7 @@ class _EmblemSlot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final emblem = data.emblem;
+    final Widget content;
     if (emblem != null) {
       final assetPath = CosmeticsConfig.standard().resolveAssetPath(
         emblem.previewAssetKey ?? emblem.assetKey,
@@ -916,19 +917,35 @@ class _EmblemSlot extends StatelessWidget {
       final rarityColor = RarityPalette.forRarity(emblem.rarity).color;
       final haloAlpha = data.pinned ? 0.32 : 0.18;
       const topPadding = 8.0;
-      return GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: SizedBox(
-          width: size,
-          height: size,
-          child: Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
-            children: [
-              // Soft round halo — bleeds slightly past the slot bounds
-              // so the rarity colour never aligns with the slot's
-              // right/bottom edges.
+      content = SizedBox(
+        width: size,
+        height: size,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            // Soft round halo — bleeds slightly past the slot bounds
+            // so the rarity colour never aligns with the slot's
+            // right/bottom edges.
+            Positioned.fill(
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        rarityColor.withValues(alpha: haloAlpha),
+                        rarityColor.withValues(alpha: 0),
+                      ],
+                      stops: const [0.0, 0.7],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // Pinned emblems get a second tighter halo for a "lit up"
+            // feel without resorting to a hard outline.
+            if (data.pinned)
               Positioned.fill(
                 child: IgnorePointer(
                   child: DecoratedBox(
@@ -936,85 +953,88 @@ class _EmblemSlot extends StatelessWidget {
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          rarityColor.withValues(alpha: haloAlpha),
+                          rarityColor.withValues(alpha: 0.30),
                           rarityColor.withValues(alpha: 0),
                         ],
-                        stops: const [0.0, 0.7],
+                        stops: const [0.0, 0.45],
                       ),
                     ),
                   ),
                 ),
               ),
-              // Pinned emblems get a second tighter halo for a "lit up"
-              // feel without resorting to a hard outline.
-              if (data.pinned)
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            rarityColor.withValues(alpha: 0.30),
-                            rarityColor.withValues(alpha: 0),
-                          ],
-                          stops: const [0.0, 0.45],
+            Padding(
+              padding: const EdgeInsets.only(top: topPadding),
+              child: SizedBox(
+                width: size,
+                height: size - topPadding,
+                child: assetPath == null
+                    ? const Icon(
+                        Icons.shield_moon_rounded,
+                        color: Colors.white70,
+                      )
+                    : Image.asset(assetPath, fit: BoxFit.contain),
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // Empty slot — dashed dim square with a centre dot (or a faint
+      // star glyph for the end-game slot). Empty-but-unlocked slots
+      // still need the GestureDetector below so the owner can pin
+      // something into them — without that wrap they'd be visually
+      // present but tap-dead after a "Remove from slot" action.
+      content = SizedBox(
+        width: size,
+        height: size,
+        child: CustomPaint(
+          painter: _DashedBorderPainter(
+            color: const Color(0x17FFFFFF), // rgba(255,255,255,0.09)
+            radius: 9,
+            dashWidth: 3,
+            dashGap: 3,
+            strokeWidth: 1,
+            fillColor: const Color(0x07FFFFFF), // rgba(255,255,255,0.025)
+          ),
+          child: Center(
+            child: data.endGame
+                ? CustomPaint(
+                    size: Size(size * 0.45, size * 0.45),
+                    painter: _StarGlyphPainter(
+                      color: const Color(0x38FFFFFF), // rgba(255,255,255,0.22)
+                    ),
+                  )
+                : data.unlocked
+                    // Unlocked-but-empty slot: a subtle "+" glyph so
+                    // the affordance reads as "tap to pin" instead of
+                    // a decorative locked square.
+                    ? Icon(
+                        Icons.add_rounded,
+                        size: size * 0.42,
+                        color: Colors.white.withValues(alpha: 0.42),
+                      )
+                    : Container(
+                        width: 4,
+                        height: 4,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Color(0x2EFFFFFF), // rgba(255,255,255,0.18)
                         ),
                       ),
-                    ),
-                  ),
-                ),
-              Padding(
-                padding: const EdgeInsets.only(top: topPadding),
-                child: SizedBox(
-                  width: size,
-                  height: size - topPadding,
-                  child: assetPath == null
-                      ? const Icon(
-                          Icons.shield_moon_rounded,
-                          color: Colors.white70,
-                        )
-                      : Image.asset(assetPath, fit: BoxFit.contain),
-                ),
-              ),
-            ],
           ),
         ),
       );
     }
 
-    // Locked slot — dashed dim square with a centre dot (or a faint
-    // star glyph for the end-game slot).
-    return SizedBox(
-      width: size,
-      height: size,
-      child: CustomPaint(
-        painter: _DashedBorderPainter(
-          color: const Color(0x17FFFFFF), // rgba(255,255,255,0.09)
-          radius: 9,
-          dashWidth: 3,
-          dashGap: 3,
-          strokeWidth: 1,
-          fillColor: const Color(0x07FFFFFF), // rgba(255,255,255,0.025)
-        ),
-        child: Center(
-          child: data.endGame
-              ? CustomPaint(
-                  size: Size(size * 0.45, size * 0.45),
-                  painter: _StarGlyphPainter(
-                    color: const Color(0x38FFFFFF), // rgba(255,255,255,0.22)
-                  ),
-                )
-              : Container(
-                  width: 4,
-                  height: 4,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color(0x2EFFFFFF), // rgba(255,255,255,0.18)
-                  ),
-                ),
-        ),
-      ),
+    // Wrap once at the top level so filled and empty branches share
+    // the same hit target. `onTap == null` (locked slot) skips the
+    // wrap so taps fall through to whatever sits underneath instead
+    // of being silently swallowed by an opaque hit area.
+    if (onTap == null) return content;
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: content,
     );
   }
 }
