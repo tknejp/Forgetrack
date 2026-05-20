@@ -4320,6 +4320,84 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String progStreakInfoPlainHeadline(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days in a row',
+      one: '1 day in a row',
+      zero: 'No streak yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String progStreakInfoLiveHeadline(int count, int percent) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count-day streak',
+      one: '1-day streak',
+    );
+    return '$_temp0 · +$percent% XP';
+  }
+
+  @override
+  String progStreakInfoLiveNextTier(int percent, int threshold) {
+    return '+$percent% from $threshold-day streak';
+  }
+
+  @override
+  String progStreakInfoLiveCap(int percent) {
+    return 'Top tier reached — current bonus +$percent% XP';
+  }
+
+  @override
+  String progStreakInfoLockedHeadline(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count-day streak · bonus locked',
+      one: '1-day streak · bonus locked',
+      zero: 'Bonus locked',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String progStreakInfoLockedSubtitle(
+      int daysToUnlock, int percent, int unlockStreak) {
+    String _temp0 = intl.Intl.pluralLogic(
+      daysToUnlock,
+      locale: localeName,
+      other: '$daysToUnlock more days',
+      one: '1 more day',
+    );
+    return '$_temp0 for +$percent% XP at a $unlockStreak-day streak';
+  }
+
+  @override
+  String progStreakInfoLegendaryHeadline(int count) {
+    return '$count-day legendary streak';
+  }
+
+  @override
+  String progStreakInfoLegendarySubtitle(int percent) {
+    return 'Legendary bonus active — +$percent% XP';
+  }
+
+  @override
+  String progStreakInfoBest(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return 'Best ever: $_temp0';
+  }
+
+  @override
   String cosmeticBuffFlat(int percent, String source) {
     return '+$percent% XP $source';
   }

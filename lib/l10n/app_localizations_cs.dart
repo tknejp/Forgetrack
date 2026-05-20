@@ -4315,6 +4315,96 @@ class AppLocalizationsCs extends AppLocalizations {
   }
 
   @override
+  String progStreakInfoPlainHeadline(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count dní v řadě',
+      few: '$count dny v řadě',
+      one: '1 den v řadě',
+      zero: 'Žádný streak',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String progStreakInfoLiveHeadline(int count, int percent) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Streak $count dní',
+      few: 'Streak $count dny',
+      one: 'Streak 1 den',
+    );
+    return '$_temp0 · +$percent % XP';
+  }
+
+  @override
+  String progStreakInfoLiveNextTier(int percent, int threshold) {
+    return '+$percent % od streaku $threshold+ dní';
+  }
+
+  @override
+  String progStreakInfoLiveCap(int percent) {
+    return 'Maximální bonus — +$percent % XP';
+  }
+
+  @override
+  String progStreakInfoLockedHeadline(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Streak $count dní · bonus zamčen',
+      few: 'Streak $count dny · bonus zamčen',
+      one: 'Streak 1 den · bonus zamčen',
+      zero: 'Bonus zamčen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String progStreakInfoLockedSubtitle(
+      int daysToUnlock, int percent, int unlockStreak) {
+    String _temp0 = intl.Intl.pluralLogic(
+      daysToUnlock,
+      locale: localeName,
+      other: 'Ještě $daysToUnlock dní',
+      few: 'Ještě $daysToUnlock dny',
+      one: 'Ještě 1 den',
+    );
+    return '$_temp0 pro +$percent % XP od streaku ${unlockStreak}d';
+  }
+
+  @override
+  String progStreakInfoLegendaryHeadline(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Legendární streak — $count dní',
+      few: 'Legendární streak — $count dny',
+      one: 'Legendární streak — 1 den',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String progStreakInfoLegendarySubtitle(int percent) {
+    return 'Legendární bonus aktivní — +$percent % XP';
+  }
+
+  @override
+  String progStreakInfoBest(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count dní',
+      few: '$count dny',
+      one: '1 den',
+    );
+    return 'Rekord: $_temp0';
+  }
+
+  @override
   String cosmeticBuffFlat(int percent, String source) {
     return '+$percent % XP $source';
   }

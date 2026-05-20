@@ -7623,6 +7623,61 @@ abstract class AppLocalizations {
   /// **'{count}d · +{percent}% from {threshold}d'**
   String questStreakChipLocked(int count, int percent, int threshold);
 
+  /// Expanded-card streak banner headline when no streak buff is equipped (or a non-streak buff like Forest Fox).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No streak yet} =1{1 day in a row} other{{count} days in a row}}'**
+  String progStreakInfoPlainHeadline(int count);
+
+  /// Live tier headline — streak buff equipped and paying out a non-zero percent below the legendary milestone.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1-day streak} other{{count}-day streak}} · +{percent}% XP'**
+  String progStreakInfoLiveHeadline(int count, int percent);
+
+  /// Subtitle hinting at the next visible tier above the current one — legendary milestone is intentionally absent.
+  ///
+  /// In en, this message translates to:
+  /// **'+{percent}% from {threshold}-day streak'**
+  String progStreakInfoLiveNextTier(int percent, int threshold);
+
+  /// Subtitle when the current resolved percent is the highest visible tier (legendary stays hidden).
+  ///
+  /// In en, this message translates to:
+  /// **'Top tier reached — current bonus +{percent}% XP'**
+  String progStreakInfoLiveCap(int percent);
+
+  /// Streak buff equipped but resolved percent is still 0 — Ember tier 0 or Lantern below threshold.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Bonus locked} =1{1-day streak · bonus locked} other{{count}-day streak · bonus locked}}'**
+  String progStreakInfoLockedHeadline(int count);
+
+  /// Subtitle teaching the unlock condition. {daysToUnlock} = remaining days (pluralised), {percent} = bonus at unlock, {unlockStreak} = target streak length surfaced literally for context.
+  ///
+  /// In en, this message translates to:
+  /// **'{daysToUnlock, plural, =1{1 more day} other{{daysToUnlock} more days}} for +{percent}% XP at a {unlockStreak}-day streak'**
+  String progStreakInfoLockedSubtitle(
+      int daysToUnlock, int percent, int unlockStreak);
+
+  /// Hidden tier reveal — only shown once the player reaches the silent 100-day milestone.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}-day legendary streak'**
+  String progStreakInfoLegendaryHeadline(int count);
+
+  /// Legendary subtitle paired with the headline reveal.
+  ///
+  /// In en, this message translates to:
+  /// **'Legendary bonus active — +{percent}% XP'**
+  String progStreakInfoLegendarySubtitle(int percent);
+
+  /// Secondary line in the streak info block. Hidden when the player is already on their best streak so 'current = best' isn't repeated.
+  ///
+  /// In en, this message translates to:
+  /// **'Best ever: {count, plural, =1{1 day} other{{count} days}}'**
+  String progStreakInfoBest(int count);
+
   /// Flat companion buff label. {percent} is integer; {source} is one of the cosmeticBuffSource* strings.
   ///
   /// In en, this message translates to:

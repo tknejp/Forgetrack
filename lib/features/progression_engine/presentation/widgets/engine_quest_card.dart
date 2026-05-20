@@ -15,6 +15,7 @@ import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import 'engine_chapter_card.dart' show EngineChapterChainPreview;
 import 'engine_companion_pill.dart';
 import 'quest_streak_chip.dart';
+import 'quest_streak_info_block.dart';
 import '../../../cosmetics/domain/companion_buff.dart';
 
 /// One quest card in the V2 quests screen.
@@ -312,6 +313,15 @@ class EngineQuestCard extends StatelessWidget {
                         streak: streak,
                         accent: accent,
                         l10n: l10n,
+                        // Main-five-only streak info — the block is
+                        // a no-op for non-streak nodes (`isStreakCard`
+                        // false), but threading the buff + percent
+                        // through unconditionally keeps the
+                        // expanded-detail API symmetric across
+                        // bucket sections.
+                        isStreakCard: isStreakCard,
+                        equippedCompanionBuff: equippedCompanionBuff,
+                        streakBuffPercent: streakBuffPercent,
                       ),
                     )
                   : const SizedBox(width: double.infinity),
@@ -400,6 +410,9 @@ class _ExpandedDetails extends StatelessWidget {
     required this.streak,
     required this.accent,
     required this.l10n,
+    required this.isStreakCard,
+    this.equippedCompanionBuff,
+    this.streakBuffPercent = 0,
   });
 
   final EngineQuestProgress quest;
@@ -407,10 +420,27 @@ class _ExpandedDetails extends StatelessWidget {
   final Color accent;
   final AppLocalizations l10n;
 
+  /// True when this card belongs to a main-five daily-goal entry
+  /// (any reward carries a `streakDomain`). Drives whether the
+  /// pedagogic streak info block renders — non-main-five cards
+  /// never participate in streaks, so the block stays hidden there.
+  final bool isStreakCard;
+
+  /// Equipped companion buff threaded down from the screen, or null
+  /// when no companion is equipped. Combined with [streakBuffPercent]
+  /// to pick the streak block's variant (plain / live / locked /
+  /// legendary).
+  final CompanionBuff? equippedCompanionBuff;
+
+  /// Live-resolved buff percent for *this card's* streak (already
+  /// run through `buff.resolvePercent` by the provider).
+  final int streakBuffPercent;
+
   @override
   Widget build(BuildContext context) {
     final lockedHint = quest.node.lockedHintKey?.call(l10n);
     final bestStreak = streak?.bestStreak ?? 0;
+    final currentStreak = streak?.currentStreak ?? 0;
 
     // The XP value already lives on the pill in the title row — repeating
     // it inside the expanded panel only adds noise. The panel keeps the
@@ -418,6 +448,21 @@ class _ExpandedDetails extends StatelessWidget {
     // bonus XP reward (so the player can read the condition without
     // cluttering the compact description).
     final rows = <Widget>[];
+
+    // Pedagogic streak block — only on main-five daily-goal cards.
+    // Subsumes the legacy "Best: N" detail line because the block
+    // already shows best streak as its secondary line; rendering
+    // both would duplicate the information.
+    if (isStreakCard) {
+      rows.add(QuestStreakInfoBlock(
+        currentStreak: currentStreak,
+        bestStreak: bestStreak,
+        accent: accent,
+        buff: equippedCompanionBuff,
+        resolvedPercent: streakBuffPercent,
+      ));
+    }
+
     for (final reward in quest.node.rewards) {
       if (reward is! BonusXpReward) continue;
       final text = _bonusConditionText(reward.condition, reward.amount, l10n);
@@ -429,7 +474,9 @@ class _ExpandedDetails extends StatelessWidget {
         text: text,
       ));
     }
-    if (bestStreak > 0) {
+    // Non-streak cards still surface the legacy best-streak detail
+    // line because they don't get the richer block.
+    if (!isStreakCard && bestStreak > 0) {
       if (rows.isNotEmpty) rows.add(const SizedBox(height: 6));
       rows.add(_DetailLine(
         icon: Icons.local_fire_department_rounded,
