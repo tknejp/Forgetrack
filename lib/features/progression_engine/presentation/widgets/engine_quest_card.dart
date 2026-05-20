@@ -39,6 +39,7 @@ class EngineQuestCard extends StatelessWidget {
     this.onToggle,
     this.chain = const [],
     this.showCompletedTodayBadge = false,
+    this.companionBuffBonus = 0,
   });
 
   final EngineQuestProgress quest;
@@ -80,6 +81,13 @@ class EngineQuestCard extends StatelessWidget {
   /// moment they tap claim — the universal "rotate only across
   /// midnight" rule keeps today's quest in place.
   final bool showCompletedTodayBadge;
+
+  /// Projected XP bonus from the player's equipped companion buff.
+  /// Pre-claim: rendered as a small chip beside the headline pill so
+  /// the player sees the buff's contribution upfront. Defaults to 0
+  /// (no chip rendered). Owner: parent screen, which has access to
+  /// [ProgressionEngineProvider.projectedCompanionBuffBonusFor].
+  final int companionBuffBonus;
 
   /// Non-XP rewards on this quest. Surface as chips so future quests
   /// carrying cosmetic/title/emblem/relic/chapter/companion payloads
@@ -198,7 +206,10 @@ class EngineQuestCard extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    XpClaimPill(key: pillKey, data: _pillData()),
+                    XpClaimPill(
+                      key: pillKey,
+                      data: _pillData(companionBonus: companionBuffBonus),
+                    ),
                     if (canExpand) ...[
                       const SizedBox(height: 4),
                       EngineCompanionPill(
@@ -264,7 +275,7 @@ class EngineQuestCard extends StatelessWidget {
     );
   }
 
-  XpClaimPillData _pillData() {
+  XpClaimPillData _pillData({required int companionBonus}) {
     // Exhaustive switch on the sealed PlayerQuestLifecycle keeps the
     // four UI states aligned with the engine's resolution output and
     // forces a compiler error if a future subtype is added without
@@ -273,21 +284,27 @@ class EngineQuestCard extends StatelessWidget {
       QuestClaimed(:final finalXp) =>
         // After a successful claim the ledger has the actually-granted
         // XP; the pill mirrors V1 (greyed-out check + final XP value).
+        // companionBonus omitted — the bonus is already implicit in
+        // the actual ledger event and the headline shows base XP at
+        // grant level; we don't try to surface the post-hoc split
+        // here (companion may have changed since claim).
         XpClaimPillData.claimed(finalXp),
       QuestCompletedPendingClaim(:final previewXp) when enabled =>
         XpClaimPillData.claimable(
           previewXp,
           onTap: (center) => onClaim(quest, from: center),
+          companionBonus: companionBonus,
         ),
       QuestCompletedPendingClaim(:final previewXp) =>
         // Claim pending but a refresh / claim is in flight — show the
         // locked pill so the player can't double-tap.
-        XpClaimPillData.locked(previewXp),
+        XpClaimPillData.locked(previewXp, companionBonus: companionBonus),
       QuestAvailable() || QuestLocked() =>
         // Objective not yet satisfied (or the row is locked outright)
         // — show the locked pill with the would-be XP at the current
         // level multiplier so the player can preview the reward.
-        XpClaimPillData.locked(quest.previewXp),
+        XpClaimPillData.locked(quest.previewXp,
+            companionBonus: companionBonus),
     };
   }
 }

@@ -219,6 +219,8 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                         expandedNodeId: _expandedNodeId,
                         onToggleExpanded: _toggleExpanded,
                         nextLocked: provider.nextLockedChapter,
+                        companionBuffBonusFor: (q) =>
+                            provider.projectedCompanionBuffBonusFor(q.node),
                       ),
                       const SizedBox(height: Tokens.spaceXl),
                     ],
@@ -244,6 +246,8 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                       expandedNodeId: _expandedNodeId,
                       onToggleExpanded: _toggleExpanded,
                       chainResolver: provider.chainQuestsFor,
+                      companionBuffBonusFor: (q) =>
+                          provider.projectedCompanionBuffBonusFor(q.node),
                     ),
                     const SizedBox(height: Tokens.spaceXl),
                     QuestSectionPanel(
@@ -266,6 +270,8 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                           provider.streakForObjective(q.node.objectiveId),
                       expandedNodeId: _expandedNodeId,
                       onToggleExpanded: _toggleExpanded,
+                      companionBuffBonusFor: (q) =>
+                          provider.projectedCompanionBuffBonusFor(q.node),
                     ),
                     if (longTerm.isNotEmpty) ...[
                       const SizedBox(height: Tokens.spaceXl),
@@ -335,6 +341,7 @@ class QuestSectionPanel extends StatelessWidget {
     this.onToggleExpanded,
     this.hint,
     this.chainResolver,
+    this.companionBuffBonusFor,
   });
 
   final String header;
@@ -356,6 +363,13 @@ class QuestSectionPanel extends StatelessWidget {
   /// to render a 🔥 chip and the best-streak detail line. Optional —
   /// tests can pass null to skip the streak path.
   final EngineStreakSummary Function(EngineQuestProgress quest)? streakFor;
+
+  /// Resolves the projected companion-buff bonus for a given quest
+  /// — driven by [ProgressionEngineProvider.projectedCompanionBuffBonusFor]
+  /// at the screen layer. The card renders a small chip beside the
+  /// XP pill when this returns > 0. Optional — tests pass null and
+  /// the bonus chip stays hidden.
+  final int Function(EngineQuestProgress quest)? companionBuffBonusFor;
 
   /// Id of the currently expanded card (one-at-a-time). Owned by the
   /// screen; the panel just forwards it to each card.
@@ -446,6 +460,8 @@ class QuestSectionPanel extends StatelessWidget {
                   // the "rotate at midnight" hint when today's quest
                   // is already done; weekly + chapter cards opt out.
                   showCompletedTodayBadge: color == Tokens.steps.color,
+                  companionBuffBonus:
+                      companionBuffBonusFor?.call(quests[i]) ?? 0,
                 ),
               ],
             ],
@@ -471,6 +487,7 @@ class _ChapterSection extends StatelessWidget {
     required this.expandedNodeId,
     required this.onToggleExpanded,
     this.nextLocked,
+    this.companionBuffBonusFor,
   });
 
   final List<EngineQuestProgress> chapters;
@@ -488,6 +505,11 @@ class _ChapterSection extends StatelessWidget {
   /// úrovni 30") so the player sees what's coming after they finish
   /// the current chapter without spoiling the upcoming content.
   final EngineQuestProgress? nextLocked;
+
+  /// Resolves the projected companion-buff bonus per chapter quest.
+  /// Wired from the screen with
+  /// `provider.projectedCompanionBuffBonusFor(quest.node)`.
+  final int Function(EngineQuestProgress quest)? companionBuffBonusFor;
 
   @override
   Widget build(BuildContext context) {
@@ -514,6 +536,8 @@ class _ChapterSection extends StatelessWidget {
             onClaim: onClaim,
             isExpanded: expandedNodeId == chapters[i].nodeId,
             onToggle: () => onToggleExpanded(chapters[i].nodeId),
+            companionBuffBonus:
+                companionBuffBonusFor?.call(chapters[i]) ?? 0,
           ),
         ],
         if (nextLocked != null) ...[

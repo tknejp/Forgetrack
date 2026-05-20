@@ -51,6 +51,7 @@ class EngineChapterCard extends StatelessWidget {
     required this.onClaim,
     this.isExpanded = false,
     this.onToggle,
+    this.companionBuffBonus = 0,
   });
 
   final EngineQuestProgress quest;
@@ -66,6 +67,11 @@ class EngineChapterCard extends StatelessWidget {
       onClaim;
   final bool isExpanded;
   final VoidCallback? onToggle;
+
+  /// Projected companion-buff bonus surfaced as a chip beside the
+  /// headline pill. Defaults to 0 (chip hidden). Owner: parent
+  /// screen, which has access to the engine provider.
+  final int companionBuffBonus;
 
   @override
   Widget build(BuildContext context) {
@@ -192,7 +198,10 @@ class EngineChapterCard extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      XpClaimPill(key: pillKey, data: _pillData()),
+                      XpClaimPill(
+                        key: pillKey,
+                        data: _pillData(companionBonus: companionBuffBonus),
+                      ),
                       // The companion pill below the XP pill surfaces
                       // a non-XP reward directly on *this* step (e.g.
                       // finale emblem) â€” distinct from the chain
@@ -280,18 +289,20 @@ class EngineChapterCard extends StatelessWidget {
     );
   }
 
-  XpClaimPillData _pillData() {
+  XpClaimPillData _pillData({required int companionBonus}) {
     return switch (quest.lifecycle) {
       QuestClaimed(:final finalXp) => XpClaimPillData.claimed(finalXp),
       QuestCompletedPendingClaim(:final previewXp) when enabled =>
         XpClaimPillData.claimable(
           previewXp,
           onTap: (center) => onClaim(quest, from: center),
+          companionBonus: companionBonus,
         ),
       QuestCompletedPendingClaim(:final previewXp) =>
-        XpClaimPillData.locked(previewXp),
+        XpClaimPillData.locked(previewXp, companionBonus: companionBonus),
       QuestAvailable() || QuestLocked() =>
-        XpClaimPillData.locked(quest.previewXp),
+        XpClaimPillData.locked(quest.previewXp,
+            companionBonus: companionBonus),
     };
   }
 }
