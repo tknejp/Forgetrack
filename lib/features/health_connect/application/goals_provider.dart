@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../data/goal_history_firestore_gateway.dart';
 import '../domain/goal_board.dart';
 import '../domain/player_goal.dart';
 
@@ -20,6 +21,12 @@ import '../domain/player_goal.dart';
 /// `goal_<metric>` (scalar target) + `goal_<metric>_history` (JSON
 /// revisions) match the pre-extraction wire format byte-for-byte.
 class GoalsProvider extends ChangeNotifier {
+  GoalsProvider({GoalHistoryFirestoreGateway? gateway})
+      : _gateway = gateway;
+
+  final GoalHistoryFirestoreGateway? _gateway;
+  String? _cloudUid;
+
   static const _kDailySteps = 'goal_daily_steps';
   static const _kTargetWeight = 'goal_target_weight';
   static const _kDailyCalories = 'goal_daily_calories';
@@ -202,6 +209,68 @@ class GoalsProvider extends ChangeNotifier {
       .resolveForDate(weekStart)
       .round();
 
+  /// Binds the Firestore gateway to [uid]. Call this on sign-in before
+  /// [pullAndMergeCloudHistory]. Clears the uid on sign-out (null).
+  void bindCloudUser(String? uid) {
+    _cloudUid = uid?.isEmpty == true ? null : uid;
+  }
+
+  /// Pulls cloud goal histories for [uid], merges with local histories
+  /// (cloud wins on same-day conflict), persists merged histories to
+  /// prefs, and notifies listeners. On first sign-in also seeds any
+  /// local-only history up to Firestore (first-time migration).
+  ///
+  /// No-op when [_gateway] is null (tests / no Firestore).
+  Future<void> pullAndMergeCloudHistory(String uid) async {
+    final gateway = _gateway;
+    if (gateway == null || uid.isEmpty) return;
+
+    final cloudAll = await gateway.pullRevisions(uid);
+
+    // First-time migration: seed local-only metrics that cloud doesn't know.
+    final toSeed = <GoalMetric, List<GoalRevision>>{};
+    for (final metric in GoalHistoryFirestoreGateway.syncedMetrics) {
+      if (!cloudAll.containsKey(metric)) {
+        final local = _board.goalFor(metric).history;
+        if (local.isNotEmpty) toSeed[metric] = local;
+      }
+    }
+    if (toSeed.isNotEmpty) {
+      await gateway.seedAllRevisions(uid, toSeed);
+    }
+
+    if (cloudAll.isEmpty) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    var changed = false;
+    for (final entry in cloudAll.entries) {
+      final metric = entry.key;
+      final cloudRevisions = entry.value;
+      final localGoal = _board.goalFor(metric);
+      final merged = GoalHistoryFirestoreGateway.merge(
+        localGoal.history,
+        cloudRevisions,
+      );
+      if (merged.length == localGoal.history.length &&
+          _revisionsEqual(merged, localGoal.history)) {
+        continue;
+      }
+      final updatedGoal = localGoal.copyWith(
+        history: merged,
+        target: merged.last.value,
+      );
+      _board = _board.withGoal(updatedGoal);
+      await _saveHistory(
+        prefs: prefs,
+        key: _historyKey[metric]!,
+        entries: merged,
+      );
+      await prefs.setDouble(_scalarKey[metric]!, merged.last.value);
+      changed = true;
+    }
+    if (changed) notifyListeners();
+  }
+
   Future<void> _setDoubleGoal(
     GoalMetric metric,
     double value, {
@@ -220,6 +289,10 @@ class GoalsProvider extends ChangeNotifier {
       key: _historyKey[metric]!,
       entries: updated.history,
     );
+    final uid = _cloudUid;
+    if (uid != null) {
+      await _gateway?.pushRevisions(uid, metric, updated.history);
+    }
   }
 
   Future<void> _setIntGoal(
@@ -240,6 +313,21 @@ class GoalsProvider extends ChangeNotifier {
       key: _historyKey[metric]!,
       entries: updated.history,
     );
+    final uid = _cloudUid;
+    if (uid != null) {
+      await _gateway?.pushRevisions(uid, metric, updated.history);
+    }
+  }
+
+  static bool _revisionsEqual(
+    List<GoalRevision> a,
+    List<GoalRevision> b,
+  ) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 
   double _readScalar(SharedPreferences prefs, GoalMetric metric) {

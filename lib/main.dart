@@ -56,6 +56,7 @@ import 'features/cosmetics/application/emblem_board_provider.dart';
 import 'features/health_connect/data/health_connect_service.dart';
 import 'features/health_connect/data/local/health_database.dart';
 import 'features/health_connect/application/goals_provider.dart';
+import 'features/health_connect/data/goal_history_firestore_gateway.dart';
 import 'features/devtools/application/devtools_provider.dart';
 import 'features/devtools/application/factory_reset/factory_reset_service.dart';
 import 'features/onboarding/application/onboarding_provider.dart';
@@ -201,7 +202,11 @@ Future<void> main() async {
     refreshNutrition: ktProvider.refreshRange,
   );
 
-  final goalsProvider = GoalsProvider();
+  final goalsProvider = GoalsProvider(
+    gateway: socialBackendState.isReady
+        ? GoalHistoryFirestoreGateway()
+        : null,
+  );
   await goalsProvider.init();
 
   final devToolsProvider = DevToolsProvider();

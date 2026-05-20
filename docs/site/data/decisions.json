@@ -1004,6 +1004,31 @@
         "lib/features/progression_engine/application/progression_engine_provider.dart",
         "https://trello.com/c/Kubcjozz"
       ]
+    },
+    {
+      "id": "goal-history-firestore-sync",
+      "title": "Goal revision history v SharedPreferences + Firestore mirror jako server truth",
+      "status": "accepted",
+      "date": "2026-05-20",
+      "context": "Karta Trello #99 zavedla `StreakBackfillService`, který přepočítává past-day completion events proti historickým goal targetům přes `GoalsProvider.progression*ForDate(day)`. Historie targetů žije v `SharedPreferences` pod klíči `goal_<metric>_history` jako JSON pole `{effectiveFrom, value}` revizí. Funguje to na jednom zařízení, ale fresh install / Google backup restore / sign-in na druhém zařízení historii ztratí — backfill spadne na current goal pro past days. To otevírá retroaktivní obcházení streaků: hráč si lokálně sníží goal, počká na backfill, a streak naskočí zpětně pro dny, kdy reálně nesplnil. Stejný attack vector pro libovolný daily-goal target.",
+      "decision": "Lokální historie zůstává v `SharedPreferences` (per-metric JSON, ~10 řádků per metrika — Isar overhead by byl neúměrný). Zrcadlo v Firestore pod `users/{uid}/goal_history/{metricName}` jako document `{ revisions: [{target: double, effectiveAt: Timestamp}], updatedAt: serverTimestamp }`. Jeden doc per metrika (osm syncovaných metrik — `targetWeight` history nemá). Push při každém `GoalsProvider.set<Metric>` (best-effort, idempotent: doc je přepsán fresh state). Pull při `bindCloudUser` před `_runStreakBackfill`, merge union by `effectiveFrom` date, conflict → cloud wins (server truth). First-time migration: lokální history bez cloud counterpart se uploadne. Security rule `users/{uid}/{document=**}` gated na `request.auth.uid == uid` — žádné peer reads.",
+      "consequences": [
+        "Fresh install / second device dostane historickou trail před backfillem; past-day completion events se vyhodnotí proti správnému targetu, ne proti current goalu.",
+        "Retroaktivní cheat zavřen pro hráče, který lokálně sníží goal — cloud drží original, merge cloud-wins ho přepíše zpátky před backfillem.",
+        "Per-metric doc šetří write fan-out (change v dailySteps netriggeruje rewrite ostatních sedmi metrik). Trade-off: 8 reads na sign-in místo 1.",
+        "Conflict resolution je jednoduchá (cloud wins). Edge case: hráč legitně změní goal na zařízení A a okamžitě jde offline na zařízení B — když se A push dokončí, B's lokální revision na stejný den se přepíše. Akceptováno; multi-device concurrent goal editing není priority use case.",
+        "Backward-compat: cloud bez historie → fallback na current goal (existing behavior, žádný regres pro pre-update users).",
+        "Re-trigger backfill po pull: `_pullCloudLedger` volá `goalsProvider.pullAndMergeCloudHistory(uid)` před `unawaited(refresh())`, který automaticky pustí `_runStreakBackfill` s updated history. Žádný explicitní re-trigger hook potřeba.",
+        "Firestore rules deploy je all-or-nothing: rules file obsahuje pouze `users/{uid}/...` carve-out. Public collections (`handles`, `friend_requests`, ...) zůstávají bez pravidla — `firebase deploy --only firestore:rules` by je zablokoval, dokud nepřibyde scope pro social rules."
+      ],
+      "alternatives": "(1) Migrovat history do Isar — odmítnuto, dnes ~50 řádků data per user, JSON v prefs je dostačující a Firestore wire mapping je přímý nad existujícím formátem. (2) Jeden doc `users/{uid}/profile/goal_history` se vším — méně docs ale větší write fan-out (jedna změna = rewrite všeho). (3) Per-revision append-only (Firestore subcollection s doc per revision) — overkill pro 10 řádků dat, drahé čtení. (4) Skip cloud sync a spoléhat na lokální history — odmítnuto, právě tohle otevírá cheat path.",
+      "links": [
+        "lib/features/health_connect/data/goal_history_firestore_gateway.dart",
+        "lib/features/health_connect/application/goals_provider.dart",
+        "lib/features/progression_engine/application/streak_backfill_service.dart",
+        "firestore.rules",
+        "https://trello.com/c/8wSc9D48"
+      ]
     }
   ]
 }

@@ -1,0 +1,38 @@
+rules_version = '2';
+
+// Forgetrack Firestore security rules.
+//
+// Scope of this file (Trello #100, 2026-05-20):
+//   - `users/{uid}/goal_history/{metric}` — per-metric goal revision
+//     history written by GoalHistoryFirestoreGateway. Strictly
+//     self-only; no peer reads, no public access. This is the
+//     anti-cheat server-truth for retroactive streak validation.
+//   - All other `users/{uid}/...` subcollections written by the
+//     existing engine ledger + cosmetics gateways are gated on
+//     `request.auth.uid == uid` for the same reason — only the
+//     signed-in user owns their gameplay state.
+//
+// Public / shared collections (`handles`, `friend_requests`,
+// `friendships`, `achievement_shares`) are intentionally NOT covered
+// here yet — they're written from the social repository and need
+// peer-read carve-outs that exceed this card's scope. Until those
+// are explicitly added, deploying this rules file will block those
+// flows; coordinate with the social-features card before
+// `firebase deploy --only firestore:rules`.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Self-owned per-user data ────────────────────────────────────
+    //
+    // Covers goal_history (this card) plus every existing engine /
+    // cosmetic / journal subcollection the app writes under
+    // `users/{uid}/...`. The wildcard `/{document=**}` includes
+    // every descendant document, so engineObjectiveCompletions,
+    // engineRewardGrants, cosmetic entitlements, notifications and
+    // goal_history all match a single rule.
+    match /users/{uid}/{document=**} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == uid;
+    }
+  }
+}

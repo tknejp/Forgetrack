@@ -132,6 +132,13 @@
           "readers": ["FirestoreCosmeticEntitlementsSource"]
         },
         {
+          "id": "goal_history",
+          "name": "users/{uid}/goal_history/{metricName}",
+          "role": "Server-truth historie goal targetů per metrika (jeden doc per metrika, pole revisions = [{target, effectiveAt}]). Anti-cheat zrcadlo lokální prefs historie pro StreakBackfillService — fresh install / second device pulluje historický target před backfillem, takže past-day completion events se vyhodnotí proti rule v platnosti tehdy, ne proti current goalu.",
+          "writers": ["GoalHistoryFirestoreGateway.pushRevisions", "GoalHistoryFirestoreGateway.seedAllRevisions"],
+          "readers": ["GoalHistoryFirestoreGateway.pullRevisions (přes GoalsProvider.pullAndMergeCloudHistory)"]
+        },
+        {
           "id": "notifications",
           "name": "users/{uid}/notifications",
           "role": "User-facing notifikace (achievement unlock, friend request, …).",

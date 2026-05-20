@@ -2161,6 +2161,10 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// (the hybrid repo dedupes; pull is gated by [_boundCloudUid]).
   void bindCloudUser(String? uid) {
     final cloud = _cloudSync;
+    // Goal history sync is independent of the engine ledger sync —
+    // wire it directly on GoalsProvider so push/pull works even in
+    // environments where the engine has no cloudSync wrapper.
+    _subscribedGoals?.bindCloudUser(uid);
     if (cloud == null) return;
     cloud.bindUser(uid);
     if (uid == null || uid.isEmpty) {
@@ -2187,6 +2191,14 @@ class ProgressionEngineProvider extends ChangeNotifier {
       if (_boundCloudUid != uid) return;
       _ledger = merged;
       _lastEvaluatedAt = _mostRecentLedgerTimestamp(_ledger);
+      // Pull cloud goal history BEFORE streak recompute / backfill so
+      // historical targets resolve against server truth, not the
+      // current local goal. Without this a fresh install / second
+      // device would backfill past days against today's goal —
+      // the exact retroactive cheat the gateway is meant to close.
+      // The follow-up refresh() below re-triggers _runStreakBackfill
+      // with the merged history in place.
+      await _subscribedGoals?.pullAndMergeCloudHistory(uid);
       _recomputeStreaks();
       // Replay historical cosmetic grants into the local CosmeticsProvider.
       // engine.evaluate() will not re-emit them (the events are already
