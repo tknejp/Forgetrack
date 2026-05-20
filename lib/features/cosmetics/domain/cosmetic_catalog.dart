@@ -868,12 +868,16 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.companions.aurora_stag',
       previewAssetKey: 'cosmetics.companions.aurora_stag',
       sortOrder: 738,
-      // "Ice plain … living aurora" — calm of night. +26 % on the
-      // sleep daily-goal claim (only 1×/day so the per-claim %
-      // can be loud without disturbing daily total balance).
+      // "Ice plain … living aurora" — calm of night. sleepXp fires
+      // exactly 1×/day on the sleep daily-goal claim — the narrowest
+      // source in the taxonomy. Bumped to +45 % so the per-claim
+      // payoff feels worth dedicating the slot to (otherwise a flat
+      // mid-tier % loses to broader companions that hit 3-5 claims
+      // daily). Daily total contribution still lands well under the
+      // 25 % daily share cap because it's a single grant.
       buff: const FlatCompanionBuff(
         kind: RewardSourceKind.sleepXp,
-        percent: 26,
+        percent: 45,
       ),
     ),
     Companion(

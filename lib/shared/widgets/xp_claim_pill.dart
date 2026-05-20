@@ -100,17 +100,23 @@ class XpClaimPill extends StatelessWidget {
     );
 
     // Compose the headline pill with an optional secondary "+N"
-    // micro chip when the equipped companion buff applies. Both are
-    // wrapped in a Row so the chip sits adjacent (not inside) the
-    // headline's rounded shape.
+    // companion chip stacked below it. Stacking (vs side-by-side)
+    // keeps endgame rows readable — at level 100 the XP headline
+    // can read "🔒 7500 XP" and the chip "🐾 +375", both wide enough
+    // that side-by-side crowds against the rest of the quest card.
+    // Right-aligned so they form a coherent column.
     final Widget child;
     if (data.companionBonus > 0) {
-      child = Row(
+      child = Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           headline,
-          const SizedBox(width: 4),
-          _CompanionBonusChip(amount: data.companionBonus),
+          const SizedBox(height: 3),
+          _CompanionBonusChip(
+            amount: data.companionBonus,
+            state: data.state,
+          ),
         ],
       );
     } else {
@@ -136,42 +142,51 @@ class XpClaimPill extends StatelessWidget {
   }
 }
 
-/// Small adjacent chip rendered next to the [XpClaimPill] when the
-/// equipped companion contributes a buff bonus to the grant. Uses
-/// the same XP gold tone as the main pill so they read as a pair
-/// (one says "you'll get / got 50 XP", the chip says "and an extra
-/// 4 from your companion"). Kept dimmer than the parent pill so the
-/// player's eye lands on the headline first.
+/// Small chip rendered beneath the [XpClaimPill] when the equipped
+/// companion contributes a buff bonus to the grant. Uses a paw icon
+/// (companion semantic) and follows the headline's state colour:
+/// claimable / locked → XP gold so the chip reads as "and an extra
+/// N from your companion"; claimed → muted grey to match the
+/// already-greyed main pill (the bonus is banked in the ledger and
+/// the player's eye doesn't need pulling back to it).
 class _CompanionBonusChip extends StatelessWidget {
-  const _CompanionBonusChip({required this.amount});
+  const _CompanionBonusChip({required this.amount, required this.state});
 
   final int amount;
+  final XpClaimPillState state;
 
   @override
   Widget build(BuildContext context) {
     final ft = context.ft;
+    final isClaimed = state == XpClaimPillState.claimed;
+    final tint = isClaimed ? ft.onSurfaceMuted : ft.xp;
+    final fg = isClaimed
+        ? ft.onSurfaceMuted
+        : ft.xp.withValues(alpha: 0.85);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: ft.xp.withValues(alpha: 0.12),
+        color: tint.withValues(alpha: isClaimed ? 0.09 : 0.12),
         borderRadius: BorderRadius.circular(Tokens.radiusProgress),
-        border: Border.all(color: ft.xp.withValues(alpha: 0.28)),
+        border: Border.all(
+          color: tint.withValues(alpha: isClaimed ? 0.16 : 0.28),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.auto_awesome_rounded,
-            size: 9,
-            color: ft.xp.withValues(alpha: 0.85),
+            Icons.pets_rounded,
+            size: 10,
+            color: fg,
           ),
-          const SizedBox(width: 2),
+          const SizedBox(width: 3),
           Text(
             '+$amount',
             style: TextStyle(
               fontSize: Tokens.fontSizeMicro,
               fontWeight: FontWeight.w700,
-              color: ft.xp.withValues(alpha: 0.85),
+              color: fg,
             ),
           ),
         ],

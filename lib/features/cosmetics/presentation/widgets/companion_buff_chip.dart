@@ -161,7 +161,7 @@ class CompanionBuffChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.auto_awesome_rounded,
+            Icons.pets_rounded,
             size: compact ? 12 : 14,
             color: color,
           ),
@@ -234,7 +234,7 @@ class CompanionBuffBanner extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const Icon(
-            Icons.auto_awesome_rounded,
+            Icons.pets_rounded,
             size: 22,
             color: Tokens.xp,
           ),

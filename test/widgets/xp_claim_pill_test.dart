@@ -65,7 +65,7 @@ void main() {
       // companionBonus, absent for the third.
       expect(find.text('+6'), findsOneWidget);
       expect(find.text('+14'), findsOneWidget);
-      expect(find.byIcon(Icons.auto_awesome_rounded), findsNWidgets(2));
+      expect(find.byIcon(Icons.pets_rounded), findsNWidgets(2));
     });
 
     testWidgets('invokes the claim callback with the pill center',
