@@ -254,7 +254,6 @@ class _CelebrationFullscreenState extends State<CelebrationFullscreen>
                       opacity: headerFade,
                       child: CelebrationXpAwardPill(
                         amount: event.xpAward!.amount,
-                        companionBonus: event.xpAward!.companionBonus,
                       ),
                     ),
                   ],

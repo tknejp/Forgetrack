@@ -193,14 +193,20 @@ class _OverviewScreenState extends State<OverviewScreen> {
     }
     if (quest == null) return null;
     final preview = quest.previewXp;
+    // Project the equipped companion's buff bonus so the micro chip
+    // beside the pill always reflects what the player would actually
+    // bank if they claimed right now.
+    final companionBonus =
+        progression.projectedCompanionBuffBonusFor(quest.node);
 
     if (quest.isCompleted) {
-      return XpClaimPillData.claimed(preview);
+      return XpClaimPillData.claimed(preview, companionBonus: companionBonus);
     }
     if (quest.isAvailableForClaim) {
       final claimId = quest.nodeId;
       return XpClaimPillData.claimable(
         preview,
+        companionBonus: companionBonus,
         onTap: (center) {
           _onXpClaimed(center);
           unawaited(progression.claimNode(nodeId: claimId));
@@ -208,7 +214,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
       );
     }
     if (preview > 0) {
-      return XpClaimPillData.locked(preview);
+      return XpClaimPillData.locked(preview, companionBonus: companionBonus);
     }
     return null;
   }

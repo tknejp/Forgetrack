@@ -6,6 +6,7 @@ import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../cosmetics/application/cosmetics_provider.dart';
+import '../../cosmetics/domain/companion_buff.dart' show CompanionBuffContext;
 import '../../health_connect/application/fitness_provider.dart';
 import '../../health_connect/application/goals_provider.dart';
 import '../../nutrition/application/kaloricke_tabulky_provider.dart';
@@ -1275,6 +1276,86 @@ class ProgressionEngineProvider extends ChangeNotifier {
       if (order != null) return order;
     }
     return null;
+  }
+
+  /// Projected companion-buff bonus XP the player would receive if
+  /// they claimed [node] right now. Mirrors the engine's grant-time
+  /// math in [RewardGrantService._resolveCompanionBuffBonus] but
+  /// resolves against the **current** running XP / streak / chain
+  /// state instead of post-event totals, so the value updates as
+  /// the player levels up / extends streaks. Returns 0 when no
+  /// companion is equipped, RPG mode is off, the buff kind doesn't
+  /// match the reward's source, or the node has no XP reward.
+  ///
+  /// `BonusXpReward` only contributes when its claim-time condition
+  /// (e.g. before-noon) currently holds — same gate the planner
+  /// applies, so the projection reads as "what you'd really get".
+  ///
+  /// The 25 % daily soft-cap is intentionally NOT applied here: the
+  /// preview is a per-claim affordance, not a daily tally, and
+  /// applying the cap would force the pill to re-read the journal
+  /// on every rebuild. The engine still clamps at grant time so the
+  /// ledger truth holds; the chip may slightly overshoot for
+  /// players who are already deep into their daily cap.
+  int projectedCompanionBuffBonusFor(Quest node) {
+    final ctx = currentContext;
+    if (ctx == null) return 0;
+    final buff = ctx.equippedCompanionBuff;
+    if (buff == null) return 0;
+    if (!ctx.player.rpgModeEnabled) return 0;
+
+    final isWeekly = node.displayBucket == QuestDisplayBucket.weekly;
+    final chainPos = node.chapterId != null ? node.chainOrder : null;
+    final level = _levelPolicy.levelForXp(ctx.player.totalXp);
+
+    var total = 0;
+    for (final reward in node.rewards) {
+      final int amount;
+      final RewardSourceKind? sourceKind;
+      if (reward is XpReward) {
+        amount = reward.amount;
+        sourceKind = reward.sourceKind;
+      } else if (reward is BonusXpReward) {
+        if (!_bonusConditionMet(reward.condition, ctx)) continue;
+        amount = reward.amount;
+        sourceKind = reward.sourceKind;
+      } else {
+        continue;
+      }
+      if (sourceKind == null) continue;
+      if (buff.kind != RewardSourceKind.allXp && buff.kind != sourceKind) {
+        continue;
+      }
+      final scaled =
+          _levelPolicy.scaledRewardXp(baseXp: amount, level: level);
+      final percent = buff.resolvePercent(
+        CompanionBuffContext(
+          rewardSourceKind: sourceKind,
+          currentStreak: ctx.maxCurrentStreak,
+          isWeeklyQuestSource: isWeekly,
+          chapterChainPosition: chainPos,
+        ),
+      );
+      if (percent <= 0) continue;
+      total += (scaled * percent / 100).round();
+    }
+    return total;
+  }
+
+  /// Inline copy of `RewardGrantPlanner._bonusConditionMet` so the
+  /// projection above doesn't have to round-trip through the planner.
+  /// Keep in sync with that switch — both surfaces resolve the same
+  /// catalog truth.
+  bool _bonusConditionMet(
+    BonusXpCondition condition,
+    EngineEvaluationContext context,
+  ) {
+    return switch (condition) {
+      CompletedBeforeHour(:final hour) =>
+        context.evaluatedAt.toLocal().hour < hour,
+      SleepAtLeast(:final minutes) =>
+        context.healthSnapshot.sleepMinutesToday >= minutes,
+    };
   }
 
   /// The player's longest currently-active streak across every

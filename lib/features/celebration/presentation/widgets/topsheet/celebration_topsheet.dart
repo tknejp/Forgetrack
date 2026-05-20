@@ -163,8 +163,6 @@ class _CelebrationTopsheetState extends State<CelebrationTopsheet>
                                   alignment: Alignment.centerRight,
                                   child: CelebrationXpAwardPill(
                                     amount: event.xpAward!.amount,
-                                    companionBonus:
-                                        event.xpAward!.companionBonus,
                                   ),
                                 ),
                               ],

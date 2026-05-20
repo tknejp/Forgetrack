@@ -5,20 +5,32 @@ import '../theme/design_tokens.dart';
 enum XpClaimPillState { locked, claimable, claimed }
 
 class XpClaimPillData {
-  const XpClaimPillData.locked(this.xp)
+  const XpClaimPillData.locked(this.xp, {this.companionBonus = 0})
       : state = XpClaimPillState.locked,
         onTap = null;
 
-  const XpClaimPillData.claimable(this.xp, {required this.onTap})
-      : state = XpClaimPillState.claimable;
+  const XpClaimPillData.claimable(
+    this.xp, {
+    required this.onTap,
+    this.companionBonus = 0,
+  }) : state = XpClaimPillState.claimable;
 
-  const XpClaimPillData.claimed(this.xp)
+  const XpClaimPillData.claimed(this.xp, {this.companionBonus = 0})
       : state = XpClaimPillState.claimed,
         onTap = null;
 
   final int xp;
   final XpClaimPillState state;
   final void Function(Offset center)? onTap;
+
+  /// Companion-buff bonus the player will earn (claimable / locked
+  /// states project it from the equipped buff) or already earned
+  /// (claimed state, read from the journal grant). When `> 0` the
+  /// pill renders a small XP-tinted micro chip beside the headline
+  /// so the player sees the equipped companion's contribution the
+  /// moment they look at the card — no celebration overlay needed.
+  /// Zero hides the chip entirely.
+  final int companionBonus;
 
   bool get isClaimable => state == XpClaimPillState.claimable;
   bool get isClaimed => state == XpClaimPillState.claimed;
@@ -63,7 +75,7 @@ class XpClaimPill extends StatelessWidget {
         ),
     };
 
-    final child = Container(
+    final headline = Container(
       padding: padding,
       decoration: BoxDecoration(
         color: appearance.bg,
@@ -87,6 +99,24 @@ class XpClaimPill extends StatelessWidget {
       ),
     );
 
+    // Compose the headline pill with an optional secondary "+N"
+    // micro chip when the equipped companion buff applies. Both are
+    // wrapped in a Row so the chip sits adjacent (not inside) the
+    // headline's rounded shape.
+    final Widget child;
+    if (data.companionBonus > 0) {
+      child = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          headline,
+          const SizedBox(width: 4),
+          _CompanionBonusChip(amount: data.companionBonus),
+        ],
+      );
+    } else {
+      child = headline;
+    }
+
     if (!data.isClaimable || data.onTap == null) {
       return child;
     }
@@ -102,6 +132,50 @@ class XpClaimPill extends StatelessWidget {
         data.onTap!(center);
       },
       child: child,
+    );
+  }
+}
+
+/// Small adjacent chip rendered next to the [XpClaimPill] when the
+/// equipped companion contributes a buff bonus to the grant. Uses
+/// the same XP gold tone as the main pill so they read as a pair
+/// (one says "you'll get / got 50 XP", the chip says "and an extra
+/// 4 from your companion"). Kept dimmer than the parent pill so the
+/// player's eye lands on the headline first.
+class _CompanionBonusChip extends StatelessWidget {
+  const _CompanionBonusChip({required this.amount});
+
+  final int amount;
+
+  @override
+  Widget build(BuildContext context) {
+    final ft = context.ft;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: ft.xp.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(Tokens.radiusProgress),
+        border: Border.all(color: ft.xp.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.auto_awesome_rounded,
+            size: 9,
+            color: ft.xp.withValues(alpha: 0.85),
+          ),
+          const SizedBox(width: 2),
+          Text(
+            '+$amount',
+            style: TextStyle(
+              fontSize: Tokens.fontSizeMicro,
+              fontWeight: FontWeight.w700,
+              color: ft.xp.withValues(alpha: 0.85),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
