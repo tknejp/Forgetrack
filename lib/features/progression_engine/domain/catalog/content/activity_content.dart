@@ -11,23 +11,21 @@ import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import '../engine_catalog_context.dart';
 import 'quest_assets.dart';
 
-/// Activity domain — daily 30-minute quest, weekly minutes quest, and
+/// Activity domain — daily minute quest, weekly minutes quest, and
 /// the per-rule "weekly warrior" reward-count achievements. Mirrors
 /// V1: rules daily_activity / weekly_activity, achievements
 /// weekly_activity_mastery / _4 / _12 / _24 / _52.
 
-const double _dailyActivityTargetMinutes = 30;
-
 List<Objective> activityObjectives(EngineCatalogContext context) {
   final goals = context.goals;
   return [
-    const Objective(
+    Objective(
       id: const ObjectiveId('daily_activity'),
       domain: ProgressionDomain.activity,
-      metric: ActivityMinutesMetric(),
-      scope: TodayScope(),
+      metric: const ActivityMinutesMetric(),
+      scope: const TodayScope(),
       operator: ObjectiveOperator.atLeast,
-      targetValue: _dailyActivityTargetMinutes,
+      targetValue: goals.dailyActivityMinutes.toDouble(),
     ),
     Objective(
       id: const ObjectiveId('weekly_activity'),

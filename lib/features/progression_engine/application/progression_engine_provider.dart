@@ -3448,8 +3448,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
         }
         return _DailyGoalSpec(
           actual: minutes.toDouble(),
-          // Matches the hardcoded 30-min target in activity_content.
-          target: 30,
+          target: goals.progressionDailyActivityMinsForDate(day).toDouble(),
           unit: DailyGoalValueUnit.minutes,
           hasData: minutes > 0,
         );
@@ -3983,6 +3982,8 @@ class ProgressionEngineProvider extends ChangeNotifier {
           // backfill sees the same target shape the live engine does.
           sleepMinutes: (goals.progressionSleepHoursForDate(date) * 60)
               .round(),
+          dailyActivityMinutes:
+              goals.progressionDailyActivityMinsForDate(date),
         ),
         appendEvents: (events) async {
           await _repository.appendEvents(events);

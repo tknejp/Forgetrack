@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/logging/app_log.dart';
 import '../data/goal_history_firestore_gateway.dart';
 import '../domain/goal_board.dart';
 import '../domain/player_goal.dart';
@@ -36,6 +37,7 @@ class GoalsProvider extends ChangeNotifier {
   static const _kDailyFiber = 'goal_daily_fiber';
   static const _kSleepHours = 'goal_sleep_hours';
   static const _kWeeklyActivityMins = 'goal_weekly_activity_mins';
+  static const _kDailyActivityMins = 'goal_daily_activity_mins';
   static const _kDailyStepsHistory = 'goal_daily_steps_history';
   static const _kDailyCaloriesHistory = 'goal_daily_calories_history';
   static const _kDailyProteinHistory = 'goal_daily_protein_history';
@@ -44,6 +46,7 @@ class GoalsProvider extends ChangeNotifier {
   static const _kDailyFiberHistory = 'goal_daily_fiber_history';
   static const _kSleepHoursHistory = 'goal_sleep_hours_history';
   static const _kWeeklyActivityMinsHistory = 'goal_weekly_activity_history';
+  static const _kDailyActivityMinsHistory = 'goal_daily_activity_mins_history';
 
   static const Map<GoalMetric, String> _scalarKey = {
     GoalMetric.dailySteps: _kDailySteps,
@@ -55,6 +58,7 @@ class GoalsProvider extends ChangeNotifier {
     GoalMetric.dailyFiber: _kDailyFiber,
     GoalMetric.sleepHours: _kSleepHours,
     GoalMetric.weeklyActivityMins: _kWeeklyActivityMins,
+    GoalMetric.dailyActivityMins: _kDailyActivityMins,
   };
 
   static const Map<GoalMetric, String> _historyKey = {
@@ -66,6 +70,7 @@ class GoalsProvider extends ChangeNotifier {
     GoalMetric.dailyFiber: _kDailyFiberHistory,
     GoalMetric.sleepHours: _kSleepHoursHistory,
     GoalMetric.weeklyActivityMins: _kWeeklyActivityMinsHistory,
+    GoalMetric.dailyActivityMins: _kDailyActivityMinsHistory,
   };
 
   static const Map<GoalMetric, double> _defaults = {
@@ -78,6 +83,7 @@ class GoalsProvider extends ChangeNotifier {
     GoalMetric.dailyFiber: 30,
     GoalMetric.sleepHours: 8.0,
     GoalMetric.weeklyActivityMins: 150,
+    GoalMetric.dailyActivityMins: 30,
   };
 
   GoalBoard _board = GoalBoard.empty;
@@ -94,6 +100,8 @@ class GoalsProvider extends ChangeNotifier {
   double get sleepHours => _board.goalFor(GoalMetric.sleepHours).target;
   int get weeklyActivityMins =>
       _board.goalFor(GoalMetric.weeklyActivityMins).target.round();
+  int get dailyActivityMins =>
+      _board.goalFor(GoalMetric.dailyActivityMins).target.round();
 
   String get progressionHistorySignature => _board.progressionHistorySignature;
 
@@ -183,6 +191,15 @@ class GoalsProvider extends ChangeNotifier {
         anchor: startOfProgressionWeek,
       );
 
+  Future<void> setDailyActivityMins(int v) async {
+    await _setIntGoal(
+      GoalMetric.dailyActivityMins,
+      v,
+      anchor: progressionDate,
+    );
+    AppLog.app.info('goals: setDailyActivityMins $v');
+  }
+
   int progressionDailyStepsForDate(DateTime day) =>
       _board.goalFor(GoalMetric.dailySteps).resolveForDate(day).round();
 
@@ -207,6 +224,11 @@ class GoalsProvider extends ChangeNotifier {
   int progressionWeeklyActivityMinsForWeek(DateTime weekStart) => _board
       .goalFor(GoalMetric.weeklyActivityMins)
       .resolveForDate(weekStart)
+      .round();
+
+  int progressionDailyActivityMinsForDate(DateTime day) => _board
+      .goalFor(GoalMetric.dailyActivityMins)
+      .resolveForDate(day)
       .round();
 
   /// Binds the Firestore gateway to [uid]. Call this on sign-in before
@@ -334,7 +356,8 @@ class GoalsProvider extends ChangeNotifier {
     final key = _scalarKey[metric]!;
     final fallback = _defaults[metric]!;
     if (metric == GoalMetric.dailySteps ||
-        metric == GoalMetric.weeklyActivityMins) {
+        metric == GoalMetric.weeklyActivityMins ||
+        metric == GoalMetric.dailyActivityMins) {
       return (prefs.getInt(key) ?? fallback.toInt()).toDouble();
     }
     return prefs.getDouble(key) ?? fallback;

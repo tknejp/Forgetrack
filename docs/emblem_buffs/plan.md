@@ -67,7 +67,7 @@ These are settled. Do not reopen without user sign-off.
 
 ## Phases
 
-### ☐ Phase 0 — Daily activity goal becomes configurable
+### ☑ Phase 0 — Daily activity goal becomes configurable
 
 **Why:** Three sites hardcode the 30-minute daily activity target ([activity_content.dart#L19](../../lib/features/progression_engine/domain/catalog/content/activity_content.dart#L19), [progression_engine_provider.dart#L3451](../../lib/features/progression_engine/application/progression_engine_provider.dart#L3451), [overview_screen.dart#L1309](../../lib/features/home/presentation/overview_screen.dart#L1309)). Phase 1 emblem mapping #5 (`emblem_mine_crest`) targets `dailyActivityMins`, which needs a real `GoalMetric` value backed by a configurable goal. Fixing the hardcode first keeps Phase 1+ clean.
 

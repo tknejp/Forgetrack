@@ -1303,10 +1303,7 @@ int _activityGoalForPeriod(GoalsProvider goals, SelectedPeriod period) {
 
   switch (period.type) {
     case PeriodType.day:
-      // Matches `_dailyActivityTargetMinutes` in
-      // progression_engine/.../activity_content.dart — the V2 catalog
-      // owns the canonical value, this is the day-view UI default.
-      return 30;
+      return goals.dailyActivityMins;
     case PeriodType.week:
       if (weekly <= 0) return 0;
       return weekly;

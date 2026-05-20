@@ -37,6 +37,7 @@ class GoalHistoryFirestoreGateway {
     GoalMetric.dailyFiber,
     GoalMetric.sleepHours,
     GoalMetric.weeklyActivityMins,
+    GoalMetric.dailyActivityMins,
   };
 
   // ── Push ─────────────────────────────────────────────────────────

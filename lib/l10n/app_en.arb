@@ -601,6 +601,9 @@
   "goalWeeklyActivity": "Weekly activity",
   "@goalWeeklyActivity": { "description": "Goal label: weekly activity minutes goal" },
 
+  "goalDailyActivity": "Daily activity",
+  "@goalDailyActivity": { "description": "Goal label: daily activity minutes goal" },
+
   "goalUnitSteps": "steps",
   "@goalUnitSteps": { "description": "Unit suffix for step count goals" },
 

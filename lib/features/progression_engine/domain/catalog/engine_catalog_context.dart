@@ -15,6 +15,7 @@ class EngineGoalSet {
     this.dailyFiberGrams = 30,
     this.sleepMinutes = 480,
     this.weeklyActivityMinutes = 150,
+    this.dailyActivityMinutes = 30,
     this.targetWeightKg = 70.0,
   });
 
@@ -26,6 +27,7 @@ class EngineGoalSet {
   final double dailyFiberGrams;
   final int sleepMinutes;
   final int weeklyActivityMinutes;
+  final int dailyActivityMinutes;
   final double targetWeightKg;
 }
 

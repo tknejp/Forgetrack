@@ -1274,6 +1274,12 @@ abstract class AppLocalizations {
   /// **'Weekly activity'**
   String get goalWeeklyActivity;
 
+  /// Goal label: daily activity minutes goal
+  ///
+  /// In en, this message translates to:
+  /// **'Daily activity'**
+  String get goalDailyActivity;
+
   /// Unit suffix for step count goals
   ///
   /// In en, this message translates to:

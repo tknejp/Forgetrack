@@ -96,6 +96,7 @@ class _ActivityGoalsTile extends StatelessWidget {
       iconBackgroundColor: accent.dim,
       label: l10n.settingsGoalsActivityHeader,
       summary: '${intFormat.format(goals.dailySteps)} ${l10n.goalUnitSteps} · '
+          '${intFormat.format(goals.dailyActivityMins)} ${l10n.goalUnitMins}/d · '
           '${intFormat.format(goals.weeklyActivityMins)} ${l10n.goalUnitMins}/wk',
       children: [
         _ChildGoalTile(
@@ -111,6 +112,22 @@ class _ActivityGoalsTile extends StatelessWidget {
             unit: l10n.goalUnitSteps,
             onSave: (value) =>
                 context.read<GoalsProvider>().setDailySteps(value),
+          ),
+        ),
+        const SettingsTileDivider(),
+        _ChildGoalTile(
+          icon: Icons.directions_run_rounded,
+          accent: accent,
+          label: l10n.goalDailyActivity,
+          valueText: intFormat.format(goals.dailyActivityMins),
+          unit: l10n.goalUnitMins,
+          onTap: () => _editIntGoal(
+            context,
+            title: l10n.goalDailyActivity,
+            initialValue: goals.dailyActivityMins,
+            unit: l10n.goalUnitMins,
+            onSave: (value) =>
+                context.read<GoalsProvider>().setDailyActivityMins(value),
           ),
         ),
         const SettingsTileDivider(),

@@ -24,6 +24,24 @@ void main() {
       expect(provider.progressionDailyProteinForDate(today), 230);
     });
 
+    test('daily activity goal defaults to 30 and round-trips through prefs',
+        () async {
+      final first = GoalsProvider();
+      await first.init();
+      expect(first.dailyActivityMins, 30);
+
+      await first.setDailyActivityMins(45);
+      expect(first.dailyActivityMins, 45);
+
+      final reloaded = GoalsProvider();
+      await reloaded.init();
+      expect(reloaded.dailyActivityMins, 45);
+      expect(
+        reloaded.progressionDailyActivityMinsForDate(DateTime.now()),
+        45,
+      );
+    });
+
     test('applies weekly activity changes to the current week immediately',
         () async {
       final provider = GoalsProvider();

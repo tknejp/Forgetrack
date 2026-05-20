@@ -21,6 +21,7 @@ enum GoalMetric {
   dailyFiber,
   sleepHours,
   weeklyActivityMins,
+  dailyActivityMins,
 }
 
 /// One row in a [PlayerGoal]'s revision timeline.

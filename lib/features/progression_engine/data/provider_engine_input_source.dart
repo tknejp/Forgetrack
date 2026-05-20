@@ -50,6 +50,7 @@ class ProviderEngineInputSource {
         dailyFiberGrams: goals.dailyFiber,
         sleepMinutes: (goals.sleepHours * 60).round(),
         weeklyActivityMinutes: goals.weeklyActivityMins,
+        dailyActivityMinutes: goals.dailyActivityMins,
         targetWeightKg: goals.targetWeight,
       ),
     );

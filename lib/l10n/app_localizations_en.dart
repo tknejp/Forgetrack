@@ -641,6 +641,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get goalWeeklyActivity => 'Weekly activity';
 
   @override
+  String get goalDailyActivity => 'Daily activity';
+
+  @override
   String get goalUnitSteps => 'steps';
 
   @override

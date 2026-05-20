@@ -643,6 +643,9 @@ class AppLocalizationsCs extends AppLocalizations {
   String get goalWeeklyActivity => 'Týdenní aktivita';
 
   @override
+  String get goalDailyActivity => 'Denní aktivita';
+
+  @override
   String get goalUnitSteps => 'kroků';
 
   @override
