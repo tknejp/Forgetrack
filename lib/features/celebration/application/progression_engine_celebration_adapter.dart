@@ -284,9 +284,13 @@ class ProgressionEngineCelebrationAdapter {
     // Sum XP from any source achievement events that carried one
     // (rare today â€” achievements granting XP directly â€” but defensive).
     var xpTotal = 0;
+    var companionBonusTotal = 0;
     for (final ev in achievements) {
       final award = ev.xpAward;
-      if (award != null) xpTotal += award.amount;
+      if (award != null) {
+        xpTotal += award.amount;
+        companionBonusTotal += award.companionBonus;
+      }
     }
 
     final count = achievements.length;
@@ -306,7 +310,12 @@ class ProgressionEngineCelebrationAdapter {
       },
       rewards: mergedRewards,
       headRarity: headRarity,
-      xpAward: xpTotal > 0 ? CelebrationXpAward(xpTotal) : null,
+      xpAward: xpTotal > 0
+          ? CelebrationXpAward(
+              xpTotal,
+              companionBonus: companionBonusTotal,
+            )
+          : null,
       variantOverride: CelebrationVariant.fullscreen,
     );
 
@@ -604,10 +613,12 @@ class ProgressionEngineCelebrationAdapter {
     // Gather all cosmetic rewards across the bucket.
     final cosmeticIds = <String>[];
     var xpAmount = 0;
+    var companionBonus = 0;
     for (final p in bucket) {
       cosmeticIds.addAll(_cosmeticIdsForNode(p.node.id, result));
       final xp = _xpAmountForNode(p.node.id, result);
       if (xp != null) xpAmount += xp;
+      companionBonus += _companionBuffBonusForNode(p.node.id, result);
     }
     final rewards = _cosmeticsToRewards(cosmeticIds);
 
@@ -635,7 +646,9 @@ class ProgressionEngineCelebrationAdapter {
       description: (l) => face.node.descriptionKey(l),
       rewards: rewards,
       headRarity: headRarity,
-      xpAward: xpAmount > 0 ? CelebrationXpAward(xpAmount) : null,
+      xpAward: xpAmount > 0
+          ? CelebrationXpAward(xpAmount, companionBonus: companionBonus)
+          : null,
     );
   }
 
@@ -717,7 +730,12 @@ class ProgressionEngineCelebrationAdapter {
       description: (l) => node.descriptionKey(l),
       rewards: allRewards,
       headRarity: headRarity,
-      xpAward: (xp != null && xp > 0) ? CelebrationXpAward(xp) : null,
+      xpAward: (xp != null && xp > 0)
+          ? CelebrationXpAward(
+              xp,
+              companionBonus: _companionBuffBonusForNode(node.id, result),
+            )
+          : null,
       variantOverride: CelebrationVariant.fullscreen,
     );
   }
@@ -747,7 +765,12 @@ class ProgressionEngineCelebrationAdapter {
       description: (l) => node.descriptionKey(l),
       rewards: rewards,
       headRarity: headRarity,
-      xpAward: (xp != null && xp > 0) ? CelebrationXpAward(xp) : null,
+      xpAward: (xp != null && xp > 0)
+          ? CelebrationXpAward(
+              xp,
+              companionBonus: _companionBuffBonusForNode(node.id, result),
+            )
+          : null,
     );
   }
 
@@ -776,7 +799,12 @@ class ProgressionEngineCelebrationAdapter {
       description: (l) => node.descriptionKey(l),
       rewards: rewards,
       headRarity: headRarity,
-      xpAward: (xp != null && xp > 0) ? CelebrationXpAward(xp) : null,
+      xpAward: (xp != null && xp > 0)
+          ? CelebrationXpAward(
+              xp,
+              companionBonus: _companionBuffBonusForNode(node.id, result),
+            )
+          : null,
     );
   }
 
@@ -916,6 +944,26 @@ class ProgressionEngineCelebrationAdapter {
       return g.event.xpAmount;
     }
     return null;
+  }
+
+  /// Sum of companion buff bonuses across every XP grant attributed
+  /// to [nodeId] in this result. Returns 0 when no buff applied
+  /// (no companion equipped, RPG mode off, kind mismatch, daily cap
+  /// clamped to zero, or pre-buff legacy events). Sums alongside
+  /// [_xpAmountForNode] so a node with both a base XP and a bonus
+  /// XP reward (e.g. daily quest + before-noon bonus) surfaces a
+  /// single combined buff contribution on the celebration.
+  int _companionBuffBonusForNode(
+    String nodeId,
+    ProgressionResolutionResult result,
+  ) {
+    var sum = 0;
+    for (final g in result.grantedRewards) {
+      if (g.event.nodeId != nodeId) continue;
+      if (g.event.rewardKind != RewardGrantKind.xp) continue;
+      sum += g.event.companionBuffBonusXp ?? 0;
+    }
+    return sum;
   }
 
   List<Cosmetic> _resolveCosmetics(List<String> ids) {

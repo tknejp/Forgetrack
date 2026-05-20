@@ -58,8 +58,18 @@ enum CelebrationVariant { topsheet, fullscreen }
 /// just earned." Skipped entirely when [amount] <= 0.
 @immutable
 class CelebrationXpAward {
-  const CelebrationXpAward(this.amount);
+  const CelebrationXpAward(this.amount, {this.companionBonus = 0});
+
+  /// Total XP credited (level-scaled base + companion buff bonus).
+  /// The pill displays this as the headline number.
   final int amount;
+
+  /// Portion of [amount] that came from the equipped companion's buff.
+  /// Zero when no buff applied (no companion equipped, RPG mode off,
+  /// kind mismatch, or daily 25 % cap clamped it to zero). Rendered
+  /// by the pill as a fade-in micro-badge so the player sees the
+  /// buff's contribution distinct from the base reward.
+  final int companionBonus;
 }
 
 /// Self-contained celebration payload. The progression layer produces these;
