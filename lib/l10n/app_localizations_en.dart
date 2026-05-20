@@ -4348,6 +4348,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String progStreakInfoLiveBonus(int percent) {
+    return '+$percent% XP';
+  }
+
+  @override
   String progStreakInfoLiveCap(int percent) {
     return 'Top tier reached — current bonus +$percent% XP';
   }
@@ -4365,15 +4370,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String progStreakInfoLockedSubtitle(
-      int daysToUnlock, int percent, int unlockStreak) {
+  String progStreakInfoLockedSubtitle(int daysToUnlock, int percent) {
     String _temp0 = intl.Intl.pluralLogic(
       daysToUnlock,
       locale: localeName,
       other: '$daysToUnlock more days',
       one: '1 more day',
     );
-    return '$_temp0 for +$percent% XP at a $unlockStreak-day streak';
+    return '$_temp0 for +$percent% XP';
   }
 
   @override
@@ -4449,12 +4453,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String cosmeticBuffRaven(int daily, int weekly) {
-    return '+$daily% daily / +$weekly% weekly quest XP';
+    return '+$daily% daily and +$weekly% weekly quest XP';
   }
 
   @override
   String cosmeticBuffLynx(int opener, int deep) {
-    return '+$opener–$deep% chapter XP (grows with chain depth)';
+    return '+$opener–$deep% chapter XP';
   }
 
   @override

@@ -129,12 +129,23 @@ String _buffSourceLabel(AppLocalizations l10n, RewardSourceKind kind) {
   };
 }
 
-/// Renders a buff label as a single-line chip tinted with the
-/// passed [color] (typically the companion's rarity color). Suitable
-/// for: the hero header pop-out, the hero detail profile.
+/// Renders a buff label as a chip.
 ///
-/// For the companion details sheet use [CompanionBuffBanner] —
-/// full-width, XP-tinted, prioritized presentation.
+/// Two visual modes:
+///
+/// * **Full** (default) — rarity-tinted, bold. Used in the cosmetic
+///   details sheet's secondary chips and the hero detail header
+///   pop-out where the buff IS the headline.
+/// * **Compact** — muted (white55 on translucent surface, no rarity
+///   tint), shorter text. Used on the profile hero card where the
+///   chip sits next to the companion standee and must not compete
+///   with the rest of the scene. Compact mode also strips the
+///   inline parenthetical from the buff copy ("(roste s hloubkou
+///   řetězce)") because the surface only has room for the headline
+///   number — the mechanic explanation lives in the details sheet.
+///
+/// For the companion details sheet's hero banner use
+/// [CompanionBuffBanner] — full-width, prioritized presentation.
 class CompanionBuffChip extends StatelessWidget {
   const CompanionBuffChip({
     super.key,
@@ -147,18 +158,63 @@ class CompanionBuffChip extends StatelessWidget {
   final Color color;
 
   /// Tighter padding / smaller text for placement inside an already
-  /// dense header (e.g. the hero card chrome).
+  /// dense header (e.g. the hero card chrome). Drops the rarity tint
+  /// in favour of a muted white-on-translucent style so the chip
+  /// reads as ambient metadata, not a marketing badge.
   final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final label = formatCompanionBuff(l10n, buff);
-    final pad = compact
-        ? const EdgeInsets.symmetric(horizontal: 8, vertical: 4)
-        : const EdgeInsets.symmetric(horizontal: 10, vertical: 6);
+
+    if (compact) {
+      // Muted ambient style — no rarity tint, low-alpha chrome.
+      // Two-line wrap so long buff copy (Cave Lynx with its inline
+      // mechanic parenthetical, Raven's daily/weekly pair) doesn't
+      // truncate; the chip lives on the hero card next to the
+      // standee where vertical room is cheap.
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(Tokens.radiusProgress),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 1.5),
+              child: Icon(
+                Icons.pets_rounded,
+                size: 11,
+                color: Colors.white.withValues(alpha: 0.55),
+              ),
+            ),
+            const SizedBox(width: 5),
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.72),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.1,
+                  height: 1.25,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Container(
-      padding: pad,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(Tokens.radiusProgress),
@@ -167,18 +223,14 @@ class CompanionBuffChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.pets_rounded,
-            size: compact ? 12 : 14,
-            color: color,
-          ),
-          SizedBox(width: compact ? 5 : 6),
+          Icon(Icons.pets_rounded, size: 14, color: color),
+          const SizedBox(width: 6),
           Flexible(
             child: Text(
               label,
               style: TextStyle(
                 color: color,
-                fontSize: compact ? 11 : 12,
+                fontSize: 12,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 0.2,
               ),
@@ -190,6 +242,7 @@ class CompanionBuffChip extends StatelessWidget {
       ),
     );
   }
+
 }
 
 /// Full-width banner emphasizing the companion's XP bonus as the
@@ -226,23 +279,28 @@ class CompanionBuffBanner extends StatelessWidget {
       buff,
       currentChapterChainPosition: currentChapterChainPosition,
     );
+    // Muted neutral surface — the previous amber-XP fill made the
+    // banner shout louder than the description / requirements
+    // sections that surround it on the details sheet. The buff is
+    // still the headline mechanic, but the visual weight now matches
+    // the rest of the sheet so it reads as one section among peers.
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Tokens.xp.withValues(alpha: 0.10),
+        color: Colors.white.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(Tokens.radiusInner),
-        border: Border.all(color: Tokens.xp.withValues(alpha: 0.32)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Icon(
+          Icon(
             Icons.pets_rounded,
-            size: 22,
-            color: Tokens.xp,
+            size: 16,
+            color: Tokens.xp.withValues(alpha: 0.85),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -250,20 +308,20 @@ class CompanionBuffBanner extends StatelessWidget {
               children: [
                 Text(
                   copy.headline,
-                  style: const TextStyle(
-                    color: Tokens.xp,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
+                  style: TextStyle(
+                    color: Tokens.xp.withValues(alpha: 0.92),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
                     letterSpacing: 0.1,
-                    height: 1.2,
+                    height: 1.25,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
                 Text(
                   copy.subtitle,
-                  style: const TextStyle(
-                    color: Tokens.onSurfaceMuted,
-                    fontSize: 12,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.55),
+                    fontSize: 11,
                     fontWeight: FontWeight.w500,
                     height: 1.35,
                   ),

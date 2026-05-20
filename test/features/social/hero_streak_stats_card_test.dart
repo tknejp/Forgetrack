@@ -23,7 +23,7 @@ Widget _host(Widget child, {Locale locale = const Locale('en')}) {
 void main() {
   group('HeroStreakStatsCard', () {
     testWidgets(
-      'renders title + achievements pill + every domain row',
+      'renders title + achievements pill; rows revealed on tap',
       (tester) async {
         await tester.pumpWidget(_host(HeroStreakStatsCard(
           achievementsCount: 17,
@@ -39,6 +39,12 @@ void main() {
 
         expect(find.text('Streak records'), findsOneWidget);
         expect(find.text('17 achievements'), findsOneWidget);
+
+        // Card starts collapsed — domain rows are not in the tree yet.
+        expect(find.text('3d'), findsNothing);
+
+        await tester.tap(find.text('Streak records'));
+        await tester.pumpAndSettle();
 
         // Each of the 5 domain rows surfaces — labels come from the
         // shared chrome extension, so finding the count finds the row.
@@ -70,6 +76,10 @@ void main() {
             ),
           ],
         )));
+
+        // Expand the collapsed-by-default card before inspecting rows.
+        await tester.tap(find.text('Streak records'));
+        await tester.pumpAndSettle();
 
         // Steps row → current = "—", best = "21d".
         expect(find.text('21d'), findsOneWidget);

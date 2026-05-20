@@ -54,7 +54,7 @@ void main() {
         )));
         expect(find.textContaining('Best ever'), findsNothing);
 
-        // current < best → best line surfaces.
+        // current < best → best appears as its own 🏆 row.
         await tester.pumpWidget(_host(const QuestStreakInfoBlock(
           currentStreak: 3,
           bestStreak: 12,
@@ -77,13 +77,13 @@ void main() {
           buff: StreakLengthCompanionBuff(),
           // Ember tier 0 → resolvedPercent = 0.
         )));
-        expect(find.text('1-day streak · bonus locked'), findsOneWidget);
-        // Headline carries the buff state; subtitle teaches the
-        // unlock target (tier 1 sits at 2-day streak, paying 5 %).
-        expect(
-          find.text('1 more day for +5% XP at a 2-day streak'),
-          findsOneWidget,
-        );
+        // Streak count row carries the day count; the bonus row
+        // teaches the unlock target (tier 1 sits at 2-day streak,
+        // paying 5 %). The unlock-streak threshold is no longer
+        // repeated in copy — it's implicit from daysToUnlock +
+        // currentStreak.
+        expect(find.text('1 day in a row'), findsOneWidget);
+        expect(find.text('1 more day for +5% XP'), findsOneWidget);
       },
     );
 
@@ -97,7 +97,8 @@ void main() {
           buff: StreakLengthCompanionBuff(),
           resolvedPercent: CompanionBuffPercents.emberTier1, // 5 %
         )));
-        expect(find.text('4-day streak · +5% XP'), findsOneWidget);
+        expect(find.text('4 days in a row'), findsOneWidget);
+        expect(find.text('+5% XP'), findsOneWidget);
         expect(
           find.text(
             '+${CompanionBuffPercents.emberTier2}% from '
@@ -141,7 +142,11 @@ void main() {
           buff: StreakLengthCompanionBuff(),
           resolvedPercent: CompanionBuffPercents.emberLegendary, // 100 %
         )));
-        expect(find.text('120-day legendary streak'), findsOneWidget);
+        // The legendary headline is intentionally not surfaced as
+        // its own row — the silent reveal is the 🌟 bonus line
+        // itself. Streak count uses the plain "X days in a row"
+        // copy regardless of tier.
+        expect(find.text('120 days in a row'), findsOneWidget);
         expect(find.text('Legendary bonus active — +100% XP'), findsOneWidget);
       },
     );
@@ -163,13 +168,14 @@ void main() {
             ),
             // Below threshold → resolvedPercent = 0.
           )));
-          expect(find.text('3-day streak · bonus locked'), findsOneWidget);
+          expect(find.text('3 days in a row'), findsOneWidget);
           // Lantern's threshold is 7 d → 4 more days from a 3-day
-          // streak. Subtitle pluralises the remaining-days noun.
+          // streak. The "at a 7-day streak" tail is dropped — the
+          // unlock target is implicit from daysToUnlock +
+          // currentStreak.
           expect(
             find.text(
-              '4 more days for +${CompanionBuffPercents.lanternGolemPercent}% '
-              'XP at a ${CompanionBuffPercents.lanternGolemThreshold}-day streak',
+              '4 more days for +${CompanionBuffPercents.lanternGolemPercent}% XP',
             ),
             findsOneWidget,
           );
@@ -189,12 +195,7 @@ void main() {
             ),
             resolvedPercent: CompanionBuffPercents.lanternGolemPercent,
           )));
-          expect(
-            find.text(
-              '7-day streak · +${CompanionBuffPercents.lanternGolemPercent}% XP',
-            ),
-            findsOneWidget,
-          );
+          expect(find.text('7 days in a row'), findsOneWidget);
           // Lantern is flat — the cap line surfaces because there's
           // no further visible tier.
           expect(
@@ -220,7 +221,7 @@ void main() {
             ),
             resolvedPercent: CompanionBuffPercents.lanternLegendary,
           )));
-          expect(find.text('100-day legendary streak'), findsOneWidget);
+          expect(find.text('100 days in a row'), findsOneWidget);
         },
       );
     },

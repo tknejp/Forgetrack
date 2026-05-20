@@ -4345,8 +4345,13 @@ class AppLocalizationsCs extends AppLocalizations {
   }
 
   @override
+  String progStreakInfoLiveBonus(int percent) {
+    return '+$percent % XP';
+  }
+
+  @override
   String progStreakInfoLiveCap(int percent) {
-    return 'Maximální bonus — +$percent % XP';
+    return 'Maximální bonus: +$percent % XP';
   }
 
   @override
@@ -4363,8 +4368,7 @@ class AppLocalizationsCs extends AppLocalizations {
   }
 
   @override
-  String progStreakInfoLockedSubtitle(
-      int daysToUnlock, int percent, int unlockStreak) {
+  String progStreakInfoLockedSubtitle(int daysToUnlock, int percent) {
     String _temp0 = intl.Intl.pluralLogic(
       daysToUnlock,
       locale: localeName,
@@ -4372,7 +4376,7 @@ class AppLocalizationsCs extends AppLocalizations {
       few: 'Ještě $daysToUnlock dny',
       one: 'Ještě 1 den',
     );
-    return '$_temp0 pro +$percent % XP od streaku ${unlockStreak}d';
+    return '$_temp0 pro +$percent % XP';
   }
 
   @override
@@ -4457,12 +4461,12 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String cosmeticBuffRaven(int daily, int weekly) {
-    return '+$daily % XP za denní quest / +$weekly % XP za týdenní';
+    return '+$daily % XP za denní quest a +$weekly % XP za týdenní';
   }
 
   @override
   String cosmeticBuffLynx(int opener, int deep) {
-    return '+$opener–$deep % XP za chapter questy (roste s hloubkou řetězce)';
+    return '+$opener–$deep % XP za chapter questy';
   }
 
   @override

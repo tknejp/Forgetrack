@@ -42,11 +42,19 @@ class XpClaimPill extends StatelessWidget {
     required this.data,
     this.padding = const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
     this.claimedLabel,
+    this.inline = false,
   });
 
   final XpClaimPillData data;
   final EdgeInsetsGeometry padding;
   final String? claimedLabel;
+
+  /// When true, the companion-bonus chip is rendered to the LEFT of the
+  /// headline pill on a single row instead of stacked below it. Used by
+  /// dense list rows (e.g. the per-activity rows inside the home
+  /// activity card) where vertical space is tight and the chip + pill
+  /// together still fit horizontally.
+  final bool inline;
 
   @override
   Widget build(BuildContext context) {
@@ -107,18 +115,30 @@ class XpClaimPill extends StatelessWidget {
     // Right-aligned so they form a coherent column.
     final Widget child;
     if (data.companionBonus > 0) {
-      child = Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          headline,
-          const SizedBox(height: 3),
-          _CompanionBonusChip(
-            amount: data.companionBonus,
-            state: data.state,
-          ),
-        ],
+      final chip = _CompanionBonusChip(
+        amount: data.companionBonus,
+        state: data.state,
       );
+      if (inline) {
+        child = Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            chip,
+            const SizedBox(width: 4),
+            headline,
+          ],
+        );
+      } else {
+        child = Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            headline,
+            const SizedBox(height: 3),
+            chip,
+          ],
+        );
+      }
     } else {
       child = headline;
     }

@@ -2952,7 +2952,7 @@ abstract class AppLocalizations {
   /// No description provided for @progQuestClaimAll.
   ///
   /// In en, this message translates to:
-  /// **'Claim all quests'**
+  /// **'Claim all'**
   String get progQuestClaimAll;
 
   /// No description provided for @progQuestClaim.
@@ -7641,6 +7641,12 @@ abstract class AppLocalizations {
   /// **'+{percent}% from {threshold}-day streak'**
   String progStreakInfoLiveNextTier(int percent, int threshold);
 
+  /// Standalone live-bonus value rendered on its own row (next-tier hint follows in a separate row when relevant).
+  ///
+  /// In en, this message translates to:
+  /// **'+{percent}% XP'**
+  String progStreakInfoLiveBonus(int percent);
+
   /// Subtitle when the current resolved percent is the highest visible tier (legendary stays hidden).
   ///
   /// In en, this message translates to:
@@ -7653,12 +7659,11 @@ abstract class AppLocalizations {
   /// **'{count, plural, =0{Bonus locked} =1{1-day streak · bonus locked} other{{count}-day streak · bonus locked}}'**
   String progStreakInfoLockedHeadline(int count);
 
-  /// Subtitle teaching the unlock condition. {daysToUnlock} = remaining days (pluralised), {percent} = bonus at unlock, {unlockStreak} = target streak length surfaced literally for context.
+  /// Subtitle teaching the unlock condition. {daysToUnlock} = remaining days (pluralised), {percent} = bonus at unlock. The unlock-streak threshold is implicit from {daysToUnlock} + currentStreak so we don't repeat it.
   ///
   /// In en, this message translates to:
-  /// **'{daysToUnlock, plural, =1{1 more day} other{{daysToUnlock} more days}} for +{percent}% XP at a {unlockStreak}-day streak'**
-  String progStreakInfoLockedSubtitle(
-      int daysToUnlock, int percent, int unlockStreak);
+  /// **'{daysToUnlock, plural, =1{1 more day} other{{daysToUnlock} more days}} for +{percent}% XP'**
+  String progStreakInfoLockedSubtitle(int daysToUnlock, int percent);
 
   /// Hidden tier reveal — only shown once the player reaches the silent 100-day milestone.
   ///
@@ -7735,13 +7740,13 @@ abstract class AppLocalizations {
   /// Ruin Raven dynamic buff — daily vs weekly quest emphasis.
   ///
   /// In en, this message translates to:
-  /// **'+{daily}% daily / +{weekly}% weekly quest XP'**
+  /// **'+{daily}% daily and +{weekly}% weekly quest XP'**
   String cosmeticBuffRaven(int daily, int weekly);
 
   /// Cave Lynx dynamic buff — chapter chain depth range.
   ///
   /// In en, this message translates to:
-  /// **'+{opener}–{deep}% chapter XP (grows with chain depth)'**
+  /// **'+{opener}–{deep}% chapter XP'**
   String cosmeticBuffLynx(int opener, int deep);
 
   /// No description provided for @cosmeticBuffSourceActivityXp.

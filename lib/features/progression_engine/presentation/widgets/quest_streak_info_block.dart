@@ -69,180 +69,166 @@ class QuestStreakInfoBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final state = _resolveState();
+    final rows = _buildRows(l10n);
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: state.tint.withValues(alpha: state.fillAlpha),
-        borderRadius: BorderRadius.circular(Tokens.radiusInner),
-        border: Border.all(
-          color: state.tint.withValues(alpha: state.borderAlpha),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    // Two-column layout: fixed-width icon gutter + flexible text
+    // column. Splitting concepts (streak / bonus / next tier / best)
+    // into separate single-purpose rows reads as a scannable
+    // stat-table instead of a wall of bullet-joined copy.
+    final textStyle = TextStyle(
+      fontSize: Tokens.fontSizeMicro,
+      fontWeight: FontWeight.w500,
+      color: Colors.white.withValues(alpha: 0.55),
+      height: 1.3,
+    );
+    const iconColumnWidth = 18.0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var i = 0; i < rows.length; i++) ...[
+          if (i > 0) const SizedBox(height: 3),
           Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(state.emoji, style: const TextStyle(fontSize: 16)),
-              const SizedBox(width: 8),
+              SizedBox(
+                width: iconColumnWidth,
+                child: Text(rows[i].icon, style: textStyle),
+              ),
               Expanded(
                 child: Text(
-                  state.headline(l10n),
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: state.tint,
-                  ),
+                  rows[i].text,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: textStyle,
                 ),
               ),
             ],
           ),
-          if (state.subtitle(l10n) case final String subtitle) ...[
-            const SizedBox(height: 4),
-            Padding(
-              padding: const EdgeInsets.only(left: 24),
-              child: Text(
-                subtitle,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: Tokens.onSurfaceMuted,
-                  height: 1.35,
-                ),
-              ),
-            ),
-          ],
-          if (bestStreak > 0 && bestStreak != currentStreak) ...[
-            const SizedBox(height: 4),
-            Padding(
-              padding: const EdgeInsets.only(left: 24),
-              child: Text(
-                l10n.progStreakInfoBest(bestStreak),
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white.withValues(alpha: 0.55),
-                ),
-              ),
-            ),
-          ],
         ],
-      ),
+      ],
     );
   }
 
-  _StreakBannerState _resolveState() {
-    // Legendary tier is read off the resolved percent rather than
-    // the streak length so renames to the silent milestone don't
-    // require touching the UI — if the buff math says "100", we
-    // surface the legendary banner.
-    final isLegendaryPayout = buff != null &&
-        resolvedPercent >= CompanionBuffPercents.streakLegendaryThreshold;
+  /// Builds the ordered list of `(icon, text)` rows the widget will
+  /// render. Each row carries a single concept:
+  ///
+  ///   1. Current streak count (always).
+  ///   2. Bonus state — only when a streak buff is equipped:
+  ///      * locked (🔒) below activation,
+  ///      * live (⚡) at any payout tier below the cap,
+  ///      * cap (⚡) at the highest visible tier,
+  ///      * legendary (🌟) once the silent 100-day milestone is hit.
+  ///   3. Next-tier hint (↗) — only for live tiers when a further
+  ///      tier exists below the legendary milestone.
+  ///   4. Best streak (🏆) — only when the player isn't already on
+  ///      their personal record.
+  List<_StreakInfoRow> _buildRows(AppLocalizations l10n) {
+    final rows = <_StreakInfoRow>[
+      _StreakInfoRow(
+        icon: '🔥',
+        text: l10n.progStreakInfoPlainHeadline(currentStreak),
+      ),
+    ];
 
-    if (isLegendaryPayout) {
-      return _StreakBannerState(
-        emoji: '🌟',
-        tint: Tokens.xp,
-        fillAlpha: 0.14,
-        borderAlpha: 0.40,
-        headline: (l10n) =>
-            l10n.progStreakInfoLegendaryHeadline(currentStreak),
-        subtitle: (l10n) =>
-            l10n.progStreakInfoLegendarySubtitle(resolvedPercent),
+    final bonusRow = _resolveBonusRow(l10n);
+    if (bonusRow != null) rows.add(bonusRow);
+
+    final nextTierRow = _resolveNextTierRow(l10n);
+    if (nextTierRow != null) rows.add(nextTierRow);
+
+    if (bestStreak > 0 && bestStreak != currentStreak) {
+      rows.add(_StreakInfoRow(
+        icon: '🏆',
+        text: l10n.progStreakInfoBest(bestStreak),
+      ));
+    }
+    return rows;
+  }
+
+  _StreakInfoRow? _resolveBonusRow(AppLocalizations l10n) {
+    final b = buff;
+    if (b == null) return null;
+    if (b is! StreakLengthCompanionBuff &&
+        b is! StreakThresholdFlatCompanionBuff) {
+      return null;
+    }
+
+    // Legendary milestone — surface only when the buff math actually
+    // resolves to the silent threshold so the reveal stays a discovery.
+    if (resolvedPercent >= CompanionBuffPercents.streakLegendaryThreshold) {
+      return _StreakInfoRow(
+        icon: '🌟',
+        text: l10n.progStreakInfoLegendarySubtitle(resolvedPercent),
       );
     }
 
-    // Locked variants — streak buff equipped but resolved percent
-    // is still 0. Each streak buff reports its unlock condition via
-    // a switch on the sealed type.
-    if (buff != null && resolvedPercent <= 0) {
-      switch (buff!) {
-        case StreakLengthCompanionBuff():
-          // Ember sits in tier 0 below the tier-1 threshold (2 d).
-          final daysToUnlock =
-              CompanionBuffPercents.emberTier1Threshold - currentStreak;
-          if (daysToUnlock > 0) {
-            return _lockedState(
-              daysToUnlock: daysToUnlock,
-              percentAtUnlock: CompanionBuffPercents.emberTier1,
-              unlockStreak: CompanionBuffPercents.emberTier1Threshold,
-            );
-          }
-        case StreakThresholdFlatCompanionBuff(:final minStreak, :final percent):
-          final daysToUnlock = minStreak - currentStreak;
-          if (daysToUnlock > 0) {
-            return _lockedState(
-              daysToUnlock: daysToUnlock,
-              percentAtUnlock: percent,
-              unlockStreak: minStreak,
-            );
-          }
-        // Non-streak buffs fall through to plain mode — they don't
-        // care about per-domain streak so a "locked" state would be
-        // misleading.
-        case FlatCompanionBuff():
-        case WeeklyEmphasisCompanionBuff():
-        case ChapterDepthCompanionBuff():
-          break;
-      }
-    }
-
-    // Live variant — streak buff equipped and paying out a non-zero
-    // percent below the legendary milestone.
-    if (buff != null && resolvedPercent > 0) {
-      final next = _nextVisibleTier();
-      return _StreakBannerState(
-        emoji: '🔥',
-        tint: accent,
-        fillAlpha: 0.12,
-        borderAlpha: 0.30,
-        headline: (l10n) =>
-            l10n.progStreakInfoLiveHeadline(currentStreak, resolvedPercent),
-        subtitle: (l10n) => next == null
+    if (resolvedPercent > 0) {
+      // At the highest visible tier the cap line carries both the
+      // "no further upgrades" + current bonus copy in one string;
+      // sub-cap tiers show just the bare bonus value, paired with a
+      // next-tier hint in a separate row below.
+      final atCap = _nextVisibleTier() == null;
+      return _StreakInfoRow(
+        icon: '⚡',
+        text: atCap
             ? l10n.progStreakInfoLiveCap(resolvedPercent)
-            : l10n.progStreakInfoLiveNextTier(
-                next.percent,
-                next.threshold,
-              ),
+            : l10n.progStreakInfoLiveBonus(resolvedPercent),
       );
     }
 
-    // Plain mode — no streak buff equipped (or a non-streak buff).
-    // Keeps the pedagogy ("X dní v řadě splněno") without claiming
-    // a bonus the player isn't actually earning.
-    return _StreakBannerState(
-      emoji: currentStreak > 0 ? '🔥' : '·',
-      tint: currentStreak > 0
-          ? accent
-          : Colors.white.withValues(alpha: 0.55),
-      fillAlpha: 0.08,
-      borderAlpha: 0.20,
-      headline: (l10n) => l10n.progStreakInfoPlainHeadline(currentStreak),
-      subtitle: (l10n) => null,
+    // Locked — buff equipped but resolved percent is 0. The unlock
+    // condition is the same for both streak buff variants once we
+    // derive (daysToUnlock, percentAtUnlock); the only difference is
+    // which threshold to compare against.
+    final unlock = _resolveUnlockCondition(b);
+    if (unlock == null) return null;
+    return _StreakInfoRow(
+      icon: '🔒',
+      text: l10n.progStreakInfoLockedSubtitle(
+        unlock.daysToUnlock,
+        unlock.percentAtUnlock,
+      ),
     );
   }
 
-  _StreakBannerState _lockedState({
-    required int daysToUnlock,
-    required int percentAtUnlock,
-    required int unlockStreak,
-  }) {
-    return _StreakBannerState(
-      emoji: '🔒',
-      tint: Colors.white.withValues(alpha: 0.55),
-      fillAlpha: 0.06,
-      borderAlpha: 0.18,
-      headline: (l10n) => l10n.progStreakInfoLockedHeadline(currentStreak),
-      subtitle: (l10n) => l10n.progStreakInfoLockedSubtitle(
-        daysToUnlock,
-        percentAtUnlock,
-        unlockStreak,
-      ),
+  _StreakInfoRow? _resolveNextTierRow(AppLocalizations l10n) {
+    if (resolvedPercent <= 0) return null;
+    if (resolvedPercent >= CompanionBuffPercents.streakLegendaryThreshold) {
+      return null;
+    }
+    final next = _nextVisibleTier();
+    if (next == null) return null;
+    return _StreakInfoRow(
+      icon: '↗',
+      text: l10n.progStreakInfoLiveNextTier(next.percent, next.threshold),
     );
+  }
+
+  _UnlockCondition? _resolveUnlockCondition(CompanionBuff b) {
+    switch (b) {
+      case StreakLengthCompanionBuff():
+        // Ember sits in tier 0 below the tier-1 threshold.
+        final daysToUnlock =
+            CompanionBuffPercents.emberTier1Threshold - currentStreak;
+        if (daysToUnlock <= 0) return null;
+        return _UnlockCondition(
+          daysToUnlock: daysToUnlock,
+          percentAtUnlock: CompanionBuffPercents.emberTier1,
+        );
+      case StreakThresholdFlatCompanionBuff(:final minStreak, :final percent):
+        final daysToUnlock = minStreak - currentStreak;
+        if (daysToUnlock <= 0) return null;
+        return _UnlockCondition(
+          daysToUnlock: daysToUnlock,
+          percentAtUnlock: percent,
+        );
+      case FlatCompanionBuff():
+      case WeeklyEmphasisCompanionBuff():
+      case ChapterDepthCompanionBuff():
+        return null;
+    }
   }
 
   /// Next *visible* tier above the current resolved percent. Returns
@@ -282,22 +268,19 @@ class QuestStreakInfoBlock extends StatelessWidget {
   }
 }
 
-class _StreakBannerState {
-  const _StreakBannerState({
-    required this.emoji,
-    required this.tint,
-    required this.fillAlpha,
-    required this.borderAlpha,
-    required this.headline,
-    required this.subtitle,
-  });
+class _StreakInfoRow {
+  const _StreakInfoRow({required this.icon, required this.text});
+  final String icon;
+  final String text;
+}
 
-  final String emoji;
-  final Color tint;
-  final double fillAlpha;
-  final double borderAlpha;
-  final String Function(AppLocalizations l10n) headline;
-  final String? Function(AppLocalizations l10n) subtitle;
+class _UnlockCondition {
+  const _UnlockCondition({
+    required this.daysToUnlock,
+    required this.percentAtUnlock,
+  });
+  final int daysToUnlock;
+  final int percentAtUnlock;
 }
 
 class _NextTier {

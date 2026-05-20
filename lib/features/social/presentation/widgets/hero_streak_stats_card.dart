@@ -44,7 +44,7 @@ class DomainStreakRow {
 ///   wire stats (today: steps + nutrition; rest renders as a dash
 ///   until the Firestore schema grows the missing fields — tracked
 ///   under #99 follow-ups).
-class HeroStreakStatsCard extends StatelessWidget {
+class HeroStreakStatsCard extends StatefulWidget {
   const HeroStreakStatsCard({
     super.key,
     required this.achievementsCount,
@@ -62,8 +62,19 @@ class HeroStreakStatsCard extends StatelessWidget {
   final List<DomainStreakRow> rows;
 
   @override
+  State<HeroStreakStatsCard> createState() => _HeroStreakStatsCardState();
+}
+
+class _HeroStreakStatsCardState extends State<HeroStreakStatsCard> {
+  /// Collapsed by default — the per-domain table is dense and most
+  /// profile visits only need the headline (achievements count). Tap
+  /// the header to reveal the full streak record table.
+  bool _expanded = false;
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final hasRows = widget.rows.isNotEmpty;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -75,21 +86,41 @@ class HeroStreakStatsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _Header(
-            achievementsCount: achievementsCount,
-            l10n: l10n,
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: hasRows
+                ? () => setState(() => _expanded = !_expanded)
+                : null,
+            child: _Header(
+              achievementsCount: widget.achievementsCount,
+              l10n: l10n,
+              expanded: _expanded,
+              showChevron: hasRows,
+            ),
           ),
-          if (rows.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            const _Divider(),
-            const SizedBox(height: 8),
-            _ColumnLegend(l10n: l10n),
-            const SizedBox(height: 4),
-            for (var i = 0; i < rows.length; i++) ...[
-              if (i > 0) const SizedBox(height: 4),
-              _DomainRow(row: rows[i], l10n: l10n),
-            ],
-          ],
+          ClipRect(
+            child: AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeInOut,
+              alignment: Alignment.topCenter,
+              child: hasRows && _expanded
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 10),
+                        const _Divider(),
+                        const SizedBox(height: 8),
+                        _ColumnLegend(l10n: l10n),
+                        const SizedBox(height: 4),
+                        for (var i = 0; i < widget.rows.length; i++) ...[
+                          if (i > 0) const SizedBox(height: 4),
+                          _DomainRow(row: widget.rows[i], l10n: l10n),
+                        ],
+                      ],
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          ),
         ],
       ),
     );
@@ -100,10 +131,14 @@ class _Header extends StatelessWidget {
   const _Header({
     required this.achievementsCount,
     required this.l10n,
+    required this.expanded,
+    required this.showChevron,
   });
 
   final int achievementsCount;
   final AppLocalizations l10n;
+  final bool expanded;
+  final bool showChevron;
 
   @override
   Widget build(BuildContext context) {
@@ -154,6 +189,18 @@ class _Header extends StatelessWidget {
             ],
           ),
         ),
+        if (showChevron) ...[
+          const SizedBox(width: 6),
+          AnimatedRotation(
+            turns: expanded ? 0.5 : 0,
+            duration: const Duration(milliseconds: 200),
+            child: Icon(
+              Icons.expand_more_rounded,
+              size: 18,
+              color: Colors.white.withValues(alpha: 0.55),
+            ),
+          ),
+        ],
       ],
     );
   }

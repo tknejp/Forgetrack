@@ -39,6 +39,7 @@ class ProfileDetailHeroCard extends StatelessWidget {
     this.emblemSlots = const <Cosmetic?>[],
     this.unlockedCount = 0,
     this.onTapEmblemSlot,
+    this.onTapCompanion,
     this.onEditPhoto,
     this.onEditHandle,
     this.photoBusy = false,
@@ -67,6 +68,11 @@ class ProfileDetailHeroCard extends StatelessWidget {
   /// a picker, route to the cosmetics screen). Slots above
   /// `unlockedEmblems.length - 1` swallow the tap silently.
   final void Function(int slotIndex)? onTapEmblemSlot;
+
+  /// Tap callback for the equipped companion's standee + buff chip.
+  /// Fires the companion's [Cosmetic] definition so the call site
+  /// can open the cosmetic details sheet. Null disables the tap.
+  final void Function(Cosmetic companion)? onTapCompanion;
 
   final VoidCallback? onEditPhoto;
   final VoidCallback? onEditHandle;
@@ -105,8 +111,13 @@ class ProfileDetailHeroCard extends StatelessWidget {
   static const double _kIdentityLeft = 172;
   static const double _kIdentityTop = 24;
   static const double _kCompanionSize = 134;
-  static const double _kCompanionRight = 6;
-  static const double _kCompanionBottom = 14;
+  // Matches `_kEdge` so the chip — right-aligned in the column — sits
+  // flush with the 16-px right margin every other card / section on
+  // the profile screen uses. The standee is wrapped in its own
+  // Transform below so the sprite can keep its previous "pressed
+  // against the edge" position without dragging the chip with it.
+  static const double _kCompanionRight = _kEdge;
+  static const double _kCompanionBottom = 20;
   static const double _kEmblemSlotSize = 52;
   static const double _kEmblemGap = 6;
   static const double _kEdge = 16;
@@ -186,38 +197,55 @@ class ProfileDetailHeroCard extends StatelessWidget {
           // Companion standee — warm radial glow on the ground + asset on
           // top. Centered roughly at right:6 / bottom:14 per the spec.
           // When the catalog row carries an XP buff (every player-facing
-          // Companion does today), a compact buff chip sits above the
-          // standee so the player reads the mechanical effect alongside
-          // the sprite.
+          // Companion does today), a compact buff chip sits below the
+          // standee — keeps the mechanical effect adjacent to the
+          // sprite without crashing into the emblem grid that occupies
+          // the bottom-left quadrant of the hero card.
           if (companion != null) ...[
             const Positioned(
-              right: 20,
-              bottom: 10,
+              right: 6,
+              bottom: 14,
               child: _GroundGlow(width: 120),
             ),
             Positioned(
               right: _kCompanionRight,
               bottom: _kCompanionBottom,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (companion is Companion && companion.buff != null)
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 150),
-                      child: CompanionBuffChip(
-                        buff: companion.buff!,
-                        color:
-                            RarityPalette.forRarity(companion.rarity).color,
-                        compact: true,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onTapCompanion == null
+                    ? null
+                    : () => onTapCompanion!(companion),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // The column is right-aligned to the 16-px card
+                    // margin so the chip below sits flush with the
+                    // standard right edge. The standee gets shifted
+                    // back outward via Transform so the sprite keeps
+                    // its "pressed against the scene" position
+                    // without overflow-clipping the chip text.
+                    Transform.translate(
+                      offset: const Offset(8, 0),
+                      child: _CompanionStandee(
+                        definition: companion,
+                        size: _kCompanionSize,
                       ),
                     ),
-                  const SizedBox(height: 4),
-                  _CompanionStandee(
-                    definition: companion,
-                    size: _kCompanionSize,
-                  ),
-                ],
+                    if (companion is Companion && companion.buff != null) ...[
+                      const SizedBox(height: 4),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 180),
+                        child: CompanionBuffChip(
+                          buff: companion.buff!,
+                          color:
+                              RarityPalette.forRarity(companion.rarity).color,
+                          compact: true,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
           ],

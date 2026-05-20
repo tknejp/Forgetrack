@@ -15,6 +15,7 @@ import '../application/home_card_order_provider.dart';
 import '../../progression_engine/application/progression_engine_provider.dart';
 import '../../progression_engine/domain/progression_domain_chrome.dart';
 import '../../progression_engine/presentation/widgets/quest_streak_chip.dart';
+import '../../progression_engine/presentation/widgets/quest_streak_info_block.dart';
 import '../../../domain/progression/catalog/progression_domain.dart';
 import '../../../domain/progression/catalog/progression_entry.dart';
 import '../../../l10n/l10n.dart';
@@ -191,13 +192,11 @@ class _OverviewScreenState extends State<OverviewScreen> {
     final quest = _findDailyQuest(progression, questNodeId);
     if (quest == null) return null;
     final preview = quest.previewXp;
-    // For cards that carry a streak chip (main-five daily goals),
-    // the chip surfaces the buff bonus instead — keep the pill
-    // companion-bonus at zero there to avoid double-counting in the
-    // UI. Non-main-five cards still get the bonus on the pill.
-    final companionBonus = _isMainFiveStreakNode(quest.node)
-        ? 0
-        : progression.projectedCompanionBuffBonusFor(quest.node);
+    // Every card surfaces the buff bonus on the XP pill — the
+    // bonus-XP chip replaces the streak chip that used to sit next
+    // to it on main-five cards (the pedagogic streak info now lives
+    // inside the expanded card body instead).
+    final companionBonus = progression.projectedCompanionBuffBonusFor(quest.node);
 
     if (quest.isCompleted) {
       return XpClaimPillData.claimed(preview, companionBonus: companionBonus);
@@ -219,18 +218,19 @@ class _OverviewScreenState extends State<OverviewScreen> {
     return null;
   }
 
-  /// Resolves the streak chip for a main-five home card. Returns
-  /// null when:
+  /// Resolves the pedagogic streak info block for a main-five home
+  /// card. Returns null when:
   ///   * the period isn't the current day (no live streak preview
   ///     on historic days),
   ///   * the node id isn't a tracked daily quest,
   ///   * the node's rewards don't carry a `streakDomain` (this card
   ///     isn't a main-five daily goal).
   ///
-  /// When non-null, the chip carries the equipped buff and the
-  /// per-domain resolved percent so it can paint in plain / live /
-  /// locked mode.
-  QuestStreakChip? _streakChipForQuest(
+  /// The block now lives inside the expanded card body (replacing
+  /// the per-card streak chip that used to sit in the header) so the
+  /// streak pedagogy stays available but doesn't crowd the
+  /// collapsed view.
+  QuestStreakInfoBlock? _streakInfoBlockForQuest(
     ProgressionEngineProvider progression,
     String questNodeId,
     SelectedPeriod period,
@@ -240,8 +240,10 @@ class _OverviewScreenState extends State<OverviewScreen> {
     if (quest == null) return null;
     final domain = _streakDomainOfNode(quest.node);
     if (domain == null) return null;
-    return QuestStreakChip(
-      streakDays: progression.currentStreakForDomain(domain),
+    final summary = progression.streakForDomain(domain);
+    return QuestStreakInfoBlock(
+      currentStreak: summary.currentStreak,
+      bestStreak: summary.bestStreak,
       accent: domain.color,
       buff: progression.equippedCompanionBuff,
       resolvedPercent: progression.projectedStreakBuffPercentFor(quest.node),
@@ -257,9 +259,6 @@ class _OverviewScreenState extends State<OverviewScreen> {
     }
     return null;
   }
-
-  bool _isMainFiveStreakNode(ProgressionEntry node) =>
-      _streakDomainOfNode(node) != null;
 
   ProgressionDomain? _streakDomainOfNode(ProgressionEntry node) {
     return streakDomainOfRewards(node.rewards);
@@ -399,7 +398,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
                       period,
                       dayOnly: dayOnly,
                     ),
-                    streakChipFor: (questNodeId) => _streakChipForQuest(
+                    streakInfoBlockFor: (questNodeId) =>
+                        _streakInfoBlockForQuest(
                       progression,
                       questNodeId,
                       period,
@@ -449,10 +449,11 @@ typedef _QuestPillResolver = XpClaimPillData? Function(
   bool dayOnly,
 });
 
-/// Resolves the streak chip for a main-five home card, given the V2
-/// quest node id (e.g. `daily_steps_today`). Returns null for nodes
-/// that aren't main-five daily goals or for historic periods.
-typedef _QuestStreakChipResolver = QuestStreakChip? Function(
+/// Resolves the pedagogic streak info block for a main-five home
+/// card, given the V2 quest node id (e.g. `daily_steps_today`).
+/// Returns null for nodes that aren't main-five daily goals or for
+/// historic periods.
+typedef _QuestStreakInfoBlockResolver = QuestStreakInfoBlock? Function(
   String questNodeId,
 );
 
@@ -467,7 +468,7 @@ class _DayContent extends StatelessWidget {
     required this.l10n,
     required this.fmtSleep,
     required this.questPillData,
-    required this.streakChipFor,
+    required this.streakInfoBlockFor,
     required this.onActivityClaim,
     required this.progression,
     required this.weightForPeriod,
@@ -497,7 +498,7 @@ class _DayContent extends StatelessWidget {
   final dynamic l10n;
   final String Function(Duration?) fmtSleep;
   final _QuestPillResolver questPillData;
-  final _QuestStreakChipResolver streakChipFor;
+  final _QuestStreakInfoBlockResolver streakInfoBlockFor;
   final void Function(ActivityRecord record, Offset center) onActivityClaim;
   final ProgressionEngineProvider progression;
   final double? weightForPeriod;
@@ -679,8 +680,13 @@ class _DayContent extends StatelessWidget {
                 progress: stepsProgress,
                 badge: '${(stepsProgress * 100).round()}%',
                 xpData: questPillData('daily_steps_today'),
-                streakChip: streakChipFor('daily_steps_today'),
                 children: [
+                  if (streakInfoBlockFor('daily_steps_today')
+                      case final block?) ...[
+                    const SizedBox(height: Tokens.spaceMd),
+                    block,
+                    const SizedBox(height: Tokens.spaceXs),
+                  ],
                   DetailShortcutButton(
                     onTap: onOpenSteps,
                     domain: Tokens.steps,
@@ -757,8 +763,13 @@ class _DayContent extends StatelessWidget {
                 progress: kcalProgress,
                 badge: '$kcalPct%',
                 xpData: questPillData('daily_calories_today'),
-                streakChip: streakChipFor('daily_calories_today'),
                 children: [
+                  if (streakInfoBlockFor('daily_calories_today')
+                      case final block?) ...[
+                    const SizedBox(height: Tokens.spaceMd),
+                    block,
+                    const SizedBox(height: Tokens.spaceXs),
+                  ],
                   const SizedBox(height: Tokens.spaceMd),
                   if (nutritionHasDetails) ...[
                     MacroRow(
@@ -843,8 +854,13 @@ class _DayContent extends StatelessWidget {
             ],
             showProgress: false,
             xpData: questPillData('daily_weight_log_today', dayOnly: false),
-            streakChip: streakChipFor('daily_weight_log_today'),
             children: [
+              if (streakInfoBlockFor('daily_weight_log_today')
+                  case final block?) ...[
+                const SizedBox(height: Tokens.spaceMd),
+                block,
+                const SizedBox(height: Tokens.spaceXs),
+              ],
               DetailShortcutButton(
                 onTap: onOpenBody,
                 domain: Tokens.weight,
@@ -883,8 +899,13 @@ class _DayContent extends StatelessWidget {
             progress: activityProgress,
             badge: '${(activityProgress * 100).round()}%',
             xpData: questPillData('daily_activity_today', dayOnly: false),
-            streakChip: streakChipFor('daily_activity_today'),
             children: [
+              if (streakInfoBlockFor('daily_activity_today')
+                  case final block?) ...[
+                const SizedBox(height: Tokens.spaceMd),
+                block,
+                const SizedBox(height: Tokens.spaceXs),
+              ],
               if (period.type == PeriodType.day) ...[
                 _ActivityClaimsList(
                   claims: progression.activityClaimsForDate(
@@ -934,8 +955,13 @@ class _DayContent extends StatelessWidget {
                 ? '${(sleepProgress * 100).round()}%'
                 : null,
             xpData: questPillData('daily_sleep_today'),
-            streakChip: streakChipFor('daily_sleep_today'),
             children: [
+              if (streakInfoBlockFor('daily_sleep_today')
+                  case final block?) ...[
+                const SizedBox(height: Tokens.spaceMd),
+                block,
+                const SizedBox(height: Tokens.spaceXs),
+              ],
               DetailShortcutButton(
                 onTap: onOpenSleep,
                 domain: Tokens.sleep,
@@ -1364,16 +1390,32 @@ class _ActivityClaimRow extends StatelessWidget {
     final duration = _formatDuration(record.duration);
     final time = _formatStartTime(context, record.startTime);
 
+    // Per-activity buff bonus mirrors the card-level pill so the
+    // player sees the equipped companion's contribution on each row,
+    // not only on the rolled-up card total above. Inline layout keeps
+    // the bonus chip + headline on a single row — vertical space here
+    // is tighter than on the main quest cards.
+    final progression = context.read<ProgressionEngineProvider>();
+    final companionBonus =
+        progression.projectedCompanionBuffBonusForActivityClaim(state.previewXp);
+
     final XpClaimPillData pillData;
     if (state.isClaimed) {
-      pillData = XpClaimPillData.claimed(state.previewXp);
+      pillData = XpClaimPillData.claimed(
+        state.previewXp,
+        companionBonus: companionBonus,
+      );
     } else if (state.isClaimable) {
       pillData = XpClaimPillData.claimable(
         state.previewXp,
         onTap: (center) => onClaim(record, center),
+        companionBonus: companionBonus,
       );
     } else {
-      pillData = XpClaimPillData.locked(state.previewXp);
+      pillData = XpClaimPillData.locked(
+        state.previewXp,
+        companionBonus: companionBonus,
+      );
     }
 
     return Padding(
@@ -1428,7 +1470,7 @@ class _ActivityClaimRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            XpClaimPill(data: pillData),
+            XpClaimPill(data: pillData, inline: true),
           ],
         ),
       ),
