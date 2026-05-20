@@ -2,37 +2,89 @@ rules_version = '2';
 
 // Forgetrack Firestore security rules.
 //
-// Scope of this file (Trello #100, 2026-05-20):
-//   - `users/{uid}/goal_history/{metric}` — per-metric goal revision
-//     history written by GoalHistoryFirestoreGateway. Strictly
-//     self-only; no peer reads, no public access. This is the
-//     anti-cheat server-truth for retroactive streak validation.
-//   - All other `users/{uid}/...` subcollections written by the
-//     existing engine ledger + cosmetics gateways are gated on
-//     `request.auth.uid == uid` for the same reason — only the
-//     signed-in user owns their gameplay state.
+// **STATUS — partial, not deploy-ready.** This file is NOT wired into
+// `firebase.json`'s `firestore` target and `firebase deploy --only
+// firestore:rules` would currently break social features (handles,
+// friend_requests, friendships, achievement_shares, cross-user
+// notification writes). Production rules live in the Firebase console
+// until a dedicated security review ports them here with emulator
+// coverage.
 //
-// Public / shared collections (`handles`, `friend_requests`,
-// `friendships`, `achievement_shares`) are intentionally NOT covered
-// here yet — they're written from the social repository and need
-// peer-read carve-outs that exceed this card's scope. Until those
-// are explicitly added, deploying this rules file will block those
-// flows; coordinate with the social-features card before
-// `firebase deploy --only firestore:rules`.
+// **What this file does cover** (Trello #100, 2026-05-20):
+//   - `users/{uid}/goal_history/{metric}` — anti-cheat server truth
+//     for retroactive streak validation. Strictly self-only.
+//   - Owner-only access for the existing engine ledger subcollections
+//     written by `FirestoreProgressionEngineGateway` and the cosmetic
+//     entitlements doc read by `FirestoreCosmeticEntitlementsSource`.
+//     These are documented as a reference implementation: should
+//     match the current production rules. If they don't, the production
+//     rules are wrong (or this file is — verify against the live
+//     ruleset before deploying).
+//
+// **What is intentionally NOT covered** (out of scope for #100):
+//   - `users/{uid}` profile doc — peer reads required for friend
+//     discovery, but writes must be self-only.
+//   - `users/{uid}/notifications` — cross-user writes (peers write
+//     reaction notifications) need carve-out.
+//   - `handles/{handle}` — handle reservation transactions.
+//   - `friend_requests/{id}` — create by `fromUid`, read by either
+//     party, update by `toUid` for accept/decline.
+//   - `friendships/{id}` — members-only read/delete.
+//   - `achievement_shares/{id}` — friends-read, field-level update
+//     for reactions.
+//
+// When the social rules card lands, replace this header and add
+// explicit `match` blocks for each top-level collection above.
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── Self-owned per-user data ────────────────────────────────────
+    // ── Goal history (Trello #100) ──────────────────────────────────
     //
-    // Covers goal_history (this card) plus every existing engine /
-    // cosmetic / journal subcollection the app writes under
-    // `users/{uid}/...`. The wildcard `/{document=**}` includes
-    // every descendant document, so engineObjectiveCompletions,
-    // engineRewardGrants, cosmetic entitlements, notifications and
-    // goal_history all match a single rule.
-    match /users/{uid}/{document=**} {
+    // Per-metric revision timeline. Pulled before backfill so past-day
+    // completion events resolve against the goal in effect on that
+    // calendar day, not against today's local goal.
+    match /users/{uid}/goal_history/{metricName} {
       allow read, write: if request.auth != null
                          && request.auth.uid == uid;
     }
+
+    // ── Engine ledger (V2 progression sync) ─────────────────────────
+    //
+    // Mirrors `FirestoreProgressionEngineGateway`'s collection list.
+    // Each event is owned by the user it lives under — no peer reads
+    // from these. (Friend hero profile reads go through
+    // `users/{uid}/engineNodeCompletions` which is intentionally
+    // open at the social-rules layer — out of scope here.)
+    match /users/{uid}/engineObjectiveCompletions/{eventKey} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == uid;
+    }
+    match /users/{uid}/engineNodeClaims/{eventKey} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == uid;
+    }
+    match /users/{uid}/engineNodeAnnouncements/{eventKey} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == uid;
+    }
+    match /users/{uid}/engineRewardGrants/{eventKey} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == uid;
+    }
+    match /users/{uid}/engineQuestOfferings/{eventKey} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == uid;
+    }
+
+    // ── Cosmetic entitlements (Firestore-Functions promotional grants) ──
+    //
+    // Client only reads — writes come from Cloud Functions with admin
+    // credentials and bypass these rules.
+    match /users/{uid}/cosmeticEntitlements/{cosmeticId} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // Everything else: deny by default. See top-of-file STATUS block.
   }
 }
