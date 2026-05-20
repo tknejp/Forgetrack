@@ -41,6 +41,7 @@ import 'package:forgetrack/domain/progression/player/player_chapter_progress.dar
 import 'package:forgetrack/domain/progression/player/player_quest_catalog.dart';
 import 'package:forgetrack/domain/progression/player/player_quest_lifecycle.dart';
 import 'chapter_catalog_builder.dart';
+import 'streak_backfill_service.dart';
 import 'player_achievement_shelf_service.dart';
 import 'player_chapter_progress_service.dart';
 import 'player_quest_catalog_service.dart';
@@ -289,6 +290,8 @@ class ProgressionEngineProvider extends ChangeNotifier {
   final EngineStreakSource _streakSource = const EngineStreakSource();
   final ObjectiveCatalog _objectiveCatalog = const ObjectiveCatalog();
   final ProgressionEntryCatalog _nodeCatalog = const ProgressionEntryCatalog();
+  final StreakBackfillService _streakBackfill =
+      const StreakBackfillService(objectiveCatalog: ObjectiveCatalog());
 
   ProviderEngineInputSource? _source;
   String? _lastEvaluatedSignature;
@@ -2286,6 +2289,12 @@ class ProgressionEngineProvider extends ChangeNotifier {
       // pin in the slot. Idempotent — same-day repeat calls are no-ops.
       await _persistDailyOfferings();
       _lastEvaluatedAt = _engineNow();
+      // Close any past-day completion gaps the live engine couldn't
+      // record. Runs after the engine pass so today's outcomes land
+      // in the ledger first, then the backfill picks up yesterday
+      // and earlier — every HC sync / app resume that triggers an
+      // evaluation also catches up the streak chain.
+      await _runStreakBackfill();
       _recomputeStreaks();
       if (!result.isEmpty) _pendingCelebrations.add(result);
       // Cosmetic dispatch happens after ledger refresh so the
@@ -3676,6 +3685,11 @@ class ProgressionEngineProvider extends ChangeNotifier {
       _ledger = await _repository.loadLedger();
       _lastEvaluatedAt = _mostRecentLedgerTimestamp(_ledger);
       _joinedAtCache = await _resolveJoinedAt(_ledger);
+      // Backfill past-day completion events before the first streak
+      // summary so the very first read the UI does already reflects
+      // the closed gaps. No-op until [bind] wires source providers
+      // — `refresh()` will re-trigger the backfill once they're set.
+      await _runStreakBackfill();
       _recomputeStreaks();
       _error = null;
     } catch (e) {
@@ -3780,6 +3794,73 @@ class ProgressionEngineProvider extends ChangeNotifier {
 
   int _totalClaimedXp(LedgerSnapshot ledger) =>
       Player.totalXpFromGrants(ledger.rewardGrants);
+
+  /// Walks past days from [joinedAt] to yesterday and appends
+  /// [ObjectiveCompletionEvent]s for any main-five daily goal that
+  /// the player met but the live engine never had a chance to record
+  /// (HC sync caught up after the fact, app was closed across midnight,
+  /// fresh install on the same account, …).
+  ///
+  /// Runs unconditionally on [_hydrate] and after every successful
+  /// [evaluateWith] pass. The service is idempotent against existing
+  /// completion events through the engine's shared eventKey shape, so
+  /// repeat passes only do work when a real gap closed.
+  ///
+  /// No-op when the engine has no bound source providers yet (early
+  /// hydration before [bind]) or when the player's history is empty.
+  Future<void> _runStreakBackfill() async {
+    final ledger = _ledger;
+    if (ledger == null) return;
+    final fitness = _subscribedFitness;
+    final nutrition = _subscribedNutrition;
+    final goals = _subscribedGoals;
+    if (fitness == null || nutrition == null || goals == null) return;
+
+    final today = DateTime(
+      _engineNow().year,
+      _engineNow().month,
+      _engineNow().day,
+    );
+    final join = DateTime(joinedAt.year, joinedAt.month, joinedAt.day);
+    if (!join.isBefore(today)) return;
+
+    try {
+      final result = await _streakBackfill.runBackfill(
+        fromDate: join,
+        toDate: today,
+        player: _buildPlayer(),
+        ledger: ledger,
+        buildHealthSnapshot: fitness.snapshotForDate,
+        buildNutritionSnapshot: nutrition.snapshotForDate,
+        buildGoals: (date) => EngineGoalSet(
+          dailySteps: goals.progressionDailyStepsForDate(date),
+          dailyCalories: goals.progressionDailyCaloriesForDate(date),
+          dailyProteinGrams: goals.progressionDailyProteinForDate(date),
+          dailyCarbsGrams: goals.progressionDailyCarbsForDate(date),
+          dailyFatGrams: goals.progressionDailyFatForDate(date),
+          dailyFiberGrams: goals.progressionDailyFiberForDate(date),
+          // Sleep is stored as hours in prefs but the catalog expects
+          // minutes for the daily-sleep objective. Convert here so the
+          // backfill sees the same target shape the live engine does.
+          sleepMinutes: (goals.progressionSleepHoursForDate(date) * 60)
+              .round(),
+        ),
+        appendEvents: (events) async {
+          await _repository.appendEvents(events);
+          _ledger = await _repository.loadLedger();
+        },
+        clock: _engineNow,
+      );
+      if (result.appendedEvents > 0) {
+        AppLog.app.info(
+          'progression: streak backfill closed ${result.appendedEvents} '
+          'completion event(s) across ${result.scannedDays} day(s)',
+        );
+      }
+    } catch (e) {
+      AppLog.app.warn('progression: streak backfill failed — $e');
+    }
+  }
 
   /// Recomputes streak summaries against the current ledger. Called
   /// from [_hydrate] and after every successful evaluation pass.

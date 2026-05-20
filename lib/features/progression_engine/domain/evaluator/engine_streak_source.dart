@@ -126,13 +126,19 @@ class EngineStreakSource {
     final sorted = dates.toList()..sort();
     final lastAchieved = sorted.last;
 
-    // Best streak: scan in order, count longest run.
+    // Best streak: scan in order, count longest run. Adjacency is
+    // checked via the calendar-day successor (`DateTime(y, m, d + 1)`)
+    // rather than `curr.difference(prev).inDays == 1` so the run
+    // survives DST transitions — a spring-forward gives prev → curr
+    // an absolute distance of 23 h, which `inDays` truncates to 0,
+    // silently breaking a streak that the calendar sees as
+    // contiguous.
     var best = 1;
     var run = 1;
     for (var i = 1; i < sorted.length; i++) {
       final prev = sorted[i - 1];
       final curr = sorted[i];
-      if (curr.difference(prev).inDays == 1) {
+      if (curr == _dayAfter(prev)) {
         run += 1;
         if (run > best) best = run;
       } else {
@@ -143,12 +149,20 @@ class EngineStreakSource {
     // Current streak: count consecutive days ending today (or
     // yesterday — a day counts as "still alive" if the player has
     // not yet had a chance to log today).
+    //
+    // Walks by **calendar day** via `DateTime(y, m, d - 1)`, not by
+    // `Duration(days: 1)`. The Duration form subtracts 86 400
+    // absolute seconds, which on the day after a DST spring-forward
+    // shifts the probe to 23:00 of the previous local day — the
+    // dates set is keyed at local midnight, so the lookup misses and
+    // the streak silently collapses to 1 around every DST boundary.
+    // Calendar-day arithmetic is the only correct shape here.
     var current = 0;
-    for (final cursor in [today, today.subtract(const Duration(days: 1))]) {
+    for (final cursor in [today, _dayBefore(today)]) {
       var probe = cursor;
       while (dates.contains(probe)) {
         current += 1;
-        probe = probe.subtract(const Duration(days: 1));
+        probe = _dayBefore(probe);
       }
       if (current > 0) break;
     }
@@ -165,6 +179,15 @@ class EngineStreakSource {
     final now = _clock();
     return DateTime(now.year, now.month, now.day);
   }
+
+  /// Calendar-day arithmetic that survives DST transitions. The
+  /// `DateTime` constructor normalises out-of-range fields, so
+  /// `DateTime(y, m, d - 1)` on the 1st of a month yields the last
+  /// day of the previous month — no hand-rolled month length tables
+  /// needed.
+  DateTime _dayBefore(DateTime d) => DateTime(d.year, d.month, d.day - 1);
+
+  DateTime _dayAfter(DateTime d) => DateTime(d.year, d.month, d.day + 1);
 
   DateTime? _parsePeriodKey(String? key) {
     if (key == null) return null;
