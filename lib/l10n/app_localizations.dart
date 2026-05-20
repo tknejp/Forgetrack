@@ -7668,8 +7668,56 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticBuffSourceAllXp.
   ///
   /// In en, this message translates to:
-  /// **'from all XP'**
+  /// **'from all sources'**
   String get cosmeticBuffSourceAllXp;
+
+  /// Banner subtitle shown for flat companion buffs — explains the buff is passive.
+  ///
+  /// In en, this message translates to:
+  /// **'Passive bonus while the companion is equipped'**
+  String get cosmeticBuffBannerFlatSubtitle;
+
+  /// Ember Sprite banner headline using the live current streak bracket value.
+  ///
+  /// In en, this message translates to:
+  /// **'+{percent}% XP from streak'**
+  String cosmeticBuffEmberHeadlineLive(int percent);
+
+  /// Ember Sprite banner headline fallback when live streak isn't available — shows floor → cap range.
+  ///
+  /// In en, this message translates to:
+  /// **'+{min} → {max}% XP from streak'**
+  String cosmeticBuffEmberHeadlineRange(int min, int max);
+
+  /// Cave Lynx banner headline range form — opener → deep without the inline parenthetical.
+  ///
+  /// In en, this message translates to:
+  /// **'+{opener} → {deep}% XP from chapter quests'**
+  String cosmeticBuffLynxHeadlineRange(int opener, int deep);
+
+  /// Banner subtitle for Ember Sprite — explains the streak-length mechanic.
+  ///
+  /// In en, this message translates to:
+  /// **'Grows with the flame — your streak length (cap +{max}%)'**
+  String cosmeticBuffEmberSubtitle(int max);
+
+  /// Banner subtitle for Ruin Raven — explains the weekly emphasis.
+  ///
+  /// In en, this message translates to:
+  /// **'Bigger payout on weekly quest claims'**
+  String get cosmeticBuffRavenSubtitle;
+
+  /// Cave Lynx banner headline using the live current chapter chain bracket value.
+  ///
+  /// In en, this message translates to:
+  /// **'+{percent}% XP from chapter quests'**
+  String cosmeticBuffLynxHeadlineLive(int percent);
+
+  /// Banner subtitle for Cave Lynx — explains the chain-depth mechanic.
+  ///
+  /// In en, this message translates to:
+  /// **'Grows with chain position (up to +{deep}%)'**
+  String cosmeticBuffLynxSubtitle(int deep);
 
   /// Pill shown on a relic that has been used to summon a companion.
   ///

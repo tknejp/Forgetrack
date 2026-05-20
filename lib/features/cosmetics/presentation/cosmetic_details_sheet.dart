@@ -455,22 +455,32 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
               ],
 
               // Companion XP buff — surfaced below the description
-              // so the player can read the flavor first, then the
-              // mechanical effect. Only renders when the catalog
-              // row carries a buff and the companion is unlocked
-              // (hidden / claimable bodies have their own surfaces).
+              // as a full-width banner because the buff is the
+              // headline "why equip this" info, not a side tag. Uses
+              // [Tokens.xp] (amber) instead of rarity color so the
+              // banner reads as "XP gain", not "rarity flex". Ember
+              // Sprite pulls live streak length from the engine so
+              // the headline shows the current bracket bonus rather
+              // than a static range.
               if (!devTools &&
                   !isHidden &&
                   !effectiveLocked &&
                   definition is Companion &&
                   definition.buff != null) ...[
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: CompanionBuffChip(
-                    buff: definition.buff!,
-                    color: color,
-                  ),
+                const SizedBox(height: 14),
+                CompanionBuffBanner(
+                  buff: definition.buff!,
+                  currentStreak: definition.buff is StreakLengthCompanionBuff
+                      ? context
+                          .watch<ProgressionEngineProvider>()
+                          .currentMaxStreak
+                      : null,
+                  currentChapterChainPosition:
+                      definition.buff is ChapterDepthCompanionBuff
+                          ? context
+                              .watch<ProgressionEngineProvider>()
+                              .currentChapterChainPosition
+                          : null,
                 ),
               ],
 

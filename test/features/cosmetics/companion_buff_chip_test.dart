@@ -30,7 +30,7 @@ void main() {
         ),
         color: Color(0xFF7C6FFF),
       )));
-      expect(find.text('+8 % XP z aktivit'), findsOneWidget);
+      expect(find.text('+8 % XP za aktivity'), findsOneWidget);
     });
 
     testWidgets('renders the Ember streak range', (tester) async {
@@ -50,7 +50,7 @@ void main() {
         color: Color(0xFF7C6FFF),
       )));
       expect(
-        find.text('+5 % denní / +30 % týdenní quest XP'),
+        find.text('+5 % XP za denní quest / +30 % XP za týdenní'),
         findsOneWidget,
       );
     });
@@ -62,9 +62,49 @@ void main() {
       )));
       expect(
         find.text(
-            '+25–65 % XP z chapter questů (roste s hloubkou řetězce)'),
+            '+25–65 % XP za chapter questy (roste s hloubkou řetězce)'),
         findsOneWidget,
       );
+    });
+  });
+
+  group('CompanionBuffBanner live tiers', () {
+    testWidgets(
+        'Lynx headline shows live percent when chain position is known',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const CompanionBuffBanner(
+            buff: ChapterDepthCompanionBuff(),
+            // chainOrder 4 → deep tier → +65 %.
+            currentChapterChainPosition: 4,
+          ),
+        ),
+      );
+      // The live ARB key renders the resolved tier inline.
+      expect(
+        find.textContaining('65'),
+        findsWidgets,
+        reason:
+            'Banner should headline the deep-tier live percent (65) when '
+            'the player is at or past chain position 4.',
+      );
+    });
+
+    testWidgets(
+        'Lynx falls back to range when chain position is null',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const CompanionBuffBanner(
+            buff: ChapterDepthCompanionBuff(),
+            currentChapterChainPosition: null,
+          ),
+        ),
+      );
+      // No active chain → range headline still mentions both ends.
+      expect(find.textContaining('25'), findsWidgets);
+      expect(find.textContaining('65'), findsWidgets);
     });
   });
 }

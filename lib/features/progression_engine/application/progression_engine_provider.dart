@@ -1244,6 +1244,39 @@ class ProgressionEngineProvider extends ChangeNotifier {
     );
   }
 
+  /// Public read of the player's longest currently-active streak.
+  /// Surfaced for UI surfaces that want to display a live buff value
+  /// (Ember Sprite banner in the companion details sheet) without
+  /// going through the engine evaluation context.
+  int get currentMaxStreak => _resolveMaxCurrentStreak();
+
+  /// Live "chain position" for the chapter quest the player is
+  /// actively progressing through. Counts already-completed steps
+  /// in the active chain — i.e. the position the *next* claim
+  /// would land on, matching what the engine plumbs into
+  /// `CompanionBuffContext.chapterChainPosition` at grant time.
+  ///
+  /// Returns null when no chapter chain is currently active (every
+  /// chain is either finished or hasn't been unlocked yet) so the
+  /// caller can fall back to the buff's range display.
+  ///
+  /// Read by the Cave Lynx banner so the player sees a live tier
+  /// preview ("+40 % from chapter quests right now") that matches
+  /// what they'd actually receive on their next chapter claim.
+  int? get currentChapterChainPosition {
+    final quests = currentChapterQuests;
+    if (quests.isEmpty) return null;
+    // currentChapterQuests already returns exactly one entry per
+    // active chain — the first uncompleted step (or a same-day pin
+    // of the most recently completed step). The position the next
+    // claim lands on IS that node's chainOrder.
+    for (final q in quests) {
+      final order = q.node.chainOrder;
+      if (order != null) return order;
+    }
+    return null;
+  }
+
   /// The player's longest currently-active streak across every
   /// tracked objective + domain summary. Read by the
   /// streak-scaling companion buff (Ember Sprite). Picks the max so

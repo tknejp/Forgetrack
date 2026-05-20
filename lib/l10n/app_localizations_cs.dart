@@ -4311,34 +4311,72 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String cosmeticBuffRaven(int daily, int weekly) {
-    return '+$daily % denní / +$weekly % týdenní quest XP';
+    return '+$daily % XP za denní quest / +$weekly % XP za týdenní';
   }
 
   @override
   String cosmeticBuffLynx(int opener, int deep) {
-    return '+$opener–$deep % XP z chapter questů (roste s hloubkou řetězce)';
+    return '+$opener–$deep % XP za chapter questy (roste s hloubkou řetězce)';
   }
 
   @override
-  String get cosmeticBuffSourceActivityXp => 'z aktivit';
+  String get cosmeticBuffSourceActivityXp => 'za aktivity';
 
   @override
-  String get cosmeticBuffSourceNutritionXp => 'z nutrice';
+  String get cosmeticBuffSourceNutritionXp => 'za výživu';
 
   @override
-  String get cosmeticBuffSourceSleepXp => 'ze spánku';
+  String get cosmeticBuffSourceSleepXp => 'za spánek';
 
   @override
-  String get cosmeticBuffSourceStreakXp => 'ze streaku';
+  String get cosmeticBuffSourceStreakXp => 'za streak';
 
   @override
-  String get cosmeticBuffSourceQuestXp => 'z questů';
+  String get cosmeticBuffSourceQuestXp => 'za denní questy';
 
   @override
-  String get cosmeticBuffSourceChapterXp => 'z chapter questů';
+  String get cosmeticBuffSourceChapterXp => 'za chapter questy';
 
   @override
-  String get cosmeticBuffSourceAllXp => 'ze všeho XP';
+  String get cosmeticBuffSourceAllXp => 'na vše';
+
+  @override
+  String get cosmeticBuffBannerFlatSubtitle =>
+      'Pasivní bonus, dokud je společník vybavený';
+
+  @override
+  String cosmeticBuffEmberHeadlineLive(int percent) {
+    return '+$percent % XP za streak';
+  }
+
+  @override
+  String cosmeticBuffEmberHeadlineRange(int min, int max) {
+    return '+$min → $max % XP za streak';
+  }
+
+  @override
+  String cosmeticBuffLynxHeadlineRange(int opener, int deep) {
+    return '+$opener → $deep % XP za chapter questy';
+  }
+
+  @override
+  String cosmeticBuffEmberSubtitle(int max) {
+    return 'Roste s plamenem — délkou streaku (max +$max %)';
+  }
+
+  @override
+  String get cosmeticBuffRavenSubtitle =>
+      'Větší výplata po dokončení týdenního questu';
+
+  @override
+  String cosmeticBuffLynxHeadlineLive(int percent) {
+    return '+$percent % XP za chapter questy';
+  }
+
+  @override
+  String cosmeticBuffLynxSubtitle(int deep) {
+    return 'Roste s pozicí v chain řetězci (až +$deep %)';
+  }
 
   @override
   String get cosmeticRelicConsumedBadge => 'Použito';
