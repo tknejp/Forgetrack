@@ -144,11 +144,13 @@ class XpClaimPill extends StatelessWidget {
 
 /// Small chip rendered beneath the [XpClaimPill] when the equipped
 /// companion contributes a buff bonus to the grant. Uses a paw icon
-/// (companion semantic) and follows the headline's state colour:
-/// claimable / locked → XP gold so the chip reads as "and an extra
-/// N from your companion"; claimed → muted grey to match the
-/// already-greyed main pill (the bonus is banked in the ledger and
-/// the player's eye doesn't need pulling back to it).
+/// (companion semantic) and mirrors the headline pill's state
+/// colour rules 1:1 — gold for claimable, muted for locked + claimed.
+/// Keeping the colours in lockstep means the pair always reads as
+/// one unit: when the headline says "you'll get this", the chip
+/// says "and an extra N"; when the headline says "locked", the chip
+/// says "and you'd get an extra N"; when the headline says "claimed",
+/// the chip recedes in matching grey.
 class _CompanionBonusChip extends StatelessWidget {
   const _CompanionBonusChip({required this.amount, required this.state});
 
@@ -158,19 +160,24 @@ class _CompanionBonusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ft = context.ft;
-    final isClaimed = state == XpClaimPillState.claimed;
-    final tint = isClaimed ? ft.onSurfaceMuted : ft.xp;
-    final fg = isClaimed
-        ? ft.onSurfaceMuted
-        : ft.xp.withValues(alpha: 0.85);
+    // Tint matches the headline pill's appearance for the same
+    // state — see the `appearance` switch in [XpClaimPill.build].
+    final (Color tint, double bgAlpha, double borderAlpha, double fgAlpha) =
+        switch (state) {
+      XpClaimPillState.claimable => (ft.xp, 0.18, 0.35, 1.0),
+      XpClaimPillState.locked || XpClaimPillState.claimed => (
+          ft.onSurfaceMuted,
+          0.09,
+          0.16,
+          1.0,
+        ),
+    };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: tint.withValues(alpha: isClaimed ? 0.09 : 0.12),
+        color: tint.withValues(alpha: bgAlpha),
         borderRadius: BorderRadius.circular(Tokens.radiusProgress),
-        border: Border.all(
-          color: tint.withValues(alpha: isClaimed ? 0.16 : 0.28),
-        ),
+        border: Border.all(color: tint.withValues(alpha: borderAlpha)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -178,7 +185,7 @@ class _CompanionBonusChip extends StatelessWidget {
           Icon(
             Icons.pets_rounded,
             size: 10,
-            color: fg,
+            color: tint.withValues(alpha: fgAlpha),
           ),
           const SizedBox(width: 3),
           Text(
@@ -186,7 +193,7 @@ class _CompanionBonusChip extends StatelessWidget {
             style: TextStyle(
               fontSize: Tokens.fontSizeMicro,
               fontWeight: FontWeight.w700,
-              color: fg,
+              color: tint.withValues(alpha: fgAlpha),
             ),
           ),
         ],
