@@ -15,7 +15,7 @@ import 'package:forgetrack/domain/progression/player/player_quest_lifecycle.dart
 void main() {
   final evaluatedAt = DateTime.utc(2026, 5, 18, 12);
 
-  DailyQuest fakeQuest(String id) => DailyQuest(
+  DailyGoal fakeQuest(String id) => DailyGoal(
         id: ProgressionEntryId(id),
         objectiveId: ObjectiveId('${id}_obj'),
         titleKey: (_) => 'Title $id',

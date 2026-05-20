@@ -4300,13 +4300,33 @@ class AppLocalizationsCs extends AppLocalizations {
   String get cosmeticBuffSectionTitle => 'Bonus XP';
 
   @override
+  String questStreakChipDays(int count) {
+    return '${count}d';
+  }
+
+  @override
+  String questStreakChipWithBonus(int count, int percent) {
+    return '${count}d · +$percent %';
+  }
+
+  @override
+  String questStreakChipLocked(int count, int percent, int threshold) {
+    return '${count}d · +$percent % od ${threshold}d';
+  }
+
+  @override
   String cosmeticBuffFlat(int percent, String source) {
     return '+$percent % XP $source';
   }
 
   @override
   String cosmeticBuffEmber(int min, int max) {
-    return '+$min–$max % XP ze streaku (roste s plamenem)';
+    return '+$min–$max % za streak (roste s každou kartou zvlášť)';
+  }
+
+  @override
+  String cosmeticBuffLanternThreshold(int percent, int days) {
+    return '+$percent % za streak (aktivace od ${days}d)';
   }
 
   @override
@@ -4346,12 +4366,22 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String cosmeticBuffEmberHeadlineLive(int percent) {
-    return '+$percent % XP za streak';
+    return '+$percent % XP';
   }
 
   @override
   String cosmeticBuffEmberHeadlineRange(int min, int max) {
-    return '+$min → $max % XP za streak';
+    return '+$min → $max % za streak';
+  }
+
+  @override
+  String cosmeticBuffLanternThresholdHeadline(int percent, int days) {
+    return '+$percent % za streak od ${days}d';
+  }
+
+  @override
+  String cosmeticBuffLanternThresholdSubtitle(int days) {
+    return 'Každý z hlavních pěti streaků odemkne bonus, jakmile poprvé překročí ${days}d';
   }
 
   @override
@@ -4361,7 +4391,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String cosmeticBuffEmberSubtitle(int max) {
-    return 'Roste s plamenem — délkou streaku (max +$max %)';
+    return 'Každý hlavní streak roste samostatně (cap +$max %)';
   }
 
   @override

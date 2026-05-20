@@ -55,7 +55,7 @@ Quest _quest({
   List<ContentTag> contentTags = const [],
   List<UnlockCondition> unlockConditions = const [],
 }) =>
-    DailyQuest(
+    DailyGoal(
       id: ProgressionEntryId(id),
       objectiveId: ObjectiveId(objectiveId),
       titleKey: (_) => 'Title $id',

@@ -6,7 +6,12 @@ import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../cosmetics/application/cosmetics_provider.dart';
-import '../../cosmetics/domain/companion_buff.dart' show CompanionBuffContext;
+import '../../cosmetics/domain/companion_buff.dart'
+    show
+        CompanionBuff,
+        CompanionBuffContext,
+        StreakLengthCompanionBuff,
+        StreakThresholdFlatCompanionBuff;
 import '../../health_connect/application/fitness_provider.dart';
 import '../../health_connect/application/goals_provider.dart';
 import '../../nutrition/application/kaloricke_tabulky_provider.dart';
@@ -1241,15 +1246,107 @@ class ProgressionEngineProvider extends ChangeNotifier {
     );
     return base.copyWith(
       equippedCompanionBuff: _cosmeticBridge.equippedCompanionBuff,
-      maxCurrentStreak: _resolveMaxCurrentStreak(),
+      currentStreakByDomain: _resolveCurrentStreakByDomain(),
     );
   }
 
-  /// Public read of the player's longest currently-active streak.
-  /// Surfaced for UI surfaces that want to display a live buff value
-  /// (Ember Sprite banner in the companion details sheet) without
-  /// going through the engine evaluation context.
-  int get currentMaxStreak => _resolveMaxCurrentStreak();
+  /// Snapshot of the player's currently-active streak per main domain.
+  /// Read by the engine grant path and the pill projection so they
+  /// resolve streak buffs against the same numbers the streak chip
+  /// surfaces on each card.
+  Map<ProgressionDomain, int> _resolveCurrentStreakByDomain() {
+    return {
+      for (final entry in _domainStreaks.entries)
+        entry.key: entry.value.currentStreak,
+    };
+  }
+
+  /// Per-domain current streak length, surfaced for UI surfaces that
+  /// need to render a streak chip on a main-5 card without going
+  /// through the engine evaluation context.
+  int currentStreakForDomain(ProgressionDomain domain) {
+    return _domainStreaks[domain]?.currentStreak ?? 0;
+  }
+
+  /// The buff carried by the player's equipped companion, or null
+  /// when no companion is equipped / RPG mode is off / the equipped
+  /// companion has no buff. Read by the quests screen so the streak
+  /// chip on each main-five card can switch between plain / live /
+  /// locked modes from the same instance the engine grant path uses.
+  CompanionBuff? get equippedCompanionBuff {
+    final ctx = currentContext;
+    if (ctx == null) return null;
+    if (!ctx.player.rpgModeEnabled) return null;
+    return ctx.equippedCompanionBuff;
+  }
+
+  /// The streak buff percent the player would pick up on their next
+  /// claim of [node], evaluated against [node]'s own streak domain
+  /// rather than the cross-card max. Returns 0 when:
+  ///   * no companion is equipped or RPG mode is off,
+  ///   * the equipped buff is not streak-related (any
+  ///     [FlatCompanionBuff] / Raven / Lynx — those keep their own
+  ///     pill-side projection),
+  ///   * the node's rewards don't carry a streak domain (combos,
+  ///     weekly quests, chapter quests, meta),
+  ///   * the buff's threshold isn't crossed yet (Lantern Golem
+  ///     below `minStreak`).
+  ///
+  /// Mirrors the per-reward math in [RewardGrantService] so the chip
+  /// and the journal grant agree on the same number.
+  int projectedStreakBuffPercentFor(Quest node) {
+    final buff = equippedCompanionBuff;
+    if (buff == null) return 0;
+    if (buff is! StreakLengthCompanionBuff &&
+        buff is! StreakThresholdFlatCompanionBuff) {
+      return 0;
+    }
+    final streakDomain = _streakDomainOfRewards(node.rewards);
+    if (streakDomain == null) return 0;
+    final streak = currentStreakForDomain(streakDomain);
+    // Source kind is needed by the buff API but streak buffs ignore
+    // it; pick the first XP reward's kind for shape, or a neutral
+    // default when none exists (no XP rewards → buff resolves to 0).
+    final sourceKind = _firstSourceKind(node.rewards) ?? RewardSourceKind.allXp;
+    return buff.resolvePercent(
+      CompanionBuffContext(
+        rewardSourceKind: sourceKind,
+        streakDomain: streakDomain,
+        currentStreak: streak,
+      ),
+    );
+  }
+
+  /// Returns the [ProgressionDomain] this quest's XP rewards
+  /// contribute a streak to, or null when no reward carries one.
+  ProgressionDomain? _streakDomainOfRewards(
+    Iterable<RewardDefinition> rewards,
+  ) {
+    for (final r in rewards) {
+      final domain = switch (r) {
+        XpReward(:final streakDomain) => streakDomain,
+        BonusXpReward(:final streakDomain) => streakDomain,
+        _ => null,
+      };
+      if (domain != null) return domain;
+    }
+    return null;
+  }
+
+  /// First sourceKind on any XP-bearing reward, or null when the
+  /// node has no XP rewards. Used as a shape default for the
+  /// streak-buff context (streak buffs ignore sourceKind).
+  RewardSourceKind? _firstSourceKind(Iterable<RewardDefinition> rewards) {
+    for (final r in rewards) {
+      final kind = switch (r) {
+        XpReward(:final sourceKind) => sourceKind,
+        BonusXpReward(:final sourceKind) => sourceKind,
+        _ => null,
+      };
+      if (kind != null) return kind;
+    }
+    return null;
+  }
 
   /// Live "chain position" for the chapter quest the player is
   /// actively progressing through. Counts already-completed steps
@@ -1312,26 +1409,30 @@ class ProgressionEngineProvider extends ChangeNotifier {
     for (final reward in node.rewards) {
       final int amount;
       final RewardSourceKind? sourceKind;
+      final ProgressionDomain? streakDomain;
       if (reward is XpReward) {
         amount = reward.amount;
         sourceKind = reward.sourceKind;
+        streakDomain = reward.streakDomain;
       } else if (reward is BonusXpReward) {
         if (!_bonusConditionMet(reward.condition, ctx)) continue;
         amount = reward.amount;
         sourceKind = reward.sourceKind;
+        streakDomain = reward.streakDomain;
       } else {
         continue;
       }
       if (sourceKind == null) continue;
-      if (buff.kind != RewardSourceKind.allXp && buff.kind != sourceKind) {
-        continue;
-      }
       final scaled =
           _levelPolicy.scaledRewardXp(baseXp: amount, level: level);
+      final domainStreak = streakDomain == null
+          ? 0
+          : ctx.currentStreakByDomain[streakDomain] ?? 0;
       final percent = buff.resolvePercent(
         CompanionBuffContext(
           rewardSourceKind: sourceKind,
-          currentStreak: ctx.maxCurrentStreak,
+          streakDomain: streakDomain,
+          currentStreak: domainStreak,
           isWeeklyQuestSource: isWeekly,
           chapterChainPosition: chainPos,
         ),
@@ -1356,22 +1457,6 @@ class ProgressionEngineProvider extends ChangeNotifier {
       SleepAtLeast(:final minutes) =>
         context.healthSnapshot.sleepMinutesToday >= minutes,
     };
-  }
-
-  /// The player's longest currently-active streak across every
-  /// tracked objective + domain summary. Read by the
-  /// streak-scaling companion buff (Ember Sprite). Picks the max so
-  /// the buff rewards the player's strongest active streak even when
-  /// other streaks are dormant.
-  int _resolveMaxCurrentStreak() {
-    var best = 0;
-    for (final s in _objectiveStreaks.values) {
-      if (s.currentStreak > best) best = s.currentStreak;
-    }
-    for (final s in _domainStreaks.values) {
-      if (s.currentStreak > best) best = s.currentStreak;
-    }
-    return best;
   }
 
   /// Resolves the current [Player] aggregate from the loaded ledger.

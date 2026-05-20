@@ -7605,17 +7605,41 @@ abstract class AppLocalizations {
   /// **'XP bonus'**
   String get cosmeticBuffSectionTitle;
 
+  /// Compact day-count label on a daily-goal card's streak chip — '12d', '0d', etc. Same string in both locales by design (no plural).
+  ///
+  /// In en, this message translates to:
+  /// **'{count}d'**
+  String questStreakChipDays(int count);
+
+  /// Streak chip with an active companion buff — '12d · +10 %'.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}d · +{percent}%'**
+  String questStreakChipWithBonus(int count, int percent);
+
+  /// Streak chip when a threshold-flat companion buff hasn't activated yet for this domain — teaches the unlock condition.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}d · +{percent}% from {threshold}d'**
+  String questStreakChipLocked(int count, int percent, int threshold);
+
   /// Flat companion buff label. {percent} is integer; {source} is one of the cosmeticBuffSource* strings.
   ///
   /// In en, this message translates to:
   /// **'+{percent}% XP {source}'**
   String cosmeticBuffFlat(int percent, String source);
 
-  /// Ember Sprite dynamic buff — streak-length tier range.
+  /// Ember Sprite dynamic buff — per-domain streak-length tier range.
   ///
   /// In en, this message translates to:
-  /// **'+{min}–{max}% XP from streak (grows with flame)'**
+  /// **'+{min}–{max}% per streak (grows with each card\'s streak)'**
   String cosmeticBuffEmber(int min, int max);
+
+  /// Lantern Golem streak-threshold buff — flat percent unlocked once each card's streak crosses the threshold.
+  ///
+  /// In en, this message translates to:
+  /// **'+{percent}% per streak (active from {days}d)'**
+  String cosmeticBuffLanternThreshold(int percent, int days);
 
   /// Ruin Raven dynamic buff — daily vs weekly quest emphasis.
   ///
@@ -7677,17 +7701,29 @@ abstract class AppLocalizations {
   /// **'Passive bonus while the companion is equipped'**
   String get cosmeticBuffBannerFlatSubtitle;
 
-  /// Ember Sprite banner headline using the live current streak bracket value.
+  /// Ember Sprite live bracket value when previewing a single streak (used by the streak chip on a card, not the banner).
   ///
   /// In en, this message translates to:
-  /// **'+{percent}% XP from streak'**
+  /// **'+{percent}% XP'**
   String cosmeticBuffEmberHeadlineLive(int percent);
 
-  /// Ember Sprite banner headline fallback when live streak isn't available — shows floor → cap range.
+  /// Ember Sprite banner headline — per-streak range across tier 1 to cap.
   ///
   /// In en, this message translates to:
-  /// **'+{min} → {max}% XP from streak'**
+  /// **'+{min} → {max}% per streak'**
   String cosmeticBuffEmberHeadlineRange(int min, int max);
+
+  /// Lantern Golem banner headline — flat percent + activation threshold in days.
+  ///
+  /// In en, this message translates to:
+  /// **'+{percent}% per streak from {days}d'**
+  String cosmeticBuffLanternThresholdHeadline(int percent, int days);
+
+  /// Lantern Golem banner subtitle — clarifies the per-streak nature of the threshold.
+  ///
+  /// In en, this message translates to:
+  /// **'Each main-five streak unlocks the bonus the first time it crosses {days}d'**
+  String cosmeticBuffLanternThresholdSubtitle(int days);
 
   /// Cave Lynx banner headline range form — opener → deep without the inline parenthetical.
   ///
@@ -7695,10 +7731,10 @@ abstract class AppLocalizations {
   /// **'+{opener} → {deep}% XP from chapter quests'**
   String cosmeticBuffLynxHeadlineRange(int opener, int deep);
 
-  /// Banner subtitle for Ember Sprite — explains the streak-length mechanic.
+  /// Banner subtitle for Ember Sprite — explains the per-streak scaling.
   ///
   /// In en, this message translates to:
-  /// **'Grows with the flame — your streak length (cap +{max}%)'**
+  /// **'Each main-five streak scales independently (cap +{max}%)'**
   String cosmeticBuffEmberSubtitle(int max);
 
   /// Banner subtitle for Ruin Raven — explains the weekly emphasis.

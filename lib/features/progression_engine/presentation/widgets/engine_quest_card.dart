@@ -14,6 +14,8 @@ import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import 'engine_chapter_card.dart' show EngineChapterChainPreview;
 import 'engine_companion_pill.dart';
+import 'quest_streak_chip.dart';
+import '../../../cosmetics/domain/companion_buff.dart';
 
 /// One quest card in the V2 quests screen.
 ///
@@ -40,6 +42,8 @@ class EngineQuestCard extends StatelessWidget {
     this.chain = const [],
     this.showCompletedTodayBadge = false,
     this.companionBuffBonus = 0,
+    this.equippedCompanionBuff,
+    this.streakBuffPercent = 0,
   });
 
   final EngineQuestProgress quest;
@@ -83,11 +87,26 @@ class EngineQuestCard extends StatelessWidget {
   final bool showCompletedTodayBadge;
 
   /// Projected XP bonus from the player's equipped companion buff.
-  /// Pre-claim: rendered as a small chip beside the headline pill so
-  /// the player sees the buff's contribution upfront. Defaults to 0
-  /// (no chip rendered). Owner: parent screen, which has access to
+  /// Pre-claim: rendered inside the XP pill as a "+X" badge so the
+  /// player sees the buff's contribution upfront on cards that don't
+  /// already carry the bonus via the streak chip. Defaults to 0 (no
+  /// badge rendered). Suppressed on main-five daily-goal cards —
+  /// those surface the buff through [streakBuffPercent] on the
+  /// streak chip instead. Owner: parent screen, which has access to
   /// [ProgressionEngineProvider.projectedCompanionBuffBonusFor].
   final int companionBuffBonus;
+
+  /// The equipped companion's buff, or null when no companion is
+  /// equipped. Threaded through to the streak chip on main-five
+  /// daily-goal cards so it can flip between plain / live / locked
+  /// modes from the same buff instance the engine grant path reads.
+  final CompanionBuff? equippedCompanionBuff;
+
+  /// Buff percent resolved for *this* card's streak, already run
+  /// through `buff.resolvePercent`. Surfaces inside the streak chip
+  /// when the equipped buff matches a streak reward — non-main-five
+  /// cards leave this at 0 and the chip falls back to plain mode.
+  final int streakBuffPercent;
 
   /// Non-XP rewards on this quest. Surface as chips so future quests
   /// carrying cosmetic/title/emblem/relic/chapter/companion payloads
@@ -105,6 +124,18 @@ class EngineQuestCard extends StatelessWidget {
     final domain = quest.domain ?? ProgressionDomain.steps;
     final accent = domain.color;
     final streakValue = streak?.currentStreak ?? 0;
+
+    // A card is a "main-five daily-goal card" when one of its XP
+    // rewards carries a [ProgressionDomain] streak tag. The presence
+    // of that tag is the single source of truth for "this is the
+    // surface the streak chip + streak buff target", so the chip
+    // and the pill agree without a separate flag from the parent.
+    final streakDomain = streakDomainOfRewards(quest.node.rewards);
+    final isStreakCard = streakDomain != null;
+    // Suppress the in-pill companion bonus on streak cards — the
+    // streak chip carries the same number instead, per the user's
+    // "streak chip replaces the bonus XP chip" direction.
+    final pillCompanionBonus = isStreakCard ? 0 : companionBuffBonus;
 
     // V1 quest cards expanded for any meta info; V2 cards only expand
     // when there's an actual extra reward to surface (rule from the
@@ -183,10 +214,6 @@ class EngineQuestCard extends StatelessWidget {
                           color: Colors.white.withValues(alpha: 0.66),
                         ),
                       ),
-                      if (streakValue > 0) ...[
-                        const SizedBox(height: 6),
-                        _StreakChip(days: streakValue, accent: accent),
-                      ],
                       if (showCompletedTodayBadge &&
                           quest.lifecycle is QuestClaimed) ...[
                         const SizedBox(height: 6),
@@ -208,8 +235,28 @@ class EngineQuestCard extends StatelessWidget {
                   children: [
                     XpClaimPill(
                       key: pillKey,
-                      data: _pillData(companionBonus: companionBuffBonus),
+                      data: _pillData(companionBonus: pillCompanionBonus),
                     ),
+                    // Streak chip sits directly under the XP pill —
+                    // same vertical anchor + 3px gap as the
+                    // [_CompanionBonusChip] inside XpClaimPill on
+                    // non-streak cards. Keeps the right column
+                    // reading as a single information cluster
+                    // regardless of which chip carries the buff.
+                    if (isStreakCard || streakValue > 0) ...[
+                      const SizedBox(height: 3),
+                      QuestStreakChip(
+                        streakDays: streakValue,
+                        accent: accent,
+                        // Only thread the buff in when this card is a
+                        // main-five streak card — non-streak cards
+                        // (combos, weekly, chapter quests) keep the
+                        // legacy plain-flame look.
+                        buff: isStreakCard ? equippedCompanionBuff : null,
+                        resolvedPercent:
+                            isStreakCard ? streakBuffPercent : 0,
+                      ),
+                    ],
                     if (canExpand) ...[
                       const SizedBox(height: 4),
                       EngineCompanionPill(
@@ -340,42 +387,6 @@ class _CompletedTodayBadge extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-/// Compact streak chip rendered inside the title column when the
-/// quest's objective has an active streak. Mirrors V1's fire chip.
-class _StreakChip extends StatelessWidget {
-  const _StreakChip({required this.days, required this.accent});
-
-  final int days;
-  final Color accent;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.13),
-        borderRadius: BorderRadius.circular(Tokens.radiusProgress),
-        border: Border.all(color: accent.withValues(alpha: 0.28)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('🔥', style: TextStyle(fontSize: 11)), // lint-ignore: l10n-literal — emoji symbol, locale-invariant
-          const SizedBox(width: 3),
-          Text(
-            '$days',
-            style: TextStyle(
-              fontSize: Tokens.fontSizeMicro,
-              fontWeight: FontWeight.w800,
-              color: accent,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

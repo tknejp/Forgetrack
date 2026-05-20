@@ -1,8 +1,11 @@
+import 'package:forgetrack/domain/progression/catalog/progression_domain.dart';
 import 'package:forgetrack/domain/progression/catalog/reward_source_kind.dart';
 
 import 'companion_buff_config.dart';
 
 export 'companion_buff_config.dart';
+export 'package:forgetrack/domain/progression/catalog/progression_domain.dart'
+    show ProgressionDomain;
 export 'package:forgetrack/domain/progression/catalog/reward_source_kind.dart'
     show RewardSourceKind;
 
@@ -12,23 +15,35 @@ export 'package:forgetrack/domain/progression/catalog/reward_source_kind.dart'
 /// reaching into progression internals.
 ///
 /// Fields default to neutral values; the engine populates only what
-/// each rule cares about (`currentStreak` for Ember, `isWeeklyQuest`
-/// for Raven, `chapterChainPosition` for Lynx). Flat buffs ignore
-/// the context entirely.
+/// each rule cares about (`streakDomain` + `currentStreak` for Ember
+/// / Lantern, `isWeeklyQuestSource` for Raven, `chapterChainPosition`
+/// for Lynx). Buffs that don't care about a particular axis simply
+/// ignore the corresponding field.
 class CompanionBuffContext {
   const CompanionBuffContext({
     required this.rewardSourceKind,
+    this.streakDomain,
     this.currentStreak = 0,
     this.isWeeklyQuestSource = false,
     this.chapterChainPosition,
   });
 
   /// Tag carried on the granting [XpReward] / [BonusXpReward] — see
-  /// [RewardSourceKind].
+  /// [RewardSourceKind]. Read by buffs that match on the granting
+  /// XP bucket ([FlatCompanionBuff], Raven, Lynx).
   final RewardSourceKind rewardSourceKind;
 
-  /// Current daily-streak length (days). Read by streak-scaling
-  /// buffs (Ember Sprite). Zero when no streak is active.
+  /// Domain the granting reward contributes a streak to, or `null`
+  /// for rewards that should not participate in streak math (quests,
+  /// combos, chapters, meta). Read by streak-scaling buffs (Ember,
+  /// Lantern) — they treat `null` as "skip this reward". Carried as
+  /// part of the reward, not derived from the node, so the buff and
+  /// the streak chip always agree on which grants count.
+  final ProgressionDomain? streakDomain;
+
+  /// Length of the player's active streak in [streakDomain]. Zero
+  /// when [streakDomain] is null or no streak is active in that
+  /// domain.
   final int currentStreak;
 
   /// True when the granting node is a weekly-bucket quest. Read by
@@ -42,77 +57,142 @@ class CompanionBuffContext {
   final int? chapterChainPosition;
 }
 
-/// Sealed buff a [Companion] catalog row may carry. The engine reads
-/// `kind` to filter which rewards the buff applies to (or treats
-/// every reward as a match when `kind == allXp`), then invokes
-/// [resolvePercent] to produce the effective bonus.
+/// Sealed buff a [Companion] catalog row may carry.
 ///
-/// Phase 1 ships [FlatCompanionBuff] for 7 of 10 companions. Three
-/// dynamic variants — [StreakLengthCompanionBuff],
-/// [WeeklyEmphasisCompanionBuff], [ChapterDepthCompanionBuff] — back
-/// the three flavor-driven mechanics from the card (Ember Sprite,
-/// Ruin Raven, Cave Lynx).
+/// Buffs are **self-matching**: [resolvePercent] returns 0 whenever
+/// the context does not match the buff's intended bucket, and the
+/// effective percent otherwise. Callers (the engine grant path and
+/// the pill projection) therefore never need to peek at the buff's
+/// internals — they just multiply the percent into the scaled XP.
+/// This keeps adding a new variant a single-file change.
 sealed class CompanionBuff {
   const CompanionBuff();
 
-  /// Source kind the buff targets. `allXp` matches every kind.
-  RewardSourceKind get kind;
-
   /// Effective bonus percent given the granting context. Returning
-  /// 0 means "no bonus this frame" (e.g. a dynamic rule whose
-  /// pre-conditions don't hold).
+  /// 0 means "no bonus for this grant" — either the buff's match
+  /// predicate failed (wrong source kind / wrong streak domain /
+  /// pre-condition unmet) or a dynamic variant resolved to zero on
+  /// the current tier.
   int resolvePercent(CompanionBuffContext ctx);
 }
 
-/// Static buff — single constant percent.
+/// Static buff — matches by [RewardSourceKind]. Returns [percent]
+/// for every reward whose `sourceKind` equals [kind], or for every
+/// reward when [kind] is [RewardSourceKind.allXp] (mythic Dragonling).
 final class FlatCompanionBuff extends CompanionBuff {
   const FlatCompanionBuff({required this.kind, required this.percent});
 
-  @override
+  /// The source bucket this buff applies to. `allXp` matches every
+  /// kind.
   final RewardSourceKind kind;
 
   /// Bonus added to the granted XP (e.g. `8` → multiplier 1.08).
   final int percent;
 
   @override
-  int resolvePercent(CompanionBuffContext ctx) => percent;
+  int resolvePercent(CompanionBuffContext ctx) {
+    if (kind != RewardSourceKind.allXp && kind != ctx.rewardSourceKind) {
+      return 0;
+    }
+    return percent;
+  }
 }
 
-/// Ember Sprite buff — bonus scales with current streak length.
+/// Ember Sprite buff — applies to **every reward that contributes to
+/// a streak**, scaling its percent with the length of that domain's
+/// streak. Each main-5 daily-goal card therefore evaluates the buff
+/// against its own streak: a 14-day steps streak yields a different
+/// bonus than a 2-day sleep streak on the same player.
 ///
-/// Floor protects the player when a streak resets so the buff is
-/// never worse than "no buff"; cap keeps the uncommon-tier buff from
-/// overshadowing rare / epic flat buffs at higher tiers.
+/// Rewards with [CompanionBuffContext.streakDomain] == null (quests,
+/// combos, chapters, meta) get 0 — streaks are a daily-goal property
+/// by design, encoded in the data, not in widget code.
+///
+/// Tier thresholds use *current* streak — a fresh reset returns the
+/// floor tier, a 100-day veteran lands in the secret legendary tier.
 final class StreakLengthCompanionBuff extends CompanionBuff {
   const StreakLengthCompanionBuff({
-    this.floorPercent = CompanionBuffPercents.emberFloor,
-    this.shortStreakPercent = CompanionBuffPercents.emberShort,
-    this.mediumStreakPercent = CompanionBuffPercents.emberMedium,
-    this.longStreakPercent = CompanionBuffPercents.emberLong,
+    this.tier0Percent = CompanionBuffPercents.emberTier0,
+    this.tier1Percent = CompanionBuffPercents.emberTier1,
+    this.tier2Percent = CompanionBuffPercents.emberTier2,
+    this.tier3Percent = CompanionBuffPercents.emberTier3,
+    this.tier4Percent = CompanionBuffPercents.emberTier4,
+    this.legendaryPercent = CompanionBuffPercents.emberLegendary,
   });
 
-  @override
-  RewardSourceKind get kind => RewardSourceKind.streakXp;
+  /// Returned for streaks 0–1 days (no streak / just reset).
+  final int tier0Percent;
 
-  /// Returned for streaks 1–3 days (or 0, i.e. just reset).
-  final int floorPercent;
+  /// Returned for streaks 2–6 days.
+  final int tier1Percent;
 
-  /// Returned for streaks 4–7 days.
-  final int shortStreakPercent;
+  /// Returned for streaks 7–13 days.
+  final int tier2Percent;
 
-  /// Returned for streaks 8–14 days.
-  final int mediumStreakPercent;
+  /// Returned for streaks 14–20 days.
+  final int tier3Percent;
 
-  /// Returned for streaks 15+ days. Cap.
-  final int longStreakPercent;
+  /// Returned for streaks 21–99 days. The advertised cap.
+  final int tier4Percent;
+
+  /// Returned for streaks 100+ days. Intentionally undocumented in
+  /// player-facing copy — a quiet reward for the kind of devotion
+  /// the rest of the catalog cannot describe.
+  final int legendaryPercent;
 
   @override
   int resolvePercent(CompanionBuffContext ctx) {
+    if (ctx.streakDomain == null) return 0;
     final s = ctx.currentStreak;
-    if (s >= 15) return longStreakPercent;
-    if (s >= 8) return mediumStreakPercent;
-    if (s >= 4) return shortStreakPercent;
-    return floorPercent;
+    if (s >= CompanionBuffPercents.streakLegendaryThreshold) {
+      return legendaryPercent;
+    }
+    if (s >= CompanionBuffPercents.emberTier4Threshold) return tier4Percent;
+    if (s >= CompanionBuffPercents.emberTier3Threshold) return tier3Percent;
+    if (s >= CompanionBuffPercents.emberTier2Threshold) return tier2Percent;
+    if (s >= CompanionBuffPercents.emberTier1Threshold) return tier1Percent;
+    return tier0Percent;
+  }
+}
+
+/// Lantern Golem buff — flat percent **once a streak threshold is
+/// crossed**. Like [StreakLengthCompanionBuff] the buff applies per
+/// streak: each main-5 card unlocks the bonus independently the
+/// first time its own streak reaches [minStreak]. Rewards with no
+/// [CompanionBuffContext.streakDomain] return 0.
+///
+/// The legendary 100-day tier mirrors Ember Sprite — kept silent in
+/// copy, surfaced only at the player's milestone.
+final class StreakThresholdFlatCompanionBuff extends CompanionBuff {
+  const StreakThresholdFlatCompanionBuff({
+    required this.percent,
+    required this.minStreak,
+    this.legendaryPercent = CompanionBuffPercents.lanternLegendary,
+  });
+
+  /// Bonus applied at and above [minStreak] but below the legendary
+  /// threshold.
+  final int percent;
+
+  /// Streak length at which the buff first activates. Below this
+  /// the buff resolves to 0 (the chip will surface a "locked"
+  /// variant so the mechanic is discoverable).
+  final int minStreak;
+
+  /// Bonus applied at and above
+  /// [CompanionBuffPercents.streakLegendaryThreshold]. Undocumented
+  /// in player-facing copy.
+  final int legendaryPercent;
+
+  @override
+  int resolvePercent(CompanionBuffContext ctx) {
+    if (ctx.streakDomain == null) return 0;
+    final s = ctx.currentStreak;
+    if (s >= CompanionBuffPercents.streakLegendaryThreshold) {
+      return legendaryPercent;
+    }
+    if (s < minStreak) return 0;
+    return percent;
   }
 }
 
@@ -127,9 +207,6 @@ final class WeeklyEmphasisCompanionBuff extends CompanionBuff {
     this.weeklyPercent = CompanionBuffPercents.ravenWeekly,
   });
 
-  @override
-  RewardSourceKind get kind => RewardSourceKind.questXp;
-
   /// Bonus applied to daily-bucket quest claims.
   final int dailyPercent;
 
@@ -137,8 +214,10 @@ final class WeeklyEmphasisCompanionBuff extends CompanionBuff {
   final int weeklyPercent;
 
   @override
-  int resolvePercent(CompanionBuffContext ctx) =>
-      ctx.isWeeklyQuestSource ? weeklyPercent : dailyPercent;
+  int resolvePercent(CompanionBuffContext ctx) {
+    if (ctx.rewardSourceKind != RewardSourceKind.questXp) return 0;
+    return ctx.isWeeklyQuestSource ? weeklyPercent : dailyPercent;
+  }
 }
 
 /// Cave Lynx buff — bonus grows with how deep the player is in the
@@ -152,9 +231,6 @@ final class ChapterDepthCompanionBuff extends CompanionBuff {
     this.deepPercent = CompanionBuffPercents.lynxDeep,
   });
 
-  @override
-  RewardSourceKind get kind => RewardSourceKind.chapterXp;
-
   /// Returned for the chapter opener (chain position 0 or 1).
   final int openerPercent;
 
@@ -166,6 +242,7 @@ final class ChapterDepthCompanionBuff extends CompanionBuff {
 
   @override
   int resolvePercent(CompanionBuffContext ctx) {
+    if (ctx.rewardSourceKind != RewardSourceKind.chapterXp) return 0;
     final pos = ctx.chapterChainPosition;
     if (pos == null) return openerPercent;
     if (pos >= 4) return deepPercent;

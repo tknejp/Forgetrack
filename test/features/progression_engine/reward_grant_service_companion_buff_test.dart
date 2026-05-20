@@ -20,14 +20,18 @@ import 'package:forgetrack/shared/domain/rarity.dart';
 /// Test fixtures: tiny catalog rows + planned grants. We deliberately
 /// fabricate the nodes here instead of building the real catalog so
 /// each test stays focused on the reward-grant pipeline.
-DailyQuest _dailyActivityQuest() => DailyQuest(
+DailyGoal _dailyActivityGoal() => DailyGoal(
       id: const ProgressionEntryId('test_daily_activity'),
       objectiveId: const ObjectiveId('test_daily_activity_obj'),
       claimPolicy: ClaimPolicy.manual,
       titleKey: (_) => 'Activity',
       descriptionKey: (_) => 'Move',
       rewards: const [
-        XpReward(sourceKind: RewardSourceKind.activityXp, amount: 100),
+        XpReward(
+          sourceKind: RewardSourceKind.activityXp,
+          streakDomain: ProgressionDomain.activity,
+          amount: 100,
+        ),
       ],
       contentTags: const [],
       rarity: Rarity.common,
@@ -72,7 +76,7 @@ PlannedRewardGrant _planFromNode(ProgressionEntry node) => PlannedRewardGrant(
 
 EngineEvaluationContext _context({
   CompanionBuff? buff,
-  int maxStreak = 0,
+  Map<ProgressionDomain, int> streaks = const {},
   bool rpg = true,
   List<JournalEvent> journalEvents = const [],
 }) {
@@ -92,7 +96,7 @@ EngineEvaluationContext _context({
     overrides: const EvaluationOverrides(),
     evaluatedAt: DateTime.utc(2026, 5, 20, 12),
     equippedCompanionBuff: buff,
-    maxCurrentStreak: maxStreak,
+    currentStreakByDomain: streaks,
   );
 }
 
@@ -103,7 +107,7 @@ void main() {
   group('RewardGrantService companion buff', () {
     test('no buff equipped → no bonus (xpAmount = scaled base)', () {
       final result = service.build(
-        planned: [_planFromNode(_dailyActivityQuest())],
+        planned: [_planFromNode(_dailyActivityGoal())],
         runningClaimedXp: 0,
         timestamp: timestamp,
         context: _context(),
@@ -115,7 +119,7 @@ void main() {
 
     test('null context skips buff entirely (callers without context)', () {
       final result = service.build(
-        planned: [_planFromNode(_dailyActivityQuest())],
+        planned: [_planFromNode(_dailyActivityGoal())],
         runningClaimedXp: 0,
         timestamp: timestamp,
       );
@@ -125,7 +129,7 @@ void main() {
 
     test('RPG mode off → buff does not apply', () {
       final result = service.build(
-        planned: [_planFromNode(_dailyActivityQuest())],
+        planned: [_planFromNode(_dailyActivityGoal())],
         runningClaimedXp: 0,
         timestamp: timestamp,
         context: _context(
@@ -141,7 +145,7 @@ void main() {
 
     test('flat kind match → bonus applied', () {
       final result = service.build(
-        planned: [_planFromNode(_dailyActivityQuest())],
+        planned: [_planFromNode(_dailyActivityGoal())],
         runningClaimedXp: 0,
         timestamp: timestamp,
         context: _context(
@@ -158,7 +162,7 @@ void main() {
 
     test('kind mismatch → no bonus', () {
       final result = service.build(
-        planned: [_planFromNode(_dailyActivityQuest())],
+        planned: [_planFromNode(_dailyActivityGoal())],
         runningClaimedXp: 0,
         timestamp: timestamp,
         context: _context(
@@ -174,7 +178,7 @@ void main() {
     test('allXp buff applies to every kind', () {
       final result = service.build(
         planned: [
-          _planFromNode(_dailyActivityQuest()),
+          _planFromNode(_dailyActivityGoal()),
           _planFromNode(_weeklyQuest()),
         ],
         runningClaimedXp: 0,
@@ -190,48 +194,128 @@ void main() {
       expect(result.events[1].companionBuffBonusXp, 7);
     });
 
-    // NB: streak-tier resolution itself is covered exhaustively in
+    // NB: per-tier streak resolution is covered exhaustively in
     // `companion_buff_test.dart`. Here we just confirm the engine
-    // pipes `maxCurrentStreak` into the rule by way of one
-    // representative tier transition — a no-streak case (floor)
-    // vs a long-streak case (cap). We need an XpReward whose
-    // sourceKind is streakXp; the catalog has none today, so we
-    // hand-roll a temp node tagged with that kind.
-    test('engine threads maxCurrentStreak into Ember tier resolution', () {
-      DailyQuest streakNode() => DailyQuest(
+    // pipes the per-domain streak into the rule. The buff applies
+    // to any reward with a non-null streakDomain — the hand-rolled
+    // node mirrors steps_content.dart's tag so the engine sees a
+    // matching domain key on the streak map.
+    test('engine threads per-domain streak into Ember tier resolution', () {
+      DailyGoal streakNode() => DailyGoal(
             id: const ProgressionEntryId('test_streak_node'),
             objectiveId: const ObjectiveId('test_streak_obj'),
             claimPolicy: ClaimPolicy.manual,
             titleKey: (_) => 'Streak',
             descriptionKey: (_) => '',
             rewards: const [
-              XpReward(sourceKind: RewardSourceKind.streakXp, amount: 100),
+              XpReward(
+                sourceKind: RewardSourceKind.activityXp,
+                streakDomain: ProgressionDomain.activity,
+                amount: 100,
+              ),
             ],
             contentTags: const [],
             rarity: Rarity.common,
           );
       const buff = StreakLengthCompanionBuff();
 
-      final floor = service.build(
+      // 1-day streak in the matching domain → tier 0 (no bonus).
+      final tier0 = service.build(
         planned: [_planFromNode(streakNode())],
         runningClaimedXp: 0,
         timestamp: timestamp,
-        context: _context(buff: buff, maxStreak: 0),
+        context: _context(
+          buff: buff,
+          streaks: const {ProgressionDomain.activity: 1},
+        ),
       );
       expect(
-        floor.events.single.companionBuffBonusXp,
-        CompanionBuffPercents.emberFloor,
+        tier0.events.single.companionBuffBonusXp,
+        // Tier 0 resolves to 0 % — the engine collapses that to a
+        // null bonus on the event.
+        isNull,
       );
 
+      // 50-day streak in the matching domain → cap tier 4.
       final cap = service.build(
         planned: [_planFromNode(streakNode())],
         runningClaimedXp: 0,
         timestamp: timestamp,
-        context: _context(buff: buff, maxStreak: 50),
+        context: _context(
+          buff: buff,
+          streaks: const {ProgressionDomain.activity: 50},
+        ),
       );
       expect(
         cap.events.single.companionBuffBonusXp,
-        CompanionBuffPercents.emberLong,
+        CompanionBuffPercents.emberTier4,
+      );
+
+      // 50-day streak in a *different* domain → no bonus (the
+      // matching domain's streak is 0).
+      final wrongDomain = service.build(
+        planned: [_planFromNode(streakNode())],
+        runningClaimedXp: 0,
+        timestamp: timestamp,
+        context: _context(
+          buff: buff,
+          streaks: const {ProgressionDomain.sleep: 50},
+        ),
+      );
+      expect(wrongDomain.events.single.companionBuffBonusXp, isNull);
+    });
+
+    test('engine respects Lantern Golem threshold per domain', () {
+      // The threshold-flat buff only pays out at or above
+      // [minStreak] on the granting reward's own domain.
+      DailyGoal nutritionNode() => DailyGoal(
+            id: const ProgressionEntryId('test_nutrition_node'),
+            objectiveId: const ObjectiveId('test_nutrition_obj'),
+            claimPolicy: ClaimPolicy.manual,
+            titleKey: (_) => 'Nutrition',
+            descriptionKey: (_) => '',
+            rewards: const [
+              XpReward(
+                sourceKind: RewardSourceKind.nutritionXp,
+                streakDomain: ProgressionDomain.nutrition,
+                amount: 100,
+              ),
+            ],
+            contentTags: const [],
+            rarity: Rarity.common,
+          );
+      const buff = StreakThresholdFlatCompanionBuff(
+        percent: CompanionBuffPercents.lanternGolemPercent,
+        minStreak: CompanionBuffPercents.lanternGolemThreshold,
+      );
+
+      // Below threshold → no bonus, surfaced as null on the event.
+      final below = service.build(
+        planned: [_planFromNode(nutritionNode())],
+        runningClaimedXp: 0,
+        timestamp: timestamp,
+        context: _context(
+          buff: buff,
+          streaks: const {ProgressionDomain.nutrition: 5},
+        ),
+      );
+      expect(below.events.single.companionBuffBonusXp, isNull);
+
+      // At threshold → full percent (cap allows it on a 100 base
+      // since 30 > 33-cap floor sits below the daily share cap).
+      final atThreshold = service.build(
+        planned: [_planFromNode(nutritionNode())],
+        runningClaimedXp: 0,
+        timestamp: timestamp,
+        context: _context(
+          buff: buff,
+          streaks: const {ProgressionDomain.nutrition: 7},
+        ),
+      );
+      // 30 % on a 100-base grant is 30, just under the 33 cap.
+      expect(
+        atThreshold.events.single.companionBuffBonusXp,
+        CompanionBuffPercents.lanternGolemPercent,
       );
     });
 
@@ -289,7 +373,7 @@ void main() {
       //     = (0.25 * (0 + 100) - 0) / 0.75
       //     = 33.33 → floor = 33.
       final result = service.build(
-        planned: [_planFromNode(_dailyActivityQuest())],
+        planned: [_planFromNode(_dailyActivityGoal())],
         runningClaimedXp: 0,
         timestamp: timestamp,
         context: _context(
@@ -310,8 +394,8 @@ void main() {
       // and bonus=33 already banked → headroom shrinks.
       final result = service.build(
         planned: [
-          _planFromNode(_dailyActivityQuest()),
-          _planFromNode(_dailyActivityQuest()),
+          _planFromNode(_dailyActivityGoal()),
+          _planFromNode(_dailyActivityGoal()),
         ],
         runningClaimedXp: 0,
         timestamp: timestamp,
@@ -352,7 +436,7 @@ void main() {
         multiplierAtGrant: 1.0,
       );
       final result = service.build(
-        planned: [_planFromNode(_dailyActivityQuest())],
+        planned: [_planFromNode(_dailyActivityGoal())],
         runningClaimedXp: 0,
         timestamp: timestamp,
         context: _context(
@@ -379,7 +463,7 @@ void main() {
         multiplierAtGrant: 1.0,
       );
       final result = service.build(
-        planned: [_planFromNode(_dailyActivityQuest())],
+        planned: [_planFromNode(_dailyActivityGoal())],
         runningClaimedXp: 0,
         timestamp: timestamp,
         context: _context(

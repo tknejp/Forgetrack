@@ -33,14 +33,20 @@ List<Objective> bodyObjectives(EngineCatalogContext context) {
 
 List<ProgressionEntry> bodyNodes() {
   return [
-    DailyQuest(
+    DailyGoal(
       id: const ProgressionEntryId('daily_weight_log_today'),
       objectiveId: ObjectiveId('daily_weight_log'),
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.progRuleDailyWeightLogDesc,
       titleKey: (l) => l.progRuleDailyWeightLog,
       descriptionKey: (l) => l.progRuleDailyWeightLogDesc,
-      rewards: const [XpReward(sourceKind: RewardSourceKind.activityXp, amount: 20)],
+      rewards: const [
+        XpReward(
+          sourceKind: RewardSourceKind.activityXp,
+          streakDomain: ProgressionDomain.body,
+          amount: 20,
+        ),
+      ],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.common,
       assetKey: questAssetActivity,

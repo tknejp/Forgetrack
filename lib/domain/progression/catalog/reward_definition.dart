@@ -1,9 +1,11 @@
 import 'bonus_xp_condition.dart';
 import 'content_tag.dart';
 import 'ids.dart';
+import 'progression_domain.dart';
 import 'reward_source_kind.dart';
 
 export 'bonus_xp_condition.dart';
+export 'progression_domain.dart';
 export 'reward_source_kind.dart';
 
 /// One concrete reward attached to a [ProgressionEntry]. Sealed so the
@@ -26,14 +28,26 @@ sealed class RewardDefinition {
 /// constructor backwards-compatible during the catalog audit roll-
 /// out — the lint test [reward_source_kind_coverage_test] asserts
 /// that every catalog `XpReward` has a non-null [sourceKind].
+///
+/// [streakDomain] declares whether claiming this reward contributes
+/// to a per-domain streak the streak-scaling companion buffs read.
+/// Set to one of the five main domains (`steps`, `nutrition`,
+/// `sleep`, `activity`, `body`) for daily-goal claims that should
+/// participate in the streak chip + streak buff math. Leave `null`
+/// for everything else (quests, combos, chapters, meta) so those
+/// claims neither show a streak chip nor pick up Ember / Lantern
+/// bonuses — that guarantee makes "streaks come only from daily
+/// goals" a property of the data, not of widget code.
 class XpReward extends RewardDefinition {
   const XpReward({
     required this.amount,
     this.sourceKind,
+    this.streakDomain,
     super.contentTags,
   });
   final int amount;
   final RewardSourceKind? sourceKind;
+  final ProgressionDomain? streakDomain;
 }
 
 /// Conditional XP bonus — only fires when the attached
@@ -48,17 +62,24 @@ class XpReward extends RewardDefinition {
 ///
 /// [sourceKind] mirrors the [XpReward] tagging — bonus XP feeds
 /// the same buff bucket as the base reward it accompanies.
+///
+/// [streakDomain] mirrors [XpReward.streakDomain]: when the base
+/// reward contributes to a domain streak the conditional bonus tagged
+/// alongside it should too, so the player's streak chip percentage
+/// applies consistently across both grants.
 class BonusXpReward extends RewardDefinition {
   const BonusXpReward({
     required this.amount,
     required this.condition,
     this.sourceKind,
+    this.streakDomain,
     super.contentTags,
   });
 
   final int amount;
   final BonusXpCondition condition;
   final RewardSourceKind? sourceKind;
+  final ProgressionDomain? streakDomain;
 }
 
 /// Cosmetic unlock — frame, background, emblem, title flair, map

@@ -771,9 +771,11 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.companions.ember_sprite',
       sortOrder: 700,
       // "Small spark … steady-footed" — flame as a metaphor for
-      // streak length. Floor +3 % so a fresh reset still beats no
-      // buff; cap +12 % keeps the uncommon-tier buff from
-      // overshadowing rare / epic flat buffs at long streaks.
+      // streak length. Applies to every main-5 daily-goal claim and
+      // resolves its tier from that domain's own streak, so a player
+      // can watch the chip climb on their strongest cards while
+      // weaker cards sit at floor. See [CompanionBuffPercents] for
+      // the five visible tiers + the silent legendary milestone.
       buff: const StreakLengthCompanionBuff(),
     ),
     Companion(
@@ -836,10 +838,14 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.companions.lantern_golem',
       sortOrder: 730,
       // "Flickering lantern in chest" — persistent inner flame.
-      // Flat +25 % streakXp (mid-game upgrade over Ember's dynamic).
-      buff: const FlatCompanionBuff(
-        kind: RewardSourceKind.streakXp,
-        percent: CompanionBuffPercents.lanternGolemStreak,
+      // Applies a flat +30 % to every main-5 daily-goal claim, but
+      // only once that domain's streak crosses 7 days. The threshold
+      // keeps the rare-tier buff from being an instant payout the
+      // moment the companion is equipped — the lantern's warmth has
+      // to be earned per card. See [CompanionBuffPercents].
+      buff: const StreakThresholdFlatCompanionBuff(
+        percent: CompanionBuffPercents.lanternGolemPercent,
+        minStreak: CompanionBuffPercents.lanternGolemThreshold,
       ),
     ),
     Companion(

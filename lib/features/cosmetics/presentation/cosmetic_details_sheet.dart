@@ -470,11 +470,6 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                 const SizedBox(height: 14),
                 CompanionBuffBanner(
                   buff: definition.buff!,
-                  currentStreak: definition.buff is StreakLengthCompanionBuff
-                      ? context
-                          .watch<ProgressionEngineProvider>()
-                          .currentMaxStreak
-                      : null,
                   currentChapterChainPosition:
                       definition.buff is ChapterDepthCompanionBuff
                           ? context

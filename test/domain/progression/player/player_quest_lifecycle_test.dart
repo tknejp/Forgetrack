@@ -91,7 +91,7 @@ void main() {
       bool isLockedByConditions = false,
     }) {
       return EngineQuestProgress(
-        node: const DailyQuest(
+        node: const DailyGoal(
           id: QuestId('q'),
           titleKey: _titleStub,
           descriptionKey: _descStub,

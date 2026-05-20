@@ -4305,13 +4305,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cosmeticBuffSectionTitle => 'XP bonus';
 
   @override
+  String questStreakChipDays(int count) {
+    return '${count}d';
+  }
+
+  @override
+  String questStreakChipWithBonus(int count, int percent) {
+    return '${count}d · +$percent%';
+  }
+
+  @override
+  String questStreakChipLocked(int count, int percent, int threshold) {
+    return '${count}d · +$percent% from ${threshold}d';
+  }
+
+  @override
   String cosmeticBuffFlat(int percent, String source) {
     return '+$percent% XP $source';
   }
 
   @override
   String cosmeticBuffEmber(int min, int max) {
-    return '+$min–$max% XP from streak (grows with flame)';
+    return '+$min–$max% per streak (grows with each card\'s streak)';
+  }
+
+  @override
+  String cosmeticBuffLanternThreshold(int percent, int days) {
+    return '+$percent% per streak (active from ${days}d)';
   }
 
   @override
@@ -4351,12 +4371,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String cosmeticBuffEmberHeadlineLive(int percent) {
-    return '+$percent% XP from streak';
+    return '+$percent% XP';
   }
 
   @override
   String cosmeticBuffEmberHeadlineRange(int min, int max) {
-    return '+$min → $max% XP from streak';
+    return '+$min → $max% per streak';
+  }
+
+  @override
+  String cosmeticBuffLanternThresholdHeadline(int percent, int days) {
+    return '+$percent% per streak from ${days}d';
+  }
+
+  @override
+  String cosmeticBuffLanternThresholdSubtitle(int days) {
+    return 'Each main-five streak unlocks the bonus the first time it crosses ${days}d';
   }
 
   @override
@@ -4366,7 +4396,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String cosmeticBuffEmberSubtitle(int max) {
-    return 'Grows with the flame — your streak length (cap +$max%)';
+    return 'Each main-five streak scales independently (cap +$max%)';
   }
 
   @override

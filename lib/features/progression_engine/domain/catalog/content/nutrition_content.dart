@@ -105,7 +105,7 @@ List<Objective> nutritionObjectives(EngineCatalogContext context) {
 List<ProgressionEntry> nutritionNodes() {
   return [
     // Daily macro quests.
-    DailyQuest(
+    DailyGoal(
       id: const ProgressionEntryId('daily_calories_today'),
       objectiveId: ObjectiveId('daily_calories'),
       claimPolicy: ClaimPolicy.manual,
@@ -114,9 +114,14 @@ List<ProgressionEntry> nutritionNodes() {
       descriptionKey: (l) => l.progRuleDailyCaloriesHintedDesc,
       // Base 60 XP, +60 bonus when claimed before 14:00 (lunch).
       rewards: const [
-        XpReward(sourceKind: RewardSourceKind.nutritionXp, amount: 60),
+        XpReward(
+          sourceKind: RewardSourceKind.nutritionXp,
+          streakDomain: ProgressionDomain.nutrition,
+          amount: 60,
+        ),
         BonusXpReward(
           sourceKind: RewardSourceKind.nutritionXp,
+          streakDomain: ProgressionDomain.nutrition,
           amount: 60,
           condition: CompletedBeforeHour(14),
         ),
@@ -125,50 +130,74 @@ List<ProgressionEntry> nutritionNodes() {
       rarity: Rarity.common,
       assetKey: questAssetNutrition,
     ),
-    DailyQuest(
+    DailyGoal(
       id: const ProgressionEntryId('daily_protein_today'),
       objectiveId: ObjectiveId('daily_protein'),
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.progRuleDailyProteinDesc,
       titleKey: (l) => l.progRuleDailyProtein,
       descriptionKey: (l) => l.progRuleDailyProteinDesc,
-      rewards: const [XpReward(sourceKind: RewardSourceKind.nutritionXp, amount: 40)],
+      rewards: const [
+        XpReward(
+          sourceKind: RewardSourceKind.nutritionXp,
+          streakDomain: ProgressionDomain.nutrition,
+          amount: 40,
+        ),
+      ],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.common,
       assetKey: questAssetNutrition,
     ),
-    DailyQuest(
+    DailyGoal(
       id: const ProgressionEntryId('daily_carbs_today'),
       objectiveId: ObjectiveId('daily_carbs'),
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.progRuleDailyCarbsDesc,
       titleKey: (l) => l.progRuleDailyCarbs,
       descriptionKey: (l) => l.progRuleDailyCarbsDesc,
-      rewards: const [XpReward(sourceKind: RewardSourceKind.nutritionXp, amount: 35)],
+      rewards: const [
+        XpReward(
+          sourceKind: RewardSourceKind.nutritionXp,
+          streakDomain: ProgressionDomain.nutrition,
+          amount: 35,
+        ),
+      ],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.common,
       assetKey: questAssetNutrition,
     ),
-    DailyQuest(
+    DailyGoal(
       id: const ProgressionEntryId('daily_fat_today'),
       objectiveId: ObjectiveId('daily_fat'),
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.progRuleDailyFatDesc,
       titleKey: (l) => l.progRuleDailyFat,
       descriptionKey: (l) => l.progRuleDailyFatDesc,
-      rewards: const [XpReward(sourceKind: RewardSourceKind.nutritionXp, amount: 35)],
+      rewards: const [
+        XpReward(
+          sourceKind: RewardSourceKind.nutritionXp,
+          streakDomain: ProgressionDomain.nutrition,
+          amount: 35,
+        ),
+      ],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.common,
       assetKey: questAssetNutrition,
     ),
-    DailyQuest(
+    DailyGoal(
       id: const ProgressionEntryId('daily_fiber_today'),
       objectiveId: ObjectiveId('daily_fiber'),
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.progRuleDailyFiberDesc,
       titleKey: (l) => l.progRuleDailyFiber,
       descriptionKey: (l) => l.progRuleDailyFiberDesc,
-      rewards: const [XpReward(sourceKind: RewardSourceKind.nutritionXp, amount: 35)],
+      rewards: const [
+        XpReward(
+          sourceKind: RewardSourceKind.nutritionXp,
+          streakDomain: ProgressionDomain.nutrition,
+          amount: 35,
+        ),
+      ],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.common,
       assetKey: questAssetNutrition,

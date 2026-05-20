@@ -154,10 +154,20 @@ sealed class Quest extends ProgressionEntry {
 
 // ── Quest subtypes ──────────────────────────────────────────────────
 
-/// Standalone daily quest — e.g. `daily_steps_today`. Lives in the
+/// A daily goal — one of the main-five per-day targets (steps,
+/// nutrition macros, sleep, activity, weight log). Lives in the
 /// daily section with the rotation-sticky-until-midnight slot rule.
-class DailyQuest extends Quest {
-  const DailyQuest({
+///
+/// Despite extending [Quest] (so the rendering / claim / pill
+/// pipeline can treat it uniformly with other daily-section entries
+/// like combos and challenges), a `DailyGoal` is **not** a quest in
+/// the narrative sense. The distinction matters for streak math:
+/// only [DailyGoal] entries carry a [XpReward.streakDomain] and
+/// therefore contribute to per-domain streak buffs. Combos / weekly
+/// quests / chapter steps / long-term quests / daily challenges
+/// never participate in streaks.
+class DailyGoal extends Quest {
+  const DailyGoal({
     required super.id,
     required super.titleKey,
     required super.descriptionKey,

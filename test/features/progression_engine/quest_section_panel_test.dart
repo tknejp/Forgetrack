@@ -11,7 +11,7 @@ import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import 'package:forgetrack/features/progression_engine/presentation/quests_screen.dart';
 import 'package:forgetrack/l10n/app_localizations.dart';
 
-Quest _node(String id, int xp) => DailyQuest(
+Quest _node(String id, int xp) => DailyGoal(
       id: ProgressionEntryId(id),
       objectiveId: ObjectiveId('${id}_objective'),
       claimPolicy: ClaimPolicy.manual,

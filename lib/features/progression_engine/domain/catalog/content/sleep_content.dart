@@ -64,14 +64,20 @@ List<Objective> sleepObjectives(EngineCatalogContext context) {
 
 List<ProgressionEntry> sleepNodes() {
   return [
-    DailyQuest(
+    DailyGoal(
       id: const ProgressionEntryId('daily_sleep_today'),
       objectiveId: ObjectiveId('daily_sleep'),
       claimPolicy: ClaimPolicy.manual,
       lockedHintKey: (l) => l.progRuleDailySleepDesc,
       titleKey: (l) => l.progRuleDailySleep,
       descriptionKey: (l) => l.progRuleDailySleepDesc,
-      rewards: const [XpReward(sourceKind: RewardSourceKind.sleepXp, amount: 50)],
+      rewards: const [
+        XpReward(
+          sourceKind: RewardSourceKind.sleepXp,
+          streakDomain: ProgressionDomain.sleep,
+          amount: 50,
+        ),
+      ],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.common,
       assetKey: questAssetStreak,

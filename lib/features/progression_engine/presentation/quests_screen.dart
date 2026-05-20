@@ -6,6 +6,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../l10n/l10n.dart';
 import '../../../shared/theme/design_tokens.dart';
 import '../../../shared/widgets/xp_sparkle_overlay.dart';
+import '../../cosmetics/domain/companion_buff.dart';
 import '../application/progression_engine_provider.dart';
 import 'widgets/engine_backfill_section.dart';
 import 'widgets/engine_chapter_card.dart';
@@ -248,6 +249,9 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                       chainResolver: provider.chainQuestsFor,
                       companionBuffBonusFor: (q) =>
                           provider.projectedCompanionBuffBonusFor(q.node),
+                      equippedCompanionBuff: provider.equippedCompanionBuff,
+                      streakBuffPercentFor: (q) =>
+                          provider.projectedStreakBuffPercentFor(q.node),
                     ),
                     const SizedBox(height: Tokens.spaceXl),
                     QuestSectionPanel(
@@ -272,6 +276,9 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                       onToggleExpanded: _toggleExpanded,
                       companionBuffBonusFor: (q) =>
                           provider.projectedCompanionBuffBonusFor(q.node),
+                      equippedCompanionBuff: provider.equippedCompanionBuff,
+                      streakBuffPercentFor: (q) =>
+                          provider.projectedStreakBuffPercentFor(q.node),
                     ),
                     if (longTerm.isNotEmpty) ...[
                       const SizedBox(height: Tokens.spaceXl),
@@ -344,6 +351,8 @@ class QuestSectionPanel extends StatelessWidget {
     this.hint,
     this.chainResolver,
     this.companionBuffBonusFor,
+    this.equippedCompanionBuff,
+    this.streakBuffPercentFor,
   });
 
   final String header;
@@ -372,6 +381,16 @@ class QuestSectionPanel extends StatelessWidget {
   /// XP pill when this returns > 0. Optional — tests pass null and
   /// the bonus chip stays hidden.
   final int Function(EngineQuestProgress quest)? companionBuffBonusFor;
+
+  /// The player's equipped companion buff. Threaded into each card
+  /// so its streak chip can switch between plain / live / locked
+  /// visual states without re-reading the provider.
+  final CompanionBuff? equippedCompanionBuff;
+
+  /// Resolves the streak-buff percent for a given quest, evaluated
+  /// against that quest's own streak domain. Wired from
+  /// [ProgressionEngineProvider.projectedStreakBuffPercentFor].
+  final int Function(EngineQuestProgress quest)? streakBuffPercentFor;
 
   /// Id of the currently expanded card (one-at-a-time). Owned by the
   /// screen; the panel just forwards it to each card.
@@ -464,6 +483,9 @@ class QuestSectionPanel extends StatelessWidget {
                   showCompletedTodayBadge: color == Tokens.steps.color,
                   companionBuffBonus:
                       companionBuffBonusFor?.call(quests[i]) ?? 0,
+                  equippedCompanionBuff: equippedCompanionBuff,
+                  streakBuffPercent:
+                      streakBuffPercentFor?.call(quests[i]) ?? 0,
                 ),
               ],
             ],

@@ -141,7 +141,7 @@ List<ProgressionEntry> stepsNodes() {
   return [
     // Daily quest — manual claim so the player taps "Vyzvednout"
     // to grant XP, matching V1 UX.
-    DailyQuest(
+    DailyGoal(
       id: const ProgressionEntryId('daily_steps_today'),
       objectiveId: ObjectiveId('daily_steps'),
       claimPolicy: ClaimPolicy.manual,
@@ -151,9 +151,14 @@ List<ProgressionEntry> stepsNodes() {
       // Base 80 XP, +80 bonus when claimed before 18:00 (2Ã— total).
       // Rewards on-the-day completion vs. last-minute claims.
       rewards: const [
-        XpReward(sourceKind: RewardSourceKind.activityXp, amount: 80),
+        XpReward(
+          sourceKind: RewardSourceKind.activityXp,
+          streakDomain: ProgressionDomain.steps,
+          amount: 80,
+        ),
         BonusXpReward(
           sourceKind: RewardSourceKind.activityXp,
+          streakDomain: ProgressionDomain.steps,
           amount: 80,
           condition: CompletedBeforeHour(18),
         ),

@@ -12,15 +12,25 @@ import '../../domain/companion_buff.dart';
 /// so the domain layer stays free of l10n concerns. Callers in
 /// presentation pass the localizer; the result is a ready-to-render
 /// string.
+///
+/// NB: streak-buff copy is intentionally framed as "+min–max % per
+/// streak" because the buff resolves against each main-5 card's
+/// own streak — the player will see the live tier on each card via
+/// the streak chip, the chip-level summary just advertises the band.
 String formatCompanionBuff(AppLocalizations l10n, CompanionBuff buff) {
   return switch (buff) {
     FlatCompanionBuff(:final kind, :final percent) =>
       l10n.cosmeticBuffFlat(percent, _buffSourceLabel(l10n, kind)),
     StreakLengthCompanionBuff(
-      :final floorPercent,
-      :final longStreakPercent,
+      :final tier1Percent,
+      :final tier4Percent,
     ) =>
-      l10n.cosmeticBuffEmber(floorPercent, longStreakPercent),
+      l10n.cosmeticBuffEmber(tier1Percent, tier4Percent),
+    StreakThresholdFlatCompanionBuff(
+      :final percent,
+      :final minStreak,
+    ) =>
+      l10n.cosmeticBuffLanternThreshold(percent, minStreak),
     WeeklyEmphasisCompanionBuff(:final dailyPercent, :final weeklyPercent) =>
       l10n.cosmeticBuffRaven(dailyPercent, weeklyPercent),
     ChapterDepthCompanionBuff(:final openerPercent, :final deepPercent) =>
@@ -39,17 +49,20 @@ class CompanionBuffBannerCopy {
   final String subtitle;
 }
 
-/// Banner copy for [CompanionBuff]. When [currentStreak] is non-null
-/// and the buff is Ember Sprite, the headline switches from the
-/// range form to the live bracket percent. Same applies to
-/// [currentChapterChainPosition] for Cave Lynx — non-null means the
-/// player is actively in a chapter chain and we render the live
-/// tier instead of the range. Raven has no single live value by
-/// design (the daily / weekly split is the headline).
+/// Banner copy for [CompanionBuff]. Streak buffs (Ember Sprite,
+/// Lantern Golem) intentionally stay in their **range / activation**
+/// form here — the banner lives on the companion details sheet,
+/// where the buff is summarised once for the whole companion. The
+/// per-card live tier shows on each main-5 card's streak chip
+/// instead, so a player who is sitting at +20 % on steps and 0 % on
+/// sleep is never told they are at a single number.
+///
+/// [currentChapterChainPosition] still drives a live Lynx headline
+/// because chapter depth is a single global value (only one chain
+/// is active at a time).
 CompanionBuffBannerCopy formatCompanionBuffBanner(
   AppLocalizations l10n,
   CompanionBuff buff, {
-  int? currentStreak,
   int? currentChapterChainPosition,
 }) {
   return switch (buff) {
@@ -58,30 +71,24 @@ CompanionBuffBannerCopy formatCompanionBuffBanner(
         subtitle: l10n.cosmeticBuffBannerFlatSubtitle,
       ),
     StreakLengthCompanionBuff(
-      :final floorPercent,
-      :final longStreakPercent,
+      :final tier1Percent,
+      :final tier4Percent,
     ) =>
-      () {
-        if (currentStreak != null) {
-          final live = buff.resolvePercent(
-            CompanionBuffContext(
-              rewardSourceKind: RewardSourceKind.streakXp,
-              currentStreak: currentStreak,
-            ),
-          );
-          return CompanionBuffBannerCopy(
-            headline: l10n.cosmeticBuffEmberHeadlineLive(live),
-            subtitle: l10n.cosmeticBuffEmberSubtitle(longStreakPercent),
-          );
-        }
-        return CompanionBuffBannerCopy(
-          headline: l10n.cosmeticBuffEmberHeadlineRange(
-            floorPercent,
-            longStreakPercent,
-          ),
-          subtitle: l10n.cosmeticBuffEmberSubtitle(longStreakPercent),
-        );
-      }(),
+      CompanionBuffBannerCopy(
+        headline: l10n.cosmeticBuffEmberHeadlineRange(
+          tier1Percent,
+          tier4Percent,
+        ),
+        subtitle: l10n.cosmeticBuffEmberSubtitle(tier4Percent),
+      ),
+    StreakThresholdFlatCompanionBuff(
+      :final percent,
+      :final minStreak,
+    ) =>
+      CompanionBuffBannerCopy(
+        headline: l10n.cosmeticBuffLanternThresholdHeadline(percent, minStreak),
+        subtitle: l10n.cosmeticBuffLanternThresholdSubtitle(minStreak),
+      ),
     WeeklyEmphasisCompanionBuff(:final dailyPercent, :final weeklyPercent) =>
       CompanionBuffBannerCopy(
         headline: l10n.cosmeticBuffRaven(dailyPercent, weeklyPercent),
@@ -195,22 +202,20 @@ class CompanionBuffChip extends StatelessWidget {
 /// dynamic mechanic (Ember / Raven / Lynx) or the generic passive
 /// nature for flat buffs.
 ///
-/// Pass [currentStreak] to switch the Ember Sprite headline from
-/// the floor → cap range form to a live bracket value reflecting
-/// the player's longest active streak. Pass
-/// [currentChapterChainPosition] for the same live treatment on
-/// Cave Lynx. Raven has no single live value by design (the daily
-/// / weekly split is itself the headline).
+/// Pass [currentChapterChainPosition] to switch the Cave Lynx
+/// headline from the opener → deep range form to a live bracket
+/// value reflecting the active chapter chain. Streak buffs (Ember /
+/// Lantern) stay in their range / activation form here by design —
+/// per-card live tiers belong on the streak chip, not on the
+/// once-per-companion banner.
 class CompanionBuffBanner extends StatelessWidget {
   const CompanionBuffBanner({
     super.key,
     required this.buff,
-    this.currentStreak,
     this.currentChapterChainPosition,
   });
 
   final CompanionBuff buff;
-  final int? currentStreak;
   final int? currentChapterChainPosition;
 
   @override
@@ -219,7 +224,6 @@ class CompanionBuffBanner extends StatelessWidget {
     final copy = formatCompanionBuffBanner(
       l10n,
       buff,
-      currentStreak: currentStreak,
       currentChapterChainPosition: currentChapterChainPosition,
     );
     return Container(

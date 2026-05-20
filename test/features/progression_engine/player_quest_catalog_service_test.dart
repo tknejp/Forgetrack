@@ -33,7 +33,7 @@ void main() {
     bool isLockedByConditions = false,
   }) {
     return EngineQuestProgress(
-      node: DailyQuest(
+      node: DailyGoal(
         id: QuestId(id),
         titleKey: _titleStub,
         descriptionKey: _descStub,

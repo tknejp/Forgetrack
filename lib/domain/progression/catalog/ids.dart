@@ -48,9 +48,11 @@ extension type const ProgressionEntryId(String value) implements String {
 }
 
 /// Id for a quest catalog row (`Quest` and its subtypes:
-/// DailyQuest, WeeklyQuest, ChapterOpener, ChapterStep, ChapterFinale,
+/// DailyGoal, WeeklyQuest, ChapterOpener, ChapterStep, ChapterFinale,
 /// ChapterSideQuest, ComboStep, ComboFinale, DailyChallenge,
-/// LongTermQuest).
+/// LongTermQuest). `DailyGoal` extends [Quest] for rendering / claim
+/// uniformity but is semantically a per-day target, not a quest —
+/// only daily goals contribute to per-domain streaks.
 extension type const QuestId(String value) implements ProgressionEntryId {}
 
 /// Id for an [Achievement] catalog row.

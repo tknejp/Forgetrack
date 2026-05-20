@@ -57,7 +57,7 @@ Quest _quest({
   ClaimPolicy? claimPolicy,
   List<RewardDefinition>? rewards,
 }) =>
-    DailyQuest(
+    DailyGoal(
       id: ProgressionEntryId(id),
       objectiveId: ObjectiveId(objectiveId),
       titleKey: (_) => 'Title',

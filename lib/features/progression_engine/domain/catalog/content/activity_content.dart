@@ -90,7 +90,7 @@ List<Objective> activityObjectives(EngineCatalogContext context) {
 
 List<ProgressionEntry> activityNodes() {
   return [
-    DailyQuest(
+    DailyGoal(
       id: const ProgressionEntryId('daily_activity_today'),
       objectiveId: ObjectiveId('daily_activity'),
       claimPolicy: ClaimPolicy.manual,
@@ -99,9 +99,14 @@ List<ProgressionEntry> activityNodes() {
       descriptionKey: (l) => l.progRuleDailyActivityHintedDesc,
       // Base 50 XP, +50 bonus when claimed before 12:00 (morning).
       rewards: const [
-        XpReward(sourceKind: RewardSourceKind.activityXp, amount: 50),
+        XpReward(
+          sourceKind: RewardSourceKind.activityXp,
+          streakDomain: ProgressionDomain.activity,
+          amount: 50,
+        ),
         BonusXpReward(
           sourceKind: RewardSourceKind.activityXp,
+          streakDomain: ProgressionDomain.activity,
           amount: 50,
           condition: CompletedBeforeHour(12),
         ),

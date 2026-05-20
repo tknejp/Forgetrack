@@ -52,10 +52,12 @@ import 'ledger_counters.dart';
 ///     the active loadout slot, or `null` when no companion is
 ///     equipped. Read by the [RewardGrantService] to scale XP grants
 ///     at append time per the equipped companion's [RewardSourceKind].
-///   - [maxCurrentStreak] — the player's longest currently-active
-///     daily streak (across any tracked objective or domain). Read
-///     by dynamic streak-scaling buffs (Ember Sprite). Defaults to 0
-///     when no streak is active.
+///   - [currentStreakByDomain] — per-domain current streak lengths.
+///     Read by streak-scaling buffs (Ember Sprite, Lantern Golem),
+///     which look up the streak for the granting reward's
+///     [streakDomain] to resolve their tier / threshold. Missing keys
+///     are treated as 0. Quests, combos, chapters and meta rewards
+///     carry a null streakDomain and therefore never read this map.
 @immutable
 class EngineEvaluationContext {
   const EngineEvaluationContext({
@@ -69,7 +71,7 @@ class EngineEvaluationContext {
     required this.evaluatedAt,
     this.ownedCosmeticIds = const <String>{},
     this.equippedCompanionBuff,
-    this.maxCurrentStreak = 0,
+    this.currentStreakByDomain = const <ProgressionDomain, int>{},
   });
 
   final Player player;
@@ -82,7 +84,7 @@ class EngineEvaluationContext {
   final DateTime evaluatedAt;
   final Set<String> ownedCosmeticIds;
   final CompanionBuff? equippedCompanionBuff;
-  final int maxCurrentStreak;
+  final Map<ProgressionDomain, int> currentStreakByDomain;
 
   EngineEvaluationContext copyWith({
     Player? player,
@@ -95,7 +97,7 @@ class EngineEvaluationContext {
     DateTime? evaluatedAt,
     Set<String>? ownedCosmeticIds,
     CompanionBuff? equippedCompanionBuff,
-    int? maxCurrentStreak,
+    Map<ProgressionDomain, int>? currentStreakByDomain,
   }) {
     return EngineEvaluationContext(
       player: player ?? this.player,
@@ -109,7 +111,8 @@ class EngineEvaluationContext {
       ownedCosmeticIds: ownedCosmeticIds ?? this.ownedCosmeticIds,
       equippedCompanionBuff:
           equippedCompanionBuff ?? this.equippedCompanionBuff,
-      maxCurrentStreak: maxCurrentStreak ?? this.maxCurrentStreak,
+      currentStreakByDomain:
+          currentStreakByDomain ?? this.currentStreakByDomain,
     );
   }
 }

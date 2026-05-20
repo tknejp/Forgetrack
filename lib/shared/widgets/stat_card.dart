@@ -47,6 +47,13 @@ class StatCard extends StatefulWidget {
   final String? xp;
   final XpClaimPillData? xpData;
   final String? claimedXpLabel;
+
+  /// Optional streak chip rendered next to the XP pill on main-five
+  /// daily-goal cards. When non-null it replaces the companion-bonus
+  /// badge that would otherwise sit on the pill — the chip surfaces
+  /// the same buff contribution through a streak-aware affordance
+  /// (plain flame, live tier, or locked threshold).
+  final Widget? streakChip;
   final StatCardVisualAssets? visualAssets;
   final List<Widget> children;
   final bool initiallyExpanded;
@@ -65,6 +72,7 @@ class StatCard extends StatefulWidget {
     this.xp,
     this.xpData,
     this.claimedXpLabel,
+    this.streakChip,
     this.visualAssets,
     this.children = const [],
     this.initiallyExpanded = false,
@@ -182,13 +190,38 @@ class _StatCardState extends State<StatCard> {
           const SizedBox(width: 6),
         ],
         if (widget.xpData != null) ...[
-          XpClaimPill(
-            data: widget.xpData!,
-            claimedLabel: widget.claimedXpLabel,
-          ),
+          // Stack the streak chip below the headline pill — same
+          // shape `XpClaimPill` already uses for the companion-bonus
+          // chip on non-main-five cards. Right-aligned so the chip
+          // and the pill read as a single column anchored to the
+          // card's right edge.
+          if (widget.streakChip != null)
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                XpClaimPill(
+                  data: widget.xpData!,
+                  claimedLabel: widget.claimedXpLabel,
+                ),
+                const SizedBox(height: 3),
+                widget.streakChip!,
+              ],
+            )
+          else
+            XpClaimPill(
+              data: widget.xpData!,
+              claimedLabel: widget.claimedXpLabel,
+            ),
           const SizedBox(width: 6),
         ] else if (widget.xp != null) ...[
           _XpPill(label: widget.xp!),
+          const SizedBox(width: 6),
+        ] else if (widget.streakChip != null) ...[
+          // No XP pill on this card (rare) — still surface the
+          // streak chip standalone so the affordance never goes
+          // missing.
+          widget.streakChip!,
           const SizedBox(width: 6),
         ],
         if (widget.collapsible) ExpandChevron(expanded: _open),

@@ -93,21 +93,25 @@ class RewardGrantService {
   }) {
     final reward = planned.reward;
     return switch (reward) {
-      XpReward(:final amount, :final sourceKind) => _buildXpEvent(
+      XpReward(:final amount, :final sourceKind, :final streakDomain) =>
+        _buildXpEvent(
           planned: planned,
           runningXp: runningXp,
           timestamp: timestamp,
           baseAmount: amount,
           sourceKind: sourceKind,
+          streakDomain: streakDomain,
           context: context,
           accountant: accountant,
         ),
-      BonusXpReward(:final amount, :final sourceKind) => _buildXpEvent(
+      BonusXpReward(:final amount, :final sourceKind, :final streakDomain) =>
+        _buildXpEvent(
           planned: planned,
           runningXp: runningXp,
           timestamp: timestamp,
           baseAmount: amount,
           sourceKind: sourceKind,
+          streakDomain: streakDomain,
           context: context,
           accountant: accountant,
         ),
@@ -174,6 +178,7 @@ class RewardGrantService {
     required DateTime timestamp,
     required int baseAmount,
     required RewardSourceKind? sourceKind,
+    required ProgressionDomain? streakDomain,
     required EngineEvaluationContext? context,
     required _DailyBuffAccountant accountant,
   }) {
@@ -184,6 +189,7 @@ class RewardGrantService {
     final bonus = _resolveCompanionBuffBonus(
       scaledBase: scaled,
       sourceKind: sourceKind,
+      streakDomain: streakDomain,
       node: planned.node,
       context: context,
       accountant: accountant,
@@ -210,13 +216,14 @@ class RewardGrantService {
   ///   * RPG mode is off,
   ///   * the reward has no [sourceKind] (defensive — coverage test
   ///     blocks this at the catalog level),
-  ///   * the buff's kind doesn't match the reward's source (and isn't
-  ///     `allXp`),
-  ///   * the dynamic rule returns a non-positive percent,
+  ///   * the buff's own [CompanionBuff.resolvePercent] returns 0
+  ///     (self-matching: kind / streakDomain / weekly / chain-depth
+  ///     gates all live inside the buff),
   ///   * the 25 % daily share cap would be exceeded.
   int _resolveCompanionBuffBonus({
     required int scaledBase,
     required RewardSourceKind? sourceKind,
+    required ProgressionDomain? streakDomain,
     required ProgressionEntry node,
     required EngineEvaluationContext? context,
     required _DailyBuffAccountant accountant,
@@ -226,19 +233,20 @@ class RewardGrantService {
     final buff = context.equippedCompanionBuff;
     if (buff == null) return 0;
     if (sourceKind == null) return 0;
-    if (buff.kind != RewardSourceKind.allXp && buff.kind != sourceKind) {
-      return 0;
-    }
 
     final isWeekly = node is Quest && node.displayBucket == QuestDisplayBucket.weekly;
     final chainPos = (node is Quest && node.chapterId != null)
         ? node.chainOrder
         : null;
+    final domainStreak = streakDomain == null
+        ? 0
+        : context.currentStreakByDomain[streakDomain] ?? 0;
 
     final percent = buff.resolvePercent(
       CompanionBuffContext(
         rewardSourceKind: sourceKind,
-        currentStreak: context.maxCurrentStreak,
+        streakDomain: streakDomain,
+        currentStreak: domainStreak,
         isWeeklyQuestSource: isWeekly,
         chapterChainPosition: chainPos,
       ),

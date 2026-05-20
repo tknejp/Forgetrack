@@ -33,13 +33,30 @@ void main() {
       expect(find.text('+8 % XP za aktivity'), findsOneWidget);
     });
 
-    testWidgets('renders the Ember streak range', (tester) async {
+    testWidgets('renders the Ember per-streak range', (tester) async {
       await tester.pumpWidget(_host(const CompanionBuffChip(
         buff: StreakLengthCompanionBuff(),
         color: Color(0xFFFF8C2A),
       )));
       expect(
-        find.text('+5–20 % XP ze streaku (roste s plamenem)'),
+        find.text(
+            '+${CompanionBuffPercents.emberTier1}–${CompanionBuffPercents.emberTier4} % za streak (roste s každou kartou zvlášť)'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('renders the Lantern threshold-flat description',
+        (tester) async {
+      await tester.pumpWidget(_host(const CompanionBuffChip(
+        buff: StreakThresholdFlatCompanionBuff(
+          percent: CompanionBuffPercents.lanternGolemPercent,
+          minStreak: CompanionBuffPercents.lanternGolemThreshold,
+        ),
+        color: Color(0xFFB388FF),
+      )));
+      expect(
+        find.text(
+            '+${CompanionBuffPercents.lanternGolemPercent} % za streak (aktivace od ${CompanionBuffPercents.lanternGolemThreshold}d)'),
         findsOneWidget,
       );
     });
