@@ -1,4 +1,5 @@
 import '../../../l10n/app_localizations.dart';
+import '../../health_connect/domain/player_goal.dart';
 import 'cosmetic_models.dart';
 import 'package:forgetrack/domain/progression/catalog/ids.dart';
 
@@ -329,6 +330,10 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.emblems.pilgrim_mark',
       previewAssetKey: 'cosmetics.emblems.pilgrim_mark',
       sortOrder: 500,
+      buff: const PerTargetEmblemBuff(
+        target: DailyGoalTarget(GoalMetric.dailyCalories),
+        percent: 10,
+      ),
     ),
     Emblem(
       id: const CosmeticId('emblem_forest_mark'),
@@ -340,6 +345,10 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.emblems.forest_mark',
       previewAssetKey: 'cosmetics.emblems.forest_mark',
       sortOrder: 510,
+      buff: const PerTargetEmblemBuff(
+        target: DailyGoalTarget(GoalMetric.dailySteps),
+        percent: 10,
+      ),
     ),
     Emblem(
       id: const CosmeticId('emblem_ruin_sigil'),
@@ -351,6 +360,10 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.emblems.ruin_sigil',
       previewAssetKey: 'cosmetics.emblems.ruin_sigil',
       sortOrder: 520,
+      buff: const PerTargetEmblemBuff(
+        target: DailyGoalTarget(GoalMetric.dailyProtein),
+        percent: 10,
+      ),
     ),
     Emblem(
       id: const CosmeticId('emblem_gatekeeper_mark'),
@@ -362,6 +375,10 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.emblems.gatekeeper_mark',
       previewAssetKey: 'cosmetics.emblems.gatekeeper_mark',
       sortOrder: 530,
+      buff: const PerTargetEmblemBuff(
+        target: DailyGoalTarget(GoalMetric.dailyFat),
+        percent: 10,
+      ),
     ),
     Emblem(
       id: const CosmeticId('emblem_mine_crest'),
@@ -373,6 +390,10 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.emblems.mine_crest',
       previewAssetKey: 'cosmetics.emblems.mine_crest',
       sortOrder: 540,
+      buff: const PerTargetEmblemBuff(
+        target: DailyGoalTarget(GoalMetric.dailyActivityMins),
+        percent: 10,
+      ),
     ),
     Emblem(
       id: const CosmeticId('emblem_underways_mark'),
@@ -384,6 +405,10 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.emblems.underways_mark',
       previewAssetKey: 'cosmetics.emblems.underways_mark',
       sortOrder: 550,
+      buff: const PerTargetEmblemBuff(
+        target: DailyGoalTarget(GoalMetric.dailyCarbs),
+        percent: 10,
+      ),
     ),
     Emblem(
       id: const CosmeticId('emblem_frost_sigil'),
@@ -395,6 +420,10 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.emblems.frost_sigil',
       previewAssetKey: 'cosmetics.emblems.frost_sigil',
       sortOrder: 560,
+      buff: const PerTargetEmblemBuff(
+        target: DailyGoalTarget(GoalMetric.sleepHours),
+        percent: 10,
+      ),
     ),
     Emblem(
       id: const CosmeticId('emblem_icewalker_mark'),
@@ -406,6 +435,10 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.emblems.icewalker_mark',
       previewAssetKey: 'cosmetics.emblems.icewalker_mark',
       sortOrder: 570,
+      buff: const PerTargetEmblemBuff(
+        target: DailyGoalTarget(GoalMetric.dailyFiber),
+        percent: 10,
+      ),
     ),
     Emblem(
       id: const CosmeticId('emblem_mountain_crest'),
@@ -417,6 +450,10 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.emblems.mountain_crest',
       previewAssetKey: 'cosmetics.emblems.mountain_crest',
       sortOrder: 580,
+      buff: const PerTargetEmblemBuff(
+        target: DailyGoalTarget(GoalMetric.targetWeight),
+        percent: 10,
+      ),
     ),
     Emblem(
       id: const CosmeticId('emblem_dragon_mark'),
@@ -428,6 +465,10 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.emblems.dragon_mark',
       previewAssetKey: 'cosmetics.emblems.dragon_mark',
       sortOrder: 590,
+      buff: const PerTargetEmblemBuff(
+        target: ComboQuestTarget(),
+        percent: 10,
+      ),
     ),
     Emblem(
       id: const CosmeticId('emblem_dragonrock_emblem'),
@@ -439,6 +480,7 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.emblems.dragonrock_emblem',
       previewAssetKey: 'cosmetics.emblems.dragonrock_emblem',
       sortOrder: 600,
+      buff: const BlanketEmblemBuff(percent: 5),
     ),
 
     // -------------------------------------------------------------------------

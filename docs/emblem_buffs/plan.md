@@ -90,7 +90,7 @@ These are settled. Do not reopen without user sign-off.
 
 ---
 
-### ☐ Phase 1 — `EmblemBuff` domain layer + catalog
+### ☑ Phase 1 — `EmblemBuff` domain layer + catalog
 
 **Scope**
 - New file [lib/features/cosmetics/domain/emblem_buff.dart](../../lib/features/cosmetics/domain/emblem_buff.dart):

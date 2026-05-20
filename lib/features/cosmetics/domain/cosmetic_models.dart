@@ -7,9 +7,11 @@ import '../../../shared/domain/rarity.dart';
 import 'package:forgetrack/domain/progression/catalog/ids.dart';
 
 import 'companion_buff.dart';
+import 'emblem_buff.dart';
 
 export '../../../shared/domain/rarity.dart' show Rarity;
 export 'companion_buff.dart';
+export 'emblem_buff.dart';
 
 /// Resolves a localized string from the active [AppLocalizations]. Used by
 /// [Cosmetic] for player-facing text (name / description / unlock
@@ -226,7 +228,12 @@ class Emblem extends Cosmetic {
     super.isEnabled,
     super.unlockHint,
     super.metadata,
+    this.buff,
   });
+
+  /// XP buff this emblem grants while equipped. `null` means the
+  /// emblem is purely cosmetic. See [EmblemBuff] / `docs/emblem_buffs/plan.md`.
+  final EmblemBuff? buff;
 
   @override
   CosmeticType get type => CosmeticType.emblem;
