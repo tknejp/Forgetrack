@@ -162,14 +162,17 @@ class _CompanionBonusChip extends StatelessWidget {
     final ft = context.ft;
     // Tint matches the headline pill's appearance for the same
     // state — see the `appearance` switch in [XpClaimPill.build].
-    final (Color tint, double bgAlpha, double borderAlpha, double fgAlpha) =
-        switch (state) {
-      XpClaimPillState.claimable => (ft.xp, 0.18, 0.35, 1.0),
+    // [tint] is applied to the foreground (icon + text) verbatim so
+    // baked-in alpha on tokens like `onSurfaceMuted` (40 % white)
+    // survives — modulating with `withValues(alpha: 1.0)` would
+    // promote the muted grey to full-opacity white. Background and
+    // border get their own alphas applied on top.
+    final (Color tint, double bgAlpha, double borderAlpha) = switch (state) {
+      XpClaimPillState.claimable => (ft.xp, 0.18, 0.35),
       XpClaimPillState.locked || XpClaimPillState.claimed => (
           ft.onSurfaceMuted,
           0.09,
           0.16,
-          1.0,
         ),
     };
     return Container(
@@ -185,7 +188,7 @@ class _CompanionBonusChip extends StatelessWidget {
           Icon(
             Icons.pets_rounded,
             size: 10,
-            color: tint.withValues(alpha: fgAlpha),
+            color: tint,
           ),
           const SizedBox(width: 3),
           Text(
@@ -193,7 +196,7 @@ class _CompanionBonusChip extends StatelessWidget {
             style: TextStyle(
               fontSize: Tokens.fontSizeMicro,
               fontWeight: FontWeight.w700,
-              color: tint.withValues(alpha: fgAlpha),
+              color: tint,
             ),
           ),
         ],
