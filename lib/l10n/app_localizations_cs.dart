@@ -1771,6 +1771,9 @@ class AppLocalizationsCs extends AppLocalizations {
   }
 
   @override
+  String get progChapterLockedSoon => 'Brzy se odemkne';
+
+  @override
   String progRewardSubtitle(String domain, int xp) {
     return '$domain · +$xp XP';
   }

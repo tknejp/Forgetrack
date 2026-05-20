@@ -2952,7 +2952,7 @@ abstract class AppLocalizations {
   /// No description provided for @progQuestClaimAll.
   ///
   /// In en, this message translates to:
-  /// **'Claim all'**
+  /// **'Claim all quests'**
   String get progQuestClaimAll;
 
   /// No description provided for @progQuestClaim.
@@ -3200,6 +3200,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Lv {level}'**
   String progChapterLockedLabel(int level);
+
+  /// No description provided for @progChapterLockedSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocks soon'**
+  String get progChapterLockedSoon;
 
   /// No description provided for @progRewardSubtitle.
   ///

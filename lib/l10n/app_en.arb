@@ -1292,6 +1292,7 @@
       "level": { "type": "int" }
     }
   },
+  "progChapterLockedSoon": "Unlocks soon",
   "progRewardSubtitle": "{domain} · +{xp} XP",
   "@progRewardSubtitle": {
     "placeholders": {

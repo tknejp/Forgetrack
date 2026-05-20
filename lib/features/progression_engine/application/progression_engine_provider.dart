@@ -1088,7 +1088,16 @@ class ProgressionEngineProvider extends ChangeNotifier {
       // the just-opened chapter card. Completion events are written
       // for both manual + auto claim flows; their timestamp matches
       // `_engineNow` on the run that produced them.
+      //
+      // Guard: the pin only applies while the chain still has work
+      // left (`firstUncompleted != null`). A claimed *finale* leaves
+      // `firstUncompleted == null` — the chapter is done and must
+      // leave the active list immediately so the next chapter's
+      // opener becomes the sole active card (Trello #66 — prevents
+      // chapter A's just-claimed finale and chapter B's auto-fired
+      // opener from coexisting in the JOURNEY section).
       if (lastCompleted != null &&
+          firstUncompleted != null &&
           _wasNodeCompletedOnDate(lastCompleted.nodeId, now)) {
         out.add(lastCompleted);
         continue;
@@ -4103,6 +4112,25 @@ class ProgressionEngineProvider extends ChangeNotifier {
         if (!completed.contains(id)) {
           prereqGate = id;
           break;
+        }
+      }
+      // Fall-through to NodeCompleted unlock conditions. Chapter
+      // openers encode the cross-chapter chain prereq (= previous
+      // chapter's finale) as a `NodeCompleted` unlock condition
+      // rather than via `prerequisiteNodeIds` (see
+      // `chapter_content.dart:_chapterPrereqByOpenId` /
+      // `chapterNodes()`). Without this fall-through `prereqGateNodeId`
+      // stays null, every later chapter's opener looks "ungated" once
+      // the level threshold is met, and the chapters leak into the
+      // active JOURNEY section instead of the locked-section route
+      // (Trello #66 — devtools-set level 50 shows every chapter up to
+      // level 50 as active even though no earlier chapter is done).
+      if (prereqGate == null) {
+        for (final c in node.unlockConditions) {
+          if (c is NodeCompleted && !completed.contains(c.nodeId.value)) {
+            prereqGate = c.nodeId.value;
+            break;
+          }
         }
       }
 

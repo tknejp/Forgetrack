@@ -6,7 +6,9 @@ import '../../../l10n/l10n.dart';
 import '../../../shared/theme/design_tokens.dart';
 import '../../../shared/widgets/xp_sparkle_overlay.dart';
 import '../../cosmetics/domain/companion_buff.dart';
+import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import '../application/progression_engine_provider.dart';
+import '../domain/catalog/progression_node_catalog.dart';
 import 'widgets/engine_backfill_section.dart';
 import 'widgets/engine_chapter_card.dart';
 import 'widgets/engine_completed_quest_card.dart';
@@ -507,9 +509,35 @@ class _NextChapterLockedTeaser extends StatelessWidget {
     final node = quest.node;
     final asset = node.assetKey;
     final level = quest.levelGate;
-    final hint = level != null
-        ? l10n.progChapterLockedLabel(level)
-        : l10n.progQuestsEmptyLockedTitle;
+    final prereqId = quest.prereqGateNodeId;
+    // Prefer the prereq hint (= "Dokonči [previous chapter finale]")
+    // when the chapter is gated by a cross-chapter NodeCompleted
+    // condition rather than a level threshold. Mirrors
+    // `EngineLockedQuestRow._resolveSubtitle`. Falls back to the level
+    // hint, then to a generic "soon" copy so the teaser never reads
+    // as the empty-locked-section title (Trello #66 follow-up — the
+    // old fallback to `progQuestsEmptyLockedTitle` rendered as "Teď
+    // tu nejsou žádné zamčené questy", which is a section header, not
+    // a per-chapter caption).
+    String? prereqTitle;
+    if (prereqId != null) {
+      final node = ProgressionEntryCatalog.definitionForId(prereqId);
+      prereqTitle = switch (node) {
+        Quest(:final titleKey) => titleKey(l10n),
+        Achievement(:final titleKey) => titleKey(l10n),
+        Milestone(:final titleKey) => titleKey(l10n),
+        LevelMilestone(:final titleKey) => titleKey(l10n),
+        _ => null,
+      };
+    }
+    final String hint;
+    if (prereqTitle != null && prereqTitle.isNotEmpty) {
+      hint = l10n.progQuestDetailCompleteQuest(prereqTitle);
+    } else if (level != null) {
+      hint = l10n.progChapterLockedLabel(level);
+    } else {
+      hint = l10n.progChapterLockedSoon;
+    }
 
     return Container(
       padding: const EdgeInsets.all(Tokens.questCardPadding),
