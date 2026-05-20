@@ -4405,6 +4405,42 @@ class AppLocalizationsCs extends AppLocalizations {
   }
 
   @override
+  String get heroStatsStreakRecordsTitle => 'Streak rekordy';
+
+  @override
+  String heroStatsAchievementsBadge(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count úspěchů',
+      few: '$count úspěchy',
+      one: '1 úspěch',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get heroStatsDomainColumn => 'Doména';
+
+  @override
+  String get heroStatsCurrentColumn => 'Aktuální';
+
+  @override
+  String get heroStatsBestColumn => 'Rekord';
+
+  @override
+  String heroStatsStreakDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '${count}d',
+      one: '1d',
+      zero: '0d',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String cosmeticBuffFlat(int percent, String source) {
     return '+$percent % XP $source';
   }

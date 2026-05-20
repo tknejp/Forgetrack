@@ -7678,6 +7678,42 @@ abstract class AppLocalizations {
   /// **'Best ever: {count, plural, =1{1 day} other{{count} days}}'**
   String progStreakInfoBest(int count);
 
+  /// Header of the hero-screen per-domain streak stats card.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak records'**
+  String get heroStatsStreakRecordsTitle;
+
+  /// Pill rendered next to the streak-records title showing total achievements unlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 achievement} other{{count} achievements}}'**
+  String heroStatsAchievementsBadge(int count);
+
+  /// Column header above the domain icon + name on the per-domain streak rows.
+  ///
+  /// In en, this message translates to:
+  /// **'Domain'**
+  String get heroStatsDomainColumn;
+
+  /// Column header above the current-streak column.
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get heroStatsCurrentColumn;
+
+  /// Column header above the all-time best-streak column.
+  ///
+  /// In en, this message translates to:
+  /// **'Best'**
+  String get heroStatsBestColumn;
+
+  /// Compact streak-length cell value, e.g. '12d'. Identical across locales by design — the card is dense and a localised 'days' suffix doesn't fit.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{0d} =1{1d} other{{count}d}}'**
+  String heroStatsStreakDays(int count);
+
   /// Flat companion buff label. {percent} is integer; {source} is one of the cosmeticBuffSource* strings.
   ///
   /// In en, this message translates to:

@@ -15,8 +15,10 @@ import '../../../cosmetics/application/emblem_board_provider.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
 import '../../../cosmetics/presentation/widgets/cosmetic_equipped_chip.dart';
 import '../../../cosmetics/presentation/widgets/cosmetics_inventory_section.dart';
+import '../../../progression_engine/application/progression_engine_provider.dart';
 import '../../application/social_provider.dart';
 import '../../domain/social_models.dart';
+import 'hero_streak_stats_card.dart';
 import '../social_profile_utils.dart';
 import 'emblem_slot_sheet.dart';
 import 'profile_detail_hero_card.dart';
@@ -298,7 +300,7 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
                             if (stats != null) ...[
                               if (!isMe && social.isFriendWith(widget.uid))
                                 const SizedBox(height: Tokens.spaceMd),
-                              _buildStats(stats),
+                              _buildStats(stats, isMe: isMe),
                             ],
                             const SizedBox(height: 10),
                             ProfileFriendsSection(stream: _friendsStream),
@@ -381,42 +383,59 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
     );
   }
 
-  Widget _buildStats(SocialUserStats stats) {
-    final l10n = context.l10n;
-    final bestStreak = [
-      stats.bestStepsStreak,
-      stats.bestNutritionStreak,
-    ].reduce((a, b) => a > b ? a : b);
+  Widget _buildStats(SocialUserStats stats, {required bool isMe}) {
+    // Own profile: read live per-domain (current + best) streaks from
+    // the progression engine. Friend profiles only carry steps +
+    // nutrition best on the Firestore wire format today; the rest
+    // surfaces as a dash placeholder until the schema grows the
+    // missing fields (tracked under #99 follow-ups).
+    if (isMe) {
+      final progression = context.watch<ProgressionEngineProvider>();
+      final rows = [
+        for (final domain in const [
+          ProgressionDomain.steps,
+          ProgressionDomain.nutrition,
+          ProgressionDomain.sleep,
+          ProgressionDomain.activity,
+          ProgressionDomain.body,
+        ])
+          DomainStreakRow(
+            domain: domain,
+            currentStreak: progression.currentStreakForDomain(domain),
+            bestStreak: progression
+                .streakForDomain(domain)
+                .bestStreak,
+          ),
+      ];
+      return HeroStreakStatsCard(
+        achievementsCount: stats.unlockedAchievementCount,
+        rows: rows,
+      );
+    }
 
-    return Row(
-      children: [
-        Expanded(
-          child: _StatCell(
-            icon: Icons.shield_moon_rounded,
-            value: '${stats.unlockedAchievementCount}',
-            label: l10n.socialProfileStatsAchievements,
-            color: Tokens.accent,
-          ),
-        ),
-        const SizedBox(width: Tokens.spaceSm),
-        Expanded(
-          child: _StatCell(
-            icon: Icons.local_fire_department_rounded,
-            value: l10n.socialDaysShort(bestStreak),
-            label: l10n.socialProfileStatsBestStreak,
-            color: Tokens.active.color,
-          ),
-        ),
-        const SizedBox(width: Tokens.spaceSm),
-        Expanded(
-          child: _StatCell(
-            icon: Icons.directions_walk_rounded,
-            value: l10n.socialDaysShort(stats.bestStepsStreak),
-            label: l10n.socialProfileStatsStepsStreak,
-            color: Tokens.steps.color,
-          ),
-        ),
-      ],
+    return HeroStreakStatsCard(
+      achievementsCount: stats.unlockedAchievementCount,
+      rows: const [
+        ProgressionDomain.steps,
+        ProgressionDomain.nutrition,
+        ProgressionDomain.sleep,
+        ProgressionDomain.activity,
+        ProgressionDomain.body,
+      ]
+          .map((domain) => DomainStreakRow(
+                domain: domain,
+                // Wire format limits — only steps / nutrition best
+                // arrives over Firestore today, and "current streak"
+                // is never published. Future wire change unlocks the
+                // remaining cells.
+                currentStreak: null,
+                bestStreak: switch (domain) {
+                  ProgressionDomain.steps => stats.bestStepsStreak,
+                  ProgressionDomain.nutrition => stats.bestNutritionStreak,
+                  _ => null,
+                },
+              ))
+          .toList(growable: false),
     );
   }
 
@@ -805,53 +824,3 @@ class _RemoveFriendButtonState extends State<_RemoveFriendButton> {
   }
 }
 
-// ── Stat cell ─────────────────────────────────────────────────────────────────
-
-class _StatCell extends StatelessWidget {
-  const _StatCell({
-    required this.icon,
-    required this.value,
-    required this.label,
-    required this.color,
-  });
-  final IconData icon;
-  final String value;
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(10, 10, 10, 11),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(Tokens.radiusInner),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(height: 5),
-          Text(value,
-              style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w900,
-                  color: color,
-                  letterSpacing: -0.4)),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-                fontSize: 8,
-                fontWeight: FontWeight.w700,
-                color: Tokens.onSurfaceFaint,
-                letterSpacing: 0.6),
-          ),
-        ],
-      ),
-    );
-  }
-}

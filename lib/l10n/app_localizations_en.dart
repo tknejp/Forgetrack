@@ -4398,6 +4398,41 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get heroStatsStreakRecordsTitle => 'Streak records';
+
+  @override
+  String heroStatsAchievementsBadge(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count achievements',
+      one: '1 achievement',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get heroStatsDomainColumn => 'Domain';
+
+  @override
+  String get heroStatsCurrentColumn => 'Current';
+
+  @override
+  String get heroStatsBestColumn => 'Best';
+
+  @override
+  String heroStatsStreakDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '${count}d',
+      one: '1d',
+      zero: '0d',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String cosmeticBuffFlat(int percent, String source) {
     return '+$percent% XP $source';
   }
