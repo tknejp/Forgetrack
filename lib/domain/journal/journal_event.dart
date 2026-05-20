@@ -132,6 +132,7 @@ class RewardGrantEvent extends JournalEvent {
     this.levelAtGrant,
     this.multiplierAtGrant,
     this.companionBuffBonusXp,
+    this.emblemBuffBonusXp,
   });
 
   final String nodeId; // lint-ignore: untyped-id — JournalEvent fields are storage-boundary raw strings
@@ -159,6 +160,12 @@ class RewardGrantEvent extends JournalEvent {
   /// the multiplier. Null on pre-buff events (older ledgers) and on
   /// non-XP grants.
   final int? companionBuffBonusXp;
+
+  /// Emblem-buff bonus XP included inside [xpAmount]. Mirrors
+  /// [companionBuffBonusXp] but sourced from equipped emblems' buffs
+  /// (additively summed with the companion buff percent at grant
+  /// time). Null on pre-emblem-buff events and on non-XP grants.
+  final int? emblemBuffBonusXp;
 }
 
 /// Discriminator on [RewardGrantEvent] so the same record table can

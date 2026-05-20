@@ -3,6 +3,7 @@ import 'package:meta/meta.dart';
 import '../../../../domain/journal/journal.dart';
 import '../../../../domain/player/player.dart';
 import '../../../cosmetics/domain/companion_buff.dart';
+import '../../../cosmetics/domain/emblem_buff.dart';
 import '../../../health_connect/domain/goal_board.dart';
 import '../../../health_connect/domain/health_snapshot.dart';
 import '../../../nutrition/domain/nutrition_snapshot.dart';
@@ -71,6 +72,7 @@ class EngineEvaluationContext {
     required this.evaluatedAt,
     this.ownedCosmeticIds = const <String>{},
     this.equippedCompanionBuff,
+    this.equippedEmblemBuffs = const <EmblemBuff>[],
     this.currentStreakByDomain = const <ProgressionDomain, int>{},
   });
 
@@ -84,6 +86,7 @@ class EngineEvaluationContext {
   final DateTime evaluatedAt;
   final Set<String> ownedCosmeticIds;
   final CompanionBuff? equippedCompanionBuff;
+  final List<EmblemBuff> equippedEmblemBuffs;
   final Map<ProgressionDomain, int> currentStreakByDomain;
 
   EngineEvaluationContext copyWith({
@@ -97,6 +100,7 @@ class EngineEvaluationContext {
     DateTime? evaluatedAt,
     Set<String>? ownedCosmeticIds,
     CompanionBuff? equippedCompanionBuff,
+    List<EmblemBuff>? equippedEmblemBuffs,
     Map<ProgressionDomain, int>? currentStreakByDomain,
   }) {
     return EngineEvaluationContext(
@@ -111,6 +115,7 @@ class EngineEvaluationContext {
       ownedCosmeticIds: ownedCosmeticIds ?? this.ownedCosmeticIds,
       equippedCompanionBuff:
           equippedCompanionBuff ?? this.equippedCompanionBuff,
+      equippedEmblemBuffs: equippedEmblemBuffs ?? this.equippedEmblemBuffs,
       currentStreakByDomain:
           currentStreakByDomain ?? this.currentStreakByDomain,
     );

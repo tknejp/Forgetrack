@@ -1,32 +1,27 @@
-import 'package:forgetrack/domain/journal/journal.dart';
 import 'package:forgetrack/domain/journal/journal_event.dart';
 import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import 'package:forgetrack/domain/progression/catalog/quest_display_bucket.dart';
 import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 
+import '../../../core/logging/app_log.dart';
 import '../../cosmetics/domain/companion_buff.dart';
+import '../../cosmetics/domain/emblem_buff.dart';
 import '../domain/evaluator/reward_grant_planner.dart';
 import '../domain/models/engine_evaluation_context.dart';
 import '../domain/policy/level_policy.dart';
+import 'emblem_target_mapping.dart';
 
-/// Daily soft-cap on the bonus XP a companion buff may contribute,
-/// expressed as a fraction of total XP granted today (level-scaled
-/// base + companion bonus, summed). At 0.25 a player can't gain more
-/// than 25 % of their daily XP from the equipped companion — keeps
-/// any one buff (incl. allXp endgame buffs) from dominating the loop.
-const double _kDailyBuffShareCap = 0.25;
+const _log = AppLogger('PROGRESSION', scope: 'claim.buff');
 
 /// Builds [RewardGrantEvent]s from planned grants. XP rewards are
 /// scaled at append time using the running level — the same logic
 /// the legacy engine applies, lifted here so V2 stays compatible
 /// with the existing level / multiplier curve.
 ///
-/// Additionally applies the equipped companion's [CompanionBuff]
-/// multiplicatively to base + bonus XP per the matching
-/// [RewardSourceKind]. The buff bonus is gated by
-/// `player.rpgModeEnabled` and respects a 25 % daily share cap so
-/// the player never gains more than 1/4 of their daily XP from the
-/// buff alone.
+/// Companion + emblem buffs stack **additively** (per the locked
+/// design in `docs/emblem_buffs/plan.md`): the final XP is
+/// `scaled × (1 + (companion% + emblem%) / 100)`. There is no daily
+/// share cap — the level curve compensates for top-end buff stacks.
 class RewardGrantService {
   const RewardGrantService({
     this.levelPolicy = const ProgressionLevelPolicy(),
@@ -38,11 +33,10 @@ class RewardGrantService {
   /// `runningClaimedXp` so XP scaling reflects already-claimed XP
   /// from earlier nodes in the same run (and from prior runs).
   ///
-  /// [context] supplies the companion buff (if any), the streak +
-  /// chain inputs the dynamic buff rules consume, and the journal
-  /// the daily soft-cap accountant reads to seed today's running
-  /// totals. May be null when called from a code path that does not
-  /// have a context yet — buffs are simply skipped in that case.
+  /// [context] supplies the equipped companion buff + emblem buffs +
+  /// streak inputs. May be null when called from a code path that
+  /// does not have a context yet — buffs are simply skipped in that
+  /// case.
   ///
   /// Returns the events plus the new running-XP total.
   ({List<RewardGrantEvent> events, int runningClaimedXp}) build({
@@ -54,29 +48,16 @@ class RewardGrantService {
     final events = <RewardGrantEvent>[];
     var running = runningClaimedXp;
 
-    // Seed today's totals from prior journal events so the cap
-    // accountant sees XP banked earlier in the same calendar day
-    // before this build call.
-    final accountant = _DailyBuffAccountant.seed(
-      journal: context?.journal,
-      anchor: timestamp,
-    );
-
     for (final p in planned) {
       final event = _buildOne(
         p,
         runningXp: running,
         timestamp: timestamp,
         context: context,
-        accountant: accountant,
       );
       events.add(event);
       final eventXp = event.xpAmount ?? 0;
       if (eventXp > 0) {
-        accountant.note(
-          totalXp: eventXp,
-          bonusXp: event.companionBuffBonusXp ?? 0,
-        );
         running += eventXp;
       }
     }
@@ -89,7 +70,6 @@ class RewardGrantService {
     required int runningXp,
     required DateTime timestamp,
     required EngineEvaluationContext? context,
-    required _DailyBuffAccountant accountant,
   }) {
     final reward = planned.reward;
     return switch (reward) {
@@ -102,7 +82,6 @@ class RewardGrantService {
           sourceKind: sourceKind,
           streakDomain: streakDomain,
           context: context,
-          accountant: accountant,
         ),
       BonusXpReward(:final amount, :final sourceKind, :final streakDomain) =>
         _buildXpEvent(
@@ -113,7 +92,6 @@ class RewardGrantService {
           sourceKind: sourceKind,
           streakDomain: streakDomain,
           context: context,
-          accountant: accountant,
         ),
       CosmeticReward(:final cosmeticId) => RewardGrantEvent(
           eventKey: planned.eventKey,
@@ -180,20 +158,43 @@ class RewardGrantService {
     required RewardSourceKind? sourceKind,
     required ProgressionDomain? streakDomain,
     required EngineEvaluationContext? context,
-    required _DailyBuffAccountant accountant,
   }) {
     final level = levelPolicy.levelForXp(runningXp);
     final scaled = levelPolicy.scaledRewardXp(baseXp: baseAmount, level: level);
     final multiplier = levelPolicy.rewardMultiplierForLevel(level);
 
-    final bonus = _resolveCompanionBuffBonus(
-      scaledBase: scaled,
+    final companionPct = _resolveCompanionPercent(
       sourceKind: sourceKind,
       streakDomain: streakDomain,
       node: planned.node,
       context: context,
-      accountant: accountant,
     );
+    final emblemPct = _resolveEmblemPercent(
+      node: planned.node,
+      sourceKind: sourceKind,
+      context: context,
+    );
+
+    final totalPct = companionPct + emblemPct;
+    final bonus = totalPct > 0 ? (scaled * totalPct / 100).round() : 0;
+
+    int companionBonusXp = 0;
+    int emblemBonusXp = 0;
+    if (bonus > 0 && totalPct > 0) {
+      companionBonusXp = (bonus * companionPct / totalPct).round();
+      emblemBonusXp = bonus - companionBonusXp;
+    }
+
+    if (bonus > 0) {
+      _log.debug(
+        'claim buff applied',
+        payload:
+            'node=${planned.node.id} kind=${sourceKind?.name} '
+            'compPct=$companionPct embPct=$emblemPct '
+            'compBonus=$companionBonusXp embBonus=$emblemBonusXp '
+            'finalXp=${scaled + bonus}',
+      );
+    }
 
     return RewardGrantEvent(
       eventKey: planned.eventKey,
@@ -205,28 +206,20 @@ class RewardGrantService {
       xpAmount: scaled + bonus,
       levelAtGrant: level,
       multiplierAtGrant: multiplier,
-      companionBuffBonusXp: bonus > 0 ? bonus : null,
+      companionBuffBonusXp: companionBonusXp > 0 ? companionBonusXp : null,
+      emblemBuffBonusXp: emblemBonusXp > 0 ? emblemBonusXp : null,
     );
   }
 
-  /// Computes the companion-buff bonus XP for one XP-bearing reward.
-  /// Returns 0 when:
-  ///   * no companion is equipped,
-  ///   * the equipped companion has no buff,
-  ///   * RPG mode is off,
-  ///   * the reward has no [sourceKind] (defensive — coverage test
-  ///     blocks this at the catalog level),
-  ///   * the buff's own [CompanionBuff.resolvePercent] returns 0
-  ///     (self-matching: kind / streakDomain / weekly / chain-depth
-  ///     gates all live inside the buff),
-  ///   * the 25 % daily share cap would be exceeded.
-  int _resolveCompanionBuffBonus({
-    required int scaledBase,
+  /// Percent contribution from the equipped companion buff for the
+  /// given reward. Returns 0 when no companion is equipped, RPG mode
+  /// is off, the reward has no [sourceKind], or the buff resolves
+  /// to 0 against its self-matching gates.
+  int _resolveCompanionPercent({
     required RewardSourceKind? sourceKind,
     required ProgressionDomain? streakDomain,
     required ProgressionEntry node,
     required EngineEvaluationContext? context,
-    required _DailyBuffAccountant accountant,
   }) {
     if (context == null) return 0;
     if (!context.player.rpgModeEnabled) return 0;
@@ -251,74 +244,35 @@ class RewardGrantService {
         chapterChainPosition: chainPos,
       ),
     );
-    if (percent <= 0) return 0;
-
-    final rawBonus = (scaledBase * percent / 100).round();
-    if (rawBonus <= 0) return 0;
-
-    return accountant.allowBonus(scaledBase: scaledBase, rawBonus: rawBonus);
+    return percent > 0 ? percent : 0;
   }
-}
 
-/// Tracks today's running XP + bonus totals so the soft-cap calculator
-/// can clamp each new buff bonus before it pushes the share over
-/// [_kDailyBuffShareCap].
-class _DailyBuffAccountant {
-  _DailyBuffAccountant({
-    required this.totalXpToday,
-    required this.bonusXpToday,
-  });
-
-  /// Seed from the journal's prior events for the same calendar day
-  /// as [anchor]. Journal events older than today contribute nothing
-  /// to the cap (it's a daily window).
-  factory _DailyBuffAccountant.seed({
-    required Journal? journal,
-    required DateTime anchor,
+  /// Sum of percent contributions from every equipped emblem buff
+  /// for the given reward. Returns 0 when RPG mode is off, no emblem
+  /// buffs are equipped, the node has no [EmblemTarget] mapping, or
+  /// every buff resolves to 0.
+  int _resolveEmblemPercent({
+    required ProgressionEntry node,
+    required RewardSourceKind? sourceKind,
+    required EngineEvaluationContext? context,
   }) {
-    if (journal == null) {
-      return _DailyBuffAccountant(totalXpToday: 0, bonusXpToday: 0);
-    }
-    final today = _dayAnchor(anchor);
+    if (context == null) return 0;
+    if (!context.player.rpgModeEnabled) return 0;
+    final buffs = context.equippedEmblemBuffs;
+    if (buffs.isEmpty) return 0;
+    final target = emblemTargetForNode(node);
+    if (target == null) return 0;
+    if (sourceKind == null) return 0;
+
+    final ctx = EmblemBuffContext(
+      target: target,
+      rewardSourceKind: sourceKind,
+    );
     var total = 0;
-    var bonus = 0;
-    for (final e in journal.events) {
-      if (e is! RewardGrantEvent) continue;
-      if (e.rewardKind != RewardGrantKind.xp) continue;
-      if (_dayAnchor(e.timestamp) != today) continue;
-      total += e.xpAmount ?? 0;
-      bonus += e.companionBuffBonusXp ?? 0;
+    for (final b in buffs) {
+      final p = b.resolvePercent(ctx);
+      if (p > 0) total += p;
     }
-    return _DailyBuffAccountant(totalXpToday: total, bonusXpToday: bonus);
-  }
-
-  int totalXpToday;
-  int bonusXpToday;
-
-  /// Returns the bonus that may be granted, clamped so the post-grant
-  /// share never exceeds [_kDailyBuffShareCap]. Solving
-  /// `(bonusXpToday + b) / (totalXpToday + scaledBase + b) <= cap`
-  /// for `b` yields the headroom expression below.
-  int allowBonus({required int scaledBase, required int rawBonus}) {
-    // (bonus + b) <= cap * (total + base + b)
-    // bonus + b <= cap*total + cap*base + cap*b
-    // (1 - cap)*b <= cap*total + cap*base - bonus
-    // b <= (cap*(total + base) - bonus) / (1 - cap)
-    final headroom = (_kDailyBuffShareCap * (totalXpToday + scaledBase) -
-            bonusXpToday) /
-        (1 - _kDailyBuffShareCap);
-    if (headroom <= 0) return 0;
-    final cappedBonus = headroom.floor();
-    return rawBonus <= cappedBonus ? rawBonus : cappedBonus;
-  }
-
-  void note({required int totalXp, required int bonusXp}) {
-    totalXpToday += totalXp;
-    bonusXpToday += bonusXp;
-  }
-
-  static DateTime _dayAnchor(DateTime t) {
-    final local = t.toLocal();
-    return DateTime(local.year, local.month, local.day);
+    return total;
   }
 }

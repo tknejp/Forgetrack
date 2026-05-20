@@ -337,12 +337,10 @@ void main() {
       );
     });
 
-    test('Cave Lynx depth: chain position drives percent', () {
-      // Run each tier as a separate `build` call so the daily cap
-      // accountant resets between runs — three sequential chapter
-      // claims in the same batch would push the deep tier into the
-      // softcap and undershoot the raw rule output (that scenario
-      // is its own assertion in "cap accumulates").
+    test('Cave Lynx depth: chain position drives percent (no cap)', () {
+      // Emblem-buffs plan locked: no daily share cap. Every tier
+      // applies at its raw percent — the engine just pipes chain
+      // position into the rule.
       const buff = ChapterDepthCompanionBuff();
       int bonusForChainOrder(int order) {
         final result = service.build(
@@ -353,25 +351,14 @@ void main() {
         );
         return result.events.single.companionBuffBonusXp ?? 0;
       }
-      // Opener tier sits under the single-grant cap and applies raw;
-      // mid + deep tiers blow through the 25 % share cap on a 100-base
-      // grant and read back at the cap value (33). The buff resolution
-      // itself is covered exhaustively in `companion_buff_test.dart`;
-      // here we just verify the engine pipes chain position into the
-      // rule. (Single-grant cap = floor(0.25 × 100 / 0.75) = 33.)
       expect(bonusForChainOrder(0), CompanionBuffPercents.lynxOpener);
-      expect(bonusForChainOrder(2), 33);
-      expect(bonusForChainOrder(5), 33);
+      expect(bonusForChainOrder(2), CompanionBuffPercents.lynxMid);
+      expect(bonusForChainOrder(5), CompanionBuffPercents.lynxDeep);
     });
 
-    test('25 % daily share cap clamps over-budget bonus', () {
-      // Big allXp buff that would normally drop +50 XP on a 100 XP
-      // grant. With no prior history the cap allows at most ~33 %
-      // of the post-grant total, which works out to 33 XP bonus on
-      // a 100-base grant. Anything above that is clamped.
-      // Note: (cap*(total+base) - bonus) / (1 - cap)
-      //     = (0.25 * (0 + 100) - 0) / 0.75
-      //     = 33.33 → floor = 33.
+    test('no cap — high-percent buff applies in full on a single grant', () {
+      // Plan locks the daily share cap removed. A 50% allXp buff on
+      // a 100-base grant lands the full 50 XP bonus.
       final result = service.build(
         planned: [_planFromNode(_dailyActivityGoal())],
         runningClaimedXp: 0,
@@ -384,14 +371,11 @@ void main() {
         ),
       );
       final event = result.events.single;
-      expect(event.companionBuffBonusXp, 33);
-      expect(event.xpAmount, 133);
+      expect(event.companionBuffBonusXp, 50);
+      expect(event.xpAmount, 150);
     });
 
-    test('cap accumulates across same-batch grants', () {
-      // Two 100-base grants with a 50 % allXp buff: first bonus is
-      // capped at 33 (per single-grant test); second has total=133
-      // and bonus=33 already banked → headroom shrinks.
+    test('no cap — bonuses do not erode across same-batch grants', () {
       final result = service.build(
         planned: [
           _planFromNode(_dailyActivityGoal()),
@@ -406,25 +390,11 @@ void main() {
           ),
         ),
       );
-      expect(result.events[0].companionBuffBonusXp, 33);
-      // Second grant: post-history (total=133, bonus=33).
-      // (0.25 * (133 + 100) - 33) / 0.75 = (58.25 - 33) / 0.75 = 33.66 → 33.
-      expect(result.events[1].companionBuffBonusXp, 33);
-      // Combined: 66 bonus on 266 total ≈ 24.8 % ≤ 25 % cap.
-      final totalBonus = result.events
-          .map((e) => e.companionBuffBonusXp ?? 0)
-          .fold<int>(0, (a, b) => a + b);
-      final totalXp = result.events
-          .map((e) => e.xpAmount ?? 0)
-          .fold<int>(0, (a, b) => a + b);
-      expect(totalBonus / totalXp, lessThanOrEqualTo(0.25));
+      expect(result.events[0].companionBuffBonusXp, 50);
+      expect(result.events[1].companionBuffBonusXp, 50);
     });
 
-    test('cap reads prior journal events from today', () {
-      // Pre-seed journal with a 1000-XP grant earlier today (no
-      // companion bonus). Cap headroom for a new 100-base grant:
-      // (0.25 * (1000 + 100) - 0) / 0.75 ≈ 366 → way above the
-      // raw 8 % bonus (8), so full bonus applies.
+    test('prior same-day XP no longer changes the bonus (cap removed)', () {
       final earlierEvent = RewardGrantEvent(
         eventKey: 'prior',
         timestamp: timestamp.subtract(const Duration(hours: 1)),
@@ -448,34 +418,6 @@ void main() {
         ),
       );
       expect(result.events.single.companionBuffBonusXp, 8);
-    });
-
-    test('cap ignores yesterday\'s events (daily window)', () {
-      final yesterdayEvent = RewardGrantEvent(
-        eventKey: 'prior',
-        timestamp: timestamp.subtract(const Duration(days: 1)),
-        nodeId: 'prior_node',
-        rewardOrdinal: 0,
-        rewardKind: RewardGrantKind.xp,
-        xpAmount: 1000,
-        companionBuffBonusXp: 100,
-        levelAtGrant: 1,
-        multiplierAtGrant: 1.0,
-      );
-      final result = service.build(
-        planned: [_planFromNode(_dailyActivityGoal())],
-        runningClaimedXp: 0,
-        timestamp: timestamp,
-        context: _context(
-          buff: const FlatCompanionBuff(
-            kind: RewardSourceKind.allXp,
-            percent: 50,
-          ),
-          journalEvents: [yesterdayEvent],
-        ),
-      );
-      // Should behave as if no prior bonus exists today.
-      expect(result.events.single.companionBuffBonusXp, 33);
     });
   });
 }

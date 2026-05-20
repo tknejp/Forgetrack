@@ -116,7 +116,7 @@ These are settled. Do not reopen without user sign-off.
 
 ---
 
-### ☐ Phase 2 — Engine integration (equipped resolve, additive math, no cap)
+### ☑ Phase 2 — Engine integration (equipped resolve, additive math, no cap)
 
 **Scope**
 - Extend [EngineEvaluationContext](../../lib/features/progression_engine/domain/models/engine_evaluation_context.dart#L62-L87) with `final List<EmblemBuff> equippedEmblemBuffs;` (default `const []`).

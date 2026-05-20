@@ -303,6 +303,7 @@ Future<void> main() async {
               fitnessProvider: fitness,
               nutritionProvider: kt,
               cosmeticsProvider: cosmetics,
+              emblemBoardProvider: emblemBoardProvider,
               authUid: auth.isSignedIn ? auth.user?.id : null,
             );
             return provider;

@@ -6,12 +6,16 @@ import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../cosmetics/application/cosmetics_provider.dart';
+import '../../cosmetics/application/emblem_board_provider.dart';
+import '../../cosmetics/domain/cosmetic_catalog.dart';
+import '../../cosmetics/domain/cosmetic_models.dart' show Emblem;
 import '../../cosmetics/domain/companion_buff.dart'
     show
         CompanionBuff,
         CompanionBuffContext,
         StreakLengthCompanionBuff,
         StreakThresholdFlatCompanionBuff;
+import '../../cosmetics/domain/emblem_buff.dart';
 import '../../health_connect/application/fitness_provider.dart';
 import '../../health_connect/application/goals_provider.dart';
 import '../../nutrition/application/kaloricke_tabulky_provider.dart';
@@ -297,6 +301,14 @@ class ProgressionEngineProvider extends ChangeNotifier {
   ProviderEngineInputSource? _source;
   String? _lastEvaluatedSignature;
   bool _evaluateQueued = false;
+
+  // Phase 2 of the emblem-buff plan: the engine resolves equipped
+  // emblem buffs from `EmblemBoardProvider.boardForUserOrAutoFill` —
+  // see `docs/emblem_buffs/plan.md`. Optional so headless tests / older
+  // wire-ups behave as if no emblems were equipped.
+  EmblemBoardProvider? _emblemBoard;
+  String? _emblemUid;
+  static const CosmeticCatalog _cosmeticCatalog = CosmeticCatalog();
 
   /// SharedPreferences key carrying the user's "joined the game"
   /// timestamp — the floor for retroactive claim windows. Persisted
@@ -1320,8 +1332,41 @@ class ProgressionEngineProvider extends ChangeNotifier {
     );
     return base.copyWith(
       equippedCompanionBuff: _cosmeticBridge.equippedCompanionBuff,
+      equippedEmblemBuffs: _resolveEquippedEmblemBuffs(base.player.rpgModeEnabled),
       currentStreakByDomain: _resolveCurrentStreakByDomain(),
     );
+  }
+
+  /// Equipped (= pinned on the user's [EmblemBoard]) emblem buffs.
+  /// Returns const [] when RPG mode is off, no board provider is
+  /// bound, no uid is bound, or none of the pinned slots resolve to
+  /// an [Emblem] with a non-null buff. Auto-fills from the unlocked
+  /// emblem chronology when the user has never explicitly pinned —
+  /// mirrors the social profile screen so fresh players still get
+  /// buffs from their unlocks.
+  List<EmblemBuff> _resolveEquippedEmblemBuffs(bool rpgModeEnabled) {
+    if (!rpgModeEnabled) return const <EmblemBuff>[];
+    final board = _emblemBoard;
+    final uid = _emblemUid;
+    if (board == null || uid == null || uid.isEmpty) {
+      return const <EmblemBuff>[];
+    }
+    final ownedIds = _cosmeticBridge.ownedCosmeticIds;
+    final unlockedEmblemIds = <String>[
+      for (final id in ownedIds)
+        if (_cosmeticCatalog.byId(id) is Emblem) id,
+    ];
+    final effective = board.boardForUserOrAutoFill(uid, unlockedEmblemIds);
+    final out = <EmblemBuff>[];
+    for (final slotId in effective.slots) {
+      if (slotId == null) continue;
+      final cosmetic = _cosmeticCatalog.byId(slotId);
+      if (cosmetic is! Emblem) continue;
+      final buff = cosmetic.buff;
+      if (buff == null) continue;
+      out.add(buff);
+    }
+    return out;
   }
 
   /// Snapshot of the player's currently-active streak per main domain.
@@ -2190,9 +2235,12 @@ class ProgressionEngineProvider extends ChangeNotifier {
     required FitnessProvider fitnessProvider,
     required KalorickeTabulkyProvider nutritionProvider,
     CosmeticsProvider? cosmeticsProvider,
+    EmblemBoardProvider? emblemBoardProvider,
     String? authUid,
   }) {
     bindCloudUser(authUid);
+    _emblemBoard = emblemBoardProvider ?? _emblemBoard;
+    _emblemUid = authUid;
     _source = ProviderEngineInputSource(
       goals: goalsProvider,
       fitness: fitnessProvider,
