@@ -365,6 +365,15 @@ class ProgressionEngineProvider extends ChangeNotifier {
   bool _isEvaluating = false;
   String? _error;
 
+  /// Node ids whose claim is currently in flight. Drives per-pill
+  /// "claim in progress" UX without forcing every other pill to flip
+  /// between claimable and locked while a single claim runs. Mirrors
+  /// the cross-cutting `_isEvaluating` flag but at single-node
+  /// granularity so the quest screen can rebuild only the affected
+  /// pill rather than the entire list each time a claim starts and
+  /// finishes.
+  final Set<String> _claimingNodeIds = <String>{};
+
   // Streak caches — recomputed after every ledger refresh.
   Map<String, EngineStreakSummary> _objectiveStreaks = const {};
   Map<ProgressionDomain, EngineStreakSummary> _domainStreaks = const {};
@@ -384,6 +393,18 @@ class ProgressionEngineProvider extends ChangeNotifier {
 
   bool get isLoading => _isLoading;
   bool get isEvaluating => _isEvaluating;
+
+  /// True when at least one [claimNode] call is currently in flight.
+  /// UI uses this to gate "claim all" CTAs without watching the full
+  /// engine evaluation cycle (which would also rebuild for refreshes
+  /// + dev-day shifts that are unrelated to a pending claim).
+  bool get isClaiming => _claimingNodeIds.isNotEmpty;
+
+  /// True when [nodeId]'s claim is currently in flight. Pills key on
+  /// this so only the pill being claimed reacts to the start/end of a
+  /// claim instead of every pill on the screen flickering whenever the
+  /// engine notifies.
+  bool isClaimingNode(String nodeId) => _claimingNodeIds.contains(nodeId);
   String? get error => _error;
   ProgressionResolutionResult? get lastResult => _lastResult;
   LedgerSnapshot? get ledger => _ledger;
@@ -853,18 +874,38 @@ class ProgressionEngineProvider extends ChangeNotifier {
     return _resolveDailySection().slots;
   }
 
+  // Memoised daily-section resolution. `currentDailyQuests` and friends
+  // call this on every UI rebuild; the underlying resolve() walks four
+  // catalog buckets and re-runs the slot policy, which is wasted work
+  // when the ledger reference hasn't changed. Cache key mirrors the
+  // PlayerQuestCatalog projection (identity-hash on the ledger plus
+  // the dev-day offset) so the cache invalidates automatically the
+  // moment a claim or refresh swaps in a new ledger snapshot.
+  DailySectionResolution? _cachedDailySection;
+  int? _dailySectionCacheKey;
+
   DailySectionResolution _resolveDailySection() {
-    return const DailySectionResolver().resolve(
+    final l = _ledger;
+    final cacheKey =
+        Object.hash(identityHashCode(l), _devDayOffset, _lastEvaluatedAt);
+    final cached = _cachedDailySection;
+    if (cached != null && _dailySectionCacheKey == cacheKey) {
+      return cached;
+    }
+    final resolution = const DailySectionResolver().resolve(
       quests: [
         ..._questsForBucket(QuestDisplayBucket.daily),
         ..._questsForBucket(QuestDisplayBucket.dailyChallenge),
         ..._questsForBucket(QuestDisplayBucket.chapterSideQuest),
         ..._questsForBucket(QuestDisplayBucket.combo),
       ],
-      ledger: _ledger,
+      ledger: l,
       now: _engineNow(),
       nodesCompletedTodayIds: _nodesCompletedTodayFromLedger(),
     );
+    _cachedDailySection = resolution;
+    _dailySectionCacheKey = cacheKey;
+    return resolution;
   }
 
   /// Writes today's planned [QuestOfferedEvent]s for slots the
@@ -1465,6 +1506,40 @@ class ProgressionEngineProvider extends ChangeNotifier {
       total += (scaled * percent / 100).round();
     }
     return total;
+  }
+
+  /// Projects the buff bonus the player would pick up on top of the
+  /// already-scaled XP for a single per-activity claim (the row pill
+  /// inside the home activity card). Mirrors the rules in
+  /// [projectedCompanionBuffBonusFor] but skips the per-reward loop
+  /// since the synthetic activity-claim grant is a single XP grant
+  /// tagged with [RewardSourceKind.activityXp] / activity streak
+  /// domain. The 25 % daily share cap that the grant path applies is
+  /// intentionally ignored here — projection cost would have to mirror
+  /// the per-row order against today's existing grants, and a slight
+  /// optimistic over-read on the pill is consistent with how
+  /// [projectedCompanionBuffBonusFor] already behaves for claimed
+  /// quests after a level-up.
+  int projectedCompanionBuffBonusForActivityClaim(int scaledXp) {
+    if (scaledXp <= 0) return 0;
+    final ctx = currentContext;
+    if (ctx == null) return 0;
+    final buff = ctx.equippedCompanionBuff;
+    if (buff == null) return 0;
+    if (!ctx.player.rpgModeEnabled) return 0;
+    final domainStreak =
+        ctx.currentStreakByDomain[ProgressionDomain.activity] ?? 0;
+    final percent = buff.resolvePercent(
+      CompanionBuffContext(
+        rewardSourceKind: RewardSourceKind.activityXp,
+        streakDomain: ProgressionDomain.activity,
+        currentStreak: domainStreak,
+        isWeeklyQuestSource: false,
+        chapterChainPosition: null,
+      ),
+    );
+    if (percent <= 0) return 0;
+    return (scaledXp * percent / 100).round();
   }
 
   /// Inline copy of `RewardGrantPlanner._bonusConditionMet` so the
@@ -2366,8 +2441,17 @@ class ProgressionEngineProvider extends ChangeNotifier {
     if (_isEvaluating) return null;
     _isEvaluating = true;
     _error = null;
+    // Per-pill "claim in flight" signal. Replaces the legacy pattern
+    // where every quest card watched `isEvaluating` and flipped its
+    // pill between `claimable` and `locked` while a single claim ran
+    // — only the pill of [nodeId] now sees a state change (and pills
+    // don't actually react visually today; they read lifecycle from
+    // the catalog instead). The flag stays around for future UX
+    // ("show a subtle spinner on the in-flight pill") + tests.
+    _claimingNodeIds.add(nodeId);
     notifyListeners();
 
+    var notifiedTail = false;
     try {
       final freshContext = currentContext;
       if (freshContext == null) {
@@ -2409,6 +2493,12 @@ class ProgressionEngineProvider extends ChangeNotifier {
       // cleared since no input source changed externally.
       _isEvaluating = false;
       _lastEvaluatedSignature = null;
+      _claimingNodeIds.remove(nodeId);
+      // [refresh] runs [evaluateWith] which will issue its own
+      // notifyListeners at the end — folding the post-claim notify
+      // into that single broadcast keeps the rebuild count to two
+      // (start + settle) instead of the legacy four.
+      notifiedTail = true;
       await refresh();
       return _lastResult;
     } catch (e) {
@@ -2416,7 +2506,14 @@ class ProgressionEngineProvider extends ChangeNotifier {
       return null;
     } finally {
       _isEvaluating = false;
-      notifyListeners();
+      // Defensive cleanup — covers the null-context early-return and
+      // any exception thrown before `_claimingNodeIds.remove` ran.
+      // Notify only when we haven't already folded the tail notify
+      // into [refresh] above; the success path leaves the engine
+      // settled and the pill in its claimed lifecycle.
+      if (_claimingNodeIds.remove(nodeId) || !notifiedTail) {
+        notifyListeners();
+      }
     }
   }
 

@@ -43,7 +43,6 @@ class EngineCompletedQuestCard extends StatelessWidget {
     super.key,
     required this.entry,
     required this.l10n,
-    required this.enabled,
     required this.pillKey,
     required this.onClaim,
     this.isExpanded = false,
@@ -52,7 +51,6 @@ class EngineCompletedQuestCard extends StatelessWidget {
 
   final EngineCompletedEntry entry;
   final AppLocalizations l10n;
-  final bool enabled;
 
   /// Sparkle target key for the gold pill. Single key per entry —
   /// the screen still owns the pill key map.
@@ -209,7 +207,7 @@ class EngineCompletedQuestCard extends StatelessWidget {
             );
       return XpClaimPillData.claimable(
         entry.pendingXp == 0 ? claimable.previewXp : entry.pendingXp,
-        onTap: enabled ? (center) => onClaim(claimable, from: center) : (_) {},
+        onTap: (center) => onClaim(claimable, from: center),
       );
     }
     // Fully claimed — show the credited XP total (sum across chain

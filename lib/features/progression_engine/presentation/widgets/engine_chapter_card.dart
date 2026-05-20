@@ -46,7 +46,6 @@ class EngineChapterCard extends StatelessWidget {
     required this.quest,
     required this.chain,
     required this.l10n,
-    required this.enabled,
     required this.pillKey,
     required this.onClaim,
     this.isExpanded = false,
@@ -61,7 +60,6 @@ class EngineChapterCard extends StatelessWidget {
   final List<EngineQuestProgress> chain;
 
   final AppLocalizations l10n;
-  final bool enabled;
   final GlobalKey pillKey;
   final Future<void> Function(EngineQuestProgress quest, {Offset? from})
       onClaim;
@@ -292,14 +290,12 @@ class EngineChapterCard extends StatelessWidget {
   XpClaimPillData _pillData({required int companionBonus}) {
     return switch (quest.lifecycle) {
       QuestClaimed(:final finalXp) => XpClaimPillData.claimed(finalXp),
-      QuestCompletedPendingClaim(:final previewXp) when enabled =>
+      QuestCompletedPendingClaim(:final previewXp) =>
         XpClaimPillData.claimable(
           previewXp,
           onTap: (center) => onClaim(quest, from: center),
           companionBonus: companionBonus,
         ),
-      QuestCompletedPendingClaim(:final previewXp) =>
-        XpClaimPillData.locked(previewXp, companionBonus: companionBonus),
       QuestAvailable() || QuestLocked() =>
         XpClaimPillData.locked(quest.previewXp,
             companionBonus: companionBonus),

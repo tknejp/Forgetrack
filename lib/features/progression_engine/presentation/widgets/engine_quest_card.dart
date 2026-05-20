@@ -34,7 +34,6 @@ class EngineQuestCard extends StatelessWidget {
     super.key,
     required this.quest,
     required this.l10n,
-    required this.enabled,
     required this.pillKey,
     required this.onClaim,
     this.streak,
@@ -49,9 +48,6 @@ class EngineQuestCard extends StatelessWidget {
 
   final EngineQuestProgress quest;
   final AppLocalizations l10n;
-
-  /// False while a refresh / claim is in flight — disables the pill.
-  final bool enabled;
 
   /// Key used by the parent's sparkle launcher to target this pill.
   final GlobalKey pillKey;
@@ -124,19 +120,16 @@ class EngineQuestCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final domain = quest.domain ?? ProgressionDomain.steps;
     final accent = domain.color;
-    final streakValue = streak?.currentStreak ?? 0;
-
     // A card is a "main-five daily-goal card" when one of its XP
     // rewards carries a [ProgressionDomain] streak tag. The presence
-    // of that tag is the single source of truth for "this is the
-    // surface the streak chip + streak buff target", so the chip
-    // and the pill agree without a separate flag from the parent.
+    // of that tag drives whether the expanded panel reveals the
+    // pedagogic streak info block.
     final streakDomain = streakDomainOfRewards(quest.node.rewards);
     final isStreakCard = streakDomain != null;
-    // Suppress the in-pill companion bonus on streak cards — the
-    // streak chip carries the same number instead, per the user's
-    // "streak chip replaces the bonus XP chip" direction.
-    final pillCompanionBonus = isStreakCard ? 0 : companionBuffBonus;
+    // Every card surfaces the buff bonus on the XP pill — the
+    // dedicated streak chip in the header is gone; streak pedagogy
+    // lives inside the expanded info block instead.
+    final pillCompanionBonus = companionBuffBonus;
 
     // V1 quest cards expanded for any meta info; V2 cards only expand
     // when there's an actual extra reward to surface (rule from the
@@ -238,26 +231,6 @@ class EngineQuestCard extends StatelessWidget {
                       key: pillKey,
                       data: _pillData(companionBonus: pillCompanionBonus),
                     ),
-                    // Streak chip sits directly under the XP pill —
-                    // same vertical anchor + 3px gap as the
-                    // [_CompanionBonusChip] inside XpClaimPill on
-                    // non-streak cards. Keeps the right column
-                    // reading as a single information cluster
-                    // regardless of which chip carries the buff.
-                    if (isStreakCard || streakValue > 0) ...[
-                      const SizedBox(height: 3),
-                      QuestStreakChip(
-                        streakDays: streakValue,
-                        accent: accent,
-                        // Only thread the buff in when this card is a
-                        // main-five streak card — non-streak cards
-                        // (combos, weekly, chapter quests) keep the
-                        // legacy plain-flame look.
-                        buff: isStreakCard ? equippedCompanionBuff : null,
-                        resolvedPercent:
-                            isStreakCard ? streakBuffPercent : 0,
-                      ),
-                    ],
                     if (canExpand) ...[
                       const SizedBox(height: 4),
                       EngineCompanionPill(
@@ -334,9 +307,13 @@ class EngineQuestCard extends StatelessWidget {
 
   XpClaimPillData _pillData({required int companionBonus}) {
     // Exhaustive switch on the sealed PlayerQuestLifecycle keeps the
-    // four UI states aligned with the engine's resolution output and
+    // three UI states aligned with the engine's resolution output and
     // forces a compiler error if a future subtype is added without
-    // updating this card.
+    // updating this card. Visual state is driven by lifecycle ALONE —
+    // there is no "engine evaluating" flicker because concurrent taps
+    // are serialised in [ProgressionEngineProvider.claimNode] via the
+    // `_isEvaluating` early-return; a second tap on a pending pill is
+    // a silent no-op rather than a visual state flip.
     return switch (quest.lifecycle) {
       QuestClaimed(:final finalXp) =>
         // After a successful claim the ledger has the actually-granted
@@ -346,16 +323,12 @@ class EngineQuestCard extends StatelessWidget {
         // grant level; we don't try to surface the post-hoc split
         // here (companion may have changed since claim).
         XpClaimPillData.claimed(finalXp),
-      QuestCompletedPendingClaim(:final previewXp) when enabled =>
+      QuestCompletedPendingClaim(:final previewXp) =>
         XpClaimPillData.claimable(
           previewXp,
           onTap: (center) => onClaim(quest, from: center),
           companionBonus: companionBonus,
         ),
-      QuestCompletedPendingClaim(:final previewXp) =>
-        // Claim pending but a refresh / claim is in flight — show the
-        // locked pill so the player can't double-tap.
-        XpClaimPillData.locked(previewXp, companionBonus: companionBonus),
       QuestAvailable() || QuestLocked() =>
         // Objective not yet satisfied (or the row is locked outright)
         // — show the locked pill with the would-be XP at the current

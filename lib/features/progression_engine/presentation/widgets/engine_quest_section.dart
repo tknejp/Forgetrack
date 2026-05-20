@@ -34,7 +34,7 @@ class EngineQuestSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Icon(Icons.auto_awesome_rounded, size: 14, color: color),
             const SizedBox(width: Tokens.spaceSm),

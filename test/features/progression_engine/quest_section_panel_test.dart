@@ -66,14 +66,10 @@ void main() {
                 countLabel: null,
                 emptyTitle: 'Empty title',
                 emptyCaption: 'Empty caption',
-                claimAllLabel: l10n.progQuestClaimAll,
                 l10n: l10n,
                 quests: const [],
-                claimable: const [],
-                enabled: true,
                 pillKeyFor: (id) => GlobalKey(),
                 onClaim: (_, {Offset? from}) async {},
-                onClaimAll: (_) async {},
               );
             },
           ),
@@ -84,14 +80,11 @@ void main() {
       expect(find.text('Empty caption'), findsOneWidget);
     });
 
-    testWidgets(
-        'shows a card per quest and the claim-all button when more than one is claimable',
-        (tester) async {
-      final claimable = [
+    testWidgets('renders one card per quest', (tester) async {
+      final quests = [
         _progress(id: 'q1', baseXp: 80, isAvailable: true),
         _progress(id: 'q2', baseXp: 120, isAvailable: true),
       ];
-      var receivedClaimAll = 0;
 
       await tester.pumpWidget(
         _wrap(
@@ -104,16 +97,10 @@ void main() {
                 countLabel: null,
                 emptyTitle: 'Empty title',
                 emptyCaption: 'Empty caption',
-                claimAllLabel: l10n.progQuestClaimAll,
                 l10n: l10n,
-                quests: claimable,
-                claimable: claimable,
-                enabled: true,
+                quests: quests,
                 pillKeyFor: (id) => GlobalKey(debugLabel: id),
                 onClaim: (_, {Offset? from}) async {},
-                onClaimAll: (q) async {
-                  receivedClaimAll = q.length;
-                },
               );
             },
           ),
@@ -122,57 +109,6 @@ void main() {
 
       expect(find.text('Title q1'), findsOneWidget);
       expect(find.text('Title q2'), findsOneWidget);
-
-      final claimAll = find.text(
-        AppLocalizations.of(
-          tester.element(find.text('Title q1')),
-        ).progQuestClaimAll,
-      );
-      expect(claimAll, findsOneWidget);
-
-      await tester.tap(claimAll);
-      await tester.pump();
-      expect(receivedClaimAll, 2);
-    });
-
-    testWidgets('hides the claim-all button when only one quest is claimable',
-        (tester) async {
-      final quests = [
-        _progress(id: 'q1', baseXp: 80, isAvailable: true),
-      ];
-
-      await tester.pumpWidget(
-        _wrap(
-          Builder(
-            builder: (context) {
-              final l10n = AppLocalizations.of(context);
-              return QuestSectionPanel(
-                header: l10n.progQuestsDailyGoalsHeader,
-                color: Colors.blue,
-                countLabel: null,
-                emptyTitle: 'Empty title',
-                emptyCaption: 'Empty caption',
-                claimAllLabel: l10n.progQuestClaimAll,
-                l10n: l10n,
-                quests: quests,
-                claimable: quests,
-                enabled: true,
-                pillKeyFor: (id) => GlobalKey(debugLabel: id),
-                onClaim: (_, {Offset? from}) async {},
-                onClaimAll: (_) async {},
-              );
-            },
-          ),
-        ),
-      );
-
-      // Card present but no separate "Claim all" affordance — the
-      // single-quest case relies on the card's pill.
-      expect(find.text('Title q1'), findsOneWidget);
-      final l10n = AppLocalizations.of(
-        tester.element(find.text('Title q1')),
-      );
-      expect(find.text(l10n.progQuestClaimAll), findsNothing);
     });
   });
 }

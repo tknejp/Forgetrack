@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../domain/progression/player/player_quest_lifecycle.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/l10n.dart';
 import '../../../shared/theme/design_tokens.dart';
@@ -96,48 +95,6 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
     await provider.claimNode(nodeId: quest.nodeId);
   }
 
-  Future<void> _claimAll(List<EngineQuestProgress> claimable) async {
-    final provider = context.read<ProgressionEngineProvider>();
-    if (provider.currentContext == null || claimable.isEmpty) return;
-
-    final origins = [
-      for (final q in claimable) _centerOfKey(_pillKeyFor(q.nodeId)),
-    ].whereType<Offset>().toList(growable: false);
-
-    if (origins.isNotEmpty) {
-      XpSparkleLauncher.launchManyToKey(
-        context,
-        fromPoints: origins,
-        targetKey: widget.barKey,
-      );
-    }
-
-    // Sequential — each claim advances the ledger and the engine's
-    // idempotency bookkeeping. Parallel claims would race on
-    // appendEvents. The provider rebuilds the engine input from the
-    // latest ledger on every claim, so per-iteration counters
-    // (totalRewardCount, nodeCompletionCounts, …) stay accurate even
-    // when one step's claim should unlock the next.
-    for (final quest in claimable) {
-      await provider.claimNode(nodeId: quest.nodeId);
-    }
-
-    // Cascade pass: a claim in the loop above can satisfy an objective
-    // that only becomes available *after* the previous claim's grants
-    // hit the ledger (e.g. `reward_count_first` triggers once the first
-    // XP grant lands). Without this, the badge would correctly report
-    // "1 to claim" but the screen wouldn't show a row to act on. Drain
-    // any freshly-available nodes here so the loop is idempotent.
-    var safety = 0;
-    while (provider.pendingClaimNodeIds.isNotEmpty && safety < 8) {
-      final cascade = provider.pendingClaimNodeIds.toList();
-      for (final id in cascade) {
-        await provider.claimNode(nodeId: id);
-      }
-      safety++;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -165,14 +122,13 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
 
     // Phase 19 of the domain refactor moved lifecycle filtering off
     // this build() and into the provider as per-bucket projections:
-    // `currentDailyClaimableQuests`, `currentDailyUnclaimedQuests`,
-    // `currentWeeklyClaimableQuests`, `currentWeeklyActiveQuests`.
-    // The widget now reads hot lists and only switches on
-    // `q.lifecycle` for per-card rendering. Domain semantics
-    // (which lifecycle stays in the daily slot, which weekly moves
-    // to DOKONČENÉ) are documented on the provider getters.
-    final dailyClaimable = provider.currentDailyClaimableQuests;
-    final weeklyClaimable = provider.currentWeeklyClaimableQuests;
+    // `currentDailyUnclaimedQuests`, `currentWeeklyActiveQuests`.
+    // The widget reads hot lists and only switches on `q.lifecycle`
+    // for per-card rendering. Domain semantics (which lifecycle stays
+    // in the daily slot, which weekly moves to DOKONČENÉ) are
+    // documented on the provider getters. The legacy claimable
+    // slices were used by the now-removed "Vyzvednout vše" header
+    // pill — taps are per-card again.
     final dailyUnclaimed = provider.currentDailyUnclaimedQuests;
     final weeklyActive = provider.currentWeeklyActiveQuests;
     final chapters = provider.currentChapterQuests;
@@ -214,7 +170,6 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                         chapters: chapters,
                         chainResolver: provider.chainQuestsFor,
                         l10n: l10n,
-                        enabled: !provider.isEvaluating,
                         pillKeyFor: _pillKeyFor,
                         onClaim: _claimQuest,
                         expandedNodeId: _expandedNodeId,
@@ -233,15 +188,11 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                           : l10n.progQuestsActiveCount(dailyUnclaimed.length),
                       emptyTitle: l10n.progQuestsEmptyActiveTitle,
                       emptyCaption: l10n.progQuestsEmptyActiveCaption,
-                      claimAllLabel: l10n.progQuestClaimAll,
                       l10n: l10n,
                       hint: l10n.progQuestsDailyTasksHint,
                       quests: daily,
-                      claimable: dailyClaimable,
-                      enabled: !provider.isEvaluating,
                       pillKeyFor: _pillKeyFor,
                       onClaim: _claimQuest,
-                      onClaimAll: _claimAll,
                       streakFor: (q) =>
                           provider.streakForObjective(q.node.objectiveId),
                       expandedNodeId: _expandedNodeId,
@@ -262,14 +213,10 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                           : l10n.progQuestsActiveCount(weeklyActive.length),
                       emptyTitle: l10n.progQuestsEmptyActiveTitle,
                       emptyCaption: l10n.progQuestsEmptyActiveCaption,
-                      claimAllLabel: l10n.progQuestClaimAll,
                       l10n: l10n,
                       quests: weeklyActive,
-                      claimable: weeklyClaimable,
-                      enabled: !provider.isEvaluating,
                       pillKeyFor: _pillKeyFor,
                       onClaim: _claimQuest,
-                      onClaimAll: _claimAll,
                       streakFor: (q) =>
                           provider.streakForObjective(q.node.objectiveId),
                       expandedNodeId: _expandedNodeId,
@@ -286,7 +233,6 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                         entries: longTerm,
                         chainResolver: provider.chainQuestsFor,
                         l10n: l10n,
-                        enabled: !provider.isEvaluating,
                         pillKeyFor: _pillKeyFor,
                         onClaim: _claimQuest,
                         expandedNodeId: _expandedNodeId,
@@ -303,10 +249,8 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                     _CompletedSection(
                       entries: completed,
                       l10n: l10n,
-                      enabled: !provider.isEvaluating,
                       pillKeyFor: _pillKeyFor,
                       onClaim: _claimQuest,
-                      onClaimAll: _claimAll,
                       expandedNodeId: _expandedNodeId,
                       onToggleExpanded: _toggleExpanded,
                     ),
@@ -337,14 +281,10 @@ class QuestSectionPanel extends StatelessWidget {
     required this.countLabel,
     required this.emptyTitle,
     required this.emptyCaption,
-    required this.claimAllLabel,
     required this.l10n,
     required this.quests,
-    required this.claimable,
-    required this.enabled,
     required this.pillKeyFor,
     required this.onClaim,
-    required this.onClaimAll,
     this.streakFor,
     this.expandedNodeId,
     this.onToggleExpanded,
@@ -360,15 +300,11 @@ class QuestSectionPanel extends StatelessWidget {
   final String? countLabel;
   final String emptyTitle;
   final String emptyCaption;
-  final String claimAllLabel;
   final AppLocalizations l10n;
   final List<EngineQuestProgress> quests;
-  final List<EngineQuestProgress> claimable;
-  final bool enabled;
   final GlobalKey Function(String nodeId) pillKeyFor;
   final Future<void> Function(EngineQuestProgress quest, {Offset? from})
       onClaim;
-  final Future<void> Function(List<EngineQuestProgress> quests) onClaimAll;
 
   /// Resolves the streak summary for a given quest. Used by the card
   /// to render a 🔥 chip and the best-streak detail line. Optional —
@@ -414,28 +350,12 @@ class QuestSectionPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: EngineQuestSection(
-                label: header,
-                color: color,
-                countLabel: countLabel,
-                isEmpty: true,
-                children: const [],
-              ),
-            ),
-            if (claimable.length > 1)
-              Padding(
-                padding: const EdgeInsets.only(top: 2, left: Tokens.spaceSm),
-                child: _ClaimAllButton(
-                  label: claimAllLabel,
-                  enabled: enabled,
-                  onTap: () => onClaimAll(claimable),
-                ),
-              ),
-          ],
+        EngineQuestSection(
+          label: header,
+          color: color,
+          countLabel: countLabel,
+          isEmpty: true,
+          children: const [],
         ),
         if (hint != null)
           Padding(
@@ -456,9 +376,9 @@ class QuestSectionPanel extends StatelessWidget {
               for (var i = 0; i < quests.length; i++) ...[
                 if (i > 0) const SizedBox(height: Tokens.spaceSm),
                 EngineQuestCard(
+                  key: ValueKey(quests[i].nodeId),
                   quest: quests[i],
                   l10n: l10n,
-                  enabled: enabled,
                   pillKey: pillKeyFor(quests[i].nodeId),
                   onClaim: onClaim,
                   streak: streakFor?.call(quests[i]),
@@ -505,7 +425,6 @@ class _ChapterSection extends StatelessWidget {
     required this.chapters,
     required this.chainResolver,
     required this.l10n,
-    required this.enabled,
     required this.pillKeyFor,
     required this.onClaim,
     required this.expandedNodeId,
@@ -517,7 +436,6 @@ class _ChapterSection extends StatelessWidget {
   final List<EngineQuestProgress> chapters;
   final List<EngineQuestProgress> Function(String chainId) chainResolver;
   final AppLocalizations l10n;
-  final bool enabled;
   final GlobalKey Function(String nodeId) pillKeyFor;
   final Future<void> Function(EngineQuestProgress quest, {Offset? from})
       onClaim;
@@ -552,10 +470,10 @@ class _ChapterSection extends StatelessWidget {
         for (var i = 0; i < chapters.length; i++) ...[
           if (i > 0) const SizedBox(height: Tokens.spaceSm),
           EngineChapterCard(
+            key: ValueKey(chapters[i].nodeId),
             quest: chapters[i],
             chain: chainResolver(chapters[i].node.chainId ?? ''),
             l10n: l10n,
-            enabled: enabled,
             pillKey: pillKeyFor(chapters[i].nodeId),
             onClaim: onClaim,
             isExpanded: expandedNodeId == chapters[i].nodeId,
@@ -685,7 +603,6 @@ class _LongTermSection extends StatelessWidget {
     required this.entries,
     required this.chainResolver,
     required this.l10n,
-    required this.enabled,
     required this.pillKeyFor,
     required this.onClaim,
     required this.expandedNodeId,
@@ -696,7 +613,6 @@ class _LongTermSection extends StatelessWidget {
   final List<EngineLongTermEntry> entries;
   final List<EngineQuestProgress> Function(String chainId) chainResolver;
   final AppLocalizations l10n;
-  final bool enabled;
   final GlobalKey Function(String nodeId) pillKeyFor;
   final Future<void> Function(EngineQuestProgress quest, {Offset? from})
       onClaim;
@@ -725,10 +641,10 @@ class _LongTermSection extends StatelessWidget {
         for (var i = 0; i < entries.length; i++) ...[
           if (i > 0) const SizedBox(height: Tokens.spaceSm),
           EngineLongTermCard(
+            key: ValueKey(entries[i].quest.nodeId),
             entry: entries[i],
             chain: chainResolver(entries[i].quest.node.chainId ?? ''),
             l10n: l10n,
-            enabled: enabled,
             pillKey: pillKeyFor(entries[i].quest.nodeId),
             onClaim: onClaim,
             isExpanded: expandedNodeId == entries[i].quest.nodeId,
@@ -750,86 +666,38 @@ class _CompletedSection extends StatelessWidget {
   const _CompletedSection({
     required this.entries,
     required this.l10n,
-    required this.enabled,
     required this.pillKeyFor,
     required this.onClaim,
-    required this.onClaimAll,
     required this.expandedNodeId,
     required this.onToggleExpanded,
   });
 
   final List<EngineCompletedEntry> entries;
   final AppLocalizations l10n;
-  final bool enabled;
   final GlobalKey Function(String nodeId) pillKeyFor;
   final Future<void> Function(EngineQuestProgress quest, {Offset? from})
       onClaim;
-  final Future<void> Function(List<EngineQuestProgress> quests) onClaimAll;
   final String? expandedNodeId;
   final void Function(String nodeId) onToggleExpanded;
 
-  /// Flattens every claimable-but-not-yet-claimed step across all
-  /// entries — used by the section's "Vyzvednout vše" button so the
-  /// player can drain pending claims in one tap. For non-chain
-  /// entries the representative is the only candidate; chain entries
-  /// can contribute multiple steps if more than one is simultaneously
-  /// claimable.
-  List<EngineQuestProgress> get _allClaimable {
-    final out = <EngineQuestProgress>[];
-    for (final e in entries) {
-      final source = e.chainQuests.isEmpty ? [e.representative] : e.chainQuests;
-      for (final q in source) {
-        if (q.lifecycle is QuestCompletedPendingClaim) out.add(q);
-      }
-    }
-    return out;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final claimable = _allClaimable;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Three-column header row matching the legacy V1 quests
-        // screen: section title on the left (filling remaining
-        // space), count text in the middle, claim-all pill on the
-        // right with a 12 px gap. Keeping the count outside the
-        // section widget lets the pill keep its full visual weight
-        // without crowding the title row.
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: EngineQuestSection(
-                label: l10n.progQuestsCompletedHeader,
-                color: Tokens.onSurfaceMuted,
-                countLabel: null,
-                isEmpty: true,
-                children: const [],
-              ),
-            ),
-            if (entries.isNotEmpty)
-              Text(
-                l10n.progQuestsCompletedCount(entries.length),
-                style: const TextStyle(
-                  fontSize: Tokens.fontSizeMicro,
-                  fontWeight: FontWeight.w600,
-                  color: Tokens.onSurfaceMuted,
-                ),
-              ),
-            if (claimable.length > 1) ...[
-              const SizedBox(width: 12),
-              _ClaimAllButton(
-                label: l10n.progRewardsClaimAll,
-                enabled: enabled,
-                onTap: () => onClaimAll(claimable),
-              ),
-            ],
-          ],
+        EngineQuestSection(
+          label: l10n.progQuestsCompletedHeader,
+          color: Tokens.onSurfaceMuted,
+          countLabel: entries.isEmpty
+              ? null
+              : l10n.progQuestsCompletedCount(entries.length),
+          isEmpty: true,
+          children: const [],
         ),
-        // Breathing room between the section header row (with the
-        // claim-all pill) and the first entry card.
+        // Breathing room between the section header row and the
+        // first entry card. Mirrors the gap the section's internal
+        // `SizedBox(10)` leaves when children render — kept here so
+        // the empty state and entry list start at the same offset.
         const SizedBox(height: 10),
         if (entries.isEmpty)
           EngineQuestEmptyLine(
@@ -840,9 +708,9 @@ class _CompletedSection extends StatelessWidget {
           for (var i = 0; i < entries.length; i++) ...[
             if (i > 0) const SizedBox(height: 6),
             EngineCompletedQuestCard(
+              key: ValueKey(entries[i].representative.nodeId),
               entry: entries[i],
               l10n: l10n,
-              enabled: enabled,
               pillKey: pillKeyFor(entries[i].representative.nodeId),
               onClaim: onClaim,
               isExpanded:
@@ -892,52 +760,3 @@ class _LockedSection extends StatelessWidget {
   }
 }
 
-class _ClaimAllButton extends StatelessWidget {
-  const _ClaimAllButton({
-    required this.label,
-    required this.enabled,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool enabled;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    const color = Color(0xFFFFBD2E);
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: enabled ? onTap : null,
-      child: Container(
-        // Sized to match the section header text height — V2's
-        // EngineQuestSection has an icon (14 px) + caption text, so
-        // a pill with the legacy 10/7 padding looked taller than the
-        // header row and broke vertical alignment. 8/3 with the micro
-        // font keeps the pill readable but lets it sit on the same
-        // baseline as the title and count text.
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-        decoration: BoxDecoration(
-          color: enabled
-              ? color.withValues(alpha: 0.16)
-              : Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(Tokens.radiusProgress),
-          border: Border.all(
-            color: enabled
-                ? color.withValues(alpha: 0.24)
-                : Colors.white.withValues(alpha: 0.08),
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: Tokens.fontSizeMicro,
-            fontWeight: FontWeight.w800,
-            color: enabled ? color : Tokens.onSurfaceFaint,
-            letterSpacing: 0.3,
-          ),
-        ),
-      ),
-    );
-  }
-}
