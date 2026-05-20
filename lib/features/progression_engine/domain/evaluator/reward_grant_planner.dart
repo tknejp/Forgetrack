@@ -1,4 +1,4 @@
-﻿import 'package:meta/meta.dart';
+import 'package:meta/meta.dart';
 
 import '../models/engine_evaluation_context.dart';
 import 'package:forgetrack/domain/journal/journal_event.dart';
@@ -32,7 +32,7 @@ class PlannedRewardGrant {
 /// returns the list of reward grants the engine should attempt to
 /// append.
 ///
-/// The planner does not touch the ledger and does not scale XP â€” XP
+/// The planner does not touch the ledger and does not scale XP — XP
 /// scaling happens in the [RewardGrantService] at append time using
 /// the running level. The planner only builds keys + payloads.
 class RewardGrantPlanner {
@@ -50,7 +50,7 @@ class RewardGrantPlanner {
       for (var i = 0; i < node.rewards.length; i++) {
         final reward = node.rewards[i];
         // Conditional bonus rewards drop out silently when their
-        // condition fails â€” the player claimed too late, slept too
+        // condition fails — the player claimed too late, slept too
         // little, etc. No ledger event is emitted; the bonus just
         // doesn't happen this time. The next claim re-evaluates.
         if (reward is BonusXpReward &&

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
@@ -18,7 +18,7 @@ import '../widgets/kt_login_sheet.dart';
 import '../widgets/onboarding_primitives.dart';
 import '../widgets/onboarding_theme.dart';
 
-// â”€â”€â”€ Step 1 â€” VÃ­tej â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Step 1 — VÃ­tej ──────────────────────────────────────────────────────
 
 class StepWelcome extends StatelessWidget {
   const StepWelcome({super.key});
@@ -28,7 +28,7 @@ class StepWelcome extends StatelessWidget {
     final progression = context.watch<ProgressionEngineProvider>();
     final l10n = context.l10n;
     // V2 [EngineProfile] is always resolved through [ProgressionLevelPolicy]
-    // (see [ProgressionEngineProvider.profile]) â€” the pre-hydration zero
+    // (see [ProgressionEngineProvider.profile]) — the pre-hydration zero
     // profile and a populated ledger both go through the same policy, so
     // reading the provider directly is now safe.
     final profile = progression.profile;
@@ -91,7 +91,7 @@ class _Step1Subtitle extends StatelessWidget {
     );
     final idx = full.indexOf(accent);
     if (idx < 0) {
-      // Translator dropped the accent phrase â€” render plain.
+      // Translator dropped the accent phrase — render plain.
       return Text(full, textAlign: TextAlign.center, style: baseStyle);
     }
     return Text.rich(
@@ -109,9 +109,9 @@ class _Step1Subtitle extends StatelessWidget {
   }
 }
 
-/// Step 1 hero illustration â€” the Forgetrack app icon floating on a
+/// Step 1 hero illustration — the Forgetrack app icon floating on a
 /// double-layered purple glow with four staggered twinkling sparkles
-/// around the periphery. No outer frame, no border, no inner disc â€”
+/// around the periphery. No outer frame, no border, no inner disc —
 /// just logo + glow + sparks.
 class _SigilCluster extends StatefulWidget {
   const _SigilCluster();
@@ -127,7 +127,7 @@ class _SigilClusterState extends State<_SigilCluster>
   @override
   void initState() {
     super.initState();
-    // 2.4s full cycle â€” matches the `wm-spark` keyframe period from the
+    // 2.4s full cycle — matches the `wm-spark` keyframe period from the
     // design. One ticker drives all four sparkles.
     _controller = AnimationController(
       duration: const Duration(milliseconds: 2400),
@@ -342,7 +342,7 @@ class _HeroPreviewCard extends StatelessWidget {
   }
 }
 
-// â”€â”€â”€ Step 2 â€” ÃšÄet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Step 2 — ÃšÄet ───────────────────────────────────────────────────────
 
 class StepAccount extends StatelessWidget {
   const StepAccount({super.key});
@@ -478,7 +478,7 @@ class _GoogleGGlyph extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // The asset folder already contains the official 4-color G as SVG â€”
+    // The asset folder already contains the official 4-color G as SVG —
     // reuse it instead of inlining the path data.
     return SvgPicture.asset(
       'assets/icons/google/google_logo.svg',
@@ -552,7 +552,7 @@ class _AccountBenefitsCard extends StatelessWidget {
   }
 }
 
-// â”€â”€â”€ Step 3 â€” ZdravÃ­ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Step 3 — ZdravÃ­ ─────────────────────────────────────────────────────
 
 class StepHealth extends StatefulWidget {
   const StepHealth({super.key});
@@ -628,7 +628,7 @@ class _DataIconGrid extends StatelessWidget {
           label: l10n.welcomeStep3DataSleep,
           color: const Color(0xFFA89BFF)),
       _DataChip(
-          emoji: 'âš”ï¸',
+          emoji: '⚔️',
           label: l10n.welcomeStep3DataActivity,
           color: const Color(0xFF2DD4BF)),
     ];
@@ -789,7 +789,7 @@ class _HealthPrivacyHint extends StatelessWidget {
   }
 }
 
-// â”€â”€â”€ Step 4 â€” Hotovo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Step 4 — Hotovo ─────────────────────────────────────────────────────
 
 class StepFinal extends StatefulWidget {
   const StepFinal({super.key});

@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:forgetrack/domain/progression/catalog/ids.dart';
 
 import 'package:forgetrack/features/progression_engine/application/progression_engine.dart';
@@ -25,7 +25,7 @@ EngineEvaluationContext _ambitiousPlayerInput() => buildTestContext(
     );
 
 void main() {
-  group('Phase 3 pilot â€” real catalog', () {
+  group('Phase 3 pilot — real catalog', () {
     test('catalog validates cleanly with default goals', () {
       const validator = CatalogValidator();
       expect(validator.validateOrThrow, returnsNormally);
@@ -54,7 +54,7 @@ void main() {
       final result = await evaluateWithContext(engine, _ambitiousPlayerInput());
 
       // Four core objectives complete (welcome_to_journey is
-      // condition-driven only â€” no objective).
+      // condition-driven only — no objective).
       final completedIds =
           result.completedObjectives.map((o) => o.objectiveId).toSet();
       expect(completedIds, containsAll({
@@ -66,7 +66,7 @@ void main() {
 
       // Auto-claim nodes complete on first run.
       // `pilgrim_path_open` is the starter chapter's auto-claim open
-      // step â€” fires once the player reaches level 1.
+      // step — fires once the player reaches level 1.
       final autoCompletedIds = result.completedNodes.map((n) => n.nodeId).toSet();
       expect(autoCompletedIds, containsAll({
         'welcome_to_journey',
@@ -83,7 +83,7 @@ void main() {
         'daily_protein_today',
       }));
 
-      // Manual-claim quest XP only arrives after the player claims â€”
+      // Manual-claim quest XP only arrives after the player claims —
       // confirm none of the manual-claim daily quests have been paid
       // out yet. The auto-claim Pilgrim Path opener does ship its XP
       // (40) immediately, so we filter that node out before asserting.
@@ -185,7 +185,7 @@ void main() {
       );
 
       // Welcome always completes (no objective, no conditions).
-      // The Pilgrim Path open also auto-claims at level 1 â€” it's the
+      // The Pilgrim Path open also auto-claims at level 1 — it's the
       // level-1 starter chapter, gated only by `LevelAtLeast(1)`.
       final ids = result.completedNodes.map((n) => n.nodeId).toSet();
       expect(ids, {'welcome_to_journey', 'pilgrim_path_open'});

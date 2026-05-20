@@ -1,4 +1,4 @@
-﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:forgetrack/features/progression_engine/domain/evaluator/objective_evaluator.dart';
@@ -54,7 +54,7 @@ Objective _objective({
 void main() {
   const evaluator = ObjectiveEvaluator();
 
-  group('ObjectiveEvaluator â€” operators', () {
+  group('ObjectiveEvaluator — operators', () {
     test('atLeast completes when value >= target', () {
       final outcome =
           evaluator.evaluate(_objective(targetValue: 100), _input(stepsToday: 100));
@@ -98,7 +98,7 @@ void main() {
     });
   });
 
-  group('ObjectiveEvaluator â€” metrics', () {
+  group('ObjectiveEvaluator — metrics', () {
     test('StepsMetric reads the right field per scope', () {
       final today = _objective(metric: const StepsMetric(), scope: const TodayScope());
       final week = _objective(metric: const StepsMetric(), scope: const ThisWeekScope());
@@ -148,7 +148,7 @@ void main() {
     });
   });
 
-  group('ObjectiveEvaluator â€” period keys', () {
+  group('ObjectiveEvaluator — period keys', () {
     test('TodayScope produces a yyyy-MM-dd key', () {
       final outcome = evaluator.evaluate(_objective(), _input(stepsToday: 10));
       expect(outcome.periodKey, '2026-05-10');
@@ -159,7 +159,7 @@ void main() {
         _objective(scope: const ThisWeekScope()),
         _input(stepsThisWeek: 10),
       );
-      // 2026-05-10 is a Sunday â†’ ISO week starts the previous Monday (May 4).
+      // 2026-05-10 is a Sunday → ISO week starts the previous Monday (May 4).
       expect(outcome.periodKey, 'w-2026-05-04');
     });
 

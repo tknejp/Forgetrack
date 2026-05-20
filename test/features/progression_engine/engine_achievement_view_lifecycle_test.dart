@@ -1,11 +1,11 @@
-﻿// Phase 8 view-model bridge pin: EngineAchievementView.lifecycle
+// Phase 8 view-model bridge pin: EngineAchievementView.lifecycle
 // precedence table.
 //
 // The bridge getter routes the view's flags (unlocked,
 // isLockedByConditions) to the sealed PlayerAchievementLifecycle.
 // Precedence: Unlocked > Locked > InProgress. Different from Phase 6
 // quests where Locked > Claimed (a side-quest of a closed chapter
-// must stay locked even after the player finished it) â€” achievements
+// must stay locked even after the player finished it) — achievements
 // never re-lock, so once the completion event is in the ledger the
 // row idempotently stays Unlocked.
 //
@@ -60,7 +60,7 @@ void main() {
     );
   }
 
-  test('(unlocked=F, locked=F) â†’ AchievementInProgress with actual/target', () {
+  test('(unlocked=F, locked=F) → AchievementInProgress with actual/target', () {
     final lc = view().lifecycle;
     expect(lc, isA<AchievementInProgress>());
     final progress = lc as AchievementInProgress;
@@ -68,12 +68,12 @@ void main() {
     expect(progress.target, 10000);
   });
 
-  test('(unlocked=F, locked=T) â†’ AchievementLocked', () {
+  test('(unlocked=F, locked=T) → AchievementLocked', () {
     final lc = view(isLockedByConditions: true).lifecycle;
     expect(lc, const AchievementLocked());
   });
 
-  test('(unlocked=T, locked=F) â†’ AchievementUnlocked(previewXp, unlockedAt)',
+  test('(unlocked=T, locked=F) → AchievementUnlocked(previewXp, unlockedAt)',
       () {
     final at = DateTime.utc(2026, 5, 18, 10);
     final lc =
@@ -82,7 +82,7 @@ void main() {
     expect(lc.unlockedAt, at);
   });
 
-  test('(unlocked=T, locked=T) â†’ AchievementUnlocked wins (never re-locks)',
+  test('(unlocked=T, locked=T) → AchievementUnlocked wins (never re-locks)',
       () {
     // Defensive precedence: even if the engine resolver and the
     // completed set disagree, an unlocked achievement stays Unlocked.

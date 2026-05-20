@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:forgetrack/features/cosmetics/application/emblem_board_provider.dart';
 import 'package:forgetrack/features/cosmetics/domain/emblem_board.dart';
@@ -67,7 +67,7 @@ void main() {
     });
 
     test('autoFillWith is suppressed when board has any explicit pin', () {
-      // User explicitly pinned to slot 5 â€” auto-fill must NOT overwrite
+      // User explicitly pinned to slot 5 — auto-fill must NOT overwrite
       // the leading nulls because the explicit layout (even with null
       // slots) is the player's intent.
       final pinned = EmblemBoard.empty.withPin(5, 'x');
@@ -116,7 +116,7 @@ void main() {
       final provider = EmblemBoardProvider();
       await provider.init();
 
-      // First render â€” auto-fill from unlock order.
+      // First render — auto-fill from unlock order.
       final autoFill = provider.boardForUserOrAutoFill(
         'uid_a',
         ['a', 'b', 'c'],

@@ -1,4 +1,4 @@
-﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import '../../../../../shared/domain/rarity.dart';
 import '../../localized_text.dart';
 import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';
@@ -14,7 +14,7 @@ import '../engine_catalog_context.dart';
 import 'quest_assets.dart';
 
 /// **Chapter side quests.** Narrative bonus content tied to the
-/// active chapter â€” surfaces only while `ChapterActive(chapterId)`
+/// active chapter — surfaces only while `ChapterActive(chapterId)`
 /// is true (chapter's `_open` quest done, `_finale` not yet).
 ///
 /// **Pool shape varies per chapter.** Early chapters offer simple
@@ -22,28 +22,28 @@ import 'quest_assets.dart';
 /// XP conditions; late chapters introduce sequential **combo
 /// chains** (one step claimable per day via
 /// `NodeCompletedBeforeToday`) that build toward a chapter-defining
-/// finale. Not every late chapter has a chain â€” variety is the
+/// finale. Not every late chapter has a chain — variety is the
 /// point, the pool reads as themed content not a uniform grid.
 ///
 /// **Chain placement** (deliberately staggered, not every chapter):
-/// - `icewalker_route` â€” 2-step chain (chain debut).
-/// - `mountain_ascent` â€” no chain, three standalone side quests.
-/// - `dragonroad` â€” 2-step chain.
-/// - `dragonrock_sovereign` â€” 4-step apex chain culminating in a
+/// - `icewalker_route` — 2-step chain (chain debut).
+/// - `mountain_ascent` — no chain, three standalone side quests.
+/// - `dragonroad` — 2-step chain.
+/// - `dragonrock_sovereign` — 4-step apex chain culminating in a
 ///   true perfect day (8/8 daily goals + stacked bonuses for
-///   pre-18:00 finish and â‰¥ 7 h sleep).
+///   pre-18:00 finish and ≥ 7 h sleep).
 ///
 /// **XP scaling.** Base XP grows with chapter level, then the engine
 /// multiplies by `rewardMultiplierForLevel` at claim time (Ã—62.5 at
 /// lvl 50, Ã—150 at lvl 100). A 1500-base apex finale at lvl 100
-/// awards â‰ˆ 225 000 XP â€” significant but well under the ~778 000-XP
+/// awards ≈ 225 000 XP — significant but well under the ~778 000-XP
 /// level boundary at that tier. Stacked bonuses on the apex push
 /// the perfect-day claim toward ~375 000 XP, still under half a
-/// level â€” a real summit, but not level-skipping.
+/// level — a real summit, but not level-skipping.
 ///
 /// **Retirement.** All side quests use `LifetimeScope`. When the
 /// chapter finale lands, `ChapterActive` flips false and any unmet
-/// steps quietly retire â€” the player moves on with the journey.
+/// steps quietly retire — the player moves on with the journey.
 
 const _pilgrimPath = ChapterId('pilgrim_path');
 const _forestTrial = ChapterId('forest_trial');
@@ -75,7 +75,7 @@ List<Objective> chapterSideQuestObjectives(
   EngineCatalogContext context,
 ) {
   return [
-    // â”€â”€ Pilgrim Path â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Pilgrim Path ───────────────────────────────────────────
     _amongObjective(
       'side_pilgrim_morning_walk_obj',
       const [ProgressionEntryId('daily_steps_today'), ProgressionEntryId('daily_activity_today')],
@@ -87,7 +87,7 @@ List<Objective> chapterSideQuestObjectives(
       2,
     ),
 
-    // â”€â”€ Forest Trial (lv 10) â€” 1 standalone + 2-step chain â”€â”€â”€â”€â”€
+    // ── Forest Trial (lv 10) — 1 standalone + 2-step chain ─────
     _amongObjective(
       'side_forest_briskwalk_obj',
       const [ProgressionEntryId('daily_steps_today'), ProgressionEntryId('daily_activity_today')],
@@ -113,7 +113,7 @@ List<Objective> chapterSideQuestObjectives(
       4,
     ),
 
-    // â”€â”€ Ruins of Discipline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Ruins of Discipline ────────────────────────────────────
     _amongObjective(
       'side_ruins_steady_dawn_obj',
       const [
@@ -135,7 +135,7 @@ List<Objective> chapterSideQuestObjectives(
       3,
     ),
 
-    // â”€â”€ Mine Descent â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Mine Descent ───────────────────────────────────────────
     _amongObjective(
       'side_mine_torchbearer_obj',
       const [ProgressionEntryId('daily_steps_today'), ProgressionEntryId('daily_activity_today')],
@@ -151,7 +151,7 @@ List<Objective> chapterSideQuestObjectives(
       3,
     ),
 
-    // â”€â”€ Mine Descent combo chain â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Mine Descent combo chain ───────────────────────────────
     _amongObjective(
       'side_mine_deep_shaft_obj',
       const [
@@ -173,7 +173,7 @@ List<Objective> chapterSideQuestObjectives(
       5,
     ),
 
-    // â”€â”€ Forge Momentum â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Forge Momentum ─────────────────────────────────────────
     _amongObjective(
       'side_forge_morning_anvil_obj',
       const [ProgressionEntryId('daily_steps_today'), ProgressionEntryId('daily_activity_today')],
@@ -190,7 +190,7 @@ List<Objective> chapterSideQuestObjectives(
       4,
     ),
 
-    // â”€â”€ Underway Pact â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Underway Pact ──────────────────────────────────────────
     _amongObjective(
       'side_underway_warm_camp_obj',
       const [
@@ -210,7 +210,7 @@ List<Objective> chapterSideQuestObjectives(
       3,
     ),
 
-    // â”€â”€ Underway Pact combo chain â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Underway Pact combo chain ──────────────────────────────
     _amongObjective(
       'side_pact_march_obj',
       const [
@@ -235,7 +235,7 @@ List<Objective> chapterSideQuestObjectives(
       6,
     ),
 
-    // â”€â”€ Frostbound Oath â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Frostbound Oath ────────────────────────────────────────
     _amongObjective(
       'side_frostbound_first_light_obj',
       const [ProgressionEntryId('daily_steps_today'), ProgressionEntryId('daily_activity_today')],
@@ -252,7 +252,7 @@ List<Objective> chapterSideQuestObjectives(
       4,
     ),
 
-    // â”€â”€ Icewalker Route (1 standalone + 2-step chain) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Icewalker Route (1 standalone + 2-step chain) ──────────
     _amongObjective(
       'side_icewalker_dawn_march_obj',
       const [
@@ -286,7 +286,7 @@ List<Objective> chapterSideQuestObjectives(
       6,
     ),
 
-    // â”€â”€ Mountain Ascent (3 standalone, no chain â€” variety) â”€â”€â”€â”€â”€
+    // ── Mountain Ascent (3 standalone, no chain — variety) ─────
     _amongObjective(
       'side_mountain_steep_morning_obj',
       const [
@@ -308,7 +308,7 @@ List<Objective> chapterSideQuestObjectives(
       5,
     ),
 
-    // â”€â”€ Dragonroad (1 standalone + 2-step chain) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Dragonroad (1 standalone + 2-step chain) ───────────────
     _amongObjective(
       'side_dragonroad_warden_dawn_obj',
       const [
@@ -344,7 +344,7 @@ List<Objective> chapterSideQuestObjectives(
       7,
     ),
 
-    // â”€â”€ Dragonrock Sovereign (1 standalone + 4-step apex chain) â”€
+    // ── Dragonrock Sovereign (1 standalone + 4-step apex chain) ─
     _amongObjective(
       'side_dragonrock_sovereign_dawn_obj',
       const [
@@ -395,7 +395,7 @@ List<Objective> chapterSideQuestObjectives(
       ],
       7,
     ),
-    // Apex finale â€” 8/8 daily goals = a literal perfect day.
+    // Apex finale — 8/8 daily goals = a literal perfect day.
     _amongObjective(
       'side_dragonrock_sovereign_finale_obj',
       const [
@@ -413,7 +413,7 @@ List<Objective> chapterSideQuestObjectives(
   ];
 }
 
-/// **Standalone side quest** â€” ungated by other side quests, just
+/// **Standalone side quest** — ungated by other side quests, just
 /// gated by the chapter being active + an early chapter chain step
 /// being done. The default everywhere except chain steps.
 Quest _standalone({
@@ -432,7 +432,7 @@ Quest _standalone({
     id: ProgressionEntryId(id),
     objectiveId: ObjectiveId(objectiveId),
     claimPolicy: ClaimPolicy.manual,
-    // ChapterActive is the only "soft" gate â€” it filters by the
+    // ChapterActive is the only "soft" gate — it filters by the
     // active chapter window. The "must be completed" + "must be at
     // least a day old" gates derive from the prereq + the subtype's
     // CooldownDays(1) policy.
@@ -448,7 +448,7 @@ Quest _standalone({
   );
 }
 
-/// **Chain step** â€” sequential side quest. First step gates on the
+/// **Chain step** — sequential side quest. First step gates on the
 /// chapter entry node; subsequent steps gate on the prior step.
 /// The `CooldownDays(1)` policy on [ChapterSideQuest] adds the
 /// "wait until tomorrow" rule, so the catalog only declares the
@@ -497,7 +497,7 @@ Quest _chainStep({
 
 List<ProgressionEntry> chapterSideQuests() {
   return [
-    // â”€â”€ Pilgrim Path (2 standalone) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Pilgrim Path (2 standalone) ────────────────────────────
     _standalone(
       id: const ProgressionEntryId('side_pilgrim_morning_walk'),
       objectiveId: ObjectiveId('side_pilgrim_morning_walk_obj'),
@@ -521,7 +521,7 @@ List<ProgressionEntry> chapterSideQuests() {
       assetKey: questAssetPilgrimPathIcon,
     ),
 
-    // â”€â”€ Forest Trial (1 standalone + 2-step chain) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Forest Trial (1 standalone + 2-step chain) ─────────────
     _standalone(
       id: const ProgressionEntryId('side_forest_briskwalk'),
       objectiveId: ObjectiveId('side_forest_briskwalk_obj'),
@@ -569,7 +569,7 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
 
-    // â”€â”€ Ruins of Discipline (2 standalone) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Ruins of Discipline (2 standalone) ─────────────────────
     _standalone(
       id: const ProgressionEntryId('side_ruins_steady_dawn'),
       objectiveId: ObjectiveId('side_ruins_steady_dawn_obj'),
@@ -596,7 +596,7 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
 
-    // â”€â”€ Mine Descent (2 standalone) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Mine Descent (2 standalone) ────────────────────────────
     _standalone(
       id: const ProgressionEntryId('side_mine_torchbearer'),
       objectiveId: ObjectiveId('side_mine_torchbearer_obj'),
@@ -623,7 +623,7 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
 
-    // â”€â”€ Mine Descent combo chain (2-step, gates on chain step 3) â”€
+    // ── Mine Descent combo chain (2-step, gates on chain step 3) ─
     _chainStep(
       id: const ProgressionEntryId('side_mine_deep_shaft'),
       objectiveId: ObjectiveId('side_mine_deep_shaft_obj'),
@@ -663,7 +663,7 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
 
-    // â”€â”€ Forge Momentum (2 standalone) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Forge Momentum (2 standalone) ──────────────────────────
     _standalone(
       id: const ProgressionEntryId('side_forge_morning_anvil'),
       objectiveId: ObjectiveId('side_forge_morning_anvil_obj'),
@@ -693,7 +693,7 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
 
-    // â”€â”€ Underway Pact (2 standalone) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Underway Pact (2 standalone) ───────────────────────────
     _standalone(
       id: const ProgressionEntryId('side_underway_warm_camp'),
       objectiveId: ObjectiveId('side_underway_warm_camp_obj'),
@@ -723,7 +723,7 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
 
-    // â”€â”€ Underway Pact combo chain (2-step, gates on chain step 3) â”€
+    // ── Underway Pact combo chain (2-step, gates on chain step 3) ─
     _chainStep(
       id: const ProgressionEntryId('side_pact_march'),
       objectiveId: ObjectiveId('side_pact_march_obj'),
@@ -763,7 +763,7 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
 
-    // â”€â”€ Frostbound Oath (2 standalone) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Frostbound Oath (2 standalone) ─────────────────────────
     _standalone(
       id: const ProgressionEntryId('side_frostbound_first_light'),
       objectiveId: ObjectiveId('side_frostbound_first_light_obj'),
@@ -793,7 +793,7 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
 
-    // â”€â”€ Icewalker Route (1 standalone + 2-step chain) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Icewalker Route (1 standalone + 2-step chain) ──────────
     _standalone(
       id: const ProgressionEntryId('side_icewalker_dawn_march'),
       objectiveId: ObjectiveId('side_icewalker_dawn_march_obj'),
@@ -847,7 +847,7 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
 
-    // â”€â”€ Mountain Ascent (2 standalone, deliberately no chain) â”€â”€
+    // ── Mountain Ascent (2 standalone, deliberately no chain) ──
     _standalone(
       id: const ProgressionEntryId('side_mountain_steep_morning'),
       objectiveId: ObjectiveId('side_mountain_steep_morning_obj'),
@@ -877,7 +877,7 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
 
-    // â”€â”€ Dragonroad (1 standalone + 2-step chain) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Dragonroad (1 standalone + 2-step chain) ───────────────
     _standalone(
       id: const ProgressionEntryId('side_dragonroad_warden_dawn'),
       objectiveId: ObjectiveId('side_dragonroad_warden_dawn_obj'),
@@ -931,7 +931,7 @@ List<ProgressionEntry> chapterSideQuests() {
       ],
     ),
 
-    // â”€â”€ Dragonrock Sovereign (1 standalone + 4-step apex) â”€â”€â”€â”€â”€â”€
+    // ── Dragonrock Sovereign (1 standalone + 4-step apex) ──────
     _standalone(
       id: const ProgressionEntryId('side_dragonrock_sovereign_dawn'),
       objectiveId: ObjectiveId('side_dragonrock_sovereign_dawn_obj'),
@@ -1003,8 +1003,8 @@ List<ProgressionEntry> chapterSideQuests() {
         BonusXpReward(sourceKind: RewardSourceKind.chapterXp, amount: 460, condition: SleepAtLeast(minutes: 420)),
       ],
     ),
-    // **Apex finale.** A literal perfect day â€” every one of the 8
-    // daily goals met â€” with two stacked bonuses (â‰¥ 7 h sleep AND
+    // **Apex finale.** A literal perfect day — every one of the 8
+    // daily goals met — with two stacked bonuses (≥ 7 h sleep AND
     // finished before 18:00). Highest base XP in the catalog.
     _chainStep(
       id: const ProgressionEntryId('side_dragonrock_sovereign_finale'),

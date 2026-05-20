@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:forgetrack/features/cosmetics/domain/cosmetic_catalog.dart';
 import 'package:forgetrack/features/cosmetics/domain/cosmetic_reveal_evaluator.dart';
 import 'package:forgetrack/features/cosmetics/domain/cosmetic_reveal_state.dart';
@@ -6,7 +6,7 @@ import 'package:forgetrack/features/cosmetics/domain/cosmetic_unlock_rule.dart';
 import 'package:forgetrack/features/cosmetics/domain/cosmetic_unlock_rules.dart';
 import 'package:forgetrack/features/cosmetics/domain/cosmetic_unlock_snapshot.dart';
 
-// â”€â”€ helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── helpers ──────────────────────────────────────────────────────────────────
 
 CosmeticUnlockSnapshot _snapshot({
   int level = 0,
@@ -46,10 +46,10 @@ Map<String, CosmeticRevealResult> _evaluate({
   );
 }
 
-// â”€â”€ tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── tests ────────────────────────────────────────────────────────────────────
 
 void main() {
-  group('CosmeticRevealEvaluator â€” no UI widget dependencies', () {
+  group('CosmeticRevealEvaluator — no UI widget dependencies', () {
     test('evaluator is a pure Dart class with no Flutter widget imports', () {
       // This test simply verifies the evaluator can be constructed and called
       // in a plain dart test environment (no WidgetTester, no BuildContext).
@@ -58,7 +58,7 @@ void main() {
     });
   });
 
-  group('CosmeticRevealEvaluator â€” unlocked always wins', () {
+  group('CosmeticRevealEvaluator — unlocked always wins', () {
     test('owned cosmetic returns unlocked regardless of rule state', () {
       // companion_forest_fox has isHidden:true; if owned it must be unlocked.
       const id = 'companion_forest_fox';
@@ -67,17 +67,17 @@ void main() {
     });
 
     test('unlocked item with compound hidden rule does not show as partial', () {
-      // companion_dragonling has isHidden:true; once owned â†’ unlocked.
+      // companion_dragonling has isHidden:true; once owned → unlocked.
       const id = 'companion_dragonling';
       final results = _evaluate(owned: {id});
       expect(results[id]?.state, CosmeticRevealState.unlocked);
     });
   });
 
-  group('CosmeticRevealEvaluator â€” hidden items', () {
+  group('CosmeticRevealEvaluator — hidden items', () {
     test('compound hidden item with 0 conditions met and far level returns hidden', () {
       // companion_ruin_raven: atLevel(25) + relic_ruin_seal + relic_ashen_omen.
-      // Level 0 â†’ 0 < 25-10=15 â†’ still hidden (player hasn't reached teaser range).
+      // Level 0 → 0 < 25-10=15 → still hidden (player hasn't reached teaser range).
       const id = 'companion_ruin_raven';
       final results = _evaluate(
         snapshot: _snapshot(level: 0),
@@ -99,7 +99,7 @@ void main() {
 
     test('hidden item does not surface name, asset, or unlock hint via state', () {
       // The reveal system should return CosmeticRevealState.hidden so UI can
-      // substitute ??? â€” the test verifies the state, not the widget.
+      // substitute ??? — the test verifies the state, not the widget.
       const id = 'companion_dragonling';
       final results = _evaluate(
         snapshot: _snapshot(level: 0),
@@ -121,7 +121,7 @@ void main() {
     });
   });
 
-  group('CosmeticRevealEvaluator â€” visibleLocked', () {
+  group('CosmeticRevealEvaluator — visibleLocked', () {
     test('tier-1 level reward (no Tier-2 rule) returns visibleLocked', () {
       // frame_wildwood is a level-10 reward with no entry in kCosmeticUnlockRules.
       const id = 'frame_wildwood';
@@ -138,7 +138,7 @@ void main() {
 
     test('frame_balance (no Tier-2 rule, granted by achievement) returns visibleLocked', () {
       // frame_balance is now a Tier-1 achievement reward (perfect_days_7) with no
-      // entry in kCosmeticUnlockRules â†’ the evaluator falls through to visibleLocked.
+      // entry in kCosmeticUnlockRules → the evaluator falls through to visibleLocked.
       const id = 'frame_balance';
       final results = _evaluate(owned: {});
       expect(results[id]?.state, CosmeticRevealState.visibleLocked);
@@ -198,11 +198,11 @@ void main() {
     });
   });
 
-  group('CosmeticRevealEvaluator â€” partial', () {
+  group('CosmeticRevealEvaluator — partial', () {
     test('companion_forest_fox shows partial when level gate met but relics missing', () {
-      // Condition 1: atLevel(15) â†’ satisfied
-      // Condition 2: ownsCosmetic(relic_moonlit_foxglove) â†’ not satisfied
-      // Condition 3: ownsCosmetic(relic_ancient_root) â†’ not satisfied
+      // Condition 1: atLevel(15) → satisfied
+      // Condition 2: ownsCosmetic(relic_moonlit_foxglove) → not satisfied
+      // Condition 3: ownsCosmetic(relic_ancient_root) → not satisfied
       const id = 'companion_forest_fox';
       final results = _evaluate(
         snapshot: _snapshot(level: 15),
@@ -215,9 +215,9 @@ void main() {
     });
 
     test('companion_ice_wisp shows partial at level 75 without relics', () {
-      // Condition 1: atLevel(75) â†’ satisfied
-      // Condition 2: ownsCosmetic(relic_polar_lantern) â†’ not satisfied
-      // Condition 3: ownsCosmetic(relic_frost_shard) â†’ not satisfied
+      // Condition 1: atLevel(75) → satisfied
+      // Condition 2: ownsCosmetic(relic_polar_lantern) → not satisfied
+      // Condition 3: ownsCosmetic(relic_frost_shard) → not satisfied
       const id = 'companion_ice_wisp';
       final results = _evaluate(
         snapshot: _snapshot(level: 75),
@@ -230,9 +230,9 @@ void main() {
     });
 
     test('companion_mountain_gryphon shows partial at level 85 without relics', () {
-      // Condition 1: atLevel(85) â†’ satisfied
-      // Condition 2: ownsCosmetic(relic_summit_feather) â†’ not satisfied
-      // Condition 3: ownsCosmetic(relic_stormcrest_plume) â†’ not satisfied
+      // Condition 1: atLevel(85) → satisfied
+      // Condition 2: ownsCosmetic(relic_summit_feather) → not satisfied
+      // Condition 3: ownsCosmetic(relic_stormcrest_plume) → not satisfied
       const id = 'companion_mountain_gryphon';
       final results = _evaluate(
         snapshot: _snapshot(level: 85),
@@ -246,9 +246,9 @@ void main() {
 
     test('partial satisfiedConditions + totalConditions are correct', () {
       // companion_lantern_golem:
-      //   cond 1: atLevel(45) â†’ not satisfied (level 0)
-      //   cond 2: ownsCosmetic(relic_deep_ember_core) â†’ not satisfied
-      //   cond 3: ownsCosmetic(relic_miners_lantern) â†’ satisfied
+      //   cond 1: atLevel(45) → not satisfied (level 0)
+      //   cond 2: ownsCosmetic(relic_deep_ember_core) → not satisfied
+      //   cond 3: ownsCosmetic(relic_miners_lantern) → satisfied
       const id = 'companion_lantern_golem';
       final results = _evaluate(
         owned: {'relic_miners_lantern'},
@@ -279,7 +279,7 @@ void main() {
     });
   });
 
-  group('CosmeticRevealEvaluator â€” full catalog smoke test', () {
+  group('CosmeticRevealEvaluator — full catalog smoke test', () {
     test('every enabled catalog item has a result', () {
       final catalog = const CosmeticCatalog();
       final results = _evaluate();

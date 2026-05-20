@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -18,8 +18,8 @@ import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 /// objective) or a non-XP direct reward.
 ///
 /// Content: the companion's badge glyph + a chevron. The whole pill is
-/// a tap target â€” taps bubble to the parent so the card expand can be
-/// toggled. Replaces the standalone chevron â€” when no companion / no
+/// a tap target — taps bubble to the parent so the card expand can be
+/// toggled. Replaces the standalone chevron — when no companion / no
 /// extra reward exists, the card isn't expandable at all.
 ///
 /// Fallback emoji: 🎁 for non-achievement extras (direct cosmetic / item
@@ -38,7 +38,7 @@ class EngineCompanionPill extends StatelessWidget {
   /// LevelMilestone; defaults to 🎁 for non-emoji extras).
   final String badge;
 
-  /// Drives the chevron rotation â€” true when the parent card is
+  /// Drives the chevron rotation — true when the parent card is
   /// expanded.
   final bool expanded;
 
@@ -118,7 +118,7 @@ String badgeForReward(RewardDefinition reward) {
 /// - Resolves each non-XP reward against [CosmeticCatalog] so the row
 ///   shows the **real** cosmetic name (e.g. "KÃ¡men Roklin", "RÃ¡meÄek
 ///   Worldwalker") instead of a generic palette glyph.
-/// - No social actions (share / pin) yet â€” these depend on the V2
+/// - No social actions (share / pin) yet — these depend on the V2
 ///   migration of social. The detail stays read-only until the
 ///   companion unlocks.
 Future<void> showEngineCompanionDetailSheet(
@@ -203,7 +203,7 @@ class _CompanionDetailSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: Tokens.spaceLg),
-            // Header row â€” matches legacy _AchievementDetailsSheet:
+            // Header row — matches legacy _AchievementDetailsSheet:
             // emoji badge in colored circle, title + summary, status
             // pill on the right.
             Row(
@@ -269,7 +269,7 @@ class _CompanionDetailSheet extends StatelessWidget {
               label: progressLabel,
               color: color,
             ),
-            // Reward rows â€” one per non-XP reward authored on the
+            // Reward rows — one per non-XP reward authored on the
             // companion. Each row resolves the cosmetic by id and
             // shows its real name + asset, not just the palette glyph
             // we used before.
@@ -463,7 +463,7 @@ class _ProgressBlock extends StatelessWidget {
 /// Falls back to a generic reward-kind label when the id is not in the
 /// cosmetics catalog (chapter unlocks, RPG-only types).
 ///
-/// Tappable when [onTap] is set â€” finale reward blocks pass
+/// Tappable when [onTap] is set — finale reward blocks pass
 /// [showEngineRewardPreviewSheet] so the player can inspect the
 /// cosmetic asset and metadata even while it's still locked.
 class EngineRewardDetailRow extends StatelessWidget {
@@ -507,7 +507,7 @@ class EngineRewardDetailRow extends StatelessWidget {
           ),
           child: Row(
             children: [
-            // Real cosmetic art when we can resolve it â€” otherwise a
+            // Real cosmetic art when we can resolve it — otherwise a
             // type-appropriate placeholder glyph. Keeps the row useful
             // even for reward ids that ship without an image yet.
             if (cosmeticId != null)
@@ -594,7 +594,7 @@ class EngineRewardDetailRow extends StatelessWidget {
     };
   }
 
-  /// Localized type label when the cosmetic id isn't in the catalog â€”
+  /// Localized type label when the cosmetic id isn't in the catalog —
   /// chapter unlocks, generic XP, or deleted entries. Mirrors the
   /// catalog [CosmeticType] vocabulary so the row reads consistently.
   String _kindLabel(RewardDefinition r, AppLocalizations l10n) {
@@ -636,7 +636,7 @@ class EngineRewardDetailRow extends StatelessWidget {
     };
   }
 
-  /// Last-resort label when the catalog has no entry for the id â€”
+  /// Last-resort label when the catalog has no entry for the id —
   /// either the cosmetic was deleted or the reward type ships its own
   /// id space (chapter unlocks). Falls back to the raw id so the row
   /// is still readable rather than blank.
@@ -658,7 +658,7 @@ class EngineRewardDetailRow extends StatelessWidget {
 ///
 /// When the reward resolves to a cosmetic via [CosmeticCatalog], we
 /// open the canonical [CosmeticDetailsSheet] so the inventory and the
-/// quest screen share one detail surface â€” locked finale rewards show
+/// quest screen share one detail surface — locked finale rewards show
 /// the cosmetic's `unlockHint` (e.g. "DokonÄi LesnÃ­ zkouÅ¡ku") instead
 /// of a redundant bespoke layout. Falls back to a minimal local sheet
 /// only when the reward has no cosmetic backing (chapter unlocks, raw
@@ -848,7 +848,7 @@ class _RewardPreviewSheet extends StatelessWidget {
   }
 }
 
-/// Localized label for a [CosmeticType] â€” used by the detail sheet's
+/// Localized label for a [CosmeticType] — used by the detail sheet's
 /// reward rows so each cosmetic reads as e.g. "RÃ¡meÄek Â· VzÃ¡cnÃ½".
 extension _CosmeticTypeLabel on CosmeticType {
   String label(AppLocalizations l10n) {

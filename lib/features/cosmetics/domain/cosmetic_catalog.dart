@@ -1,4 +1,4 @@
-﻿import '../../../l10n/app_localizations.dart';
+import '../../../l10n/app_localizations.dart';
 import 'cosmetic_models.dart';
 import 'package:forgetrack/domain/progression/catalog/ids.dart';
 
@@ -11,7 +11,7 @@ import 'package:forgetrack/domain/progression/catalog/ids.dart';
 /// Player-facing text (name / description / unlock hint) is wired directly to
 /// the generated [AppLocalizations] getters via a closure, e.g.
 /// `name: (l) => l.cosmeticFramePilgrimName`. There is no separate id-to-key
-/// switch table â€” the catalog *is* the mapping. Renaming an `.arb` key
+/// switch table — the catalog *is* the mapping. Renaming an `.arb` key
 /// auto-renames all references through the IDE; typos fail to compile.
 ///
 /// The catalog is intentionally not loaded from JSON or remote config so that
@@ -22,7 +22,7 @@ class CosmeticCatalog {
   static final List<Cosmetic> definitions =
       List.unmodifiable(<Cosmetic>[
     // -------------------------------------------------------------------------
-    // Frames â€” Journey milestone set
+    // Frames — Journey milestone set
     // -------------------------------------------------------------------------
 
     Frame(
@@ -130,7 +130,7 @@ class CosmeticCatalog {
     ),
 
     // -------------------------------------------------------------------------
-    // Backgrounds â€” Journey map regions (camp â†’ dragonrock fortress)
+    // Backgrounds — Journey map regions (camp → dragonrock fortress)
     // -------------------------------------------------------------------------
 
     Background(
@@ -245,7 +245,7 @@ class CosmeticCatalog {
     ),
 
     // -------------------------------------------------------------------------
-    // Backgrounds â€” Developer-only (grant via DevTools only)
+    // Backgrounds — Developer-only (grant via DevTools only)
     // -------------------------------------------------------------------------
 
     Background(
@@ -316,7 +316,7 @@ class CosmeticCatalog {
     ),
 
     // -------------------------------------------------------------------------
-    // Emblems â€” Journey badges (insignia of crossed milestones)
+    // Emblems — Journey badges (insignia of crossed milestones)
     // -------------------------------------------------------------------------
 
     Emblem(
@@ -442,7 +442,7 @@ class CosmeticCatalog {
     ),
 
     // -------------------------------------------------------------------------
-    // Relics â€” Journey-earned tokens (quests, streaks, step totals, prestige)
+    // Relics — Journey-earned tokens (quests, streaks, step totals, prestige)
     // -------------------------------------------------------------------------
 
     RelicCosmetic(
@@ -664,7 +664,7 @@ class CosmeticCatalog {
     ),
 
     // -------------------------------------------------------------------------
-    // Frames â€” Discipline / streak / prestige rewards
+    // Frames — Discipline / streak / prestige rewards
     // -------------------------------------------------------------------------
 
     Frame(

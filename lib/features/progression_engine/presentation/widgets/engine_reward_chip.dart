@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../../../shared/theme/design_tokens.dart';
 import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
@@ -10,7 +10,7 @@ import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 ///
 /// Used on the long-term card aggregate chip strip (primary +
 /// companions) and on regular quest cards once they ship non-XP
-/// rewards. XP rewards are filtered upstream â€” the XP value already
+/// rewards. XP rewards are filtered upstream — the XP value already
 /// lives on the gold pill.
 class EngineRewardChipStrip extends StatelessWidget {
   const EngineRewardChipStrip({

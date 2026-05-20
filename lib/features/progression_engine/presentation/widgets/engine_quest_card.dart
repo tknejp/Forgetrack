@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../domain/progression/player/player_quest_lifecycle.dart';
@@ -22,7 +22,7 @@ import 'engine_companion_pill.dart';
 /// [isExpanded] is true an extra panel reveals the full description, an
 /// XP-scaling line, and the locked hint when the node has one.
 ///
-/// Stateless â€” the parent owns the claim flow, the pill key for the
+/// Stateless — the parent owns the claim flow, the pill key for the
 /// sparkle target, *and* the one-at-a-time expansion state (V1
 /// pattern). The card surfaces taps via [onToggle] but never mutates
 /// state on its own.
@@ -45,7 +45,7 @@ class EngineQuestCard extends StatelessWidget {
   final EngineQuestProgress quest;
   final AppLocalizations l10n;
 
-  /// False while a refresh / claim is in flight â€” disables the pill.
+  /// False while a refresh / claim is in flight — disables the pill.
   final bool enabled;
 
   /// Key used by the parent's sparkle launcher to target this pill.
@@ -110,7 +110,7 @@ class EngineQuestCard extends StatelessWidget {
     // when there's an actual extra reward to surface (rule from the
     // user: "Quest cards nepÅ¯jdou expandovat pokud neobsahujÃ­ odmÄ›nu
     // navÃ­c mimo XP"). Today's daily/weekly quests in the catalog ship
-    // XP-only â€” no companion / no item â€” so they're collapsed-only.
+    // XP-only — no companion / no item — so they're collapsed-only.
     final canExpand = _hasNonXpReward && onToggle != null;
 
     return GestureDetector(
@@ -201,7 +201,7 @@ class EngineQuestCard extends StatelessWidget {
                 const SizedBox(width: Tokens.spaceSm),
                 // Right column: XP pill on top, optional companion
                 // pill below when the quest carries a non-XP reward.
-                // No standalone chevron â€” the pill itself doubles as
+                // No standalone chevron — the pill itself doubles as
                 // the expand affordance.
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -249,7 +249,7 @@ class EngineQuestCard extends StatelessWidget {
             ] else
               const SizedBox(height: Tokens.spaceSm),
             _ProgressRow(quest: quest, accent: accent),
-            // Animate the expand block â€” `AnimatedSize` smooths the
+            // Animate the expand block — `AnimatedSize` smooths the
             // height transition; the conditional child collapses to
             // an empty box so cards without anything in the expanded
             // panel don't reserve space.
@@ -381,7 +381,7 @@ class _StreakChip extends StatelessWidget {
 }
 
 /// Detail panel revealed when the player expands a quest card.
-/// Shows the XP-scaling info (base Ã— level multiplier â†’ preview),
+/// Shows the XP-scaling info (base Ã— level multiplier → preview),
 /// the locked hint when set, and the streak record when present.
 class _ExpandedDetails extends StatelessWidget {
   const _ExpandedDetails({
@@ -401,7 +401,7 @@ class _ExpandedDetails extends StatelessWidget {
     final lockedHint = quest.node.lockedHintKey?.call(l10n);
     final bestStreak = streak?.bestStreak ?? 0;
 
-    // The XP value already lives on the pill in the title row â€” repeating
+    // The XP value already lives on the pill in the title row — repeating
     // it inside the expanded panel only adds noise. The panel keeps the
     // streak record, any locked hint authored on the node, and the
     // bonus XP reward (so the player can read the condition without

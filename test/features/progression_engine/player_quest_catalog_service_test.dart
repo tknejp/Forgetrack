@@ -1,4 +1,4 @@
-﻿// Phase 7 adapter contract pin for PlayerQuestCatalogService.
+// Phase 7 adapter contract pin for PlayerQuestCatalogService.
 //
 // The service is the bridge between the engine's per-evaluation
 // `EngineQuestProgress` view-model list and the pure-domain
@@ -9,7 +9,7 @@
 //
 // These tests verify:
 //   1. The service produces a catalog with the right size + entries.
-//   2. Lifecycle is preserved through the projection â€” flag-derived
+//   2. Lifecycle is preserved through the projection — flag-derived
 //      states on the input show up as the matching sealed subtypes
 //      on the output.
 //   3. evaluatedAt is stamped on every entry.

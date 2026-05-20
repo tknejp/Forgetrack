@@ -1,4 +1,4 @@
-﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import '../../../../../shared/domain/rarity.dart';
 import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';
 import 'package:forgetrack/domain/progression/catalog/content_tag.dart';
@@ -11,7 +11,7 @@ import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import '../engine_catalog_context.dart';
 import 'quest_assets.dart';
 
-/// Sleep domain â€” daily sleep quest + lifetime mastery + rolling-window
+/// Sleep domain — daily sleep quest + lifetime mastery + rolling-window
 /// mastery achievements. Mirrors V1: rule `daily_sleep`,
 /// `sleep_total_250h`/`1000h`, `sleep_month_225h`/`240h`.
 

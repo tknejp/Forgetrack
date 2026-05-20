@@ -1,4 +1,4 @@
-﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:forgetrack/domain/progression/catalog/quest_policies.dart';
 
 import '../../../../../shared/domain/rarity.dart';
@@ -17,7 +17,7 @@ import 'quest_assets.dart';
 const _chapterId = ChapterId('forest_trial');
 const _chainId = ChainId('forest_trial');
 
-/// Forest Trial chapter â€” pilot port of a V1 journey chapter.
+/// Forest Trial chapter — pilot port of a V1 journey chapter.
 ///
 /// Shape mirrors the V1 monolith: one auto-claim "open" quest gated by
 /// player level, three manual-claim "step" quests that share the
@@ -25,7 +25,7 @@ const _chainId = ChainId('forest_trial');
 /// [Quest.nextNodeIds], and a manual-claim finale that drops the
 /// chapter emblem (cosmetic reward).
 ///
-/// Other V1 chapters (ruins_discipline, mine_descent, â€¦) are deferred
+/// Other V1 chapters (ruins_discipline, mine_descent, …) are deferred
 /// until this pattern proves itself end-to-end in the V2 quests
 /// screen.
 List<Objective> forestTrialObjectives() {
@@ -38,7 +38,7 @@ List<Objective> forestTrialObjectives() {
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 10,
-      debugLabel: 'Forest Trial open â€” level >= 10',
+      debugLabel: 'Forest Trial open — level >= 10',
     ),
     // Step 1 ("Rytmus stezky"): 5 days with at least 2 of the daily
     // goals done. Matches the player-facing description ("splÅˆ
@@ -67,11 +67,11 @@ List<Objective> forestTrialObjectives() {
       operator: ObjectiveOperator.atLeast,
       targetValue: 5,
       baselineFromNodeId: ProgressionEntryId('forest_trial_open'),
-      debugLabel: 'Forest Trial step 1 â€” 5 days with 2+ daily goals since open',
+      debugLabel: 'Forest Trial step 1 — 5 days with 2+ daily goals since open',
     ),
     // Step 2 ("PÄ›t dnÃ­ na cestÄ›"): 5 daily-steps completions after
     // step 1 cleared. The old metric pointed at `daily_protein_today`
-    // â€” the description says "splÅˆ krokovÃ½ cÃ­l 5krÃ¡t" so the metric
+    // — the description says "splÅˆ krokovÃ½ cÃ­l 5krÃ¡t" so the metric
     // must read step completions, not protein.
     Objective(
       id: const ObjectiveId('forest_trial_steps_5_objective'),
@@ -81,7 +81,7 @@ List<Objective> forestTrialObjectives() {
       operator: ObjectiveOperator.atLeast,
       targetValue: 5,
       baselineFromNodeId: ProgressionEntryId('forest_trial_daily_wins_5'),
-      debugLabel: 'Forest Trial step 2 â€” 5 daily steps since step 1',
+      debugLabel: 'Forest Trial step 2 — 5 daily steps since step 1',
     ),
     // Step 3 ("OdpoÄinek pod stromy"): 3 days with both daily steps
     // AND daily sleep on the same day. The old metric tracked sleep
@@ -98,7 +98,7 @@ List<Objective> forestTrialObjectives() {
       operator: ObjectiveOperator.atLeast,
       targetValue: 3,
       baselineFromNodeId: ProgressionEntryId('forest_trial_steps_5'),
-      debugLabel: 'Forest Trial step 3 â€” 3 days with steps + sleep since step 2',
+      debugLabel: 'Forest Trial step 3 — 3 days with steps + sleep since step 2',
     ),
     // Finale: cheap auto-true objective. Real gating lives in
     // [QuestNode.prerequisiteNodeIds] which forces all 3 steps to
@@ -110,7 +110,7 @@ List<Objective> forestTrialObjectives() {
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 10,
-      debugLabel: 'Forest Trial finale â€” level >= 10 (prereqs gate the chain)',
+      debugLabel: 'Forest Trial finale — level >= 10 (prereqs gate the chain)',
     ),
   ];
 }

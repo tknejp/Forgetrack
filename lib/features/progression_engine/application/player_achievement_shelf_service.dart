@@ -1,4 +1,4 @@
-﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:forgetrack/domain/progression/player/player_achievement.dart';
 import 'package:forgetrack/domain/progression/player/player_achievement_lifecycle.dart';
 import 'package:forgetrack/domain/progression/player/player_achievement_shelf.dart';
@@ -15,11 +15,11 @@ import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 /// directly because that view-model is a value class with no Flutter
 /// dependencies. The achievement equivalent (`EngineAchievementView`)
 /// carries `NodeDisplay` (localised title/description) which requires
-/// `AppLocalizations` â€” a widget-bound dependency. The provider has
+/// `AppLocalizations` — a widget-bound dependency. The provider has
 /// no access to `AppLocalizations`, so building a shelf via the view
 /// model would force the shelf API into a presentation-tier surface.
 ///
-/// Solution: the service takes pure-domain primitives â€” the same
+/// Solution: the service takes pure-domain primitives — the same
 /// engine state the view-model adapter would read, minus the
 /// localised display strings. The shelf is lifecycle state, not
 /// display data; the two concerns split cleanly here. Widget
@@ -59,11 +59,11 @@ class PlayerAchievementShelfService {
   ///
   ///   - `completedNodeIds.contains(id)` wins (idempotent unlock,
   ///     achievements never re-lock).
-  ///   - else `lockedNodeIds.contains(id)` â†’ [AchievementLocked].
-  ///   - else â†’ [AchievementInProgress] with the objective's actual /
+  ///   - else `lockedNodeIds.contains(id)` → [AchievementLocked].
+  ///   - else → [AchievementInProgress] with the objective's actual /
   ///     target.
   ///
-  /// Duplicate ids in [achievements] are not expected â€” the catalog
+  /// Duplicate ids in [achievements] are not expected — the catalog
   /// emits each row once. The defensive
   /// [PlayerAchievementShelf.fromEntries] last-wins semantics handle
   /// the edge case without throwing.

@@ -1,4 +1,4 @@
-﻿import 'package:meta/meta.dart';
+import 'package:meta/meta.dart';
 
 import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'player_cosmetic_lifecycle.dart';
@@ -14,12 +14,12 @@ import 'player_cosmetic_lifecycle.dart';
 /// names this `PlayerCosmetic { Cosmetic cosmetic; ...}`, but holding
 /// the full catalog reference here would force a churn whenever the
 /// catalog row's fields change. The lifecycle projection is decoupled
-/// from chrome on purpose â€” screens that need both pair `PlayerCosmetic`
+/// from chrome on purpose — screens that need both pair `PlayerCosmetic`
 /// (lifecycle) with `CosmeticCatalog.byId(id)` (chrome).
 ///
 /// **Immutability.** `const` ctor, value-based equals. [evaluatedAt]
 /// participates in equality so consumers can detect stale snapshots
-/// without a separate version field â€” same contract Phase 7 / 8 used.
+/// without a separate version field — same contract Phase 7 / 8 used.
 ///
 /// See:
 ///   - `docs/domain_model/proposal.md` Â§2.4 (PlayerCosmetic entity).
@@ -39,7 +39,7 @@ class PlayerCosmetic {
 
   /// Discriminator + payload for the player-side state. The 4 sealed
   /// subtypes (Hidden / Teased / Claimable / Owned) carry the
-  /// rendering payload the grid card + detail sheet need â€” see
+  /// rendering payload the grid card + detail sheet need — see
   /// `lib/features/cosmetics/domain/player_cosmetic_lifecycle.dart`.
   final PlayerCosmeticLifecycle lifecycle;
 

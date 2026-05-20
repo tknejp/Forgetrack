@@ -1,4 +1,4 @@
-﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:forgetrack/features/progression_engine/application/progression_engine.dart';
@@ -93,7 +93,7 @@ ProgressionEngine _newEngine({
     );
 
 void main() {
-  group('ProgressionEngine â€” happy path', () {
+  group('ProgressionEngine — happy path', () {
     test('emits objective + node + reward events on first run', () async {
       final repo = InMemoryProgressionEngineRepository();
       final engine = _newEngine(
@@ -138,7 +138,7 @@ void main() {
     });
   });
 
-  group('ProgressionEngine â€” idempotency', () {
+  group('ProgressionEngine — idempotency', () {
     test('second run with same input emits no new completions or grants',
         () async {
       final repo = InMemoryProgressionEngineRepository();
@@ -202,7 +202,7 @@ void main() {
     });
   });
 
-  group('ProgressionEngine â€” manual claim', () {
+  group('ProgressionEngine — manual claim', () {
     test('manual node enters availability, claim then completes + grants',
         () async {
       final repo = InMemoryProgressionEngineRepository();
@@ -224,7 +224,7 @@ void main() {
         repository: repo,
       );
 
-      // Objective satisfied â†’ node available, NOT completed.
+      // Objective satisfied → node available, NOT completed.
       final first = await evaluateWithContext(engine, _context(steps: 1500));
       expect(first.completedNodes, isEmpty);
       expect(first.availableNodes, hasLength(1));

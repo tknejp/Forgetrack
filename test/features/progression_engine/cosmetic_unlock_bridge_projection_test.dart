@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:forgetrack/domain/journal/journal_event.dart';
 import 'package:forgetrack/domain/journal/journal_projection.dart';
@@ -12,10 +12,10 @@ import 'package:forgetrack/features/progression_engine/application/cosmetic_unlo
 ///
 /// Mirrors the two rebuild scenarios the migration plan calls out:
 ///
-/// * **Factory reset** â€” empty event stream â†’ no cosmetics applied,
+/// * **Factory reset** — empty event stream → no cosmetics applied,
 ///   inventory stays empty. The bridge must not crash on an empty
 ///   ledger or report phantom unlocks.
-/// * **Pull-and-merge** â€” historical reward grants from a merged
+/// * **Pull-and-merge** — historical reward grants from a merged
 ///   ledger get replayed into the local cosmetics inventory exactly
 ///   once. A second rebuild must be a true no-op (idempotency).
 ///
@@ -24,7 +24,7 @@ import 'package:forgetrack/features/progression_engine/application/cosmetic_unlo
 /// bit-for-bit, so a regression in projection ordering or filtering
 /// would surface here.
 void main() {
-  group('CosmeticUnlockBridge â€” JournalProjection', () {
+  group('CosmeticUnlockBridge — JournalProjection', () {
     late InMemoryCosmeticsRepository repo;
     late CosmeticsService service;
     late CosmeticsProvider cosmetics;
@@ -43,7 +43,7 @@ void main() {
       bridge.bindCosmetics(cosmetics);
     });
 
-    test('factoryReset with empty events â†’ 0 applied, inventory empty', () async {
+    test('factoryReset with empty events → 0 applied, inventory empty', () async {
       final applied = await bridge.rebuildFromJournal(
         events: const <JournalEvent>[],
         reason: RebuildFromJournalReason.factoryReset,
@@ -93,7 +93,7 @@ void main() {
           containsAll(<String>['frame_wildwood', 'companion_forest_fox']));
     });
 
-    test('rebuild is idempotent â€” second call applies 0 new unlocks',
+    test('rebuild is idempotent — second call applies 0 new unlocks',
         () async {
       final events = <JournalEvent>[
         RewardGrantEvent(

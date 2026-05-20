@@ -1,4 +1,4 @@
-﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:forgetrack/domain/progression/catalog/quest_policies.dart';
 
 import '../../../../../shared/domain/rarity.dart';
@@ -12,7 +12,7 @@ import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import 'package:forgetrack/domain/progression/catalog/unlock_condition.dart';
 import 'quest_assets.dart';
 
-/// Pilgrim's Path â€” the level-1 starter chapter.
+/// Pilgrim's Path — the level-1 starter chapter.
 ///
 /// Onboarding chapter that mirrors V1's "starter quest" set
 /// (`kProgressionStarterQuestIds` = daily_steps_today + daily_sleep_today
@@ -23,7 +23,7 @@ import 'quest_assets.dart';
 ///
 /// Step semantics use [Objective.baselineFromNodeId] so each
 /// step starts counting from the moment the chain step actually
-/// unlocked â€” a returning player who already has 100 daily completions
+/// unlocked — a returning player who already has 100 daily completions
 /// banked still has to walk / sleep / earn once after touching this
 /// chapter to clear the steps.
 
@@ -39,7 +39,7 @@ List<Objective> pilgrimPathObjectives() {
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 1,
-      debugLabel: 'Pilgrim Path open â€” level >= 1 (auto-unlocked)',
+      debugLabel: 'Pilgrim Path open — level >= 1 (auto-unlocked)',
     ),
     Objective(
       id: const ObjectiveId('pilgrim_path_first_steps_objective'),
@@ -49,7 +49,7 @@ List<Objective> pilgrimPathObjectives() {
       operator: ObjectiveOperator.atLeast,
       targetValue: 1,
       baselineFromNodeId: ProgressionEntryId('pilgrim_path_open'),
-      debugLabel: 'Pilgrim Path step 1 â€” daily steps since open',
+      debugLabel: 'Pilgrim Path step 1 — daily steps since open',
     ),
     Objective(
       id: const ObjectiveId('pilgrim_path_first_sleep_objective'),
@@ -59,15 +59,15 @@ List<Objective> pilgrimPathObjectives() {
       operator: ObjectiveOperator.atLeast,
       targetValue: 1,
       baselineFromNodeId: ProgressionEntryId('pilgrim_path_first_steps'),
-      debugLabel: 'Pilgrim Path step 2 â€” daily sleep since step 1',
+      debugLabel: 'Pilgrim Path step 2 — daily sleep since step 1',
     ),
     // Step 3 used to be `RewardCountMetric()` baselined on step 2,
     // but that self-fulfils: claiming step 2 grants XP, which lands
-    // a reward event the same tick â€” step 3 reads 100% the instant
+    // a reward event the same tick — step 3 reads 100% the instant
     // step 2 finishes. Replaced with a "complete daily protein once
     // since unlock" check. Narratively this introduces the third
     // daily-loop pillar (steps + sleep already taught by steps 1 and
-    // 2) â€” a fitting send-off before the player heads into the
+    // 2) — a fitting send-off before the player heads into the
     // Forest Trial chapter at level 10.
     Objective(
       id: const ObjectiveId('pilgrim_path_first_reward_objective'),
@@ -77,7 +77,7 @@ List<Objective> pilgrimPathObjectives() {
       operator: ObjectiveOperator.atLeast,
       targetValue: 1,
       baselineFromNodeId: ProgressionEntryId('pilgrim_path_first_sleep'),
-      debugLabel: 'Pilgrim Path step 3 â€” daily protein since step 2',
+      debugLabel: 'Pilgrim Path step 3 — daily protein since step 2',
     ),
     Objective(
       id: const ObjectiveId('pilgrim_path_finale_objective'),
@@ -86,7 +86,7 @@ List<Objective> pilgrimPathObjectives() {
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 1,
-      debugLabel: 'Pilgrim Path finale â€” level gate (prereqs gate the chain)',
+      debugLabel: 'Pilgrim Path finale — level gate (prereqs gate the chain)',
     ),
   ];
 }

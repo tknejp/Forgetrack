@@ -1,4 +1,4 @@
-﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import '../../../../../shared/domain/rarity.dart';
 import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';
 import 'package:forgetrack/domain/progression/catalog/content_tag.dart';
@@ -11,7 +11,7 @@ import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import '../engine_catalog_context.dart';
 import 'quest_assets.dart';
 
-/// Body / weight domain â€” daily weight-log quest.
+/// Body / weight domain — daily weight-log quest.
 ///
 /// The objective fires the moment a weight record exists for today,
 /// driven by [WeightLoggedTodayMetric]. The home weight card surfaces

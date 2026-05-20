@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:forgetrack/features/cosmetics/application/player_cosmetic_lifecycle_service.dart';
 import 'package:forgetrack/features/cosmetics/domain/cosmetic_catalog.dart';
 import 'package:forgetrack/features/cosmetics/domain/cosmetic_lifecycle_helpers.dart';
@@ -92,7 +92,7 @@ void main() {
       expect(lifecycle, isA<CosmeticTeased>());
     });
 
-    test('partial reveal â†’ CosmeticTeased with progress + rows', () {
+    test('partial reveal → CosmeticTeased with progress + rows', () {
       final rows = [
         const CosmeticRevealConditionRow(
           conditionId: 'level_at_least_5',
@@ -128,7 +128,7 @@ void main() {
       expect(lifecycle.conditionRows, rows);
     });
 
-    test('visibleLocked â†’ CosmeticTeased without progress', () {
+    test('visibleLocked → CosmeticTeased without progress', () {
       final inventory = service.build(
         catalog: catalog,
         unlocked: const {},
@@ -150,7 +150,7 @@ void main() {
       expect(lifecycle.totalConditions, 0);
     });
 
-    test('hidden reveal â†’ CosmeticHidden', () {
+    test('hidden reveal → CosmeticHidden', () {
       final inventory = service.build(
         catalog: catalog,
         unlocked: const {},
@@ -234,12 +234,12 @@ void main() {
       expect(inventory.length, catalog.enabled.length);
     });
 
-    test('Owned â†’ unlock event transition mirrors Inventory', () {
-      // Simulates the happy-path transition: Hidden â†’ Teased(partial) â†’
-      // Claimable â†’ Owned via three successive builds.
+    test('Owned → unlock event transition mirrors Inventory', () {
+      // Simulates the happy-path transition: Hidden → Teased(partial) →
+      // Claimable → Owned via three successive builds.
       final results = <PlayerCosmeticLifecycle>[];
 
-      // 1. No progression data yet â†’ defaults to Hidden.
+      // 1. No progression data yet → defaults to Hidden.
       results.add(
         service
             .build(
@@ -253,7 +253,7 @@ void main() {
             .lifecycle,
       );
 
-      // 2. Partial progress lands â†’ Teased.
+      // 2. Partial progress lands → Teased.
       results.add(
         service
             .build(
@@ -274,7 +274,7 @@ void main() {
             .lifecycle,
       );
 
-      // 3. Engine fires availability â†’ Claimable (rows still attached
+      // 3. Engine fires availability → Claimable (rows still attached
       //    so the sheet can render the checklist alongside the CTA).
       results.add(
         service
@@ -296,7 +296,7 @@ void main() {
             .lifecycle,
       );
 
-      // 4. Player claims â†’ Owned.
+      // 4. Player claims → Owned.
       results.add(
         service
             .build(

@@ -1,4 +1,4 @@
-﻿import 'package:meta/meta.dart';
+import 'package:meta/meta.dart';
 
 import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'player_cosmetic.dart';
@@ -11,7 +11,7 @@ import 'player_cosmetic_lifecycle.dart';
 /// same construction contract (factory from entries, immutable map
 /// wrapped unmodifiable), same accessor vocabulary, same empty
 /// sentinel. The "inventory" term matches the proposal's collection
-/// noun (`docs/domain_model/proposal.md` Â§2.4) â€” the player browses
+/// noun (`docs/domain_model/proposal.md` Â§2.4) — the player browses
 /// owned / teased cosmetics as a shelf-style inventory, not a queue.
 ///
 /// **Construction.** Build via
@@ -19,7 +19,7 @@ import 'player_cosmetic_lifecycle.dart';
 /// `lib/features/cosmetics/application/`. The service takes primitive
 /// inputs (catalog rows + unlocked map + reveal results + available
 /// node ids) so the [Inventory] surface itself stays a pure-domain
-/// value class â€” no Flutter / l10n / provider imports.
+/// value class — no Flutter / l10n / provider imports.
 ///
 /// **Empty state.** [Inventory.empty] is the sentinel for the
 /// pre-first-evaluation window. Returns empty iterables and null
@@ -36,7 +36,7 @@ import 'player_cosmetic_lifecycle.dart';
 @immutable
 class Inventory {
   /// Construct from an iterable of [PlayerCosmetic] entries.
-  /// Duplicate ids keep the last occurrence â€” matches Dart's
+  /// Duplicate ids keep the last occurrence — matches Dart's
   /// `Map.fromEntries` semantics and the service contract.
   factory Inventory.fromEntries(Iterable<PlayerCosmetic> entries) {
     final map = <CosmeticId, PlayerCosmetic>{};
@@ -69,7 +69,7 @@ class Inventory {
   /// Number of catalog rows in the inventory. O(1).
   int get length => _entries.length;
 
-  /// True when the inventory has zero entries â€” typically the sentinel
+  /// True when the inventory has zero entries — typically the sentinel
   /// [Inventory.empty] before the first evaluation completes.
   bool get isEmpty => _entries.isEmpty;
 
@@ -83,19 +83,19 @@ class Inventory {
   Iterable<PlayerCosmetic> get owned =>
       _entries.values.where((c) => c.lifecycle is CosmeticOwned);
 
-  /// Cosmetics in [CosmeticClaimable] â€” the player can claim them now.
+  /// Cosmetics in [CosmeticClaimable] — the player can claim them now.
   /// Today this is only ever companion availability; future producers
   /// (premium grants, promotional codes) layer on the same state.
   Iterable<PlayerCosmetic> get claimable =>
       _entries.values.where((c) => c.lifecycle is CosmeticClaimable);
 
-  /// Cosmetics in [CosmeticTeased] â€” identity revealed, locked. Mixes
+  /// Cosmetics in [CosmeticTeased] — identity revealed, locked. Mixes
   /// the no-progress "visibleLocked" flavour with the partial-progress
   /// flavour; widgets pattern-match on `hasProgress` to distinguish.
   Iterable<PlayerCosmetic> get teased =>
       _entries.values.where((c) => c.lifecycle is CosmeticTeased);
 
-  /// Cosmetics in [CosmeticHidden] â€” silhouette in the grid.
+  /// Cosmetics in [CosmeticHidden] — silhouette in the grid.
   Iterable<PlayerCosmetic> get hidden =>
       _entries.values.where((c) => c.lifecycle is CosmeticHidden);
 

@@ -1,4 +1,4 @@
-﻿import '../models/engine_evaluation_context.dart';
+import '../models/engine_evaluation_context.dart';
 import 'package:forgetrack/domain/progression/catalog/unlock_condition.dart';
 import '../repository/ledger_snapshot.dart';
 
@@ -11,8 +11,8 @@ import '../repository/ledger_snapshot.dart';
 /// completion).
 ///
 /// **Lifetime vs period semantics.** Every set this resolver receives
-/// â€” [completedNodesLifetime], [claimedNodesLifetime],
-/// [unlockedChapterIds], [availableCompanionIds] â€” describes "this
+/// — [completedNodesLifetime], [claimedNodesLifetime],
+/// [unlockedChapterIds], [availableCompanionIds] — describes "this
 /// has happened at least once ever". That matches every current
 /// `NodeCompleted` use case in the catalog: chain prereqs point at
 /// lifetime-scoped targets (chapter opens, combo steps, side-quest

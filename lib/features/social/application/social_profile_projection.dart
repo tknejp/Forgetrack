@@ -1,4 +1,4 @@
-﻿import 'package:forgetrack/domain/journal/journal_event.dart';
+import 'package:forgetrack/domain/journal/journal_event.dart';
 import 'package:forgetrack/domain/journal/journal_projection.dart';
 
 import '../../../core/logging/app_log.dart';
@@ -46,7 +46,7 @@ typedef SocialProfileInputsGetter = SocialProfileInputs? Function();
 /// row from the canonical Player + Loadout + Journal state.
 ///
 /// **Why a projection.** The Firestore profile is a denormalised cache
-/// â€” every field can be re-derived from Player aggregate +
+/// — every field can be re-derived from Player aggregate +
 /// [JournalEvent]s. Promoting the build path into a
 /// [JournalProjection] (per `docs/domain_model/migration_plan.md`
 /// Â§Phase 20) gives this cache rebuild the same documented contract as
@@ -61,10 +61,10 @@ typedef SocialProfileInputsGetter = SocialProfileInputs? Function();
 /// **Incremental vs. rebuild paths.** Both share the same projection
 /// math:
 ///
-/// * Incremental â€” `SocialProvider._syncProfileIfNeeded` does
+/// * Incremental — `SocialProvider._syncProfileIfNeeded` does
 ///   signature-debounced publishes after every relevant state change.
 ///   It calls [publishIfReady] directly.
-/// * Rebuild â€” explicit triggers (factory reset, cloud
+/// * Rebuild — explicit triggers (factory reset, cloud
 ///   pull-and-merge, devtools "republish") call [rebuildFromJournal]
 ///   which delegates to the same publish path. Today the only wired
 ///   trigger is the incremental path (the engine pull-and-merge
@@ -88,7 +88,7 @@ class SocialProfileProjection
   /// inputs aren't ready (no signed-in user, social disabled,
   /// providers not yet bound).
   ///
-  /// Throws whatever [SocialPresenceRepository.upsertProfile] throws â€”
+  /// Throws whatever [SocialPresenceRepository.upsertProfile] throws —
   /// the caller (`SocialProvider`) translates the error for the UI.
   Future<SocialProfileSyncPayload?> publishIfReady() async {
     final payload = buildPayload();
@@ -97,7 +97,7 @@ class SocialProfileProjection
     return payload;
   }
 
-  /// Pure projection â€” same inputs â†’ same output, no IO.
+  /// Pure projection — same inputs → same output, no IO.
   SocialProfileSyncPayload? buildPayload() {
     final inputs = _inputsGetter();
     if (inputs == null) return null;
@@ -139,7 +139,7 @@ class SocialProfileProjection
     // own `ledger` field already mirrors the journal after the
     // pull-and-merge call site that fronts this method, so reading
     // through the engine getter gives the same answer as walking the
-    // events parameter â€” and matches the [publishIfReady] path
+    // events parameter — and matches the [publishIfReady] path
     // exactly. The parameter remains part of the contract so the
     // interface stays uniform with cosmetics replay.
     return publishIfReady();
@@ -149,7 +149,7 @@ class SocialProfileProjection
   /// catalog. The published `rarity` field is the shared [Rarity] enum
   /// (`rarity.name` on the wire); receivers with the achievement id in
   /// their local catalog still resolve display through the V2 display
-  /// resolver â€” the cloud-side rarity is the unknown-id colour fallback.
+  /// resolver — the cloud-side rarity is the unknown-id colour fallback.
   static List<SocialUnlockedAchievement> _buildUnlockedAchievementsFromEngine(
     ProgressionEngineProvider engine,
   ) {
@@ -183,7 +183,7 @@ class SocialProfileProjection
   }
 
   /// Total XP grant rows in the V2 ledger. V2 grants rewards
-  /// immediately at evaluation time â€” there is no claimed vs pending
+  /// immediately at evaluation time — there is no claimed vs pending
   /// split, so this single number stands in for both legacy counters.
   static int _grantedRewardCount(ProgressionEngineProvider engine) {
     final ledger = engine.ledger;

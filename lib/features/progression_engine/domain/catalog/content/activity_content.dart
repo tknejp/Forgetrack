@@ -1,4 +1,4 @@
-﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import '../../../../../shared/domain/rarity.dart';
 import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';
 import 'package:forgetrack/domain/progression/catalog/content_tag.dart';
@@ -11,7 +11,7 @@ import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import '../engine_catalog_context.dart';
 import 'quest_assets.dart';
 
-/// Activity domain â€” daily 30-minute quest, weekly minutes quest, and
+/// Activity domain — daily 30-minute quest, weekly minutes quest, and
 /// the per-rule "weekly warrior" reward-count achievements. Mirrors
 /// V1: rules daily_activity / weekly_activity, achievements
 /// weekly_activity_mastery / _4 / _12 / _24 / _52.
@@ -168,7 +168,7 @@ List<ProgressionEntry> activityNodes() {
       badgeEmoji: '\u{2744}\u{FE0F}', // snowflake
       titleKey: (l) => l.progAchievementWeeklyActivity36Title,
       descriptionKey: (l) => l.progAchievementWeeklyActivity36Desc,
-      // Sources relic_aurora_thread â€” ~9 months of consistent weekly
+      // Sources relic_aurora_thread — ~9 months of consistent weekly
       // activity, the Aurora Stag (lvl 65) ingredient.
       rewards: const [CosmeticReward(cosmeticId: CosmeticId('relic_aurora_thread'))],
       contentTags: const [ContentTag.core, ContentTag.fitness],

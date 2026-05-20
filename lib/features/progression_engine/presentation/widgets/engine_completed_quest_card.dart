@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -16,7 +16,7 @@ import 'engine_chapter_card.dart' show EngineChapterChainPreview;
 import 'engine_companion_pill.dart';
 
 /// Compact, expandable card rendered inside the DOKONÄŒENÃ‰ QUESTY
-/// section. One card per [EngineCompletedEntry] â€” a single quest or
+/// section. One card per [EngineCompletedEntry] — a single quest or
 /// an aggregated chain.
 ///
 /// Collapsed layout:
@@ -30,11 +30,11 @@ import 'engine_companion_pill.dart';
 /// key) when [EngineCompletedEntry.hasClaimable] is true, otherwise
 /// "claimed" (greyed, check icon, total XP credited).
 ///
-/// Expanded layout adds â€” beneath the title row:
+/// Expanded layout adds — beneath the title row:
 ///
 /// 1. Description.
 /// 2. Chain preview row (only when the entry represents an actual
-///    chain â€” single-quest entries skip it).
+///    chain — single-quest entries skip it).
 /// 3. Companion list ("TakÃ© odemkne") with the same row vocabulary as
 ///    the long-term card. Tapping a companion opens
 ///    [showEngineCompanionDetailSheet].
@@ -54,7 +54,7 @@ class EngineCompletedQuestCard extends StatelessWidget {
   final AppLocalizations l10n;
   final bool enabled;
 
-  /// Sparkle target key for the gold pill. Single key per entry â€”
+  /// Sparkle target key for the gold pill. Single key per entry —
   /// the screen still owns the pill key map.
   final GlobalKey pillKey;
 
@@ -85,7 +85,7 @@ class EngineCompletedQuestCard extends StatelessWidget {
           color: const Color(0xFF111423),
           borderRadius: BorderRadius.circular(Tokens.questCardRadius),
           border: Border.all(
-            // Gold-tinted border only while a claim is pending â€”
+            // Gold-tinted border only while a claim is pending —
             // already-claimed entries blend into the neutral card
             // background so the eye lands on rows that still owe the
             // player XP.
@@ -101,7 +101,7 @@ class EngineCompletedQuestCard extends StatelessWidget {
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
-            // Gold glow only on claimable entries â€” those still owe
+            // Gold glow only on claimable entries — those still owe
             // the player XP and deserve the visual nudge. Claimed
             // entries get the regular shadow only so they read as
             // archived rather than "look at me".
@@ -197,7 +197,7 @@ class EngineCompletedQuestCard extends StatelessWidget {
 
   XpClaimPillData _pillData() {
     if (entry.hasClaimable) {
-      // First claimable step drives the tap â€” claim handlers walk the
+      // First claimable step drives the tap — claim handlers walk the
       // chain top-down and claim what's available. We pass the
       // earliest-by-chainOrder claimable step so prereq chains advance
       // step by step.
@@ -212,7 +212,7 @@ class EngineCompletedQuestCard extends StatelessWidget {
         onTap: enabled ? (center) => onClaim(claimable, from: center) : (_) {},
       );
     }
-    // Fully claimed â€” show the credited XP total (sum across chain
+    // Fully claimed — show the credited XP total (sum across chain
     // steps) in the muted "claimed" pill style.
     return XpClaimPillData.claimed(entry.totalXpClaimed);
   }
@@ -223,7 +223,7 @@ class EngineCompletedQuestCard extends StatelessWidget {
 }
 
 /// Leading asset that mirrors the long-term card's leading but greys
-/// out for claimed entries â€” matches the user's "zeÅ¡edne jako zamÄenÃ½
+/// out for claimed entries — matches the user's "zeÅ¡edne jako zamÄenÃ½
 /// quest" intent. Claimable entries stay at full opacity to draw the
 /// eye to the gold pill on the right.
 class _Leading extends StatelessWidget {
@@ -288,7 +288,7 @@ class _ExpandedBody extends StatelessWidget {
             height: 1.45,
           ),
         ),
-        // Chain preview â€” only renders when the entry is an actual
+        // Chain preview — only renders when the entry is an actual
         // chain. For single-quest entries we skip it; there's nothing
         // to show.
         if (entry.isChain) ...[
@@ -321,7 +321,7 @@ class _ExpandedBody extends StatelessWidget {
     );
   }
 
-  /// The first chain step the player has not yet touched â€” i.e. the
+  /// The first chain step the player has not yet touched — i.e. the
   /// next ðŸ”’ dot in the chain preview. Returns null when every chain
   /// step has been claimed / is claimable (player has reached the
   /// end of the authored chain) or when the entry isn't a chain.

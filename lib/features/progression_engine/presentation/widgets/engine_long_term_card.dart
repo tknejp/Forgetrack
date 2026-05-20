@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -50,7 +50,7 @@ class EngineLongTermCard extends StatelessWidget {
 
   /// Full chain (in chainOrder) the active quest belongs to, used to
   /// render the dot/connector row beneath the description. Empty list
-  /// or one-element list when the quest is not part of a chain â€” the
+  /// or one-element list when the quest is not part of a chain — the
   /// preview row hides.
   final List<EngineQuestProgress> chain;
 
@@ -78,7 +78,7 @@ class EngineLongTermCard extends StatelessWidget {
         if (r is! XpReward) r,
     ];
     // Chain-finale non-XP rewards (e.g. Worldwalker frame on the
-    // chain's last step) â€” surfaced as a "Po dokonÄenÃ­ Å™ady" block
+    // chain's last step) — surfaced as a "Po dokonÄenÃ­ Å™ady" block
     // so a mid-chain step still advertises what waits at the end.
     final finaleRewards = chain.isEmpty
         ? const <RewardDefinition>[]
@@ -87,7 +87,7 @@ class EngineLongTermCard extends StatelessWidget {
               if (r is! XpReward) r,
           ];
     // First chain step the player hasn't yet touched. Drives the
-    // expanded panel's "Next step locked becauseâ€¦" hint so chained
+    // expanded panel's "Next step locked because…" hint so chained
     // long-term quests never look stuck without explanation.
     EngineQuestProgress? nextLockedStep;
     for (final q in chain) {
@@ -179,7 +179,7 @@ class EngineLongTermCard extends StatelessWidget {
                 const SizedBox(width: Tokens.spaceSm),
                 // Right column: XP pill on top, companion pill(s) below.
                 // The companion pill replaces the legacy stand-alone
-                // chevron â€” it's both the "extra reward exists" hint
+                // chevron — it's both the "extra reward exists" hint
                 // and the expand toggle.
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -199,7 +199,7 @@ class EngineLongTermCard extends StatelessWidget {
                 ),
               ],
             ),
-            // Chain preview row â€” same visual as the chapter card so
+            // Chain preview row — same visual as the chapter card so
             // chained long-term goals (lifetime steps, XP milestones,
             // reward hunter) read the same as chapter chains. Hidden
             // for orphan long-term quests with no chain.
@@ -249,7 +249,7 @@ class EngineLongTermCard extends StatelessWidget {
   /// Stack of [EngineCompanionPill]s rendered under the XP pill.
   ///
   /// One pill per companion node (capped at 2 to keep the right
-  /// column tidy â€” overflow surfaces in the expanded panel). When the
+  /// column tidy — overflow surfaces in the expanded panel). When the
   /// quest has no companions but carries a non-XP direct reward, a
   /// single fallback pill is rendered using the reward kind's emoji.
   List<Widget> _buildCompanionPills({
@@ -301,15 +301,15 @@ class EngineLongTermCard extends StatelessWidget {
 /// Combined expanded-body content for the long-term card. Stacks
 /// (in order, only the populated chunks):
 ///
-/// 1. **Next-step hint** â€” names the first locked chain step and
+/// 1. **Next-step hint** — names the first locked chain step and
 ///    explains the gate (uses node's `lockedHintKey` when authored,
 ///    otherwise the generic "complete the previous step" copy). Keeps
 ///    chained long-term quests from looking stuck without
 ///    explanation.
-/// 2. **Companion list** ("TakÃ© odemkne") â€” sibling nodes that share
+/// 2. **Companion list** ("TakÃ© odemkne") — sibling nodes that share
 ///    the active step's objective. Each row opens the V2 companion
 ///    detail sheet.
-/// 3. **Chain finale rewards** â€” non-XP rewards on the chain's last
+/// 3. **Chain finale rewards** — non-XP rewards on the chain's last
 ///    step (e.g. Worldwalker frame). Surfaced as a chip strip under
 ///    a "Chapter finale reward" header so the player can see what
 ///    waits at the end while working a mid-chain step.
@@ -427,7 +427,7 @@ class _NextStepHint extends StatelessWidget {
   }
 }
 
-/// Companions block â€” same shape as the legacy "TakÃ© odemkne" panel
+/// Companions block — same shape as the legacy "TakÃ© odemkne" panel
 /// kept its own class so the [_LongTermExpanded] orchestrator only
 /// stitches blocks together.
 class _AlsoUnlocks extends StatelessWidget {
@@ -481,7 +481,7 @@ class _AlsoUnlocks extends StatelessWidget {
   }
 }
 
-/// "Po dokonÄenÃ­ Å™ady" block â€” surfaces the chain's last step's
+/// "Po dokonÄenÃ­ Å™ady" block — surfaces the chain's last step's
 /// non-XP rewards as chips. Mirrors the chapter card's "PO DOKONÄŒENÃ
 /// KAPITOLY" footer so the player sees what's waiting at the end
 /// regardless of which step they're currently working on.

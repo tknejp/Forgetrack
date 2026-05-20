@@ -1,4 +1,4 @@
-﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import '../../../../../shared/domain/rarity.dart';
 import 'package:forgetrack/domain/progression/catalog/content_tag.dart';
 import 'package:forgetrack/domain/progression/catalog/objective.dart';
@@ -9,7 +9,7 @@ import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import '../engine_catalog_context.dart';
 
-/// Welcome flow â€” the first achievement the player ever unlocks
+/// Welcome flow — the first achievement the player ever unlocks
 /// (no objective, no conditions) plus the "first reward" milestone
 /// that fires after their first claimed grant.
 
@@ -29,11 +29,11 @@ List<ProgressionEntry> welcomeNodes() {
   return [
     Achievement(
       id: const ProgressionEntryId('welcome_to_journey'),
-      // No objective, no conditions â€” fires on first evaluation.
+      // No objective, no conditions — fires on first evaluation.
       titleKey: (l) => l.progAchievementWelcomeToJourneyTitle,
       descriptionKey: (l) => l.progAchievementWelcomeToJourneyDesc,
       // Welcome ships a starter pack so the player has something to
-      // equip on day one â€” the camp background + the pilgrim frame.
+      // equip on day one — the camp background + the pilgrim frame.
       // The pilgrim_emblem comes later from the Pilgrim Path chapter
       // finale; this is just the starter wardrobe.
       rewards: const [

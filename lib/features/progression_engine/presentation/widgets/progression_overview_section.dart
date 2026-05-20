@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -20,7 +20,7 @@ import 'package:forgetrack/features/progression_engine/domain/progression_domain
 ///   * 2x2 grid (total XP, XP to next, achievements, quests done)
 ///   * current + best domain streak pills
 ///
-/// Active daily quests no longer live here â€” they moved to the expanded
+/// Active daily quests no longer live here — they moved to the expanded
 /// state of `HeroProgressionHeader`.
 class ProgressionOverviewSection extends StatefulWidget {
   const ProgressionOverviewSection({super.key});
@@ -256,7 +256,7 @@ class _CompactChip extends StatelessWidget {
   }
 }
 
-// â”€â”€ Mini stats grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Mini stats grid ───────────────────────────────────────────────────────────
 
 class _MiniStatGrid extends StatelessWidget {
   const _MiniStatGrid({
@@ -404,7 +404,7 @@ class _MiniStatCell extends StatelessWidget {
   }
 }
 
-// â”€â”€ Domain streak summary â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Domain streak summary ─────────────────────────────────────────────────────
 
 class _DomainSummary extends StatelessWidget {
   const _DomainSummary({
@@ -542,7 +542,7 @@ class _DomainSummaryPill extends StatelessWidget {
   }
 }
 
-// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 class _DomainStreak {
   const _DomainStreak({

@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
@@ -122,13 +122,13 @@ class SocialProvider extends ChangeNotifier {
 
   /// Aggregated read view of every social state surface for the
   /// signed-in user. Phase 17 of the domain refactor introduces this
-  /// as the forward-compatible read shape â€” widgets can incrementally
+  /// as the forward-compatible read shape — widgets can incrementally
   /// migrate from per-getter reads (`socialProvider.friendships`,
   /// `.recentShares`, `.notifications`) to a single
   /// `socialProvider.presence` read. Phase 19 will sweep widgets.
   ///
   /// `ownProfile` is null today because the provider doesn't track
-  /// the signed-in user's published profile snapshot locally â€” it
+  /// the signed-in user's published profile snapshot locally — it
   /// only *writes* it (`publishProfile`). A follow-up will hydrate
   /// own profile via `watchProfilesByIds([_activeUid])` so the
   /// aggregate can drive the header without an extra round-trip.
@@ -161,7 +161,7 @@ class SocialProvider extends ChangeNotifier {
       _lastAuthSignature = authSignature;
       // Warm the image cache with the Auth photoUrl as soon as the user
       // is known. This URL is the hero header's fallback before the
-      // Firestore profile arrives â€” precaching here means the avatar
+      // Firestore profile arrives — precaching here means the avatar
       // paints synchronously on first navigate to the home screen.
       precacheProfilePhoto(authProvider.user?.photoUrl);
       unawaited(_reconcileSession());
@@ -401,13 +401,13 @@ class SocialProvider extends ChangeNotifier {
   /// Maps raw V2 ledger completions read from `users/{uid}/engineNodeCompletions`
   /// into the friend-view achievement list.
   ///
-  /// Filters to [Achievement] ids â€” quest / milestone completions are
+  /// Filters to [Achievement] ids — quest / milestone completions are
   /// in the same collection but live elsewhere in the UI. Per-node we
   /// keep the earliest completion timestamp (engine ledger may have
   /// multiple period rows for repeating nodes; achievements are
   /// once-and-done so this is mostly a guard).
   ///
-  /// Catalog metadata (rarity, domain) comes from the LOCAL catalog â€”
+  /// Catalog metadata (rarity, domain) comes from the LOCAL catalog —
   /// every device runs the same compiled app version, so the catalog
   /// is the right source even for someone else's data.
   List<SocialUnlockedAchievement> _buildUnlockedAchievementsFromRemote(
@@ -817,7 +817,7 @@ class SocialProvider extends ChangeNotifier {
   /// Assemble the canonical inputs the [SocialProfileProjection]
   /// denormalises into a [SocialProfileSyncPayload].
   ///
-  /// Returns null when the social session isn't ready to publish â€”
+  /// Returns null when the social session isn't ready to publish —
   /// the projection treats that as a no-op.
   SocialProfileInputs? _collectProfileInputs() {
     final authProvider = _authProvider;

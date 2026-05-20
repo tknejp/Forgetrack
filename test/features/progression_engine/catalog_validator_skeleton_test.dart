@@ -1,4 +1,4 @@
-﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:forgetrack/features/progression_engine/domain/catalog/catalog_validator.dart';
@@ -69,7 +69,7 @@ Quest _quest({
     );
 
 void main() {
-  group('CatalogValidator â€” identity', () {
+  group('CatalogValidator — identity', () {
     test('flags duplicate objective ids as errors', () {
       final validator = CatalogValidator(
         objectiveCatalog: _FakeObjectiveCatalog([
@@ -122,7 +122,7 @@ void main() {
           _quest(
             id: 'q1',
             objectiveId: ObjectiveId('o1'),
-            // Manual without lockedHintKey â†’ warning, not error.
+            // Manual without lockedHintKey → warning, not error.
             claimPolicy: ClaimPolicy.manual,
           ),
         ]),
@@ -131,7 +131,7 @@ void main() {
     });
   });
 
-  group('CatalogValidator â€” references', () {
+  group('CatalogValidator — references', () {
     test('flags node referencing unknown objective', () {
       final validator = CatalogValidator(
         objectiveCatalog: const _FakeObjectiveCatalog([]),
@@ -167,7 +167,7 @@ void main() {
     });
   });
 
-  group('CatalogValidator â€” coherence warnings', () {
+  group('CatalogValidator — coherence warnings', () {
     test('warns on manual claim node missing lockedHintKey', () {
       final validator = CatalogValidator(
         objectiveCatalog: _FakeObjectiveCatalog([_objective('o1')]),
@@ -225,7 +225,7 @@ void main() {
     });
   });
 
-  group('CatalogValidator â€” real catalogs', () {
+  group('CatalogValidator — real catalogs', () {
     test('the shipped sample catalogs validate cleanly', () {
       const validator = CatalogValidator();
       expect(validator.validateOrThrow, returnsNormally);

@@ -1,4 +1,4 @@
-﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -166,7 +166,7 @@ void main() {
         ),
       );
 
-      // Card present but no separate "Claim all" affordance â€” the
+      // Card present but no separate "Claim all" affordance — the
       // single-quest case relies on the card's pill.
       expect(find.text('Title q1'), findsOneWidget);
       final l10n = AppLocalizations.of(

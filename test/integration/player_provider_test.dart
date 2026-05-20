@@ -1,4 +1,4 @@
-﻿// Integration tests for PlayerProvider.
+// Integration tests for PlayerProvider.
 //
 // PlayerProvider is wired into the MultiProvider tree as a
 // `ChangeNotifierProxyProvider2<AuthProvider, ProgressionEngineProvider,
@@ -12,11 +12,11 @@
 //   - rebuild + notify when chrome-only fields change (auth notify)
 //   - cache short-circuit when the same upstream snapshot is replayed
 //     (notifyListeners must not fire)
-//   - rebuild on sign-out â†’ anonymous shape
+//   - rebuild on sign-out → anonymous shape
 //   - rpgModeEnabled passthrough
 //
 // Tests deliberately do not instantiate the live AuthProvider or
-// ProgressionEngineProvider â€” those drag in Firebase / Isar setup
+// ProgressionEngineProvider — those drag in Firebase / Isar setup
 // that belongs to their own provider-level tests. PlayerProvider's
 // input surface is primitives + an iterable, so the rebuild seam is
 // exercised directly.

@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:forgetrack/features/progression_engine/domain/progression_domain_chrome.dart';
 
@@ -14,7 +14,7 @@ void main() {
   final l10n = AppLocalizationsEn();
   const locale = 'en';
 
-  group('ProgressionDisplayResolver â€” levels', () {
+  group('ProgressionDisplayResolver — levels', () {
     test('levelDisplay returns tier metadata for a known level', () {
       final display = resolver.levelDisplay(5);
       expect(display.level, 5);
@@ -36,10 +36,10 @@ void main() {
 
     test('levelDisplay between milestones inherits the governing breakpoint',
         () {
-      // Levels 2-4 don't have their own milestone spec â€” they should keep
+      // Levels 2-4 don't have their own milestone spec — they should keep
       // the level-1 (Pilgrim) title + common rarity until the next
       // breakpoint at level 5 fires. Regression guard for the screen
-      // header showing "Level 2 âš” LEVEL 2" with the default accent.
+      // header showing "Level 2 ⚔ LEVEL 2" with the default accent.
       for (final mid in [2, 3, 4]) {
         final display = resolver.levelDisplay(mid);
         final governing = kLevelMilestones.first;
@@ -63,7 +63,7 @@ void main() {
     });
   });
 
-  group('ProgressionDisplayResolver â€” nodes', () {
+  group('ProgressionDisplayResolver — nodes', () {
     test('nodeDisplay resolves a level milestone id', () {
       final display = resolver.nodeDisplay('level_10', l10n);
       expect(display, isNotNull);
@@ -116,7 +116,7 @@ void main() {
     });
   });
 
-  group('ProgressionDisplayResolver â€” friendDisplayLabel', () {
+  group('ProgressionDisplayResolver — friendDisplayLabel', () {
     test('returns LEVEL N (uppercase) for level milestone ids', () {
       final display = resolver.nodeDisplay('level_25', l10n)!;
       final label = resolver.friendDisplayLabel(display, l10n);
@@ -130,7 +130,7 @@ void main() {
     });
   });
 
-  group('ProgressionDisplayResolver â€” compactSummary', () {
+  group('ProgressionDisplayResolver — compactSummary', () {
     test('returns a level label for level milestone ids', () {
       expect(
         resolver.compactSummary('level_20', l10n, locale),
@@ -164,7 +164,7 @@ void main() {
     });
   });
 
-  group('ProgressionDisplayResolver â€” domains', () {
+  group('ProgressionDisplayResolver — domains', () {
     test('domainDisplay carries the legacy domain visuals through', () {
       final display = resolver.domainDisplay(ProgressionDomain.steps);
       expect(display.domain, ProgressionDomain.steps);

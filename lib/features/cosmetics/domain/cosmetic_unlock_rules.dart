@@ -1,10 +1,10 @@
-﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 
 import 'cosmetic_unlock_rule.dart';
 
 /// Baseline unlock rules used when a fresh user state is created.
 ///
-/// This file deliberately knows nothing about progression/social features â€”
+/// This file deliberately knows nothing about progression/social features —
 /// other features call into the cosmetics service to grant unlocks; cosmetics
 /// never reaches into them.
 class CosmeticUnlockRules {
@@ -22,7 +22,7 @@ class CosmeticUnlockRules {
 
 /// Tier-2 unlock rules: companion unlocks gated on level + two relic ownership
 /// conditions. Relics themselves flow exclusively from Tier-1 (achievement
-/// reward table) â€” there are no Tier-2 relic rules.
+/// reward table) — there are no Tier-2 relic rules.
 ///
 /// Pattern for every companion:
 ///   Cond.atLevel(N) + Cond.ownsCosmetic(relic_a) + Cond.ownsCosmetic(relic_b)
@@ -37,9 +37,9 @@ final List<CosmeticUnlockRule> kCosmeticUnlockRules = <CosmeticUnlockRule>[
   // -- Companions: relic gate + level gate, idempotent, no consumption -------
   //
   // Companion ladder is paced every 10 levels from 5 to 95 and mapped to the
-  // journey environment progression: camp (5) â†’ forest end (15) â†’ ruins (25)
-  // â†’ bridge (35) â†’ mines (45) â†’ rocky descent (55) â†’ ice plain (65) â†’
-  // ice lake (75) â†’ end-game climb (85) â†’ pre-dragonrock (95). Lvl 100 is a
+  // journey environment progression: camp (5) → forest end (15) → ruins (25)
+  // → bridge (35) → mines (45) → rocky descent (55) → ice plain (65) →
+  // ice lake (75) → end-game climb (85) → pre-dragonrock (95). Lvl 100 is a
   // quiet cap with no companion unlock.
   CosmeticUnlockRule(
     cosmeticId: CosmeticId('companion_ember_sprite'),

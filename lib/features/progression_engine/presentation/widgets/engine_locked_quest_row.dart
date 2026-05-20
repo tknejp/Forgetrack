@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
@@ -12,7 +12,7 @@ import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 ///
 /// Mirrors the V1 `_LockedQuestRow`: leading quest asset (or domain
 /// icon fallback) Â· title Â· "VyÅ¾aduje level X" subtitle Â· trailing
-/// lock glyph. No claim affordance â€” these rows are informational
+/// lock glyph. No claim affordance — these rows are informational
 /// until the gating level is reached.
 class EngineLockedQuestRow extends StatelessWidget {
   const EngineLockedQuestRow({
@@ -25,7 +25,7 @@ class EngineLockedQuestRow extends StatelessWidget {
   final AppLocalizations l10n;
 
   /// Subtitle picked from whichever gate is actually blocking this
-  /// quest. Prereq takes priority over level â€” the player must finish
+  /// quest. Prereq takes priority over level — the player must finish
   /// the previous chapter before the level requirement matters anyway,
   /// so leading with the chapter name is more actionable than "Reach
   /// level X". Falls back to the level hint when no prereq is set or

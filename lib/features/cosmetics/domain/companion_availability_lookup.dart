@@ -1,4 +1,4 @@
-﻿import '../../progression_engine/domain/catalog/progression_node_catalog.dart';
+import '../../progression_engine/domain/catalog/progression_node_catalog.dart';
 import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 
 /// Pure lookup helpers for the `CompanionAvailability` progression
@@ -6,7 +6,7 @@ import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 /// to drive the claim CTA and the devtools state matrix.
 ///
 /// **Why a free function, not a class.** Phase 11 deletes
-/// `CompanionsRegistry` â€” the view-model factory it used to bundle
+/// `CompanionsRegistry` — the view-model factory it used to bundle
 /// (cosmetic + node + state + revealResult) is gone. The only piece of
 /// `CompanionsRegistry` that survives is the catalog walk that
 /// extracts `CompanionAvailability` rows from
@@ -16,10 +16,10 @@ import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 /// **Identity invariant.** Companion id == cosmetic id == availability
 /// node id (set in `companions_content.dart`). `companionAvailabilityFor(id)`
 /// returns the node whose `companionId` equals [id]. Returns null when
-/// no row matches â€” typically because [id] isn't a companion at all.
+/// no row matches — typically because [id] isn't a companion at all.
 
 /// Cached list of every `CompanionAvailability` row in the engine
-/// catalog (today 7 â€” see `companions_content.dart`). Built once at
+/// catalog (today 7 — see `companions_content.dart`). Built once at
 /// first access; the catalog is `const` so a single eager pass is
 /// fine and the result never changes within an app run.
 final List<CompanionAvailability> _allCompanionAvailabilities = [

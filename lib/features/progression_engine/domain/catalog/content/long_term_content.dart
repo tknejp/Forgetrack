@@ -1,4 +1,4 @@
-﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:forgetrack/domain/progression/catalog/quest_policies.dart';
 
 import '../../../../../shared/domain/rarity.dart';
@@ -12,34 +12,34 @@ import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import 'quest_assets.dart';
 
-/// Long-term goal chains â€” multi-month / lifetime quests that share
+/// Long-term goal chains — multi-month / lifetime quests that share
 /// each step's objective with the matching achievement node (V2
 /// design rule: quest + achievement with the same goal both reference
 /// the same Objective; no duplicate evaluation).
 ///
 /// Three chains mirror V1's long-term display:
 ///
-/// - **lifetime_steps** (100K â†’ 500K â†’ 1M â†’ 5M â†’ 10M). Every step's
+/// - **lifetime_steps** (100K → 500K → 1M → 5M → 10M). Every step's
 ///   objective already lives in `steps_content`; the matching
 ///   `steps_total_*` achievement is the companion that drops the
 ///   cosmetic / relic / frame rewards.
-/// - **xp_milestones** (500 â†’ 2K â†’ 5K â†’ 25K â†’ 100K â†’ 1M XP). 500 / 2K /
+/// - **xp_milestones** (500 → 2K → 5K → 25K → 100K → 1M XP). 500 / 2K /
 ///   5K / 25K are new objectives; 100K / 1M reuse `meta_content`'s
 ///   `lifetime_xp_100k` / `lifetime_xp_1m` with `xp_100000` /
 ///   `xp_1000000` as companion achievements.
-/// - **reward_hunter** (first â†’ 25 â†’ 100 â†’ 250). First / 250 are new
+/// - **reward_hunter** (first → 25 → 100 → 250). First / 250 are new
 ///   objectives; 25 / 100 reuse `meta_content`'s `reward_count_25` /
 ///   `reward_count_100` with `reward_hunter_25` / `reward_hunter_100`
 ///   as companion achievements.
 ///
-/// All steps are manual-claim â€” the player taps the gold pill to grant
+/// All steps are manual-claim — the player taps the gold pill to grant
 /// XP once the objective is satisfied. The matching achievements stay
 /// auto-claim so their cosmetics land immediately.
 ///
 /// **No `prerequisiteNodeIds`** on these threshold chains. Each step
 /// is the same metric at a higher target (`StepsMetric + LifetimeScope`,
 /// `TotalXpMetric + LifetimeScope`, `RewardCountMetric`), so reaching
-/// 100k XP logically implies passing 500 / 2k / 5k / 25k â€” the chain
+/// 100k XP logically implies passing 500 / 2k / 5k / 25k — the chain
 /// order is purely a display convenience. Adding `NodeCompleted`
 /// prereqs would gate downstream steps behind the *claim* of each
 /// previous step (manual-claim quests only emit `NodeCompletionEvent`
@@ -107,7 +107,7 @@ List<Objective> longTermObjectives() {
 
 List<ProgressionEntry> longTermNodes() {
   return [
-    // â”€â”€ Lifetime steps chain â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Lifetime steps chain ────────────────────────────────────────
     LongTermQuest(
       id: const ProgressionEntryId('long_term_steps_100k'),
       objectiveId: ObjectiveId('lifetime_steps_100k'),
@@ -188,7 +188,7 @@ List<ProgressionEntry> longTermNodes() {
       sortOrder: 1104,
     ),
 
-    // â”€â”€ XP milestones chain â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── XP milestones chain ─────────────────────────────────────────
     LongTermQuest(
       id: const ProgressionEntryId('long_term_reach_500_xp'),
       objectiveId: ObjectiveId('lifetime_xp_500'),
@@ -285,7 +285,7 @@ List<ProgressionEntry> longTermNodes() {
       sortOrder: 1205,
     ),
 
-    // â”€â”€ Reward hunter chain â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Reward hunter chain ─────────────────────────────────────────
     LongTermQuest(
       id: const ProgressionEntryId('long_term_earn_first_reward'),
       objectiveId: ObjectiveId('reward_count_first'),

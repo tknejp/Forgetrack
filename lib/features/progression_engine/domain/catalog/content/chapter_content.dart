@@ -1,4 +1,4 @@
-﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:forgetrack/domain/progression/catalog/quest_policies.dart';
 
 import '../../../../../l10n/app_localizations.dart';
@@ -16,7 +16,7 @@ import 'quest_assets.dart';
 /// Chapter quests 2-10, ported from the V1 monolith
 /// `progression/domain/catalog/quest_catalog.dart` (the "journey
 /// chapter" specs). Forest Trial lives in its own file as the pilot;
-/// this aggregator covers Ruins of Discipline â†’ Dragonrock Sovereign
+/// this aggregator covers Ruins of Discipline → Dragonrock Sovereign
 /// using a single shared shape so the catalog stays scannable.
 ///
 /// Each chapter has five nodes: an auto-claim **open** gated by
@@ -26,31 +26,31 @@ import 'quest_assets.dart';
 ///
 /// Step objectives use [Objective.baselineFromNodeId] so
 /// progress counts only what the player does *after* the previous
-/// step completed â€” keeps a high-level player from auto-finishing a
+/// step completed — keeps a high-level player from auto-finishing a
 /// late chapter on day one just because their lifetime ledger is
 /// already past the threshold. The override path supports
 /// [NodeCompletionsMetric] and [RewardCountMetric] today; the few
 /// [StepsMetric]-based steps (mine_descent_steps_250k,
-/// icewalker_route_steps_500k) fall back to lifetime semantics â€” the
+/// icewalker_route_steps_500k) fall back to lifetime semantics — the
 /// chain prereq still enforces sequential ordering.
 ///
 /// Step criterion mapping from V1:
-/// - `ruleCompletionsAtLeast(daily_X, day)` â†’ `NodeCompletionsMetric('daily_X_today')`
-/// - `ruleCompletionsAtLeast(weekly_activity, week)` â†’ `NodeCompletionsMetric('weekly_activity')`
-/// - `totalRuleValueAtLeast(daily_steps)` â†’ `StepsMetric` lifetime (no baseline)
-/// - `ruleSetCompletionsAtLeast(reqCount, related[])` â†’
+/// - `ruleCompletionsAtLeast(daily_X, day)` → `NodeCompletionsMetric('daily_X_today')`
+/// - `ruleCompletionsAtLeast(weekly_activity, week)` → `NodeCompletionsMetric('weekly_activity')`
+/// - `totalRuleValueAtLeast(daily_steps)` → `StepsMetric` lifetime (no baseline)
+/// - `ruleSetCompletionsAtLeast(reqCount, related[])` →
 ///   `DaysWithAtLeastKAmongMetric(related, atLeast: reqCount)`. Counts
 ///   distinct days on which at least `reqCount` of the listed daily
 ///   atoms were done (goal met or claimed) since the chain step's
-///   baseline. Preserves V1's "K of M rules per day" semantics â€”
-///   "splÅˆ vÅ¡echny 4 dennÃ­ cÃ­le 5krÃ¡t" means 5 days with â‰¥4 daily
+///   baseline. Preserves V1's "K of M rules per day" semantics —
+///   "splÅˆ vÅ¡echny 4 dennÃ­ cÃ­le 5krÃ¡t" means 5 days with ≥4 daily
 ///   goals met, not 5 step-quest completions.
-/// - `rewardCountAtLeast` â†’ `RewardCountMetric()` since baseline
-/// - `domainRewardCountAtLeast(domain)` â†’ `RewardCountMetric(domain: â€¦)` since baseline
+/// - `rewardCountAtLeast` → `RewardCountMetric()` since baseline
+/// - `domainRewardCountAtLeast(domain)` → `RewardCountMetric(domain: …)` since baseline
 
 /// The full set of daily-quest node ids that the "four pillars"
 /// chapter steps gate against. Steps that ask for "all 4 daily
-/// goals" check for at least 4 of these on the same day â€” matches
+/// goals" check for at least 4 of these on the same day — matches
 /// the `daily_challenge_balanced` pool semantic the player already
 /// sees in the daily-challenge tier.
 const _allDailyAtoms = <ProgressionEntryId>[
@@ -149,7 +149,7 @@ List<_ChapterSpec> _chapters() {
           id: const ProgressionEntryId('ruins_discipline_nutrition_7'),
           titleKey: (l) => l.progQuestRuinsDisciplineNutrition7Title,
           descriptionKey: (l) => l.progQuestRuinsDisciplineNutrition7Desc,
-          // "splÅˆ cÃ­l kaloriÃ­ i bÃ­lkovin 7krÃ¡t" â€” needs both nodes
+          // "splÅˆ cÃ­l kaloriÃ­ i bÃ­lkovin 7krÃ¡t" — needs both nodes
           // on the same day, 7 days total. Old single-node calories
           // check let any 7 calorie days satisfy the step regardless
           // of protein.
@@ -197,7 +197,7 @@ List<_ChapterSpec> _chapters() {
           id: const ProgressionEntryId('mine_descent_steps_250k'),
           titleKey: (l) => l.progQuestMineDescentSteps250kTitle,
           descriptionKey: (l) => l.progQuestMineDescentSteps250kDesc,
-          // StepsMetric lifetime â€” no baseline override today; chain
+          // StepsMetric lifetime — no baseline override today; chain
           // prereq still enforces ordering. Players past 250k at
           // unlock will see this satisfied immediately.
           metric: const StepsMetric(),
@@ -260,7 +260,7 @@ List<_ChapterSpec> _chapters() {
           id: const ProgressionEntryId('forge_momentum_nutrition_15'),
           titleKey: (l) => l.progQuestForgeMomentumNutrition15Title,
           descriptionKey: (l) => l.progQuestForgeMomentumNutrition15Desc,
-          // "splÅˆ cÃ­l kaloriÃ­ i bÃ­lkovin 15krÃ¡t" â€” paired-day check.
+          // "splÅˆ cÃ­l kaloriÃ­ i bÃ­lkovin 15krÃ¡t" — paired-day check.
           metric: const DaysWithAtLeastKAmongMetric(
             nodeIds: _calorieAndProtein,
             atLeast: 2,
@@ -287,7 +287,7 @@ List<_ChapterSpec> _chapters() {
           id: const ProgressionEntryId('underway_pact_four_pillars_5'),
           titleKey: (l) => l.progQuestUnderwayPactFourPillars5Title,
           descriptionKey: (l) => l.progQuestUnderwayPactFourPillars5Desc,
-          // "splÅˆ vÅ¡echny 4 dennÃ­ cÃ­le 5krÃ¡t" â€” 5 days with â‰¥4 of
+          // "splÅˆ vÅ¡echny 4 dennÃ­ cÃ­le 5krÃ¡t" — 5 days with ≥4 of
           // the 8 daily atoms done. Restored from the V1 four-pillars
           // intent; the previous single-node proxy gave the player
           // a free pass on every other daily goal.
@@ -312,7 +312,7 @@ List<_ChapterSpec> _chapters() {
           id: const ProgressionEntryId('underway_pact_recovery_10'),
           titleKey: (l) => l.progQuestUnderwayPactRecovery10Title,
           descriptionKey: (l) => l.progQuestUnderwayPactRecovery10Desc,
-          // "splÅˆ cÃ­l krokÅ¯ i spÃ¡nku ve stejnÃ½ den 10krÃ¡t" â€”
+          // "splÅˆ cÃ­l krokÅ¯ i spÃ¡nku ve stejnÃ½ den 10krÃ¡t" —
           // paired-day check on steps + sleep.
           metric: const DaysWithAtLeastKAmongMetric(
             nodeIds: _stepsAndSleep,
@@ -422,7 +422,7 @@ List<_ChapterSpec> _chapters() {
           id: const ProgressionEntryId('mountain_ascent_four_pillars_15'),
           titleKey: (l) => l.progQuestMountainAscentFourPillars15Title,
           descriptionKey: (l) => l.progQuestMountainAscentFourPillars15Desc,
-          // "splÅˆ vÅ¡echny 4 dennÃ­ cÃ­le 15krÃ¡t" â€” four-pillars check.
+          // "splÅˆ vÅ¡echny 4 dennÃ­ cÃ­le 15krÃ¡t" — four-pillars check.
           metric: const DaysWithAtLeastKAmongMetric(
             nodeIds: _allDailyAtoms,
             atLeast: 4,
@@ -476,7 +476,7 @@ List<_ChapterSpec> _chapters() {
           id: const ProgressionEntryId('dragonroad_four_pillars_25'),
           titleKey: (l) => l.progQuestDragonroadFourPillars25Title,
           descriptionKey: (l) => l.progQuestDragonroadFourPillars25Desc,
-          // "splÅˆ vÅ¡echny 4 dennÃ­ cÃ­le 25krÃ¡t" â€” four-pillars check.
+          // "splÅˆ vÅ¡echny 4 dennÃ­ cÃ­le 25krÃ¡t" — four-pillars check.
           metric: const DaysWithAtLeastKAmongMetric(
             nodeIds: _allDailyAtoms,
             atLeast: 4,
@@ -513,7 +513,7 @@ List<_ChapterSpec> _chapters() {
           titleKey: (l) => l.progQuestDragonrockSovereignFourPillars30Title,
           descriptionKey: (l) =>
               l.progQuestDragonrockSovereignFourPillars30Desc,
-          // "splÅˆ vÅ¡echny 4 dennÃ­ cÃ­le 30krÃ¡t" â€” four-pillars check.
+          // "splÅˆ vÅ¡echny 4 dennÃ­ cÃ­le 30krÃ¡t" — four-pillars check.
           metric: const DaysWithAtLeastKAmongMetric(
             nodeIds: _allDailyAtoms,
             atLeast: 4,
@@ -569,7 +569,7 @@ List<Objective> chapterObjectives() {
       scope: const LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: c.level.toDouble(),
-      debugLabel: '${c.id} open â€” level >= ${c.level}',
+      debugLabel: '${c.id} open — level >= ${c.level}',
     ));
     // Steps with baselines wired so each step's progress starts at the
     // previous step's completion.
@@ -583,7 +583,7 @@ List<Objective> chapterObjectives() {
         operator: ObjectiveOperator.atLeast,
         targetValue: s.targetValue,
         baselineFromNodeId: prevNodeId,
-        debugLabel: '${c.id} ${s.id} â€” since $prevNodeId',
+        debugLabel: '${c.id} ${s.id} — since $prevNodeId',
       ));
       prevNodeId = ProgressionEntryId(s.id);
     }
@@ -595,7 +595,7 @@ List<Objective> chapterObjectives() {
       scope: const LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: c.level.toDouble(),
-      debugLabel: '${c.id} finale â€” level gate (prereqs gate the chain)',
+      debugLabel: '${c.id} finale — level gate (prereqs gate the chain)',
     ));
   }
   return out;
@@ -603,7 +603,7 @@ List<Objective> chapterObjectives() {
 
 // Cross-chapter chain: each chapter's open auto-claims only once the
 // previous chapter's finale is in the ledger. Order matches the spec
-// list above (Ruins â†’ â€¦ â†’ Dragonrock); Forest Trail still chains off
+// list above (Ruins → … → Dragonrock); Forest Trail still chains off
 // pilgrim_path_finale (declared in its own content file).
 const _chapterPrereqByOpenId = <ProgressionEntryId, ProgressionEntryId>{
   ProgressionEntryId('ruins_discipline_open'):

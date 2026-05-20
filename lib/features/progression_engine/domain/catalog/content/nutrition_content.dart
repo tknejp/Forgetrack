@@ -1,4 +1,4 @@
-﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import '../../../../../shared/domain/rarity.dart';
 import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';
 import 'package:forgetrack/domain/progression/catalog/content_tag.dart';
@@ -11,7 +11,7 @@ import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import '../engine_catalog_context.dart';
 import 'quest_assets.dart';
 
-/// Nutrition domain â€” daily macro rules + streak/grant achievements.
+/// Nutrition domain — daily macro rules + streak/grant achievements.
 ///
 /// Mirrors V1: rules daily_calories / daily_protein / daily_carbs /
 /// daily_fat / daily_fiber, achievements nutrition_streak_3/30/100

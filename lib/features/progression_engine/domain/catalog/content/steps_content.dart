@@ -1,4 +1,4 @@
-﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import '../../../../../shared/domain/rarity.dart';
 import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';
 import 'package:forgetrack/domain/progression/catalog/content_tag.dart';
@@ -11,7 +11,7 @@ import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import '../engine_catalog_context.dart';
 import 'quest_assets.dart';
 
-/// Steps domain â€” daily walking quest, lifetime mastery achievements,
+/// Steps domain — daily walking quest, lifetime mastery achievements,
 /// best-rolling-window achievements, and per-rule streak achievements.
 ///
 /// Mirrors V1 entries: rule `daily_steps`, achievements
@@ -139,7 +139,7 @@ List<Objective> stepsObjectives(EngineCatalogContext context) {
 
 List<ProgressionEntry> stepsNodes() {
   return [
-    // Daily quest â€” manual claim so the player taps "Vyzvednout"
+    // Daily quest — manual claim so the player taps "Vyzvednout"
     // to grant XP, matching V1 UX.
     DailyQuest(
       id: const ProgressionEntryId('daily_steps_today'),
@@ -202,7 +202,7 @@ List<ProgressionEntry> stepsNodes() {
       badgeEmoji: '\u{1F97E}',
       titleKey: (l) => l.progAchievementSteps2500000Title,
       descriptionKey: (l) => l.progAchievementSteps2500000Desc,
-      // Sources relic_ravine_stone â€” mid-game (~8â€“9 months) ingredient for
+      // Sources relic_ravine_stone — mid-game (~8–9 months) ingredient for
       // the Cave Lynx (lvl 55) companion pair.
       rewards: const [CosmeticReward(cosmeticId: CosmeticId('relic_ravine_stone'))],
       contentTags: const [ContentTag.core, ContentTag.fitness],

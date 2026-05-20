@@ -1,4 +1,4 @@
-﻿import 'package:meta/meta.dart';
+import 'package:meta/meta.dart';
 import 'package:intl/intl.dart';
 
 import '../models/engine_evaluation_context.dart';
@@ -33,7 +33,7 @@ class ObjectiveOutcome {
 /// Phase 2 implements the metrics needed to demonstrate the design
 /// end-to-end (steps, calories, level, totalXp, reward count, node
 /// completions, combo pool completions); the rest land alongside
-/// real catalog entries during Phase 3 â€” adding a metric is one
+/// real catalog entries during Phase 3 — adding a metric is one
 /// switch case.
 class ObjectiveEvaluator {
   const ObjectiveEvaluator();
@@ -42,7 +42,7 @@ class ObjectiveEvaluator {
     Objective objective,
     EngineEvaluationContext context,
   ) {
-    // Provider-supplied override wins â€” used for objectives whose
+    // Provider-supplied override wins — used for objectives whose
     // actual value depends on ledger history (e.g. chapter step
     // `baselineFromNodeId` counters "since this chain step unlocked").
     final override = context.overrides.objectiveActualOverrides[objective.id];
@@ -63,7 +63,7 @@ class ObjectiveEvaluator {
     );
   }
 
-  // â”€â”€ Metric â†’ context field â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Metric → context field ───────────────────────────────────────
 
   double _readMetric(
     ObjectiveMetric metric,
@@ -160,7 +160,7 @@ class ObjectiveEvaluator {
         return n.toDouble();
       }(),
       // Per-day "at least K of these nodes were done" requires the
-      // ledger to reconstruct daily groupings â€” that's done in the
+      // ledger to reconstruct daily groupings — that's done in the
       // provider and surfaced through `objectiveActualOverrides`.
       // The evaluator returns 0 by default so an objective with no
       // override registered (no baseline node yet completed) reads
@@ -169,7 +169,7 @@ class ObjectiveEvaluator {
     };
   }
 
-  // â”€â”€ Operator comparison â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Operator comparison ───────────────────────────────────────────
 
   bool _matches({
     required ObjectiveOperator operator,
@@ -196,7 +196,7 @@ class ObjectiveEvaluator {
     }
   }
 
-  // â”€â”€ Period keying â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Period keying ─────────────────────────────────────────────────
 
   String? _periodKey(ObjectiveScope scope, EngineEvaluationContext context) {
     final dt = context.evaluatedAt;

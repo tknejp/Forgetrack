@@ -1,4 +1,4 @@
-﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:forgetrack/domain/progression/catalog/content_tag.dart';
 import 'package:forgetrack/domain/progression/catalog/objective.dart';
 import 'package:forgetrack/domain/progression/catalog/objective_metric.dart';
@@ -11,10 +11,10 @@ import '../../policy/level_policy.dart';
 import '../engine_catalog_context.dart';
 import '../level_milestone_specs.dart';
 
-/// Level milestone nodes â€” one per [kLevelMilestones] entry except the
+/// Level milestone nodes — one per [kLevelMilestones] entry except the
 /// level-1 origin. Each tier-anchor + decorative cosmetic level becomes
 /// a first-class node so the engine grants cosmetics through the regular
-/// completion â†’ reward grant pipeline.
+/// completion → reward grant pipeline.
 ///
 /// Each tier also gets a paired XP-threshold objective so a future
 /// "level achievement" view (separate from the milestone) can hook

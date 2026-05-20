@@ -1,4 +1,4 @@
-﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import '../../../../../shared/domain/rarity.dart';
 import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';
 import 'package:forgetrack/domain/progression/catalog/content_tag.dart';
@@ -11,10 +11,10 @@ import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import '../engine_catalog_context.dart';
 import 'quest_assets.dart';
 
-/// **DennÃ­ quest** templates â€” one rotating themed bonus quest per
+/// **DennÃ­ quest** templates — one rotating themed bonus quest per
 /// day, picked deterministically from this pool by a date hash.
 /// Higher XP than the simple "DENNÃ CÃLE" tier (those are pure
-/// metric thresholds â€” steps, calories, etc.); this tier is the
+/// metric thresholds — steps, calories, etc.); this tier is the
 /// flavour layer that asks for *combinations* of daily atoms with
 /// a small narrative twist.
 ///
@@ -25,7 +25,7 @@ import 'quest_assets.dart';
 /// - All templates share `comboPoolId: ComboPoolId('daily_combo_pool')` so they
 ///   feed the `combo_victory_10` achievement alongside the combo
 ///   chain.
-/// - `LifetimeScope` so completion is once-and-done per template â€”
+/// - `LifetimeScope` so completion is once-and-done per template —
 ///   the daily *picker* (provider) rotates which template surfaces
 ///   today, not the engine's per-period reset. If a template
 ///   resurfaces months later, the player can claim it again only

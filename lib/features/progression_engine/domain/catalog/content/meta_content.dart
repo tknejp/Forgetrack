@@ -1,4 +1,4 @@
-﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import '../../../../../shared/domain/rarity.dart';
 import 'package:forgetrack/domain/progression/catalog/content_tag.dart';
 import 'package:forgetrack/domain/progression/catalog/objective.dart';
@@ -11,7 +11,7 @@ import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import 'package:forgetrack/domain/progression/catalog/unlock_condition.dart';
 import '../engine_catalog_context.dart';
 
-/// Cross-domain meta achievements â€” total-XP milestones and
+/// Cross-domain meta achievements — total-XP milestones and
 /// reward-count "reward hunter" mastery achievements. Mirrors V1:
 /// `xp_100000`/`xp_1000000`, `reward_hunter_25`/`100`.
 
@@ -45,7 +45,7 @@ List<Objective> metaObjectives(EngineCatalogContext context) {
       operator: ObjectiveOperator.atLeast,
       targetValue: 100,
     ),
-    // V1 â†’ V2 ports (Phase 9c follow-up). Backing metrics live in
+    // V1 → V2 ports (Phase 9c follow-up). Backing metrics live in
     // `objective_metric.dart` (QuestCompletionsByBucketMetric,
     // DistinctActiveDaysMetric); ledger aggregations live in
     // `progression_engine_provider.dart`.
@@ -93,7 +93,7 @@ List<Objective> metaObjectives(EngineCatalogContext context) {
       targetValue: 10,
     ),
     // The triple-combo achievements count completions across every
-    // combo chain step whose target is 3+ atoms â€” the new combo
+    // combo chain step whose target is 3+ atoms — the new combo
     // shape spreads "3-of-N" wins across multiple chains, so we
     // enumerate them explicitly here.
     Objective(
@@ -175,9 +175,9 @@ List<ProgressionEntry> metaNodes() {
       contentTags: const [ContentTag.core],
       rarity: Rarity.epic,
     ),
-    // V1 â†’ V2 ports (Phase 9c follow-up). Relic ids are already
+    // V1 → V2 ports (Phase 9c follow-up). Relic ids are already
     // authored in `cosmetic_catalog.dart`; this is the missing
-    // achievementâ†’relic wiring.
+    // achievement→relic wiring.
     Achievement(
       id: const ProgressionEntryId('daily_quest_3'),
       objectiveId: ObjectiveId('daily_quest_count_3'),
@@ -223,10 +223,10 @@ List<ProgressionEntry> metaNodes() {
     Achievement(
       id: const ProgressionEntryId('active_days_90'),
       objectiveId: ObjectiveId('active_days_90'),
-      badgeEmoji: '\u{1F33F}', // herb â€” re-uses motif from daily_quest_7
+      badgeEmoji: '\u{1F33F}', // herb — re-uses motif from daily_quest_7
       titleKey: (l) => l.progAchievementActiveDays90Title,
       descriptionKey: (l) => l.progAchievementActiveDays90Desc,
-      // Sources relic_wildwood_charm â€” mid-game (~3 months) ingredient for
+      // Sources relic_wildwood_charm — mid-game (~3 months) ingredient for
       // the Cave Lynx (lvl 55) companion pair.
       rewards: const [CosmeticReward(cosmeticId: CosmeticId('relic_wildwood_charm'))],
       contentTags: const [ContentTag.core],

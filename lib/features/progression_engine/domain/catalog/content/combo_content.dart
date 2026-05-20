@@ -1,4 +1,4 @@
-﻿import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
 import 'package:forgetrack/domain/progression/catalog/quest_policies.dart';
 
 import '../../../../../shared/domain/rarity.dart';
@@ -12,7 +12,7 @@ import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import '../engine_catalog_context.dart';
 import 'quest_assets.dart';
 
-/// Daily combo chains â€” themed sequential quests that live in their
+/// Daily combo chains — themed sequential quests that live in their
 /// own `QuestDisplayBucket.combo` so they don't compete with the
 /// 2-per-day base daily rotation.
 ///
@@ -24,11 +24,11 @@ import 'quest_assets.dart';
 /// for UI affordances (chain-preview locks, "complete previous step
 /// first" hints).
 ///
-/// **Chain rotation (finite for now).** Chain 1 â†’ 2 â†’ 3. The first
+/// **Chain rotation (finite for now).** Chain 1 → 2 → 3. The first
 /// step of each subsequent chain has both the prereq and the
 /// before-today gate pointing at the previous chain's finale. A
 /// perpetual "lap counter" so chain 1 can re-unlock after chain 3
-/// finishes is **future engine work** â€” the engine has no per-lap
+/// finishes is **future engine work** — the engine has no per-lap
 /// completion semantics today, so once all 13 steps complete the
 /// player sees an empty combo section until new content lands.
 ///
@@ -36,19 +36,19 @@ import 'quest_assets.dart';
 /// combo`, `comboPoolId: ComboPoolId('daily_combo_pool')` (so the existing
 /// `combo_victory_10` achievement counts these), and an objective
 /// using `TodayCompletionsAmongMetric`. Difficulty escalates per
-/// step â€” step N requires more of today's daily goals than step
+/// step — step N requires more of today's daily goals than step
 /// N-1, and the player must actually meet the larger set today
 /// (not retroactively credit yesterday's wins).
 ///
 /// **Triple combo membership.** Steps with 3+ atoms feed the
 /// `combo_triple_victory_25` / `combo_triple_victory_100`
-/// achievements â€” see `tripleComboNodeIds` and the matching
+/// achievements — see `tripleComboNodeIds` and the matching
 /// `triple_combo_*` objectives in `meta_content.dart`.
 
 const _comboPoolId = ComboPoolId('daily_combo_pool');
 
 /// Pool of **all** daily-bucket quests that count toward
-/// "any 1/2/3/4 daily goal" â€” used by the chain 1 "balanced"
+/// "any 1/2/3/4 daily goal" — used by the chain 1 "balanced"
 /// progression. Anything completed today from this set counts.
 const _allDailyQuests = <ProgressionEntryId>[
   ProgressionEntryId('daily_steps_today'),
@@ -78,13 +78,13 @@ const tripleComboNodeIds = <ProgressionEntryId>[
 /// regardless of scope, so the *value* (today's atoms) is unchanged;
 /// the lifetime scope just makes the *completion event* once-and-done
 /// (no per-period reset). That's the correct semantic for chain
-/// progression â€” once step N is claimed it stays completed, and step
+/// progression — once step N is claimed it stays completed, and step
 /// N+1 picks up tomorrow with a fresh today-atoms tally. Without
 /// this, the resolver would treat each step as a per-day node and
 /// the chain would never advance across days.
 List<Objective> comboObjectives(EngineCatalogContext context) {
   return const [
-    // â”€â”€ Chain 1: Balanced â€” any daily goal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Chain 1: Balanced — any daily goal ──────────────────────
     Objective(
       id: const ObjectiveId('combo_balanced_step_1_obj'),
       metric: TodayCompletionsAmongMetric(nodeIds: _allDailyQuests),
@@ -113,7 +113,7 @@ List<Objective> comboObjectives(EngineCatalogContext context) {
       operator: ObjectiveOperator.atLeast,
       targetValue: 4,
     ),
-    // â”€â”€ Chain 2: Recovery â€” sleep-anchored â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Chain 2: Recovery — sleep-anchored ──────────────────────
     Objective(
       id: const ObjectiveId('combo_recovery_step_1_obj'),
       metric: TodayCompletionsAmongMetric(
@@ -159,7 +159,7 @@ List<Objective> comboObjectives(EngineCatalogContext context) {
       operator: ObjectiveOperator.atLeast,
       targetValue: 4,
     ),
-    // â”€â”€ Chain 3: Nutrition â€” macro-anchored â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Chain 3: Nutrition — macro-anchored ─────────────────────
     Objective(
       id: const ObjectiveId('combo_nutrition_step_1_obj'),
       metric: TodayCompletionsAmongMetric(
@@ -225,7 +225,7 @@ List<Objective> comboObjectives(EngineCatalogContext context) {
 
 List<ProgressionEntry> comboNodes() {
   return [
-    // â”€â”€ Chain 1: Balanced â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Chain 1: Balanced ──────────────────────────────────────
     ComboStep(
       id: const ProgressionEntryId('combo_balanced_step_1'),
       objectiveId: ObjectiveId('combo_balanced_step_1_obj'),
@@ -288,7 +288,7 @@ List<ProgressionEntry> comboNodes() {
       chainStepIcon: ChainStepIcon.comboFlag,
       prerequisiteNodeIds: const [ProgressionEntryId('combo_balanced_step_3')],
     ),
-    // â”€â”€ Chain 2: Recovery (sleep-anchored) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Chain 2: Recovery (sleep-anchored) ─────────────────────
     ComboStep(
       id: const ProgressionEntryId('combo_recovery_step_1'),
       objectiveId: ObjectiveId('combo_recovery_step_1_obj'),
@@ -352,7 +352,7 @@ List<ProgressionEntry> comboNodes() {
       chainStepIcon: ChainStepIcon.comboFlag,
       prerequisiteNodeIds: const [ProgressionEntryId('combo_recovery_step_3')],
     ),
-    // â”€â”€ Chain 3: Nutrition (macro-anchored, 5 steps) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Chain 3: Nutrition (macro-anchored, 5 steps) ──────────
     ComboStep(
       id: const ProgressionEntryId('combo_nutrition_step_1'),
       objectiveId: ObjectiveId('combo_nutrition_step_1_obj'),

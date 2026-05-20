@@ -1,4 +1,4 @@
-﻿import 'package:meta/meta.dart';
+import 'package:meta/meta.dart';
 
 import 'package:forgetrack/domain/progression/catalog/activation_policy.dart';
 import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';
@@ -153,7 +153,7 @@ class ProgressionNodeResolver {
     );
   }
 
-  // â”€â”€ Event key helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Event key helpers ────────────────────────────────────────────
   // These are also used by the engine when appending events; kept
   // here so resolver and engine agree on the format.
 

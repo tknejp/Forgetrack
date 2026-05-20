@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../cosmetics/application/cosmetics_provider.dart';
 import '../../cosmetics/domain/cosmetic_models.dart';
@@ -21,7 +21,7 @@ import '../domain/models/celebration_reward.dart';
 /// 1. Bulk reasons (factoryResetSeed / historicalResync) collapse into a
 ///    single "welcome back" summary so the player is not buried under N
 ///    popups.
-/// 2. Level milestones always render solo â€” they are the moment.
+/// 2. Level milestones always render solo — they are the moment.
 /// 3. Chapter completions bundle the immediately-unlocked next chapter
 ///    (when present in the same result) into one celebration.
 /// 4. Quest + achievement + milestone nodes sharing an `objectiveId` are
@@ -35,7 +35,7 @@ import '../domain/models/celebration_reward.dart';
 /// 7. Any cosmetic grant that didn't piggyback on a node celebration
 ///    surfaces as an orphan "reward from your progress" event.
 ///
-/// The adapter is pure â€” same input, same output, no diffing. Diff
+/// The adapter is pure — same input, same output, no diffing. Diff
 /// already happened inside the engine; this layer is purely a view
 /// mapping.
 class ProgressionEngineCelebrationAdapter {
@@ -62,7 +62,7 @@ class ProgressionEngineCelebrationAdapter {
       completions.add(_NodeCompletionPair(c, node));
     }
 
-    // â”€â”€ Fold pre-pass â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Fold pre-pass ─────────────────────────────────────────────
     //
     // The catalog frequently authors a relic + a companion + a level
     // milestone gated on the same `LevelAtLeast(N)`. Without folding
@@ -104,7 +104,7 @@ class ProgressionEngineCelebrationAdapter {
     // or matching level milestone (fallback). Reads `newlyAvailableNodes`
     // (engine delta backed by NodeAnnouncedEvent in the ledger) so
     // the fold fires the first time the companion surfaces and
-    // never again â€” including across app restarts.
+    // never again — including across app restarts.
     for (final availability in result.newlyAvailableNodes) {
       final node = ProgressionEntryCatalog.definitionForId(availability.nodeId);
       if (node is! CompanionAvailability) continue;
@@ -124,7 +124,7 @@ class ProgressionEngineCelebrationAdapter {
     final events = <CelebrationEvent>[];
     final consumed = <String>{};
 
-    // 1. Level milestones â€” always solo, always first.
+    // 1. Level milestones — always solo, always first.
     for (final pair in completions) {
       if (pair.node is! LevelMilestone) continue;
       events.add(_withExtras(
@@ -156,7 +156,7 @@ class ProgressionEngineCelebrationAdapter {
     }
     consumed.addAll(bundledUnlockIds);
 
-    // 3. Goal completions â€” bundle by objectiveId.
+    // 3. Goal completions — bundle by objectiveId.
     final byObjective = <String, List<_NodeCompletionPair>>{};
     final unbound = <_NodeCompletionPair>[];
     for (final pair in completions) {
@@ -172,7 +172,7 @@ class ProgressionEngineCelebrationAdapter {
     for (final bucket in byObjective.values) {
       final ev = _buildGoalEvent(bucket, result);
       if (ev != null) {
-        // Extras can land on any node in the bucket â€” usually they
+        // Extras can land on any node in the bucket — usually they
         // hit the face (first by quest > achievement > milestone),
         // but be defensive and merge across all bucket members.
         var merged = ev;
@@ -207,9 +207,9 @@ class ProgressionEngineCelebrationAdapter {
       consumed.add(pair.node.id);
     }
 
-    // 5. Un-folded companion availabilities â€” emit as their own
+    // 5. Un-folded companion availabilities — emit as their own
     //    fullscreen celebration with the companion as a single reward
-    //    card. The fullscreen's secondary CTA ("OtevÅ™Ã­t inventÃ¡Å™ â†’")
+    //    card. The fullscreen's secondary CTA ("OtevÅ™Ã­t inventÃ¡Å™ →")
     //    is how the player actually unlocks the companion; there is
     //    no inline claim button.
     //
@@ -236,11 +236,11 @@ class ProgressionEngineCelebrationAdapter {
       events.add(_buildOrphanCosmeticEvent(orphanIds));
     }
 
-    // â”€â”€ Final pass: bundle solo achievements into a moment pack â”€â”€
+    // ── Final pass: bundle solo achievements into a moment pack ──
     //
-    // When â‰¥2 plain `CelebrationType.achievement` events remain after
-    // all earlier fold passes â€” typical case: welcome flow fires
-    // `welcome_to_journey` + `first_reward` together â€” fan them into
+    // When ≥2 plain `CelebrationType.achievement` events remain after
+    // all earlier fold passes — typical case: welcome flow fires
+    // `welcome_to_journey` + `first_reward` together — fan them into
     // a single fullscreen card stack so the player sees one cohesive
     // "moment" instead of N popups in a row. Levels, chapters,
     // goal-bucket merges, and companion-folded events stay distinct.
@@ -282,7 +282,7 @@ class ProgressionEngineCelebrationAdapter {
     }
 
     // Sum XP from any source achievement events that carried one
-    // (rare today â€” achievements granting XP directly â€” but defensive).
+    // (rare today — achievements granting XP directly — but defensive).
     var xpTotal = 0;
     var companionBonusTotal = 0;
     for (final ev in achievements) {
@@ -356,7 +356,7 @@ class ProgressionEngineCelebrationAdapter {
   /// Returns the [LevelMilestone] completion that gates `conds`,
   /// but only when the conditions are *exactly* one or more
   /// [LevelAtLeast] entries. Any other condition kind disqualifies the
-  /// fold â€” we don't want to assume a node belongs to the level
+  /// fold — we don't want to assume a node belongs to the level
   /// milestone if it also has a [NodeCompleted] or RPG gate.
   _NodeCompletionPair? _hostFromLevelOnly(
     List<UnlockCondition> conds,
@@ -389,7 +389,7 @@ class ProgressionEngineCelebrationAdapter {
   }
 
   /// Reward card for a not-yet-claimed companion. We intentionally hide
-  /// the companion's real name + art on the celebration surface â€” the
+  /// the companion's real name + art on the celebration surface — the
   /// claim flow inside the inventory's details sheet is what actually
   /// reveals the companion (with its forging animation). Until then the
   /// card reads as a generic "mysterious companion" preview so the
@@ -407,7 +407,7 @@ class ProgressionEngineCelebrationAdapter {
     );
   }
 
-  /// Header reward card for a chapter â€” uses `chapterIconAssetFor`
+  /// Header reward card for a chapter — uses `chapterIconAssetFor`
   /// from the catalog so the celebration ties visually to the chapter
   /// art the player already saw on the chapter card. Rendered as a
   /// `location` kind so the celebration UI uses the map glyph as a
@@ -445,10 +445,10 @@ class ProgressionEngineCelebrationAdapter {
 
   /// Standalone fullscreen for an un-folded companion availability.
   /// The companion appears as a single reward card and the fullscreen's
-  /// existing "Open inventory â†’" CTA is how the player completes the
+  /// existing "Open inventory →" CTA is how the player completes the
   /// activation.
   /// Standalone fullscreen for an un-folded companion availability.
-  /// Title + description are kept neutral â€” the real reveal happens in
+  /// Title + description are kept neutral — the real reveal happens in
   /// the inventory claim flow, not on this screen. Without this swap
   /// the celebration would spoil the companion's name (and the asset
   /// path on `_companionPreviewCard` would leak the artwork) before
@@ -469,7 +469,7 @@ class ProgressionEngineCelebrationAdapter {
     );
   }
 
-  // â”€â”€ Level â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Level ─────────────────────────────────────────────────────
 
   CelebrationEvent _buildLevelEvent(
     _NodeCompletionPair pair,
@@ -508,7 +508,7 @@ class ProgressionEngineCelebrationAdapter {
     );
   }
 
-  // â”€â”€ Chapter (with bundled next-chapter unlock) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Chapter (with bundled next-chapter unlock) ───────────────
 
   CelebrationEvent? _buildChapterEvent(
     _NodeCompletionPair chapterPair,
@@ -551,7 +551,7 @@ class ProgressionEngineCelebrationAdapter {
 
     // Prepend the chapter icon as the headliner card so the
     // celebration ties visually to the chapter art the player just
-    // finished. Always force fullscreen â€” finishing a chapter is a
+    // finished. Always force fullscreen — finishing a chapter is a
     // narrative beat that deserves the big-reveal treatment.
     final allRewards = <CelebrationReward>[
       _chapterIconCard(
@@ -578,7 +578,7 @@ class ProgressionEngineCelebrationAdapter {
     );
   }
 
-  // â”€â”€ Goal (quest + achievement + milestone sharing objectiveId) â”€
+  // ── Goal (quest + achievement + milestone sharing objectiveId) ─
 
   CelebrationEvent? _buildGoalEvent(
     List<_NodeCompletionPair> bucket,
@@ -652,7 +652,7 @@ class ProgressionEngineCelebrationAdapter {
     );
   }
 
-  // â”€â”€ Solo (quest / achievement / milestone / relic) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Solo (quest / achievement / milestone / relic) ────────────
 
   CelebrationEvent? _buildSoloEvent(
     _NodeCompletionPair pair,
@@ -852,7 +852,7 @@ class ProgressionEngineCelebrationAdapter {
     );
   }
 
-  // â”€â”€ Orphan cosmetic + welcome-back summary â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Orphan cosmetic + welcome-back summary ────────────────────
 
   CelebrationEvent _buildOrphanCosmeticEvent(List<String> cosmeticIds) {
     final rewards = _cosmeticsToRewards(cosmeticIds);
@@ -896,7 +896,7 @@ class ProgressionEngineCelebrationAdapter {
     );
   }
 
-  // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Helpers ───────────────────────────────────────────────────
 
   /// Extracts the objectiveId from nodes that have one, so the goal-bucket
   /// pre-pass can group siblings tracking the same condition.

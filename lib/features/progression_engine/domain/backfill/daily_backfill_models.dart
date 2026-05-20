@@ -1,4 +1,4 @@
-﻿import 'package:meta/meta.dart';
+import 'package:meta/meta.dart';
 
 import '../../../health_connect/domain/activity_record.dart';
 import '../activity_claim/activity_claim_state.dart';
@@ -38,7 +38,7 @@ class DailyGoalClaimItem {
     required this.hasData,
   });
 
-  /// Catalog node â€” UI resolves the title via `node.titleKey(l10n)`
+  /// Catalog node — UI resolves the title via `node.titleKey(l10n)`
   /// and pulls any other node-level fields (asset, description) on
   /// demand. Provider can't depend on the l10n delegate.
   final Quest node;
@@ -55,7 +55,7 @@ class DailyGoalClaimItem {
   final DailyGoalValueUnit valueUnit;
 
   /// True when the objective resolves as satisfied (operator + target
-  /// + tolerance applied). Independent of claim state â€” a goal can be
+  /// + tolerance applied). Independent of claim state — a goal can be
   /// met but not yet claimed, or claimed even though the underlying
   /// data is missing today (an old grant).
   final bool isMet;
@@ -82,11 +82,11 @@ class DailyGoalClaimItem {
   bool get isClaimable => isMet && !isClaimed && isWithinWindow && previewXp > 0;
 }
 
-/// One daily-section quest row inside a backfill day card â€” daily
+/// One daily-section quest row inside a backfill day card — daily
 /// challenge, combo chain step, or chapter side quest that was
 /// offered on this day via [QuestOfferedEvent]. Compact compared to
 /// [DailyGoalClaimItem]: no actual / target value (the underlying
-/// objective handles satisfaction internally) â€” just title + pill.
+/// objective handles satisfaction internally) — just title + pill.
 @immutable
 class DailyQuestClaimItem {
   const DailyQuestClaimItem({
@@ -99,7 +99,7 @@ class DailyQuestClaimItem {
     required this.isWithinWindow,
   });
 
-  /// Catalog node â€” UI resolves `node.titleKey(l10n)` etc.
+  /// Catalog node — UI resolves `node.titleKey(l10n)` etc.
   final Quest node;
 
   String get nodeId => node.id;
@@ -107,11 +107,11 @@ class DailyQuestClaimItem {
   /// Domain inherited from the bound objective for icon / accent.
   final ProgressionDomain domain;
 
-  /// Engine flag â€” true when the bound objective has fired its
+  /// Engine flag — true when the bound objective has fired its
   /// completion event for the relevant period.
   final bool isCompleted;
 
-  /// Engine flag â€” true when the manual-claim pill should fire.
+  /// Engine flag — true when the manual-claim pill should fire.
   /// Subsumed by [isClaimable] (which also gates on window + xp).
   final bool isAvailableForClaim;
 
@@ -160,7 +160,7 @@ class DailyBackfillEntry {
   final List<DailyQuestClaimItem> dailyQuests;
   final List<ActivityClaimState> activities;
 
-  /// Records exposed by the activity rows â€” convenient when the
+  /// Records exposed by the activity rows — convenient when the
   /// "Claim all" footer wants to feed them straight to
   /// `claimActivity`.
   Iterable<ActivityRecord> get activityRecords =>
@@ -216,7 +216,7 @@ class DailyBackfillEntry {
   }
 
   /// True when the day has at least one met goal *or* one quest
-  /// offered *or* one activity â€” i.e. there is something to surface to
+  /// offered *or* one activity — i.e. there is something to surface to
   /// the player. Empty days (player didn't log anything and the
   /// rotation didn't pick anything either) can be hidden by the
   /// caller.

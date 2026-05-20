@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../shared/theme/design_tokens.dart';
@@ -61,7 +61,7 @@ class ProgressionScaffold extends StatelessWidget {
   }
 }
 
-/// Compact "nothing to show" line â€” title + caption â€” rendered inside
+/// Compact "nothing to show" line — title + caption — rendered inside
 /// sections that have no data yet.
 class ProgressionEmptyLine extends StatelessWidget {
   const ProgressionEmptyLine({
