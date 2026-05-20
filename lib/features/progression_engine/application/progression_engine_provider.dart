@@ -33,6 +33,7 @@ import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';
 import '../domain/models/engine_evaluation_context.dart';
 import '../domain/models/evaluation_overrides.dart';
 import '../domain/models/ledger_counters.dart';
+import '../domain/models/player_statistics.dart';
 import 'package:forgetrack/domain/journal/journal_event.dart';
 import 'package:forgetrack/domain/player/player.dart';
 import 'package:forgetrack/domain/progression/catalog/chapter.dart';
@@ -1219,6 +1220,26 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// daily-scoped objective tagged with that domain completed.
   EngineStreakSummary streakForDomain(ProgressionDomain domain) {
     return _domainStreaks[domain] ?? const EngineStreakSummary.empty();
+  }
+
+  /// Aggregated, read-only view of every stat surface the UI cares
+  /// about. Bundles per-domain streaks + the ledger counter map +
+  /// the player's current XP / level into one immutable snapshot so
+  /// widget consumers stop fishing individual getters out of the
+  /// provider. See [PlayerStatistics] for the rationale + the ADR
+  /// `player-statistics-value-object` for the design call.
+  ///
+  /// Rebuilt every time `_recomputeStreaks` runs (i.e. on hydration
+  /// and after every successful `evaluateWith` pass). Callers should
+  /// treat each read as a snapshot — don't cache across rebuilds,
+  /// don't mutate.
+  PlayerStatistics get playerStatistics {
+    return PlayerStatistics(
+      streaksByDomain: Map.unmodifiable(_domainStreaks),
+      counters: _buildLedgerCounters(),
+      totalXp: profile.totalXp,
+      level: profile.level,
+    );
   }
 
   /// Resolution results that have not yet been consumed by the
