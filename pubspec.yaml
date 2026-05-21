@@ -8,6 +8,7 @@ environment:
   sdk: ^3.5.0
 
 dependencies:
+  sentry_flutter: ^9.20.0
   flutter:
     sdk: flutter
   flutter_localizations:
@@ -74,6 +75,7 @@ dependencies:
   cached_network_image: ^3.4.1
 
 dev_dependencies:
+  sentry_dart_plugin: ^3.3.0
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
@@ -101,3 +103,9 @@ flutter:
     - assets/cosmetics/backgrounds/
     - assets/cosmetics/emblems/
     - assets/cosmetics/companions/
+
+sentry:
+  upload_debug_symbols: true
+  upload_source_maps: true
+  project: flutter
+  org: knejp

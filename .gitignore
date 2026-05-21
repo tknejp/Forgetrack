@@ -86,3 +86,5 @@ audit/
 
 # Personal memory notes (kept locally, not shared)
 memory/
+
+sentry.properties

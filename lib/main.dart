@@ -4,10 +4,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import 'app.dart';
 import 'core/logging/app_log.dart';
+import 'core/sentry/sentry_bootstrap.dart';
+import 'core/sentry/sentry_consent_provider.dart';
 import 'app/notification_preferences_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' show FirebaseFirestore, Settings;
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
@@ -68,16 +71,28 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   AppLog.app.info('Forgetrack starting up');
 
+  // Sentry consent is read BEFORE init so the very first session honours
+  // the persisted choice. First launch defaults to enabled (the GDPR
+  // dialog the user sees after boot just confirms the pre-checked state).
+  final sentryConsent = SentryConsentProvider();
+  await sentryConsent.init();
+
+  // SentryBootstrap is a no-op unless BuildConfig.isProd, a non-empty
+  // SENTRY_DSN was passed via --dart-define, AND consent.enabled is true.
+  // When skipped it still runs the appRunner so the app boots normally.
+  await SentryBootstrap.init(
+    consent: sentryConsent.enabled,
+    appRunner: () => _runForgetrack(sentryConsent),
+  );
+}
+
+Future<void> _runForgetrack(SentryConsentProvider sentryConsent) async {
   // Debug builds: keep screen awake so Android Doze doesn't drop the
   // VM-service connection or trigger Firestore reconnect storms while
   // we're actively debugging. Never enabled in release.
   if (kDebugMode) {
     unawaited(WakelockPlus.enable());
   }
-
-  AppLog.app.info('APP START TEST');
-  AppLog.app.warn('APP WARN TEST');
-  AppLog.app.error('APP ERROR TEST');
 
   await Future.wait([
     initializeDateFormatting('cs', null),
@@ -230,164 +245,188 @@ Future<void> main() async {
       ? FirestoreCosmeticEntitlementsSource()
       : const NoopCosmeticEntitlementsSource();
 
+  // SentryWidget wraps everything in SentryScreenshotWidget (forces a
+  // RepaintBoundary + extra Stack/Container/Directionality at the root,
+  // mutates a global _status on every rebuild) and SentryUserInteractionWidget
+  // (installs a global Listener that walks the element tree on every tap,
+  // because its default flags evaluate to true even when Sentry isn't
+  // initialised). On dev / no-DSN / opt-out builds the wrapper is pure
+  // overhead — devtools scroll jank and tap latency. Wrap only when we're
+  // actually reporting.
+  final appTree = MultiProvider(
+        providers: [
+          // Plain (non-ChangeNotifier) singletons used by DevTools factory
+          // reset. Exposed via Provider.value so they can be read from
+          // BuildContext alongside the existing notifier providers.
+          Provider<HealthDatabase>.value(value: healthDb),
+          Provider<KtNutritionDatabase>.value(value: ktDb),
+          Provider<ProgressionEngineDatabase>.value(value: progressionEngineDb),
+          Provider<CosmeticsDatabase>.value(value: cosmeticsDatabase),
+          Provider<FactoryResetService>(create: (_) => FactoryResetService()),
+          ChangeNotifierProvider.value(value: sentryConsent),
+          ChangeNotifierProvider.value(value: localeProvider),
+          ChangeNotifierProvider.value(value: notificationPreferencesProvider),
+          ChangeNotifierProvider.value(value: goalsProvider),
+          ChangeNotifierProvider(
+            // Eager: AuthProvider listens to FirebaseAuth state changes from
+            // construction time. If we let it stay lazy, Firestore-dependent
+            // providers downstream (Social, Cosmetics) wait for first widget
+            // read before they even start their cold-start hydration round-trip,
+            // so the home screen briefly renders empty until streams catch up.
+            lazy: false,
+            create: (_) => AuthProvider(),
+          ),
+          ChangeNotifierProvider.value(value: fitnessProvider),
+          ChangeNotifierProvider.value(value: ktProvider),
+          ChangeNotifierProvider.value(value: connectivityProvider),
+          ChangeNotifierProvider.value(value: homeCardOrderProvider),
+          ChangeNotifierProvider.value(value: emblemBoardProvider),
+          ChangeNotifierProvider(create: (_) => SheetsExportProvider()),
+          ChangeNotifierProvider.value(value: bushidoExportProvider),
+          ChangeNotifierProvider.value(value: devToolsProvider),
+          ChangeNotifierProvider.value(value: onboardingProvider),
+          ChangeNotifierProxyProvider<AuthProvider, CosmeticsProvider>(
+            // Eager so cosmetic entitlements load + Isar state hydrate kick off
+            // immediately at app boot rather than at first widget read.
+            lazy: false,
+            create: (_) => CosmeticsProvider(
+              service: cosmeticsService,
+              entitlementsSource: cosmeticEntitlementsSource,
+            ),
+            update: (_, auth, provider) {
+              provider!.bindUser(auth.isSignedIn ? auth.user?.id : null);
+              return provider;
+            },
+          ),
+          // V2 progression engine — declared after CosmeticsProvider so its
+          // bind() update sees it in scope. Source dependencies: auth (uid
+          // for cloud sync) + goals + fitness + nutrition + cosmetics.
+          ChangeNotifierProxyProvider5<
+              AuthProvider,
+              GoalsProvider,
+              FitnessProvider,
+              KalorickeTabulkyProvider,
+              CosmeticsProvider,
+              ProgressionEngineProvider>(
+            // Eager: provider's constructor calls `_hydrate()` which loads the
+            // Isar ledger. We want that running in parallel with Cosmetics +
+            // Social so the home header doesn't wait on it.
+            lazy: false,
+            create: (_) => ProgressionEngineProvider(
+              engine: progressionEngineV2,
+              repository: progressionEngineRepo,
+              cloudSync: progressionEngineCloudSync,
+            ),
+            update: (_, auth, goals, fitness, kt, cosmetics, provider) {
+              provider!.bind(
+                goalsProvider: goals,
+                fitnessProvider: fitness,
+                nutritionProvider: kt,
+                cosmeticsProvider: cosmetics,
+                emblemBoardProvider: emblemBoardProvider,
+                authUid: auth.isSignedIn ? auth.user?.id : null,
+              );
+              return provider;
+            },
+          ),
+          // Phase 5 of the domain refactor: Player is computed from
+          // the Journal via Player.fromJournal, not read-through over
+          // the engine's pre-computed profile. The proxy passes the
+          // ledger's reward grants + the LevelCurve so the provider's
+          // applySnapshot routes through the canonical derivation.
+          // ProgressionEngineProvider's EngineProfile getter runs the
+          // same XP sum (via Player.totalXpFromGrants) so the two
+          // consumers stay in lockstep without a provider cycle.
+          ChangeNotifierProxyProvider2<AuthProvider, ProgressionEngineProvider,
+              PlayerProvider>(
+            // Lazy: no Phase 5 consumer reads PlayerProvider yet, so
+            // deferring creation until first read keeps startup cost
+            // flat while the scaffolding is in place.
+            create: (_) => PlayerProvider(),
+            update: (_, auth, engine, provider) {
+              final identity = auth.user;
+              provider!.applySnapshot(
+                uid: identity?.id ?? '',
+                rewardGrants:
+                    engine.ledger?.rewardGrants ?? const <RewardGrantEvent>[],
+                levelCurve: const LevelCurve(),
+                joinedAt: engine.joinedAt,
+                displayName: identity?.displayName,
+                photoUrl: identity?.photoUrl,
+              );
+              return provider;
+            },
+          ),
+          ChangeNotifierProxyProvider3<AuthProvider, ProgressionEngineProvider,
+              CosmeticsProvider, SocialProvider>(
+            // Eager: starts Firestore session reconcile + friend / profile
+            // stream subscriptions during boot. Without this, the hero profile
+            // header on the home screen sees a blank avatar for 100-500 ms
+            // until a widget first reads SocialProvider and triggers create().
+            lazy: false,
+            create: (_) => SocialProvider(
+              repository: socialRepository,
+              session: socialSession,
+              backendState: socialBackendState,
+            ),
+            update: (_, auth, progression, cosmetics, provider) {
+              provider!.bind(
+                authProvider: auth,
+                progressionProvider: progression,
+                cosmeticsProvider: cosmetics,
+              );
+              return provider;
+            },
+          ),
+          ChangeNotifierProxyProvider2<ProgressionEngineProvider,
+              CosmeticsProvider, CelebrationController>(
+            create: (_) => CelebrationController(),
+            update: (_, progression, cosmetics, controller) {
+              controller!.bind(progression: progression, cosmetics: cosmetics);
+              return controller;
+            },
+          ),
+          // Companion food triggers (Monster Energy easter egg, future
+          // cow / hen). Declared after Calorie + Cosmetics + Engine so
+          // context.read sees them during eager create(). Lazy: false
+          // so prefs hydration starts at boot, not at first widget read
+          // — without that the gold dot / claim pill miss their initial
+          // paint on the home screen.
+          ChangeNotifierProvider<FoodTriggerProvider>(
+            lazy: false,
+            create: (ctx) {
+              final p = FoodTriggerProvider(
+                nutritionProvider: ctx.read<KalorickeTabulkyProvider>(),
+                cosmeticsProvider: ctx.read<CosmeticsProvider>(),
+                grant: ({required int amount, required String periodKey}) =>
+                    ctx.read<ProgressionEngineProvider>()
+                        .grantCompanionTriggerXp(
+                          amount: amount,
+                          periodKey: periodKey,
+                        ),
+              );
+              unawaited(p.init());
+              return p;
+            },
+          ),
+        ],
+        child: Selector<AuthProvider, String?>(
+          selector: (_, auth) =>
+              auth.isSignedIn ? auth.user?.firebaseUid : null,
+          builder: (context, uid, child) {
+            // Strict-PII policy: push only the opaque Firebase UID into
+            // Sentry's user scope. No email, no displayName. Cheap no-op
+            // when Sentry isn't initialised (dev / opt-out builds).
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              SentryBootstrap.setUserId(uid);
+            });
+            return child!;
+          },
+          child: const ForgetrackApp(),
+        ),
+      );
+
   runApp(
-    MultiProvider(
-      providers: [
-        // Plain (non-ChangeNotifier) singletons used by DevTools factory
-        // reset. Exposed via Provider.value so they can be read from
-        // BuildContext alongside the existing notifier providers.
-        Provider<HealthDatabase>.value(value: healthDb),
-        Provider<KtNutritionDatabase>.value(value: ktDb),
-        Provider<ProgressionEngineDatabase>.value(value: progressionEngineDb),
-        Provider<CosmeticsDatabase>.value(value: cosmeticsDatabase),
-        Provider<FactoryResetService>(create: (_) => FactoryResetService()),
-        ChangeNotifierProvider.value(value: localeProvider),
-        ChangeNotifierProvider.value(value: notificationPreferencesProvider),
-        ChangeNotifierProvider.value(value: goalsProvider),
-        ChangeNotifierProvider(
-          // Eager: AuthProvider listens to FirebaseAuth state changes from
-          // construction time. If we let it stay lazy, Firestore-dependent
-          // providers downstream (Social, Cosmetics) wait for first widget
-          // read before they even start their cold-start hydration round-trip,
-          // so the home screen briefly renders empty until streams catch up.
-          lazy: false,
-          create: (_) => AuthProvider(),
-        ),
-        ChangeNotifierProvider.value(value: fitnessProvider),
-        ChangeNotifierProvider.value(value: ktProvider),
-        ChangeNotifierProvider.value(value: connectivityProvider),
-        ChangeNotifierProvider.value(value: homeCardOrderProvider),
-        ChangeNotifierProvider.value(value: emblemBoardProvider),
-        ChangeNotifierProvider(create: (_) => SheetsExportProvider()),
-        ChangeNotifierProvider.value(value: bushidoExportProvider),
-        ChangeNotifierProvider.value(value: devToolsProvider),
-        ChangeNotifierProvider.value(value: onboardingProvider),
-        ChangeNotifierProxyProvider<AuthProvider, CosmeticsProvider>(
-          // Eager so cosmetic entitlements load + Isar state hydrate kick off
-          // immediately at app boot rather than at first widget read.
-          lazy: false,
-          create: (_) => CosmeticsProvider(
-            service: cosmeticsService,
-            entitlementsSource: cosmeticEntitlementsSource,
-          ),
-          update: (_, auth, provider) {
-            provider!.bindUser(auth.isSignedIn ? auth.user?.id : null);
-            return provider;
-          },
-        ),
-        // V2 progression engine — declared after CosmeticsProvider so its
-        // bind() update sees it in scope. Source dependencies: auth (uid
-        // for cloud sync) + goals + fitness + nutrition + cosmetics.
-        ChangeNotifierProxyProvider5<
-            AuthProvider,
-            GoalsProvider,
-            FitnessProvider,
-            KalorickeTabulkyProvider,
-            CosmeticsProvider,
-            ProgressionEngineProvider>(
-          // Eager: provider's constructor calls `_hydrate()` which loads the
-          // Isar ledger. We want that running in parallel with Cosmetics +
-          // Social so the home header doesn't wait on it.
-          lazy: false,
-          create: (_) => ProgressionEngineProvider(
-            engine: progressionEngineV2,
-            repository: progressionEngineRepo,
-            cloudSync: progressionEngineCloudSync,
-          ),
-          update: (_, auth, goals, fitness, kt, cosmetics, provider) {
-            provider!.bind(
-              goalsProvider: goals,
-              fitnessProvider: fitness,
-              nutritionProvider: kt,
-              cosmeticsProvider: cosmetics,
-              emblemBoardProvider: emblemBoardProvider,
-              authUid: auth.isSignedIn ? auth.user?.id : null,
-            );
-            return provider;
-          },
-        ),
-        // Phase 5 of the domain refactor: Player is computed from
-        // the Journal via Player.fromJournal, not read-through over
-        // the engine's pre-computed profile. The proxy passes the
-        // ledger's reward grants + the LevelCurve so the provider's
-        // applySnapshot routes through the canonical derivation.
-        // ProgressionEngineProvider's EngineProfile getter runs the
-        // same XP sum (via Player.totalXpFromGrants) so the two
-        // consumers stay in lockstep without a provider cycle.
-        ChangeNotifierProxyProvider2<AuthProvider, ProgressionEngineProvider,
-            PlayerProvider>(
-          // Lazy: no Phase 5 consumer reads PlayerProvider yet, so
-          // deferring creation until first read keeps startup cost
-          // flat while the scaffolding is in place.
-          create: (_) => PlayerProvider(),
-          update: (_, auth, engine, provider) {
-            final identity = auth.user;
-            provider!.applySnapshot(
-              uid: identity?.id ?? '',
-              rewardGrants:
-                  engine.ledger?.rewardGrants ?? const <RewardGrantEvent>[],
-              levelCurve: const LevelCurve(),
-              joinedAt: engine.joinedAt,
-              displayName: identity?.displayName,
-              photoUrl: identity?.photoUrl,
-            );
-            return provider;
-          },
-        ),
-        ChangeNotifierProxyProvider3<AuthProvider, ProgressionEngineProvider,
-            CosmeticsProvider, SocialProvider>(
-          // Eager: starts Firestore session reconcile + friend / profile
-          // stream subscriptions during boot. Without this, the hero profile
-          // header on the home screen sees a blank avatar for 100-500 ms
-          // until a widget first reads SocialProvider and triggers create().
-          lazy: false,
-          create: (_) => SocialProvider(
-            repository: socialRepository,
-            session: socialSession,
-            backendState: socialBackendState,
-          ),
-          update: (_, auth, progression, cosmetics, provider) {
-            provider!.bind(
-              authProvider: auth,
-              progressionProvider: progression,
-              cosmeticsProvider: cosmetics,
-            );
-            return provider;
-          },
-        ),
-        ChangeNotifierProxyProvider2<ProgressionEngineProvider,
-            CosmeticsProvider, CelebrationController>(
-          create: (_) => CelebrationController(),
-          update: (_, progression, cosmetics, controller) {
-            controller!.bind(progression: progression, cosmetics: cosmetics);
-            return controller;
-          },
-        ),
-        // Companion food triggers (Monster Energy easter egg, future
-        // cow / hen). Declared after Calorie + Cosmetics + Engine so
-        // context.read sees them during eager create(). Lazy: false
-        // so prefs hydration starts at boot, not at first widget read
-        // — without that the gold dot / claim pill miss their initial
-        // paint on the home screen.
-        ChangeNotifierProvider<FoodTriggerProvider>(
-          lazy: false,
-          create: (ctx) {
-            final p = FoodTriggerProvider(
-              nutritionProvider: ctx.read<KalorickeTabulkyProvider>(),
-              cosmeticsProvider: ctx.read<CosmeticsProvider>(),
-              grant: ({required int amount, required String periodKey}) =>
-                  ctx.read<ProgressionEngineProvider>()
-                      .grantCompanionTriggerXp(
-                        amount: amount,
-                        periodKey: periodKey,
-                      ),
-            );
-            unawaited(p.init());
-            return p;
-          },
-        ),
-      ],
-      child: const ForgetrackApp(),
-    ),
+    SentryBootstrap.isEnabled ? SentryWidget(child: appTree) : appTree,
   );
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../../../../core/config/constants.dart';
+import '../../../../core/sentry/sentry_bootstrap.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../coach_log_export/presentation/bushido_export_screen.dart';
 import '../../../../shared/widgets/app_logo.dart';
@@ -101,7 +103,20 @@ class SettingsAboutSection extends StatelessWidget {
           icon: Icons.feedback_outlined,
           label: l10n.settingsFeedback,
           showChevron: true,
-          onTap: () {},
+          onTap: () {
+            // SentryFeedbackWidget asserts that Sentry options are wired, so
+            // we hard-skip on dev / no-DSN builds. The snackbar makes the
+            // dead-end obvious instead of silently doing nothing.
+            if (!SentryBootstrap.isEnabled) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(l10n.settingsFeedbackUnavailable),
+                ),
+              );
+              return;
+            }
+            SentryFeedbackWidget.show(context);
+          },
         ),
       ],
     );

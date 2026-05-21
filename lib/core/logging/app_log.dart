@@ -1,8 +1,12 @@
-import 'dart:developer' as dev;
-
 import 'package:flutter/foundation.dart';
 
+import '../sentry/sentry_breadcrumb_sink.dart';
+
 // ─── ANSI colors ──────────────────────────────────────────────────────────────
+//
+// Render in real terminals (`flutter run` from cmd) AND in the VSCode Debug
+// Console — Dart Debug Adapter forwards stdout verbatim and VSCode renders
+// ANSI escape sequences in the Debug Console panel.
 
 abstract final class _Ansi {
   static const reset = '\x1B[0m';
@@ -22,14 +26,6 @@ enum _Level {
   success,
   warn,
   error;
-
-  int get _devLevel => switch (this) {
-        debug => 500,
-        info => 800,
-        success => 800,
-        warn => 900,
-        error => 1000,
-      };
 
   String get _prefix => switch (this) {
         debug => '·',
@@ -79,6 +75,17 @@ class AppLogger {
     Object? err,
     StackTrace? stackTrace,
   }) {
+    // Forward to Sentry breadcrumb sink BEFORE the _shouldLog gate — in
+    // release builds AppLog skips terminal output but breadcrumbs still
+    // need to flow. The sink is a no-op when Sentry isn't initialised, so
+    // the cost in dev is one call into an empty function.
+    SentryBreadcrumbSink.instance.add(
+      level: level.name,
+      domain: domain,
+      scope: scope,
+      message: message,
+    );
+
     if (!_shouldLog(level)) return;
 
     final now = DateTime.now();
@@ -89,30 +96,25 @@ class AppLogger {
 
     final domainTag = scope != null ? '[$domain][$scope]' : '[$domain]';
     final payloadStr = payload != null ? '  | $payload' : '';
+    // `[Forgetrack]` prefix lets the VSCode Debug Console search filter hide
+    // non-app noise (engine prints, plugin stdout). Kept right after the
+    // severity glyph so the visual rhythm of the line stays intact.
     final line =
-        '${level._prefix} [$ts][${level._tag}]$domainTag $message$payloadStr';
+        '${level._prefix} [Forgetrack][$ts][${level._tag}]$domainTag $message$payloadStr';
 
-    final coloredLine = '${level._ansiColor}$line${_Ansi.reset}';
-
-    // Barevný výstup jen do terminalu.
-    debugPrint(coloredLine);
+    // Single sink: debugPrint goes to stdout, which both `flutter run` in cmd
+    // and the VSCode Debug Console pick up. dev.log is intentionally not used
+    // — the DAP would surface it as a second entry per call, doubling the
+    // visible noise in Debug Console for no extra signal.
+    debugPrint('${level._ansiColor}$line${_Ansi.reset}');
 
     if (err != null) {
-      debugPrint('${_Ansi.red}error: $err${_Ansi.reset}');
+      debugPrint('${_Ansi.red}[Forgetrack] error: $err${_Ansi.reset}');
     }
 
     if (stackTrace != null) {
       debugPrintStack(stackTrace: stackTrace);
     }
-
-    // Čistý výstup do DevTools/logcat, bez ANSI escape sekvencí.
-    dev.log(
-      line,
-      name: 'FT',
-      level: level._devLevel,
-      error: err,
-      stackTrace: stackTrace,
-    );
   }
 
   void debug(String message, {Object? payload}) =>

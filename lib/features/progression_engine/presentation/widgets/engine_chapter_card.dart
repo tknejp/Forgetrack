@@ -7,7 +7,6 @@ import '../../../../shared/theme/design_tokens.dart';
 import '../../../../shared/widgets/ft_expand_chevron.dart';
 import '../../../../shared/widgets/progress_bar.dart';
 import '../../../../shared/widgets/xp_claim_pill.dart';
-import 'package:forgetrack/domain/progression/catalog/progression_domain.dart';
 import 'package:forgetrack/features/progression_engine/domain/progression_domain_chrome.dart';
 import '../../application/progression_engine_provider.dart';
 import '../../domain/catalog/content/quest_assets.dart';

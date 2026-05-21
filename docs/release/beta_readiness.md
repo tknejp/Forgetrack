@@ -10,17 +10,17 @@ Tento dokument je pracovní tracker. Architektonické rozhodnutí, které se v p
 
 Sloupec **Probíhá** po reklasifikaci (2026-05-21):
 
-| Tier | # | Karta |
-|---|---|---|
-| 0 | [#108](https://trello.com/c/SOQFZYgU) | Android — vlastní applicationId + release signingConfig |
-| 0 | [#75](https://trello.com/c/g4ADmdO9) | Debug + production build flavors |
-| 0 | [#70](https://trello.com/c/x2nl5b6y) | Crash reporting + feedback SDK |
-| 1 | [#97](https://trello.com/c/ez8f3wXm) | KT sync — error banner eskalační kaskáda |
-| 1 | [#79](https://trello.com/c/E3YaeVBK) | Persistence schema migration framework |
-| 2 | [#110](https://trello.com/c/ay5Pk5Ri) | Cosmetics — Firestore hybrid repo |
-| 2 | [#106](https://trello.com/c/QawQ5XxC) | Devtools — Firestore `devUsers/{uid}` lookup |
-| 2 | [#74](https://trello.com/c/rdHZqAcP) | Light theme |
-| 2 | [#73](https://trello.com/c/FfJR6mve) | RPG mode — toggle pro skrytí RPG obsahu |
+| Tier | # | Karta | Stav |
+|---|---|---|---|
+| 0 | [#108](https://trello.com/c/SOQFZYgU) | Android — vlastní applicationId + release signingConfig | ✓ shipped 2026-05-21 |
+| 0 | [#75](https://trello.com/c/g4ADmdO9) | Debug + production build flavors | ✓ shipped 2026-05-21 |
+| 0 | [#70](https://trello.com/c/x2nl5b6y) | Crash reporting + feedback SDK | ⚠ code shipped 2026-05-22 — e2e verify pending |
+| 1 | [#97](https://trello.com/c/ez8f3wXm) | KT sync — error banner eskalační kaskáda | — |
+| 1 | [#79](https://trello.com/c/E3YaeVBK) | Persistence schema migration framework | — |
+| 2 | [#110](https://trello.com/c/ay5Pk5Ri) | Cosmetics — Firestore hybrid repo | — |
+| 2 | [#106](https://trello.com/c/QawQ5XxC) | Devtools — Firestore `devUsers/{uid}` lookup | — |
+| 2 | [#74](https://trello.com/c/rdHZqAcP) | Light theme | — |
+| 2 | [#73](https://trello.com/c/FfJR6mve) | RPG mode — toggle pro skrytí RPG obsahu | — |
 
 ## Sprint plán
 
@@ -149,48 +149,48 @@ Karty řazené po hlasité poptávce od testerů. Reálné pořadí se rozhodne 
 
 ---
 
-### #70 — Crash reporting + feedback SDK
+### #70 — Crash reporting + feedback (Sentry)
 
 **Cíl:** automatický sběr crashů + způsob, jak tester nahlásí bug s kontextem (screenshot, repro kroky).
 
-**Aktuální stav:** žádné crash reporting deps v [pubspec.yaml](../../pubspec.yaml). Žádný `FirebaseCrashlytics.instance` v `lib/`. Beta uživatel = informačně slepá oblast.
+**Vendor: Sentry** (rozhodnutí 2026-05-21, viz changelog níže). Plná capability: Crash + Performance + Session Replay + in-app User Feedback widget. ADR `sentry-crash-reporting` v [docs/site/data/decisions.json](../site/data/decisions.json) drží PROČ + uvažované alternativy (Crashlytics, Instabug). Volume risk free-tier (5k errors / 100k transactions / 50 replays měsíčně) je documented known-risk; sample rates jsou konzervativní (`tracesSampleRate: 0.2`, `replaysSessionSampleRate: 0.1`, `replaysOnErrorSampleRate: 1.0`).
 
-**Rozhodnutí o vendoru** *(první krok, dřív než implementace)*:
-- **Firebase Crashlytics** — *doporučeno*. Firebase už máme zapnutý (Auth, Firestore, Functions). Free tier. Zero-config v Flutteru přes `firebase_crashlytics` plugin. Stack traces, custom keys, breadcrumbs. **Nevýhoda:** žádný in-app feedback widget; testeři musí psát e-mailem / přes druhý kanál.
-- **Sentry** — free tier (5k errors/měsíc) + lepší DX (issue grouping, performance traces). Druhý vendor v stacku.
-- **Instabug** — placený, ale má in-app feedback widget s screenshot annotation + repro recording. Pro beta velmi silné UX, ale měsíční fee.
+**Architektura ([lib/core/sentry/](../../lib/core/sentry/)):**
 
-**Doporučení:** Crashlytics + samostatný feedback mechanismus (jednoduché tlačítko v Settings → otevře e-mail s pre-fillem device/version info). Pokud testeři nahlásí, že feedback flow je tření, sáhnout po Instabugu v Sprintu 3.
+- [`sentry_bootstrap.dart`](../../lib/core/sentry/sentry_bootstrap.dart) — three-gate init (`BuildConfig.isProd` + `--dart-define=SENTRY_DSN=<dsn>` + user consent). Když jakákoli gate selže, `SentryFlutter.init` se nikdy nezavolá a `SentryBreadcrumbSink` zůstane no-op. `setUserId(uid)` helper pro auth scope binding.
+- [`sentry_consent_provider.dart`](../../lib/core/sentry/sentry_consent_provider.dart) — `ChangeNotifier` nad SharedPreferences (`sentry.collection_enabled` default `true`, `sentry.consent_seen` default `false`).
+- [`sentry_consent_gate.dart`](../../lib/core/sentry/sentry_consent_gate.dart) — first-frame dialog na cold-startu pokud `!hasSeenDialog && SentryBootstrap.isAvailable`. Default pre-checked Allow; explicit "No thanks" flippne pref na false.
+- [`sentry_pii_scrubber.dart`](../../lib/core/sentry/sentry_pii_scrubber.dart) — strict denylist (regex pro email-likes + 24+ char tokeny, klíče `email`/`password*`/`fcm_token`/`weight*`/`food*`/`kcal`/`cookie`/`session`).
+- [`sentry_breadcrumb_sink.dart`](../../lib/core/sentry/sentry_breadcrumb_sink.dart) — interface, který `AppLog._emit` volá BEFORE `_shouldLog` gate. Default no-op; bootstrap nainstaluje real impl s whitelist `{AUTH, SYNC, KT, HEALTH}`.
 
-**Kroky (varianta Crashlytics):**
+**Implementace (shipped 2026-05-22):**
 
-1. Přidat `firebase_crashlytics: ^4.x.x` do [pubspec.yaml](../../pubspec.yaml).
-2. V [lib/main.dart](../../lib/main.dart):
-   ```dart
-   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
-   PlatformDispatcher.instance.onError = (error, stack) {
-     FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-     return true;
-   };
-   ```
-3. **Vypnout Crashlytics v debug** flavoru (přes `setCrashlyticsCollectionEnabled(BuildConfig.isProd)`). Jinak vývojář generuje šum.
-4. **Custom keys** — při startu nastavit: app version, flavor, user UID (po loginu), aktivní feature flagy.
-5. **Breadcrumbs** přes `AppLog` ([lib/core/logging/app_log.dart](../../lib/core/logging/app_log.dart)) — release-mode logy odeslat jako `Crashlytics.log()`. Nepotřebné domény (např. `cosmetics-render`) filtrovat.
-6. **GDPR consent** — při prvním spuštění opt-in dialog („souhlasím se sbíráním crash reportů"). Pokud user odmítne → `setCrashlyticsCollectionEnabled(false)` napevno.
-7. **PII anonymizace** — žádné e-maily / KT credentials / weight values v error messages. Audit logger calls.
-8. **In-app feedback button** v Settings: `mailto:` s pre-filled subject `[Forgetrack {version} {flavor}] Feedback` a body s device info.
-9. **Test crash** — devtools tlačítko „Force crash" (debug-only) pro ověření, že Crashlytics dashboard data dostává.
+1. `sentry_flutter: ^9.20.0` + `sentry_dart_plugin: ^3.3.0` (pubspec wizard scaffold; ručně refactored aby splňovala plán).
+2. [`lib/main.dart`](../../lib/main.dart) — `SentryBootstrap.init` gated na consent + `BuildConfig.isProd` + non-empty `SENTRY_DSN`. Wizard's hardcoded DSN + `kReleaseMode` gate + test log calls **odstraněny**. `appRunner` callback nastaví tagy (`flavor`, `app_version`) a nainstaluje breadcrumb sink. `SentryWidget` wrapping kolem `MultiProvider` zůstává (no-op když Sentry off).
+3. `Selector<AuthProvider, String?>` pod `MultiProvider` v main.dart pushuje opaque `firebaseUid` do `SentryUser(id: …)` po postFrameCallback — strict PII: ŽÁDNÝ email / displayName / photoUrl.
+4. [`lib/core/logging/app_log.dart`](../../lib/core/logging/app_log.dart) — `_emit` forwarduje do `SentryBreadcrumbSink.instance.add(...)` PŘED `_shouldLog` gate. V release módě AppLog skipuje terminal output, ale breadcrumby tečou dál. Cost v dev: jeden virtual dispatch do no-op.
+5. PII scrubbing přes `options.sendDefaultPii = false`, `options.attachScreenshot = false`, `beforeSend` (`event.user = SentryUser(id: …)` + `event.request = null` + message scrub), `beforeBreadcrumb` (message + data scrub přes `SentryPiiScrubber`).
+6. PII audit grep AppLog volání v `lib/features/auth/`, `lib/features/social/data/social_firebase_session.dart`, `lib/core/services/`, `lib/features/health_connect/`, `lib/features/nutrition/data/kaloricke_tabulky_service/` — žádný call v AUTH/SYNC/KT/HEALTH whitelistu neloguje email / KT credentials / weight / food / FCM token v message stringu. Strict scrubber je defense-in-depth.
+7. Settings UI ([lib/features/settings/presentation/sections/settings_preferences_section.dart](../../lib/features/settings/presentation/sections/settings_preferences_section.dart)) — toggle `Crash reporting` v Preferences sekci. Když `SentryBootstrap.isAvailable == false` (dev / no-DSN build), toggle pořád funguje (uloží pref pro budoucí prod build) ale subtitle ukazuje „Available only in production builds" a restart-required snackbar se nepouští.
+8. Feedback button ([lib/features/settings/presentation/sections/settings_static_sections.dart](../../lib/features/settings/presentation/sections/settings_static_sections.dart)) — `SettingsTile` „Send feedback" v About sekci volá `SentryFeedbackWidget.show(context)` (full-screen route s name/email/message + screenshot attachment). Na dev/no-DSN buildech místo toho fallback snackbar „Feedback is available only in production builds".
+9. Devtools force-crash ([lib/features/devtools/presentation/sections/devtools_app_section.dart](../../lib/features/devtools/presentation/sections/devtools_app_section.dart)) — `DevToolsActionTile` „Force crash" + Sentry status tile (`reporting` / `disabled (opt-out)` / `off (dev / no DSN)`). Crash dispatch přes `Future<void>(() => throw StateError(...))` aby šel přes Flutter's onError hook, ne přes InkWell callback try/catch. Visible only via `DevToolsPermissionService.hasAccess(uid)` — dev flavor + UID allowlist v prod.
 
 **Acceptance:**
-- [ ] Crash v `prod` buildu se zobrazí v Firebase Crashlytics dashboardu do ~5 minut.
-- [ ] Debug build nezasílá nic (verify v Crashlytics dashboardu).
-- [ ] User UID je k crash reportu připojený jako custom key (umožní cross-reference s Firestore daty).
-- [ ] Settings → Feedback otevře e-mail s device/version info v body.
-- [ ] GDPR opt-in funguje (volba se respektuje a persistuje).
 
-**Velikost:** ~1–2 dny (vlastní Crashlytics wire-up je rychlý, GDPR consent + PII audit je zbytek).
+- [x] Code path: Sentry init gate na `BuildConfig.isProd` + DSN + consent — všechny tři ověřené v [`sentry_bootstrap.dart`](../../lib/core/sentry/sentry_bootstrap.dart).
+- [x] AppLog breadcrumb bridge pro AUTH/SYNC/KT/HEALTH (release-mode passthrough).
+- [x] PII scrubber: `beforeSend` + `beforeBreadcrumb` + `sendDefaultPii: false`.
+- [x] Custom tags (flavor, app_version) + user scope (opaque UID) hooked.
+- [x] GDPR opt-in dialog: první start, default ON, persistovaný (`sentry.collection_enabled`).
+- [x] Settings toggle pro pozdější změnu (s restart-required snackbar).
+- [x] In-app feedback widget napojený na Settings → „Send feedback".
+- [x] Devtools „Force crash" tlačítko (devtools-gated, ne mainstream prod UX).
+- [x] **End-to-end verify (2026-05-22):** ověřeno přes `flutter run --flavor prod --dart-define=FLAVOR=prod --dart-define=SENTRY_DSN=<dsn>` v debug módu — force crash z devtools dorazil do Sentry dashboardu, appka pokračovala v běhu díky `runZonedGuarded` který Sentry instaluje kolem `appRunner`. Dev flavor paralelně ověřen — žádné events do Sentry (gate `BuildConfig.isProd` blokuje init). Full prod release APK acceptance ještě pending (release-mode signed APK → install na test device → force crash → dashboard verify).
+- [ ] **Volume re-tune:** po prvním plném měsíci tester usage zkontrolovat free-tier consumption v Sentry dashboardu; pokud blízko limitu, snížit `tracesSampleRate` / `replaysSessionSampleRate` přes dashboard rate limits (no code change).
 
-**Závislosti:** #75 (potřebuje `BuildConfig.flavor` pro debug-mode disable).
+**Velikost:** ~1 den implementace (větší než plánovaný odhad ~1–2 dny pro Crashlytics, ale s plnou Performance + Replay capability + PII scrubber + GDPR flow).
+
+**Závislosti:** #75 (`BuildConfig.flavor` jako primary gate) ✓ splněno.
 
 ---
 
@@ -415,3 +415,4 @@ Karty v tomto tier se aktivují **podle hlasité poptávky od testerů** ze Spri
 - **2026-05-21**: #70 vendor rozhodnutí — **Sentry** (ne Crashlytics jak default v sekci #70 počítal). Důvod: lepší DX (issue grouping, performance traces). ADR doplnit při startu #70 ticketu; sekce #70 v tomto dokumentu se přepíše tehdy.
 - **2026-05-21**: #108 follow-up — release cert SHA-1 (`639146796b…`) + SHA-256 (`fc12d160…`) doregistrované na produkční Firebase app `1:798278342104:android:a44ecd497db4f28161cead` přes Firebase MCP. Bez toho by Google Sign-In testerům na release buildu nepoběžel.
 - **2026-05-21**: #75 shipped — Android product flavors `dev` / `prod` ([android/app/build.gradle.kts](../../android/app/build.gradle.kts)), nová Firebase app `Forgetrack DEV` (`1:798278342104:android:9a16491e8d45918b61cead`, package `com.knejp.forgetrack.dev`) v projektu `forgetracker-493415`, sjednocený `google-services.json` s oběma `client` bloky, `lib/core/build_config.dart` runtime gate, `DevToolsPermissionService` přepnut z `kDebugMode` na `BuildConfig.isDev`, dev launcher ikona dostává oranžové pozadí přes `src/dev/res/values/colors.xml`, manifest swap `android:label="@string/app_name"`. iOS flavor scaffolding odloženo do Trello #2. Ověřeno: `flutter build apk --release --flavor prod` produkuje `app-prod-release.apk` podepsaný stále prod certem; `flutter build apk --debug --flavor dev` produkuje dev APK. ADR `android-flavor-split-dev-prod` v [docs/site/data/decisions.json](../site/data/decisions.json).
+- **2026-05-22**: #70 implementace shipped — Sentry Flutter 9.20.0 + `sentry_dart_plugin` 3.3.0. Wizard scaffold (hardcoded DSN + `kReleaseMode` gate + test log calls) přepsán: DSN přes `--dart-define=SENTRY_DSN=<dsn>`, three-gate init (`BuildConfig.isProd` + DSN + consent) v [`lib/core/sentry/sentry_bootstrap.dart`](../../lib/core/sentry/sentry_bootstrap.dart). Sample rates: traces 0.2, replay 0.1 session / 1.0 onError. Strict PII scrubber ([`sentry_pii_scrubber.dart`](../../lib/core/sentry/sentry_pii_scrubber.dart)) + `sendDefaultPii: false` + `event.user = SentryUser(id: …)` v `beforeSend`. AppLog ↔ Sentry breadcrumb bridge přes `SentryBreadcrumbSink` (whitelist AUTH/SYNC/KT/HEALTH; release-mode passthrough před `_shouldLog` gate). GDPR opt-in dialog (`SentryConsentGate` wrapping `MaterialApp.home`, default ON) + Settings toggle + Send feedback widget (`SentryFeedbackWidget.show`) + devtools force-crash. ADR `sentry-crash-reporting` v [docs/site/data/decisions.json](../site/data/decisions.json). Open: end-to-end verify v Sentry dashboardu (user-side prod build + force crash) + volume re-tune po prvním měsíci tester usage.

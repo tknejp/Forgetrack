@@ -1,0 +1,51 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Forgetrack (dev, debug)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": ["--flavor", "dev", "--dart-define=FLAVOR=dev"]
+    },
+    {
+      "name": "Forgetrack (dev, profile)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "flutterMode": "profile",
+      "args": ["--flavor", "dev", "--dart-define=FLAVOR=dev"]
+    },
+    {
+      "name": "Forgetrack (dev, release)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "flutterMode": "release",
+      "args": ["--flavor", "dev", "--dart-define=FLAVOR=dev"]
+    },
+    {
+      "name": "Forgetrack (prod, debug)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "--flavor", "prod",
+        "--dart-define=FLAVOR=prod",
+        "--dart-define=SENTRY_DSN=https://e8abd46c58d9ecb8dbcacc38d941b24c@o4511430116835328.ingest.de.sentry.io/4511430127976528"
+      ]
+    },
+    {
+      "name": "Forgetrack (prod, release)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "flutterMode": "release",
+      "args": [
+        "--flavor", "prod",
+        "--dart-define=FLAVOR=prod",
+        "--dart-define=SENTRY_DSN=https://e8abd46c58d9ecb8dbcacc38d941b24c@o4511430116835328.ingest.de.sentry.io/4511430127976528"
+      ]
+    }
+  ]
+}

@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../app/locale_provider.dart';
 import '../../../../app/notification_preferences_provider.dart';
+import '../../../../core/sentry/sentry_bootstrap.dart';
+import '../../../../core/sentry/sentry_consent_provider.dart';
 import '../widgets/settings_widgets.dart';
 
 class SettingsPreferencesSection extends StatelessWidget {
@@ -14,7 +16,9 @@ class SettingsPreferencesSection extends StatelessWidget {
     final localeProvider = context.watch<LocaleProvider>();
     final notificationPreferences =
         context.watch<NotificationPreferencesProvider>();
+    final sentryConsent = context.watch<SentryConsentProvider>();
     final l10n = context.l10n;
+    final sentryAvailable = SentryBootstrap.isAvailable;
 
     return SettingsCard(
       children: [
@@ -51,6 +55,30 @@ class SettingsPreferencesSection extends StatelessWidget {
             context
                 .read<NotificationPreferencesProvider>()
                 .setNotificationsEnabled(value);
+          },
+        ),
+        const SettingsTileDivider(),
+        SettingsSwitchTile(
+          icon: Icons.bug_report_outlined,
+          label: l10n.settingsCrashReporting,
+          subtitle: sentryAvailable
+              ? l10n.settingsCrashReportingSubtitle
+              : l10n.settingsCrashReportingDevBuild,
+          // On dev / no-DSN builds the toggle is effectively informational —
+          // we still let the user flip the persisted pref so when they hop
+          // onto a prod build it takes effect immediately, but a restart-
+          // required snackbar only fires when Sentry can actually run.
+          value: sentryConsent.enabled,
+          onChanged: (value) async {
+            await context.read<SentryConsentProvider>().setEnabled(value);
+            if (!context.mounted) return;
+            if (sentryAvailable) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(l10n.settingsCrashReportingRestart),
+                ),
+              );
+            }
           },
         ),
       ],

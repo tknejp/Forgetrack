@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/config/constants.dart';
+import '../../../../core/sentry/sentry_bootstrap.dart';
+import '../../../../l10n/l10n.dart';
 import '../../../auth/application/auth_provider.dart';
 import '../../application/devtools_permission_service.dart';
 import '../../application/devtools_provider.dart';
+import '../widgets/devtools_action_tile.dart';
 import '../widgets/devtools_section_card.dart';
 import '../widgets/devtools_status_tile.dart';
 
@@ -100,6 +103,35 @@ class DevToolsAppSection extends StatelessWidget {
             valueColor: cs.error,
           ),
         ],
+        const DevToolsSectionDivider(),
+        DevToolsStatusTile(
+          label: 'Sentry',
+          value: SentryBootstrap.isEnabled
+              ? 'reporting'
+              : SentryBootstrap.isAvailable
+                  ? 'disabled (opt-out)'
+                  : 'off (dev / no DSN)',
+          valueColor: SentryBootstrap.isEnabled
+              ? Colors.greenAccent.shade400
+              : cs.onSurfaceVariant,
+        ),
+        const DevToolsSectionDivider(),
+        DevToolsActionTile(
+          label: context.l10n.devtoolsForceCrashLabel,
+          subtitle: context.l10n.devtoolsForceCrashSubtitle,
+          icon: Icons.warning_amber_rounded,
+          isDestructive: true,
+          onTap: () {
+            // Defer the throw so the InkWell callback returns cleanly and
+            // the exception bubbles through Flutter's onError → Sentry hook
+            // instead of being swallowed by the tap handler.
+            Future<void>(() {
+              throw StateError(
+                'Forced crash from devtools — Sentry pipeline check.',
+              );
+            });
+          },
+        ),
       ],
     );
   }

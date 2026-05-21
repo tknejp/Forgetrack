@@ -4,7 +4,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:forgetrack/features/progression_engine/application/progression_engine_provider.dart';
-import 'package:forgetrack/domain/progression/catalog/progression_domain.dart';
 import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';
 import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';

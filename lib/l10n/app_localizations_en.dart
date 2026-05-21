@@ -344,6 +344,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsFeedback => 'Send feedback';
 
   @override
+  String get settingsFeedbackUnavailable =>
+      'Feedback is available only in production builds';
+
+  @override
+  String get settingsCrashReporting => 'Crash reporting';
+
+  @override
+  String get settingsCrashReportingSubtitle =>
+      'Send anonymous crash data so we can fix bugs faster.';
+
+  @override
+  String get settingsCrashReportingDevBuild =>
+      'Available only in production builds.';
+
+  @override
+  String get settingsCrashReportingRestart =>
+      'Restart the app for the change to take effect.';
+
+  @override
+  String get sentryConsentTitle => 'Help improve Forgetrack';
+
+  @override
+  String get sentryConsentBody =>
+      'We can send anonymous crash reports and short technical breadcrumbs (no email, no nutrition data, no weights) to help us fix bugs faster. You can change this any time in Settings.';
+
+  @override
+  String get sentryConsentAccept => 'Allow';
+
+  @override
+  String get sentryConsentDecline => 'No thanks';
+
+  @override
+  String get devtoolsForceCrashLabel => 'Force crash';
+
+  @override
+  String get devtoolsForceCrashSubtitle =>
+      'Throws an uncaught exception so we can confirm Sentry receives it.';
+
+  @override
   String get settingsClearCache => 'Clear local data';
 
   @override

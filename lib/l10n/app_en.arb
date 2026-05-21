@@ -323,6 +323,39 @@
   "settingsFeedback": "Send feedback",
   "@settingsFeedback": { "description": "Label for the send feedback row" },
 
+  "settingsFeedbackUnavailable": "Feedback is available only in production builds",
+  "@settingsFeedbackUnavailable": { "description": "Snackbar shown when the user taps Send feedback on a dev build" },
+
+  "settingsCrashReporting": "Crash reporting",
+  "@settingsCrashReporting": { "description": "Label for the Sentry crash-reporting toggle in Settings" },
+
+  "settingsCrashReportingSubtitle": "Send anonymous crash data so we can fix bugs faster.",
+  "@settingsCrashReportingSubtitle": { "description": "Subtitle under the crash-reporting toggle" },
+
+  "settingsCrashReportingDevBuild": "Available only in production builds.",
+  "@settingsCrashReportingDevBuild": { "description": "Subtitle replacement when crash reporting is unavailable (dev flavor / missing DSN)" },
+
+  "settingsCrashReportingRestart": "Restart the app for the change to take effect.",
+  "@settingsCrashReportingRestart": { "description": "Snackbar after toggling crash reporting in Settings" },
+
+  "sentryConsentTitle": "Help improve Forgetrack",
+  "@sentryConsentTitle": { "description": "Title of the first-run crash-reporting consent dialog" },
+
+  "sentryConsentBody": "We can send anonymous crash reports and short technical breadcrumbs (no email, no nutrition data, no weights) to help us fix bugs faster. You can change this any time in Settings.",
+  "@sentryConsentBody": { "description": "Body of the first-run crash-reporting consent dialog" },
+
+  "sentryConsentAccept": "Allow",
+  "@sentryConsentAccept": { "description": "Confirm button in the crash-reporting consent dialog" },
+
+  "sentryConsentDecline": "No thanks",
+  "@sentryConsentDecline": { "description": "Decline button in the crash-reporting consent dialog" },
+
+  "devtoolsForceCrashLabel": "Force crash",
+  "@devtoolsForceCrashLabel": { "description": "Devtools action that throws to verify Sentry pipeline (dev only)" },
+
+  "devtoolsForceCrashSubtitle": "Throws an uncaught exception so we can confirm Sentry receives it.",
+  "@devtoolsForceCrashSubtitle": { "description": "Subtitle for the force-crash devtools action" },
+
   "settingsClearCache": "Clear local data",
   "@settingsClearCache": { "description": "Label for the clear local cache row" },
 

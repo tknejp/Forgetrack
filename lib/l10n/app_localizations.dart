@@ -734,6 +734,72 @@ abstract class AppLocalizations {
   /// **'Send feedback'**
   String get settingsFeedback;
 
+  /// Snackbar shown when the user taps Send feedback on a dev build
+  ///
+  /// In en, this message translates to:
+  /// **'Feedback is available only in production builds'**
+  String get settingsFeedbackUnavailable;
+
+  /// Label for the Sentry crash-reporting toggle in Settings
+  ///
+  /// In en, this message translates to:
+  /// **'Crash reporting'**
+  String get settingsCrashReporting;
+
+  /// Subtitle under the crash-reporting toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Send anonymous crash data so we can fix bugs faster.'**
+  String get settingsCrashReportingSubtitle;
+
+  /// Subtitle replacement when crash reporting is unavailable (dev flavor / missing DSN)
+  ///
+  /// In en, this message translates to:
+  /// **'Available only in production builds.'**
+  String get settingsCrashReportingDevBuild;
+
+  /// Snackbar after toggling crash reporting in Settings
+  ///
+  /// In en, this message translates to:
+  /// **'Restart the app for the change to take effect.'**
+  String get settingsCrashReportingRestart;
+
+  /// Title of the first-run crash-reporting consent dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Help improve Forgetrack'**
+  String get sentryConsentTitle;
+
+  /// Body of the first-run crash-reporting consent dialog
+  ///
+  /// In en, this message translates to:
+  /// **'We can send anonymous crash reports and short technical breadcrumbs (no email, no nutrition data, no weights) to help us fix bugs faster. You can change this any time in Settings.'**
+  String get sentryConsentBody;
+
+  /// Confirm button in the crash-reporting consent dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get sentryConsentAccept;
+
+  /// Decline button in the crash-reporting consent dialog
+  ///
+  /// In en, this message translates to:
+  /// **'No thanks'**
+  String get sentryConsentDecline;
+
+  /// Devtools action that throws to verify Sentry pipeline (dev only)
+  ///
+  /// In en, this message translates to:
+  /// **'Force crash'**
+  String get devtoolsForceCrashLabel;
+
+  /// Subtitle for the force-crash devtools action
+  ///
+  /// In en, this message translates to:
+  /// **'Throws an uncaught exception so we can confirm Sentry receives it.'**
+  String get devtoolsForceCrashSubtitle;
+
   /// Label for the clear local cache row
   ///
   /// In en, this message translates to:

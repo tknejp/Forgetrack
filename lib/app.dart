@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'app/locale_provider.dart';
 import 'core/config/constants.dart';
 import 'core/navigation/navigator_key.dart';
+import 'core/sentry/sentry_consent_gate.dart';
 import 'features/app_shell/presentation/main_shell.dart';
 import 'features/health_connect/application/fitness_provider.dart';
 import 'features/nutrition/application/kaloricke_tabulky_provider.dart';
@@ -64,7 +65,9 @@ class _ForgetrackAppState extends State<ForgetrackApp>
       theme: AppTheme.dark(),
       darkTheme: AppTheme.dark(),
       themeMode: ThemeMode.dark,
-      home: showWelcome ? const WelcomeScreen() : const MainShell(),
+      home: SentryConsentGate(
+        child: showWelcome ? const WelcomeScreen() : const MainShell(),
+      ),
       locale: selectedLocale,
       localizationsDelegates: const [
         AppLocalizations.delegate,

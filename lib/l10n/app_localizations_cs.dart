@@ -345,6 +345,45 @@ class AppLocalizationsCs extends AppLocalizations {
   String get settingsFeedback => 'Odeslat zpětnou vazbu';
 
   @override
+  String get settingsFeedbackUnavailable =>
+      'Zpětná vazba je dostupná jen v produkčním buildu';
+
+  @override
+  String get settingsCrashReporting => 'Hlášení pádů';
+
+  @override
+  String get settingsCrashReportingSubtitle =>
+      'Posílat anonymní hlášení pádů, abychom mohli chyby opravovat rychleji.';
+
+  @override
+  String get settingsCrashReportingDevBuild =>
+      'Dostupné jen v produkčním buildu.';
+
+  @override
+  String get settingsCrashReportingRestart =>
+      'Změny se projeví po restartu aplikace.';
+
+  @override
+  String get sentryConsentTitle => 'Pomoz vylepšit Forgetrack';
+
+  @override
+  String get sentryConsentBody =>
+      'Můžeme odesílat anonymní hlášení pádů a krátké technické breadcrumby (žádný e-mail, žádná nutriční data, žádné váhy), abychom mohli chyby opravovat rychleji. Volbu změníš kdykoli v Nastavení.';
+
+  @override
+  String get sentryConsentAccept => 'Povolit';
+
+  @override
+  String get sentryConsentDecline => 'Ne, díky';
+
+  @override
+  String get devtoolsForceCrashLabel => 'Vyvolat pád';
+
+  @override
+  String get devtoolsForceCrashSubtitle =>
+      'Hodí neodchycenou výjimku, abychom ověřili, že Sentry zachytává.';
+
+  @override
   String get settingsClearCache => 'Vymazat lokální data';
 
   @override
