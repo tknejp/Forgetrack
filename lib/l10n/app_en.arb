@@ -1956,18 +1956,6 @@
   "cosmeticCompanionMonsterEnergyName": "Monster Energy",
   "cosmeticCompanionMonsterEnergyDesc": "A mythic can of caffeinated capitalism. +13% activity XP — caffeine only kicks down into the legs. If anything with \"monster\" in its name shows up in the food log, something inside the can rattles.",
 
-  "companionFoodTriggerPillLabel": "+{amount} XP cling",
-  "@companionFoodTriggerPillLabel": {
-    "description": "Hero header claim pill — short XP-grab label shown when the equipped companion's food trigger has something to claim.",
-    "placeholders": { "amount": { "type": "int" } }
-  },
-
-  "companionFoodTriggerPillClaimedLabel": "+{amount} XP clung",
-  "@companionFoodTriggerPillClaimedLabel": {
-    "description": "Hero header settled pill — past-tense variant of companionFoodTriggerPillLabel, shown once today's food-trigger XP has been fully claimed and no further matches remain.",
-    "placeholders": { "amount": { "type": "int" } }
-  },
-
   "dialogClose": "Close",
   "@dialogClose": { "description": "Generic close button label" },
 

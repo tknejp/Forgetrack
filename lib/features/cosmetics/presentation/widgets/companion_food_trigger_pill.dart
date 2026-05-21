@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
 
-import '../../../../l10n/app_localizations.dart';
-import '../../../../l10n/l10n.dart';
 import '../../../../shared/theme/design_tokens.dart';
+import '../../../../shared/widgets/xp_claim_pill.dart';
 import '../../application/food_trigger_service.dart';
 
-/// Claim pill for a companion's [FoodTriggerReward]. Renders only the
-/// **claimable** state per the product call — locked and claimed
-/// states stay hidden. The caller is expected to gate visibility on
-/// `snapshot.hasClaimable`; the pill is opinionated about its own
-/// presence (no "0 XP" fallback) so a misuse is loud, not silent.
+/// Hero-header surface for a companion's [FoodTriggerReward].
+/// Thin wrapper over the shared [XpClaimPill] so the food-trigger
+/// states render in lockstep with quest / chapter / long-term card
+/// pills (same colors, same shape, same icons, same "+N XP" label).
 ///
-/// Visual: short XP-gold pill with a subtle pulse on the leading
-/// icon so the player notices the new affordance without it shouting
-/// like a quest reward. Matches the muted-ambient style the rest of
-/// the hero header uses (`Tokens.xp` over a low-alpha surface, no
-/// rarity tint — this is XP gain, not rarity flex).
+/// Snapshot-driven state pick:
+///   * `claimableXp > 0`            → [XpClaimPillData.claimable]
+///   * `alreadyClaimedXp > 0`       → [XpClaimPillData.claimed]
+///   * both zero                    → renders nothing
+/// Locked state is intentionally never rendered — the player only
+/// hears about the trigger once they've earned it.
+///
+/// `isBusy` swallows the tap during the engine append so a double-
+/// click can't fire a duplicate claim; the visual cue lives in the
+/// pill's own claimable styling, not in a separate spinner.
 class CompanionFoodTriggerPill extends StatelessWidget {
   const CompanionFoodTriggerPill({
     super.key,
@@ -24,140 +27,32 @@ class CompanionFoodTriggerPill extends StatelessWidget {
     this.isBusy = false,
   });
 
-  /// Snapshot to render. Must have `hasClaimable == true` — callers
-  /// that pass a zero-claimable snapshot will see an assertion in
-  /// debug.
   final FoodTriggerSnapshot snapshot;
-
-  /// Invoked when the user taps the pill. Disabled (visually muted)
-  /// when [isBusy] is true so a double-tap during the engine append
-  /// can't fire a duplicate claim.
   final VoidCallback onClaim;
-
-  /// Set by the parent while the food-trigger provider is mid-claim.
-  /// Decouples the pill from any specific async state machine.
   final bool isBusy;
 
   @override
   Widget build(BuildContext context) {
-    assert(snapshot.hasClaimable,
-        'CompanionFoodTriggerPill is claim-only — hide when claimableXp == 0');
-    final l10n = context.l10n;
-    final label = _label(l10n);
+    final claimable = snapshot.claimableXp;
+    final claimed = snapshot.alreadyClaimedXp;
+    if (claimable <= 0 && claimed <= 0) {
+      return const SizedBox.shrink();
+    }
+
+    final data = claimable > 0
+        ? XpClaimPillData.claimable(
+            claimable,
+            // XpClaimPill calls back with the pill's center offset so
+            // celebrations can launch from it. We don't run a
+            // celebration here, so the offset is dropped — claim()
+            // is the only side effect.
+            onTap: isBusy ? (_) {} : (_) => onClaim(),
+          )
+        : XpClaimPillData.claimed(claimed);
 
     return Opacity(
-      opacity: isBusy ? 0.55 : 1.0,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: isBusy ? null : onClaim,
-          borderRadius: BorderRadius.circular(Tokens.radiusProgress),
-          child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-            decoration: BoxDecoration(
-              color: Tokens.xp.withValues(alpha: 0.16),
-              borderRadius:
-                  BorderRadius.circular(Tokens.radiusProgress),
-              border: Border.all(
-                color: Tokens.xp.withValues(alpha: 0.55),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Tokens.xpGlow,
-                  blurRadius: 10,
-                  spreadRadius: -2,
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.auto_awesome_rounded,
-                  size: 12,
-                  color: Tokens.xp,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: Tokens.xp,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  String _label(AppLocalizations l10n) {
-    return l10n.companionFoodTriggerPillLabel(snapshot.claimableXp);
-  }
-}
-
-/// Settled / claimed-today variant of [CompanionFoodTriggerPill].
-/// Renders once the player has drained every claim for the day (no
-/// new matching entries since the last claim) so the surface still
-/// communicates "you got XP for that meal" instead of vanishing
-/// silently. Mirrors the check-circle + amount shape that quest
-/// cards use for their `QuestClaimed` state.
-///
-/// Static (no tap, no glow, no busy state) — same accent as the
-/// claimable pill but at reduced intensity so the eye reads it as
-/// settled rather than asking for action.
-class CompanionFoodTriggerClaimedPill extends StatelessWidget {
-  const CompanionFoodTriggerClaimedPill({super.key, required this.claimedXp});
-
-  /// Total XP claimed today via this companion's food trigger.
-  /// Must be positive; callers gate visibility on
-  /// `snapshot.alreadyClaimedXp > 0`.
-  final int claimedXp;
-
-  @override
-  Widget build(BuildContext context) {
-    assert(claimedXp > 0,
-        'CompanionFoodTriggerClaimedPill renders the claimed-today state — '
-        'hide when alreadyClaimedXp == 0');
-    final l10n = context.l10n;
-    final label = l10n.companionFoodTriggerPillClaimedLabel(claimedXp);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-      decoration: BoxDecoration(
-        color: Tokens.xp.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(Tokens.radiusProgress),
-        border: Border.all(
-          color: Tokens.xp.withValues(alpha: 0.30),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.check_circle_rounded,
-            size: 12,
-            color: Tokens.xp.withValues(alpha: 0.85),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              color: Tokens.xp.withValues(alpha: 0.85),
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.2,
-            ),
-          ),
-        ],
-      ),
+      opacity: isBusy && claimable > 0 ? 0.55 : 1.0,
+      child: XpClaimPill(data: data),
     );
   }
 }

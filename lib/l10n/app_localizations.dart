@@ -6609,18 +6609,6 @@ abstract class AppLocalizations {
   /// **'A mythic can of caffeinated capitalism. +13% activity XP — caffeine only kicks down into the legs. If anything with \"monster\" in its name shows up in the food log, something inside the can rattles.'**
   String get cosmeticCompanionMonsterEnergyDesc;
 
-  /// Hero header claim pill — short XP-grab label shown when the equipped companion's food trigger has something to claim.
-  ///
-  /// In en, this message translates to:
-  /// **'+{amount} XP cling'**
-  String companionFoodTriggerPillLabel(int amount);
-
-  /// Hero header settled pill — past-tense variant of companionFoodTriggerPillLabel, shown once today's food-trigger XP has been fully claimed and no further matches remain.
-  ///
-  /// In en, this message translates to:
-  /// **'+{amount} XP clung'**
-  String companionFoodTriggerPillClaimedLabel(int amount);
-
   /// Generic close button label
   ///
   /// In en, this message translates to:

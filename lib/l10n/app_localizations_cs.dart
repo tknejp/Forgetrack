@@ -3696,16 +3696,6 @@ class AppLocalizationsCs extends AppLocalizations {
       'Mythická plechovka kofeinového kapitalismu. +13 % XP za aktivitu — kofein kope jen do nohou. A když se v jídelníčku objeví cokoli s „monster“ v názvu, v plechovce něco cinkne.';
 
   @override
-  String companionFoodTriggerPillLabel(int amount) {
-    return '+$amount XP cinkne';
-  }
-
-  @override
-  String companionFoodTriggerPillClaimedLabel(int amount) {
-    return '+$amount XP cinklo';
-  }
-
-  @override
   String get dialogClose => 'Zavřít';
 
   @override

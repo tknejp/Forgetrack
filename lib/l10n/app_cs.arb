@@ -1197,18 +1197,6 @@
   "cosmeticCompanionMonsterEnergyName": "Monster Energy",
   "cosmeticCompanionMonsterEnergyDesc": "Mythická plechovka kofeinového kapitalismu. +13 % XP za aktivitu — kofein kope jen do nohou. A když se v jídelníčku objeví cokoli s „monster“ v názvu, v plechovce něco cinkne.",
 
-  "companionFoodTriggerPillLabel": "+{amount} XP cinkne",
-  "@companionFoodTriggerPillLabel": {
-    "description": "Hero header claim pill — short XP-grab label shown when the equipped companion's food trigger has something to claim (e.g. Monster Energy on a logged Monster).",
-    "placeholders": { "amount": { "type": "int" } }
-  },
-
-  "companionFoodTriggerPillClaimedLabel": "+{amount} XP cinklo",
-  "@companionFoodTriggerPillClaimedLabel": {
-    "description": "Hero header settled pill — past-tense variant of companionFoodTriggerPillLabel, shown once today's food-trigger XP has been fully claimed and no further matches remain.",
-    "placeholders": { "amount": { "type": "int" } }
-  },
-
   "dialogClose": "Zavřít",
   "@dialogClose": { "description": "Generic close button label" },
 
