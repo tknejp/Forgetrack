@@ -307,12 +307,22 @@ class _HeaderBody extends StatelessWidget {
                                             .buff !=
                                         null) ||
                                 foodTriggerSnapshot?.hasClaimable ==
-                                    true) ...[
-                              // Buff chip + (optional) claim pill on
-                              // a single row. Wrap so a long buff
-                              // copy on a narrow device pushes the
-                              // pill onto the next line instead of
-                              // overflowing.
+                                    true ||
+                                (foodTriggerSnapshot?.alreadyClaimedXp ??
+                                        0) >
+                                    0) ...[
+                              // Buff chip + (optional) food-trigger
+                              // pill on a single row. The trigger
+                              // pill flips between two variants:
+                              //   * claimable → tappable +XP pill
+                              //   * settled (claimable == 0,
+                              //     alreadyClaimedXp > 0) → static
+                              //     check-circle pill showing what
+                              //     was claimed today
+                              // Locked state stays invisible. Wrap
+                              // so a long buff copy on a narrow
+                              // device pushes the pill onto the next
+                              // line instead of overflowing.
                               Wrap(
                                 spacing: 8,
                                 runSpacing: 6,
@@ -338,6 +348,14 @@ class _HeaderBody extends StatelessWidget {
                                       snapshot: foodTriggerSnapshot!,
                                       isBusy: foodTriggerBusy,
                                       onClaim: onClaimFoodTrigger,
+                                    )
+                                  else if ((foodTriggerSnapshot
+                                                  ?.alreadyClaimedXp ??
+                                              0) >
+                                          0)
+                                    CompanionFoodTriggerClaimedPill(
+                                      claimedXp: foodTriggerSnapshot!
+                                          .alreadyClaimedXp,
                                     ),
                                 ],
                               ),

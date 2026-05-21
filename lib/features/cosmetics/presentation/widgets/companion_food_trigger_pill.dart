@@ -102,6 +102,66 @@ class CompanionFoodTriggerPill extends StatelessWidget {
   }
 }
 
+/// Settled / claimed-today variant of [CompanionFoodTriggerPill].
+/// Renders once the player has drained every claim for the day (no
+/// new matching entries since the last claim) so the surface still
+/// communicates "you got XP for that meal" instead of vanishing
+/// silently. Mirrors the check-circle + amount shape that quest
+/// cards use for their `QuestClaimed` state.
+///
+/// Static (no tap, no glow, no busy state) — same accent as the
+/// claimable pill but at reduced intensity so the eye reads it as
+/// settled rather than asking for action.
+class CompanionFoodTriggerClaimedPill extends StatelessWidget {
+  const CompanionFoodTriggerClaimedPill({super.key, required this.claimedXp});
+
+  /// Total XP claimed today via this companion's food trigger.
+  /// Must be positive; callers gate visibility on
+  /// `snapshot.alreadyClaimedXp > 0`.
+  final int claimedXp;
+
+  @override
+  Widget build(BuildContext context) {
+    assert(claimedXp > 0,
+        'CompanionFoodTriggerClaimedPill renders the claimed-today state — '
+        'hide when alreadyClaimedXp == 0');
+    final l10n = context.l10n;
+    final label = l10n.companionFoodTriggerPillClaimedLabel(claimedXp);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: Tokens.xp.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(Tokens.radiusProgress),
+        border: Border.all(
+          color: Tokens.xp.withValues(alpha: 0.30),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.check_circle_rounded,
+            size: 12,
+            color: Tokens.xp.withValues(alpha: 0.85),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              color: Tokens.xp.withValues(alpha: 0.85),
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Tiny gold dot rendered next to the expand chevron when the hero
 /// header is collapsed and there is something to claim. Pulses gently
 /// to draw the eye without becoming a notification badge.
