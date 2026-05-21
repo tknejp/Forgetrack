@@ -4126,6 +4126,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cosmeticEquippedBadge => 'EQUIPPED';
 
   @override
+  String emblemBuffPerTarget(int percent, String metric) {
+    return 'Bonus: +$percent% XP from $metric';
+  }
+
+  @override
+  String emblemBuffBlanket(int percent) {
+    return 'Bonus: +$percent% XP on every daily goal an emblem covers';
+  }
+
+  @override
+  String get emblemBuffComboTarget => 'combo quests';
+
+  @override
+  String get emblemBuffEquippedBadge => 'BUFF';
+
+  @override
+  String claimToastEmblemBonus(int amount) {
+    return '+$amount XP (emblem)';
+  }
+
+  @override
   String get cosmeticUnknown => 'Unknown cosmetic';
 
   @override

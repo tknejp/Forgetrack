@@ -8,6 +8,7 @@ import '../../../shared/widgets/ft_back_button.dart';
 import '../../../shared/widgets/screen_header.dart';
 import '../../progression_engine/application/progression_engine_provider.dart';
 import '../application/cosmetics_provider.dart';
+import '../application/emblem_board_provider.dart';
 import '../domain/cosmetic_lifecycle_helpers.dart';
 import '../domain/cosmetic_models.dart';
 import '../domain/cosmetic_reveal_state.dart';
@@ -17,6 +18,7 @@ import '../domain/inventory.dart';
 import '../domain/player_cosmetic_lifecycle.dart';
 import 'cosmetic_details_sheet.dart';
 import 'cosmetics_screen_internals.dart';
+import 'emblem_buff_label.dart';
 
 class CosmeticsScreen extends StatefulWidget {
   const CosmeticsScreen({
@@ -507,6 +509,20 @@ class _CategoryGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Pin lookup for the emblem `isEquipped` chrome below. Watching
+    // the board provider so the badge updates the instant the player
+    // pins / unpins from any other surface (board screen, debug).
+    final uid = cosmetics.currentUid;
+    final Set<String> pinnedEmblemIds;
+    if (uid != null) {
+      final board = context.watch<EmblemBoardProvider>().boardForUser(uid);
+      pinnedEmblemIds = {
+        for (final id in board.slots)
+          if (id != null) id,
+      };
+    } else {
+      pinnedEmblemIds = const <String>{};
+    }
     return RefreshIndicator(
       onRefresh: cosmetics.refresh,
       color: Tokens.accent,
@@ -539,9 +555,17 @@ class _CategoryGrid extends StatelessWidget {
                 final isRelicConsumed = !devTools &&
                     def is RelicCosmetic &&
                     consumedRelicIds.contains(def.id);
+                // Emblems are multi-slot via EmblemBoard, not the single
+                // `equipped` slot — show the equipped chrome whenever an
+                // emblem is pinned anywhere on the player's board so
+                // "equipped = buffed" reads consistently with the new
+                // emblem XP buff system.
+                final isEmblemPinned = def is Emblem &&
+                    pinnedEmblemIds.contains(def.id);
                 return _CosmeticCard(
                   definition: def,
-                  isEquipped: state.equipped.slotId(def.type) == def.id,
+                  isEquipped: isEmblemPinned ||
+                      state.equipped.slotId(def.type) == def.id,
                   isLocked: devTools && !isUnlocked,
                   showMissingAsset: devTools,
                   lifecycle: lifecycle,
@@ -802,6 +826,28 @@ class _CosmeticCardState extends State<_CosmeticCard>
                           letterSpacing: 0,
                         ),
                       ),
+                      if (!isHiddenCard &&
+                          definition is Emblem &&
+                          definition.buff != null) ...[
+                        const SizedBox(height: 3),
+                        Builder(builder: (context) {
+                          final label =
+                              emblemBuffLabel(definition.buff!, l10n);
+                          if (label == null) return const SizedBox.shrink();
+                          return Text(
+                            label,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Tokens.xp.withValues(alpha: 0.85),
+                              fontSize: Tokens.fontSizeTiny - 1,
+                              fontWeight: FontWeight.w600,
+                              height: 1.15,
+                            ),
+                          );
+                        }),
+                      ],
                     ],
                   ),
                 ),

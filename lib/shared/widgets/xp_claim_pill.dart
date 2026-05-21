@@ -5,18 +5,25 @@ import '../theme/design_tokens.dart';
 enum XpClaimPillState { locked, claimable, claimed }
 
 class XpClaimPillData {
-  const XpClaimPillData.locked(this.xp, {this.companionBonus = 0})
-      : state = XpClaimPillState.locked,
+  const XpClaimPillData.locked(
+    this.xp, {
+    this.companionBonus = 0,
+    this.emblemBonus = 0,
+  })  : state = XpClaimPillState.locked,
         onTap = null;
 
   const XpClaimPillData.claimable(
     this.xp, {
     required this.onTap,
     this.companionBonus = 0,
+    this.emblemBonus = 0,
   }) : state = XpClaimPillState.claimable;
 
-  const XpClaimPillData.claimed(this.xp, {this.companionBonus = 0})
-      : state = XpClaimPillState.claimed,
+  const XpClaimPillData.claimed(
+    this.xp, {
+    this.companionBonus = 0,
+    this.emblemBonus = 0,
+  })  : state = XpClaimPillState.claimed,
         onTap = null;
 
   final int xp;
@@ -31,6 +38,13 @@ class XpClaimPillData {
   /// moment they look at the card — no celebration overlay needed.
   /// Zero hides the chip entirely.
   final int companionBonus;
+
+  /// Emblem-buff bonus, additive sibling of [companionBonus]. Rendered
+  /// as a second micro chip (shield icon) under the headline whenever
+  /// `> 0`, mirroring the companion chrome 1:1 so a claim that fires
+  /// both buffs shows both sub-lines at once. See
+  /// `docs/emblem_buffs/plan.md` Phase 3.
+  final int emblemBonus;
 
   bool get isClaimable => state == XpClaimPillState.claimable;
   bool get isClaimed => state == XpClaimPillState.claimed;
@@ -114,17 +128,31 @@ class XpClaimPill extends StatelessWidget {
     // that side-by-side crowds against the rest of the quest card.
     // Right-aligned so they form a coherent column.
     final Widget child;
-    if (data.companionBonus > 0) {
-      final chip = _CompanionBonusChip(
-        amount: data.companionBonus,
-        state: data.state,
-      );
+    final hasCompanion = data.companionBonus > 0;
+    final hasEmblem = data.emblemBonus > 0;
+    if (hasCompanion || hasEmblem) {
+      final chips = <Widget>[
+        if (hasCompanion)
+          _BuffBonusChip(
+            amount: data.companionBonus,
+            state: data.state,
+            icon: Icons.pets_rounded,
+          ),
+        if (hasEmblem)
+          _BuffBonusChip(
+            amount: data.emblemBonus,
+            state: data.state,
+            icon: Icons.shield_rounded,
+          ),
+      ];
       if (inline) {
         child = Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            chip,
-            const SizedBox(width: 4),
+            for (final chip in chips) ...[
+              chip,
+              const SizedBox(width: 4),
+            ],
             headline,
           ],
         );
@@ -134,8 +162,10 @@ class XpClaimPill extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             headline,
-            const SizedBox(height: 3),
-            chip,
+            for (final chip in chips) ...[
+              const SizedBox(height: 3),
+              chip,
+            ],
           ],
         );
       }
@@ -171,11 +201,16 @@ class XpClaimPill extends StatelessWidget {
 /// says "and an extra N"; when the headline says "locked", the chip
 /// says "and you'd get an extra N"; when the headline says "claimed",
 /// the chip recedes in matching grey.
-class _CompanionBonusChip extends StatelessWidget {
-  const _CompanionBonusChip({required this.amount, required this.state});
+class _BuffBonusChip extends StatelessWidget {
+  const _BuffBonusChip({
+    required this.amount,
+    required this.state,
+    required this.icon,
+  });
 
   final int amount;
   final XpClaimPillState state;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -206,7 +241,7 @@ class _CompanionBonusChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.pets_rounded,
+            icon,
             size: 10,
             color: tint,
           ),

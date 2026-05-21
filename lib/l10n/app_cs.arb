@@ -1382,6 +1382,20 @@
   "progAchievementStepsStreak50Desc": "Splň pravidlo denních kroků 50 dní v řadě.",
 
   "cosmeticEquippedBadge": "VYBAVENO",
+  "emblemBuffPerTarget": "Bonus: +{percent} % XP z {metric}",
+  "@emblemBuffPerTarget": {
+    "placeholders": { "percent": { "type": "int" }, "metric": { "type": "String" } }
+  },
+  "emblemBuffBlanket": "Bonus: +{percent} % XP ze všech denních cílů, na které máš nasazený znak",
+  "@emblemBuffBlanket": {
+    "placeholders": { "percent": { "type": "int" } }
+  },
+  "emblemBuffComboTarget": "kombo questů",
+  "emblemBuffEquippedBadge": "BUFF",
+  "claimToastEmblemBonus": "+{amount} XP (znak)",
+  "@claimToastEmblemBonus": {
+    "placeholders": { "amount": { "type": "int" } }
+  },
   "cosmeticUnknown": "Neznámá kosmetika",
   "cosmeticHiddenName": "???",
   "cosmeticUnknownReward": "Neznámá odměna",

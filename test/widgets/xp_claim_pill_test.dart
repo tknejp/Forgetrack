@@ -68,6 +68,29 @@ void main() {
       expect(find.byIcon(Icons.pets_rounded), findsNWidgets(2));
     });
 
+    testWidgets('renders companion and emblem sub-lines simultaneously',
+        (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: XpClaimPill(
+              data: XpClaimPillData.claimed(
+                200,
+                companionBonus: 12,
+                emblemBonus: 8,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('+200 XP'), findsOneWidget);
+      expect(find.text('+12'), findsOneWidget);
+      expect(find.text('+8'), findsOneWidget);
+      expect(find.byIcon(Icons.pets_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.shield_rounded), findsOneWidget);
+    });
+
     testWidgets('invokes the claim callback with the pill center',
         (tester) async {
       Offset? tappedCenter;

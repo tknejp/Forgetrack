@@ -2143,6 +2143,25 @@
   "progAchievementStepsStreak50Desc": "Hit the daily steps rule for 50 periods in a row.",
 
   "cosmeticEquippedBadge": "EQUIPPED",
+  "emblemBuffPerTarget": "Bonus: +{percent}% XP from {metric}",
+  "@emblemBuffPerTarget": {
+    "description": "Per-target emblem buff label rendered under the emblem tile. metric is a localized goal label like 'daily calories'.",
+    "placeholders": { "percent": { "type": "int" }, "metric": { "type": "String" } }
+  },
+  "emblemBuffBlanket": "Bonus: +{percent}% XP on every daily goal an emblem covers",
+  "@emblemBuffBlanket": {
+    "description": "Endgame blanket emblem buff label rendered under the dragonrock emblem tile.",
+    "placeholders": { "percent": { "type": "int" } }
+  },
+  "emblemBuffComboTarget": "combo quests",
+  "@emblemBuffComboTarget": { "description": "Inline metric label used by emblemBuffPerTarget for the combo-quest emblem (dragon)." },
+  "emblemBuffEquippedBadge": "BUFF",
+  "@emblemBuffEquippedBadge": { "description": "Tiny chip text overlaid on an equipped emblem tile to advertise that its XP buff is active." },
+  "claimToastEmblemBonus": "+{amount} XP (emblem)",
+  "@claimToastEmblemBonus": {
+    "description": "Semantic / accessibility label for the emblem-bonus chip rendered next to the XP claim pill.",
+    "placeholders": { "amount": { "type": "int" } }
+  },
   "cosmeticUnknown": "Unknown cosmetic",
   "cosmeticHiddenName": "???",
   "cosmeticUnknownReward": "Unknown reward",

@@ -202,6 +202,8 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                       chainResolver: provider.chainQuestsFor,
                       companionBuffBonusFor: (q) =>
                           provider.projectedCompanionBuffBonusFor(q.node),
+                      emblemBuffBonusFor: (q) =>
+                          provider.projectedEmblemBuffBonusFor(q.node),
                       equippedCompanionBuff: provider.equippedCompanionBuff,
                       streakBuffPercentFor: (q) =>
                           provider.projectedStreakBuffPercentFor(q.node),
@@ -225,6 +227,8 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                       onToggleExpanded: _toggleExpanded,
                       companionBuffBonusFor: (q) =>
                           provider.projectedCompanionBuffBonusFor(q.node),
+                      emblemBuffBonusFor: (q) =>
+                          provider.projectedEmblemBuffBonusFor(q.node),
                       equippedCompanionBuff: provider.equippedCompanionBuff,
                       streakBuffPercentFor: (q) =>
                           provider.projectedStreakBuffPercentFor(q.node),
@@ -293,6 +297,7 @@ class QuestSectionPanel extends StatelessWidget {
     this.hint,
     this.chainResolver,
     this.companionBuffBonusFor,
+    this.emblemBuffBonusFor,
     this.equippedCompanionBuff,
     this.streakBuffPercentFor,
   });
@@ -319,6 +324,11 @@ class QuestSectionPanel extends StatelessWidget {
   /// XP pill when this returns > 0. Optional — tests pass null and
   /// the bonus chip stays hidden.
   final int Function(EngineQuestProgress quest)? companionBuffBonusFor;
+
+  /// Same shape as [companionBuffBonusFor] but for the emblem buff
+  /// system. Wired from
+  /// [ProgressionEngineProvider.projectedEmblemBuffBonusFor].
+  final int Function(EngineQuestProgress quest)? emblemBuffBonusFor;
 
   /// The player's equipped companion buff. Threaded into each card
   /// so its streak chip can switch between plain / live / locked
@@ -405,6 +415,8 @@ class QuestSectionPanel extends StatelessWidget {
                   showCompletedTodayBadge: color == Tokens.steps.color,
                   companionBuffBonus:
                       companionBuffBonusFor?.call(quests[i]) ?? 0,
+                  emblemBuffBonus:
+                      emblemBuffBonusFor?.call(quests[i]) ?? 0,
                   equippedCompanionBuff: equippedCompanionBuff,
                   streakBuffPercent:
                       streakBuffPercentFor?.call(quests[i]) ?? 0,

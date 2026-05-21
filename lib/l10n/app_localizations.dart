@@ -7317,6 +7317,36 @@ abstract class AppLocalizations {
   /// **'EQUIPPED'**
   String get cosmeticEquippedBadge;
 
+  /// Per-target emblem buff label rendered under the emblem tile. metric is a localized goal label like 'daily calories'.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonus: +{percent}% XP from {metric}'**
+  String emblemBuffPerTarget(int percent, String metric);
+
+  /// Endgame blanket emblem buff label rendered under the dragonrock emblem tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonus: +{percent}% XP on every daily goal an emblem covers'**
+  String emblemBuffBlanket(int percent);
+
+  /// Inline metric label used by emblemBuffPerTarget for the combo-quest emblem (dragon).
+  ///
+  /// In en, this message translates to:
+  /// **'combo quests'**
+  String get emblemBuffComboTarget;
+
+  /// Tiny chip text overlaid on an equipped emblem tile to advertise that its XP buff is active.
+  ///
+  /// In en, this message translates to:
+  /// **'BUFF'**
+  String get emblemBuffEquippedBadge;
+
+  /// Semantic / accessibility label for the emblem-bonus chip rendered next to the XP claim pill.
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount} XP (emblem)'**
+  String claimToastEmblemBonus(int amount);
+
   /// No description provided for @cosmeticUnknown.
   ///
   /// In en, this message translates to:

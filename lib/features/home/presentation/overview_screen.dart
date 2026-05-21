@@ -197,15 +197,21 @@ class _OverviewScreenState extends State<OverviewScreen> {
     // to it on main-five cards (the pedagogic streak info now lives
     // inside the expanded card body instead).
     final companionBonus = progression.projectedCompanionBuffBonusFor(quest.node);
+    final emblemBonus = progression.projectedEmblemBuffBonusFor(quest.node);
 
     if (quest.isCompleted) {
-      return XpClaimPillData.claimed(preview, companionBonus: companionBonus);
+      return XpClaimPillData.claimed(
+        preview,
+        companionBonus: companionBonus,
+        emblemBonus: emblemBonus,
+      );
     }
     if (quest.isAvailableForClaim) {
       final claimId = quest.nodeId;
       return XpClaimPillData.claimable(
         preview,
         companionBonus: companionBonus,
+        emblemBonus: emblemBonus,
         onTap: (center) {
           _onXpClaimed(center);
           unawaited(progression.claimNode(nodeId: claimId));
@@ -213,7 +219,11 @@ class _OverviewScreenState extends State<OverviewScreen> {
       );
     }
     if (preview > 0) {
-      return XpClaimPillData.locked(preview, companionBonus: companionBonus);
+      return XpClaimPillData.locked(
+        preview,
+        companionBonus: companionBonus,
+        emblemBonus: emblemBonus,
+      );
     }
     return null;
   }

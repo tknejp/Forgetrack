@@ -4116,6 +4116,27 @@ class AppLocalizationsCs extends AppLocalizations {
   String get cosmeticEquippedBadge => 'VYBAVENO';
 
   @override
+  String emblemBuffPerTarget(int percent, String metric) {
+    return 'Bonus: +$percent % XP z $metric';
+  }
+
+  @override
+  String emblemBuffBlanket(int percent) {
+    return 'Bonus: +$percent % XP ze všech denních cílů, na které máš nasazený znak';
+  }
+
+  @override
+  String get emblemBuffComboTarget => 'kombo questů';
+
+  @override
+  String get emblemBuffEquippedBadge => 'BUFF';
+
+  @override
+  String claimToastEmblemBonus(int amount) {
+    return '+$amount XP (znak)';
+  }
+
+  @override
   String get cosmeticUnknown => 'Neznámá kosmetika';
 
   @override

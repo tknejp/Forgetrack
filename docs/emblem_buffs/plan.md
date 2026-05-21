@@ -149,7 +149,7 @@ These are settled. Do not reopen without user sign-off.
 
 ---
 
-### ☐ Phase 3 — UI discoverability (inventory + claim toast)
+### ☑ Phase 3 — UI discoverability (inventory + claim toast)
 
 **Scope**
 - **Inventory emblem tile**: under each emblem in cosmetics inventory list, render 1-line buff label ("Bonus: +10 % XP z denního kcal cíle" / blanket: "Bonus: +5 % XP ze všech denních cílů, na které máš nasazený znak"). Helper pure-function `emblemBuffLabel(EmblemBuff, AppLocalizations)`.

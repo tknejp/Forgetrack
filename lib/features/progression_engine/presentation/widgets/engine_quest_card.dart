@@ -42,6 +42,7 @@ class EngineQuestCard extends StatelessWidget {
     this.chain = const [],
     this.showCompletedTodayBadge = false,
     this.companionBuffBonus = 0,
+    this.emblemBuffBonus = 0,
     this.equippedCompanionBuff,
     this.streakBuffPercent = 0,
   });
@@ -92,6 +93,12 @@ class EngineQuestCard extends StatelessWidget {
   /// streak chip instead. Owner: parent screen, which has access to
   /// [ProgressionEngineProvider.projectedCompanionBuffBonusFor].
   final int companionBuffBonus;
+
+  /// Projected XP bonus from equipped emblem buffs (additive sibling
+  /// of [companionBuffBonus]). Rendered as a second micro-chip on the
+  /// XP pill, mirroring the companion chrome. Owner threads it via
+  /// [ProgressionEngineProvider.projectedEmblemBuffBonusFor].
+  final int emblemBuffBonus;
 
   /// The equipped companion's buff, or null when no companion is
   /// equipped. Threaded through to the streak chip on main-five
@@ -229,7 +236,10 @@ class EngineQuestCard extends StatelessWidget {
                   children: [
                     XpClaimPill(
                       key: pillKey,
-                      data: _pillData(companionBonus: pillCompanionBonus),
+                      data: _pillData(
+                        companionBonus: pillCompanionBonus,
+                        emblemBonus: emblemBuffBonus,
+                      ),
                     ),
                     if (canExpand) ...[
                       const SizedBox(height: 4),
@@ -305,7 +315,10 @@ class EngineQuestCard extends StatelessWidget {
     );
   }
 
-  XpClaimPillData _pillData({required int companionBonus}) {
+  XpClaimPillData _pillData({
+    required int companionBonus,
+    required int emblemBonus,
+  }) {
     // Exhaustive switch on the sealed PlayerQuestLifecycle keeps the
     // three UI states aligned with the engine's resolution output and
     // forces a compiler error if a future subtype is added without
@@ -328,13 +341,17 @@ class EngineQuestCard extends StatelessWidget {
           previewXp,
           onTap: (center) => onClaim(quest, from: center),
           companionBonus: companionBonus,
+          emblemBonus: emblemBonus,
         ),
       QuestAvailable() || QuestLocked() =>
         // Objective not yet satisfied (or the row is locked outright)
         // — show the locked pill with the would-be XP at the current
         // level multiplier so the player can preview the reward.
-        XpClaimPillData.locked(quest.previewXp,
-            companionBonus: companionBonus),
+        XpClaimPillData.locked(
+          quest.previewXp,
+          companionBonus: companionBonus,
+          emblemBonus: emblemBonus,
+        ),
     };
   }
 }

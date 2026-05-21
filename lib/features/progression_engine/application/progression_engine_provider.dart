@@ -19,6 +19,7 @@ import '../../cosmetics/domain/emblem_buff.dart';
 import '../../health_connect/application/fitness_provider.dart';
 import '../../health_connect/application/goals_provider.dart';
 import '../../nutrition/application/kaloricke_tabulky_provider.dart';
+import 'emblem_target_mapping.dart';
 import '../domain/activity_claim/activity_claim_constants.dart';
 import '../domain/activity_claim/activity_claim_key.dart';
 import '../domain/activity_claim/activity_claim_state.dart';
@@ -1513,6 +1514,53 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// on every rebuild. The engine still clamps at grant time so the
   /// ledger truth holds; the chip may slightly overshoot for
   /// players who are already deep into their daily cap.
+  /// Projected emblem-buff bonus XP for [node]. Sibling of
+  /// [projectedCompanionBuffBonusFor] — sums every equipped (pinned)
+  /// emblem buff's contribution for the node's [EmblemTarget] across
+  /// the node's XP rewards, additive on top of the level-scaled base.
+  /// Returns 0 when RPG mode is off, no buffs are equipped, the node
+  /// has no emblem target, or none of the buffs cover the target.
+  ///
+  /// No daily cap is applied — locked design decision in
+  /// `docs/emblem_buffs/plan.md` (emblem buffs are uncapped).
+  int projectedEmblemBuffBonusFor(Quest node) {
+    final ctx = currentContext;
+    if (ctx == null) return 0;
+    if (!ctx.player.rpgModeEnabled) return 0;
+    final buffs = ctx.equippedEmblemBuffs;
+    if (buffs.isEmpty) return 0;
+    final target = emblemTargetForNode(node);
+    if (target == null) return 0;
+    final level = _levelPolicy.levelForXp(ctx.player.totalXp);
+    var total = 0;
+    for (final reward in node.rewards) {
+      final int amount;
+      final RewardSourceKind? sourceKind;
+      if (reward is XpReward) {
+        amount = reward.amount;
+        sourceKind = reward.sourceKind;
+      } else if (reward is BonusXpReward) {
+        if (!_bonusConditionMet(reward.condition, ctx)) continue;
+        amount = reward.amount;
+        sourceKind = reward.sourceKind;
+      } else {
+        continue;
+      }
+      if (sourceKind == null) continue;
+      final scaled =
+          _levelPolicy.scaledRewardXp(baseXp: amount, level: level);
+      var percent = 0;
+      for (final buff in buffs) {
+        percent += buff.resolvePercent(
+          EmblemBuffContext(target: target, rewardSourceKind: sourceKind),
+        );
+      }
+      if (percent <= 0) continue;
+      total += (scaled * percent / 100).round();
+    }
+    return total;
+  }
+
   int projectedCompanionBuffBonusFor(Quest node) {
     final ctx = currentContext;
     if (ctx == null) return 0;
