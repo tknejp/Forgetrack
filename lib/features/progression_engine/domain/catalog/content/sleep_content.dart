@@ -26,6 +26,18 @@ List<Objective> sleepObjectives(EngineCatalogContext context) {
       operator: ObjectiveOperator.atLeast,
       targetValue: goals.sleepMinutes.toDouble(),
     ),
+    Objective(
+      // Weekly quest: accumulate `sleepMinutes * 7` (a full week of
+      // hitting the nightly goal) across the current ISO week. Uses
+      // the new SleepMinutesMetric + ThisWeekScope wiring landed
+      // alongside this catalog entry.
+      id: const ObjectiveId('weekly_sleep'),
+      domain: ProgressionDomain.sleep,
+      metric: const SleepMinutesMetric(),
+      scope: const ThisWeekScope(),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: (goals.sleepMinutes * 7).toDouble(),
+    ),
     const Objective(
       id: const ObjectiveId('lifetime_sleep_250h'),
       domain: ProgressionDomain.sleep,
@@ -129,6 +141,22 @@ List<ProgressionEntry> sleepNodes() {
       ],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.common,
+      assetKey: questAssetStreak,
+    ),
+    // Weekly quest — accumulate the equivalent of seven nights at goal.
+    // Pairs with `weekly_activity` / `weekly_steps`; the ISO-week
+    // periodKey on the bound objective handles "completed stays until
+    // next Monday" without any extra slot-policy work.
+    WeeklyQuest(
+      id: const ProgressionEntryId('weekly_sleep'),
+      objectiveId: ObjectiveId('weekly_sleep'),
+      claimPolicy: ClaimPolicy.manual,
+      lockedHintKey: (l) => l.progRuleWeeklySleepDesc,
+      titleKey: (l) => l.progRuleWeeklySleep,
+      descriptionKey: (l) => l.progRuleWeeklySleepDesc,
+      rewards: const [XpReward(sourceKind: RewardSourceKind.questXp, amount: 120)],
+      contentTags: const [ContentTag.core, ContentTag.fitness],
+      rarity: Rarity.uncommon,
       assetKey: questAssetStreak,
     ),
     Achievement(

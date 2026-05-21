@@ -1868,6 +1868,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Accumulate the configured weekly activity minutes.';
 
   @override
+  String get progRuleWeeklySteps => 'Weekly Steps';
+
+  @override
+  String get progRuleWeeklyStepsDesc =>
+      'Hit your daily step goal for an entire week — seven times your daily target.';
+
+  @override
+  String get progRuleWeeklySleep => 'Weekly Sleep';
+
+  @override
+  String get progRuleWeeklySleepDesc =>
+      'Sleep through the whole week — accumulate seven nights at your sleep goal.';
+
+  @override
   String get progRuleDailyWeightLog => 'Weight Log';
 
   @override

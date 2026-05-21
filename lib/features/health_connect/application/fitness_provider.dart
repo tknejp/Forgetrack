@@ -328,6 +328,7 @@ class FitnessProvider extends ChangeNotifier {
       stepsThisWeek: _stepsForWeekContaining(day),
       stepsLifetime: _stepsLifetime(),
       sleepMinutesToday: sleepForDate(day)?.totalDuration.inMinutes ?? 0,
+      sleepMinutesThisWeek: _sleepMinutesForWeekContaining(day),
       activityMinutesToday: _activityMinutesForDay(day),
       activityMinutesThisWeek: _activityMinutesForWeekContaining(day),
       weightLoggedToday: weightForDate(day) != null,
@@ -373,6 +374,17 @@ class FitnessProvider extends ChangeNotifier {
       if (activityDay.isBefore(monday) || activityDay.isAfter(day)) return sum;
       return sum + activity.duration.inMinutes;
     });
+  }
+
+  int _sleepMinutesForWeekContaining(DateTime day) {
+    final monday = day.subtract(Duration(days: day.weekday - 1));
+    var sum = 0;
+    for (final r in _sleepHistory) {
+      final wake = DateTime(r.wakeTime.year, r.wakeTime.month, r.wakeTime.day);
+      if (wake.isBefore(monday) || wake.isAfter(day)) continue;
+      sum += r.totalDuration.inMinutes;
+    }
+    return sum;
   }
 
   // --- Weight aggregation (delegated to FitnessQueries) ---------------------

@@ -69,8 +69,15 @@ void main() {
           firstLedger.questOfferings.map((e) => e.nodeId).toSet();
       // Today's offerings cover every slot the resolver picked.
       expect(firstOfferingNodes.containsAll(picks), isTrue);
-      // All offerings share the same calendar day.
-      final dayKeys = firstLedger.questOfferings.map((e) => e.dayKey).toSet();
+      // All offerings for today's daily picks share the same calendar
+      // day. (The weekly resolver also writes offerings anchored at
+      // the ISO-week Monday, so the full questOfferings list can carry
+      // two distinct dayKeys — that's expected and not what this
+      // assertion is checking.)
+      final dayKeys = firstLedger.questOfferings
+          .where((e) => picks.contains(e.nodeId))
+          .map((e) => e.dayKey)
+          .toSet();
       expect(dayKeys, hasLength(1));
 
       // Second evaluation on the same day must not duplicate.

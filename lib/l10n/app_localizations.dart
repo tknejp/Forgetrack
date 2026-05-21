@@ -3375,6 +3375,30 @@ abstract class AppLocalizations {
   /// **'Accumulate the configured weekly activity minutes.'**
   String get progRuleWeeklyActivityDesc;
 
+  /// No description provided for @progRuleWeeklySteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Steps'**
+  String get progRuleWeeklySteps;
+
+  /// No description provided for @progRuleWeeklyStepsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Hit your daily step goal for an entire week — seven times your daily target.'**
+  String get progRuleWeeklyStepsDesc;
+
+  /// No description provided for @progRuleWeeklySleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Sleep'**
+  String get progRuleWeeklySleep;
+
+  /// No description provided for @progRuleWeeklySleepDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep through the whole week — accumulate seven nights at your sleep goal.'**
+  String get progRuleWeeklySleepDesc;
+
   /// No description provided for @progRuleDailyWeightLog.
   ///
   /// In en, this message translates to:

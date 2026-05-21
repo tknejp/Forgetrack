@@ -30,6 +30,18 @@ List<Objective> stepsObjectives(EngineCatalogContext context) {
       targetValue: goals.dailySteps.toDouble(),
       debugLabel: 'Steps today >= dailyStepsGoal',
     ),
+    Objective(
+      // Weekly quest: hit `dailySteps * 7` (= weekly step goal) across
+      // the current ISO week. Reuses the wired StepsMetric +
+      // ThisWeekScope plumbing — no new evaluator branches needed.
+      id: const ObjectiveId('weekly_steps'),
+      domain: ProgressionDomain.steps,
+      metric: const StepsMetric(),
+      scope: const ThisWeekScope(),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: (goals.dailySteps * 7).toDouble(),
+      debugLabel: 'Steps this week >= dailyStepsGoal * 7',
+    ),
     const Objective(
       id: const ObjectiveId('lifetime_steps_100k'),
       domain: ProgressionDomain.steps,
@@ -182,6 +194,24 @@ List<ProgressionEntry> stepsNodes() {
       ],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.common,
+      assetKey: questAssetSteps,
+    ),
+
+    // Weekly quest — hit the weekly step goal (dailySteps × 7) across
+    // the ISO week. Pairs with `weekly_activity` / `weekly_sleep` in
+    // the weekly section of the quests screen; the `ThisWeekScope`
+    // periodKey resets every Monday so the quest is re-claimable next
+    // week, and a claimed card stays in DOKONČENÉ until the rollover.
+    WeeklyQuest(
+      id: const ProgressionEntryId('weekly_steps'),
+      objectiveId: ObjectiveId('weekly_steps'),
+      claimPolicy: ClaimPolicy.manual,
+      lockedHintKey: (l) => l.progRuleWeeklyStepsDesc,
+      titleKey: (l) => l.progRuleWeeklySteps,
+      descriptionKey: (l) => l.progRuleWeeklyStepsDesc,
+      rewards: const [XpReward(sourceKind: RewardSourceKind.questXp, amount: 150)],
+      contentTags: const [ContentTag.core, ContentTag.fitness],
+      rarity: Rarity.uncommon,
       assetKey: questAssetSteps,
     ),
 

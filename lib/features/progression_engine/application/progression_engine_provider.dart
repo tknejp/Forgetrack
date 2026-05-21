@@ -68,6 +68,7 @@ import '../domain/repository/progression_engine_repository.dart';
 import '../data/hybrid_progression_engine_repository.dart';
 import 'cosmetic_unlock_bridge.dart';
 import 'daily_section_resolver.dart';
+import 'weekly_section_resolver.dart';
 import 'progression_engine.dart';
 
 export '../domain/evaluator/engine_streak_source.dart' show EngineStreakSummary;
@@ -897,6 +898,8 @@ class ProgressionEngineProvider extends ChangeNotifier {
   // moment a claim or refresh swaps in a new ledger snapshot.
   DailySectionResolution? _cachedDailySection;
   int? _dailySectionCacheKey;
+  WeeklySectionResolution? _cachedWeeklySection;
+  int? _weeklySectionCacheKey;
 
   DailySectionResolution _resolveDailySection() {
     final l = _ledger;
@@ -953,9 +956,49 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// directly.
   static const int dailyQuestPickCount = 2;
 
-  /// Same shape, but for the weekly bucket.
+  /// Same shape, but for the weekly bucket — narrowed by the
+  /// [WeeklySectionResolver] to a deterministic per-week pick. The
+  /// resolver reads `QuestOfferedEvent`s anchored at the week's
+  /// Monday to keep the pick stable across UI rebuilds within the
+  /// same ISO week; the engine writes a fresh offering for any
+  /// unfilled slot on the next [evaluateWith] tick (see
+  /// [_persistWeeklyOfferings]).
   List<EngineQuestProgress> get currentWeeklyQuests {
-    return _questsForBucket(QuestDisplayBucket.weekly);
+    return _resolveWeeklySection().slots;
+  }
+
+  WeeklySectionResolution _resolveWeeklySection() {
+    final l = _ledger;
+    final cacheKey =
+        Object.hash(identityHashCode(l), _devDayOffset, _lastEvaluatedAt);
+    final cached = _cachedWeeklySection;
+    if (cached != null && _weeklySectionCacheKey == cacheKey) {
+      return cached;
+    }
+    final resolution = const WeeklySectionResolver().resolve(
+      quests: _questsForBucket(QuestDisplayBucket.weekly),
+      ledger: l,
+      now: _engineNow(),
+    );
+    _cachedWeeklySection = resolution;
+    _weeklySectionCacheKey = cacheKey;
+    return resolution;
+  }
+
+  /// Mirrors [_persistDailyOfferings] for the weekly rotation.
+  /// Idempotent — same-week repeat calls are no-ops because the
+  /// week's `QuestOfferedEvent` is already on the ledger by then.
+  Future<void> _persistWeeklyOfferings() async {
+    final ledger = _ledger;
+    if (ledger == null) return;
+    final resolution = _resolveWeeklySection();
+    if (resolution.plannedOfferings.isEmpty) return;
+    final newEvents = <QuestOfferedEvent>[
+      for (final e in resolution.plannedOfferings)
+        if (!ledger.hasEventKey(e.eventKey)) e,
+    ];
+    if (newEvents.isEmpty) return;
+    _ledger = await _repository.appendEvents(newEvents);
   }
 
   /// Long-term quests aggregated with any companion nodes that share
@@ -2581,6 +2624,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
       // (isCompleted, isAvailableForClaim) before deciding what to
       // pin in the slot. Idempotent — same-day repeat calls are no-ops.
       await _persistDailyOfferings();
+      await _persistWeeklyOfferings();
       _lastEvaluatedAt = _engineNow();
       // Close any past-day completion gaps the live engine couldn't
       // record. Runs after the engine pass so today's outcomes land

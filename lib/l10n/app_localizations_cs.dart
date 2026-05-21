@@ -1869,6 +1869,20 @@ class AppLocalizationsCs extends AppLocalizations {
       'Nasbírej nastavené týdenní minuty aktivity.';
 
   @override
+  String get progRuleWeeklySteps => 'Týdenní kroky';
+
+  @override
+  String get progRuleWeeklyStepsDesc =>
+      'Splň denní cíl kroků celý týden — sedminásobek denního cíle.';
+
+  @override
+  String get progRuleWeeklySleep => 'Týdenní spánek';
+
+  @override
+  String get progRuleWeeklySleepDesc =>
+      'Prospi celý týden ve formě — nasbírej sedm nocí v cíli spánku.';
+
+  @override
   String get progRuleDailyWeightLog => 'Záznam váhy';
 
   @override

@@ -105,6 +105,7 @@ class ObjectiveEvaluator {
         },
       SleepMinutesMetric() => switch (scope) {
           TodayScope() => health.sleepMinutesToday.toDouble(),
+          ThisWeekScope() => health.sleepMinutesThisWeek.toDouble(),
           RollingWindowScope(:final days) =>
             (counters.bestRollingSleepMinutesByDays[days] ?? 0).toDouble(),
           _ => 0,

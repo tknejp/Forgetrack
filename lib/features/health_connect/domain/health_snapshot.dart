@@ -33,6 +33,7 @@ class HealthSnapshot {
     this.stepsThisWeek = 0,
     this.stepsLifetime = 0,
     this.sleepMinutesToday = 0,
+    this.sleepMinutesThisWeek = 0,
     this.activityMinutesToday = 0,
     this.activityMinutesThisWeek = 0,
     this.weightLoggedToday = false,
@@ -56,6 +57,12 @@ class HealthSnapshot {
   final int stepsThisWeek;
   final int stepsLifetime;
   final int sleepMinutesToday;
+
+  /// Minutes of sleep summed across the current ISO week
+  /// (Monday → [evaluatedDate], inclusive). Drives the weekly sleep
+  /// quest via [SleepMinutesMetric] + [ThisWeekScope].
+  final int sleepMinutesThisWeek;
+
   final int activityMinutesToday;
   final int activityMinutesThisWeek;
   final bool weightLoggedToday;
@@ -89,6 +96,7 @@ class HealthSnapshot {
         stepsThisWeek,
         stepsLifetime,
         sleepMinutesToday,
+        sleepMinutesThisWeek,
         activityMinutesToday,
         activityMinutesThisWeek,
         weightLoggedToday ? 1 : 0,
@@ -103,6 +111,7 @@ class HealthSnapshot {
     int? stepsThisWeek,
     int? stepsLifetime,
     int? sleepMinutesToday,
+    int? sleepMinutesThisWeek,
     int? activityMinutesToday,
     int? activityMinutesThisWeek,
     bool? weightLoggedToday,
@@ -116,6 +125,7 @@ class HealthSnapshot {
       stepsThisWeek: stepsThisWeek ?? this.stepsThisWeek,
       stepsLifetime: stepsLifetime ?? this.stepsLifetime,
       sleepMinutesToday: sleepMinutesToday ?? this.sleepMinutesToday,
+      sleepMinutesThisWeek: sleepMinutesThisWeek ?? this.sleepMinutesThisWeek,
       activityMinutesToday: activityMinutesToday ?? this.activityMinutesToday,
       activityMinutesThisWeek:
           activityMinutesThisWeek ?? this.activityMinutesThisWeek,
@@ -138,6 +148,7 @@ class HealthSnapshot {
         other.stepsThisWeek == stepsThisWeek &&
         other.stepsLifetime == stepsLifetime &&
         other.sleepMinutesToday == sleepMinutesToday &&
+        other.sleepMinutesThisWeek == sleepMinutesThisWeek &&
         other.activityMinutesToday == activityMinutesToday &&
         other.activityMinutesThisWeek == activityMinutesThisWeek &&
         other.weightLoggedToday == weightLoggedToday &&
@@ -155,6 +166,7 @@ class HealthSnapshot {
         stepsThisWeek,
         stepsLifetime,
         sleepMinutesToday,
+        sleepMinutesThisWeek,
         activityMinutesToday,
         activityMinutesThisWeek,
         weightLoggedToday,
@@ -167,7 +179,8 @@ class HealthSnapshot {
   String toString() =>
       'HealthSnapshot(date: $evaluatedDate, stepsToday: $stepsToday, '
       'stepsThisWeek: $stepsThisWeek, stepsLifetime: $stepsLifetime, '
-      'sleepMin: $sleepMinutesToday, activityMin: $activityMinutesToday, '
+      'sleepMin: $sleepMinutesToday, sleepMinWeek: $sleepMinutesThisWeek, '
+      'activityMin: $activityMinutesToday, '
       'activityMinWeek: $activityMinutesThisWeek, '
       'weightLogged: $weightLoggedToday, '
       'nightsAfter1am: $lifetimeNightsStartedAtOrAfter1am, '
