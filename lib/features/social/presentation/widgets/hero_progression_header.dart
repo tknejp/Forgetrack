@@ -7,13 +7,15 @@ import '../../../../shared/widgets/ft_expand_chevron.dart';
 import '../../../../shared/widgets/progress_bar.dart';
 import '../../../auth/application/auth_provider.dart';
 import '../../../cosmetics/application/cosmetics_provider.dart';
+import '../../../cosmetics/application/food_trigger_provider.dart';
+import '../../../cosmetics/application/food_trigger_service.dart';
 import '../../../cosmetics/config/cosmetics_config.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
 import '../../../cosmetics/presentation/widgets/companion_buff_chip.dart';
 import '../../../cosmetics/presentation/widgets/companion_fake_idle_preview.dart';
+import '../../../cosmetics/presentation/widgets/companion_food_trigger_pill.dart';
 import '../../../cosmetics/presentation/widgets/cosmetic_frame_preview.dart';
 import '../../../progression_engine/application/progression_engine_provider.dart';
-import 'package:forgetrack/domain/progression/catalog/progression_domain.dart';
 import 'package:forgetrack/features/progression_engine/domain/progression_domain_chrome.dart';
 import '../../../progression_engine/domain/display/progression_display_resolver.dart';
 import '../../../progression_engine/presentation/widgets/level_badge.dart';
@@ -116,6 +118,13 @@ class _HeroProgressionHeaderState extends State<HeroProgressionHeader> {
         final equippedFrame = _resolveEquippedFrame(cosmetics);
         final equippedBackground = _resolveEquippedBackground(cosmetics);
         final equippedCompanion = _resolveEquippedCompanion(cosmetics);
+        // Subscribed so the gold dot / claim pill repaint when the
+        // calorie log changes or the player completes a claim. The
+        // provider returns null while still hydrating from prefs —
+        // _HeaderBody treats that as "nothing to show", same as a
+        // zero-claimable snapshot.
+        final foodTrigger = context.watch<FoodTriggerProvider>();
+        final foodSnapshot = foodTrigger.currentSnapshot;
 
         return _HeaderBody(
           displayName: displayName,
@@ -124,6 +133,9 @@ class _HeroProgressionHeaderState extends State<HeroProgressionHeader> {
           equippedFrame: equippedFrame,
           equippedBackground: equippedBackground,
           equippedCompanion: equippedCompanion,
+          foodTriggerSnapshot: foodSnapshot,
+          foodTriggerBusy: foodTrigger.isClaiming,
+          onClaimFoodTrigger: () => foodTrigger.claim(),
           expanded: _expanded,
           onToggleExpanded: _toggle,
           onOpenProfile: () => openUserProfile(
@@ -147,6 +159,9 @@ class _HeaderBody extends StatelessWidget {
     required this.equippedFrame,
     required this.equippedBackground,
     required this.equippedCompanion,
+    required this.foodTriggerSnapshot,
+    required this.foodTriggerBusy,
+    required this.onClaimFoodTrigger,
     required this.expanded,
     required this.onToggleExpanded,
     required this.onOpenProfile,
@@ -159,6 +174,9 @@ class _HeaderBody extends StatelessWidget {
   final Cosmetic? equippedFrame;
   final Cosmetic? equippedBackground;
   final Cosmetic? equippedCompanion;
+  final FoodTriggerSnapshot? foodTriggerSnapshot;
+  final bool foodTriggerBusy;
+  final VoidCallback onClaimFoodTrigger;
   final bool expanded;
   final VoidCallback onToggleExpanded;
   final VoidCallback onOpenProfile;
@@ -216,10 +234,25 @@ class _HeaderBody extends StatelessWidget {
               behavior: HitTestBehavior.opaque,
               child: Padding(
                 padding: const EdgeInsets.all(4),
-                child: ExpandChevron(
-                  expanded: expanded,
-                  color: Colors.white.withValues(alpha: 0.72),
-                  size: 18,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Collapsed-only gold dot hint that a claim is
+                    // waiting. Hidden the moment the header is
+                    // expanded — the claim pill below carries the
+                    // affordance from there.
+                    if (!expanded &&
+                        foodTriggerSnapshot?.hasClaimable == true) ...[
+                      const CompanionFoodTriggerDot(),
+                      const SizedBox(width: 4),
+                    ],
+                    ExpandChevron(
+                      expanded: expanded,
+                      color: Colors.white.withValues(alpha: 0.72),
+                      size: 18,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -269,16 +302,44 @@ class _HeaderBody extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (equippedCompanion is Companion &&
-                                (equippedCompanion as Companion).buff !=
-                                    null) ...[
-                              CompanionBuffChip(
-                                buff:
-                                    (equippedCompanion as Companion).buff!,
-                                color: RarityPalette.forRarity(
-                                  equippedCompanion!.rarity,
-                                ).color,
-                                compact: true,
+                            if ((equippedCompanion is Companion &&
+                                    (equippedCompanion as Companion)
+                                            .buff !=
+                                        null) ||
+                                foodTriggerSnapshot?.hasClaimable ==
+                                    true) ...[
+                              // Buff chip + (optional) claim pill on
+                              // a single row. Wrap so a long buff
+                              // copy on a narrow device pushes the
+                              // pill onto the next line instead of
+                              // overflowing.
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 6,
+                                crossAxisAlignment:
+                                    WrapCrossAlignment.center,
+                                children: [
+                                  if (equippedCompanion is Companion &&
+                                      (equippedCompanion as Companion)
+                                              .buff !=
+                                          null)
+                                    CompanionBuffChip(
+                                      buff: (equippedCompanion
+                                              as Companion)
+                                          .buff!,
+                                      color: RarityPalette.forRarity(
+                                        equippedCompanion!.rarity,
+                                      ).color,
+                                      compact: true,
+                                    ),
+                                  if (foodTriggerSnapshot?.hasClaimable ==
+                                      true)
+                                    CompanionFoodTriggerPill(
+                                      snapshot: foodTriggerSnapshot!,
+                                      isBusy: foodTriggerBusy,
+                                      onClaim: onClaimFoodTrigger,
+                                    ),
+                                ],
                               ),
                               const SizedBox(height: 10),
                             ],

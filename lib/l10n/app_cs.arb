@@ -1195,6 +1195,7 @@
   "cosmeticBackgroundDevOnlyDesc": "Vyvojarske pozadi. Grant pres DevTools.",
   "cosmeticCompanionDevOnlyDesc": "Vývojářský společník. Grant přes DevTools.",
   "cosmeticCompanionMonsterEnergyName": "Monster Energy",
+  "cosmeticCompanionMonsterEnergyDesc": "Mythická plechovka kofeinového kapitalismu. +13 % XP za aktivitu — kofein kope jen do nohou. A když se v jídelníčku objeví cokoli s „monster“ v názvu, v plechovce něco cinkne.",
 
   "companionFoodTriggerPillLabel": "+{amount} XP cinkne",
   "@companionFoodTriggerPillLabel": {

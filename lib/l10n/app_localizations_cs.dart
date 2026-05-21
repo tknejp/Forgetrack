@@ -3692,6 +3692,10 @@ class AppLocalizationsCs extends AppLocalizations {
   String get cosmeticCompanionMonsterEnergyName => 'Monster Energy';
 
   @override
+  String get cosmeticCompanionMonsterEnergyDesc =>
+      'Mythická plechovka kofeinového kapitalismu. +13 % XP za aktivitu — kofein kope jen do nohou. A když se v jídelníčku objeví cokoli s „monster“ v názvu, v plechovce něco cinkne.';
+
+  @override
   String companionFoodTriggerPillLabel(int amount) {
     return '+$amount XP cinkne';
   }

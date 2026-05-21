@@ -3701,6 +3701,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cosmeticCompanionMonsterEnergyName => 'Monster Energy';
 
   @override
+  String get cosmeticCompanionMonsterEnergyDesc =>
+      'A mythic can of caffeinated capitalism. +13% activity XP — caffeine only kicks down into the legs. If anything with \"monster\" in its name shows up in the food log, something inside the can rattles.';
+
+  @override
   String companionFoodTriggerPillLabel(int amount) {
     return '+$amount XP cling';
   }

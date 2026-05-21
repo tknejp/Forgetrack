@@ -6603,6 +6603,12 @@ abstract class AppLocalizations {
   /// **'Monster Energy'**
   String get cosmeticCompanionMonsterEnergyName;
 
+  /// No description provided for @cosmeticCompanionMonsterEnergyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A mythic can of caffeinated capitalism. +13% activity XP — caffeine only kicks down into the legs. If anything with \"monster\" in its name shows up in the food log, something inside the can rattles.'**
+  String get cosmeticCompanionMonsterEnergyDesc;
+
   /// Hero header claim pill — short XP-grab label shown when the equipped companion's food trigger has something to claim.
   ///
   /// In en, this message translates to:
@@ -8724,7 +8730,7 @@ abstract class AppLocalizations {
   /// No description provided for @socialProfileCosmetics.
   ///
   /// In en, this message translates to:
-  /// **'COSMETICS'**
+  /// **'INVENTORY'**
   String get socialProfileCosmetics;
 
   /// No description provided for @socialAddFriend.

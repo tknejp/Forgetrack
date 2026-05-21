@@ -354,9 +354,116 @@ class _CompanionRow extends StatelessWidget {
                 ),
             ],
           ),
+          // Mechanics hint — visible buff + hidden food trigger from
+          // the cosmetics catalog. Player-facing details sheet stays
+          // intentionally narrow (buff chip + flavor copy); the
+          // devtools row spells out the numbers so QA can spot a
+          // mis-wired keyword / cap / source kind without diffing
+          // the catalog file.
+          ..._buildMechanicsHint(context),
         ],
       ),
     );
+  }
+
+  List<Widget> _buildMechanicsHint(BuildContext context) {
+    final companion = const CosmeticCatalog().byId(node.id as String);
+    if (companion is! Companion) return const [];
+    final buff = companion.buff;
+    final trigger = companion.foodTrigger;
+    if (buff == null && trigger == null) return const [];
+
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final lines = <_HintLine>[];
+
+    if (buff != null) {
+      lines.add(_HintLine(
+        icon: Icons.flash_on_rounded,
+        label: 'Buff',
+        value: _buffSummary(buff),
+        accent: cs.primary,
+      ));
+    }
+    if (trigger != null) {
+      lines.add(_HintLine(
+        icon: Icons.restaurant_rounded,
+        label: 'Food',
+        value: _triggerSummary(trigger),
+        accent: const Color(0xFFFFBD2E), // mirrors Tokens.xp
+      ));
+    }
+
+    return [
+      const SizedBox(height: 8),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.025),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (var i = 0; i < lines.length; i++) ...[
+              if (i > 0) const SizedBox(height: 4),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Icon(lines[i].icon, size: 12, color: lines[i].accent),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${lines[i].label}: ',
+                    style: tt.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 11,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      lines[i].value,
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.onSurface.withValues(alpha: 0.85),
+                        fontSize: 11,
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    ];
+  }
+
+  String _buffSummary(CompanionBuff buff) {
+    return switch (buff) {
+      FlatCompanionBuff(:final kind, :final percent) =>
+        '+$percent% ${kind.name}',
+      StreakLengthCompanionBuff(:final tier1Percent, :final tier4Percent) =>
+        '+$tier1Percent–$tier4Percent% per-streak',
+      StreakThresholdFlatCompanionBuff(:final percent, :final minStreak) =>
+        '+$percent% above ${minStreak}d streak',
+      WeeklyEmphasisCompanionBuff(:final dailyPercent, :final weeklyPercent) =>
+        '+$dailyPercent% daily / +$weeklyPercent% weekly quest',
+      ChapterDepthCompanionBuff(:final openerPercent, :final deepPercent) =>
+        '+$openerPercent–$deepPercent% chapter chain',
+    };
+  }
+
+  String _triggerSummary(FoodTriggerReward trigger) {
+    return switch (trigger) {
+      FoodKeywordTrigger(
+        :final keywords,
+        :final perEntryXp,
+        :final perDayMaxXp,
+      ) =>
+        '[${keywords.join(", ")}] · $perEntryXp XP/entry · cap $perDayMaxXp/day (hidden)',
+    };
   }
 
   /// Map the canonical lifecycle to the closest matrix target for
@@ -383,6 +490,23 @@ class _CompanionRow extends StatelessWidget {
       CompanionDevTarget.claimed => 'Claimed',
     };
   }
+}
+
+/// One mechanics row inside the devtools companion hint (visible
+/// buff or hidden food trigger). Pure data — the layout is owned by
+/// `_CompanionRow._buildMechanicsHint`.
+class _HintLine {
+  const _HintLine({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.accent,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color accent;
 }
 
 class _StateChip extends StatelessWidget {

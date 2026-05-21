@@ -993,7 +993,11 @@ class CosmeticCatalog {
       rarity: Rarity.mythic,
       region: CosmeticRegion.neutral,
       name: (l10n) => l10n.cosmeticCompanionMonsterEnergyName,
-      description: (l10n) => l10n.cosmeticCompanionDevOnlyDesc,
+      // Unique description (not the shared devOnlyDesc) — it carries
+      // the gag for the +13 % activity buff *and* the secret food
+      // trigger, so the details sheet hints at the easter egg
+      // without spelling out the keyword.
+      description: (l10n) => l10n.cosmeticCompanionMonsterEnergyDesc,
       assetKey: 'cosmetics.companions.monster_energy',
       previewAssetKey: 'cosmetics.companions.monster_energy',
       sortOrder: 9100,

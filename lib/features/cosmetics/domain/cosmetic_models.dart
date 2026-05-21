@@ -8,10 +8,12 @@ import 'package:forgetrack/domain/progression/catalog/ids.dart';
 
 import 'companion_buff.dart';
 import 'emblem_buff.dart';
+import 'food_trigger.dart';
 
 export '../../../shared/domain/rarity.dart' show Rarity;
 export 'companion_buff.dart';
 export 'emblem_buff.dart';
+export 'food_trigger.dart';
 
 /// Resolves a localized string from the active [AppLocalizations]. Used by
 /// [Cosmetic] for player-facing text (name / description / unlock
@@ -179,6 +181,7 @@ class Companion extends Cosmetic {
     super.unlockHint,
     super.metadata,
     this.buff,
+    this.foodTrigger,
   });
 
   /// Passive XP buff this companion grants while equipped in the
@@ -186,6 +189,13 @@ class Companion extends Cosmetic {
   /// assigned a buff yet (the runtime coverage test
   /// `companion_buff_coverage_test` flags missing assignments).
   final CompanionBuff? buff;
+
+  /// Optional food-driven bonus: when set, the companion grants
+  /// claimable XP whenever specific food names appear in today's
+  /// nutrition log. Distinct from [buff] — see [FoodTriggerReward]
+  /// for the contract. Null on most companions; opt-in per catalog
+  /// row.
+  final FoodTriggerReward? foodTrigger;
 
   @override
   CosmeticType get type => CosmeticType.companion;

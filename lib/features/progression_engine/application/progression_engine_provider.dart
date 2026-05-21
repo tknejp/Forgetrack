@@ -3741,6 +3741,57 @@ class ProgressionEngineProvider extends ChangeNotifier {
     await refresh();
   }
 
+  /// Player-facing — append a single XP grant attributed to a
+  /// companion's [FoodTriggerReward] claim. Mirrors [devToolsAddXp]
+  /// (synthetic node id, scale-free) so the ledger entry is
+  /// distinguishable in the reward history without dragging the
+  /// claim into the full quest / planning pipeline. [periodKey]
+  /// embeds companion + day so a duplicate-claim attempt is
+  /// detectable by future migrations even if the in-memory dedupe
+  /// in the provider drifts.
+  Future<void> grantCompanionTriggerXp({
+    required int amount,
+    required String periodKey,
+  }) async {
+    if (amount <= 0) return;
+    final repo = _repository;
+    if (repo is! ProgressionEngineLocalRepository) return;
+
+    _isEvaluating = true;
+    notifyListeners();
+    try {
+      final ordinal = (_ledger?.rewardGrants.length ?? 0);
+      await repo.appendEvents([
+        RewardGrantEvent(
+          eventKey:
+              'reward|companion_trigger_xp|$ordinal|$periodKey|grant',
+          timestamp: _engineNow(),
+          nodeId: ProgressionEntryId('companion_trigger_xp'),
+          rewardOrdinal: ordinal,
+          rewardKind: RewardGrantKind.xp,
+          periodKey: periodKey,
+          xpAmount: amount,
+          levelAtGrant: level,
+          multiplierAtGrant: 1.0,
+        ),
+      ]);
+      _ledger = await _repository.loadLedger();
+      _recomputeStreaks();
+      AppLog.app.info(
+        'grantCompanionTriggerXp: granted $amount XP period=$periodKey',
+      );
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
+      AppLog.app.warn('grantCompanionTriggerXp: failed — $e');
+    } finally {
+      _isEvaluating = false;
+      notifyListeners();
+    }
+    _lastEvaluatedSignature = null;
+    await refresh();
+  }
+
   /// Devtools — set the player's level by deriving the matching
   /// total XP via [ProgressionLevelPolicy] and calling
   /// [devToolsSetTotalXp].

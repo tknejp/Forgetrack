@@ -23,6 +23,7 @@ import 'features/auth/application/auth_provider.dart';
 import 'features/celebration/application/celebration_controller.dart';
 import 'features/cosmetics/application/cosmetics_provider.dart';
 import 'features/cosmetics/application/cosmetics_service.dart';
+import 'features/cosmetics/application/food_trigger_provider.dart';
 import 'features/cosmetics/config/cosmetics_config.dart';
 import 'features/cosmetics/data/cosmetic_entitlements_source.dart';
 import 'features/cosmetics/data/firestore_cosmetic_entitlements_source.dart';
@@ -364,6 +365,29 @@ Future<void> main() async {
           update: (_, progression, cosmetics, controller) {
             controller!.bind(progression: progression, cosmetics: cosmetics);
             return controller;
+          },
+        ),
+        // Companion food triggers (Monster Energy easter egg, future
+        // cow / hen). Declared after Calorie + Cosmetics + Engine so
+        // context.read sees them during eager create(). Lazy: false
+        // so prefs hydration starts at boot, not at first widget read
+        // — without that the gold dot / claim pill miss their initial
+        // paint on the home screen.
+        ChangeNotifierProvider<FoodTriggerProvider>(
+          lazy: false,
+          create: (ctx) {
+            final p = FoodTriggerProvider(
+              calorieProvider: ctx.read<CalorieProvider>(),
+              cosmeticsProvider: ctx.read<CosmeticsProvider>(),
+              grant: ({required int amount, required String periodKey}) =>
+                  ctx.read<ProgressionEngineProvider>()
+                      .grantCompanionTriggerXp(
+                        amount: amount,
+                        periodKey: periodKey,
+                      ),
+            );
+            unawaited(p.init());
+            return p;
           },
         ),
       ],
