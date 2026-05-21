@@ -8,7 +8,12 @@ import '../../../l10n/l10n.dart';
 import '../../../shared/theme/design_tokens.dart';
 import '../../../shared/widgets/progress_bar.dart';
 import '../../../shared/widgets/tiny_pill.dart';
+import '../../cosmetics/domain/cosmetic_catalog.dart';
+import '../../cosmetics/domain/cosmetic_models.dart';
+import '../../cosmetics/presentation/widgets/cosmetic_asset_thumb.dart';
 import '../../cosmetics/presentation/widgets/cosmetics_inventory_section.dart';
+import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
+import 'widgets/engine_companion_pill.dart' show showEngineRewardPreviewSheet;
 import '../../journey/presentation/widgets/journey_preview_card.dart';
 import '../../social/application/social_provider.dart';
 import '../../social/domain/social_models.dart';
@@ -44,24 +49,24 @@ class _HeroScreenState extends State<HeroScreen> {
     // The boolean view.unlocked is preserved as a producer-side flag
     // (mirrors the Phase 6/7 EngineQuestProgress pattern), but every
     // *consumer* of state goes through the discriminated lifecycle.
+    int compare(EngineAchievementView a, EngineAchievementView b) {
+      final rarity = b.display.rarity.index.compareTo(a.display.rarity.index);
+      if (rarity != 0) return rarity;
+      final at = a.unlockedAt?.millisecondsSinceEpoch ?? 0;
+      final bt = b.unlockedAt?.millisecondsSinceEpoch ?? 0;
+      final date = bt.compareTo(at);
+      if (date != 0) return date;
+      return b.node.sortOrder.compareTo(a.node.sortOrder);
+    }
+
     final unlocked = [
       for (final v in views)
         if (v.lifecycle is AchievementUnlocked) v,
-    ]..sort((a, b) {
-        final rarity = b.display.rarity.index.compareTo(a.display.rarity.index);
-        if (rarity != 0) return rarity;
-        final at = a.unlockedAt?.millisecondsSinceEpoch ?? 0;
-        final bt = b.unlockedAt?.millisecondsSinceEpoch ?? 0;
-        return bt.compareTo(at);
-      });
+    ]..sort(compare);
     final inProgress = [
       for (final v in views)
         if (v.lifecycle is! AchievementUnlocked) v,
-    ]..sort((a, b) {
-        final rarity = b.display.rarity.index.compareTo(a.display.rarity.index);
-        if (rarity != 0) return rarity;
-        return b.progress.compareTo(a.progress);
-      });
+    ]..sort(compare);
 
     if (progression.isLoading && progression.rewardHistory.isEmpty) {
       return ProgressionScaffold(
@@ -511,6 +516,10 @@ class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
                   ),
               ],
             ),
+            if (view.node.rewards.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              _AchievementRewardsSection(view: view, color: color, l10n: l10n),
+            ],
             const SizedBox(height: 14),
             Container(
               width: double.infinity,
@@ -768,5 +777,267 @@ String _achievementCompactSummary(
 
 String _formatCompactInt(int value, String locale) {
   return NumberFormat.compact(locale: locale).format(value);
+}
+
+class _AchievementRewardsSection extends StatelessWidget {
+  const _AchievementRewardsSection({
+    required this.view,
+    required this.color,
+    required this.l10n,
+  });
+
+  final EngineAchievementView view;
+  final Color color;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final unlocked = view.lifecycle is AchievementUnlocked;
+    final xpAmount = unlocked
+        ? view.previewXp
+        : view.node.rewards
+            .whereType<XpReward>()
+            .fold<int>(0, (sum, r) => sum + r.amount);
+    final nonXp = [
+      for (final r in view.node.rewards)
+        if (r is! XpReward && r is! BonusXpReward) r,
+    ];
+    if (xpAmount <= 0 && nonXp.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.progQuestDetailRewards,
+          style: const TextStyle(
+            fontSize: Tokens.fontSizeMicro,
+            fontWeight: FontWeight.w800,
+            color: Tokens.onSurfaceMuted,
+            letterSpacing: 0.6,
+          ),
+        ),
+        const SizedBox(height: Tokens.spaceSm),
+        if (xpAmount > 0) ...[
+          _XpRewardChip(amount: xpAmount, color: color, unlocked: unlocked),
+          if (nonXp.isNotEmpty) const SizedBox(height: 8),
+        ],
+        for (var i = 0; i < nonXp.length; i++) ...[
+          _RewardCard(
+            reward: nonXp[i],
+            unlocked: unlocked,
+            accent: color,
+            l10n: l10n,
+          ),
+          if (i < nonXp.length - 1) const SizedBox(height: 8),
+        ],
+      ],
+    );
+  }
+}
+
+class _XpRewardChip extends StatelessWidget {
+  const _XpRewardChip({
+    required this.amount,
+    required this.color,
+    required this.unlocked,
+  });
+
+  final int amount;
+  final Color color;
+  final bool unlocked;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = unlocked ? color : Tokens.onSurfaceMuted;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: c.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(Tokens.radiusProgress),
+        border: Border.all(color: c.withValues(alpha: 0.24)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.bolt_rounded, size: 14, color: c),
+          const SizedBox(width: 4),
+          Text(
+            '+$amount XP',
+            style: TextStyle(
+              fontSize: Tokens.fontSizeCaption,
+              fontWeight: FontWeight.w800,
+              color: c,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RewardCard extends StatelessWidget {
+  const _RewardCard({
+    required this.reward,
+    required this.unlocked,
+    required this.accent,
+    required this.l10n,
+  });
+
+  final RewardDefinition reward;
+  final bool unlocked;
+  final Color accent;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final cosmeticId = _cosmeticIdOf(reward);
+    final definition =
+        cosmeticId == null ? null : const CosmeticCatalog().byId(cosmeticId);
+    final name = definition?.name(l10n) ?? _fallbackName(reward);
+    final subtitleParts = <String>[
+      _typeLabel(reward, definition, l10n),
+      if (definition != null) definition.rarity.label(l10n),
+    ];
+    final subtitle = subtitleParts.where((s) => s.isNotEmpty).join(' · ');
+    final color = unlocked ? accent : Tokens.onSurfaceMuted;
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => showEngineRewardPreviewSheet(
+        context,
+        reward: reward,
+        unlocked: unlocked,
+        accent: accent,
+        l10n: l10n,
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(Tokens.radiusTile),
+          border: Border.all(color: color.withValues(alpha: 0.22)),
+        ),
+        child: Row(
+          children: [
+            if (cosmeticId != null)
+              CosmeticAssetThumb(
+                cosmeticId: cosmeticId,
+                size: 48,
+                borderRadius: 10,
+                dimmed: !unlocked,
+                fallbackColor: color,
+                fallbackIcon: _fallbackIcon(reward),
+              )
+            else
+              Container(
+                width: 48,
+                height: 48,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: color.withValues(alpha: 0.24)),
+                ),
+                child: Icon(_fallbackIcon(reward), size: 26, color: color),
+              ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: Tokens.fontSizeSmall,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                  if (subtitle.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: Tokens.fontSizeMicro,
+                        fontWeight: FontWeight.w700,
+                        color: color.withValues(alpha: 0.9),
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: color.withValues(alpha: 0.7),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static String? _cosmeticIdOf(RewardDefinition r) => switch (r) {
+        CosmeticReward(:final cosmeticId) => cosmeticId,
+        EmblemReward(:final emblemId) => emblemId,
+        TitleReward(:final titleId) => titleId,
+        RelicReward(:final relicId) => relicId,
+        CompanionAvailabilityReward(:final companionId) => companionId,
+        _ => null,
+      };
+
+  static String _fallbackName(RewardDefinition r) => switch (r) {
+        CosmeticReward(:final cosmeticId) => cosmeticId,
+        EmblemReward(:final emblemId) => emblemId,
+        TitleReward(:final titleId) => titleId,
+        RelicReward(:final relicId) => relicId,
+        CompanionAvailabilityReward(:final companionId) => companionId,
+        ChapterUnlockReward(:final chapterId) => chapterId,
+        XpReward() || BonusXpReward() => 'XP',
+      };
+
+  static IconData _fallbackIcon(RewardDefinition r) => switch (r) {
+        XpReward() || BonusXpReward() => Icons.bolt_rounded,
+        CosmeticReward() => Icons.card_giftcard_rounded,
+        ChapterUnlockReward() => Icons.menu_book_rounded,
+        CompanionAvailabilityReward() => Icons.groups_2_rounded,
+        TitleReward() => Icons.workspace_premium_rounded,
+        EmblemReward() => Icons.military_tech_rounded,
+        RelicReward() => Icons.diamond_rounded,
+      };
+
+  static String _typeLabel(
+    RewardDefinition r,
+    Cosmetic? definition,
+    AppLocalizations l10n,
+  ) {
+    if (definition != null) {
+      return switch (definition.type) {
+        CosmeticType.frame => l10n.cosmeticTypeFrame,
+        CosmeticType.relic => l10n.cosmeticTypeRelic,
+        CosmeticType.background => l10n.cosmeticTypeBackground,
+        CosmeticType.emblem => l10n.cosmeticTypeEmblem,
+        CosmeticType.companion => l10n.cosmeticTypeCompanion,
+        CosmeticType.titleFlair => l10n.cosmeticTypeTitleFlair,
+        CosmeticType.mapEffect => l10n.cosmeticTypeMapEffect,
+      };
+    }
+    return switch (r) {
+      XpReward() || BonusXpReward() => 'XP',
+      CosmeticReward() => l10n.cosmeticTypeFrame,
+      ChapterUnlockReward() => l10n.progQuestsChapterHeader,
+      CompanionAvailabilityReward() => l10n.cosmeticTypeCompanion,
+      TitleReward() => l10n.cosmeticTypeTitleFlair,
+      EmblemReward() => l10n.cosmeticTypeEmblem,
+      RelicReward() => l10n.cosmeticTypeRelic,
+    };
+  }
 }
 

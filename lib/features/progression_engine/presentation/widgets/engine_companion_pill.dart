@@ -659,7 +659,7 @@ class EngineRewardDetailRow extends StatelessWidget {
 /// When the reward resolves to a cosmetic via [CosmeticCatalog], we
 /// open the canonical [CosmeticDetailsSheet] so the inventory and the
 /// quest screen share one detail surface — locked finale rewards show
-/// the cosmetic's `unlockHint` (e.g. "DokonÄi LesnÃ­ zkouÅ¡ku") instead
+/// the cosmetic's `unlockHint` (e.g. "Dokonči Lesní zkoušku") instead
 /// of a redundant bespoke layout. Falls back to a minimal local sheet
 /// only when the reward has no cosmetic backing (chapter unlocks, raw
 /// XP previews).
@@ -849,7 +849,7 @@ class _RewardPreviewSheet extends StatelessWidget {
 }
 
 /// Localized label for a [CosmeticType] — used by the detail sheet's
-/// reward rows so each cosmetic reads as e.g. "RÃ¡meÄek Â· VzÃ¡cnÃ½".
+/// reward rows so each cosmetic reads as e.g. "RÃ¡meÄek  · VzÃ¡cnÃ½".
 extension _CosmeticTypeLabel on CosmeticType {
   String label(AppLocalizations l10n) {
     return switch (this) {

@@ -26,7 +26,7 @@ import '../domain/models/celebration_reward.dart';
 ///    (when present in the same result) into one celebration.
 /// 4. Quest + achievement + milestone nodes sharing an `objectiveId` are
 ///    merged into a single "goal complete" celebration so the player sees
-///    "10M steps Â· achievement VzestupnÃ½ Â· 1 reward" in one card stack
+///    "10M steps · achievement VzestupnÃ½ · 1 reward" in one card stack
 ///    instead of three popups.
 /// 5. Achievement / relic / content-unlock nodes that don't fit any
 ///    bucket render solo.
@@ -69,7 +69,7 @@ class ProgressionEngineCelebrationAdapter {
     // they fire as three separate overlays, two of which share a
     // placeholder title (e.g. "VÃ­tej na cestÄ›"). Fold them into the
     // level milestone celebration so the player sees one cohesive
-    // moment: "Level N Â· here are the things you just unlocked."
+    // moment: "Level N · here are the things you just unlocked."
     final levelHostByLevel = <int, _NodeCompletionPair>{};
     for (final p in completions) {
       if (p.node is LevelMilestone) {
@@ -306,7 +306,7 @@ class ProgressionEngineCelebrationAdapter {
         return achievements
             .map((ev) => ev.title(l))
             .where((s) => s.isNotEmpty)
-            .join(' Â· ');
+            .join(' · ');
       },
       rewards: mergedRewards,
       headRarity: headRarity,
@@ -546,7 +546,7 @@ class ProgressionEngineCelebrationAdapter {
             final suffix =
                 l.celebrationChapterUnlockedSuffix(unlockNode.titleKey(l));
             if (chapterDescription.isEmpty) return suffix;
-            return '$chapterDescription Â· $suffix';
+            return '$chapterDescription · $suffix';
           };
 
     // Prepend the chapter icon as the headliner card so the

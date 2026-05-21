@@ -165,7 +165,7 @@ class ProgressionLoadingBlock extends StatelessWidget {
   }
 }
 
-/// "d MMM Â· HH:mm" formatter shared by hero / journey / quest views.
+/// "d MMM · HH:mm" formatter shared by hero / journey / quest views.
 String progressionFormatDateTime(DateTime value, String locale) {
-  return DateFormat('d MMM Â· HH:mm', locale).format(value);
+  return DateFormat('d MMM · HH:mm', locale).format(value);
 }

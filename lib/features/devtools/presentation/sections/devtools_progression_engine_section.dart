@@ -116,7 +116,7 @@ class _DevToolsProgressionEngineSectionState
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
           child: DevToolsCollapsibleCard(
             title: 'XP / level overrides',
-            subtitle: 'Set total Â· Add delta Â· Set level',
+            subtitle: 'Set total · Add delta · Set level',
             leadingIcon: Icons.bolt_rounded,
             children: [_XpLevelTabsPanel(isBusy: busy)],
           ),
@@ -1085,7 +1085,7 @@ class _NodePickerPanelState extends State<_NodePickerPanel> {
   }
 
   String _kindLabelFor(ProgressionEntry node) => switch (node) {
-        Quest(:final displayBucket) => 'quest Â· ${displayBucket.name}',
+        Quest(:final displayBucket) => 'quest · ${displayBucket.name}',
         Achievement() => 'achievement',
         Milestone() => 'milestone',
         LevelMilestone(:final level) => 'level $level',

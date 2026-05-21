@@ -11,7 +11,7 @@ import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 /// Compact row used inside the "ZAMÄŒENÃ‰ QUESTY" section.
 ///
 /// Mirrors the V1 `_LockedQuestRow`: leading quest asset (or domain
-/// icon fallback) Â· title Â· "VyÅ¾aduje level X" subtitle Â· trailing
+/// icon fallback)  · title  · "VyÅ¾aduje level X" subtitle  · trailing
 /// lock glyph. No claim affordance — these rows are informational
 /// until the gating level is reached.
 class EngineLockedQuestRow extends StatelessWidget {

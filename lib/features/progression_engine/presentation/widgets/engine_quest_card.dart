@@ -20,8 +20,8 @@ import '../../../cosmetics/domain/companion_buff.dart';
 
 /// One quest card in the V2 quests screen.
 ///
-/// Layout (collapsed): leading asset Â· title + description (+ optional
-/// streak chip) Â· XP pill Â· expand chevron, then the progress row. When
+/// Layout (collapsed): leading asset  · title + description (+ optional
+/// streak chip)  · XP pill  · expand chevron, then the progress row. When
 /// [isExpanded] is true an extra panel reveals the full description, an
 /// XP-scaling line, and the locked hint when the node has one.
 ///

@@ -15,7 +15,7 @@ import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import 'engine_chapter_card.dart' show EngineChapterChainPreview;
 import 'engine_companion_pill.dart';
 
-/// Compact, expandable card rendered inside the DOKONÄŒENÃ‰ QUESTY
+/// Compact, expandable card rendered inside the DOKONČENÉ QUESTY
 /// section. One card per [EngineCompletedEntry] — a single quest or
 /// an aggregated chain.
 ///
@@ -23,7 +23,7 @@ import 'engine_companion_pill.dart';
 ///
 /// ```
 /// [asset] Title                               [+750 XP] [chevron]
-///         DokonÄeno 12 kvÄ› Â· 23:11
+///         Dokončeno 12 kvě · 23:11
 /// ```
 ///
 /// The pill goes "claimable" (gold + clickable, sparkle to the bar
@@ -35,7 +35,7 @@ import 'engine_companion_pill.dart';
 /// 1. Description.
 /// 2. Chain preview row (only when the entry represents an actual
 ///    chain — single-quest entries skip it).
-/// 3. Companion list ("TakÃ© odemkne") with the same row vocabulary as
+/// 3. Companion list ("Také odemkne") with the same row vocabulary as
 ///    the long-term card. Tapping a companion opens
 ///    [showEngineCompanionDetailSheet].
 class EngineCompletedQuestCard extends StatelessWidget {

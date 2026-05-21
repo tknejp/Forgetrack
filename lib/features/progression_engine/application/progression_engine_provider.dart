@@ -465,7 +465,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
   // Phase 7 read projection. Built lazily on read from the union of
   // the engine's bucket lists, cached by `_ledger` reference identity
   // + dev-day-offset so repeated reads in the same eval window are
-  // O(1) instead of O(buckets Â· resolver). Invalidates implicitly
+  // O(1) instead of O(buckets · resolver). Invalidates implicitly
   // whenever a new ledger snapshot lands (the next read sees a
   // different identity and rebuilds).
   //
@@ -2849,7 +2849,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
     await refresh();
   }
 
-  // ── Daily backfill (quest screen "K vyzvednutÃ­ Â· 14 dnÃ­") ─────────
+  // ── Daily backfill (quest screen "K vyzvednutÃ­  · 14 dnÃ­") ─────────
 
   /// Catalog `nodeId`s for daily goals surfaced in the backfill
   /// section, in display order. The order is also the visual priority
@@ -4202,7 +4202,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
       // The engine resolver also derives `NodeCompleted` conditions
       // from this list, but the resolver only exposes the resulting
       // available/locked state, not *which* prereq is blocking. We
-      // recompute here so the ZAMÄŒENÃ‰ row can say "DokonÄi X" with
+      // recompute here so the ZAMČENÉ row can say "Dokonči X" with
       // the actual blocker name.
       String? prereqGate;
       for (final id in node.prerequisiteNodeIds) {
