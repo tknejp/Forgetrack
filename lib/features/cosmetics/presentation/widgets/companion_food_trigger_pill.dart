@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../../shared/widgets/xp_claim_pill.dart';
+import '../../../../shared/widgets/xp_sparkle_overlay.dart';
 import '../../application/food_trigger_service.dart';
 
 /// Hero-header surface for a companion's [FoodTriggerReward].
@@ -24,11 +25,20 @@ class CompanionFoodTriggerPill extends StatelessWidget {
     super.key,
     required this.snapshot,
     required this.onClaim,
+    this.sparkleTargetKey,
     this.isBusy = false,
   });
 
   final FoodTriggerSnapshot snapshot;
   final VoidCallback onClaim;
+
+  /// XP-bar key the sparkle animation should fly toward when the
+  /// player taps the claimable pill — same target the quest /
+  /// chapter / long-term pills use on their respective screens. Null
+  /// disables the sparkle (the claim still runs); kept optional so
+  /// the widget remains usable on surfaces without a visible XP bar.
+  final GlobalKey? sparkleTargetKey;
+
   final bool isBusy;
 
   @override
@@ -42,11 +52,25 @@ class CompanionFoodTriggerPill extends StatelessWidget {
     final data = claimable > 0
         ? XpClaimPillData.claimable(
             claimable,
-            // XpClaimPill calls back with the pill's center offset so
-            // celebrations can launch from it. We don't run a
-            // celebration here, so the offset is dropped — claim()
-            // is the only side effect.
-            onTap: isBusy ? (_) {} : (_) => onClaim(),
+            // XpClaimPill hands back the pill's center offset so we
+            // can launch the XP sparkle from the same spot every
+            // other claim pill in the app does. Launch first, then
+            // fire the claim — the sparkle runs against pre-claim
+            // state but visually meets the bar just as the engine
+            // append lands, matching `_claimQuest` on quests_screen.
+            onTap: isBusy
+                ? (_) {}
+                : (center) {
+                    final target = sparkleTargetKey;
+                    if (target != null) {
+                      XpSparkleLauncher.launchToKey(
+                        context,
+                        from: center,
+                        targetKey: target,
+                      );
+                    }
+                    onClaim();
+                  },
           )
         : XpClaimPillData.claimed(claimed);
 

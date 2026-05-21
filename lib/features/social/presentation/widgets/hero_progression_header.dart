@@ -352,6 +352,14 @@ class _HeaderBody extends StatelessWidget {
                                               0))
                                     CompanionFoodTriggerPill(
                                       snapshot: foodTriggerSnapshot!,
+                                      // Sparkle flies to the same XP
+                                      // bar the rest of the screen
+                                      // claims target. barKey may be
+                                      // null on auth-locked / loading
+                                      // states where the bar is not
+                                      // mounted — the pill silently
+                                      // skips the launch then.
+                                      sparkleTargetKey: barKey,
                                       isBusy: foodTriggerBusy,
                                       onClaim: onClaimFoodTrigger,
                                     ),
