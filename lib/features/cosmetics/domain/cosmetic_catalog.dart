@@ -1,7 +1,8 @@
+import 'package:forgetrack/domain/progression/catalog/ids.dart';
+
 import '../../../l10n/app_localizations.dart';
 import '../../health_connect/domain/player_goal.dart';
 import 'cosmetic_models.dart';
-import 'package:forgetrack/domain/progression/catalog/ids.dart';
 
 /// Single source of truth for all cosmetic definitions in the app.
 ///
@@ -815,6 +816,11 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.companions.ember_sprite',
       previewAssetKey: 'cosmetics.companions.ember_sprite',
       sortOrder: 700,
+      levelGate: 5,
+      requiredItems: const [
+        CosmeticId('relic_campfire_spark'),
+        CosmeticId('relic_warm_kindling'),
+      ],
       // "Small spark … steady-footed" — flame as a metaphor for
       // streak length. Applies to every main-5 daily-goal claim and
       // resolves its tier from that domain's own streak, so a player
@@ -833,6 +839,11 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.companions.forest_fox',
       previewAssetKey: 'cosmetics.companions.forest_fox',
       sortOrder: 710,
+      levelGate: 15,
+      requiredItems: const [
+        CosmeticId('relic_moonlit_foxglove'),
+        CosmeticId('relic_ancient_root'),
+      ],
       // "Quiet wildwood fox" — forager. +10 % on every nutrition
       // daily-goal claim.
       buff: const FlatCompanionBuff(
@@ -850,6 +861,11 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.companions.ruin_raven',
       previewAssetKey: 'cosmetics.companions.ruin_raven',
       sortOrder: 720,
+      levelGate: 25,
+      requiredItems: const [
+        CosmeticId('relic_ruin_seal'),
+        CosmeticId('relic_ashen_omen'),
+      ],
       // "Seen most often after a weekly quest is closed" — flavor
       // points directly at weekly cadence. Dampened daily so the
       // weekly close lands as a satisfying spike.
@@ -865,6 +881,11 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.companions.bridge_gargoyle',
       previewAssetKey: 'cosmetics.companions.bridge_gargoyle',
       sortOrder: 725,
+      levelGate: 35,
+      requiredItems: const [
+        CosmeticId('relic_oathbound_mark'),
+        CosmeticId('relic_bridge_key'),
+      ],
       // Guards the bridge — bridge-walker, movement-themed. +8 % on
       // activity-domain XP (incl. steps + per-recorded-activity).
       buff: const FlatCompanionBuff(
@@ -882,6 +903,11 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.companions.lantern_golem',
       previewAssetKey: 'cosmetics.companions.lantern_golem',
       sortOrder: 730,
+      levelGate: 45,
+      requiredItems: const [
+        CosmeticId('relic_deep_ember_core'),
+        CosmeticId('relic_miners_lantern'),
+      ],
       // "Flickering lantern in chest" — persistent inner flame.
       // Applies a flat +30 % to every main-5 daily-goal claim, but
       // only once that domain's streak crosses 7 days. The threshold
@@ -903,6 +929,11 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.companions.cave_lynx',
       previewAssetKey: 'cosmetics.companions.cave_lynx',
       sortOrder: 735,
+      levelGate: 55,
+      requiredItems: const [
+        CosmeticId('relic_wildwood_charm'),
+        CosmeticId('relic_ravine_stone'),
+      ],
       // "Lynx … follows walkers carrying scent of distant forests
       // and ravines" — goes deeper with the player. Bonus scales
       // with chapter chain position; resets when a new chapter
@@ -919,6 +950,11 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.companions.aurora_stag',
       previewAssetKey: 'cosmetics.companions.aurora_stag',
       sortOrder: 738,
+      levelGate: 65,
+      requiredItems: const [
+        CosmeticId('relic_polar_lantern'),
+        CosmeticId('relic_aurora_thread'),
+      ],
       // "Ice plain … living aurora" — calm of night. sleepXp fires
       // exactly 1×/day on the sleep daily-goal claim — the narrowest
       // source in the taxonomy. Bumped to +80 % so the per-claim
@@ -941,6 +977,11 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.companions.ice_wisp',
       previewAssetKey: 'cosmetics.companions.ice_wisp',
       sortOrder: 740,
+      levelGate: 75,
+      requiredItems: const [
+        CosmeticId('relic_frozen_lake_heart'),
+        CosmeticId('relic_frost_shard'),
+      ],
       // "Pale spark drawn out" — drawn to signals / tasks.
       // +30 % on every quest claim (daily + weekly + combo +
       // long-term + daily-challenge).
@@ -959,6 +1000,11 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.companions.mountain_gryphon',
       previewAssetKey: 'cosmetics.companions.mountain_gryphon',
       sortOrder: 750,
+      levelGate: 85,
+      requiredItems: const [
+        CosmeticId('relic_summit_feather'),
+        CosmeticId('relic_stormcrest_plume'),
+      ],
       // "Rides high ridges with chosen walker" — strong walker
       // companion. +50 % activityXp (incl. steps).
       buff: const FlatCompanionBuff(
@@ -976,6 +1022,11 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.companions.dragonling',
       previewAssetKey: 'cosmetics.companions.dragonling',
       sortOrder: 760,
+      levelGate: 95,
+      requiredItems: const [
+        CosmeticId('relic_dragon_scale'),
+        CosmeticId('relic_dragonrock_heart'),
+      ],
       // Endgame mistr všeho — +15 % on every XP grant regardless of
       // source. The only `allXp` companion.
       buff: const FlatCompanionBuff(

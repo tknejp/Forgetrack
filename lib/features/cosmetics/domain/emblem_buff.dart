@@ -7,7 +7,8 @@
 // (see locked design decisions in the plan).
 
 import '../../health_connect/domain/player_goal.dart';
-import '../../../domain/progression/catalog/reward_source_kind.dart';
+import 'cosmetic_catalog.dart';
+import 'cosmetic_models.dart';
 
 /// Granularity carrier — the *thing* a buff can target.
 ///
@@ -77,29 +78,34 @@ class PerTargetEmblemBuff extends EmblemBuff {
 /// Endgame buff that applies whenever the claim's [EmblemBuffContext.target]
 /// is covered by some [PerTargetEmblemBuff] in the active catalogue.
 ///
-/// V1 coverage is a static, hand-maintained list — when Phase 0+ adds a
-/// new buffable metric to the catalog, [coveredTargets] must be updated
-/// in lockstep, otherwise the blanket buff silently ignores it.
+/// "Covered" is derived from the catalog itself — [coveredTargets] walks
+/// every [Emblem] cosmetic and collects the target of each
+/// [PerTargetEmblemBuff] it carries. Adding a new per-target emblem to
+/// the catalog automatically extends the blanket coverage; there is no
+/// parallel list to keep in sync.
 class BlanketEmblemBuff extends EmblemBuff {
   const BlanketEmblemBuff({required this.percent});
 
   final int percent;
 
-  /// Hand-maintained list of targets that any [PerTargetEmblemBuff] in
-  /// the catalog covers. Must stay in sync with the mapping table in
-  /// `docs/emblem_buffs/archive/plan.md`.
-  static const List<EmblemTarget> coveredTargets = <EmblemTarget>[
-    DailyGoalTarget(GoalMetric.dailyCalories),
-    DailyGoalTarget(GoalMetric.dailySteps),
-    DailyGoalTarget(GoalMetric.dailyProtein),
-    DailyGoalTarget(GoalMetric.dailyFat),
-    DailyGoalTarget(GoalMetric.dailyActivityMins),
-    DailyGoalTarget(GoalMetric.dailyCarbs),
-    DailyGoalTarget(GoalMetric.sleepHours),
-    DailyGoalTarget(GoalMetric.dailyFiber),
-    DailyGoalTarget(GoalMetric.targetWeight),
-    ComboQuestTarget(),
-  ];
+  /// Every [EmblemTarget] that some [PerTargetEmblemBuff] in
+  /// [CosmeticCatalog] currently buffs. Derived once on first read
+  /// from the catalog — guaranteed to be in sync with the per-target
+  /// emblems by construction. See class doc for rationale.
+  static List<EmblemTarget> get coveredTargets => _coveredTargetsCache ??=
+      List<EmblemTarget>.unmodifiable(_computeCoveredTargets());
+
+  static List<EmblemTarget>? _coveredTargetsCache;
+
+  static Iterable<EmblemTarget> _computeCoveredTargets() sync* {
+    final seen = <EmblemTarget>{};
+    for (final emblem in CosmeticCatalog().emblems) {
+      final buff = emblem.buff;
+      if (buff is PerTargetEmblemBuff && seen.add(buff.target)) {
+        yield buff.target;
+      }
+    }
+  }
 
   static bool covers(EmblemTarget target) => coveredTargets.contains(target);
 

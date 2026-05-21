@@ -1,5 +1,5 @@
-import 'package:forgetrack/domain/progression/catalog/ids.dart';
-
+import 'cosmetic_catalog.dart';
+import 'cosmetic_models.dart';
 import 'cosmetic_unlock_rule.dart';
 
 /// Baseline unlock rules used when a fresh user state is created.
@@ -20,135 +20,44 @@ class CosmeticUnlockRules {
       defaultUnlockedIds.contains(cosmeticId);
 }
 
-/// Tier-2 unlock rules: companion unlocks gated on level + two relic ownership
-/// conditions. Relics themselves flow exclusively from Tier-1 (achievement
-/// reward table) — there are no Tier-2 relic rules.
+/// Tier-2 unlock rules: companion unlocks gated on level + item ownership.
+/// Relics themselves flow exclusively from Tier-1 (achievement reward table)
+/// — there are no Tier-2 relic rules.
 ///
-/// Pattern for every companion:
-///   Cond.atLevel(N) + Cond.ownsCosmetic(relic_a) + Cond.ownsCosmetic(relic_b)
+/// Pattern for every companion with a non-null `levelGate`:
+///   Cond.atLevel(companion.levelGate) +
+///   one Cond.ownsCosmetic per item in companion.requiredItems
 ///
-/// Unlocks are idempotent and non-destructive: relics remain in inventory after
-/// a companion is granted.
+/// Unlocks are idempotent and non-destructive: relics remain in inventory
+/// after a companion is granted.
 ///
 /// The fixed-point dispatcher (pass 3) handles the timing: achievement unlock
 /// grants relics in pass 1, then pass 3 iteration 1 grants companions that now
 /// see the relics in ownedCosmeticIds.
-final List<CosmeticUnlockRule> kCosmeticUnlockRules = <CosmeticUnlockRule>[
-  // -- Companions: relic gate + level gate, idempotent, no consumption -------
-  //
-  // Companion ladder is paced every 10 levels from 5 to 95 and mapped to the
-  // journey environment progression: camp (5) → forest end (15) → ruins (25)
-  // → bridge (35) → mines (45) → rocky descent (55) → ice plain (65) →
-  // ice lake (75) → end-game climb (85) → pre-dragonrock (95). Lvl 100 is a
-  // quiet cap with no companion unlock.
-  CosmeticUnlockRule(
-    cosmeticId: CosmeticId('companion_ember_sprite'),
+///
+/// Derived directly from [CosmeticCatalog] — the catalog is the single source
+/// of truth for which companions exist and their level + item gate.
+/// Companions whose `levelGate` is null (today only DevTools-granted items
+/// like Monster Energy) are skipped here — they are not surfaced through the
+/// unlock pipeline. Rules carry no `sourceId`: the `(cosmeticId, sourceType:
+/// 'compound')` pair is already 1:1 with the rule, so a separate source
+/// reference would just duplicate the cosmetic id.
+final List<CosmeticUnlockRule> kCosmeticUnlockRules = CosmeticCatalog()
+    .companions
+    .where((c) => c.levelGate != null)
+    .map(_toCompanionUnlockRule)
+    .toList(growable: false);
+
+CosmeticUnlockRule _toCompanionUnlockRule(Companion companion) {
+  // levelGate and requiredItems are non-null together by construction
+  // (catalog rows pair them); the bang operator documents that invariant.
+  return CosmeticUnlockRule(
+    cosmeticId: companion.id.value,
     sourceType: 'compound',
-    sourceId: 'compound_jiskricka',
     conditions: [
-      Cond.atLevel(5),
-      Cond.ownsCosmetic('relic_campfire_spark'),
-      Cond.ownsCosmetic('relic_warm_kindling'),
+      Cond.atLevel(companion.levelGate!),
+      for (final item in companion.requiredItems) Cond.ownsCosmetic(item.value),
     ],
     isHidden: true,
-  ),
-  CosmeticUnlockRule(
-    cosmeticId: CosmeticId('companion_forest_fox'),
-    sourceType: 'compound',
-    sourceId: 'compound_lesni_liska',
-    conditions: [
-      Cond.atLevel(15),
-      Cond.ownsCosmetic('relic_moonlit_foxglove'),
-      Cond.ownsCosmetic('relic_ancient_root'),
-    ],
-    isHidden: true,
-  ),
-  CosmeticUnlockRule(
-    cosmeticId: CosmeticId('companion_ruin_raven'),
-    sourceType: 'compound',
-    sourceId: 'compound_havran_ruin',
-    conditions: [
-      Cond.atLevel(25),
-      Cond.ownsCosmetic('relic_ruin_seal'),
-      Cond.ownsCosmetic('relic_ashen_omen'),
-    ],
-    isHidden: true,
-  ),
-  CosmeticUnlockRule(
-    cosmeticId: CosmeticId('companion_bridge_gargoyle'),
-    sourceType: 'compound',
-    sourceId: 'compound_mostni_gargoyle',
-    conditions: [
-      Cond.atLevel(35),
-      Cond.ownsCosmetic('relic_oathbound_mark'),
-      Cond.ownsCosmetic('relic_bridge_key'),
-    ],
-    isHidden: true,
-  ),
-  CosmeticUnlockRule(
-    cosmeticId: CosmeticId('companion_lantern_golem'),
-    sourceType: 'compound',
-    sourceId: 'compound_lucernovy_golem',
-    conditions: [
-      Cond.atLevel(45),
-      Cond.ownsCosmetic('relic_deep_ember_core'),
-      Cond.ownsCosmetic('relic_miners_lantern'),
-    ],
-    isHidden: true,
-  ),
-  CosmeticUnlockRule(
-    cosmeticId: CosmeticId('companion_cave_lynx'),
-    sourceType: 'compound',
-    sourceId: 'compound_jeskynni_rys',
-    conditions: [
-      Cond.atLevel(55),
-      Cond.ownsCosmetic('relic_wildwood_charm'),
-      Cond.ownsCosmetic('relic_ravine_stone'),
-    ],
-    isHidden: true,
-  ),
-  CosmeticUnlockRule(
-    cosmeticId: CosmeticId('companion_aurora_stag'),
-    sourceType: 'compound',
-    sourceId: 'compound_polarni_jelen',
-    conditions: [
-      Cond.atLevel(65),
-      Cond.ownsCosmetic('relic_polar_lantern'),
-      Cond.ownsCosmetic('relic_aurora_thread'),
-    ],
-    isHidden: true,
-  ),
-  CosmeticUnlockRule(
-    cosmeticId: CosmeticId('companion_ice_wisp'),
-    sourceType: 'compound',
-    sourceId: 'compound_ledovy_prizrak',
-    conditions: [
-      Cond.atLevel(75),
-      Cond.ownsCosmetic('relic_frozen_lake_heart'),
-      Cond.ownsCosmetic('relic_frost_shard'),
-    ],
-    isHidden: true,
-  ),
-  CosmeticUnlockRule(
-    cosmeticId: CosmeticId('companion_mountain_gryphon'),
-    sourceType: 'compound',
-    sourceId: 'compound_horsky_gryf',
-    conditions: [
-      Cond.atLevel(85),
-      Cond.ownsCosmetic('relic_summit_feather'),
-      Cond.ownsCosmetic('relic_stormcrest_plume'),
-    ],
-    isHidden: true,
-  ),
-  CosmeticUnlockRule(
-    cosmeticId: CosmeticId('companion_dragonling'),
-    sourceType: 'compound',
-    sourceId: 'compound_draci_mlade',
-    conditions: [
-      Cond.atLevel(95),
-      Cond.ownsCosmetic('relic_dragon_scale'),
-      Cond.ownsCosmetic('relic_dragonrock_heart'),
-    ],
-    isHidden: true,
-  ),
-];
+  );
+}

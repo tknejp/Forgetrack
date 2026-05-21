@@ -4,6 +4,7 @@
 
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/domain/rarity.dart';
+import 'package:forgetrack/domain/cosmetics/cosmetic_region.dart';
 import 'package:forgetrack/domain/progression/catalog/ids.dart';
 
 import 'companion_buff.dart';
@@ -11,6 +12,14 @@ import 'emblem_buff.dart';
 import 'food_trigger.dart';
 
 export '../../../shared/domain/rarity.dart' show Rarity;
+// Re-exported from the domain layer so feature-side callers keep using
+// `cosmetic_models.dart` as the one-stop import for cosmetic types.
+// The canonical home is `lib/domain/cosmetics/cosmetic_region.dart`
+// because the cross-feature `CompanionSpec` (consumed by both
+// `cosmetics` and `progression_engine`) needs to name it without
+// either feature importing the other's domain.
+export 'package:forgetrack/domain/cosmetics/cosmetic_region.dart'
+    show CosmeticRegion;
 export 'companion_buff.dart';
 export 'emblem_buff.dart';
 export 'food_trigger.dart';
@@ -29,16 +38,6 @@ enum CosmeticType {
   companion,
   titleFlair,
   mapEffect,
-}
-
-enum CosmeticRegion {
-  forestTrail,
-  ruinedPass,
-  dwarvenMines,
-  frostlands,
-  dragonMountains,
-  dragonrockFortress,
-  neutral,
 }
 
 /// Where an unlock came from. Stored as part of [UnlockedCosmetic] for audit.
@@ -180,9 +179,37 @@ class Companion extends Cosmetic {
     super.isEnabled,
     super.unlockHint,
     super.metadata,
+    this.levelGate,
+    this.requiredItems = const <CosmeticId>[],
     this.buff,
     this.foodTrigger,
   });
+
+  /// Player level the player must reach before this companion can
+  /// unlock through the progression pipeline. `null` means the
+  /// companion is granted outside the progression pipeline (today
+  /// only DevTools-granted items like Monster Energy), in which case
+  /// [requiredItems] is also empty.
+  ///
+  /// Read by `companions_content.dart` to build the
+  /// `CompanionAvailability` node (`LevelAtLeast(N)`) and by
+  /// `cosmetic_unlock_rules.dart` to build the `CosmeticUnlockRule`
+  /// (`Cond.atLevel(N)`). Neither file holds its own copy of this
+  /// value — they read it from here so the catalog row stays the
+  /// single source of truth.
+  final int? levelGate;
+
+  /// Cosmetic ids the player must own (all of them) to satisfy the
+  /// gate. Each id resolves to a [Cosmetic] in [CosmeticCatalog] —
+  /// read the resolved entry when you need the item's own attributes
+  /// (rarity, region, asset). Empty when the companion has no
+  /// ownership prerequisites (today only DevTools-granted items).
+  ///
+  /// Today every progression companion lists exactly two relics, but
+  /// the list shape keeps the contract honest if a future companion
+  /// needs three relics, a one-relic + chapter-completion mix, or a
+  /// level-only gate.
+  final List<CosmeticId> requiredItems;
 
   /// Passive XP buff this companion grants while equipped in the
   /// active loadout slot. Null when the catalog row has not been

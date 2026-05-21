@@ -233,9 +233,10 @@ unaware of XP math.
 * **`EmblemBuff` (sealed)** — `PerTargetEmblemBuff(target, percent)`
   matches a single `EmblemTarget`; `BlanketEmblemBuff(percent)` applies
   to any target covered by some `PerTargetEmblemBuff` in the active
-  catalog. The covered-target list is a `static const` on
-  `BlanketEmblemBuff` — hand-maintained, must stay in lockstep with
-  the per-target catalog entries.
+  catalog. `BlanketEmblemBuff.coveredTargets` derives lazily from
+  `CosmeticCatalog().emblems` — adding a new per-target emblem to the
+  catalog automatically extends blanket coverage; no parallel list to
+  keep in sync.
 * **`EmblemTarget` (sealed)** — `DailyGoalTarget(GoalMetric)` for daily
   goal claims (kcal / steps / macros / sleep / activity / weight),
   `ComboQuestTarget()` for combo-bucket quests. Resolution per claim is

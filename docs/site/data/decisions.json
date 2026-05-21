@@ -1057,6 +1057,82 @@
         "lib/domain/journal/journal_event.dart",
         "https://trello.com/c/SNNduXTX"
       ]
+    },
+    {
+      "id": "companion-catalog-canonical",
+      "title": "Companion catalog row jako jediný zdroj pravdy pro companion data",
+      "status": "accepted",
+      "date": "2026-05-21",
+      "context": "Před touto konsolidací každý companion existoval ve třech paralelních definicích: `Companion` row v `cosmetic_catalog.dart` (rarity + region + display), `CompanionAvailability` node v `companions_content.dart` (engine progression: level + relic conditions + rarity), `CosmeticUnlockRule` v `cosmetic_unlock_rules.dart` (grant pipeline: level + relic conditions + sourceId). Stejná tuple — level gate, dva relicy, rarity — žila ve všech třech, drift mezi nimi nebyl strukturálně blokován. Commit `6cac3d4` opravil dva user-visible bugy způsobené tímto drift modelem: relic swap byl propagovaný jen do dvou ze tří souborů (companion detail screen ukazoval starý relic pár), a `companion_lantern_golem` byl `rare` v katalogu ale `epic` v engine node. Doslovné komentáře v engine source jako `// Synced with cosmetic_catalog.dart companion rarity (rare)` byly přiznáním, že invariant drží lidi, ne typový systém. První iterace zavedla samostatný `CompanionSpec` model v `lib/domain/cosmetics/`, ze kterého všichni tři konzumenti derivovali — ale spec sám nesl `rarity`, `region`, `levelGate` atd. vedle Companion row, čímž se drift přesunul o úroveň výš (rarity v catalogu vs rarity ve specu). Spec byl meta-layer řešící problém na špatné úrovni.",
+      "decision": "Companion catalog row (`Companion` subtype of sealed `Cosmetic` v `lib/features/cosmetics/domain/cosmetic_models.dart`) je rozšířen o dvě pole popisující unlock gate: `levelGate: int?` a `requiredItems: List<CosmeticId>` (cosmetic ids, které musí hráč vlastnit — dnes vždycky dva relicy, ale list umožňuje budoucí jiné gate-shape). Tím se Companion stává **jediným místem**, kde každá data o companionu žijí — rarity, region, display closures, gate. `cosmetic_unlock_rules.dart` derivuje `kCosmeticUnlockRules` přes `CosmeticCatalog().companions.where((c) => c.levelGate != null).map(_toCompanionUnlockRule)`. `companions_content.dart` (progression_engine feature) derivuje `companionNodes()` přes stejný filtr a mapping na `CompanionAvailability`, **přičemž re-používá `companion.name` a `companion.description` closures přímo** jako engine `titleKey` / `descriptionKey` — žádná duplikovaná l10n mapa. Dev-only companions (today: Monster Energy s `levelGate == null`) jsou z obou derivací filtrem vyloučeni a granted výhradně přes DevTools. `progression_engine` feature import-uje `CosmeticCatalog` z cosmetics feature domain při sestavování svého progression catalogu — content-construction-time dependency, ne runtime evaluation. `CosmeticUnlockRule.sourceId` je nullable a pro compound (companion) rules vždy `null` — `(cosmeticId, sourceType: 'compound')` je už 1:1 s pravidlem, takže separátní source reference by jen přejmenoval cosmeticId. `lib/domain/cosmetics/cosmetic_region.dart` zůstává (legitimní cross-feature enum); spec layer odstraněn. Stejný drift pattern (hand-maintained list mirroring catalog) byl opraven i u `BlanketEmblemBuff.coveredTargets`, které teď derivují lazily z `CosmeticCatalog().emblems`.",
+      "consequences": [
+        "Přidání nového companiona = jediný `Companion(...)` literál v `cosmetic_catalog.dart` s gate fields (`levelGate`, `requiredItems`) inline. Engine `CompanionAvailability` node + `CosmeticUnlockRule` se postaví automaticky z catalogu. Drift mezi inventory display a engine evaluation je strukturálně nemožný — všechna data pocházejí z jediného řádku.",
+        "Engine `titleKey` / `descriptionKey` jsou TÉŽ closures `Companion.name` / `Companion.description`. Pokud designér přejmenuje companion ARB klíč, engine UI ho zobrazí stejně automaticky jako inventář — bez další ruční change.",
+        "Cross-feature dependency: `lib/features/progression_engine/domain/catalog/content/companions_content.dart` import-uje `CosmeticCatalog` z `lib/features/cosmetics/domain/`. To je první cross-feature domain import v projektu. Konzistentní s pravidly v `docs/architecture.md` (žádné explicitní zákazy mezi feature `domain/` vrstvami), a je content-construction-time only — engine runtime evaluation čte ownership cosmeticu přes `EngineEvaluationContext.ownedCosmeticIds`, ne přes přímou catalog reference.",
+        "Dev-only signál se rozdvojuje: `metadata['devOnly'] == true` znamená 'skryj z UI inventáře' (čte `cosmetic_reveal_evaluator`), `levelGate == null` znamená 'mimo progression pipeline'. Pro Monster Energy jsou dnes oba zarovnané; budoucí companion s alternativním unlock mechanismem ale může chtít jen jedno z nich.",
+        "Per-companion buffy a food triggery zůstávají na `Companion` row tam, kde byly. Sealed `CompanionBuff` a `FoodTriggerReward` hierarchies zůstávají v `lib/features/cosmetics/domain/` — engine je nečte, takže cross-feature move není potřeba.",
+        "`CosmeticUnlockRule.sourceId` je nullable. Compound (companion) pravidla ho nepoužívají (vždy `null`). Engine-grant pravidla v `cosmetic_unlock_bridge.dart` ho dál posílají jako `grant.event.nodeId` — tam je 1:N (jeden node může grantovat víc cosmeticů), takže nodeId disambiguates. UI `_RuleBlock` zobrazí `source: $type` pro null sourceId, jinak `source: $type / $id`.",
+        "`BlanketEmblemBuff.coveredTargets` přepnut ze `static const List` na lazy-derived getter, který sbírá targets z `PerTargetEmblemBuff.target` v `CosmeticCatalog().emblems`. Stejný motivace — single source of truth, žádný paralelní seznam k udržování. Lazy init je safe protože první read se děje až při evaluation time, dlouho po static init catalogu.",
+        "Validátor v `companion_consistency_test.dart` má tři assertions: (1) gate-pole jsou coherent (level + items společně non-null, jinak oba null); (2) `kCosmeticUnlockRules` set ↔ catalog-filtered-by-levelGate; (3) `companionNodes()` set ↔ catalog-filtered + per-node fingerprint matches catalog row. Většina je strukturálně garantována derivací, ale test stojí jako safety net pro budoucí ruční edits."
+      ],
+      "alternatives": "(A) **Samostatný `CompanionSpec` v `lib/domain/cosmetics/`**. První iterace tudy šla, ale spec musel duplikovat `rarity` + `region` vedle Companion row, čímž se drift přesunul o vrstvu výš. Odmítnuto — nepřidal hodnotu, jen vytvořil novou možnost drifty. (B) **Move full Cosmetic sealed hierarchy do `lib/domain/cosmetics/`**. Eliminuje cross-feature import, ale vyžaduje move CompanionBuff + FoodTriggerReward + EmblemBuff hierarchies taky. Větší PR, lze udělat samostatně později pokud cross-feature import začne vadit. (C) **Derive Companion catalog FROM engine `CompanionAvailability`**. Inverze — cosmetics by muselo importovat progression_engine. Odmítnuto kvůli vrstvení. (D) **Žít s duplicity + jen validator**. Odmítnuto — duplicity už způsobila dva drift bugy v jedné session. Validator zachytí drift po faktu, ale nezabrání pisateli omylem editovat jen jeden ze tří souborů. (E) **Zachovat `sourceId` v `Companion` jako Czech-named audit key**. Odmítnuto — `sourceType: 'compound'` říká JAK a `cosmeticId` říká CO; sourceId nepřidává info pro 1:1 mapping a české labely (`compound_jiskricka` atd.) byly leftover bez konzumenta. Vyřazeno.",
+      "links": [
+        "docs/companion_catalog/archive/session_handoff.md",
+        "lib/features/cosmetics/domain/cosmetic_models.dart",
+        "lib/features/cosmetics/domain/cosmetic_catalog.dart",
+        "lib/features/cosmetics/domain/cosmetic_unlock_rules.dart",
+        "lib/features/cosmetics/domain/emblem_buff.dart",
+        "lib/features/progression_engine/domain/catalog/content/companions_content.dart",
+        "test/features/cosmetics/companion_consistency_test.dart"
+      ]
+    },
+    {
+      "id": "body-xp-split-from-activity",
+      "title": "RewardSourceKind: bodyXp jako samostatný bucket (split z activityXp)",
+      "status": "accepted",
+      "date": "2026-05-21",
+      "context": "Trello #101 — `daily_weight_log_today` ([body_content.dart](lib/features/progression_engine/domain/catalog/content/body_content.dart)) deklaroval `streakDomain: ProgressionDomain.body` (správně), ale `sourceKind: RewardSourceKind.activityXp` — tj. denní vážení spadlo do stejného companion-buff kbelíku jako kroky + aktivita. Důsledek: pohyb-themed companion buffy `Bridge Gargoyle` (rare, +20 %), `Mountain Gryphon` (legendary, +50 %) a dev-only `Monster Energy` (mythic, +13 %), které deklarují `FlatCompanionBuff(kind: activityXp)`, silently buffovaly i vážení. Flavor i intent míří na pohyb (\"strážce mostu / chůze\", \"ridge rider\", \"kofein do nohou\"), ale buff math hráči přidávala procenta i na zápis váhy. Streak math byla správná (`streakDomain: body`), ale source-kind tag byl zmatený. `RewardSourceKind` docstring ([reward_source_kind.dart](lib/domain/progression/catalog/reward_source_kind.dart)) explicitně říká, že per-domain axis je `nutritionXp / activityXp / sleepXp` — `body` jako pátá hlavní `ProgressionDomain` na axe chyběla, proto fallback na `activityXp`.",
+      "decision": "Přidána nová varianta `RewardSourceKind.bodyXp`, paralelní k `nutritionXp / activityXp / sleepXp`. `daily_weight_log_today` přepnut z `activityXp` na `bodyXp`. Exhaustive switch v `_buffSourceLabel` ([companion_buff_chip.dart](lib/features/cosmetics/presentation/widgets/companion_buff_chip.dart)) získává nový case napojený na ARB klíč `cosmeticBuffSourceBodyXp` (\"za vážení\" / \"from weight logging\"). Žádný companion buff dnes nemíří na `bodyXp` — což je intent: pohyb-themed companions už váhu nebuffují, `Dragonling` (allXp) buffuje stále vše, streak buffy (Ember, Lantern) fungují přes `streakDomain` nezávisle na source kind. Naming `bodyXp` zvolen místo `weightXp` z karty kvůli paralele s ostatními per-domain axes (`nutritionXp` cílí na celou domain, ne na konkrétní macro), future-proof kdyby body domain získala další node.",
+      "consequences": [
+        "Hráči se aktuálně nasazeným Bridge Gargoyle / Mountain Gryphon / Monster Energy ztratí silent buff na denní vážení (~20 / 50 / 13 % na base 20 XP × 1 claim/den). Bug fix, ne nerf — flavor i intent companion buffů míří na pohyb.",
+        "AppLog scope `claim.buff` nyní rozlišuje weight vs activity claim přes `kind=bodyXp` vs `kind=activityXp` — telemetry retro-tuning konečně dostává čistá data.",
+        "Žádná migrace existujících journal `RewardGrantEvent` — per-claim XP už je vyplaceno, historický `kind=activityXp` zůstává v ledgeru, fix se vztahuje jen na nové claims.",
+        "Lint test `catalog_reward_source_kind_coverage_test` zůstává zelený (sourceKind je non-null, jen jiná hodnota).",
+        "Pokud body domain získá další node (body fat %, measurements), bude `bodyXp` připraven — nemusí se zavádět další source kind."
+      ],
+      "alternatives": "(A) **`weightXp`** dle Trello karty. Zvažováno; odmítnuto ve prospěch `bodyXp` z důvodu paralely s ostatními per-domain axes (`activityXp` / `nutritionXp` / `sleepXp` jsou všechny per-domain, ne per-metric). `weightXp` by signalizoval, že existuje plánovaná granularita uvnitř body domain, což zbytečně přislibuje. (B) **Nechat `activityXp` a buffy `Bridge Gargoyle` atd. přepsat na narrower match přes node.id**. Odmítnuto — taxonomie by zůstala matoucí a každý nový pohyb-themed companion by musel reimplementovat exclude list. (C) **Přidat companion buff cílící specificky na `bodyXp`**. Vědomě NE v tomto PR — fix je o **odebrání** tichého buffu, ne o přidání nového. Future balance work může companion mířící na `bodyXp` zavést, ale teď by zamlžil scope. (D) **Nechat jako je, dokumentovat workaround přes `GoalMetric.targetWeight` na emblem layer**. Odmítnuto — `emblem_mountain_crest` per-target match přes `GoalMetric` funguje korektně i bez tohoto fixu, ale to neřeší companion buff layer, kde je problém největší."
+      ,
+      "links": [
+        "lib/domain/progression/catalog/reward_source_kind.dart",
+        "lib/features/progression_engine/domain/catalog/content/body_content.dart",
+        "lib/features/cosmetics/presentation/widgets/companion_buff_chip.dart",
+        "lib/l10n/app_en.arb",
+        "lib/l10n/app_cs.arb",
+        "test/features/progression_engine/reward_grant_service_companion_buff_test.dart"
+      ]
+    },
+    {
+      "id": "emblem-weight-log-label-split",
+      "title": "Emblem label pro GoalMetric.targetWeight pojmenovává event, ne Settings",
+      "status": "accepted",
+      "date": "2026-05-21",
+      "context": "Phase 1 emblem mapping ([docs/emblem_buffs/archive/plan.md §Mapping](docs/emblem_buffs/archive/plan.md)) přiřadil `emblem_mountain_crest` (legendary, +10 %) target `DailyGoalTarget(GoalMetric.targetWeight)` a `emblem_target_mapping.dart` namapoval `daily_weight_log_today` claim na stejný target. Mechanika fungovala — buff se aplikoval na denní weight-log claim — ale player-facing label vyrenderovaný přes `emblemBuffLabel` šel přes `_metricLabel(GoalMetric.targetWeight)` na sdílený `goalTargetWeight` ARB klíč se zněním \"Cílová váha\" / \"Target weight\". Hráč tak v inventáři viděl \"Bonus: +10 % XP z cílová váha\" — což pojmenovává Settings input (nastavení cílové hmotnosti v kg), ne XP-bearing event.",
+      "decision": "Label-only fix bez strukturálních změn EmblemTarget hierarchie. `_metricLabel` v `emblem_buff_label.dart` vrací pro `GoalMetric.targetWeight` case nový ARB klíč `emblemBuffWeightLogTarget` (\"denní zápis váhy\" / \"daily weight log\") místo sdíleného `goalTargetWeight`. Settings UI volá `l10n.goalTargetWeight` přímo, ne přes `_metricLabel`, takže split labelu je confined v emblem-render cestě. `DailyGoalTarget(GoalMetric.targetWeight)` zůstává jako target pro `emblem_mountain_crest` i v `emblem_target_mapping.dart`; equality match v `PerTargetEmblemBuff` nadále funguje hodnotově.",
+      "consequences": [
+        "Player-facing label `emblem_mountain_crest` teď čte \"Bonus: +10 % XP z denní zápis váhy\" / \"Bonus: +10% XP from daily weight log\" — pojmenovává XP-bearing event korektně.",
+        "EmblemTarget sealed hierarchie zůstává 2-variantní (`DailyGoalTarget` + `ComboQuestTarget`) — žádný nový variant pro jediný node, žádná conceptual duplikace v inventáři tagů.",
+        "`GoalMetric.targetWeight` má split semantics podle call site: Settings render → \"Cílová váha\", emblem render → \"denní zápis váhy\". Komentář v `_metricLabel` to dokumentuje; je to akceptovaný kvirk, ne čistý design.",
+        "Žádná migrace ani persistence change — EmblemTarget není serializován, ARB klíč `goalTargetWeight` zůstává nedotčen, existující journal eventy a emblem board state platné beze změny.",
+        "Archivovaný plán (`docs/emblem_buffs/archive/plan.md`) je permanentní design record; přidaná footnote (†) odkazuje na tento ADR pro budoucí čtenáře."
+      ],
+      "alternatives": "(A) **Přejmenovat sdílený `goalTargetWeight` ARB klíč** na \"denní zápis váhy\". Odmítnuto — klíč se používá i v Settings UI a tam by popisek nedával smysl. (B) **Zavést nový sealed variant `DailyWeightLogTarget()`** v EmblemTarget hierarchii a přemapovat `daily_weight_log_today` na něj. Zvažováno a původně implementováno (2026-05-21 dopoledne), ale revertnuto — refactor přidal třetí variant pro jediný progression node a způsobil conceptual duplicate (`DailyGoalTarget(GoalMetric.targetWeight)` i `DailyWeightLogTarget()` reprezentují tu samou věc). Daily-goal claim mechanika fungovala bez něj; jediný viditelný bug byl label render, který se dá opravit point-fixem v `_metricLabel`. Pokud body doména v budoucnu získá další non-numeric daily claim (mood log, water log, …), bude tento variant smysluplný zavést, ale teď je premature. (C) **Nový GoalMetric.dailyWeightLog**. Odmítnuto — `GoalMetric` enum sémanticky drží **cíle s číselnými targety**; denní weight log je presence-only check, ne target-based goal. Zašuměl by enum taxonomy. (D) **Žít s misleading labelem**. Odmítnuto — explicit player-visible bug, fix je 1-liner v `_metricLabel` + 1 ARB klíč.",
+      "links": [
+        "docs/emblem_buffs/archive/plan.md",
+        "lib/features/cosmetics/presentation/emblem_buff_label.dart",
+        "lib/l10n/app_en.arb",
+        "lib/l10n/app_cs.arb",
+        "test/features/cosmetics/emblem_buff_label_test.dart"
+      ]
     }
   ]
 }

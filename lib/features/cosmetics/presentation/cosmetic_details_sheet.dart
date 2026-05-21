@@ -1407,7 +1407,10 @@ class _RuleBlock extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppLocalizations.of(context).ruleSource(rule.sourceType, rule.sourceId),
+            rule.sourceId != null
+                ? AppLocalizations.of(context)
+                    .ruleSource(rule.sourceType, rule.sourceId!)
+                : 'source: ${rule.sourceType}',
             style: tt.bodySmall?.copyWith(
               color: color.withValues(alpha: 0.6),
               fontSize: 10,

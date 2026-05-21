@@ -1,7 +1,8 @@
 # Companion Catalog — Source-of-Truth Consolidation Handoff
 
 **Created:** 2026-05-21
-**Status:** Kickoff brief for next session. **Design first, then incremental refactor — no big bang.**
+**Shipped:** 2026-05-21
+**Status:** Archived — permanent design record. Plan executed per §4 Option C (recommended) + §4 Option D (validator-only safety net). Sealed `CompanionSpec` (with `ProgressionCompanionSpec` + `DevOnlyCompanionSpec` subtypes for the Monster Energy carve-out) lives in `lib/domain/cosmetics/companion_spec.dart`; the three feature-side files now derive from `kCompanionSpecs`. Consistency validator in `test/features/cosmetics/companion_consistency_test.dart`. See ADR `companion-spec-canonical` for context + alternatives.
 **Triggering commit:** `6cac3d4` (achievements: rarity + granter rebalance, dual-source-of-truth fixes)
 
 ---

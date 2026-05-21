@@ -22,20 +22,24 @@ class CosmeticUnlockCondition {
 /// referenced cosmetic is granted. OR-style rules are expressed by listing
 /// two rules with the same `cosmeticId` — the evaluator deduplicates by id.
 ///
-/// `sourceType` and `sourceId` flow through to `CosmeticsProvider.unlock` for
-/// audit (the same pipeline that records achievement-driven unlocks).
+/// `sourceType` flows through to `CosmeticsProvider.unlock` for audit
+/// (the same pipeline that records achievement-driven unlocks).
+/// `sourceId` is optional — present when the rule's source carries a
+/// disambiguating reference (e.g. the granting achievement id for a
+/// reward-style unlock), null when `(cosmeticId, sourceType)` is already
+/// 1:1 with the rule (e.g. compound companion rules).
 class CosmeticUnlockRule {
   const CosmeticUnlockRule({
     required this.cosmeticId,
     required this.sourceType,
-    required this.sourceId,
     required this.conditions,
+    this.sourceId,
     this.isHidden = false,
   });
 
   final String cosmeticId; // lint-ignore: untyped-id — mirrors CosmeticId in the unlock rule
   final String sourceType;
-  final String sourceId; // lint-ignore: untyped-id — opaque rule-author-supplied source key (quest/achievement/level/...)
+  final String? sourceId; // lint-ignore: untyped-id — opaque rule-author-supplied source key (quest/achievement/level/...), null for 1:1 mappings
   final List<CosmeticUnlockCondition> conditions;
 
   /// When true, partial-progress UI should not surface this rule even if it
