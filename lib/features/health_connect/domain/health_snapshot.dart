@@ -34,6 +34,7 @@ class HealthSnapshot {
     this.stepsLifetime = 0,
     this.sleepMinutesToday = 0,
     this.activityMinutesToday = 0,
+    this.activityMinutesThisWeek = 0,
     this.weightLoggedToday = false,
     this.lifetimeNightsStartedAtOrAfter1am = 0,
     this.lifetimeNightsStartedBefore10pm = 0,
@@ -56,6 +57,7 @@ class HealthSnapshot {
   final int stepsLifetime;
   final int sleepMinutesToday;
   final int activityMinutesToday;
+  final int activityMinutesThisWeek;
   final bool weightLoggedToday;
 
   /// Lifetime count of recorded sleep records whose `sleepStart`
@@ -88,6 +90,7 @@ class HealthSnapshot {
         stepsLifetime,
         sleepMinutesToday,
         activityMinutesToday,
+        activityMinutesThisWeek,
         weightLoggedToday ? 1 : 0,
         lifetimeNightsStartedAtOrAfter1am,
         lifetimeNightsStartedBefore10pm,
@@ -101,6 +104,7 @@ class HealthSnapshot {
     int? stepsLifetime,
     int? sleepMinutesToday,
     int? activityMinutesToday,
+    int? activityMinutesThisWeek,
     bool? weightLoggedToday,
     int? lifetimeNightsStartedAtOrAfter1am,
     int? lifetimeNightsStartedBefore10pm,
@@ -113,6 +117,8 @@ class HealthSnapshot {
       stepsLifetime: stepsLifetime ?? this.stepsLifetime,
       sleepMinutesToday: sleepMinutesToday ?? this.sleepMinutesToday,
       activityMinutesToday: activityMinutesToday ?? this.activityMinutesToday,
+      activityMinutesThisWeek:
+          activityMinutesThisWeek ?? this.activityMinutesThisWeek,
       weightLoggedToday: weightLoggedToday ?? this.weightLoggedToday,
       lifetimeNightsStartedAtOrAfter1am: lifetimeNightsStartedAtOrAfter1am ??
           this.lifetimeNightsStartedAtOrAfter1am,
@@ -133,6 +139,7 @@ class HealthSnapshot {
         other.stepsLifetime == stepsLifetime &&
         other.sleepMinutesToday == sleepMinutesToday &&
         other.activityMinutesToday == activityMinutesToday &&
+        other.activityMinutesThisWeek == activityMinutesThisWeek &&
         other.weightLoggedToday == weightLoggedToday &&
         other.lifetimeNightsStartedAtOrAfter1am ==
             lifetimeNightsStartedAtOrAfter1am &&
@@ -149,6 +156,7 @@ class HealthSnapshot {
         stepsLifetime,
         sleepMinutesToday,
         activityMinutesToday,
+        activityMinutesThisWeek,
         weightLoggedToday,
         lifetimeNightsStartedAtOrAfter1am,
         lifetimeNightsStartedBefore10pm,
@@ -160,6 +168,7 @@ class HealthSnapshot {
       'HealthSnapshot(date: $evaluatedDate, stepsToday: $stepsToday, '
       'stepsThisWeek: $stepsThisWeek, stepsLifetime: $stepsLifetime, '
       'sleepMin: $sleepMinutesToday, activityMin: $activityMinutesToday, '
+      'activityMinWeek: $activityMinutesThisWeek, '
       'weightLogged: $weightLoggedToday, '
       'nightsAfter1am: $lifetimeNightsStartedAtOrAfter1am, '
       'nightsBefore10pm: $lifetimeNightsStartedBefore10pm, '

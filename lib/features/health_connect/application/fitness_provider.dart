@@ -329,6 +329,7 @@ class FitnessProvider extends ChangeNotifier {
       stepsLifetime: _stepsLifetime(),
       sleepMinutesToday: sleepForDate(day)?.totalDuration.inMinutes ?? 0,
       activityMinutesToday: _activityMinutesForDay(day),
+      activityMinutesThisWeek: _activityMinutesForWeekContaining(day),
       weightLoggedToday: weightForDate(day) != null,
       lifetimeNightsStartedAtOrAfter1am: nightsAfter1am,
       lifetimeNightsStartedBefore10pm: nightsBefore10pm,
@@ -357,6 +358,19 @@ class FitnessProvider extends ChangeNotifier {
         activity.startTime.day,
       );
       if (activityDay != day) return sum;
+      return sum + activity.duration.inMinutes;
+    });
+  }
+
+  int _activityMinutesForWeekContaining(DateTime day) {
+    final monday = day.subtract(Duration(days: day.weekday - 1));
+    return _activities.fold<int>(0, (sum, activity) {
+      final activityDay = DateTime(
+        activity.startTime.year,
+        activity.startTime.month,
+        activity.startTime.day,
+      );
+      if (activityDay.isBefore(monday) || activityDay.isAfter(day)) return sum;
       return sum + activity.duration.inMinutes;
     });
   }
