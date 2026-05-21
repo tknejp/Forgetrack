@@ -232,7 +232,7 @@ class Emblem extends Cosmetic {
   });
 
   /// XP buff this emblem grants while equipped. `null` means the
-  /// emblem is purely cosmetic. See [EmblemBuff] / `docs/emblem_buffs/plan.md`.
+  /// emblem is purely cosmetic. See [EmblemBuff] / `docs/emblem_buffs/archive/plan.md`.
   final EmblemBuff? buff;
 
   @override

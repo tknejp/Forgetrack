@@ -1048,7 +1048,7 @@
       ],
       "alternatives": "(A) **Owned-based pool** (každý unlocked emblem buffuje, bez nutnosti equipnout) — odmítnuto, bere hráči loadout decision a v endgame by se z toho stal monotonic creep s každým unlockem. (B) **Multiplicative stack** (`final = base × (1 + comp/100) × (1 + emb/100)`) — odmítnuto, hůř čitelné a v endgame neúměrně bobtná; user explicitně preferoval additive. (C) **Per-source cap** (kept _DailyBuffAccountant, just rebumped ceiling) — odmítnuto, existing companion buffy už cap překračovaly a debugging proč buff dnes 'nezabral' je velmi nepříjemný; raději otevřít ceiling a recalibrate křivku až bude balance telemetry. (D) **Per-emblem rarity scaling** (common +5 / rare +10 / legendary +15 atd.) — deferred do Phase 2 / dalšího iteraci; V1 ships uniform +10 % per-target a +5 % blanket pro single-axis tuning. (E) **`RewardSourceKind` jako target granularity** — odmítnuto, lumpuje všech 5 macro goals dohromady (nutritionXp); GoalMetric je správná resolution. (F) **Diminishing returns přes multiple emblemy na stejný target** — V1 mapping je 1:1 (jeden emblem per target), takže akademické; activates jen pokud future catalog rozšíří.",
       "links": [
-        "docs/emblem_buffs/plan.md",
+        "docs/emblem_buffs/archive/plan.md",
         "lib/features/cosmetics/domain/emblem_buff.dart",
         "lib/features/progression_engine/application/emblem_target_mapping.dart",
         "lib/features/progression_engine/application/reward_grant_service.dart",

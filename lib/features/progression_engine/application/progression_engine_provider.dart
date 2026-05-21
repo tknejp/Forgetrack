@@ -305,7 +305,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
 
   // Phase 2 of the emblem-buff plan: the engine resolves equipped
   // emblem buffs from `EmblemBoardProvider.boardForUserOrAutoFill` —
-  // see `docs/emblem_buffs/plan.md`. Optional so headless tests / older
+  // see `docs/emblem_buffs/archive/plan.md`. Optional so headless tests / older
   // wire-ups behave as if no emblems were equipped.
   EmblemBoardProvider? _emblemBoard;
   String? _emblemUid;
@@ -1522,7 +1522,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// has no emblem target, or none of the buffs cover the target.
   ///
   /// No daily cap is applied — locked design decision in
-  /// `docs/emblem_buffs/plan.md` (emblem buffs are uncapped).
+  /// `docs/emblem_buffs/archive/plan.md` (emblem buffs are uncapped).
   int projectedEmblemBuffBonusFor(Quest node) {
     final ctx = currentContext;
     if (ctx == null) return 0;

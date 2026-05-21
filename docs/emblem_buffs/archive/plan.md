@@ -188,7 +188,7 @@ These are settled. Do not reopen without user sign-off.
 
 ---
 
-### ☐ Phase 5 — Close-out
+### ☑ Phase 5 — Close-out
 
 This phase is purely procedural. No new code.
 

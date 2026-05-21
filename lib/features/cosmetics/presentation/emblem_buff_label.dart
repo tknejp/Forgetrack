@@ -1,6 +1,6 @@
 // Pure helper that turns an [EmblemBuff] into a localized 1-line label
 // rendered under emblem tiles in the cosmetics inventory. See
-// `docs/emblem_buffs/plan.md` Phase 3.
+// `docs/emblem_buffs/archive/plan.md` Phase 3.
 //
 // Kept widget-free so it can be reused by both the inventory tile and
 // the cosmetic details sheet, and unit-tested without pumping widgets.

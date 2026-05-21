@@ -43,7 +43,7 @@ class XpClaimPillData {
   /// as a second micro chip (shield icon) under the headline whenever
   /// `> 0`, mirroring the companion chrome 1:1 so a claim that fires
   /// both buffs shows both sub-lines at once. See
-  /// `docs/emblem_buffs/plan.md` Phase 3.
+  /// `docs/emblem_buffs/archive/plan.md` Phase 3.
   final int emblemBonus;
 
   bool get isClaimable => state == XpClaimPillState.claimable;

@@ -19,7 +19,7 @@ const _log = AppLogger('PROGRESSION', scope: 'claim.buff');
 /// with the existing level / multiplier curve.
 ///
 /// Companion + emblem buffs stack **additively** (per the locked
-/// design in `docs/emblem_buffs/plan.md`): the final XP is
+/// design in `docs/emblem_buffs/archive/plan.md`): the final XP is
 /// `scaled × (1 + (companion% + emblem%) / 100)`. There is no daily
 /// share cap — the level curve compensates for top-end buff stacks.
 class RewardGrantService {

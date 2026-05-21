@@ -1,4 +1,4 @@
-// Emblem XP buff domain model — see docs/emblem_buffs/plan.md.
+// Emblem XP buff domain model — see docs/emblem_buffs/archive/plan.md.
 //
 // An [Emblem] in the catalog may carry a non-null [EmblemBuff]. At grant
 // time the progression engine builds an [EmblemBuffContext] for the
@@ -87,7 +87,7 @@ class BlanketEmblemBuff extends EmblemBuff {
 
   /// Hand-maintained list of targets that any [PerTargetEmblemBuff] in
   /// the catalog covers. Must stay in sync with the mapping table in
-  /// `docs/emblem_buffs/plan.md`.
+  /// `docs/emblem_buffs/archive/plan.md`.
   static const List<EmblemTarget> coveredTargets = <EmblemTarget>[
     DailyGoalTarget(GoalMetric.dailyCalories),
     DailyGoalTarget(GoalMetric.dailySteps),

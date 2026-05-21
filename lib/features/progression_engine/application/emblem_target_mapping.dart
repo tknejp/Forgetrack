@@ -9,7 +9,7 @@ import '../../health_connect/domain/player_goal.dart';
 /// equipped [EmblemBuff] is asked to resolve against.
 ///
 /// Mapping is intentionally string-switched on the node id — the
-/// per-target emblem mapping in `docs/emblem_buffs/plan.md` is keyed
+/// per-target emblem mapping in `docs/emblem_buffs/archive/plan.md` is keyed
 /// on the same node ids the daily-section catalog uses
 /// (`daily_calories_today`, `daily_steps_today`, …). Combo bucket
 /// quests fall back to the generic [ComboQuestTarget].
