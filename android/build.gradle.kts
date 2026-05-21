@@ -32,6 +32,17 @@ subprojects {
             }
         }
     }
+    // Many Flutter plugins pin compileSdk to an old API level (e.g. isar_flutter_libs
+    // -> 31), which makes their per-library verifyReleaseResources task fail on
+    // resources from newer androidx artifacts (e.g. android:attr/lStar from API 31).
+    // Overriding compileSdk fights AGP 8's "too late to set" guard, so we disable
+    // the per-library check instead — the same linking is re-verified when the app
+    // module assembles with its own (modern) compileSdk.
+    afterEvaluate {
+        tasks.matching { it.name == "verifyReleaseResources" }.configureEach {
+            enabled = false
+        }
+    }
 
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
