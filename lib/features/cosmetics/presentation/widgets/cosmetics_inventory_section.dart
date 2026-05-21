@@ -8,7 +8,7 @@ import '../../config/cosmetics_config.dart';
 import '../../domain/cosmetic_models.dart';
 import '../cosmetics_screen.dart';
 
-/// "Kosmetika" section — a row of three featured cosmetic tiles (frame,
+/// "Inventář" section — a row of three featured cosmetic tiles (frame,
 /// companion, background) that reads the signed-in user's
 /// [CosmeticsProvider] state and routes taps to the full
 /// [CosmeticsScreen] filtered by type.
@@ -124,7 +124,7 @@ class _InventorySectionHead extends StatelessWidget {
         const SizedBox(width: 6),
         const Expanded(
           child: Text(
-            'KOSMETIKA',
+            'INVENTÁŘ',
             style: TextStyle(
               fontSize: Tokens.fontSizeSmall,
               fontWeight: FontWeight.w900,

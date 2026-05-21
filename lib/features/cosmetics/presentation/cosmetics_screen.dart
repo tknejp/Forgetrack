@@ -91,7 +91,7 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
               ),
               child: ScreenHeader(
                 greeting: '',
-                title: 'Kosmetika',
+                title: 'Inventář',
                 leading: const FtBackButton(),
               ),
             ),
@@ -146,7 +146,18 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
       inventory: inventory,
     );
 
-    final equippedDefs = cosmetics.service.getEquippedDefinitions(state);
+    // Only frame / background / companion are equippable from the
+    // inventory's "Vybaveno" row. Emblems live on the profile-screen
+    // emblem grid; relics are consumed by companion claims, not
+    // worn. Filtering at the call site keeps the top row a fixed
+    // 3-tile layout without scroll.
+    final equippedDefs = cosmetics.service
+        .getEquippedDefinitions(state)
+        .where((def) =>
+            def.type == CosmeticType.frame ||
+            def.type == CosmeticType.background ||
+            def.type == CosmeticType.companion)
+        .toList(growable: false);
     final presentTypes = devTools
         ? CosmeticType.values.toList()
         : CosmeticType.values
@@ -356,23 +367,21 @@ class _EquippedSection extends StatelessWidget {
         else
           SizedBox(
             height: 128,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              clipBehavior: Clip.none,
-              itemBuilder: (context, index) {
-                final definition = definitions[index];
-                return SizedBox(
-                  width: 116,
-                  child: _CosmeticCard(
-                    definition: definition,
-                    isEquipped: true,
-                    l10n: l10n,
-                    onTap: () => onTap(definition),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 0; i < definitions.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 10),
+                  Expanded(
+                    child: _CosmeticCard(
+                      definition: definitions[i],
+                      isEquipped: true,
+                      l10n: l10n,
+                      onTap: () => onTap(definitions[i]),
+                    ),
                   ),
-                );
-              },
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
-              itemCount: definitions.length,
+                ],
+              ],
             ),
           ),
       ],
@@ -560,13 +569,17 @@ class _CategoryGrid extends StatelessWidget {
                 // `equipped` slot — show the equipped chrome whenever an
                 // emblem is pinned anywhere on the player's board so
                 // "equipped = buffed" reads consistently with the new
-                // emblem XP buff system.
+                // emblem XP buff system. Relics aren't equippable from
+                // the inventory at all (they're consumed by companion
+                // claims), so a stale `Loadout.relicId` doesn't count.
                 final isEmblemPinned = def is Emblem &&
                     pinnedEmblemIds.contains(def.id);
+                final slotEquipped = def is! Emblem &&
+                    def is! RelicCosmetic &&
+                    state.equipped.slotId(def.type) == def.id;
                 return _CosmeticCard(
                   definition: def,
-                  isEquipped: isEmblemPinned ||
-                      state.equipped.slotId(def.type) == def.id,
+                  isEquipped: isEmblemPinned || slotEquipped,
                   isLocked: devTools && !isUnlocked,
                   showMissingAsset: devTools,
                   lifecycle: lifecycle,

@@ -206,7 +206,15 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
     final cosmeticsProvider = context.watch<CosmeticsProvider>();
     final cosmeticsState = cosmeticsProvider.state ?? widget.state;
     final progression = context.watch<ProgressionEngineProvider>();
-    final isEquipped =
+    // Only frame / background / companion are equippable from this
+    // sheet — emblems live on the profile emblem grid, relics are
+    // consumed by companion claims. Force `isEquipped = false` for
+    // the non-equippable types so a stale `Loadout` slot from before
+    // doesn't surface a misleading "VYBAVENO" pill.
+    final canEquipType = definition is Frame ||
+        definition is Background ||
+        definition is Companion;
+    final isEquipped = canEquipType &&
         cosmeticsState.equipped.slotId(definition.type) == definition.id;
     final assetPath = context
         .read<CosmeticsProvider>()
@@ -706,7 +714,13 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                       ),
                     ],
                   ),
-              ] else if (effectiveLocked)
+              ] else if (effectiveLocked ||
+                  definition is Emblem ||
+                  definition is RelicCosmetic)
+                // Emblems live on the profile-screen emblem grid and
+                // relics are consumed by companion claims — neither
+                // is equippable from the inventory details sheet.
+                // Locked items also collapse to the close button.
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton(
