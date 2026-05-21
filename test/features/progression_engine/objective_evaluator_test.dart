@@ -264,6 +264,30 @@ void main() {
       expect(evaluator.evaluate(spec, at).completed, isTrue);
     });
 
+    test('BestPerfectDayStreakMetric reads bestPerfectDayStreak', () {
+      final spec = _objective(
+        metric: const BestPerfectDayStreakMetric(),
+        scope: const LifetimeScope(),
+        targetValue: 30,
+      );
+      final under = buildTestContext(bestPerfectDayStreak: 29);
+      final at = buildTestContext(bestPerfectDayStreak: 30);
+      expect(evaluator.evaluate(spec, under).completed, isFalse);
+      expect(evaluator.evaluate(spec, at).completed, isTrue);
+    });
+
+    test('PerfectWeeksLifetimeMetric reads perfectWeeksLifetime', () {
+      final spec = _objective(
+        metric: const PerfectWeeksLifetimeMetric(),
+        scope: const LifetimeScope(),
+        targetValue: 52,
+      );
+      final under = buildTestContext(perfectWeeksLifetime: 51);
+      final at = buildTestContext(perfectWeeksLifetime: 52);
+      expect(evaluator.evaluate(spec, under).completed, isFalse);
+      expect(evaluator.evaluate(spec, at).completed, isTrue);
+    });
+
     test('unwired (hour, direction) combinations evaluate to 0', () {
       // Catalog only wires (1, atOrAfter) and (22, before). Anything
       // else stays at 0 so a new entry without snapshot wiring does

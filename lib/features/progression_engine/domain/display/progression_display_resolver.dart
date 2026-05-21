@@ -445,6 +445,10 @@ class ProgressionDisplayResolver {
       ReturnAfterGapMetric() => l10n.progAchievementSummaryComeback,
       StreakAfterGapMetric() =>
         '$target ${l10n.progAchievementSummaryComebackDays}',
+      BestPerfectDayStreakMetric() =>
+        '$target ${l10n.progAchievementSummaryPerfectDays}',
+      PerfectWeeksLifetimeMetric() =>
+        '$target ${l10n.progAchievementSummaryPerfectWeeks}',
       ActivityMinutesMetric() => _ruleScaledSummary(
           objective: objective,
           targetValue: target,

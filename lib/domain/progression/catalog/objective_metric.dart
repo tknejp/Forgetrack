@@ -214,6 +214,21 @@ class StreakAfterGapMetric extends ObjectiveMetric {
   final int gapDays;
 }
 
+/// Longest run of consecutive **perfect days** in player history —
+/// where a perfect day satisfies every canonical daily objective
+/// (steps, calories, sleep, activity). Drives `perfect_month` (30 in
+/// a row).
+class BestPerfectDayStreakMetric extends ObjectiveMetric {
+  const BestPerfectDayStreakMetric();
+}
+
+/// Count of distinct **perfect weeks** (Monday-anchored ISO weeks
+/// where every day was a perfect day) across player history. Drives
+/// `balanced_year` (52 perfect weeks = an entire calendar year).
+class PerfectWeeksLifetimeMetric extends ObjectiveMetric {
+  const PerfectWeeksLifetimeMetric();
+}
+
 /// Number of distinct calendar days on which at least [atLeast] of the
 /// named nodes were "done" (goal met or claimed). Use when a quest
 /// reads as "complete at least K daily goals on N different days"

@@ -35,6 +35,9 @@ class LedgerCounters {
     this.nodesCompletedToday = const {},
     this.returnsAfterGapByDays = const {},
     this.bestStreakAfterGapByDays = const {},
+    this.bestPerfectDayStreak = 0,
+    this.perfectWeeksLifetime = 0,
+    this.perfectDaysLifetime = 0,
   });
 
   /// Empty sentinel — used by tests / pre-first-evaluation provider
@@ -90,6 +93,21 @@ class LedgerCounters {
   /// evaluator stays pure.
   final int distinctActiveDays;
 
+  /// Longest run of consecutive **perfect days** in the ledger —
+  /// where a perfect day = every canonical daily objective fired that
+  /// day (see [PerfectDayLedgerSource.requiredObjectiveIds]). Drives
+  /// [BestPerfectDayStreakMetric].
+  final int bestPerfectDayStreak;
+
+  /// Count of distinct ISO weeks where every Mon → Sun day appears in
+  /// the perfect-day set. Drives [PerfectWeeksLifetimeMetric].
+  final int perfectWeeksLifetime;
+
+  /// Total number of perfect days across history. Mirrors the legacy
+  /// [CosmeticUnlockSnapshot.perfectDaysCount] consumed by the
+  /// cosmetic reveal evaluator's "perfect days at least N" rules.
+  final int perfectDaysLifetime;
+
   /// `gapDays → number of node-completion events that landed after the
   /// player had been inactive for at least `gapDays` consecutive days`.
   /// Drives [ReturnAfterGapMetric]. Producer (provider input source)
@@ -125,6 +143,9 @@ class LedgerCounters {
     Set<String>? nodesCompletedToday,
     Map<int, int>? returnsAfterGapByDays,
     Map<int, int>? bestStreakAfterGapByDays,
+    int? bestPerfectDayStreak,
+    int? perfectWeeksLifetime,
+    int? perfectDaysLifetime,
   }) {
     return LedgerCounters(
       totalRewardCount: totalRewardCount ?? this.totalRewardCount,
@@ -149,6 +170,9 @@ class LedgerCounters {
           returnsAfterGapByDays ?? this.returnsAfterGapByDays,
       bestStreakAfterGapByDays:
           bestStreakAfterGapByDays ?? this.bestStreakAfterGapByDays,
+      bestPerfectDayStreak: bestPerfectDayStreak ?? this.bestPerfectDayStreak,
+      perfectWeeksLifetime: perfectWeeksLifetime ?? this.perfectWeeksLifetime,
+      perfectDaysLifetime: perfectDaysLifetime ?? this.perfectDaysLifetime,
     );
   }
 }

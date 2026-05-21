@@ -127,6 +127,20 @@ List<Objective> metaObjectives(EngineCatalogContext context) {
       operator: ObjectiveOperator.atLeast,
       targetValue: 14,
     ),
+    Objective(
+      id: const ObjectiveId('perfect_month_30'),
+      metric: BestPerfectDayStreakMetric(),
+      scope: LifetimeScope(),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: 30,
+    ),
+    Objective(
+      id: const ObjectiveId('balanced_year_52'),
+      metric: PerfectWeeksLifetimeMetric(),
+      scope: LifetimeScope(),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: 52,
+    ),
     // Combo-pool counters (Phase 9c follow-up).
     Objective(
       id: const ObjectiveId('combo_pool_10'),
@@ -334,6 +348,26 @@ List<ProgressionEntry> metaNodes() {
       rewards: const [],
       contentTags: const [ContentTag.core],
       rarity: Rarity.rare,
+    ),
+    Achievement(
+      id: const ProgressionEntryId('perfect_month_30'),
+      objectiveId: ObjectiveId('perfect_month_30'),
+      badgeEmoji: '\u{1F4AB}',
+      titleKey: (l) => l.progAchievementPerfectMonthTitle,
+      descriptionKey: (l) => l.progAchievementPerfectMonthDesc,
+      rewards: const [],
+      contentTags: const [ContentTag.core],
+      rarity: Rarity.legendary,
+    ),
+    Achievement(
+      id: const ProgressionEntryId('balanced_year_52'),
+      objectiveId: ObjectiveId('balanced_year_52'),
+      badgeEmoji: '\u{1F30E}',
+      titleKey: (l) => l.progAchievementBalancedYearTitle,
+      descriptionKey: (l) => l.progAchievementBalancedYearDesc,
+      rewards: const [],
+      contentTags: const [ContentTag.core],
+      rarity: Rarity.mythic,
     ),
     // Combo achievements (Phase 9c follow-up). Backing infra:
     // ComboPoolCompletionsMetric for the lifetime "all combos" tally,

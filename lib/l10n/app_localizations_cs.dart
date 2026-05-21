@@ -3228,6 +3228,20 @@ class AppLocalizationsCs extends AppLocalizations {
       'Po 7+denní pauze splň 14 aktivních dní v řadě.';
 
   @override
+  String get progAchievementPerfectMonthTitle => 'Dokonalý měsíc';
+
+  @override
+  String get progAchievementPerfectMonthDesc =>
+      'Splň všechny denní cíle (kroky, kalorie, spánek, aktivita) 30 dní v řadě.';
+
+  @override
+  String get progAchievementBalancedYearTitle => 'Vyvážený rok';
+
+  @override
+  String get progAchievementBalancedYearDesc =>
+      'Nasbírej 52 dokonalých týdnů — každý den v týdnu byl dokonalý.';
+
+  @override
   String get progAchievementPerfectDays7Title => 'Vyvážený týden';
 
   @override
@@ -5222,7 +5236,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get cosmeticRelicAncientRootUnlockHint =>
-      'Udržuj 7denní krokovací sérii.';
+      'Splň poprvé týdenní cíl aktivity.';
 
   @override
   String get cosmeticRelicRavineStoneUnlockHint =>
@@ -5230,30 +5244,33 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get cosmeticRelicRuinSealUnlockHint =>
-      'Dokonči svůj první týdenní úkol.';
+      'Staň se ranním ptáčetem, nebo noční sovou.';
 
   @override
-  String get cosmeticRelicBridgeKeyUnlockHint => 'Dokonči 3 týdenní úkoly.';
+  String get cosmeticRelicBridgeKeyUnlockHint => 'Získej celkem 100 odměn.';
 
   @override
-  String get cosmeticRelicMinersLanternUnlockHint => 'Dokonči celkem 50 úkolů.';
+  String get cosmeticRelicMinersLanternUnlockHint =>
+      'Dokonči 25 trojitých kombo úkolů.';
 
   @override
-  String get cosmeticRelicPolarLanternUnlockHint => 'Dosáhni úrovně 55.';
+  String get cosmeticRelicPolarLanternUnlockHint =>
+      'Splň týdenní cíl aktivity 24×.';
 
   @override
-  String get cosmeticRelicFrostShardUnlockHint => 'Dosáhni úrovně 65.';
+  String get cosmeticRelicFrostShardUnlockHint =>
+      'Ujdi celkem 5 000 000 kroků.';
 
   @override
   String get cosmeticRelicAuroraThreadUnlockHint =>
       'Splň týdenní cíl aktivity 36krát.';
 
   @override
-  String get cosmeticRelicFrozenLakeHeartUnlockHint =>
-      'Ujdi celkem 1 000 000 kroků.';
+  String get cosmeticRelicFrozenLakeHeartUnlockHint => 'Splň 250 úkolů celkem.';
 
   @override
-  String get cosmeticRelicDragonScaleUnlockHint => 'Dosáhni úrovně 85.';
+  String get cosmeticRelicDragonScaleUnlockHint =>
+      'Ujdi celkem 10 000 000 kroků.';
 
   @override
   String get cosmeticRelicWarmKindlingUnlockHint => 'Splň 3 denní úkoly.';

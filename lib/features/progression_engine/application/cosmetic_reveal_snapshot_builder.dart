@@ -3,6 +3,7 @@ import '../domain/catalog/progression_node_catalog.dart';
 import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import 'package:forgetrack/domain/progression/catalog/quest_display_bucket.dart';
 import '../domain/repository/ledger_snapshot.dart';
+import 'perfect_day_ledger_source.dart';
 
 /// V2 → [CosmeticUnlockSnapshot] adapter.
 ///
@@ -65,6 +66,8 @@ class CosmeticRevealSnapshotBuilder {
       activeDays.add(_dateOf(grant.timestamp));
     }
 
+    final perfectDates = PerfectDayLedgerSource.perfectDates(ledger);
+
     return CosmeticUnlockSnapshot(
       level: level,
       activeDaysCount: activeDays.length,
@@ -73,8 +76,9 @@ class CosmeticRevealSnapshotBuilder {
       totalCompletedQuests: totalCount,
       firstDailyQuestEver: dailyCount >= 1,
       firstWeeklyQuestEver: weeklyCount >= 1,
-      perfectDaysCount: 0,
-      perfectWeeksCount: 0,
+      perfectDaysCount: perfectDates.length,
+      perfectWeeksCount:
+          PerfectDayLedgerSource.perfectWeeksLifetime(perfectDates),
       ownedCosmeticIds: ownedCosmeticIds,
     );
   }

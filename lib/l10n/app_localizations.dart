@@ -5799,6 +5799,30 @@ abstract class AppLocalizations {
   /// **'After a 7+ day break, complete 14 consecutive active days.'**
   String get progAchievementComebackStreakDesc;
 
+  /// No description provided for @progAchievementPerfectMonthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Perfect Month'**
+  String get progAchievementPerfectMonthTitle;
+
+  /// No description provided for @progAchievementPerfectMonthDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Hit every daily goal (steps, calories, sleep, activity) 30 days in a row.'**
+  String get progAchievementPerfectMonthDesc;
+
+  /// No description provided for @progAchievementBalancedYearTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced Year'**
+  String get progAchievementBalancedYearTitle;
+
+  /// No description provided for @progAchievementBalancedYearDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 52 perfect weeks — every day in the week was a perfect day.'**
+  String get progAchievementBalancedYearDesc;
+
   /// No description provided for @progAchievementPerfectDays7Title.
   ///
   /// In en, this message translates to:
@@ -9031,7 +9055,7 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticRelicAncientRootUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Maintain a 7-day step streak.'**
+  /// **'Complete the weekly activity goal for the first time.'**
   String get cosmeticRelicAncientRootUnlockHint;
 
   /// No description provided for @cosmeticRelicRavineStoneUnlockHint.
@@ -9043,31 +9067,31 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticRelicRuinSealUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Complete your first weekly quest.'**
+  /// **'Become an early bird or a night owl.'**
   String get cosmeticRelicRuinSealUnlockHint;
 
   /// No description provided for @cosmeticRelicBridgeKeyUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Complete 3 weekly quests.'**
+  /// **'Earn 100 rewards in total.'**
   String get cosmeticRelicBridgeKeyUnlockHint;
 
   /// No description provided for @cosmeticRelicMinersLanternUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Complete 50 quests.'**
+  /// **'Complete 25 triple combo quests.'**
   String get cosmeticRelicMinersLanternUnlockHint;
 
   /// No description provided for @cosmeticRelicPolarLanternUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Reach level 55.'**
+  /// **'Complete the weekly activity goal 24 times.'**
   String get cosmeticRelicPolarLanternUnlockHint;
 
   /// No description provided for @cosmeticRelicFrostShardUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Reach level 65.'**
+  /// **'Walk 5,000,000 total steps.'**
   String get cosmeticRelicFrostShardUnlockHint;
 
   /// No description provided for @cosmeticRelicAuroraThreadUnlockHint.
@@ -9079,13 +9103,13 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticRelicFrozenLakeHeartUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Walk 1,000,000 total steps.'**
+  /// **'Complete 250 quests in total.'**
   String get cosmeticRelicFrozenLakeHeartUnlockHint;
 
   /// No description provided for @cosmeticRelicDragonScaleUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Reach level 85.'**
+  /// **'Walk 10,000,000 total steps.'**
   String get cosmeticRelicDragonScaleUnlockHint;
 
   /// No description provided for @cosmeticRelicWarmKindlingUnlockHint.

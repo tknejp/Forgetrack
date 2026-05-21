@@ -47,6 +47,7 @@ import 'package:forgetrack/domain/progression/player/player_chapter_progress.dar
 import 'package:forgetrack/domain/progression/player/player_quest_catalog.dart';
 import 'package:forgetrack/domain/progression/player/player_quest_lifecycle.dart';
 import 'chapter_catalog_builder.dart';
+import 'perfect_day_ledger_source.dart';
 import 'streak_backfill_service.dart';
 import 'player_achievement_shelf_service.dart';
 import 'player_chapter_progress_service.dart';
@@ -1688,6 +1689,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
   LedgerCounters _buildLedgerCounters() {
     final quests = _questCompletionsFromLedger();
     final gaps = _gapBasedCountersFromLedger(const [7]);
+    final perfect = _perfectDayCountersFromLedger();
     return LedgerCounters(
       totalRewardCount: _totalRewardCountFromLedger(),
       rewardCountByDomain: _rewardCountByDomainFromLedger(),
@@ -1701,6 +1703,26 @@ class ProgressionEngineProvider extends ChangeNotifier {
       comboPoolCompletionCounts: _comboPoolCompletionCountsFromLedger(),
       returnsAfterGapByDays: gaps.returnsByDays,
       bestStreakAfterGapByDays: gaps.bestStreakByDays,
+      bestPerfectDayStreak: perfect.bestStreak,
+      perfectWeeksLifetime: perfect.weeks,
+      perfectDaysLifetime: perfect.days,
+    );
+  }
+
+  /// Perfect-day aggregates from the ledger — drives
+  /// `perfect_month` (30-in-a-row streak), `balanced_year` (52
+  /// perfect ISO weeks), and the cosmetic reveal evaluator's
+  /// `perfectDaysAtLeast` rules. See [PerfectDayLedgerSource] for the
+  /// canonical definition.
+  ({int bestStreak, int weeks, int days}) _perfectDayCountersFromLedger() {
+    final l = _ledger;
+    if (l == null) return (bestStreak: 0, weeks: 0, days: 0);
+    final dates = PerfectDayLedgerSource.perfectDates(l);
+    if (dates.isEmpty) return (bestStreak: 0, weeks: 0, days: 0);
+    return (
+      bestStreak: PerfectDayLedgerSource.bestStreak(dates),
+      weeks: PerfectDayLedgerSource.perfectWeeksLifetime(dates),
+      days: dates.length,
     );
   }
 

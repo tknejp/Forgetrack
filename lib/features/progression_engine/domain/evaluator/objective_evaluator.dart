@@ -124,6 +124,7 @@ class ObjectiveEvaluator {
       }(),
       ActivityMinutesMetric() => switch (scope) {
           TodayScope() => health.activityMinutesToday.toDouble(),
+          ThisWeekScope() => health.activityMinutesThisWeek.toDouble(),
           _ => 0,
         },
       WeightLoggedTodayMetric() => switch (scope) {
@@ -182,6 +183,10 @@ class ObjectiveEvaluator {
         (counters.returnsAfterGapByDays[gapDays] ?? 0).toDouble(),
       StreakAfterGapMetric(:final gapDays) =>
         (counters.bestStreakAfterGapByDays[gapDays] ?? 0).toDouble(),
+      BestPerfectDayStreakMetric() =>
+        counters.bestPerfectDayStreak.toDouble(),
+      PerfectWeeksLifetimeMetric() =>
+        counters.perfectWeeksLifetime.toDouble(),
       // Per-day "at least K of these nodes were done" requires the
       // ledger to reconstruct daily groupings — that's done in the
       // provider and surfaced through `objectiveActualOverrides`.

@@ -3236,6 +3236,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'After a 7+ day break, complete 14 consecutive active days.';
 
   @override
+  String get progAchievementPerfectMonthTitle => 'Perfect Month';
+
+  @override
+  String get progAchievementPerfectMonthDesc =>
+      'Hit every daily goal (steps, calories, sleep, activity) 30 days in a row.';
+
+  @override
+  String get progAchievementBalancedYearTitle => 'Balanced Year';
+
+  @override
+  String get progAchievementBalancedYearDesc =>
+      'Accumulate 52 perfect weeks — every day in the week was a perfect day.';
+
+  @override
   String get progAchievementPerfectDays7Title => 'Balanced Week';
 
   @override
@@ -5221,7 +5235,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cosmeticRelicAncientRootUnlockHint =>
-      'Maintain a 7-day step streak.';
+      'Complete the weekly activity goal for the first time.';
 
   @override
   String get cosmeticRelicRavineStoneUnlockHint =>
@@ -5229,19 +5243,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cosmeticRelicRuinSealUnlockHint =>
-      'Complete your first weekly quest.';
+      'Become an early bird or a night owl.';
 
   @override
-  String get cosmeticRelicBridgeKeyUnlockHint => 'Complete 3 weekly quests.';
+  String get cosmeticRelicBridgeKeyUnlockHint => 'Earn 100 rewards in total.';
 
   @override
-  String get cosmeticRelicMinersLanternUnlockHint => 'Complete 50 quests.';
+  String get cosmeticRelicMinersLanternUnlockHint =>
+      'Complete 25 triple combo quests.';
 
   @override
-  String get cosmeticRelicPolarLanternUnlockHint => 'Reach level 55.';
+  String get cosmeticRelicPolarLanternUnlockHint =>
+      'Complete the weekly activity goal 24 times.';
 
   @override
-  String get cosmeticRelicFrostShardUnlockHint => 'Reach level 65.';
+  String get cosmeticRelicFrostShardUnlockHint => 'Walk 5,000,000 total steps.';
 
   @override
   String get cosmeticRelicAuroraThreadUnlockHint =>
@@ -5249,10 +5265,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cosmeticRelicFrozenLakeHeartUnlockHint =>
-      'Walk 1,000,000 total steps.';
+      'Complete 250 quests in total.';
 
   @override
-  String get cosmeticRelicDragonScaleUnlockHint => 'Reach level 85.';
+  String get cosmeticRelicDragonScaleUnlockHint =>
+      'Walk 10,000,000 total steps.';
 
   @override
   String get cosmeticRelicWarmKindlingUnlockHint => 'Complete 3 daily quests.';
