@@ -13,7 +13,6 @@ import '../../../../shared/widgets/screen_header.dart';
 import '../../../cosmetics/application/cosmetics_provider.dart';
 import '../../../cosmetics/application/emblem_board_provider.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
-import '../../../cosmetics/presentation/cosmetic_details_sheet.dart';
 import '../../../cosmetics/presentation/widgets/cosmetic_equipped_chip.dart';
 import '../../../cosmetics/presentation/widgets/cosmetics_inventory_section.dart';
 import '../../../progression_engine/application/progression_engine_provider.dart';
@@ -21,6 +20,7 @@ import '../../application/social_provider.dart';
 import '../../domain/social_models.dart';
 import 'hero_streak_stats_card.dart';
 import '../social_profile_utils.dart';
+import 'companion_slot_sheet.dart';
 import 'emblem_slot_sheet.dart';
 import 'profile_detail_hero_card.dart';
 import 'social_cosmetic_avatar.dart';
@@ -186,28 +186,32 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
     return [for (final id in board.slots) id == null ? null : byId[id]];
   }
 
-  /// Opens the cosmetic details sheet for the equipped companion.
-  /// Mirrors the `_showDetails` flow in `cosmetics_screen.dart` but
-  /// keeps the call site here so the profile hero stays the entry
-  /// point. Read-only when the state hasn't loaded yet — the sheet
-  /// gracefully handles a missing inventory row by surfacing the
-  /// definition's preview, not a crash.
+  /// Opens the companion-slot management sheet for the equipped
+  /// companion. The sheet lets the owner swap to any other unlocked
+  /// companion or unequip the current one — both routed through the
+  /// shared [CosmeticsProvider] equip / unequip API. No-ops when the
+  /// inventory state hasn't loaded yet.
   Future<void> _openCompanionDetails(Cosmetic companion) async {
     final cosmetics = context.read<CosmeticsProvider>();
     final state = cosmetics.state;
     if (state == null) return;
-    final l10n = AppLocalizations.of(context);
-    await showModalBottomSheet<void>(
-      context: context,
-      useSafeArea: true,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => CosmeticDetailsSheet(
-        definition: companion,
-        state: state,
-        l10n: l10n,
-      ),
+    final unlockedCompanions = [
+      for (final id in state.unlocked.keys)
+        if (socialCosmeticById(id) case final def?
+            when def.type == CosmeticType.companion)
+          def,
+    ]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    final pick = await CompanionSlotSheet.show(
+      context,
+      current: companion,
+      unlocked: unlockedCompanions,
     );
+    if (pick == null || !mounted) return;
+    if (pick.removed) {
+      await cosmetics.unequip(CosmeticType.companion);
+    } else if (pick.cosmeticId != null) {
+      await cosmetics.equip(pick.cosmeticId!);
+    }
   }
 
   Future<void> _openEmblemSlotSheet({
