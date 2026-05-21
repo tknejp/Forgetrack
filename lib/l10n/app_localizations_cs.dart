@@ -4482,12 +4482,12 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String cosmeticBuffEmber(int min, int max) {
-    return '+$min–$max % za streak (roste s každou kartou zvlášť)';
+    return '+$min–$max % za streak';
   }
 
   @override
   String cosmeticBuffLanternThreshold(int percent, int days) {
-    return '+$percent % za streak (aktivace od ${days}d)';
+    return '+$percent % za streak ${days}d+';
   }
 
   @override

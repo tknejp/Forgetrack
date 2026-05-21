@@ -4474,7 +4474,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String cosmeticBuffEmber(int min, int max) {
-    return '+$min–$max% per streak (grows with each card\'s streak)';
+    return '+$min–$max% per streak';
   }
 
   @override

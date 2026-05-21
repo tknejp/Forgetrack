@@ -7776,7 +7776,7 @@ abstract class AppLocalizations {
   /// Ember Sprite dynamic buff — per-domain streak-length tier range.
   ///
   /// In en, this message translates to:
-  /// **'+{min}–{max}% per streak (grows with each card\'s streak)'**
+  /// **'+{min}–{max}% per streak'**
   String cosmeticBuffEmber(int min, int max);
 
   /// Lantern Golem streak-threshold buff — flat percent unlocked once each card's streak crosses the threshold.
