@@ -3240,7 +3240,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get progAchievementPerfectMonthDesc =>
-      'Hit every daily goal (steps, calories, sleep, activity) 30 days in a row.';
+      'Hit every daily goal (steps, calories, protein, sleep, activity) 30 days in a row.';
+
+  @override
+  String get progAchievementPerfectStreak100Title => 'Hundred Day Halo';
+
+  @override
+  String get progAchievementPerfectStreak100Desc =>
+      'Hit every daily goal (steps, calories, protein, sleep, activity) 100 days in a row.';
 
   @override
   String get progAchievementBalancedYearTitle => 'Balanced Year';

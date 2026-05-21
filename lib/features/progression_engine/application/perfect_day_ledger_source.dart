@@ -5,18 +5,20 @@ import '../domain/repository/ledger_snapshot.dart';
 /// Pure helpers that derive "perfect day" aggregates from the ledger.
 ///
 /// **Perfect day = every required daily objective was satisfied that
-/// day.** The set is fixed at four canonical pillars:
+/// day.** The set is fixed at five canonical pillars:
 ///
 ///   - `daily_steps`
 ///   - `daily_calories`
+///   - `daily_protein`
 ///   - `daily_sleep`
 ///   - `daily_activity`
 ///
 /// `daily_weight_log` is intentionally excluded — body tracking is
 /// opt-in, so requiring it would price-out players who don't weigh
-/// daily. The five nutrition macros collapse to `daily_calories` as
-/// the canonical food objective for the same reason (requiring all
-/// five macro objectives would be punishing on rest / fasting days).
+/// daily. Of the five nutrition macros only `daily_protein` is in
+/// the set (most diet-driving macro alongside calories); carbs / fat
+/// / fiber are not — requiring every macro would punish rest /
+/// fasting days.
 ///
 /// All helpers are static + side-effect-free so the cosmetic reveal
 /// snapshot builder and the engine provider can share the same
@@ -29,6 +31,7 @@ class PerfectDayLedgerSource {
   static const Set<String> requiredObjectiveIds = {
     'daily_steps',
     'daily_calories',
+    'daily_protein',
     'daily_sleep',
     'daily_activity',
   };

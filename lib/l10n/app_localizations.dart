@@ -5808,8 +5808,20 @@ abstract class AppLocalizations {
   /// No description provided for @progAchievementPerfectMonthDesc.
   ///
   /// In en, this message translates to:
-  /// **'Hit every daily goal (steps, calories, sleep, activity) 30 days in a row.'**
+  /// **'Hit every daily goal (steps, calories, protein, sleep, activity) 30 days in a row.'**
   String get progAchievementPerfectMonthDesc;
+
+  /// No description provided for @progAchievementPerfectStreak100Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Hundred Day Halo'**
+  String get progAchievementPerfectStreak100Title;
+
+  /// No description provided for @progAchievementPerfectStreak100Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Hit every daily goal (steps, calories, protein, sleep, activity) 100 days in a row.'**
+  String get progAchievementPerfectStreak100Desc;
 
   /// No description provided for @progAchievementBalancedYearTitle.
   ///

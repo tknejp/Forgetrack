@@ -20,7 +20,7 @@ LedgerSnapshot _ledger(List<ObjectiveCompletionEvent> events) {
   return LedgerSnapshot(objectiveCompletions: events);
 }
 
-List<ObjectiveCompletionEvent> _allFour(DateTime day) {
+List<ObjectiveCompletionEvent> _allRequired(DateTime day) {
   return [
     for (final id in PerfectDayLedgerSource.requiredObjectiveIds) _event(id, day),
   ];
@@ -35,9 +35,10 @@ void main() {
         // Partial day — missing daily_sleep.
         _event('daily_steps', partial),
         _event('daily_calories', partial),
+        _event('daily_protein', partial),
         _event('daily_activity', partial),
         // Fully perfect day.
-        ..._allFour(perfect),
+        ..._allRequired(perfect),
       ];
       final dates = PerfectDayLedgerSource.perfectDates(_ledger(events));
       expect(dates, [perfect]);
@@ -47,7 +48,7 @@ void main() {
       final d1 = DateTime(2026, 5, 19);
       final d2 = DateTime(2026, 5, 18);
       final dates = PerfectDayLedgerSource.perfectDates(
-        _ledger([..._allFour(d1), ..._allFour(d2)]),
+        _ledger([..._allRequired(d1), ..._allRequired(d2)]),
       );
       expect(dates, [d2, d1]);
     });

@@ -3232,7 +3232,14 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get progAchievementPerfectMonthDesc =>
-      'Splň všechny denní cíle (kroky, kalorie, spánek, aktivita) 30 dní v řadě.';
+      'Splň všechny denní cíle (kroky, kalorie, protein, spánek, aktivita) 30 dní v řadě.';
+
+  @override
+  String get progAchievementPerfectStreak100Title => 'Stodenní svatozář';
+
+  @override
+  String get progAchievementPerfectStreak100Desc =>
+      'Splň všechny denní cíle (kroky, kalorie, protein, spánek, aktivita) 100 dní v řadě.';
 
   @override
   String get progAchievementBalancedYearTitle => 'Vyvážený rok';
