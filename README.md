@@ -158,17 +158,53 @@ DI graph, data flows, storage layout, RPG layer, ADRs), open
 ```bash
 flutter pub get
 flutter pub run build_runner build --delete-conflicting-outputs   # generates Isar .g.dart
-flutter run
+flutter run --flavor dev --dart-define=FLAVOR=dev
 ```
 
 The first launch walks you through onboarding: Health Connect
 permissions → Google Sign-In → optional Kalorické tabulky login.
 
+### Build flavors
+
+Two product flavors are wired in [`android/app/build.gradle.kts`](android/app/build.gradle.kts):
+
+| Flavor | applicationId | Launcher label | DevTools access |
+|---|---|---|---|
+| `dev` | `com.knejp.forgetrack.dev` | "Forgetrack DEV" (orange icon background) | always allowed |
+| `prod` | `com.knejp.forgetrack` | "Forgetrack" | requires UID in `DevToolsPermissionService._developerUids` |
+
+Both can be installed side-by-side on the same device — their data
+(Isar / SharedPreferences / Health Connect grants) is fully isolated
+by package name. Each registers as a separate Firebase Android app in
+the `forgetracker-493415` project.
+
+```bash
+# Dev build (default), debug debugger session
+flutter run --flavor dev --dart-define=FLAVOR=dev
+
+# Prod build, profile mode for performance sanity checks
+flutter run --flavor prod --dart-define=FLAVOR=prod --profile
+```
+
+Always pair `--flavor` with `--dart-define=FLAVOR=<same>`. The Gradle
+flavor selects the applicationId + Firebase app + launcher resources;
+`--dart-define=FLAVOR` flips runtime checks in
+[`lib/core/build_config.dart`](lib/core/build_config.dart). They
+must match.
+
 ### Build a release APK
 
 ```bash
-flutter build apk --release
+flutter build apk --release --flavor prod --dart-define=FLAVOR=prod
 ```
+
+This produces a `prod`-signed APK at
+`build/app/outputs/flutter-apk/app-prod-release.apk`. Release signing
+loads `android/key.properties` (gitignored) — see
+[docs/release/beta_readiness.md](docs/release/beta_readiness.md) for
+the keystore setup. On a fresh checkout without `key.properties` the
+release build falls back to the debug keystore, so the file simply
+not existing is not a build error.
 
 ## Project structure
 

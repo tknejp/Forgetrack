@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Dev flavor adaptive-icon background: distinct from prod's #221F2D
+        (dark purple-ish brand color) so a glance at the launcher tells
+        you which build you're opening. Overrides the same-named color
+        from src/main/res/values/colors.xml; the adaptive-icon XML
+        reference resolves to this value when the `dev` flavor is active.
+    -->
+    <color name="ic_launcher_background">#D84315</color>
+</resources>

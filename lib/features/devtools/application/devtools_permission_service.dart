@@ -1,9 +1,9 @@
-import 'package:flutter/foundation.dart';
+import '../../../core/build_config.dart';
 
 /// Controls who can open Developer Tools.
 ///
-/// Access is granted if the app runs in debug mode, or if the current
-/// Firebase Auth UID is listed in [_developerUids].
+/// Access is granted on the `dev` flavor, or if the current Firebase Auth
+/// UID is listed in [_developerUids].
 ///
 /// This is the single place for that check — do not scatter UID comparisons
 /// across UI files.
@@ -13,7 +13,7 @@ import 'package:flutter/foundation.dart';
 class DevToolsPermissionService {
   DevToolsPermissionService._();
 
-  /// Firebase Auth UIDs that can access DevTools in release/profile builds.
+  /// Firebase Auth UIDs that can access DevTools on the `prod` flavor.
   /// Add your own Firebase UID here to enable access on a physical device.
   static const Set<String> _developerUids = {
     'ZolbJyQwpzSuUDsCV09UDwWXgX93',
@@ -21,10 +21,10 @@ class DevToolsPermissionService {
 
   /// Returns true if [firebaseUid] is allowed to open Developer Tools.
   ///
-  /// Always true in debug mode. In release/profile: only if the UID is in
+  /// Always true on the `dev` flavor. On `prod`: only if the UID is in
   /// [_developerUids].
   static bool hasAccess(String? firebaseUid) {
-    if (kDebugMode) return true;
+    if (BuildConfig.isDev) return true;
     if (firebaseUid == null || firebaseUid.isEmpty) return false;
     return _developerUids.contains(firebaseUid);
   }
