@@ -263,6 +263,46 @@
       "file": "lib/domain/journal/journal_projection.dart",
       "summary": "Phase 20 promotes the ad-hoc cosmetic-unlock replay pattern into a first-class JournalProjection<T> abstract interface s typed `RebuildFromJournalReason` enum (factoryReset / pullAndMerge / devToolsWipe / periodicResync). The codebase má dvě denormalised caches that this contract now covers: (1) **CosmeticUnlockBridge** (implements JournalProjection<int>) replays RewardGrantEvent grants into CosmeticsProvider inventory after pull-and-merge / factory reset — rebuildFromJournal returns the count of cosmetics actually unlocked (idempotent: a second call returns 0). (2) **SocialProfileProjection** (implements JournalProjection<SocialProfileSyncPayload?>) builds the Firestore profile cache row from Player + Loadout + Journal — same payload the previous inline _buildSyncPayload in SocialProvider produced (wire format frozen per Phase 17). SocialProvider drží projection instance + delegates _syncProfileIfNeeded přes _profileProjection.buildPayload(); the JournalProjection.rebuildFromJournal hook delegates to publishIfReady() so future explicit 'republish my profile from scratch' affordance lands without restructuring. Engine pull-and-merge call site (_pullCloudLedger v progression_engine_provider) volá `_cosmeticBridge.rebuildFromJournal(events: merged.all, reason: RebuildFromJournalReason.pullAndMerge)` namísto pre-Phase-20 `reapplyHistoricalCosmetics(LedgerSnapshot)`. Idempotency invariant tested directly v test/features/progression_engine/cosmetic_unlock_bridge_projection_test.dart (factory reset → 0 applied; pull-and-merge → 2 applied; second pull-and-merge → 0 applied).",
       "diagram": "classDiagram\n    class RebuildFromJournalReason {\n      <<enum>>\n      factoryReset\n      pullAndMerge\n      devToolsWipe\n      periodicResync\n    }\n    class JournalProjection~T~ {\n      <<abstract>>\n      +Future~T~ rebuildFromJournal(events, reason)\n    }\n    class CosmeticUnlockBridge {\n      +void bindCosmetics(CosmeticsProvider)\n      +Future~void~ dispatch(result, ledger, level)\n      +Future~int~ rebuildFromJournal(events, reason)\n    }\n    class SocialProfileProjection {\n      +SocialProfileSyncPayload? buildPayload()\n      +Future publishIfReady()\n      +Future rebuildFromJournal(events, reason)\n    }\n    class SocialProfileInputs {\n      <<VO>>\n      +String uid\n      +String displayName\n      +String handle\n      +ProgressionEngineProvider engine\n      +SocialEquippedCosmetics equippedCosmetics\n    }\n    JournalProjection~T~ <|.. CosmeticUnlockBridge\n    JournalProjection~T~ <|.. SocialProfileProjection\n    SocialProfileProjection --> SocialProfileInputs\n    CosmeticUnlockBridge --> CosmeticsProvider\n    CosmeticUnlockBridge ..> RebuildFromJournalReason\n    SocialProfileProjection ..> RebuildFromJournalReason"
+    },
+    {
+      "id": "emblem-buff",
+      "title": "EmblemBuff (sealed)",
+      "category": "Cosmetics",
+      "file": "lib/features/cosmetics/domain/emblem_buff.dart",
+      "summary": "Sealed hierarchie buffů nasaditelných na `Emblem` katalog entry. `Emblem.buff` je nullable — emblem buď přidává mechanický bonus, nebo zůstává čistě dekorativní. Dvě varianty: `PerTargetEmblemBuff` (matches jediný `EmblemTarget`) a `BlanketEmblemBuff` (matches every target, který je covered alespoň jedním per-target buffem v katalogu). `int resolvePercent(EmblemBuffContext)` vrací 0..100 — 0 znamená 'tento buff se na tento claim neaplikuje'. Equipped buffy collectuje engine přes `EmblemBoardProvider.boardForUserOrAutoFill(uid, unlockedIds)` (NE z owned set — equipped = buffed); RewardGrantService sumuje jejich percenty s companion% additively (`final = base × (1 + (companion% + emblem%) / 100)`), žádný per-day cap. RPG mode off → engine předá `const []` → žádný emblem bonus.",
+      "diagram": "classDiagram\n    class EmblemBuff {\n      <<sealed>>\n      +int resolvePercent(EmblemBuffContext)\n    }\n    class PerTargetEmblemBuff {\n      +EmblemTarget target\n      +int percent\n    }\n    class BlanketEmblemBuff {\n      +int percent\n      +static List~EmblemTarget~ coveredTargets$\n      +static bool covers(EmblemTarget)$\n    }\n    class Emblem {\n      +CosmeticId id\n      +EmblemBuff? buff\n    }\n    EmblemBuff <|-- PerTargetEmblemBuff\n    EmblemBuff <|-- BlanketEmblemBuff\n    Emblem o-- EmblemBuff\n    note for BlanketEmblemBuff \"coveredTargets is hand-maintained;\\nmust stay in sync s mapping table\\nv docs/emblem_buffs/archive/plan.md\""
+    },
+    {
+      "id": "emblem-target",
+      "title": "EmblemTarget (sealed granularity carrier)",
+      "category": "Cosmetics",
+      "file": "lib/features/cosmetics/domain/emblem_buff.dart",
+      "summary": "Sealed VO identifying *co* buff cílí. Vznikl protože `RewardSourceKind` byl moc hrubozrnný (`nutritionXp` lumpuje všech pět macro goalů dohromady) — `GoalMetric` má správnou resoluci. Dvě varianty: `DailyGoalTarget(GoalMetric metric)` pro denní cíle (kalorie / kroky / makra / spánek / aktivita / váha) a `ComboQuestTarget()` pro combo-bucket questy. Mapping z `ProgressionEntry` (quest node) na target dělá `emblemTargetForNode` (lib/features/progression_engine/application/emblem_target_mapping.dart) — string switch nad node.id pro daily-section nodes, fallback na ComboQuestTarget pro combo questy, jinak null. Vrácený null znamená, že žádný emblem dnes ten node necílí — i blanket buff respektuje toto (přes `BlanketEmblemBuff.covers`).",
+      "diagram": "classDiagram\n    class EmblemTarget {\n      <<sealed>>\n    }\n    class DailyGoalTarget {\n      +GoalMetric metric\n    }\n    class ComboQuestTarget {\n    }\n    EmblemTarget <|-- DailyGoalTarget\n    EmblemTarget <|-- ComboQuestTarget\n    DailyGoalTarget --> GoalMetric"
+    },
+    {
+      "id": "per-target-emblem-buff",
+      "title": "PerTargetEmblemBuff",
+      "category": "Cosmetics",
+      "file": "lib/features/cosmetics/domain/emblem_buff.dart",
+      "summary": "Konkrétní `EmblemBuff` co matchne jediný `EmblemTarget`. `resolvePercent(ctx)` vrací `percent` když `ctx.target == target`, jinak 0. V1 katalog ships deset takových buffů, každý +10 % (devět denních cílů + combo questy). Equality nad EmblemTarget je value-based (DailyGoalTarget compares metric, ComboQuestTarget je singleton), takže `const PerTargetEmblemBuff(target: DailyGoalTarget(GoalMetric.dailySteps), percent: 10)` matchne jakýkoli claim na `daily_steps_today` node.",
+      "diagram": "classDiagram\n    class PerTargetEmblemBuff {\n      +EmblemTarget target\n      +int percent\n      +int resolvePercent(EmblemBuffContext)\n    }\n    note for PerTargetEmblemBuff \"return ctx.target == target ? percent : 0\""
+    },
+    {
+      "id": "blanket-emblem-buff",
+      "title": "BlanketEmblemBuff (endgame catch-all)",
+      "category": "Cosmetics",
+      "file": "lib/features/cosmetics/domain/emblem_buff.dart",
+      "summary": "Endgame `EmblemBuff` co aplikuje na *jakýkoli* `EmblemTarget` covered nějakým `PerTargetEmblemBuff` v aktivním katalogu — preventuje endgame buffing future un-buffable targets a udržuje single VO shape. V1 ships na `emblem_dragonrock_emblem` (mythic) s +5 %. Coverage list je `static const List<EmblemTarget> coveredTargets` — **hand-maintained**, musí stay in sync s mapping table v `docs/emblem_buffs/archive/plan.md`. Když Phase 0+ přidá nový buffable metric, coverage list musí update v lockstep, jinak blanket buff silently ignoruje.",
+      "diagram": "classDiagram\n    class BlanketEmblemBuff {\n      +int percent\n      +static List~EmblemTarget~ coveredTargets$\n      +static bool covers(EmblemTarget)$\n      +int resolvePercent(EmblemBuffContext)\n    }\n    note for BlanketEmblemBuff \"return covers(ctx.target) ? percent : 0\""
+    },
+    {
+      "id": "emblem-buff-context",
+      "title": "EmblemBuffContext (per-claim evaluation arg)",
+      "category": "Cosmetics",
+      "file": "lib/features/cosmetics/domain/emblem_buff.dart",
+      "summary": "Per-claim evaluation context handed do `EmblemBuff.resolvePercent`. Drží `target: EmblemTarget` (derived via `emblemTargetForNode(node)`) a `rewardSourceKind: RewardSourceKind` (carried for future use — V1 buff impl rozhoduje pouze podle target). Stavěn v `RewardGrantService._buildXpEvent` pro každý XP grant a per equipped buff voláno `buff.resolvePercent(ctx)`; suma je `emblemPct`, additively combined s companionPct.",
+      "diagram": "classDiagram\n    class EmblemBuffContext {\n      <<VO>>\n      +EmblemTarget target\n      +RewardSourceKind rewardSourceKind\n    }\n    EmblemBuffContext --> EmblemTarget\n    EmblemBuffContext --> RewardSourceKind"
     }
   ]
 }

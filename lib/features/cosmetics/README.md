@@ -221,6 +221,51 @@ For non-throwing pre-checks (e.g. greying out a tile in a grid), use
 6. Add the asset folder under `assets/cosmetics/<bucket>/` and declare it
    in `pubspec.yaml`.
 
+## Emblem XP buffs
+
+Each `Emblem` in the catalog may carry a non-null `EmblemBuff`
+([domain/emblem_buff.dart](domain/emblem_buff.dart)). When the player
+pins an emblem into an `EmblemBoard` slot, its buff contributes a
+percent bonus to XP claims that match the buff's `EmblemTarget`. The
+progression engine consumes the equipped set; cosmetics itself stays
+unaware of XP math.
+
+* **`EmblemBuff` (sealed)** — `PerTargetEmblemBuff(target, percent)`
+  matches a single `EmblemTarget`; `BlanketEmblemBuff(percent)` applies
+  to any target covered by some `PerTargetEmblemBuff` in the active
+  catalog. The covered-target list is a `static const` on
+  `BlanketEmblemBuff` — hand-maintained, must stay in lockstep with
+  the per-target catalog entries.
+* **`EmblemTarget` (sealed)** — `DailyGoalTarget(GoalMetric)` for daily
+  goal claims (kcal / steps / macros / sleep / activity / weight),
+  `ComboQuestTarget()` for combo-bucket quests. Resolution per claim is
+  done by `emblemTargetForNode` in the progression engine.
+* **`EmblemBuffContext`** — built per claim from the target +
+  `RewardSourceKind`; passed to every equipped buff's
+  `resolvePercent(ctx)`.
+* **Source of truth = equipped, not owned.** The engine reads
+  `EmblemBoardProvider.boardForUserOrAutoFill(uid, unlockedIds)`,
+  maps pinned slot ids to catalog `Emblem.buff`, and forwards them as
+  `EngineEvaluationContext.equippedEmblemBuffs`. Auto-fill keeps fresh
+  users (who never opened the picker) benefiting from their unlocks.
+* **Math.** `RewardGrantService` combines companion% and emblem%
+  additively into a single multiplier:
+  `final = base × (1 + (companionPct + emblemPct) / 100)`. There is no
+  per-day cap. Bonus XP is split proportionally for telemetry and
+  persisted on `RewardGrantEvent.emblemBuffBonusXp`.
+* **RPG mode gate.** When `!player.rpgModeEnabled` the engine passes
+  `const []`, so emblem buffs contribute zero — mirrors companion buff
+  gating.
+* **Discoverability.** Inventory tiles render a one-line buff label
+  (`emblemBuffPerTarget` / `emblemBuffBlanket` ARB keys) and an
+  equipped-badge adornment for pinned emblems. The XP claim pill and
+  reward toast surface an emblem bonus sub-line whenever
+  `event.emblemBuffBonusXp > 0`. Pre-claim projection uses
+  `ProgressionEngineProvider.projectedEmblemBuffBonusFor(nodeId, baseXp)`.
+* **Telemetry.** Every buffed claim emits an `AppLog` line under the
+  `progression.claim.buff` scope with nodeId, sourceKind, companionPct,
+  emblemPct, companionBonusXp, emblemBonusXp, finalXp.
+
 ## Progression integration
 
 `progression` owns the dispatch loop; this feature exposes

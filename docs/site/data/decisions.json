@@ -1029,6 +1029,34 @@
         "firestore.rules",
         "https://trello.com/c/8wSc9D48"
       ]
+    },
+    {
+      "id": "emblem-buffs",
+      "title": "Emblem XP buffs — equipped-based, additive, no daily cap",
+      "status": "accepted",
+      "date": "2026-05-21",
+      "context": "Karta Trello #93 — emblemy byly do té doby čistě dekorativní (frame / background / companion equivalent — vizuální adornment v profile-header showcase přes EmblemBoard). Hra už měla companion XP buffy (per-claim percent přidaný k base XP) gatované 25 % daily cap přes _DailyBuffAccountant. Cíl: dát i emblemům mechanickou váhu (collection-grind reward → XP throughput), aniž by se zlomil shape claim path nebo rozjely runaway combos. Open design otázky: (1) source pool — owned vs equipped; (2) granularita — RewardSourceKind je moc hrubý (nutritionXp groupuje všech 5 macro goalů), GoalMetric je správná resolution; (3) stacking math vůči companion buffu — multiplicative vs additive; (4) co s existujícím 25 % daily cap; (5) endgame model — extra buff přes všechny cíle bez vyhroceného single-target stackingu.",
+      "decision": "(1) **Equipped-based resolve**: engine čte buffy z `EmblemBoardProvider.boardForUserOrAutoFill(uid, unlockedIds)` (pinned slots, auto-fill na fresh users), NE z owned set. Future-proofs pro grids menší než collection nebo omezené equip sloty + dává hráči meaningful loadout decision. (2) **Sealed `EmblemTarget`** s `DailyGoalTarget(GoalMetric)` + `ComboQuestTarget()` variants jako granularity carrier. Mapping `ProgressionEntry → EmblemTarget?` dělá `emblemTargetForNode` v `lib/features/progression_engine/application/emblem_target_mapping.dart`. (3) **Additive percent sum, single multiplier**: `final = base × (1 + (companionPct + emblemPct) / 100)`. Hráčsky čitelnější mental math a větší felt bonusy než multiplicative stack. (4) **Žádný daily cap**: Phase 2 odstranil `_DailyBuffAccountant` entirely — některé companion buffy už by design překračovaly 25 %; level-curve recalibration bude kompenzovat. (5) **`BlanketEmblemBuff`** sealed sibling co aplikuje na *jakýkoli* target covered nějakým `PerTargetEmblemBuff` v aktivním katalogu — coverage list je `static const` hand-maintained na buffu samotném, dokumentuje synchronisation povinnost s mapping table. RPG mode off → engine předá `equippedEmblemBuffs: const []`, parity s companion buff gatingem. Telemetry v `AppLog` scope `progression.claim.buff` loguje per-claim companionPct / emblemPct / split bonus / finalXp; `RewardGrantEvent.emblemBuffBonusXp` persistován do journalu pro retro-tuning a UI surfaces.",
+      "consequences": [
+        "Equipped (NE owned) = buffed: hráč musí buff explicitně pinnout do EmblemBoard slotu. Auto-fill path zajišťuje, že fresh hráč co nikdy neotevřel picker pořád dostává buffy ze svých unlocků (boardForUserOrAutoFill).",
+        "Companion buff ceiling je teď otevřený — `_DailyBuffAccountant` removed znamená, že legitimní stack companion+emblem může v praxi překračovat 50 %+ na jeden claim. Level-curve recalibration potřebuje balance telemetry před tím, než se přidají vyšší percenty.",
+        "Sealed `EmblemTarget` znamená, že přidání nové buffable kategorie (např. weekly quests) vyžaduje nový sealed variant + update `emblemTargetForNode` mapper + `BlanketEmblemBuff.coveredTargets` update — compile-time guard ale zachycuje missing case ve switche.",
+        "Blanket coverage list je hand-maintained — single source of truth žije na `BlanketEmblemBuff.coveredTargets`. Když Phase 0+ přidá nový buffable metric (jako Phase 0 přidalo `GoalMetric.dailyActivityMins` pro `emblem_mine_crest`), coverage list MUST update v lockstep, jinak blanket buff silently ignoruje.",
+        "`RewardGrantEvent.emblemBuffBonusXp` nullable field — pre-feature events default null, post-feature events 0 nebo positive. Wire-format additive, žádná migrace.",
+        "EmblemBoardProvider získal nový downstream consumer (engine). Pre-#93 to byl read-only přes social/profile header. Edge `EmblemBoardProvider → ProgressionEngineProvider` reflectován v providers.json — closure-capture v main.dart, ne Proxy update arg.",
+        "Telemetry split je proportional (`companionBonusXp = (bonus * companionPct / totalPct).round()`, remainder → emblemBonusXp). Lock testovaný — rounding drift je deterministic ±0 pro fixní vstup."
+      ],
+      "alternatives": "(A) **Owned-based pool** (každý unlocked emblem buffuje, bez nutnosti equipnout) — odmítnuto, bere hráči loadout decision a v endgame by se z toho stal monotonic creep s každým unlockem. (B) **Multiplicative stack** (`final = base × (1 + comp/100) × (1 + emb/100)`) — odmítnuto, hůř čitelné a v endgame neúměrně bobtná; user explicitně preferoval additive. (C) **Per-source cap** (kept _DailyBuffAccountant, just rebumped ceiling) — odmítnuto, existing companion buffy už cap překračovaly a debugging proč buff dnes 'nezabral' je velmi nepříjemný; raději otevřít ceiling a recalibrate křivku až bude balance telemetry. (D) **Per-emblem rarity scaling** (common +5 / rare +10 / legendary +15 atd.) — deferred do Phase 2 / dalšího iteraci; V1 ships uniform +10 % per-target a +5 % blanket pro single-axis tuning. (E) **`RewardSourceKind` jako target granularity** — odmítnuto, lumpuje všech 5 macro goals dohromady (nutritionXp); GoalMetric je správná resolution. (F) **Diminishing returns přes multiple emblemy na stejný target** — V1 mapping je 1:1 (jeden emblem per target), takže akademické; activates jen pokud future catalog rozšíří.",
+      "links": [
+        "docs/emblem_buffs/plan.md",
+        "lib/features/cosmetics/domain/emblem_buff.dart",
+        "lib/features/progression_engine/application/emblem_target_mapping.dart",
+        "lib/features/progression_engine/application/reward_grant_service.dart",
+        "lib/features/cosmetics/application/emblem_board_provider.dart",
+        "lib/features/progression_engine/domain/models/engine_evaluation_context.dart",
+        "lib/domain/journal/journal_event.dart",
+        "https://trello.com/c/SNNduXTX"
+      ]
     }
   ]
 }

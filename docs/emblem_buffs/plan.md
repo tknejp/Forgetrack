@@ -169,7 +169,7 @@ These are settled. Do not reopen without user sign-off.
 
 ---
 
-### ☐ Phase 4 — Architecture docs
+### ☑ Phase 4 — Architecture docs
 
 **Scope** (per CLAUDE.md doc conventions table)
 - **ADR** in [docs/site/data/decisions.json](../../docs/site/data/decisions.json): id `emblem-buffs`, context (emblems were pure cosmetic; this gives them mechanical weight), decision (equipped-based, additive percent sum, no cap, sealed `EmblemTarget`), consequences (level curve will need recalibration when balance telemetry lands; `_DailyBuffAccountant` removed has knock-on for companion buff ceiling), alternatives rejected (owned-based, multiplicative stack, per-source cap, per-emblem rarity scaling — all deferred to Phase 2 if needed).

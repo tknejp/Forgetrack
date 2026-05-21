@@ -93,8 +93,8 @@
       "kind": "ChangeNotifierProxyProvider",
       "eager": true,
       "file": "lib/features/progression_engine/application/progression_engine_provider.dart",
-      "summary": "V2 engine — vyhodnocování objectives, append-only ledger, hybrid sync do Firestoru. Nejnetriviálnější uzel grafu (5 závislostí).",
-      "dependsOn": ["AuthProvider", "GoalsProvider", "FitnessProvider", "KalorickeTabulkyProvider", "CosmeticsProvider"]
+      "summary": "V2 engine — vyhodnocování objectives, append-only ledger, hybrid sync do Firestoru. Nejnetriviálnější uzel grafu (6 závislostí). EmblemBoardProvider edge přidán s #93 emblem XP buffs: engine při evaluaci čte pinned slots přes `boardForUserOrAutoFill(uid, unlockedIds)`, mapuje na `EmblemBuff` z katalogu a předává jako `EngineEvaluationContext.equippedEmblemBuffs` do `RewardGrantService`.",
+      "dependsOn": ["AuthProvider", "GoalsProvider", "FitnessProvider", "KalorickeTabulkyProvider", "CosmeticsProvider", "EmblemBoardProvider"]
     },
     {
       "id": "PlayerProvider",

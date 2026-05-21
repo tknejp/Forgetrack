@@ -49,6 +49,14 @@ Built with Flutter, fully localized in **Czech and English**.
 - **Cosmetic loadout** — frames, relics, backgrounds, emblems and
   companions earned via achievements + compound rules
   (`level ≥ N AND owns relic_X AND owns relic_Y`).
+- **Emblem XP buffs** — emblems pinned into your `EmblemBoard`
+  contribute a percent XP bonus per claim. Per-target buffs match a
+  specific daily goal or combo quest; the mythic blanket emblem adds a
+  smaller bonus to every target the catalog covers. Companion and
+  emblem percents stack additively into a single multiplier — no daily
+  cap. Pre-claim projection shows the bonus in the XP pill; the
+  granted bonus is persisted on the journal event and surfaced in the
+  reward toast.
 - **Journey map + celebrations** — pannable level-spine map and
   fullscreen celebration scenes for reward claims.
 - **Retroactive claim window** — forgot to tap claim? Backfill section
