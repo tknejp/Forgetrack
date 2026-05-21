@@ -299,7 +299,7 @@ class _ExpandedBody extends StatelessWidget {
           ),
         ],
         // Surface the next-but-locked chain step. The chain row above
-        // already shows it as a ðŸ”’ dot; this line names the step and
+        // already shows it as a 🔒 dot; this line names the step and
         // explains why it's not yet active so the player isn't left
         // guessing whether the chain is broken.
         if (nextStep != null) ...[
@@ -320,7 +320,7 @@ class _ExpandedBody extends StatelessWidget {
   }
 
   /// The first chain step the player has not yet touched — i.e. the
-  /// next ðŸ”’ dot in the chain preview. Returns null when every chain
+  /// next 🔒 dot in the chain preview. Returns null when every chain
   /// step has been claimed / is claimable (player has reached the
   /// end of the authored chain) or when the entry isn't a chain.
   EngineQuestProgress? _nextLockedStep() {

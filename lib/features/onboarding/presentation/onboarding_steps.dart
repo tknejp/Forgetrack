@@ -616,15 +616,15 @@ class _DataIconGrid extends StatelessWidget {
     final l10n = context.l10n;
     final items = [
       _DataChip(
-          emoji: 'ðŸ‘£',
+          emoji: '👣',
           label: l10n.welcomeStep3DataSteps,
           color: OnboardingTheme.green),
       _DataChip(
-          emoji: 'ðŸ”¥',
+          emoji: '🔥',
           label: l10n.welcomeStep3DataCalories,
           color: const Color(0xFFFBBF24)),
       _DataChip(
-          emoji: 'ðŸ˜´',
+          emoji: '🌙',
           label: l10n.welcomeStep3DataSleep,
           color: const Color(0xFFA89BFF)),
       _DataChip(
@@ -859,7 +859,7 @@ class _StepFinalState extends State<StepFinal> {
             tint: OnboardingTheme.purpleAccent,
             active: notifPrefs.notificationsEnabled,
             onTap: _handleNotifTap,
-            icon: 'ðŸ””',
+            icon: '🔔',
           ),
           const SizedBox(height: 18),
           const _FirstQuestsCard(),

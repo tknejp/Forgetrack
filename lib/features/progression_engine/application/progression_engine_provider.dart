@@ -2247,7 +2247,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
     // Also build a parallel map of the FULL chain (touched + locked
     // future steps) so the entry can render every dot in its chain
     // preview, not just the steps the player has reached. Locked
-    // future steps render as ðŸ”’ dots, communicating "more to come".
+    // future steps render as 🔒 dots, communicating "more to come".
     final byChain = <String, List<EngineQuestProgress>>{};
     final fullChainById = <String, List<EngineQuestProgress>>{};
     final orphans = <EngineQuestProgress>[];
@@ -2312,7 +2312,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
       }
       // Representative = highest-chainOrder touched step (most recent
       // progress). The chain row shown on the card walks `fullChain`
-      // so locked future steps render as ðŸ”’ dots — gives the player
+      // so locked future steps render as 🔒 dots — gives the player
       // a visible "more to come" cue.
       final representative = touchedSteps.last;
       final lastEventAt = touchedSteps

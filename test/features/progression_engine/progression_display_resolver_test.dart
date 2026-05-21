@@ -105,13 +105,13 @@ void main() {
         nodeId: ProgressionEntryId('mystery_id_42'),
         fallbackTitle: 'Mystery achievement',
         fallbackDescription: 'A test description',
-        badgeEmoji: 'ðŸ”®',
+        badgeEmoji: '🔮',
         unlockedAt: unlockedAt,
       );
       expect(display.nodeId, 'mystery_id_42');
       expect(display.title(l10n), 'Mystery achievement');
       expect(display.description(l10n), 'A test description');
-      expect(display.badgeEmoji, 'ðŸ”®');
+      expect(display.badgeEmoji, '🔮');
       expect(display.unlockedAt, unlockedAt);
     });
   });
