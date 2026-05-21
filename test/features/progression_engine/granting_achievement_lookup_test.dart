@@ -6,7 +6,7 @@ void main() {
   group('grantingNodeForCosmetic — real catalog walk', () {
     test('relic_moonlit_foxglove resolves to an achievement node', () {
       // forest_fox's first relic is granted by the achievement
-      // `active_days_7` per the meta achievement catalog. The exact id
+      // `active_days_21` per the meta achievement catalog. The exact id
       // is asserted via cross-check with the catalog so this test
       // catches catalog renames; if the granting achievement is ever
       // changed, the assertion below fails and the regression surfaces.
@@ -20,7 +20,7 @@ void main() {
     test('relic_oathbound_mark (bridge_gargoyle gating) resolves to '
         'an achievement node', () {
       final id = grantingNodeForCosmetic('relic_oathbound_mark');
-      expect(id, equals('combo_victory_10'));
+      expect(id, equals('steps_total_1000000'));
     });
 
     test('relic_bridge_key resolves to reward_hunter_100', () {

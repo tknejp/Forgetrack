@@ -46,6 +46,15 @@ List<Objective> metaObjectives(EngineCatalogContext context) {
       targetValue: 10000000,
     ),
     Objective(
+      id: const ObjectiveId('lifetime_xp_22m'),
+      metric: TotalXpMetric(),
+      scope: LifetimeScope(),
+      operator: ObjectiveOperator.atLeast,
+      // ≈ lvl 98 — soft level gate for dragonrock_trial without
+      // requiring the literal level cap.
+      targetValue: 22000000,
+    ),
+    Objective(
       id: const ObjectiveId('lifetime_xp_24m'),
       metric: TotalXpMetric(),
       scope: LifetimeScope(),
@@ -93,11 +102,11 @@ List<Objective> metaObjectives(EngineCatalogContext context) {
       targetValue: 250,
     ),
     Objective(
-      id: const ObjectiveId('active_days_7'),
+      id: const ObjectiveId('active_days_21'),
       metric: DistinctActiveDaysMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
-      targetValue: 7,
+      targetValue: 21,
     ),
     Objective(
       id: const ObjectiveId('active_days_90'),
@@ -267,7 +276,7 @@ List<ProgressionEntry> metaNodes() {
       descriptionKey: (l) => l.progAchievementRewardHunter100Desc,
       rewards: const [CosmeticReward(cosmeticId: CosmeticId('relic_bridge_key'))],
       contentTags: const [ContentTag.core],
-      rarity: Rarity.epic,
+      rarity: Rarity.rare,
     ),
     // V1 → V2 ports (Phase 9c follow-up). Relic ids are already
     // authored in `cosmetic_catalog.dart`; this is the missing
@@ -300,19 +309,22 @@ List<ProgressionEntry> metaNodes() {
       badgeEmoji: '\u{1F3F9}', // bow
       titleKey: (l) => l.progAchievementQuestHunter250Title,
       descriptionKey: (l) => l.progAchievementQuestHunter250Desc,
-      rewards: const [CosmeticReward(cosmeticId: CosmeticId('relic_frozen_lake_heart'))],
+      // Relic relocated to `perfect_streak_100` so the legendary
+      // frozen_lake_heart sources from peak discipline rather than
+      // quest count. quest_hunter_250 stays as a badge-only milestone.
+      rewards: const [],
       contentTags: const [ContentTag.core],
       rarity: Rarity.epic,
     ),
     Achievement(
-      id: const ProgressionEntryId('active_days_7'),
-      objectiveId: ObjectiveId('active_days_7'),
+      id: const ProgressionEntryId('active_days_21'),
+      objectiveId: ObjectiveId('active_days_21'),
       badgeEmoji: '\u{1F319}', // moon
-      titleKey: (l) => l.progAchievementActiveDays7Title,
-      descriptionKey: (l) => l.progAchievementActiveDays7Desc,
+      titleKey: (l) => l.progAchievementActiveDays21Title,
+      descriptionKey: (l) => l.progAchievementActiveDays21Desc,
       rewards: const [CosmeticReward(cosmeticId: CosmeticId('relic_moonlit_foxglove'))],
       contentTags: const [ContentTag.core],
-      rarity: Rarity.rare,
+      rarity: Rarity.uncommon,
     ),
     Achievement(
       id: const ProgressionEntryId('active_days_90'),
@@ -362,9 +374,11 @@ List<ProgressionEntry> metaNodes() {
       badgeEmoji: '\u{1F4AB}',
       titleKey: (l) => l.progAchievementPerfectMonthTitle,
       descriptionKey: (l) => l.progAchievementPerfectMonthDesc,
-      rewards: const [],
+      rewards: const [
+        CosmeticReward(cosmeticId: CosmeticId('relic_deep_ember_core')),
+      ],
       contentTags: const [ContentTag.core],
-      rarity: Rarity.epic,
+      rarity: Rarity.rare,
     ),
     Achievement(
       id: const ProgressionEntryId('perfect_streak_100'),
@@ -372,7 +386,9 @@ List<ProgressionEntry> metaNodes() {
       badgeEmoji: '\u{1F31F}',
       titleKey: (l) => l.progAchievementPerfectStreak100Title,
       descriptionKey: (l) => l.progAchievementPerfectStreak100Desc,
-      rewards: const [],
+      rewards: const [
+        CosmeticReward(cosmeticId: CosmeticId('relic_frozen_lake_heart')),
+      ],
       contentTags: const [ContentTag.core],
       rarity: Rarity.legendary,
     ),
@@ -450,10 +466,13 @@ List<ProgressionEntry> metaNodes() {
     ),
     Achievement(
       id: const ProgressionEntryId('dragonrock_trial'),
-      // Condition-only: AND of level + quest count + lifetime steps.
+      // Condition-only: AND of lifetime XP + quest count + lifetime
+      // steps. Lifetime XP (22M, ≈ lvl 98) replaces the prior
+      // `LevelAtLeast(100)` so the trial is a soft level gate that
+      // composes with the other grinds rather than a hard cap-touch.
       objectiveId: null,
       unlockConditions: const [
-        LevelAtLeast(100),
+        ObjectiveCompleted(ObjectiveId('lifetime_xp_22m')),
         ObjectiveCompleted(ObjectiveId('quest_count_250')),
         ObjectiveCompleted(ObjectiveId('lifetime_steps_10m')),
       ],

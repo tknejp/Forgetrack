@@ -113,7 +113,7 @@ final List<CosmeticUnlockRule> kCosmeticUnlockRules = <CosmeticUnlockRule>[
     sourceId: 'compound_polarni_jelen',
     conditions: [
       Cond.atLevel(65),
-      Cond.ownsCosmetic('relic_frozen_lake_heart'),
+      Cond.ownsCosmetic('relic_polar_lantern'),
       Cond.ownsCosmetic('relic_aurora_thread'),
     ],
     isHidden: true,
@@ -124,7 +124,7 @@ final List<CosmeticUnlockRule> kCosmeticUnlockRules = <CosmeticUnlockRule>[
     sourceId: 'compound_ledovy_prizrak',
     conditions: [
       Cond.atLevel(75),
-      Cond.ownsCosmetic('relic_polar_lantern'),
+      Cond.ownsCosmetic('relic_frozen_lake_heart'),
       Cond.ownsCosmetic('relic_frost_shard'),
     ],
     isHidden: true,

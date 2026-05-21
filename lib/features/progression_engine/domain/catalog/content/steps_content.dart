@@ -214,9 +214,12 @@ List<ProgressionEntry> stepsNodes() {
       badgeEmoji: '\u{1F97E}',
       titleKey: (l) => l.progAchievementSteps1000000Title,
       descriptionKey: (l) => l.progAchievementSteps1000000Desc,
-      rewards: const [CosmeticReward(cosmeticId: CosmeticId('relic_deep_ember_core'))],
+      // Sources relic_oathbound_mark (rare) for the Bridge Gargoyle
+      // (lvl 35) pair. Swapped with `perfect_month_30` which now
+      // grants the epic `relic_deep_ember_core`.
+      rewards: const [CosmeticReward(cosmeticId: CosmeticId('relic_oathbound_mark'))],
       contentTags: const [ContentTag.core, ContentTag.fitness],
-      rarity: Rarity.epic,
+      rarity: Rarity.rare,
     ),
     Achievement(
       id: const ProgressionEntryId('steps_total_2_5m'),
@@ -246,12 +249,15 @@ List<ProgressionEntry> stepsNodes() {
       badgeEmoji: '\u{1F3D4}\u{FE0F}',
       titleKey: (l) => l.progAchievementSteps10000000Title,
       descriptionKey: (l) => l.progAchievementSteps10000000Desc,
+      // Relic relocated to `sleep_200d_1600h` — the 10M step milestone
+      // remains as a hard prerequisite of `dragonrock_trial` and still
+      // grants the worldwalker frame, so it's a meaningful achievement
+      // even without its own relic.
       rewards: const [
-        CosmeticReward(cosmeticId: CosmeticId('relic_dragon_scale')),
         CosmeticReward(cosmeticId: CosmeticId('frame_worldwalker')),
       ],
       contentTags: const [ContentTag.core, ContentTag.fitness],
-      rarity: Rarity.mythic,
+      rarity: Rarity.legendary,
     ),
 
     // Rolling-window mastery achievements.

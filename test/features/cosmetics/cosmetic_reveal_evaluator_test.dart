@@ -216,7 +216,7 @@ void main() {
 
     test('companion_ice_wisp shows partial at level 75 without relics', () {
       // Condition 1: atLevel(75) → satisfied
-      // Condition 2: ownsCosmetic(relic_polar_lantern) → not satisfied
+      // Condition 2: ownsCosmetic(relic_frozen_lake_heart) → not satisfied
       // Condition 3: ownsCosmetic(relic_frost_shard) → not satisfied
       const id = 'companion_ice_wisp';
       final results = _evaluate(

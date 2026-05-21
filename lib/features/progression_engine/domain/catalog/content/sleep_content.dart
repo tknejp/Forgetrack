@@ -147,7 +147,10 @@ List<ProgressionEntry> sleepNodes() {
       badgeEmoji: '\u{1F48E}',
       titleKey: (l) => l.progAchievementSleep1000hTitle,
       descriptionKey: (l) => l.progAchievementSleep1000hDesc,
-      rewards: const [],
+      // Sources relic_polar_lantern (epic) for the Aurora Stag
+      // (lvl 65) pair — pairs the sleep-buff companion with a sleep
+      // grind reward.
+      rewards: const [CosmeticReward(cosmeticId: CosmeticId('relic_polar_lantern'))],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.epic,
     ),
@@ -197,7 +200,11 @@ List<ProgressionEntry> sleepNodes() {
       badgeEmoji: '\u{1F3C6}',
       titleKey: (l) => l.progAchievementSleep200d1600hTitle,
       descriptionKey: (l) => l.progAchievementSleep200d1600hDesc,
-      rewards: const [],
+      // Sources relic_dragon_scale (mythic) for the Dragonling
+      // (lvl 95) pair — endgame sleep-mastery gate. Health Connect
+      // dependency is intentional; later releases may add manual
+      // sleep entry to broaden access.
+      rewards: const [CosmeticReward(cosmeticId: CosmeticId('relic_dragon_scale'))],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.mythic,
     ),

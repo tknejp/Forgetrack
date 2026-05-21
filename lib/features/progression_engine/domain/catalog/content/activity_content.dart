@@ -169,7 +169,10 @@ List<ProgressionEntry> activityNodes() {
       badgeEmoji: '\u{1F938}',
       titleKey: (l) => l.progAchievementWeeklyActivity24Title,
       descriptionKey: (l) => l.progAchievementWeeklyActivity24Desc,
-      rewards: const [CosmeticReward(cosmeticId: CosmeticId('relic_polar_lantern'))],
+      // Relic relocated to `sleep_total_1000h` so the Aurora Stag
+      // (lvl 65) sleep-buff companion sources its lantern from a
+      // sleep grind. This milestone stays as a badge-only milestone.
+      rewards: const [],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.epic,
     ),

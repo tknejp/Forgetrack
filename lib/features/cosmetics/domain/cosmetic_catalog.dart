@@ -511,7 +511,7 @@ class CosmeticCatalog {
     ),
     RelicCosmetic(
       id: const CosmeticId('relic_ancient_root'),
-      rarity: Rarity.uncommon,
+      rarity: Rarity.common,
       region: CosmeticRegion.forestTrail,
       name: (l10n) => l10n.cosmeticRelicAncientRootName,
       description: (l10n) => l10n.cosmeticRelicAncientRootDesc,
@@ -533,7 +533,7 @@ class CosmeticCatalog {
     ),
     RelicCosmetic(
       id: const CosmeticId('relic_wildwood_charm'),
-      rarity: Rarity.uncommon,
+      rarity: Rarity.rare,
       region: CosmeticRegion.forestTrail,
       name: (l10n) => l10n.cosmeticRelicWildwoodCharmName,
       description: (l10n) => l10n.cosmeticRelicWildwoodCharmDesc,
@@ -544,7 +544,7 @@ class CosmeticCatalog {
     ),
     RelicCosmetic(
       id: const CosmeticId('relic_ravine_stone'),
-      rarity: Rarity.uncommon,
+      rarity: Rarity.epic,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticRelicRavineStoneName,
       description: (l10n) => l10n.cosmeticRelicRavineStoneDesc,
@@ -555,7 +555,7 @@ class CosmeticCatalog {
     ),
     RelicCosmetic(
       id: const CosmeticId('relic_ruin_seal'),
-      rarity: Rarity.uncommon,
+      rarity: Rarity.rare,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticRelicRuinSealName,
       description: (l10n) => l10n.cosmeticRelicRuinSealDesc,
@@ -625,16 +625,18 @@ class CosmeticCatalog {
       region: CosmeticRegion.frostlands,
       name: (l10n) => l10n.cosmeticRelicPolarLanternName,
       description: (l10n) => l10n.cosmeticRelicPolarLanternDesc,
+      unlockHint: (l10n) => l10n.cosmeticRelicPolarLanternUnlockHint,
       assetKey: 'cosmetics.relics.polar_lantern',
       previewAssetKey: 'cosmetics.relics.polar_lantern',
       sortOrder: 392,
     ),
     RelicCosmetic(
       id: const CosmeticId('relic_frost_shard'),
-      rarity: Rarity.epic,
+      rarity: Rarity.legendary,
       region: CosmeticRegion.frostlands,
       name: (l10n) => l10n.cosmeticRelicFrostShardName,
       description: (l10n) => l10n.cosmeticRelicFrostShardDesc,
+      unlockHint: (l10n) => l10n.cosmeticRelicFrostShardUnlockHint,
       assetKey: 'cosmetics.relics.frost_shard',
       previewAssetKey: 'cosmetics.relics.frost_shard',
       sortOrder: 394,
@@ -663,10 +665,11 @@ class CosmeticCatalog {
     ),
     RelicCosmetic(
       id: const CosmeticId('relic_dragon_scale'),
-      rarity: Rarity.legendary,
+      rarity: Rarity.mythic,
       region: CosmeticRegion.dragonMountains,
       name: (l10n) => l10n.cosmeticRelicDragonScaleName,
       description: (l10n) => l10n.cosmeticRelicDragonScaleDesc,
+      unlockHint: (l10n) => l10n.cosmeticRelicDragonScaleUnlockHint,
       assetKey: 'cosmetics.relics.dragon_scale',
       previewAssetKey: 'cosmetics.relics.dragon_scale',
       sortOrder: 397,
@@ -995,6 +998,23 @@ class CosmeticCatalog {
       previewAssetKey: 'cosmetics.companions.monster_energy',
       sortOrder: 9100,
       metadata: <String, Object?>{'devOnly': true},
+      // Dev-only gag: mythic rarity, +13 % activity XP. The kofein
+      // kopne jen do nohou — sleep / nutrition / quests / chapters
+      // all see 0. Nicely also tanks any sleep streak in spirit if
+      // not in math.
+      buff: const FlatCompanionBuff(
+        kind: RewardSourceKind.activityXp,
+        percent: 13,
+      ),
+      // Easter-egg claim — log any food whose name contains
+      // "monster" and the companion coughs up XP. perDayMaxXp caps
+      // it at three plechovky's worth so a player who decides to
+      // farm Monster Energy still hits a wall.
+      foodTrigger: const FoodKeywordTrigger(
+        keywords: ['monster'],
+        perEntryXp: 25,
+        perDayMaxXp: 75,
+      ),
     ),
   ]);
 

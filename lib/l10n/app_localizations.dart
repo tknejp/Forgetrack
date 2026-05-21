@@ -5643,17 +5643,17 @@ abstract class AppLocalizations {
   /// **'Complete 250 quests in total.'**
   String get progAchievementQuestHunter250Desc;
 
-  /// No description provided for @progAchievementActiveDays7Title.
+  /// No description provided for @progAchievementActiveDays21Title.
   ///
   /// In en, this message translates to:
-  /// **'A Week on the Road'**
-  String get progAchievementActiveDays7Title;
+  /// **'Three Weeks on the Road'**
+  String get progAchievementActiveDays21Title;
 
-  /// No description provided for @progAchievementActiveDays7Desc.
+  /// No description provided for @progAchievementActiveDays21Desc.
   ///
   /// In en, this message translates to:
-  /// **'Be active for 7 days.'**
-  String get progAchievementActiveDays7Desc;
+  /// **'Be active for 21 days.'**
+  String get progAchievementActiveDays21Desc;
 
   /// No description provided for @progAchievementActiveDays90Title.
   ///
@@ -5904,7 +5904,7 @@ abstract class AppLocalizations {
   /// No description provided for @progAchievementDragonrockTrialDesc.
   ///
   /// In en, this message translates to:
-  /// **'Reach level 100, complete 250 quests, and walk 10,000,000 steps.'**
+  /// **'Earn 22,000,000 XP, complete 250 quests, and walk 10,000,000 steps.'**
   String get progAchievementDragonrockTrialDesc;
 
   /// No description provided for @progAchievementSummaryComposite.
@@ -6603,6 +6603,12 @@ abstract class AppLocalizations {
   /// **'Monster Energy'**
   String get cosmeticCompanionMonsterEnergyName;
 
+  /// Hero header claim pill — short XP-grab label shown when the equipped companion's food trigger has something to claim.
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount} XP cling'**
+  String companionFoodTriggerPillLabel(int amount);
+
   /// Generic close button label
   ///
   /// In en, this message translates to:
@@ -7050,7 +7056,7 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticRelicAncientRootDesc.
   ///
   /// In en, this message translates to:
-  /// **'A twisted root from the old forest, marker of seven days unbroken.'**
+  /// **'A twisted root from the old forest, marker of the first weekly goal cleared.'**
   String get cosmeticRelicAncientRootDesc;
 
   /// No description provided for @cosmeticRelicRavineStoneName.
@@ -7074,7 +7080,7 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticRelicRuinSealDesc.
   ///
   /// In en, this message translates to:
-  /// **'A wax seal pressed for completing the first weekly quest.'**
+  /// **'A wax seal pressed for early birds and night owls alike.'**
   String get cosmeticRelicRuinSealDesc;
 
   /// No description provided for @cosmeticRelicBridgeKeyName.
@@ -7098,7 +7104,7 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticRelicMinersLanternDesc.
   ///
   /// In en, this message translates to:
-  /// **'A brass lantern earned by completing fifty quests.'**
+  /// **'A brass lantern earned through many triple combo victories.'**
   String get cosmeticRelicMinersLanternDesc;
 
   /// No description provided for @cosmeticRelicPolarLanternName.
@@ -7146,7 +7152,7 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticRelicFrozenLakeHeartDesc.
   ///
   /// In en, this message translates to:
-  /// **'A blue-cored stone earned at one million total steps.'**
+  /// **'A blue-cored stone earned through a hundred perfect days in a row.'**
   String get cosmeticRelicFrozenLakeHeartDesc;
 
   /// No description provided for @cosmeticRelicDragonScaleName.
@@ -7230,7 +7236,7 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticRelicDeepEmberCoreDesc.
   ///
   /// In en, this message translates to:
-  /// **'A coal that still burns after a million careful steps in the deep.'**
+  /// **'A coal that still burns after a month of perfect discipline.'**
   String get cosmeticRelicDeepEmberCoreDesc;
 
   /// No description provided for @cosmeticRelicSummitFeatherName.
@@ -9097,7 +9103,7 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticRelicPolarLanternUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Complete the weekly activity goal 24 times.'**
+  /// **'Accumulate 1,000 lifetime sleep hours.'**
   String get cosmeticRelicPolarLanternUnlockHint;
 
   /// No description provided for @cosmeticRelicFrostShardUnlockHint.
@@ -9115,13 +9121,13 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticRelicFrozenLakeHeartUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Complete 250 quests in total.'**
+  /// **'Hit 100 perfect days in a row.'**
   String get cosmeticRelicFrozenLakeHeartUnlockHint;
 
   /// No description provided for @cosmeticRelicDragonScaleUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Walk 10,000,000 total steps.'**
+  /// **'Sleep 1,600 hours within a 200-day window.'**
   String get cosmeticRelicDragonScaleUnlockHint;
 
   /// No description provided for @cosmeticRelicWarmKindlingUnlockHint.
@@ -9133,7 +9139,7 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticRelicMoonlitFoxgloveUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Stay active for 7 days.'**
+  /// **'Stay active for 21 days.'**
   String get cosmeticRelicMoonlitFoxgloveUnlockHint;
 
   /// No description provided for @cosmeticRelicWildwoodCharmUnlockHint.
@@ -9151,13 +9157,13 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticRelicOathboundMarkUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Complete 10 combo quests.'**
+  /// **'Walk 1,000,000 total steps.'**
   String get cosmeticRelicOathboundMarkUnlockHint;
 
   /// No description provided for @cosmeticRelicDeepEmberCoreUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Walk 1,000,000 total steps.'**
+  /// **'Hit 30 perfect days in a row.'**
   String get cosmeticRelicDeepEmberCoreUnlockHint;
 
   /// No description provided for @cosmeticRelicSummitFeatherUnlockHint.

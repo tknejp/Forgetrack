@@ -3150,10 +3150,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Complete 250 quests in total.';
 
   @override
-  String get progAchievementActiveDays7Title => 'A Week on the Road';
+  String get progAchievementActiveDays21Title => 'Three Weeks on the Road';
 
   @override
-  String get progAchievementActiveDays7Desc => 'Be active for 7 days.';
+  String get progAchievementActiveDays21Desc => 'Be active for 21 days.';
 
   @override
   String get progAchievementActiveDays90Title => 'A Season on the Road';
@@ -3296,7 +3296,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get progAchievementDragonrockTrialDesc =>
-      'Reach level 100, complete 250 quests, and walk 10,000,000 steps.';
+      'Earn 22,000,000 XP, complete 250 quests, and walk 10,000,000 steps.';
 
   @override
   String get progAchievementSummaryComposite => 'all conditions';
@@ -3701,6 +3701,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cosmeticCompanionMonsterEnergyName => 'Monster Energy';
 
   @override
+  String companionFoodTriggerPillLabel(int amount) {
+    return '+$amount XP cling';
+  }
+
+  @override
   String get dialogClose => 'Close';
 
   @override
@@ -3953,7 +3958,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cosmeticRelicAncientRootDesc =>
-      'A twisted root from the old forest, marker of seven days unbroken.';
+      'A twisted root from the old forest, marker of the first weekly goal cleared.';
 
   @override
   String get cosmeticRelicRavineStoneName => 'Ravine Stone';
@@ -3967,7 +3972,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cosmeticRelicRuinSealDesc =>
-      'A wax seal pressed for completing the first weekly quest.';
+      'A wax seal pressed for early birds and night owls alike.';
 
   @override
   String get cosmeticRelicBridgeKeyName => 'Bridge Key';
@@ -3981,7 +3986,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cosmeticRelicMinersLanternDesc =>
-      'A brass lantern earned by completing fifty quests.';
+      'A brass lantern earned through many triple combo victories.';
 
   @override
   String get cosmeticRelicPolarLanternName => 'Polar Lantern';
@@ -4009,7 +4014,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cosmeticRelicFrozenLakeHeartDesc =>
-      'A blue-cored stone earned at one million total steps.';
+      'A blue-cored stone earned through a hundred perfect days in a row.';
 
   @override
   String get cosmeticRelicDragonScaleName => 'Dragon Scale';
@@ -4058,7 +4063,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cosmeticRelicDeepEmberCoreDesc =>
-      'A coal that still burns after a million careful steps in the deep.';
+      'A coal that still burns after a month of perfect discipline.';
 
   @override
   String get cosmeticRelicSummitFeatherName => 'Summit Feather';
@@ -5033,7 +5038,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialSharedPostsEmpty => 'No shared posts yet.';
 
   @override
-  String get socialProfileCosmetics => 'COSMETICS';
+  String get socialProfileCosmetics => 'INVENTORY';
 
   @override
   String get socialAddFriend => 'Add friend';
@@ -5261,7 +5266,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cosmeticRelicPolarLanternUnlockHint =>
-      'Complete the weekly activity goal 24 times.';
+      'Accumulate 1,000 lifetime sleep hours.';
 
   @override
   String get cosmeticRelicFrostShardUnlockHint => 'Walk 5,000,000 total steps.';
@@ -5272,18 +5277,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cosmeticRelicFrozenLakeHeartUnlockHint =>
-      'Complete 250 quests in total.';
+      'Hit 100 perfect days in a row.';
 
   @override
   String get cosmeticRelicDragonScaleUnlockHint =>
-      'Walk 10,000,000 total steps.';
+      'Sleep 1,600 hours within a 200-day window.';
 
   @override
   String get cosmeticRelicWarmKindlingUnlockHint => 'Complete 3 daily quests.';
 
   @override
   String get cosmeticRelicMoonlitFoxgloveUnlockHint =>
-      'Stay active for 7 days.';
+      'Stay active for 21 days.';
 
   @override
   String get cosmeticRelicWildwoodCharmUnlockHint => 'Be active for 90 days.';
@@ -5294,11 +5299,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cosmeticRelicOathboundMarkUnlockHint =>
-      'Complete 10 combo quests.';
+      'Walk 1,000,000 total steps.';
 
   @override
   String get cosmeticRelicDeepEmberCoreUnlockHint =>
-      'Walk 1,000,000 total steps.';
+      'Hit 30 perfect days in a row.';
 
   @override
   String get cosmeticRelicSummitFeatherUnlockHint =>

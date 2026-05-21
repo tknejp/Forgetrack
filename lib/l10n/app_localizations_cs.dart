@@ -3142,10 +3142,10 @@ class AppLocalizationsCs extends AppLocalizations {
   String get progAchievementQuestHunter250Desc => 'Splň celkem 250 úkolů.';
 
   @override
-  String get progAchievementActiveDays7Title => 'Týden na cestě';
+  String get progAchievementActiveDays21Title => 'Tři týdny na cestě';
 
   @override
-  String get progAchievementActiveDays7Desc => 'Buď aktivní 7 dní.';
+  String get progAchievementActiveDays21Desc => 'Buď aktivní 21 dní.';
 
   @override
   String get progAchievementActiveDays90Title => 'Sezóna na cestě';
@@ -3288,7 +3288,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get progAchievementDragonrockTrialDesc =>
-      'Dosáhni úrovně 100, splň 250 úkolů a ujdi 10 000 000 kroků.';
+      'Získej 22 000 000 XP, splň 250 úkolů a ujdi 10 000 000 kroků.';
 
   @override
   String get progAchievementSummaryComposite => 'všechny podmínky';
@@ -3692,6 +3692,11 @@ class AppLocalizationsCs extends AppLocalizations {
   String get cosmeticCompanionMonsterEnergyName => 'Monster Energy';
 
   @override
+  String companionFoodTriggerPillLabel(int amount) {
+    return '+$amount XP cinkne';
+  }
+
+  @override
   String get dialogClose => 'Zavřít';
 
   @override
@@ -3944,7 +3949,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get cosmeticRelicAncientRootDesc =>
-      'Pokroucený kořen z hvozdu, znak sedmi nepřerušených dní.';
+      'Pokroucený kořen z hvozdu, znak prvního zdolaného týdne aktivity.';
 
   @override
   String get cosmeticRelicRavineStoneName => 'Kámen rokle';
@@ -3958,7 +3963,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get cosmeticRelicRuinSealDesc =>
-      'Vosková pečeť za splnění prvního týdenního questu.';
+      'Vosková pečeť — odměna pro ranní ptáčata i noční sovy.';
 
   @override
   String get cosmeticRelicBridgeKeyName => 'Klíč visutého mostu';
@@ -3972,7 +3977,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get cosmeticRelicMinersLanternDesc =>
-      'Mosazná lucerna za splnění padesáti questů.';
+      'Mosazná lucerna získaná po mnoha trojitých kombo vítězstvích.';
 
   @override
   String get cosmeticRelicPolarLanternName => 'Polární lucerna';
@@ -4000,7 +4005,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get cosmeticRelicFrozenLakeHeartDesc =>
-      'Modře zářící kámen za milion celkových kroků.';
+      'Modře zářící kámen za sto dokonalých dní v řadě.';
 
   @override
   String get cosmeticRelicDragonScaleName => 'Dračí šupina';
@@ -4049,7 +4054,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get cosmeticRelicDeepEmberCoreDesc =>
-      'Uhlík, který stále hoří po milionu opatrných kroků v hlubinách.';
+      'Uhlík, který stále hoří po měsíci dokonalé disciplíny.';
 
   @override
   String get cosmeticRelicSummitFeatherName => 'Vrcholové pero';
@@ -4059,7 +4064,7 @@ class AppLocalizationsCs extends AppLocalizations {
       'Vítr ho přinese jen těm, co překročili každý práh.';
 
   @override
-  String get cosmeticRelicStormcrestPlumeName => 'Bouřné péro';
+  String get cosmeticRelicStormcrestPlumeName => 'Bouřné pero';
 
   @override
   String get cosmeticRelicStormcrestPlumeDesc =>
@@ -5041,7 +5046,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get socialSharedPostsEmpty => 'Žádné sdílené příspěvky zatím.';
 
   @override
-  String get socialProfileCosmetics => 'KOSMETIKA';
+  String get socialProfileCosmetics => 'INVENTÁŘ';
 
   @override
   String get socialAddFriend => 'Přidat přítele';
@@ -5262,7 +5267,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get cosmeticRelicPolarLanternUnlockHint =>
-      'Splň týdenní cíl aktivity 24×.';
+      'Nasbírej celkem 1 000 hodin spánku.';
 
   @override
   String get cosmeticRelicFrostShardUnlockHint =>
@@ -5273,17 +5278,18 @@ class AppLocalizationsCs extends AppLocalizations {
       'Splň týdenní cíl aktivity 36krát.';
 
   @override
-  String get cosmeticRelicFrozenLakeHeartUnlockHint => 'Splň 250 úkolů celkem.';
+  String get cosmeticRelicFrozenLakeHeartUnlockHint =>
+      'Splň 100 dokonalých dní v řadě.';
 
   @override
   String get cosmeticRelicDragonScaleUnlockHint =>
-      'Ujdi celkem 10 000 000 kroků.';
+      'Naspi 1 600 hodin ve 200denním okně.';
 
   @override
   String get cosmeticRelicWarmKindlingUnlockHint => 'Splň 3 denní úkoly.';
 
   @override
-  String get cosmeticRelicMoonlitFoxgloveUnlockHint => 'Buď aktivní 7 dní.';
+  String get cosmeticRelicMoonlitFoxgloveUnlockHint => 'Buď aktivní 21 dní.';
 
   @override
   String get cosmeticRelicWildwoodCharmUnlockHint => 'Buď aktivní 90 dní.';
@@ -5292,11 +5298,12 @@ class AppLocalizationsCs extends AppLocalizations {
   String get cosmeticRelicAshenOmenUnlockHint => 'Splň týdenní aktivitu 4×.';
 
   @override
-  String get cosmeticRelicOathboundMarkUnlockHint => 'Splň 10 kombo úkolů.';
+  String get cosmeticRelicOathboundMarkUnlockHint =>
+      'Ujdi celkem 1 000 000 kroků.';
 
   @override
   String get cosmeticRelicDeepEmberCoreUnlockHint =>
-      'Naber 1 000 000 kroků celkem.';
+      'Splň 30 dokonalých dní v řadě.';
 
   @override
   String get cosmeticRelicSummitFeatherUnlockHint =>
@@ -5344,7 +5351,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get cosmeticCompanionMountainGryphonUnlockHint =>
-      'Získej Vrcholové pero a Bouřkové peří.';
+      'Získej Vrcholové a Bouřné peří.';
 
   @override
   String get cosmeticCompanionDragonlingUnlockHint =>

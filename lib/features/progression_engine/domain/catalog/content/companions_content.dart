@@ -55,7 +55,8 @@ List<ProgressionEntry> companionNodes() {
         OwnsCosmetic(CosmeticId('relic_warm_kindling')),
       ],
       lockedHintKey: (l) => l.cosmeticCompanionLevelGate(5),
-      rarity: Rarity.uncommon,
+      // Synced with `cosmetic_catalog.dart` companion rarity (common).
+      rarity: Rarity.common,
     ),
     CompanionAvailability(
       id: const ProgressionEntryId('companion_forest_fox'),
@@ -71,7 +72,8 @@ List<ProgressionEntry> companionNodes() {
         OwnsCosmetic(CosmeticId('relic_ancient_root')),
       ],
       lockedHintKey: (l) => l.cosmeticCompanionLevelGate(15),
-      rarity: Rarity.rare,
+      // Synced with `cosmetic_catalog.dart` companion rarity (uncommon).
+      rarity: Rarity.uncommon,
     ),
     CompanionAvailability(
       id: const ProgressionEntryId('companion_ruin_raven'),
@@ -87,7 +89,8 @@ List<ProgressionEntry> companionNodes() {
         OwnsCosmetic(CosmeticId('relic_ashen_omen')),
       ],
       lockedHintKey: (l) => l.cosmeticCompanionLevelGate(25),
-      rarity: Rarity.rare,
+      // Synced with `cosmetic_catalog.dart` companion rarity (uncommon).
+      rarity: Rarity.uncommon,
     ),
     CompanionAvailability(
       id: const ProgressionEntryId('companion_bridge_gargoyle'),
@@ -121,7 +124,9 @@ List<ProgressionEntry> companionNodes() {
         OwnsCosmetic(CosmeticId('relic_miners_lantern')),
       ],
       lockedHintKey: (l) => l.cosmeticCompanionLevelGate(45),
-      rarity: Rarity.epic,
+      // Synced with `cosmetic_catalog.dart` companion rarity (rare) so
+      // the progress node and the inventory display agree.
+      rarity: Rarity.rare,
     ),
     CompanionAvailability(
       id: const ProgressionEntryId('companion_cave_lynx'),
@@ -149,7 +154,7 @@ List<ProgressionEntry> companionNodes() {
       ],
       unlockConditions: const [
         LevelAtLeast(65),
-        OwnsCosmetic(CosmeticId('relic_frozen_lake_heart')),
+        OwnsCosmetic(CosmeticId('relic_polar_lantern')),
         OwnsCosmetic(CosmeticId('relic_aurora_thread')),
       ],
       lockedHintKey: (l) => l.cosmeticCompanionLevelGate(65),
@@ -165,7 +170,7 @@ List<ProgressionEntry> companionNodes() {
       ],
       unlockConditions: const [
         LevelAtLeast(75),
-        OwnsCosmetic(CosmeticId('relic_polar_lantern')),
+        OwnsCosmetic(CosmeticId('relic_frozen_lake_heart')),
         OwnsCosmetic(CosmeticId('relic_frost_shard')),
       ],
       lockedHintKey: (l) => l.cosmeticCompanionLevelGate(75),
