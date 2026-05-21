@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../features/cosmetics/application/food_trigger_provider.dart';
 import '../../../../features/progression_engine/application/progression_engine_provider.dart';
 import '../../../../features/progression_engine/domain/catalog/progression_node_catalog.dart';
 import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
@@ -163,6 +164,7 @@ class _DevToolsProgressionEngineSectionState
   Future<void> _confirmAndWipe(BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
     final provider = context.read<ProgressionEngineProvider>();
+    final foodTrigger = context.read<FoodTriggerProvider>();
     final errorColor = Theme.of(context).colorScheme.error;
 
     final confirmed = await showDialog<bool>(
@@ -191,6 +193,14 @@ class _DevToolsProgressionEngineSectionState
     setState(() => _isWiping = true);
     try {
       await provider.devToolsWipeLedger();
+      // The engine ledger holds the *granted* XP; the food-trigger
+      // per-day claim totals live in SharedPreferences. Without
+      // dropping them here, the pill stays stuck in its claimed
+      // state for the rest of the day and the same Monster entry
+      // can't be re-tested. Factory reset already wipes prefs
+      // wholesale, so this hook is only for the devtools partial
+      // wipe path.
+      await foodTrigger.devToolsResetClaims();
       if (!mounted) return;
       messenger.showSnackBar(
         const SnackBar(content: Text('V2 ledger wiped')), // lint-ignore: l10n-literal — devtools, intentionally English

@@ -139,6 +139,30 @@ class FoodTriggerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Devtools — drop every stored claim total. Pairs with
+  /// [ProgressionEngineProvider.devToolsWipeLedger]: once the ledger
+  /// is gone, the engine no longer remembers granted XP, but the
+  /// per-day claim ledger we keep in [SharedPreferences] still does
+  /// — leaving the food-trigger pill stuck in its claimed state and
+  /// blocking re-tests on the same day. Calling this from the wipe
+  /// flow restores parity. Factory reset bypasses this on purpose
+  /// because it clears all prefs wholesale (see
+  /// `FactoryResetService.clearSharedPreferences`).
+  Future<void> devToolsResetClaims() async {
+    final prefs = await SharedPreferences.getInstance();
+    final removed = <String>[];
+    for (final k in prefs.getKeys()) {
+      if (!k.startsWith('$_kPrefsPrefix.')) continue;
+      removed.add(k);
+    }
+    for (final k in removed) {
+      await prefs.remove(k);
+    }
+    _claimedToday = const {};
+    _log.info('devToolsResetClaims: dropped ${removed.length} keys');
+    notifyListeners();
+  }
+
   /// Attempts to claim whatever XP the equipped companion's trigger
   /// owes against today's log. Returns the granted amount (0 when
   /// nothing was claimable or the operation was suppressed).
