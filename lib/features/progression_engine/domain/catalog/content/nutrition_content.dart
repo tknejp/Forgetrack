@@ -221,7 +221,7 @@ List<ProgressionEntry> nutritionNodes() {
       descriptionKey: (l) => l.progAchievementNutritionStreak30Desc,
       rewards: const [],
       contentTags: const [ContentTag.core, ContentTag.fitness],
-      rarity: Rarity.epic,
+      rarity: Rarity.rare,
     ),
     Achievement(
       id: const ProgressionEntryId('nutrition_streak_100'),

@@ -2862,6 +2862,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progAchievementXp1000000Desc => 'Accumulate 1,000,000 XP.';
 
   @override
+  String get progAchievementXp5000000Title => 'Astral Echo';
+
+  @override
+  String get progAchievementXp5000000Desc => 'Accumulate 5,000,000 XP.';
+
+  @override
+  String get progAchievementXp10000000Title => 'Cosmic Forger';
+
+  @override
+  String get progAchievementXp10000000Desc => 'Accumulate 10,000,000 XP.';
+
+  @override
+  String get progAchievementXp24000000Title => 'Apex of the Realm';
+
+  @override
+  String get progAchievementXp24000000Desc =>
+      'Accumulate 24,000,000 XP — the level 100 cap.';
+
+  @override
   String get progAchievementMythicRangerLevel50Title => 'Mythic Ranger';
 
   @override
@@ -3056,6 +3075,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Complete the weekly activity rule 52 times.';
 
   @override
+  String get progAchievementWeeklyActivity104Title => 'Two-Year Engine';
+
+  @override
+  String get progAchievementWeeklyActivity104Desc =>
+      'Complete the weekly activity rule 104 times (two full years).';
+
+  @override
   String get progAchievementSleep250hTitle => 'Rested Soul';
 
   @override
@@ -3082,6 +3108,27 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get progAchievementSleepMonth240hDesc =>
       'Accumulate 240 hours of sleep across any 30-day window.';
+
+  @override
+  String get progAchievementSleepMonth270hTitle => 'Lunar Hibernation';
+
+  @override
+  String get progAchievementSleepMonth270hDesc =>
+      'Accumulate 270 hours of sleep across any 30-day window (9h / night).';
+
+  @override
+  String get progAchievementSleepMonth300hTitle => 'Endless Dream';
+
+  @override
+  String get progAchievementSleepMonth300hDesc =>
+      'Accumulate 300 hours of sleep across any 30-day window (10h / night).';
+
+  @override
+  String get progAchievementSleep200d1600hTitle => 'Cycle of the Owl';
+
+  @override
+  String get progAchievementSleep200d1600hDesc =>
+      'Accumulate 1,600 hours of sleep across any 200-day window (8h / night).';
 
   @override
   String get progAchievementDailyQuest3Title => 'First Steps';
@@ -3113,6 +3160,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get progAchievementActiveDays90Desc => 'Be active for 90 days.';
+
+  @override
+  String get progAchievementActiveDays365Title => 'Year of the Wanderer';
+
+  @override
+  String get progAchievementActiveDays365Desc => 'Be active for 365 days.';
+
+  @override
+  String get progAchievementChapterCompletionistTitle => 'Chronicle Keeper';
+
+  @override
+  String get progAchievementChapterCompletionistDesc =>
+      'Complete every main chapter of the journey.';
+
+  @override
+  String get progAchievementWeightLogStreak90Title => 'Steady Scale';
+
+  @override
+  String get progAchievementWeightLogStreak90Desc =>
+      'Log your weight 90 days in a row.';
+
+  @override
+  String get progAchievementNightOwlTitle => 'Night Owl';
+
+  @override
+  String get progAchievementNightOwlDesc =>
+      'Record 30 nights that started at or after 1:00 AM.';
+
+  @override
+  String get progAchievementEarlyBirdTitle => 'Early Bird';
+
+  @override
+  String get progAchievementEarlyBirdDesc =>
+      'Record 30 nights that started before 10:00 PM.';
+
+  @override
+  String get progAchievementSummaryNights => 'nights';
 
   @override
   String get progAchievementPerfectDays7Title => 'Balanced Week';
@@ -4529,7 +4613,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String cosmeticBuffLanternThresholdHeadline(int percent, int days) {
-    return '+$percent% per streak from ${days}d';
+    return '+$percent% per streak ${days}d+';
   }
 
   @override

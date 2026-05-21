@@ -5139,6 +5139,42 @@ abstract class AppLocalizations {
   /// **'Accumulate 1,000,000 XP.'**
   String get progAchievementXp1000000Desc;
 
+  /// No description provided for @progAchievementXp5000000Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Astral Echo'**
+  String get progAchievementXp5000000Title;
+
+  /// No description provided for @progAchievementXp5000000Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 5,000,000 XP.'**
+  String get progAchievementXp5000000Desc;
+
+  /// No description provided for @progAchievementXp10000000Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Cosmic Forger'**
+  String get progAchievementXp10000000Title;
+
+  /// No description provided for @progAchievementXp10000000Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 10,000,000 XP.'**
+  String get progAchievementXp10000000Desc;
+
+  /// No description provided for @progAchievementXp24000000Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Apex of the Realm'**
+  String get progAchievementXp24000000Title;
+
+  /// No description provided for @progAchievementXp24000000Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 24,000,000 XP — the level 100 cap.'**
+  String get progAchievementXp24000000Desc;
+
   /// No description provided for @progAchievementMythicRangerLevel50Title.
   ///
   /// In en, this message translates to:
@@ -5475,6 +5511,18 @@ abstract class AppLocalizations {
   /// **'Complete the weekly activity rule 52 times.'**
   String get progAchievementWeeklyActivity52Desc;
 
+  /// No description provided for @progAchievementWeeklyActivity104Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-Year Engine'**
+  String get progAchievementWeeklyActivity104Title;
+
+  /// No description provided for @progAchievementWeeklyActivity104Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the weekly activity rule 104 times (two full years).'**
+  String get progAchievementWeeklyActivity104Desc;
+
   /// No description provided for @progAchievementSleep250hTitle.
   ///
   /// In en, this message translates to:
@@ -5522,6 +5570,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Accumulate 240 hours of sleep across any 30-day window.'**
   String get progAchievementSleepMonth240hDesc;
+
+  /// No description provided for @progAchievementSleepMonth270hTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lunar Hibernation'**
+  String get progAchievementSleepMonth270hTitle;
+
+  /// No description provided for @progAchievementSleepMonth270hDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 270 hours of sleep across any 30-day window (9h / night).'**
+  String get progAchievementSleepMonth270hDesc;
+
+  /// No description provided for @progAchievementSleepMonth300hTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Endless Dream'**
+  String get progAchievementSleepMonth300hTitle;
+
+  /// No description provided for @progAchievementSleepMonth300hDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 300 hours of sleep across any 30-day window (10h / night).'**
+  String get progAchievementSleepMonth300hDesc;
+
+  /// No description provided for @progAchievementSleep200d1600hTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle of the Owl'**
+  String get progAchievementSleep200d1600hTitle;
+
+  /// No description provided for @progAchievementSleep200d1600hDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulate 1,600 hours of sleep across any 200-day window (8h / night).'**
+  String get progAchievementSleep200d1600hDesc;
 
   /// No description provided for @progAchievementDailyQuest3Title.
   ///
@@ -5582,6 +5666,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Be active for 90 days.'**
   String get progAchievementActiveDays90Desc;
+
+  /// No description provided for @progAchievementActiveDays365Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Year of the Wanderer'**
+  String get progAchievementActiveDays365Title;
+
+  /// No description provided for @progAchievementActiveDays365Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Be active for 365 days.'**
+  String get progAchievementActiveDays365Desc;
+
+  /// No description provided for @progAchievementChapterCompletionistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chronicle Keeper'**
+  String get progAchievementChapterCompletionistTitle;
+
+  /// No description provided for @progAchievementChapterCompletionistDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete every main chapter of the journey.'**
+  String get progAchievementChapterCompletionistDesc;
+
+  /// No description provided for @progAchievementWeightLogStreak90Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Steady Scale'**
+  String get progAchievementWeightLogStreak90Title;
+
+  /// No description provided for @progAchievementWeightLogStreak90Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Log your weight 90 days in a row.'**
+  String get progAchievementWeightLogStreak90Desc;
+
+  /// No description provided for @progAchievementNightOwlTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Night Owl'**
+  String get progAchievementNightOwlTitle;
+
+  /// No description provided for @progAchievementNightOwlDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Record 30 nights that started at or after 1:00 AM.'**
+  String get progAchievementNightOwlDesc;
+
+  /// No description provided for @progAchievementEarlyBirdTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Early Bird'**
+  String get progAchievementEarlyBirdTitle;
+
+  /// No description provided for @progAchievementEarlyBirdDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Record 30 nights that started before 10:00 PM.'**
+  String get progAchievementEarlyBirdDesc;
+
+  /// No description provided for @progAchievementSummaryNights.
+  ///
+  /// In en, this message translates to:
+  /// **'nights'**
+  String get progAchievementSummaryNights;
 
   /// No description provided for @progAchievementPerfectDays7Title.
   ///
@@ -7860,7 +8010,7 @@ abstract class AppLocalizations {
   /// Lantern Golem banner headline — flat percent + activation threshold in days.
   ///
   /// In en, this message translates to:
-  /// **'+{percent}% per streak from {days}d'**
+  /// **'+{percent}% per streak {days}d+'**
   String cosmeticBuffLanternThresholdHeadline(int percent, int days);
 
   /// Lantern Golem banner subtitle — clarifies the per-streak nature of the threshold.

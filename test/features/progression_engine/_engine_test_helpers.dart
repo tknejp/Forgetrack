@@ -28,6 +28,8 @@ EngineEvaluationContext buildTestContext({
   int sleepMinutesToday = 0,
   int activityMinutesToday = 0,
   bool weightLoggedToday = false,
+  int lifetimeNightsStartedAtOrAfter1am = 0,
+  int lifetimeNightsStartedBefore10pm = 0,
   double caloriesToday = 0,
   double proteinGramsToday = 0,
   double carbsGramsToday = 0,
@@ -67,6 +69,8 @@ EngineEvaluationContext buildTestContext({
       sleepMinutesToday: sleepMinutesToday,
       activityMinutesToday: activityMinutesToday,
       weightLoggedToday: weightLoggedToday,
+      lifetimeNightsStartedAtOrAfter1am: lifetimeNightsStartedAtOrAfter1am,
+      lifetimeNightsStartedBefore10pm: lifetimeNightsStartedBefore10pm,
     ),
     nutritionSnapshot: NutritionSnapshot(
       evaluatedDate: day,

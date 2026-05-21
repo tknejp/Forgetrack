@@ -35,6 +35,8 @@ class HealthSnapshot {
     this.sleepMinutesToday = 0,
     this.activityMinutesToday = 0,
     this.weightLoggedToday = false,
+    this.lifetimeNightsStartedAtOrAfter1am = 0,
+    this.lifetimeNightsStartedBefore10pm = 0,
   });
 
   /// Sentinel "no data" snapshot keyed at the unix epoch. Used by
@@ -55,6 +57,17 @@ class HealthSnapshot {
   final int activityMinutesToday;
   final bool weightLoggedToday;
 
+  /// Lifetime count of recorded sleep records whose `sleepStart`
+  /// local hour is **at or after 1:00** — drives the `night_owl`
+  /// achievement via [SleepStartHourCountMetric]. Bounded by
+  /// `FitnessProvider`'s sleep history retention window.
+  final int lifetimeNightsStartedAtOrAfter1am;
+
+  /// Lifetime count of recorded sleep records whose `sleepStart`
+  /// local hour is **strictly before 22:00** — drives the
+  /// `early_bird` achievement via [SleepStartHourCountMetric].
+  final int lifetimeNightsStartedBefore10pm;
+
   /// Stable signature for change detection. Joined with the
   /// [NutritionSnapshot] / [GoalBoard] signatures inside
   /// `ProviderEngineInputSource.auditSignature` so any meaningful
@@ -67,6 +80,8 @@ class HealthSnapshot {
         sleepMinutesToday,
         activityMinutesToday,
         weightLoggedToday ? 1 : 0,
+        lifetimeNightsStartedAtOrAfter1am,
+        lifetimeNightsStartedBefore10pm,
       ].join('|');
 
   HealthSnapshot copyWith({
@@ -77,6 +92,8 @@ class HealthSnapshot {
     int? sleepMinutesToday,
     int? activityMinutesToday,
     bool? weightLoggedToday,
+    int? lifetimeNightsStartedAtOrAfter1am,
+    int? lifetimeNightsStartedBefore10pm,
   }) {
     return HealthSnapshot(
       evaluatedDate: evaluatedDate ?? this.evaluatedDate,
@@ -86,6 +103,10 @@ class HealthSnapshot {
       sleepMinutesToday: sleepMinutesToday ?? this.sleepMinutesToday,
       activityMinutesToday: activityMinutesToday ?? this.activityMinutesToday,
       weightLoggedToday: weightLoggedToday ?? this.weightLoggedToday,
+      lifetimeNightsStartedAtOrAfter1am: lifetimeNightsStartedAtOrAfter1am ??
+          this.lifetimeNightsStartedAtOrAfter1am,
+      lifetimeNightsStartedBefore10pm: lifetimeNightsStartedBefore10pm ??
+          this.lifetimeNightsStartedBefore10pm,
     );
   }
 
@@ -99,7 +120,11 @@ class HealthSnapshot {
         other.stepsLifetime == stepsLifetime &&
         other.sleepMinutesToday == sleepMinutesToday &&
         other.activityMinutesToday == activityMinutesToday &&
-        other.weightLoggedToday == weightLoggedToday;
+        other.weightLoggedToday == weightLoggedToday &&
+        other.lifetimeNightsStartedAtOrAfter1am ==
+            lifetimeNightsStartedAtOrAfter1am &&
+        other.lifetimeNightsStartedBefore10pm ==
+            lifetimeNightsStartedBefore10pm;
   }
 
   @override
@@ -111,6 +136,8 @@ class HealthSnapshot {
         sleepMinutesToday,
         activityMinutesToday,
         weightLoggedToday,
+        lifetimeNightsStartedAtOrAfter1am,
+        lifetimeNightsStartedBefore10pm,
       );
 
   @override
@@ -118,5 +145,7 @@ class HealthSnapshot {
       'HealthSnapshot(date: $evaluatedDate, stepsToday: $stepsToday, '
       'stepsThisWeek: $stepsThisWeek, stepsLifetime: $stepsLifetime, '
       'sleepMin: $sleepMinutesToday, activityMin: $activityMinutesToday, '
-      'weightLogged: $weightLoggedToday)';
+      'weightLogged: $weightLoggedToday, '
+      'nightsAfter1am: $lifetimeNightsStartedAtOrAfter1am, '
+      'nightsBefore10pm: $lifetimeNightsStartedBefore10pm)';
 }

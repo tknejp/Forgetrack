@@ -2855,6 +2855,25 @@ class AppLocalizationsCs extends AppLocalizations {
   String get progAchievementXp1000000Desc => 'Nasbírej 1 000 000 XP.';
 
   @override
+  String get progAchievementXp5000000Title => 'Astrální ozvěna';
+
+  @override
+  String get progAchievementXp5000000Desc => 'Nasbírej 5 000 000 XP.';
+
+  @override
+  String get progAchievementXp10000000Title => 'Kosmický kovář';
+
+  @override
+  String get progAchievementXp10000000Desc => 'Nasbírej 10 000 000 XP.';
+
+  @override
+  String get progAchievementXp24000000Title => 'Vrchol říše';
+
+  @override
+  String get progAchievementXp24000000Desc =>
+      'Nasbírej 24 000 000 XP — strop levelu 100.';
+
+  @override
   String get progAchievementMythicRangerLevel50Title => 'Mytický ranger';
 
   @override
@@ -3049,6 +3068,13 @@ class AppLocalizationsCs extends AppLocalizations {
       'Splň týdenní cíl aktivity dvaapadesátkrát.';
 
   @override
+  String get progAchievementWeeklyActivity104Title => 'Dvouletý motor';
+
+  @override
+  String get progAchievementWeeklyActivity104Desc =>
+      'Splň týdenní cíl aktivity 104× (dva celé roky).';
+
+  @override
   String get progAchievementSleep250hTitle => 'Odpočatá duše';
 
   @override
@@ -3075,6 +3101,27 @@ class AppLocalizationsCs extends AppLocalizations {
   @override
   String get progAchievementSleepMonth240hDesc =>
       'Nasbírej 240 hodin spánku v libovolném 30denním okně.';
+
+  @override
+  String get progAchievementSleepMonth270hTitle => 'Lunární hibernace';
+
+  @override
+  String get progAchievementSleepMonth270hDesc =>
+      'Nasbírej 270 hodin spánku v libovolném 30denním okně (9h / noc).';
+
+  @override
+  String get progAchievementSleepMonth300hTitle => 'Nekonečný sen';
+
+  @override
+  String get progAchievementSleepMonth300hDesc =>
+      'Nasbírej 300 hodin spánku v libovolném 30denním okně (10h / noc).';
+
+  @override
+  String get progAchievementSleep200d1600hTitle => 'Cyklus sovy';
+
+  @override
+  String get progAchievementSleep200d1600hDesc =>
+      'Nasbírej 1 600 hodin spánku v libovolném 200denním okně (8h / noc).';
 
   @override
   String get progAchievementDailyQuest3Title => 'První kroky';
@@ -3105,6 +3152,43 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get progAchievementActiveDays90Desc => 'Buď aktivní 90 dní.';
+
+  @override
+  String get progAchievementActiveDays365Title => 'Rok poutníka';
+
+  @override
+  String get progAchievementActiveDays365Desc => 'Buď aktivní 365 dní.';
+
+  @override
+  String get progAchievementChapterCompletionistTitle => 'Strážce kronik';
+
+  @override
+  String get progAchievementChapterCompletionistDesc =>
+      'Dokonči všechny hlavní kapitoly cesty.';
+
+  @override
+  String get progAchievementWeightLogStreak90Title => 'Pevná váha';
+
+  @override
+  String get progAchievementWeightLogStreak90Desc =>
+      'Zapiš si váhu 90 dní v řadě.';
+
+  @override
+  String get progAchievementNightOwlTitle => 'Noční sova';
+
+  @override
+  String get progAchievementNightOwlDesc =>
+      'Zaznamenej 30 nocí, které začaly v 1:00 nebo později.';
+
+  @override
+  String get progAchievementEarlyBirdTitle => 'Ranní ptáče';
+
+  @override
+  String get progAchievementEarlyBirdDesc =>
+      'Zaznamenej 30 nocí, které začaly před 22:00.';
+
+  @override
+  String get progAchievementSummaryNights => 'nocí';
 
   @override
   String get progAchievementPerfectDays7Title => 'Vyvážený týden';

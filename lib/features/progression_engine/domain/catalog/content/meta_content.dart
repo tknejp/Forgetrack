@@ -32,6 +32,28 @@ List<Objective> metaObjectives(EngineCatalogContext context) {
       targetValue: 1000000,
     ),
     Objective(
+      id: const ObjectiveId('lifetime_xp_5m'),
+      metric: TotalXpMetric(),
+      scope: LifetimeScope(),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: 5000000,
+    ),
+    Objective(
+      id: const ObjectiveId('lifetime_xp_10m'),
+      metric: TotalXpMetric(),
+      scope: LifetimeScope(),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: 10000000,
+    ),
+    Objective(
+      id: const ObjectiveId('lifetime_xp_24m'),
+      metric: TotalXpMetric(),
+      scope: LifetimeScope(),
+      operator: ObjectiveOperator.atLeast,
+      // Level 100 cap (~24M XP).
+      targetValue: 24000000,
+    ),
+    Objective(
       id: const ObjectiveId('reward_count_25'),
       metric: RewardCountMetric(),
       scope: LifetimeScope(),
@@ -83,6 +105,13 @@ List<Objective> metaObjectives(EngineCatalogContext context) {
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 90,
+    ),
+    Objective(
+      id: const ObjectiveId('active_days_365'),
+      metric: DistinctActiveDaysMetric(),
+      scope: LifetimeScope(),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: 365,
     ),
     // Combo-pool counters (Phase 9c follow-up).
     Objective(
@@ -143,7 +172,7 @@ List<ProgressionEntry> metaNodes() {
       descriptionKey: (l) => l.progAchievementXp100000Desc,
       rewards: const [],
       contentTags: const [ContentTag.core],
-      rarity: Rarity.epic,
+      rarity: Rarity.common,
     ),
     Achievement(
       id: const ProgressionEntryId('xp_1000000'),
@@ -153,7 +182,37 @@ List<ProgressionEntry> metaNodes() {
       descriptionKey: (l) => l.progAchievementXp1000000Desc,
       rewards: const [],
       contentTags: const [ContentTag.core],
+      rarity: Rarity.rare,
+    ),
+    Achievement(
+      id: const ProgressionEntryId('xp_5000000'),
+      objectiveId: ObjectiveId('lifetime_xp_5m'),
+      badgeEmoji: '\u{1F320}',
+      titleKey: (l) => l.progAchievementXp5000000Title,
+      descriptionKey: (l) => l.progAchievementXp5000000Desc,
+      rewards: const [],
+      contentTags: const [ContentTag.core],
+      rarity: Rarity.epic,
+    ),
+    Achievement(
+      id: const ProgressionEntryId('xp_10000000'),
+      objectiveId: ObjectiveId('lifetime_xp_10m'),
+      badgeEmoji: '\u{2604}\u{FE0F}',
+      titleKey: (l) => l.progAchievementXp10000000Title,
+      descriptionKey: (l) => l.progAchievementXp10000000Desc,
+      rewards: const [],
+      contentTags: const [ContentTag.core],
       rarity: Rarity.legendary,
+    ),
+    Achievement(
+      id: const ProgressionEntryId('xp_24000000'),
+      objectiveId: ObjectiveId('lifetime_xp_24m'),
+      badgeEmoji: '\u{1F30C}',
+      titleKey: (l) => l.progAchievementXp24000000Title,
+      descriptionKey: (l) => l.progAchievementXp24000000Desc,
+      rewards: const [],
+      contentTags: const [ContentTag.core],
+      rarity: Rarity.mythic,
     ),
     Achievement(
       id: const ProgressionEntryId('reward_hunter_25'),
@@ -230,7 +289,17 @@ List<ProgressionEntry> metaNodes() {
       // the Cave Lynx (lvl 55) companion pair.
       rewards: const [CosmeticReward(cosmeticId: CosmeticId('relic_wildwood_charm'))],
       contentTags: const [ContentTag.core],
-      rarity: Rarity.epic,
+      rarity: Rarity.rare,
+    ),
+    Achievement(
+      id: const ProgressionEntryId('active_days_365'),
+      objectiveId: ObjectiveId('active_days_365'),
+      badgeEmoji: '\u{1F305}',
+      titleKey: (l) => l.progAchievementActiveDays365Title,
+      descriptionKey: (l) => l.progAchievementActiveDays365Desc,
+      rewards: const [],
+      contentTags: const [ContentTag.core],
+      rarity: Rarity.legendary,
     ),
     // Combo achievements (Phase 9c follow-up). Backing infra:
     // ComboPoolCompletionsMetric for the lifetime "all combos" tally,
@@ -246,7 +315,7 @@ List<ProgressionEntry> metaNodes() {
       descriptionKey: (l) => l.progAchievementComboVictory10Desc,
       rewards: const [CosmeticReward(cosmeticId: CosmeticId('relic_oathbound_mark'))],
       contentTags: const [ContentTag.core],
-      rarity: Rarity.rare,
+      rarity: Rarity.uncommon,
     ),
     Achievement(
       id: const ProgressionEntryId('combo_triple_victory_25'),
@@ -267,6 +336,32 @@ List<ProgressionEntry> metaNodes() {
       rewards: const [CosmeticReward(cosmeticId: CosmeticId('relic_summit_feather'))],
       contentTags: const [ContentTag.core],
       rarity: Rarity.legendary,
+    ),
+    Achievement(
+      id: const ProgressionEntryId('chapter_completionist'),
+      // Condition-only: AND of every main-chain chapter finale being
+      // completed (claimed). Side quests intentionally excluded — this
+      // tracks the canonical journey.
+      objectiveId: null,
+      unlockConditions: const [
+        NodeCompleted(ProgressionEntryId('pilgrim_path_finale')),
+        NodeCompleted(ProgressionEntryId('forest_trial_finale')),
+        NodeCompleted(ProgressionEntryId('ruins_discipline_finale')),
+        NodeCompleted(ProgressionEntryId('mine_descent_finale')),
+        NodeCompleted(ProgressionEntryId('forge_momentum_finale')),
+        NodeCompleted(ProgressionEntryId('underway_pact_finale')),
+        NodeCompleted(ProgressionEntryId('frostbound_oath_finale')),
+        NodeCompleted(ProgressionEntryId('icewalker_route_finale')),
+        NodeCompleted(ProgressionEntryId('mountain_ascent_finale')),
+        NodeCompleted(ProgressionEntryId('dragonroad_finale')),
+        NodeCompleted(ProgressionEntryId('dragonrock_sovereign_finale')),
+      ],
+      badgeEmoji: '\u{1F4DC}', // scroll
+      titleKey: (l) => l.progAchievementChapterCompletionistTitle,
+      descriptionKey: (l) => l.progAchievementChapterCompletionistDesc,
+      rewards: const [],
+      contentTags: const [ContentTag.core],
+      rarity: Rarity.mythic,
     ),
     Achievement(
       id: const ProgressionEntryId('dragonrock_trial'),

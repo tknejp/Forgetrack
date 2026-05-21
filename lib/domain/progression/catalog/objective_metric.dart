@@ -38,6 +38,33 @@ class SleepMinutesMetric extends ObjectiveMetric {
   const SleepMinutesMetric();
 }
 
+/// Whether [SleepStartHourCountMetric] counts nights whose start hour
+/// is *at or after* a threshold, or *strictly before* it.
+enum SleepStartHourDirection { before, atOrAfter }
+
+/// Number of recorded sleep records whose `sleepStart` local hour
+/// matches a threshold (e.g. *at or after 1:00* — `night_owl`,
+/// *before 22:00* — `early_bird`). Pair with [LifetimeScope] and
+/// `atLeast N` to express "N nights starting after/before X o'clock".
+///
+/// The resolver reads this from a pre-aggregated count on
+/// `HealthSnapshot` — wiring populates the specific (hour, direction)
+/// combinations the catalog actually queries; unwired combinations
+/// evaluate to 0.
+class SleepStartHourCountMetric extends ObjectiveMetric {
+  const SleepStartHourCountMetric({
+    required this.hour,
+    required this.direction,
+  });
+
+  /// Hour-of-day threshold in 24h local time. Compared against the
+  /// `sleepStart` timestamp's hour component.
+  final int hour;
+
+  /// `before` → hour < threshold; `atOrAfter` → hour >= threshold.
+  final SleepStartHourDirection direction;
+}
+
 class ActivityMinutesMetric extends ObjectiveMetric {
   const ActivityMinutesMetric();
 }

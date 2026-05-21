@@ -28,6 +28,14 @@ List<Objective> bodyObjectives(EngineCatalogContext context) {
       operator: ObjectiveOperator.atLeast,
       targetValue: 1,
     ),
+    Objective(
+      id: const ObjectiveId('streak_weight_log_90'),
+      domain: ProgressionDomain.body,
+      metric: StreakDaysMetric.byRule('daily_weight_log'),
+      scope: LifetimeScope(),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: 90,
+    ),
   ];
 }
 
@@ -50,6 +58,16 @@ List<ProgressionEntry> bodyNodes() {
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.common,
       assetKey: questAssetActivity,
+    ),
+    Achievement(
+      id: const ProgressionEntryId('weight_log_streak_90'),
+      objectiveId: ObjectiveId('streak_weight_log_90'),
+      badgeEmoji: '\u{2696}\u{FE0F}', // scales
+      titleKey: (l) => l.progAchievementWeightLogStreak90Title,
+      descriptionKey: (l) => l.progAchievementWeightLogStreak90Desc,
+      rewards: const [],
+      contentTags: const [ContentTag.core, ContentTag.fitness],
+      rarity: Rarity.rare,
     ),
   ];
 }

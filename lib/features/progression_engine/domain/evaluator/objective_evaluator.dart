@@ -109,6 +109,19 @@ class ObjectiveEvaluator {
             (counters.bestRollingSleepMinutesByDays[days] ?? 0).toDouble(),
           _ => 0,
         },
+      SleepStartHourCountMetric(:final hour, :final direction) => () {
+        // Resolver only wires the (hour, direction) combinations the
+        // catalog actually asks for; everything else returns 0 so a
+        // new catalog entry without snapshot wiring stays at zero
+        // instead of silently lifetime-true.
+        if (direction == SleepStartHourDirection.atOrAfter && hour == 1) {
+          return health.lifetimeNightsStartedAtOrAfter1am.toDouble();
+        }
+        if (direction == SleepStartHourDirection.before && hour == 22) {
+          return health.lifetimeNightsStartedBefore10pm.toDouble();
+        }
+        return 0.0;
+      }(),
       ActivityMinutesMetric() => switch (scope) {
           TodayScope() => health.activityMinutesToday.toDouble(),
           _ => 0,

@@ -83,6 +83,14 @@ List<Objective> activityObjectives(EngineCatalogContext context) {
       operator: ObjectiveOperator.atLeast,
       targetValue: 52,
     ),
+    const Objective(
+      id: const ObjectiveId('reward_count_weekly_activity_104'),
+      domain: ProgressionDomain.activity,
+      metric: RewardCountMetric(ruleId: 'weekly_activity'),
+      scope: LifetimeScope(),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: 104,
+    ),
   ];
 }
 
@@ -153,7 +161,7 @@ List<ProgressionEntry> activityNodes() {
       descriptionKey: (l) => l.progAchievementWeeklyActivity12Desc,
       rewards: const [],
       contentTags: const [ContentTag.core, ContentTag.fitness],
-      rarity: Rarity.epic,
+      rarity: Rarity.rare,
     ),
     Achievement(
       id: const ProgressionEntryId('weekly_activity_24'),
@@ -186,6 +194,16 @@ List<ProgressionEntry> activityNodes() {
       rewards: const [CosmeticReward(cosmeticId: CosmeticId('relic_stormcrest_plume'))],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.legendary,
+    ),
+    Achievement(
+      id: const ProgressionEntryId('weekly_activity_104'),
+      objectiveId: ObjectiveId('reward_count_weekly_activity_104'),
+      badgeEmoji: '\u{1F3D4}\u{FE0F}',
+      titleKey: (l) => l.progAchievementWeeklyActivity104Title,
+      descriptionKey: (l) => l.progAchievementWeeklyActivity104Desc,
+      rewards: const [],
+      contentTags: const [ContentTag.core, ContentTag.fitness],
+      rarity: Rarity.mythic,
     ),
   ];
 }

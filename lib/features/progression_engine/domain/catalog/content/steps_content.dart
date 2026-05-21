@@ -234,7 +234,7 @@ List<ProgressionEntry> stepsNodes() {
         CosmeticReward(cosmeticId: CosmeticId('frame_worldwalker')),
       ],
       contentTags: const [ContentTag.core, ContentTag.fitness],
-      rarity: Rarity.legendary,
+      rarity: Rarity.mythic,
     ),
 
     // Rolling-window mastery achievements.

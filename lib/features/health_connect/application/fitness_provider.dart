@@ -311,6 +311,13 @@ class FitnessProvider extends ChangeNotifier {
   /// previously required helper closures inside the input source.
   HealthSnapshot snapshotForDate(DateTime date) {
     final day = DateTime(date.year, date.month, date.day);
+    var nightsAfter1am = 0;
+    var nightsBefore10pm = 0;
+    for (final r in _sleepHistory) {
+      final h = r.sleepStart.hour;
+      if (h >= 1 && h < 12) nightsAfter1am++;
+      if (h < 22 && h >= 12) nightsBefore10pm++;
+    }
     return HealthSnapshot(
       evaluatedDate: day,
       stepsToday: stepsForDate(day),
@@ -319,6 +326,8 @@ class FitnessProvider extends ChangeNotifier {
       sleepMinutesToday: sleepForDate(day)?.totalDuration.inMinutes ?? 0,
       activityMinutesToday: _activityMinutesForDay(day),
       weightLoggedToday: weightForDate(day) != null,
+      lifetimeNightsStartedAtOrAfter1am: nightsAfter1am,
+      lifetimeNightsStartedBefore10pm: nightsBefore10pm,
     );
   }
 

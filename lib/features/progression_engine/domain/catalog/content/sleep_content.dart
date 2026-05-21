@@ -59,6 +59,55 @@ List<Objective> sleepObjectives(EngineCatalogContext context) {
       operator: ObjectiveOperator.atLeast,
       targetValue: 14400,
     ),
+    const Objective(
+      id: const ObjectiveId('rolling_sleep_30d_270h'),
+      domain: ProgressionDomain.sleep,
+      metric: SleepMinutesMetric(),
+      scope: RollingWindowScope(days: 30),
+      operator: ObjectiveOperator.atLeast,
+      // 270h × 60 = 16200 min (9h / night for 30 days).
+      targetValue: 16200,
+    ),
+    const Objective(
+      id: const ObjectiveId('rolling_sleep_30d_300h'),
+      domain: ProgressionDomain.sleep,
+      metric: SleepMinutesMetric(),
+      scope: RollingWindowScope(days: 30),
+      operator: ObjectiveOperator.atLeast,
+      // 300h × 60 = 18000 min (10h / night for 30 days).
+      targetValue: 18000,
+    ),
+    const Objective(
+      id: const ObjectiveId('rolling_sleep_200d_1600h'),
+      domain: ProgressionDomain.sleep,
+      metric: SleepMinutesMetric(),
+      scope: RollingWindowScope(days: 200),
+      operator: ObjectiveOperator.atLeast,
+      // 1600h × 60 = 96000 min (8h / night for 200 days).
+      targetValue: 96000,
+    ),
+    const Objective(
+      id: const ObjectiveId('sleep_starts_after_1am_30'),
+      domain: ProgressionDomain.sleep,
+      metric: SleepStartHourCountMetric(
+        hour: 1,
+        direction: SleepStartHourDirection.atOrAfter,
+      ),
+      scope: LifetimeScope(),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: 30,
+    ),
+    const Objective(
+      id: const ObjectiveId('sleep_starts_before_10pm_30'),
+      domain: ProgressionDomain.sleep,
+      metric: SleepStartHourCountMetric(
+        hour: 22,
+        direction: SleepStartHourDirection.before,
+      ),
+      scope: LifetimeScope(),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: 30,
+    ),
   ];
 }
 
@@ -100,7 +149,7 @@ List<ProgressionEntry> sleepNodes() {
       descriptionKey: (l) => l.progAchievementSleep1000hDesc,
       rewards: const [],
       contentTags: const [ContentTag.core, ContentTag.fitness],
-      rarity: Rarity.uncommon,
+      rarity: Rarity.epic,
     ),
     Achievement(
       id: const ProgressionEntryId('sleep_month_225h'),
@@ -110,7 +159,7 @@ List<ProgressionEntry> sleepNodes() {
       descriptionKey: (l) => l.progAchievementSleepMonth225hDesc,
       rewards: const [],
       contentTags: const [ContentTag.core, ContentTag.fitness],
-      rarity: Rarity.epic,
+      rarity: Rarity.rare,
     ),
     Achievement(
       id: const ProgressionEntryId('sleep_month_240h'),
@@ -120,7 +169,57 @@ List<ProgressionEntry> sleepNodes() {
       descriptionKey: (l) => l.progAchievementSleepMonth240hDesc,
       rewards: const [],
       contentTags: const [ContentTag.core, ContentTag.fitness],
+      rarity: Rarity.epic,
+    ),
+    Achievement(
+      id: const ProgressionEntryId('sleep_month_270h'),
+      objectiveId: ObjectiveId('rolling_sleep_30d_270h'),
+      badgeEmoji: '\u{1F30C}',
+      titleKey: (l) => l.progAchievementSleepMonth270hTitle,
+      descriptionKey: (l) => l.progAchievementSleepMonth270hDesc,
+      rewards: const [],
+      contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.legendary,
+    ),
+    Achievement(
+      id: const ProgressionEntryId('sleep_month_300h'),
+      objectiveId: ObjectiveId('rolling_sleep_30d_300h'),
+      badgeEmoji: '\u{1F9DA}',
+      titleKey: (l) => l.progAchievementSleepMonth300hTitle,
+      descriptionKey: (l) => l.progAchievementSleepMonth300hDesc,
+      rewards: const [],
+      contentTags: const [ContentTag.core, ContentTag.fitness],
+      rarity: Rarity.mythic,
+    ),
+    Achievement(
+      id: const ProgressionEntryId('sleep_200d_1600h'),
+      objectiveId: ObjectiveId('rolling_sleep_200d_1600h'),
+      badgeEmoji: '\u{1F3C6}',
+      titleKey: (l) => l.progAchievementSleep200d1600hTitle,
+      descriptionKey: (l) => l.progAchievementSleep200d1600hDesc,
+      rewards: const [],
+      contentTags: const [ContentTag.core, ContentTag.fitness],
+      rarity: Rarity.mythic,
+    ),
+    Achievement(
+      id: const ProgressionEntryId('night_owl'),
+      objectiveId: ObjectiveId('sleep_starts_after_1am_30'),
+      badgeEmoji: '\u{1F989}',
+      titleKey: (l) => l.progAchievementNightOwlTitle,
+      descriptionKey: (l) => l.progAchievementNightOwlDesc,
+      rewards: const [],
+      contentTags: const [ContentTag.core, ContentTag.fitness],
+      rarity: Rarity.rare,
+    ),
+    Achievement(
+      id: const ProgressionEntryId('early_bird'),
+      objectiveId: ObjectiveId('sleep_starts_before_10pm_30'),
+      badgeEmoji: '\u{1F424}',
+      titleKey: (l) => l.progAchievementEarlyBirdTitle,
+      descriptionKey: (l) => l.progAchievementEarlyBirdDesc,
+      rewards: const [],
+      contentTags: const [ContentTag.core, ContentTag.fitness],
+      rarity: Rarity.rare,
     ),
   ];
 }

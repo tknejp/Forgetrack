@@ -438,6 +438,8 @@ class ProgressionDisplayResolver {
           ruleHintId: 'daily_fiber',
         ),
       SleepMinutesMetric() => _sleepSummary(target, l10n),
+      SleepStartHourCountMetric() =>
+        '$target ${l10n.progAchievementSummaryNights}',
       ActivityMinutesMetric() => _ruleScaledSummary(
           objective: objective,
           targetValue: target,

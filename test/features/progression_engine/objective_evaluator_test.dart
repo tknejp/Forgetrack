@@ -171,4 +171,63 @@ void main() {
       expect(outcome.periodKey, isNull);
     });
   });
+
+  group('ObjectiveEvaluator — SleepStartHourCountMetric', () {
+    test('atOrAfter 1am reads lifetimeNightsStartedAtOrAfter1am', () {
+      final spec = _objective(
+        metric: const SleepStartHourCountMetric(
+          hour: 1,
+          direction: SleepStartHourDirection.atOrAfter,
+        ),
+        scope: const LifetimeScope(),
+        targetValue: 30,
+      );
+      final ctx = buildTestContext(
+        evaluatedAt: DateTime(2026, 5, 21, 12),
+        lifetimeNightsStartedAtOrAfter1am: 30,
+      );
+      final out = evaluator.evaluate(spec, ctx);
+      expect(out.actualValue, 30);
+      expect(out.completed, isTrue);
+    });
+
+    test('before 10pm reads lifetimeNightsStartedBefore10pm', () {
+      final spec = _objective(
+        metric: const SleepStartHourCountMetric(
+          hour: 22,
+          direction: SleepStartHourDirection.before,
+        ),
+        scope: const LifetimeScope(),
+        targetValue: 30,
+      );
+      final under = buildTestContext(
+        evaluatedAt: DateTime(2026, 5, 21, 12),
+        lifetimeNightsStartedBefore10pm: 29,
+      );
+      final at = buildTestContext(
+        evaluatedAt: DateTime(2026, 5, 21, 12),
+        lifetimeNightsStartedBefore10pm: 30,
+      );
+      expect(evaluator.evaluate(spec, under).completed, isFalse);
+      expect(evaluator.evaluate(spec, at).completed, isTrue);
+    });
+
+    test('unwired (hour, direction) combinations evaluate to 0', () {
+      // Catalog only wires (1, atOrAfter) and (22, before). Anything
+      // else stays at 0 so a new entry without snapshot wiring does
+      // not silently complete.
+      final spec = _objective(
+        metric: const SleepStartHourCountMetric(
+          hour: 3,
+          direction: SleepStartHourDirection.atOrAfter,
+        ),
+        targetValue: 1,
+      );
+      final ctx = buildTestContext(
+        evaluatedAt: DateTime(2026, 5, 21, 12),
+        lifetimeNightsStartedAtOrAfter1am: 999,
+      );
+      expect(evaluator.evaluate(spec, ctx).actualValue, 0);
+    });
+  });
 }
