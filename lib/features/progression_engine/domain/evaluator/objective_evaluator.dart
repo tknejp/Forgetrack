@@ -172,6 +172,16 @@ class ObjectiveEvaluator {
         }
         return n.toDouble();
       }(),
+      BestDailyValueMetric(:final metric) => switch (metric) {
+          StepsMetric() => health.bestSingleDayStepsLifetime.toDouble(),
+          // Only StepsMetric is wired today; other daily metrics fall
+          // through to 0 until the snapshot grows the matching field.
+          _ => 0,
+        },
+      ReturnAfterGapMetric(:final gapDays) =>
+        (counters.returnsAfterGapByDays[gapDays] ?? 0).toDouble(),
+      StreakAfterGapMetric(:final gapDays) =>
+        (counters.bestStreakAfterGapByDays[gapDays] ?? 0).toDouble(),
       // Per-day "at least K of these nodes were done" requires the
       // ledger to reconstruct daily groupings — that's done in the
       // provider and surfaced through `objectiveActualOverrides`.

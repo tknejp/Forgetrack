@@ -5733,6 +5733,72 @@ abstract class AppLocalizations {
   /// **'nights'**
   String get progAchievementSummaryNights;
 
+  /// No description provided for @progAchievementSummaryInOneDay.
+  ///
+  /// In en, this message translates to:
+  /// **'in one day'**
+  String get progAchievementSummaryInOneDay;
+
+  /// No description provided for @progAchievementSummaryComeback.
+  ///
+  /// In en, this message translates to:
+  /// **'after a 7-day break'**
+  String get progAchievementSummaryComeback;
+
+  /// No description provided for @progAchievementSummaryComebackDays.
+  ///
+  /// In en, this message translates to:
+  /// **'day comeback'**
+  String get progAchievementSummaryComebackDays;
+
+  /// No description provided for @progAchievementMarathonDayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Marathon Day'**
+  String get progAchievementMarathonDayTitle;
+
+  /// No description provided for @progAchievementMarathonDayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk 42,195 steps in a single day.'**
+  String get progAchievementMarathonDayDesc;
+
+  /// No description provided for @progAchievementStepsDay100kTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hundred Thousand Strides'**
+  String get progAchievementStepsDay100kTitle;
+
+  /// No description provided for @progAchievementStepsDay100kDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk 100,000 steps in a single day.'**
+  String get progAchievementStepsDay100kDesc;
+
+  /// No description provided for @progAchievementZeroDayRecoveryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The Comeback'**
+  String get progAchievementZeroDayRecoveryTitle;
+
+  /// No description provided for @progAchievementZeroDayRecoveryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Return to the journey after a break of 7+ days.'**
+  String get progAchievementZeroDayRecoveryDesc;
+
+  /// No description provided for @progAchievementComebackStreakTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unbroken Return'**
+  String get progAchievementComebackStreakTitle;
+
+  /// No description provided for @progAchievementComebackStreakDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'After a 7+ day break, complete 14 consecutive active days.'**
+  String get progAchievementComebackStreakDesc;
+
   /// No description provided for @progAchievementPerfectDays7Title.
   ///
   /// In en, this message translates to:

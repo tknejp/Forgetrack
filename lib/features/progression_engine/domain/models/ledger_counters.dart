@@ -33,6 +33,8 @@ class LedgerCounters {
     this.questCompletionsByBucket = const {},
     this.distinctActiveDays = 0,
     this.nodesCompletedToday = const {},
+    this.returnsAfterGapByDays = const {},
+    this.bestStreakAfterGapByDays = const {},
   });
 
   /// Empty sentinel — used by tests / pre-first-evaluation provider
@@ -88,6 +90,18 @@ class LedgerCounters {
   /// evaluator stays pure.
   final int distinctActiveDays;
 
+  /// `gapDays → number of node-completion events that landed after the
+  /// player had been inactive for at least `gapDays` consecutive days`.
+  /// Drives [ReturnAfterGapMetric]. Producer (provider input source)
+  /// only populates the gap thresholds the catalog queries (today: 7).
+  final Map<int, int> returnsAfterGapByDays;
+
+  /// `gapDays → longest run of consecutive active days that *began*
+  /// after a gap of at least `gapDays` inactive days`. Drives
+  /// [StreakAfterGapMetric]. 0 when no qualifying comeback streak has
+  /// happened yet.
+  final Map<int, int> bestStreakAfterGapByDays;
+
   /// Set of node ids whose completion event landed *today*. Drives
   /// `TodayCompletionsAmongMetric` — combo daily quests use this to
   /// ask "K of {daily_steps_today, daily_calories_today, …}
@@ -109,6 +123,8 @@ class LedgerCounters {
     Map<String, int>? questCompletionsByBucket,
     int? distinctActiveDays,
     Set<String>? nodesCompletedToday,
+    Map<int, int>? returnsAfterGapByDays,
+    Map<int, int>? bestStreakAfterGapByDays,
   }) {
     return LedgerCounters(
       totalRewardCount: totalRewardCount ?? this.totalRewardCount,
@@ -129,6 +145,10 @@ class LedgerCounters {
           questCompletionsByBucket ?? this.questCompletionsByBucket,
       distinctActiveDays: distinctActiveDays ?? this.distinctActiveDays,
       nodesCompletedToday: nodesCompletedToday ?? this.nodesCompletedToday,
+      returnsAfterGapByDays:
+          returnsAfterGapByDays ?? this.returnsAfterGapByDays,
+      bestStreakAfterGapByDays:
+          bestStreakAfterGapByDays ?? this.bestStreakAfterGapByDays,
     );
   }
 }

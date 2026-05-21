@@ -440,6 +440,11 @@ class ProgressionDisplayResolver {
       SleepMinutesMetric() => _sleepSummary(target, l10n),
       SleepStartHourCountMetric() =>
         '$target ${l10n.progAchievementSummaryNights}',
+      BestDailyValueMetric() =>
+        '${_compactInt(target, locale)} ${l10n.progAchievementSummaryInOneDay}',
+      ReturnAfterGapMetric() => l10n.progAchievementSummaryComeback,
+      StreakAfterGapMetric() =>
+        '$target ${l10n.progAchievementSummaryComebackDays}',
       ActivityMinutesMetric() => _ruleScaledSummary(
           objective: objective,
           targetValue: target,

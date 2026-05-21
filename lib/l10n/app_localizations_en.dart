@@ -3199,6 +3199,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progAchievementSummaryNights => 'nights';
 
   @override
+  String get progAchievementSummaryInOneDay => 'in one day';
+
+  @override
+  String get progAchievementSummaryComeback => 'after a 7-day break';
+
+  @override
+  String get progAchievementSummaryComebackDays => 'day comeback';
+
+  @override
+  String get progAchievementMarathonDayTitle => 'Marathon Day';
+
+  @override
+  String get progAchievementMarathonDayDesc =>
+      'Walk 42,195 steps in a single day.';
+
+  @override
+  String get progAchievementStepsDay100kTitle => 'Hundred Thousand Strides';
+
+  @override
+  String get progAchievementStepsDay100kDesc =>
+      'Walk 100,000 steps in a single day.';
+
+  @override
+  String get progAchievementZeroDayRecoveryTitle => 'The Comeback';
+
+  @override
+  String get progAchievementZeroDayRecoveryDesc =>
+      'Return to the journey after a break of 7+ days.';
+
+  @override
+  String get progAchievementComebackStreakTitle => 'Unbroken Return';
+
+  @override
+  String get progAchievementComebackStreakDesc =>
+      'After a 7+ day break, complete 14 consecutive active days.';
+
+  @override
   String get progAchievementPerfectDays7Title => 'Balanced Week';
 
   @override

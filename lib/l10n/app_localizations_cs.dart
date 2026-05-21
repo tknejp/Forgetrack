@@ -3191,6 +3191,43 @@ class AppLocalizationsCs extends AppLocalizations {
   String get progAchievementSummaryNights => 'nocí';
 
   @override
+  String get progAchievementSummaryInOneDay => 'za 1 den';
+
+  @override
+  String get progAchievementSummaryComeback => 'po 7denní pauze';
+
+  @override
+  String get progAchievementSummaryComebackDays => 'denní comeback';
+
+  @override
+  String get progAchievementMarathonDayTitle => 'Maratonský den';
+
+  @override
+  String get progAchievementMarathonDayDesc =>
+      'Ujdi 42 195 kroků za jeden den.';
+
+  @override
+  String get progAchievementStepsDay100kTitle => 'Sto tisíc kroků';
+
+  @override
+  String get progAchievementStepsDay100kDesc =>
+      'Ujdi 100 000 kroků za jeden den.';
+
+  @override
+  String get progAchievementZeroDayRecoveryTitle => 'Comeback';
+
+  @override
+  String get progAchievementZeroDayRecoveryDesc =>
+      'Vrať se na cestu po 7denní (nebo delší) pauze.';
+
+  @override
+  String get progAchievementComebackStreakTitle => 'Nezlomený návrat';
+
+  @override
+  String get progAchievementComebackStreakDesc =>
+      'Po 7+denní pauze splň 14 aktivních dní v řadě.';
+
+  @override
   String get progAchievementPerfectDays7Title => 'Vyvážený týden';
 
   @override

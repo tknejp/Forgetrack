@@ -169,6 +169,51 @@ class LifetimeCompletionsAmongMetric extends ObjectiveMetric {
   final List<ProgressionEntryId> nodeIds;
 }
 
+/// Best single-day value of a wrapped daily metric across history.
+/// Drives "marathon day" / "100k steps in a day" type achievements —
+/// the player only needs *one* day that hits the threshold, ever.
+///
+/// The wrapped metric carries the unit; only daily-source metrics
+/// make sense here (StepsMetric is the only one wired today). The
+/// resolver reads a pre-aggregated single-day max from
+/// `HealthSnapshot`.
+class BestDailyValueMetric extends ObjectiveMetric {
+  const BestDailyValueMetric({required this.metric});
+
+  final ObjectiveMetric metric;
+}
+
+/// Counts how many node-completion events landed after the player had
+/// previously been inactive for at least [gapDays] consecutive days.
+/// Pair with `LifetimeScope` + `atLeast 1` for a "you came back!"
+/// achievement (`zero_day_recovery`).
+///
+/// Producer (provider input source) scans the ledger's node-completion
+/// events in chronological order, groups by local-day, and increments
+/// the counter every time the gap between two consecutive active days
+/// is >= [gapDays]. Brand new players (no prior active day) do not
+/// trip this — the first ever completion is not a "return".
+class ReturnAfterGapMetric extends ObjectiveMetric {
+  const ReturnAfterGapMetric({required this.gapDays});
+
+  final int gapDays;
+}
+
+/// Longest run of consecutive active days that *began* after a gap of
+/// at least [gapDays] inactive days. Drives `comeback_streak` —
+/// rewards the player who powered through after a long break.
+///
+/// Producer increments the running streak each consecutive active
+/// day, resets on inactivity, and records `bestStreakAfterGap` only
+/// for streaks whose first day followed a >= [gapDays] gap from the
+/// previous active day. Returns 0 when no qualifying comeback streak
+/// has happened yet.
+class StreakAfterGapMetric extends ObjectiveMetric {
+  const StreakAfterGapMetric({required this.gapDays});
+
+  final int gapDays;
+}
+
 /// Number of distinct calendar days on which at least [atLeast] of the
 /// named nodes were "done" (goal met or claimed). Use when a quest
 /// reads as "complete at least K daily goals on N different days"

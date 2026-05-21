@@ -207,7 +207,12 @@ List<ProgressionEntry> sleepNodes() {
       badgeEmoji: '\u{1F989}',
       titleKey: (l) => l.progAchievementNightOwlTitle,
       descriptionKey: (l) => l.progAchievementNightOwlDesc,
-      rewards: const [],
+      // Paired with `early_bird`: both grant `relic_ruin_seal`. The
+      // cosmetic unlock bridge is idempotent (`cosmetics.unlock`
+      // no-ops when the id is already unlocked), so whichever
+      // achievement completes first awards the relic and the second
+      // is silent.
+      rewards: const [CosmeticReward(cosmeticId: CosmeticId('relic_ruin_seal'))],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.rare,
     ),
@@ -217,7 +222,8 @@ List<ProgressionEntry> sleepNodes() {
       badgeEmoji: '\u{1F424}',
       titleKey: (l) => l.progAchievementEarlyBirdTitle,
       descriptionKey: (l) => l.progAchievementEarlyBirdDesc,
-      rewards: const [],
+      // Pair with `night_owl` — see comment above for idempotence.
+      rewards: const [CosmeticReward(cosmeticId: CosmeticId('relic_ruin_seal'))],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.rare,
     ),

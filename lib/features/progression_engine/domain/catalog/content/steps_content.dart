@@ -134,6 +134,23 @@ List<Objective> stepsObjectives(EngineCatalogContext context) {
       operator: ObjectiveOperator.atLeast,
       targetValue: 100,
     ),
+    const Objective(
+      id: const ObjectiveId('best_day_steps_42195'),
+      domain: ProgressionDomain.steps,
+      metric: BestDailyValueMetric(metric: StepsMetric()),
+      scope: LifetimeScope(),
+      operator: ObjectiveOperator.atLeast,
+      // Marathon distance (42.195 km) at an average ~1 m per step.
+      targetValue: 42195,
+    ),
+    const Objective(
+      id: const ObjectiveId('best_day_steps_100k'),
+      domain: ProgressionDomain.steps,
+      metric: BestDailyValueMetric(metric: StepsMetric()),
+      scope: LifetimeScope(),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: 100000,
+    ),
   ];
 }
 
@@ -312,6 +329,26 @@ List<ProgressionEntry> stepsNodes() {
       rewards: const [CosmeticReward(cosmeticId: CosmeticId('frame_eternal_flame'))],
       contentTags: const [ContentTag.core, ContentTag.fitness],
       rarity: Rarity.legendary,
+    ),
+    Achievement(
+      id: const ProgressionEntryId('marathon_day'),
+      objectiveId: ObjectiveId('best_day_steps_42195'),
+      badgeEmoji: '\u{1F3C3}',
+      titleKey: (l) => l.progAchievementMarathonDayTitle,
+      descriptionKey: (l) => l.progAchievementMarathonDayDesc,
+      rewards: const [],
+      contentTags: const [ContentTag.core, ContentTag.fitness],
+      rarity: Rarity.epic,
+    ),
+    Achievement(
+      id: const ProgressionEntryId('steps_day_100k'),
+      objectiveId: ObjectiveId('best_day_steps_100k'),
+      badgeEmoji: '\u{1F525}',
+      titleKey: (l) => l.progAchievementStepsDay100kTitle,
+      descriptionKey: (l) => l.progAchievementStepsDay100kDesc,
+      rewards: const [],
+      contentTags: const [ContentTag.core, ContentTag.fitness],
+      rarity: Rarity.mythic,
     ),
   ];
 }

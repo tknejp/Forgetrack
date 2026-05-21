@@ -1687,6 +1687,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// single [LedgerCounters] VO.
   LedgerCounters _buildLedgerCounters() {
     final quests = _questCompletionsFromLedger();
+    final gaps = _gapBasedCountersFromLedger(const [7]);
     return LedgerCounters(
       totalRewardCount: _totalRewardCountFromLedger(),
       rewardCountByDomain: _rewardCountByDomainFromLedger(),
@@ -1698,7 +1699,64 @@ class ProgressionEngineProvider extends ChangeNotifier {
       distinctActiveDays: _distinctActiveDaysFromLedger(),
       nodesCompletedToday: _nodesCompletedTodayFromLedger(),
       comboPoolCompletionCounts: _comboPoolCompletionCountsFromLedger(),
+      returnsAfterGapByDays: gaps.returnsByDays,
+      bestStreakAfterGapByDays: gaps.bestStreakByDays,
     );
+  }
+
+  /// Walks the ledger's node-completion events in chronological order,
+  /// groups by local-day, and for each `gapDays` threshold computes:
+  ///
+  ///   - `returnsByDays[gapDays]` — number of active days whose
+  ///     previous active day was strictly more than `gapDays` calendar
+  ///     days earlier. Brand-new players (no prior active day) never
+  ///     count — first ever completion is not a "return".
+  ///   - `bestStreakByDays[gapDays]` — longest run of consecutive
+  ///     active days whose first day followed such a gap.
+  ///
+  /// Drives [ReturnAfterGapMetric] / [StreakAfterGapMetric]. Single
+  /// pass per gap threshold; runs once per evaluation alongside the
+  /// other journal-derived counters.
+  ({Map<int, int> returnsByDays, Map<int, int> bestStreakByDays})
+      _gapBasedCountersFromLedger(List<int> gapDays) {
+    final l = _ledger;
+    if (l == null || gapDays.isEmpty) {
+      return (returnsByDays: const {}, bestStreakByDays: const {});
+    }
+    final activeDays = <DateTime>{};
+    for (final e in l.nodeCompletions) {
+      final t = e.timestamp.toLocal();
+      activeDays.add(DateTime(t.year, t.month, t.day));
+    }
+    if (activeDays.isEmpty) {
+      return (returnsByDays: const {}, bestStreakByDays: const {});
+    }
+    final ordered = activeDays.toList()..sort();
+    final returns = <int, int>{for (final g in gapDays) g: 0};
+    final bestStreak = <int, int>{for (final g in gapDays) g: 0};
+    // Track running streak + the gap that preceded its first day, so
+    // we can credit `bestStreakByDays[g]` whenever the running streak
+    // grows past its previous high.
+    var streak = 1;
+    var streakStartGap = 0; // 0 = no prior active day (brand new player).
+    for (var i = 1; i < ordered.length; i++) {
+      final gap = ordered[i].difference(ordered[i - 1]).inDays;
+      if (gap == 1) {
+        streak += 1;
+      } else {
+        streak = 1;
+        streakStartGap = gap;
+        for (final g in gapDays) {
+          if (gap >= g) returns[g] = (returns[g] ?? 0) + 1;
+        }
+      }
+      for (final g in gapDays) {
+        if (streakStartGap >= g && streak > (bestStreak[g] ?? 0)) {
+          bestStreak[g] = streak;
+        }
+      }
+    }
+    return (returnsByDays: returns, bestStreakByDays: bestStreak);
   }
 
   // ── Ledger-derived input helpers ────────────────────────────────

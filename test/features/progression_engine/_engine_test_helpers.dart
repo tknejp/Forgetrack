@@ -30,6 +30,7 @@ EngineEvaluationContext buildTestContext({
   bool weightLoggedToday = false,
   int lifetimeNightsStartedAtOrAfter1am = 0,
   int lifetimeNightsStartedBefore10pm = 0,
+  int bestSingleDayStepsLifetime = 0,
   double caloriesToday = 0,
   double proteinGramsToday = 0,
   double carbsGramsToday = 0,
@@ -48,6 +49,8 @@ EngineEvaluationContext buildTestContext({
   Map<String, int> questCompletionsByBucket = const {},
   int distinctActiveDays = 0,
   Set<String> nodesCompletedToday = const {},
+  Map<int, int> returnsAfterGapByDays = const {},
+  Map<int, int> bestStreakAfterGapByDays = const {},
   Map<String, double> objectiveActualOverrides = const {},
   List<JournalEvent> events = const [],
 }) {
@@ -71,6 +74,7 @@ EngineEvaluationContext buildTestContext({
       weightLoggedToday: weightLoggedToday,
       lifetimeNightsStartedAtOrAfter1am: lifetimeNightsStartedAtOrAfter1am,
       lifetimeNightsStartedBefore10pm: lifetimeNightsStartedBefore10pm,
+      bestSingleDayStepsLifetime: bestSingleDayStepsLifetime,
     ),
     nutritionSnapshot: NutritionSnapshot(
       evaluatedDate: day,
@@ -96,6 +100,8 @@ EngineEvaluationContext buildTestContext({
       questCompletionsByBucket: questCompletionsByBucket,
       distinctActiveDays: distinctActiveDays,
       nodesCompletedToday: nodesCompletedToday,
+      returnsAfterGapByDays: returnsAfterGapByDays,
+      bestStreakAfterGapByDays: bestStreakAfterGapByDays,
     ),
     overrides: EvaluationOverrides(
       objectiveActualOverrides: objectiveActualOverrides,

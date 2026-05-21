@@ -113,6 +113,20 @@ List<Objective> metaObjectives(EngineCatalogContext context) {
       operator: ObjectiveOperator.atLeast,
       targetValue: 365,
     ),
+    Objective(
+      id: const ObjectiveId('zero_day_recovery'),
+      metric: ReturnAfterGapMetric(gapDays: 7),
+      scope: LifetimeScope(),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: 1,
+    ),
+    Objective(
+      id: const ObjectiveId('comeback_streak_14'),
+      metric: StreakAfterGapMetric(gapDays: 7),
+      scope: LifetimeScope(),
+      operator: ObjectiveOperator.atLeast,
+      targetValue: 14,
+    ),
     // Combo-pool counters (Phase 9c follow-up).
     Objective(
       id: const ObjectiveId('combo_pool_10'),
@@ -300,6 +314,26 @@ List<ProgressionEntry> metaNodes() {
       rewards: const [],
       contentTags: const [ContentTag.core],
       rarity: Rarity.legendary,
+    ),
+    Achievement(
+      id: const ProgressionEntryId('zero_day_recovery'),
+      objectiveId: ObjectiveId('zero_day_recovery'),
+      badgeEmoji: '\u{2600}\u{FE0F}',
+      titleKey: (l) => l.progAchievementZeroDayRecoveryTitle,
+      descriptionKey: (l) => l.progAchievementZeroDayRecoveryDesc,
+      rewards: const [],
+      contentTags: const [ContentTag.core],
+      rarity: Rarity.uncommon,
+    ),
+    Achievement(
+      id: const ProgressionEntryId('comeback_streak_14'),
+      objectiveId: ObjectiveId('comeback_streak_14'),
+      badgeEmoji: '\u{1F9D7}',
+      titleKey: (l) => l.progAchievementComebackStreakTitle,
+      descriptionKey: (l) => l.progAchievementComebackStreakDesc,
+      rewards: const [],
+      contentTags: const [ContentTag.core],
+      rarity: Rarity.rare,
     ),
     // Combo achievements (Phase 9c follow-up). Backing infra:
     // ComboPoolCompletionsMetric for the lifetime "all combos" tally,

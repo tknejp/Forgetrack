@@ -37,6 +37,7 @@ class HealthSnapshot {
     this.weightLoggedToday = false,
     this.lifetimeNightsStartedAtOrAfter1am = 0,
     this.lifetimeNightsStartedBefore10pm = 0,
+    this.bestSingleDayStepsLifetime = 0,
   });
 
   /// Sentinel "no data" snapshot keyed at the unix epoch. Used by
@@ -68,6 +69,14 @@ class HealthSnapshot {
   /// `early_bird` achievement via [SleepStartHourCountMetric].
   final int lifetimeNightsStartedBefore10pm;
 
+  /// Highest single-day steps total recorded across the entire
+  /// step-history window kept by `FitnessProvider`. Drives
+  /// [BestDailyValueMetric] wrapped around `StepsMetric` — feeds
+  /// `marathon_day` (42k) and `steps_day_100k`. Bounded by Health
+  /// Connect's retention window, matching the pre-extraction
+  /// behaviour.
+  final int bestSingleDayStepsLifetime;
+
   /// Stable signature for change detection. Joined with the
   /// [NutritionSnapshot] / [GoalBoard] signatures inside
   /// `ProviderEngineInputSource.auditSignature` so any meaningful
@@ -82,6 +91,7 @@ class HealthSnapshot {
         weightLoggedToday ? 1 : 0,
         lifetimeNightsStartedAtOrAfter1am,
         lifetimeNightsStartedBefore10pm,
+        bestSingleDayStepsLifetime,
       ].join('|');
 
   HealthSnapshot copyWith({
@@ -94,6 +104,7 @@ class HealthSnapshot {
     bool? weightLoggedToday,
     int? lifetimeNightsStartedAtOrAfter1am,
     int? lifetimeNightsStartedBefore10pm,
+    int? bestSingleDayStepsLifetime,
   }) {
     return HealthSnapshot(
       evaluatedDate: evaluatedDate ?? this.evaluatedDate,
@@ -107,6 +118,8 @@ class HealthSnapshot {
           this.lifetimeNightsStartedAtOrAfter1am,
       lifetimeNightsStartedBefore10pm: lifetimeNightsStartedBefore10pm ??
           this.lifetimeNightsStartedBefore10pm,
+      bestSingleDayStepsLifetime:
+          bestSingleDayStepsLifetime ?? this.bestSingleDayStepsLifetime,
     );
   }
 
@@ -124,7 +137,8 @@ class HealthSnapshot {
         other.lifetimeNightsStartedAtOrAfter1am ==
             lifetimeNightsStartedAtOrAfter1am &&
         other.lifetimeNightsStartedBefore10pm ==
-            lifetimeNightsStartedBefore10pm;
+            lifetimeNightsStartedBefore10pm &&
+        other.bestSingleDayStepsLifetime == bestSingleDayStepsLifetime;
   }
 
   @override
@@ -138,6 +152,7 @@ class HealthSnapshot {
         weightLoggedToday,
         lifetimeNightsStartedAtOrAfter1am,
         lifetimeNightsStartedBefore10pm,
+        bestSingleDayStepsLifetime,
       );
 
   @override
@@ -147,5 +162,6 @@ class HealthSnapshot {
       'sleepMin: $sleepMinutesToday, activityMin: $activityMinutesToday, '
       'weightLogged: $weightLoggedToday, '
       'nightsAfter1am: $lifetimeNightsStartedAtOrAfter1am, '
-      'nightsBefore10pm: $lifetimeNightsStartedBefore10pm)';
+      'nightsBefore10pm: $lifetimeNightsStartedBefore10pm, '
+      'bestSingleDaySteps: $bestSingleDayStepsLifetime)';
 }

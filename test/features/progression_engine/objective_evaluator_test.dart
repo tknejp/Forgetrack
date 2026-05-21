@@ -212,6 +212,58 @@ void main() {
       expect(evaluator.evaluate(spec, at).completed, isTrue);
     });
 
+    test('BestDailyValueMetric(StepsMetric) reads bestSingleDayStepsLifetime',
+        () {
+      final spec = _objective(
+        metric: const BestDailyValueMetric(metric: StepsMetric()),
+        scope: const LifetimeScope(),
+        targetValue: 42195,
+      );
+      final under = buildTestContext(bestSingleDayStepsLifetime: 42000);
+      final at = buildTestContext(bestSingleDayStepsLifetime: 42195);
+      expect(evaluator.evaluate(spec, under).completed, isFalse);
+      expect(evaluator.evaluate(spec, at).completed, isTrue);
+    });
+
+    test('BestDailyValueMetric falls to 0 for unwired wrapped metrics', () {
+      // Only StepsMetric is wired; e.g. CaloriesMetric returns 0 so a
+      // new achievement on the wrong axis does not silently complete.
+      final spec = _objective(
+        metric: const BestDailyValueMetric(metric: CaloriesMetric()),
+        targetValue: 1,
+      );
+      expect(
+          evaluator
+              .evaluate(spec, buildTestContext(bestSingleDayStepsLifetime: 99999))
+              .actualValue,
+          0);
+    });
+
+    test('ReturnAfterGapMetric reads returnsAfterGapByDays[gapDays]', () {
+      final spec = _objective(
+        metric: const ReturnAfterGapMetric(gapDays: 7),
+        scope: const LifetimeScope(),
+        targetValue: 1,
+      );
+      final none = buildTestContext(returnsAfterGapByDays: const {7: 0});
+      final hit = buildTestContext(returnsAfterGapByDays: const {7: 1});
+      expect(evaluator.evaluate(spec, none).completed, isFalse);
+      expect(evaluator.evaluate(spec, hit).completed, isTrue);
+    });
+
+    test('StreakAfterGapMetric reads bestStreakAfterGapByDays[gapDays]', () {
+      final spec = _objective(
+        metric: const StreakAfterGapMetric(gapDays: 7),
+        scope: const LifetimeScope(),
+        targetValue: 14,
+      );
+      final under =
+          buildTestContext(bestStreakAfterGapByDays: const {7: 13});
+      final at = buildTestContext(bestStreakAfterGapByDays: const {7: 14});
+      expect(evaluator.evaluate(spec, under).completed, isFalse);
+      expect(evaluator.evaluate(spec, at).completed, isTrue);
+    });
+
     test('unwired (hour, direction) combinations evaluate to 0', () {
       // Catalog only wires (1, atOrAfter) and (22, before). Anything
       // else stays at 0 so a new entry without snapshot wiring does

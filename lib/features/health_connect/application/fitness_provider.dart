@@ -318,6 +318,10 @@ class FitnessProvider extends ChangeNotifier {
       if (h >= 1 && h < 12) nightsAfter1am++;
       if (h < 22 && h >= 12) nightsBefore10pm++;
     }
+    var bestSingleDaySteps = 0;
+    for (final r in _stepsHistory) {
+      if (r.steps > bestSingleDaySteps) bestSingleDaySteps = r.steps;
+    }
     return HealthSnapshot(
       evaluatedDate: day,
       stepsToday: stepsForDate(day),
@@ -328,6 +332,7 @@ class FitnessProvider extends ChangeNotifier {
       weightLoggedToday: weightForDate(day) != null,
       lifetimeNightsStartedAtOrAfter1am: nightsAfter1am,
       lifetimeNightsStartedBefore10pm: nightsBefore10pm,
+      bestSingleDayStepsLifetime: bestSingleDaySteps,
     );
   }
 
