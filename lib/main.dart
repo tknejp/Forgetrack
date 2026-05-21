@@ -46,9 +46,7 @@ import 'features/social/data/social_firebase_bootstrap.dart';
 import 'features/social/data/social_firebase_session.dart';
 import 'features/social/data/social_repository_disabled.dart';
 import 'features/social/data/social_repository_firestore.dart';
-import 'features/nutrition/application/calorie_provider.dart';
 import 'features/nutrition/application/kaloricke_tabulky_provider.dart';
-import 'features/nutrition/data/calorie_api_service.dart';
 import 'features/nutrition/data/kaloricke_tabulky_service.dart';
 import 'features/nutrition/data/local/kt_nutrition_database.dart';
 import 'features/health_connect/application/fitness_provider.dart';
@@ -98,7 +96,6 @@ Future<void> main() async {
   await fitnessProvider.initialize();
   unawaited(fitnessProvider.refreshOnAppOpen(force: true));
 
-  final calorieApi = CalorieApiService();
   final ktService = KalorickeTabulkyService();
   final ktDb = KtNutritionDatabase();
   await ktDb.open();
@@ -257,7 +254,6 @@ Future<void> main() async {
           create: (_) => AuthProvider(),
         ),
         ChangeNotifierProvider.value(value: fitnessProvider),
-        ChangeNotifierProvider(create: (_) => CalorieProvider(calorieApi)),
         ChangeNotifierProvider.value(value: ktProvider),
         ChangeNotifierProvider.value(value: connectivityProvider),
         ChangeNotifierProvider.value(value: homeCardOrderProvider),
@@ -377,7 +373,7 @@ Future<void> main() async {
           lazy: false,
           create: (ctx) {
             final p = FoodTriggerProvider(
-              calorieProvider: ctx.read<CalorieProvider>(),
+              nutritionProvider: ctx.read<KalorickeTabulkyProvider>(),
               cosmeticsProvider: ctx.read<CosmeticsProvider>(),
               grant: ({required int amount, required String periodKey}) =>
                   ctx.read<ProgressionEngineProvider>()

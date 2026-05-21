@@ -54,16 +54,6 @@
       "dependsOn": []
     },
     {
-      "id": "CalorieProvider",
-      "displayName": "Calorie",
-      "feature": "nutrition",
-      "group": "data",
-      "kind": "ChangeNotifierProvider",
-      "file": "lib/features/nutrition/application/calorie_provider.dart",
-      "summary": "Lightweight aggregated kalorické metriky pro home dashboard.",
-      "dependsOn": []
-    },
-    {
       "id": "CosmeticsProvider",
       "displayName": "Cosmetics",
       "feature": "cosmetics",

@@ -1,4 +1,3 @@
-import '../../nutrition/domain/calorie_entry.dart';
 import '../domain/cosmetic_models.dart';
 
 /// Snapshot of what a companion's [FoodTriggerReward] is owed against
@@ -23,8 +22,10 @@ class FoodTriggerSnapshot {
   /// when invoking [FoodTriggerService.claim].
   final Companion companion;
 
-  /// Number of distinct [CalorieEntry] rows whose food name matched
-  /// the trigger's keyword set today.
+  /// Number of food-name entries today whose title matched the
+  /// trigger's keyword set. The provider feeds raw titles in (KT
+  /// foodstuff titles, manual log, …) — the service does not know
+  /// which source they came from.
   final int matchedEntryCount;
 
   /// Name of one of the matched entries, for UI flavor ("Plechovka
@@ -61,7 +62,16 @@ class FoodTriggerSnapshot {
 class FoodTriggerService {
   const FoodTriggerService();
 
-  /// Build a snapshot for [companion] against [todayLog].
+  /// Build a snapshot for [companion] against the raw food names
+  /// logged today.
+  ///
+  /// [todayFoodNames] is the flat list of every food title the
+  /// player has logged for the current day, from any nutrition
+  /// source (Kalorické Tabulky meals, the legacy manual log, future
+  /// integrations). The provider is responsible for the
+  /// source-to-string projection so the service stays trivially
+  /// testable and doesn't drag the nutrition-feature models into
+  /// the cosmetics layer.
   ///
   /// Returns null when the companion has no [Companion.foodTrigger]
   /// — callers can skip the UI entirely in that branch. A returned
@@ -70,7 +80,7 @@ class FoodTriggerService {
   /// null: it means "trigger exists, just nothing right now".
   FoodTriggerSnapshot? evaluate({
     required Companion companion,
-    required List<CalorieEntry> todayLog,
+    required List<String> todayFoodNames,
     required int alreadyClaimedXpToday,
   }) {
     final trigger = companion.foodTrigger;
@@ -78,10 +88,10 @@ class FoodTriggerService {
 
     var matchCount = 0;
     var sample = '';
-    for (final entry in todayLog) {
-      if (trigger.matchesEntry(entry.food.name)) {
+    for (final name in todayFoodNames) {
+      if (trigger.matchesEntry(name)) {
         matchCount += 1;
-        if (sample.isEmpty) sample = entry.food.name;
+        if (sample.isEmpty) sample = name;
       }
     }
 

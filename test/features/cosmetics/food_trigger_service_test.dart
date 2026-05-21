@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forgetrack/features/cosmetics/application/food_trigger_service.dart';
 import 'package:forgetrack/features/cosmetics/domain/cosmetic_models.dart';
-import 'package:forgetrack/features/nutrition/domain/calorie_entry.dart';
 import 'package:forgetrack/domain/progression/catalog/ids.dart';
 
 // Pinned Cosmetic id used across the tests below. Synthesized so the
@@ -17,16 +16,6 @@ Companion _companion({FoodTriggerReward? trigger}) {
     name: (_) => 'Test',
     description: (_) => 'Test',
     foodTrigger: trigger,
-  );
-}
-
-CalorieEntry _entry(String foodName) {
-  return CalorieEntry(
-    id: 'id-$foodName',
-    date: DateTime(2026, 5, 21, 12),
-    meal: MealType.svacina,
-    food: FoodItem(name: foodName, kcalPer100g: 50),
-    grams: 100,
   );
 }
 
@@ -69,7 +58,7 @@ void main() {
     test('returns null when companion has no trigger', () {
       final snap = service.evaluate(
         companion: _companion(),
-        todayLog: [_entry('Monster Energy')],
+        todayFoodNames: const ['Monster Energy'],
         alreadyClaimedXpToday: 0,
       );
       expect(snap, isNull);
@@ -78,7 +67,7 @@ void main() {
     test('no matches → zero claimable, snapshot still returned', () {
       final snap = service.evaluate(
         companion: _companion(trigger: trigger),
-        todayLog: [_entry('Voda'), _entry('Kuřecí prsa')],
+        todayFoodNames: const ['Voda', 'Kuřecí prsa'],
         alreadyClaimedXpToday: 0,
       );
       expect(snap, isNotNull);
@@ -91,10 +80,7 @@ void main() {
     test('per-entry XP grants linearly under cap', () {
       final snap = service.evaluate(
         companion: _companion(trigger: trigger),
-        todayLog: [
-          _entry('Monster Energy'),
-          _entry('Voda'),
-        ],
+        todayFoodNames: const ['Monster Energy', 'Voda'],
         alreadyClaimedXpToday: 0,
       );
       expect(snap!.matchedEntryCount, 1);
@@ -104,10 +90,22 @@ void main() {
       expect(snap.sampleEntryName, 'Monster Energy');
     });
 
+    test('matches keyword anywhere in the title (not just prefix)', () {
+      // Real KT title for the regression we're fixing: the keyword
+      // appears mid-string, surrounded by brand + flavor text.
+      final snap = service.evaluate(
+        companion: _companion(trigger: trigger),
+        todayFoodNames: const ['VR46 zero sugar Monster Energy'],
+        alreadyClaimedXpToday: 0,
+      );
+      expect(snap!.matchedEntryCount, 1);
+      expect(snap.claimableXp, 25);
+    });
+
     test('per-day cap clamps the gross', () {
       final snap = service.evaluate(
         companion: _companion(trigger: trigger),
-        todayLog: List.generate(8, (i) => _entry('Monster $i')),
+        todayFoodNames: List.generate(8, (i) => 'Monster $i'),
         alreadyClaimedXpToday: 0,
       );
       expect(snap!.matchedEntryCount, 8);
@@ -118,10 +116,10 @@ void main() {
     test('already-claimed subtracts from cap-adjusted total', () {
       final snap = service.evaluate(
         companion: _companion(trigger: trigger),
-        todayLog: [
-          _entry('Monster Energy'),
-          _entry('Monster Ultra'),
-          _entry('Monster Zero'),
+        todayFoodNames: const [
+          'Monster Energy',
+          'Monster Ultra',
+          'Monster Zero',
         ],
         alreadyClaimedXpToday: 50,
       );
@@ -133,7 +131,7 @@ void main() {
     test('over-claim (impossible in normal flow) clamps to zero', () {
       final snap = service.evaluate(
         companion: _companion(trigger: trigger),
-        todayLog: [_entry('Monster Energy')],
+        todayFoodNames: const ['Monster Energy'],
         alreadyClaimedXpToday: 100,
       );
       expect(snap!.claimableXp, 0);

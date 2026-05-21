@@ -33,9 +33,11 @@ sealed class FoodTriggerReward {
 }
 
 /// Trigger that matches by case-insensitive substring against any of
-/// [keywords]. The match runs over the raw [FoodItem.name] string the
-/// player saw when adding the entry; the data layer's normalisation
-/// (or lack of it) is exactly what the catalog row authors against.
+/// [keywords]. The match runs over the raw food title the player
+/// saw when they logged the entry — KT foodstuff titles today, any
+/// future nutrition source the provider plugs in tomorrow. The data
+/// layer's normalisation (or lack of it) is exactly what the
+/// catalog row authors against.
 ///
 /// Multiple keywords are OR-ed — useful for cs/en synonyms ("mléko"
 /// + "milk") or brand/category alternates ("monster", "monster

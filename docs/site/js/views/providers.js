@@ -172,7 +172,7 @@ function layoutConfig() {
     avoidOverlap: true,
     grid: true,
     roots: ['AuthProvider', 'GoalsProvider', 'FitnessProvider', 'KalorickeTabulkyProvider',
-            'CalorieProvider', 'SheetsExportProvider', 'BushidoExportProvider',
+            'SheetsExportProvider', 'BushidoExportProvider',
             'ConnectivityProvider', 'LocaleProvider', 'NotificationPreferencesProvider',
             'HomeCardOrderProvider', 'OnboardingProvider', 'DevToolsProvider'],
   };

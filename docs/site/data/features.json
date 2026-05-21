@@ -61,7 +61,7 @@
       "group": "data",
       "summary": "Klient pro REST API kaloricketabulky.cz — denní makro a kalorické záznamy.",
       "description": "Cookie-based autentizace s credentials ve flutter_secure_storage. Lokální Isar cache pro nutriční záznamy. Dnešní záznam může být legitimně 0 (uživatel ještě nic neloggoval).",
-      "providers": ["KalorickeTabulkyProvider", "CalorieProvider"],
+      "providers": ["KalorickeTabulkyProvider"],
       "consumes": ["auth"],
       "producedSignals": ["nutrition.dailyUpdated"],
       "files": {

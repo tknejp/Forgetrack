@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/logging/app_log.dart';
-import '../../nutrition/application/calorie_provider.dart';
+import '../../nutrition/application/kaloricke_tabulky_provider.dart';
 import '../domain/cosmetic_models.dart';
 import 'cosmetics_provider.dart';
 import 'food_trigger_service.dart';
@@ -37,21 +37,25 @@ typedef CompanionTriggerGrantFn = Future<void> Function({
 /// surfaces stay hidden.
 class FoodTriggerProvider extends ChangeNotifier {
   FoodTriggerProvider({
-    required CalorieProvider calorieProvider,
+    required KalorickeTabulkyProvider nutritionProvider,
     required CosmeticsProvider cosmeticsProvider,
     required CompanionTriggerGrantFn grant,
     FoodTriggerService service = const FoodTriggerService(),
     DateTime Function() now = DateTime.now,
-  })  : _calorie = calorieProvider,
+  })  : _nutrition = nutritionProvider,
         _cosmetics = cosmeticsProvider,
         _grant = grant,
         _service = service,
         _now = now {
-    _calorie.addListener(_onInputsChanged);
+    _nutrition.addListener(_onInputsChanged);
     _cosmetics.addListener(_onInputsChanged);
   }
 
-  final CalorieProvider _calorie;
+  /// Source of truth for today's logged food. KT is the only live
+  /// nutrition log in the app today; if a manual / OFF source ever
+  /// comes back, project it down to the same `List<String>` of
+  /// titles and the service code does not need to change.
+  final KalorickeTabulkyProvider _nutrition;
   final CosmeticsProvider _cosmetics;
   final CompanionTriggerGrantFn _grant;
   final FoodTriggerService _service;
@@ -80,9 +84,26 @@ class FoodTriggerProvider extends ChangeNotifier {
     if (companion == null) return null;
     return _service.evaluate(
       companion: companion,
-      todayLog: _calorie.todayLog,
+      todayFoodNames: _collectTodayFoodNames(),
       alreadyClaimedXpToday: _claimedToday[companion.id.raw] ?? 0,
     );
+  }
+
+  /// Flattens [KalorickeTabulkyProvider.todayMeals] down to the list
+  /// of foodstuff titles. Kept as a tiny private helper instead of a
+  /// getter on the KT provider so the projection lives next to the
+  /// consumer that needs it; if another nutrition source ever joins
+  /// the trigger pipeline, this is the one place that grows.
+  List<String> _collectTodayFoodNames() {
+    final meals = _nutrition.todayMeals;
+    if (meals.isEmpty) return const [];
+    final out = <String>[];
+    for (final meal in meals) {
+      for (final f in meal.foodstuff) {
+        out.add(f.title);
+      }
+    }
+    return out;
   }
 
   /// Loads today's already-claimed totals from prefs. Old keys (for
@@ -191,7 +212,7 @@ class FoodTriggerProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    _calorie.removeListener(_onInputsChanged);
+    _nutrition.removeListener(_onInputsChanged);
     _cosmetics.removeListener(_onInputsChanged);
     super.dispose();
   }
