@@ -2155,6 +2155,8 @@
   },
   "emblemBuffComboTarget": "combo quests",
   "@emblemBuffComboTarget": { "description": "Inline metric label used by emblemBuffPerTarget for the combo-quest emblem (dragon)." },
+  "emblemBuffBannerSubtitle": "Passive bonus while pinned to your emblem board.",
+  "@emblemBuffBannerSubtitle": { "description": "Subtitle of the emblem buff banner shown in the cosmetic details sheet and the emblem slot sheet." },
   "emblemBuffEquippedBadge": "BUFF",
   "@emblemBuffEquippedBadge": { "description": "Tiny chip text overlaid on an equipped emblem tile to advertise that its XP buff is active." },
   "claimToastEmblemBonus": "+{amount} XP (emblem)",

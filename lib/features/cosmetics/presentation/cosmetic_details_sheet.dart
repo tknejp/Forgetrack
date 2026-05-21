@@ -18,6 +18,7 @@ import '../domain/consumed_relics.dart';
 import '../domain/player_cosmetic_lifecycle.dart';
 import 'cosmetics_screen_internals.dart';
 import 'widgets/companion_buff_chip.dart';
+import 'widgets/emblem_buff_banner.dart';
 import 'widgets/companion_claim_flow.dart';
 import 'widgets/companion_fake_idle_preview.dart';
 import 'widgets/cosmetic_asset_thumb.dart';
@@ -477,6 +478,18 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
                               .currentChapterChainPosition
                           : null,
                 ),
+              ],
+
+              // Emblem XP buff — same shape as the companion banner so
+              // both cosmetic types advertise their passive bonus with
+              // matching chrome.
+              if (!devTools &&
+                  !isHidden &&
+                  !effectiveLocked &&
+                  definition is Emblem &&
+                  definition.buff != null) ...[
+                const SizedBox(height: 14),
+                EmblemBuffBanner(buff: definition.buff!),
               ],
 
               // companion requirements checklist — shown for every

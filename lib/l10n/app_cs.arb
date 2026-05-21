@@ -1391,6 +1391,7 @@
     "placeholders": { "percent": { "type": "int" } }
   },
   "emblemBuffComboTarget": "kombo questů",
+  "emblemBuffBannerSubtitle": "Pasivní bonus, dokud máš znak nasazený na desce.",
   "emblemBuffEquippedBadge": "BUFF",
   "claimToastEmblemBonus": "+{amount} XP (znak)",
   "@claimToastEmblemBonus": {

@@ -4139,6 +4139,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emblemBuffComboTarget => 'combo quests';
 
   @override
+  String get emblemBuffBannerSubtitle =>
+      'Passive bonus while pinned to your emblem board.';
+
+  @override
   String get emblemBuffEquippedBadge => 'BUFF';
 
   @override

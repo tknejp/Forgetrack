@@ -4129,6 +4129,10 @@ class AppLocalizationsCs extends AppLocalizations {
   String get emblemBuffComboTarget => 'kombo questů';
 
   @override
+  String get emblemBuffBannerSubtitle =>
+      'Pasivní bonus, dokud máš znak nasazený na desce.';
+
+  @override
   String get emblemBuffEquippedBadge => 'BUFF';
 
   @override

@@ -4,6 +4,7 @@ import '../../../../l10n/l10n.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../cosmetics/config/cosmetics_config.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
+import '../../../cosmetics/presentation/widgets/emblem_buff_banner.dart';
 
 /// Bottom sheet for inspecting / managing the emblem in a single
 /// header slot.
@@ -274,6 +275,10 @@ class _CurrentEmblemBlock extends StatelessWidget {
               height: 1.4,
             ),
           ),
+          if (emblem case Emblem(buff: final buff) when buff != null) ...[
+            const SizedBox(height: 12),
+            EmblemBuffBanner(buff: buff),
+          ],
           if (isOwner) ...[
             const SizedBox(height: 14),
             _RemoveButton(onTap: onRemove),

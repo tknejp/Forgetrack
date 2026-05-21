@@ -19,6 +19,7 @@ import '../domain/player_cosmetic_lifecycle.dart';
 import 'cosmetic_details_sheet.dart';
 import 'cosmetics_screen_internals.dart';
 import 'emblem_buff_label.dart';
+import 'widgets/companion_buff_chip.dart';
 
 class CosmeticsScreen extends StatefulWidget {
   const CosmeticsScreen({
@@ -826,24 +827,32 @@ class _CosmeticCardState extends State<_CosmeticCard>
                           letterSpacing: 0,
                         ),
                       ),
-                      if (!isHiddenCard &&
-                          definition is Emblem &&
-                          definition.buff != null) ...[
-                        const SizedBox(height: 3),
+                      if (!isHiddenCard) ...[
                         Builder(builder: (context) {
-                          final label =
-                              emblemBuffLabel(definition.buff!, l10n);
+                          final String? label;
+                          if (definition is Emblem &&
+                              definition.buff != null) {
+                            label = emblemBuffLabel(definition.buff!, l10n);
+                          } else if (definition is Companion &&
+                              definition.buff != null) {
+                            label = formatCompanionBuff(l10n, definition.buff!);
+                          } else {
+                            label = null;
+                          }
                           if (label == null) return const SizedBox.shrink();
-                          return Text(
-                            label,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Tokens.xp.withValues(alpha: 0.85),
-                              fontSize: Tokens.fontSizeTiny - 1,
-                              fontWeight: FontWeight.w600,
-                              height: 1.15,
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 3),
+                            child: Text(
+                              label,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Tokens.xp.withValues(alpha: 0.85),
+                                fontSize: Tokens.fontSizeTiny - 1,
+                                fontWeight: FontWeight.w600,
+                                height: 1.15,
+                              ),
                             ),
                           );
                         }),

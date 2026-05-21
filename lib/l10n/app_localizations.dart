@@ -7335,6 +7335,12 @@ abstract class AppLocalizations {
   /// **'combo quests'**
   String get emblemBuffComboTarget;
 
+  /// Subtitle of the emblem buff banner shown in the cosmetic details sheet and the emblem slot sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Passive bonus while pinned to your emblem board.'**
+  String get emblemBuffBannerSubtitle;
+
   /// Tiny chip text overlaid on an equipped emblem tile to advertise that its XP buff is active.
   ///
   /// In en, this message translates to:
