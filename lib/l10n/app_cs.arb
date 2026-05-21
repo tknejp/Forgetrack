@@ -1203,6 +1203,12 @@
     "placeholders": { "amount": { "type": "int" } }
   },
 
+  "companionFoodTriggerPillClaimedLabel": "+{amount} XP cinklo",
+  "@companionFoodTriggerPillClaimedLabel": {
+    "description": "Hero header settled pill — past-tense variant of companionFoodTriggerPillLabel, shown once today's food-trigger XP has been fully claimed and no further matches remain.",
+    "placeholders": { "amount": { "type": "int" } }
+  },
+
   "dialogClose": "Zavřít",
   "@dialogClose": { "description": "Generic close button label" },
 
@@ -1440,6 +1446,7 @@
     "placeholders": { "percent": { "type": "int" } }
   },
   "emblemBuffComboTarget": "kombo questů",
+  "emblemBuffWeightLogTarget": "denní zápis váhy",
   "emblemBuffBannerSubtitle": "Pasivní bonus, dokud máš znak nasazený na desce.",
   "emblemBuffEquippedBadge": "BUFF",
   "claimToastEmblemBonus": "+{amount} XP (znak)",
@@ -1572,6 +1579,8 @@
   "@cosmeticBuffSourceNutritionXp": {},
   "cosmeticBuffSourceSleepXp": "za spánek",
   "@cosmeticBuffSourceSleepXp": {},
+  "cosmeticBuffSourceBodyXp": "za vážení",
+  "@cosmeticBuffSourceBodyXp": {},
   "cosmeticBuffSourceStreakXp": "za streak",
   "@cosmeticBuffSourceStreakXp": {},
   "cosmeticBuffSourceQuestXp": "za denní questy",

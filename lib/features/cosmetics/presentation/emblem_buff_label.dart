@@ -33,12 +33,23 @@ String _targetLabel(EmblemTarget target, AppLocalizations l10n) {
   }
 }
 
+/// Resolves the localized label rendered under an emblem tile for a
+/// [DailyGoalTarget] metric.
+///
+/// `GoalMetric.targetWeight` returns [AppLocalizations.emblemBuffWeightLogTarget]
+/// ("denní zápis váhy" / "daily weight log") rather than the shared
+/// [AppLocalizations.goalTargetWeight] ("Cílová váha") — `targetWeight`
+/// is the body-weight setting in Settings, but the matching emblem
+/// (`emblem_mountain_crest`) actually buffs the daily weight-log claim
+/// (`daily_weight_log_today`). Settings UI calls `goalTargetWeight`
+/// directly without going through this resolver, so the split label is
+/// confined to the emblem render path.
 String _metricLabel(GoalMetric metric, AppLocalizations l10n) {
   switch (metric) {
     case GoalMetric.dailySteps:
       return l10n.goalDailySteps;
     case GoalMetric.targetWeight:
-      return l10n.goalTargetWeight;
+      return l10n.emblemBuffWeightLogTarget;
     case GoalMetric.dailyCalories:
       return l10n.goalDailyCalories;
     case GoalMetric.dailyProtein:

@@ -1962,6 +1962,12 @@
     "placeholders": { "amount": { "type": "int" } }
   },
 
+  "companionFoodTriggerPillClaimedLabel": "+{amount} XP clung",
+  "@companionFoodTriggerPillClaimedLabel": {
+    "description": "Hero header settled pill — past-tense variant of companionFoodTriggerPillLabel, shown once today's food-trigger XP has been fully claimed and no further matches remain.",
+    "placeholders": { "amount": { "type": "int" } }
+  },
+
   "dialogClose": "Close",
   "@dialogClose": { "description": "Generic close button label" },
 
@@ -2204,6 +2210,8 @@
   },
   "emblemBuffComboTarget": "combo quests",
   "@emblemBuffComboTarget": { "description": "Inline metric label used by emblemBuffPerTarget for the combo-quest emblem (dragon)." },
+  "emblemBuffWeightLogTarget": "daily weight log",
+  "@emblemBuffWeightLogTarget": { "description": "Inline metric label used by emblemBuffPerTarget for the emblem that buffs the daily weight-log claim (mountain crest). Names the XP-earning event, NOT the body-weight setting in Settings." },
   "emblemBuffBannerSubtitle": "Passive bonus while pinned to your emblem board.",
   "@emblemBuffBannerSubtitle": { "description": "Subtitle of the emblem buff banner shown in the cosmetic details sheet and the emblem slot sheet." },
   "emblemBuffEquippedBadge": "BUFF",
@@ -2339,6 +2347,8 @@
   "@cosmeticBuffSourceNutritionXp": {},
   "cosmeticBuffSourceSleepXp": "from sleep",
   "@cosmeticBuffSourceSleepXp": {},
+  "cosmeticBuffSourceBodyXp": "from weight logging",
+  "@cosmeticBuffSourceBodyXp": { "description": "Inline source-kind label used by FlatCompanionBuff chips for buffs targeting RewardSourceKind.bodyXp (daily weight-log claim)." },
   "cosmeticBuffSourceStreakXp": "from streak",
   "@cosmeticBuffSourceStreakXp": {},
   "cosmeticBuffSourceQuestXp": "from quests",

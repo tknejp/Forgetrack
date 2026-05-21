@@ -6615,6 +6615,12 @@ abstract class AppLocalizations {
   /// **'+{amount} XP cling'**
   String companionFoodTriggerPillLabel(int amount);
 
+  /// Hero header settled pill — past-tense variant of companionFoodTriggerPillLabel, shown once today's food-trigger XP has been fully claimed and no further matches remain.
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount} XP clung'**
+  String companionFoodTriggerPillClaimedLabel(int amount);
+
   /// Generic close button label
   ///
   /// In en, this message translates to:
@@ -7599,6 +7605,12 @@ abstract class AppLocalizations {
   /// **'combo quests'**
   String get emblemBuffComboTarget;
 
+  /// Inline metric label used by emblemBuffPerTarget for the emblem that buffs the daily weight-log claim (mountain crest). Names the XP-earning event, NOT the body-weight setting in Settings.
+  ///
+  /// In en, this message translates to:
+  /// **'daily weight log'**
+  String get emblemBuffWeightLogTarget;
+
   /// Subtitle of the emblem buff banner shown in the cosmetic details sheet and the emblem slot sheet.
   ///
   /// In en, this message translates to:
@@ -8078,6 +8090,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'from sleep'**
   String get cosmeticBuffSourceSleepXp;
+
+  /// Inline source-kind label used by FlatCompanionBuff chips for buffs targeting RewardSourceKind.bodyXp (daily weight-log claim).
+  ///
+  /// In en, this message translates to:
+  /// **'from weight logging'**
+  String get cosmeticBuffSourceBodyXp;
 
   /// No description provided for @cosmeticBuffSourceStreakXp.
   ///

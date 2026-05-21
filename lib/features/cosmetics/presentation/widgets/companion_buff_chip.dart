@@ -122,6 +122,7 @@ String _buffSourceLabel(AppLocalizations l10n, RewardSourceKind kind) {
     RewardSourceKind.activityXp => l10n.cosmeticBuffSourceActivityXp,
     RewardSourceKind.nutritionXp => l10n.cosmeticBuffSourceNutritionXp,
     RewardSourceKind.sleepXp => l10n.cosmeticBuffSourceSleepXp,
+    RewardSourceKind.bodyXp => l10n.cosmeticBuffSourceBodyXp,
     RewardSourceKind.streakXp => l10n.cosmeticBuffSourceStreakXp,
     RewardSourceKind.questXp => l10n.cosmeticBuffSourceQuestXp,
     RewardSourceKind.chapterXp => l10n.cosmeticBuffSourceChapterXp,

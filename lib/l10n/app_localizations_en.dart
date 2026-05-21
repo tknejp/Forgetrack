@@ -3710,6 +3710,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String companionFoodTriggerPillClaimedLabel(int amount) {
+    return '+$amount XP clung';
+  }
+
+  @override
   String get dialogClose => 'Close';
 
   @override
@@ -4290,6 +4295,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emblemBuffComboTarget => 'combo quests';
 
   @override
+  String get emblemBuffWeightLogTarget => 'daily weight log';
+
+  @override
   String get emblemBuffBannerSubtitle =>
       'Passive bonus while pinned to your emblem board.';
 
@@ -4651,6 +4659,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cosmeticBuffSourceSleepXp => 'from sleep';
+
+  @override
+  String get cosmeticBuffSourceBodyXp => 'from weight logging';
 
   @override
   String get cosmeticBuffSourceStreakXp => 'from streak';

@@ -175,6 +175,76 @@ void main() {
       expect(result.events.single.companionBuffBonusXp, isNull);
     });
 
+    // Regression for #101 — body / weight-log claim used to ride on
+    // `RewardSourceKind.activityXp`, so any movement-themed companion
+    // (Bridge Gargoyle, Mountain Gryphon) silently buffed it. After
+    // the split to `bodyXp`, activityXp buffs must NOT match weight.
+    test('activityXp companion buff does NOT match a body / weight-log '
+        'claim (regression for #101)', () {
+      DailyGoal weightLogNode() => DailyGoal(
+            id: const ProgressionEntryId('test_weight_log'),
+            objectiveId: const ObjectiveId('test_weight_log_obj'),
+            claimPolicy: ClaimPolicy.manual,
+            titleKey: (_) => 'Weight log',
+            descriptionKey: (_) => '',
+            rewards: const [
+              XpReward(
+                sourceKind: RewardSourceKind.bodyXp,
+                streakDomain: ProgressionDomain.body,
+                amount: 100,
+              ),
+            ],
+            contentTags: const [],
+            rarity: Rarity.common,
+          );
+      final result = service.build(
+        planned: [_planFromNode(weightLogNode())],
+        runningClaimedXp: 0,
+        timestamp: timestamp,
+        context: _context(
+          buff: const FlatCompanionBuff(
+            kind: RewardSourceKind.activityXp,
+            percent: 20,
+          ),
+        ),
+      );
+      final event = result.events.single;
+      expect(event.companionBuffBonusXp, isNull);
+      expect(event.xpAmount, 100,
+          reason: 'Weight log must not pick up activityXp companion buff.');
+    });
+
+    test('allXp still buffs body / weight-log claim', () {
+      DailyGoal weightLogNode() => DailyGoal(
+            id: const ProgressionEntryId('test_weight_log_all'),
+            objectiveId: const ObjectiveId('test_weight_log_all_obj'),
+            claimPolicy: ClaimPolicy.manual,
+            titleKey: (_) => 'Weight log',
+            descriptionKey: (_) => '',
+            rewards: const [
+              XpReward(
+                sourceKind: RewardSourceKind.bodyXp,
+                streakDomain: ProgressionDomain.body,
+                amount: 100,
+              ),
+            ],
+            contentTags: const [],
+            rarity: Rarity.common,
+          );
+      final result = service.build(
+        planned: [_planFromNode(weightLogNode())],
+        runningClaimedXp: 0,
+        timestamp: timestamp,
+        context: _context(
+          buff: const FlatCompanionBuff(
+            kind: RewardSourceKind.allXp,
+            percent: 15,
+          ),
+        ),
+      );
+      expect(result.events.single.companionBuffBonusXp, 15);
+    });
+
     test('allXp buff applies to every kind', () {
       final result = service.build(
         planned: [

@@ -50,7 +50,7 @@ List<ProgressionEntry> bodyNodes() {
       descriptionKey: (l) => l.progRuleDailyWeightLogDesc,
       rewards: const [
         XpReward(
-          sourceKind: RewardSourceKind.activityXp,
+          sourceKind: RewardSourceKind.bodyXp,
           streakDomain: ProgressionDomain.body,
           amount: 20,
         ),

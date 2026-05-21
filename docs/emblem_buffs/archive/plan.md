@@ -57,11 +57,13 @@ These are settled. Do not reopen without user sign-off.
 | 6 | `emblem_underways_mark` (epic) | `DailyGoalTarget(GoalMetric.dailyCarbs)` | +10% |
 | 7 | `emblem_frost_sigil` (epic) | `DailyGoalTarget(GoalMetric.sleepHours)` | +10% |
 | 8 | `emblem_icewalker_mark` (epic) | `DailyGoalTarget(GoalMetric.dailyFiber)` | +10% |
-| 9 | `emblem_mountain_crest` (legendary) | `DailyGoalTarget(GoalMetric.targetWeight)` | +10% |
+| 9 | `emblem_mountain_crest` (legendary) | `DailyGoalTarget(GoalMetric.targetWeight)` † | +10% |
 | 10 | `emblem_dragon_mark` (legendary) | `ComboQuestTarget()` | +10% |
 | 11 | `emblem_dragonrock_emblem` (mythic) | `BlanketEmblemBuff` | +5% to every target covered above |
 
 ★ `GoalMetric.dailyActivityMins` does NOT exist yet — Phase 0 adds it.
+
+† Label fix 2026-05-21 — `emblem_mountain_crest` target zůstává `DailyGoalTarget(GoalMetric.targetWeight)`, ale `_metricLabel` v `emblem_buff_label.dart` pro tento case vrací nový ARB klíč `emblemBuffWeightLogTarget` ("denní zápis váhy" / "daily weight log") místo sdíleného `goalTargetWeight`. Settings UI nadále renderuje "Cílová váha" — split labelu je confined v emblem-render cestě. Detail: `docs/site/data/decisions.json#emblem-weight-log-label-split`.
 
 ---
 

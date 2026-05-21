@@ -37,6 +37,28 @@ void main() {
       expect(label, contains(l10n.emblemBuffComboTarget));
     });
 
+    test('targetWeight per-target names the daily weight-log event, '
+        'not the body-weight setting', () async {
+      final l10n = await _loadEn();
+      final label = emblemBuffLabel(
+        const PerTargetEmblemBuff(
+          target: DailyGoalTarget(GoalMetric.targetWeight),
+          percent: 10,
+        ),
+        l10n,
+      );
+      expect(label, isNotNull);
+      expect(label, contains('10'));
+      expect(label, contains(l10n.emblemBuffWeightLogTarget));
+      expect(
+        label,
+        isNot(contains(l10n.goalTargetWeight)),
+        reason: 'Emblem-side label resolver must name the XP-earning '
+            'event ("daily weight log"), not the body-weight setting '
+            '("Target weight") which Settings uses.',
+      );
+    });
+
     test('blanket buff yields the blanket line', () async {
       final l10n = await _loadEn();
       final label =

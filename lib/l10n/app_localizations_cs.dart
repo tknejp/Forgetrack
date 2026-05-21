@@ -3701,6 +3701,11 @@ class AppLocalizationsCs extends AppLocalizations {
   }
 
   @override
+  String companionFoodTriggerPillClaimedLabel(int amount) {
+    return '+$amount XP cinklo';
+  }
+
+  @override
   String get dialogClose => 'Zavřít';
 
   @override
@@ -4280,6 +4285,9 @@ class AppLocalizationsCs extends AppLocalizations {
   String get emblemBuffComboTarget => 'kombo questů';
 
   @override
+  String get emblemBuffWeightLogTarget => 'denní zápis váhy';
+
+  @override
   String get emblemBuffBannerSubtitle =>
       'Pasivní bonus, dokud máš znak nasazený na desce.';
 
@@ -4659,6 +4667,9 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get cosmeticBuffSourceSleepXp => 'za spánek';
+
+  @override
+  String get cosmeticBuffSourceBodyXp => 'za vážení';
 
   @override
   String get cosmeticBuffSourceStreakXp => 'za streak';
