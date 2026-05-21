@@ -1013,7 +1013,12 @@ class _RelicGateTile extends StatelessWidget {
     final relicId =
         conditionRow.conditionId.substring(_ownsPrefix.length);
     final relic = _catalog.byId(relicId);
-    final accent = met ? color : Tokens.onSurfaceMuted;
+    // Tint by the relic's own rarity, not the companion's — the tile
+    // represents the relic, so the player reads its rarity at a glance
+    // (e.g. a legendary relic gating an epic companion still pops gold).
+    final relicColor =
+        relic == null ? color : cosmeticRarityColor(relic.rarity);
+    final accent = relicColor;
     final alpha = met ? 0.9 : 0.55;
     final label = relic == null
         ? conditionRow.conditionId
