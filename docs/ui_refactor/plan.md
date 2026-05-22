@@ -1,6 +1,6 @@
 # UI refactor plan — Trello #85
 
-**Status:** Phase 0–1 + Phase 1.1 + Phase 1.2 + Phase 1.3 shipped 2026-05-22. Phase 2 next (quest screen split into `presentation/sections/`).
+**Status:** Phase 0–2 shipped 2026-05-22. Phase 3 next (large screen splits — `nutrition_screen.dart` 1925 LoC tops the priority list).
 **Scope:** Performance hotfix + structural split of presentation-layer hot-spots (10 screens > 1000 LoC) + extraction of reusable template widgets.
 **Out of scope:** Visual design changes, theme token changes (FtTokens / AppTheme stay), cross-feature business logic.
 **Pre-conditions:** Domain refactor closed (✅, 2026-05-19). Phase 21 lint baseline `widget-no-logic: 0` (✅) — must not regress during refactor.
@@ -21,7 +21,7 @@ This plan is **designed to be picked up by a fresh session at any phase**. Each 
 | 1.1 | Quest screen scroll jank investigation | ✅ shipped 2026-05-22 | — | Flattened ListView so each card is its own lazy mount; root cause was `Column`-wrapped sections mounting all N cards in one frame |
 | 1.2 | Home screen perf audit | ✅ shipped 2026-05-22 | — | StatCard Phase 0–1 invariants + per-card provider subscriptions on home so a KT tick rebuilds only the calorie card |
 | 1.3 | Home card expand animation cost | ✅ shipped 2026-05-22 | — | StatCard bg image moved from `Opacity + Image.asset(BlendMode.darken)` to `DecorationImage(opacity:)` — kills the per-paint `saveLayer`. Hero icon shadow blur 14→8 (Phase 0.2 invariant). Both expand-tick and open-card-scroll repaints are now within the 120 Hz raster budget. |
-| 2 | Quest screen split | ⏳ pending | — | Sections to `presentation/sections/` (now mostly mechanical — Phase 1.1 deleted the private section widgets; only `QuestSectionPanel`, `_NextChapterLockedTeaser`, and the `buildQuestSectionItems` helper are left to extract) |
+| 2 | Quest screen split | ✅ shipped 2026-05-22 | — | `QuestSectionPanel` + helper + `NextChapterLockedTeaser` moved to `presentation/sections/` |
 | 3 | Large screen splits | ⏳ pending | — | 10 screens > 1000 LoC, in priority order |
 | 4 | Shell lazy pages | ⏳ pending | — | Replace eager 4-tab PageView |
 | 5 | Shared template widgets | ⏳ pending | — | MetricCardWithTrend, UnlockConditionsBlock |
@@ -179,35 +179,13 @@ Full design record + verification + lessons codified: **[archive/phase_1_3_home_
 
 ---
 
-## Phase 2 — Quest screen split
+## Phase 2 — Quest screen split ✅ shipped 2026-05-22
 
-**Why:** [quests_screen.dart](../../lib/features/progression_engine/presentation/quests_screen.dart) is 802 LoC with five private section widgets crammed in (`_ChapterSection`, `QuestSectionPanel`, `_LongTermSection`, `_CompletedSection`, `_LockedSection`).
+The screen file shrank from 817 → 462 LoC. `QuestSectionPanel`, the `buildQuestSectionItems(...)` helper, and the `_QuestSectionHint` privacy-helper moved together into [sections/quest_section_panel.dart](../../lib/features/progression_engine/presentation/sections/quest_section_panel.dart); `_NextChapterLockedTeaser` moved to [sections/next_chapter_locked_teaser.dart](../../lib/features/progression_engine/presentation/sections/next_chapter_locked_teaser.dart) and lost its `_` prefix. The four `_QuestsScreenV2State._build*Items` methods stayed on State — they capture instance callbacks (`_pillKeyFor`, `_toggleExpanded`, `_claimQuest`) and returning `List<Widget>` directly is what preserves Phase 1.1's per-card lazy mount. Pulling them into section widgets would either thread the callbacks through new widget constructors (clutter) or re-collapse mounting back to "all cards in one Column" (regression).
 
-### Tasks
+Full design record + LoC table + lessons: **[archive/phase_2_quest_screen_split.md](archive/phase_2_quest_screen_split.md)**.
 
-1. Create `lib/features/progression_engine/presentation/sections/` directory.
-
-2. Extract each section to its own file:
-   - `sections/chapter_section.dart` ← `_ChapterSection`
-   - `sections/quest_section_panel.dart` ← `QuestSectionPanel` (already public-named)
-   - `sections/long_term_section.dart` ← `_LongTermSection`
-   - `sections/completed_section.dart` ← `_CompletedSection`
-   - `sections/locked_section.dart` ← `_LockedSection`
-
-3. Make extracted classes public (drop the `_` prefix). They become part of the progression_engine feature's section API.
-
-4. Update [quests_screen.dart](../../lib/features/progression_engine/presentation/quests_screen.dart) to import + use them. Target: < 350 LoC.
-
-### What NOT to do
-
-- **Don't change section behavior.** Pure file move + privacy change.
-- **Don't add new lifecycle filtering** — that lives in the provider (Phase 19 of the domain refactor closed this).
-
-### Verification
-
-- `flutter analyze` clean
-- `flutter test test/features/progression_engine/` green
-- Manual: quest screen renders identically
+> **Cold-start note for fresh sessions:** when adding a new section helper to `quests_screen.dart`, decide by capture: if it needs `State` instance methods, leave it as a State method returning `List<Widget>`; if it takes everything via parameters, put it in `presentation/sections/`. The split file already shows the pattern — `buildQuestSectionItems` (free function, fully parameterised) is in `sections/`; `_buildChapterItems` (calls `_pillKeyFor`, `_toggleExpanded`, `_claimQuest`) stays on `_QuestsScreenV2State`. Don't promote a State method into a widget just to extract a file — the Phase 1.1 flat-ListView win is what determines this rule, not file size.
 
 ---
 

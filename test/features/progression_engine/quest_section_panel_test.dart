@@ -7,7 +7,7 @@ import 'package:forgetrack/features/progression_engine/application/progression_e
 import 'package:forgetrack/domain/progression/catalog/claim_policy.dart';
 import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
-import 'package:forgetrack/features/progression_engine/presentation/quests_screen.dart';
+import 'package:forgetrack/features/progression_engine/presentation/sections/quest_section_panel.dart';
 import 'package:forgetrack/l10n/app_localizations.dart';
 
 Quest _node(String id, int xp) => DailyGoal(
