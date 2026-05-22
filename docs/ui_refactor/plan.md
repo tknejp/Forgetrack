@@ -1,6 +1,6 @@
 # UI refactor plan — Trello #85
 
-**Status:** Phase 0–2 shipped 2026-05-22. Phase 3 next (large screen splits — `nutrition_screen.dart` 1925 LoC tops the priority list).
+**Status:** Phase 0–2 + Phase 1.4 shipped 2026-05-22. Phase 3 next (large screen splits — `nutrition_screen.dart` 1925 LoC tops the priority list).
 **Scope:** Performance hotfix + structural split of presentation-layer hot-spots (10 screens > 1000 LoC) + extraction of reusable template widgets.
 **Out of scope:** Visual design changes, theme token changes (FtTokens / AppTheme stay), cross-feature business logic.
 **Pre-conditions:** Domain refactor closed (✅, 2026-05-19). Phase 21 lint baseline `widget-no-logic: 0` (✅) — must not regress during refactor.
@@ -21,6 +21,7 @@ This plan is **designed to be picked up by a fresh session at any phase**. Each 
 | 1.1 | Quest screen scroll jank investigation | ✅ shipped 2026-05-22 | — | Flattened ListView so each card is its own lazy mount; root cause was `Column`-wrapped sections mounting all N cards in one frame |
 | 1.2 | Home screen perf audit | ✅ shipped 2026-05-22 | — | StatCard Phase 0–1 invariants + per-card provider subscriptions on home so a KT tick rebuilds only the calorie card |
 | 1.3 | Home card expand animation cost | ✅ shipped 2026-05-22 | — | StatCard bg image moved from `Opacity + Image.asset(BlendMode.darken)` to `DecorationImage(opacity:)` — kills the per-paint `saveLayer`. Hero icon shadow blur 14→8 (Phase 0.2 invariant). Both expand-tick and open-card-scroll repaints are now within the 120 Hz raster budget. |
+| 1.4 | Hero screen perf audit | ✅ shipped 2026-05-22 | — | `HeroScreen.build()` no longer watches the provider directly — `Selector<ProgressionEngineProvider, _HeroChrome>` (Dart 3 record) gates rebuilds to loading/error flips. Expensive `buildEngineAchievementViews` + sort moved into `_AchievementsSliverSection` (self-watches). Sliver list children are const. Tile + journey card shadow blur reduced to `Tokens.glowSm` (Phase 0.2). |
 | 2 | Quest screen split | ✅ shipped 2026-05-22 | — | `QuestSectionPanel` + helper + `NextChapterLockedTeaser` moved to `presentation/sections/` |
 | 3 | Large screen splits | ⏳ pending | — | 10 screens > 1000 LoC, in priority order |
 | 4 | Shell lazy pages | ⏳ pending | — | Replace eager 4-tab PageView |
@@ -176,6 +177,26 @@ The "scroll over open card janks too" pattern was the diagnostic: it's steady-st
 Full design record + verification + lessons codified: **[archive/phase_1_3_home_card_expand_cost.md](archive/phase_1_3_home_card_expand_cost.md)**.
 
 > **Cold-start note for fresh sessions:** when authoring a reusable card widget with a background image (`StatCard`, `ExpandableQuestCard`, anything that lives in a scrollable feed), use `DecorationImage(opacity:)` for the dimming — never wrap the image in an `Opacity` widget, and never use `colorBlendMode` for a darken pass. `Opacity`'s `saveLayer` is paid every paint, which compounds with `AnimatedSize` ticks and with overscroll repaints into raster jank. The wider rule for any widget inside an `AnimatedSize`-driven expand: the card's whole layer re-rasterizes per tick, so every `saveLayer`, every blur ≥ 12 px, every `BackdropFilter`, and every `ColorFiltered` (without its own boundary) is paid ~16× over a 260 ms animation. Audit each before merging.
+
+---
+
+## Phase 1.4 — Hero screen perf audit ✅ shipped 2026-05-22
+
+User reported visible scroll jank on the hero tab at 120 Hz without needing a profiler. Audit found the same Phase 1.2-style cascade we already fixed on home: `HeroScreen.build()` was watching `ProgressionEngineProvider` at the screen level AND calling `buildEngineAchievementViews(progression, l10n)` + two list-comprehension sorts on every notify. `ProgressionOverviewSection` and `JourneyPreviewCard` (both inside the same `SliverList`) each had their own `context.watch` too — so a single engine tick fanned out into three independent recomputes plus the screen-level achievement build, and the `SliverList` delegate identity changed each time.
+
+Fixed in [lib/features/progression_engine/presentation/hero_screen.dart](../../lib/features/progression_engine/presentation/hero_screen.dart) and [lib/features/journey/presentation/widgets/journey_preview_card.dart](../../lib/features/journey/presentation/widgets/journey_preview_card.dart):
+
+- `HeroScreen.build()` now wraps everything in a `Selector<ProgressionEngineProvider, _HeroChrome>` where `_HeroChrome` is a Dart 3 record `({bool showLoading, String? error})`. The selector skips rebuild unless loading/error chrome actually flips — engine XP / claim / journal ticks no longer rerun `HeroScreen.build()`. `RefreshIndicator.onRefresh` switched to `context.read` so the screen doesn't watch for it.
+- Achievement-view computation + sort + section header moved into `_AchievementsSliverSection`, which now self-watches via `context.watch<ProgressionEngineProvider>()` and reads `context.l10n` directly. Section returns a `SliverMainAxisGroup` so the header + grid (or empty state) live in the same sliver block. Drops `unlocked` / `inProgress` / `l10n` constructor params; `_AchievementsSliverSection()` is now a const widget.
+- The top `SliverList`'s children are now const (`const ProgressionOverviewSection()`, `const JourneyPreviewCard()`, spacers). `SliverChildListDelegate.fixed` so the delegate itself is also const — engine notify doesn't churn this sliver.
+- `_AchievementTile` `boxShadow.blurRadius` 12 → `Tokens.glowSm` (8) per the Phase 0.2 invariant: tiles re-rasterize when they first enter the viewport during scroll, so even a static shadow ≥ 12 px adds visible first-paint cost on the row crossing the cache extent.
+- `JourneyPreviewCard` outer-card `boxShadow.blurRadius` 16 → `Tokens.glowSm` (8). Same first-paint-cost reason; the spread offset stays so the visual depth is preserved.
+
+**Not done (rejected):** Memoizing `buildEngineAchievementViews` / `JourneyAdapter.buildMilestoneMap` as Phase 0 getter caches. These functions only run on the provider's notify (not per scroll frame) and the Selector + per-section watch already kills the cascade. Re-trace before adding a cache — premature.
+
+**Verification:** `flutter analyze` clean for both files (same 95 pre-existing `unnecessary_const` infos baseline). 178 progression_engine tests + 11 widget tests green.
+
+> **Cold-start note for fresh sessions:** the home/hero pattern generalises to _any_ screen where a top-level `StatefulWidget.build()` watches a provider AND composes per-section widgets that watch the same provider AND runs a non-trivial derivation (`buildXxxViews`, sort, filter) in the same build. Three rebuilds happen instead of one, and the screen's slivers get a new delegate identity per tick. The fix shape: (a) screen-level `Selector<P, R>` with a Dart 3 record of _only the discriminators that drive control flow_ (loading / error / route gates), (b) per-section widgets that own their `context.watch` and any expensive derivation, (c) const sliver children + `SliverChildListDelegate.fixed` wherever possible. `Selector` rebuilds only when the record's structural equality changes; const children skip parent-driven rebuilds; per-section watches mean a notify only wakes the affected section.
 
 ---
 

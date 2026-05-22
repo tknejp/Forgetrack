@@ -37,18 +37,104 @@ class HeroScreen extends StatefulWidget {
   State<HeroScreen> createState() => _HeroScreenState();
 }
 
+typedef _HeroChrome = ({bool showLoading, String? error});
+
 class _HeroScreenState extends State<HeroScreen> {
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
+    // Phase 1.2 / 1.3 pattern: HeroScreen.build() does not watch the
+    // ProgressionEngineProvider directly. A Selector with a Dart 3 record
+    // discriminator only rebuilds when loading/error chrome flips —
+    // engine ticks (XP, quest claim, journal updates) leave this build
+    // path untouched. ProgressionOverviewSection + JourneyPreviewCard
+    // own their own context.watch; _AchievementsSliverSection owns its
+    // own context.watch + the expensive buildEngineAchievementViews
+    // computation that previously ran at screen level on every notify.
+    return Selector<ProgressionEngineProvider, _HeroChrome>(
+      selector: (_, p) => (
+        showLoading: p.isLoading && p.rewardHistory.isEmpty,
+        error: p.error,
+      ),
+      builder: (context, chrome, _) {
+        if (chrome.showLoading) {
+          return ProgressionScaffold(
+            child: ListView(
+              padding:
+                  EdgeInsets.fromLTRB(14, widget.topContentInset + 8, 14, 24),
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                const ProgressionLoadingBlock(height: 180),
+                const SizedBox(height: Tokens.spaceMd),
+                const ProgressionLoadingBlock(height: 140),
+                const SizedBox(height: Tokens.spaceMd),
+                const ProgressionLoadingBlock(height: 120),
+              ],
+            ),
+          );
+        }
+
+        final error = chrome.error;
+        return ProgressionScaffold(
+          child: RefreshIndicator(
+            onRefresh: () =>
+                context.read<ProgressionEngineProvider>().refresh(),
+            color: Tokens.accent,
+            backgroundColor: Tokens.surface,
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                if (error != null)
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(
+                        14, widget.topContentInset + 8, 14, 0),
+                    sliver: SliverToBoxAdapter(
+                      child: ProgressionErrorBanner(message: error),
+                    ),
+                  ),
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(
+                    14,
+                    error != null ? 16 : widget.topContentInset + 16,
+                    14,
+                    0,
+                  ),
+                  sliver: const SliverList(
+                    delegate: SliverChildListDelegate.fixed([
+                      ProgressionOverviewSection(),
+                      SizedBox(height: Tokens.spaceLg),
+                      JourneyPreviewCard(),
+                      SizedBox(height: Tokens.spaceLg),
+                    ]),
+                  ),
+                ),
+                const _AchievementsSliverSection(),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ── Achievements ──────────────────────────────────────────────────────────────
+
+class _AchievementsSliverSection extends StatelessWidget {
+  const _AchievementsSliverSection();
+
+  @override
+  Widget build(BuildContext context) {
+    // Section self-watches: the heavy buildEngineAchievementViews + two
+    // sorted comprehensions used to run on every engine notify at the
+    // HeroScreen.build() level (overview / journey already had their
+    // own watches — three deep recomputes per tick). Moved here so the
+    // chrome-level Selector skips the screen rebuild entirely.
     final progression = context.watch<ProgressionEngineProvider>();
+    final l10n = context.l10n;
     final views = buildEngineAchievementViews(progression, l10n);
     // Phase 8: route state filters through the sealed
     // PlayerAchievementLifecycle exposed by EngineAchievementView.lifecycle.
-    // The boolean view.unlocked is preserved as a producer-side flag
-    // (mirrors the Phase 6/7 EngineQuestProgress pattern), but every
-    // *consumer* of state goes through the discriminated lifecycle.
-    int compare(EngineAchievementView a, EngineAchievementView b) {
+    int compareViews(EngineAchievementView a, EngineAchievementView b) {
       final rarity = b.display.rarity.index.compareTo(a.display.rarity.index);
       if (rarity != 0) return rarity;
       final at = a.unlockedAt?.millisecondsSinceEpoch ?? 0;
@@ -61,111 +147,48 @@ class _HeroScreenState extends State<HeroScreen> {
     final unlocked = [
       for (final v in views)
         if (v.lifecycle is AchievementUnlocked) v,
-    ]..sort(compare);
+    ]..sort(compareViews);
     final inProgress = [
       for (final v in views)
         if (v.lifecycle is! AchievementUnlocked) v,
-    ]..sort(compare);
-
-    if (progression.isLoading && progression.rewardHistory.isEmpty) {
-      return ProgressionScaffold(
-        child: ListView(
-          padding: EdgeInsets.fromLTRB(14, widget.topContentInset + 8, 14, 24),
-          physics: const AlwaysScrollableScrollPhysics(),
-          children: [
-            const ProgressionLoadingBlock(height: 180),
-            const SizedBox(height: Tokens.spaceMd),
-            const ProgressionLoadingBlock(height: 140),
-            const SizedBox(height: Tokens.spaceMd),
-            const ProgressionLoadingBlock(height: 120),
-          ],
-        ),
-      );
-    }
-
-    return ProgressionScaffold(
-      child: RefreshIndicator(
-        onRefresh: progression.refresh,
-        color: Tokens.accent,
-        backgroundColor: Tokens.surface,
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            if (progression.error != null)
-              SliverPadding(
-                padding:
-                    EdgeInsets.fromLTRB(14, widget.topContentInset + 8, 14, 0),
-                sliver: SliverToBoxAdapter(
-                  child: ProgressionErrorBanner(message: progression.error!),
-                ),
-              ),
-            SliverPadding(
-              padding: EdgeInsets.fromLTRB(
-                14,
-                progression.error != null ? 16 : widget.topContentInset + 16,
-                14,
-                0,
-              ),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  const ProgressionOverviewSection(),
-                  const SizedBox(height: Tokens.spaceLg),
-                  const JourneyPreviewCard(),
-                  const SizedBox(height: Tokens.spaceLg),
-                  ProgSectionHead(
-                    label: l10n.progAchievementsSectionLabel,
-                    caption: l10n.progAchievementsSectionCaption,
-                    accent: Tokens.accent,
-                  ),
-                  const SizedBox(height: Tokens.spaceSm),
-                ]),
-              ),
-            ),
-            _AchievementsSliverSection(
-              unlocked: unlocked,
-              inProgress: inProgress,
-              l10n: l10n,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Achievements ──────────────────────────────────────────────────────────────
-
-class _AchievementsSliverSection extends StatelessWidget {
-  const _AchievementsSliverSection({
-    required this.unlocked,
-    required this.inProgress,
-    required this.l10n,
-  });
-
-  final List<EngineAchievementView> unlocked;
-  final List<EngineAchievementView> inProgress;
-  final AppLocalizations l10n;
-
-  @override
-  Widget build(BuildContext context) {
+    ]..sort(compareViews);
     final achievements = [...unlocked, ...inProgress];
+
+    final header = ProgSectionHead(
+      label: l10n.progAchievementsSectionLabel,
+      caption: l10n.progAchievementsSectionCaption,
+      accent: Tokens.accent,
+    );
+
     if (achievements.isEmpty) {
       return SliverPadding(
         padding: const EdgeInsets.fromLTRB(14, 0, 14, 28),
-        sliver: SliverToBoxAdapter(
-          child: ProgressionEmptyLine(
-            title: l10n.progAchievementsEmptyUnlockedTitle,
-            caption: l10n.progAchievementsEmptyUnlockedCaption,
-          ),
+        sliver: SliverList(
+          delegate: SliverChildListDelegate([
+            header,
+            const SizedBox(height: Tokens.spaceSm),
+            ProgressionEmptyLine(
+              title: l10n.progAchievementsEmptyUnlockedTitle,
+              caption: l10n.progAchievementsEmptyUnlockedCaption,
+            ),
+          ]),
         ),
       );
     }
-    return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(14, 0, 14, 28),
-      sliver: _AchievementBadgeSliverGrid(
-        achievements: achievements,
-        l10n: l10n,
-      ),
+    return SliverMainAxisGroup(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(14, 0, 14, Tokens.spaceSm),
+          sliver: SliverToBoxAdapter(child: header),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(14, 0, 14, 28),
+          sliver: _AchievementBadgeSliverGrid(
+            achievements: achievements,
+            l10n: l10n,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -259,8 +282,10 @@ class _AchievementTile extends StatelessWidget {
           boxShadow: unlocked
               ? [
                   BoxShadow(
+                    // Phase 0.2 invariant: blurRadius < 12 on tiles
+                    // that pay first-paint cost when entering viewport.
                     color: color.withValues(alpha: 0.2),
-                    blurRadius: 12,
+                    blurRadius: Tokens.glowSm,
                   ),
                 ]
               : null,

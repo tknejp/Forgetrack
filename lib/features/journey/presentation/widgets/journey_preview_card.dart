@@ -65,8 +65,10 @@ class JourneyPreviewCard extends StatelessWidget {
                 ),
                 boxShadow: [
                   BoxShadow(
+                    // Phase 0.2 invariant: blurRadius < 12 on cards in
+                    // a scrollable feed (first-paint cost on viewport entry).
                     color: Tokens.accent.withValues(alpha: 0.10),
-                    blurRadius: 16,
+                    blurRadius: Tokens.glowSm,
                     spreadRadius: -4,
                     offset: const Offset(0, 4),
                   ),
