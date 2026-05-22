@@ -11,7 +11,6 @@ import '../../../shared/widgets/tiny_pill.dart';
 import '../../cosmetics/domain/cosmetic_catalog.dart';
 import '../../cosmetics/domain/cosmetic_models.dart';
 import '../../cosmetics/presentation/widgets/cosmetic_asset_thumb.dart';
-import '../../cosmetics/presentation/widgets/cosmetics_inventory_section.dart';
 import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import 'widgets/engine_companion_pill.dart' show showEngineRewardPreviewSheet;
 import '../../journey/presentation/widgets/journey_preview_card.dart';
@@ -110,10 +109,6 @@ class _HeroScreenState extends State<HeroScreen> {
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   const ProgressionOverviewSection(),
-                  const SizedBox(height: Tokens.spaceLg),
-                  // ARCHIVED 2026-04-29: "Přehled postupu" + "Série" sections
-                  // moved to archived_sections.dart. Replaced by inventory.
-                  const CosmeticsInventorySection(),
                   const SizedBox(height: Tokens.spaceLg),
                   const JourneyPreviewCard(),
                   const SizedBox(height: Tokens.spaceLg),
@@ -225,6 +220,10 @@ class _AchievementTile extends StatelessWidget {
     final color = view.display.accentColor;
     final unlocked = view.lifecycle is AchievementUnlocked;
     final emoji = view.display.badgeEmoji ?? '';
+    final itemReward = _firstNonXpReward(view.node.rewards);
+    final progress = view.progress.clamp(0.0, 1.0);
+    final showProgressBar = !unlocked && progress > 0;
+    final borderRadius = BorderRadius.circular(Tokens.radiusInner);
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -234,6 +233,11 @@ class _AchievementTile extends StatelessWidget {
         l10n: l10n,
       ),
       child: Container(
+        // `clipBehavior: antiAlias` so the bottom progress bar sits
+        // strictly inside the tile's rounded corners — without it the
+        // bar's straight bottom edges peek past the tile's rounded
+        // outline near the bottom-left / bottom-right corners.
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           gradient: unlocked
               ? LinearGradient(
@@ -246,7 +250,7 @@ class _AchievementTile extends StatelessWidget {
                 )
               : null,
           color: unlocked ? null : const Color(0x08FFFFFF),
-          borderRadius: BorderRadius.circular(Tokens.radiusInner),
+          borderRadius: borderRadius,
           border: Border.all(
             color: unlocked
                 ? color.withValues(alpha: 0.27)
@@ -261,31 +265,98 @@ class _AchievementTile extends StatelessWidget {
                 ]
               : null,
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
           children: [
-            Text(
-              emoji,
-              style: TextStyle(
-                fontSize: 22,
-                color: unlocked ? null : const Color(0x66FFFFFF),
+            // Positioned.fill so the icon + label stay centred within
+            // the *full* tile bounds regardless of which positioned
+            // siblings (reward badge, progress bar) are present. A
+            // bare Column in the Stack collapses to the wider child's
+            // intrinsic width and gets anchored to top-start, which
+            // visibly shifted shorter labels off-centre.
+            Positioned.fill(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    emoji,
+                    style: TextStyle(
+                      fontSize: 22,
+                      color: unlocked ? null : const Color(0x66FFFFFF),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Text(
+                      _achievementDisplayLabel(view, l10n),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: Tokens.fontSizeTiny,
+                        fontWeight: FontWeight.w700,
+                        color: unlocked ? color : const Color(0x66FFFFFF),
+                        letterSpacing: 0.5,
+                        height: 1.15,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 6),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Text(
-                _achievementDisplayLabel(view, l10n),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: Tokens.fontSizeTiny,
-                  fontWeight: FontWeight.w700,
-                  color: unlocked ? color : const Color(0x66FFFFFF),
-                  letterSpacing: 0.5,
-                  height: 1.15,
+            if (itemReward != null)
+              Positioned(
+                top: 5,
+                right: 5,
+                child: _RewardCornerBadge(
+                  icon: _rewardIconFor(itemReward),
+                  color: color,
+                  unlocked: unlocked,
                 ),
+              ),
+            if (showProgressBar)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: _AchievementTileProgress(
+                  progress: progress,
+                  color: color,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Tile-bottom progress indicator for in-progress achievements. Flat 3-px
+/// bar with no labels — purely a peripheral hint of how close the player
+/// is to unlocking.
+class _AchievementTileProgress extends StatelessWidget {
+  const _AchievementTileProgress({
+    required this.progress,
+    required this.color,
+  });
+
+  final double progress;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 3,
+      child: LayoutBuilder(
+        builder: (_, constraints) => Stack(
+          children: [
+            Container(color: Colors.white.withValues(alpha: 0.04)),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                width: constraints.maxWidth * progress,
+                color: color.withValues(alpha: 0.5),
               ),
             ),
           ],
@@ -294,6 +365,57 @@ class _AchievementTile extends StatelessWidget {
     );
   }
 }
+
+class _RewardCornerBadge extends StatelessWidget {
+  const _RewardCornerBadge({
+    required this.icon,
+    required this.color,
+    required this.unlocked,
+  });
+
+  final IconData icon;
+  final Color color;
+  final bool unlocked;
+
+  @override
+  Widget build(BuildContext context) {
+    // Locked tiles get a much quieter badge — same shape, lower alpha
+    // across fill / border / glyph — so the gift hint doesn't visually
+    // compete with the unlocked achievements above it in the grid.
+    final c = unlocked ? color : Tokens.onSurfaceFaint;
+    final fillAlpha = unlocked ? 0.18 : 0.08;
+    final borderAlpha = unlocked ? 0.32 : 0.14;
+    final iconAlpha = unlocked ? 1.0 : 0.55;
+    return Container(
+      width: 18,
+      height: 18,
+      decoration: BoxDecoration(
+        color: c.withValues(alpha: fillAlpha),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: c.withValues(alpha: borderAlpha)),
+      ),
+      child: Icon(icon, size: 11, color: c.withValues(alpha: iconAlpha)),
+    );
+  }
+}
+
+RewardDefinition? _firstNonXpReward(List<RewardDefinition> rewards) {
+  for (final r in rewards) {
+    if (r is XpReward || r is BonusXpReward) continue;
+    return r;
+  }
+  return null;
+}
+
+IconData _rewardIconFor(RewardDefinition reward) => switch (reward) {
+      XpReward() || BonusXpReward() => Icons.bolt_rounded,
+      CosmeticReward() => Icons.card_giftcard_rounded,
+      ChapterUnlockReward() => Icons.menu_book_rounded,
+      CompanionAvailabilityReward() => Icons.groups_2_rounded,
+      TitleReward() => Icons.workspace_premium_rounded,
+      EmblemReward() => Icons.military_tech_rounded,
+      RelicReward() => Icons.diamond_rounded,
+    };
 
 class _AchievementEmojiBadge extends StatelessWidget {
   const _AchievementEmojiBadge({

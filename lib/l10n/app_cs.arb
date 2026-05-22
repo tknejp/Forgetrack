@@ -1748,7 +1748,13 @@
   "@socialReactorsTitle": { "placeholders": { "count": { "type": "int" } } },
 
   "socialProfileFriendsTitle": "PŘÁTELÉ",
+  "socialProfileFriendsChipLabel": "Přátelé",
   "socialProfileNoFriends": "Žádní přátelé zatím.",
+  "socialSharedPostDelete": "Odstranit",
+  "socialSharedPostMoreTooltip": "Více",
+  "socialSharedPostDeleteConfirmTitle": "Odstranit příspěvek",
+  "socialSharedPostDeleteConfirmBody": "Tento sdílený příspěvek bude odstraněn z feedu tvých přátel.",
+  "socialSharedPostDeleted": "Příspěvek odstraněn.",
   "socialFriendLevelSubtitle": "Level {level} {title}",
   "@socialFriendLevelSubtitle": { "placeholders": { "level": { "type": "int" }, "title": { "type": "String" } } },
   "socialFriendHandleLevelSubtitle": "@{handle} - Level {level} {title}",

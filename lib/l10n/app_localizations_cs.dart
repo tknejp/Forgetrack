@@ -5144,7 +5144,26 @@ class AppLocalizationsCs extends AppLocalizations {
   String get socialProfileFriendsTitle => 'PŘÁTELÉ';
 
   @override
+  String get socialProfileFriendsChipLabel => 'Přátelé';
+
+  @override
   String get socialProfileNoFriends => 'Žádní přátelé zatím.';
+
+  @override
+  String get socialSharedPostDelete => 'Odstranit';
+
+  @override
+  String get socialSharedPostMoreTooltip => 'Více';
+
+  @override
+  String get socialSharedPostDeleteConfirmTitle => 'Odstranit příspěvek';
+
+  @override
+  String get socialSharedPostDeleteConfirmBody =>
+      'Tento sdílený příspěvek bude odstraněn z feedu tvých přátel.';
+
+  @override
+  String get socialSharedPostDeleted => 'Příspěvek odstraněn.';
 
   @override
   String socialFriendLevelSubtitle(int level, String title) {

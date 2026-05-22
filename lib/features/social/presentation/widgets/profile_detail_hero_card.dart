@@ -43,6 +43,8 @@ class ProfileDetailHeroCard extends StatelessWidget {
     this.onEditPhoto,
     this.onEditHandle,
     this.photoBusy = false,
+    this.friendCount,
+    this.onTapFriendChip,
   });
 
   final String displayName;
@@ -77,6 +79,15 @@ class ProfileDetailHeroCard extends StatelessWidget {
   final VoidCallback? onEditPhoto;
   final VoidCallback? onEditHandle;
   final bool photoBusy;
+
+  /// Number of friends to surface in the small "Přátelé · N" chip under
+  /// the @handle. `null` hides the chip — used while the friend list is
+  /// still loading.
+  final int? friendCount;
+
+  /// Tap callback for the friend chip — typically opens the friends
+  /// modal sheet. `null` hides the chip.
+  final VoidCallback? onTapFriendChip;
 
   /// Total emblem slots in the collection grid. Mirrors
   /// `EmblemBoard.slotCount` so the data model and the visual grid
@@ -192,6 +203,8 @@ class ProfileDetailHeroCard extends StatelessWidget {
               levelAccent: levelAccent,
               isMe: isMe,
               onEditHandle: onEditHandle,
+              friendCount: friendCount,
+              onTapFriendChip: onTapFriendChip,
             ),
           ),
           // Companion standee — warm radial glow on the ground + asset on
@@ -621,6 +634,8 @@ class _IdentityBlock extends StatelessWidget {
     required this.levelAccent,
     required this.isMe,
     required this.onEditHandle,
+    required this.friendCount,
+    required this.onTapFriendChip,
   });
 
   final String displayName;
@@ -630,6 +645,8 @@ class _IdentityBlock extends StatelessWidget {
   final Color levelAccent;
   final bool isMe;
   final VoidCallback? onEditHandle;
+  final int? friendCount;
+  final VoidCallback? onTapFriendChip;
 
   @override
   Widget build(BuildContext context) {
@@ -708,7 +725,75 @@ class _IdentityBlock extends StatelessWidget {
         ),
         const SizedBox(height: 3),
         handleWidget,
+        if (friendCount != null && onTapFriendChip != null) ...[
+          const SizedBox(height: 8),
+          _FriendsChip(
+            count: friendCount!,
+            onTap: onTapFriendChip!,
+            label: context.l10n.socialProfileFriendsChipLabel,
+          ),
+        ],
       ],
+    );
+  }
+}
+
+/// Compact pill rendered under @handle in the hero card. Decentní
+/// chrome — white-translucent, small icon — designed to read as a
+/// secondary affordance, not compete with the player's display name
+/// or level pill above it.
+class _FriendsChip extends StatelessWidget {
+  const _FriendsChip({
+    required this.count,
+    required this.onTap,
+    required this.label,
+  });
+
+  final int count;
+  final VoidCallback onTap;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.14),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.groups_rounded,
+                  size: 12,
+                  color: Color(0xCCFFFFFF),
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  '$label · $count',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xCCFFFFFF),
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

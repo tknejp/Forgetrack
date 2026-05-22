@@ -679,6 +679,14 @@ class FirestoreSocialRepository implements SocialPresenceRepository {
       });
 
   @override
+  Future<Result<void, AppError>> deleteAchievementShare({
+    required String shareId,
+  }) =>
+      _classify('deleteAchievementShare', () async {
+        await _achievementShares.doc(shareId).delete();
+      });
+
+  @override
   Stream<List<RemoteEngineNodeCompletion>> watchEngineNodeCompletions(
     String uid,
   ) {

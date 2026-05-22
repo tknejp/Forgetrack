@@ -5136,7 +5136,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialProfileFriendsTitle => 'FRIENDS';
 
   @override
+  String get socialProfileFriendsChipLabel => 'Friends';
+
+  @override
   String get socialProfileNoFriends => 'No friends yet.';
+
+  @override
+  String get socialSharedPostDelete => 'Delete';
+
+  @override
+  String get socialSharedPostMoreTooltip => 'More';
+
+  @override
+  String get socialSharedPostDeleteConfirmTitle => 'Delete post';
+
+  @override
+  String get socialSharedPostDeleteConfirmBody =>
+      'This shared post will be removed from your friends\' feed.';
+
+  @override
+  String get socialSharedPostDeleted => 'Post deleted.';
 
   @override
   String socialFriendLevelSubtitle(int level, String title) {

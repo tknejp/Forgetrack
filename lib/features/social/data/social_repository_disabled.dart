@@ -82,6 +82,12 @@ class DisabledSocialRepository implements SocialPresenceRepository {
       _disabled<void>('shareAchievement');
 
   @override
+  Future<Result<void, AppError>> deleteAchievementShare({
+    required String shareId,
+  }) async =>
+      _disabled<void>('deleteAchievementShare');
+
+  @override
   Future<Result<void, AppError>> upsertProfile(
     SocialProfileSyncPayload payload,
   ) async =>

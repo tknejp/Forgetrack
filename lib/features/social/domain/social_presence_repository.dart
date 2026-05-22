@@ -108,6 +108,13 @@ abstract class SocialPresenceRepository {
     SocialAchievementShare share,
   );
 
+  /// Removes a previously-published achievement share. Callers must
+  /// gate this on ownership — the repository performs no auth check
+  /// beyond what Firestore rules enforce.
+  Future<Result<void, AppError>> deleteAchievementShare({
+    required String shareId,
+  });
+
   /// Streams every node completion event in the user's V2 engine ledger.
   ///
   /// Used by `SocialProvider.watchFriendAchievements` which filters down

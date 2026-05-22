@@ -8895,11 +8895,47 @@ abstract class AppLocalizations {
   /// **'FRIENDS'**
   String get socialProfileFriendsTitle;
 
+  /// No description provided for @socialProfileFriendsChipLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends'**
+  String get socialProfileFriendsChipLabel;
+
   /// No description provided for @socialProfileNoFriends.
   ///
   /// In en, this message translates to:
   /// **'No friends yet.'**
   String get socialProfileNoFriends;
+
+  /// No description provided for @socialSharedPostDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get socialSharedPostDelete;
+
+  /// No description provided for @socialSharedPostMoreTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get socialSharedPostMoreTooltip;
+
+  /// No description provided for @socialSharedPostDeleteConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete post'**
+  String get socialSharedPostDeleteConfirmTitle;
+
+  /// No description provided for @socialSharedPostDeleteConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This shared post will be removed from your friends\' feed.'**
+  String get socialSharedPostDeleteConfirmBody;
+
+  /// No description provided for @socialSharedPostDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Post deleted.'**
+  String get socialSharedPostDeleted;
 
   /// No description provided for @socialFriendLevelSubtitle.
   ///

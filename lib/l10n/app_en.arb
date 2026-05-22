@@ -2538,7 +2538,13 @@
   "@socialReactorsTitle": { "placeholders": { "count": { "type": "int" } } },
 
   "socialProfileFriendsTitle": "FRIENDS",
+  "socialProfileFriendsChipLabel": "Friends",
   "socialProfileNoFriends": "No friends yet.",
+  "socialSharedPostDelete": "Delete",
+  "socialSharedPostMoreTooltip": "More",
+  "socialSharedPostDeleteConfirmTitle": "Delete post",
+  "socialSharedPostDeleteConfirmBody": "This shared post will be removed from your friends' feed.",
+  "socialSharedPostDeleted": "Post deleted.",
   "socialFriendLevelSubtitle": "Level {level} {title}",
   "@socialFriendLevelSubtitle": { "placeholders": { "level": { "type": "int" }, "title": { "type": "String" } } },
   "socialFriendHandleLevelSubtitle": "@{handle} - Level {level} {title}",

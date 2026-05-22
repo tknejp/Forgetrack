@@ -641,6 +641,21 @@ class SocialProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Deletes a previously-shared achievement post. Only the share's
+  /// `actorUid` can delete it — callers must enforce ownership at the
+  /// UI layer (the repository delegates the final check to Firestore
+  /// rules).
+  Future<void> deleteAchievementShare(String shareId) async {
+    final result = await _repository.deleteAchievementShare(shareId: shareId);
+    switch (result) {
+      case Success():
+        _clearError();
+      case Failure(error: final e):
+        _recordAppError('deleteAchievementShare', e);
+    }
+    notifyListeners();
+  }
+
   Future<void> addReaction(String shareId, String emoji) async {
     final uid = _activeUid;
     final authProvider = _authProvider;

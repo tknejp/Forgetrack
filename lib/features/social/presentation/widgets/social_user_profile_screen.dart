@@ -13,7 +13,6 @@ import '../../../../shared/widgets/screen_header.dart';
 import '../../../cosmetics/application/cosmetics_provider.dart';
 import '../../../cosmetics/application/emblem_board_provider.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
-import '../../../cosmetics/presentation/widgets/cosmetic_equipped_chip.dart';
 import '../../../cosmetics/presentation/widgets/cosmetics_inventory_section.dart';
 import '../../../progression_engine/application/progression_engine_provider.dart';
 import '../../application/social_provider.dart';
@@ -299,66 +298,88 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
                     children: [
                       // Hero header bleeds to the screen edges — the
                       // rest of the profile keeps the 16-px gutter.
-                      ProfileDetailHeroCard(
-                        displayName: displayName,
-                        handle: handle,
-                        photoUrl: photoUrl,
-                        profile: profile,
-                        isMe: isMe,
-                        emblemSlots: emblemSlots,
-                        unlockedCount: unlockedCount,
-                        photoBusy: _photoBusy,
-                        onEditPhoto: isMe ? _pickOwnProfilePhoto : null,
-                        onEditHandle:
-                            isMe ? () => _editOwnHandle(handle) : null,
-                        // Friend profiles get read-only detail; the
-                        // owner gets the full picker (equip / remove /
-                        // swap). Locked slots ignore the tap.
-                        onTapEmblemSlot: (slotIndex) =>
-                            _openEmblemSlotSheet(
-                          slotIndex: slotIndex,
-                          isOwner: isMe,
-                          uid: widget.uid,
-                          slots: emblemSlots,
-                          unlocked: ownUnlockedEmblems,
-                        ),
-                        // Tap on the companion standee → cosmetic
-                        // details sheet (own profile only — friend
-                        // profiles don't carry the local cosmetics
-                        // state needed to render lifecycle / equip).
-                        onTapCompanion:
-                            isMe ? (c) => _openCompanionDetails(c) : null,
+                      // Wrapped in StreamBuilder so the "Přátelé · N"
+                      // chip under @handle reflects the live friend
+                      // count from the same stream the modal sheet
+                      // opens onto.
+                      StreamBuilder<List<SocialUserProfile>>(
+                        stream: _friendsStream,
+                        builder: (context, friendsSnap) {
+                          final friendCount = friendsSnap.data?.length;
+                          return ProfileDetailHeroCard(
+                            displayName: displayName,
+                            handle: handle,
+                            photoUrl: photoUrl,
+                            profile: profile,
+                            isMe: isMe,
+                            emblemSlots: emblemSlots,
+                            unlockedCount: unlockedCount,
+                            photoBusy: _photoBusy,
+                            onEditPhoto: isMe ? _pickOwnProfilePhoto : null,
+                            onEditHandle:
+                                isMe ? () => _editOwnHandle(handle) : null,
+                            friendCount: friendCount,
+                            // `_friendsStream` is single-subscription
+                            // and already listened-to by this hero
+                            // card's StreamBuilder for the chip count
+                            // — handing the same instance to the sheet
+                            // would silently fail to subscribe and the
+                            // sheet would stick at "loading". Spin up
+                            // a fresh stream for the sheet instead;
+                            // the repository serves an independent
+                            // Firestore snapshot listener per call.
+                            onTapFriendChip: () =>
+                                ProfileFriendsListSheet.show(
+                              context,
+                              stream: social
+                                  .watchFriendProfilesForUser(widget.uid),
+                            ),
+                            // Friend profiles get read-only detail; the
+                            // owner gets the full picker (equip / remove /
+                            // swap). Locked slots ignore the tap.
+                            onTapEmblemSlot: (slotIndex) =>
+                                _openEmblemSlotSheet(
+                              slotIndex: slotIndex,
+                              isOwner: isMe,
+                              uid: widget.uid,
+                              slots: emblemSlots,
+                              unlocked: ownUnlockedEmblems,
+                            ),
+                            // Tap on the companion standee → cosmetic
+                            // details sheet (own profile only — friend
+                            // profiles don't carry the local cosmetics
+                            // state needed to render lifecycle / equip).
+                            onTapCompanion: isMe
+                                ? (c) => _openCompanionDetails(c)
+                                : null,
+                          );
+                        },
                       ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (!isMe && social.isFriendWith(widget.uid))
-                              _buildActionArea(
-                                  context, social, displayName),
-                            if (stats != null) ...[
-                              if (!isMe && social.isFriendWith(widget.uid))
-                                const SizedBox(height: Tokens.spaceMd),
-                              _buildStats(stats, isMe: isMe),
-                            ],
-                            const SizedBox(height: 10),
-                            ProfileFriendsSection(stream: _friendsStream),
-                            if (!isMe &&
-                                !social.isFriendWith(widget.uid)) ...[
-                              const SizedBox(height: 10),
-                              _buildActionArea(
-                                  context, social, displayName),
-                            ],
-                            // Own-profile only — friends don't see
-                            // your inventory tiles, and we don't have
-                            // their unlocked catalogue to render anyway.
                             if (isMe) ...[
-                              const SizedBox(height: Tokens.spaceLg),
+                              // Owner-only section ordering per the
+                              // 2026-05-22 UI refactor: Streak rekordy →
+                              // Inventář → Připnuté achievementy →
+                              // Sdílené příspěvky (s možností odstranit).
+                              if (stats != null) ...[
+                                _buildStats(stats, isMe: true),
+                                const SizedBox(height: Tokens.spaceLg),
+                              ],
                               const CosmeticsInventorySection(),
+                              const SizedBox(height: Tokens.spaceLg),
+                            ] else ...[
+                              // Foreign profile: pending request / add or
+                              // remove-friend action sits above the
+                              // pinned + shared sections. Streak rekordy
+                              // and inventory are owner-only.
+                              _buildActionArea(
+                                  context, social, displayName),
+                              const SizedBox(height: Tokens.spaceLg),
                             ],
-                            _ProfileCosmeticsSection(profile: profile),
-                            const SizedBox(height: Tokens.spaceLg),
                             _SectionTitle(
                               icon: Icons.push_pin_rounded,
                               title:
@@ -379,6 +400,7 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
                             const SizedBox(height: 10),
                             _ProfileSharesSection(
                               stream: _sharesStream,
+                              canDelete: isMe,
                             ),
                           ],
                         ),
@@ -600,9 +622,16 @@ class _PinnedAchievementsSection extends StatelessWidget {
 }
 
 class _ProfileSharesSection extends StatelessWidget {
-  const _ProfileSharesSection({required this.stream});
+  const _ProfileSharesSection({
+    required this.stream,
+    required this.canDelete,
+  });
 
   final Stream<List<SocialAchievementShare>> stream;
+
+  /// True when the viewer owns this profile — wires a kebab menu into
+  /// each share card so the owner can remove their own posts.
+  final bool canDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -625,48 +654,80 @@ class _ProfileSharesSection extends StatelessWidget {
             for (final share in shares)
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: SocialFeedCard(share: share),
+                child: SocialFeedCard(
+                  share: share,
+                  onDelete: canDelete
+                      ? () => _confirmAndDeleteShare(context, share)
+                      : null,
+                ),
               ),
           ],
         );
       },
     );
   }
-}
 
-class _ProfileCosmeticsSection extends StatelessWidget {
-  const _ProfileCosmeticsSection({required this.profile});
-
-  final SocialUserProfile? profile;
-
-  @override
-  Widget build(BuildContext context) {
-    final cosmetics = socialProfileExtraCosmetics(profile);
-    if (cosmetics.isEmpty) return const SizedBox.shrink();
-
-    final l10n = AppLocalizations.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(top: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SectionTitle(
-            icon: Icons.auto_awesome_rounded,
-            title: context.l10n.socialProfileCosmetics,
+  Future<void> _confirmAndDeleteShare(
+    BuildContext context,
+    SocialAchievementShare share,
+  ) async {
+    final l10n = context.l10n;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Tokens.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Tokens.radiusButton),
+        ),
+        title: Text(
+          l10n.socialSharedPostDeleteConfirmTitle,
+          style: const TextStyle(
+            color: Tokens.onSurface,
+            fontWeight: FontWeight.w800,
           ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final definition in cosmetics)
-                CosmeticEquippedChip(
-                  definition: definition,
-                  l10n: l10n,
-                ),
-            ],
+        ),
+        content: Text(
+          l10n.socialSharedPostDeleteConfirmBody,
+          style: const TextStyle(
+            color: Tokens.onSurfaceMuted,
+            fontSize: Tokens.fontSizeBody,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(
+              l10n.socialCancel,
+              style: const TextStyle(color: Tokens.onSurfaceMuted),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(
+              l10n.socialSharedPostDelete,
+              style: const TextStyle(
+                color: Color(0xFFEF4444),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
         ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    final social = context.read<SocialProvider>();
+    final messenger = ScaffoldMessenger.of(context);
+    await social.deleteAchievementShare(share.id);
+    if (!context.mounted) return;
+    messenger.showSnackBar(
+      SnackBar(
+        backgroundColor: Tokens.surface,
+        content: Text(
+          social.error == null
+              ? l10n.socialSharedPostDeleted
+              : l10n.socialErrorWithMessage(social.error!),
+          style: const TextStyle(color: Tokens.onSurface),
+        ),
       ),
     );
   }

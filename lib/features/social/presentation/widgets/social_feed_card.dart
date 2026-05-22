@@ -9,8 +9,18 @@ import '../social_profile_utils.dart';
 import 'social_cosmetic_avatar.dart';
 
 class SocialFeedCard extends StatelessWidget {
-  const SocialFeedCard({super.key, required this.share});
+  const SocialFeedCard({
+    super.key,
+    required this.share,
+    this.onDelete,
+  });
+
   final SocialAchievementShare share;
+
+  /// Provided only when the viewer owns this share — surfaces a kebab
+  /// menu in the card header with a "Delete post" action. `null`
+  /// hides the menu entirely.
+  final VoidCallback? onDelete;
 
   void _react(BuildContext context, String emoji, String? myCurrentEmoji) {
     final social = context.read<SocialProvider>();
@@ -88,7 +98,11 @@ class SocialFeedCard extends StatelessWidget {
           // ── Header: avatar + name + time ─────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-            child: _ShareActorHeader(share: share, color: color),
+            child: _ShareActorHeader(
+              share: share,
+              color: color,
+              onDelete: onDelete,
+            ),
           ),
           const SizedBox(height: 10),
           // ── Achievement block ─────────────────────────────────────────────
@@ -221,10 +235,12 @@ class _ShareActorHeader extends StatelessWidget {
   const _ShareActorHeader({
     required this.share,
     required this.color,
+    this.onDelete,
   });
 
   final SocialAchievementShare share;
   final Color color;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -295,9 +311,64 @@ class _ShareActorHeader extends StatelessWidget {
                 color: Tokens.onSurfaceFaint,
               ),
             ),
+            if (onDelete != null) ...[
+              const SizedBox(width: 4),
+              _ShareOverflowMenu(onDelete: onDelete!),
+            ],
           ],
         );
       },
+    );
+  }
+}
+
+class _ShareOverflowMenu extends StatelessWidget {
+  const _ShareOverflowMenu({required this.onDelete});
+
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<String>(
+      tooltip: context.l10n.socialSharedPostMoreTooltip,
+      icon: const Icon(
+        Icons.more_vert_rounded,
+        size: 18,
+        color: Tokens.onSurfaceFaint,
+      ),
+      padding: EdgeInsets.zero,
+      splashRadius: 16,
+      color: Tokens.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Tokens.radiusInner),
+        side: BorderSide(color: Tokens.cardBorder),
+      ),
+      onSelected: (value) {
+        if (value == 'delete') onDelete();
+      },
+      itemBuilder: (ctx) => [
+        PopupMenuItem<String>(
+          value: 'delete',
+          child: Row(
+            children: [
+              const Icon(
+                Icons.delete_outline_rounded,
+                size: 16,
+                color: Color(0xFFEF4444),
+              ),
+              const SizedBox(width: Tokens.spaceSm),
+              Text(
+                ctx.l10n.socialSharedPostDelete,
+                style: const TextStyle(
+                  color: Color(0xFFEF4444),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
