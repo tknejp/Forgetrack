@@ -190,10 +190,22 @@ class _DevToolsBodyState extends State<_DevToolsBody> {
                     leading: const FtBackButton(),
                   ),
                   const SizedBox(height: 18),
+                  // Phase 0.3 invariant applied to the devtools screen.
+                  // SingleChildScrollView+Column is kept (lazy mounting via
+                  // SliverList would break Scrollable.ensureVisible to
+                  // far-off sections — the jump bar's whole point).
+                  // Wrapping each section in RepaintBoundary makes scroll
+                  // = compositor translation of N cached layers instead of
+                  // re-rasterizing the whole giant scrollable layer per
+                  // tick. Provider notifies in one section (9 of 11
+                  // sections watch a provider) also stop dirtying the
+                  // siblings' cached layers.
                   for (final section in _sections) ...[
-                    KeyedSubtree(
-                      key: section.key,
-                      child: section.builder(),
+                    RepaintBoundary(
+                      child: KeyedSubtree(
+                        key: section.key,
+                        child: section.builder(),
+                      ),
                     ),
                     if (section != _sections.last)
                       const SizedBox(height: Tokens.spaceLg),
@@ -205,10 +217,16 @@ class _DevToolsBodyState extends State<_DevToolsBody> {
               left: 14,
               right: 14,
               bottom: MediaQuery.of(context).padding.bottom + 12,
-              child: _DevToolsBottomJumpBar(
-                sections: _sections,
-                onJump: _jumpTo,
-                onOpenMenu: _showJumpSheet,
+              // Isolate the static jump bar from the scrollable's layer so
+              // its 8 px shadow + decoration isn't repainted on every
+              // scroll tick. The bar never moves; compositor reuses its
+              // cached layer.
+              child: RepaintBoundary(
+                child: _DevToolsBottomJumpBar(
+                  sections: _sections,
+                  onJump: _jumpTo,
+                  onOpenMenu: _showJumpSheet,
+                ),
               ),
             ),
           ],
@@ -259,8 +277,11 @@ class _DevToolsBottomJumpBar extends StatelessWidget {
         border: Border.all(color: ft.cardBorder),
         boxShadow: [
           BoxShadow(
+            // Phase 0.2 invariant — keep blur under 12 even on static
+            // overlays so first-paint + any layer re-rasterization
+            // (rotation, resize, theme swap) stays cheap.
             color: Colors.black.withValues(alpha: 0.28),
-            blurRadius: 18,
+            blurRadius: Tokens.glowSm,
             offset: const Offset(0, 8),
           ),
         ],
