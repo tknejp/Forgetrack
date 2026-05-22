@@ -1,7 +1,6 @@
-import 'dart:developer' as dev;
-
-import 'package:flutter/foundation.dart';
 import 'package:health/health.dart';
+
+import '../../../../core/logging/app_log.dart';
 
 /// Shared Health Connect query infrastructure used by all HcXxxService collaborators.
 ///
@@ -15,35 +14,24 @@ class HcReadClient {
   bool _configured = false;
   bool? _availabilityCached;
 
-  static const _logName = 'HealthConnectService';
-
   // ─── Logging ───────────────────────────────────────────────────────────────
+  //
+  // Routed through AppLog.health so every line carries the `[Forgetrack]`
+  // prefix used by the VSCode Debug Console filter. AppLog handles level
+  // gating per build mode (debug: all, profile: warn+error, release: none),
+  // so we don't add a `kDebugMode` gate here — that would silence HC errors
+  // in profile builds, where they're useful for diagnosing real-device runs.
 
-  void logDebug(String message) {
-    if (!kDebugMode) return;
-    dev.log(message, name: _logName);
-  }
+  static const _log = AppLog.health;
 
-  void logInfo(String message) {
-    if (!kDebugMode) return;
-    dev.log(message, name: _logName, level: 800);
-  }
+  void logDebug(String message) => _log.debug(message);
 
-  void logWarning(String message) {
-    if (!kDebugMode) return;
-    dev.log(message, name: _logName, level: 900);
-  }
+  void logInfo(String message) => _log.info(message);
 
-  void logError(String message, [Object? error, StackTrace? stackTrace]) {
-    if (!kDebugMode) return;
-    dev.log(
-      message,
-      name: _logName,
-      level: 1000,
-      error: error,
-      stackTrace: stackTrace,
-    );
-  }
+  void logWarning(String message) => _log.warn(message);
+
+  void logError(String message, [Object? error, StackTrace? stackTrace]) =>
+      _log.error(message, err: error, stackTrace: stackTrace);
 
   String fmt(DateTime dt) => dt.toIso8601String();
 

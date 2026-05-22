@@ -113,7 +113,12 @@ class AppLogger {
     }
 
     if (stackTrace != null) {
-      debugPrintStack(stackTrace: stackTrace);
+      // Emit each frame as its own debugPrint so every visible line in the
+      // VSCode Debug Console starts with `[Forgetrack]` — debugPrintStack
+      // writes raw `#0 …` frames that the filter would hide.
+      for (final frame in stackTrace.toString().trimRight().split('\n')) {
+        debugPrint('${_Ansi.red}[Forgetrack] $frame${_Ansi.reset}');
+      }
     }
   }
 
