@@ -42,6 +42,12 @@ class _DragRevealPagerState<T> extends State<DragRevealPager<T>>
   late final AnimationController _offsetController;
   double _viewportWidth = 0;
 
+  // Side (previous/next) pages are heavy to build, so we only materialize
+  // them while the user is actively dragging or an animation is in flight.
+  // At rest only the current page is built, matching the original wall cost
+  // when providers notify and trigger a parent rebuild.
+  bool _sidePagesActive = false;
+
   double get _dragOffset => _offsetController.value;
   bool get _hasPrevious => widget.hasPrevious(widget.item);
   bool get _hasNext => widget.hasNext(widget.item);
@@ -50,8 +56,10 @@ class _DragRevealPagerState<T> extends State<DragRevealPager<T>>
   @override
   void initState() {
     super.initState();
-    _offsetController = AnimationController.unbounded(vsync: this)
-      ..addListener(() => setState(() {}));
+    // No setState listener — AnimatedBuilder below subscribes to the
+    // controller and rebuilds only the Transform.translate wrappers, not the
+    // cached page subtrees.
+    _offsetController = AnimationController.unbounded(vsync: this);
   }
 
   @override
@@ -68,6 +76,20 @@ class _DragRevealPagerState<T> extends State<DragRevealPager<T>>
     super.dispose();
   }
 
+  void _activateSidePages() {
+    if (!_sidePagesActive) {
+      setState(() => _sidePagesActive = true);
+    }
+  }
+
+  void _deactivateSidePagesIfIdle() {
+    if (_sidePagesActive &&
+        !_offsetController.isAnimating &&
+        _dragOffset.abs() < 0.1) {
+      setState(() => _sidePagesActive = false);
+    }
+  }
+
   void _setDragOffset(double value) {
     if ((_dragOffset - value).abs() < 0.1) return;
     _offsetController.value = value;
@@ -77,6 +99,7 @@ class _DragRevealPagerState<T> extends State<DragRevealPager<T>>
     if (_offsetController.isAnimating) {
       _offsetController.stop();
     }
+    _activateSidePages();
   }
 
   void _handleHorizontalDragUpdate(DragUpdateDetails details) {
@@ -98,6 +121,7 @@ class _DragRevealPagerState<T> extends State<DragRevealPager<T>>
         widget.onCommit(committedItem);
       }
       _offsetController.value = 0;
+      _deactivateSidePagesIfIdle();
       return;
     }
 
@@ -112,11 +136,13 @@ class _DragRevealPagerState<T> extends State<DragRevealPager<T>>
       widget.onCommit(committedItem);
     }
     _offsetController.value = 0;
+    _deactivateSidePagesIfIdle();
   }
 
   void _handleHorizontalDragEnd(DragEndDetails details) {
     if (_viewportWidth <= 0 || _dragOffset.abs() < 0.1) {
       _offsetController.value = 0;
+      _deactivateSidePagesIfIdle();
       return;
     }
 
@@ -147,7 +173,10 @@ class _DragRevealPagerState<T> extends State<DragRevealPager<T>>
   }
 
   void _handleHorizontalDragCancel() {
-    if (_dragOffset.abs() < 0.1) return;
+    if (_dragOffset.abs() < 0.1) {
+      _deactivateSidePagesIfIdle();
+      return;
+    }
     _animateToOffset(0);
   }
 
@@ -158,17 +187,25 @@ class _DragRevealPagerState<T> extends State<DragRevealPager<T>>
         _viewportWidth = constraints.maxWidth.isFinite
             ? constraints.maxWidth
             : MediaQuery.sizeOf(context).width;
-        final dragOffset = _dragOffset.clamp(-_pageSpan, _pageSpan);
-        final previousItem = dragOffset > 0 && _hasPrevious
-            ? widget.previousOf(widget.item)
-            : null;
-        final nextItem =
-            dragOffset < 0 && _hasNext ? widget.nextOf(widget.item) : null;
+        final viewportWidth = _viewportWidth;
+        final pageSpan = _pageSpan;
+        final hasPrevious = _hasPrevious;
+        final hasNext = _hasNext;
 
-        Widget wrapItem(Widget child) => SizedBox(
-              width: _viewportWidth,
-              child: child,
+        // Build each page once per parent rebuild and wrap it in a
+        // RepaintBoundary so the rasterized layer can be re-translated by
+        // Impeller without re-painting the subtree on every animation tick.
+        Widget wrapItem(Widget child) => RepaintBoundary(
+              child: SizedBox(width: viewportWidth, child: child),
             );
+
+        final currentPage = wrapItem(widget.builder(context, widget.item));
+        final previousPage = (_sidePagesActive && hasPrevious)
+            ? wrapItem(widget.builder(context, widget.previousOf(widget.item)))
+            : null;
+        final nextPage = (_sidePagesActive && hasNext)
+            ? wrapItem(widget.builder(context, widget.nextOf(widget.item)))
+            : null;
 
         return GestureDetector(
           behavior: HitTestBehavior.translucent,
@@ -177,24 +214,32 @@ class _DragRevealPagerState<T> extends State<DragRevealPager<T>>
           onHorizontalDragEnd: _handleHorizontalDragEnd,
           onHorizontalDragCancel: _handleHorizontalDragCancel,
           child: ClipRect(
-            child: Stack(
-              alignment: Alignment.topLeft,
-              children: [
-                if (previousItem != null)
-                  Transform.translate(
-                    offset: Offset(dragOffset - _pageSpan, 0),
-                    child: wrapItem(widget.builder(context, previousItem)),
-                  ),
-                if (nextItem != null)
-                  Transform.translate(
-                    offset: Offset(dragOffset + _pageSpan, 0),
-                    child: wrapItem(widget.builder(context, nextItem)),
-                  ),
-                Transform.translate(
-                  offset: Offset(dragOffset, 0),
-                  child: wrapItem(widget.builder(context, widget.item)),
-                ),
-              ],
+            child: AnimatedBuilder(
+              animation: _offsetController,
+              builder: (context, _) {
+                final dragOffset = _dragOffset.clamp(-pageSpan, pageSpan);
+                final showPrevious = dragOffset > 0 && previousPage != null;
+                final showNext = dragOffset < 0 && nextPage != null;
+                return Stack(
+                  alignment: Alignment.topLeft,
+                  children: [
+                    if (showPrevious)
+                      Transform.translate(
+                        offset: Offset(dragOffset - pageSpan, 0),
+                        child: previousPage,
+                      ),
+                    if (showNext)
+                      Transform.translate(
+                        offset: Offset(dragOffset + pageSpan, 0),
+                        child: nextPage,
+                      ),
+                    Transform.translate(
+                      offset: Offset(dragOffset, 0),
+                      child: currentPage,
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         );
