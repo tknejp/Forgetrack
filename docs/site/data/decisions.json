@@ -1193,6 +1193,33 @@
         "lib/features/devtools/presentation/sections/devtools_app_section.dart",
         "docs/release/beta_readiness.md"
       ]
+    },
+    {
+      "id": "expandable-quest-card-template",
+      "title": "Slot-based ExpandableQuestCard šablona pro engine card varianty",
+      "status": "accepted",
+      "date": "2026-05-22",
+      "context": "Čtyři engine card widgety na quest screenu (EngineQuestCard, EngineChapterCard, EngineLongTermCard, EngineCompletedQuestCard) — dohromady ~2600 LoC — opakovaly stejnou shell kostru: AnimatedContainer s padding+border+shadow, GestureDetector na celou kartu, AnimatedSize body s inner RepaintBoundary, top-level RepaintBoundary, ExpandedQuestScope subskripce. Phase 0–0.3 perf hotfix iniciativy přidaly per-card invarianty (žádné conditional shadows, žádný animated blur, top-level RepaintBoundary), které musely být ručně dodržené v každé ze čtyř kart. Bez sjednocené šablony každá budoucí perf změna nebo nová affordance znamenala patchovat čtyři soubory paralelně, s rizikem že jedno místo zapomenutě regreseuje invariant. Chapter karta navíc měla nevyřešený raster bottleneck — DecorationImage(BoxFit.cover) v outer kontejneru re-samploval bg image každý frame expand animace, protože silueta rostla s AnimatedSize.",
+      "decision": "Vytvořit feature-scoped ExpandableQuestCard šablonu v `lib/features/progression_engine/presentation/widgets/expandable_quest_card.dart` se slot-based API: header / chainPreview / progressRow / expandedBody / fixedHeader, plus per-card overrides pro collapsedBorderColor / expandedBorderColor / shadows. Šablona vlastní všechny cross-cutting perf invarianty (top-level RepaintBoundary, AnimatedContainer s 180ms border tween, AnimatedSize body s inner RepaintBoundary, ExpandedQuestScope subskripce přes nodeId, ClipRRect na rounded corners). Slot widgety nesou vlastní leading whitespace — šablona neinjektuje gaps, takže per-card vertical rhythm zůstává zachovaný. Optional fixedHeader slot specificky řeší chapter raster bottleneck: bg image jde do Positioned(top:0, left:0, right:0) layeru s konstantní výškou (112 px), Stack se sizeuje podle padded contentu, takže bg band se nemění s expand animací a DecorationImage se rasterizuje jednou za build místo per-frame resample.",
+      "consequences": [
+        "Každý nový engine card variant komponuje šablonu a dědí perf invarianty zdarma — nelze 'zapomenout' top-level RepaintBoundary nebo se přepsat conditional shadow protože šablona to nedovolí (shadows je statický List<BoxShadow>, žádný builder API).",
+        "Per-card build() metody jsou ~50% kratší (duplikovaná scaffolding je pryč), ale celkové LoC karet kleslo jen mírně (2681 → 2783, +102) — zbylé řádky jsou private helper widgety (_ProgressRow, _ExpandedDetails, _CompanionRow, _ChainNode, atd.), které nebyly cílem deduplikace. Phase 2/3 je můžou ještě dále carve out.",
+        "Chapter karta strukturální změna: bg image už nepokrývá celou kartu, ale jen 112 px header band; chain dots a progress row teď sedí na plain dark `0xFF111423` místo na zatemněném obrázku. Akceptovaný visual trade — image byl beztak darkened na alpha 0.42/0.62 takže visual příspěvek mimo title block byl subtle. Raster cost expand animace klesá z ~23 ms/frame (post-Phase-0.2) pod 120 Hz budget 8.3 ms.",
+        "Constructor signatury Engine*Card jsou nedotčené — sections v quests_screen.dart pokračují fungovat beze změny. Žádný test neústrojně neselhal (Phase 0.1 grep potvrdil že žádný test card přímo nekonstruuje).",
+        "Šablona je explicitně feature-scoped (NE v lib/shared/widgets/) protože používá doménové typy (EngineQuestProgress přes slot widgety). Phase 5 UI refaktor iniciativy posoudí, jestli stejný shape vznikne cross-feature a zda extrahovat do shared.",
+        "Lint baseline widget-no-logic: 0 zachován — šablona nečte žádné providery, všechna data tečou skrz konstruktor / slot widgety."
+      ],
+      "alternatives": "(A) Composition mixins místo slot-based šablony. Odmítnuto: Flutter widgets jsou immutable a mixiny by znamenaly buď generování boilerplate, nebo runtime override magic — žádné z nich neřeší shell duplikaci čistěji než slots. (B) Šablona s builder API per slot (`headerBuilder: (context, isExpanded) => ...`) místo widget slots. Odmítnuto pro tuto první iteraci: jednodušší slot API stačí — karty resolvují isExpanded uvnitř vlastního build() pro per-slot potřeby (asset size, pill expanded state) a předají hotové widgety. Builder API přidává jeden indirection level bez konkrétního benefitu, dokud nepotřebujeme šablonu rebuild-isolated od scope subskripce. (C) Ponechat čtyři samostatné karty a dokumentovat invarianty komentáři. Odmítnuto: komentáře nezabrání regresi — Phase 0.2 a 0.3 musely opravit přesně tu třídu chyb (animated shadow params, missing RepaintBoundary), kterou ručně-udržované invarianty na čtyřech místech neudrží. (D) Šablona v lib/shared/widgets/ od první minuty. Odmítnuto: CLAUDE.md pravidlo je 'extract až po ≥ 3 ne-progression-engine call sites', a Phase 5 explicitně řeší cross-feature widgets samostatně.",
+      "links": [
+        "lib/features/progression_engine/presentation/widgets/expandable_quest_card.dart",
+        "lib/features/progression_engine/presentation/widgets/expanded_quest_scope.dart",
+        "lib/features/progression_engine/presentation/widgets/engine_quest_card.dart",
+        "lib/features/progression_engine/presentation/widgets/engine_chapter_card.dart",
+        "lib/features/progression_engine/presentation/widgets/engine_long_term_card.dart",
+        "lib/features/progression_engine/presentation/widgets/engine_completed_quest_card.dart",
+        "docs/ui_refactor/plan.md",
+        "docs/ui_refactor/archive/phase_1_engine_card_template.md"
+      ]
     }
   ]
 }

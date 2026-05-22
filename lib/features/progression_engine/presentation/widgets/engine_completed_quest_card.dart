@@ -14,6 +14,7 @@ import '../../application/progression_engine_provider.dart';
 import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import 'engine_chapter_card.dart' show EngineChapterChainPreview;
 import 'engine_companion_pill.dart';
+import 'expandable_quest_card.dart';
 import 'expanded_quest_scope.dart';
 
 /// Compact, expandable card rendered inside the DOKONČENÉ QUESTY
@@ -76,130 +77,100 @@ class EngineCompletedQuestCard extends StatelessWidget {
     final locale = Localizations.localeOf(context).toString();
     final dateLabel = _formatDate(entry.lastEventAt, locale);
 
-    // Per-card RepaintBoundary — see [engine_quest_card.dart] for the
-    // rationale (scroll + sibling expand isolation).
-    return RepaintBoundary(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onToggle,
-        child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.all(Tokens.questCardPadding),
-        decoration: BoxDecoration(
-          color: const Color(0xFF111423),
-          borderRadius: BorderRadius.circular(Tokens.questCardRadius),
-          border: Border.all(
-            // Gold-tinted border only while a claim is pending —
-            // already-claimed entries blend into the neutral card
-            // background so the eye lands on rows that still owe the
-            // player XP.
-            color: entry.hasClaimable
-                ? Tokens.xp.withValues(alpha: isExpanded ? 0.42 : 0.32)
-                : (isExpanded
-                    ? Tokens.accent.withValues(alpha: 0.32)
-                    : Colors.white.withValues(alpha: 0.06)),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.24),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-            // Gold glow only on claimable entries — those still owe
-            // the player XP and deserve the visual nudge. Claimed
-            // entries get the regular shadow only so they read as
-            // archived rather than "look at me".
-            //
-            // Note: the gold glow used to also animate alpha + blur
-            // when the entry was expanded. That meant a 16–22 px
-            // Gaussian blur re-rasterized every frame of the expand
-            // animation, which the 120 Hz raster budget couldn't
-            // afford. Now the gold glow uses fixed params — its
-            // claimable-vs-claimed split still reads, and the expand
-            // affordance comes entirely from the body sliding open.
-            if (entry.hasClaimable)
-              BoxShadow(
-                color: Tokens.xp.withValues(alpha: 0.14),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
-              ),
-          ],
+    // Border tints: gold while a claim is pending, neutral once
+    // claimed — so the eye lands on rows that still owe the player XP.
+    // Expanded-vs-collapsed only shifts alpha; no shadow/blur is
+    // animated (Phase 0.2 invariant).
+    final collapsedBorder = entry.hasClaimable
+        ? Tokens.xp.withValues(alpha: 0.32)
+        : Colors.white.withValues(alpha: 0.06);
+    final expandedBorder = entry.hasClaimable
+        ? Tokens.xp.withValues(alpha: 0.42)
+        : Tokens.accent.withValues(alpha: 0.32);
+
+    return ExpandableQuestCard(
+      nodeId: quest.nodeId,
+      onToggle: onToggle,
+      canExpand: onToggle != null,
+      collapsedBorderColor: collapsedBorder,
+      expandedBorderColor: expandedBorder,
+      shadows: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.24),
+          blurRadius: 10,
+          offset: const Offset(0, 4),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+        // Gold glow only on claimable entries — those still owe the
+        // player XP and deserve the visual nudge. Claimed entries get
+        // the regular shadow only so they read as archived rather than
+        // "look at me". Fixed params (no expand-state animation) so the
+        // 120 Hz raster budget isn't blown re-rasterizing a blur on a
+        // growing silhouette — see Phase 0.2 of the UI refactor plan.
+        if (entry.hasClaimable)
+          BoxShadow(
+            color: Tokens.xp.withValues(alpha: 0.14),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+      ],
+      header: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          _Leading(
+            node: quest.node,
+            domain: domain,
+            size: Tokens.questAssetCollapsed,
+            dimmed: !entry.hasClaimable,
+          ),
+          const SizedBox(width: Tokens.spaceMd),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _Leading(
-                  node: quest.node,
-                  domain: domain,
-                  size: Tokens.questAssetCollapsed,
-                  dimmed: !entry.hasClaimable,
-                ),
-                const SizedBox(width: Tokens.spaceMd),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        quest.node.titleKey(l10n),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.w700,
-                          color: entry.hasClaimable
-                              ? Colors.white
-                              : Colors.white.withValues(alpha: 0.74),
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        l10n.progRewardsUnlockedAt(dateLabel),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: Tokens.fontSizeMicro,
-                          fontWeight: FontWeight.w600,
-                          color: Tokens.onSurfaceMuted,
-                        ),
-                      ),
-                    ],
+                Text(
+                  quest.node.titleKey(l10n),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                    color: entry.hasClaimable
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.74),
                   ),
                 ),
-                const SizedBox(width: Tokens.spaceSm),
-                XpClaimPill(key: pillKey, data: _pillData()),
-                if (onToggle != null) ...[
-                  const SizedBox(width: 6),
-                  ExpandChevron(
-                    expanded: isExpanded,
+                const SizedBox(height: 3),
+                Text(
+                  l10n.progRewardsUnlockedAt(dateLabel),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: Tokens.fontSizeMicro,
+                    fontWeight: FontWeight.w600,
                     color: Tokens.onSurfaceMuted,
-                    size: 20,
                   ),
-                ],
+                ),
               ],
             ),
-            AnimatedSize(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              alignment: Alignment.topCenter,
-              child: isExpanded
-                  ? RepaintBoundary(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: Tokens.spaceMd),
-                        child: _ExpandedBody(
-                          entry: entry,
-                          accent: accent,
-                          l10n: l10n,
-                        ),
-                      ),
-                    )
-                  : const SizedBox(width: double.infinity),
+          ),
+          const SizedBox(width: Tokens.spaceSm),
+          XpClaimPill(key: pillKey, data: _pillData()),
+          if (onToggle != null) ...[
+            const SizedBox(width: 6),
+            ExpandChevron(
+              expanded: isExpanded,
+              color: Tokens.onSurfaceMuted,
+              size: 20,
             ),
           ],
-        ),
+        ],
       ),
+      // Completed card uses spaceMd above the body (a hair more breathing
+      // room than the template default spaceSm) — preserve it via a
+      // top padding on the expanded body itself.
+      expandedBody: Padding(
+        padding: const EdgeInsets.only(top: Tokens.spaceXs),
+        child: _ExpandedBody(entry: entry, accent: accent, l10n: l10n),
       ),
     );
   }

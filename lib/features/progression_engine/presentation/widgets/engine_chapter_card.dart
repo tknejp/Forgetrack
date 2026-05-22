@@ -14,6 +14,7 @@ import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import 'package:forgetrack/domain/progression/catalog/quest_policies.dart';
 import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import 'engine_companion_pill.dart';
+import 'expandable_quest_card.dart';
 import 'expanded_quest_scope.dart';
 
 /// Maps the pure-domain [ChainStepIcon] enum to the Material `Icons.…`
@@ -82,6 +83,13 @@ class EngineChapterCard extends StatelessWidget {
     final chapterId = quest.node.chapterId ?? quest.node.chainId ?? '';
     final bgAsset = chapterBgAssetFor(chapterId);
     final isLocked = quest.levelGate != null;
+    // Asset size + description maxLines locked to the collapsed values
+    // across expand state — resizing the icon and re-wrapping the
+    // description during `AnimatedSize` was forcing a header relayout
+    // per frame that read as a micro-stutter at the start of the
+    // animation. The expanded panel surfaces additional content below
+    // without touching anything in the collapsed area.
+    const assetSize = Tokens.questAssetCollapsed;
 
     // Direct non-XP rewards authored on this step (typically the
     // finale's emblem). Drives the companion pill under the XP pill.
@@ -106,202 +114,174 @@ class EngineChapterCard extends StatelessWidget {
     // unfinished and hid where the chain was heading.
     final canExpand = !isLocked && onToggle != null;
 
-    // Per-card RepaintBoundary so scrolling + sibling expand animations
-    // don't invalidate this card's cached layer. See
-    // [engine_quest_card.dart] for the same change + rationale.
-    return RepaintBoundary(
-      child: GestureDetector(
-        onTap: canExpand ? onToggle : null,
-        behavior: HitTestBehavior.opaque,
-        child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.all(Tokens.questCardPadding),
-        decoration: BoxDecoration(
-          color: const Color(0xFF111423),
-          image: bgAsset.isEmpty
-              ? null
-              : DecorationImage(
-                  image: AssetImage(bgAsset),
-                  fit: BoxFit.cover,
-                  colorFilter: ColorFilter.mode(
-                    Colors.black.withValues(alpha: isLocked ? 0.62 : 0.42),
-                    BlendMode.darken,
-                  ),
-                ),
-          borderRadius: BorderRadius.circular(Tokens.questCardRadius),
-          border: Border.all(
-            color: isExpanded
-                ? Tokens.accent.withValues(alpha: 0.42)
-                : Colors.white.withValues(alpha: 0.08),
-          ),
-          boxShadow: [
-            // Drop shadow blur reduced from 14 to Tokens.glowSm (8)
-            // because the chapter card's `AnimatedSize` body re-grows
-            // the silhouette every frame of the expand animation,
-            // forcing the shadow to re-rasterize. A 14 px Gaussian
-            // blur on a card-sized rect pushed the 120 Hz raster
-            // budget over 8.3 ms; the smaller blur keeps it within.
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.32),
-              blurRadius: Tokens.glowSm,
-              offset: const Offset(0, 6),
-            ),
-          ],
+    return ExpandableQuestCard(
+      nodeId: quest.nodeId,
+      onToggle: onToggle,
+      canExpand: canExpand,
+      collapsedBorderColor: Colors.white.withValues(alpha: 0.08),
+      shadows: const [
+        // Drop shadow blur reduced from 14 to Tokens.glowSm (8) because
+        // the chapter card's `AnimatedSize` body re-grows the silhouette
+        // every frame of the expand animation, forcing the shadow to
+        // re-rasterize. A 14 px Gaussian blur on a card-sized rect
+        // pushed the 120 Hz raster budget over 8.3 ms; the smaller
+        // blur keeps it within. See Phase 0.2 of the UI refactor plan.
+        BoxShadow(
+          color: Color(0x52000000), // black 32%
+          blurRadius: Tokens.glowSm,
+          offset: Offset(0, 6),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      ],
+      // Background image covers the entire card via a STATIC
+      // DecoratedBox inside the template's ClipRRect — the same
+      // pattern HeroProgressionHeader uses for its cosmetic
+      // background. The outer AnimatedContainer keeps only color +
+      // border + shadow + radius, so no per-frame BoxDecoration.lerp
+      // touches the DecorationImage. The image just re-paints as a
+      // textured quad as the card grows under AnimatedSize — a
+      // near-constant GPU cost.
+      //
+      // `opacity` over `BlendMode.darken`: opacity is a single shader
+      // multiply (cheap), BlendMode.darken is a per-pixel min-blend
+      // pipeline op (was the Phase 0.3 suspect). The dark card color
+      // shows through at 1 - opacity to give the darkened-art look.
+      // Tweak these values if the art reads too bright / too dim.
+      backgroundDecoration: bgAsset.isEmpty
+          ? null
+          : BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage(bgAsset),
+                fit: BoxFit.cover,
+                opacity: isLocked ? 0.30 : 0.52,
+              ),
+            ),
+      header: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _ChapterIcon(node: quest.node, size: assetSize),
+          const SizedBox(width: Tokens.spaceMd),
+          Expanded(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _ChapterIcon(
-                  node: quest.node,
-                  size: isExpanded
-                      ? Tokens.questAssetExpanded
-                      : Tokens.questAssetCollapsed,
-                ),
-                const SizedBox(width: Tokens.spaceMd),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        quest.node.titleKey(l10n),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        quest.node.descriptionKey(l10n),
-                        // No clamp when expanded — chapter step
-                        // descriptions tend to spill past two lines
-                        // and a "..." in the open state told the
-                        // player nothing about what comes next.
-                        maxLines: isExpanded ? null : 2,
-                        overflow: isExpanded
-                            ? TextOverflow.visible
-                            : TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white.withValues(alpha: 0.78),
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
+                Text(
+                  quest.node.titleKey(l10n),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
                   ),
                 ),
-                const SizedBox(width: Tokens.spaceSm),
-                // Right column: lock chip when level-gated, otherwise
-                // XP pill on top with an optional reward pill below
-                // for chapters that carry a non-XP reward (finale
-                // emblem / cosmetic). The pill replaces the legacy
-                // chevron — chapters with only XP have no expand
-                // affordance at all (user rule).
-                if (isLocked)
-                  _LockChip(level: quest.levelGate!, l10n: l10n)
-                else
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      XpClaimPill(
-                        key: pillKey,
-                        data: _pillData(companionBonus: companionBuffBonus),
-                      ),
-                      // The companion pill below the XP pill surfaces
-                      // a non-XP reward directly on *this* step (e.g.
-                      // finale emblem) — distinct from the chain
-                      // finale reward, which the expanded body shows
-                      // separately. The pill also doubles as the
-                      // expand arrow so the player has a clear tap
-                      // target on rewarded steps.
-                      if (canExpand && directNonXpRewards.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        EngineCompanionPill(
-                          badge: badgeForReward(directNonXpRewards.first),
-                          expanded: isExpanded,
-                          onTap: onToggle!,
-                          accent: accent,
-                        ),
-                      ] else if (canExpand) ...[
-                        // No direct reward to badge — show a plain
-                        // chevron so the card still has a visible
-                        // expand affordance. Without this, pure-XP
-                        // chapter steps would look unexpandable even
-                        // though tapping the row works.
-                        const SizedBox(height: 4),
-                        ExpandChevron(
-                          expanded: isExpanded,
-                          color: Colors.white.withValues(alpha: 0.72),
-                          size: 18,
-                        ),
-                      ],
-                    ],
+                const SizedBox(height: 3),
+                Text(
+                  quest.node.descriptionKey(l10n),
+                  // Clamped to 2 lines + ellipsis in both states so the
+                  // header doesn't reflow when the card expands (the
+                  // re-wrap was a per-frame layout cost during
+                  // `AnimatedSize`). The full description belongs in
+                  // the expanded body if a future revision wants it
+                  // surfaced.
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white.withValues(alpha: 0.78),
+                    height: 1.4,
                   ),
+                ),
               ],
             ),
-            // Chain preview between the title row and the progress bar
-            // (V1 layout) so the player sees their position in the
-            // chain at a glance — the progress bar still belongs
-            // immediately above the next visual primitive.
-            if (chain.length > 1) ...[
-              const SizedBox(height: Tokens.spaceSm),
-              Padding(
-                padding: EdgeInsets.only(
-                  left: (isExpanded
-                          ? Tokens.questAssetExpanded
-                          : Tokens.questAssetCollapsed) +
-                      Tokens.spaceMd,
+          ),
+          const SizedBox(width: Tokens.spaceSm),
+          // Right column: lock chip when level-gated, otherwise XP pill
+          // on top with an optional reward pill below for chapters that
+          // carry a non-XP reward (finale emblem / cosmetic). The pill
+          // replaces the legacy chevron — chapters with only XP have no
+          // expand affordance at all (user rule).
+          if (isLocked)
+            _LockChip(level: quest.levelGate!, l10n: l10n)
+          else
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                XpClaimPill(
+                  key: pillKey,
+                  data: _pillData(companionBonus: companionBuffBonus),
                 ),
-                child: EngineChapterChainPreview(
-                  chain: chain,
-                  currentNodeId: quest.node.id,
-                  accent: accent,
-                  l10n: l10n,
-                ),
-              ),
-            ],
-            const SizedBox(height: Tokens.spaceSm),
-            if (!isLocked) _ProgressRow(quest: quest, accent: accent),
-            AnimatedSize(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              alignment: Alignment.topCenter,
-              child: isExpanded
-                  ? RepaintBoundary(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: Tokens.spaceSm),
-                        child: _ChapterExpandedDetails(
-                          quest: quest,
-                          accent: accent,
-                          finaleRewards: finaleRewards,
-                          // Chapter title comes from the chain's open
-                          // node (chainOrder 0) — the chapter's own
-                          // titleKey lives there, not on per-step nodes.
-                          // Used as the expanded-body eyebrow so the
-                          // player sees "Stezka poutníka" instead of a
-                          // redundant step number that just mirrors the
-                          // chain dots above.
-                          chapterTitle: chain.isEmpty
-                              ? null
-                              : chain.first.node.titleKey(l10n),
-                          l10n: l10n,
-                        ),
-                      ),
-                    )
-                  : const SizedBox(width: double.infinity),
+                // The companion pill below the XP pill surfaces a non-XP
+                // reward directly on *this* step (e.g. finale emblem) —
+                // distinct from the chain finale reward, which the
+                // expanded body shows separately. The pill also doubles
+                // as the expand arrow so the player has a clear tap
+                // target on rewarded steps.
+                if (canExpand && directNonXpRewards.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  EngineCompanionPill(
+                    badge: badgeForReward(directNonXpRewards.first),
+                    expanded: isExpanded,
+                    onTap: onToggle!,
+                    accent: accent,
+                  ),
+                ] else if (canExpand) ...[
+                  // No direct reward to badge — show a plain chevron so
+                  // the card still has a visible expand affordance.
+                  // Without this, pure-XP chapter steps would look
+                  // unexpandable even though tapping the row works.
+                  const SizedBox(height: 4),
+                  ExpandChevron(
+                    expanded: isExpanded,
+                    color: Colors.white.withValues(alpha: 0.72),
+                    size: 18,
+                  ),
+                ],
+              ],
             ),
-          ],
-        ),
+        ],
       ),
+      // Chain preview between the title row and the progress bar (V1
+      // layout) so the player sees their position in the chain at a
+      // glance — the progress bar still belongs immediately above the
+      // next visual primitive.
+      chainPreview: chain.length > 1
+          ? Padding(
+              padding: EdgeInsets.only(
+                top: Tokens.spaceSm,
+                left: assetSize + Tokens.spaceMd,
+              ),
+              child: EngineChapterChainPreview(
+                chain: chain,
+                currentNodeId: quest.node.id,
+                accent: accent,
+                l10n: l10n,
+              ),
+            )
+          : null,
+      progressRow: isLocked
+          ? null
+          : Padding(
+              padding: const EdgeInsets.only(top: Tokens.spaceSm),
+              child: _ProgressRow(quest: quest, accent: accent),
+            ),
+      expandedBody: _ChapterExpandedDetails(
+        quest: quest,
+        accent: accent,
+        finaleRewards: finaleRewards,
+        // Chapter title comes from the chain's open node (chainOrder 0)
+        // — the chapter's own titleKey lives there, not on per-step
+        // nodes. Used as the expanded-body eyebrow so the player sees
+        // "Stezka poutníka" instead of a redundant step number that
+        // just mirrors the chain dots above.
+        chapterTitle: chain.isEmpty
+            ? null
+            : chain.first.node.titleKey(l10n),
+        l10n: l10n,
       ),
     );
   }
+
 
   XpClaimPillData _pillData({required int companionBonus}) {
     return switch (quest.lifecycle) {
@@ -689,72 +669,73 @@ class _ChapterExpandedDetails extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(Tokens.radiusInner),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (hasTitle) ...[
-            Text(
-              chapterTitle!.toUpperCase(),
-              style: TextStyle(
-                fontSize: Tokens.fontSizeMicro,
-                fontWeight: FontWeight.w900,
-                color: accent,
-                letterSpacing: 1.1,
-              ),
+    // No surrounding container chrome — the previous black-tinted box
+    // with white-8% border felt like a panel sitting on top of the
+    // chapter art. A thin hairline divider above the content reads as
+    // a continuation of the card, matching the daily-quests divider
+    // pattern in HeroProgressionHeader's expanded section.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          height: 1,
+          color: Colors.white.withValues(alpha: 0.08),
+        ),
+        const SizedBox(height: 10),
+        if (hasTitle) ...[
+          Text(
+            chapterTitle!.toUpperCase(),
+            style: TextStyle(
+              fontSize: Tokens.fontSizeMicro,
+              fontWeight: FontWeight.w900,
+              color: accent,
+              letterSpacing: 1.1,
             ),
-            if (hasLockedHint || hasFinale) const SizedBox(height: 6),
-          ],
-          if (hasLockedHint) ...[
-            _DetailLine(
-              icon: Icons.lock_outline_rounded,
-              color: Colors.white.withValues(alpha: 0.78),
-              text: lockedHint,
+          ),
+          if (hasLockedHint || hasFinale) const SizedBox(height: 6),
+        ],
+        if (hasLockedHint) ...[
+          _DetailLine(
+            icon: Icons.lock_outline_rounded,
+            color: Colors.white.withValues(alpha: 0.82),
+            text: lockedHint,
+          ),
+          if (hasFinale) const SizedBox(height: 8),
+        ],
+        if (hasFinale) ...[
+          Text(
+            l10n.progQuestChainFinaleReward.toUpperCase(),
+            style: TextStyle(
+              fontSize: Tokens.fontSizeMicro,
+              fontWeight: FontWeight.w900,
+              color: Colors.white.withValues(alpha: 0.72),
+              letterSpacing: 1.1,
             ),
-            if (hasFinale) const SizedBox(height: 8),
-          ],
-          if (hasFinale) ...[
-            Text(
-              l10n.progQuestChainFinaleReward.toUpperCase(),
-              style: const TextStyle(
-                fontSize: Tokens.fontSizeMicro,
-                fontWeight: FontWeight.w900,
-                color: Tokens.onSurfaceMuted,
-                letterSpacing: 1.1,
-              ),
-            ),
-            const SizedBox(height: 6),
-            // Rich reward rows — each shows the resolved cosmetic asset
-            // (e.g. forest emblem), the localized name, and a chevron
-            // that opens a read-only preview sheet. Lets the player
-            // inspect what's waiting at the finale before they unlock
-            // it, instead of staring at an anonymous icon chip.
-            for (var i = 0; i < finaleRewards.length; i++) ...[
-              if (i > 0) const SizedBox(height: 6),
-              EngineRewardDetailRow(
+          ),
+          const SizedBox(height: 6),
+          // Rich reward rows — each shows the resolved cosmetic asset
+          // (e.g. forest emblem), the localized name, and a chevron
+          // that opens a read-only preview sheet. Lets the player
+          // inspect what's waiting at the finale before they unlock
+          // it, instead of staring at an anonymous icon chip.
+          for (var i = 0; i < finaleRewards.length; i++) ...[
+            if (i > 0) const SizedBox(height: 6),
+            EngineRewardDetailRow(
+              reward: finaleRewards[i],
+              l10n: l10n,
+              unlocked: false,
+              accent: accent,
+              onTap: () => showEngineRewardPreviewSheet(
+                context,
                 reward: finaleRewards[i],
-                l10n: l10n,
                 unlocked: false,
                 accent: accent,
-                onTap: () => showEngineRewardPreviewSheet(
-                  context,
-                  reward: finaleRewards[i],
-                  unlocked: false,
-                  accent: accent,
-                  l10n: l10n,
-                ),
+                l10n: l10n,
               ),
-            ],
+            ),
           ],
         ],
-      ),
+      ],
     );
   }
 }

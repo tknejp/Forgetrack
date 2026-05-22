@@ -13,6 +13,7 @@ import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import 'engine_chapter_card.dart' show EngineChapterChainPreview;
 import 'engine_companion_pill.dart';
+import 'expandable_quest_card.dart';
 import 'expanded_quest_scope.dart';
 import 'quest_streak_chip.dart';
 import 'quest_streak_info_block.dart';
@@ -131,199 +132,139 @@ class EngineQuestCard extends StatelessWidget {
     // rewards carries a [ProgressionDomain] streak tag. The presence
     // of that tag drives whether the expanded panel reveals the
     // pedagogic streak info block.
-    final streakDomain = streakDomainOfRewards(quest.node.rewards);
-    final isStreakCard = streakDomain != null;
-    // Every card surfaces the buff bonus on the XP pill — the
-    // dedicated streak chip in the header is gone; streak pedagogy
-    // lives inside the expanded info block instead.
-    final pillCompanionBonus = companionBuffBonus;
-
+    final isStreakCard = streakDomainOfRewards(quest.node.rewards) != null;
     // V1 quest cards expanded for any meta info; V2 cards only expand
     // when there's an actual extra reward to surface (rule from the
-    // user: "Quest cards nepÅ¯jdou expandovat pokud neobsahujÃ­ odmÄ›nu
-    // navÃ­c mimo XP"). Today's daily/weekly quests in the catalog ship
+    // user: "Quest cards nepůjdou expandovat pokud neobsahují odměnu
+    // navíc mimo XP"). Today's daily/weekly quests in the catalog ship
     // XP-only — no companion / no item — so they're collapsed-only.
     final canExpand = _hasNonXpReward && onToggle != null;
+    // Asset size locked to the collapsed value across expand state.
+    // Resizing the icon during expand was triggering a relayout of the
+    // whole header row per frame of `AnimatedSize`, which read as a
+    // micro-stutter at the start of the animation. The chain preview's
+    // left indent still uses this constant so it stays aligned with the
+    // title column.
+    const assetSize = Tokens.questAssetCollapsed;
 
-    // RepaintBoundary so each card owns its own rasterized layer. The
-    // parent `ListView` only inserts a boundary around top-level
-    // sections, not around the cards *inside* a section. Without this,
-    // scrolling within a section forces the whole section to repaint,
-    // and expanding one card invalidates the section's cache and
-    // re-rasterizes every sibling card too. With per-card boundaries,
-    // scroll becomes a pure GPU translate of cached layers and an
-    // expand animation only re-rasterizes the animating card.
-    return RepaintBoundary(
-      child: GestureDetector(
-        onTap: canExpand ? onToggle : null,
-        behavior: HitTestBehavior.opaque,
-        child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.all(Tokens.questCardPadding),
-        decoration: BoxDecoration(
-          color: const Color(0xFF111423),
-          borderRadius: BorderRadius.circular(Tokens.questCardRadius),
-          border: Border.all(
-            color: isExpanded
-                ? Tokens.accent.withValues(alpha: 0.42)
-                : Colors.white.withValues(alpha: 0.06),
-          ),
-          boxShadow: [
-            // Single static drop shadow. The previous "if (isExpanded)
-            // BoxShadow(blur: glowXl)" conditional re-rasterized a
-            // 22 px Gaussian blur every frame of the AnimatedSize expand
-            // animation (the card's silhouette changes per tick, so the
-            // shadow shape changes too). Removing it keeps the raster
-            // thread under the 8.3 ms budget on 120 Hz panels — see
-            // docs/ui_refactor/plan.md Phase 0.2.
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.26),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return ExpandableQuestCard(
+      nodeId: quest.nodeId,
+      onToggle: onToggle,
+      canExpand: canExpand,
+      header: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _QuestLeading(node: quest.node, domain: domain, size: assetSize),
+          const SizedBox(width: Tokens.spaceMd),
+          Expanded(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _QuestLeading(
-                  node: quest.node,
-                  domain: domain,
-                  size: isExpanded
-                      ? Tokens.questAssetExpanded
-                      : Tokens.questAssetCollapsed,
-                ),
-                const SizedBox(width: Tokens.spaceMd),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        quest.node.titleKey(l10n),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 15.5,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        // Lets longer side-quest copy ("splň dnes
-                        // kroky, aktivitu, spánek i protein.") wrap to
-                        // a third line instead of getting clipped with
-                        // an ellipsis. Cards size to content; short
-                        // daily quests stay the same height.
-                        quest.node.descriptionKey(l10n),
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white.withValues(alpha: 0.66),
-                        ),
-                      ),
-                      if (showCompletedTodayBadge &&
-                          quest.lifecycle is QuestClaimed) ...[
-                        const SizedBox(height: 6),
-                        _CompletedTodayBadge(
-                          label: l10n.progDailyQuestCompletedTodayBadge,
-                          accent: accent,
-                        ),
-                      ],
-                    ],
+                Text(
+                  quest.node.titleKey(l10n),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
                   ),
                 ),
-                const SizedBox(width: Tokens.spaceSm),
-                // Right column: XP pill on top, optional companion
-                // pill below when the quest carries a non-XP reward.
-                // No standalone chevron — the pill itself doubles as
-                // the expand affordance.
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    XpClaimPill(
-                      key: pillKey,
-                      data: _pillData(
-                        companionBonus: pillCompanionBonus,
-                        emblemBonus: emblemBuffBonus,
-                      ),
-                    ),
-                    if (canExpand) ...[
-                      const SizedBox(height: 4),
-                      EngineCompanionPill(
-                        badge: badgeForReward(_nonXpRewards.first),
-                        expanded: isExpanded,
-                        onTap: onToggle!,
-                        accent: accent,
-                      ),
-                    ],
-                  ],
+                const SizedBox(height: 3),
+                Text(
+                  // Lets longer side-quest copy ("splň dnes kroky,
+                  // aktivitu, spánek i protein.") wrap to a third line
+                  // instead of getting clipped with an ellipsis. Cards
+                  // size to content; short daily quests stay the same
+                  // height.
+                  quest.node.descriptionKey(l10n),
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white.withValues(alpha: 0.66),
+                  ),
                 ),
+                if (showCompletedTodayBadge &&
+                    quest.lifecycle is QuestClaimed) ...[
+                  const SizedBox(height: 6),
+                  _CompletedTodayBadge(
+                    label: l10n.progDailyQuestCompletedTodayBadge,
+                    accent: accent,
+                  ),
+                ],
               ],
             ),
-            // Chain preview — surfaces only when this card belongs to
-            // a multi-step chain (combo daily quests). Indented under
-            // the leading icon to align with the title column. Small
-            // top gap + larger bottom gap before the progress bar so
-            // the row sits visually centered between the title block
-            // and the progress row instead of crowding the bar.
-            if (chain.length > 1) ...[
-              const SizedBox(height: Tokens.spaceXs),
-              Padding(
-                padding: EdgeInsets.only(
-                  left: (isExpanded
-                          ? Tokens.questAssetExpanded
-                          : Tokens.questAssetCollapsed) +
-                      Tokens.spaceMd,
-                ),
-                child: EngineChapterChainPreview(
-                  chain: chain,
-                  currentNodeId: quest.node.id,
-                  accent: accent,
-                  l10n: l10n,
+          ),
+          const SizedBox(width: Tokens.spaceSm),
+          // Right column: XP pill on top, optional companion pill below
+          // when the quest carries a non-XP reward. No standalone
+          // chevron — the pill itself doubles as the expand affordance.
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              XpClaimPill(
+                key: pillKey,
+                data: _pillData(
+                  companionBonus: companionBuffBonus,
+                  emblemBonus: emblemBuffBonus,
                 ),
               ),
-              const SizedBox(height: Tokens.spaceMd),
-            ] else
-              const SizedBox(height: Tokens.spaceSm),
-            _ProgressRow(quest: quest, accent: accent),
-            // Animate the expand block — `AnimatedSize` smooths the
-            // height transition; the conditional child collapses to
-            // an empty box so cards without anything in the expanded
-            // panel don't reserve space.
-            AnimatedSize(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              alignment: Alignment.topCenter,
-              child: isExpanded
-                  ? RepaintBoundary(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: Tokens.spaceSm),
-                        child: _ExpandedDetails(
-                          quest: quest,
-                          streak: streak,
-                          accent: accent,
-                          l10n: l10n,
-                          // Main-five-only streak info — the block is
-                          // a no-op for non-streak nodes (`isStreakCard`
-                          // false), but threading the buff + percent
-                          // through unconditionally keeps the
-                          // expanded-detail API symmetric across
-                          // bucket sections.
-                          isStreakCard: isStreakCard,
-                          equippedCompanionBuff: equippedCompanionBuff,
-                          streakBuffPercent: streakBuffPercent,
-                        ),
-                      ),
-                    )
-                  : const SizedBox(width: double.infinity),
-            ),
-          ],
-        ),
+              if (canExpand) ...[
+                const SizedBox(height: 4),
+                EngineCompanionPill(
+                  badge: badgeForReward(_nonXpRewards.first),
+                  expanded: isExpanded,
+                  onTap: onToggle!,
+                  accent: accent,
+                ),
+              ],
+            ],
+          ),
+        ],
       ),
+      // Chain preview — surfaces only when this card belongs to a
+      // multi-step chain (combo daily quests). Indented under the
+      // leading icon to align with the title column. Small top gap +
+      // larger bottom gap so the row sits visually centered between
+      // the title block and the progress row instead of crowding the
+      // bar — the template stacks slots without injecting gaps, so
+      // both halves of the gap live here.
+      chainPreview: chain.length > 1
+          ? Padding(
+              padding: EdgeInsets.only(
+                top: Tokens.spaceXs,
+                left: assetSize + Tokens.spaceMd,
+                bottom: Tokens.spaceMd,
+              ),
+              child: EngineChapterChainPreview(
+                chain: chain,
+                currentNodeId: quest.node.id,
+                accent: accent,
+                l10n: l10n,
+              ),
+            )
+          : null,
+      // When there's no chain preview the template still needs the 8 px
+      // breathing room between the header row and the progress bar
+      // that the original card laid in by hand.
+      progressRow: Padding(
+        padding: EdgeInsets.only(
+          top: chain.length > 1 ? 0 : Tokens.spaceSm,
+        ),
+        child: _ProgressRow(quest: quest, accent: accent),
+      ),
+      expandedBody: _ExpandedDetails(
+        quest: quest,
+        streak: streak,
+        accent: accent,
+        l10n: l10n,
+        // Main-five-only streak info — the block is a no-op for
+        // non-streak nodes (`isStreakCard` false), but threading the
+        // buff + percent through unconditionally keeps the
+        // expanded-detail API symmetric across bucket sections.
+        isStreakCard: isStreakCard,
+        equippedCompanionBuff: equippedCompanionBuff,
+        streakBuffPercent: streakBuffPercent,
       ),
     );
   }

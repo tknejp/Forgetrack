@@ -15,6 +15,7 @@ import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import 'engine_chapter_card.dart' show EngineChapterChainPreview;
 import 'engine_companion_pill.dart';
 import 'engine_reward_chip.dart';
+import 'expandable_quest_card.dart';
 import 'expanded_quest_scope.dart';
 
 /// Long-term goal card.
@@ -106,148 +107,102 @@ class EngineLongTermCard extends StatelessWidget {
         nextLockedStep != null ||
         chain.length > 1;
     final canExpand = hasExtraContent && onToggle != null;
+    // Asset size locked to the collapsed value across expand state —
+    // resizing the icon during `AnimatedSize` was forcing a header
+    // relayout per frame that read as a micro-stutter at the start of
+    // the animation.
+    const assetSize = Tokens.questAssetCollapsed;
 
-    // Per-card RepaintBoundary — see [engine_quest_card.dart] for the
-    // rationale (scroll + sibling expand isolation).
-    return RepaintBoundary(
-      child: GestureDetector(
-        onTap: canExpand ? onToggle : null,
-        behavior: HitTestBehavior.opaque,
-        child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.all(Tokens.questCardPadding),
-        decoration: BoxDecoration(
-          color: const Color(0xFF111423),
-          borderRadius: BorderRadius.circular(Tokens.questCardRadius),
-          border: Border.all(
-            color: isExpanded
-                ? Tokens.accent.withValues(alpha: 0.42)
-                : Colors.white.withValues(alpha: 0.06),
-          ),
-          boxShadow: [
-            // Single static drop shadow — the previous conditional
-            // accent glow re-rasterized a 22 px Gaussian blur per
-            // frame of the expand animation. See engine_quest_card.dart
-            // for the same change + rationale.
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.26),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return ExpandableQuestCard(
+      nodeId: quest.nodeId,
+      onToggle: onToggle,
+      canExpand: canExpand,
+      header: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _Leading(node: quest.node, domain: domain, size: assetSize),
+          const SizedBox(width: Tokens.spaceMd),
+          Expanded(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _Leading(
-                  node: quest.node,
-                  domain: domain,
-                  size: isExpanded
-                      ? Tokens.questAssetExpanded
-                      : Tokens.questAssetCollapsed,
-                ),
-                const SizedBox(width: Tokens.spaceMd),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        quest.node.titleKey(l10n),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 15.5,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        quest.node.descriptionKey(l10n),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white.withValues(alpha: 0.66),
-                        ),
-                      ),
-                    ],
+                Text(
+                  quest.node.titleKey(l10n),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
                   ),
                 ),
-                const SizedBox(width: Tokens.spaceSm),
-                // Right column: XP pill on top, companion pill(s) below.
-                // The companion pill replaces the legacy stand-alone
-                // chevron — it's both the "extra reward exists" hint
-                // and the expand toggle.
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    XpClaimPill(
-                      key: pillKey,
-                      data: _pillData(companionBonus: companionBuffBonus),
-                    ),
-                    if (canExpand) ...[
-                      const SizedBox(height: 4),
-                      ..._buildCompanionPills(
-                        directNonXp: directNonXpRewards,
-                        accent: accent,
-                        isExpanded: isExpanded,
-                      ),
-                    ],
-                  ],
+                const SizedBox(height: 3),
+                Text(
+                  quest.node.descriptionKey(l10n),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white.withValues(alpha: 0.66),
+                  ),
                 ),
               ],
             ),
-            // Chain preview row — same visual as the chapter card so
-            // chained long-term goals (lifetime steps, XP milestones,
-            // reward hunter) read the same as chapter chains. Hidden
-            // for orphan long-term quests with no chain.
-            if (chain.length > 1) ...[
-              const SizedBox(height: Tokens.spaceSm),
-              Padding(
-                padding: EdgeInsets.only(
-                  left: (isExpanded
-                          ? Tokens.questAssetExpanded
-                          : Tokens.questAssetCollapsed) +
-                      Tokens.spaceMd,
-                ),
-                child: EngineChapterChainPreview(
-                  chain: chain,
-                  currentNodeId: quest.node.id,
-                  accent: accent,
-                  l10n: l10n,
-                ),
+          ),
+          const SizedBox(width: Tokens.spaceSm),
+          // Right column: XP pill on top, companion pill(s) below. The
+          // companion pill replaces the legacy stand-alone chevron —
+          // it's both the "extra reward exists" hint and the expand
+          // toggle.
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              XpClaimPill(
+                key: pillKey,
+                data: _pillData(companionBonus: companionBuffBonus),
               ),
+              if (canExpand) ...[
+                const SizedBox(height: 4),
+                ..._buildCompanionPills(
+                  directNonXp: directNonXpRewards,
+                  accent: accent,
+                  isExpanded: isExpanded,
+                ),
+              ],
             ],
-            const SizedBox(height: Tokens.spaceSm),
-            _ProgressRow(quest: quest, accent: accent),
-            AnimatedSize(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              alignment: Alignment.topCenter,
-              child: isExpanded
-                  ? RepaintBoundary(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: Tokens.spaceSm),
-                        child: _LongTermExpanded(
-                          entry: entry,
-                          quest: quest,
-                          accent: accent,
-                          nextLockedStep: nextLockedStep,
-                          finaleRewards: finaleRewards,
-                          l10n: l10n,
-                        ),
-                      ),
-                    )
-                  : const SizedBox(width: double.infinity),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
+      // Chain preview row — same visual as the chapter card so chained
+      // long-term goals (lifetime steps, XP milestones, reward hunter)
+      // read the same as chapter chains. Hidden for orphan long-term
+      // quests with no chain.
+      chainPreview: chain.length > 1
+          ? Padding(
+              padding: EdgeInsets.only(
+                top: Tokens.spaceSm,
+                left: assetSize + Tokens.spaceMd,
+              ),
+              child: EngineChapterChainPreview(
+                chain: chain,
+                currentNodeId: quest.node.id,
+                accent: accent,
+                l10n: l10n,
+              ),
+            )
+          : null,
+      progressRow: Padding(
+        padding: const EdgeInsets.only(top: Tokens.spaceSm),
+        child: _ProgressRow(quest: quest, accent: accent),
+      ),
+      expandedBody: _LongTermExpanded(
+        entry: entry,
+        quest: quest,
+        accent: accent,
+        nextLockedStep: nextLockedStep,
+        finaleRewards: finaleRewards,
+        l10n: l10n,
       ),
     );
   }

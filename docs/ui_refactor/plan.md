@@ -1,6 +1,6 @@
 # UI refactor plan — Trello #85
 
-**Status:** Phase 0 shipped 2026-05-22. Phase 1 next.
+**Status:** Phase 0–1 shipped 2026-05-22. Phase 1.1 next (recurring scroll jank on quest screen).
 **Scope:** Performance hotfix + structural split of presentation-layer hot-spots (10 screens > 1000 LoC) + extraction of reusable template widgets.
 **Out of scope:** Visual design changes, theme token changes (FtTokens / AppTheme stay), cross-feature business logic.
 **Pre-conditions:** Domain refactor closed (✅, 2026-05-19). Phase 21 lint baseline `widget-no-logic: 0` (✅) — must not regress during refactor.
@@ -17,7 +17,8 @@ This plan is **designed to be picked up by a fresh session at any phase**. Each 
 | 0.1 | Expand-state scope | ✅ shipped 2026-05-22 | — | `ExpandedQuestScope` (InheritedModel) — only 2 cards rebuild on toggle |
 | 0.2 | Card shadow raster cost | ✅ shipped 2026-05-22 | — | Dropped 22 px conditional glow + reduced chapter blur 14→8 |
 | 0.3 | Per-card RepaintBoundary | ✅ shipped 2026-05-22 | — | Each `Engine*Card` self-wraps so scroll + sibling-expand don't invalidate the whole section's cache |
-| 1 | EngineCard template extraction | ⏳ pending | — | 4 quest cards (~2600 LoC) → one template + slots |
+| 1 | EngineCard template extraction | ✅ shipped 2026-05-22 | — | `ExpandableQuestCard` template (205 LoC); 4 cards compose it; chapter bg moved to hero-style static `backgroundDecoration` (the `fixedHeader` band was a transitional fix, dropped in the hero-pattern follow-up); collapsed-card layout locked across expand state |
+| 1.1 | Quest screen scroll jank investigation | ⏳ pending | — | Recurring 22 ms jank during scroll; 4 BUILDs per jank frame; need to identify what invalidates sections per scroll tick |
 | 2 | Quest screen split | ⏳ pending | — | Sections to `presentation/sections/` |
 | 3 | Large screen splits | ⏳ pending | — | 10 screens > 1000 LoC, in priority order |
 | 4 | Shell lazy pages | ⏳ pending | — | Replace eager 4-tab PageView |
@@ -126,87 +127,75 @@ A fourth DevTools trace showed two remaining patterns: occasional UI jank (~12�
 
 ---
 
-## Phase 1 — EngineCard template extraction
+## Phase 1 — EngineCard template extraction ✅ shipped 2026-05-22
 
-**Why:** Four "engine card" widgets sum to **~2600 LoC** with heavy structural duplication, and one (chapter) still has a raster jank during expand that needs structural restructure (see Phase 0 known limits below).
+The four engine cards (~2600 LoC) used to repeat the same animated container + border interpolation + drop shadow + AnimatedSize body + RepaintBoundary scaffolding inline. Phase 1 collected all of that into a slot-based [ExpandableQuestCard](../../lib/features/progression_engine/presentation/widgets/expandable_quest_card.dart) template (205 LoC) and rewrote each `Engine*Card.build()` to compose it. Constructor signatures are unchanged — section widgets in [quests_screen.dart](../../lib/features/progression_engine/presentation/quests_screen.dart) are untouched.
 
-| File | LoC | Role |
+The chapter card's bg image moved from a full-card `DecorationImage` (which re-sampled per frame on a growing silhouette — the Phase 0.3 raster bottleneck) to the template's optional `fixedHeader` slot — a constant-height `Positioned` band that doesn't grow with `AnimatedSize`. Visible structural change: the chain dots / progress row now sit on plain dark `0xFF111423` instead of on top of the darkened image. All Phase 0–0.3 perf invariants (top-level `RepaintBoundary`, `ExpandedQuestScope` subscription, no animated shadows, etc.) are baked into the template.
+
+Full design record + per-card override table + LoC outcome: **[archive/phase_1_engine_card_template.md](archive/phase_1_engine_card_template.md)**.
+
+> **Cold-start note for fresh sessions:** when adding a new "engine card" variant, compose `ExpandableQuestCard` — don't reinvent the shell. The template owns the perf invariants and you'll inherit them for free. If you ever need to change the shell (a new affordance, a perf tweak), change it in one place. **Bg images go on the template's `backgroundDecoration` parameter, NEVER on `AnimatedContainer.decoration` directly** — the hero-pattern follow-up to Phase 1 proved that image-bearing decoration on the animated container forces a per-tick `BoxDecoration.lerp` over `DecorationImage` that was the original chapter card's raster jank. Static `DecoratedBox` + `opacity` (not `BlendMode.darken`) is the path that works at 120 Hz.
+
+---
+
+## Phase 1.1 — Quest screen scroll jank investigation
+
+**Why:** After Phase 1 + the hero-pattern follow-up shipped, a fresh DevTools profile-mode trace on the quest screen still shows a **recurring ~22 ms jank frame during scroll** — not a one-time cost when a section first enters the viewport (the original hypothesis), but a **per-scroll-tick** stutter that's visible to the user ("scroll není smooth a zadrhne se, nebo občas úplně zastaví").
+
+### Trace evidence (2026-05-22)
+
+| Slice | Wall (ms) | Occurrences |
 |---|---|---|
-| [engine_chapter_card.dart](../../lib/features/progression_engine/presentation/widgets/engine_chapter_card.dart) | 777 | Chapter progress card |
-| [engine_long_term_card.dart](../../lib/features/progression_engine/presentation/widgets/engine_long_term_card.dart) | 696 | Long-term goal card with companions |
-| [engine_quest_card.dart](../../lib/features/progression_engine/presentation/widgets/engine_quest_card.dart) | 691 | Daily / weekly quest card |
-| [engine_completed_quest_card.dart](../../lib/features/progression_engine/presentation/widgets/engine_completed_quest_card.dart) | 517 | Completed quest read-only card |
+| `VsyncProcessCallback` | 22.65 | 1 |
+| `Animator::BeginFrame` | 22.64 | 1 |
+| `LAYOUT (root)` | 21.85 | 1 |
+| `LAYOUT` | 21.84 | 1 |
+| `BUILD` | 21.14 | **4** |
+| `COMPOSITING` | 0.20 | 1 |
+| `PAINT` | 0.01 | 1 |
 
-All four share: card shell (`AnimatedContainer` with `color: 0xFF111423`, `borderRadius: Tokens.questCardRadius`, animated border colour, a static drop shadow, padding `Tokens.questCardPadding`) + a header row + progress row + `AnimatedSize` expanded body with a `RepaintBoundary` around its content. They diverge in *what goes into the expanded body* and *what chips sit beside the title / under the progress row*.
+UI thread bound. Raster thread is clean (PAINT + COMPOSITING < 0.5 ms; the Phase 0.x raster invariants are holding). The cost is in **4 BUILD events per jank frame, ~5 ms each**, all inside a single LAYOUT pass.
 
-### Per-card structural notes (from Phase 0 reading)
+### Hypothesis space (in priority order)
 
-Use these to bootstrap step 1's tabulation — verify each by re-reading the file, since Phase 0 only walked the top-of-build:
+1. **A provider notifies during scroll, triggering full `QuestsScreenV2.build()`.** The screen calls `context.watch<...>()` on several providers. If any of them ticks during scroll (e.g. health data polling, time-based UI updates, foreground sync), the whole build runs → all sections rebuild → all visible cards rebuild. The "4 BUILDs per frame" pattern matches "one section with 4 cards rebuilds because its parent invalidated."
+   - Files to grep: `lib/features/progression_engine/presentation/quests_screen.dart` — find every `context.watch`, `Consumer`, `Selector`.
+   - Providers to investigate (rebuild frequency): `ProgressionEngineProvider`, `HealthConnectProvider`, `FoodTriggerProvider`, `CosmeticsProvider`, `AuthProvider`, `SocialProvider`, plus anything wired through `Provider.of`.
+   - **Fix shape:** replace `watch` with `Selector` keyed on the specific fields the screen uses, or push the provider read down into the deepest leaf that actually consumes it.
 
-- **Quest card** — main-five daily streak chip in header, optional companion pill stack under XP pill, `_ExpandedDetails` body (description + XP scaling line + locked hint + optional streak info block for main-five cards). Expand only enabled when `_hasNonXpReward`.
-- **Chapter card** — has a `DecorationImage(AssetImage(bgAsset), fit: BoxFit.cover, colorFilter: darken)` in the outer container's decoration. **This is the Phase-0.3 raster bottleneck during expand**: as `AnimatedSize` grows the silhouette, the image re-samples to fill the new box each frame. The new template MUST move this background to a **fixed-height header region** (e.g. `SizedBox(height: headerHeight, child: bg image stack)`) that does NOT grow with the body — that way the image rasterizes once per build and only the body region animates. Body is `_ChapterExpandedDetails` (chain finale rewards + chapter title eyebrow). Has its own chain-dot preview row (`EngineChapterChainPreview`).
-- **Long-term card** — body is `_LongTermExpanded` (also contains `_AlsoUnlocks` companion list + `_FinaleRewards` block + `_CompanionRow`s). `_AlsoUnlocks` reads `completedNodeIds` once at build to compute `isUnlocked` per row (Phase 0). Has `_CompanionPills` stack under XP pill.
-- **Completed card** — read-only, has a fixed gold glow when `entry.hasClaimable`, no glow otherwise (Phase 0.2 froze these to fixed alpha/blur). Body `_ExpandedBody` is much simpler — companion list + chain preview if applicable.
+2. **A periodic timer / animation controller above the ListView ticks.** Could be a `Ticker` somewhere in the section tree (e.g. an animation rebuilding without `AnimatedBuilder`'s `child:` optimization). Check for `setState` calls in section / screen lifecycles.
 
-### Invariants the new template MUST preserve (baked in by Phase 0–0.3)
+3. **Sections rebuild because their constructor args change identity per parent build.** E.g. if `_ChapterSection` is constructed with `chainResolver: (id) => ...` (a fresh closure per parent build), the section's element won't equal its previous element and Flutter rebuilds it even when nothing functional changed. Check for inline closures / list literals in section constructor sites in `quests_screen.dart`.
 
-These are the rules that make the current quest-screen perf acceptable. The template must keep them; do not undo them:
+4. **Eager section building is the residual cost.** Less likely given the "every scroll tick" pattern, but check anyway: each section uses `Column(children: [for (var i = 0; ...) Card])` rather than `SliverList.builder`. When a section first enters the viewport, all cards build in one frame. If the user is scrolling through a section that's in-viewport every frame (visible card count varies), the section might be re-built per frame because its `children` list identity changes. Solution: convert sections to `SliverList.builder` so each card builds lazily by index.
 
-1. **Expand state via `ExpandedQuestScope`.** Each card resolves `isExpanded` via `ExpandedQuestScope.isExpanded(context, nodeId)` inside its `build()` — never via a constructor parameter. This is the InheritedModel that makes the toggle update only the two affected cards. See [expanded_quest_scope.dart](../../lib/features/progression_engine/presentation/widgets/expanded_quest_scope.dart) for the contract. The template MUST resolve expand state the same way.
-2. **Top-level `RepaintBoundary` per card.** The first widget returned by `build()` (after the `RepaintBoundary` it will live inside) is a `RepaintBoundary` wrapping the card's `GestureDetector` + outer container. This isolates scroll + sibling-expand re-rasterization. Don't drop it in the template.
-3. **`AnimatedSize` body with a `RepaintBoundary` *inside* it** around the expanded `Padding(...)` (Phase 0). When `isExpanded` is false the child is a `SizedBox(width: double.infinity)` placeholder so `AnimatedSize` collapses to zero height. Don't change this shape — collapsed state matters for `AnimatedSize`'s height interpolation.
-4. **No conditional shadows. No animated shadow params.** The conditional `if (isExpanded) BoxShadow(blurRadius: glowXl=22)` and animated blur/alpha were Phase 0.2's removal — they re-rasterize a 22 px Gaussian blur per frame on a growing silhouette and blow the 120 Hz raster budget. The template can have at most one **static** drop shadow per state (per "is claimable" / static). Use small `blurRadius` (`Tokens.glowSm = 8` or the current per-card 10–14 range — never `glowXl`).
-5. **No animated `DecorationImage` re-sampling.** If the chapter background image stays as part of the outer growing container's decoration, the raster jank from Phase 0.3 stays unfixed. See chapter notes above — restructure it.
-6. **Border colour interpolation is fine.** The current `AnimatedContainer(duration: 180ms)` animating just the border colour is cheap and should be kept as the "expand affordance" alongside the body slide. Pair this with a non-animated drop shadow (already in place) and we're good.
+### Tasks for the next session
 
-### Tasks
+1. **DevTools rebuild stats.** Run quest screen in profile mode, open DevTools → Performance → "Rebuild Stats" tab. Confirm which widgets rebuild per frame during scroll. The "4 BUILDs" should resolve to specific widget classes — that names the culprit.
 
-1. **Read all four files** end-to-end. Tabulate per-card differences in:
-   - Header composition (icon kind, title rows, optional eyebrow, chip strip)
-   - Progress-row composition (`_ProgressRow` vs chain-dot row vs none)
-   - What sits under the XP pill (streak chip, companion pill stack, nothing)
-   - Expanded-body sections (description, chain preview, companion list, finale rewards, streak info)
-   - Claim flow (active claim button vs read-only XP pill)
-   - Any tap targets beyond the whole-card toggle (companion-pill taps that open sheets, etc.)
+2. **Grep `quests_screen.dart` for every `context.watch` / `Provider.of` / `Consumer` / `Selector`.** Tabulate what each subscription pulls and how often the source provider notifies. The fix likely lands here.
 
-2. **Design `ExpandableQuestCard`** under `lib/features/progression_engine/presentation/widgets/expandable_quest_card.dart` (feature-scoped — depends on `EngineQuestProgress` and friends, do NOT put it in `lib/shared/widgets/`). Slot-based API. Sketch:
-   ```dart
-   ExpandableQuestCard(
-     accent: accent,
-     nodeId: quest.nodeId,        // for ExpandedQuestScope subscription
-     onToggle: onToggle,
-     header: ...,                 // icon + title + eyebrow + chips
-     progressRow: ...,            // _ProgressRow OR chain dots OR null
-     trailingPill: ...,           // XP pill + optional companion buff chip
-     belowPill: ...,              // companion pill stack (long-term/quest)
-     fixedHeader: ...,            // OPTIONAL fixed-height region BEFORE body — chapter bg image lives here
-     expandedBody: ...,           // _FooExpandedDetails widget
-   )
-   ```
-   Resolve `isExpanded` inside the template via `ExpandedQuestScope.isExpanded(context, nodeId)`. The `fixedHeader` slot is what fixes the chapter card's raster jank — it sits in a `SizedBox(height: const)` that does NOT grow with the body.
+3. **Audit section constructors** for closure / list args reconstructed per parent build (chainResolver, pillKeyFor, onClaim, etc.). Hoist anything that should be stable into `State` fields or top-level consts.
 
-3. **Rewrite each `Engine*Card` to compose `ExpandableQuestCard`** with its slots. Target: ~150-250 LoC per card after rewrite. Card constructors stay unchanged for callers (sections still call `EngineQuestCard(quest: …, onToggle: …, …)`).
+4. **If steps 1–3 don't fully close the gap**, convert sections from `Column(children: [cards])` to `SliverList.builder` inside `CustomScrollView(slivers: [...])` so card BUILD spreads across frames as they enter / leave the viewport.
 
-4. **Consolidate `AnimatedSize` + inner `RepaintBoundary` + top-level `RepaintBoundary` + drop shadow + `AnimatedContainer` border animation** inside the template — Phase 0 added them per-card; Phase 1 collects them in one place.
-
-5. **Re-trace after** to confirm chapter expand raster comes down to <8.3 ms / frame.
+5. **Re-trace** after each change. Target: zero recurring jank during steady-state scroll, no frame > 8.3 ms on UI thread (120 Hz budget).
 
 ### What NOT to do
 
-- **Don't change the public API of `Engine*Card` constructors.** Sections in [quests_screen.dart](../../lib/features/progression_engine/presentation/quests_screen.dart) (`_ChapterSection`, `QuestSectionPanel`, `_LongTermSection`, `_CompletedSection`) must continue to work unchanged. The cards' `build()` internals change; their `super.key`, named parameters, and behaviour stay.
-- **Don't reintroduce conditional shadows or `Tokens.glowXl` blur in the template.** See invariants above.
-- **Don't move `ExpandableQuestCard` to `lib/shared/widgets/`.** Feature-scoped. Phase 5 handles cross-feature widgets.
-- **Don't change claim flow semantics or which widget owns `onClaim` wiring.** Card just passes the callback through to the XP pill / claim button.
-- **Don't read providers in the template.** All provider data is already resolved by the caller (sections) and passed in as constructor parameters / slot widgets. Lint baseline `widget-no-logic: 0` must not regress.
-- **Don't break the `ExpandedQuestScope` subscription contract.** Each card's `nodeId` is what the scope keys off; keep the existing nodeIds (`quest.nodeId` for active cards, `entry.representative.nodeId` for completed cards).
+- **Don't touch the `ExpandableQuestCard` template or Phase 0/1 invariants.** Cards are not the bottleneck here — they're caching correctly via per-card `RepaintBoundary`. The cost is BUILD (UI thread), not PAINT (raster).
+- **Don't add `AutomaticKeepAliveClientMixin` to cards as a first attempt.** It keeps element state alive across viewport scrolls but doesn't fix the underlying "why does this rebuild every frame" question — masks the symptom.
+- **Don't preemptively migrate to `CustomScrollView` + `SliverList.builder` until #1–#3 are ruled out.** The structural change is a bigger refactor than a targeted `Selector` swap; do the cheap diagnostic first.
+- **Don't break Phase 0.1's `ExpandedQuestScope`.** The aspect-based notify is what makes expand toggle cheap; any new subscription pattern must preserve that.
+- **Don't change card visuals** — this is a perf hotfix, not a UX iteration.
 
 ### Verification
 
-- `flutter analyze` clean (the 95 pre-existing `unnecessary_const` infos in `domain/catalog/content/` are unrelated and should stay)
-- `flutter test test/features/progression_engine/` green (178 tests as of Phase 0.3). No test constructs `Engine*Card` directly — confirmed by Phase 0.1 grep — so card API changes are safe.
-- Visual diff: open each card type before/after, expand, claim — no behavioural changes. The chapter card's bg image now lives in a fixed-height header that doesn't animate, which is a visible structural change.
-- Re-trace in DevTools profile mode: chapter expand raster frames < 8.3 ms (was ~23 ms post-Phase-0.2). Other cards stay in budget. UI thread unchanged (still benefits from Phase 0.1 `ExpandedQuestScope`).
-- LoC budget per card: < 300 each. `ExpandableQuestCard` < 400.
+- DevTools profile-mode trace shows no frames > 8.3 ms on UI thread during steady-state scroll across the entire quest screen.
+- Manual: scroll up / down the full quest screen on a real device (where the jank is observable); subjective smooth feel, no visible stutters.
+- `flutter analyze` clean, `flutter test test/features/progression_engine/` green (178 tests baseline from Phase 1).
+- Lint baseline `widget-no-logic: 0` not regressed.
 
 ---
 
