@@ -150,6 +150,99 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
     final longTerm = provider.currentLongTermQuests;
     final locked = provider.lockedQuests;
     final completed = provider.completedEntries;
+    final nextLocked = provider.nextLockedChapter;
+
+    // Phase 1.1 perf fix: build a flat list of ListView children so
+    // each card is its own lazy mount unit. `ListView(children: [...])`
+    // uses `SliverChildListDelegate` whose lazy element creation runs
+    // per top-level child — when each top-level child is a SECTION
+    // containing N cards in a Column, mounting the section eagerly
+    // mounts all N cards in one frame. Pre-Phase-1.1 trace: 4 BUILDs
+    // per scroll-jank frame inside a single LAYOUT pass = a section
+    // boundary entering the cache window. By splatting each section's
+    // header, hint, empty-line, cards, and spacers as top-level
+    // entries, lazy mounting now runs PER-CARD as it crosses the cache
+    // boundary, spreading the build cost across many scroll ticks.
+    final items = <Widget>[];
+
+    if (chapters.isNotEmpty || nextLocked != null) {
+      items.addAll(_buildChapterItems(
+        chapters: chapters,
+        nextLocked: nextLocked,
+        provider: provider,
+        l10n: l10n,
+      ));
+      items.add(const SizedBox(height: Tokens.spaceXl));
+    }
+
+    items.addAll(buildQuestSectionItems(
+      header: l10n.progQuestsDailyTasksHeader,
+      color: Tokens.steps.color,
+      countLabel: dailyUnclaimed.isEmpty
+          ? null
+          : l10n.progQuestsActiveCount(dailyUnclaimed.length),
+      emptyTitle: l10n.progQuestsEmptyActiveTitle,
+      emptyCaption: l10n.progQuestsEmptyActiveCaption,
+      l10n: l10n,
+      hint: l10n.progQuestsDailyTasksHint,
+      quests: daily,
+      pillKeyFor: _pillKeyFor,
+      onClaim: _claimQuest,
+      streakFor: (q) => provider.streakForObjective(q.node.objectiveId),
+      onToggleExpanded: _toggleExpanded,
+      chainResolver: provider.chainQuestsFor,
+      companionBuffBonusFor: (q) =>
+          provider.projectedCompanionBuffBonusFor(q.node),
+      emblemBuffBonusFor: (q) =>
+          provider.projectedEmblemBuffBonusFor(q.node),
+      equippedCompanionBuff: provider.equippedCompanionBuff,
+      streakBuffPercentFor: (q) =>
+          provider.projectedStreakBuffPercentFor(q.node),
+    ));
+    items.add(const SizedBox(height: Tokens.spaceXl));
+
+    items.addAll(buildQuestSectionItems(
+      header: l10n.progQuestsWeeklyHeader,
+      color: Tokens.calories.color,
+      countLabel: weeklyActive.isEmpty
+          ? null
+          : l10n.progQuestsActiveCount(weeklyActive.length),
+      emptyTitle: l10n.progQuestsEmptyActiveTitle,
+      emptyCaption: l10n.progQuestsEmptyActiveCaption,
+      l10n: l10n,
+      quests: weeklyActive,
+      pillKeyFor: _pillKeyFor,
+      onClaim: _claimQuest,
+      streakFor: (q) => provider.streakForObjective(q.node.objectiveId),
+      onToggleExpanded: _toggleExpanded,
+      companionBuffBonusFor: (q) =>
+          provider.projectedCompanionBuffBonusFor(q.node),
+      emblemBuffBonusFor: (q) =>
+          provider.projectedEmblemBuffBonusFor(q.node),
+      equippedCompanionBuff: provider.equippedCompanionBuff,
+      streakBuffPercentFor: (q) =>
+          provider.projectedStreakBuffPercentFor(q.node),
+    ));
+
+    if (longTerm.isNotEmpty) {
+      items.add(const SizedBox(height: Tokens.spaceXl));
+      items.addAll(_buildLongTermItems(
+        entries: longTerm,
+        provider: provider,
+        l10n: l10n,
+      ));
+    }
+
+    if (locked.isNotEmpty) {
+      items.add(const SizedBox(height: Tokens.spaceXl));
+      items.addAll(_buildLockedItems(quests: locked, l10n: l10n));
+    }
+
+    items.add(const SizedBox(height: Tokens.spaceXl));
+    items.addAll(_buildCompletedItems(entries: completed, l10n: l10n));
+
+    items.add(const SizedBox(height: Tokens.spaceXl));
+    items.add(EngineBackfillSection(barKey: widget.barKey, l10n: l10n));
 
     return Scaffold(
       backgroundColor: Tokens.bg,
@@ -194,105 +287,7 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                       14,
                       28,
                     ),
-                    children: [
-                      if (chapters.isNotEmpty ||
-                          provider.nextLockedChapter != null) ...[
-                        _ChapterSection(
-                          chapters: chapters,
-                          chainResolver: provider.chainQuestsFor,
-                          l10n: l10n,
-                          pillKeyFor: _pillKeyFor,
-                          onClaim: _claimQuest,
-                          onToggleExpanded: _toggleExpanded,
-                          nextLocked: provider.nextLockedChapter,
-                          companionBuffBonusFor: (q) =>
-                              provider.projectedCompanionBuffBonusFor(q.node),
-                        ),
-                        const SizedBox(height: Tokens.spaceXl),
-                      ],
-                      QuestSectionPanel(
-                        header: l10n.progQuestsDailyTasksHeader,
-                        color: Tokens.steps.color,
-                        countLabel: dailyUnclaimed.isEmpty
-                            ? null
-                            : l10n.progQuestsActiveCount(
-                                dailyUnclaimed.length),
-                        emptyTitle: l10n.progQuestsEmptyActiveTitle,
-                        emptyCaption: l10n.progQuestsEmptyActiveCaption,
-                        l10n: l10n,
-                        hint: l10n.progQuestsDailyTasksHint,
-                        quests: daily,
-                        pillKeyFor: _pillKeyFor,
-                        onClaim: _claimQuest,
-                        streakFor: (q) =>
-                            provider.streakForObjective(q.node.objectiveId),
-                        onToggleExpanded: _toggleExpanded,
-                        chainResolver: provider.chainQuestsFor,
-                        companionBuffBonusFor: (q) =>
-                            provider.projectedCompanionBuffBonusFor(q.node),
-                        emblemBuffBonusFor: (q) =>
-                            provider.projectedEmblemBuffBonusFor(q.node),
-                        equippedCompanionBuff:
-                            provider.equippedCompanionBuff,
-                        streakBuffPercentFor: (q) =>
-                            provider.projectedStreakBuffPercentFor(q.node),
-                      ),
-                      const SizedBox(height: Tokens.spaceXl),
-                      QuestSectionPanel(
-                        header: l10n.progQuestsWeeklyHeader,
-                        color: Tokens.calories.color,
-                        countLabel: weeklyActive.isEmpty
-                            ? null
-                            : l10n.progQuestsActiveCount(weeklyActive.length),
-                        emptyTitle: l10n.progQuestsEmptyActiveTitle,
-                        emptyCaption: l10n.progQuestsEmptyActiveCaption,
-                        l10n: l10n,
-                        quests: weeklyActive,
-                        pillKeyFor: _pillKeyFor,
-                        onClaim: _claimQuest,
-                        streakFor: (q) =>
-                            provider.streakForObjective(q.node.objectiveId),
-                        onToggleExpanded: _toggleExpanded,
-                        companionBuffBonusFor: (q) =>
-                            provider.projectedCompanionBuffBonusFor(q.node),
-                        emblemBuffBonusFor: (q) =>
-                            provider.projectedEmblemBuffBonusFor(q.node),
-                        equippedCompanionBuff:
-                            provider.equippedCompanionBuff,
-                        streakBuffPercentFor: (q) =>
-                            provider.projectedStreakBuffPercentFor(q.node),
-                      ),
-                      if (longTerm.isNotEmpty) ...[
-                        const SizedBox(height: Tokens.spaceXl),
-                        _LongTermSection(
-                          entries: longTerm,
-                          chainResolver: provider.chainQuestsFor,
-                          l10n: l10n,
-                          pillKeyFor: _pillKeyFor,
-                          onClaim: _claimQuest,
-                          onToggleExpanded: _toggleExpanded,
-                          companionBuffBonusFor: (q) =>
-                              provider.projectedCompanionBuffBonusFor(q.node),
-                        ),
-                      ],
-                      if (locked.isNotEmpty) ...[
-                        const SizedBox(height: Tokens.spaceXl),
-                        _LockedSection(quests: locked, l10n: l10n),
-                      ],
-                      const SizedBox(height: Tokens.spaceXl),
-                      _CompletedSection(
-                        entries: completed,
-                        l10n: l10n,
-                        pillKeyFor: _pillKeyFor,
-                        onClaim: _claimQuest,
-                        onToggleExpanded: _toggleExpanded,
-                      ),
-                      const SizedBox(height: Tokens.spaceXl),
-                      EngineBackfillSection(
-                        barKey: widget.barKey,
-                        l10n: l10n,
-                      ),
-                    ],
+                    children: items,
                   ),
                 ),
               ),
@@ -302,11 +297,289 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
       ),
     );
   }
+
+  // ── Per-section item builders ──────────────────────────────────────
+  //
+  // Each helper returns a flat List<Widget> the screen splats into
+  // ListView.children. Items: section header row, optional hint, then
+  // each card (with inline spacers between them). Keeping these as
+  // methods on State — not standalone widget classes — is what makes
+  // every card a top-level ListView entry. A widget class wrapping
+  // cards in a Column would re-collapse mounting back to "all cards in
+  // one shot" (the pre-Phase-1.1 jank).
+
+  List<Widget> _buildChapterItems({
+    required List<EngineQuestProgress> chapters,
+    required EngineQuestProgress? nextLocked,
+    required ProgressionEngineProvider provider,
+    required AppLocalizations l10n,
+  }) {
+    final items = <Widget>[
+      EngineQuestSection(
+        label: l10n.progQuestsChapterHeader,
+        color: Tokens.accent,
+        countLabel: chapters.length == 1
+            ? null
+            : l10n.progQuestsActiveCount(chapters.length),
+        isEmpty: true,
+        children: const [],
+      ),
+    ];
+
+    for (var i = 0; i < chapters.length; i++) {
+      if (i > 0) items.add(const SizedBox(height: Tokens.spaceSm));
+      final c = chapters[i];
+      items.add(
+        EngineChapterCard(
+          key: ValueKey(c.nodeId),
+          quest: c,
+          chain: provider.chainQuestsFor(c.node.chainId ?? ''),
+          l10n: l10n,
+          pillKey: _pillKeyFor(c.nodeId),
+          onClaim: _claimQuest,
+          onToggle: () => _toggleExpanded(c.nodeId),
+          companionBuffBonus: provider.projectedCompanionBuffBonusFor(c.node),
+        ),
+      );
+    }
+
+    if (nextLocked != null) {
+      if (chapters.isNotEmpty) {
+        items.add(const SizedBox(height: Tokens.spaceSm));
+      }
+      items.add(_NextChapterLockedTeaser(quest: nextLocked, l10n: l10n));
+    }
+
+    return items;
+  }
+
+  List<Widget> _buildLongTermItems({
+    required List<EngineLongTermEntry> entries,
+    required ProgressionEngineProvider provider,
+    required AppLocalizations l10n,
+  }) {
+    final items = <Widget>[
+      EngineQuestSection(
+        label: l10n.progQuestsLongTermHeader,
+        color: Tokens.accent,
+        countLabel: entries.length <= 1
+            ? null
+            : l10n.progQuestsActiveCount(entries.length),
+        isEmpty: true,
+        children: const [],
+      ),
+    ];
+
+    for (var i = 0; i < entries.length; i++) {
+      if (i > 0) items.add(const SizedBox(height: Tokens.spaceSm));
+      final e = entries[i];
+      items.add(
+        EngineLongTermCard(
+          key: ValueKey(e.quest.nodeId),
+          entry: e,
+          chain: provider.chainQuestsFor(e.quest.node.chainId ?? ''),
+          l10n: l10n,
+          pillKey: _pillKeyFor(e.quest.nodeId),
+          onClaim: _claimQuest,
+          onToggle: () => _toggleExpanded(e.quest.nodeId),
+          companionBuffBonus:
+              provider.projectedCompanionBuffBonusFor(e.quest.node),
+        ),
+      );
+    }
+
+    return items;
+  }
+
+  List<Widget> _buildCompletedItems({
+    required List<EngineCompletedEntry> entries,
+    required AppLocalizations l10n,
+  }) {
+    final items = <Widget>[
+      EngineQuestSection(
+        label: l10n.progQuestsCompletedHeader,
+        color: Tokens.onSurfaceMuted,
+        countLabel: entries.isEmpty
+            ? null
+            : l10n.progQuestsCompletedCount(entries.length),
+        isEmpty: true,
+        children: const [],
+      ),
+      // Breathing room between the section header row and the first
+      // entry card. Mirrors the gap the section's internal
+      // `SizedBox(10)` leaves when children render — kept here so the
+      // empty state and entry list start at the same offset.
+      const SizedBox(height: 10),
+    ];
+
+    if (entries.isEmpty) {
+      items.add(
+        EngineQuestEmptyLine(
+          title: l10n.progQuestsEmptyCompletedTitle,
+          caption: l10n.progQuestsEmptyCompletedCaption,
+        ),
+      );
+    } else {
+      for (var i = 0; i < entries.length; i++) {
+        if (i > 0) items.add(const SizedBox(height: 6));
+        final e = entries[i];
+        items.add(
+          EngineCompletedQuestCard(
+            key: ValueKey(e.representative.nodeId),
+            entry: e,
+            l10n: l10n,
+            pillKey: _pillKeyFor(e.representative.nodeId),
+            onClaim: _claimQuest,
+            onToggle: () => _toggleExpanded(e.representative.nodeId),
+          ),
+        );
+      }
+    }
+
+    return items;
+  }
+
+  List<Widget> _buildLockedItems({
+    required List<EngineQuestProgress> quests,
+    required AppLocalizations l10n,
+  }) {
+    final items = <Widget>[
+      EngineQuestSection(
+        label: l10n.progQuestsLockedHeader,
+        color: Tokens.onSurfaceMuted,
+        countLabel: null,
+        isEmpty: true,
+        children: const [],
+      ),
+    ];
+
+    for (var i = 0; i < quests.length; i++) {
+      if (i > 0) items.add(const SizedBox(height: 6));
+      items.add(EngineLockedQuestRow(quest: quests[i], l10n: l10n));
+    }
+
+    return items;
+  }
+}
+
+/// Builds the flat list of widgets for one quest section (daily /
+/// weekly). Used by both [QuestSectionPanel.build] (wrapping in a
+/// Column for standalone / test use) and [_QuestsScreenV2State.build]
+/// (splatting items directly into the ListView so each card is its
+/// own lazy entry — Phase 1.1 perf fix). Keeping a single helper
+/// keeps the widget-form and the screen-form visually identical and
+/// prevents drift.
+List<Widget> buildQuestSectionItems({
+  required String header,
+  required Color color,
+  required String? countLabel,
+  required String emptyTitle,
+  required String emptyCaption,
+  required AppLocalizations l10n,
+  required List<EngineQuestProgress> quests,
+  required GlobalKey Function(String nodeId) pillKeyFor,
+  required Future<void> Function(EngineQuestProgress quest, {Offset? from})
+      onClaim,
+  EngineStreakSummary Function(EngineQuestProgress quest)? streakFor,
+  void Function(String nodeId)? onToggleExpanded,
+  String? hint,
+  List<EngineQuestProgress> Function(String chainId)? chainResolver,
+  int Function(EngineQuestProgress quest)? companionBuffBonusFor,
+  int Function(EngineQuestProgress quest)? emblemBuffBonusFor,
+  CompanionBuff? equippedCompanionBuff,
+  int Function(EngineQuestProgress quest)? streakBuffPercentFor,
+}) {
+  final items = <Widget>[
+    EngineQuestSection(
+      label: header,
+      color: color,
+      countLabel: countLabel,
+      isEmpty: true,
+      children: const [],
+    ),
+  ];
+
+  if (hint != null) {
+    items.add(_QuestSectionHint(hint: hint));
+  }
+
+  if (quests.isEmpty) {
+    items.add(EngineQuestEmptyLine(title: emptyTitle, caption: emptyCaption));
+    return items;
+  }
+
+  for (var i = 0; i < quests.length; i++) {
+    if (i > 0) items.add(const SizedBox(height: Tokens.spaceSm));
+    final q = quests[i];
+    items.add(
+      EngineQuestCard(
+        key: ValueKey(q.nodeId),
+        quest: q,
+        l10n: l10n,
+        pillKey: pillKeyFor(q.nodeId),
+        onClaim: onClaim,
+        streak: streakFor?.call(q),
+        onToggle: onToggleExpanded == null
+            ? null
+            : () => onToggleExpanded(q.nodeId),
+        // Combo daily quests carry a chainId; the resolver returns
+        // the full chain so the card renders the chain-dot preview
+        // row. Non-combo cards pass an empty chain and skip the row
+        // entirely.
+        chain: () {
+          final chainId = q.node.chainId;
+          if (chainId == null || chainResolver == null) {
+            return const <EngineQuestProgress>[];
+          }
+          return chainResolver(chainId);
+        }(),
+        // Daily-section cards (steps domain accent) surface the
+        // "rotate at midnight" hint when today's quest is already
+        // done; weekly + chapter cards opt out.
+        showCompletedTodayBadge: color == Tokens.steps.color,
+        companionBuffBonus: companionBuffBonusFor?.call(q) ?? 0,
+        emblemBuffBonus: emblemBuffBonusFor?.call(q) ?? 0,
+        equippedCompanionBuff: equippedCompanionBuff,
+        streakBuffPercent: streakBuffPercentFor?.call(q) ?? 0,
+      ),
+    );
+  }
+
+  return items;
+}
+
+/// Hint caption rendered below a section header. Pulled out into its
+/// own widget so the [Theme.of] read doesn't force [buildQuestSectionItems]
+/// to take a BuildContext — the items are built once during the screen's
+/// build, but each item gets its own BuildContext at mount time.
+class _QuestSectionHint extends StatelessWidget {
+  const _QuestSectionHint({required this.hint});
+  final String hint;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(
+          left: 2, right: 2, bottom: Tokens.spaceXs),
+      child: Text(
+        hint,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Tokens.onSurfaceMuted,
+            ),
+      ),
+    );
+  }
 }
 
 /// Header row + list of [EngineQuestCard]s for one quest bucket
 /// (daily or weekly). Public so tests can render a section in
 /// isolation without spinning up the whole screen.
+///
+/// The screen itself doesn't compose this widget — it calls
+/// [buildQuestSectionItems] directly and splats the result into the
+/// ListView so each card becomes its own lazy-mounted entry (Phase
+/// 1.1 perf fix). This widget remains for stand-alone use (widget
+/// tests, previews) and wraps the same helper output in a Column.
 class QuestSectionPanel extends StatelessWidget {
   const QuestSectionPanel({
     super.key,
@@ -386,142 +659,25 @@ class QuestSectionPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        EngineQuestSection(
-          label: header,
-          color: color,
-          countLabel: countLabel,
-          isEmpty: true,
-          children: const [],
-        ),
-        if (hint != null)
-          Padding(
-            padding: const EdgeInsets.only(
-                left: 2, right: 2, bottom: Tokens.spaceXs),
-            child: Text(
-              hint!,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Tokens.onSurfaceMuted,
-                  ),
-            ),
-          ),
-        if (quests.isEmpty)
-          EngineQuestEmptyLine(title: emptyTitle, caption: emptyCaption)
-        else
-          Column(
-            children: [
-              for (var i = 0; i < quests.length; i++) ...[
-                if (i > 0) const SizedBox(height: Tokens.spaceSm),
-                EngineQuestCard(
-                  key: ValueKey(quests[i].nodeId),
-                  quest: quests[i],
-                  l10n: l10n,
-                  pillKey: pillKeyFor(quests[i].nodeId),
-                  onClaim: onClaim,
-                  streak: streakFor?.call(quests[i]),
-                  onToggle: onToggleExpanded == null
-                      ? null
-                      : () => onToggleExpanded!(quests[i].nodeId),
-                  // Combo daily quests carry a chainId; the resolver
-                  // returns the full chain so the card renders the
-                  // chain-dot preview row. Non-combo cards pass an
-                  // empty chain and skip the row entirely.
-                  chain: () {
-                    final chainId = quests[i].node.chainId;
-                    if (chainId == null || chainResolver == null) {
-                      return const <EngineQuestProgress>[];
-                    }
-                    return chainResolver!(chainId);
-                  }(),
-                  // Daily-section cards (steps domain accent) surface
-                  // the "rotate at midnight" hint when today's quest
-                  // is already done; weekly + chapter cards opt out.
-                  showCompletedTodayBadge: color == Tokens.steps.color,
-                  companionBuffBonus:
-                      companionBuffBonusFor?.call(quests[i]) ?? 0,
-                  emblemBuffBonus:
-                      emblemBuffBonusFor?.call(quests[i]) ?? 0,
-                  equippedCompanionBuff: equippedCompanionBuff,
-                  streakBuffPercent:
-                      streakBuffPercentFor?.call(quests[i]) ?? 0,
-                ),
-              ],
-            ],
-          ),
-      ],
-    );
-  }
-}
-
-/// Top-of-screen "Journey Chapters" section. Renders one
-/// [EngineChapterCard] per active chapter, each with the chain
-/// preview pulled via [chainResolver]. Chapter quests are auto-claim
-/// (open + finale) or manual-claim (steps); the screen routes claim
-/// taps through the same handler the daily/weekly cards use.
-class _ChapterSection extends StatelessWidget {
-  const _ChapterSection({
-    required this.chapters,
-    required this.chainResolver,
-    required this.l10n,
-    required this.pillKeyFor,
-    required this.onClaim,
-    required this.onToggleExpanded,
-    this.nextLocked,
-    this.companionBuffBonusFor,
-  });
-
-  final List<EngineQuestProgress> chapters;
-  final List<EngineQuestProgress> Function(String chainId) chainResolver;
-  final AppLocalizations l10n;
-  final GlobalKey Function(String nodeId) pillKeyFor;
-  final Future<void> Function(EngineQuestProgress quest, {Offset? from})
-      onClaim;
-  final void Function(String nodeId) onToggleExpanded;
-
-  /// Compact teaser for the next-up locked chapter. Renders below the
-  /// active chapter cards as a single low-info row ("Odemkne se na
-  /// úrovni 30") so the player sees what's coming after they finish
-  /// the current chapter without spoiling the upcoming content.
-  final EngineQuestProgress? nextLocked;
-
-  /// Resolves the projected companion-buff bonus per chapter quest.
-  /// Wired from the screen with
-  /// `provider.projectedCompanionBuffBonusFor(quest.node)`.
-  final int Function(EngineQuestProgress quest)? companionBuffBonusFor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        EngineQuestSection(
-          label: l10n.progQuestsChapterHeader,
-          color: Tokens.accent,
-          countLabel: chapters.length == 1
-              ? null
-              : l10n.progQuestsActiveCount(chapters.length),
-          isEmpty: true,
-          children: const [],
-        ),
-        for (var i = 0; i < chapters.length; i++) ...[
-          if (i > 0) const SizedBox(height: Tokens.spaceSm),
-          EngineChapterCard(
-            key: ValueKey(chapters[i].nodeId),
-            quest: chapters[i],
-            chain: chainResolver(chapters[i].node.chainId ?? ''),
-            l10n: l10n,
-            pillKey: pillKeyFor(chapters[i].nodeId),
-            onClaim: onClaim,
-            onToggle: () => onToggleExpanded(chapters[i].nodeId),
-            companionBuffBonus:
-                companionBuffBonusFor?.call(chapters[i]) ?? 0,
-          ),
-        ],
-        if (nextLocked != null) ...[
-          if (chapters.isNotEmpty) const SizedBox(height: Tokens.spaceSm),
-          _NextChapterLockedTeaser(quest: nextLocked!, l10n: l10n),
-        ],
-      ],
+      children: buildQuestSectionItems(
+        header: header,
+        color: color,
+        countLabel: countLabel,
+        emptyTitle: emptyTitle,
+        emptyCaption: emptyCaption,
+        l10n: l10n,
+        quests: quests,
+        pillKeyFor: pillKeyFor,
+        onClaim: onClaim,
+        streakFor: streakFor,
+        onToggleExpanded: onToggleExpanded,
+        hint: hint,
+        chainResolver: chainResolver,
+        companionBuffBonusFor: companionBuffBonusFor,
+        emblemBuffBonusFor: emblemBuffBonusFor,
+        equippedCompanionBuff: equippedCompanionBuff,
+        streakBuffPercentFor: streakBuffPercentFor,
+      ),
     );
   }
 }
@@ -658,167 +814,3 @@ class _NextChapterLockedTeaser extends StatelessWidget {
     );
   }
 }
-
-/// "VEDLEJŠÍ ÚKOLY KAPITOLY" section — narrative side quests tied
-/// to the currently-active chapter. One card per uncompleted side
-/// quest; cards disappear individually as they're claimed, and the
-/// whole section retires when the chapter finale completes.
-/// "DLOUHODOBÉ CÍLE" section. Renders one [EngineLongTermCard] per
-/// long-term quest entry. The card aggregates rewards from companion
-/// nodes (achievements sharing the same objective), so the player
-/// sees XP + items + companion achievements as one row.
-class _LongTermSection extends StatelessWidget {
-  const _LongTermSection({
-    required this.entries,
-    required this.chainResolver,
-    required this.l10n,
-    required this.pillKeyFor,
-    required this.onClaim,
-    required this.onToggleExpanded,
-    this.companionBuffBonusFor,
-  });
-
-  final List<EngineLongTermEntry> entries;
-  final List<EngineQuestProgress> Function(String chainId) chainResolver;
-  final AppLocalizations l10n;
-  final GlobalKey Function(String nodeId) pillKeyFor;
-  final Future<void> Function(EngineQuestProgress quest, {Offset? from})
-      onClaim;
-  final void Function(String nodeId) onToggleExpanded;
-
-  /// Resolves the projected companion-buff bonus per long-term
-  /// quest. Wired from the screen the same way the chapter section
-  /// and quest panels do.
-  final int Function(EngineQuestProgress quest)? companionBuffBonusFor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        EngineQuestSection(
-          label: l10n.progQuestsLongTermHeader,
-          color: Tokens.accent,
-          countLabel: entries.length <= 1
-              ? null
-              : l10n.progQuestsActiveCount(entries.length),
-          isEmpty: true,
-          children: const [],
-        ),
-        for (var i = 0; i < entries.length; i++) ...[
-          if (i > 0) const SizedBox(height: Tokens.spaceSm),
-          EngineLongTermCard(
-            key: ValueKey(entries[i].quest.nodeId),
-            entry: entries[i],
-            chain: chainResolver(entries[i].quest.node.chainId ?? ''),
-            l10n: l10n,
-            pillKey: pillKeyFor(entries[i].quest.nodeId),
-            onClaim: onClaim,
-            onToggle: () => onToggleExpanded(entries[i].quest.nodeId),
-            companionBuffBonus:
-                companionBuffBonusFor?.call(entries[i].quest) ?? 0,
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-/// "DOKONČENÉ QUESTY" section. Renders one
-/// [EngineCompletedQuestCard] per [EngineCompletedEntry] from the
-/// provider. Chains aggregate to a single row whose chain preview
-/// grows a dot per progressed step.
-class _CompletedSection extends StatelessWidget {
-  const _CompletedSection({
-    required this.entries,
-    required this.l10n,
-    required this.pillKeyFor,
-    required this.onClaim,
-    required this.onToggleExpanded,
-  });
-
-  final List<EngineCompletedEntry> entries;
-  final AppLocalizations l10n;
-  final GlobalKey Function(String nodeId) pillKeyFor;
-  final Future<void> Function(EngineQuestProgress quest, {Offset? from})
-      onClaim;
-  final void Function(String nodeId) onToggleExpanded;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        EngineQuestSection(
-          label: l10n.progQuestsCompletedHeader,
-          color: Tokens.onSurfaceMuted,
-          countLabel: entries.isEmpty
-              ? null
-              : l10n.progQuestsCompletedCount(entries.length),
-          isEmpty: true,
-          children: const [],
-        ),
-        // Breathing room between the section header row and the
-        // first entry card. Mirrors the gap the section's internal
-        // `SizedBox(10)` leaves when children render — kept here so
-        // the empty state and entry list start at the same offset.
-        const SizedBox(height: 10),
-        if (entries.isEmpty)
-          EngineQuestEmptyLine(
-            title: l10n.progQuestsEmptyCompletedTitle,
-            caption: l10n.progQuestsEmptyCompletedCaption,
-          )
-        else
-          for (var i = 0; i < entries.length; i++) ...[
-            if (i > 0) const SizedBox(height: 6),
-            EngineCompletedQuestCard(
-              key: ValueKey(entries[i].representative.nodeId),
-              entry: entries[i],
-              l10n: l10n,
-              pillKey: pillKeyFor(entries[i].representative.nodeId),
-              onClaim: onClaim,
-              onToggle: () =>
-                  onToggleExpanded(entries[i].representative.nodeId),
-            ),
-          ],
-      ],
-    );
-  }
-}
-
-/// "ZAMČENÉ QUESTY" section. Renders one [EngineLockedQuestRow] per
-/// level-gated quest from [ProgressionEngineProvider.lockedQuests].
-/// V1 parity — the chapter quest (e.g. Lesní zkouška) lives here as a
-/// compact row until the player reaches its required level, instead
-/// of rendering a full chapter card up top.
-class _LockedSection extends StatelessWidget {
-  const _LockedSection({required this.quests, required this.l10n});
-
-  final List<EngineQuestProgress> quests;
-  final AppLocalizations l10n;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        EngineQuestSection(
-          label: l10n.progQuestsLockedHeader,
-          color: Tokens.onSurfaceMuted,
-          countLabel: null,
-          isEmpty: true,
-          children: const [],
-        ),
-        Column(
-          children: [
-            for (var i = 0; i < quests.length; i++) ...[
-              if (i > 0) const SizedBox(height: 6),
-              EngineLockedQuestRow(quest: quests[i], l10n: l10n),
-            ],
-          ],
-        ),
-      ],
-    );
-  }
-}
-

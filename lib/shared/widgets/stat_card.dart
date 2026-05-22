@@ -89,52 +89,66 @@ class _StatCardState extends State<StatCard> {
   Widget build(BuildContext context) {
     final ft = context.ft;
     final d = widget.domain;
-    return GestureDetector(
-      onTap: widget.collapsible ? () => setState(() => _open = !_open) : null,
-      child: Container(
-        decoration: d.cardDecoration(),
-        clipBehavior: Clip.antiAlias,
-        child: Stack(
-          children: [
-            _buildBackgroundImage(),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildHeroIcon(d),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _buildHeader(d, ft),
-                            const SizedBox(height: 5),
-                            _buildCompactBody(d, ft),
-                          ],
+    // Top-level RepaintBoundary so scroll = compositor translation of the
+    // cached card layer, and a sibling card's expand animation doesn't
+    // re-rasterize this card. Mirrors the Phase 0.3 invariant from the
+    // quest screen — any widget that (1) gets repeated in a list,
+    // (2) has its own internal animation, or (3) is non-trivial to
+    // rasterize should self-wrap. StatCard satisfies all three.
+    return RepaintBoundary(
+      child: GestureDetector(
+        onTap:
+            widget.collapsible ? () => setState(() => _open = !_open) : null,
+        child: Container(
+          decoration: d.cardDecoration(),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            children: [
+              _buildBackgroundImage(),
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeroIcon(d),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _buildHeader(d, ft),
+                              const SizedBox(height: 5),
+                              _buildCompactBody(d, ft),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  ClipRect(
-                    child: AnimatedSize(
-                      duration: const Duration(milliseconds: 260),
-                      curve: Curves.easeInOut,
-                      alignment: Alignment.topCenter,
-                      child: _open
-                          ? _buildExpandedBody(d, ft)
-                          : const SizedBox.shrink(),
+                      ],
                     ),
-                  ),
-                ],
+                    ClipRect(
+                      child: AnimatedSize(
+                        duration: const Duration(milliseconds: 260),
+                        curve: Curves.easeInOut,
+                        alignment: Alignment.topCenter,
+                        // Inner RepaintBoundary so the expanded body's
+                        // silhouette interpolates inside its own layer
+                        // without invalidating the outer card raster
+                        // every tick of AnimatedSize. Same invariant
+                        // ExpandableQuestCard bakes in for quest cards.
+                        child: _open
+                            ? RepaintBoundary(child: _buildExpandedBody(d, ft))
+                            : const SizedBox.shrink(),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

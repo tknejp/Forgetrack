@@ -1,6 +1,6 @@
 # UI refactor plan — Trello #85
 
-**Status:** Phase 0–1 shipped 2026-05-22. Phase 1.1 next (recurring scroll jank on quest screen).
+**Status:** Phase 0–1 + Phase 1.1 + Phase 1.2 shipped 2026-05-22. Phase 2 next (quest screen split into `presentation/sections/`).
 **Scope:** Performance hotfix + structural split of presentation-layer hot-spots (10 screens > 1000 LoC) + extraction of reusable template widgets.
 **Out of scope:** Visual design changes, theme token changes (FtTokens / AppTheme stay), cross-feature business logic.
 **Pre-conditions:** Domain refactor closed (✅, 2026-05-19). Phase 21 lint baseline `widget-no-logic: 0` (✅) — must not regress during refactor.
@@ -18,8 +18,10 @@ This plan is **designed to be picked up by a fresh session at any phase**. Each 
 | 0.2 | Card shadow raster cost | ✅ shipped 2026-05-22 | — | Dropped 22 px conditional glow + reduced chapter blur 14→8 |
 | 0.3 | Per-card RepaintBoundary | ✅ shipped 2026-05-22 | — | Each `Engine*Card` self-wraps so scroll + sibling-expand don't invalidate the whole section's cache |
 | 1 | EngineCard template extraction | ✅ shipped 2026-05-22 | — | `ExpandableQuestCard` template (205 LoC); 4 cards compose it; chapter bg moved to hero-style static `backgroundDecoration` (the `fixedHeader` band was a transitional fix, dropped in the hero-pattern follow-up); collapsed-card layout locked across expand state |
-| 1.1 | Quest screen scroll jank investigation | ⏳ pending | — | Recurring 22 ms jank during scroll; 4 BUILDs per jank frame; need to identify what invalidates sections per scroll tick |
-| 2 | Quest screen split | ⏳ pending | — | Sections to `presentation/sections/` |
+| 1.1 | Quest screen scroll jank investigation | ✅ shipped 2026-05-22 | — | Flattened ListView so each card is its own lazy mount; root cause was `Column`-wrapped sections mounting all N cards in one frame |
+| 1.2 | Home screen perf audit | ✅ shipped 2026-05-22 | — | StatCard Phase 0–1 invariants + per-card provider subscriptions on home so a KT tick rebuilds only the calorie card |
+| 1.3 | Home card expand animation cost | ⏳ deferred | — | Post-1.2 profile-mode trace during a card expand still showed frames ~10–13 ms on a 120 Hz target (8.3 ms budget). User parked it. Likely culprits: `Opacity` widget around the bg image (saveLayer per paint), `Image.asset` with `BlendMode.darken`, `Stack + Positioned.fill` background that re-rasterizes per tick of `AnimatedSize`. Candidate fix: apply Phase 1 hero-pattern lesson to `StatCard` (use `DecoratedBox` + `DecorationImage(opacity:)`, drop blend mode), and consider `SizeTransition` over `AnimatedSize` to avoid per-tick child relayout. See bottom of this file for the deferred plan. |
+| 2 | Quest screen split | ⏳ pending | — | Sections to `presentation/sections/` (now mostly mechanical — Phase 1.1 deleted the private section widgets; only `QuestSectionPanel`, `_NextChapterLockedTeaser`, and the `buildQuestSectionItems` helper are left to extract) |
 | 3 | Large screen splits | ⏳ pending | — | 10 screens > 1000 LoC, in priority order |
 | 4 | Shell lazy pages | ⏳ pending | — | Replace eager 4-tab PageView |
 | 5 | Shared template widgets | ⏳ pending | — | MetricCardWithTrend, UnlockConditionsBlock |
@@ -139,63 +141,57 @@ Full design record + per-card override table + LoC outcome: **[archive/phase_1_e
 
 ---
 
-## Phase 1.1 — Quest screen scroll jank investigation
+## Phase 1.1 — Quest screen scroll jank investigation ✅ shipped 2026-05-22
 
-**Why:** After Phase 1 + the hero-pattern follow-up shipped, a fresh DevTools profile-mode trace on the quest screen still shows a **recurring ~22 ms jank frame during scroll** — not a one-time cost when a section first enters the viewport (the original hypothesis), but a **per-scroll-tick** stutter that's visible to the user ("scroll není smooth a zadrhne se, nebo občas úplně zastaví").
+A 2026-05-22 profile-mode trace showed `LAYOUT (root) = 21.85 ms / 1 occurrence` with `BUILD = 21.14 ms / 4 occurrences` per scroll-jank frame on the quest screen, raster thread clean. Root cause: `ListView(children: [...sections])` made each section a single child of `SliverChildListDelegate`, and each section wrapped its N cards in a `Column`. `SliverChildListDelegate` creates Elements lazily per top-level child, but `Column` is a `MultiChildRenderObjectWidget` that eagerly mounts all children in one pass — so a section entering the cache extent during scroll cascaded into mounting all of its cards in the same frame.
 
-### Trace evidence (2026-05-22)
+Fix: flattened the screen so each card is its own top-level `ListView` child. Section widgets (`_ChapterSection`, `_LongTermSection`, `_CompletedSection`, `_LockedSection`) became `_QuestsScreenV2State` methods returning `List<Widget>`. A shared free function `buildQuestSectionItems(...)` produces daily / weekly items; both `QuestSectionPanel` (kept as a widget for the existing test) and the screen call it. Card BUILDs now spread across many scroll ticks at ~1 card per cache-boundary crossing instead of clustering at section boundaries.
 
-| Slice | Wall (ms) | Occurrences |
-|---|---|---|
-| `VsyncProcessCallback` | 22.65 | 1 |
-| `Animator::BeginFrame` | 22.64 | 1 |
-| `LAYOUT (root)` | 21.85 | 1 |
-| `LAYOUT` | 21.84 | 1 |
-| `BUILD` | 21.14 | **4** |
-| `COMPOSITING` | 0.20 | 1 |
-| `PAINT` | 0.01 | 1 |
+Full design record + diagnosis path + rejected hypotheses: **[archive/phase_1_1_quest_scroll_jank.md](archive/phase_1_1_quest_scroll_jank.md)**.
 
-UI thread bound. Raster thread is clean (PAINT + COMPOSITING < 0.5 ms; the Phase 0.x raster invariants are holding). The cost is in **4 BUILD events per jank frame, ~5 ms each**, all inside a single LAYOUT pass.
+> **Cold-start note for fresh sessions:** inside a scrollable feed, each card must be its own top-level child of the scrollable, **not** a child of an inner `Column` inside a "section" wrapper widget. Wrapping cards in a `Column` defeats `SliverChildListDelegate` / `SliverChildBuilderDelegate` lazy-element mounting because `Column` is a `MultiChildRenderObjectWidget` that mounts all its children in one pass. The pattern: per-section helper methods return `List<Widget>` of flat items (header, hint, cards interleaved with spacers); the screen splats them into the ListView's children list with `...`. Keeps section-level encapsulation while preserving lazy mounting at card granularity. If migrating to `CustomScrollView`, the equivalent is `SliverList.builder` per section — same rule, same trap to avoid.
+
+---
+
+## Phase 1.2 — Home screen perf audit ✅ shipped 2026-05-22
+
+User reported "more janks on home than on quest screen" after Phase 1.1 closed the quest scroll case. Audit found three issues: (1) `OverviewScreen.build()` was watching 6 providers, so every fitness/KT tick rebuilt the whole tree + all 5 dashboard cards; (2) `ReorderableListView.builder(shrinkWrap: true)` defeated its own laziness (accepted — only 5 cards, low magnitude); (3) `StatCard` was missing the Phase 0–1 invariants (no top-level `RepaintBoundary`, no inner boundary on the expanded `AnimatedSize` body), so a card expand re-rasterized the whole sliver per tick.
+
+Fixed: added the Phase 0–1 invariants to `StatCard` in [lib/shared/widgets/stat_card.dart](../../lib/shared/widgets/stat_card.dart) (the win covers every screen composing it). Refactored [lib/features/home/presentation/overview_screen.dart](../../lib/features/home/presentation/overview_screen.dart) so each dashboard card is its own widget with its own `context.watch`; layout decisions (HC prompt collapsing, KT prompt collapsing, card order) sit in a `_HomeCardList` parent using `Selector2` on a Dart 3 record of derived values. A `KalorickeTabulkyProvider` food-log tick now only rebuilds the calorie card; steps/weight/activity/sleep stay cached.
+
+Full design record + rebuild table: **[archive/phase_1_2_home_perf_audit.md](archive/phase_1_2_home_perf_audit.md)**.
+
+> **Cold-start note for fresh sessions:** when a screen renders N cards each consuming different provider subsets, do NOT `context.watch` at the screen level — that fans every notify out to every card. Push each card into its own `StatelessWidget` that watches only what it reads. Keep screen-level layout decisions in a separate widget that uses `Selector` (or `Selector2`/`Selector3`) on a small derived value — a Dart 3 record gives structural equality for free. The pattern paired with the `StatCard` Phase 0–1 invariants (top-level + inner `RepaintBoundary`) generalizes across any multi-card dashboard. Don't reach for `AutomaticKeepAliveClientMixin` to "freeze" a card — that masks the cascade without fixing it.
+
+---
+
+## Phase 1.3 — Home card expand animation cost (deferred 2026-05-22)
+
+Post-Phase-1.2 the user captured a profile-mode trace while opening (tapping to expand) a card on the home screen. With the device at 120 Hz (8.3 ms budget), most frames during the 260 ms `AnimatedSize` animation showed bar heights around 10–13 ms — over budget. The trace was described as "all raster janks", but tall red bars in DevTools' Flutter Frames chart can be either UI or raster jank (a re-trace should hover the specific bars to confirm which thread is the bottleneck).
+
+The user **parked this issue** and moved on. This block exists so a future session can pick it up cold.
 
 ### Hypothesis space (in priority order)
 
-1. **A provider notifies during scroll, triggering full `QuestsScreenV2.build()`.** The screen calls `context.watch<...>()` on several providers. If any of them ticks during scroll (e.g. health data polling, time-based UI updates, foreground sync), the whole build runs → all sections rebuild → all visible cards rebuild. The "4 BUILDs per frame" pattern matches "one section with 4 cards rebuilds because its parent invalidated."
-   - Files to grep: `lib/features/progression_engine/presentation/quests_screen.dart` — find every `context.watch`, `Consumer`, `Selector`.
-   - Providers to investigate (rebuild frequency): `ProgressionEngineProvider`, `HealthConnectProvider`, `FoodTriggerProvider`, `CosmeticsProvider`, `AuthProvider`, `SocialProvider`, plus anything wired through `Provider.of`.
-   - **Fix shape:** replace `watch` with `Selector` keyed on the specific fields the screen uses, or push the provider read down into the deepest leaf that actually consumes it.
+1. **`Opacity` widget around the bg image** in `_buildBackgroundImage()` in [lib/shared/widgets/stat_card.dart](../../lib/shared/widgets/stat_card.dart) creates a `saveLayer` call per paint. Per tick of `AnimatedSize` the outer card layer re-rasterizes; the saveLayer is paid each tick. Phase 1 hero-pattern follow-up established this exact lesson for the chapter card. **Fix candidate:** replace `Stack + Positioned.fill + IgnorePointer + Opacity + Image.asset(color, colorBlendMode)` with `DecoratedBox(decoration: BoxDecoration(image: DecorationImage(opacity:)))` and drop the `BlendMode.darken` (opacity alone is the validated path).
 
-2. **A periodic timer / animation controller above the ListView ticks.** Could be a `Ticker` somewhere in the section tree (e.g. an animation rebuilding without `AnimatedBuilder`'s `child:` optimization). Check for `setState` calls in section / screen lifecycles.
+2. **`BlendMode.darken` on the `Image.asset`** — pipeline op per paint. Phase 1 lesson: prefer opacity alone for "darkened backdrop" readability.
 
-3. **Sections rebuild because their constructor args change identity per parent build.** E.g. if `_ChapterSection` is constructed with `chainResolver: (id) => ...` (a fresh closure per parent build), the section's element won't equal its previous element and Flutter rebuilds it even when nothing functional changed. Check for inline closures / list literals in section constructor sites in `quests_screen.dart`.
+3. **Hero icon's 14 px blur shadow** ([stat_card.dart:215-220](../../lib/shared/widgets/stat_card.dart#L215-L220)) — Phase 0.2 banned `blurRadius ≥ 12` on widgets that get re-rasterized per frame. The icon's circle is a fixed 54×54 size, but it sits inside the card's RepaintBoundary layer which DOES re-rasterize per tick of `AnimatedSize` (because the card's overall bounds grow). Reducing blur to `Tokens.glowSm` (8) would save measurable per-frame cost.
 
-4. **Eager section building is the residual cost.** Less likely given the "every scroll tick" pattern, but check anyway: each section uses `Column(children: [for (var i = 0; ...) Card])` rather than `SliverList.builder`. When a section first enters the viewport, all cards build in one frame. If the user is scrolling through a section that's in-viewport every frame (visible card count varies), the section might be re-built per frame because its `children` list identity changes. Solution: convert sections to `SliverList.builder` so each card builds lazily by index.
-
-### Tasks for the next session
-
-1. **DevTools rebuild stats.** Run quest screen in profile mode, open DevTools → Performance → "Rebuild Stats" tab. Confirm which widgets rebuild per frame during scroll. The "4 BUILDs" should resolve to specific widget classes — that names the culprit.
-
-2. **Grep `quests_screen.dart` for every `context.watch` / `Provider.of` / `Consumer` / `Selector`.** Tabulate what each subscription pulls and how often the source provider notifies. The fix likely lands here.
-
-3. **Audit section constructors** for closure / list args reconstructed per parent build (chainResolver, pillKeyFor, onClaim, etc.). Hoist anything that should be stable into `State` fields or top-level consts.
-
-4. **If steps 1–3 don't fully close the gap**, convert sections from `Column(children: [cards])` to `SliverList.builder` inside `CustomScrollView(slivers: [...])` so card BUILD spreads across frames as they enter / leave the viewport.
-
-5. **Re-trace** after each change. Target: zero recurring jank during steady-state scroll, no frame > 8.3 ms on UI thread (120 Hz budget).
+4. **`AnimatedSize` causes per-tick child relayout** — `RenderAnimatedSize.performLayout` calls `child.layout(constraints, parentUsesSize: true)` every animation tick. For a calorie card with a deep expanded body (streak block + 4 MacroRows + nutrition tile + shortcut button), the layout walk per tick adds UI-thread cost. **Fix candidate (if trace shows UI-bound):** replace `AnimatedSize` with a `SizeTransition` driven by an `AnimationController` on `_StatCardState`. `SizeTransition` lays out the child ONCE at its intrinsic size and animates only the visible clip extent — no per-tick child relayout.
 
 ### What NOT to do
 
-- **Don't touch the `ExpandableQuestCard` template or Phase 0/1 invariants.** Cards are not the bottleneck here — they're caching correctly via per-card `RepaintBoundary`. The cost is BUILD (UI thread), not PAINT (raster).
-- **Don't add `AutomaticKeepAliveClientMixin` to cards as a first attempt.** It keeps element state alive across viewport scrolls but doesn't fix the underlying "why does this rebuild every frame" question — masks the symptom.
-- **Don't preemptively migrate to `CustomScrollView` + `SliverList.builder` until #1–#3 are ruled out.** The structural change is a bigger refactor than a targeted `Selector` swap; do the cheap diagnostic first.
-- **Don't break Phase 0.1's `ExpandedQuestScope`.** The aspect-based notify is what makes expand toggle cheap; any new subscription pattern must preserve that.
-- **Don't change card visuals** — this is a perf hotfix, not a UX iteration.
+- **Don't drop the top-level / inner `RepaintBoundary` added in Phase 1.2.** Those don't help during a card's OWN expand (the layer's bounds change per tick anyway), but they're load-bearing for scroll + sibling-expand isolation. Keep them.
+- **Don't change `StatCard`'s public API.** Other screens (sleep, body, nutrition) compose it. Visual fidelity must be preserved.
+- **Don't add `cacheExtent` tweaks or `AutomaticKeepAliveClientMixin` to home cards.** Wrong tool — those are scroll-cache primitives, not paint-budget primitives.
 
 ### Verification
 
-- DevTools profile-mode trace shows no frames > 8.3 ms on UI thread during steady-state scroll across the entire quest screen.
-- Manual: scroll up / down the full quest screen on a real device (where the jank is observable); subjective smooth feel, no visible stutters.
-- `flutter analyze` clean, `flutter test test/features/progression_engine/` green (178 tests baseline from Phase 1).
-- Lint baseline `widget-no-logic: 0` not regressed.
+- Re-trace card expand on a 120 Hz device after each fix. Hover bars in DevTools to confirm UI vs. raster split.
+- Target: zero frames > 8.3 ms during the 260 ms expand animation.
+- `flutter analyze` clean; sleep / body / nutrition screens visually unchanged (they share `StatCard`).
 
 ---
 
