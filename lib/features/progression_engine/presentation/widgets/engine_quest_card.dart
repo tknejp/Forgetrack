@@ -13,6 +13,7 @@ import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import 'engine_chapter_card.dart' show EngineChapterChainPreview;
 import 'engine_companion_pill.dart';
+import 'expanded_quest_scope.dart';
 import 'quest_streak_chip.dart';
 import 'quest_streak_info_block.dart';
 import '../../../cosmetics/domain/companion_buff.dart';
@@ -36,7 +37,6 @@ class EngineQuestCard extends StatelessWidget {
     required this.pillKey,
     required this.onClaim,
     this.streak,
-    this.isExpanded = false,
     this.onToggle,
     this.chain = const [],
     this.showCompletedTodayBadge = false,
@@ -62,12 +62,12 @@ class EngineQuestCard extends StatelessWidget {
   /// [EngineStreakSummary.currentStreak] > 0.
   final EngineStreakSummary? streak;
 
-  /// True when the player has tapped this card open. Owned by the
-  /// parent so only one card is expanded at a time (V1 parity).
-  final bool isExpanded;
-
   /// Tap handler for the entire card. Null disables expansion (e.g.
-  /// completed quests in the rollup row).
+  /// completed quests in the rollup row). Expanded state itself is
+  /// pulled from [ExpandedQuestScope] inside [build] so toggling
+  /// expansion only marks the two affected cards dirty (the
+  /// previously- and newly-expanded ones) rather than the whole quest
+  /// screen.
   final VoidCallback? onToggle;
 
   /// Full chain (in chainOrder) the quest belongs to. Non-empty for
@@ -124,6 +124,7 @@ class EngineQuestCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isExpanded = ExpandedQuestScope.isExpanded(context, quest.nodeId);
     final domain = quest.domain ?? ProgressionDomain.steps;
     final accent = domain.color;
     // A card is a "main-five daily-goal card" when one of its XP
@@ -144,10 +145,19 @@ class EngineQuestCard extends StatelessWidget {
     // XP-only — no companion / no item — so they're collapsed-only.
     final canExpand = _hasNonXpReward && onToggle != null;
 
-    return GestureDetector(
-      onTap: canExpand ? onToggle : null,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
+    // RepaintBoundary so each card owns its own rasterized layer. The
+    // parent `ListView` only inserts a boundary around top-level
+    // sections, not around the cards *inside* a section. Without this,
+    // scrolling within a section forces the whole section to repaint,
+    // and expanding one card invalidates the section's cache and
+    // re-rasterizes every sibling card too. With per-card boundaries,
+    // scroll becomes a pure GPU translate of cached layers and an
+    // expand animation only re-rasterizes the animating card.
+    return RepaintBoundary(
+      child: GestureDetector(
+        onTap: canExpand ? onToggle : null,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.all(Tokens.questCardPadding),
         decoration: BoxDecoration(
@@ -159,17 +169,18 @@ class EngineQuestCard extends StatelessWidget {
                 : Colors.white.withValues(alpha: 0.06),
           ),
           boxShadow: [
+            // Single static drop shadow. The previous "if (isExpanded)
+            // BoxShadow(blur: glowXl)" conditional re-rasterized a
+            // 22 px Gaussian blur every frame of the AnimatedSize expand
+            // animation (the card's silhouette changes per tick, so the
+            // shadow shape changes too). Removing it keeps the raster
+            // thread under the 8.3 ms budget on 120 Hz panels — see
+            // docs/ui_refactor/plan.md Phase 0.2.
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.26),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
-            if (isExpanded)
-              BoxShadow(
-                color: Tokens.accent.withValues(alpha: 0.18),
-                blurRadius: Tokens.glowXl,
-                offset: const Offset(0, 10),
-              ),
           ],
         ),
         child: Column(
@@ -288,28 +299,31 @@ class EngineQuestCard extends StatelessWidget {
               curve: Curves.easeOutCubic,
               alignment: Alignment.topCenter,
               child: isExpanded
-                  ? Padding(
-                      padding: const EdgeInsets.only(top: Tokens.spaceSm),
-                      child: _ExpandedDetails(
-                        quest: quest,
-                        streak: streak,
-                        accent: accent,
-                        l10n: l10n,
-                        // Main-five-only streak info — the block is
-                        // a no-op for non-streak nodes (`isStreakCard`
-                        // false), but threading the buff + percent
-                        // through unconditionally keeps the
-                        // expanded-detail API symmetric across
-                        // bucket sections.
-                        isStreakCard: isStreakCard,
-                        equippedCompanionBuff: equippedCompanionBuff,
-                        streakBuffPercent: streakBuffPercent,
+                  ? RepaintBoundary(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: Tokens.spaceSm),
+                        child: _ExpandedDetails(
+                          quest: quest,
+                          streak: streak,
+                          accent: accent,
+                          l10n: l10n,
+                          // Main-five-only streak info — the block is
+                          // a no-op for non-streak nodes (`isStreakCard`
+                          // false), but threading the buff + percent
+                          // through unconditionally keeps the
+                          // expanded-detail API symmetric across
+                          // bucket sections.
+                          isStreakCard: isStreakCard,
+                          equippedCompanionBuff: equippedCompanionBuff,
+                          streakBuffPercent: streakBuffPercent,
+                        ),
                       ),
                     )
                   : const SizedBox(width: double.infinity),
             ),
           ],
         ),
+      ),
       ),
     );
   }

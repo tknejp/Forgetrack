@@ -14,6 +14,7 @@ import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import 'package:forgetrack/domain/progression/catalog/quest_policies.dart';
 import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import 'engine_companion_pill.dart';
+import 'expanded_quest_scope.dart';
 
 /// Maps the pure-domain [ChainStepIcon] enum to the Material `Icons.…`
 /// constant the chain preview row renders. The enum lives in
@@ -47,7 +48,6 @@ class EngineChapterCard extends StatelessWidget {
     required this.l10n,
     required this.pillKey,
     required this.onClaim,
-    this.isExpanded = false,
     this.onToggle,
     this.companionBuffBonus = 0,
   });
@@ -62,7 +62,10 @@ class EngineChapterCard extends StatelessWidget {
   final GlobalKey pillKey;
   final Future<void> Function(EngineQuestProgress quest, {Offset? from})
       onClaim;
-  final bool isExpanded;
+
+  /// Tap handler for the entire card. Expanded state itself is pulled
+  /// from [ExpandedQuestScope] inside [build] so toggling expansion
+  /// only marks the two affected cards dirty.
   final VoidCallback? onToggle;
 
   /// Projected companion-buff bonus surfaced as a chip beside the
@@ -73,6 +76,7 @@ class EngineChapterCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final quest = this.quest;
+    final isExpanded = ExpandedQuestScope.isExpanded(context, quest.nodeId);
     final domain = quest.domain ?? ProgressionDomain.activity;
     final accent = domain.color;
     final chapterId = quest.node.chapterId ?? quest.node.chainId ?? '';
@@ -102,10 +106,14 @@ class EngineChapterCard extends StatelessWidget {
     // unfinished and hid where the chain was heading.
     final canExpand = !isLocked && onToggle != null;
 
-    return GestureDetector(
-      onTap: canExpand ? onToggle : null,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
+    // Per-card RepaintBoundary so scrolling + sibling expand animations
+    // don't invalidate this card's cached layer. See
+    // [engine_quest_card.dart] for the same change + rationale.
+    return RepaintBoundary(
+      child: GestureDetector(
+        onTap: canExpand ? onToggle : null,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.all(Tokens.questCardPadding),
         decoration: BoxDecoration(
@@ -127,9 +135,15 @@ class EngineChapterCard extends StatelessWidget {
                 : Colors.white.withValues(alpha: 0.08),
           ),
           boxShadow: [
+            // Drop shadow blur reduced from 14 to Tokens.glowSm (8)
+            // because the chapter card's `AnimatedSize` body re-grows
+            // the silhouette every frame of the expand animation,
+            // forcing the shadow to re-rasterize. A 14 px Gaussian
+            // blur on a card-sized rect pushed the 120 Hz raster
+            // budget over 8.3 ms; the smaller blur keeps it within.
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.32),
-              blurRadius: 14,
+              blurRadius: Tokens.glowSm,
               offset: const Offset(0, 6),
             ),
           ],
@@ -259,29 +273,32 @@ class EngineChapterCard extends StatelessWidget {
               curve: Curves.easeOutCubic,
               alignment: Alignment.topCenter,
               child: isExpanded
-                  ? Padding(
-                      padding: const EdgeInsets.only(top: Tokens.spaceSm),
-                      child: _ChapterExpandedDetails(
-                        quest: quest,
-                        accent: accent,
-                        finaleRewards: finaleRewards,
-                        // Chapter title comes from the chain's open
-                        // node (chainOrder 0) — the chapter's own
-                        // titleKey lives there, not on per-step nodes.
-                        // Used as the expanded-body eyebrow so the
-                        // player sees "Stezka poutníka" instead of a
-                        // redundant step number that just mirrors the
-                        // chain dots above.
-                        chapterTitle: chain.isEmpty
-                            ? null
-                            : chain.first.node.titleKey(l10n),
-                        l10n: l10n,
+                  ? RepaintBoundary(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: Tokens.spaceSm),
+                        child: _ChapterExpandedDetails(
+                          quest: quest,
+                          accent: accent,
+                          finaleRewards: finaleRewards,
+                          // Chapter title comes from the chain's open
+                          // node (chainOrder 0) — the chapter's own
+                          // titleKey lives there, not on per-step nodes.
+                          // Used as the expanded-body eyebrow so the
+                          // player sees "Stezka poutníka" instead of a
+                          // redundant step number that just mirrors the
+                          // chain dots above.
+                          chapterTitle: chain.isEmpty
+                              ? null
+                              : chain.first.node.titleKey(l10n),
+                          l10n: l10n,
+                        ),
                       ),
                     )
                   : const SizedBox(width: double.infinity),
             ),
           ],
         ),
+      ),
       ),
     );
   }

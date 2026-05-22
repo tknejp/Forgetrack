@@ -481,6 +481,17 @@ class ProgressionEngineProvider extends ChangeNotifier {
   PlayerQuestCatalog? _cachedPlayerQuestCatalog;
   int? _playerQuestCatalogCacheKey;
 
+  // Hot-path memoization for getters called every quest screen rebuild.
+  // Cache key shape mirrors [_playerQuestCatalogCacheKey]: any ledger
+  // replacement or devtools day shift flips the key and reseeds the
+  // result. See [playerQuestCatalog] for the canonical pattern.
+  List<EngineLongTermEntry>? _cachedCurrentLongTermQuests;
+  int? _currentLongTermQuestsCacheKey;
+  List<EngineQuestProgress>? _cachedCurrentChapterQuests;
+  int? _currentChapterQuestsCacheKey;
+  Set<String>? _cachedCompletedNodeIds;
+  int? _completedNodeIdsCacheKey;
+
   /// Phase 7 read projection. Returns [PlayerQuestCatalog.empty]
   /// before the first ledger load completes; once the ledger is in
   /// place, the catalog rebuilds from the union of
@@ -684,10 +695,24 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// Set of node ids the engine has marked completed. Order is not
   /// guaranteed; consumers should iterate via the catalog when they
   /// need a stable display order.
+  ///
+  /// Memoized — the result is reused across reads with the same ledger
+  /// identity. Callers must not mutate the returned set (it's wrapped
+  /// in [Set.unmodifiable]).
   Set<String> get completedNodeIds {
     final l = _ledger;
     if (l == null) return const {};
-    return {for (final e in l.nodeCompletions) e.nodeId};
+    final cacheKey = Object.hash(identityHashCode(l), _devDayOffset);
+    final cached = _cachedCompletedNodeIds;
+    if (cached != null && _completedNodeIdsCacheKey == cacheKey) {
+      return cached;
+    }
+    final result = Set<String>.unmodifiable({
+      for (final e in l.nodeCompletions) e.nodeId,
+    });
+    _cachedCompletedNodeIds = result;
+    _completedNodeIdsCacheKey = cacheKey;
+    return result;
   }
 
   /// Set of manual-claim node ids currently in `available` state per
@@ -1018,8 +1043,20 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// rule (quest + achievement on the same objective should not
   /// duplicate UI).
   List<EngineLongTermEntry> get currentLongTermQuests {
+    final l = _ledger;
+    if (l == null) return const [];
+    final cacheKey = Object.hash(identityHashCode(l), _devDayOffset);
+    final cached = _cachedCurrentLongTermQuests;
+    if (cached != null && _currentLongTermQuestsCacheKey == cacheKey) {
+      return cached;
+    }
+
     final all = _questsForBucket(QuestDisplayBucket.longTerm);
-    if (all.isEmpty) return const [];
+    if (all.isEmpty) {
+      _cachedCurrentLongTermQuests = const [];
+      _currentLongTermQuestsCacheKey = cacheKey;
+      return const [];
+    }
 
     // Group by chain so we can pick one representative per chain.
     // Quests without a chainId become their own one-element "chain".
@@ -1058,7 +1095,11 @@ class ProgressionEngineProvider extends ChangeNotifier {
       if (!q.isCompleted) reps.add(q);
     }
     reps.sort((a, b) => a.node.sortOrder.compareTo(b.node.sortOrder));
-    if (reps.isEmpty) return const [];
+    if (reps.isEmpty) {
+      _cachedCurrentLongTermQuests = const [];
+      _currentLongTermQuestsCacheKey = cacheKey;
+      return const [];
+    }
 
     // Build objective → nodes index once so the per-entry companion
     // lookup is O(1).
@@ -1069,7 +1110,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
       byObjective.putIfAbsent(objectiveId, () => []).add(node);
     }
 
-    return [
+    final result = <EngineLongTermEntry>[
       for (final quest in reps)
         EngineLongTermEntry(
           quest: quest,
@@ -1079,6 +1120,9 @@ class ProgressionEngineProvider extends ChangeNotifier {
           ],
         ),
     ];
+    _cachedCurrentLongTermQuests = result;
+    _currentLongTermQuestsCacheKey = cacheKey;
+    return result;
   }
 
   static String? _objectiveIdOf(ProgressionEntry node) {
@@ -1108,8 +1152,20 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// step. This mirrors the daily / side-quest slot rule so all
   /// claim cards age out at the same wall-clock boundary.
   List<EngineQuestProgress> get currentChapterQuests {
+    final l = _ledger;
+    if (l == null) return const [];
+    final cacheKey = Object.hash(identityHashCode(l), _devDayOffset);
+    final cached = _cachedCurrentChapterQuests;
+    if (cached != null && _currentChapterQuestsCacheKey == cacheKey) {
+      return cached;
+    }
+
     final all = _questsForBucket(QuestDisplayBucket.chapter);
-    if (all.isEmpty) return const [];
+    if (all.isEmpty) {
+      _cachedCurrentChapterQuests = const [];
+      _currentChapterQuestsCacheKey = cacheKey;
+      return const [];
+    }
 
     final byChain = <String, List<EngineQuestProgress>>{};
     for (final q in all) {
@@ -1173,6 +1229,9 @@ class ProgressionEngineProvider extends ChangeNotifier {
     }
     out.sort((a, b) =>
         (a.node.sortOrder).compareTo(b.node.sortOrder));
+    _cachedCurrentChapterQuests = out;
+    _currentChapterQuestsCacheKey = Object.hash(
+        identityHashCode(_ledger), _devDayOffset);
     return out;
   }
 

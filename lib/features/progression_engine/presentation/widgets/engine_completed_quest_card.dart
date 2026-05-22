@@ -14,6 +14,7 @@ import '../../application/progression_engine_provider.dart';
 import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import 'engine_chapter_card.dart' show EngineChapterChainPreview;
 import 'engine_companion_pill.dart';
+import 'expanded_quest_scope.dart';
 
 /// Compact, expandable card rendered inside the DOKONČENÉ QUESTY
 /// section. One card per [EngineCompletedEntry] — a single quest or
@@ -45,7 +46,6 @@ class EngineCompletedQuestCard extends StatelessWidget {
     required this.l10n,
     required this.pillKey,
     required this.onClaim,
-    this.isExpanded = false,
     this.onToggle,
   });
 
@@ -62,21 +62,27 @@ class EngineCompletedQuestCard extends StatelessWidget {
   final Future<void> Function(EngineQuestProgress quest, {Offset? from})
       onClaim;
 
-  final bool isExpanded;
+  /// Tap handler for the entire card. Expanded state itself is pulled
+  /// from [ExpandedQuestScope] inside [build] so toggling expansion
+  /// only marks the two affected cards dirty.
   final VoidCallback? onToggle;
 
   @override
   Widget build(BuildContext context) {
     final quest = entry.representative;
+    final isExpanded = ExpandedQuestScope.isExpanded(context, quest.nodeId);
     final domain = quest.domain ?? ProgressionDomain.steps;
     final accent = domain.color;
     final locale = Localizations.localeOf(context).toString();
     final dateLabel = _formatDate(entry.lastEventAt, locale);
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onToggle,
-      child: AnimatedContainer(
+    // Per-card RepaintBoundary — see [engine_quest_card.dart] for the
+    // rationale (scroll + sibling expand isolation).
+    return RepaintBoundary(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onToggle,
+        child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.all(Tokens.questCardPadding),
         decoration: BoxDecoration(
@@ -103,17 +109,19 @@ class EngineCompletedQuestCard extends StatelessWidget {
             // the player XP and deserve the visual nudge. Claimed
             // entries get the regular shadow only so they read as
             // archived rather than "look at me".
+            //
+            // Note: the gold glow used to also animate alpha + blur
+            // when the entry was expanded. That meant a 16–22 px
+            // Gaussian blur re-rasterized every frame of the expand
+            // animation, which the 120 Hz raster budget couldn't
+            // afford. Now the gold glow uses fixed params — its
+            // claimable-vs-claimed split still reads, and the expand
+            // affordance comes entirely from the body sliding open.
             if (entry.hasClaimable)
               BoxShadow(
-                color: Tokens.xp.withValues(alpha: isExpanded ? 0.26 : 0.14),
-                blurRadius: isExpanded ? Tokens.glowXl : 16,
+                color: Tokens.xp.withValues(alpha: 0.14),
+                blurRadius: 16,
                 offset: const Offset(0, 6),
-              )
-            else if (isExpanded)
-              BoxShadow(
-                color: Tokens.accent.withValues(alpha: 0.18),
-                blurRadius: Tokens.glowXl,
-                offset: const Offset(0, 10),
               ),
           ],
         ),
@@ -177,18 +185,21 @@ class EngineCompletedQuestCard extends StatelessWidget {
               curve: Curves.easeOutCubic,
               alignment: Alignment.topCenter,
               child: isExpanded
-                  ? Padding(
-                      padding: const EdgeInsets.only(top: Tokens.spaceMd),
-                      child: _ExpandedBody(
-                        entry: entry,
-                        accent: accent,
-                        l10n: l10n,
+                  ? RepaintBoundary(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: Tokens.spaceMd),
+                        child: _ExpandedBody(
+                          entry: entry,
+                          accent: accent,
+                          l10n: l10n,
+                        ),
                       ),
                     )
                   : const SizedBox(width: double.infinity),
             ),
           ],
         ),
+      ),
       ),
     );
   }

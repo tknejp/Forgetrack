@@ -16,6 +16,7 @@ import 'widgets/engine_locked_quest_row.dart';
 import 'widgets/engine_long_term_card.dart';
 import 'widgets/engine_quest_card.dart';
 import 'widgets/engine_quest_section.dart';
+import 'widgets/expanded_quest_scope.dart';
 
 /// V2 quests screen.
 ///
@@ -60,15 +61,27 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
 
   /// One-at-a-time card expansion (V1 parity). Null when no card is
   /// open. Tapping the same id collapses; tapping another switches.
-  String? _expandedNodeId;
+  ///
+  /// Stored as a [ValueNotifier] so that toggling expansion does NOT
+  /// rebuild [QuestsScreenV2] — only the two cards involved in the flip
+  /// rebuild via [ExpandedQuestScope]'s aspect-based notification.
+  /// Previously a `String?` field flipped via `setState`, which
+  /// invalidated the whole screen build (~90 ms per tap, 2026-05-22
+  /// trace) because every card got new constructor closures.
+  final ValueNotifier<String?> _expandedNodeId = ValueNotifier(null);
 
   GlobalKey _pillKeyFor(String nodeId) =>
       _pillKeys.putIfAbsent(nodeId, () => GlobalKey(debugLabel: nodeId));
 
   void _toggleExpanded(String nodeId) {
-    setState(() {
-      _expandedNodeId = _expandedNodeId == nodeId ? null : nodeId;
-    });
+    _expandedNodeId.value =
+        _expandedNodeId.value == nodeId ? null : nodeId;
+  }
+
+  @override
+  void dispose() {
+    _expandedNodeId.dispose();
+    super.dispose();
   }
 
   Offset? _centerOfKey(GlobalKey key) {
@@ -155,117 +168,132 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
                 onRefresh: provider.refresh,
                 color: Tokens.accent,
                 backgroundColor: Tokens.surface,
-                child: ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: EdgeInsets.fromLTRB(
-                    14,
-                    provider.error != null
-                        ? 16
-                        : widget.topContentInset + 16,
-                    14,
-                    28,
+                // Wrap the ListView in a ValueListenableBuilder whose
+                // `child` is the ListView itself, so the cards built
+                // inside it are kept stable across expand toggles. The
+                // builder rebuilds only the ExpandedQuestScope on each
+                // tick of `_expandedNodeId`; the scope's
+                // [InheritedModel] aspect-based notification then marks
+                // only the two affected cards dirty (the old + new
+                // expanded ids).
+                child: ValueListenableBuilder<String?>(
+                  valueListenable: _expandedNodeId,
+                  builder: (context, expandedId, child) {
+                    return ExpandedQuestScope(
+                      expandedNodeId: expandedId,
+                      child: child!,
+                    );
+                  },
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: EdgeInsets.fromLTRB(
+                      14,
+                      provider.error != null
+                          ? 16
+                          : widget.topContentInset + 16,
+                      14,
+                      28,
+                    ),
+                    children: [
+                      if (chapters.isNotEmpty ||
+                          provider.nextLockedChapter != null) ...[
+                        _ChapterSection(
+                          chapters: chapters,
+                          chainResolver: provider.chainQuestsFor,
+                          l10n: l10n,
+                          pillKeyFor: _pillKeyFor,
+                          onClaim: _claimQuest,
+                          onToggleExpanded: _toggleExpanded,
+                          nextLocked: provider.nextLockedChapter,
+                          companionBuffBonusFor: (q) =>
+                              provider.projectedCompanionBuffBonusFor(q.node),
+                        ),
+                        const SizedBox(height: Tokens.spaceXl),
+                      ],
+                      QuestSectionPanel(
+                        header: l10n.progQuestsDailyTasksHeader,
+                        color: Tokens.steps.color,
+                        countLabel: dailyUnclaimed.isEmpty
+                            ? null
+                            : l10n.progQuestsActiveCount(
+                                dailyUnclaimed.length),
+                        emptyTitle: l10n.progQuestsEmptyActiveTitle,
+                        emptyCaption: l10n.progQuestsEmptyActiveCaption,
+                        l10n: l10n,
+                        hint: l10n.progQuestsDailyTasksHint,
+                        quests: daily,
+                        pillKeyFor: _pillKeyFor,
+                        onClaim: _claimQuest,
+                        streakFor: (q) =>
+                            provider.streakForObjective(q.node.objectiveId),
+                        onToggleExpanded: _toggleExpanded,
+                        chainResolver: provider.chainQuestsFor,
+                        companionBuffBonusFor: (q) =>
+                            provider.projectedCompanionBuffBonusFor(q.node),
+                        emblemBuffBonusFor: (q) =>
+                            provider.projectedEmblemBuffBonusFor(q.node),
+                        equippedCompanionBuff:
+                            provider.equippedCompanionBuff,
+                        streakBuffPercentFor: (q) =>
+                            provider.projectedStreakBuffPercentFor(q.node),
+                      ),
+                      const SizedBox(height: Tokens.spaceXl),
+                      QuestSectionPanel(
+                        header: l10n.progQuestsWeeklyHeader,
+                        color: Tokens.calories.color,
+                        countLabel: weeklyActive.isEmpty
+                            ? null
+                            : l10n.progQuestsActiveCount(weeklyActive.length),
+                        emptyTitle: l10n.progQuestsEmptyActiveTitle,
+                        emptyCaption: l10n.progQuestsEmptyActiveCaption,
+                        l10n: l10n,
+                        quests: weeklyActive,
+                        pillKeyFor: _pillKeyFor,
+                        onClaim: _claimQuest,
+                        streakFor: (q) =>
+                            provider.streakForObjective(q.node.objectiveId),
+                        onToggleExpanded: _toggleExpanded,
+                        companionBuffBonusFor: (q) =>
+                            provider.projectedCompanionBuffBonusFor(q.node),
+                        emblemBuffBonusFor: (q) =>
+                            provider.projectedEmblemBuffBonusFor(q.node),
+                        equippedCompanionBuff:
+                            provider.equippedCompanionBuff,
+                        streakBuffPercentFor: (q) =>
+                            provider.projectedStreakBuffPercentFor(q.node),
+                      ),
+                      if (longTerm.isNotEmpty) ...[
+                        const SizedBox(height: Tokens.spaceXl),
+                        _LongTermSection(
+                          entries: longTerm,
+                          chainResolver: provider.chainQuestsFor,
+                          l10n: l10n,
+                          pillKeyFor: _pillKeyFor,
+                          onClaim: _claimQuest,
+                          onToggleExpanded: _toggleExpanded,
+                          companionBuffBonusFor: (q) =>
+                              provider.projectedCompanionBuffBonusFor(q.node),
+                        ),
+                      ],
+                      if (locked.isNotEmpty) ...[
+                        const SizedBox(height: Tokens.spaceXl),
+                        _LockedSection(quests: locked, l10n: l10n),
+                      ],
+                      const SizedBox(height: Tokens.spaceXl),
+                      _CompletedSection(
+                        entries: completed,
+                        l10n: l10n,
+                        pillKeyFor: _pillKeyFor,
+                        onClaim: _claimQuest,
+                        onToggleExpanded: _toggleExpanded,
+                      ),
+                      const SizedBox(height: Tokens.spaceXl),
+                      EngineBackfillSection(
+                        barKey: widget.barKey,
+                        l10n: l10n,
+                      ),
+                    ],
                   ),
-                  children: [
-                    if (chapters.isNotEmpty ||
-                        provider.nextLockedChapter != null) ...[
-                      _ChapterSection(
-                        chapters: chapters,
-                        chainResolver: provider.chainQuestsFor,
-                        l10n: l10n,
-                        pillKeyFor: _pillKeyFor,
-                        onClaim: _claimQuest,
-                        expandedNodeId: _expandedNodeId,
-                        onToggleExpanded: _toggleExpanded,
-                        nextLocked: provider.nextLockedChapter,
-                        companionBuffBonusFor: (q) =>
-                            provider.projectedCompanionBuffBonusFor(q.node),
-                      ),
-                      const SizedBox(height: Tokens.spaceXl),
-                    ],
-                    QuestSectionPanel(
-                      header: l10n.progQuestsDailyTasksHeader,
-                      color: Tokens.steps.color,
-                      countLabel: dailyUnclaimed.isEmpty
-                          ? null
-                          : l10n.progQuestsActiveCount(dailyUnclaimed.length),
-                      emptyTitle: l10n.progQuestsEmptyActiveTitle,
-                      emptyCaption: l10n.progQuestsEmptyActiveCaption,
-                      l10n: l10n,
-                      hint: l10n.progQuestsDailyTasksHint,
-                      quests: daily,
-                      pillKeyFor: _pillKeyFor,
-                      onClaim: _claimQuest,
-                      streakFor: (q) =>
-                          provider.streakForObjective(q.node.objectiveId),
-                      expandedNodeId: _expandedNodeId,
-                      onToggleExpanded: _toggleExpanded,
-                      chainResolver: provider.chainQuestsFor,
-                      companionBuffBonusFor: (q) =>
-                          provider.projectedCompanionBuffBonusFor(q.node),
-                      emblemBuffBonusFor: (q) =>
-                          provider.projectedEmblemBuffBonusFor(q.node),
-                      equippedCompanionBuff: provider.equippedCompanionBuff,
-                      streakBuffPercentFor: (q) =>
-                          provider.projectedStreakBuffPercentFor(q.node),
-                    ),
-                    const SizedBox(height: Tokens.spaceXl),
-                    QuestSectionPanel(
-                      header: l10n.progQuestsWeeklyHeader,
-                      color: Tokens.calories.color,
-                      countLabel: weeklyActive.isEmpty
-                          ? null
-                          : l10n.progQuestsActiveCount(weeklyActive.length),
-                      emptyTitle: l10n.progQuestsEmptyActiveTitle,
-                      emptyCaption: l10n.progQuestsEmptyActiveCaption,
-                      l10n: l10n,
-                      quests: weeklyActive,
-                      pillKeyFor: _pillKeyFor,
-                      onClaim: _claimQuest,
-                      streakFor: (q) =>
-                          provider.streakForObjective(q.node.objectiveId),
-                      expandedNodeId: _expandedNodeId,
-                      onToggleExpanded: _toggleExpanded,
-                      companionBuffBonusFor: (q) =>
-                          provider.projectedCompanionBuffBonusFor(q.node),
-                      emblemBuffBonusFor: (q) =>
-                          provider.projectedEmblemBuffBonusFor(q.node),
-                      equippedCompanionBuff: provider.equippedCompanionBuff,
-                      streakBuffPercentFor: (q) =>
-                          provider.projectedStreakBuffPercentFor(q.node),
-                    ),
-                    if (longTerm.isNotEmpty) ...[
-                      const SizedBox(height: Tokens.spaceXl),
-                      _LongTermSection(
-                        entries: longTerm,
-                        chainResolver: provider.chainQuestsFor,
-                        l10n: l10n,
-                        pillKeyFor: _pillKeyFor,
-                        onClaim: _claimQuest,
-                        expandedNodeId: _expandedNodeId,
-                        onToggleExpanded: _toggleExpanded,
-                        companionBuffBonusFor: (q) =>
-                            provider.projectedCompanionBuffBonusFor(q.node),
-                      ),
-                    ],
-                    if (locked.isNotEmpty) ...[
-                      const SizedBox(height: Tokens.spaceXl),
-                      _LockedSection(quests: locked, l10n: l10n),
-                    ],
-                    const SizedBox(height: Tokens.spaceXl),
-                    _CompletedSection(
-                      entries: completed,
-                      l10n: l10n,
-                      pillKeyFor: _pillKeyFor,
-                      onClaim: _claimQuest,
-                      expandedNodeId: _expandedNodeId,
-                      onToggleExpanded: _toggleExpanded,
-                    ),
-                    const SizedBox(height: Tokens.spaceXl),
-                    EngineBackfillSection(
-                      barKey: widget.barKey,
-                      l10n: l10n,
-                    ),
-                  ],
                 ),
               ),
             ),
@@ -292,7 +320,6 @@ class QuestSectionPanel extends StatelessWidget {
     required this.pillKeyFor,
     required this.onClaim,
     this.streakFor,
-    this.expandedNodeId,
     this.onToggleExpanded,
     this.hint,
     this.chainResolver,
@@ -340,12 +367,10 @@ class QuestSectionPanel extends StatelessWidget {
   /// [ProgressionEngineProvider.projectedStreakBuffPercentFor].
   final int Function(EngineQuestProgress quest)? streakBuffPercentFor;
 
-  /// Id of the currently expanded card (one-at-a-time). Owned by the
-  /// screen; the panel just forwards it to each card.
-  final String? expandedNodeId;
-
   /// Tap handler for card expansion. When null, cards render without
-  /// the expand chevron and ignore taps.
+  /// the expand chevron and ignore taps. Expansion state itself is
+  /// resolved by each card via [ExpandedQuestScope] so panel rebuilds
+  /// don't cascade to every card on toggle.
   final void Function(String nodeId)? onToggleExpanded;
 
   /// Optional caption line rendered below the section header — used
@@ -394,7 +419,6 @@ class QuestSectionPanel extends StatelessWidget {
                   pillKey: pillKeyFor(quests[i].nodeId),
                   onClaim: onClaim,
                   streak: streakFor?.call(quests[i]),
-                  isExpanded: expandedNodeId == quests[i].nodeId,
                   onToggle: onToggleExpanded == null
                       ? null
                       : () => onToggleExpanded!(quests[i].nodeId),
@@ -441,7 +465,6 @@ class _ChapterSection extends StatelessWidget {
     required this.l10n,
     required this.pillKeyFor,
     required this.onClaim,
-    required this.expandedNodeId,
     required this.onToggleExpanded,
     this.nextLocked,
     this.companionBuffBonusFor,
@@ -453,7 +476,6 @@ class _ChapterSection extends StatelessWidget {
   final GlobalKey Function(String nodeId) pillKeyFor;
   final Future<void> Function(EngineQuestProgress quest, {Offset? from})
       onClaim;
-  final String? expandedNodeId;
   final void Function(String nodeId) onToggleExpanded;
 
   /// Compact teaser for the next-up locked chapter. Renders below the
@@ -490,7 +512,6 @@ class _ChapterSection extends StatelessWidget {
             l10n: l10n,
             pillKey: pillKeyFor(chapters[i].nodeId),
             onClaim: onClaim,
-            isExpanded: expandedNodeId == chapters[i].nodeId,
             onToggle: () => onToggleExpanded(chapters[i].nodeId),
             companionBuffBonus:
                 companionBuffBonusFor?.call(chapters[i]) ?? 0,
@@ -562,18 +583,26 @@ class _NextChapterLockedTeaser extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           if (asset != null && asset.isNotEmpty)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: ColorFiltered(
-                colorFilter: const ColorFilter.matrix(<double>[
-                  // Greyscale matrix — chapter art is decorative until
-                  // the player unlocks it.
-                  0.33, 0.33, 0.33, 0, 0,
-                  0.33, 0.33, 0.33, 0, 0,
-                  0.33, 0.33, 0.33, 0, 0,
-                  0, 0, 0, 0.55, 0,
-                ]),
-                child: Image.asset(asset, width: 44, height: 44, fit: BoxFit.cover),
+            // RepaintBoundary so the greyscale ColorFiltered output is
+            // cached as a raster layer. Without it, every frame of the
+            // outer PageView swipe re-evaluates the per-pixel matrix
+            // multiply for each locked chapter teaser (4× × ~13 ms in
+            // the 2026-05-22 trace).
+            RepaintBoundary(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: ColorFiltered(
+                  colorFilter: const ColorFilter.matrix(<double>[
+                    // Greyscale matrix — chapter art is decorative until
+                    // the player unlocks it.
+                    0.33, 0.33, 0.33, 0, 0,
+                    0.33, 0.33, 0.33, 0, 0,
+                    0.33, 0.33, 0.33, 0, 0,
+                    0, 0, 0, 0.55, 0,
+                  ]),
+                  child: Image.asset(asset,
+                      width: 44, height: 44, fit: BoxFit.cover),
+                ),
               ),
             )
           else
@@ -645,7 +674,6 @@ class _LongTermSection extends StatelessWidget {
     required this.l10n,
     required this.pillKeyFor,
     required this.onClaim,
-    required this.expandedNodeId,
     required this.onToggleExpanded,
     this.companionBuffBonusFor,
   });
@@ -656,7 +684,6 @@ class _LongTermSection extends StatelessWidget {
   final GlobalKey Function(String nodeId) pillKeyFor;
   final Future<void> Function(EngineQuestProgress quest, {Offset? from})
       onClaim;
-  final String? expandedNodeId;
   final void Function(String nodeId) onToggleExpanded;
 
   /// Resolves the projected companion-buff bonus per long-term
@@ -687,7 +714,6 @@ class _LongTermSection extends StatelessWidget {
             l10n: l10n,
             pillKey: pillKeyFor(entries[i].quest.nodeId),
             onClaim: onClaim,
-            isExpanded: expandedNodeId == entries[i].quest.nodeId,
             onToggle: () => onToggleExpanded(entries[i].quest.nodeId),
             companionBuffBonus:
                 companionBuffBonusFor?.call(entries[i].quest) ?? 0,
@@ -708,7 +734,6 @@ class _CompletedSection extends StatelessWidget {
     required this.l10n,
     required this.pillKeyFor,
     required this.onClaim,
-    required this.expandedNodeId,
     required this.onToggleExpanded,
   });
 
@@ -717,7 +742,6 @@ class _CompletedSection extends StatelessWidget {
   final GlobalKey Function(String nodeId) pillKeyFor;
   final Future<void> Function(EngineQuestProgress quest, {Offset? from})
       onClaim;
-  final String? expandedNodeId;
   final void Function(String nodeId) onToggleExpanded;
 
   @override
@@ -753,8 +777,6 @@ class _CompletedSection extends StatelessWidget {
               l10n: l10n,
               pillKey: pillKeyFor(entries[i].representative.nodeId),
               onClaim: onClaim,
-              isExpanded:
-                  expandedNodeId == entries[i].representative.nodeId,
               onToggle: () =>
                   onToggleExpanded(entries[i].representative.nodeId),
             ),

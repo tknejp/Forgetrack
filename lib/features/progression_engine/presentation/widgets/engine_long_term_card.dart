@@ -15,6 +15,7 @@ import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import 'engine_chapter_card.dart' show EngineChapterChainPreview;
 import 'engine_companion_pill.dart';
 import 'engine_reward_chip.dart';
+import 'expanded_quest_scope.dart';
 
 /// Long-term goal card.
 ///
@@ -39,7 +40,6 @@ class EngineLongTermCard extends StatelessWidget {
     required this.l10n,
     required this.pillKey,
     required this.onClaim,
-    this.isExpanded = false,
     this.onToggle,
     this.companionBuffBonus = 0,
   });
@@ -56,7 +56,10 @@ class EngineLongTermCard extends StatelessWidget {
   final GlobalKey pillKey;
   final Future<void> Function(EngineQuestProgress quest, {Offset? from})
       onClaim;
-  final bool isExpanded;
+
+  /// Tap handler for the entire card. Expanded state itself is pulled
+  /// from [ExpandedQuestScope] inside [build] so toggling expansion
+  /// only marks the two affected cards dirty.
   final VoidCallback? onToggle;
 
   /// Projected companion-buff bonus surfaced as a chip beside the
@@ -67,6 +70,7 @@ class EngineLongTermCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final quest = entry.quest;
+    final isExpanded = ExpandedQuestScope.isExpanded(context, quest.nodeId);
     final domain = quest.domain ?? ProgressionDomain.steps;
     final accent = domain.color;
 
@@ -103,10 +107,13 @@ class EngineLongTermCard extends StatelessWidget {
         chain.length > 1;
     final canExpand = hasExtraContent && onToggle != null;
 
-    return GestureDetector(
-      onTap: canExpand ? onToggle : null,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
+    // Per-card RepaintBoundary — see [engine_quest_card.dart] for the
+    // rationale (scroll + sibling expand isolation).
+    return RepaintBoundary(
+      child: GestureDetector(
+        onTap: canExpand ? onToggle : null,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.all(Tokens.questCardPadding),
         decoration: BoxDecoration(
@@ -118,17 +125,15 @@ class EngineLongTermCard extends StatelessWidget {
                 : Colors.white.withValues(alpha: 0.06),
           ),
           boxShadow: [
+            // Single static drop shadow — the previous conditional
+            // accent glow re-rasterized a 22 px Gaussian blur per
+            // frame of the expand animation. See engine_quest_card.dart
+            // for the same change + rationale.
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.26),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
-            if (isExpanded)
-              BoxShadow(
-                color: Tokens.accent.withValues(alpha: 0.18),
-                blurRadius: Tokens.glowXl,
-                offset: const Offset(0, 10),
-              ),
           ],
         ),
         child: Column(
@@ -190,6 +195,7 @@ class EngineLongTermCard extends StatelessWidget {
                       ..._buildCompanionPills(
                         directNonXp: directNonXpRewards,
                         accent: accent,
+                        isExpanded: isExpanded,
                       ),
                     ],
                   ],
@@ -224,21 +230,24 @@ class EngineLongTermCard extends StatelessWidget {
               curve: Curves.easeOutCubic,
               alignment: Alignment.topCenter,
               child: isExpanded
-                  ? Padding(
-                      padding: const EdgeInsets.only(top: Tokens.spaceSm),
-                      child: _LongTermExpanded(
-                        entry: entry,
-                        quest: quest,
-                        accent: accent,
-                        nextLockedStep: nextLockedStep,
-                        finaleRewards: finaleRewards,
-                        l10n: l10n,
+                  ? RepaintBoundary(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: Tokens.spaceSm),
+                        child: _LongTermExpanded(
+                          entry: entry,
+                          quest: quest,
+                          accent: accent,
+                          nextLockedStep: nextLockedStep,
+                          finaleRewards: finaleRewards,
+                          l10n: l10n,
+                        ),
                       ),
                     )
                   : const SizedBox(width: double.infinity),
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -252,6 +261,7 @@ class EngineLongTermCard extends StatelessWidget {
   List<Widget> _buildCompanionPills({
     required List<RewardDefinition> directNonXp,
     required Color accent,
+    required bool isExpanded,
   }) {
     final pills = <Widget>[];
     final tap = onToggle ?? () {};
@@ -440,6 +450,10 @@ class _AlsoUnlocks extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Resolve completion state once for the whole companion list so
+    // each row doesn't punch through to the provider in its own build.
+    final completed =
+        context.read<ProgressionEngineProvider>().completedNodeIds;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(10),
@@ -468,6 +482,7 @@ class _AlsoUnlocks extends StatelessWidget {
               quest: quest,
               accent: accent,
               l10n: l10n,
+              isUnlocked: completed.contains(companions[i].id),
             ),
           ],
         ],
@@ -542,12 +557,14 @@ class _CompanionRow extends StatelessWidget {
     required this.quest,
     required this.accent,
     required this.l10n,
+    required this.isUnlocked,
   });
 
   final ProgressionEntry node;
   final EngineQuestProgress quest;
   final Color accent;
   final AppLocalizations l10n;
+  final bool isUnlocked;
 
   @override
   Widget build(BuildContext context) {
@@ -556,11 +573,6 @@ class _CompanionRow extends StatelessWidget {
       for (final r in node.rewards)
         if (r is! XpReward) r,
     ];
-
-    final isUnlocked = context
-        .read<ProgressionEngineProvider>()
-        .completedNodeIds
-        .contains(node.id);
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
