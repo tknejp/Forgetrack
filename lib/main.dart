@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -69,6 +70,26 @@ import 'domain/player/level_curve.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Opt the app into the panel's native refresh rate (90 / 120 Hz on
+  // modern Android flagships). Android caps apps to 60 Hz by default
+  // to save battery; this call asks the OS for the highest supported
+  // rate at the active resolution. Throws PlatformException on iOS /
+  // desktop / unsupported devices — we just log and keep going so the
+  // boot path is never blocked by display-mode quirks. iOS ProMotion
+  // is handled separately via Info.plist's
+  // `CADisableMinimumFrameDurationOnPhone` key.
+  try {
+    await FlutterDisplayMode.setHighRefreshRate();
+    final active = await FlutterDisplayMode.active;
+    AppLog.app.info(
+      'Display mode: ${active.width}x${active.height} @ '
+      '${active.refreshRate.toStringAsFixed(0)} Hz',
+    );
+  } catch (e) {
+    AppLog.app.warn('FlutterDisplayMode unavailable', payload: e);
+  }
+
   AppLog.app.info('Forgetrack starting up');
 
   // Sentry consent is read BEFORE init so the very first session honours
