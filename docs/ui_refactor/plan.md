@@ -1,6 +1,6 @@
 # UI refactor plan — Trello #85
 
-**Status:** Phase 0–1 + Phase 1.1 + Phase 1.2 shipped 2026-05-22. Phase 2 next (quest screen split into `presentation/sections/`).
+**Status:** Phase 0–1 + Phase 1.1 + Phase 1.2 + Phase 1.3 shipped 2026-05-22. Phase 2 next (quest screen split into `presentation/sections/`).
 **Scope:** Performance hotfix + structural split of presentation-layer hot-spots (10 screens > 1000 LoC) + extraction of reusable template widgets.
 **Out of scope:** Visual design changes, theme token changes (FtTokens / AppTheme stay), cross-feature business logic.
 **Pre-conditions:** Domain refactor closed (✅, 2026-05-19). Phase 21 lint baseline `widget-no-logic: 0` (✅) — must not regress during refactor.
@@ -20,7 +20,7 @@ This plan is **designed to be picked up by a fresh session at any phase**. Each 
 | 1 | EngineCard template extraction | ✅ shipped 2026-05-22 | — | `ExpandableQuestCard` template (205 LoC); 4 cards compose it; chapter bg moved to hero-style static `backgroundDecoration` (the `fixedHeader` band was a transitional fix, dropped in the hero-pattern follow-up); collapsed-card layout locked across expand state |
 | 1.1 | Quest screen scroll jank investigation | ✅ shipped 2026-05-22 | — | Flattened ListView so each card is its own lazy mount; root cause was `Column`-wrapped sections mounting all N cards in one frame |
 | 1.2 | Home screen perf audit | ✅ shipped 2026-05-22 | — | StatCard Phase 0–1 invariants + per-card provider subscriptions on home so a KT tick rebuilds only the calorie card |
-| 1.3 | Home card expand animation cost | ⏳ deferred | — | Post-1.2 profile-mode trace during a card expand still showed frames ~10–13 ms on a 120 Hz target (8.3 ms budget). User parked it. Likely culprits: `Opacity` widget around the bg image (saveLayer per paint), `Image.asset` with `BlendMode.darken`, `Stack + Positioned.fill` background that re-rasterizes per tick of `AnimatedSize`. Candidate fix: apply Phase 1 hero-pattern lesson to `StatCard` (use `DecoratedBox` + `DecorationImage(opacity:)`, drop blend mode), and consider `SizeTransition` over `AnimatedSize` to avoid per-tick child relayout. See bottom of this file for the deferred plan. |
+| 1.3 | Home card expand animation cost | ✅ shipped 2026-05-22 | — | StatCard bg image moved from `Opacity + Image.asset(BlendMode.darken)` to `DecorationImage(opacity:)` — kills the per-paint `saveLayer`. Hero icon shadow blur 14→8 (Phase 0.2 invariant). Both expand-tick and open-card-scroll repaints are now within the 120 Hz raster budget. |
 | 2 | Quest screen split | ⏳ pending | — | Sections to `presentation/sections/` (now mostly mechanical — Phase 1.1 deleted the private section widgets; only `QuestSectionPanel`, `_NextChapterLockedTeaser`, and the `buildQuestSectionItems` helper are left to extract) |
 | 3 | Large screen splits | ⏳ pending | — | 10 screens > 1000 LoC, in priority order |
 | 4 | Shell lazy pages | ⏳ pending | — | Replace eager 4-tab PageView |
@@ -165,33 +165,17 @@ Full design record + rebuild table: **[archive/phase_1_2_home_perf_audit.md](arc
 
 ---
 
-## Phase 1.3 — Home card expand animation cost (deferred 2026-05-22)
+## Phase 1.3 — Home card expand animation cost ✅ shipped 2026-05-22
 
-Post-Phase-1.2 the user captured a profile-mode trace while opening (tapping to expand) a card on the home screen. With the device at 120 Hz (8.3 ms budget), most frames during the 260 ms `AnimatedSize` animation showed bar heights around 10–13 ms — over budget. The trace was described as "all raster janks", but tall red bars in DevTools' Flutter Frames chart can be either UI or raster jank (a re-trace should hover the specific bars to confirm which thread is the bottleneck).
+Post-Phase-1.2 the user captured a 120 Hz profile-mode trace that showed frames in the 10–13 ms range for the full 260 ms `AnimatedSize` expand (8.3 ms budget) plus raster janks up to ~20 ms when scrolling past an already-open card. Closed-card scroll was fine — Phase 1.2's `RepaintBoundary` already handled that case.
 
-The user **parked this issue** and moved on. This block exists so a future session can pick it up cold.
+The "scroll over open card janks too" pattern was the diagnostic: it's steady-state with no animation running, so per-tick relayout couldn't explain it. The actual cost was per-paint raster ops inside `StatCard`'s repaint boundary. Two fixes landed in [lib/shared/widgets/stat_card.dart](../../lib/shared/widgets/stat_card.dart): (1) `_buildBackgroundImage()` moved from `Positioned.fill + IgnorePointer + Opacity + Image.asset(color, BlendMode.darken)` to `Positioned.fill + IgnorePointer + DecoratedBox(decoration: BoxDecoration(image: DecorationImage(opacity:)))` — `Opacity`'s per-paint `saveLayer` was the single biggest cost, and `BlendMode.darken` was a redundant pipeline op (Phase 1 hero-pattern lesson); (2) hero icon shadow `blurRadius` reduced from 14 to `Tokens.glowSm` (8) per the Phase 0.2 invariant for widgets that re-rasterize per frame.
 
-### Hypothesis space (in priority order)
+`AnimatedSize`→`SizeTransition` was considered but rejected: it would only help the expand case, not the open-scroll case, and the bg-image fix addresses both. Reserved as next lever if a future trace shows residual UI-bound jank during expand specifically.
 
-1. **`Opacity` widget around the bg image** in `_buildBackgroundImage()` in [lib/shared/widgets/stat_card.dart](../../lib/shared/widgets/stat_card.dart) creates a `saveLayer` call per paint. Per tick of `AnimatedSize` the outer card layer re-rasterizes; the saveLayer is paid each tick. Phase 1 hero-pattern follow-up established this exact lesson for the chapter card. **Fix candidate:** replace `Stack + Positioned.fill + IgnorePointer + Opacity + Image.asset(color, colorBlendMode)` with `DecoratedBox(decoration: BoxDecoration(image: DecorationImage(opacity:)))` and drop the `BlendMode.darken` (opacity alone is the validated path).
+Full design record + verification + lessons codified: **[archive/phase_1_3_home_card_expand_cost.md](archive/phase_1_3_home_card_expand_cost.md)**.
 
-2. **`BlendMode.darken` on the `Image.asset`** — pipeline op per paint. Phase 1 lesson: prefer opacity alone for "darkened backdrop" readability.
-
-3. **Hero icon's 14 px blur shadow** ([stat_card.dart:215-220](../../lib/shared/widgets/stat_card.dart#L215-L220)) — Phase 0.2 banned `blurRadius ≥ 12` on widgets that get re-rasterized per frame. The icon's circle is a fixed 54×54 size, but it sits inside the card's RepaintBoundary layer which DOES re-rasterize per tick of `AnimatedSize` (because the card's overall bounds grow). Reducing blur to `Tokens.glowSm` (8) would save measurable per-frame cost.
-
-4. **`AnimatedSize` causes per-tick child relayout** — `RenderAnimatedSize.performLayout` calls `child.layout(constraints, parentUsesSize: true)` every animation tick. For a calorie card with a deep expanded body (streak block + 4 MacroRows + nutrition tile + shortcut button), the layout walk per tick adds UI-thread cost. **Fix candidate (if trace shows UI-bound):** replace `AnimatedSize` with a `SizeTransition` driven by an `AnimationController` on `_StatCardState`. `SizeTransition` lays out the child ONCE at its intrinsic size and animates only the visible clip extent — no per-tick child relayout.
-
-### What NOT to do
-
-- **Don't drop the top-level / inner `RepaintBoundary` added in Phase 1.2.** Those don't help during a card's OWN expand (the layer's bounds change per tick anyway), but they're load-bearing for scroll + sibling-expand isolation. Keep them.
-- **Don't change `StatCard`'s public API.** Other screens (sleep, body, nutrition) compose it. Visual fidelity must be preserved.
-- **Don't add `cacheExtent` tweaks or `AutomaticKeepAliveClientMixin` to home cards.** Wrong tool — those are scroll-cache primitives, not paint-budget primitives.
-
-### Verification
-
-- Re-trace card expand on a 120 Hz device after each fix. Hover bars in DevTools to confirm UI vs. raster split.
-- Target: zero frames > 8.3 ms during the 260 ms expand animation.
-- `flutter analyze` clean; sleep / body / nutrition screens visually unchanged (they share `StatCard`).
+> **Cold-start note for fresh sessions:** when authoring a reusable card widget with a background image (`StatCard`, `ExpandableQuestCard`, anything that lives in a scrollable feed), use `DecorationImage(opacity:)` for the dimming — never wrap the image in an `Opacity` widget, and never use `colorBlendMode` for a darken pass. `Opacity`'s `saveLayer` is paid every paint, which compounds with `AnimatedSize` ticks and with overscroll repaints into raster jank. The wider rule for any widget inside an `AnimatedSize`-driven expand: the card's whole layer re-rasterizes per tick, so every `saveLayer`, every blur ≥ 12 px, every `BackdropFilter`, and every `ColorFiltered` (without its own boundary) is paid ~16× over a 260 ms animation. Audit each before merging.
 
 ---
 

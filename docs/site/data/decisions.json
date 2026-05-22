@@ -1265,6 +1265,29 @@
         "docs/ui_refactor/plan.md",
         "docs/ui_refactor/archive/phase_1_2_home_perf_audit.md"
       ]
+    },
+    {
+      "id": "decoration-image-over-opacity-widget",
+      "title": "Background images na reusable cards: DecorationImage(opacity:), nikdy Opacity widget",
+      "status": "accepted",
+      "date": "2026-05-22",
+      "context": "Po Phase 1.2 (per-card watch + StatCard RepaintBoundary) uživatel reportoval, že na 120 Hz zařízení (8.3 ms budget) home screen StatCard expand stále produkoval 10–13 ms frames přes celou 260 ms `AnimatedSize` animaci, plus raster janky až ~20 ms při scrollu přes již otevřenou kartu. Scroll přes zavřenou kartu byl OK — Phase 1.2 RepaintBoundary tu cestu pokrývá. 'Janky i při scrollu přes OTEVŘENOU kartu' byl diagnostický pattern: je to steady-state bez běžící animace, takže per-tick relayout (kandidát `AnimatedSize`→`SizeTransition`) to nemůže vysvětlit. Skutečná cena byla per-paint raster op uvnitř `StatCard`-ova repaint-boundary layeru: `_buildBackgroundImage()` wrapoval `Image.asset(color: black-18%, colorBlendMode: BlendMode.darken)` v `Opacity` widgetu. `Opacity` volá `saveLayer` před paintem dítěte a `restore()` po — off-screen buffer velikosti karty, alokovaný a kompozitovaný KAŽDÝ paint. Paid each frame: každý tick `AnimatedSize` expand (silueta roste → re-rasterize), každý overscroll repaint otevřené (větší) karty. Phase 1 hero-pattern follow-up už toto pravidlo etabloval pro chapter kartu, ale `StatCard` ho neměl — duplicitní lesson napříč dvěma reusable kartami zaslouží explicit ADR.",
+      "decision": "Pro každý reusable card widget s background image: použij `Positioned.fill → IgnorePointer → DecoratedBox(decoration: BoxDecoration(image: DecorationImage(image: AssetImage(...), fit, alignment, opacity)))`. NIKDY nezabaluj background `Image.asset` do `Opacity` widgetu. NIKDY nepoužívej `colorBlendMode` pro dimming / darken pass. `DecorationImage(opacity:)` zapéká alfu do stejného draw callu jako image sample — žádný off-screen buffer, žádný `saveLayer`. Opacity sama je dost pro readability (Phase 1 hero-pattern proved). Pokud karta žije uvnitř `AnimatedSize`-driven expandu nebo v scrollable feedu, navíc audituj všechny `BoxShadow(blurRadius >= 12)` (Phase 0.2 invariant), `BackdropFilter`, a `ColorFiltered` bez vlastní `RepaintBoundary` — stejný typ per-paint cost.",
+      "consequences": [
+        "StatCard expand + open-card-scroll frames se vejdou do 120 Hz raster budgetu (8.3 ms). Win se vztahuje na home, sleep, body, nutrition screeny — všechny komponují StatCard.",
+        "Pattern je generalizovatelný: ExpandableQuestCard už používá DecorationImage pro chapter card backgroundDecoration; nové reusable karty (Phase 5 šablony, MetricCardWithTrend) musí dodržovat stejné pravidlo.",
+        "Visual fidelity zachována — `backgroundOpacity` v `DashboardCardAssetResolver` už zakóduje 0.28–0.30 alpha; dropnutý `BlendMode.darken` byl redundantní 18% black overlay, který oko sotva registruje.",
+        "`DecorationImage` nepodporuje `errorBuilder` callback — místo grafu fallback widgetu missing asset prostě nepainta (žádná exception). Defensive errorBuilder removed; v praxi missing-asset case neexistuje pro shipped builds (build catches missing pubspec assets).",
+        "Pravidlo je SPECIFICKÉ pro reusable cards v scrollable feedech / uvnitř AnimatedSize. Pro one-shot widgety mimo hot-paint paths (např. modal dialog s opacity fade-in) je `Opacity` widget stále OK; náklad `saveLayer` se pak platí jen jednou."
+      ],
+      "alternatives": "(A) Nahradit `AnimatedSize` `SizeTransition`em (driven AnimationController na _StatCardState). `SizeTransition` layoutuje dítě JEDNOU a animuje jen visible clip extent — eliminuje per-tick child relayout. Odmítnuto: vyřešilo by jen expand-tick cost, ale NE scroll-over-open-card cost (steady state, žádná animace neběží — per-tick relayout argument neaplikovatelný). Vyžaduje SingleTickerProviderStateMixin + AnimationController boilerplate + duplikuje funkcionalitu, kterou AnimatedSize poskytuje out of the box. Rezervováno jako další lever pokud budoucí trace ukáže residual UI-bound jank specificky během expand (a ne během open-scroll). (B) Drop `RepaintBoundary` wraps z Phase 1.2 a spoléhat na compositor optimalizace. Odmítnuto: boundaries jsou load-bearing pro scroll caching + sibling-expand isolation (closed-card scroll je fast díky tomu); jen NEpomohou během karty vlastního expandu (layer bounds rostou per tick). Drop by regressoval Phase 1.2 wins. (C) Reduce StatCard expanded body LoC (méně MacroRows, žádná nutrition tile). Odmítnuto: layout depth není root cause (open-scroll je steady-state), a změna API by lámala visual fidelity sleep/body/nutrition screenů. (D) `cacheExtent` tweaky nebo `AutomaticKeepAliveClientMixin` na home karty. Odmítnuto — wrong tool, scroll-cache primitives, ne paint-budget primitives. Masks symptom, nefixuje root cause.",
+      "links": [
+        "lib/shared/widgets/stat_card.dart",
+        "lib/features/progression_engine/presentation/widgets/expandable_quest_card.dart",
+        "docs/ui_refactor/plan.md",
+        "docs/ui_refactor/archive/phase_1_3_home_card_expand_cost.md",
+        "docs/ui_refactor/archive/phase_1_engine_card_template.md"
+      ]
     }
   ]
 }

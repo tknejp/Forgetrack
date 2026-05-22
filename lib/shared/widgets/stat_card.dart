@@ -160,19 +160,22 @@ class _StatCardState extends State<StatCard> {
       return const SizedBox.shrink();
     }
 
+    // DecorationImage(opacity:) instead of an Opacity widget — Opacity calls
+    // saveLayer per paint, paid every frame of AnimatedSize expand and on
+    // every repaint of the expanded card during scroll. DecorationImage
+    // bakes the alpha into the same draw call as the image sample, no
+    // off-screen buffer. Phase 1 hero-pattern lesson (chapter card) — drop
+    // BlendMode.darken too; opacity alone is enough for readability.
     return Positioned.fill(
       child: IgnorePointer(
-        child: Opacity(
-          opacity: assets.backgroundOpacity.clamp(0.0, 1.0),
-          child: Image.asset(
-            assets.backgroundAssetPath!,
-            fit: BoxFit.cover,
-            alignment: assets.backgroundAlignment,
-            color: Colors.black.withValues(alpha: 0.18),
-            colorBlendMode: BlendMode.darken,
-            errorBuilder: (context, error, stackTrace) {
-              return const SizedBox.shrink();
-            },
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(assets.backgroundAssetPath!),
+              fit: BoxFit.cover,
+              alignment: assets.backgroundAlignment,
+              opacity: assets.backgroundOpacity.clamp(0.0, 1.0),
+            ),
           ),
         ),
       ),
@@ -227,8 +230,12 @@ class _StatCardState extends State<StatCard> {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
+                  // Phase 0.2 invariant: blurRadius < 12 on widgets that
+                  // get re-rasterized per frame. The icon sits inside the
+                  // card layer which re-rasterizes per tick of AnimatedSize
+                  // (card bounds grow) and on scroll repaint of an open card.
                   color: d.glow.withValues(alpha: 0.18),
-                  blurRadius: 14,
+                  blurRadius: Tokens.glowSm,
                   spreadRadius: 0.5,
                 ),
               ],
