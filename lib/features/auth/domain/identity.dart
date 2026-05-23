@@ -39,10 +39,15 @@ class Identity {
       }
     }
 
+    // Firebase Auth UID is the canonical key for Firestore paths
+    // (`users/{uid}/...`). Security rules compare it against
+    // `request.auth.uid`, so any other choice (e.g. Google sub) would
+    // make every owner-only rule deny legitimate writes. Mirrors
+    // `canonicalUid` in `core/services/fcm_service.dart`.
     final canonicalId = _firstNonEmpty([
+      user.uid,
       googleInfo?.uid,
       user.email,
-      user.uid,
     ]);
 
     return Identity(

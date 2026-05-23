@@ -15,20 +15,12 @@ import 'notification_service.dart';
 import '../../features/devtools/application/devtools_sync_logger.dart';
 import '../../features/devtools/domain/devtools_sync_event.dart';
 
-/// Returns the same canonical UID as AuthUser.fromFirebase – Google subject ID
-/// when present, falling back to Firebase Auth UID.
+/// Returns the canonical UID for Firestore paths: the Firebase Auth UID.
 ///
-/// Important: Cloud Functions and client writes must use the same UID.
-String canonicalUid(User user) {
-  for (final provider in user.providerData) {
-    if (provider.providerId == 'google.com' &&
-        (provider.uid?.isNotEmpty ?? false)) {
-      return provider.uid!;
-    }
-  }
-
-  return user.uid;
-}
+/// Must match `Identity.id` produced by `Identity.fromFirebase` so client
+/// writes and Cloud Functions read/write the same `users/{uid}/...` paths,
+/// and so security rules can compare against `request.auth.uid`.
+String canonicalUid(User user) => user.uid;
 
 /// Top-level handler called by the OS when an FCM message arrives while the app
 /// is in background or terminated.

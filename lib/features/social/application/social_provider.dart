@@ -454,7 +454,7 @@ class SocialProvider extends ChangeNotifier {
       );
 
       throw StateError(
-        'PÅ™Ã¡telstvÃ­ nebylo nalezeno (friendships=${_friendships.length}).',
+        'Přátelství nebylo nalezeno (friendships=${_friendships.length}).',
       );
     }
 
@@ -1200,21 +1200,21 @@ class SocialProvider extends ChangeNotifier {
       switch (error.code) {
         case 'canceled':
         case 'cancelled':
-          return 'Vyber byl zrusen.';
+          return 'Výběr byl zrušen.';
         case 'unauthorized':
-          return 'Profilovou fotku nejde nahrat. Zkontroluj Firebase Storage pravidla.';
+          return 'Profilovou fotku nejde nahrát. Zkontroluj Firebase Storage pravidla.';
         case 'failed-precondition':
-          return 'SociÃ¡lnÃ­ data se jeÅ¡tÄ› pÅ™ipravujÃ­. Zkus to prosÃ­m za chvÃ­li znovu.';
+          return 'Sociální data se ještě připravují. Zkus to prosím za chvíli znovu.';
         case 'permission-denied':
-          return 'PÅ™Ã­stup k sociÃ¡lnÃ­m datÅ¯m byl zamÃ­tnut. Zkus se znovu pÅ™ihlÃ¡sit.';
+          return 'Přístup k sociálním datům byl zamítnut. Zkus se znovu přihlásit.';
         case 'unauthenticated':
-          return 'Pro sociÃ¡lnÃ­ funkce je potÅ™eba bÃ½t pÅ™ihlÃ¡Å¡enÃ½.';
+          return 'Pro sociální funkce je potřeba být přihlášený.';
         case 'unavailable':
-          return 'SociÃ¡lnÃ­ backend je doÄasnÄ› nedostupnÃ½. Zkus to prosÃ­m pozdÄ›ji.';
+          return 'Sociální backend je dočasně nedostupný. Zkus to prosím později.';
         case 'not-found':
-          return 'PoÅ¾adovanÃ¡ sociÃ¡lnÃ­ poloÅ¾ka nebyla nalezena.';
+          return 'Požadovaná sociální položka nebyla nalezena.';
         case 'already-exists':
-          return 'Tahle poloÅ¾ka uÅ¾ v sociÃ¡lnÃ­ ÄÃ¡sti existuje.';
+          return 'Tahle položka už v sociální části existuje.';
       }
     }
 
@@ -1222,31 +1222,31 @@ class SocialProvider extends ChangeNotifier {
 
     if (raw.contains('requires an index') ||
         raw.contains('failed-precondition')) {
-      return 'SociÃ¡lnÃ­ data se jeÅ¡tÄ› pÅ™ipravujÃ­. Zkus to prosÃ­m za chvÃ­li znovu.';
+      return 'Sociální data se ještě připravují. Zkus to prosím za chvíli znovu.';
     }
 
     if (raw.contains('permission-denied')) {
-      return 'PÅ™Ã­stup k sociÃ¡lnÃ­m datÅ¯m byl zamÃ­tnut. Zkus se znovu pÅ™ihlÃ¡sit.';
+      return 'Přístup k sociálním datům byl zamítnut. Zkus se znovu přihlásit.';
     }
 
     if (raw.contains('unauthenticated')) {
-      return 'Pro sociÃ¡lnÃ­ funkce je potÅ™eba bÃ½t pÅ™ihlÃ¡Å¡enÃ½.';
+      return 'Pro sociální funkce je potřeba být přihlášený.';
     }
 
     if (raw.contains('google sign-in did not return an id token')) {
-      return 'Google pÅ™ihlÃ¡Å¡enÃ­ se nepodaÅ™ilo dokonÄit. Zkus to prosÃ­m znovu.';
+      return 'Google přihlášení se nepodařilo dokončit. Zkus to prosím znovu.';
     }
 
     if (raw.contains('friend request not found')) {
-      return 'Å½Ã¡dost o pÅ™Ã¡telstvÃ­ uÅ¾ nenÃ­ dostupnÃ¡.';
+      return 'Žádost o přátelství už není dostupná.';
     }
 
     if (raw.contains('payload is empty')) {
-      return 'SociÃ¡lnÃ­ data dorazila nekompletnÃ­. Zkus to prosÃ­m znovu.';
+      return 'Sociální data dorazila nekompletní. Zkus to prosím znovu.';
     }
 
     if (raw.contains('a user cannot send a friend request to themselves')) {
-      return 'SÃ¡m sobÄ› Å¾Ã¡dost o pÅ™Ã¡telstvÃ­ poslat nejde.';
+      return 'Sám sobě žádost o přátelství poslat nejde.';
     }
 
     if (error is ArgumentError || error is StateError) {
@@ -1254,7 +1254,7 @@ class SocialProvider extends ChangeNotifier {
       if (message.isNotEmpty) return message;
     }
 
-    return 'V sociÃ¡lnÃ­ ÄÃ¡sti se nÄ›co nepovedlo. Zkus to prosÃ­m znovu.';
+    return 'V sociální části se něco nepovedlo. Zkus to prosím znovu.';
   }
 
   @override
