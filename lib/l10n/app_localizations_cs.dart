@@ -1508,6 +1508,75 @@ class AppLocalizationsCs extends AppLocalizations {
   String get cosmeticTypeMapEffect => 'Mapový efekt';
 
   @override
+  String get cosmeticTypeSkin => 'Vzhled';
+
+  @override
+  String get heroRaceHumanName => 'Človek';
+
+  @override
+  String get heroRaceHumanDesc => 'Vytrvalý poutník světa.';
+
+  @override
+  String get heroRaceElfName => 'Elf';
+
+  @override
+  String get heroRaceElfDesc => 'Tichý strážce lesů a starodávných stezek.';
+
+  @override
+  String get heroRaceDwarfName => 'Trpaslík';
+
+  @override
+  String get heroRaceDwarfDesc => 'Houževnatý kovář kamenů, mistr hlubin.';
+
+  @override
+  String get heroRaceOrcName => 'Skřet';
+
+  @override
+  String get heroRaceOrcDesc => 'Divoký bojovník otevřených stepí.';
+
+  @override
+  String get heroRaceSpiritName => 'Duch';
+
+  @override
+  String get heroRaceSpiritDesc => 'Šepot pradávných lesů, na pomezí světů.';
+
+  @override
+  String get heroRaceGolemName => 'Golem';
+
+  @override
+  String get heroRaceGolemDesc => 'Probuzený kámen, věčný strážce.';
+
+  @override
+  String get cosmeticSkinPilgrimName => 'Poutník';
+
+  @override
+  String get cosmeticSkinPilgrimDesc =>
+      'Skromné šaty toho, kdo právě vyšel na cestu.';
+
+  @override
+  String get cosmeticSkinPilgrimUnlockHint => 'Vybráno na začátku cesty.';
+
+  @override
+  String get forcePickRaceHeader => 'JEŠTĚ JEDEN KROK';
+
+  @override
+  String get forcePickRaceTitle => 'Vyber si hrdinu';
+
+  @override
+  String get forcePickRaceSubtitle =>
+      'Tvoje cesta začala dřív, než hrdinové měli tvář. Vyber si teď svou rasu — tahle podoba tě bude provázet dál.';
+
+  @override
+  String get forcePickRaceCta => 'Potvrdit volbu';
+
+  @override
+  String get forcePickRaceCtaBusy => 'Ukládám…';
+
+  @override
+  String get forcePickRaceCommitFailed =>
+      'Nepodařilo se uložit volbu. Zkus to prosím znovu.';
+
+  @override
   String get progQuestsChapterWaitingHeader => 'PŘIPRAVENÉ KAPITOLY';
 
   @override
@@ -5051,19 +5120,6 @@ class AppLocalizationsCs extends AppLocalizations {
   }
 
   @override
-  String socialPhotoPickFailed(String error) {
-    return 'Výběr fotky se nepodařil: $error';
-  }
-
-  @override
-  String socialPhotoSaveFailed(String error) {
-    return 'Fotku se nepodařilo uložit: $error';
-  }
-
-  @override
-  String get socialPhotoSaved => 'Profilová fotka uložena.';
-
-  @override
   String get socialTryAgain => 'zkus to znovu';
 
   @override
@@ -5576,14 +5632,14 @@ class AppLocalizationsCs extends AppLocalizations {
   String get welcomeCtaFinish => 'Vstoupit do hry';
 
   @override
-  String get welcomeStep1Title => 'Vítej, hrdino.';
+  String get welcomeStep1Title => 'Vyber si tvář';
 
   @override
   String get welcomeStep1Subtitle =>
-      'Forgetrack udělá ze tvého zdraví cestu plnou questů — kroky, spánek a jídlo se mění v XP, levely a tituly.';
+      'Takhle tě uvidí ostatní hráči v žebříčku. Nemůžeš se rozhodnout? Změníš to kdykoliv v profilu.';
 
   @override
-  String get welcomeStep1SubtitleAccent => 'cestu plnou questů';
+  String get welcomeStep1SubtitleAccent => 'Nemůžeš se rozhodnout?';
 
   @override
   String get welcomeStep1HeroLabel => 'TVŮJ START';
@@ -5594,7 +5650,7 @@ class AppLocalizationsCs extends AppLocalizations {
   }
 
   @override
-  String get welcomeStep1HeroPill => '+50 XP';
+  String get welcomeStep1HeroPill => 'LVL 1';
 
   @override
   String get welcomeStep2Title => 'Ulož si svůj postup';

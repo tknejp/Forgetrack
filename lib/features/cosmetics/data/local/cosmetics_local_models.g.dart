@@ -48,18 +48,28 @@ const CosmeticsUserStateRecordSchema = CollectionSchema(
       name: r'relicId',
       type: IsarType.string,
     ),
-    r'titleFlairId': PropertySchema(
+    r'selectedRaceId': PropertySchema(
       id: 6,
+      name: r'selectedRaceId',
+      type: IsarType.string,
+    ),
+    r'skinId': PropertySchema(
+      id: 7,
+      name: r'skinId',
+      type: IsarType.string,
+    ),
+    r'titleFlairId': PropertySchema(
+      id: 8,
       name: r'titleFlairId',
       type: IsarType.string,
     ),
     r'uid': PropertySchema(
-      id: 7,
+      id: 9,
       name: r'uid',
       type: IsarType.string,
     ),
     r'updatedAt': PropertySchema(
-      id: 8,
+      id: 10,
       name: r'updatedAt',
       type: IsarType.dateTime,
     )
@@ -148,6 +158,18 @@ int _cosmeticsUserStateRecordEstimateSize(
     }
   }
   {
+    final value = object.selectedRaceId;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.skinId;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
     final value = object.titleFlairId;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
@@ -169,9 +191,11 @@ void _cosmeticsUserStateRecordSerialize(
   writer.writeString(offsets[3], object.frameId);
   writer.writeString(offsets[4], object.mapEffectId);
   writer.writeString(offsets[5], object.relicId);
-  writer.writeString(offsets[6], object.titleFlairId);
-  writer.writeString(offsets[7], object.uid);
-  writer.writeDateTime(offsets[8], object.updatedAt);
+  writer.writeString(offsets[6], object.selectedRaceId);
+  writer.writeString(offsets[7], object.skinId);
+  writer.writeString(offsets[8], object.titleFlairId);
+  writer.writeString(offsets[9], object.uid);
+  writer.writeDateTime(offsets[10], object.updatedAt);
 }
 
 CosmeticsUserStateRecord _cosmeticsUserStateRecordDeserialize(
@@ -188,9 +212,11 @@ CosmeticsUserStateRecord _cosmeticsUserStateRecordDeserialize(
   object.id = id;
   object.mapEffectId = reader.readStringOrNull(offsets[4]);
   object.relicId = reader.readStringOrNull(offsets[5]);
-  object.titleFlairId = reader.readStringOrNull(offsets[6]);
-  object.uid = reader.readString(offsets[7]);
-  object.updatedAt = reader.readDateTime(offsets[8]);
+  object.selectedRaceId = reader.readStringOrNull(offsets[6]);
+  object.skinId = reader.readStringOrNull(offsets[7]);
+  object.titleFlairId = reader.readStringOrNull(offsets[8]);
+  object.uid = reader.readString(offsets[9]);
+  object.updatedAt = reader.readDateTime(offsets[10]);
   return object;
 }
 
@@ -216,8 +242,12 @@ P _cosmeticsUserStateRecordDeserializeProp<P>(
     case 6:
       return (reader.readStringOrNull(offset)) as P;
     case 7:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 8:
+      return (reader.readStringOrNull(offset)) as P;
+    case 9:
+      return (reader.readString(offset)) as P;
+    case 10:
       return (reader.readDateTime(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1517,6 +1547,318 @@ extension CosmeticsUserStateRecordQueryFilter on QueryBuilder<
   }
 
   QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> selectedRaceIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'selectedRaceId',
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> selectedRaceIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'selectedRaceId',
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> selectedRaceIdEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'selectedRaceId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> selectedRaceIdGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'selectedRaceId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> selectedRaceIdLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'selectedRaceId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> selectedRaceIdBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'selectedRaceId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> selectedRaceIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'selectedRaceId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> selectedRaceIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'selectedRaceId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+          QAfterFilterCondition>
+      selectedRaceIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'selectedRaceId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+          QAfterFilterCondition>
+      selectedRaceIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'selectedRaceId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> selectedRaceIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'selectedRaceId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> selectedRaceIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'selectedRaceId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> skinIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'skinId',
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> skinIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'skinId',
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> skinIdEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'skinId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> skinIdGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'skinId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> skinIdLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'skinId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> skinIdBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'skinId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> skinIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'skinId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> skinIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'skinId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+          QAfterFilterCondition>
+      skinIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'skinId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+          QAfterFilterCondition>
+      skinIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'skinId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> skinIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'skinId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> skinIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'skinId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
       QAfterFilterCondition> titleFlairIdIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -1960,6 +2302,34 @@ extension CosmeticsUserStateRecordQuerySortBy on QueryBuilder<
   }
 
   QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord, QAfterSortBy>
+      sortBySelectedRaceId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'selectedRaceId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord, QAfterSortBy>
+      sortBySelectedRaceIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'selectedRaceId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord, QAfterSortBy>
+      sortBySkinId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'skinId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord, QAfterSortBy>
+      sortBySkinIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'skinId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord, QAfterSortBy>
       sortByTitleFlairId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'titleFlairId', Sort.asc);
@@ -2103,6 +2473,34 @@ extension CosmeticsUserStateRecordQuerySortThenBy on QueryBuilder<
   }
 
   QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord, QAfterSortBy>
+      thenBySelectedRaceId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'selectedRaceId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord, QAfterSortBy>
+      thenBySelectedRaceIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'selectedRaceId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord, QAfterSortBy>
+      thenBySkinId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'skinId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord, QAfterSortBy>
+      thenBySkinIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'skinId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord, QAfterSortBy>
       thenByTitleFlairId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'titleFlairId', Sort.asc);
@@ -2190,6 +2588,21 @@ extension CosmeticsUserStateRecordQueryWhereDistinct on QueryBuilder<
   }
 
   QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord, QDistinct>
+      distinctBySelectedRaceId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'selectedRaceId',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord, QDistinct>
+      distinctBySkinId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'skinId', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord, QDistinct>
       distinctByTitleFlairId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'titleFlairId', caseSensitive: caseSensitive);
@@ -2258,6 +2671,20 @@ extension CosmeticsUserStateRecordQueryProperty on QueryBuilder<
       relicIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'relicId');
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, String?, QQueryOperations>
+      selectedRaceIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'selectedRaceId');
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, String?, QQueryOperations>
+      skinIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'skinId');
     });
   }
 

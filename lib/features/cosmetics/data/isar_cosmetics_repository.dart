@@ -71,6 +71,7 @@ class IsarCosmeticsRepository implements CosmeticsRepository {
       unlocked: unlocked,
       equipped: _equippedFromRecord(stateRecord),
       updatedAt: stateRecord?.updatedAt ?? _clock(),
+      selectedRaceId: stateRecord?.selectedRaceId,
     );
   }
 
@@ -236,6 +237,10 @@ class IsarCosmeticsRepository implements CosmeticsRepository {
           stateRecord.mapEffectId = null;
           dirty = true;
         }
+        if (stateRecord.skinId == cosmeticId) {
+          stateRecord.skinId = null;
+          dirty = true;
+        }
         if (dirty) {
           stateRecord.updatedAt = now;
           await _isar.cosmeticsUserStateRecords.put(stateRecord);
@@ -243,6 +248,27 @@ class IsarCosmeticsRepository implements CosmeticsRepository {
           await _bumpUpdatedAt(uid, now);
         }
       }
+    });
+  }
+
+  @override
+  Future<void> selectRace({
+    required String uid,
+    required String? raceId,
+  }) async {
+    final now = _clock();
+    await _isar.writeTxn(() async {
+      await _ensureSeededWithinTxn(uid, now);
+      final existing = await _isar.cosmeticsUserStateRecords
+          .filter()
+          .uidEqualTo(uid)
+          .findFirst();
+      final record = existing ?? CosmeticsUserStateRecord()
+        ..uid = uid;
+      record
+        ..selectedRaceId = raceId
+        ..updatedAt = now;
+      await _isar.cosmeticsUserStateRecords.put(record);
     });
   }
 
@@ -277,6 +303,8 @@ class IsarCosmeticsRepository implements CosmeticsRepository {
         ..companionId = null
         ..titleFlairId = null
         ..mapEffectId = null
+        ..skinId = null
+        ..selectedRaceId = null
         ..updatedAt = now;
       await _isar.cosmeticsUserStateRecords.put(record);
     });
@@ -303,6 +331,7 @@ class IsarCosmeticsRepository implements CosmeticsRepository {
       companionId: r.companionId,
       titleFlairId: r.titleFlairId,
       mapEffectId: r.mapEffectId,
+      skinId: r.skinId,
     );
   }
 
@@ -344,6 +373,8 @@ class IsarCosmeticsRepository implements CosmeticsRepository {
         ..companionId = state.equipped.companionId
         ..titleFlairId = state.equipped.titleFlairId
         ..mapEffectId = state.equipped.mapEffectId
+        ..skinId = state.equipped.skinId
+        ..selectedRaceId = state.selectedRaceId
         ..updatedAt = state.updatedAt;
       await _isar.cosmeticsUserStateRecords.put(record);
 
@@ -401,6 +432,7 @@ class IsarCosmeticsRepository implements CosmeticsRepository {
       ..companionId = _config.defaultEquipped.companionId
       ..titleFlairId = _config.defaultEquipped.titleFlairId
       ..mapEffectId = _config.defaultEquipped.mapEffectId
+      ..skinId = _config.defaultEquipped.skinId
       ..updatedAt = now;
     await _isar.cosmeticsUserStateRecords.put(stateRecord);
 
@@ -443,6 +475,8 @@ class IsarCosmeticsRepository implements CosmeticsRepository {
         record.titleFlairId = cosmeticId;
       case CosmeticType.mapEffect:
         record.mapEffectId = cosmeticId;
+      case CosmeticType.skin:
+        record.skinId = cosmeticId;
     }
     record.updatedAt = now;
     await _isar.cosmeticsUserStateRecords.put(record);

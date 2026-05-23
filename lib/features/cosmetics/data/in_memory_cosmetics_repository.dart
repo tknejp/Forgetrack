@@ -157,10 +157,25 @@ class InMemoryCosmeticsRepository implements CosmeticsRepository {
   }
 
   @override
+  Future<void> selectRace({
+    required String uid,
+    required String? raceId,
+  }) async {
+    final state = await loadForUser(uid);
+    final now = _clock();
+    _states[uid] = state.copyWith(
+      selectedRaceId: raceId,
+      clearSelectedRaceId: raceId == null,
+      updatedAt: now,
+    );
+  }
+
+  @override
   Future<int> clearAllUnlocks(String uid) async {
     final state = await loadForUser(uid);
     final removed = state.unlocked.length;
     if (removed == 0 &&
+        state.selectedRaceId == null &&
         CosmeticType.values.every((t) => state.equipped.slotId(t) == null)) {
       return 0;
     }
@@ -168,6 +183,7 @@ class InMemoryCosmeticsRepository implements CosmeticsRepository {
     _states[uid] = state.copyWith(
       unlocked: const <String, UnlockedCosmetic>{},
       equipped: const Loadout.empty(),
+      clearSelectedRaceId: true,
       updatedAt: now,
     );
     return removed;

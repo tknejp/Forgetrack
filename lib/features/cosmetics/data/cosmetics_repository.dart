@@ -70,4 +70,19 @@ abstract class CosmeticsRepository {
   ///
   /// Returns the number of unlock records removed.
   Future<int> clearAllUnlocks(String uid);
+
+  /// Persists the player's chosen [HeroRace] id on the user state row.
+  /// Overwrites any previous selection — race-lock is enforced at the UI
+  /// layer (onboarding Step 1 only shows once after completion).
+  ///
+  /// Pass [raceId] as `null` to clear the selection (used by DevTools
+  /// wipe + `clearAllUnlocks` paths).
+  ///
+  /// Implementations should NOT validate the id against
+  /// `HeroRaceCatalog` — that validation lives in `CosmeticsService`
+  /// so the repository stays a thin persistence boundary.
+  Future<void> selectRace({
+    required String uid,
+    required String? raceId,
+  });
 }

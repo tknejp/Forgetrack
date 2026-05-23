@@ -163,6 +163,8 @@ IconData _iconForType(CosmeticType type) {
       return Icons.title;
     case CosmeticType.mapEffect:
       return Icons.map;
+    case CosmeticType.skin:
+      return Icons.person;
   }
 }
 
@@ -184,5 +186,7 @@ String _typeLabel(CosmeticType type) {
       return 'Titul';
     case CosmeticType.mapEffect:
       return 'Efekt mapy';
+    case CosmeticType.skin:
+      return 'Vzhled';
   }
 }

@@ -162,5 +162,7 @@ IconData _iconForType(CosmeticType type) {
       return Icons.title;
     case CosmeticType.mapEffect:
       return Icons.map;
+    case CosmeticType.skin:
+      return Icons.person;
   }
 }

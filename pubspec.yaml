@@ -66,10 +66,6 @@ dependencies:
 
   # --- Firebase Cloud Messaging (push notifikace) ---
   firebase_messaging: ^16.2.0
-  image_picker: ^1.2.2
-  firebase_storage: ^13.3.0
-  image_picker_android: ^0.8.13+16
-  image_picker_platform_interface: ^2.11.1
   wakelock_plus: ^1.5.2
   connectivity_plus: ^7.1.1
   cached_network_image: ^3.4.1
@@ -111,6 +107,15 @@ flutter:
     - assets/cosmetics/backgrounds/
     - assets/cosmetics/emblems/
     - assets/cosmetics/companions/
+    - assets/cosmetics/skins/human_male/
+    - assets/cosmetics/skins/human_female/
+    - assets/cosmetics/skins/elf_male/
+    - assets/cosmetics/skins/elf_female/
+    - assets/cosmetics/skins/dwarf_male/
+    - assets/cosmetics/skins/dwarf_female/
+    - assets/cosmetics/skins/orc/
+    - assets/cosmetics/skins/spirit/
+    - assets/cosmetics/skins/golem/
 
 sentry:
   upload_debug_symbols: true

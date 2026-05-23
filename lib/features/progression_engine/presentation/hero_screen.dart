@@ -1174,6 +1174,7 @@ class _RewardCard extends StatelessWidget {
         CosmeticType.companion => l10n.cosmeticTypeCompanion,
         CosmeticType.titleFlair => l10n.cosmeticTypeTitleFlair,
         CosmeticType.mapEffect => l10n.cosmeticTypeMapEffect,
+        CosmeticType.skin => l10n.cosmeticTypeSkin,
       };
     }
     return switch (r) {

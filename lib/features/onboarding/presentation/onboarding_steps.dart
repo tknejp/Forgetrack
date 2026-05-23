@@ -8,8 +8,6 @@ import '../../../l10n/l10n.dart';
 import '../../auth/application/auth_provider.dart';
 import '../../health_connect/application/fitness_provider.dart';
 import '../../nutrition/application/kaloricke_tabulky_provider.dart';
-import '../../progression_engine/application/progression_engine_provider.dart';
-import '../../progression_engine/domain/catalog/level_milestone_specs.dart';
 import '../../progression_engine/domain/catalog/progression_node_catalog.dart';
 import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
 import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
@@ -17,331 +15,44 @@ import '../widgets/integration_toggle_row.dart';
 import '../widgets/kt_login_sheet.dart';
 import '../widgets/onboarding_primitives.dart';
 import '../widgets/onboarding_theme.dart';
+import 'race_picker_view.dart';
 
-// ─── Step 1 — VÃ­tej ──────────────────────────────────────────────────────
+// ─── Step 1 — Race picker ────────────────────────────────────────────────
 
 class StepWelcome extends StatelessWidget {
-  const StepWelcome({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final progression = context.watch<ProgressionEngineProvider>();
-    final l10n = context.l10n;
-    // V2 [EngineProfile] is always resolved through [ProgressionLevelPolicy]
-    // (see [ProgressionEngineProvider.profile]) — the pre-hydration zero
-    // profile and a populated ledger both go through the same policy, so
-    // reading the provider directly is now safe.
-    final profile = progression.profile;
-    final tier = levelMilestoneAtOrBelow(profile.level);
-    // Gap inside the current level so it matches the in-app hero card.
-    final levelGap =
-        (profile.nextLevelXp - profile.levelFloorXp).clamp(1, 1 << 30);
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Column(
-        children: [
-          const _SigilCluster(),
-          const SizedBox(height: 18),
-          Text(
-            l10n.welcomeStep1Title,
-            textAlign: TextAlign.center,
-            style: OnboardingTheme.displayTitle,
-          ),
-          const SizedBox(height: 6),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: _Step1Subtitle(
-              full: l10n.welcomeStep1Subtitle,
-              accent: l10n.welcomeStep1SubtitleAccent,
-            ),
-          ),
-          const SizedBox(height: 22),
-          _HeroPreviewCard(
-            level: profile.level,
-            xpInto: profile.xpIntoLevel,
-            xpToNext: levelGap,
-            tierTitle: tier.titleKey(l10n),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Renders the step 1 subtitle, splitting the localised string on its
-/// accent phrase so the inner span can be coloured/bolded without
-/// fragmenting the translation across multiple keys.
-class _Step1Subtitle extends StatelessWidget {
-  const _Step1Subtitle({required this.full, required this.accent});
-
-  final String full;
-  final String accent;
-
-  @override
-  Widget build(BuildContext context) {
-    final baseStyle = TextStyle(
-      fontSize: 15,
-      height: 1.45,
-      color: OnboardingTheme.textSecondary,
-    );
-    final accentStyle = const TextStyle(
-      color: OnboardingTheme.purpleAccent,
-      fontWeight: FontWeight.w600,
-    );
-    final idx = full.indexOf(accent);
-    if (idx < 0) {
-      // Translator dropped the accent phrase — render plain.
-      return Text(full, textAlign: TextAlign.center, style: baseStyle);
-    }
-    return Text.rich(
-      TextSpan(
-        children: [
-          if (idx > 0) TextSpan(text: full.substring(0, idx)),
-          TextSpan(text: accent, style: accentStyle),
-          if (idx + accent.length < full.length)
-            TextSpan(text: full.substring(idx + accent.length)),
-        ],
-      ),
-      textAlign: TextAlign.center,
-      style: baseStyle,
-    );
-  }
-}
-
-/// Step 1 hero illustration — the Forgetrack app icon floating on a
-/// double-layered purple glow with four staggered twinkling sparkles
-/// around the periphery. No outer frame, no border, no inner disc —
-/// just logo + glow + sparks.
-class _SigilCluster extends StatefulWidget {
-  const _SigilCluster();
-
-  @override
-  State<_SigilCluster> createState() => _SigilClusterState();
-}
-
-class _SigilClusterState extends State<_SigilCluster>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    // 2.4s full cycle — matches the `wm-spark` keyframe period from the
-    // design. One ticker drives all four sparkles.
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 2400),
-      vsync: this,
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    const size = 168.0;
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Outer wide purple bloom.
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  Color.fromRGBO(139, 92, 246, 0.42),
-                  Colors.transparent,
-                ],
-                radius: 0.55,
-              ),
-            ),
-            child: SizedBox.expand(),
-          ),
-          // Inner brighter core.
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  Color.fromRGBO(167, 139, 250, 0.55),
-                  Colors.transparent,
-                ],
-                radius: 0.32,
-              ),
-            ),
-            child: SizedBox.expand(),
-          ),
-          // App icon foreground.
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Image.asset(
-              'assets/branding/app-icon-foreground.png',
-              fit: BoxFit.contain,
-            ),
-          ),
-          // Four staggered sparkles. Positions match the design
-          // (top-left, top-right, bottom-right, bottom-left) and the
-          // phase offsets keep the four pulses out of phase so the
-          // ring feels alive rather than blinking in unison.
-          Positioned(
-            left: size * 0.04,
-            top: size * 0.18,
-            child: AnimatedSparkle(
-              animation: _controller,
-              phaseOffset: 0.0,
-              size: 14,
-            ),
-          ),
-          Positioned(
-            right: size * 0.06,
-            top: size * 0.10,
-            child: AnimatedSparkle(
-              animation: _controller,
-              phaseOffset: 0.25,
-              size: 18,
-            ),
-          ),
-          Positioned(
-            right: size * 0.04,
-            bottom: size * 0.16,
-            child: AnimatedSparkle(
-              animation: _controller,
-              phaseOffset: 0.50,
-              size: 12,
-            ),
-          ),
-          Positioned(
-            left: size * 0.08,
-            bottom: size * 0.10,
-            child: AnimatedSparkle(
-              animation: _controller,
-              phaseOffset: 0.75,
-              size: 16,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HeroPreviewCard extends StatelessWidget {
-  const _HeroPreviewCard({
-    required this.level,
-    required this.xpInto,
-    required this.xpToNext,
-    required this.tierTitle,
+  const StepWelcome({
+    super.key,
+    required this.draftRaceId,
+    required this.onPickRace,
   });
 
-  final int level;
-  final int xpInto;
-  final int xpToNext;
-  final String tierTitle;
+  /// Race id the parent (`WelcomeScreen`) currently has drafted.
+  /// Pre-sign-in state — not persisted until the welcome `_finish()`
+  /// commit, because `CosmeticsProvider` writes are uid-keyed and
+  /// sign-in happens in Step 2.
+  final String draftRaceId;
+
+  /// Callback fired when the user taps a race tile. Updates the
+  /// parent's draft only; the cosmetics provider trio (selectRace +
+  /// unlock + equip) runs in `_finish()` once a uid is bound.
+  final ValueChanged<String> onPickRace;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        gradient: OnboardingTheme.heroCardGradient,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: OnboardingTheme.borderSoft),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SectionLabel(
-            text: l10n.welcomeStep1HeroLabel,
-            color: OnboardingTheme.purpleAccent,
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              // Level badge.
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  gradient: OnboardingTheme.levelBadgeGradient,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: OnboardingTheme.levelBadgeShadow,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  '$level',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      tierTitle.toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.66, // 0.06em
-                        color: OnboardingTheme.gold,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      l10n.welcomeStep1HeroXpProgress(xpInto, xpToNext),
-                      style: TextStyle(
-                        fontSize: 13,
-                        color:
-                            OnboardingTheme.textPrimary.withValues(alpha: 0.6),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: OnboardingTheme.gold.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(
-                    color: OnboardingTheme.gold.withValues(alpha: 0.35),
-                  ),
-                ),
-                child: Text(
-                  l10n.welcomeStep1HeroPill,
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.6,
-                    color: OnboardingTheme.gold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: RacePickerView(
+        draftRaceId: draftRaceId,
+        onPickRace: onPickRace,
+        title: l10n.welcomeStep1Title,
+        subtitle: l10n.welcomeStep1Subtitle,
+        subtitleAccent: l10n.welcomeStep1SubtitleAccent,
+        levelLabel: l10n.welcomeStep1HeroPill,
       ),
     );
   }
 }
-
 // ─── Step 2 — ÃšÄet ───────────────────────────────────────────────────────
 
 class StepAccount extends StatelessWidget {

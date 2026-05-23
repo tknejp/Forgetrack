@@ -55,6 +55,12 @@ class CosmeticsProvider extends ChangeNotifier {
   UserCosmeticsState? get state => _state;
   String? get errorMessage => _errorMessage;
 
+  /// Convenience accessor for the bound user's `HeroRace` selection.
+  /// Null pre-onboarding and after factory reset. Widgets that compose
+  /// the skin asset path read this together with `state?.equipped.skinId`
+  /// and feed both into `SkinAssetResolver`.
+  String? get currentRaceId => _state?.selectedRaceId;
+
   CosmeticsService get service => _service;
 
   /// Called by the progression dispatcher after each sync to enable accurate
@@ -477,6 +483,44 @@ class CosmeticsProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  /// Persists the player's [HeroRace] pick for the bound user. Onboarding
+  /// Step 1's CTA calls this once with the chosen race id; the call also
+  /// notifies listeners so the hero preview re-renders against the new
+  /// race folder via `SkinAssetResolver`.
+  ///
+  /// Throws no exceptions in the standard path — invalid race ids are
+  /// rejected by [CosmeticsService.selectRace] and surface on
+  /// [errorMessage] instead.
+  Future<void> selectRace(String raceId) async {
+    final uid = _currentUid;
+    if (uid == null) {
+      _log.warn('selectRace skipped — no uid bound', payload: 'raceId=$raceId');
+      _errorMessage = 'no_user_bound';
+      notifyListeners();
+      return;
+    }
+    try {
+      _state = await _service.selectRace(uid, raceId);
+      _errorMessage = null;
+      _log.info('selectRace OK', payload: 'raceId=$raceId uid=$uid');
+    } on CosmeticsException catch (error) {
+      _errorMessage = error.code;
+      _log.warn(
+        'selectRace rejected',
+        payload: 'raceId=$raceId code=${error.code} message=${error.message}',
+      );
+    } catch (error, st) {
+      _errorMessage = error.toString();
+      _log.error(
+        'selectRace crashed',
+        payload: 'raceId=$raceId',
+        err: error,
+        stackTrace: st,
+      );
+    }
+    notifyListeners();
   }
 
   Future<void> equip(String cosmeticId) async {

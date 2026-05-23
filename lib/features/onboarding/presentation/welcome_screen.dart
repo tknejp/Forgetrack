@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/logging/app_log.dart';
 import '../../../l10n/l10n.dart';
+import '../../cosmetics/application/cosmetics_provider.dart';
+import '../../cosmetics/domain/cosmetic_models.dart';
+import '../../cosmetics/domain/hero_race_catalog.dart';
 import '../application/onboarding_provider.dart';
 import '../widgets/onboarding_primitives.dart';
 import '../widgets/onboarding_theme.dart';
@@ -27,8 +31,35 @@ class WelcomeScreen extends StatefulWidget {
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
   static const _stepCount = 4;
+
+  /// Starter skin catalog id granted at race-pick time. The cosmetics
+  /// provider trio in [_finish] unlocks + equips this so the new
+  /// player's hero card paints with their chosen race's pilgrim look
+  /// from the first frame after onboarding.
+  static const _starterSkinId = 'skin_pilgrim';
+
   final PageController _pageController = PageController();
   int _step = 0;
+
+  /// Currently-previewed [HeroRace] id. Local UI state until [_finish] —
+  /// sign-in happens in Step 2, and `CosmeticsProvider` writes are
+  /// uid-keyed, so we can only persist once Auth has bound a user.
+  /// Initialised from the cosmetics provider on first build (carries a
+  /// re-entered onboarding's prior pick), else from the first race in
+  /// catalog order.
+  String _draftRaceId = HeroRaceCatalog.definitions.first.id;
+  bool _draftSeeded = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_draftSeeded) return;
+    final persistedRace = context.read<CosmeticsProvider>().currentRaceId;
+    if (persistedRace != null && HeroRaceCatalog.byId(persistedRace) != null) {
+      _draftRaceId = persistedRace;
+    }
+    _draftSeeded = true;
+  }
 
   @override
   void dispose() {
@@ -59,8 +90,61 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   void _skip() => _go(_stepCount - 1);
 
+  void _onPickRace(String raceId) {
+    if (raceId == _draftRaceId) return;
+    setState(() => _draftRaceId = raceId);
+  }
+
   Future<void> _finish() async {
-    await context.read<OnboardingProvider>().markCompleted();
+    final cosmetics = context.read<CosmeticsProvider>();
+    final onboarding = context.read<OnboardingProvider>();
+
+    // Commit race + starter skin once a uid is bound. If the user
+    // skipped sign-in (Step 2 is opt-in via the skip button), the
+    // commit is deferred — `CosmeticsProvider` would warn `no_user_bound`
+    // and discard the call. The draft race id is intentionally not
+    // persisted to a secondary store; cosmetic state is uid-scoped by
+    // design and the unauth path is a degraded mode anyway.
+    if (cosmetics.currentUid != null) {
+      try {
+        await cosmetics.selectRace(_draftRaceId);
+        final hasStarter =
+            cosmetics.state?.unlocked.containsKey(_starterSkinId) ?? false;
+        if (!hasStarter) {
+          await cosmetics.unlock(
+            _starterSkinId,
+            sourceType: CosmeticUnlockSource.defaultBaseline.name,
+          );
+        }
+        if (cosmetics.state?.equipped.skinId != _starterSkinId) {
+          await cosmetics.equip(_starterSkinId);
+        }
+        AppLog.app.info(
+          'onboarding: race + starter skin committed',
+          payload:
+              'race=$_draftRaceId skin=$_starterSkinId uid=${cosmetics.currentUid}',
+        );
+      } catch (e, st) {
+        // Race / unlock / equip throws are already caught + logged
+        // inside the provider; this `catch` is defensive against
+        // platform-level failures (Isar I/O, etc.). Onboarding
+        // completion must not be blocked by a transient cosmetic
+        // write — the player can re-enter through DevTools reset if
+        // their state ended up half-applied.
+        AppLog.app.warn(
+          'onboarding: race commit threw',
+          payload: 'race=$_draftRaceId error=$e stack=$st',
+        );
+      }
+      if (!mounted) return;
+    } else {
+      AppLog.app.warn(
+        'onboarding: finished without signed-in user — race not persisted',
+        payload: 'draftRace=$_draftRaceId',
+      );
+    }
+
+    await onboarding.markCompleted();
     // Routing in app.dart watches the provider — flipping completed
     // automatically swaps the home from WelcomeScreen to MainShell.
   }
@@ -110,11 +194,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   child: PageView(
                     controller: _pageController,
                     physics: const NeverScrollableScrollPhysics(),
-                    children: const [
-                      _StepScroll(child: StepWelcome()),
-                      _StepScroll(child: StepAccount()),
-                      _StepScroll(child: StepHealth()),
-                      _StepScroll(child: StepFinal()),
+                    children: [
+                      _StepScroll(
+                        child: StepWelcome(
+                          draftRaceId: _draftRaceId,
+                          onPickRace: _onPickRace,
+                        ),
+                      ),
+                      const _StepScroll(child: StepAccount()),
+                      const _StepScroll(child: StepHealth()),
+                      const _StepScroll(child: StepFinal()),
                     ],
                   ),
                 ),

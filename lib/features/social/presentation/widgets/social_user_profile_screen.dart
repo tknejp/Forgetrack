@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:image_picker_android/image_picker_android.dart';
-import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
 import 'package:provider/provider.dart';
 
 import '../../../progression_engine/domain/display/progression_display_models.dart';
@@ -51,7 +48,6 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
   late final Stream<List<SocialAchievementShare>> _sharesStream;
   late final Stream<List<SocialUserProfile>> _friendsStream;
   bool _actionBusy = false;
-  bool _photoBusy = false;
 
   @override
   void initState() {
@@ -86,56 +82,6 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
                   social.error ?? l10n.socialTryAgain,
                 )
               : l10n.socialHandleSaved(savedHandle),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _pickOwnProfilePhoto() async {
-    if (_photoBusy) return;
-
-    final messenger = ScaffoldMessenger.of(context);
-    final social = context.read<SocialProvider>();
-    final l10n = context.l10n;
-    XFile? image;
-
-    try {
-      final implementation = ImagePickerPlatform.instance;
-      if (implementation is ImagePickerAndroid) {
-        implementation.useAndroidPhotoPicker = true;
-      }
-      image = await ImagePicker().pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 1200,
-        maxHeight: 1200,
-        imageQuality: 86,
-        requestFullMetadata: false,
-      );
-    } catch (error) {
-      if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(l10n.socialPhotoPickFailed(error.toString())),
-        ),
-      );
-      return;
-    }
-
-    if (image == null || !mounted) return;
-
-    setState(() => _photoBusy = true);
-    final url = await social.uploadCurrentProfilePhoto(image);
-    if (!mounted) return;
-    setState(() => _photoBusy = false);
-
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          url == null
-              ? l10n.socialPhotoSaveFailed(
-                  social.error ?? l10n.socialTryAgain,
-                )
-              : l10n.socialPhotoSaved,
         ),
       ),
     );
@@ -260,7 +206,6 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
             final profile = profileSnap.data;
             final displayName =
                 profile?.displayName ?? widget.initialDisplayName ?? '';
-            final photoUrl = profile?.photoUrl ?? widget.initialPhotoUrl;
             final handle = profile?.handle ?? '';
             final stats = profile?.stats;
             // Slot mapping → cosmetic def. For friend profiles we
@@ -306,16 +251,24 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
                         stream: _friendsStream,
                         builder: (context, friendsSnap) {
                           final friendCount = friendsSnap.data?.length;
+                          // For own profile the hero body reads
+                          // race + equipped skin straight from the
+                          // local cosmetics provider. Friend profiles
+                          // have no race/skin payload on the wire
+                          // format yet (extension lands in a follow-up)
+                          // — they fall back to the silhouette.
+                          final cosmeticsState = isMe
+                              ? context.watch<CosmeticsProvider>()
+                              : null;
                           return ProfileDetailHeroCard(
                             displayName: displayName,
                             handle: handle,
-                            photoUrl: photoUrl,
                             profile: profile,
                             isMe: isMe,
+                            raceId: cosmeticsState?.currentRaceId,
+                            skinId: cosmeticsState?.state?.equipped.skinId,
                             emblemSlots: emblemSlots,
                             unlockedCount: unlockedCount,
-                            photoBusy: _photoBusy,
-                            onEditPhoto: isMe ? _pickOwnProfilePhoto : null,
                             onEditHandle:
                                 isMe ? () => _editOwnHandle(handle) : null,
                             friendCount: friendCount,

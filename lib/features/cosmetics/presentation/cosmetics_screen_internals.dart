@@ -176,6 +176,8 @@ IconData cosmeticIconForType(CosmeticType type) {
       return Icons.title_rounded;
     case CosmeticType.mapEffect:
       return Icons.map_rounded;
+    case CosmeticType.skin:
+      return Icons.person_rounded;
   }
 }
 
@@ -195,6 +197,8 @@ String cosmeticTypeLabel(CosmeticType type) {
       return 'Titul';
     case CosmeticType.mapEffect:
       return 'Efekt mapy';
+    case CosmeticType.skin:
+      return 'Vzhled';
   }
 }
 

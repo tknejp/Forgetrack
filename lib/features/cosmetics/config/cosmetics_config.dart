@@ -31,6 +31,7 @@ class CosmeticsConfig {
         CosmeticType.emblem,
         CosmeticType.companion,
         CosmeticType.titleFlair,
+        CosmeticType.skin,
         // mapEffect intentionally omitted — gated behind experimentalTypesEnabled.
       },
       rarityDisplayOrder: <Rarity>[
@@ -119,6 +120,7 @@ class CosmeticsConfig {
     check('companionId', defaultEquipped.companionId, CosmeticType.companion);
     check('titleFlairId', defaultEquipped.titleFlairId, CosmeticType.titleFlair);
     check('mapEffectId', defaultEquipped.mapEffectId, CosmeticType.mapEffect);
+    check('skinId', defaultEquipped.skinId, CosmeticType.skin);
     return warnings;
   }
 
@@ -138,6 +140,12 @@ class CosmeticsConfig {
         return 'title_flairs';
       case 'map_effects':
         return 'map_effects';
+      case 'skins':
+        // Skin paths are resolved per race by `SkinAssetResolver`, not by
+        // the flat `resolveAssetPath` template. This entry exists so the
+        // catalog's `assetKey` validator (`cosmetics.skins.<id>`) passes —
+        // the actual file lives under `assets/cosmetics/skins/<race>/<id>.png`.
+        return 'skins';
     }
     return null;
   }

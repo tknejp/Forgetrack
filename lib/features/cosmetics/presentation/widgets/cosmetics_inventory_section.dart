@@ -311,6 +311,8 @@ class _FeaturedCosmeticTile extends StatelessWidget {
         return 'Tituly';
       case CosmeticType.mapEffect:
         return 'Efekty mapy';
+      case CosmeticType.skin:
+        return 'Vzhledy';
     }
   }
 }
@@ -352,6 +354,8 @@ class _PreviewFallback extends StatelessWidget {
         return Icons.title;
       case CosmeticType.mapEffect:
         return Icons.map;
+      case CosmeticType.skin:
+        return Icons.person;
     }
   }
 }

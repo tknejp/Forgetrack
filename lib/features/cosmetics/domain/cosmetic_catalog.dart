@@ -1039,6 +1039,26 @@ class CosmeticCatalog {
     // Companions — Developer-only (grant via DevTools only)
     // -------------------------------------------------------------------------
 
+    // -------------------------------------------------------------------------
+    // Skins — full-body avatar themes resolved per race at render time
+    // -------------------------------------------------------------------------
+
+    Skin(
+      id: const CosmeticId('skin_pilgrim'),
+      rarity: Rarity.common,
+      region: CosmeticRegion.neutral,
+      name: (l10n) => l10n.cosmeticSkinPilgrimName,
+      description: (l10n) => l10n.cosmeticSkinPilgrimDesc,
+      unlockHint: (l10n) => l10n.cosmeticSkinPilgrimUnlockHint,
+      assetKey: 'cosmetics.skins.pilgrim',
+      previewAssetKey: 'cosmetics.skins.pilgrim',
+      sortOrder: 800,
+    ),
+
+    // -------------------------------------------------------------------------
+    // Companions — Developer-only (grant via DevTools only)
+    // -------------------------------------------------------------------------
+
     Companion(
       id: const CosmeticId('companion_monster_energy'),
       rarity: Rarity.mythic,
@@ -1100,6 +1120,8 @@ class CosmeticCatalog {
       definitions.whereType<TitleFlair>().toList(growable: false);
   List<MapEffect> get mapEffects =>
       definitions.whereType<MapEffect>().toList(growable: false);
+  List<Skin> get skins =>
+      definitions.whereType<Skin>().toList(growable: false);
 
   List<Cosmetic> byRegion(CosmeticRegion region) {
     return definitions.where((d) => d.region == region).toList(growable: false);

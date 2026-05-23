@@ -203,15 +203,6 @@
         { "id": "kt-email", "name": "kt_email", "role": "Email pro Kalorické tabulky.", "writers": ["KalorickeTabulkyService"], "readers": ["KalorickeTabulkyService"] },
         { "id": "kt-pwd-hash", "name": "kt_pwd_hash", "role": "Hash hesla pro Kalorické tabulky (uložen hash, ne plaintext).", "writers": ["KalorickeTabulkyService"], "readers": ["KalorickeTabulkyService"] }
       ]
-    },
-    {
-      "id": "firebase_storage",
-      "name": "Firebase Storage",
-      "summary": "Velké binární assety — profile fotky.",
-      "kind": "cloud-blob",
-      "stores": [
-        { "id": "profile-photos", "name": "social_profile_photos/{uid}/profile_{ts}.{ext}", "role": "Originál profilové fotky. URL se ukládá do users/{uid}.photoURL.", "writers": ["SocialProvider.uploadCurrentProfilePhoto"], "readers": ["SocialAvatar (přes CachedNetworkImage)"] }
-      ]
     }
   ]
 }

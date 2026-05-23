@@ -1,19 +1,18 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import '../../../../l10n/l10n.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../cosmetics/config/cosmetics_config.dart';
+import '../../../cosmetics/config/skin_asset_resolver.dart';
+import '../../../cosmetics/domain/cosmetic_catalog.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
 import '../../../cosmetics/presentation/widgets/companion_buff_chip.dart';
 import '../../../cosmetics/presentation/widgets/companion_fake_idle_preview.dart';
 import '../../../progression_engine/domain/display/progression_display_resolver.dart';
 import '../../../progression_engine/domain/policy/level_policy.dart';
 import '../../domain/social_models.dart';
-import 'social_avatar.dart';
 import 'social_cosmetic_avatar.dart'
-    show socialBackgroundDefinition, socialCosmeticById, socialFrameDefinition;
+    show socialBackgroundDefinition, socialCosmeticById;
 
 /// Cinematic 400-px tall hero card surfaced at the top of
 /// [SocialUserProfileSheet]. Ports `design_handoff_social_profile`:
@@ -33,25 +32,33 @@ class ProfileDetailHeroCard extends StatelessWidget {
     super.key,
     required this.displayName,
     required this.handle,
-    required this.photoUrl,
     required this.profile,
     required this.isMe,
+    this.raceId,
+    this.skinId,
     this.emblemSlots = const <Cosmetic?>[],
     this.unlockedCount = 0,
     this.onTapEmblemSlot,
     this.onTapCompanion,
-    this.onEditPhoto,
     this.onEditHandle,
-    this.photoBusy = false,
     this.friendCount,
     this.onTapFriendChip,
   });
 
   final String displayName;
   final String handle;
-  final String? photoUrl;
   final SocialUserProfile? profile;
   final bool isMe;
+
+  /// `HeroRace` id resolved for the hero body. Null pre-onboarding /
+  /// pre-skin-flow → renders a silhouette placeholder. Parents fill
+  /// this from `CosmeticsProvider` (own profile) or from the social
+  /// wire format (friend profile — wire extension lands in a follow-up).
+  final String? raceId;
+
+  /// Equipped skin cosmetic id. Combined with [raceId] by
+  /// [SkinAssetResolver] to pick the on-disk full-body asset.
+  final String? skinId;
 
   /// Per-slot emblem mapping. Length should match `slotCount` (11) —
   /// each entry is either the emblem pinned in that slot, or null for
@@ -76,9 +83,7 @@ class ProfileDetailHeroCard extends StatelessWidget {
   /// can open the cosmetic details sheet. Null disables the tap.
   final void Function(Cosmetic companion)? onTapCompanion;
 
-  final VoidCallback? onEditPhoto;
   final VoidCallback? onEditHandle;
-  final bool photoBusy;
 
   /// Number of friends to surface in the small "Přátelé · N" chip under
   /// the @handle. `null` hides the chip — used while the friend list is
@@ -116,28 +121,37 @@ class ProfileDetailHeroCard extends StatelessWidget {
 
   // ── Design-spec sizing ─────────────────────────────────────────────────────
   static const double _kHeight = 400;
-  static const double _kAvatarSize = 140;
-  static const double _kAvatarLeft = 16;
-  static const double _kAvatarTop = 16;
-  static const double _kIdentityLeft = 172;
-  static const double _kIdentityTop = 24;
+  static const double _kEdge = 16;
+
+  /// Full-body hero avatar — 1.5× the companion standee per the
+  /// 2026-05 redesign. Drives the asymmetric "hero on the left,
+  /// companion on the right" composition. No frame border applied
+  /// (frames live on the compact thumbnail surfaces only).
+  static const double _kHeroAvatarSize = 200;
+  static const double _kHeroAvatarBottom = 12;
+
   static const double _kCompanionSize = 134;
-  // Matches `_kEdge` so the chip — right-aligned in the column — sits
-  // flush with the 16-px right margin every other card / section on
-  // the profile screen uses. The standee is wrapped in its own
-  // Transform below so the sprite can keep its previous "pressed
-  // against the edge" position without dragging the chip with it.
   static const double _kCompanionRight = _kEdge;
   static const double _kCompanionBottom = 20;
-  static const double _kEmblemSlotSize = 52;
-  static const double _kEmblemGap = 6;
-  static const double _kEdge = 16;
+
+  static const double _kIdentityTop = 16;
+  static const double _kEmblemTop = 16;
+
+  // 3-column × 4-row emblem layout (11 slots, last row 2 of 3). Tile
+  // and gap sized so the grid fits in the top-right quadrant alongside
+  // the identity block on a 360-px-wide screen.
+  static const double _kEmblemSlotSize = 44;
+  static const double _kEmblemGap = 5;
+  static const double _kEmblemGridWidth =
+      3 * _kEmblemSlotSize + 2 * _kEmblemGap;
+  static const double _kIdentityEmblemGutter = 12;
+  static const double _kIdentityRight =
+      _kEdge + _kEmblemGridWidth + _kIdentityEmblemGutter;
 
   @override
   Widget build(BuildContext context) {
     final stats = profile?.stats;
     final equipped = profile?.equippedCosmetics;
-    final frame = socialFrameDefinition(equipped?.frameId);
     final background = socialBackgroundDefinition(equipped?.backgroundId);
     final companion = socialCosmeticById(equipped?.companionId);
     final emblem = socialCosmeticById(equipped?.emblemId);
@@ -158,43 +172,13 @@ class ProfileDetailHeroCard extends StatelessWidget {
         clipBehavior: Clip.hardEdge,
         children: [
           _BackgroundLayer(definition: background),
-          // Avatar block — tilted frame + pixel-art photo. The LVL/title
-          // label sits as a separate Positioned below so its width is
-          // free to extend past the avatar's 140 px without overflowing
-          // the screen edge (the rotated SizedBox would crop or push
-          // long titles off-screen).
+          // Identity block — top-left. Constrained on the right to
+          // leave room for the emblem grid sitting beside it in the
+          // top-right quadrant.
           Positioned(
-            left: _kAvatarLeft,
-            top: _kAvatarTop,
-            child: _FramedAvatar(
-              size: _kAvatarSize,
-              tiltDegrees: -3,
-              displayName: displayName,
-              photoUrl: photoUrl,
-              frame: frame,
-            ),
-          ),
-          // Camera edit button — owner-only, hidden in friend's view.
-          // Sits near the bottom-right corner of the avatar (a few px
-          // higher than flush with the corner so it overlaps the frame
-          // less aggressively) and uses a quieter translucent chrome —
-          // no purple accent halo.
-          if (isMe && onEditPhoto != null)
-            Positioned(
-              left: 130,
-              top: 124,
-              child: _CameraEditButton(
-                onTap: onEditPhoto!,
-                busy: photoBusy,
-              ),
-            ),
-          // Identity block — name + handle right of avatar (title pill
-          // moved under the LVL pin so the level/title pair travels with
-          // the avatar visually).
-          Positioned(
-            left: _kIdentityLeft,
+            left: _kEdge,
             top: _kIdentityTop,
-            right: _kEdge,
+            right: _kIdentityRight,
             child: _IdentityBlock(
               displayName: displayName,
               handle: handle,
@@ -205,6 +189,34 @@ class ProfileDetailHeroCard extends StatelessWidget {
               onEditHandle: onEditHandle,
               friendCount: friendCount,
               onTapFriendChip: onTapFriendChip,
+            ),
+          ),
+          // Emblem grid — top-right (was bottom-left in the pre-2026-05
+          // layout). 3-col × 4-row layout sized to fit alongside the
+          // identity block.
+          Positioned(
+            right: _kEdge,
+            top: _kEmblemTop,
+            child: _EmblemCollection(
+              slots: _resolveSlots(emblem),
+              unlockedCount: _resolveUnlockedCount(emblem),
+              slotSize: _kEmblemSlotSize,
+              gap: _kEmblemGap,
+              onTapSlot: onTapEmblemSlot,
+            ),
+          ),
+          // Hero body — bottom-left, full-body skin asset. No frame
+          // border per the 2026-05 redesign (frames live in the
+          // compact thumbnail surfaces only — top app bar, social feed,
+          // settings header, …).
+          Positioned(
+            left: _kEdge,
+            bottom: _kHeroAvatarBottom,
+            child: _HeroBodyAvatar(
+              raceId: raceId,
+              skinId: skinId,
+              fallbackLabel: displayName,
+              size: _kHeroAvatarSize,
             ),
           ),
           // Companion standee — warm radial glow on the ground + asset on
@@ -262,22 +274,6 @@ class ProfileDetailHeroCard extends StatelessWidget {
               ),
             ),
           ],
-          // Emblem collection — 4·4·3 grid, bottom-left. Per-slot
-          // mapping from the caller drives what (if anything) sits in
-          // each slot. Friend profiles fall back to a single-slot view
-          // of their currently equipped emblem (we don't have their
-          // unlocked catalogue or pinning state).
-          Positioned(
-            left: _kEdge,
-            bottom: _kEdge,
-            child: _EmblemCollection(
-              slots: _resolveSlots(emblem),
-              unlockedCount: _resolveUnlockedCount(emblem),
-              slotSize: _kEmblemSlotSize,
-              gap: _kEmblemGap,
-              onTapSlot: onTapEmblemSlot,
-            ),
-          ),
         ],
       ),
     );
@@ -356,111 +352,113 @@ class _BackgroundLayer extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// FramedAvatar — pixel-art avatar inset inside a tilted decorative frame,
-// with a neutral-gray `LVL N` pin counter-rotated at the bottom-centre.
+// HeroBodyAvatar — full-body skin asset rendered against the scene.
+// Replaces the pre-2026-05 framed pixel-art avatar; the frame border is
+// reserved for compact thumbnail surfaces only (top app bar, social
+// feed cards, settings header, ...).
 // ─────────────────────────────────────────────────────────────────────
 
-class _FramedAvatar extends StatelessWidget {
-  const _FramedAvatar({
+class _HeroBodyAvatar extends StatelessWidget {
+  const _HeroBodyAvatar({
+    required this.raceId,
+    required this.skinId,
+    required this.fallbackLabel,
     required this.size,
-    required this.tiltDegrees,
-    required this.displayName,
-    required this.photoUrl,
-    required this.frame,
   });
 
+  /// `HeroRace` id used to pick the asset subfolder. `null` when the
+  /// player hasn't completed onboarding race-pick yet (or for a friend
+  /// profile while the social wire format extension is still pending).
+  final String? raceId;
+
+  /// Equipped skin cosmetic id. The catalog row's `assetKey` is the
+  /// race-agnostic template; the resolver composes it with the race
+  /// folder to land on a concrete file.
+  final String? skinId;
+
+  /// Player-facing label used in the silhouette placeholder fallback
+  /// (pre-asset / unresolved race state). Typically the display name.
+  final String fallbackLabel;
+
   final double size;
-  final double tiltDegrees;
-  final String displayName;
-  final String? photoUrl;
-  final Cosmetic? frame;
+
+  static const _resolver = SkinAssetResolver();
 
   @override
   Widget build(BuildContext context) {
-    final inset = (size * 0.10).roundToDouble();
-    final innerSize = size - inset * 2;
-    final framePath = frame == null
-        ? null
-        : CosmeticsConfig.standard().resolveAssetPath(
-            frame!.previewAssetKey ?? frame!.assetKey,
-          );
-    // Soft glow in the frame's rarity colour — doubles as a halo that
-    // visually anti-aliases the sharp PNG edges into the background.
-    // Skipped when no frame is equipped (nothing to colour-key off of).
-    final rarityGlow = frame == null
-        ? null
-        : RarityPalette.forRarity(frame!.rarity).color;
+    // We only read the catalog row to fish out its asset key template
+    // — the per-race path goes through `SkinAssetResolver`, not the
+    // generic `CosmeticsConfig.resolveAssetPath`.
+    final skinDef = skinId == null ? null : const CosmeticCatalog().byId(skinId!);
+    final assetPath = _resolver.resolve(
+      raceId: raceId,
+      skinAssetKey: skinDef?.assetKey,
+      variant: SkinAssetVariant.fullBody,
+    );
+    if (assetPath == null) {
+      return _HeroSilhouette(label: fallbackLabel, size: size);
+    }
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Image.asset(
+        assetPath,
+        fit: BoxFit.contain,
+        // Sharp pixel art — turn off bilinear sampling so the asset
+        // upscales with crisp pixel edges. Matches the rendering style
+        // used by companion standees in the same card.
+        filterQuality: FilterQuality.none,
+        errorBuilder: (_, __, ___) =>
+            _HeroSilhouette(label: fallbackLabel, size: size),
+      ),
+    );
+  }
+}
 
-    return Transform.rotate(
-      angle: tiltDegrees * math.pi / 180,
-      // Without filterQuality, Flutter applies the rotation directly to
-      // the raster grid → diagonal pixel staircases on the frame artwork.
-      // FilterQuality.high routes the rotated subtree through a SaveLayer
-      // with image-filter sampling, so the frame edges anti-alias smoothly.
-      filterQuality: FilterQuality.high,
-      child: SizedBox(
-        width: size,
-        height: size,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            // Drop shadow + rarity halo on the avatar block. Both are
-            // outward BoxShadows on an empty transparent Container, so
-            // they render outside its bounds without painting a body.
-            Positioned(
-              left: 0,
-              top: 0,
-              width: size,
-              height: size,
-              child: Container(
-                decoration: BoxDecoration(
-                  boxShadow: [
-                    if (rarityGlow != null)
-                      BoxShadow(
-                        color: rarityGlow.withValues(alpha: 0.30),
-                        blurRadius: 24,
-                        spreadRadius: 2,
-                      ),
-                    const BoxShadow(
-                      color: Color(0x8C000000), // rgba(0,0,0,0.55)
-                      blurRadius: 20,
-                      offset: Offset(0, 14),
-                    ),
-                  ],
+/// Styled placeholder rendered when no skin asset is resolvable (race
+/// not picked yet, asset file not yet shipped). Sized for the hero
+/// card's 200-px body slot — uses a person glyph + the display name as
+/// a label so the placeholder reads as "your hero, art landing soon"
+/// rather than "broken image".
+class _HeroSilhouette extends StatelessWidget {
+  const _HeroSilhouette({required this.label, required this.size});
+
+  final String label;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.person_rounded,
+            size: size * 0.55,
+            color: Colors.white.withValues(alpha: 0.18),
+          ),
+          if (size >= 100) ...[
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Text(
+                label,
+                maxLines: 1,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.4,
+                  color: Colors.white.withValues(alpha: 0.40),
                 ),
               ),
             ),
-            // Pixel-art photo, inset so the frame visually surrounds it.
-            Positioned(
-              left: inset,
-              top: inset,
-              width: innerSize,
-              height: innerSize,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: SocialAvatar(
-                  name: displayName,
-                  size: innerSize,
-                  photoUrl: photoUrl,
-                  radius: 6,
-                ),
-              ),
-            ),
-            // Decorative frame artwork on top, full size.
-            if (framePath != null)
-              Positioned(
-                left: 0,
-                top: 0,
-                width: size,
-                height: size,
-                child: Image.asset(
-                  framePath,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                ),
-              ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -568,55 +566,6 @@ class _LevelTitleLabel extends StatelessWidget {
       ),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────
-// Camera edit button — only rendered when viewing your own profile.
-// ─────────────────────────────────────────────────────────────────────
-
-class _CameraEditButton extends StatelessWidget {
-  const _CameraEditButton({required this.onTap, required this.busy});
-
-  final VoidCallback onTap;
-  final bool busy;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: busy ? null : onTap,
-        customBorder: const CircleBorder(),
-        child: Container(
-          width: 26,
-          height: 26,
-          decoration: BoxDecoration(
-            // Translucent dark chrome — reads as an affordance over the
-            // avatar without competing with the rarity-coloured glow.
-            color: const Color(0xCC0A0E1C),
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: const Color(0x33FFFFFF),
-              width: 1,
-            ),
-          ),
-          child: busy
-              ? const Padding(
-                  padding: EdgeInsets.all(5),
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Icon(
-                  Icons.photo_camera_rounded,
-                  size: 14,
-                  color: Color(0xCCFFFFFF),
-                ),
-        ),
-      ),
     );
   }
 }
@@ -902,7 +851,10 @@ class _EmblemCollection extends StatelessWidget {
   final void Function(int slotIndex)? onTapSlot;
 
   static const int _totalSlots = 11;
-  static const List<int> _rowSizes = [4, 4, 3];
+  // 3-col × 4-row layout (3+3+3+2 = 11). Switched from the legacy
+  // 4·4·3 on 2026-05 to fit alongside the identity block in the new
+  // top-right placement.
+  static const List<int> _rowSizes = [3, 3, 3, 2];
 
   @override
   Widget build(BuildContext context) {

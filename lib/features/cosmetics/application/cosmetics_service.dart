@@ -2,6 +2,7 @@ import '../config/cosmetics_config.dart';
 import '../data/cosmetics_repository.dart';
 import '../domain/cosmetic_catalog.dart';
 import '../domain/cosmetic_models.dart';
+import '../domain/hero_race_catalog.dart';
 
 class CosmeticsProgressionResetResult {
   const CosmeticsProgressionResetResult({
@@ -108,6 +109,28 @@ class CosmeticsService {
       state: state,
       removedCount: removed,
     );
+  }
+
+  /// Persists the player's chosen [HeroRace] for [uid]. Validates that
+  /// [raceId] resolves to a row in [HeroRaceCatalog] — throws
+  /// `CosmeticsException('race_not_found')` otherwise so DevTools / UI
+  /// typos surface immediately instead of silently corrupting the user
+  /// state.
+  ///
+  /// Race lock is enforced by the UI (onboarding Step 1 is one-pass);
+  /// the repository accepts overwrites so factory-reset flows that
+  /// nuke `selectedRaceId` followed by a fresh pick still go through
+  /// the same code path.
+  Future<UserCosmeticsState> selectRace(String uid, String raceId) async {
+    final race = HeroRaceCatalog.byId(raceId);
+    if (race == null) {
+      throw CosmeticsException(
+        'race_not_found',
+        'No hero race with id "$raceId"',
+      );
+    }
+    await _repository.selectRace(uid: uid, raceId: raceId);
+    return _repository.loadForUser(uid);
   }
 
   Future<UserCosmeticsState> equip(String uid, String cosmeticId) async {

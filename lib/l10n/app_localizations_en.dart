@@ -1504,6 +1504,76 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cosmeticTypeMapEffect => 'Map effect';
 
   @override
+  String get cosmeticTypeSkin => 'Appearance';
+
+  @override
+  String get heroRaceHumanName => 'Human';
+
+  @override
+  String get heroRaceHumanDesc => 'Steady traveler of the world.';
+
+  @override
+  String get heroRaceElfName => 'Elf';
+
+  @override
+  String get heroRaceElfDesc => 'Quiet keeper of forests and ancient paths.';
+
+  @override
+  String get heroRaceDwarfName => 'Dwarf';
+
+  @override
+  String get heroRaceDwarfDesc => 'Hardy smith of stones, master of the deep.';
+
+  @override
+  String get heroRaceOrcName => 'Orc';
+
+  @override
+  String get heroRaceOrcDesc => 'Wild warrior of the open steppes.';
+
+  @override
+  String get heroRaceSpiritName => 'Spirit';
+
+  @override
+  String get heroRaceSpiritDesc =>
+      'Whisper of ancient forests, between worlds.';
+
+  @override
+  String get heroRaceGolemName => 'Golem';
+
+  @override
+  String get heroRaceGolemDesc => 'Awakened stone, eternal guardian.';
+
+  @override
+  String get cosmeticSkinPilgrimName => 'Pilgrim';
+
+  @override
+  String get cosmeticSkinPilgrimDesc => 'Humble garb of one just setting out.';
+
+  @override
+  String get cosmeticSkinPilgrimUnlockHint =>
+      'Chosen at the start of your journey.';
+
+  @override
+  String get forcePickRaceHeader => 'ONE MORE STEP';
+
+  @override
+  String get forcePickRaceTitle => 'Pick your hero';
+
+  @override
+  String get forcePickRaceSubtitle =>
+      'Your journey began before heroes had a face. Choose your race now — this look will follow you through the world.';
+
+  @override
+  String get forcePickRaceCta => 'Confirm choice';
+
+  @override
+  String get forcePickRaceCtaBusy => 'Saving…';
+
+  @override
+  String get forcePickRaceCommitFailed =>
+      'Could not save the choice. Please try again.';
+
+  @override
   String get progQuestsChapterWaitingHeader => 'UPCOMING CHAPTERS';
 
   @override
@@ -5043,19 +5113,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String socialPhotoPickFailed(String error) {
-    return 'Photo selection failed: $error';
-  }
-
-  @override
-  String socialPhotoSaveFailed(String error) {
-    return 'Photo could not be saved: $error';
-  }
-
-  @override
-  String get socialPhotoSaved => 'Profile photo saved.';
-
-  @override
   String get socialTryAgain => 'try again';
 
   @override
@@ -5577,14 +5634,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get welcomeCtaFinish => 'Enter the game';
 
   @override
-  String get welcomeStep1Title => 'Welcome, hero.';
+  String get welcomeStep1Title => 'Pick a face';
 
   @override
   String get welcomeStep1Subtitle =>
-      'Forgetrack turns your health into a journey of quests — steps, sleep and food become XP, levels and titles.';
+      'This is how other players will see you on the leaderboard. Can\'t decide? You can change it any time in your profile.';
 
   @override
-  String get welcomeStep1SubtitleAccent => 'a journey of quests';
+  String get welcomeStep1SubtitleAccent => 'Can\'t decide?';
 
   @override
   String get welcomeStep1HeroLabel => 'YOUR START';
@@ -5595,7 +5652,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get welcomeStep1HeroPill => '+50 XP';
+  String get welcomeStep1HeroPill => 'LVL 1';
 
   @override
   String get welcomeStep2Title => 'Save your progress';

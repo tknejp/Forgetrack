@@ -19,6 +19,11 @@ class CosmeticsUserStateRecord {
   String? companionId;
   String? titleFlairId;
   String? mapEffectId;
+  String? skinId;
+
+  /// Persisted [HeroRace] id picked at onboarding. `null` until the player
+  /// completes race selection.
+  String? selectedRaceId;
 
   @Index()
   late DateTime updatedAt;

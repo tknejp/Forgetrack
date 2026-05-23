@@ -1007,6 +1007,11 @@ class ProgressionEngineCelebrationAdapter {
         return CelebrationRewardKind.gem;
       case CosmeticType.mapEffect:
         return CelebrationRewardKind.location;
+      case CosmeticType.skin:
+        // TODO(skin): celebration treatment for skin unlocks lands with the
+        // skin UI commit. Reuse the frame kind for now so the celebration
+        // screen has a valid badge to render in MVP.
+        return CelebrationRewardKind.frame;
     }
   }
 }

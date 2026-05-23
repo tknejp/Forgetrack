@@ -1,8 +1,7 @@
 import 'dart:async';
 
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_core/firebase_core.dart' show FirebaseException;
 import 'package:flutter/foundation.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../../../core/errors/app_error.dart';
 import '../../../core/errors/firebase_error_classifier.dart';
@@ -230,85 +229,6 @@ class SocialProvider extends ChangeNotifier {
         _recordAppError('updateCurrentHandle', e);
         notifyListeners();
         return null;
-    }
-  }
-
-  Future<void> updateCurrentPhotoUrl(String? photoUrl) async {
-    final uid = _activeUid;
-    if (uid == null) return;
-
-    final result = await _repository.updateProfilePhotoUrl(
-      uid: uid,
-      photoUrl: photoUrl,
-    );
-    switch (result) {
-      case Success():
-        _lastProfileSignature = null;
-        _clearError();
-      case Failure(error: final e):
-        _recordAppError('updateCurrentPhotoUrl', e);
-    }
-
-    notifyListeners();
-  }
-
-  Future<String?> uploadCurrentProfilePhoto(XFile image) async {
-    final uid = _activeUid;
-    if (uid == null) return null;
-    if (!backendReady) {
-      _error = backendMessage;
-      notifyListeners();
-      return null;
-    }
-
-    try {
-      final bytes = await image.readAsBytes();
-      if (bytes.isEmpty) {
-        throw StateError('Vybrany obrazek je prazdny.');
-      }
-
-      final contentType = _contentTypeForImage(image);
-      final extension = _extensionForContentType(contentType);
-      final storageUid = _storageSafeId(uid);
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final ref = FirebaseStorage.instance
-          .ref()
-          .child('social_profile_photos')
-          .child(storageUid)
-          .child('profile_$timestamp.$extension');
-
-      await ref.putData(
-        bytes,
-        SettableMetadata(
-          contentType: contentType,
-          cacheControl: 'public,max-age=604800',
-          customMetadata: {
-            'uid': uid,
-            'source': 'forgetrack_social_profile',
-          },
-        ),
-      );
-
-      final url = await ref.getDownloadURL();
-      final updateResult =
-          await _repository.updateProfilePhotoUrl(uid: uid, photoUrl: url);
-      switch (updateResult) {
-        case Success():
-          _lastProfileSignature = null;
-          _clearError();
-          notifyListeners();
-          return url;
-        case Failure(error: final e):
-          _recordAppError('uploadCurrentProfilePhoto', e);
-          notifyListeners();
-          return null;
-      }
-    } catch (error, stackTrace) {
-      // Storage upload (FirebaseStorage.putData / readAsBytes) raises
-      // outside the repository contract, so classify inline.
-      _recordError('uploadCurrentProfilePhoto', error, stackTrace);
-      notifyListeners();
-      return null;
     }
   }
 
@@ -1344,40 +1264,3 @@ class SocialProvider extends ChangeNotifier {
   }
 }
 
-String _contentTypeForImage(XFile image) {
-  final mimeType = image.mimeType?.trim().toLowerCase();
-  if (mimeType == 'image/png' ||
-      mimeType == 'image/webp' ||
-      mimeType == 'image/heic' ||
-      mimeType == 'image/heif') {
-    return mimeType!;
-  }
-
-  final lowerName = image.name.toLowerCase();
-  if (lowerName.endsWith('.png')) return 'image/png';
-  if (lowerName.endsWith('.webp')) return 'image/webp';
-  if (lowerName.endsWith('.heic')) return 'image/heic';
-  if (lowerName.endsWith('.heif')) return 'image/heif';
-  return 'image/jpeg';
-}
-
-String _extensionForContentType(String contentType) {
-  switch (contentType) {
-    case 'image/png':
-      return 'png';
-    case 'image/webp':
-      return 'webp';
-    case 'image/heic':
-      return 'heic';
-    case 'image/heif':
-      return 'heif';
-    case 'image/jpeg':
-    default:
-      return 'jpg';
-  }
-}
-
-String _storageSafeId(String value) {
-  final safe = value.replaceAll(RegExp(r'[^A-Za-z0-9_.-]'), '_');
-  return safe.isEmpty ? 'user' : safe;
-}

@@ -2799,6 +2799,138 @@ abstract class AppLocalizations {
   /// **'Map effect'**
   String get cosmeticTypeMapEffect;
 
+  /// No description provided for @cosmeticTypeSkin.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get cosmeticTypeSkin;
+
+  /// No description provided for @heroRaceHumanName.
+  ///
+  /// In en, this message translates to:
+  /// **'Human'**
+  String get heroRaceHumanName;
+
+  /// No description provided for @heroRaceHumanDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Steady traveler of the world.'**
+  String get heroRaceHumanDesc;
+
+  /// No description provided for @heroRaceElfName.
+  ///
+  /// In en, this message translates to:
+  /// **'Elf'**
+  String get heroRaceElfName;
+
+  /// No description provided for @heroRaceElfDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet keeper of forests and ancient paths.'**
+  String get heroRaceElfDesc;
+
+  /// No description provided for @heroRaceDwarfName.
+  ///
+  /// In en, this message translates to:
+  /// **'Dwarf'**
+  String get heroRaceDwarfName;
+
+  /// No description provided for @heroRaceDwarfDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Hardy smith of stones, master of the deep.'**
+  String get heroRaceDwarfDesc;
+
+  /// No description provided for @heroRaceOrcName.
+  ///
+  /// In en, this message translates to:
+  /// **'Orc'**
+  String get heroRaceOrcName;
+
+  /// No description provided for @heroRaceOrcDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Wild warrior of the open steppes.'**
+  String get heroRaceOrcDesc;
+
+  /// No description provided for @heroRaceSpiritName.
+  ///
+  /// In en, this message translates to:
+  /// **'Spirit'**
+  String get heroRaceSpiritName;
+
+  /// No description provided for @heroRaceSpiritDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Whisper of ancient forests, between worlds.'**
+  String get heroRaceSpiritDesc;
+
+  /// No description provided for @heroRaceGolemName.
+  ///
+  /// In en, this message translates to:
+  /// **'Golem'**
+  String get heroRaceGolemName;
+
+  /// No description provided for @heroRaceGolemDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Awakened stone, eternal guardian.'**
+  String get heroRaceGolemDesc;
+
+  /// No description provided for @cosmeticSkinPilgrimName.
+  ///
+  /// In en, this message translates to:
+  /// **'Pilgrim'**
+  String get cosmeticSkinPilgrimName;
+
+  /// No description provided for @cosmeticSkinPilgrimDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Humble garb of one just setting out.'**
+  String get cosmeticSkinPilgrimDesc;
+
+  /// No description provided for @cosmeticSkinPilgrimUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Chosen at the start of your journey.'**
+  String get cosmeticSkinPilgrimUnlockHint;
+
+  /// No description provided for @forcePickRaceHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'ONE MORE STEP'**
+  String get forcePickRaceHeader;
+
+  /// No description provided for @forcePickRaceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick your hero'**
+  String get forcePickRaceTitle;
+
+  /// No description provided for @forcePickRaceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your journey began before heroes had a face. Choose your race now — this look will follow you through the world.'**
+  String get forcePickRaceSubtitle;
+
+  /// No description provided for @forcePickRaceCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm choice'**
+  String get forcePickRaceCta;
+
+  /// No description provided for @forcePickRaceCtaBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get forcePickRaceCtaBusy;
+
+  /// No description provided for @forcePickRaceCommitFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the choice. Please try again.'**
+  String get forcePickRaceCommitFailed;
+
   /// No description provided for @progQuestsChapterWaitingHeader.
   ///
   /// In en, this message translates to:
@@ -8733,24 +8865,6 @@ abstract class AppLocalizations {
   /// **'Social ID saved: @{handle}'**
   String socialHandleSaved(String handle);
 
-  /// No description provided for @socialPhotoPickFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Photo selection failed: {error}'**
-  String socialPhotoPickFailed(String error);
-
-  /// No description provided for @socialPhotoSaveFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Photo could not be saved: {error}'**
-  String socialPhotoSaveFailed(String error);
-
-  /// No description provided for @socialPhotoSaved.
-  ///
-  /// In en, this message translates to:
-  /// **'Profile photo saved.'**
-  String get socialPhotoSaved;
-
   /// No description provided for @socialTryAgain.
   ///
   /// In en, this message translates to:
@@ -9637,19 +9751,19 @@ abstract class AppLocalizations {
   /// No description provided for @welcomeStep1Title.
   ///
   /// In en, this message translates to:
-  /// **'Welcome, hero.'**
+  /// **'Pick a face'**
   String get welcomeStep1Title;
 
   /// No description provided for @welcomeStep1Subtitle.
   ///
   /// In en, this message translates to:
-  /// **'Forgetrack turns your health into a journey of quests — steps, sleep and food become XP, levels and titles.'**
+  /// **'This is how other players will see you on the leaderboard. Can\'t decide? You can change it any time in your profile.'**
   String get welcomeStep1Subtitle;
 
   /// Highlighted phrase inside welcomeStep1Subtitle. Must appear verbatim within the subtitle string for the in-text colouring to find it.
   ///
   /// In en, this message translates to:
-  /// **'a journey of quests'**
+  /// **'Can\'t decide?'**
   String get welcomeStep1SubtitleAccent;
 
   /// No description provided for @welcomeStep1HeroLabel.
@@ -9667,7 +9781,7 @@ abstract class AppLocalizations {
   /// No description provided for @welcomeStep1HeroPill.
   ///
   /// In en, this message translates to:
-  /// **'+50 XP'**
+  /// **'LVL 1'**
   String get welcomeStep1HeroPill;
 
   /// No description provided for @welcomeStep2Title.

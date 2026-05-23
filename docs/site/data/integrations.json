@@ -103,23 +103,6 @@
       ]
     },
     {
-      "id": "firebase_storage",
-      "name": "Firebase Storage",
-      "category": "firebase",
-      "summary": "Cloud blob storage pro profilové fotky.",
-      "package": "firebase_storage: ^13.3.0",
-      "auth": "Firebase Auth pravidla — user smí psát jen do social_profile_photos/{vlastní uid}/.",
-      "entry": "lib/features/social/application/social_provider.dart",
-      "usedBy": ["social"],
-      "endpoints": [
-        { "name": "ref.putFile", "purpose": "Upload fotky vybrané přes image_picker." },
-        { "name": "ref.getDownloadURL", "purpose": "Public CDN URL pro users/{uid}.photoURL." }
-      ],
-      "constraints": [
-        "SocialAvatar používá cached_network_image — fotka se cachuje na disk mezi spuštěními, žádný re-download z CDN."
-      ]
-    },
-    {
       "id": "google_sheets",
       "name": "Google Sheets API",
       "category": "google",

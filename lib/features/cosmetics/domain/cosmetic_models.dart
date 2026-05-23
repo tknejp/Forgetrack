@@ -38,6 +38,7 @@ enum CosmeticType {
   companion,
   titleFlair,
   mapEffect,
+  skin,
 }
 
 /// Where an unlock came from. Stored as part of [UnlockedCosmetic] for audit.
@@ -316,6 +317,31 @@ class MapEffect extends Cosmetic {
   CosmeticType get type => CosmeticType.mapEffect;
 }
 
+/// Avatar skin — a race-agnostic theme (Pilgrim, Hunter, Frostwalker, ...)
+/// that resolves to a race-specific asset at render time. Each skin in the
+/// catalog represents one visual theme; the player's persisted
+/// `selectedRaceId` (on [UserCosmeticsState]) picks which artwork variant
+/// to display. See `SkinAssetResolver` for the path composition.
+class Skin extends Cosmetic {
+  const Skin({
+    required super.id,
+    required super.rarity,
+    required super.region,
+    required super.name,
+    required super.description,
+    super.assetKey,
+    super.previewAssetKey,
+    super.sortOrder,
+    super.isPremium,
+    super.isEnabled,
+    super.unlockHint,
+    super.metadata,
+  });
+
+  @override
+  CosmeticType get type => CosmeticType.skin;
+}
+
 /// Per-user unlock record. Immutable.
 class UnlockedCosmetic {
   const UnlockedCosmetic({
@@ -351,6 +377,7 @@ class Loadout {
     this.companionId,
     this.titleFlairId,
     this.mapEffectId,
+    this.skinId,
   });
 
   const Loadout.empty()
@@ -360,7 +387,8 @@ class Loadout {
         emblemId = null,
         companionId = null,
         titleFlairId = null,
-        mapEffectId = null;
+        mapEffectId = null,
+        skinId = null;
 
   final String? frameId;
   final String? relicId;
@@ -369,6 +397,7 @@ class Loadout {
   final String? companionId;
   final String? titleFlairId;
   final String? mapEffectId;
+  final String? skinId;
 
   String? slotId(CosmeticType type) {
     switch (type) {
@@ -386,6 +415,8 @@ class Loadout {
         return titleFlairId;
       case CosmeticType.mapEffect:
         return mapEffectId;
+      case CosmeticType.skin:
+        return skinId;
     }
   }
 
@@ -417,6 +448,8 @@ class Loadout {
           mapEffectId: cosmeticId,
           clearMapEffect: cosmeticId == null,
         );
+      case CosmeticType.skin:
+        return copyWith(skinId: cosmeticId, clearSkin: cosmeticId == null);
     }
   }
 
@@ -428,6 +461,7 @@ class Loadout {
     String? companionId,
     String? titleFlairId,
     String? mapEffectId,
+    String? skinId,
     bool clearFrame = false,
     bool clearRelic = false,
     bool clearBackground = false,
@@ -435,6 +469,7 @@ class Loadout {
     bool clearCompanion = false,
     bool clearTitleFlair = false,
     bool clearMapEffect = false,
+    bool clearSkin = false,
   }) {
     return Loadout(
       frameId: clearFrame ? null : (frameId ?? this.frameId),
@@ -446,6 +481,7 @@ class Loadout {
       titleFlairId:
           clearTitleFlair ? null : (titleFlairId ?? this.titleFlairId),
       mapEffectId: clearMapEffect ? null : (mapEffectId ?? this.mapEffectId),
+      skinId: clearSkin ? null : (skinId ?? this.skinId),
     );
   }
 
@@ -458,7 +494,8 @@ class Loadout {
         other.emblemId == emblemId &&
         other.companionId == companionId &&
         other.titleFlairId == titleFlairId &&
-        other.mapEffectId == mapEffectId;
+        other.mapEffectId == mapEffectId &&
+        other.skinId == skinId;
   }
 
   @override
@@ -470,6 +507,7 @@ class Loadout {
         companionId,
         titleFlairId,
         mapEffectId,
+        skinId,
       );
 }
 
@@ -481,6 +519,7 @@ class UserCosmeticsState {
     required this.unlocked,
     required this.equipped,
     required this.updatedAt,
+    this.selectedRaceId,
   });
 
   final String uid; // lint-ignore: untyped-id — Firebase Auth uid is a platform-boundary raw string
@@ -490,18 +529,30 @@ class UserCosmeticsState {
   final Loadout equipped;
   final DateTime updatedAt;
 
+  /// Persisted [HeroRace] id picked at onboarding. `null` until the player
+  /// completes race selection. Once set, the chosen race is permanent for
+  /// the lifetime of this user state (factory reset / new device login is
+  /// the only way to re-pick). Drives the asset path of every equipped
+  /// [Skin] through `SkinAssetResolver`.
+  final String? selectedRaceId;
+
   bool isUnlocked(String cosmeticId) => unlocked.containsKey(cosmeticId);
 
   UserCosmeticsState copyWith({
     Map<String, UnlockedCosmetic>? unlocked,
     Loadout? equipped,
     DateTime? updatedAt,
+    String? selectedRaceId,
+    bool clearSelectedRaceId = false,
   }) {
     return UserCosmeticsState(
       uid: uid,
       unlocked: unlocked ?? this.unlocked,
       equipped: equipped ?? this.equipped,
       updatedAt: updatedAt ?? this.updatedAt,
+      selectedRaceId: clearSelectedRaceId
+          ? null
+          : (selectedRaceId ?? this.selectedRaceId),
     );
   }
 }
