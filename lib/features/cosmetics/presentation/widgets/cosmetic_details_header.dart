@@ -10,6 +10,86 @@ import 'hidden_badge_large.dart';
 import 'partial_progress_row.dart';
 import 'tiny_pill.dart';
 
+/// Slot width/height for the companion preview inside the cosmetic
+/// details header. Bumped from the original 130 to 170 so the natural
+/// size hierarchy across companions is preserved (wide / canvas-filling
+/// companions stay visibly larger than tiny low-biased ones) without
+/// needing per-asset normalisation — the raw asset renders at its
+/// natural BoxFit.contain size and the bigger slot just gives every
+/// companion more room to breathe.
+const double kCompanionDetailsSlotSize = 170;
+
+/// Vertical lift applied to the preview content (glow + image) inside
+/// the slot. Both render in the upper portion of the slot so the
+/// bottom-biased silhouettes most companion canvases use (foot pad
+/// below the feet, compositional weight in the lower half) shift
+/// closer to the slot's optical centre.
+const double _kCompanionDetailsLift = 22;
+
+/// Companion preview rendered inside the cosmetic details header — a
+/// raw 512² asset over a soft rarity-tinted glow that covers the
+/// whole render area, both shifted toward the top of the slot. Raw
+/// render preserves natural size hierarchy (Mountain Gryphon stays
+/// bigger than Ember Sprite); the slot is sized + lifted instead of
+/// per-asset scaling so the glow always covers wherever the silhouette
+/// actually lands.
+class _CompanionDetailsPreview extends StatelessWidget {
+  const _CompanionDetailsPreview({
+    required this.assetPath,
+    required this.glowColor,
+  });
+
+  final String? assetPath;
+  final Color glowColor;
+
+  @override
+  Widget build(BuildContext context) {
+    // Padding wraps both the glow and the image so the two stay
+    // locked together — shifting the image up via the bottom padding
+    // also shifts the glow, which prevents the "silhouette low, glow
+    // high" misalignment seen when only the image moved.
+    return Padding(
+      padding: const EdgeInsets.only(bottom: _kCompanionDetailsLift),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Soft full-area rarity glow. Sizing it to fill the padded
+          // content rather than a tight halo means the silhouette
+          // sits inside the glow regardless of how the asset balances
+          // its content inside the 512² canvas — tiny low-biased
+          // sprites are still kissed by colour even though they sit
+          // lower than the glow's geometric peak.
+          IgnorePointer(
+            child: SizedBox.expand(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    colors: [
+                      glowColor.withValues(alpha: 0.38),
+                      glowColor.withValues(alpha: 0.12),
+                      glowColor.withValues(alpha: 0),
+                    ],
+                    stops: const [0.0, 0.55, 1.0],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          if (assetPath == null)
+            Icon(Icons.pets_rounded, size: 56, color: glowColor)
+          else
+            Image.asset(
+              assetPath!,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) =>
+                  Icon(Icons.pets_rounded, size: 56, color: glowColor),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Header row of the cosmetic details standard body: badge / companion
 /// preview on the left, name + pills + optional partial-progress row on
 /// the right.
@@ -61,8 +141,8 @@ class CosmeticDetailsHeader extends StatelessWidget {
         else if (definition is Companion)
           SizedBox(
             key: companionSlotKey,
-            width: 130,
-            height: 130,
+            width: kCompanionDetailsSlotSize,
+            height: kCompanionDetailsSlotSize,
             child: ValueListenableBuilder<bool>(
               valueListenable: hideCompanion,
               builder: (context, hidden, child) {
@@ -72,22 +152,24 @@ class CosmeticDetailsHeader extends StatelessWidget {
                 );
               },
               child: CompanionFakeIdlePreview(
-                width: 130,
-                height: 130,
+                width: kCompanionDetailsSlotSize,
+                height: kCompanionDetailsSlotSize,
                 glowColor: color,
                 enableGlow: false,
                 floatDistance: 2.5,
                 minScale: 0.995,
                 maxScale: 1.008,
-                child: CosmeticBadge(
-                  definition: definition,
+                // Raw BoxFit.contain render inside a bigger slot —
+                // preserves the natural size hierarchy across
+                // companions (wide canvases stay larger than tiny
+                // low-biased ones) instead of normalising via the
+                // per-asset `displayScale`. The slot itself is
+                // enlarged + the content shifts up so the silhouette
+                // lands at the optical centre regardless of how the
+                // asset balances its content in the 512² canvas.
+                child: _CompanionDetailsPreview(
                   assetPath: assetPath,
-                  color: color,
-                  size: 130,
-                  framed: false,
-                  glow: true,
-                  fit: BoxFit.contain,
-                  contentScale: 1.25,
+                  glowColor: color,
                 ),
               ),
             ),

@@ -110,7 +110,7 @@ class RewardDisc extends StatelessWidget {
     final assetPath = reward.assetPath;
     final icon = reward.fallbackIcon ?? iconForRewardKind(reward.kind);
     if (assetPath != null) {
-      return Image.asset(
+      final image = Image.asset(
         assetPath,
         width: size,
         height: size,
@@ -118,6 +118,18 @@ class RewardDisc extends StatelessWidget {
         errorBuilder: (_, __, ___) =>
             Icon(icon, size: iconSize, color: tint),
       );
+      if (reward.kind == CelebrationRewardKind.companion) {
+        // Companion source canvases are bottom-biased — the silhouette
+        // centre sits ~60% down because of the empty foot pad. A raw
+        // `BoxFit.contain` render lands the silhouette below the glow
+        // halo's bright core. Reserve bottom padding proportional to
+        // the disc so the silhouette lifts back into the halo.
+        return Padding(
+          padding: EdgeInsets.only(bottom: size * 0.12),
+          child: image,
+        );
+      }
+      return image;
     }
     return Icon(icon, size: iconSize, color: tint);
   }

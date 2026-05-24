@@ -23,6 +23,7 @@ class CompanionClaimMorph extends StatefulWidget {
     super.key,
     required this.assetPath,
     required this.color,
+    required this.displayScale,
     required this.sourceCenter,
     required this.destSlotKey,
     required this.onComplete,
@@ -38,6 +39,14 @@ class CompanionClaimMorph extends StatefulWidget {
 
   /// Tint used for the drop-shadow and the missing-asset fallback.
   final Color color;
+
+  /// Per-asset display scale forwarded from the catalog row. Pinned
+  /// for the whole morph so both endpoints visually match their
+  /// adjacent screens — the forging sprite and the details-header
+  /// preview both apply the same scale, so the morph picking either
+  /// (instead of lerping to a generic value) keeps the silhouette
+  /// continuous through the handoff.
+  final double displayScale;
 
   /// Companion's last on-screen center in the forging overlay.
   final Offset sourceCenter;
@@ -134,6 +143,13 @@ class _CompanionClaimMorphState extends State<CompanionClaimMorph>
             final shadowBlur = _lerp(32.0, 18.0, t);
             final shadowOffset = _lerp(12.0, 8.0, t);
             final shadowAlpha = _lerp(0.55, 0.45, t);
+            // Pin scale to the catalog row's per-asset value. Both
+            // the forging sprite and the details-header preview render
+            // with the same `displayScale`, so holding the same value
+            // here keeps the silhouette continuous through the
+            // handoff — no scale lerp needed, only the size + position
+            // lerps below.
+            final contentScale = widget.displayScale;
             return Stack(
               clipBehavior: Clip.none,
               children: [
@@ -148,6 +164,7 @@ class _CompanionClaimMorphState extends State<CompanionClaimMorph>
                     shadowBlur: shadowBlur,
                     shadowOffset: shadowOffset,
                     shadowAlpha: shadowAlpha,
+                    contentScale: contentScale,
                   ),
                 ),
               ],
@@ -168,6 +185,7 @@ class _MorphSprite extends StatelessWidget {
     required this.shadowBlur,
     required this.shadowOffset,
     required this.shadowAlpha,
+    required this.contentScale,
   });
 
   final String? assetPath;
@@ -175,6 +193,12 @@ class _MorphSprite extends StatelessWidget {
   final double shadowBlur;
   final double shadowOffset;
   final double shadowAlpha;
+
+  /// Per-frame Transform.scale applied to the BoxFit.contain'd asset.
+  /// Driven by the morph's progress curve so the silhouette continuously
+  /// transitions between the forging endpoint (≈1.7×, silhouette fills
+  /// the box) and the details-header endpoint (1.0×, raw asset).
+  final double contentScale;
 
   @override
   Widget build(BuildContext context) {
@@ -193,11 +217,17 @@ class _MorphSprite extends StatelessWidget {
           ? Center(
               child: Icon(Icons.pets_rounded, color: color),
             )
-          : Image.asset(
-              assetPath!,
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) =>
-                  Center(child: Icon(Icons.pets_rounded, color: color)),
+          : ClipRect(
+              child: Transform.scale(
+                scale: contentScale,
+                alignment: const Alignment(0, 0.5),
+                child: Image.asset(
+                  assetPath!,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) =>
+                      Center(child: Icon(Icons.pets_rounded, color: color)),
+                ),
+              ),
             ),
     );
   }

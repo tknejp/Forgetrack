@@ -815,6 +815,11 @@ class CosmeticCatalog {
       unlockHint: (l10n) => l10n.cosmeticCompanionEmberSpriteUnlockHint,
       assetKey: 'cosmetics.companions.ember_sprite',
       previewAssetKey: 'cosmetics.companions.ember_sprite',
+      // Tiny low-biased silhouette inside the 512² canvas (flame body
+      // occupies roughly the bottom third) — zoom past the empty top
+      // padding so the sprite reads at the same visual size as the
+      // standard full-body companions on every preview surface.
+      displayScale: 1.8,
       sortOrder: 700,
       levelGate: 5,
       requiredItems: const [
@@ -860,6 +865,11 @@ class CosmeticCatalog {
       unlockHint: (l10n) => l10n.cosmeticCompanionRuinRavenUnlockHint,
       assetKey: 'cosmetics.companions.ruin_raven',
       previewAssetKey: 'cosmetics.companions.ruin_raven',
+      // Small low-right silhouette — most of the canvas is empty
+      // negative space, so the raw asset reads way too small at
+      // preview sizes. Bump the per-asset scale to match the other
+      // companions.
+      displayScale: 1.8,
       sortOrder: 720,
       levelGate: 25,
       requiredItems: const [
@@ -949,6 +959,10 @@ class CosmeticCatalog {
       unlockHint: (l10n) => l10n.cosmeticCompanionAuroraStagUnlockHint,
       assetKey: 'cosmetics.companions.aurora_stag',
       previewAssetKey: 'cosmetics.companions.aurora_stag',
+      // Tall antlers already fill the canvas — extra scaling clips
+      // the crown. Render closer to raw so the antlers stay inside
+      // the preview slot.
+      displayScale: 0.95,
       sortOrder: 738,
       levelGate: 65,
       requiredItems: const [
@@ -976,6 +990,10 @@ class CosmeticCatalog {
       unlockHint: (l10n) => l10n.cosmeticCompanionIceWispUnlockHint,
       assetKey: 'cosmetics.companions.ice_wisp',
       previewAssetKey: 'cosmetics.companions.ice_wisp',
+      // Same small low-biased silhouette pattern as ember sprite —
+      // zoom past the empty top half so the wisp reads at a
+      // comparable visual size to the other companions.
+      displayScale: 1.8,
       sortOrder: 740,
       levelGate: 75,
       requiredItems: const [
@@ -999,6 +1017,10 @@ class CosmeticCatalog {
       unlockHint: (l10n) => l10n.cosmeticCompanionMountainGryphonUnlockHint,
       assetKey: 'cosmetics.companions.mountain_gryphon',
       previewAssetKey: 'cosmetics.companions.mountain_gryphon',
+      // Wings already span almost the full canvas width — any extra
+      // scaling clips them. Render closer to raw so the wingspan
+      // stays inside the preview slot.
+      displayScale: 0.9,
       sortOrder: 750,
       levelGate: 85,
       requiredItems: const [

@@ -45,7 +45,17 @@ class CosmeticBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isFrame = definition is Frame;
+    final isCompanion = definition is Companion;
     final effectiveFit = fit ?? (isFrame ? BoxFit.contain : BoxFit.cover);
+    // Companion silhouettes vary wildly inside the 512² canvas — some
+    // are tiny and low-biased (ember sprite), others span almost the
+    // full canvas (mountain gryphon). Fold the catalog row's per-asset
+    // `displayScale` into the per-call `contentScale` so each
+    // companion reads at a comparable visual size on every preview
+    // surface; non-companion types are unaffected.
+    final effectiveContentScale = isCompanion
+        ? contentScale * (definition as Companion).displayScale
+        : contentScale;
 
     final content = assetPath == null
         ? CosmeticBadgeFallback(
@@ -103,8 +113,18 @@ class CosmeticBadge extends StatelessWidget {
                   )
                 : null,
             clipBehavior: framed && !isFrame ? Clip.antiAlias : Clip.none,
+            // Companions are bottom-biased inside the 512² canvas (silhouette
+            // centre sits below the geometric centre across most assets).
+            // Default centre-anchored scaling drops the silhouette toward the
+            // tile floor; anchor the zoom below centre so the body lifts
+            // upward and any empty top/bottom padding bleeds off the
+            // long axis instead. Matches the morph / forging / details
+            // header anchors so a companion that appears in two surfaces
+            // side-by-side reads at the same vertical position.
             child: Transform.scale(
-              scale: contentScale,
+              scale: effectiveContentScale,
+              alignment:
+                  isCompanion ? const Alignment(0, 0.5) : Alignment.center,
               child: content,
             ),
           ),

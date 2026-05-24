@@ -166,6 +166,17 @@ class Background extends Cosmetic {
   CosmeticType get type => CosmeticType.background;
 }
 
+/// Companion source assets are 512×512 with the silhouette sized
+/// non-uniformly within the canvas (gryphons fill it, fire sprites
+/// occupy a tiny lower-centre area, full-body companions sit centred
+/// with ~48 px foot pad). Compact preview surfaces (picker tiles,
+/// header chips, detail thumbnails) historically scaled by this fixed
+/// factor to "crop past" the surrounding padding; the actual per-asset
+/// `Companion.displayScale` now replaces it everywhere, but the
+/// constant is kept as a sensible default for the morph-curve
+/// endpoints and any non-companion fallback paths.
+const double kCompanionAssetContentScale = 512 / 300;
+
 class Companion extends Cosmetic {
   const Companion({
     required super.id,
@@ -184,7 +195,26 @@ class Companion extends Cosmetic {
     this.requiredItems = const <CosmeticId>[],
     this.buff,
     this.foodTrigger,
+    this.displayScale = 1.2,
   });
+
+  /// Per-asset display scale applied to the companion sprite by every
+  /// preview surface (forging reveal, claim morph, details header,
+  /// cosmetic grid tile, hero-header chip, celebration disc). Drives a
+  /// `Transform.scale` around an anchor below centre so the silhouette
+  /// reads at a comparable visual size across assets despite the wildly
+  /// different silhouette bounds inside the shared 512² canvas:
+  ///
+  ///   * `> 1.0` — small or low-biased silhouettes (e.g. ember sprite,
+  ///     ice wisp) zoom past their empty top/side padding.
+  ///   * `1.0` — wide / canvas-filling silhouettes (e.g. mountain
+  ///     gryphon) that already use the full canvas — any extra scaling
+  ///     clips wings or sides.
+  ///   * Default `1.3` — moderate boost for the "standard" full-body
+  ///     companion (silhouette ~300² in the 512² canvas).
+  ///
+  /// Tune in the catalog row, not here.
+  final double displayScale;
 
   /// Player level the player must reach before this companion can
   /// unlock through the progression pipeline. `null` means the

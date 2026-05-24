@@ -240,13 +240,11 @@ class _FeaturedCosmeticTile extends StatelessWidget {
             Expanded(
               child: Center(
                 child: assetPath != null
-                    ? Image.asset(
-                        assetPath,
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => _PreviewFallback(
-                          type: type,
-                          dim: !hasItem,
-                        ),
+                    ? _FeaturedAssetImage(
+                        assetPath: assetPath,
+                        type: type,
+                        definition: definition,
+                        hasItem: hasItem,
                       )
                     : _PreviewFallback(type: type, dim: !hasItem),
               ),
@@ -314,6 +312,39 @@ class _FeaturedCosmeticTile extends StatelessWidget {
       case CosmeticType.skin:
         return 'Vzhledy';
     }
+  }
+}
+
+/// Featured-tile asset image with type-aware vertical anchoring. Companion
+/// source assets carry ~48 px of empty pad below the feet inside their
+/// 512² canvas, so the raw `BoxFit.contain` render sits visibly low in
+/// the tile — the silhouette body ends up below the visual centre while
+/// the foot pad acts as dead space at the bottom. Reserve bottom padding
+/// for companions so the contained image is forced upward, the foot pad
+/// disappears into the tile floor, and the silhouette reads as
+/// vertically balanced against the type label below.
+class _FeaturedAssetImage extends StatelessWidget {
+  const _FeaturedAssetImage({
+    required this.assetPath,
+    required this.type,
+    required this.definition,
+    required this.hasItem,
+  });
+
+  final String assetPath;
+  final CosmeticType type;
+  final Cosmetic? definition;
+  final bool hasItem;
+
+  @override
+  Widget build(BuildContext context) {
+    final image = Image.asset(
+      assetPath,
+      fit: BoxFit.contain,
+      errorBuilder: (_, __, ___) =>
+          _PreviewFallback(type: type, dim: !hasItem),
+    );
+    return image;
   }
 }
 

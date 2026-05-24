@@ -27,6 +27,7 @@ void main() {
                 CompanionClaimMorph(
                   assetPath: null,
                   color: const Color(0xFFFF8C2A),
+                  displayScale: 1.2,
                   sourceCenter: const Offset(200, 400),
                   destSlotKey: slotKey,
                   duration: duration,
@@ -54,6 +55,7 @@ void main() {
             body: CompanionClaimMorph(
               assetPath: null,
               color: const Color(0xFFFF8C2A),
+              displayScale: 1.2,
               sourceCenter: const Offset(50, 50),
               destSlotKey: slotKey,
               duration: const Duration(milliseconds: 100),

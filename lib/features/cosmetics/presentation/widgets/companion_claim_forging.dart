@@ -8,6 +8,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../domain/cosmetic_models.dart';
 import 'companion_claim_morph.dart';
+import 'cosmetic_details_header.dart' show kCompanionDetailsSlotSize;
 import 'cosmetic_asset_thumb.dart';
 
 /// Fullscreen Orbita-variant forging overlay (5.4 s).
@@ -259,8 +260,15 @@ class _CompanionClaimForgingState extends State<CompanionClaimForging>
       return CompanionClaimMorph(
         assetPath: widget.assetPath,
         color: widget.color,
+        displayScale: widget.companion is Companion
+            ? (widget.companion as Companion).displayScale
+            : 1.0,
         sourceCenter: _spriteCenter!,
         destSlotKey: widget.destSlotKey!,
+        // Matches the details-header slot size so the morph lands
+        // at the same dimensions as the destination render rather
+        // than snapping to a slightly different size at handoff.
+        destSize: kCompanionDetailsSlotSize,
         onComplete: _finalize,
       );
     }
@@ -679,6 +687,9 @@ class _ForgingScene extends StatelessWidget {
                       assetPath: assetPath,
                       color: color,
                       opacity: spriteOpacity.clamp(0.0, 1.0),
+                      displayScale: companion is Companion
+                          ? (companion as Companion).displayScale
+                          : 1.0,
                     ),
                   ),
                 ),
@@ -839,11 +850,20 @@ class _CompanionSprite extends StatelessWidget {
     required this.assetPath,
     required this.color,
     required this.opacity,
+    required this.displayScale,
   });
 
   final String? assetPath;
   final Color color;
   final double opacity;
+
+  /// Per-asset display scale from the catalog row. Tiny silhouettes
+  /// (ember sprite, ice wisp) zoom up so the reveal frame doesn't
+  /// look empty; canvas-filling silhouettes (mountain gryphon) render
+  /// closer to raw so wings don't clip against the slot edges. Anchor
+  /// is biased below centre so the upward shift compensates for the
+  /// bottom-biased composition shared by most companion canvases.
+  final double displayScale;
 
   @override
   Widget build(BuildContext context) {
@@ -861,13 +881,21 @@ class _CompanionSprite extends StatelessWidget {
       ),
       child: assetPath == null
           ? Icon(Icons.pets_rounded, size: 120, color: color)
-          : Image.asset(
-              assetPath!,
+          : SizedBox(
               width: 220,
               height: 220,
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) =>
-                  Icon(Icons.pets_rounded, size: 120, color: color),
+              child: ClipRect(
+                child: Transform.scale(
+                  scale: displayScale,
+                  alignment: const Alignment(0, 0.5),
+                  child: Image.asset(
+                    assetPath!,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) =>
+                        Icon(Icons.pets_rounded, size: 120, color: color),
+                  ),
+                ),
+              ),
             ),
     );
   }
