@@ -1,6 +1,6 @@
 # UI refactor plan — Trello #85
 
-**Status:** Phase 0–2 + Phase 1.4 shipped 2026-05-22. Phase 3 next (large screen splits — `nutrition_screen.dart` 1925 LoC tops the priority list).
+**Status:** Phase 0–3 + Phase 1.4 shipped (2026-05-22 → 2026-05-24). Phase 4 next (shell lazy pages).
 **Scope:** Performance hotfix + structural split of presentation-layer hot-spots (10 screens > 1000 LoC) + extraction of reusable template widgets.
 **Out of scope:** Visual design changes, theme token changes (FtTokens / AppTheme stay), cross-feature business logic.
 **Pre-conditions:** Domain refactor closed (✅, 2026-05-19). Phase 21 lint baseline `widget-no-logic: 0` (✅) — must not regress during refactor.
@@ -23,7 +23,7 @@ This plan is **designed to be picked up by a fresh session at any phase**. Each 
 | 1.3 | Home card expand animation cost | ✅ shipped 2026-05-22 | — | StatCard bg image moved from `Opacity + Image.asset(BlendMode.darken)` to `DecorationImage(opacity:)` — kills the per-paint `saveLayer`. Hero icon shadow blur 14→8 (Phase 0.2 invariant). Both expand-tick and open-card-scroll repaints are now within the 120 Hz raster budget. |
 | 1.4 | Hero screen perf audit | ✅ shipped 2026-05-22 | — | `HeroScreen.build()` no longer watches the provider directly — `Selector<ProgressionEngineProvider, _HeroChrome>` (Dart 3 record) gates rebuilds to loading/error flips. Expensive `buildEngineAchievementViews` + sort moved into `_AchievementsSliverSection` (self-watches). Sliver list children are const. Tile + journey card shadow blur reduced to `Tokens.glowSm` (Phase 0.2). |
 | 2 | Quest screen split | ✅ shipped 2026-05-22 | — | `QuestSectionPanel` + helper + `NextChapterLockedTeaser` moved to `presentation/sections/` |
-| 3 | Large screen splits | ⏳ pending | — | 10 screens > 1000 LoC, in priority order |
+| 3 | Large screen splits | ✅ shipped 2026-05-22 → 2026-05-24 | — | All 10 screens split (3 P1 + 4 P2 + 3 P3). Archived at [archive/phase_3_large_screen_splits.md](archive/phase_3_large_screen_splits.md) |
 | 4 | Shell lazy pages | ⏳ pending | — | Replace eager 4-tab PageView |
 | 5 | Shared template widgets | ⏳ pending | — | MetricCardWithTrend, UnlockConditionsBlock |
 | 6 | Docs + ADR | ⏳ pending | — | Site JSONs, ADR for card template approach |
@@ -210,42 +210,9 @@ Full design record + LoC table + lessons: **[archive/phase_2_quest_screen_split.
 
 ---
 
-## Phase 3 — Large screen splits
+## Phase 3 — Large screen splits ✅ shipped 2026-05-22 → 2026-05-24
 
-**Why:** 10 screens > 1000 LoC (Trello canonical list).
-
-| Priority | File | LoC | Extract |
-|---|---|---|---|
-| P1 | [nutrition_screen.dart](../../lib/features/nutrition/presentation/nutrition_screen.dart) | 1925 | `_MacroTrendCard`, `_BalanceCard`, `_MealsCard`, `_TodayHeaderCard` to `widgets/` |
-| P1 | [cosmetic_details_sheet.dart](../../lib/features/cosmetics/presentation/cosmetic_details_sheet.dart) | 1514 | `_UnlockConditionsSection`, `_RuleBlock`, claim bodies (`_ClaimableCompanionBody`, `_LockedCompanionBody`) |
-| P1 | [overview_screen.dart](../../lib/features/home/presentation/overview_screen.dart) | 1403 | `_DayContent` out to its own file (was 470-1058 in scan) |
-| P2 | [sleep_screen.dart](../../lib/features/health_connect/presentation/sleep_screen.dart) | 1571 | Already well-sectioned — extract `_SleepMetricTrendCard`, `_ExpandedSleepBody` |
-| P2 | [journey_interactive_map.dart](../../lib/features/journey/presentation/widgets/journey_interactive_map.dart) | 1670 | Already well-sectioned — extract custom painters + collision helpers |
-| P2 | [devtools_progression_engine_section.dart](../../lib/features/devtools/presentation/sections/devtools_progression_engine_section.dart) | 1208 | Each collapsible card into its own file |
-| P2 | [engine_backfill_section.dart](../../lib/features/progression_engine/presentation/widgets/engine_backfill_section.dart) | 1146 | Progress tracker + award grid + action buttons |
-| P3 | [cosmetics_screen.dart](../../lib/features/cosmetics/presentation/cosmetics_screen.dart) | 1077 | Tab content widgets per gear category |
-| P3 | [profile_detail_hero_card.dart](../../lib/features/social/presentation/widgets/profile_detail_hero_card.dart) | 1067 | Hero card sections |
-| P3 | [body_screen.dart](../../lib/features/health_connect/presentation/body_screen.dart) | 1063 | Body metric tiles + expanded modals |
-
-**Per-screen rules:**
-
-- Target: parent screen < 600 LoC after split.
-- Extracted widgets land in `widgets/` next to the screen, not in `lib/shared/widgets/` (those are cross-feature).
-- **Take the perf hit during the split:** memoize any expensive getters the screen calls, add `RepaintBoundary` to heavy paint nodes, ensure no `Opacity`/`BackdropFilter` over large areas without `if (sigma > 0)` gating.
-- Each screen is its own commit. Title prefix: `quest-ui:`, `nutrition:`, `cosmetics:`, etc. (project convention).
-
-### What NOT to do
-
-- **Don't refactor multiple screens in one commit.** One screen per PR / commit.
-- **Don't touch `lib/shared/widgets/`.** Phase 5 handles that.
-- **Don't change visual design.** Same theme tokens, same layout, same animations.
-
-### Verification per screen
-
-- `flutter analyze` clean
-- `flutter test test/features/<area>/` green (where coverage exists)
-- Manual: smoke the screen — open, scroll, interact with primary action
-- Confirm LoC budget: split screen < 600, each extracted widget < 400
+All 10 screens > 1000 LoC have been split, one screen per commit, with parent < 600 LoC and each extracted widget < 400 LoC. Visual design + theme tokens + animations unchanged across the whole phase; `widget-no-logic: 0` lint baseline held. Each split applied the Phase 0–1.3 raster-budget invariants (per-card `RepaintBoundary`, inner `RepaintBoundary` inside `AnimatedSize` bodies, no animated shadows ≥ 12 px on growing silhouettes, `DecorationImage(opacity:)` instead of `Opacity` widget for backgrounds). Permanent design record + per-file before/after LoC + pattern notes in [archive/phase_3_large_screen_splits.md](archive/phase_3_large_screen_splits.md).
 
 ---
 
