@@ -7,17 +7,16 @@ import '../../../cosmetics/config/skin_asset_resolver.dart';
 import '../../../cosmetics/domain/cosmetic_catalog.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
 import '../../../cosmetics/presentation/widgets/companion_buff_chip.dart';
-import '../../../cosmetics/presentation/widgets/companion_fake_idle_preview.dart';
 import '../../../progression_engine/domain/display/progression_display_resolver.dart';
 import '../../../progression_engine/domain/policy/level_policy.dart';
 import '../../domain/social_models.dart';
 import 'social_cosmetic_avatar.dart'
     show socialBackgroundDefinition, socialCosmeticById;
 
-/// Cinematic 400-px tall hero card surfaced at the top of
+/// Cinematic 460-px tall hero card surfaced at the top of
 /// [SocialUserProfileSheet]. Ports `design_handoff_social_profile`:
 ///
-///   * Background image (cosmetic) with radial + vertical darken overlays
+///   * Background image (cosmetic) with vertical fade overlay
 ///   * `_FramedAvatar` top-left, tilted -3°, with neutral `LVL N` pin
 ///   * Identity block (name + handle + title pill) right of the avatar
 ///   * Companion bottom-right with a warm `_GroundGlow` underneath
@@ -120,19 +119,100 @@ class ProfileDetailHeroCard extends StatelessWidget {
   }
 
   // ── Design-spec sizing ─────────────────────────────────────────────────────
-  static const double _kHeight = 400;
+  static const double _kHeight = 480;
   static const double _kEdge = 16;
 
-  /// Full-body hero avatar — 1.5× the companion standee per the
-  /// 2026-05 redesign. Drives the asymmetric "hero on the left,
+  // Ground line — the single vertical anchor every foreground element
+  // hangs off. Measured from the card's bottom edge; both the hero's
+  // and companion's visible feet, the contact shadows, and the
+  // background's painted standing area all pin to this row.
+  static const double _kGroundLineFromBottom = 66;
+  static const double _kGroundLineY = _kHeight - _kGroundLineFromBottom;
+
+  // Hero + companion source sprites share the same full-body format:
+  // 512-px square canvas with the painted feet sitting 48 px above
+  // the asset's bottom edge. At any display size the visible feet
+  // land at this fraction of the rendered height above the sprite's
+  // bottom — used to derive each sprite's bottom anchor below.
+  static const double _kAssetFeetFraction = 48 / 512;
+
+  // Background asset format: 9:16 portrait scenes authored so the
+  // foreground "standing area" sits at a known fraction down the
+  // image. The layer scales width-first (height = width × 16/9) and
+  // slides vertically until that row lands on [_kGroundLineY].
+  static const double _kBackgroundAspect = 16 / 9;
+  static const double _kBackgroundStandingFraction = 0.77;
+
+  /// Full-body hero avatar — drives the asymmetric "hero on the left,
   /// companion on the right" composition. No frame border applied
   /// (frames live on the compact thumbnail surfaces only).
-  static const double _kHeroAvatarSize = 200;
-  static const double _kHeroAvatarBottom = 12;
+  static const double _kHeroAvatarSize = 268;
+  // Derived so the painted feet meet the ground line at this size.
+  static const double _kHeroAvatarBottom = _kGroundLineFromBottom - _kHeroAvatarSize * _kAssetFeetFraction;
+  // Sprite hangs slightly off the card's left edge so the character
+  // feels rooted in the scene rather than pinned to the 16-px gutter.
+  static const double _kHeroAvatarOverhang = 32;
+  static const double _kHeroAvatarLeft = _kEdge - _kHeroAvatarOverhang;
 
-  static const double _kCompanionSize = 134;
-  static const double _kCompanionRight = _kEdge;
-  static const double _kCompanionBottom = 20;
+  // Soft contact shadow under the hero's feet — wide flat oval centred
+  // on the ground line so the sprite reads as standing on something.
+  static const double _kAvatarShadowWidth = 220;
+  static const double _kAvatarShadowHeight = 48;
+  // Horizontal nudge of the shadow centre relative to the sprite's
+  // mid line — the silhouette's feet sit slightly left of centre.
+  static const double _kAvatarShadowNudgeX = 6;
+  static const double _kAvatarShadowLeft = _kHeroAvatarLeft + (_kHeroAvatarSize - _kAvatarShadowWidth) / 2 + _kAvatarShadowNudgeX;
+  static const double _kAvatarShadowBottom = _kGroundLineFromBottom - _kAvatarShadowHeight / 2;
+
+  // Companion uses the same full-body 512-px format as the avatar but
+  // the silhouette inside the frame is smaller — display size is
+  // bumped accordingly so the companion still reads at its intended
+  // visual scale relative to the hero.
+  static const double _kCompanionSize = 220;
+  // Companion overhangs past the standard 16-px right gutter so the
+  // sprite sits visually further to the right of the painted scene —
+  // pairs the hero on the left with a companion that's pushed against
+  // the scene's right edge instead of floating inside the safe area.
+  // The chip below is centred on the companion's foot column (not the
+  // card's right margin) so it tracks the sprite wherever this lands.
+  static const double _kCompanionInset = 0;
+  static const double _kCompanionRight = _kEdge + _kCompanionInset;
+  // Derived so the painted feet meet the same ground line as the hero.
+  static const double _kCompanionBottom = _kGroundLineFromBottom - _kCompanionSize * _kAssetFeetFraction;
+  // Outward Transform nudge applied to the standee sprite so the
+  // pixel art sits flush with the scene edge while the buff chip
+  // below keeps the standard right margin.
+  static const double _kCompanionStandeeNudgeX = 8;
+  // Horizontal centre of the companion sprite measured from the
+  // card's right edge — shared by the shadow and the ground glow so
+  // both stay anchored on the standee's foot column.
+  static const double _kCompanionCenterFromRight = _kCompanionRight - _kCompanionStandeeNudgeX + _kCompanionSize / 2;
+
+  // Companion contact shadow — same ground line as the hero shadow,
+  // narrower because the standee is roughly half the avatar's
+  // footprint.
+  static const double _kCompanionShadowWidth = 200;
+  static const double _kCompanionShadowHeight = _kAvatarShadowHeight;
+  static const double _kCompanionShadowBottom = _kAvatarShadowBottom;
+  static const double _kCompanionShadowRight = _kCompanionCenterFromRight - _kCompanionShadowWidth / 2;
+
+  // Ground glow stays on the companion's foot column so the warm
+  // puddle reads as "under" the sprite, not behind it.
+  static const double _kCompanionGroundGlowWidth = 120;
+  static const double _kCompanionGroundGlowRight = _kCompanionCenterFromRight - _kCompanionGroundGlowWidth / 2;
+  static const double _kCompanionGroundGlowBottom = 14;
+
+  // Buff chip sits in its own Positioned in the dark band below the
+  // ground line — keeping it out of the Column that used to wrap the
+  // standee is what lets the companion sprite anchor at the same
+  // `bottom` as the hero avatar instead of being lifted by the chip
+  // height. Horizontally the chip sits in a fixed band centred on the
+  // companion's foot column so it follows the sprite wherever
+  // `_kCompanionInset` lands — not on the card's right margin.
+  static const double _kCompanionBuffChipBottom = 6;
+  static const double _kCompanionBuffChipBandWidth = 200;
+  static const double _kCompanionBuffChipBandRight =
+      _kCompanionCenterFromRight - _kCompanionBuffChipBandWidth / 2;
 
   static const double _kIdentityTop = 16;
   static const double _kEmblemTop = 16;
@@ -142,8 +222,7 @@ class ProfileDetailHeroCard extends StatelessWidget {
   // the identity block on a 360-px-wide screen.
   static const double _kEmblemSlotSize = 44;
   static const double _kEmblemGap = 5;
-  static const double _kEmblemGridWidth =
-      3 * _kEmblemSlotSize + 2 * _kEmblemGap;
+  static const double _kEmblemGridWidth = 3 * _kEmblemSlotSize + 2 * _kEmblemGap;
   static const double _kIdentityEmblemGutter = 12;
   static const double _kIdentityRight =
       _kEdge + _kEmblemGridWidth + _kIdentityEmblemGutter;
@@ -171,7 +250,15 @@ class ProfileDetailHeroCard extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.hardEdge,
         children: [
-          _BackgroundLayer(definition: background),
+          // Painted scene — scaled to header width with a fixed 9:16
+          // aspect, then vertically anchored so its baked-in standing
+          // area always lands on the card's ground line regardless
+          // of device width.
+          Positioned.fill(child: _BackgroundLayer(definition: background)),
+          // Edge fade stays pinned to the header frame regardless of
+          // the background shift, so the feathering always lands at
+          // the card's true top and bottom seams.
+          const Positioned.fill(child: _BackgroundEdgeFade()),
           // Identity block — top-left. Constrained on the right to
           // leave room for the emblem grid sitting beside it in the
           // top-right quadrant.
@@ -205,18 +292,33 @@ class ProfileDetailHeroCard extends StatelessWidget {
               onTapSlot: onTapEmblemSlot,
             ),
           ),
+          // Soft elliptical shadow under the avatar's feet. The asset's
+          // feet start 48 px above the bottom of the sprite, so the
+          // shadow centre sits at that vertical offset, horizontally
+          // aligned to the avatar's mid line. Rendered behind the
+          // avatar so the sprite occludes the centre of the oval.
+          Positioned(
+            left: _kAvatarShadowLeft,
+            bottom: _kAvatarShadowBottom,
+            child: const _AvatarFootShadow(
+              width: _kAvatarShadowWidth,
+              height: _kAvatarShadowHeight,
+            ),
+          ),
           // Hero body — bottom-left, full-body skin asset. No frame
           // border per the 2026-05 redesign (frames live in the
           // compact thumbnail surfaces only — top app bar, social feed,
           // settings header, …).
           Positioned(
-            left: _kEdge,
+            left: _kHeroAvatarLeft,
             bottom: _kHeroAvatarBottom,
-            child: _HeroBodyAvatar(
-              raceId: raceId,
-              skinId: skinId,
-              fallbackLabel: displayName,
-              size: _kHeroAvatarSize,
+            child: _SceneBlendFade(
+              child: _HeroBodyAvatar(
+                raceId: raceId,
+                skinId: skinId,
+                fallbackLabel: displayName,
+                size: _kHeroAvatarSize,
+              ),
             ),
           ),
           // Companion standee — warm radial glow on the ground + asset on
@@ -228,51 +330,58 @@ class ProfileDetailHeroCard extends StatelessWidget {
           // the bottom-left quadrant of the hero card.
           if (companion != null) ...[
             const Positioned(
-              right: 6,
-              bottom: 14,
-              child: _GroundGlow(width: 120),
+              right: _kCompanionShadowRight,
+              bottom: _kCompanionShadowBottom,
+              child: _AvatarFootShadow(
+                width: _kCompanionShadowWidth,
+                height: _kCompanionShadowHeight,
+              ),
             ),
+            const Positioned(
+              right: _kCompanionGroundGlowRight,
+              bottom: _kCompanionGroundGlowBottom,
+              child: _GroundGlow(width: _kCompanionGroundGlowWidth),
+            ),
+            // Standee is anchored on its own so the buff chip below
+            // does NOT push the sprite upward — pairing the standee
+            // with the chip inside a Column made the companion sprite
+            // sit `chipHeight + gap` higher than the hero avatar,
+            // breaking the "same 512² asset, same vertical position"
+            // contract the two share. Bake the outward Transform nudge
+            // into `right` directly so the visible sprite still kisses
+            // the scene edge.
             Positioned(
-              right: _kCompanionRight,
+              right: _kCompanionRight - _kCompanionStandeeNudgeX,
               bottom: _kCompanionBottom,
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: onTapCompanion == null
                     ? null
                     : () => onTapCompanion!(companion),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // The column is right-aligned to the 16-px card
-                    // margin so the chip below sits flush with the
-                    // standard right edge. The standee gets shifted
-                    // back outward via Transform so the sprite keeps
-                    // its "pressed against the scene" position
-                    // without overflow-clipping the chip text.
-                    Transform.translate(
-                      offset: const Offset(8, 0),
-                      child: _CompanionStandee(
-                        definition: companion,
-                        size: _kCompanionSize,
-                      ),
-                    ),
-                    if (companion is Companion && companion.buff != null) ...[
-                      const SizedBox(height: 4),
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 180),
-                        child: CompanionBuffChip(
-                          buff: companion.buff!,
-                          color:
-                              RarityPalette.forRarity(companion.rarity).color,
-                          compact: true,
-                        ),
-                      ),
-                    ],
-                  ],
+                child: _SceneBlendFade(
+                  child: _CompanionStandee(
+                    definition: companion,
+                    size: _kCompanionSize,
+                  ),
                 ),
               ),
             ),
+            if (companion is Companion && companion.buff != null)
+              Positioned(
+                right: _kCompanionBuffChipBandRight,
+                bottom: _kCompanionBuffChipBottom,
+                width: _kCompanionBuffChipBandWidth,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 180),
+                    child: CompanionBuffChip(
+                      buff: companion.buff!,
+                      color: RarityPalette.forRarity(companion.rarity).color,
+                      compact: true,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ],
       ),
@@ -281,7 +390,39 @@ class ProfileDetailHeroCard extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// Background — image + radial darken + vertical fade.
+// Scene blend — soft alpha fade applied to hero/companion sprites so
+// their crisp pixel edges feather into the painted background instead
+// of looking like cut-out stickers. Top is lightly dimmed, bottom
+// fades harder where the sprite meets the ground.
+// ─────────────────────────────────────────────────────────────────────
+
+class _SceneBlendFade extends StatelessWidget {
+  const _SceneBlendFade({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return ShaderMask(
+      blendMode: BlendMode.dstIn,
+      shaderCallback: (bounds) => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        stops: [0.0, 0.12, 0.78, 1.0],
+        colors: [
+          Color(0xCCFFFFFF), // soft top dim
+          Color(0xFFFFFFFF),
+          Color(0xFFFFFFFF),
+          Color(0x33FFFFFF), // bottom feather into ground
+        ],
+      ).createShader(bounds),
+      child: child,
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Background — image + vertical fade (no radial darken).
 // ─────────────────────────────────────────────────────────────────────
 
 class _BackgroundLayer extends StatelessWidget {
@@ -297,55 +438,72 @@ class _BackgroundLayer extends StatelessWidget {
             definition!.previewAssetKey ?? definition!.assetKey,
           );
 
-    return Positioned.fill(
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (assetPath != null)
-            Image.asset(
-              assetPath,
-              fit: BoxFit.cover,
-              // `objectPosition: center 30%` in CSS → align horizontally
-              // centered, vertically biased toward the top. Flutter's
-              // Alignment(0, -0.4) maps roughly to "30% from the top".
-              alignment: const Alignment(0, -0.4),
-              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-            )
-          else
-            const ColoredBox(color: Color(0xFF0A0E1C)),
-          // Radial darken: pulls focus to the centre, dims edges.
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment(0, -0.3),
-                radius: 0.95,
-                colors: [
-                  Color(0x00000000),
-                  Color(0x730A0E1C), // 0.45
-                  Color(0xF20A0E1C), // 0.95
-                ],
-                stops: [0.0, 0.7, 1.0],
+    if (assetPath == null) {
+      return const ColoredBox(color: Color(0xFF0A0E1C));
+    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        // Scale the 9:16 source to fill header width — its natural
+        // rendered height is therefore fixed relative to the device.
+        final imageHeight =
+            width * ProfileDetailHeroCard._kBackgroundAspect;
+        // Anchor: the standing-area row inside the image must land on
+        // the card's ground line. Top offset is whatever it takes to
+        // move that row down to the ground line — turns out positive
+        // for narrow phones (image needs to slide down) and negative
+        // for wide ones (image needs to slide up).
+        final standingY = imageHeight *
+            ProfileDetailHeroCard._kBackgroundStandingFraction;
+        final top = ProfileDetailHeroCard._kGroundLineY - standingY;
+        return ClipRect(
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned(
+                left: 0,
+                top: top,
+                width: width,
+                height: imageHeight,
+                child: Image.asset(
+                  assetPath,
+                  fit: BoxFit.fill,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
               ),
-            ),
+            ],
           ),
-          // Vertical fade: dim top (status bar) and bottom (seam into
-          // the rest of the profile page).
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                stops: [0.0, 0.22, 0.55, 1.0],
-                colors: [
-                  Color(0xF50A0E1C),// 0.5
-                  Color(0x000A0E1C),
-                  Color(0x000A0E1C),
-                  Color(0xF50A0E1C), // 0.96
-                ],
-              ),
-            ),
+        );
+      },
+    );
+  }
+}
+
+/// Top + bottom feather rendered on top of the painted scene. Pinned
+/// to the header frame so the fade always lands at the visible seam,
+/// even when [_BackgroundLayer]'s image slides vertically to anchor
+/// its standing area to the card's ground line.
+class _BackgroundEdgeFade extends StatelessWidget {
+  const _BackgroundEdgeFade();
+
+  @override
+  Widget build(BuildContext context) {
+    return const IgnorePointer(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            stops: [0.0, 0.08, 0.92, 1.0],
+            colors: [
+              Color(0xFF0A0E1C),
+              Color(0x000A0E1C),
+              Color(0x000A0E1C),
+              Color(0xFF0A0E1C),
+            ],
           ),
-        ],
+        ),
+        child: SizedBox.expand(),
       ),
     );
   }
@@ -766,22 +924,55 @@ class _CompanionStandee extends StatelessWidget {
       definition.previewAssetKey ?? definition.assetKey,
     );
 
-    final image = SizedBox(
+    return SizedBox(
       width: size,
       height: size,
       child: assetPath == null
           ? const Icon(Icons.pets_rounded, size: 64, color: Colors.white24)
           : Image.asset(assetPath, fit: BoxFit.contain),
     );
+  }
+}
 
-    return CompanionFakeIdlePreview(
-      width: size,
-      height: size,
-      enableGlow: false,
-      floatDistance: 2.5,
-      minScale: 0.995,
-      maxScale: 1.012,
-      child: image,
+class _AvatarFootShadow extends StatelessWidget {
+  const _AvatarFootShadow({required this.width, required this.height});
+
+  final double width;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    // RadialGradient in a non-square box still paints a circle, so we
+    // render a square radial and squash it on the Y axis to get a real
+    // ground-contact ellipse.
+    return IgnorePointer(
+      child: SizedBox(
+        width: width,
+        height: height,
+        child: FittedBox(
+          fit: BoxFit.fill,
+          child: SizedBox(
+            width: width,
+            height: width,
+            child: const DecoratedBox(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  center: Alignment.center,
+                  radius: 0.5,
+                  colors: [
+                    Color(0xF2000000), // dense black core, ~0.95 alpha
+                    Color(0x66000000), // ~0.4 alpha mid
+                    Color(0x00000000),
+                  ],
+                  stops: [0.0, 0.55, 1.0],
+                ),
+              ),
+              child: SizedBox.expand(),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
