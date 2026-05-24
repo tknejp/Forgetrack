@@ -40,7 +40,7 @@ void main() {
       )));
       expect(
         find.text(
-            '+${CompanionBuffPercents.emberTier1}–${CompanionBuffPercents.emberTier4} % za streak (roste s každou kartou zvlášť)'),
+            '+${CompanionBuffPercents.emberTier1}–${CompanionBuffPercents.emberTier4} % za streak'),
         findsOneWidget,
       );
     });
@@ -56,7 +56,7 @@ void main() {
       )));
       expect(
         find.text(
-            '+${CompanionBuffPercents.lanternGolemPercent} % za streak (aktivace od ${CompanionBuffPercents.lanternGolemThreshold}d)'),
+            '+${CompanionBuffPercents.lanternGolemPercent} % za streak ${CompanionBuffPercents.lanternGolemThreshold}d+'),
         findsOneWidget,
       );
     });
@@ -67,7 +67,8 @@ void main() {
         color: Color(0xFF7C6FFF),
       )));
       expect(
-        find.text('+5 % XP za denní quest / +30 % XP za týdenní'),
+        find.text(
+            '+${CompanionBuffPercents.ravenDaily} % XP za denní quest a +${CompanionBuffPercents.ravenWeekly} % XP za týdenní'),
         findsOneWidget,
       );
     });
@@ -79,7 +80,7 @@ void main() {
       )));
       expect(
         find.text(
-            '+20–80 % XP za chapter questy (roste s hloubkou řetězce)'),
+            '+${CompanionBuffPercents.lynxOpener}–${CompanionBuffPercents.lynxDeep} % XP za chapter questy'),
         findsOneWidget,
       );
     });

@@ -122,7 +122,8 @@ void main() {
           catalog.relics.length +
           catalog.emblems.length +
           catalog.titleFlairs.length +
-          catalog.mapEffects.length;
+          catalog.mapEffects.length +
+          catalog.skins.length;
       expect(partitionSum, catalog.all.length);
     });
   });
