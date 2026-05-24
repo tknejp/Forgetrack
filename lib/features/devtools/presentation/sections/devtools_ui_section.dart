@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../features/health_connect/application/fitness_provider.dart';
 import '../../../../features/nutrition/application/kaloricke_tabulky_provider.dart';
+import '../../../../features/onboarding/presentation/welcome_screen.dart';
 import '../../../../features/progression_engine/application/progression_engine_provider.dart';
 import '../widgets/devtools_section_card.dart';
 import '../widgets/devtools_status_tile.dart';
@@ -94,6 +95,18 @@ class DevToolsUiSection extends StatelessWidget {
           label: 'Force Progression refresh',
           subtitle: 'Calls progression.refresh() — no sync log until Phase 3',
           onTap: () => context.read<ProgressionEngineProvider>().refresh(),
+        ),
+        const DevToolsSectionDivider(),
+        DevToolsActionTile(
+          label: 'Preview onboarding screen',
+          subtitle: 'Pushes WelcomeScreen on top — back to dismiss. No state reset.',
+          icon: Icons.slideshow_rounded,
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const WelcomeScreen(),
+              fullscreenDialog: true,
+            ),
+          ),
         ),
       ],
     );
