@@ -1288,6 +1288,30 @@
         "docs/ui_refactor/archive/phase_1_3_home_card_expand_cost.md",
         "docs/ui_refactor/archive/phase_1_engine_card_template.md"
       ]
+    },
+    {
+      "id": "combo-chain-pre-allocated-generations",
+      "title": "Combo chain repeatability: pre-allocated generations (`@N` suffix) místo dynamického respawn overlay",
+      "status": "accepted",
+      "date": "2026-05-24",
+      "context": "Po Phase 9c byly combo chains finite — jakmile hráč dokončil chain 3 (nutrition finale), combo sekce zhasla a nikdy se znovu nerozsvítila. Side-effect: achievementy `combo_triple_victory_25` (Trojitá hrozba) a `combo_triple_victory_100` (Vládce komb) byly **matematicky nedosažitelné**, protože `LifetimeCompletionsAmongMetric` v `meta_content.dart` čítala 7 jednorázových uzlů (`combo_*_step_3/4/finale`) → max value 7, target 25 / 100. Trello karta #117 navrhovala dynamic overlay + respawn service + persistent counter + sync schema bump — sedm nových komponent. Po analýze (provider counters jsou už derived z ledgeru per evaluation, evaluator umí matchovat přes set ids) bylo zjevné, že stejný gameplay loop lze postavit aditivně bez nových služeb.",
+      "decision": "Combo chains se pre-allocují v `kComboGenerationCount = 50` generacích přímo v `combo_content.dart`. Generace 1 zachovává canonical (unsuffixed) ids pro back-compat s ledger eventy, generace 2..N suffixují `@<gen>` k `nodeId`, `chainId` a `objectiveId`. Gen N chain 1 step 1 prereqs gen (N-1) chain 3 finale — completing celý loop unlocks příští loop. Triple-combo achievementy v `meta_content.dart` zůstávají na 7 template ids; evaluator's `LifetimeCompletionsAmongMetric` rolluje completions přes všechny generace skrz `templateIdOf(nodeId)` match. 50 gen × 13 dní min cooldown = ~1.8 roku perfektní hry, daleko za triple_combo_100 (~15 gens).",
+      "consequences": [
+        "Resolver / unlock condition resolver / daily section picker / reward grant planner / sync schema **se nemění** — gen N nodes jsou pro engine identické s gen 1 nodes až na své distinct ids a prereqs.",
+        "Žádná migrace existujících hráčů: `nodeCompletionCounts` se přepočítá z ledgeru per evaluation; hráči s dokončenou gen 1 automaticky uvidí gen 2 chain 1 step 1 (prereq = gen 1 chain 3 finale, který už mají v ledgeru). Triple-combo claims gen 1 už mají v ledgeru a započtou se přes template-id match.",
+        "Žádný nový persistentní field, žádný sync schema bump, žádný nový metric class, žádný respawn service, žádný overlay file.",
+        "Memory: ~520 combo entries vs 13 dnes (~100 KB heap); iteration overhead v provider hot paths je mikrosekundy.",
+        "Hard ceiling na 50 gens. Když telemetrie ukáže hráče blížícího se gen 49+, bumpneme konstantu v dalším release (one-line change, zero migration). Pro 50 gens hráč hraje 1.8 roku perfektně, takže realistický horizon je daleko mimo dnešní user base.",
+        "UI audit clean — všechna místa konzumující `node.id` ho používají jako technický klíč (ValueKey, GlobalKey, claim payload), žádné raw zobrazení hráči. `titleKey(l10n)` rendering zůstává neměnný."
+      ],
+      "alternatives": "(A) **Dynamic overlay + respawn service** (původní návrh z karty #117): runtime materializace gen N nodes z templatu, listener na finale eventy spawnuje další gen, persistentní counter `tripleComboStepClaims` v engine counters. Odmítnuto — vyžaduje ledger plumbing do static catalogu, sync schema bump (counter field), claim-handler change, dva nové soubory, devtools, counter↔ledger invariant test. Pre-allocation dosáhne stejného gameplay efektu nulou architektury. (B) **`DaysWithAtLeastKAmongMetric` místo combo step countingu** — počítat 'dny kdy hráč splnil 3+ libovolných denních cílů' přímo z ledger evens. Odmítnuto: změnilo by sémantiku achievementu (achievement je framed kolem combo step claimování, ne kolem dnů). User explicit: 'triple combo se má počítat právě pouze z 3. stepu combo questu'. (C) **`ChainCycleScope` nový sealed scope** — combo step objektivy by měly per-cycle once-and-done semantiku, evaluator by derived current cycle z ledgeru, periodKey by byl 'cycle-N'. Odmítnuto: cycle-awareness by rippled do unlock condition resolveru (prereq `combo_balanced_step_1` by potřeboval current-cycle filter), což znamená nový `NodeCompletedInCurrentCycle` condition variant a změny v gating logice — výrazně větší surface area než suffix v id. (D) **Tunnel triple_combo targets dolů** (25→4, 100→7). Odmítnuto: bug fix bez gameplay fix — combo chains by zůstaly finite. User záměr je explicitně gameplay repeatability.",
+      "links": [
+        "lib/domain/progression/catalog/generation_suffix.dart",
+        "lib/features/progression_engine/domain/catalog/content/combo_content.dart",
+        "lib/features/progression_engine/domain/evaluator/objective_evaluator.dart",
+        "lib/features/progression_engine/domain/catalog/content/meta_content.dart",
+        "test/features/progression_engine/combo_chain_generations_test.dart"
+      ]
     }
   ]
 }

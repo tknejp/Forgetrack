@@ -311,6 +311,14 @@
       "file": "lib/features/cosmetics/domain/emblem_buff.dart",
       "summary": "Per-claim evaluation context handed do `EmblemBuff.resolvePercent`. Drží `target: EmblemTarget` (derived via `emblemTargetForNode(node)`) a `rewardSourceKind: RewardSourceKind` (carried for future use — V1 buff impl rozhoduje pouze podle target). Stavěn v `RewardGrantService._buildXpEvent` pro každý XP grant a per equipped buff voláno `buff.resolvePercent(ctx)`; suma je `emblemPct`, additively combined s companionPct.",
       "diagram": "classDiagram\n    class EmblemBuffContext {\n      <<VO>>\n      +EmblemTarget target\n      +RewardSourceKind rewardSourceKind\n    }\n    EmblemBuffContext --> EmblemTarget\n    EmblemBuffContext --> RewardSourceKind"
+    },
+    {
+      "id": "generation-suffix",
+      "title": "Generation suffix (`@N` v node id)",
+      "category": "Progression",
+      "file": "lib/domain/progression/catalog/generation_suffix.dart",
+      "summary": "Konvence id pro repeatable combo chains (ADR `combo-chain-pre-allocated-generations`). Generace 1 keeps canonical (unsuffixed) id pro back-compat s ledger eventy emitnutými před pre-allocation. Generace 2..N suffixují `@<gen>` k `nodeId`, `chainId` a `objectiveId` — gen 2 chain 1 step 1 je `combo_balanced_step_1@2`, jeho chainId `combo_balanced@2`, jeho objectiveId `combo_balanced_step_1_obj@2`. `templateIdOf(nodeId)` strips suffix; `withGenerationSuffix(template, gen)` ho aplikuje (gen 1 = no-op pro back-compat). Evaluator's `LifetimeCompletionsAmongMetric` matchuje completions přes template, takže triple_combo achievementy rolují přes všechny generace bez znalosti suffixu.",
+      "diagram": "classDiagram\n    class GenerationSuffix {\n      +String kGenerationSuffixSeparator$\n      +int kComboGenerationCount$\n      +String templateIdOf(String id)$\n      +String withGenerationSuffix(String template, int gen)$\n      +int generationOf(String id)$\n    }\n    note for GenerationSuffix \"gen 1 → 'combo_balanced_step_1'\\ngen 2 → 'combo_balanced_step_1@2'\\ngen N → 'combo_balanced_step_1@N'\""
     }
   ]
 }

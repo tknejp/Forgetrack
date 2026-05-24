@@ -306,4 +306,68 @@ void main() {
       expect(evaluator.evaluate(spec, ctx).actualValue, 0);
     });
   });
+
+  group('ObjectiveEvaluator — LifetimeCompletionsAmongMetric (template id)', () {
+    // Repeatable combo chains suffix node ids per generation
+    // (`combo_balanced_step_3`, `combo_balanced_step_3@2`, …). The
+    // triple-combo achievements list **template** ids and rely on the
+    // evaluator to roll up completions across every generation.
+    Objective triple({double target = 25}) => _objective(
+          metric: const LifetimeCompletionsAmongMetric(
+            nodeIds: [
+              ProgressionEntryId('combo_balanced_step_3'),
+              ProgressionEntryId('combo_recovery_step_3'),
+              ProgressionEntryId('combo_nutrition_step_3'),
+            ],
+          ),
+          scope: const LifetimeScope(),
+          targetValue: target,
+        );
+
+    test('counts gen 1 completions (canonical ids)', () {
+      final ctx = _input(nodeCompletionCounts: const {
+        'combo_balanced_step_3': 1,
+        'combo_recovery_step_3': 1,
+      });
+      final out = evaluator.evaluate(triple(target: 1), ctx);
+      expect(out.actualValue, 2);
+      expect(out.completed, isTrue);
+    });
+
+    test('counts gen 2+ completions via template-id match', () {
+      final ctx = _input(nodeCompletionCounts: const {
+        'combo_balanced_step_3@2': 1,
+        'combo_balanced_step_3@3': 1,
+        'combo_nutrition_step_3@5': 1,
+      });
+      final out = evaluator.evaluate(triple(target: 3), ctx);
+      expect(out.actualValue, 3);
+      expect(out.completed, isTrue);
+    });
+
+    test('aggregates canonical + suffixed across generations', () {
+      final ctx = _input(nodeCompletionCounts: const {
+        'combo_balanced_step_3': 1,
+        'combo_balanced_step_3@2': 1,
+        'combo_recovery_step_3@3': 1,
+        'combo_nutrition_step_3@10': 1,
+        // Unrelated node — must not contribute.
+        'daily_steps_today': 25,
+      });
+      final out = evaluator.evaluate(triple(target: 4), ctx);
+      expect(out.actualValue, 4);
+      expect(out.completed, isTrue);
+    });
+
+    test('ignores ids whose template is not in the metric set', () {
+      final ctx = _input(nodeCompletionCounts: const {
+        // step_2 templates are not in `tripleComboNodeIds` — must not count.
+        'combo_balanced_step_2': 9,
+        'combo_balanced_step_2@5': 9,
+      });
+      final out = evaluator.evaluate(triple(target: 1), ctx);
+      expect(out.actualValue, 0);
+      expect(out.completed, isFalse);
+    });
+  });
 }

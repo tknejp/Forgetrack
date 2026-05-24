@@ -2,6 +2,7 @@ import 'package:meta/meta.dart';
 import 'package:intl/intl.dart';
 
 import '../models/engine_evaluation_context.dart';
+import 'package:forgetrack/domain/progression/catalog/generation_suffix.dart';
 import 'package:forgetrack/domain/progression/catalog/objective.dart';
 import 'package:forgetrack/domain/progression/catalog/objective_metric.dart';
 import 'package:forgetrack/domain/progression/catalog/objective_operator.dart';
@@ -168,9 +169,17 @@ class ObjectiveEvaluator {
         return n.toDouble();
       }(),
       LifetimeCompletionsAmongMetric(:final nodeIds) => () {
+        // Match by **template id** so completions across every
+        // generation of a repeatable chain (e.g. `combo_balanced_step_3`,
+        // `combo_balanced_step_3@2`, `combo_balanced_step_3@3` …) all
+        // roll up to the lifetime tally. See
+        // `lib/domain/progression/catalog/generation_suffix.dart`.
+        final templates = <String>{for (final id in nodeIds) id};
         var n = 0;
-        for (final id in nodeIds) {
-          n += counters.nodeCompletionCounts[id] ?? 0;
+        for (final entry in counters.nodeCompletionCounts.entries) {
+          if (templates.contains(templateIdOf(entry.key))) {
+            n += entry.value;
+          }
         }
         return n.toDouble();
       }(),
