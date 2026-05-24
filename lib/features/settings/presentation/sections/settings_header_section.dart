@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../auth/application/auth_provider.dart';
 import '../../../auth/presentation/google_sign_in_button.dart';
+import '../../../cosmetics/application/cosmetics_provider.dart';
+import '../../../social/presentation/widgets/social_cosmetic_avatar.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../../shared/widgets/app_logo.dart';
 import '../dialogs/settings_dialogs.dart';
@@ -99,27 +101,42 @@ class _SignedInHeaderContent extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final l10n = context.l10n;
     final user = auth.user!;
-    final photoUrl = user.photoUrl?.trim();
-    final hasPhoto = photoUrl != null && photoUrl.isNotEmpty;
     final primaryLine = user.displayName?.trim().isNotEmpty == true
         ? user.displayName!.trim()
         : user.email;
     final showEmail = user.email.isNotEmpty && primaryLine != user.email;
+    final cosmetics = context.watch<CosmeticsProvider>();
+    final raceId = cosmetics.currentRaceId;
+    final skinId = cosmetics.state?.equipped.skinId;
+    final frameId = cosmetics.state?.equipped.frameId;
+    final canShowSkin = raceId != null && skinId != null;
 
     return Material(
       color: Colors.transparent,
       child: SettingsTile(
         icon: Icons.person,
-        iconWidget: CircleAvatar(
-          radius: 18,
-          backgroundImage: hasPhoto ? NetworkImage(photoUrl) : null,
-          backgroundColor: _kGoogleBlue.withValues(alpha: 0.22),
-          child: hasPhoto
-              ? null
-              : const Icon(
-                  Icons.person,
-                  size: 18,
-                  color: Tokens.onSurface,
+        iconWidget: SizedBox(
+          width: 36,
+          height: 36,
+          child: canShowSkin
+              ? SocialCosmeticAvatar(
+                  name: primaryLine,
+                  size: 32,
+                  raceId: raceId,
+                  skinId: skinId,
+                  frameId: frameId,
+                  frameOverscan: 1.18,
+                  frameMargin: EdgeInsets.zero,
+                  radius: 16,
+                )
+              : CircleAvatar(
+                  radius: 18,
+                  backgroundColor: _kGoogleBlue.withValues(alpha: 0.22),
+                  child: const Icon(
+                    Icons.person,
+                    size: 18,
+                    color: Tokens.onSurface,
+                  ),
                 ),
         ),
         iconBorderless: true,

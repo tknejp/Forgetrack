@@ -427,22 +427,6 @@ class FirestoreSocialRepository implements SocialPresenceRepository {
       });
 
   @override
-  Future<Result<void, AppError>> updateProfilePhotoUrl({
-    required String uid,
-    required String? photoUrl,
-  }) =>
-      _classify('updateProfilePhotoUrl', () async {
-        final normalized = photoUrl?.trim();
-        await _users.doc(uid).set(
-          {
-            'photoUrl': normalized?.isEmpty == true ? null : normalized,
-            'updatedAt': FieldValue.serverTimestamp(),
-          },
-          SetOptions(merge: true),
-        );
-      });
-
-  @override
   Future<Result<void, AppError>> updatePinnedAchievement({
     required String uid,
     required String achievementId,
@@ -523,6 +507,7 @@ class FirestoreSocialRepository implements SocialPresenceRepository {
       'handleLower': handle.toLowerCase(),
       'handleSearchTokens': buildSocialHandleSearchTokens(handle),
       'photoUrl': payload.photoUrl,
+      'raceId': payload.raceId,
       'socialEnabled': payload.socialEnabled,
       'equippedCosmetics': {
         'frameId': payload.equippedCosmetics.frameId,
@@ -532,6 +517,7 @@ class FirestoreSocialRepository implements SocialPresenceRepository {
         'companionId': payload.equippedCosmetics.companionId,
         'titleFlairId': payload.equippedCosmetics.titleFlairId,
         'mapEffectId': payload.equippedCosmetics.mapEffectId,
+        'skinId': payload.equippedCosmetics.skinId,
       },
       'updatedAt': FieldValue.serverTimestamp(),
       if (includeCreatedAt) 'createdAt': FieldValue.serverTimestamp(),
@@ -740,6 +726,7 @@ class FirestoreSocialRepository implements SocialPresenceRepository {
       email: data['email'] as String? ?? '',
       handle: data['handle'] as String? ?? '',
       photoUrl: data['photoUrl'] as String?,
+      raceId: _readNonEmptyString(data['raceId']),
       socialEnabled: data['socialEnabled'] == true,
       pinnedAchievementIds:
           (data['pinnedAchievementIds'] as List<dynamic>? ?? const [])
@@ -756,6 +743,7 @@ class FirestoreSocialRepository implements SocialPresenceRepository {
         companionId: _readNonEmptyString(equipped['companionId']),
         titleFlairId: _readNonEmptyString(equipped['titleFlairId']),
         mapEffectId: _readNonEmptyString(equipped['mapEffectId']),
+        skinId: _readNonEmptyString(equipped['skinId']),
       ),
       stats: SocialUserStats(
         level: _readInt(stats['level']),

@@ -80,11 +80,6 @@ abstract class SocialPresenceRepository {
     required String desiredHandle,
   });
 
-  Future<Result<void, AppError>> updateProfilePhotoUrl({
-    required String uid,
-    required String? photoUrl,
-  });
-
   Future<Result<void, AppError>> updatePinnedAchievement({
     required String uid,
     required String achievementId,

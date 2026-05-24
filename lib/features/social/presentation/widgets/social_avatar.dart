@@ -2,12 +2,31 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../shared/theme/design_tokens.dart';
+import '../../../cosmetics/config/skin_asset_resolver.dart';
+import '../../../cosmetics/domain/cosmetic_catalog.dart';
 
+/// Compact avatar tile for the signed-in user and friends.
+///
+/// Render priority:
+/// 1. `raceId` + `skinId` → resolves a race-specific skin thumbnail via
+///    [SkinAssetResolver] and paints it. This is the canonical post-
+///    race-system rendering — every compact surface (top bar, social
+///    feed, settings, leaderboard, friend chips) shows the player's
+///    chosen race × skin instead of the Google identity selfie.
+/// 2. `photoUrl` — transitional fallback retained ONLY for legacy
+///    actor / reactor snapshots embedded in older share documents
+///    (where raceId/skinId were never captured). New compact-surface
+///    callsites should not pass `photoUrl`.
+/// 3. Initials derived from `name` — final fallback when neither
+///    skin nor photo is available (e.g., friend on a client that
+///    predates the race-system rollout).
 class SocialAvatar extends StatelessWidget {
   const SocialAvatar({
     super.key,
     required this.name,
     required this.size,
+    this.raceId,
+    this.skinId,
     this.photoUrl,
     this.color,
     this.radius,
@@ -15,6 +34,8 @@ class SocialAvatar extends StatelessWidget {
 
   final String name;
   final double size;
+  final String? raceId;
+  final String? skinId;
   final String? photoUrl;
   final Color? color;
   final double? radius;
@@ -32,6 +53,28 @@ class SocialAvatar extends StatelessWidget {
         .join();
 
     final initialsWidget = _Initials(initials: initials, color: c, size: size);
+    final skinPath = _resolveSkinPath();
+
+    final inner = skinPath != null
+        ? Image.asset(
+            skinPath,
+            fit: BoxFit.cover,
+            filterQuality: FilterQuality.none,
+            gaplessPlayback: true,
+            errorBuilder: (_, __, ___) => initialsWidget,
+          )
+        : (photoUrl != null && photoUrl!.isNotEmpty
+            ? Image(
+                // Image+CachedNetworkImageProvider renders synchronously when
+                // the bitmap is in Flutter's in-memory imageCache (warmed by
+                // precacheProfilePhoto on cold start). Falls back to the
+                // initials only when the load actually fails.
+                image: CachedNetworkImageProvider(photoUrl!),
+                fit: BoxFit.cover,
+                gaplessPlayback: true,
+                errorBuilder: (_, __, ___) => initialsWidget,
+              )
+            : initialsWidget);
 
     return Container(
       width: size,
@@ -42,19 +85,18 @@ class SocialAvatar extends StatelessWidget {
         border: Border.all(color: c.withValues(alpha: 0.35), width: 1.5),
       ),
       clipBehavior: Clip.antiAlias,
-      child: photoUrl != null
-          ? Image(
-              // Image+CachedNetworkImageProvider renders synchronously when
-              // the bitmap is in Flutter's in-memory imageCache (warmed by
-              // precacheProfilePhoto on cold start). Falls back to the
-              // initials only when the load actually fails — no explicit
-              // placeholder frame between widget mount and image paint.
-              image: CachedNetworkImageProvider(photoUrl!),
-              fit: BoxFit.cover,
-              gaplessPlayback: true,
-              errorBuilder: (_, __, ___) => initialsWidget,
-            )
-          : initialsWidget,
+      child: inner,
+    );
+  }
+
+  String? _resolveSkinPath() {
+    if (raceId == null || skinId == null) return null;
+    final assetKey = const CosmeticCatalog().byId(skinId!)?.assetKey;
+    if (assetKey == null) return null;
+    return const SkinAssetResolver().resolve(
+      raceId: raceId,
+      skinAssetKey: assetKey,
+      variant: SkinAssetVariant.thumbnail,
     );
   }
 }

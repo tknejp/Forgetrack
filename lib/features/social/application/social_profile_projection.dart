@@ -25,6 +25,7 @@ class SocialProfileInputs {
     required this.email,
     required this.handle,
     required this.photoUrl,
+    required this.raceId,
     required this.socialEnabled,
     required this.engine,
     required this.equippedCosmetics,
@@ -35,6 +36,7 @@ class SocialProfileInputs {
   final String email;
   final String handle;
   final String? photoUrl;
+  final String? raceId;
   final bool socialEnabled;
   final ProgressionEngineProvider engine;
   final SocialEquippedCosmetics equippedCosmetics;
@@ -110,6 +112,7 @@ class SocialProfileProjection
       email: inputs.email,
       handle: inputs.handle,
       photoUrl: inputs.photoUrl,
+      raceId: inputs.raceId,
       socialEnabled: inputs.socialEnabled,
       stats: SocialUserStats(
         level: inputs.engine.profile.level,

@@ -30,7 +30,6 @@ class ActivitiesScreen extends StatelessWidget {
               syncedAt: fitness.lastSyncedAt,
             ),
             isSignedIn: auth.isSignedIn,
-            photoUrl: auth.user?.photoUrl,
             displayName: auth.user?.displayName,
             email: auth.user?.email,
             sessionStateKey: auth.sessionState.name,

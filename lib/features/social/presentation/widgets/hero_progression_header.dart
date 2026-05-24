@@ -118,6 +118,11 @@ class _HeroProgressionHeaderState extends State<HeroProgressionHeader> {
         final equippedFrame = _resolveEquippedFrame(cosmetics);
         final equippedBackground = _resolveEquippedBackground(cosmetics);
         final equippedCompanion = _resolveEquippedCompanion(cosmetics);
+        // Own race + skin come straight from CosmeticsProvider — the
+        // hero header is always the signed-in player's, so we don't
+        // need to wait for the Firestore profile to round-trip.
+        final raceId = cosmetics.currentRaceId;
+        final skinId = cosmetics.state?.equipped.skinId;
         // Subscribed so the gold dot / claim pill repaint when the
         // calorie log changes or the player completes a claim. The
         // provider returns null while still hydrating from prefs —
@@ -130,6 +135,8 @@ class _HeroProgressionHeaderState extends State<HeroProgressionHeader> {
           displayName: displayName,
           handle: handle,
           photoUrl: photoUrl,
+          raceId: raceId,
+          skinId: skinId,
           equippedFrame: equippedFrame,
           equippedBackground: equippedBackground,
           equippedCompanion: equippedCompanion,
@@ -156,6 +163,8 @@ class _HeaderBody extends StatelessWidget {
     required this.displayName,
     required this.handle,
     required this.photoUrl,
+    required this.raceId,
+    required this.skinId,
     required this.equippedFrame,
     required this.equippedBackground,
     required this.equippedCompanion,
@@ -171,6 +180,8 @@ class _HeaderBody extends StatelessWidget {
   final String displayName;
   final String handle;
   final String? photoUrl;
+  final String? raceId;
+  final String? skinId;
   final Cosmetic? equippedFrame;
   final Cosmetic? equippedBackground;
   final Cosmetic? equippedCompanion;
@@ -209,19 +220,27 @@ class _HeaderBody extends StatelessWidget {
         children: [
           if (equippedCompanion != null)
             Positioned(
-              right: -10,
-              bottom: -10,
+              right: -16,
+              bottom: -22,
               child: IgnorePointer(
                 child: CompanionFakeIdlePreview(
-                  width: 100,
-                  height: 100,
+                  width: _kCompanionSlot,
+                  height: _kCompanionSlot,
                   enableGlow: false,
                   floatDistance: 2.5,
                   minScale: 0.995,
                   maxScale: 1.012,
-                  child: CompanionAsset(
+                  // Render the raw 512² companion canvas at full slot
+                  // size instead of routing through `CompanionAsset` —
+                  // the latter scales past the empty foot pad to keep
+                  // small surfaces compact, which clips antlers + feet
+                  // here. The hero card has room for the full sprite,
+                  // and the slot's `bottom: -22` deliberately bleeds
+                  // the foot pad off the card so the silhouette reads
+                  // as resting against the bottom edge.
+                  child: _HeroHeaderCompanion(
                     definition: equippedCompanion!,
-                    size: 100,
+                    size: _kCompanionSlot,
                   ),
                 ),
               ),
@@ -264,6 +283,8 @@ class _HeaderBody extends StatelessWidget {
                 displayName: displayName,
                 handle: handle,
                 photoUrl: photoUrl,
+                raceId: raceId,
+                skinId: skinId,
                 equippedFrame: equippedFrame,
                 onTapAvatar: onOpenProfile,
               ),
@@ -389,6 +410,8 @@ class _IdentityRow extends StatelessWidget {
     required this.displayName,
     required this.handle,
     required this.photoUrl,
+    required this.raceId,
+    required this.skinId,
     required this.equippedFrame,
     required this.onTapAvatar,
   });
@@ -396,6 +419,8 @@ class _IdentityRow extends StatelessWidget {
   final String displayName;
   final String handle;
   final String? photoUrl;
+  final String? raceId;
+  final String? skinId;
   final Cosmetic? equippedFrame;
   final VoidCallback onTapAvatar;
 
@@ -415,6 +440,8 @@ class _IdentityRow extends StatelessWidget {
             child: SocialAvatar(
               name: displayName,
               size: 64,
+              raceId: raceId,
+              skinId: skinId,
               photoUrl: photoUrl,
               radius: 20,
             ),
@@ -541,11 +568,21 @@ class _ProgressionRow extends StatelessWidget {
   }
 }
 
+/// Display side of the companion sprite slot inside the hero header. The
+/// slot is intentionally larger than the silhouette's visual footprint
+/// — the raw 512² canvas carries antlers near its top edge and ~48 px
+/// of empty pad below the feet, so the slot needs headroom to show
+/// both. `right`/`bottom` overhang values pair with this size to bleed
+/// the foot pad off the card while keeping antlers in view.
+const double _kCompanionSlot = 150;
+
 /// Right-side gutter under the companion sprite that bars + quest rows
-/// must avoid. Math: companion size 100 with `right: -10` offset overhangs
-/// the card edge by 10px, so its visible left edge sits 90px from the
-/// content's right edge. We round up to 96 for a small breathing gap.
-const double _kCompanionReservedWidth = 96;
+/// must avoid. Math: slot is `_kCompanionSlot` wide with `right: -16`
+/// offset, so its visible left edge sits ~154 px from the content's
+/// right edge; the silhouette itself fills the centre ~100 px of the
+/// slot, so its true left edge lands ~110 px from the right. Round up
+/// to 130 for a small breathing gap before the XP bar.
+const double _kCompanionReservedWidth = 110;
 
 class _DailyQuestsPreview extends StatelessWidget {
   const _DailyQuestsPreview({required this.quests});
@@ -691,13 +728,79 @@ class CompanionAsset extends StatelessWidget {
     if (assetPath == null) {
       return SizedBox(width: size, height: size, child: Center(child: fallback()));
     }
+    // Use the catalog row's per-asset `displayScale` so each
+    // companion reads at a comparable visual size in this small
+    // surface — tiny silhouettes (ember sprite) zoom up, wide ones
+    // (mountain gryphon) render closer to raw. Below-centre anchor
+    // matches the other companion previews (forging, morph, details,
+    // grid tiles) so a companion seen in two surfaces side-by-side
+    // lines up vertically. Falls back to 1.0 for non-Companion
+    // cosmetics that happen to pass through here.
+    final scale =
+        definition is Companion ? (definition as Companion).displayScale : 1.0;
+    return SizedBox(
+      width: size,
+      height: size,
+      child: ClipRect(
+        child: Transform.scale(
+          scale: scale,
+          alignment: const Alignment(0, 0.5),
+          child: Image.asset(
+            assetPath,
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => Center(child: fallback()),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Hero-header-specific companion renderer that paints the raw 512²
+/// asset at full slot size, bypassing the `kCompanionAssetContentScale`
+/// crop used on small surfaces. The hero header has enough room for
+/// the full canvas (antlers, body, foot pad) and relies on the slot's
+/// negative `bottom` offset to bleed the empty foot pad off the card
+/// — the standard cropped renderer instead truncates both antlers and
+/// feet when the slot is this small.
+class _HeroHeaderCompanion extends StatelessWidget {
+  const _HeroHeaderCompanion({
+    required this.definition,
+    required this.size,
+  });
+
+  final Cosmetic definition;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final assetPath = CosmeticsConfig.standard().resolveAssetPath(
+      definition.previewAssetKey ?? definition.assetKey,
+    );
+    if (assetPath == null) {
+      return SizedBox(
+        width: size,
+        height: size,
+        child: Center(
+          child: Icon(
+            Icons.pets_rounded,
+            size: size * 0.4,
+            color: Tokens.accent,
+          ),
+        ),
+      );
+    }
     return SizedBox(
       width: size,
       height: size,
       child: Image.asset(
         assetPath,
         fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) => Center(child: fallback()),
+        errorBuilder: (_, __, ___) => Icon(
+          Icons.pets_rounded,
+          size: size * 0.4,
+          color: Tokens.accent,
+        ),
       ),
     );
   }

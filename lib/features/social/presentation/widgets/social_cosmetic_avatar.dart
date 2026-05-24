@@ -10,6 +10,25 @@ const _catalog = CosmeticCatalog();
 const _defaultFrameId = 'frame_pilgrim';
 const _defaultBackgroundId = 'background_camp';
 
+/// Compact framed avatar: race × skin thumbnail inside the equipped
+/// Frame cosmetic border.
+///
+/// Inputs:
+///   * `profile` — friend / leaderboard / actor profile. The widget
+///     reads `raceId` + `equippedCosmetics.skinId` + `equippedCosmetics
+///     .frameId` from here when explicit overrides are not given. Null
+///     profile falls back to initials inside the default frame.
+///   * `raceId` / `skinId` — explicit overrides used by own-user
+///     callsites (top app bar, settings header, hero progression
+///     header) that source identity from `CosmeticsProvider` directly
+///     instead of routing through a fetched profile snapshot.
+///   * `frameId` — explicit override for the same own-user callsites
+///     so the equipped Frame border still surrounds the thumb without
+///     going through Firestore. Falls back to `profile?.equippedCosmetics
+///     .frameId` then to [_defaultFrameId].
+///   * `photoUrl` — transitional fallback for legacy share-actor
+///     snapshots only. New compact-surface callsites should leave it
+///     null and pass `raceId`/`skinId` instead.
 class SocialCosmeticAvatar extends StatelessWidget {
   const SocialCosmeticAvatar({
     super.key,
@@ -17,6 +36,8 @@ class SocialCosmeticAvatar extends StatelessWidget {
     required this.size,
     this.photoUrl,
     this.profile,
+    this.raceId,
+    this.skinId,
     this.frameId,
     this.color,
     this.radius,
@@ -28,6 +49,8 @@ class SocialCosmeticAvatar extends StatelessWidget {
   final double size;
   final String? photoUrl;
   final SocialUserProfile? profile;
+  final String? raceId;
+  final String? skinId;
   final String? frameId;
   final Color? color;
   final double? radius;
@@ -37,9 +60,12 @@ class SocialCosmeticAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final r = radius ?? size * 0.28;
-    final frame = socialFrameDefinition(
-      frameId ?? profile?.equippedCosmetics.frameId,
-    );
+    final effectiveFrameId =
+        frameId ?? profile?.equippedCosmetics.frameId;
+    final frame = socialFrameDefinition(effectiveFrameId);
+    final effectiveRaceId = raceId ?? profile?.raceId;
+    final effectiveSkinId =
+        skinId ?? profile?.equippedCosmetics.skinId;
 
     final margin = frameMargin ??
         EdgeInsets.all(((size * (frameOverscan - 1)) / 2 + 2).clamp(3, 8));
@@ -54,6 +80,8 @@ class SocialCosmeticAvatar extends StatelessWidget {
         child: SocialAvatar(
           name: name,
           size: size,
+          raceId: effectiveRaceId,
+          skinId: effectiveSkinId,
           photoUrl: photoUrl,
           color: color,
           radius: r,

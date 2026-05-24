@@ -783,6 +783,7 @@ class SocialProvider extends ChangeNotifier {
       email: user.email,
       handle: handle,
       photoUrl: user.photoUrl,
+      raceId: _cosmeticsProvider?.currentRaceId,
       socialEnabled: true,
       engine: progressionProvider,
       equippedCosmetics: _buildEquippedCosmeticsSnapshot(),
@@ -800,6 +801,7 @@ class SocialProvider extends ChangeNotifier {
       companionId: equipped.companionId,
       titleFlairId: equipped.titleFlairId,
       mapEffectId: equipped.mapEffectId,
+      skinId: equipped.skinId,
     );
   }
 
@@ -825,6 +827,7 @@ class SocialProvider extends ChangeNotifier {
       payload.displayName,
       payload.handle,
       payload.photoUrl ?? '',
+      payload.raceId ?? '',
       payload.stats.level.toString(),
       payload.stats.totalXp.toString(),
       payload.stats.unlockedAchievementCount.toString(),
@@ -838,6 +841,7 @@ class SocialProvider extends ChangeNotifier {
       payload.equippedCosmetics.companionId ?? '',
       payload.equippedCosmetics.titleFlairId ?? '',
       payload.equippedCosmetics.mapEffectId ?? '',
+      payload.equippedCosmetics.skinId ?? '',
       unlockedIds,
     ].join('|');
   }

@@ -1,6 +1,6 @@
 # Avatars — Race × Skin System Handoff
 
-**Status (2026-05-23):** in-progress. Domain + persistence + onboarding flow + profile hero card + force-pick gate all shipped. Compact thumbnail surfaces + social wire format + Cosmetics screen tab still open. Drip-feed skin content is product-pending.
+**Status (2026-05-23):** in-progress. Domain + persistence + onboarding flow + profile hero card + force-pick gate + compact thumbnail rendering + social wire format extension all shipped. Cosmetics screen "Vzhled" tab still open. Drip-feed skin content is product-pending.
 
 This is the working-state doc for the avatar refactor that replaces the legacy `AvatarSelectionProvider` / `AvatarCatalog` / photo-upload pipeline with a two-axis system:
 
@@ -124,6 +124,32 @@ Hard-deleted to avoid two parallel identity systems coexisting:
 * Props: dropped `photoUrl`, added `raceId` + `skinId` (nullable).
 * `social_user_profile_screen.dart` derives both from `CosmeticsProvider` for own profile; friend profiles pass null (silhouette fallback — wire format extension pending).
 
+### Compact thumbnail rendering
+
+Every UI surface that previously read `photoUrl` (Google identity avatar) now renders the race × skin thumbnail inside the equipped Frame cosmetic border:
+
+* `lib/shared/widgets/profile_avatar_action.dart` (top app bar) — watches `CosmeticsProvider` for raceId / skinId / frameId, falls back to a Material person icon pre-onboarding or signed out.
+* `lib/features/social/presentation/widgets/social_avatar.dart` — primitive accepts `raceId` + `skinId`; resolves via `SkinAssetResolver(thumbnail)` and paints the asset. `photoUrl` kept ONLY as a transitional fallback for legacy share-actor snapshots that predate the race system. Initials are the final fallback.
+* `lib/features/social/presentation/widgets/social_cosmetic_avatar.dart` — composes the inner skin thumb with the Frame border via `CosmeticFramePreview`. Reads `raceId` + `equippedCosmetics.skinId` + `equippedCosmetics.frameId` from `profile` by default, or honors explicit overrides for own-user callsites that source identity from `CosmeticsProvider` directly.
+* `lib/features/social/presentation/widgets/hero_progression_header.dart` — reads own race / skin from `CosmeticsProvider` and threads through `_HeaderBody` → `_IdentityRow` so the header never paints the Google identity selfie.
+* `lib/features/settings/presentation/sections/settings_header_section.dart` — Google-account card swaps its `NetworkImage(photoUrl)` chip for the framed skin thumb (with person-icon fallback pre-pick).
+* `social_feed_card.dart`, `social_notification_card.dart`, `social_profile_friends_section.dart`, `social_leaderboard_tab.dart`, `social_friends_tab.dart` — unchanged at the callsite level; they pass `profile:` and the avatar primitive now auto-derives raceId/skinId from the wire format extension below.
+
+**Design path locked: Path A.** Thumbnails keep their own baked-in background. The Frame border surrounds the existing self-contained square card. The equipped Background cosmetic does NOT show through in compact surfaces (only the profile hero card scene shows it). Rationale: faster to ship; the only requirement to switch to Path B would be reshooting all 9 race thumbs as transparent face crops, which is significant art rework deferred until product locks the look.
+
+### Social wire format extension
+
+`SocialUserProfile.raceId` + `SocialEquippedCosmetics.skinId` now flow over the Firestore wire format so friend profiles render the same race × skin treatment as own profile.
+
+* `SocialUserProfile.raceId` (nullable), `SocialEquippedCosmetics.skinId` (nullable), and `SocialProfileSyncPayload.{raceId, equippedCosmetics.skinId}` extended in `lib/features/social/domain/social_user_profile.dart`.
+* `SocialProfileInputs.raceId` added; `SocialProfileProjection.buildPayload` threads it through.
+* `SocialProvider._collectProfileInputs` reads `_cosmeticsProvider?.currentRaceId` and `_buildEquippedCosmeticsSnapshot` includes `skinId`. The proxy provider re-fires `bind()` whenever cosmetics state changes, so `_syncProfileIfNeeded()` republishes on race-pick / skin-equip.
+* `_buildProfileSignature` includes both fields, so the dedupe debounce republishes on change.
+* `FirestoreSocialRepository._profileData` writes `raceId` (top-level) + `equippedCosmetics.skinId`; `_mapUserProfile` reads them back. Legacy docs without the fields hydrate with null and fall through to silhouette / initials.
+* No Firestore rules change required — the existing per-uid write rule does not validate equippedCosmetics field shape, so additive subfields land cleanly.
+
+Friend devices that haven't republished yet appear with initials in compact surfaces. The first state change on their end (force-pick run, skin equip, level-up) triggers a re-upsert that fills both fields.
+
 ### Force-pick gate
 
 Existing players with completed onboarding but `selectedRaceId == null` (game state predates the race system) are routed through `ForcePickRaceScreen` before MainShell.
@@ -149,33 +175,6 @@ The two splash branches prevent a ~100–500 ms flash of MainShell (and the Goog
 
 ## What's open
 
-### Compact thumbnail rendering surfaces (active)
-
-Every UI surface that currently reads `photoUrl` (Google identity avatar) needs to switch to `SkinAssetResolver(thumbnail)` + the equipped Frame cosmetic as the surrounding border:
-
-* `lib/shared/widgets/profile_avatar_action.dart` (top app bar)
-* `lib/features/social/presentation/widgets/social_avatar.dart` (primitive used by feed cards + notifications)
-* `lib/features/social/presentation/widgets/social_cosmetic_avatar.dart` (likely already handles frame layer; just swap inner)
-* `lib/features/social/presentation/widgets/social_feed_card.dart`
-* `lib/features/social/presentation/widgets/social_notification_card.dart`
-* `lib/features/social/presentation/widgets/hero_progression_header.dart`
-* `lib/features/social/presentation/widgets/social_profile_friends_section.dart`
-* `lib/features/social/presentation/tabs/social_leaderboard_tab.dart`
-* `lib/features/social/presentation/tabs/social_friends_tab.dart`
-* `lib/features/settings/presentation/sections/settings_header_section.dart`
-
-**Open design question:** thumbnail with its own background (current shipped pilgrim set) vs. transparent face-crop inside the frame. Today's thumbs are square 512×512 with a baked-in scene background — inside a frame they render as a self-contained square card. If we want the frame's interior to show the equipped Background cosmetic, we'd need to reshoot all 9 thumbs as transparent face crops. Decide before locking the compact-surface migration in.
-
-### Social wire format extension
-
-`SocialUserProfile.raceId` + `SocialEquippedCosmetics.skinId` need to flow over the Firestore wire format so friend profiles can render the same race × skin treatment as own profile.
-
-* Extend `SocialUserProfile` + `SocialEquippedCosmetics` types.
-* `SocialProfileProjection._collectProfileInputs` populates both.
-* `SocialProvider._buildProfileSignature` includes them in the signature so re-upsert fires on change.
-* Firestore docs: legacy `photoUrl` field stays as a sirotek (no migrations rule — old data simply isn't re-read).
-* Without this, `profile_detail_hero_card.dart` falls back to silhouette for every friend profile.
-
 ### Cosmetics screen "Vzhled" tab
 
 A new tab in `CosmeticsScreen` for browsing owned + locked skins, with a details sheet matching the Frames pattern. Today the only way to swap the equipped skin is to use DevTools — there's no in-game UI for it. Low risk; pattern is well-established.
@@ -198,7 +197,6 @@ Discuss when ready to lock the first non-pilgrim theme.
 
 ### Tech debt
 
-* `SocialRepository.updateProfilePhotoUrl` — orphan interface method (only caller was `SocialProvider.updateCurrentPhotoUrl`, deleted). Drop from interface + Firestore impl + disabled impl.
 * `design/design_handoff_avatar_picker_step/` — stale design folder referencing the photo-upload era. Delete or replace with race-picker design notes.
 * `docs/site/data/glossary.json` — add `HeroRace`, `Skin`, `SkinAssetResolver`.
 * `docs/site/data/decisions.json` — ADR "Avatars promoted to race × skin system" (context: photo upload removal, decision: split identity vs. evolution, alternatives considered).

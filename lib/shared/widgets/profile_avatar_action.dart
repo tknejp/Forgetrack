@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../l10n/l10n.dart';
+import '../../features/cosmetics/application/cosmetics_provider.dart';
 import '../../features/settings/presentation/settings_screen.dart';
+import '../../features/social/presentation/widgets/social_cosmetic_avatar.dart';
 
+/// Top-app-bar profile action. Renders the signed-in player's
+/// race × skin thumbnail (post-onboarding) inside the equipped Frame
+/// border. Falls back to a Material person icon when signed out or
+/// before the race-pick gate has run.
 class ProfileAvatarAction extends StatelessWidget {
   final bool isSignedIn;
-  final String? photoUrl;
   final String? displayName;
   final String? email;
   final String sessionStateKey;
@@ -13,7 +19,6 @@ class ProfileAvatarAction extends StatelessWidget {
   const ProfileAvatarAction({
     super.key,
     required this.isSignedIn,
-    this.photoUrl,
     this.displayName,
     this.email,
     required this.sessionStateKey,
@@ -21,10 +26,12 @@ class ProfileAvatarAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final trimmedPhotoUrl = isSignedIn ? photoUrl?.trim() : null;
-    final hasPhoto = trimmedPhotoUrl != null && trimmedPhotoUrl.isNotEmpty;
-    final initials = isSignedIn ? _buildInitials(displayName, email) : null;
+    final cosmetics = context.watch<CosmeticsProvider>();
+    final raceId = cosmetics.currentRaceId;
+    final skinId = cosmetics.state?.equipped.skinId;
+    final frameId = cosmetics.state?.equipped.frameId;
     final colorScheme = Theme.of(context).colorScheme;
+    final canShowSkin = isSignedIn && raceId != null && skinId != null;
 
     return IconButton(
       tooltip: context.l10n.screenProfile,
@@ -38,63 +45,44 @@ class ProfileAvatarAction extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         switchInCurve: Curves.easeOut,
         switchOutCurve: Curves.easeIn,
-        child: Container(
+        child: SizedBox(
           key: ValueKey(
-            '$sessionStateKey:${photoUrl ?? ''}:${email ?? ''}',
+            '$sessionStateKey:${raceId ?? ''}:${skinId ?? ''}:${frameId ?? ''}',
           ),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: hasPhoto
-                  ? colorScheme.outlineVariant.withValues(alpha: 0.6)
-                  : Colors.transparent,
-            ),
-          ),
-          child: CircleAvatar(
-            radius: 16,
-            foregroundImage: hasPhoto
-                ? NetworkImage(trimmedPhotoUrl)
-                : null,
-            backgroundColor: isSignedIn
-                ? colorScheme.primaryContainer
-                : colorScheme.surfaceContainerHigh,
-            child: initials != null
-                ? Text(
-                    initials,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: colorScheme.onPrimaryContainer,
-                          fontWeight: FontWeight.w700,
-                        ),
-                  )
-                : Icon(
-                    Icons.person_outline,
-                    size: 18,
-                    color: isSignedIn
-                        ? colorScheme.onPrimaryContainer
-                        : colorScheme.onSurfaceVariant,
+          width: 36,
+          height: 36,
+          child: canShowSkin
+              ? SocialCosmeticAvatar(
+                  name: displayName ?? email ?? '',
+                  size: 32,
+                  raceId: raceId,
+                  skinId: skinId,
+                  frameId: frameId,
+                  // Compact tap target — frame already supplies its own
+                  // border; keep overscan modest so the chrome doesn't
+                  // bleed past the IconButton bounds.
+                  frameOverscan: 1.18,
+                  frameMargin: EdgeInsets.zero,
+                  radius: 16,
+                  color: colorScheme.primary,
+                )
+              : Center(
+                  child: CircleAvatar(
+                    radius: 16,
+                    backgroundColor: isSignedIn
+                        ? colorScheme.primaryContainer
+                        : colorScheme.surfaceContainerHigh,
+                    child: Icon(
+                      Icons.person_outline,
+                      size: 18,
+                      color: isSignedIn
+                          ? colorScheme.onPrimaryContainer
+                          : colorScheme.onSurfaceVariant,
+                    ),
                   ),
-          ),
+                ),
         ),
       ),
     );
-  }
-
-  String? _buildInitials(String? displayName, String? email) {
-    final trimmedDisplayName = displayName?.trim();
-    final raw = trimmedDisplayName != null && trimmedDisplayName.isNotEmpty
-        ? trimmedDisplayName
-        : email?.trim();
-    if (raw == null || raw.isEmpty) return null;
-
-    final parts = raw
-        .split(RegExp(r'\s+'))
-        .where((part) => part.isNotEmpty)
-        .take(2)
-        .toList();
-    if (parts.isEmpty) return null;
-
-    final initials =
-        parts.map((part) => part.substring(0, 1).toUpperCase()).join();
-    return initials.isEmpty ? null : initials;
   }
 }

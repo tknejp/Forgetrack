@@ -11,7 +11,6 @@ class TopLevelAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String subtitle;
   final bool emphasizeTitle;
   final bool isSignedIn;
-  final String? photoUrl;
   final String? displayName;
   final String? email;
   final String sessionStateKey;
@@ -22,7 +21,6 @@ class TopLevelAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.subtitle,
     this.emphasizeTitle = false,
     required this.isSignedIn,
-    this.photoUrl,
     this.displayName,
     this.email,
     required this.sessionStateKey,
@@ -80,7 +78,6 @@ class TopLevelAppBar extends StatelessWidget implements PreferredSizeWidget {
           child: Center(
             child: ProfileAvatarAction(
               isSignedIn: isSignedIn,
-              photoUrl: photoUrl,
               displayName: displayName,
               email: email,
               sessionStateKey: sessionStateKey,

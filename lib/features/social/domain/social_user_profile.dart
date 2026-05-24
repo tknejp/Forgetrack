@@ -59,6 +59,7 @@ class SocialUserProfile {
     required this.socialEnabled,
     required this.stats,
     this.photoUrl,
+    this.raceId,
     this.createdAt,
     this.updatedAt,
     this.pinnedAchievementIds = const [],
@@ -70,6 +71,12 @@ class SocialUserProfile {
   final String handle;
   final String email;
   final String? photoUrl;
+
+  /// HeroRace id picked at onboarding / force-pick. Null until the
+  /// owning device has run the force-pick gate at least once and the
+  /// projection has flushed. Friend renderers fall back to silhouette
+  /// when null.
+  final String? raceId;
   final bool socialEnabled;
   final SocialUserStats stats;
   final DateTime? createdAt;
@@ -91,6 +98,7 @@ class SocialEquippedCosmetics {
     this.companionId,
     this.titleFlairId,
     this.mapEffectId,
+    this.skinId,
   });
 
   const SocialEquippedCosmetics.empty()
@@ -100,7 +108,8 @@ class SocialEquippedCosmetics {
         emblemId = null,
         companionId = null,
         titleFlairId = null,
-        mapEffectId = null;
+        mapEffectId = null,
+        skinId = null;
 
   final String? frameId;
   final String? relicId;
@@ -110,6 +119,11 @@ class SocialEquippedCosmetics {
   final String? titleFlairId;
   final String? mapEffectId;
 
+  /// Equipped Skin id (race-agnostic catalog key). Combined with the
+  /// owning [SocialUserProfile.raceId] at render time to resolve a
+  /// per-race artwork path through `SkinAssetResolver`.
+  final String? skinId;
+
   bool get hasAny =>
       frameId != null ||
       relicId != null ||
@@ -117,7 +131,8 @@ class SocialEquippedCosmetics {
       emblemId != null ||
       companionId != null ||
       titleFlairId != null ||
-      mapEffectId != null;
+      mapEffectId != null ||
+      skinId != null;
 }
 
 /// Bundle the Social repository takes when pushing a fresh profile
@@ -131,6 +146,7 @@ class SocialProfileSyncPayload {
     required this.email,
     required this.handle,
     required this.photoUrl,
+    required this.raceId,
     required this.socialEnabled,
     required this.stats,
     required this.unlockedAchievements,
@@ -142,6 +158,7 @@ class SocialProfileSyncPayload {
   final String email;
   final String handle;
   final String? photoUrl;
+  final String? raceId;
   final bool socialEnabled;
   final SocialUserStats stats;
   final List<SocialUnlockedAchievement> unlockedAchievements;
@@ -152,6 +169,7 @@ class SocialProfileSyncPayload {
     String? email,
     String? handle,
     Object? photoUrl = _unchanged,
+    Object? raceId = _unchanged,
     bool? socialEnabled,
     SocialUserStats? stats,
     List<SocialUnlockedAchievement>? unlockedAchievements,
@@ -164,6 +182,8 @@ class SocialProfileSyncPayload {
       handle: handle ?? this.handle,
       photoUrl:
           identical(photoUrl, _unchanged) ? this.photoUrl : photoUrl as String?,
+      raceId:
+          identical(raceId, _unchanged) ? this.raceId : raceId as String?,
       socialEnabled: socialEnabled ?? this.socialEnabled,
       stats: stats ?? this.stats,
       unlockedAchievements: unlockedAchievements ?? this.unlockedAchievements,

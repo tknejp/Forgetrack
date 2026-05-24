@@ -101,13 +101,6 @@ class DisabledSocialRepository implements SocialPresenceRepository {
       _disabled<String>('updateProfileHandle');
 
   @override
-  Future<Result<void, AppError>> updateProfilePhotoUrl({
-    required String uid,
-    required String? photoUrl,
-  }) async =>
-      _disabled<void>('updateProfilePhotoUrl');
-
-  @override
   Future<Result<void, AppError>> updatePinnedAchievement({
     required String uid,
     required String achievementId,

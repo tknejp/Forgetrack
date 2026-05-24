@@ -78,7 +78,7 @@
           "id": "users",
           "name": "users/{uid}",
           "path": "Per-user profile snapshot",
-          "role": "Denormalizovaný display profile pro social (level, totalXp, equipped cosmetic IDs, unlocked achievement IDs, handle, photoURL).",
+          "role": "Denormalizovaný display profile pro social (level, totalXp, raceId, equipped cosmetic IDs vč. skinId, unlocked achievement IDs, handle, photoURL).",
           "writers": ["SocialProvider.upsertProfile"],
           "readers": ["SocialProvider.watchProfileById", "Friends tab"]
         },
