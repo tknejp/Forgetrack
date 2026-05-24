@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 enum FtEdgeHandoffDirection {
@@ -18,8 +19,8 @@ class DragRevealPager<T> extends StatefulWidget {
     required this.builder,
     required this.onCommit,
     this.pageGap = 0,
-    this.commitThreshold = 0.25,
-    this.velocityThreshold = 300,
+    this.commitThreshold = 0.12,
+    this.velocityThreshold = 120,
   });
 
   final T item;
@@ -42,10 +43,11 @@ class _DragRevealPagerState<T> extends State<DragRevealPager<T>>
   late final AnimationController _offsetController;
   double _viewportWidth = 0;
 
-  // Side (previous/next) pages are heavy to build, so we only materialize
-  // them while the user is actively dragging or an animation is in flight.
-  // At rest only the current page is built, matching the original wall cost
-  // when providers notify and trigger a parent rebuild.
+  // Side (previous/next) pages are pre-warmed one frame after the current
+  // item paints. Building them lazily at drag-start used to drop the first
+  // frame of the swipe (heavy DayContent build), which felt like the gesture
+  // was fighting the user. The wall cost at rest is acceptable — pages are
+  // wrapped in RepaintBoundary so they don't repaint while idle.
   bool _sidePagesActive = false;
 
   double get _dragOffset => _offsetController.value;
@@ -60,13 +62,20 @@ class _DragRevealPagerState<T> extends State<DragRevealPager<T>>
     // controller and rebuilds only the Transform.translate wrappers, not the
     // cached page subtrees.
     _offsetController = AnimationController.unbounded(vsync: this);
+    _scheduleSidePageWarmup();
   }
 
   @override
   void didUpdateWidget(covariant DragRevealPager<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.item != widget.item && !_offsetController.isAnimating) {
-      _offsetController.value = 0;
+    if (oldWidget.item != widget.item) {
+      if (!_offsetController.isAnimating) {
+        _offsetController.value = 0;
+      }
+      // After a commit the side identities change — rebuild them next frame
+      // so the new current page paints first.
+      _sidePagesActive = false;
+      _scheduleSidePageWarmup();
     }
   }
 
@@ -76,18 +85,11 @@ class _DragRevealPagerState<T> extends State<DragRevealPager<T>>
     super.dispose();
   }
 
-  void _activateSidePages() {
-    if (!_sidePagesActive) {
+  void _scheduleSidePageWarmup() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _sidePagesActive) return;
       setState(() => _sidePagesActive = true);
-    }
-  }
-
-  void _deactivateSidePagesIfIdle() {
-    if (_sidePagesActive &&
-        !_offsetController.isAnimating &&
-        _dragOffset.abs() < 0.1) {
-      setState(() => _sidePagesActive = false);
-    }
+    });
   }
 
   void _setDragOffset(double value) {
@@ -99,7 +101,6 @@ class _DragRevealPagerState<T> extends State<DragRevealPager<T>>
     if (_offsetController.isAnimating) {
       _offsetController.stop();
     }
-    _activateSidePages();
   }
 
   void _handleHorizontalDragUpdate(DragUpdateDetails details) {
@@ -121,7 +122,6 @@ class _DragRevealPagerState<T> extends State<DragRevealPager<T>>
         widget.onCommit(committedItem);
       }
       _offsetController.value = 0;
-      _deactivateSidePagesIfIdle();
       return;
     }
 
@@ -136,13 +136,11 @@ class _DragRevealPagerState<T> extends State<DragRevealPager<T>>
       widget.onCommit(committedItem);
     }
     _offsetController.value = 0;
-    _deactivateSidePagesIfIdle();
   }
 
   void _handleHorizontalDragEnd(DragEndDetails details) {
     if (_viewportWidth <= 0 || _dragOffset.abs() < 0.1) {
       _offsetController.value = 0;
-      _deactivateSidePagesIfIdle();
       return;
     }
 
@@ -173,10 +171,7 @@ class _DragRevealPagerState<T> extends State<DragRevealPager<T>>
   }
 
   void _handleHorizontalDragCancel() {
-    if (_dragOffset.abs() < 0.1) {
-      _deactivateSidePagesIfIdle();
-      return;
-    }
+    if (_dragOffset.abs() < 0.1) return;
     _animateToOffset(0);
   }
 
@@ -256,8 +251,8 @@ class EdgePageHandoff extends StatefulWidget {
     required this.currentPage,
     required this.targetPage,
     required this.isEnabled,
-    this.commitThreshold = 0.25,
-    this.velocityThreshold = 300,
+    this.commitThreshold = 0.12,
+    this.velocityThreshold = 120,
   }) : assert(currentPage != targetPage);
 
   final Widget child;
@@ -278,9 +273,9 @@ class EdgePageHandoff extends StatefulWidget {
 
 class _EdgePageHandoffState extends State<EdgePageHandoff> {
   Offset? _startPosition;
-  Duration? _startTimeStamp;
   bool _handoffActive = false;
   double? _basePixels;
+  VelocityTracker? _velocityTracker;
 
   bool _matchesDirection(double deltaX) {
     switch (widget.direction) {
@@ -295,26 +290,31 @@ class _EdgePageHandoffState extends State<EdgePageHandoff> {
 
   void _reset() {
     _startPosition = null;
-    _startTimeStamp = null;
     _handoffActive = false;
     _basePixels = null;
+    _velocityTracker = null;
   }
 
   void _handlePointerDown(PointerDownEvent event) {
     _startPosition = event.position;
-    _startTimeStamp = event.timeStamp;
     _handoffActive = false;
     _basePixels = null;
+    _velocityTracker = VelocityTracker.withKind(event.kind);
+    _velocityTracker!.addPosition(event.timeStamp, event.position);
   }
 
   void _handlePointerMove(PointerMoveEvent event) {
     final startPosition = _startPosition;
     if (startPosition == null || !widget.controller.hasClients) return;
+    _velocityTracker?.addPosition(event.timeStamp, event.position);
 
     final delta = event.position - startPosition;
     if (!_handoffActive) {
       if (!widget.isEnabled()) return;
-      if (delta.dx.abs() < 12) return;
+      // Lowered from 12 px to 6 px so the handoff engages almost immediately
+      // when the user continues sliding past the day-pager edge — the prior
+      // deadband felt like a hitch between the two horizontal swipes.
+      if (delta.dx.abs() < 6) return;
       if (delta.dx.abs() <= delta.dy.abs() + 4) return;
       if (!_matchesDirection(delta.dx)) return;
 
@@ -349,17 +349,17 @@ class _EdgePageHandoffState extends State<EdgePageHandoff> {
     final position = widget.controller.position;
     final width =
         position.hasViewportDimension ? position.viewportDimension : 0.0;
-    final startPosition = _startPosition;
-    final startTimeStamp = _startTimeStamp;
-    if (width <= 0 || startPosition == null || startTimeStamp == null) {
+    if (width <= 0) {
       _reset();
       return;
     }
 
-    final elapsed = math.max(
-        1, endTimeStamp.inMicroseconds - startTimeStamp.inMicroseconds);
-    final velocity = (endPosition.dx - startPosition.dx) /
-        (elapsed / Duration.microsecondsPerSecond).toDouble();
+    // Use the velocity tracker's lift-time estimate (last ~100 ms of motion)
+    // instead of averaging over the whole drag. Averaging snap-backed on
+    // gestures where the user flicked then paused before lifting — the
+    // average was low even though the lift felt fast.
+    final velocity =
+        _velocityTracker?.getVelocity().pixelsPerSecond.dx ?? 0.0;
     final progress =
         (position.pixels - _pagePixels(widget.currentPage, width)).abs() /
             width;

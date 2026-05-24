@@ -23,6 +23,7 @@ import '../../settings/presentation/settings_screen.dart';
 import '../../social/application/social_provider.dart';
 import '../../social/presentation/ft_social_screen.dart';
 import '../../social/presentation/widgets/hero_progression_header.dart';
+import '../../../shared/widgets/snappy_page_physics.dart';
 import 'widgets/debug_tools_sheet.dart';
 import 'widgets/main_bottom_nav.dart';
 import 'widgets/shell_header.dart';
@@ -182,6 +183,7 @@ class _FtMainShellState extends State<MainShell> {
                 child: PageView(
                   controller: _pageController,
                   onPageChanged: _handlePageChanged,
+                  physics: const SnappyPageScrollPhysics(),
                   children: screens,
                 ),
               ),
