@@ -49,6 +49,8 @@ class HeroStreakStatsCard extends StatefulWidget {
     super.key,
     required this.achievementsCount,
     required this.rows,
+    this.editFooter,
+    this.forceExpanded = false,
   });
 
   /// Total achievements unlocked. Headline number kept from the
@@ -60,6 +62,19 @@ class HeroStreakStatsCard extends StatefulWidget {
   /// the canonical steps / nutrition / sleep / activity / body
   /// order across own and friend profiles.
   final List<DomainStreakRow> rows;
+
+  /// Optional widget rendered at the bottom of the expanded body,
+  /// below the domain rows. Used by the profile-stats edit mode to
+  /// inject a visibility eye toggle that sits inside the card itself
+  /// (instead of overlapping with the achievements pill in the
+  /// header). Null in normal view.
+  final Widget? editFooter;
+
+  /// When true the card stays open regardless of the user's tap state.
+  /// Used in edit mode so the [editFooter] toggle is always visible
+  /// — collapsing the card with the footer inside would hide the
+  /// toggle and confuse the user.
+  final bool forceExpanded;
 
   @override
   State<HeroStreakStatsCard> createState() => _HeroStreakStatsCardState();
@@ -75,6 +90,7 @@ class _HeroStreakStatsCardState extends State<HeroStreakStatsCard> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final hasRows = widget.rows.isNotEmpty;
+    final effectiveExpanded = widget.forceExpanded || _expanded;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -88,14 +104,16 @@ class _HeroStreakStatsCardState extends State<HeroStreakStatsCard> {
         children: [
           GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: hasRows
+            // Force-expanded mode disables tap-to-collapse — the
+            // caller (edit mode wrapper) owns expansion state.
+            onTap: hasRows && !widget.forceExpanded
                 ? () => setState(() => _expanded = !_expanded)
                 : null,
             child: _Header(
               achievementsCount: widget.achievementsCount,
               l10n: l10n,
-              expanded: _expanded,
-              showChevron: hasRows,
+              expanded: effectiveExpanded,
+              showChevron: hasRows && !widget.forceExpanded,
             ),
           ),
           ClipRect(
@@ -103,7 +121,7 @@ class _HeroStreakStatsCardState extends State<HeroStreakStatsCard> {
               duration: const Duration(milliseconds: 220),
               curve: Curves.easeInOut,
               alignment: Alignment.topCenter,
-              child: hasRows && _expanded
+              child: hasRows && effectiveExpanded
                   ? Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -115,6 +133,12 @@ class _HeroStreakStatsCardState extends State<HeroStreakStatsCard> {
                         for (var i = 0; i < widget.rows.length; i++) ...[
                           if (i > 0) const SizedBox(height: 4),
                           _DomainRow(row: widget.rows[i], l10n: l10n),
+                        ],
+                        if (widget.editFooter != null) ...[
+                          const SizedBox(height: 10),
+                          const _Divider(),
+                          const SizedBox(height: 8),
+                          widget.editFooter!,
                         ],
                       ],
                     )

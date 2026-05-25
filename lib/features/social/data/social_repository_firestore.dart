@@ -447,6 +447,22 @@ class FirestoreSocialRepository implements SocialPresenceRepository {
         );
       });
 
+  @override
+  Future<Result<void, AppError>> updateStatVisibilityOverrides({
+    required String uid,
+    required Set<String> statVisibilityOverrides,
+  }) =>
+      _classify('updateStatVisibilityOverrides', () async {
+        await _users.doc(uid).set(
+          {
+            'statVisibilityOverrides':
+                statVisibilityOverrides.toList(growable: false),
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true),
+        );
+      });
+
   Future<
       ({
         DocumentReference<Map<String, dynamic>> ref,
@@ -529,7 +545,34 @@ class FirestoreSocialRepository implements SocialPresenceRepository {
         'bestStepsStreak': payload.stats.bestStepsStreak,
         'bestNutritionStreak': payload.stats.bestNutritionStreak,
         'updatedAt': FieldValue.serverTimestamp(),
+        // Personal-metric cache. Nullable wire entries — older
+        // clients reading the doc treat missing fields as unknown
+        // and render `—`. Newer clients see the value when present
+        // and the owner has not blacklisted the corresponding stat
+        // key.
+        'stepsLifetime': payload.stats.stepsLifetime,
+        'stepsAvg30d': payload.stats.stepsAvg30d,
+        'activeDays30d': payload.stats.activeDays30d,
+        'avgSleepMinutes7d': payload.stats.avgSleepMinutes7d,
+        'avgBedtimeMinutes7d': payload.stats.avgBedtimeMinutes7d,
+        'avgWakeMinutes7d': payload.stats.avgWakeMinutes7d,
+        'avgDeepMinutes7d': payload.stats.avgDeepMinutes7d,
+        'avgRemMinutes7d': payload.stats.avgRemMinutes7d,
+        'latestWeightKg': payload.stats.latestWeightKg,
+        'latestBodyFatPct': payload.stats.latestBodyFatPct,
+        'avgKcal7d': payload.stats.avgKcal7d,
+        'avgProteinG7d': payload.stats.avgProteinG7d,
+        'avgFatG7d': payload.stats.avgFatG7d,
+        'avgCarbsG7d': payload.stats.avgCarbsG7d,
+        'cosmeticsUnlocked': payload.stats.cosmeticsUnlocked,
       },
+      // NOTE: `hiddenStatKeys` is intentionally NOT written here. It is
+      // a user preference, not a projection-derivable cache field;
+      // routing it through the upsertProfile rebuild path would let
+      // every progression-driven re-publish overwrite the user's
+      // visibility choices. The dedicated [updateHiddenStatKeys] write
+      // owns the field — `SetOptions(merge: true)` above preserves it
+      // across rebuilds.
     };
   }
 
@@ -733,6 +776,11 @@ class FirestoreSocialRepository implements SocialPresenceRepository {
               .map((value) => value.toString())
               .where((value) => value.isNotEmpty)
               .toList(growable: false),
+      statVisibilityOverrides: {
+        for (final value
+            in (data['statVisibilityOverrides'] as List<dynamic>? ?? const []))
+          if (value is String && value.isNotEmpty) value,
+      },
       createdAt: _readDateTime(data['createdAt']),
       updatedAt: _readDateTime(data['updatedAt']),
       equippedCosmetics: SocialEquippedCosmetics(
@@ -753,6 +801,21 @@ class FirestoreSocialRepository implements SocialPresenceRepository {
         bestStepsStreak: _readInt(stats['bestStepsStreak']),
         bestNutritionStreak: _readInt(stats['bestNutritionStreak']),
         updatedAt: _readDateTime(stats['updatedAt']),
+        stepsLifetime: _readIntOrNull(stats['stepsLifetime']),
+        stepsAvg30d: _readIntOrNull(stats['stepsAvg30d']),
+        activeDays30d: _readIntOrNull(stats['activeDays30d']),
+        avgSleepMinutes7d: _readIntOrNull(stats['avgSleepMinutes7d']),
+        avgBedtimeMinutes7d: _readIntOrNull(stats['avgBedtimeMinutes7d']),
+        avgWakeMinutes7d: _readIntOrNull(stats['avgWakeMinutes7d']),
+        avgDeepMinutes7d: _readIntOrNull(stats['avgDeepMinutes7d']),
+        avgRemMinutes7d: _readIntOrNull(stats['avgRemMinutes7d']),
+        latestWeightKg: _readDoubleOrNull(stats['latestWeightKg']),
+        latestBodyFatPct: _readDoubleOrNull(stats['latestBodyFatPct']),
+        avgKcal7d: _readDoubleOrNull(stats['avgKcal7d']),
+        avgProteinG7d: _readDoubleOrNull(stats['avgProteinG7d']),
+        avgFatG7d: _readDoubleOrNull(stats['avgFatG7d']),
+        avgCarbsG7d: _readDoubleOrNull(stats['avgCarbsG7d']),
+        cosmeticsUnlocked: _readIntOrNull(stats['cosmeticsUnlocked']),
       ),
     );
   }
@@ -973,6 +1036,18 @@ class FirestoreSocialRepository implements SocialPresenceRepository {
     if (value is int) return value;
     if (value is num) return value.toInt();
     return 0;
+  }
+
+  int? _readIntOrNull(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return null;
+  }
+
+  double? _readDoubleOrNull(dynamic value) {
+    if (value is double) return value;
+    if (value is num) return value.toDouble();
+    return null;
   }
 
   String? _readNonEmptyString(dynamic value) {

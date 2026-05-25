@@ -9,6 +9,8 @@ import '../../../core/logging/app_log.dart';
 import '../../../core/result/result.dart';
 import '../../auth/application/auth_provider.dart';
 import '../../cosmetics/application/cosmetics_provider.dart';
+import '../../health_connect/application/fitness_provider.dart';
+import '../../nutrition/application/kaloricke_tabulky_provider.dart';
 import '../../progression_engine/application/progression_engine_provider.dart';
 import '../../progression_engine/domain/catalog/progression_node_catalog.dart';
 import 'package:forgetrack/domain/progression/catalog/progression_entry.dart'
@@ -43,6 +45,8 @@ class SocialProvider extends ChangeNotifier {
   AuthProvider? _authProvider;
   ProgressionEngineProvider? _progressionProvider;
   CosmeticsProvider? _cosmeticsProvider;
+  FitnessProvider? _fitnessProvider;
+  KalorickeTabulkyProvider? _nutritionProvider;
 
   StreamSubscription<List<SocialFriendRequest>>? _incomingRequestsSubscription;
   StreamSubscription<List<SocialFriendRequest>>? _outgoingRequestsSubscription;
@@ -150,10 +154,14 @@ class SocialProvider extends ChangeNotifier {
     required AuthProvider authProvider,
     required ProgressionEngineProvider progressionProvider,
     CosmeticsProvider? cosmeticsProvider,
+    FitnessProvider? fitnessProvider,
+    KalorickeTabulkyProvider? nutritionProvider,
   }) {
     _authProvider = authProvider;
     _progressionProvider = progressionProvider;
     _cosmeticsProvider = cosmeticsProvider;
+    _fitnessProvider = fitnessProvider;
+    _nutritionProvider = nutritionProvider;
 
     final authSignature = _buildAuthSignature(authProvider);
     if (authSignature != _lastAuthSignature) {
@@ -419,6 +427,29 @@ class SocialProvider extends ChangeNotifier {
         _clearError();
       case Failure(error: final e):
         _recordAppError('setCurrentAchievementPinned', e);
+    }
+
+    notifyListeners();
+  }
+
+  /// Persists the signed-in user's stat-visibility override set. The
+  /// editor widget on the profile screen calls this once on commit
+  /// (not per-toggle) so the Firestore write is batched.
+  Future<void> setCurrentStatVisibilityOverrides(
+    Set<String> statVisibilityOverrides,
+  ) async {
+    final uid = _activeUid;
+    if (uid == null) return;
+
+    final result = await _repository.updateStatVisibilityOverrides(
+      uid: uid,
+      statVisibilityOverrides: statVisibilityOverrides,
+    );
+    switch (result) {
+      case Success():
+        _clearError();
+      case Failure(error: final e):
+        _recordAppError('setCurrentStatVisibilityOverrides', e);
     }
 
     notifyListeners();
@@ -787,6 +818,9 @@ class SocialProvider extends ChangeNotifier {
       socialEnabled: true,
       engine: progressionProvider,
       equippedCosmetics: _buildEquippedCosmeticsSnapshot(),
+      fitness: _fitnessProvider,
+      nutrition: _nutritionProvider,
+      cosmetics: _cosmeticsProvider,
     );
   }
 
@@ -834,6 +868,21 @@ class SocialProvider extends ChangeNotifier {
       payload.stats.grantedRewardCount.toString(),
       payload.stats.bestStepsStreak.toString(),
       payload.stats.bestNutritionStreak.toString(),
+      payload.stats.stepsLifetime?.toString() ?? '',
+      payload.stats.stepsAvg30d?.toString() ?? '',
+      payload.stats.activeDays30d?.toString() ?? '',
+      payload.stats.avgSleepMinutes7d?.toString() ?? '',
+      payload.stats.avgBedtimeMinutes7d?.toString() ?? '',
+      payload.stats.avgWakeMinutes7d?.toString() ?? '',
+      payload.stats.avgDeepMinutes7d?.toString() ?? '',
+      payload.stats.avgRemMinutes7d?.toString() ?? '',
+      payload.stats.latestWeightKg?.toStringAsFixed(2) ?? '',
+      payload.stats.latestBodyFatPct?.toStringAsFixed(2) ?? '',
+      payload.stats.avgKcal7d?.round().toString() ?? '',
+      payload.stats.avgProteinG7d?.round().toString() ?? '',
+      payload.stats.avgFatG7d?.round().toString() ?? '',
+      payload.stats.avgCarbsG7d?.round().toString() ?? '',
+      payload.stats.cosmeticsUnlocked?.toString() ?? '',
       payload.equippedCosmetics.frameId ?? '',
       payload.equippedCosmetics.relicId ?? '',
       payload.equippedCosmetics.backgroundId ?? '',

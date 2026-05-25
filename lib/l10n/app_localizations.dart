@@ -6819,6 +6819,78 @@ abstract class AppLocalizations {
   /// **'Reach level {level} through earned XP.'**
   String progLevelAchievementDesc(int level);
 
+  /// No description provided for @progEmblemSlotMilestoneTitle1.
+  ///
+  /// In en, this message translates to:
+  /// **'Insignia I'**
+  String get progEmblemSlotMilestoneTitle1;
+
+  /// No description provided for @progEmblemSlotMilestoneTitle2.
+  ///
+  /// In en, this message translates to:
+  /// **'Insignia II'**
+  String get progEmblemSlotMilestoneTitle2;
+
+  /// No description provided for @progEmblemSlotMilestoneTitle3.
+  ///
+  /// In en, this message translates to:
+  /// **'Insignia III'**
+  String get progEmblemSlotMilestoneTitle3;
+
+  /// No description provided for @progEmblemSlotMilestoneTitle4.
+  ///
+  /// In en, this message translates to:
+  /// **'Insignia IV'**
+  String get progEmblemSlotMilestoneTitle4;
+
+  /// No description provided for @progEmblemSlotMilestoneTitle5.
+  ///
+  /// In en, this message translates to:
+  /// **'Insignia V'**
+  String get progEmblemSlotMilestoneTitle5;
+
+  /// No description provided for @progEmblemSlotMilestoneTitle6.
+  ///
+  /// In en, this message translates to:
+  /// **'Insignia VI'**
+  String get progEmblemSlotMilestoneTitle6;
+
+  /// No description provided for @progEmblemSlotMilestoneDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocks emblem slot #{slot} on your profile crest.'**
+  String progEmblemSlotMilestoneDesc(int slot);
+
+  /// No description provided for @celebrationEmblemSlotEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'NEW SLOT UNLOCKED'**
+  String get celebrationEmblemSlotEyebrow;
+
+  /// No description provided for @celebrationEmblemSlotTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A new emblem slot is unlocked!'**
+  String get celebrationEmblemSlotTitle;
+
+  /// No description provided for @celebrationEmblemSlotDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Reaching level {level} opened another slot on your emblem crest. Head to your profile to pick which emblem you want to show off.'**
+  String celebrationEmblemSlotDescription(int level);
+
+  /// No description provided for @celebrationEmblemSlotRewardName.
+  ///
+  /// In en, this message translates to:
+  /// **'Emblem slot'**
+  String get celebrationEmblemSlotRewardName;
+
+  /// No description provided for @celebrationEmblemSlotRewardSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Slot {slot} of {total}'**
+  String celebrationEmblemSlotRewardSub(int slot, int total);
+
   /// No description provided for @cosmeticFramePilgrimName.
   ///
   /// In en, this message translates to:
@@ -9050,6 +9122,222 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'SHARED POSTS'**
   String get socialProfileSharedPosts;
+
+  /// No description provided for @profileStatsSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'STATS'**
+  String get profileStatsSectionTitle;
+
+  /// No description provided for @profileStatsEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get profileStatsEdit;
+
+  /// No description provided for @profileStatsSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get profileStatsSave;
+
+  /// No description provided for @profileStatsCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get profileStatsCancel;
+
+  /// No description provided for @profileStatsHeroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hero'**
+  String get profileStatsHeroTitle;
+
+  /// No description provided for @profileStatsActivityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get profileStatsActivityTitle;
+
+  /// No description provided for @profileStatsSleepTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep'**
+  String get profileStatsSleepTitle;
+
+  /// No description provided for @profileStatsBodyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Body'**
+  String get profileStatsBodyTitle;
+
+  /// No description provided for @profileStatsNutritionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition'**
+  String get profileStatsNutritionTitle;
+
+  /// No description provided for @profileStatsSocialTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Community'**
+  String get profileStatsSocialTitle;
+
+  /// No description provided for @profileStatLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Level'**
+  String get profileStatLevel;
+
+  /// No description provided for @profileStatTotalXp.
+  ///
+  /// In en, this message translates to:
+  /// **'Total XP'**
+  String get profileStatTotalXp;
+
+  /// No description provided for @profileStatUnlockedAchievements.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievements'**
+  String get profileStatUnlockedAchievements;
+
+  /// No description provided for @profileStatGrantedRewards.
+  ///
+  /// In en, this message translates to:
+  /// **'Granted rewards'**
+  String get profileStatGrantedRewards;
+
+  /// No description provided for @profileStatCosmeticsUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Cosmetics unlocked'**
+  String get profileStatCosmeticsUnlocked;
+
+  /// No description provided for @profileStatDaysOnApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Days in app'**
+  String get profileStatDaysOnApp;
+
+  /// No description provided for @profileStatStepsLifetime.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps (total)'**
+  String get profileStatStepsLifetime;
+
+  /// No description provided for @profileStatStepsAvg30d.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg steps / day'**
+  String get profileStatStepsAvg30d;
+
+  /// No description provided for @profileStatActiveDays30d.
+  ///
+  /// In en, this message translates to:
+  /// **'Active days'**
+  String get profileStatActiveDays30d;
+
+  /// No description provided for @profileStatSleepAvgDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg sleep'**
+  String get profileStatSleepAvgDuration;
+
+  /// No description provided for @profileStatSleepAvgBedtime.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg bedtime'**
+  String get profileStatSleepAvgBedtime;
+
+  /// No description provided for @profileStatSleepAvgWakeTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg wake time'**
+  String get profileStatSleepAvgWakeTime;
+
+  /// No description provided for @profileStatSleepAvgDeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep sleep'**
+  String get profileStatSleepAvgDeep;
+
+  /// No description provided for @profileStatSleepAvgRem.
+  ///
+  /// In en, this message translates to:
+  /// **'REM sleep'**
+  String get profileStatSleepAvgRem;
+
+  /// No description provided for @profileStatLatestWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get profileStatLatestWeight;
+
+  /// No description provided for @profileStatLatestBodyFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Body fat'**
+  String get profileStatLatestBodyFat;
+
+  /// No description provided for @profileStatAvgKcal.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg kcal / day'**
+  String get profileStatAvgKcal;
+
+  /// No description provided for @profileStatAvgProtein.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg protein / day'**
+  String get profileStatAvgProtein;
+
+  /// No description provided for @profileStatAvgFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg fat / day'**
+  String get profileStatAvgFat;
+
+  /// No description provided for @profileStatAvgCarbs.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg carbs / day'**
+  String get profileStatAvgCarbs;
+
+  /// No description provided for @profileStatFriendsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends'**
+  String get profileStatFriendsCount;
+
+  /// No description provided for @profileStatSharedPostsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared posts'**
+  String get profileStatSharedPostsCount;
+
+  /// No description provided for @profileStatJoinedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Hero since'**
+  String get profileStatJoinedAt;
+
+  /// No description provided for @profileStatsOwnerOnlyBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'you only'**
+  String get profileStatsOwnerOnlyBadge;
+
+  /// No description provided for @profileStatsStreakVisibilityShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show to others'**
+  String get profileStatsStreakVisibilityShow;
+
+  /// No description provided for @profileStatsStreakVisibilityHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden from profile'**
+  String get profileStatsStreakVisibilityHide;
 
   /// No description provided for @socialProfileStatsAchievements.
   ///

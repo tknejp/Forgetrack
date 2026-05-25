@@ -381,23 +381,36 @@ Future<void> _runForgetrack(SentryConsentProvider sentryConsent) async {
               return provider;
             },
           ),
-          ChangeNotifierProxyProvider3<AuthProvider, ProgressionEngineProvider,
-              CosmeticsProvider, SocialProvider>(
+          ChangeNotifierProxyProvider5<
+              AuthProvider,
+              ProgressionEngineProvider,
+              CosmeticsProvider,
+              FitnessProvider,
+              KalorickeTabulkyProvider,
+              SocialProvider>(
             // Eager: starts Firestore session reconcile + friend / profile
             // stream subscriptions during boot. Without this, the hero profile
             // header on the home screen sees a blank avatar for 100-500 ms
             // until a widget first reads SocialProvider and triggers create().
+            //
+            // Fitness + KT are wired in so the profile-stats projection can
+            // populate the activity / sleep / body / nutrition wire fields
+            // that friend devices read from `SocialUserStats`. Signature
+            // debouncing in `_buildProfileSignature` rejects no-op republishes
+            // when those providers tick on unrelated data.
             lazy: false,
             create: (_) => SocialProvider(
               repository: socialRepository,
               session: socialSession,
               backendState: socialBackendState,
             ),
-            update: (_, auth, progression, cosmetics, provider) {
+            update: (_, auth, progression, cosmetics, fitness, kt, provider) {
               provider!.bind(
                 authProvider: auth,
                 progressionProvider: progression,
                 cosmeticsProvider: cosmetics,
+                fitnessProvider: fitness,
+                nutritionProvider: kt,
               );
               return provider;
             },

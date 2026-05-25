@@ -86,6 +86,19 @@ abstract class SocialPresenceRepository {
     required bool pinned,
   });
 
+  /// Writes the user's per-stat visibility overrides to the profile
+  /// document without rebuilding the full payload. Mirrors the
+  /// pinned-achievement single-field update path — visibility is a UI
+  /// preference, decoupled from progression-driven re-publishes.
+  ///
+  /// Set semantics: membership means the user's choice differs from
+  /// the catalog's `defaultHidden` for that key. See
+  /// `SocialUserProfile.statVisibilityOverrides`.
+  Future<Result<void, AppError>> updateStatVisibilityOverrides({
+    required String uid,
+    required Set<String> statVisibilityOverrides,
+  });
+
   Future<Result<void, AppError>> sendFriendRequest({
     required String fromUid,
     required String toUid,

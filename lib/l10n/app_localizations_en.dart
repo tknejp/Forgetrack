@@ -3825,6 +3825,48 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get progEmblemSlotMilestoneTitle1 => 'Insignia I';
+
+  @override
+  String get progEmblemSlotMilestoneTitle2 => 'Insignia II';
+
+  @override
+  String get progEmblemSlotMilestoneTitle3 => 'Insignia III';
+
+  @override
+  String get progEmblemSlotMilestoneTitle4 => 'Insignia IV';
+
+  @override
+  String get progEmblemSlotMilestoneTitle5 => 'Insignia V';
+
+  @override
+  String get progEmblemSlotMilestoneTitle6 => 'Insignia VI';
+
+  @override
+  String progEmblemSlotMilestoneDesc(int slot) {
+    return 'Unlocks emblem slot #$slot on your profile crest.';
+  }
+
+  @override
+  String get celebrationEmblemSlotEyebrow => 'NEW SLOT UNLOCKED';
+
+  @override
+  String get celebrationEmblemSlotTitle => 'A new emblem slot is unlocked!';
+
+  @override
+  String celebrationEmblemSlotDescription(int level) {
+    return 'Reaching level $level opened another slot on your emblem crest. Head to your profile to pick which emblem you want to show off.';
+  }
+
+  @override
+  String get celebrationEmblemSlotRewardName => 'Emblem slot';
+
+  @override
+  String celebrationEmblemSlotRewardSub(int slot, int total) {
+    return 'Slot $slot of $total';
+  }
+
+  @override
   String get cosmeticFramePilgrimName => 'Pilgrim\'s Frame';
 
   @override
@@ -5219,6 +5261,114 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get socialProfileSharedPosts => 'SHARED POSTS';
+
+  @override
+  String get profileStatsSectionTitle => 'STATS';
+
+  @override
+  String get profileStatsEdit => 'Edit';
+
+  @override
+  String get profileStatsSave => 'Done';
+
+  @override
+  String get profileStatsCancel => 'Cancel';
+
+  @override
+  String get profileStatsHeroTitle => 'Hero';
+
+  @override
+  String get profileStatsActivityTitle => 'Activity';
+
+  @override
+  String get profileStatsSleepTitle => 'Sleep';
+
+  @override
+  String get profileStatsBodyTitle => 'Body';
+
+  @override
+  String get profileStatsNutritionTitle => 'Nutrition';
+
+  @override
+  String get profileStatsSocialTitle => 'Community';
+
+  @override
+  String get profileStatLevel => 'Level';
+
+  @override
+  String get profileStatTotalXp => 'Total XP';
+
+  @override
+  String get profileStatUnlockedAchievements => 'Achievements';
+
+  @override
+  String get profileStatGrantedRewards => 'Granted rewards';
+
+  @override
+  String get profileStatCosmeticsUnlocked => 'Cosmetics unlocked';
+
+  @override
+  String get profileStatDaysOnApp => 'Days in app';
+
+  @override
+  String get profileStatStepsLifetime => 'Steps (total)';
+
+  @override
+  String get profileStatStepsAvg30d => 'Avg steps / day';
+
+  @override
+  String get profileStatActiveDays30d => 'Active days';
+
+  @override
+  String get profileStatSleepAvgDuration => 'Avg sleep';
+
+  @override
+  String get profileStatSleepAvgBedtime => 'Avg bedtime';
+
+  @override
+  String get profileStatSleepAvgWakeTime => 'Avg wake time';
+
+  @override
+  String get profileStatSleepAvgDeep => 'Deep sleep';
+
+  @override
+  String get profileStatSleepAvgRem => 'REM sleep';
+
+  @override
+  String get profileStatLatestWeight => 'Weight';
+
+  @override
+  String get profileStatLatestBodyFat => 'Body fat';
+
+  @override
+  String get profileStatAvgKcal => 'Avg kcal / day';
+
+  @override
+  String get profileStatAvgProtein => 'Avg protein / day';
+
+  @override
+  String get profileStatAvgFat => 'Avg fat / day';
+
+  @override
+  String get profileStatAvgCarbs => 'Avg carbs / day';
+
+  @override
+  String get profileStatFriendsCount => 'Friends';
+
+  @override
+  String get profileStatSharedPostsCount => 'Shared posts';
+
+  @override
+  String get profileStatJoinedAt => 'Hero since';
+
+  @override
+  String get profileStatsOwnerOnlyBadge => 'you only';
+
+  @override
+  String get profileStatsStreakVisibilityShow => 'Show to others';
+
+  @override
+  String get profileStatsStreakVisibilityHide => 'Hidden from profile';
 
   @override
   String get socialProfileStatsAchievements => 'ACHIEVEMENTS';

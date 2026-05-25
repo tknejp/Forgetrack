@@ -1223,6 +1223,36 @@
     }
   },
 
+  "progEmblemSlotMilestoneTitle1": "Insignie I",
+  "progEmblemSlotMilestoneTitle2": "Insignie II",
+  "progEmblemSlotMilestoneTitle3": "Insignie III",
+  "progEmblemSlotMilestoneTitle4": "Insignie IV",
+  "progEmblemSlotMilestoneTitle5": "Insignie V",
+  "progEmblemSlotMilestoneTitle6": "Insignie VI",
+  "progEmblemSlotMilestoneDesc": "Odemkne {slot}. místo na štítu emblémů v profilu.",
+  "@progEmblemSlotMilestoneDesc": {
+    "placeholders": {
+      "slot": { "type": "int" }
+    }
+  },
+
+  "celebrationEmblemSlotEyebrow": "NOVÝ SLOT ODEMČEN",
+  "celebrationEmblemSlotTitle": "Odemčen nový slot pro emblém!",
+  "celebrationEmblemSlotDescription": "Dosažením levelu {level} se ti otevřel další slot na štítu emblémů. Otevři svůj profil a vyber si, který emblém v něm vystavíš.",
+  "@celebrationEmblemSlotDescription": {
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+  "celebrationEmblemSlotRewardName": "Slot na emblém",
+  "celebrationEmblemSlotRewardSub": "Slot {slot} z {total}",
+  "@celebrationEmblemSlotRewardSub": {
+    "placeholders": {
+      "slot": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
   "cosmeticFramePilgrimName": "Poutnický rámeček",
   "cosmeticFramePilgrimDesc": "Prostý dřevěný rámeček pro každého, kdo se vydal na cestu.",
 
@@ -1767,6 +1797,42 @@
 
   "socialProfilePinnedAchievements": "PŘIPNUTÉ ACHIEVEMENTY",
   "socialProfileSharedPosts": "SDÍLENÉ PŘÍSPĚVKY",
+  "profileStatsSectionTitle": "STATISTIKY",
+  "profileStatsEdit": "Upravit",
+  "profileStatsSave": "Hotovo",
+  "profileStatsCancel": "Zrušit",
+  "profileStatsHeroTitle": "Hrdina",
+  "profileStatsActivityTitle": "Aktivita",
+  "profileStatsSleepTitle": "Spánek",
+  "profileStatsBodyTitle": "Tělo",
+  "profileStatsNutritionTitle": "Výživa",
+  "profileStatsSocialTitle": "Společenství",
+  "profileStatLevel": "Úroveň",
+  "profileStatTotalXp": "Celkem XP",
+  "profileStatUnlockedAchievements": "Achievementy",
+  "profileStatGrantedRewards": "Získané odměny",
+  "profileStatCosmeticsUnlocked": "Odemčené kosmetiky",
+  "profileStatDaysOnApp": "Dny v appce",
+  "profileStatStepsLifetime": "Kroky celkem",
+  "profileStatStepsAvg30d": "Průměr kroků / den",
+  "profileStatActiveDays30d": "Aktivní dny",
+  "profileStatSleepAvgDuration": "Průměr spánku",
+  "profileStatSleepAvgBedtime": "Průměr usnutí",
+  "profileStatSleepAvgWakeTime": "Průměr probuzení",
+  "profileStatSleepAvgDeep": "Hluboký spánek",
+  "profileStatSleepAvgRem": "REM spánek",
+  "profileStatLatestWeight": "Váha",
+  "profileStatLatestBodyFat": "Tělesný tuk",
+  "profileStatAvgKcal": "Průměr kcal / den",
+  "profileStatAvgProtein": "Průměr bílkoviny / den",
+  "profileStatAvgFat": "Průměr tuky / den",
+  "profileStatAvgCarbs": "Průměr sacharidy / den",
+  "profileStatFriendsCount": "Přátelé",
+  "profileStatSharedPostsCount": "Sdílené příspěvky",
+  "profileStatJoinedAt": "Hrdina od",
+  "profileStatsOwnerOnlyBadge": "jen pro mě",
+  "profileStatsStreakVisibilityShow": "Zobrazit ostatním",
+  "profileStatsStreakVisibilityHide": "Skryté z profilu",
   "socialProfileStatsAchievements": "ÚSPĚCHY",
   "socialProfileStatsBestStreak": "NEJL. SÉRIE",
   "socialProfileStatsStepsStreak": "KROKY SÉRIE",

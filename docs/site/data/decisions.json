@@ -1312,6 +1312,32 @@
         "lib/features/progression_engine/domain/catalog/content/meta_content.dart",
         "test/features/progression_engine/combo_chain_generations_test.dart"
       ]
+    },
+    {
+      "id": "profile-stats-visibility",
+      "title": "Profile stats viditelnost: XOR override set mimo projection rebuild",
+      "status": "accepted",
+      "date": "2026-05-25",
+      "context": "Profile screen má sekci STATISTIKY s 7 expandable kartami (Hrdina / Streak rekordy / Aktivita / Spánek / Tělo / Výživa / Společenství). Owner chce vědomě řídit, které stats jsou veřejné a které privátní — váha, kcal, body fat patří mezi citlivé metriky, ale level a achievementy jsou součást herního profilu. Některé defaultní hodnoty mají dávat smysl jako veřejné (level), jiné jako skryté (váha) — uživatel musí mít možnost obě jednoduše překlopit. SocialUserProfile už denormalizovaný cache row v Firestore (rebuilden z Player + Loadout + Journal přes SocialProfileProjection.publishIfReady). Otázka: kam patří viditelnostní seznam? Pokud by žil jako další pole v upsertProfile payload, každý progression-driven re-publish (XP grant, achievement unlock — event-driven) by ho přepsal hodnotou z inputs. To by buď donutilo projection držet 'last-known-good' cache mimo svůj input contract (porušuje pure-projection princip 'same inputs → same output'), nebo by signature debouncing zaříznul UI optimistic update protože visibility toggle by neměl progression signal. Druhý problém: jak v jednom Set<String> reprezentovat OBĚ směry toggle (default-visible → hide; default-hidden → publish)?",
+      "decision": "**`statVisibilityOverrides: Set<String>` je nezávislé pole na SocialUserProfile dokumentu**, zapisuje se výhradně přes dedicated `SocialPresenceRepository.updateStatVisibilityOverrides(uid, Set<String>)` single-field merge — projection-driven `upsertProfile` ho NIKDY nezapisuje (Firestore `SetOptions(merge: true)` ho zachová napříč rebuild publishes). Princip: **viditelnost je user input, ne derived state**. Sémantika setu je **XOR proti catalog `defaultHidden`**: membership znamená, že uživatelská volba se liší od defaultu. Resolver `isStatVisibleForViewer` počítá `defaultVisible != overridden`. Tím funguje obojí směr — default-visible v setu = skryté, default-hidden v setu = publikované. Owner toggluje → jeden set.add/remove pro libovolný klíč, žádné větvení podle defaultu. Wire format zároveň rozšířen o nullable personal-metric pole na SocialUserStats (stepsLifetime, stepsAvg30d, activeDays30d, avgSleep/Bedtime/Wake/Deep/RemMinutes7d, latestWeightKg/BodyFatPct, avgKcal/Protein/Fat/CarbsG7d, cosmeticsUnlocked) — projection je tahá z volitelně bound FitnessProvider + KalorickeTabulkyProvider + CosmeticsProvider. Per-stat default-hidden flag (v profileStatCatalog) řídí kurátorovaný default pro foreign viewery; citlivé jsou opt-in publish, veřejné jsou opt-out hide.",
+      "consequences": [
+        "Toggle UI je triviální a optimistic-friendly: setCurrentStatVisibilityOverrides(Set) píše přímo do Firestore, projection rebuildy běží nezávisle. Toggle handler je jeden set.add/remove call regardless of catalog default — žádné větvení.",
+        "Forward-compatible defaults: nový stat key přidaný v budoucnu se na cizích profilech zobrazí jen pokud `defaultHidden: false`. Sensitive metriky doplňované v katalogu mají `defaultHidden: true` (opt-in publish), uživatel ale může vědomě překlopit přes přidání klíče do override setu.",
+        "Bezpečný re-publish path: pokud uživatel pře-instaluje appku a re-publishuje profile (signature mismatch po cold start), předchozí `statVisibilityOverrides` zůstane zachovaná díky `SetOptions(merge: true)` — projection rebuild ji neztratí.",
+        "SocialProfileInputs má volitelné FitnessProvider + KalorickeTabulkyProvider + CosmeticsProvider; main.dart switchnul SocialProvider DI z ChangeNotifierProxyProvider3 na ProxyProvider5 (auth, progression, cosmetics, fitness, KT). Signature debouncer rozšířen o personal metrics + cosmetics count tak, aby drift v stepsHistory / unlocked.length triggeroval republish.",
+        "Streak rekordy karta dostala single card-level klíč `streaks.allRecords` (per-row toggling by neřeklo víc než per-card pro densní 5-domain tabulku).",
+        "Žádný stat není 'owner-only' na wire format — všechny mají publikovatelnou cestu (cosmeticsUnlocked dostal int? wire field), takže každý toggle v edit modu je smysluplný."
+      ],
+      "alternatives": "(A) **Literal blacklist (`hiddenStatKeys`)** — jen 'add = hide'. Odmítnuto: nemůže reprezentovat opt-in publishing default-hidden statů. Default-hidden + přidání do setu = stále hidden = bug. XOR override sjednocuje obě sémantiky. (B) **Dva oddělené sety (`hidden` + `published`)** — explicit ale větší wire payload a redundantní (membership v obou je nesmysl). XOR komprimuje na jeden set. (C) **`statVisibilityOverrides` jako součást upsertProfile** s 'preserve' logikou v projection — odmítnuto: porušuje pure projection contract, vyžaduje stateful cache mimo Firestore dokument, race condition během boot windows. (D) **Per-card visibility místo per-row** — jednodušší UI ale ztratí granularitu (uživatel chce skrýt jen 'získané odměny' z Hrdina karty, ne celou Hrdina kartu). Streak rekordy karta je výjimka kde per-card dává smysl (5 řádků × 2 kolony = příliš dense pro per-row eye toggle). (E) **Settings screen místo inline edit mode** — odmítnuto: edit pencil v hlavičce sekce drží volbu v kontextu kde uživatel vidí náhled, settings screen by oddálil cause-and-effect.",
+      "links": [
+        "lib/features/social/domain/profile_stat_catalog.dart",
+        "lib/features/social/domain/social_user_profile.dart",
+        "lib/features/social/data/social_repository_firestore.dart",
+        "lib/features/social/application/social_profile_projection.dart",
+        "lib/features/social/application/social_provider.dart",
+        "lib/features/social/presentation/widgets/profile_stats_section.dart",
+        "lib/features/social/presentation/widgets/profile_stat_card.dart"
+      ]
     }
   ]
 }

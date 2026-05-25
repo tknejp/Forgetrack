@@ -3815,6 +3815,48 @@ class AppLocalizationsCs extends AppLocalizations {
   }
 
   @override
+  String get progEmblemSlotMilestoneTitle1 => 'Insignie I';
+
+  @override
+  String get progEmblemSlotMilestoneTitle2 => 'Insignie II';
+
+  @override
+  String get progEmblemSlotMilestoneTitle3 => 'Insignie III';
+
+  @override
+  String get progEmblemSlotMilestoneTitle4 => 'Insignie IV';
+
+  @override
+  String get progEmblemSlotMilestoneTitle5 => 'Insignie V';
+
+  @override
+  String get progEmblemSlotMilestoneTitle6 => 'Insignie VI';
+
+  @override
+  String progEmblemSlotMilestoneDesc(int slot) {
+    return 'Odemkne $slot. místo na štítu emblémů v profilu.';
+  }
+
+  @override
+  String get celebrationEmblemSlotEyebrow => 'NOVÝ SLOT ODEMČEN';
+
+  @override
+  String get celebrationEmblemSlotTitle => 'Odemčen nový slot pro emblém!';
+
+  @override
+  String celebrationEmblemSlotDescription(int level) {
+    return 'Dosažením levelu $level se ti otevřel další slot na štítu emblémů. Otevři svůj profil a vyber si, který emblém v něm vystavíš.';
+  }
+
+  @override
+  String get celebrationEmblemSlotRewardName => 'Slot na emblém';
+
+  @override
+  String celebrationEmblemSlotRewardSub(int slot, int total) {
+    return 'Slot $slot z $total';
+  }
+
+  @override
   String get cosmeticFramePilgrimName => 'Poutnický rámeček';
 
   @override
@@ -5226,6 +5268,114 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get socialProfileSharedPosts => 'SDÍLENÉ PŘÍSPĚVKY';
+
+  @override
+  String get profileStatsSectionTitle => 'STATISTIKY';
+
+  @override
+  String get profileStatsEdit => 'Upravit';
+
+  @override
+  String get profileStatsSave => 'Hotovo';
+
+  @override
+  String get profileStatsCancel => 'Zrušit';
+
+  @override
+  String get profileStatsHeroTitle => 'Hrdina';
+
+  @override
+  String get profileStatsActivityTitle => 'Aktivita';
+
+  @override
+  String get profileStatsSleepTitle => 'Spánek';
+
+  @override
+  String get profileStatsBodyTitle => 'Tělo';
+
+  @override
+  String get profileStatsNutritionTitle => 'Výživa';
+
+  @override
+  String get profileStatsSocialTitle => 'Společenství';
+
+  @override
+  String get profileStatLevel => 'Úroveň';
+
+  @override
+  String get profileStatTotalXp => 'Celkem XP';
+
+  @override
+  String get profileStatUnlockedAchievements => 'Achievementy';
+
+  @override
+  String get profileStatGrantedRewards => 'Získané odměny';
+
+  @override
+  String get profileStatCosmeticsUnlocked => 'Odemčené kosmetiky';
+
+  @override
+  String get profileStatDaysOnApp => 'Dny v appce';
+
+  @override
+  String get profileStatStepsLifetime => 'Kroky celkem';
+
+  @override
+  String get profileStatStepsAvg30d => 'Průměr kroků / den';
+
+  @override
+  String get profileStatActiveDays30d => 'Aktivní dny';
+
+  @override
+  String get profileStatSleepAvgDuration => 'Průměr spánku';
+
+  @override
+  String get profileStatSleepAvgBedtime => 'Průměr usnutí';
+
+  @override
+  String get profileStatSleepAvgWakeTime => 'Průměr probuzení';
+
+  @override
+  String get profileStatSleepAvgDeep => 'Hluboký spánek';
+
+  @override
+  String get profileStatSleepAvgRem => 'REM spánek';
+
+  @override
+  String get profileStatLatestWeight => 'Váha';
+
+  @override
+  String get profileStatLatestBodyFat => 'Tělesný tuk';
+
+  @override
+  String get profileStatAvgKcal => 'Průměr kcal / den';
+
+  @override
+  String get profileStatAvgProtein => 'Průměr bílkoviny / den';
+
+  @override
+  String get profileStatAvgFat => 'Průměr tuky / den';
+
+  @override
+  String get profileStatAvgCarbs => 'Průměr sacharidy / den';
+
+  @override
+  String get profileStatFriendsCount => 'Přátelé';
+
+  @override
+  String get profileStatSharedPostsCount => 'Sdílené příspěvky';
+
+  @override
+  String get profileStatJoinedAt => 'Hrdina od';
+
+  @override
+  String get profileStatsOwnerOnlyBadge => 'jen pro mě';
+
+  @override
+  String get profileStatsStreakVisibilityShow => 'Zobrazit ostatním';
+
+  @override
+  String get profileStatsStreakVisibilityHide => 'Skryté z profilu';
 
   @override
   String get socialProfileStatsAchievements => 'ÚSPĚCHY';

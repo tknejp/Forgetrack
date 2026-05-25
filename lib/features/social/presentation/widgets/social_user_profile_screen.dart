@@ -11,14 +11,13 @@ import '../../../cosmetics/application/cosmetics_provider.dart';
 import '../../../cosmetics/application/emblem_board_provider.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
 import '../../../cosmetics/presentation/widgets/cosmetics_inventory_section.dart';
-import '../../../progression_engine/application/progression_engine_provider.dart';
 import '../../application/social_provider.dart';
 import '../../domain/social_models.dart';
-import 'hero_streak_stats_card.dart';
 import '../social_profile_utils.dart';
 import 'companion_slot_sheet.dart';
 import 'emblem_slot_sheet.dart';
 import 'profile_detail_hero_card.dart';
+import 'profile_stats_section.dart';
 import 'skin_slot_sheet.dart';
 import 'social_cosmetic_avatar.dart';
 import 'social_edit_handle_sheet.dart';
@@ -239,7 +238,6 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
             final displayName =
                 profile?.displayName ?? widget.initialDisplayName ?? '';
             final handle = profile?.handle ?? '';
-            final stats = profile?.stats;
             // Slot mapping → cosmetic def. For friend profiles we
             // only know their single equipped emblem, so slot 0 shows
             // it and everything else is null.
@@ -253,15 +251,6 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
                         i++)
                       null,
                   ];
-            // Owner always gets slot 0 as a live entry point — even
-            // with zero unlocks, tapping it opens the picker (which
-            // surfaces the "Zatím nemáš odemčený žádný znak." empty
-            // state) instead of leaving a fresh player with no path
-            // into the emblem system from the profile.
-            final unlockedCount = isMe
-                ? (ownUnlockedEmblems.isEmpty ? 1 : ownUnlockedEmblems.length)
-                : (profile?.equippedCosmetics.emblemId == null ? 0 : 1);
-
             // The top app bar is rendered as a transparent overlay on
             // top of the hero header — the background scene shows
             // through under the status bar / back button, no chrome
@@ -300,7 +289,6 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
                             raceId: cosmeticsState?.currentRaceId,
                             skinId: cosmeticsState?.state?.equipped.skinId,
                             emblemSlots: emblemSlots,
-                            unlockedCount: unlockedCount,
                             onEditHandle:
                                 isMe ? () => _editOwnHandle(handle) : null,
                             friendCount: friendCount,
@@ -351,23 +339,29 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             if (isMe) ...[
-                              // Owner-only section ordering per the
-                              // 2026-05-22 UI refactor: Streak rekordy →
-                              // Inventář → Připnuté achievementy →
-                              // Sdílené příspěvky (s možností odstranit).
-                              if (stats != null) ...[
-                                _buildStats(stats, isMe: true),
-                                const SizedBox(height: Tokens.spaceLg),
-                              ],
+                              // Owner section order (2026-05-25 stats
+                              // section landing): Inventář →
+                              // Statistiky (subsumes Streak rekordy as
+                              // one of its cards) → Připnuté
+                              // achievementy → Sdílené příspěvky.
+                              // Inventář sits above stats because users
+                              // open the profile to manage cosmetics
+                              // more often than to scan numbers.
                               const CosmeticsInventorySection(),
                               const SizedBox(height: Tokens.spaceLg),
+                              _buildProfileStatsSection(
+                                  profile, isMe: true),
+                              const SizedBox(height: Tokens.spaceLg),
                             ] else ...[
-                              // Foreign profile: pending request / add or
-                              // remove-friend action sits above the
-                              // pinned + shared sections. Streak rekordy
-                              // and inventory are owner-only.
+                              // Foreign profile: pending request /
+                              // add/remove-friend action sits above
+                              // the stats section. Inventář is
+                              // owner-only.
                               _buildActionArea(
                                   context, social, displayName),
+                              const SizedBox(height: Tokens.spaceLg),
+                              _buildProfileStatsSection(
+                                  profile, isMe: false),
                               const SizedBox(height: Tokens.spaceLg),
                             ],
                             _SectionTitle(
@@ -469,59 +463,34 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
     );
   }
 
-  Widget _buildStats(SocialUserStats stats, {required bool isMe}) {
-    // Own profile: read live per-domain (current + best) streaks from
-    // the progression engine. Friend profiles only carry steps +
-    // nutrition best on the Firestore wire format today; the rest
-    // surfaces as a dash placeholder until the schema grows the
-    // missing fields (tracked under #99 follow-ups).
-    if (isMe) {
-      final progression = context.watch<ProgressionEngineProvider>();
-      final rows = [
-        for (final domain in const [
-          ProgressionDomain.steps,
-          ProgressionDomain.nutrition,
-          ProgressionDomain.sleep,
-          ProgressionDomain.activity,
-          ProgressionDomain.body,
-        ])
-          DomainStreakRow(
-            domain: domain,
-            currentStreak: progression.currentStreakForDomain(domain),
-            bestStreak: progression
-                .streakForDomain(domain)
-                .bestStreak,
-          ),
-      ];
-      return HeroStreakStatsCard(
-        achievementsCount: stats.unlockedAchievementCount,
-        rows: rows,
-      );
-    }
-
-    return HeroStreakStatsCard(
-      achievementsCount: stats.unlockedAchievementCount,
-      rows: const [
-        ProgressionDomain.steps,
-        ProgressionDomain.nutrition,
-        ProgressionDomain.sleep,
-        ProgressionDomain.activity,
-        ProgressionDomain.body,
-      ]
-          .map((domain) => DomainStreakRow(
-                domain: domain,
-                // Wire format limits — only steps / nutrition best
-                // arrives over Firestore today, and "current streak"
-                // is never published. Future wire change unlocks the
-                // remaining cells.
-                currentStreak: null,
-                bestStreak: switch (domain) {
-                  ProgressionDomain.steps => stats.bestStepsStreak,
-                  ProgressionDomain.nutrition => stats.bestNutritionStreak,
-                  _ => null,
-                },
-              ))
-          .toList(growable: false),
+  /// Renders the stat-visibility section under the streak card.
+  ///
+  /// Wraps the section in two nested StreamBuilders so the friend
+  /// count + shared posts count come from the same live streams the
+  /// rest of the profile screen already subscribes to (a fresh
+  /// subscription per builder; the repository serves an independent
+  /// snapshot listener per call so each StreamBuilder is fed
+  /// regardless of how many other widgets watch the same data).
+  Widget _buildProfileStatsSection(
+    SocialUserProfile? profile, {
+    required bool isMe,
+  }) {
+    final social = context.read<SocialProvider>();
+    return StreamBuilder<List<SocialUserProfile>>(
+      stream: social.watchFriendProfilesForUser(widget.uid),
+      builder: (context, friendsSnap) {
+        return StreamBuilder<List<SocialAchievementShare>>(
+          stream: _sharesStream,
+          builder: (context, sharesSnap) {
+            return ProfileStatsSection(
+              profile: profile,
+              isMe: isMe,
+              friendCount: friendsSnap.data?.length,
+              sharedPostsCount: sharesSnap.data?.length,
+            );
+          },
+        );
+      },
     );
   }
 

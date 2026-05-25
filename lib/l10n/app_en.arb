@@ -2027,6 +2027,36 @@
     }
   },
 
+  "progEmblemSlotMilestoneTitle1": "Insignia I",
+  "progEmblemSlotMilestoneTitle2": "Insignia II",
+  "progEmblemSlotMilestoneTitle3": "Insignia III",
+  "progEmblemSlotMilestoneTitle4": "Insignia IV",
+  "progEmblemSlotMilestoneTitle5": "Insignia V",
+  "progEmblemSlotMilestoneTitle6": "Insignia VI",
+  "progEmblemSlotMilestoneDesc": "Unlocks emblem slot #{slot} on your profile crest.",
+  "@progEmblemSlotMilestoneDesc": {
+    "placeholders": {
+      "slot": { "type": "int" }
+    }
+  },
+
+  "celebrationEmblemSlotEyebrow": "NEW SLOT UNLOCKED",
+  "celebrationEmblemSlotTitle": "A new emblem slot is unlocked!",
+  "celebrationEmblemSlotDescription": "Reaching level {level} opened another slot on your emblem crest. Head to your profile to pick which emblem you want to show off.",
+  "@celebrationEmblemSlotDescription": {
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+  "celebrationEmblemSlotRewardName": "Emblem slot",
+  "celebrationEmblemSlotRewardSub": "Slot {slot} of {total}",
+  "@celebrationEmblemSlotRewardSub": {
+    "placeholders": {
+      "slot": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
   "cosmeticFramePilgrimName": "Pilgrim's Frame",
   "cosmeticFramePilgrimDesc": "A plain wooden frame for anyone who set out on the road.",
 
@@ -2580,6 +2610,42 @@
 
   "socialProfilePinnedAchievements": "PINNED ACHIEVEMENTS",
   "socialProfileSharedPosts": "SHARED POSTS",
+  "profileStatsSectionTitle": "STATS",
+  "profileStatsEdit": "Edit",
+  "profileStatsSave": "Done",
+  "profileStatsCancel": "Cancel",
+  "profileStatsHeroTitle": "Hero",
+  "profileStatsActivityTitle": "Activity",
+  "profileStatsSleepTitle": "Sleep",
+  "profileStatsBodyTitle": "Body",
+  "profileStatsNutritionTitle": "Nutrition",
+  "profileStatsSocialTitle": "Community",
+  "profileStatLevel": "Level",
+  "profileStatTotalXp": "Total XP",
+  "profileStatUnlockedAchievements": "Achievements",
+  "profileStatGrantedRewards": "Granted rewards",
+  "profileStatCosmeticsUnlocked": "Cosmetics unlocked",
+  "profileStatDaysOnApp": "Days in app",
+  "profileStatStepsLifetime": "Steps (total)",
+  "profileStatStepsAvg30d": "Avg steps / day",
+  "profileStatActiveDays30d": "Active days",
+  "profileStatSleepAvgDuration": "Avg sleep",
+  "profileStatSleepAvgBedtime": "Avg bedtime",
+  "profileStatSleepAvgWakeTime": "Avg wake time",
+  "profileStatSleepAvgDeep": "Deep sleep",
+  "profileStatSleepAvgRem": "REM sleep",
+  "profileStatLatestWeight": "Weight",
+  "profileStatLatestBodyFat": "Body fat",
+  "profileStatAvgKcal": "Avg kcal / day",
+  "profileStatAvgProtein": "Avg protein / day",
+  "profileStatAvgFat": "Avg fat / day",
+  "profileStatAvgCarbs": "Avg carbs / day",
+  "profileStatFriendsCount": "Friends",
+  "profileStatSharedPostsCount": "Shared posts",
+  "profileStatJoinedAt": "Hero since",
+  "profileStatsOwnerOnlyBadge": "you only",
+  "profileStatsStreakVisibilityShow": "Show to others",
+  "profileStatsStreakVisibilityHide": "Hidden from profile",
   "socialProfileStatsAchievements": "ACHIEVEMENTS",
   "socialProfileStatsBestStreak": "BEST STREAK",
   "socialProfileStatsStepsStreak": "STEPS STREAK",

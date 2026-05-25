@@ -27,6 +27,21 @@ class SocialUserStats {
     required this.bestStepsStreak,
     required this.bestNutritionStreak,
     this.updatedAt,
+    this.stepsLifetime,
+    this.stepsAvg30d,
+    this.activeDays30d,
+    this.avgSleepMinutes7d,
+    this.avgBedtimeMinutes7d,
+    this.avgWakeMinutes7d,
+    this.avgDeepMinutes7d,
+    this.avgRemMinutes7d,
+    this.latestWeightKg,
+    this.latestBodyFatPct,
+    this.avgKcal7d,
+    this.avgProteinG7d,
+    this.avgFatG7d,
+    this.avgCarbsG7d,
+    this.cosmeticsUnlocked,
   });
 
   final int level;
@@ -40,6 +55,44 @@ class SocialUserStats {
   final int bestStepsStreak;
   final int bestNutritionStreak;
   final DateTime? updatedAt;
+
+  // ── Personal-metric cache (nullable on the wire). ───────────────
+  //
+  // All entries are optional. A null value means the field is
+  // unknown (the owner's device hasn't published yet) and renders
+  // as `—` on friend profiles. Visibility for foreign viewers is
+  // still gated by `SocialUserProfile.hiddenStatKeys` —
+  // [profileStatCatalog] marks the sensitive ones default-hidden.
+
+  final int? stepsLifetime;
+  final int? stepsAvg30d;
+  final int? activeDays30d;
+
+  /// Average nightly sleep duration over the last 7 days, minutes.
+  final int? avgSleepMinutes7d;
+
+  /// Average bedtime in minutes-since-midnight over the last 7 days.
+  /// Bedtimes before noon are normalised to the same 0–1440 range so
+  /// the value renders as a 24-hour clock; sleep that crosses midnight
+  /// is recorded as the actual bedtime minute (e.g. 23:30 → 1410).
+  final int? avgBedtimeMinutes7d;
+  final int? avgWakeMinutes7d;
+  final int? avgDeepMinutes7d;
+  final int? avgRemMinutes7d;
+
+  final double? latestWeightKg;
+  final double? latestBodyFatPct;
+
+  final double? avgKcal7d;
+  final double? avgProteinG7d;
+  final double? avgFatG7d;
+  final double? avgCarbsG7d;
+
+  /// Total unlocked cosmetics count. Sourced from
+  /// [CosmeticsProvider.state.unlocked] at publish time. Null when
+  /// cosmetics provider isn't bound (first-publish race after a fresh
+  /// install).
+  final int? cosmeticsUnlocked;
 }
 
 /// Denormalised public-profile row published to Firestore for a
@@ -63,6 +116,7 @@ class SocialUserProfile {
     this.createdAt,
     this.updatedAt,
     this.pinnedAchievementIds = const [],
+    this.statVisibilityOverrides = const <String>{},
     this.equippedCosmetics = const SocialEquippedCosmetics.empty(),
   });
 
@@ -82,6 +136,22 @@ class SocialUserProfile {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final List<String> pinnedAchievementIds;
+
+  /// Per-stat visibility overrides for the profile stats section.
+  ///
+  /// Each entry is a stat key from `profileStatCatalog`. Semantics:
+  /// **membership means the user's choice differs from the catalog's
+  /// `defaultHidden`** — i.e. a default-visible stat in this set is
+  /// hidden from foreign viewers, and a default-hidden stat in this
+  /// set is published to foreign viewers. The resolver evaluates
+  /// `defaultHidden XOR statVisibilityOverrides.contains(key)` to
+  /// decide foreign-profile visibility.
+  ///
+  /// Override (not blacklist or whitelist) so the wire payload stays
+  /// minimal when the user keeps the curated defaults, regardless of
+  /// whether those defaults are visible or hidden.
+  final Set<String> statVisibilityOverrides;
+
   final SocialEquippedCosmetics equippedCosmetics;
 }
 
