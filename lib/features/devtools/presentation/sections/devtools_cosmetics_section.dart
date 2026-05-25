@@ -4,8 +4,11 @@ import 'package:provider/provider.dart';
 import '../../../../features/cosmetics/application/cosmetics_provider.dart';
 import '../../../../features/cosmetics/domain/cosmetic_catalog.dart';
 import '../../../../features/cosmetics/domain/cosmetic_models.dart';
+import '../../../../features/cosmetics/domain/hero_race_catalog.dart';
 import '../../../../features/cosmetics/domain/player_cosmetic_lifecycle.dart';
 import '../../../../features/cosmetics/presentation/cosmetics_screen.dart';
+import '../../../../features/onboarding/presentation/race_picker_view.dart';
+import '../../../../features/onboarding/widgets/onboarding_theme.dart';
 import '../../../../features/progression_engine/application/progression_engine_provider.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../application/companion_dev_controller.dart';
@@ -81,6 +84,16 @@ class _DevToolsCosmmeticsSectionState
         ),
         const DevToolsSectionDivider(),
         DevToolsActionTile(
+          label: 'Change race',
+          subtitle: cosmetics.currentRaceId == null
+              ? 'No race set — pick one'
+              : 'Current: ${cosmetics.currentRaceId}',
+          icon: Icons.face_retouching_natural_rounded,
+          isLoading: isBusy,
+          onTap: isBusy ? null : _changeRace,
+        ),
+        const DevToolsSectionDivider(),
+        DevToolsActionTile(
           label: 'Unlock all cosmetics',
           subtitle: 'Grants every catalog item to the signed-in user',
           icon: Icons.lock_open_rounded,
@@ -130,6 +143,34 @@ class _DevToolsCosmmeticsSectionState
         setState(() => _busyCompanionIds.remove(companionId));
       }
     }
+  }
+
+  Future<void> _changeRace() async {
+    final cosmetics = context.read<CosmeticsProvider>();
+    final initial = cosmetics.currentRaceId ??
+        HeroRaceCatalog.definitions.first.id;
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _DevToolsRacePickerSheet(initialRaceId: initial),
+    );
+    if (picked == null || !mounted) return;
+    if (picked == cosmetics.currentRaceId) return;
+
+    await cosmetics.selectRace(picked);
+    if (!mounted) return;
+    final err = cosmetics.errorMessage;
+    final ok = cosmetics.currentRaceId == picked;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          ok
+              ? 'DevTools: race changed to $picked'
+              : 'DevTools: race change failed${err == null ? '' : ' ($err)'}',
+        ),
+      ),
+    );
   }
 
   Future<void> _grantAll() async {
@@ -586,6 +627,106 @@ class _StateButton extends StatelessWidget {
           fontWeight: FontWeight.w800,
           color: isCurrent ? cs.primary : cs.onSurface,
           letterSpacing: 0.2,
+        ),
+      ),
+    );
+  }
+}
+
+/// DevTools-only race re-pick sheet. Wraps the onboarding [RacePickerView]
+/// so QA can flip races without going through factory reset. Pops the
+/// chosen race id (or null when dismissed) — the caller commits via
+/// [CosmeticsProvider.selectRace].
+class _DevToolsRacePickerSheet extends StatefulWidget {
+  const _DevToolsRacePickerSheet({required this.initialRaceId});
+
+  final String initialRaceId;
+
+  @override
+  State<_DevToolsRacePickerSheet> createState() =>
+      _DevToolsRacePickerSheetState();
+}
+
+class _DevToolsRacePickerSheetState extends State<_DevToolsRacePickerSheet> {
+  late String _draftRaceId = widget.initialRaceId;
+
+  @override
+  Widget build(BuildContext context) {
+    final mediaBottom = MediaQuery.of(context).viewInsets.bottom;
+    return DraggableScrollableSheet(
+      initialChildSize: 0.85,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (context, scrollController) => Container(
+        decoration: const BoxDecoration(
+          color: OnboardingTheme.bg,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 8, 4),
+              child: Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'DevTools — change race',
+                      style: TextStyle(
+                        color: OnboardingTheme.textPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded,
+                        color: OnboardingTheme.textPrimary),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                controller: scrollController,
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                child: RacePickerView(
+                  draftRaceId: _draftRaceId,
+                  onPickRace: (id) => setState(() => _draftRaceId = id),
+                  title: 'Pick a race',
+                  subtitle: 'Devtools override — persists immediately via '
+                      'CosmeticsProvider.selectRace.',
+                  subtitleAccent: '',
+                  levelLabel: 'DEV',
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(20, 8, 20, 16 + mediaBottom),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: OnboardingTheme.purplePrimary,
+                    foregroundColor: OnboardingTheme.textPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  onPressed: () => Navigator.of(context).pop(_draftRaceId),
+                  child: Text(
+                    _draftRaceId == widget.initialRaceId
+                        ? 'Confirm (no change)'
+                        : 'Switch to $_draftRaceId',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
