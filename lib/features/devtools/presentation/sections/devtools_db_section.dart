@@ -264,25 +264,113 @@ class _DevToolsDbSectionState extends State<DevToolsDbSection> {
         _SubHeader(label: 'Cache actions'),
         DevToolsActionTile(
           label: 'Clear Health cache',
-          subtitle: 'Requires HealthDatabase.clearAll() — not yet implemented',
-          onTap: null,
-          isDisabled: true,
+          subtitle:
+              'Wipes local HC Isar (steps / calories / weight / sleep / '
+              'activities). HC itself is read-only and stays untouched; '
+              'next sync repopulates the cache.',
+          isDestructive: true,
+          icon: Icons.delete_sweep_rounded,
+          isLoading: _isClearingHc,
+          isDisabled: _isClearingKt,
+          onTap: _isClearingHc ? null : () => _confirmClearHc(context),
         ),
         const DevToolsSectionDivider(),
         DevToolsActionTile(
           label: 'Clear KT cache',
-          subtitle: 'Requires KtNutritionDatabase.clearAll() — not yet implemented',
-          onTap: null,
-          isDisabled: true,
-        ),
-        const DevToolsSectionDivider(),
-        DevToolsActionTile(
-          label: 'Clear Progression cache',
-          subtitle: 'Requires ProgressionDatabase.clearAll() — not yet implemented',
-          onTap: null,
-          isDisabled: true,
+          subtitle:
+              'Drops cached nutrition days and resets today\'s snapshot. '
+              'Login + credentials are preserved; next refresh re-fetches '
+              'from Kalorické tabulky.',
+          isDestructive: true,
+          icon: Icons.delete_sweep_rounded,
+          isLoading: _isClearingKt,
+          isDisabled: _isClearingHc,
+          onTap: _isClearingKt ? null : () => _confirmClearKt(context),
         ),
       ],
+    );
+  }
+
+  // ── Cache action handlers ────────────────────────────────────────────────
+
+  bool _isClearingHc = false;
+  bool _isClearingKt = false;
+
+  Future<void> _confirmClearHc(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = context.read<FitnessProvider>();
+    final confirmed = await _showConfirm(
+      context: context,
+      title: 'Clear Health cache?',
+      message:
+          'Wipes the local Health Connect cache (steps, calories, weight, '
+          'sleep, activities). Health Connect itself stays untouched. '
+          'Next sync repopulates the cache.',
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isClearingHc = true);
+    try {
+      await provider.devToolsClearCache();
+      if (!mounted) return;
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Health cache cleared')),
+      );
+      _refresh();
+    } finally {
+      if (mounted) setState(() => _isClearingHc = false);
+    }
+  }
+
+  Future<void> _confirmClearKt(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = context.read<KalorickeTabulkyProvider>();
+    final confirmed = await _showConfirm(
+      context: context,
+      title: 'Clear KT cache?',
+      message:
+          'Drops cached Kalorické tabulky nutrition days and today\'s '
+          'snapshot. Login + credentials are preserved. Next refresh '
+          're-fetches from KT.',
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isClearingKt = true);
+    try {
+      await provider.devToolsClearCache();
+      if (!mounted) return;
+      messenger.showSnackBar(
+        const SnackBar(content: Text('KT cache cleared')),
+      );
+      _refresh();
+    } finally {
+      if (mounted) setState(() => _isClearingKt = false);
+    }
+  }
+
+  Future<bool?> _showConfirm({
+    required BuildContext context,
+    required String title,
+    required String message,
+  }) {
+    final errorColor = Theme.of(context).colorScheme.error;
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: errorColor),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -45,6 +45,15 @@ class FitnessProvider extends ChangeNotifier {
   bool _hasHistoricalDataAccess = false;
   bool _hasBackgroundDataAccess = false;
   bool _historyPermissionDeniedThisSession = false;
+
+  /// True once an interactive [requestPermissions] call returned
+  /// without permissions being granted. HC's plugin remembers Android's
+  /// "denied permanently" decision and silently returns `false` on
+  /// subsequent calls, so the UI uses this flag to route the user to
+  /// the HC settings page (which is the only remaining grant path)
+  /// instead of looping back into a no-op request. Cleared on a
+  /// successful grant.
+  bool _lastRequestDenied = false;
   bool _backgroundPermissionDeniedThisSession = false;
   String? _errorMessage;
   DateTime? _lastSyncedAt;
@@ -85,8 +94,18 @@ class FitnessProvider extends ChangeNotifier {
   bool get hasHistoricalDataAccess => _hasHistoricalDataAccess;
   bool get hasBackgroundDataAccess => _hasBackgroundDataAccess;
 
+  /// Whether the most recent interactive permission request finished
+  /// without granting access. UI consumers use this to fall back to
+  /// the HC settings deep-link path on the next access attempt.
+  bool get lastRequestDenied => _lastRequestDenied;
+
   FitnessAccessState get accessState {
-    if (!_hasInitialized || _isLoading) return FitnessAccessState.checking;
+    // Only report "checking" before the first initialize completes —
+    // runtime _isLoading flips (e.g. during requestPermissions or a
+    // pull-to-refresh) must NOT downgrade the access state, otherwise
+    // every HC slot briefly transitions from "prompt" to "real card
+    // with empty data" while a permission grant is in flight.
+    if (!_hasInitialized) return FitnessAccessState.checking;
     if (!_isHealthConnectAvailable) return FitnessAccessState.unavailable;
     if (!_hasPermissions) return FitnessAccessState.permissionRequired;
     return FitnessAccessState.ready;
@@ -435,6 +454,12 @@ class FitnessProvider extends ChangeNotifier {
 
       final perms = await _service.hasPermissions();
       _hasPermissions = perms == true;
+      if (_hasPermissions) {
+        // User granted permissions externally (HC settings deep-link
+        // flow) — clear the stale "last request denied" marker so the
+        // next CTA tap doesn't unnecessarily route to settings again.
+        _lastRequestDenied = false;
+      }
 
       // Always surface previously-cached data so the UI can offer a
       // "show saved data" path when permissions are revoked. Cheap
@@ -486,6 +511,7 @@ class FitnessProvider extends ChangeNotifier {
       if (!_isHealthConnectAvailable) return;
 
       _hasPermissions = await _service.requestPermissions();
+      _lastRequestDenied = !_hasPermissions;
       if (_hasPermissions) {
         await _refreshHistoryAccess(interactive: true);
         await _refreshBackgroundAccess(interactive: true);
@@ -836,6 +862,21 @@ class FitnessProvider extends ChangeNotifier {
       _inFlight = false;
       notifyListeners();
     }
+  }
+
+  // --- DevTools -------------------------------------------------------------
+
+  /// Wipes the local HC Isar cache (steps / calories / weight / sleep /
+  /// activities / meta) and refreshes provider state. Health Connect
+  /// itself is read-only and stays untouched — the next sync will
+  /// repopulate the cache from HC.
+  Future<void> devToolsClearCache() async {
+    AppLog.health.info('devtools: clearCache start');
+    await _db.clearAll();
+    _loadFromDb();
+    _lastAppOpenRefreshAttemptAt = null;
+    notifyListeners();
+    AppLog.health.success('devtools: clearCache done');
   }
 
   // --- Private --------------------------------------------------------------
