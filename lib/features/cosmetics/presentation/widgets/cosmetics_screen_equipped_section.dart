@@ -24,15 +24,15 @@ class CosmeticsScreenEquippedSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const CosmeticsScreenSectionHead(
-          label: 'Vybaveno',
-          caption: 'Aktuální vzhled profilu a cesty',
+        CosmeticsScreenSectionHead(
+          label: l10n.cosmeticsEquippedSectionLabel,
+          caption: l10n.cosmeticsEquippedSectionCaption,
         ),
         const SizedBox(height: 10),
         if (definitions.isEmpty)
-          const CosmeticsScreenEmptyLine(
-            title: 'Zatím nic není vybavené.',
-            caption: 'Klepni na odemčenou kosmetiku níže a vyber Vybavit.',
+          CosmeticsScreenEmptyLine(
+            title: l10n.cosmeticsEquippedEmptyTitle,
+            caption: l10n.cosmeticsEquippedEmptyCaption,
           )
         else
           SizedBox(

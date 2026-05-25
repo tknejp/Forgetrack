@@ -89,7 +89,7 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
               ),
               child: ScreenHeader(
                 greeting: '',
-                title: 'Inventář',
+                title: l10n.cosmeticsScreenTitle,
                 leading: const FtBackButton(),
               ),
             ),

@@ -221,6 +221,9 @@ Future<void> _runForgetrack(SentryConsentProvider sentryConsent) async {
         localeProvider.locale?.languageCode ?? 'cs',
       ));
     }
+    // Android channel names live in system settings — re-register so the
+    // visible name follows the in-app language switch on the next sync.
+    unawaited(NotificationService.instance.refreshChannelLocalization());
   });
 
   AppLog.app.info('Providers ready, launching KT initialize()');

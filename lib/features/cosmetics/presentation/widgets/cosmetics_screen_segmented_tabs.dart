@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../domain/cosmetic_models.dart';
 import '../cosmetics_screen_internals.dart';
@@ -13,7 +14,7 @@ class CosmeticsScreenSegmentedTabs extends StatelessWidget {
     required this.onTap,
   });
 
-  /// Index 0 is always the "Vše" tab (null type). Remaining entries are the
+  /// Index 0 is always the "All" tab (null type). Remaining entries are the
   /// types currently present in the inventory, in catalog order.
   final List<CosmeticType?> tabs;
   final int currentIndex;
@@ -21,12 +22,13 @@ class CosmeticsScreenSegmentedTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 18, 14, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const CosmeticsScreenSectionHead(label: 'Inventář'),
+          CosmeticsScreenSectionHead(label: l10n.cosmeticsInventorySectionHead),
           const SizedBox(height: 10),
           Container(
             decoration: BoxDecoration(
@@ -41,8 +43,8 @@ class CosmeticsScreenSegmentedTabs extends StatelessWidget {
                   Expanded(
                     child: _SegmentButton(
                       label: tabs[i] == null
-                          ? 'Vše'
-                          : cosmeticTypeLabel(tabs[i]!),
+                          ? l10n.cosmeticsTabAll
+                          : cosmeticTypeLabel(tabs[i]!, l10n),
                       icon: tabs[i] == null
                           ? Icons.apps_rounded
                           : cosmeticIconForType(tabs[i]!),

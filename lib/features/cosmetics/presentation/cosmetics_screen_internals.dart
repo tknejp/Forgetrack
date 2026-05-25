@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../../shared/theme/design_tokens.dart';
 import '../domain/cosmetic_models.dart';
 
@@ -201,24 +202,24 @@ IconData cosmeticIconForType(CosmeticType type) {
   }
 }
 
-String cosmeticTypeLabel(CosmeticType type) {
+String cosmeticTypeLabel(CosmeticType type, AppLocalizations l10n) {
   switch (type) {
     case CosmeticType.frame:
-      return 'Rámeček';
+      return l10n.cosmeticTypeFrame;
     case CosmeticType.relic:
-      return 'Relikvie';
+      return l10n.cosmeticTypeRelic;
     case CosmeticType.background:
-      return 'Pozadí';
+      return l10n.cosmeticTypeBackground;
     case CosmeticType.emblem:
-      return 'Znak';
+      return l10n.cosmeticTypeEmblem;
     case CosmeticType.companion:
-      return 'Společník';
+      return l10n.cosmeticTypeCompanion;
     case CosmeticType.titleFlair:
-      return 'Titul';
+      return l10n.cosmeticTypeTitleFlair;
     case CosmeticType.mapEffect:
-      return 'Efekt mapy';
+      return l10n.cosmeticTypeMapEffect;
     case CosmeticType.skin:
-      return 'Vzhled';
+      return l10n.cosmeticTypeSkin;
   }
 }
 

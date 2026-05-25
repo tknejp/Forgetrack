@@ -1504,7 +1504,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cosmeticTypeMapEffect => 'Map effect';
 
   @override
-  String get cosmeticTypeSkin => 'Appearance';
+  String get cosmeticTypeSkin => 'Look';
 
   @override
   String get heroRaceHumanName => 'Human';
@@ -5823,4 +5823,146 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get welcomeKtSheetFootnote =>
       'Forgetrack uses your sign-in only to read the KT diary.';
+
+  @override
+  String get cosmeticsScreenTitle => 'Inventory';
+
+  @override
+  String get cosmeticsInventorySectionHead => 'Inventory';
+
+  @override
+  String get cosmeticsTabAll => 'All';
+
+  @override
+  String get cosmeticsEmptyUnlockedTitle => 'No unlocked cosmetics yet.';
+
+  @override
+  String get cosmeticsEmptyUnlockedCaption =>
+      'New pieces show up after you complete achievements and milestones.';
+
+  @override
+  String get cosmeticsNotSignedInTitle => 'Inventory unavailable.';
+
+  @override
+  String get cosmeticsNotSignedInCaption => 'Sign in to access cosmetics.';
+
+  @override
+  String get cosmeticsEquippedSectionLabel => 'Equipped';
+
+  @override
+  String get cosmeticsEquippedSectionCaption =>
+      'Current look of your profile and journey';
+
+  @override
+  String get cosmeticsEquippedEmptyTitle => 'Nothing equipped yet.';
+
+  @override
+  String get cosmeticsEquippedEmptyCaption =>
+      'Tap an unlocked cosmetic below and choose Equip.';
+
+  @override
+  String get cosmeticsInventoryShowAll => 'Show all';
+
+  @override
+  String get cosmeticsInventoryLoading => 'Loading inventory…';
+
+  @override
+  String get cosmeticsInventorySignInHint =>
+      'Inventory becomes available after sign-in.';
+
+  @override
+  String get cosmeticsInventoryItemNone => 'None';
+
+  @override
+  String get cosmeticsInventoryEquippedBadge => 'EQUIPPED';
+
+  @override
+  String get cosmeticsInventoryLatestBadge => 'LATEST';
+
+  @override
+  String get cosmeticTypePluralFrame => 'Frames';
+
+  @override
+  String get cosmeticTypePluralRelic => 'Relics';
+
+  @override
+  String get cosmeticTypePluralBackground => 'Backgrounds';
+
+  @override
+  String get cosmeticTypePluralEmblem => 'Emblems';
+
+  @override
+  String get cosmeticTypePluralCompanion => 'Companions';
+
+  @override
+  String get cosmeticTypePluralTitleFlair => 'Titles';
+
+  @override
+  String get cosmeticTypePluralMapEffect => 'Map effects';
+
+  @override
+  String get cosmeticTypePluralSkin => 'Looks';
+
+  @override
+  String get notifChannelProgressionName => 'Progress';
+
+  @override
+  String get notifChannelProgressionDescription =>
+      'Completed quests and unlocked achievements';
+
+  @override
+  String get notifChannelSocialName => 'Social';
+
+  @override
+  String get notifChannelSocialDescription =>
+      'Friend requests and reactions to posts';
+
+  @override
+  String get notifChannelRemindersName => 'Reminders';
+
+  @override
+  String get notifChannelRemindersDescription => 'Daily goal reminders';
+
+  @override
+  String get notifQuestCompletedTitle => 'Quest completed! 🏆';
+
+  @override
+  String notifQuestCompletedBody(String questTitle, int xp) {
+    return '$questTitle · +$xp XP';
+  }
+
+  @override
+  String get notifAchievementUnlockedTitle => 'Achievement unlocked! ⚔️';
+
+  @override
+  String notifAchievementUnlockedBody(String title, String description) {
+    return '$title – $description';
+  }
+
+  @override
+  String get notifFriendRequestTitle => 'Friend request';
+
+  @override
+  String notifFriendRequestBody(String name) {
+    return '$name sent you a friend request';
+  }
+
+  @override
+  String get notifFriendRequestAcceptedTitle => 'Friend request accepted';
+
+  @override
+  String notifFriendRequestAcceptedBody(String name) {
+    return '$name accepted your request';
+  }
+
+  @override
+  String notifReactionTitle(String actor, String emoji) {
+    return '$actor reacted $emoji';
+  }
+
+  @override
+  String get notifGoalReminderTitle => 'How\'s your day going? 🎯';
+
+  @override
+  String get notifGoalReminderBody => 'Don\'t forget to hit your daily goals';
 }

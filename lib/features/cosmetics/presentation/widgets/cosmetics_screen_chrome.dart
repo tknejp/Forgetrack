@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
 
 class CosmeticsScreenSectionHead extends StatelessWidget {
@@ -99,11 +100,12 @@ class CosmeticsScreenEmptyInventory extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.only(top: 6),
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
       child: CosmeticsScreenEmptyLine(
-        title: 'Zatím žádná odemčená kosmetika.',
-        caption: 'Nové kousky se objeví po splnění úspěchů a milníků.',
+        title: l10n.cosmeticsEmptyUnlockedTitle,
+        caption: l10n.cosmeticsEmptyUnlockedCaption,
       ),
     );
   }
@@ -114,12 +116,13 @@ class CosmeticsScreenNotSignedIn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    final l10n = AppLocalizations.of(context);
+    return Center(
       child: Padding(
-        padding: EdgeInsets.all(32),
+        padding: const EdgeInsets.all(32),
         child: CosmeticsScreenEmptyLine(
-          title: 'Inventář není dostupný.',
-          caption: 'Přihlas se pro přístup ke kosmetice.',
+          title: l10n.cosmeticsNotSignedInTitle,
+          caption: l10n.cosmeticsNotSignedInCaption,
         ),
       ),
     );

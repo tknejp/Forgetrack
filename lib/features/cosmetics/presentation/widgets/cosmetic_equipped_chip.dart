@@ -4,6 +4,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../config/cosmetics_config.dart';
 import '../../domain/cosmetic_models.dart';
+import '../cosmetics_screen_internals.dart';
 import 'cosmetic_preview_path.dart';
 
 /// Compact tile for an equipped cosmetic — small thumbnail + two-line label
@@ -72,18 +73,20 @@ class CosmeticEquippedChip extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    _typeLabel(definition.type).toUpperCase(),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      fontSize: Tokens.fontSizeTiny,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.8,
-                      color: theme.colorScheme.onSurfaceVariant,
+                  if (l10n != null) ...[
+                    Text(
+                      cosmeticTypeLabel(definition.type, l10n).toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontSize: Tokens.fontSizeTiny,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 1),
+                    const SizedBox(height: 1),
+                  ],
                   Text(
                     name,
                     maxLines: 1,
@@ -179,25 +182,3 @@ IconData _iconForType(CosmeticType type) {
   }
 }
 
-// Hardcoded Czech labels — debug-quality. Promote to l10n once the
-// collection screen ships.
-String _typeLabel(CosmeticType type) {
-  switch (type) {
-    case CosmeticType.frame:
-      return 'Rámeček';
-    case CosmeticType.relic:
-      return 'Relikvie';
-    case CosmeticType.background:
-      return 'Pozadí';
-    case CosmeticType.emblem:
-      return 'Znak';
-    case CosmeticType.companion:
-      return 'Společník';
-    case CosmeticType.titleFlair:
-      return 'Titul';
-    case CosmeticType.mapEffect:
-      return 'Efekt mapy';
-    case CosmeticType.skin:
-      return 'Vzhled';
-  }
-}

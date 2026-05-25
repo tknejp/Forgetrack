@@ -2757,52 +2757,52 @@ abstract class AppLocalizations {
   /// **'Chapter finale reward'**
   String get progQuestChainFinaleReward;
 
-  /// No description provided for @cosmeticTypeFrame.
+  /// Singular label for a cosmetic of type Frame
   ///
   /// In en, this message translates to:
   /// **'Frame'**
   String get cosmeticTypeFrame;
 
-  /// No description provided for @cosmeticTypeRelic.
+  /// Singular label for a cosmetic of type Relic
   ///
   /// In en, this message translates to:
   /// **'Relic'**
   String get cosmeticTypeRelic;
 
-  /// No description provided for @cosmeticTypeBackground.
+  /// Singular label for a cosmetic of type Background
   ///
   /// In en, this message translates to:
   /// **'Background'**
   String get cosmeticTypeBackground;
 
-  /// No description provided for @cosmeticTypeEmblem.
+  /// Singular label for a cosmetic of type Emblem
   ///
   /// In en, this message translates to:
   /// **'Emblem'**
   String get cosmeticTypeEmblem;
 
-  /// No description provided for @cosmeticTypeCompanion.
+  /// Singular label for a cosmetic of type Companion
   ///
   /// In en, this message translates to:
   /// **'Companion'**
   String get cosmeticTypeCompanion;
 
-  /// No description provided for @cosmeticTypeTitleFlair.
+  /// Singular label for a cosmetic of type Title flair
   ///
   /// In en, this message translates to:
   /// **'Title'**
   String get cosmeticTypeTitleFlair;
 
-  /// No description provided for @cosmeticTypeMapEffect.
+  /// Singular label for a cosmetic of type Map effect
   ///
   /// In en, this message translates to:
   /// **'Map effect'**
   String get cosmeticTypeMapEffect;
 
-  /// No description provided for @cosmeticTypeSkin.
+  /// Singular label for a cosmetic of type Skin / appearance
   ///
   /// In en, this message translates to:
-  /// **'Appearance'**
+  /// **'Look'**
   String get cosmeticTypeSkin;
 
   /// No description provided for @heroRaceHumanName.
@@ -10083,6 +10083,258 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Forgetrack uses your sign-in only to read the KT diary.'**
   String get welcomeKtSheetFootnote;
+
+  /// Title of the full cosmetics inventory screen reached from the Hero/Profile inventory section
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory'**
+  String get cosmeticsScreenTitle;
+
+  /// Section header above the segmented type tabs inside the cosmetics inventory screen
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory'**
+  String get cosmeticsInventorySectionHead;
+
+  /// First segmented tab inside the cosmetics inventory — shows every owned cosmetic regardless of type
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get cosmeticsTabAll;
+
+  /// Empty-state title shown in the cosmetics inventory when the player has not unlocked any items
+  ///
+  /// In en, this message translates to:
+  /// **'No unlocked cosmetics yet.'**
+  String get cosmeticsEmptyUnlockedTitle;
+
+  /// Caption under cosmeticsEmptyUnlockedTitle explaining how new items are earned
+  ///
+  /// In en, this message translates to:
+  /// **'New pieces show up after you complete achievements and milestones.'**
+  String get cosmeticsEmptyUnlockedCaption;
+
+  /// Empty-state title shown in the cosmetics inventory when the user is not signed in
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory unavailable.'**
+  String get cosmeticsNotSignedInTitle;
+
+  /// Caption under cosmeticsNotSignedInTitle prompting the user to sign in
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to access cosmetics.'**
+  String get cosmeticsNotSignedInCaption;
+
+  /// Section header above the row of currently-equipped cosmetic tiles inside the cosmetics inventory screen
+  ///
+  /// In en, this message translates to:
+  /// **'Equipped'**
+  String get cosmeticsEquippedSectionLabel;
+
+  /// Caption under cosmeticsEquippedSectionLabel describing what the equipped row represents
+  ///
+  /// In en, this message translates to:
+  /// **'Current look of your profile and journey'**
+  String get cosmeticsEquippedSectionCaption;
+
+  /// Empty-state title shown when the equipped row has no items yet
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing equipped yet.'**
+  String get cosmeticsEquippedEmptyTitle;
+
+  /// Caption under cosmeticsEquippedEmptyTitle explaining how to equip a cosmetic
+  ///
+  /// In en, this message translates to:
+  /// **'Tap an unlocked cosmetic below and choose Equip.'**
+  String get cosmeticsEquippedEmptyCaption;
+
+  /// Trailing action on the inline inventory section that opens the full cosmetics screen
+  ///
+  /// In en, this message translates to:
+  /// **'Show all'**
+  String get cosmeticsInventoryShowAll;
+
+  /// Hint shown in the inline inventory section while the cosmetics state is still loading
+  ///
+  /// In en, this message translates to:
+  /// **'Loading inventory…'**
+  String get cosmeticsInventoryLoading;
+
+  /// Hint shown in the inline inventory section when the user is signed out
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory becomes available after sign-in.'**
+  String get cosmeticsInventorySignInHint;
+
+  /// Placeholder name shown in an inventory tile when there is no cosmetic to display
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get cosmeticsInventoryItemNone;
+
+  /// Badge shown on an inventory tile whose cosmetic is currently equipped
+  ///
+  /// In en, this message translates to:
+  /// **'EQUIPPED'**
+  String get cosmeticsInventoryEquippedBadge;
+
+  /// Badge shown on an inventory tile that surfaces the most recently unlocked cosmetic for that slot
+  ///
+  /// In en, this message translates to:
+  /// **'LATEST'**
+  String get cosmeticsInventoryLatestBadge;
+
+  /// Plural label used as a tile heading for the Frame cosmetic type
+  ///
+  /// In en, this message translates to:
+  /// **'Frames'**
+  String get cosmeticTypePluralFrame;
+
+  /// Plural label used as a tile heading for the Relic cosmetic type
+  ///
+  /// In en, this message translates to:
+  /// **'Relics'**
+  String get cosmeticTypePluralRelic;
+
+  /// Plural label used as a tile heading for the Background cosmetic type
+  ///
+  /// In en, this message translates to:
+  /// **'Backgrounds'**
+  String get cosmeticTypePluralBackground;
+
+  /// Plural label used as a tile heading for the Emblem cosmetic type
+  ///
+  /// In en, this message translates to:
+  /// **'Emblems'**
+  String get cosmeticTypePluralEmblem;
+
+  /// Plural label used as a tile heading for the Companion cosmetic type
+  ///
+  /// In en, this message translates to:
+  /// **'Companions'**
+  String get cosmeticTypePluralCompanion;
+
+  /// Plural label used as a tile heading for the Title flair cosmetic type
+  ///
+  /// In en, this message translates to:
+  /// **'Titles'**
+  String get cosmeticTypePluralTitleFlair;
+
+  /// Plural label used as a tile heading for the Map effect cosmetic type
+  ///
+  /// In en, this message translates to:
+  /// **'Map effects'**
+  String get cosmeticTypePluralMapEffect;
+
+  /// Plural label used as a tile heading for the Skin / appearance cosmetic type
+  ///
+  /// In en, this message translates to:
+  /// **'Looks'**
+  String get cosmeticTypePluralSkin;
+
+  /// Android notification channel name for quest / achievement notifications
+  ///
+  /// In en, this message translates to:
+  /// **'Progress'**
+  String get notifChannelProgressionName;
+
+  /// Android notification channel description for the progression channel
+  ///
+  /// In en, this message translates to:
+  /// **'Completed quests and unlocked achievements'**
+  String get notifChannelProgressionDescription;
+
+  /// Android notification channel name for social notifications
+  ///
+  /// In en, this message translates to:
+  /// **'Social'**
+  String get notifChannelSocialName;
+
+  /// Android notification channel description for the social channel
+  ///
+  /// In en, this message translates to:
+  /// **'Friend requests and reactions to posts'**
+  String get notifChannelSocialDescription;
+
+  /// Android notification channel name for daily reminder notifications
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get notifChannelRemindersName;
+
+  /// Android notification channel description for the reminders channel
+  ///
+  /// In en, this message translates to:
+  /// **'Daily goal reminders'**
+  String get notifChannelRemindersDescription;
+
+  /// Local notification title shown when the player completes a quest
+  ///
+  /// In en, this message translates to:
+  /// **'Quest completed! 🏆'**
+  String get notifQuestCompletedTitle;
+
+  /// Local notification body for a completed quest. questTitle is the quest name, xp is the XP awarded.
+  ///
+  /// In en, this message translates to:
+  /// **'{questTitle} · +{xp} XP'**
+  String notifQuestCompletedBody(String questTitle, int xp);
+
+  /// Local notification title shown when the player unlocks an achievement
+  ///
+  /// In en, this message translates to:
+  /// **'Achievement unlocked! ⚔️'**
+  String get notifAchievementUnlockedTitle;
+
+  /// Local notification body for an unlocked achievement.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} – {description}'**
+  String notifAchievementUnlockedBody(String title, String description);
+
+  /// Local notification title for a new incoming friend request
+  ///
+  /// In en, this message translates to:
+  /// **'Friend request'**
+  String get notifFriendRequestTitle;
+
+  /// Local notification body for a new friend request. name is the requester's display name.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} sent you a friend request'**
+  String notifFriendRequestBody(String name);
+
+  /// Local notification title shown when a friend accepts the player's outgoing request
+  ///
+  /// In en, this message translates to:
+  /// **'Friend request accepted'**
+  String get notifFriendRequestAcceptedTitle;
+
+  /// Local notification body for an accepted friend request.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} accepted your request'**
+  String notifFriendRequestAcceptedBody(String name);
+
+  /// Local notification title for a reaction event on the player's content.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} reacted {emoji}'**
+  String notifReactionTitle(String actor, String emoji);
+
+  /// Local notification title for the evening goal reminder
+  ///
+  /// In en, this message translates to:
+  /// **'How\'s your day going? 🎯'**
+  String get notifGoalReminderTitle;
+
+  /// Local notification body for the evening goal reminder
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t forget to hit your daily goals'**
+  String get notifGoalReminderBody;
 }
 
 class _AppLocalizationsDelegate

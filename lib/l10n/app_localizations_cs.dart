@@ -1496,7 +1496,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get cosmeticTypeBackground => 'Pozadí';
 
   @override
-  String get cosmeticTypeEmblem => 'Emblém';
+  String get cosmeticTypeEmblem => 'Znak';
 
   @override
   String get cosmeticTypeCompanion => 'Společník';
@@ -1505,7 +1505,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get cosmeticTypeTitleFlair => 'Titul';
 
   @override
-  String get cosmeticTypeMapEffect => 'Mapový efekt';
+  String get cosmeticTypeMapEffect => 'Efekt mapy';
 
   @override
   String get cosmeticTypeSkin => 'Vzhled';
@@ -5821,4 +5821,147 @@ class AppLocalizationsCs extends AppLocalizations {
   @override
   String get welcomeKtSheetFootnote =>
       'Forgetrack používá tvé přihlášení jen ke čtení deníku z KT.';
+
+  @override
+  String get cosmeticsScreenTitle => 'Inventář';
+
+  @override
+  String get cosmeticsInventorySectionHead => 'Inventář';
+
+  @override
+  String get cosmeticsTabAll => 'Vše';
+
+  @override
+  String get cosmeticsEmptyUnlockedTitle => 'Zatím žádná odemčená kosmetika.';
+
+  @override
+  String get cosmeticsEmptyUnlockedCaption =>
+      'Nové kousky se objeví po splnění úspěchů a milníků.';
+
+  @override
+  String get cosmeticsNotSignedInTitle => 'Inventář není dostupný.';
+
+  @override
+  String get cosmeticsNotSignedInCaption =>
+      'Přihlas se pro přístup ke kosmetice.';
+
+  @override
+  String get cosmeticsEquippedSectionLabel => 'Vybaveno';
+
+  @override
+  String get cosmeticsEquippedSectionCaption =>
+      'Aktuální vzhled profilu a cesty';
+
+  @override
+  String get cosmeticsEquippedEmptyTitle => 'Zatím nic není vybavené.';
+
+  @override
+  String get cosmeticsEquippedEmptyCaption =>
+      'Klepni na odemčenou kosmetiku níže a vyber Vybavit.';
+
+  @override
+  String get cosmeticsInventoryShowAll => 'Zobrazit vše';
+
+  @override
+  String get cosmeticsInventoryLoading => 'Načítám inventář…';
+
+  @override
+  String get cosmeticsInventorySignInHint =>
+      'Inventář bude dostupný po přihlášení.';
+
+  @override
+  String get cosmeticsInventoryItemNone => 'Žádné';
+
+  @override
+  String get cosmeticsInventoryEquippedBadge => 'VYBAVENO';
+
+  @override
+  String get cosmeticsInventoryLatestBadge => 'POSLEDNÍ';
+
+  @override
+  String get cosmeticTypePluralFrame => 'Rámečky';
+
+  @override
+  String get cosmeticTypePluralRelic => 'Relikvie';
+
+  @override
+  String get cosmeticTypePluralBackground => 'Pozadí';
+
+  @override
+  String get cosmeticTypePluralEmblem => 'Znaky';
+
+  @override
+  String get cosmeticTypePluralCompanion => 'Společníci';
+
+  @override
+  String get cosmeticTypePluralTitleFlair => 'Tituly';
+
+  @override
+  String get cosmeticTypePluralMapEffect => 'Efekty mapy';
+
+  @override
+  String get cosmeticTypePluralSkin => 'Vzhledy';
+
+  @override
+  String get notifChannelProgressionName => 'Postup';
+
+  @override
+  String get notifChannelProgressionDescription =>
+      'Dokončené questy a odemčené achievementy';
+
+  @override
+  String get notifChannelSocialName => 'Sociální';
+
+  @override
+  String get notifChannelSocialDescription =>
+      'Žádosti o přátelství a reakce na příspěvky';
+
+  @override
+  String get notifChannelRemindersName => 'Připomínky';
+
+  @override
+  String get notifChannelRemindersDescription => 'Denní připomínky cílů';
+
+  @override
+  String get notifQuestCompletedTitle => 'Quest dokončen! 🏆';
+
+  @override
+  String notifQuestCompletedBody(String questTitle, int xp) {
+    return '$questTitle · +$xp XP';
+  }
+
+  @override
+  String get notifAchievementUnlockedTitle => 'Achievement odemčen! ⚔️';
+
+  @override
+  String notifAchievementUnlockedBody(String title, String description) {
+    return '$title – $description';
+  }
+
+  @override
+  String get notifFriendRequestTitle => 'Žádost o přátelství';
+
+  @override
+  String notifFriendRequestBody(String name) {
+    return '$name ti poslal/a žádost o přátelství';
+  }
+
+  @override
+  String get notifFriendRequestAcceptedTitle => 'Žádost o přátelství přijata';
+
+  @override
+  String notifFriendRequestAcceptedBody(String name) {
+    return '$name přijal/a tvoji žádost';
+  }
+
+  @override
+  String notifReactionTitle(String actor, String emoji) {
+    return '$actor reagoval/a $emoji';
+  }
+
+  @override
+  String get notifGoalReminderTitle => 'Jak jde dnešek? 🎯';
+
+  @override
+  String get notifGoalReminderBody => 'Nezapomeň splnit svoje denní cíle';
 }

@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ui';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../logging/app_log.dart';
 import '../navigation/navigator_key.dart';
 import 'notification_preferences.dart';
@@ -15,6 +18,7 @@ class NotificationService {
   static final instance = NotificationService._();
 
   static const _log = 'NotificationService';
+  static const _localePrefKey = 'selected_language_code';
 
   final _plugin = FlutterLocalNotificationsPlugin();
 
@@ -31,34 +35,58 @@ class NotificationService {
   static const _idFcmForeground = 7000;
   static const _idDebug = 8000; // DevTools debug notifications — no business state
 
-  // Android notification channels
-  static const _chProgression = AndroidNotificationChannel(
+  // Android notification channels — names + descriptions are localized at
+  // [initialize] time so a fresh install on an English device doesn't surface
+  // Czech channel names in the system settings. Calling
+  // `createNotificationChannel` with the same id on Android 8+ updates the
+  // displayed name/description, so subsequent app launches with a different
+  // locale also stay in sync.
+  AndroidNotificationChannel _chProgression = const AndroidNotificationChannel(
     'progression',
-    'Postup',
-    description: 'Dokončené questy a odemčené achievementy',
+    'Progress',
+    description: 'Completed quests and unlocked achievements',
     importance: Importance.defaultImportance,
   );
-
-  static const _chSocial = AndroidNotificationChannel(
+  AndroidNotificationChannel _chSocial = const AndroidNotificationChannel(
     'social',
-    'Sociální',
-    description: 'Žádosti o přátelství a reakce na příspěvky',
+    'Social',
+    description: 'Friend requests and reactions to posts',
     importance: Importance.high,
   );
-
-  static const _chReminders = AndroidNotificationChannel(
+  AndroidNotificationChannel _chReminders = const AndroidNotificationChannel(
     'reminders',
-    'Připomínky',
-    description: 'Denní připomínky cílů',
+    'Reminders',
+    description: 'Daily goal reminders',
     importance: Importance.defaultImportance,
   );
-
   static const _chDebug = AndroidNotificationChannel(
     'devtools_debug',
     'DevTools Debug',
     description: 'Debug notifications — only visible when DevTools debug mode is ON',
     importance: Importance.low,
   );
+
+  /// Loads [AppLocalizations] for the user's selected language, or the system
+  /// locale when no explicit choice is persisted, falling back to English when
+  /// neither matches a supported locale. Mirrors the resolution logic in
+  /// `MaterialApp.localeResolutionCallback` so notifications stay in sync
+  /// with the on-screen UI — including from background isolates that have
+  /// no [BuildContext].
+  Future<AppLocalizations> _resolveL10n() async {
+    final prefs = await SharedPreferences.getInstance();
+    final code = prefs.getString(_localePrefKey);
+    Locale locale;
+    if (code != null) {
+      locale = Locale(code);
+    } else {
+      final system = PlatformDispatcher.instance.locale;
+      locale = AppLocalizations.supportedLocales.firstWhere(
+        (l) => l.languageCode == system.languageCode,
+        orElse: () => const Locale('en'),
+      );
+    }
+    return AppLocalizations.delegate.load(locale);
+  }
 
   // ─── Debug/diagnostic getters (read-only) ────────────────────────────────
   bool get isInitialized => _initialized;
@@ -83,7 +111,7 @@ class NotificationService {
           },
         );
 
-        await _createAndroidChannels();
+        await refreshChannelLocalization();
 
         _initialized = true;
 
@@ -142,7 +170,33 @@ class NotificationService {
     }
   }
 
-  Future<void> _createAndroidChannels() async {
+  /// Rebuilds the localized progression / social / reminders channels from
+  /// the current locale and (re-)registers them with Android. Safe to call
+  /// repeatedly — on Android 8+ `createNotificationChannel` updates an
+  /// existing channel's name/description in place. Invoked at [initialize]
+  /// and again when the user switches language in settings.
+  Future<void> refreshChannelLocalization() async {
+    final l10n = await _resolveL10n();
+
+    _chProgression = AndroidNotificationChannel(
+      _chProgression.id,
+      l10n.notifChannelProgressionName,
+      description: l10n.notifChannelProgressionDescription,
+      importance: _chProgression.importance,
+    );
+    _chSocial = AndroidNotificationChannel(
+      _chSocial.id,
+      l10n.notifChannelSocialName,
+      description: l10n.notifChannelSocialDescription,
+      importance: _chSocial.importance,
+    );
+    _chReminders = AndroidNotificationChannel(
+      _chReminders.id,
+      l10n.notifChannelRemindersName,
+      description: l10n.notifChannelRemindersDescription,
+      importance: _chReminders.importance,
+    );
+
     final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
 
@@ -190,11 +244,12 @@ class NotificationService {
   }) async {
     if (!await NotificationPreferences.areEnabled()) return;
     await initialize();
+    final l10n = await _resolveL10n();
 
     return _plugin.show(
       _idQuestBase + index,
-      'Quest dokončen! 🏆',
-      '$questTitle · +$xp XP',
+      l10n.notifQuestCompletedTitle,
+      l10n.notifQuestCompletedBody(questTitle, xp),
       _details(_chProgression),
       payload: jsonEncode({'type': 'quest'}),
     );
@@ -207,11 +262,12 @@ class NotificationService {
   }) async {
     if (!await NotificationPreferences.areEnabled()) return;
     await initialize();
+    final l10n = await _resolveL10n();
 
     return _plugin.show(
       _idAchievementBase + index,
-      'Achievement odemčen! ⚔️',
-      '$title – $description',
+      l10n.notifAchievementUnlockedTitle,
+      l10n.notifAchievementUnlockedBody(title, description),
       _details(_chProgression),
       payload: jsonEncode({'type': 'achievement'}),
     );
@@ -220,11 +276,12 @@ class NotificationService {
   Future<void> showFriendRequest(String fromName) async {
     if (!await NotificationPreferences.areEnabled()) return;
     await initialize();
+    final l10n = await _resolveL10n();
 
     return _plugin.show(
       _idFriendRequest,
-      'Žádost o přátelství',
-      '$fromName ti poslal/a žádost o přátelství',
+      l10n.notifFriendRequestTitle,
+      l10n.notifFriendRequestBody(fromName),
       _details(
         _chSocial,
         importance: Importance.high,
@@ -237,11 +294,12 @@ class NotificationService {
   Future<void> showFriendRequestAccepted(String byName) async {
     if (!await NotificationPreferences.areEnabled()) return;
     await initialize();
+    final l10n = await _resolveL10n();
 
     return _plugin.show(
       _idFriendAccepted,
-      'Žádost o přátelství přijata',
-      '$byName přijal/a tvoji žádost',
+      l10n.notifFriendRequestAcceptedTitle,
+      l10n.notifFriendRequestAcceptedBody(byName),
       _details(
         _chSocial,
         importance: Importance.high,
@@ -259,10 +317,11 @@ class NotificationService {
   }) async {
     if (!await NotificationPreferences.areEnabled()) return;
     await initialize();
+    final l10n = await _resolveL10n();
 
     return _plugin.show(
       _idReactionBase + index,
-      '$actorName reagoval/a $emoji',
+      l10n.notifReactionTitle(actorName, emoji),
       achievementTitle,
       _details(
         _chSocial,
@@ -318,11 +377,12 @@ class NotificationService {
   Future<void> showGoalReminder() async {
     if (!await NotificationPreferences.areEnabled()) return;
     await initialize();
+    final l10n = await _resolveL10n();
 
     return _plugin.show(
       _idGoalReminder,
-      'Jak jde dnešek? 🎯',
-      'Nezapomeň splnit svoje denní cíle',
+      l10n.notifGoalReminderTitle,
+      l10n.notifGoalReminderBody,
       _details(_chReminders),
       payload: jsonEncode({'type': 'goal_reminder'}),
     );

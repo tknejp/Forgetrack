@@ -205,7 +205,7 @@ class CosmeticDetailsHeader extends StatelessWidget {
                 children: [
                   if (!isHidden) ...[
                     TinyPill(
-                      label: cosmeticTypeLabel(definition.type),
+                      label: cosmeticTypeLabel(definition.type, l10n),
                       color: color,
                     ),
                     TinyPill(

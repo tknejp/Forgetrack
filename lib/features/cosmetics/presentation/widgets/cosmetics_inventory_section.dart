@@ -40,6 +40,7 @@ class CosmeticsInventorySection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _InventorySectionHead(
+          l10n: l10n,
           onShowAll: state == null
               ? null
               : () => Navigator.of(context).push(
@@ -52,8 +53,8 @@ class CosmeticsInventorySection extends StatelessWidget {
         if (state == null)
           _InventoryHint(
             text: cosmetics.isLoading
-                ? 'Načítám inventář…'
-                : 'Inventář bude dostupný po přihlášení.',
+                ? l10n.cosmeticsInventoryLoading
+                : l10n.cosmeticsInventorySignInHint,
           )
         else
           Row(
@@ -117,8 +118,9 @@ class CosmeticsInventorySection extends StatelessWidget {
 }
 
 class _InventorySectionHead extends StatelessWidget {
-  const _InventorySectionHead({required this.onShowAll});
+  const _InventorySectionHead({required this.l10n, required this.onShowAll});
 
+  final AppLocalizations l10n;
   final VoidCallback? onShowAll;
 
   @override
@@ -128,10 +130,10 @@ class _InventorySectionHead extends StatelessWidget {
         Icon(Icons.auto_awesome,
             size: 14, color: Tokens.accent.withValues(alpha: 0.85)),
         const SizedBox(width: 6),
-        const Expanded(
+        Expanded(
           child: Text(
-            'INVENTÁŘ',
-            style: TextStyle(
+            l10n.cosmeticsInventorySectionHead.toUpperCase(),
+            style: const TextStyle(
               fontSize: Tokens.fontSizeSmall,
               fontWeight: FontWeight.w900,
               color: Tokens.accent,
@@ -149,8 +151,8 @@ class _InventorySectionHead extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Zobrazit vše',
-                    style: TextStyle(
+                    l10n.cosmeticsInventoryShowAll,
+                    style: const TextStyle(
                       fontSize: Tokens.fontSizeCaption,
                       fontWeight: FontWeight.w800,
                       color: Tokens.onSurfaceMuted,
@@ -266,7 +268,7 @@ class _FeaturedCosmeticTile extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              _labelForType(type).toUpperCase(),
+              _labelForType(type, l10n).toUpperCase(),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
@@ -278,7 +280,9 @@ class _FeaturedCosmeticTile extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             Text(
-              definition == null ? 'Žádné' : definition.name(l10n),
+              definition == null
+                  ? l10n.cosmeticsInventoryItemNone
+                  : definition.name(l10n),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
@@ -290,7 +294,9 @@ class _FeaturedCosmeticTile extends StatelessWidget {
             if (item != null) ...[
               const SizedBox(height: 2),
               Text(
-                item!.isEquipped ? 'VYBAVENO' : 'POSLEDNÍ',
+                item!.isEquipped
+                    ? l10n.cosmeticsInventoryEquippedBadge
+                    : l10n.cosmeticsInventoryLatestBadge,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
@@ -308,24 +314,24 @@ class _FeaturedCosmeticTile extends StatelessWidget {
     );
   }
 
-  static String _labelForType(CosmeticType type) {
+  static String _labelForType(CosmeticType type, AppLocalizations l10n) {
     switch (type) {
       case CosmeticType.frame:
-        return 'Rámečky';
+        return l10n.cosmeticTypePluralFrame;
       case CosmeticType.relic:
-        return 'Relikvie';
+        return l10n.cosmeticTypePluralRelic;
       case CosmeticType.background:
-        return 'Pozadí';
+        return l10n.cosmeticTypePluralBackground;
       case CosmeticType.emblem:
-        return 'Znaky';
+        return l10n.cosmeticTypePluralEmblem;
       case CosmeticType.companion:
-        return 'Společníci';
+        return l10n.cosmeticTypePluralCompanion;
       case CosmeticType.titleFlair:
-        return 'Tituly';
+        return l10n.cosmeticTypePluralTitleFlair;
       case CosmeticType.mapEffect:
-        return 'Efekty mapy';
+        return l10n.cosmeticTypePluralMapEffect;
       case CosmeticType.skin:
-        return 'Vzhledy';
+        return l10n.cosmeticTypePluralSkin;
     }
   }
 }
