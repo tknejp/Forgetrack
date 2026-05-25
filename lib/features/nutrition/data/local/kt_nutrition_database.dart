@@ -127,10 +127,9 @@ class KtNutritionDatabase {
   KtDayNutrition? getDay(DateTime date) {
     final key = _toKey(date);
     final nutrition = _cache[key];
-    AppLog.ktDb.debug(
-      'getDay($key) → ${nutrition == null ? 'MISS' : 'HIT'}',
-      payload: nutrition == null ? null : _describeNutrition(nutrition),
-    );
+    if (nutrition == null) {
+      AppLog.ktDb.debug('getDay($key) → MISS');
+    }
     return nutrition;
   }
 
@@ -147,10 +146,11 @@ class KtNutritionDatabase {
       if (v != null) result[key] = v;
       d = d.add(const Duration(days: 1));
     }
-    AppLog.ktDb.debug(
-      'getRange(${_toKey(start)} → ${_toKey(end)}) → ${result.length} hit(s)',
-      payload: _previewKeys(result.keys),
-    );
+    if (result.isEmpty) {
+      AppLog.ktDb.debug(
+        'getRange(${_toKey(start)} → ${_toKey(end)}) → 0 hit(s)',
+      );
+    }
     return result;
   }
 
