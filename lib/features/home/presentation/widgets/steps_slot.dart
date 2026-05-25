@@ -10,24 +10,20 @@ import '../../../../shared/widgets/detail_shortcut_button.dart';
 import '../../../../shared/widgets/stat_card.dart';
 import '../../../health_connect/application/fitness_provider.dart';
 import '../../../health_connect/application/goals_provider.dart';
+import '../../../health_connect/presentation/widgets/hc_status_indicators.dart';
 import '../../../progression_engine/application/progression_engine_provider.dart';
 import 'home_helpers.dart';
-import 'offline_source_banner.dart';
 
 class StepsSlot extends StatelessWidget {
   const StepsSlot({
     super.key,
     required this.period,
     required this.barKey,
-    required this.showHcOfflineBanner,
-    required this.onHcAction,
     required this.onOpenSteps,
   });
 
   final SelectedPeriod period;
   final GlobalKey barKey;
-  final bool showHcOfflineBanner;
-  final VoidCallback onHcAction;
   final VoidCallback onOpenSteps;
 
   @override
@@ -47,18 +43,7 @@ class StepsSlot extends StatelessWidget {
         stepsGoal > 0 ? (steps / stepsGoal).clamp(0.0, 1.0) : 0.0;
     final stepsLeft = (stepsGoal - steps).clamp(0, stepsGoal);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (showHcOfflineBanner) ...[
-          OfflineSourceBanner(
-            message: l10n.healthOfflineNotice,
-            onTap: onHcAction,
-          ),
-          const SizedBox(height: 10),
-        ],
-        StatCard(
+    return StatCard(
           icon: '🥾',
           label: l10n.stepsTitle,
           domain: Tokens.steps,
@@ -84,6 +69,9 @@ class StepsSlot extends StatelessWidget {
             questNodeId: 'daily_steps_today',
             barKey: barKey,
           ),
+          footer: HcCardStatusFooter.isActive(fitness)
+              ? HcCardStatusFooter(fitness: fitness)
+              : null,
           children: [
             if (streakInfoBlockForQuest(
                   progression: progression,
@@ -97,8 +85,6 @@ class StepsSlot extends StatelessWidget {
             ],
             DetailShortcutButton(onTap: onOpenSteps, domain: Tokens.steps),
           ],
-        ),
-      ],
-    );
+        );
   }
 }

@@ -12,6 +12,7 @@ import '../../../shared/widgets/screen_header.dart';
 import '../../../shared/widgets/stat_card.dart';
 import '../../../shared/widgets/swipe_period_gesture.dart';
 import '../application/fitness_provider.dart';
+import 'widgets/hc_status_indicators.dart';
 import 'body/widgets/body_metric_helpers.dart';
 import 'body/widgets/body_metric_trend_card.dart';
 import 'body/widgets/body_period.dart';
@@ -385,6 +386,13 @@ class _BodyScreenState extends State<BodyScreen> {
                   ),
                 ),
               ),
+              if (HcStatusBanner.isActive(fitness))
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+                    child: HcStatusBanner(fitness: fitness),
+                  ),
+                ),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(14, 0, 14, 24),

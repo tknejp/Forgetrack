@@ -13,6 +13,7 @@ import '../../../../shared/widgets/stat_card.dart';
 import '../../../../shared/widgets/xp_sparkle_overlay.dart';
 import '../../../health_connect/application/fitness_provider.dart';
 import '../../../health_connect/application/goals_provider.dart';
+import '../../../health_connect/presentation/widgets/hc_status_indicators.dart';
 import '../../../progression_engine/application/progression_engine_provider.dart';
 import 'activity_claims_list.dart';
 import 'home_helpers.dart';
@@ -84,6 +85,9 @@ class ActivitySlot extends StatelessWidget {
         barKey: barKey,
         dayOnly: false,
       ),
+      footer: HcCardStatusFooter.isActive(fitness)
+          ? HcCardStatusFooter(fitness: fitness)
+          : null,
       children: [
         if (streakInfoBlockForQuest(
               progression: progression,

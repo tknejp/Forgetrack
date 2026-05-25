@@ -419,6 +419,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Showing saved data — tap to set up Health Connect';
 
   @override
+  String get healthFooterOfflineHint =>
+      'Showing saved data — tap to connect Health Connect';
+
+  @override
   String get homeOfflineBanner => 'You\'re offline — showing saved data';
 
   @override

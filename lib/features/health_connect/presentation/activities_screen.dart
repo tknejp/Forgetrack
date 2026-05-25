@@ -21,6 +21,7 @@ import '../../progression_engine/application/progression_engine_provider.dart';
 import '../application/fitness_provider.dart';
 import '../domain/activity_record.dart';
 import 'activity_detail_screen.dart';
+import 'widgets/hc_status_indicators.dart';
 import 'steps_screen.dart';
 
 /// Workout-focused detail screen. Today header → period navigator with tabs →
@@ -526,6 +527,13 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                   ),
                 ),
               ),
+              if (HcStatusBanner.isActive(fitness))
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+                    child: HcStatusBanner(fitness: fitness),
+                  ),
+                ),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(14, 0, 14, 24),

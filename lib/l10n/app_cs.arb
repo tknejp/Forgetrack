@@ -126,6 +126,7 @@
   "healthRetry": "Zkusit znovu",
   "healthShowCachedData": "Zobrazit uložená data",
   "healthOfflineNotice": "Zobrazují se uložená data — klepnutím nastavte Health Connect",
+  "healthFooterOfflineHint": "Uložená data — klepnutím připojit Health Connect",
   "homeOfflineBanner": "Jste offline — zobrazují se uložená data",
   "ktOfflineNotice": "Zobrazují se uložená data — klepnutím připojte Kalorické Tabulky",
   "healthLastSynced": "Synchronizováno: {time}",

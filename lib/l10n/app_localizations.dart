@@ -866,6 +866,12 @@ abstract class AppLocalizations {
   /// **'Showing saved data — tap to set up Health Connect'**
   String get healthOfflineNotice;
 
+  /// In-card footer / inline detail-screen banner on Health Connect–driven cards when the user is viewing cached data without granted permissions. Tap routes back to the HC permission / install flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing saved data — tap to connect Health Connect'**
+  String get healthFooterOfflineHint;
+
   /// Inline banner shown on the home overview when the device has no network connectivity, so users know data may be stale
   ///
   /// In en, this message translates to:

@@ -17,6 +17,7 @@ import '../../../shared/widgets/trend_chart.dart';
 import '../application/fitness_provider.dart';
 import '../domain/activity_record.dart';
 import 'activities_screen.dart';
+import 'widgets/hc_status_indicators.dart';
 
 /// Steps-focused detail screen. Today header → period navigator with tabs →
 /// period stats → trend chart. Cross-links to the Activities screen at the
@@ -340,6 +341,13 @@ class _StepsScreenState extends State<StepsScreen> {
                   ),
                 ),
               ),
+              if (HcStatusBanner.isActive(fitness))
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+                    child: HcStatusBanner(fitness: fitness),
+                  ),
+                ),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(14, 0, 14, 24),

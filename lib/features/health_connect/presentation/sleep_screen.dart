@@ -15,6 +15,7 @@ import '../../../shared/widgets/trend_chart.dart';
 import '../application/fitness_provider.dart';
 import '../domain/sleep_record.dart';
 import 'sleep/widgets/sleep_metric_trend_card.dart';
+import 'widgets/hc_status_indicators.dart';
 import 'sleep/widgets/sleep_period.dart';
 import 'sleep/widgets/stage_breakdown_card.dart';
 import 'sleep/widgets/stage_colors.dart';
@@ -519,6 +520,13 @@ class _SleepScreenState extends State<SleepScreen> {
                   ),
                 ),
               ),
+              if (HcStatusBanner.isActive(fitness))
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+                    child: HcStatusBanner(fitness: fitness),
+                  ),
+                ),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(14, 0, 14, 24),

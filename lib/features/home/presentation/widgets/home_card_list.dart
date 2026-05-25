@@ -74,7 +74,6 @@ class HomeCardList extends StatelessWidget {
         final hcCachedView = showCachedHcAnyway && hcCached;
         return (
           showHcPrompt: !hcReady && !hcChecking && !hcCachedView,
-          showHcOfflineBanner: !hcReady && !hcChecking && hcCachedView,
           hcUnavailable:
               fitness.accessState == FitnessAccessState.unavailable,
           showKtPrompt: !kt.isLoggedIn &&
@@ -113,8 +112,6 @@ class HomeCardList extends StatelessWidget {
             : StepsSlot(
                 period: period,
                 barKey: barKey,
-                showHcOfflineBanner: viz.showHcOfflineBanner,
-                onHcAction: onHcAction,
                 onOpenSteps: onOpenSteps,
               );
 

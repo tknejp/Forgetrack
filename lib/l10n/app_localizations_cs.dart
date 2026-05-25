@@ -420,6 +420,10 @@ class AppLocalizationsCs extends AppLocalizations {
       'Zobrazují se uložená data — klepnutím nastavte Health Connect';
 
   @override
+  String get healthFooterOfflineHint =>
+      'Uložená data — klepnutím připojit Health Connect';
+
+  @override
   String get homeOfflineBanner => 'Jste offline — zobrazují se uložená data';
 
   @override

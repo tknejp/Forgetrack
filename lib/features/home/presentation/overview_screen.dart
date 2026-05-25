@@ -9,6 +9,7 @@ import '../../../shared/selected_period.dart';
 import '../../../shared/theme/design_tokens.dart';
 import '../../../shared/widgets/drag_reveal_pager.dart';
 import '../../health_connect/application/fitness_provider.dart';
+import '../../health_connect/application/health_connect_settings_launcher.dart';
 import '../../nutrition/application/kaloricke_tabulky_provider.dart';
 import '../../progression_engine/application/progression_engine_provider.dart';
 import 'widgets/day_content.dart';
@@ -76,15 +77,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
   }
 
   Future<void> _handleHcAction() async {
-    final fitness = context.read<FitnessProvider>();
-    if (fitness.accessState == FitnessAccessState.unavailable) {
-      await fitness.installHealthConnect();
-      return;
-    }
-    await fitness.requestPermissions();
-    if (mounted) {
-      await fitness.initialize();
-    }
+    await runHcAccessFlow(context.read<FitnessProvider>());
   }
 
   Future<void> _openDatePicker() async {

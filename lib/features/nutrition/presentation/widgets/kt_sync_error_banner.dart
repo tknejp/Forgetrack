@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../../l10n/l10n.dart';
-import '../../../../shared/theme/design_tokens.dart';
+import '../../../../shared/widgets/data_source_status_row.dart';
 import '../../../onboarding/widgets/kt_login_sheet.dart';
 import '../../application/kaloricke_tabulky_provider.dart';
 
@@ -88,10 +88,12 @@ class _KtSyncStatusBannerState extends State<KtSyncStatusBanner> {
     final kt = widget.kt;
 
     if (kt.needsReauth) {
-      return _BannerShell(
+      return DataSourceStatusBanner(
+        icon: Icons.error_outline,
+        tone: DataSourceStatusTone.warning,
         message: l10n.ktReauthRequired,
         ctaLabel: l10n.ktReauthCta,
-        onCta: () => KTLoginSheet.show(context),
+        onTap: () => KTLoginSheet.show(context),
       );
     }
 
@@ -99,137 +101,35 @@ class _KtSyncStatusBannerState extends State<KtSyncStatusBanner> {
     if (nextAt != null) {
       final remaining = nextAt.difference(DateTime.now()).inSeconds;
       final seconds = remaining > 0 ? remaining : 0;
-      return _BannerShell(
+      return DataSourceStatusBanner(
+        icon: Icons.sync,
+        tone: DataSourceStatusTone.warning,
+        spinning: true,
         message: l10n.ktReconnecting(seconds),
         ctaLabel: l10n.ktReconnectTryNow,
-        onCta: kt.retryNow,
+        onTap: kt.retryNow,
       );
     }
 
     if (kt.syncError != null) {
-      return _BannerShell(
+      return DataSourceStatusBanner(
+        icon: Icons.warning_amber_rounded,
+        tone: DataSourceStatusTone.warning,
         message: l10n.ktSyncError,
         ctaLabel: l10n.ktRetry,
-        onCta: widget.onRetry,
+        onTap: widget.onRetry,
       );
     }
 
     if (!kt.isLoggedIn && kt.hasCachedNutrition) {
-      return _InfoBannerShell(
+      return DataSourceStatusBanner(
+        icon: Icons.cloud_off_rounded,
         message: l10n.ktFooterOfflineHint,
+        showTrailingChevron: true,
         onTap: () => KTLoginSheet.show(context),
       );
     }
 
     return const SizedBox.shrink();
-  }
-}
-
-/// Muted info variant of [_BannerShell] for the offline-cache state.
-/// Distinct from the red error/warning styling so users read it as
-/// informational, not as a failure.
-class _InfoBannerShell extends StatelessWidget {
-  final String message;
-  final VoidCallback onTap;
-
-  const _InfoBannerShell({required this.message, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final ft = context.ft;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: ft.surfaceSubtle,
-          borderRadius: BorderRadius.circular(Tokens.radiusInner),
-          border: Border.all(color: ft.cardBorder),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.cloud_off_rounded,
-              size: 16,
-              color: ft.onSurfaceMuted,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                message,
-                style: TextStyle(
-                  fontSize: Tokens.fontSizeSmall,
-                  color: ft.onSurfaceMuted,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            const SizedBox(width: 6),
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 16,
-              color: ft.onSurfaceMuted,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _BannerShell extends StatelessWidget {
-  final String message;
-  final String ctaLabel;
-  final VoidCallback onCta;
-
-  const _BannerShell({
-    required this.message,
-    required this.ctaLabel,
-    required this.onCta,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF87171).withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(Tokens.radiusInner),
-        border:
-            Border.all(color: const Color(0xFFF87171).withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.warning_amber_rounded,
-            size: 16,
-            color: Color(0xFFF87171),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              message,
-              style: const TextStyle(
-                fontSize: Tokens.fontSizeSmall,
-                color: Color(0xCCFFFFFF),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          GestureDetector(
-            onTap: onCta,
-            child: Text(
-              ctaLabel,
-              style: const TextStyle(
-                fontSize: Tokens.fontSizeSmall,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFFF87171),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

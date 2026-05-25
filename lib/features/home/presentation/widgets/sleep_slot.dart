@@ -10,6 +10,7 @@ import '../../../../shared/widgets/detail_shortcut_button.dart';
 import '../../../../shared/widgets/stat_card.dart';
 import '../../../health_connect/application/fitness_provider.dart';
 import '../../../health_connect/application/goals_provider.dart';
+import '../../../health_connect/presentation/widgets/hc_status_indicators.dart';
 import '../../../progression_engine/application/progression_engine_provider.dart';
 import 'home_helpers.dart';
 
@@ -76,6 +77,9 @@ class SleepSlot extends StatelessWidget {
         questNodeId: 'daily_sleep_today',
         barKey: barKey,
       ),
+      footer: HcCardStatusFooter.isActive(fitness)
+          ? HcCardStatusFooter(fitness: fitness)
+          : null,
       children: [
         if (streakInfoBlockForQuest(
               progression: progression,

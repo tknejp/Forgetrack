@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../../l10n/l10n.dart';
-import '../../../../shared/theme/design_tokens.dart';
+import '../../../../shared/widgets/data_source_status_row.dart';
 import '../../../nutrition/application/kaloricke_tabulky_provider.dart';
 import '../../../onboarding/widgets/kt_login_sheet.dart';
 
@@ -86,11 +86,11 @@ class _KtCardStatusFooterState extends State<KtCardStatusFooter> {
     final kt = widget.kt;
 
     if (kt.needsReauth) {
-      return _FooterRow(
+      return DataSourceStatusRow(
         icon: Icons.error_outline,
-        iconColor: const Color(0xFFF87171),
+        tone: DataSourceStatusTone.warning,
         message: l10n.ktReauthRequired,
-        cta: l10n.ktReauthCta,
+        ctaLabel: l10n.ktReauthCta,
         onTap: () => KTLoginSheet.show(context),
       );
     }
@@ -99,108 +99,35 @@ class _KtCardStatusFooterState extends State<KtCardStatusFooter> {
     if (nextAt != null) {
       final remaining = nextAt.difference(DateTime.now()).inSeconds;
       final seconds = remaining > 0 ? remaining : 0;
-      return _FooterRow(
+      return DataSourceStatusRow(
         icon: Icons.sync,
-        iconColor: const Color(0xFFF59E0B),
+        tone: DataSourceStatusTone.warning,
         spinning: true,
         message: l10n.ktReconnecting(seconds),
-        cta: l10n.ktReconnectTryNow,
+        ctaLabel: l10n.ktReconnectTryNow,
         onTap: kt.retryNow,
       );
     }
 
     if (kt.isLoggedIn && kt.syncError != null) {
-      return _FooterRow(
+      return DataSourceStatusRow(
         icon: Icons.warning_amber_rounded,
-        iconColor: const Color(0xFFF87171),
+        tone: DataSourceStatusTone.warning,
         message: l10n.ktSyncError,
-        cta: l10n.ktRetry,
+        ctaLabel: l10n.ktRetry,
         onTap: widget.onSyncRetry,
       );
     }
 
     if (!kt.isLoggedIn && kt.hasCachedNutrition) {
-      return _FooterRow(
+      return DataSourceStatusRow(
         icon: Icons.cloud_off_rounded,
         message: l10n.ktFooterOfflineHint,
-        // Whole row is the CTA — no separate label needed.
+        showTrailingChevron: true,
         onTap: () => KTLoginSheet.show(context),
-        trailing: const Icon(Icons.chevron_right_rounded, size: 16),
       );
     }
 
     return const SizedBox.shrink();
-  }
-}
-
-class _FooterRow extends StatelessWidget {
-  final IconData icon;
-  final Color? iconColor;
-  final bool spinning;
-  final String message;
-  final String? cta;
-  final VoidCallback onTap;
-  final Widget? trailing;
-
-  const _FooterRow({
-    required this.icon,
-    required this.message,
-    required this.onTap,
-    this.iconColor,
-    this.spinning = false,
-    this.cta,
-    this.trailing,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final ft = context.ft;
-    final resolvedIconColor = iconColor ?? ft.onSurfaceMuted;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: Row(
-        children: [
-          spinning
-              ? SizedBox(
-                  width: 14,
-                  height: 14,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 1.6,
-                    color: resolvedIconColor,
-                  ),
-                )
-              : Icon(icon, size: 14, color: resolvedIconColor),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              message,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: ft.onSurfaceMuted,
-              ),
-            ),
-          ),
-          if (cta != null) ...[
-            const SizedBox(width: 6),
-            Text(
-              cta!,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: resolvedIconColor,
-              ),
-            ),
-          ] else if (trailing != null) ...[
-            const SizedBox(width: 6),
-            IconTheme(
-              data: IconThemeData(color: ft.onSurfaceMuted),
-              child: trailing!,
-            ),
-          ],
-        ],
-      ),
-    );
   }
 }

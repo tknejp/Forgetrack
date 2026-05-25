@@ -19,7 +19,6 @@ import '../../../progression_engine/presentation/widgets/quest_streak_info_block
 /// the underlying state hasn't changed in a layout-relevant way.
 typedef CardVisibility = ({
   bool showHcPrompt,
-  bool showHcOfflineBanner,
   bool hcUnavailable,
   bool showKtPrompt,
   bool hasCachedHcData,
