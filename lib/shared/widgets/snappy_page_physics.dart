@@ -52,9 +52,17 @@ class SnappyPageScrollPhysics extends ScrollPhysics {
     final progress = current - base;
 
     double targetPage;
-    if (velocity <= -velocityThreshold) {
+    // Strict inequalities so velocity == 0 falls through to the
+    // position-based branches. A tap that interrupts an in-flight
+    // ballistic animation re-enters `createBallisticSimulation` with
+    // velocity 0 to settle; with `<=` the negative-velocity branch was
+    // satisfied (`0 <= -0`) and the page reverted to `floor(current)`.
+    // For a leftward swipe (page 0 → 1) that meant snapping back to
+    // page 0; the rightward swipe (page 1 → 0) hid the bug because
+    // `floor(current)` already pointed at the swipe's target.
+    if (velocity < -velocityThreshold) {
       targetPage = base;
-    } else if (velocity >= velocityThreshold) {
+    } else if (velocity > velocityThreshold) {
       targetPage = base + 1;
     } else if (progress >= 1 - commitThreshold) {
       targetPage = base + 1;
