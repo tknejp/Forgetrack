@@ -74,9 +74,8 @@ class CaloriesSlot extends StatelessWidget {
 
     return StatCard(
           icon: '🔥',
-          label: period.type == PeriodType.day
-              ? l10n.caloriesTodayTitle
-              : l10n.caloriesAvgPerDay,
+          label: l10n.nutritionCardTitle,
+          subtitle: homeCardAverageSubtitle(l10n, period),
           domain: Tokens.calories,
           visualAssets:
               DashboardCardAssetResolver.forKind(DashboardCardKind.nutrition),
@@ -85,6 +84,7 @@ class CaloriesSlot extends StatelessWidget {
               value: fmt.format(kcal.round()),
               label: l10n.caloriesConsumed,
               unit: 'kcal',
+              goal: kcalGoal > 0 ? fmt.format(kcalGoal.round()) : null,
             ),
             StatStat(
               value: fmt.format(kcalGoal.round()),

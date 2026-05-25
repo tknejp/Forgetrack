@@ -38,6 +38,7 @@ class WeightSlot extends StatelessWidget {
     return StatCard(
       icon: '⚖',
       label: l10n.weightTitle,
+      subtitle: homeCardAverageSubtitle(l10n, period),
       domain: Tokens.weight,
       visualAssets:
           DashboardCardAssetResolver.forKind(DashboardCardKind.weight),

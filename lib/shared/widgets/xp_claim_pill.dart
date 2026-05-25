@@ -57,6 +57,7 @@ class XpClaimPill extends StatelessWidget {
     this.padding = const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
     this.claimedLabel,
     this.inline = false,
+    this.headlineOnly = false,
   });
 
   final XpClaimPillData data;
@@ -69,6 +70,48 @@ class XpClaimPill extends StatelessWidget {
   /// activity card) where vertical space is tight and the chip + pill
   /// together still fit horizontally.
   final bool inline;
+
+  /// When true, only the headline pill is rendered — companion/emblem
+  /// bonus chips are skipped. The caller is responsible for placing
+  /// the bonus column (see [bonusChipsColumn]) somewhere that allows
+  /// the chips to grow downward into otherwise-empty card space,
+  /// instead of inflating the header row height. Used by home cards
+  /// where the right side has a "rail" alongside the value/progress
+  /// area; the chips stack downward in that rail.
+  final bool headlineOnly;
+
+  /// Builds the right-aligned column of companion / emblem bonus
+  /// chips that normally sits under the headline. Returns null when
+  /// the grant has no bonuses. Mirrors the stacked layout used inside
+  /// [build] when [headlineOnly] is false, but lets a parent widget
+  /// hoist the chips into a separate slot.
+  static Widget? bonusChipsColumn(XpClaimPillData data) {
+    final hasCompanion = data.companionBonus > 0;
+    final hasEmblem = data.emblemBonus > 0;
+    if (!hasCompanion && !hasEmblem) return null;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        if (hasCompanion) ...[
+          const SizedBox(height: 3),
+          _BuffBonusChip(
+            amount: data.companionBonus,
+            state: data.state,
+            icon: Icons.pets_rounded,
+          ),
+        ],
+        if (hasEmblem) ...[
+          const SizedBox(height: 3),
+          _BuffBonusChip(
+            amount: data.emblemBonus,
+            state: data.state,
+            icon: Icons.shield_rounded,
+          ),
+        ],
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -130,7 +173,9 @@ class XpClaimPill extends StatelessWidget {
     final Widget child;
     final hasCompanion = data.companionBonus > 0;
     final hasEmblem = data.emblemBonus > 0;
-    if (hasCompanion || hasEmblem) {
+    if (headlineOnly) {
+      child = headline;
+    } else if (hasCompanion || hasEmblem) {
       final chips = <Widget>[
         if (hasCompanion)
           _BuffBonusChip(

@@ -49,13 +49,15 @@ class ActivitySlot extends StatelessWidget {
       (sum, activity) => sum + activity.duration.inMinutes,
     );
     final activityGoal = activityGoalForPeriod(goals, period);
-    final activityProgress = activityGoal > 0
-        ? (activeMinutes / activityGoal).clamp(0.0, 1.0)
-        : 0.0;
+    final activityRatio =
+        activityGoal > 0 ? activeMinutes / activityGoal : 0.0;
+    final activityProgress = activityRatio.clamp(0.0, 1.0);
+    final activityPct = (activityRatio * 100).round();
 
     return StatCard(
       icon: '⚡',
       label: l10n.activitiesActiveMins,
+      subtitle: homeCardAverageSubtitle(l10n, period),
       domain: Tokens.activityCard,
       visualAssets:
           DashboardCardAssetResolver.forKind(DashboardCardKind.activity),
@@ -64,6 +66,7 @@ class ActivitySlot extends StatelessWidget {
           value: fmt.format(activeMinutes),
           label: l10n.activitiesActiveMins,
           unit: 'min',
+          goal: activityGoal > 0 ? fmt.format(activityGoal) : null,
         ),
         StatStat(
           value: fmt.format(activityGoal),
@@ -76,7 +79,7 @@ class ActivitySlot extends StatelessWidget {
         ),
       ],
       progress: activityProgress,
-      badge: '${(activityProgress * 100).round()}%',
+      badge: '$activityPct%',
       xpData: xpPillForQuest(
         context: context,
         progression: progression,

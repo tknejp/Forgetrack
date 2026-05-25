@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/selected_period.dart';
 import '../../../../shared/widgets/xp_claim_pill.dart';
 import '../../../../shared/widgets/xp_sparkle_overlay.dart';
@@ -153,6 +154,21 @@ String fmtSleep(Duration? duration) {
   final hours = duration.inHours;
   final minutes = duration.inMinutes - hours * 60;
   return '${hours}h ${minutes.toString().padLeft(2, '0')}m';
+}
+
+/// Resolves the muted "weekly/monthly average" subtitle line for home
+/// cards when the user is viewing an aggregated period. Day view gets
+/// null — the headline number is already the day's value.
+String? homeCardAverageSubtitle(AppLocalizations l10n, SelectedPeriod period) {
+  switch (period.type) {
+    case PeriodType.day:
+      return null;
+    case PeriodType.week:
+      return l10n.homeCardAvgWeek;
+    case PeriodType.month:
+    case PeriodType.custom:
+      return l10n.homeCardAvgMonth;
+  }
 }
 
 int activityGoalForPeriod(GoalsProvider goals, SelectedPeriod period) {

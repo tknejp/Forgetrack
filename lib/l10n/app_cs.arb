@@ -27,6 +27,9 @@
   "periodToday": "Dnes",
   "periodCustomRangeSoon": "Vlastní rozsah bude brzy k dispozici",
   "caloriesAvgPerDay": "Průměr / den",
+  "homeCardAvgWeek": "průměr za týden",
+  "homeCardAvgMonth": "průměr za měsíc",
+  "nutritionCardTitle": "Výživa",
   "sleepAverage": "Průměr",
 
   "stepsTitle": "Kroky",

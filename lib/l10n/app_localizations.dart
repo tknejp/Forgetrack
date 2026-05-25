@@ -326,6 +326,24 @@ abstract class AppLocalizations {
   /// **'Avg / day'**
   String get caloriesAvgPerDay;
 
+  /// Home card subtitle shown when the period is set to week — flags that the primary number is a daily average over the week
+  ///
+  /// In en, this message translates to:
+  /// **'weekly average'**
+  String get homeCardAvgWeek;
+
+  /// Home card subtitle shown when the period is set to month — flags that the primary number is a daily average over the month
+  ///
+  /// In en, this message translates to:
+  /// **'monthly average'**
+  String get homeCardAvgMonth;
+
+  /// Home nutrition card title (replaces day/avg-specific titles)
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition'**
+  String get nutritionCardTitle;
+
   /// Label for average sleep duration in week/month mode
   ///
   /// In en, this message translates to:

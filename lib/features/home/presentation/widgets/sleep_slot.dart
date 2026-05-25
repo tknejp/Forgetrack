@@ -42,13 +42,16 @@ class SleepSlot extends StatelessWidget {
         : null;
     final sleepDuration = sleep?.totalDuration ?? avgSleep;
     final sleepGoalMinutes = goals.sleepHours * 60;
-    final sleepProgress = sleepDuration != null
-        ? (sleepDuration.inMinutes / sleepGoalMinutes).clamp(0.0, 1.0)
+    final sleepRatio = sleepDuration != null && sleepGoalMinutes > 0
+        ? sleepDuration.inMinutes / sleepGoalMinutes
         : 0.0;
+    final sleepProgress = sleepRatio.clamp(0.0, 1.0);
+    final sleepPct = (sleepRatio * 100).round();
 
     return StatCard(
       icon: '🌙',
       label: l10n.sleepTitle,
+      subtitle: homeCardAverageSubtitle(l10n, period),
       domain: Tokens.sleep,
       visualAssets:
           DashboardCardAssetResolver.forKind(DashboardCardKind.sleep),
@@ -68,8 +71,7 @@ class SleepSlot extends StatelessWidget {
         ),
       ],
       progress: sleepProgress,
-      badge:
-          sleepDuration != null ? '${(sleepProgress * 100).round()}%' : null,
+      badge: sleepDuration != null ? '$sleepPct%' : null,
       xpData: xpPillForQuest(
         context: context,
         progression: progression,

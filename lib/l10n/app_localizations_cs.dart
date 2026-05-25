@@ -134,6 +134,15 @@ class AppLocalizationsCs extends AppLocalizations {
   String get caloriesAvgPerDay => 'Průměr / den';
 
   @override
+  String get homeCardAvgWeek => 'průměr za týden';
+
+  @override
+  String get homeCardAvgMonth => 'průměr za měsíc';
+
+  @override
+  String get nutritionCardTitle => 'Výživa';
+
+  @override
   String get sleepAverage => 'Průměr';
 
   @override

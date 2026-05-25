@@ -39,18 +39,24 @@ class StepsSlot extends StatelessWidget {
         ? fitness.stepsForDate(period.start)
         : fitness.stepsAvgForRange(period.start, period.end);
     final stepsGoal = goals.dailySteps;
-    final stepsProgress =
-        stepsGoal > 0 ? (steps / stepsGoal).clamp(0.0, 1.0) : 0.0;
+    final stepsRatio = stepsGoal > 0 ? steps / stepsGoal : 0.0;
+    final stepsProgress = stepsRatio.clamp(0.0, 1.0);
+    final stepsPct = (stepsRatio * 100).round();
     final stepsLeft = (stepsGoal - steps).clamp(0, stepsGoal);
 
     return StatCard(
           icon: '🥾',
           label: l10n.stepsTitle,
+          subtitle: homeCardAverageSubtitle(l10n, period),
           domain: Tokens.steps,
           visualAssets:
               DashboardCardAssetResolver.forKind(DashboardCardKind.steps),
           stats: [
-            StatStat(value: fmt.format(steps), label: l10n.stepsTitle),
+            StatStat(
+              value: fmt.format(steps),
+              label: l10n.stepsTitle,
+              goal: stepsGoal > 0 ? fmt.format(stepsGoal) : null,
+            ),
             StatStat(value: fmt.format(stepsGoal), label: l10n.stepsGoal),
             StatStat(
               value: period.type == PeriodType.day
@@ -61,7 +67,7 @@ class StepsSlot extends StatelessWidget {
             ),
           ],
           progress: stepsProgress,
-          badge: '${(stepsProgress * 100).round()}%',
+          badge: '$stepsPct%',
           xpData: xpPillForQuest(
             context: context,
             progression: progression,

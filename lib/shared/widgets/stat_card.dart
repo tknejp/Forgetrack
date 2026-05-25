@@ -10,10 +10,18 @@ class StatStat {
   final String label;
   final String? unit;
 
+  /// Optional goal value rendered inline next to [value] in the card's
+  /// compact body as "value / goal unit" — goal/unit in muted grey, big
+  /// colored number stays on `value`. Used on cards that have a daily
+  /// target (steps, calories, active minutes); leave null on cards with
+  /// no meaningful target (weight, sleep).
+  final String? goal;
+
   const StatStat({
     required this.value,
     required this.label,
     this.unit,
+    this.goal,
   });
 }
 
@@ -38,6 +46,10 @@ class StatCardVisualAssets {
 class StatCard extends StatefulWidget {
   final String icon;
   final String label;
+  /// Optional muted line rendered under [label]. Home cards use this to
+  /// flag week/month average periods ("průměr za týden") without
+  /// rewriting the main title per period.
+  final String? subtitle;
   final Domain domain;
   final List<StatStat> stats;
   final double? progress;
@@ -64,6 +76,7 @@ class StatCard extends StatefulWidget {
     super.key,
     required this.icon,
     required this.label,
+    this.subtitle,
     required this.domain,
     required this.stats,
     this.progress,
@@ -125,18 +138,53 @@ class _StatCardState extends State<StatCard> {
                         _buildHeroIcon(d),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildHeader(d, ft),
-                              const SizedBox(height: 5),
-                              _buildCompactBody(d, ft),
+                              Expanded(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Text(
+                                      widget.label,
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w800,
+                                        color: ft.onSurface,
+                                      ),
+                                    ),
+                                    if (widget.subtitle != null) ...[
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        widget.subtitle!,
+                                        style: TextStyle(
+                                          fontSize: Tokens.fontSizeCaption,
+                                          fontWeight: FontWeight.w600,
+                                          color: ft.onSurfaceMuted,
+                                        ),
+                                      ),
+                                    ],
+                                    const SizedBox(height: 5),
+                                    _buildCompactBody(d, ft),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              _buildRightRail(d, ft),
                             ],
                           ),
                         ),
                       ],
                     ),
+                    if (widget.showProgress && widget.progress != null) ...[
+                      const SizedBox(height: 7),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8),
+                        child: _buildProgressRow(d, ft),
+                      ),
+                    ],
                     ClipRect(
                       child: AnimatedSize(
                         duration: const Duration(milliseconds: 260),
@@ -196,34 +244,53 @@ class _StatCardState extends State<StatCard> {
     );
   }
 
-  Widget _buildHeader(Domain d, ThemeTokens ft) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            widget.label,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: ft.onSurface,
-            ),
-          ),
+  /// Right "rail" sitting next to the title + value column. Headline
+  /// pill + chevron stay on the top row (aligned with the title);
+  /// companion / emblem bonus chips stack downward beneath them into
+  /// the vertical space alongside the value + progress bar, so they
+  /// no longer inflate the header row height.
+  Widget _buildRightRail(Domain d, ThemeTokens ft) {
+    final headline = <Widget>[
+      if (widget.trophy) ...[
+        const Text('🏆', style: TextStyle(fontSize: 16)),
+        const SizedBox(width: 6),
+      ],
+      if (widget.xpData != null) ...[
+        XpClaimPill(
+          data: widget.xpData!,
+          claimedLabel: widget.claimedXpLabel,
+          headlineOnly: true,
         ),
-        if (widget.trophy) ...[
-          const Text('🏆', style: TextStyle(fontSize: 16)),
-          const SizedBox(width: 6),
-        ],
-        if (widget.xpData != null) ...[
-          XpClaimPill(
-            data: widget.xpData!,
-            claimedLabel: widget.claimedXpLabel,
+        const SizedBox(width: 6),
+      ] else if (widget.xp != null) ...[
+        _XpPill(label: widget.xp!),
+        const SizedBox(width: 6),
+      ],
+      if (widget.collapsible) ExpandChevron(expanded: _open),
+    ];
+
+    final Widget? bonusChips = widget.xpData != null
+        ? XpClaimPill.bonusChipsColumn(widget.xpData!)
+        : null;
+
+    // Shift chips left by chevron width + the SizedBox(6) gap that
+    // sits between pill and chevron in the headline row, so the chip
+    // column right-aligns under the headline PILL's right edge — not
+    // under the chevron.
+    const chevronInset = 18.0 + 6.0;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Row(mainAxisSize: MainAxisSize.min, children: headline),
+        if (bonusChips != null)
+          Padding(
+            padding: EdgeInsets.only(
+              right: widget.collapsible ? chevronInset : 0,
+            ),
+            child: bonusChips,
           ),
-          const SizedBox(width: 6),
-        ] else if (widget.xp != null) ...[
-          _XpPill(label: widget.xp!),
-          const SizedBox(width: 6),
-        ],
-        if (widget.collapsible) ExpandChevron(expanded: _open),
       ],
     );
   }
@@ -293,6 +360,17 @@ class _StatCardState extends State<StatCard> {
                   letterSpacing: -0.5,
                 ),
               ),
+              if (primary.goal != null) ...[
+                const SizedBox(width: Tokens.spaceXs),
+                Text(
+                  '/ ${primary.goal}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: ft.onSurfaceMuted,
+                  ),
+                ),
+              ],
               if (primary.unit != null) ...[
                 const SizedBox(width: Tokens.spaceXs),
                 Text(
@@ -300,7 +378,9 @@ class _StatCardState extends State<StatCard> {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: d.color.withValues(alpha: 0.7),
+                    color: primary.goal != null
+                        ? ft.onSurfaceMuted
+                        : d.color.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -320,23 +400,26 @@ class _StatCardState extends State<StatCard> {
             ),
           ],
         ],
-        if (widget.showProgress && widget.progress != null) ...[
-          const SizedBox(height: 7),
-          Row(
-            children: [
-              Expanded(child: _buildProgressBar(d)),
-              if (widget.badge != null) ...[
-                const SizedBox(width: 10),
-                Text(
-                  widget.badge!,
-                  style: TextStyle(
-                    fontSize: Tokens.fontSizeCaption,
-                    fontWeight: FontWeight.w800,
-                    color: ft.onSurface,
-                  ),
-                ),
-              ],
-            ],
+      ],
+    );
+  }
+
+  /// Full-width progress bar + percentage badge row. Lifted out of
+  /// [_buildCompactBody] so the bar always spans the whole card width
+  /// regardless of the right rail's chip stack — see [_buildRightRail].
+  Widget _buildProgressRow(Domain d, ThemeTokens ft) {
+    return Row(
+      children: [
+        Expanded(child: _buildProgressBar(d)),
+        if (widget.badge != null) ...[
+          const SizedBox(width: 10),
+          Text(
+            widget.badge!,
+            style: TextStyle(
+              fontSize: Tokens.fontSizeCaption,
+              fontWeight: FontWeight.w800,
+              color: ft.onSurface,
+            ),
           ),
         ],
       ],

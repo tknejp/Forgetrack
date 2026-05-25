@@ -133,6 +133,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get caloriesAvgPerDay => 'Avg / day';
 
   @override
+  String get homeCardAvgWeek => 'weekly average';
+
+  @override
+  String get homeCardAvgMonth => 'monthly average';
+
+  @override
+  String get nutritionCardTitle => 'Nutrition';
+
+  @override
   String get sleepAverage => 'Average';
 
   @override
