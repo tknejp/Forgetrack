@@ -37,9 +37,23 @@ class ObjectiveCatalog {
     for (final def in const ObjectiveCatalog().build()) def.id: def,
   };
 
+  // Cached default-context build — same rationale as the matching
+  // cache on `ProgressionEntryCatalog`. Combo objective pre-allocation
+  // added ~600 objectives; rebuilding this list on every `firstWhere`
+  // inside the quest-screen hot path was the dominant cost in debug
+  // mode.
+  static List<Objective>? _cachedDefaultBuild;
+
   List<Objective> build([
     EngineCatalogContext context = const EngineCatalogContext(),
   ]) {
+    if (identical(context, const EngineCatalogContext())) {
+      return _cachedDefaultBuild ??= List.unmodifiable(_build(context));
+    }
+    return _build(context);
+  }
+
+  List<Objective> _build(EngineCatalogContext context) {
     return [
       ...stepsObjectives(context),
       ...nutritionObjectives(context),

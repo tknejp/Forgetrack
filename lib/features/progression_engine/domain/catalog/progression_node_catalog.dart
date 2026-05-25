@@ -34,9 +34,25 @@ class ProgressionEntryCatalog {
     for (final def in const ProgressionEntryCatalog().build()) def.id: def,
   };
 
+  // Cached default-context build. The catalog is a pure function of
+  // its context, every hot caller (provider quest-screen getters,
+  // devtools pickers, achievement helpers) passes the default
+  // context, and combo chain pre-allocation (50 gens × ~13 nodes)
+  // inflated the result list. Rebuilding it from scratch on every
+  // walk dominated quest-screen debug-mode frames; cache the
+  // canonical-context build and fall through for any custom context.
+  static List<ProgressionEntry>? _cachedDefaultBuild;
+
   List<ProgressionEntry> build([
     EngineCatalogContext context = const EngineCatalogContext(),
   ]) {
+    if (identical(context, const EngineCatalogContext())) {
+      return _cachedDefaultBuild ??= List.unmodifiable(_build(context));
+    }
+    return _build(context);
+  }
+
+  List<ProgressionEntry> _build(EngineCatalogContext context) {
     return [
       ...stepsNodes(),
       ...nutritionNodes(),

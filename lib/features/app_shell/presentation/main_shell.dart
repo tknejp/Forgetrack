@@ -183,6 +183,15 @@ class _FtMainShellState extends State<MainShell> {
                 child: PageView(
                   controller: _pageController,
                   onPageChanged: _handlePageChanged,
+                  // pageSnapping must be false: when true, PageView wraps
+                  // user-supplied physics inside a fresh `PageScrollPhysics`
+                  // (see PageView source ~line 996) whose own
+                  // `createBallisticSimulation` snaps to the nearest page
+                  // midpoint and never delegates to the parent — making
+                  // SnappyPageScrollPhysics's thresholds dead code. With
+                  // snapping off, our physics drives the ballistic
+                  // simulation directly.
+                  pageSnapping: false,
                   physics: const SnappyPageScrollPhysics(),
                   children: screens,
                 ),

@@ -492,6 +492,42 @@ class ProgressionEngineProvider extends ChangeNotifier {
   Set<String>? _cachedCompletedNodeIds;
   int? _completedNodeIdsCacheKey;
 
+  // Combo chain pre-allocation (50 gens × ~13 nodes) and the new
+  // skin/cosmetic content roughly doubled the catalog size. Every
+  // bucket walk in [_questsForBucket] became a noticeable chunk of
+  // a quest-screen build (and `chainQuestsFor` re-runs the walk per
+  // chapter / long-term / daily card per build). Cache the read
+  // projections that derive from the catalog + ledger so a single
+  // quest-screen build hits each one at most once.
+  final Map<QuestDisplayBucket, List<EngineQuestProgress>>
+      _questsForBucketCache = {};
+  int? _questsForBucketCacheKey;
+  final Map<String, List<EngineQuestProgress>> _chainQuestsCache = {};
+  int? _chainQuestsCacheKey;
+  List<EngineQuestProgress>? _cachedLockedQuests;
+  int? _lockedQuestsCacheKey;
+  List<EngineCompletedEntry>? _cachedCompletedEntries;
+  int? _completedEntriesCacheKey;
+  EngineQuestProgress? _cachedNextLockedChapter;
+  bool _hasCachedNextLockedChapter = false;
+  int? _nextLockedChapterCacheKey;
+  EngineEvaluationContext? _cachedCurrentContext;
+  bool _hasCachedCurrentContext = false;
+  int? _currentContextCacheKey;
+
+  /// Cache key for read projections derived from the catalog × the
+  /// engine's last evaluation. Mirrors the shape of
+  /// `_dailySectionCacheKey` (any ledger swap / dev-day shift / new
+  /// evaluation flips the key) and additionally tracks `_lastResult`
+  /// identity so projections invalidate when the result is cleared
+  /// without a new timestamp (reset / wipe paths).
+  int _engineProjectionCacheKey() => Object.hash(
+        identityHashCode(_ledger),
+        _devDayOffset,
+        _lastEvaluatedAt,
+        identityHashCode(_lastResult),
+      );
+
   /// Phase 7 read projection. Returns [PlayerQuestCatalog.empty]
   /// before the first ledger load completes; once the ledger is in
   /// place, the catalog rebuilds from the union of
@@ -819,10 +855,7 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// objective is not in the catalog.
   Objective? objectiveById(String? objectiveId) {
     if (objectiveId == null) return null;
-    for (final o in _objectiveCatalog.build()) {
-      if (o.id == objectiveId) return o;
-    }
-    return null;
+    return ObjectiveCatalog.definitionForId(objectiveId);
   }
 
   /// Every quest node that has at least one completion event, paired
@@ -1267,6 +1300,18 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// place of the just-finished chapter, instead of pushing it down
   /// into the generic ZAMÄŒENO bucket where it reads as a side note.
   EngineQuestProgress? get nextLockedChapter {
+    final key = _engineProjectionCacheKey();
+    if (_hasCachedNextLockedChapter && _nextLockedChapterCacheKey == key) {
+      return _cachedNextLockedChapter;
+    }
+    final out = _computeNextLockedChapter();
+    _cachedNextLockedChapter = out;
+    _hasCachedNextLockedChapter = true;
+    _nextLockedChapterCacheKey = key;
+    return out;
+  }
+
+  EngineQuestProgress? _computeNextLockedChapter() {
     final chapters = _questsForBucket(QuestDisplayBucket.chapter);
     if (chapters.isEmpty) return null;
     final chains = <String, List<EngineQuestProgress>>{};
@@ -1306,6 +1351,16 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// (e.g. a standalone weekly with [LevelAtLeast]) are still surfaced
   /// individually.
   List<EngineQuestProgress> get lockedQuests {
+    final key = _engineProjectionCacheKey();
+    final cached = _cachedLockedQuests;
+    if (cached != null && _lockedQuestsCacheKey == key) return cached;
+    final out = _buildLockedQuests();
+    _cachedLockedQuests = out;
+    _lockedQuestsCacheKey = key;
+    return out;
+  }
+
+  List<EngineQuestProgress> _buildLockedQuests() {
     final out = <EngineQuestProgress>[];
 
     // ── Non-chapter level-gated quests ──────────────────────────────
@@ -1363,16 +1418,29 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// preview — both render the same dot/connector strip. Scans every
   /// display bucket so chains can live across daily/weekly/chapter/
   /// long-term as authors see fit.
+  ///
+  /// Memoised per-chainId. Quest screen calls this per chapter card,
+  /// per long-term card, and per daily card (via the `chainResolver`
+  /// passed into `buildQuestSectionItems`); without the cache a
+  /// single build re-ran the bucket walk an order of magnitude more
+  /// often than necessary.
   List<EngineQuestProgress> chainQuestsFor(String chainId) {
-    final out = <EngineQuestProgress>[];
-    for (final bucket in QuestDisplayBucket.values) {
-      for (final q in _questsForBucket(bucket)) {
-        if (q.node.chainId == chainId) out.add(q);
-      }
+    final key = _engineProjectionCacheKey();
+    if (_chainQuestsCacheKey != key) {
+      _chainQuestsCache.clear();
+      _chainQuestsCacheKey = key;
     }
-    out.sort((a, b) =>
-        (a.node.chainOrder ?? 0).compareTo(b.node.chainOrder ?? 0));
-    return out;
+    return _chainQuestsCache.putIfAbsent(chainId, () {
+      final out = <EngineQuestProgress>[];
+      for (final bucket in QuestDisplayBucket.values) {
+        for (final q in _questsForBucket(bucket)) {
+          if (q.node.chainId == chainId) out.add(q);
+        }
+      }
+      out.sort((a, b) =>
+          (a.node.chainOrder ?? 0).compareTo(b.node.chainOrder ?? 0));
+      return out;
+    });
   }
 
   /// Streak by objective id (only daily-scoped objectives have a
@@ -1425,6 +1493,18 @@ class ProgressionEngineProvider extends ChangeNotifier {
   EngineEvaluationContext? get currentContext {
     final source = _source;
     if (source == null) return null;
+    // Memoised — `currentContext` previously rebuilt the full
+    // EngineEvaluationContext on every read, including the multi-walk
+    // `_buildLedgerCounters()` (4 ledger passes), `_ledger.all.toList()`,
+    // and `_objectiveActualOverridesFromLedger()`. The projected-buff
+    // chip projections (`projectedCompanionBuffBonusFor`,
+    // `projectedEmblemBuffBonusFor`) call this getter per quest card,
+    // so a quest-screen build was paying that cost 20+ times — a
+    // significant chunk of any scroll-induced rebuild in release mode.
+    final key = _engineProjectionCacheKey();
+    if (_hasCachedCurrentContext && _currentContextCacheKey == key) {
+      return _cachedCurrentContext;
+    }
     final base = source.buildContext(
       player: _buildPlayer(),
       events: _ledger?.all.toList() ?? const [],
@@ -1434,11 +1514,15 @@ class ProgressionEngineProvider extends ChangeNotifier {
       ),
       ownedCosmeticIds: _cosmeticBridge.ownedCosmeticIds,
     );
-    return base.copyWith(
+    final out = base.copyWith(
       equippedCompanionBuff: _cosmeticBridge.equippedCompanionBuff,
       equippedEmblemBuffs: _resolveEquippedEmblemBuffs(base.player.rpgModeEnabled),
       currentStreakByDomain: _resolveCurrentStreakByDomain(),
     );
+    _cachedCurrentContext = out;
+    _hasCachedCurrentContext = true;
+    _currentContextCacheKey = key;
+    return out;
   }
 
   /// Equipped (= pinned on the user's [EmblemBoard]) emblem buffs.
@@ -2239,6 +2323,16 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// Sorted newest-event first so the most recently progressed entry
   /// shows up at the top.
   List<EngineCompletedEntry> get completedEntries {
+    final key = _engineProjectionCacheKey();
+    final cached = _cachedCompletedEntries;
+    if (cached != null && _completedEntriesCacheKey == key) return cached;
+    final out = _buildCompletedEntries();
+    _cachedCompletedEntries = out;
+    _completedEntriesCacheKey = key;
+    return out;
+  }
+
+  List<EngineCompletedEntry> _buildCompletedEntries() {
     final l = _ledger;
     if (l == null) return const [];
 
@@ -2445,10 +2539,8 @@ class ProgressionEngineProvider extends ChangeNotifier {
       _ => null,
     };
     if (objectiveId == null) return ProgressionDomain.steps;
-    for (final o in _objectiveCatalog.build()) {
-      if (o.id == objectiveId) return o.domain ?? ProgressionDomain.steps;
-    }
-    return ProgressionDomain.steps;
+    final objective = ObjectiveCatalog.definitionForId(objectiveId);
+    return objective?.domain ?? ProgressionDomain.steps;
   }
 
   ProgressionResolutionResult? takePendingCelebration() {
@@ -4356,7 +4448,25 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// requested display bucket. Reads the latest objective outcomes
   /// for in-progress %, the ledger for completion state, and the
   /// last-result availability set for the claim pill.
+  ///
+  /// Memoised per-bucket against [_engineProjectionCacheKey]. A single
+  /// quest-screen build pulls daily / weekly / chapter / long-term /
+  /// locked / completed projections + several `chainQuestsFor(...)`
+  /// calls — without the cache the bucket walk re-ran ~10× per build
+  /// and dominated debug-mode frames after combo chain pre-allocation.
   List<EngineQuestProgress> _questsForBucket(QuestDisplayBucket bucket) {
+    final key = _engineProjectionCacheKey();
+    if (_questsForBucketCacheKey != key) {
+      _questsForBucketCache.clear();
+      _questsForBucketCacheKey = key;
+    }
+    return _questsForBucketCache.putIfAbsent(
+      bucket,
+      () => _buildQuestsForBucket(bucket),
+    );
+  }
+
+  List<EngineQuestProgress> _buildQuestsForBucket(QuestDisplayBucket bucket) {
     final r = _lastResult;
     final outcomesById = <String, ObjectiveOutcome>{
       for (final o in r?.allObjectiveOutcomes ?? const <ObjectiveOutcome>[])
@@ -4373,12 +4483,13 @@ class ProgressionEngineProvider extends ChangeNotifier {
       if (node.displayBucket != bucket) continue;
 
       final outcome = outcomesById[node.objectiveId];
-      // Look up the objective to get its target — actualValue alone
-      // is not enough for a progress bar.
-      final objective = _objectiveCatalog.build().firstWhere(
-            (o) => o.id == node.objectiveId,
-            orElse: () => objectiveCatalogFallback(node.objectiveId),
-          );
+      // Static O(1) lookup — earlier `_objectiveCatalog.build().firstWhere(...)`
+      // rebuilt the full objective list AND linear-scanned it per node,
+      // which is what made quest-screen builds O(quests × objectives)
+      // after combo pre-allocation. The fallback handles devtools
+      // synthetic objectives that bypass the catalog.
+      final objective = ObjectiveCatalog.definitionForId(node.objectiveId) ??
+          objectiveCatalogFallback(node.objectiveId);
 
       final actual = outcome?.actualValue ?? 0;
       final target = objective.targetValue;

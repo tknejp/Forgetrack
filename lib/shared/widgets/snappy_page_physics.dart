@@ -7,11 +7,16 @@ import 'package:flutter/widgets.dart';
 /// Why: the stock behaviour feels like the screen is fighting the user when
 /// they drag ~30–40 % across — the page reverts. Lowering the position and
 /// velocity thresholds makes shell-level swipes feel responsive.
+///
+/// Defaults: a short fast flick (~5 % across @ 60 px/s) commits. Pure-distance
+/// drags commit at 8 % of the viewport; anything between 8 % and 92 % with no
+/// flick rounds to the nearest page (so a slow half-drag still goes the way
+/// the player pushed it).
 class SnappyPageScrollPhysics extends ScrollPhysics {
   const SnappyPageScrollPhysics({
     super.parent,
-    this.commitThreshold = 0.12,
-    this.velocityThreshold = 120,
+    this.commitThreshold = 0,
+    this.velocityThreshold = 0,
   });
 
   final double commitThreshold;

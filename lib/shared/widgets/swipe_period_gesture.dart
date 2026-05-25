@@ -17,8 +17,8 @@ class SwipePeriodGesture extends StatelessWidget {
     required this.child,
     required this.onPrev,
     required this.onNext,
-    this.minVelocity = 250,
-    this.minDistance = 40,
+    this.minVelocity = 120,
+    this.minDistance = 20,
   });
 
   final Widget child;
