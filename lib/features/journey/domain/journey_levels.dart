@@ -53,16 +53,14 @@ const List<int> kJourneyTitleBreakpoints = [
 /// journey map feel populated between anchor tiers.
 const Map<int, String> _decorativeEmojiByLevel = {
   55: '🦅',
-  65: '🌠',
-  85: '🪽',
 };
 
 /// Emoji for a given level, suitable for journey-map nodes.
 /// Resolution order:
 ///   1. Exact match in [kLevelMilestones] — reward-bearing milestones
 ///      carry their own emoji (anchors at 5/10/… and decoratives at
-///      35/45/75/95).
-///   2. Journey-only decorative emoji (55/65/85).
+///      35/45/75/95 and skin drops at 12/42/65/85).
+///   2. Journey-only decorative emoji (55).
 ///   3. Fall back to the governing milestone's emoji so any level
 ///      between anchors renders the active tier glyph.
 String journeyEmojiForLevel(int level) {

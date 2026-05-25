@@ -4,6 +4,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../config/cosmetics_config.dart';
 import '../../domain/cosmetic_models.dart';
+import 'cosmetic_preview_path.dart';
 
 /// Compact tile for an equipped cosmetic — small thumbnail + two-line label
 /// (type small caps, cosmetic name on the next line). Designed to flow in
@@ -18,6 +19,7 @@ class CosmeticEquippedChip extends StatelessWidget {
     required this.definition,
     this.l10n,
     this.config,
+    this.raceId,
     this.labelOverride,
     this.onTap,
   });
@@ -25,14 +27,23 @@ class CosmeticEquippedChip extends StatelessWidget {
   final Cosmetic definition;
   final AppLocalizations? l10n;
   final CosmeticsConfig? config;
+
+  /// Player's selected race id. Skin previews need it to land on the
+  /// race-specific thumbnail (`assets/cosmetics/skins/<race>/<id>_thumb.png`);
+  /// non-skin types ignore it. Null is safe — skin chips fall back to
+  /// the type-icon placeholder.
+  final String? raceId;
   final String? labelOverride;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final assetPath = (config ?? CosmeticsConfig.standard())
-        .resolveAssetPath(definition.previewAssetKey ?? definition.assetKey);
+    final assetPath = resolveCosmeticPreviewPath(
+      definition,
+      config: config ?? CosmeticsConfig.standard(),
+      raceId: raceId,
+    );
     final l10n = this.l10n;
     final name =
         labelOverride ?? (l10n != null ? definition.name(l10n) : definition.id);

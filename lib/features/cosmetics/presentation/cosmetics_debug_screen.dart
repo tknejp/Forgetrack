@@ -178,10 +178,15 @@ class _UnequipChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final raceId = context.watch<CosmeticsProvider>().currentRaceId;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        CosmeticEquippedChip(definition: definition, l10n: l10n),
+        CosmeticEquippedChip(
+          definition: definition,
+          l10n: l10n,
+          raceId: raceId,
+        ),
         IconButton(
           tooltip: 'Unequip',
           icon: const Icon(Icons.close, size: 16),
@@ -287,6 +292,7 @@ class _Tile extends StatelessWidget {
       definition: definition,
       isUnlocked: isUnlocked,
       isEquipped: isEquipped,
+      raceId: cosmetics.currentRaceId,
       l10n: l10n,
       onTap: () {
         if (!isUnlocked) {

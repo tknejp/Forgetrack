@@ -45,6 +45,9 @@ enum CelebrationRewardKind {
   /// Cosmetic companion / pet.
   companion,
 
+  /// Full-body skin / avatar theme.
+  skin,
+
   /// Generic gem / treasure.
   gem;
 
@@ -72,6 +75,8 @@ enum CelebrationRewardKind {
         return l10n.celebrationKindBackground;
       case CelebrationRewardKind.companion:
         return l10n.celebrationKindCompanion;
+      case CelebrationRewardKind.skin:
+        return l10n.celebrationKindSkin;
       case CelebrationRewardKind.gem:
         return l10n.celebrationKindGem;
     }

@@ -4,6 +4,7 @@ import '../../../../shared/theme/design_tokens.dart';
 import '../../config/cosmetics_config.dart';
 import '../../domain/cosmetic_catalog.dart';
 import '../../domain/cosmetic_models.dart';
+import 'cosmetic_preview_path.dart';
 
 /// Square thumbnail that renders a cosmetic's preview asset (`previewAssetKey`
 /// or the main `assetKey`) given the cosmetic id. Falls back to a typed icon
@@ -25,6 +26,7 @@ class CosmeticAssetThumb extends StatelessWidget {
     this.dimmed = false,
     this.fallbackIcon,
     this.fallbackColor,
+    this.raceId,
     CosmeticsConfig? config,
   }) : config = config ?? CosmeticsConfig.standard();
 
@@ -47,6 +49,11 @@ class CosmeticAssetThumb extends StatelessWidget {
   /// design system accent.
   final Color? fallbackColor;
 
+  /// Player's selected race id. Skin thumbs need it to land on the
+  /// race-specific artwork; ignored for non-skin types. Null is safe —
+  /// the thumb falls back to the type icon placeholder.
+  final String? raceId;
+
   /// Wired so tests can pass a custom config without dragging providers
   /// through. Production usage gets the default const config.
   final CosmeticsConfig config;
@@ -55,9 +62,13 @@ class CosmeticAssetThumb extends StatelessWidget {
   Widget build(BuildContext context) {
     final definition = const CosmeticCatalog().byId(cosmeticId);
     final accent = fallbackColor ?? Tokens.accent;
-    final assetPath = config.resolveAssetPath(
-      definition?.previewAssetKey ?? definition?.assetKey,
-    );
+    final assetPath = definition == null
+        ? null
+        : resolveCosmeticPreviewPath(
+            definition,
+            config: config,
+            raceId: raceId,
+          );
 
     Widget fallback() {
       return _Placeholder(

@@ -7,6 +7,7 @@ import '../../application/cosmetics_provider.dart';
 import '../../config/cosmetics_config.dart';
 import '../../domain/cosmetic_models.dart';
 import '../cosmetics_screen.dart';
+import 'cosmetic_preview_path.dart';
 
 /// "Inventář" section — a row of three featured cosmetic tiles (frame,
 /// companion, background) that reads the signed-in user's
@@ -18,8 +19,12 @@ import '../cosmetics_screen.dart';
 class CosmeticsInventorySection extends StatelessWidget {
   const CosmeticsInventorySection({super.key});
 
+  // Order mirrors the inventory tab order: skin (body / identity) →
+  // companion (buddy) → background (scene). Frame is omitted on
+  // purpose — its chrome appears on every compact avatar surface
+  // already, so showing it here would duplicate that signal.
   static const _featuredTypes = <CosmeticType>[
-    CosmeticType.frame,
+    CosmeticType.skin,
     CosmeticType.companion,
     CosmeticType.background,
   ];
@@ -66,6 +71,7 @@ class CosmeticsInventorySection extends StatelessWidget {
                     ),
                     l10n: l10n,
                     config: config,
+                    raceId: cosmetics.currentRaceId,
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => CosmeticsScreen(
@@ -204,6 +210,7 @@ class _FeaturedCosmeticTile extends StatelessWidget {
     required this.item,
     required this.l10n,
     required this.config,
+    required this.raceId,
     required this.onTap,
   });
 
@@ -211,14 +218,22 @@ class _FeaturedCosmeticTile extends StatelessWidget {
   final _FeaturedCosmetic? item;
   final AppLocalizations l10n;
   final CosmeticsConfig config;
+
+  /// Player's selected race id — drives the per-race file lookup
+  /// for skin tiles. Ignored for non-skin types.
+  final String? raceId;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final definition = item?.definition;
-    final assetPath = config.resolveAssetPath(
-      definition?.previewAssetKey ?? definition?.assetKey,
-    );
+    final assetPath = definition == null
+        ? null
+        : resolveCosmeticPreviewPath(
+            definition,
+            config: config,
+            raceId: raceId,
+          );
     final hasItem = definition != null;
 
     return InkWell(

@@ -40,7 +40,7 @@ class CosmeticCatalog {
     ),
     Frame(
       id: const CosmeticId('frame_wildwood'),
-      rarity: Rarity.common,
+      rarity: Rarity.uncommon,
       region: CosmeticRegion.forestTrail,
       name: (l10n) => l10n.cosmeticFrameWildwoodName,
       description: (l10n) => l10n.cosmeticFrameWildwoodDesc,
@@ -51,7 +51,7 @@ class CosmeticCatalog {
     ),
     Frame(
       id: const CosmeticId('frame_ruins'),
-      rarity: Rarity.rare,
+      rarity: Rarity.uncommon,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticFrameRuinsName,
       description: (l10n) => l10n.cosmeticFrameRuinsDesc,
@@ -73,7 +73,7 @@ class CosmeticCatalog {
     ),
     Frame(
       id: const CosmeticId('frame_underways'),
-      rarity: Rarity.rare,
+      rarity: Rarity.epic,
       region: CosmeticRegion.dwarvenMines,
       name: (l10n) => l10n.cosmeticFrameUnderwaysName,
       description: (l10n) => l10n.cosmeticFrameUnderwaysDesc,
@@ -148,7 +148,7 @@ class CosmeticCatalog {
     ),
     Background(
       id: const CosmeticId('background_forest_trail'),
-      rarity: Rarity.uncommon,
+      rarity: Rarity.common,
       region: CosmeticRegion.forestTrail,
       name: (l10n) => l10n.cosmeticBackgroundForestTrailName,
       description: (l10n) => l10n.cosmeticBackgroundForestTrailDesc,
@@ -170,7 +170,7 @@ class CosmeticCatalog {
     ),
     Background(
       id: const CosmeticId('background_ruins'),
-      rarity: Rarity.uncommon,
+      rarity: Rarity.rare,
       region: CosmeticRegion.ruinedPass,
       name: (l10n) => l10n.cosmeticBackgroundRuinsName,
       description: (l10n) => l10n.cosmeticBackgroundRuinsDesc,
@@ -1075,6 +1075,77 @@ class CosmeticCatalog {
       assetKey: 'cosmetics.skins.pilgrim',
       previewAssetKey: 'cosmetics.skins.pilgrim',
       sortOrder: 800,
+    ),
+    Skin(
+      id: const CosmeticId('skin_hunter'),
+      rarity: Rarity.uncommon,
+      region: CosmeticRegion.forestTrail,
+      name: (l10n) => l10n.cosmeticSkinHunterName,
+      description: (l10n) => l10n.cosmeticSkinHunterDesc,
+      unlockHint: (l10n) => l10n.cosmeticSkinHunterUnlockHint,
+      assetKey: 'cosmetics.skins.hunter',
+      previewAssetKey: 'cosmetics.skins.hunter',
+      sortOrder: 810,
+    ),
+    Skin(
+      id: const CosmeticId('skin_mine'),
+      rarity: Rarity.rare,
+      region: CosmeticRegion.dwarvenMines,
+      name: (l10n) => l10n.cosmeticSkinMineName,
+      description: (l10n) => l10n.cosmeticSkinMineDesc,
+      unlockHint: (l10n) => l10n.cosmeticSkinMineUnlockHint,
+      assetKey: 'cosmetics.skins.mine',
+      previewAssetKey: 'cosmetics.skins.mine',
+      sortOrder: 820,
+    ),
+    Skin(
+      id: const CosmeticId('skin_frostwalker'),
+      rarity: Rarity.epic,
+      region: CosmeticRegion.frostlands,
+      name: (l10n) => l10n.cosmeticSkinFrostwalkerName,
+      description: (l10n) => l10n.cosmeticSkinFrostwalkerDesc,
+      unlockHint: (l10n) => l10n.cosmeticSkinFrostwalkerUnlockHint,
+      assetKey: 'cosmetics.skins.frostwalker',
+      previewAssetKey: 'cosmetics.skins.frostwalker',
+      sortOrder: 830,
+    ),
+    Skin(
+      id: const CosmeticId('skin_mage'),
+      rarity: Rarity.legendary,
+      region: CosmeticRegion.neutral,
+      name: (l10n) => l10n.cosmeticSkinMageName,
+      description: (l10n) => l10n.cosmeticSkinMageDesc,
+      unlockHint: (l10n) => l10n.cosmeticSkinMageUnlockHint,
+      assetKey: 'cosmetics.skins.mage',
+      previewAssetKey: 'cosmetics.skins.mage',
+      sortOrder: 840,
+    ),
+    Skin(
+      id: const CosmeticId('skin_dragonrock'),
+      rarity: Rarity.mythic,
+      region: CosmeticRegion.dragonrockFortress,
+      name: (l10n) => l10n.cosmeticSkinDragonrockName,
+      description: (l10n) => l10n.cosmeticSkinDragonrockDesc,
+      unlockHint: (l10n) => l10n.cosmeticSkinDragonrockUnlockHint,
+      assetKey: 'cosmetics.skins.dragonrock',
+      previewAssetKey: 'cosmetics.skins.dragonrock',
+      sortOrder: 850,
+    ),
+
+    // -------------------------------------------------------------------------
+    // Skins — Developer-only (grant via DevTools only)
+    // -------------------------------------------------------------------------
+
+    Skin(
+      id: const CosmeticId('skin_extra'),
+      rarity: Rarity.mythic,
+      region: CosmeticRegion.neutral,
+      name: (l10n) => l10n.cosmeticSkinExtraName,
+      description: (l10n) => l10n.cosmeticSkinExtraDesc,
+      assetKey: 'cosmetics.skins.extra',
+      previewAssetKey: 'cosmetics.skins.extra',
+      sortOrder: 9200,
+      metadata: <String, Object?>{'devOnly': true},
     ),
 
     // -------------------------------------------------------------------------

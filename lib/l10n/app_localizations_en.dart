@@ -1554,6 +1554,68 @@ class AppLocalizationsEn extends AppLocalizations {
       'Chosen at the start of your journey.';
 
   @override
+  String get cosmeticSkinHunterName => 'Hunter';
+
+  @override
+  String get cosmeticSkinHunterDesc =>
+      'Light leathers and a quiet bow — the wildwood teaches patience before it gives game.';
+
+  @override
+  String get cosmeticSkinHunterUnlockHint =>
+      'For those who learned to read the forest before crossing it.';
+
+  @override
+  String get cosmeticSkinMineName => 'Deepwarden';
+
+  @override
+  String get cosmeticSkinMineDesc =>
+      'Stout gear scarred by stone and forge — built for the dark below the mountains.';
+
+  @override
+  String get cosmeticSkinMineUnlockHint =>
+      'Worn deep beneath the dwarven halls.';
+
+  @override
+  String get cosmeticSkinFrostwalkerName => 'Frostwalker';
+
+  @override
+  String get cosmeticSkinFrostwalkerDesc =>
+      'Furs, breath of frost, footsteps without sound — the cold begins to recognise you.';
+
+  @override
+  String get cosmeticSkinFrostwalkerUnlockHint =>
+      'Earned on the long crossing of the frozen lands.';
+
+  @override
+  String get cosmeticSkinMageName => 'Arcanist';
+
+  @override
+  String get cosmeticSkinMageDesc =>
+      'Robes stitched with sigils, a quiet stave — the world hums slightly louder near you now.';
+
+  @override
+  String get cosmeticSkinMageUnlockHint =>
+      'Won by those who studied the old patterns longer than most.';
+
+  @override
+  String get cosmeticSkinDragonrockName => 'Dragonrock';
+
+  @override
+  String get cosmeticSkinDragonrockDesc =>
+      'Plates of obsidian and ember, marked by the fortress — what comes after this needs no introduction.';
+
+  @override
+  String get cosmeticSkinDragonrockUnlockHint =>
+      'Forged at the gates of the dragonrock fortress.';
+
+  @override
+  String get cosmeticSkinExtraName => 'Borrowed Legend';
+
+  @override
+  String get cosmeticSkinExtraDesc =>
+      'Developer-only skin: echoes of heroes from other sagas — your race steps into a borrowed silhouette. Grant via DevTools.';
+
+  @override
   String get forcePickRaceHeader => 'ONE MORE STEP';
 
   @override
@@ -4902,6 +4964,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get celebrationKindCompanion => 'Companion';
+
+  @override
+  String get celebrationKindSkin => 'Skin';
 
   @override
   String get celebrationKindBadge => 'Badge';

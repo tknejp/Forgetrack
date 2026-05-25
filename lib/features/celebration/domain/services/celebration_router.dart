@@ -38,6 +38,7 @@ class CelebrationRouter {
       case CelebrationRewardKind.frame:
       case CelebrationRewardKind.background:
       case CelebrationRewardKind.companion:
+      case CelebrationRewardKind.skin:
       case CelebrationRewardKind.title:
       case CelebrationRewardKind.location:
       case CelebrationRewardKind.badge:

@@ -1557,6 +1557,68 @@ class AppLocalizationsCs extends AppLocalizations {
   String get cosmeticSkinPilgrimUnlockHint => 'Vybráno na začátku cesty.';
 
   @override
+  String get cosmeticSkinHunterName => 'Lovec';
+
+  @override
+  String get cosmeticSkinHunterDesc =>
+      'Lehká kůže a tichý luk — divoký les nejdřív naučí trpělivosti, teprve pak dá zvěř.';
+
+  @override
+  String get cosmeticSkinHunterUnlockHint =>
+      'Pro toho, kdo se naučil číst les ještě dřív, než ho překročil.';
+
+  @override
+  String get cosmeticSkinMineName => 'Strážce hlubin';
+
+  @override
+  String get cosmeticSkinMineDesc =>
+      'Pevná výstroj poznamenaná kamenem a výhní — stavěná pro tmu pod horami.';
+
+  @override
+  String get cosmeticSkinMineUnlockHint =>
+      'Nošeno hluboko v trpasličích síních.';
+
+  @override
+  String get cosmeticSkinFrostwalkerName => 'Mrazochodec';
+
+  @override
+  String get cosmeticSkinFrostwalkerDesc =>
+      'Kožešiny, ledový dech, kroky bez zvuku — chlad tě začíná poznávat.';
+
+  @override
+  String get cosmeticSkinFrostwalkerUnlockHint =>
+      'Vysloužené při dlouhém přechodu zmrzlé krajiny.';
+
+  @override
+  String get cosmeticSkinMageName => 'Mág';
+
+  @override
+  String get cosmeticSkinMageDesc =>
+      'Roucho šité sigily a tichá hůl — svět kolem tebe teď zní o něco hlasitěji.';
+
+  @override
+  String get cosmeticSkinMageUnlockHint =>
+      'Získáno těmi, kdo studovali staré vzorce déle než ostatní.';
+
+  @override
+  String get cosmeticSkinDragonrockName => 'Dračí skála';
+
+  @override
+  String get cosmeticSkinDragonrockDesc =>
+      'Pláty z obsidiánu a žhavých uhlíků, poznamenané pevností — co přijde po tomhle, se už nepředstavuje.';
+
+  @override
+  String get cosmeticSkinDragonrockUnlockHint =>
+      'Ukováno u bran pevnosti Dračí skály.';
+
+  @override
+  String get cosmeticSkinExtraName => 'Vypůjčená legenda';
+
+  @override
+  String get cosmeticSkinExtraDesc =>
+      'Vzhled jen pro vývojáře: ozvěny hrdinů z jiných ság — tvá rasa vkročí do vypůjčené siluety. Udělit přes DevTools.';
+
+  @override
   String get forcePickRaceHeader => 'JEŠTĚ JEDEN KROK';
 
   @override
@@ -4909,6 +4971,9 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get celebrationKindCompanion => 'Společník';
+
+  @override
+  String get celebrationKindSkin => 'Vzhled';
 
   @override
   String get celebrationKindBadge => 'Odznak';

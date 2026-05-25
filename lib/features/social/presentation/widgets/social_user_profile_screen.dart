@@ -19,6 +19,7 @@ import '../social_profile_utils.dart';
 import 'companion_slot_sheet.dart';
 import 'emblem_slot_sheet.dart';
 import 'profile_detail_hero_card.dart';
+import 'skin_slot_sheet.dart';
 import 'social_cosmetic_avatar.dart';
 import 'social_edit_handle_sheet.dart';
 import 'social_feed_card.dart';
@@ -154,6 +155,37 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
     if (pick == null || !mounted) return;
     if (pick.removed) {
       await cosmetics.unequip(CosmeticType.companion);
+    } else if (pick.cosmeticId != null) {
+      await cosmetics.equip(pick.cosmeticId!);
+    }
+  }
+
+  /// Mirrors [_openCompanionDetails] for the skin slot. Tap on the
+  /// avatar opens a manage sheet; the sheet's `equip` / `remove`
+  /// result is routed through the same `CosmeticsProvider` API.
+  /// No-op when the inventory state hasn't loaded yet — without it
+  /// there's no race / unlock data to drive the picker.
+  Future<void> _openSkinDetails(String? equippedSkinId) async {
+    final cosmetics = context.read<CosmeticsProvider>();
+    final state = cosmetics.state;
+    if (state == null) return;
+    final currentSkin =
+        equippedSkinId == null ? null : socialCosmeticById(equippedSkinId);
+    final unlockedSkins = [
+      for (final id in state.unlocked.keys)
+        if (socialCosmeticById(id) case final def?
+            when def.type == CosmeticType.skin)
+          def,
+    ]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    final pick = await SkinSlotSheet.show(
+      context,
+      current: currentSkin,
+      unlocked: unlockedSkins,
+      raceId: cosmetics.currentRaceId,
+    );
+    if (pick == null || !mounted) return;
+    if (pick.removed) {
+      await cosmetics.unequip(CosmeticType.skin);
     } else if (pick.cosmeticId != null) {
       await cosmetics.equip(pick.cosmeticId!);
     }
@@ -305,6 +337,11 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
                             onTapCompanion: isMe
                                 ? (c) => _openCompanionDetails(c)
                                 : null,
+                            // Tap on the hero body → skin slot sheet,
+                            // same restriction as the companion tap.
+                            onTapAvatar: isMe
+                                ? (id) => _openSkinDetails(id)
+                                : null,
                           );
                         },
                       ),
@@ -361,29 +398,63 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
                     ],
                   ),
                 ),
-                // Transparent overlay app bar — sits above everything,
-                // letting the hero background image read under it.
+                // Top fade overlay — pure decoration behind the app
+                // bar so the back button + display name read against
+                // a darker band regardless of the hero scene under
+                // them. Wrapped in IgnorePointer so it never eats
+                // taps on the chrome above it.
+                //
+                // Scope limited to the app bar zone only: the band
+                // behind the inline handle/friends subtitle row is
+                // darkened by a separate fade INSIDE the hero card
+                // (`profile_detail_hero_card.dart`), so the text
+                // there sits in front of its darkener instead of
+                // behind a screen-fixed overlay.
                 Positioned(
                   top: 0,
                   left: 0,
                   right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.fromLTRB(14, 8, 14, 18),
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        stops: [0.0, 0.65, 1.0],
-                        colors: [
-                          Color(0xE60A0E1C), // strong top fade
-                          Color(0x990A0E1C), // soft middle
-                          Color(0x000A0E1C), // transparent bottom
-                        ],
+                  child: IgnorePointer(
+                    child: Container(
+                      // Status bar + ~56 chrome + ~14 pad below.
+                      height: MediaQuery.of(context).padding.top + 70,
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          stops: [0.0, 0.65, 1.0],
+                          colors: [
+                            Color(0xE60A0E1C),
+                            Color(0x990A0E1C),
+                            Color(0x000A0E1C),
+                          ],
+                        ),
                       ),
                     ),
+                  ),
+                ),
+                // App bar chrome — pure tap target, no own gradient
+                // (handled by the overlay above).
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 8, 14, 18),
                     child: ScreenHeader(
                       greeting: '',
-                      title: l10n.screenProfile,
+                      // Show the player's display name in the app
+                      // bar instead of the generic "Profil" label —
+                      // the screen is always about a specific user,
+                      // and the hero card already devotes its biggest
+                      // text slot to the same name, so anchoring the
+                      // bar to it ties the two surfaces together.
+                      // Falls back to the screen label only while
+                      // the profile stream hasn't produced a name
+                      // yet, so the bar never sits empty.
+                      title: displayName.isEmpty
+                          ? l10n.screenProfile
+                          : displayName,
                       leading: Navigator.of(context).canPop()
                           ? const FtBackButton()
                           : null,

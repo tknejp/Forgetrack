@@ -10,6 +10,7 @@ import '../../domain/player_cosmetic_lifecycle.dart';
 import '../cosmetics_screen_internals.dart';
 import '../emblem_buff_label.dart';
 import 'companion_buff_chip.dart';
+import 'cosmetic_preview_path.dart';
 import 'cosmetics_screen_card_overlays.dart';
 
 class CosmeticsScreenCard extends StatefulWidget {
@@ -106,13 +107,14 @@ class _CosmeticsScreenCardState extends State<CosmeticsScreenCard>
         ? Tokens.onSurfaceFaint
         : cosmeticRarityColor(definition.rarity);
 
+    final cosmeticsProvider = context.read<CosmeticsProvider>();
     final assetPath = isHiddenCard
         ? null
-        : context
-            .read<CosmeticsProvider>()
-            .service
-            .config
-            .resolveAssetPath(definition.previewAssetKey ?? definition.assetKey);
+        : resolveCosmeticPreviewPath(
+            definition,
+            config: cosmeticsProvider.service.config,
+            raceId: cosmeticsProvider.currentRaceId,
+          );
     final hasAsset = definition.assetKey != null;
 
     final displayName = hidesCompanion

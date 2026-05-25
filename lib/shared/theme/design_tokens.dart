@@ -459,13 +459,15 @@ class RarityPalette {
 
 /// Visual recipe used by the celebration feature. Decouples *rarity* (drives
 /// aura, glow, particles, rim of reward thumbs) from *type* (drives only the
-/// header icon-square). The base [color] is intentionally kept in sync with
-/// the existing [Rarity] palette so cosmetic cards in the inventory match the
-/// celebration UI; the additional fields layer the visual "fanfare" specified
-/// in the celebration design handoff.
+/// header icon-square).
+///
+/// All hues are derived from the canonical [RarityPalette] so the celebration
+/// surface matches the inventory tile rarity colour exactly. Only the
+/// fanfare-specific extras (raysMultiplier, lighter/darker tonal shifts) live
+/// here.
 @immutable
 class CelebrationRarityToken {
-  const CelebrationRarityToken({
+  const CelebrationRarityToken._({
     required this.color,
     required this.color2,
     required this.glow,
@@ -475,7 +477,7 @@ class CelebrationRarityToken {
     required this.raysMultiplier,
   });
 
-  /// Primary accent (matches inventory rarity color).
+  /// Primary accent — same value as [RarityPalette.forRarity].`color`.
   final Color color;
 
   /// Highlight / lighter tint used for reward-disc gradient stop, sheen.
@@ -492,87 +494,54 @@ class CelebrationRarityToken {
   /// Border around 108-px reward discs.
   final Color rim;
 
-  /// 2–4 swatches sampled by the particle painter. Keep ordered light → mid
-  /// → dark so the painter can pick by index without re-sorting.
+  /// 3 swatches sampled by the particle painter. Ordered light → mid → dark
+  /// so the painter can pick by index without re-sorting.
   final List<Color> particles;
 
   /// Sun-rays opacity multiplier (0 = invisible, 1 = at full intensity).
   /// Common rarities barely emit rays; mythic is dazzling.
   final double raysMultiplier;
 
-  /// Lookup by [Rarity]-compatible index.
-  static const _table = <CelebrationRarityToken>[
-    // common
-    CelebrationRarityToken(
-      color: Color(0xFF9E9E9E),
-      color2: Color(0xFFBFBFBF),
-      glow: Color(0xFF9E9E9E),
-      aura: Color(0xFF9E9E9E),
-      rim: Color(0xFFBFBFBF),
-      particles: [Color(0xFFD1D5DB), Color(0xFF9CA3AF), Color(0xFFE5E7EB)],
-      raysMultiplier: 0.10,
-    ),
-    // uncommon
-    CelebrationRarityToken(
-      color: Color(0xFF34D399),
-      color2: Color(0xFF6EE7B7),
-      glow: Color(0xFF34D399),
-      aura: Color(0xFF34D399),
-      rim: Color(0xFF6EE7B7),
-      particles: [Color(0xFF6EE7B7), Color(0xFF34D399), Color(0xFFA7F3D0)],
-      raysMultiplier: 0.18,
-    ),
-    // rare
-    CelebrationRarityToken(
-      color: Color(0xFF58A6FF),
-      color2: Color(0xFF93C5FD),
-      glow: Color(0xFF58A6FF),
-      aura: Color(0xFF58A6FF),
-      rim: Color(0xFF93C5FD),
-      particles: [Color(0xFFBFDBFE), Color(0xFF58A6FF), Color(0xFF1F6FEB)],
-      raysMultiplier: 0.28,
-    ),
-    // epic
-    CelebrationRarityToken(
-      color: Color(0xFFB388FF),
-      color2: Color(0xFFD4BFFF),
-      glow: Color(0xFFB388FF),
-      aura: Color(0xFFB388FF),
-      rim: Color(0xFFD4BFFF),
-      particles: [Color(0xFFDDD6FE), Color(0xFFB388FF), Color(0xFF7B3FE4)],
-      raysMultiplier: 0.42,
-    ),
-    // legendary
-    CelebrationRarityToken(
-      color: Color(0xFFFFD54F),
-      color2: Color(0xFFFFE38A),
-      glow: Color(0xFFFFD54F),
-      aura: Color(0xFFFFD54F),
-      rim: Color(0xFFFFE38A),
-      particles: [Color(0xFFFFE9A8), Color(0xFFFFD54F), Color(0xFFE0A800)],
-      raysMultiplier: 0.62,
-    ),
-    // mythic
-    CelebrationRarityToken(
-      color: Color(0xFFFF4B3A),
-      color2: Color(0xFFFF8B7A),
-      glow: Color(0xFFFF4B3A),
-      aura: Color(0xFFFF4B3A),
-      rim: Color(0xFFFF8B7A),
-      particles: [
-        Color(0xFFFFB4A8),
-        Color(0xFFFF4B3A),
-        Color(0xFF7A0010),
-        Color(0xFFFF8B7A),
-      ],
-      raysMultiplier: 0.85,
-    ),
-  ];
+  /// Build the celebration token for [rarity] by deriving tonal variants
+  /// from [RarityPalette.forRarity] — the single source of truth for rarity
+  /// hues across the app.
+  static CelebrationRarityToken forRarity(Rarity rarity) {
+    final palette = RarityPalette.forRarity(rarity);
+    final base = palette.color;
+    final dark = palette.gradStart;
+    final light = Color.lerp(base, const Color(0xFFFFFFFF), 0.30)!;
+    final highlight = Color.lerp(base, const Color(0xFFFFFFFF), 0.55)!;
+    return CelebrationRarityToken._(
+      color: base,
+      color2: light,
+      glow: base,
+      aura: base,
+      rim: light,
+      particles: [highlight, base, dark],
+      raysMultiplier: _raysForRarity(rarity),
+    );
+  }
 
-  /// Get the token for a rarity index in the canonical
-  /// `common..mythic` order.
+  /// Convenience for callers that hold a `rarity.index`.
   static CelebrationRarityToken forIndex(int index) =>
-      _table[index.clamp(0, _table.length - 1)];
+      forRarity(Rarity.values[index.clamp(0, Rarity.values.length - 1)]);
+
+  static double _raysForRarity(Rarity rarity) {
+    switch (rarity) {
+      case Rarity.common:
+        return 0.10;
+      case Rarity.uncommon:
+        return 0.18;
+      case Rarity.rare:
+        return 0.28;
+      case Rarity.epic:
+        return 0.42;
+      case Rarity.legendary:
+        return 0.62;
+      case Rarity.mythic:
+        return 0.85;
+    }
+  }
 }
 
 /// Type accent for the small header icon-square of a celebration. Decoupled

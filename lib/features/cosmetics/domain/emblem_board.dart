@@ -1,6 +1,6 @@
 import 'package:meta/meta.dart';
 
-/// Immutable per-user mapping of the 11 emblem-collection slots →
+/// Immutable per-user mapping of the 6 emblem-collection slots →
 /// cosmetic id (or null for an empty slot).
 ///
 /// Phase 12 extracted this VO from `lib/features/social/application
@@ -9,8 +9,9 @@ import 'package:meta/meta.dart';
 /// header), distinct from `Loadout.emblemId` which carries the single
 /// worn emblem broadcast to friends. The two concepts overlap only
 /// in their value type (`String?` cosmetic id) — semantically the
-/// loadout is "what I'm wearing now" and the board is "the 11 emblems
-/// I want to show off".
+/// loadout is "what I'm wearing now" and the board is "the 6 emblems
+/// I want to show off". Capped at 6 so the player has to choose:
+/// the showcase reads as a curated set, not a complete dump.
 ///
 /// **Persistence policy.** EmblemBoard lives in per-device
 /// SharedPreferences (`pinned_emblems_<uid>`) — the layout survives
@@ -19,8 +20,8 @@ import 'package:meta/meta.dart';
 /// shape is a comma-joined string; encoding lives on
 /// `EmblemBoardProvider` so the VO surface stays pure (no I/O).
 ///
-/// **Slot count.** 11 slots, rendered as a 4+4+3 grid in the profile
-/// header. The last slot (index 10) is the "end-game" slot —
+/// **Slot count.** 6 slots, rendered as a 3+3 grid in the profile
+/// header. The last slot (index 5) is the "end-game" slot —
 /// presentation concern only; the board treats every index uniformly.
 ///
 /// **Empty sentinel.** `EmblemBoard.empty` is the const default for
@@ -34,17 +35,18 @@ import 'package:meta/meta.dart';
 /// itself is just the data carrier.
 @immutable
 class EmblemBoard {
-  /// Total slot count. Matches the visual 4+4+3 grid in the profile
+  /// Total slot count. Matches the visual 3+3 grid in the profile
   /// header. Last slot is the "end-game" slot — purely a
-  /// presentation concern.
-  static const int slotCount = 11;
+  /// presentation concern. The cap forces the player to curate
+  /// rather than display every unlock.
+  static const int slotCount = 6;
 
   const EmblemBoard._(this._slots);
 
   /// All-null sentinel for brand-new users / never-pinned state. Use
   /// for default fields + const init paths.
   static const EmblemBoard empty = EmblemBoard._(
-    <String?>[null, null, null, null, null, null, null, null, null, null, null],
+    <String?>[null, null, null, null, null, null],
   );
 
   /// Construct from an explicit slot list. Pads / truncates to

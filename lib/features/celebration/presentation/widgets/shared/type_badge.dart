@@ -214,6 +214,8 @@ IconData iconForRewardKind(CelebrationRewardKind kind) {
       return Icons.landscape_rounded;
     case CelebrationRewardKind.companion:
       return Icons.pets_rounded;
+    case CelebrationRewardKind.skin:
+      return Icons.checkroom_rounded;
     case CelebrationRewardKind.gem:
       return Icons.diamond_rounded;
   }

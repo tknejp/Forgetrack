@@ -8,6 +8,7 @@ import '../../../l10n/l10n.dart';
 import '../../../shared/theme/design_tokens.dart';
 import '../../../shared/widgets/progress_bar.dart';
 import '../../../shared/widgets/tiny_pill.dart';
+import '../../cosmetics/application/cosmetics_provider.dart';
 import '../../cosmetics/domain/cosmetic_catalog.dart';
 import '../../cosmetics/domain/cosmetic_models.dart';
 import '../../cosmetics/presentation/widgets/cosmetic_asset_thumb.dart';
@@ -1074,6 +1075,7 @@ class _RewardCard extends StatelessWidget {
                 dimmed: !unlocked,
                 fallbackColor: color,
                 fallbackIcon: _fallbackIcon(reward),
+                raceId: context.watch<CosmeticsProvider>().currentRaceId,
               )
             else
               Container(

@@ -3,10 +3,15 @@ import 'package:flutter/material.dart';
 import '../../../cosmetics/config/cosmetics_config.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
 
-/// Soft contact-shadow oval rendered under hero / companion sprites.
+/// Cast-shadow oval rendered under hero / companion sprites — reads as
+/// the figure's own shadow on the ground, not a soft glow halo.
 /// Painted with a RadialGradient squashed onto a horizontal ellipse via
 /// FittedBox so the gradient draws as a circle and is then scaled to
 /// the requested width/height.
+///
+/// The gradient holds a solid black core across most of the radius and
+/// drops to transparent only in the last fifth, so the silhouette
+/// edge stays defined instead of fading away into nothing.
 class ProfileHeroFootShadow extends StatelessWidget {
   const ProfileHeroFootShadow({
     super.key,
@@ -34,12 +39,17 @@ class ProfileHeroFootShadow extends StatelessWidget {
                 gradient: RadialGradient(
                   center: Alignment.center,
                   radius: 0.5,
+                  // Core stays near-opaque ~half the radius so the
+                  // shadow reads as a defined oval, then eases off
+                  // across the outer third — softer than a hard wall
+                  // but tighter than the original slow halo.
                   colors: [
                     Color(0xF2000000),
-                    Color(0x66000000),
+                    Color(0xCC000000),
+                    Color(0x40000000),
                     Color(0x00000000),
                   ],
-                  stops: [0.0, 0.55, 1.0],
+                  stops: [0.0, 0.45, 0.78, 1.0],
                 ),
               ),
               child: SizedBox.expand(),

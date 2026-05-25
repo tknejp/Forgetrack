@@ -12,10 +12,12 @@ import '../domain/cosmetic_reveal_state.dart';
 import '../domain/cosmetic_unlock_rule.dart';
 import '../domain/cosmetic_unlock_rules.dart';
 import '../domain/player_cosmetic_lifecycle.dart';
+import '../config/skin_asset_resolver.dart';
 import 'cosmetics_screen_internals.dart';
 import 'widgets/claimable_companion_body.dart';
 import 'widgets/companion_claim_flow.dart';
 import 'widgets/cosmetic_details_standard_body.dart';
+import 'widgets/cosmetic_preview_path.dart';
 import 'widgets/locked_companion_body.dart';
 
 const _log = AppLogger('COSMETICS', scope: 'details_sheet');
@@ -200,11 +202,15 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
         definition is Companion;
     final isEquipped = canEquipType &&
         cosmeticsState.equipped.slotId(definition.type) == definition.id;
-    final assetPath = context
-        .read<CosmeticsProvider>()
-        .service
-        .config
-        .resolveAssetPath(definition.previewAssetKey ?? definition.assetKey);
+    final assetPath = resolveCosmeticPreviewPath(
+      definition,
+      config: cosmeticsProvider.service.config,
+      raceId: cosmeticsProvider.currentRaceId,
+      // The details header on the standard body renders skins as a
+      // full-body composition (no frame border around the figure),
+      // matching the profile / hero hero header treatment.
+      skinVariant: SkinAssetVariant.fullBody,
+    );
     final description = definition.description(l10n);
     final unlock = cosmeticsState.unlocked[definition.id];
     final bottomPad = MediaQuery.of(context).padding.bottom;

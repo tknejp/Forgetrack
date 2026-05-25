@@ -125,13 +125,13 @@ void main() {
       expect(autoFill.slotAt(1), 'b');
 
       // After an explicit pin, auto-fill is suppressed for the user.
-      await provider.setPin(uid: 'uid_a', slotIndex: 7, cosmeticId: CosmeticId('x'));
+      await provider.setPin(uid: 'uid_a', slotIndex: 4, cosmeticId: CosmeticId('x'));
       final explicit = provider.boardForUserOrAutoFill(
         'uid_a',
         ['a', 'b', 'c'],
       );
       expect(explicit.slotAt(0), isNull);
-      expect(explicit.slotAt(7), 'x');
+      expect(explicit.slotAt(4), 'x');
     });
 
     test('setPin clears duplicate slots across the same user', () async {
@@ -161,17 +161,22 @@ void main() {
       // Phase 12 invariant: existing devices that wrote the comma-joined
       // string via PinnedEmblemsStore must roll forward without a
       // migration step. Seed the wire format manually + verify the new
-      // provider reads it correctly.
+      // provider reads it correctly. The 2026-05-25 slot-cap drop
+      // (11 → 6) silently truncates extra entries — legacy strings
+      // wider than the new cap lose tail pins on read, which is the
+      // documented behaviour: no migration, no error.
       SharedPreferences.setMockInitialValues({
-        'pinned_emblems_uid_a': 'frame_pilgrim,,relic_x,,,,,,,,emblem_z',
+        'pinned_emblems_uid_a': 'frame_pilgrim,,relic_x,,emblem_y,emblem_tail',
       });
       final provider = EmblemBoardProvider();
       await provider.init();
       final board = provider.boardForUser('uid_a');
+      expect(board.slots.length, EmblemBoard.slotCount);
       expect(board.slotAt(0), 'frame_pilgrim');
       expect(board.slotAt(1), isNull);
       expect(board.slotAt(2), 'relic_x');
-      expect(board.slotAt(10), 'emblem_z');
+      expect(board.slotAt(4), 'emblem_y');
+      expect(board.slotAt(5), 'emblem_tail');
     });
   });
 }

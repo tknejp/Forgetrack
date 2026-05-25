@@ -144,28 +144,52 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
       inventory: inventory,
     );
 
-    // Only frame / background / companion are equippable from the
-    // inventory's "Vybaveno" row. Emblems live on the profile-screen
-    // emblem grid; relics are consumed by companion claims, not
-    // worn. Filtering at the call site keeps the top row a fixed
-    // 3-tile layout without scroll.
-    final equippedDefs = cosmetics.service
-        .getEquippedDefinitions(state)
-        .where((def) =>
-            def.type == CosmeticType.frame ||
-            def.type == CosmeticType.background ||
-            def.type == CosmeticType.companion)
-        .toList(growable: false);
+    // The "Vybaveno" row shows the three slots that define how the
+    // hero reads at a glance: skin (the body / identity), background
+    // (the scene behind), companion (the buddy beside). Frame chrome
+    // appears on every compact avatar surface already, so it's
+    // omitted here to give skin the lead slot — the same skin asset
+    // drives the profile + hero header full-body composition.
+    // Emblems live on the profile-screen emblem grid; relics are
+    // consumed by companion claims, not worn. The explicit order
+    // (instead of relying on `CosmeticType.values`) pins skin to
+    // first place regardless of future enum reshuffles.
+    const equippedSlotOrder = <CosmeticType>[
+      CosmeticType.skin,
+      CosmeticType.companion,
+      CosmeticType.background,
+    ];
+    final equippedById = {
+      for (final def in cosmetics.service.getEquippedDefinitions(state))
+        def.type: def,
+    };
+    final equippedDefs = <Cosmetic>[
+      for (final type in equippedSlotOrder)
+        if (equippedById[type] != null) equippedById[type]!,
+    ];
+    // Player-facing tab order: skin (identity) → companion (buddy)
+    // → background (scene) → frame → emblem → relic → anything else
+    // → "Vše". Skin sits first so the inventory opens on what the
+    // player most often customises, mirroring the inventory section
+    // order on the profile screen.
+    //
+    // `_kTabTypeOrder` keys this ranking; types missing from the
+    // ranking (titleFlair, mapEffect, …) keep their natural enum
+    // order at the tail. In normal mode types with zero displayable
+    // items are dropped via `displayDefs.any`; devtools mode keeps
+    // every type so empty categories are still inspectable.
+    final orderedTypes = [...CosmeticType.values]
+      ..sort((a, b) => _kTabTypeRank(a).compareTo(_kTabTypeRank(b)));
     final presentTypes = devTools
-        ? CosmeticType.values.toList()
-        : CosmeticType.values
+        ? orderedTypes
+        : orderedTypes
             .where((type) => displayDefs.any((def) => def.type == type)) // lint-ignore: widget-no-logic — tab-presence filter over pre-built displayDefs
             .toList(growable: false);
 
-    // Tab layout: index 0 = "Vše" (null type, shows every displayDef),
-    // followed by one tab per present type. PageView pages stay in lockstep
-    // with the segmented selector via the shared PageController.
-    final tabs = <CosmeticType?>[null, ...presentTypes];
+    // Tab layout: per-type tabs first (skin leads), "Vše" pinned at
+    // the end so the catch-all browse mode is one swipe away without
+    // pushing the most-used tab off the screen edge.
+    final tabs = <CosmeticType?>[...presentTypes, null];
 
     // One-shot initial jump from widget.initialType. We can't pass an initial
     // page to the controller in initState because `tabs` is derived from the
@@ -333,3 +357,20 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
     );
   }
 }
+
+/// Player-facing tab priority for the cosmetics inventory.
+///
+/// Lower rank = earlier in the strip. Types missing from the table
+/// fall to a stable high rank (after the explicit list, before
+/// "Vše") and keep their natural enum order within that band.
+const Map<CosmeticType, int> _kTabPriority = <CosmeticType, int>{
+  CosmeticType.skin: 0,
+  CosmeticType.companion: 1,
+  CosmeticType.background: 2,
+  CosmeticType.frame: 3,
+  CosmeticType.emblem: 4,
+  CosmeticType.relic: 5,
+};
+
+int _kTabTypeRank(CosmeticType type) =>
+    _kTabPriority[type] ?? (100 + type.index);

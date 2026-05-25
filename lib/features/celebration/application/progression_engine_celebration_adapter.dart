@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../cosmetics/application/cosmetics_provider.dart';
+import '../../cosmetics/config/skin_asset_resolver.dart';
 import '../../cosmetics/domain/cosmetic_models.dart';
+import '../../cosmetics/presentation/widgets/cosmetic_preview_path.dart';
 import '../../progression_engine/domain/catalog/content/quest_assets.dart';
 import '../../progression_engine/domain/catalog/progression_node_catalog.dart';
 import 'package:forgetrack/domain/journal/journal_event.dart';
@@ -984,8 +986,11 @@ class ProgressionEngineCelebrationAdapter {
           sub: (l) => def.rarity.label(l),
           rarity: def.rarity,
           kind: _kindForCosmeticType(def.type),
-          assetPath: cosmetics.service.config.resolveAssetPath(
-            def.previewAssetKey ?? def.assetKey,
+          assetPath: resolveCosmeticPreviewPath(
+            def,
+            config: cosmetics.service.config,
+            raceId: cosmetics.currentRaceId,
+            skinVariant: SkinAssetVariant.fullBody,
           ),
         ),
     ];
@@ -1008,10 +1013,7 @@ class ProgressionEngineCelebrationAdapter {
       case CosmeticType.mapEffect:
         return CelebrationRewardKind.location;
       case CosmeticType.skin:
-        // TODO(skin): celebration treatment for skin unlocks lands with the
-        // skin UI commit. Reuse the frame kind for now so the celebration
-        // screen has a valid badge to render in MVP.
-        return CelebrationRewardKind.frame;
+        return CelebrationRewardKind.skin;
     }
   }
 }

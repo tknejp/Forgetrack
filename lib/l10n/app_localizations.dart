@@ -2895,6 +2895,108 @@ abstract class AppLocalizations {
   /// **'Chosen at the start of your journey.'**
   String get cosmeticSkinPilgrimUnlockHint;
 
+  /// No description provided for @cosmeticSkinHunterName.
+  ///
+  /// In en, this message translates to:
+  /// **'Hunter'**
+  String get cosmeticSkinHunterName;
+
+  /// No description provided for @cosmeticSkinHunterDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Light leathers and a quiet bow — the wildwood teaches patience before it gives game.'**
+  String get cosmeticSkinHunterDesc;
+
+  /// No description provided for @cosmeticSkinHunterUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For those who learned to read the forest before crossing it.'**
+  String get cosmeticSkinHunterUnlockHint;
+
+  /// No description provided for @cosmeticSkinMineName.
+  ///
+  /// In en, this message translates to:
+  /// **'Deepwarden'**
+  String get cosmeticSkinMineName;
+
+  /// No description provided for @cosmeticSkinMineDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Stout gear scarred by stone and forge — built for the dark below the mountains.'**
+  String get cosmeticSkinMineDesc;
+
+  /// No description provided for @cosmeticSkinMineUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Worn deep beneath the dwarven halls.'**
+  String get cosmeticSkinMineUnlockHint;
+
+  /// No description provided for @cosmeticSkinFrostwalkerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Frostwalker'**
+  String get cosmeticSkinFrostwalkerName;
+
+  /// No description provided for @cosmeticSkinFrostwalkerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Furs, breath of frost, footsteps without sound — the cold begins to recognise you.'**
+  String get cosmeticSkinFrostwalkerDesc;
+
+  /// No description provided for @cosmeticSkinFrostwalkerUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Earned on the long crossing of the frozen lands.'**
+  String get cosmeticSkinFrostwalkerUnlockHint;
+
+  /// No description provided for @cosmeticSkinMageName.
+  ///
+  /// In en, this message translates to:
+  /// **'Arcanist'**
+  String get cosmeticSkinMageName;
+
+  /// No description provided for @cosmeticSkinMageDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Robes stitched with sigils, a quiet stave — the world hums slightly louder near you now.'**
+  String get cosmeticSkinMageDesc;
+
+  /// No description provided for @cosmeticSkinMageUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Won by those who studied the old patterns longer than most.'**
+  String get cosmeticSkinMageUnlockHint;
+
+  /// No description provided for @cosmeticSkinDragonrockName.
+  ///
+  /// In en, this message translates to:
+  /// **'Dragonrock'**
+  String get cosmeticSkinDragonrockName;
+
+  /// No description provided for @cosmeticSkinDragonrockDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Plates of obsidian and ember, marked by the fortress — what comes after this needs no introduction.'**
+  String get cosmeticSkinDragonrockDesc;
+
+  /// No description provided for @cosmeticSkinDragonrockUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Forged at the gates of the dragonrock fortress.'**
+  String get cosmeticSkinDragonrockUnlockHint;
+
+  /// No description provided for @cosmeticSkinExtraName.
+  ///
+  /// In en, this message translates to:
+  /// **'Borrowed Legend'**
+  String get cosmeticSkinExtraName;
+
+  /// No description provided for @cosmeticSkinExtraDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Developer-only skin: echoes of heroes from other sagas — your race steps into a borrowed silhouette. Grant via DevTools.'**
+  String get cosmeticSkinExtraDesc;
+
   /// No description provided for @forcePickRaceHeader.
   ///
   /// In en, this message translates to:
@@ -8504,6 +8606,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Companion'**
   String get celebrationKindCompanion;
+
+  /// No description provided for @celebrationKindSkin.
+  ///
+  /// In en, this message translates to:
+  /// **'Skin'**
+  String get celebrationKindSkin;
 
   /// No description provided for @celebrationKindBadge.
   ///

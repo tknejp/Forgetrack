@@ -4,6 +4,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../config/cosmetics_config.dart';
 import '../../domain/cosmetic_models.dart';
+import 'cosmetic_preview_path.dart';
 
 /// Grid tile for a cosmetic in a collection screen. Renders unlocked/locked
 /// states and an optional "equipped" badge. Designed to be safe when the
@@ -15,6 +16,7 @@ class CosmeticCollectionTile extends StatelessWidget {
     required this.isUnlocked,
     this.isEquipped = false,
     this.config,
+    this.raceId,
     this.l10n,
     this.onTap,
   });
@@ -23,14 +25,21 @@ class CosmeticCollectionTile extends StatelessWidget {
   final bool isUnlocked;
   final bool isEquipped;
   final CosmeticsConfig? config;
+
+  /// Player's selected race id. Skin tiles need it to land on the
+  /// race-specific thumbnail; ignored for non-skin types.
+  final String? raceId;
   final AppLocalizations? l10n;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final l10n = this.l10n;
-    final assetPath = (config ?? CosmeticsConfig.standard())
-        .resolveAssetPath(definition.previewAssetKey ?? definition.assetKey);
+    final assetPath = resolveCosmeticPreviewPath(
+      definition,
+      config: config ?? CosmeticsConfig.standard(),
+      raceId: raceId,
+    );
 
     return InkWell(
       onTap: onTap,

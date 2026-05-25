@@ -42,6 +42,7 @@ class ProfileDetailHeroCard extends StatelessWidget {
     this.unlockedCount = 0,
     this.onTapEmblemSlot,
     this.onTapCompanion,
+    this.onTapAvatar,
     this.onEditHandle,
     this.friendCount,
     this.onTapFriendChip,
@@ -57,6 +58,12 @@ class ProfileDetailHeroCard extends StatelessWidget {
   final int unlockedCount;
   final void Function(int slotIndex)? onTapEmblemSlot;
   final void Function(Cosmetic companion)? onTapCompanion;
+
+  /// Tap on the hero body / avatar → skin slot sheet (own profile
+  /// only). Receives the currently equipped skin id, which may be
+  /// null if nothing is equipped yet — the sheet handles the empty
+  /// case by collapsing the manage block.
+  final void Function(String? equippedSkinId)? onTapAvatar;
   final VoidCallback? onEditHandle;
   final int? friendCount;
   final VoidCallback? onTapFriendChip;
@@ -114,18 +121,69 @@ class ProfileDetailHeroCard extends StatelessWidget {
           // the background shift, so feathering always lands at the
           // card's true top and bottom seams.
           const Positioned.fill(child: ProfileHeroBackgroundEdgeFade()),
-          // Identity block — top-left, constrained on the right to
-          // leave room for the emblem grid beside it.
+          // Top-band darkener that lives INSIDE the hero card stack,
+          // sitting between the background and the foreground text
+          // (level + title, handle + friends, emblem grid). The
+          // text Positioned widgets that follow this entry in the
+          // Stack are therefore drawn IN FRONT of the gradient, so
+          // the muted handle/friends typography reads cleanly even
+          // when the underlying scene happens to be bright in that
+          // band. Lifted out of the screen-fixed overlay (in
+          // `social_user_profile_screen.dart`) on 2026-05-25 — the
+          // screen overlay used to cover the same vertical range
+          // but sat on top of the text, pushing it into the
+          // background visually.
+          //
+          // Wrapped in `IgnorePointer` so the gradient never eats
+          // taps on the segments below it.
+          const Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: IgnorePointer(
+              child: SizedBox(
+                height: 120,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      stops: [0.0, 0.55, 1.0],
+                      colors: [
+                        Color(0xCC0A0E1C),
+                        Color(0x800A0E1C),
+                        Color(0x000A0E1C),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Level + title label — full card width so a long class
+          // title isn't clipped by the emblem grid below it. The
+          // grid sits at `emblemTop` (well below this row), so the
+          // two never overlap vertically.
+          Positioned(
+            left: ProfileHeroLayout.edge,
+            right: ProfileHeroLayout.edge,
+            top: ProfileHeroLayout.levelTitleTop,
+            child: ProfileHeroLevelTitleLabel(
+              level: resolved.level,
+              title: levelTitle,
+              accent: levelAccent,
+            ),
+          ),
+          // Identity block (handle + friends) — top-left. Right edge
+          // freed on 2026-05-25 when the emblem grid moved down +
+          // left out of the top-right corner; the row was previously
+          // constrained to leave room for it.
           Positioned(
             left: ProfileHeroLayout.edge,
             top: ProfileHeroLayout.identityTop,
-            right: ProfileHeroLayout.identityRight,
+            right: ProfileHeroLayout.edge,
             child: ProfileHeroIdentityBlock(
-              displayName: displayName,
               handle: handle,
-              level: resolved.level,
-              levelTitle: levelTitle,
-              levelAccent: levelAccent,
               isMe: isMe,
               onEditHandle: onEditHandle,
               friendCount: friendCount,
@@ -133,9 +191,13 @@ class ProfileDetailHeroCard extends StatelessWidget {
               friendsChipLabel: context.l10n.socialProfileFriendsChipLabel,
             ),
           ),
-          // Emblem grid — top-right.
+          // Emblem grid — top-LEFT, immediately under the level +
+          // title row. Anchored to the same `edge` gutter as the
+          // identity strip above so the whole left column reads as
+          // one stacked panel (subtitle → tier banner → emblem
+          // showcase) rather than two parallel side-elements.
           Positioned(
-            right: ProfileHeroLayout.edge,
+            left: ProfileHeroLayout.edge,
             top: ProfileHeroLayout.emblemTop,
             child: ProfileHeroEmblemCollection(
               slots: _resolveSlots(emblem),
@@ -155,16 +217,25 @@ class ProfileDetailHeroCard extends StatelessWidget {
               height: ProfileHeroLayout.avatarShadowHeight,
             ),
           ),
-          // Hero body — bottom-left, full-body skin asset.
+          // Hero body — bottom-left, full-body skin asset. Wrapped in
+          // a GestureDetector so a tap opens the skin slot sheet
+          // (own profile only — friend profiles pass null and the
+          // detector becomes a no-op).
           Positioned(
             left: ProfileHeroLayout.heroAvatarLeft,
             bottom: ProfileHeroLayout.heroAvatarBottom,
-            child: ProfileHeroSceneBlendFade(
-              child: ProfileHeroBodyAvatar(
-                raceId: raceId,
-                skinId: skinId,
-                fallbackLabel: displayName,
-                size: ProfileHeroLayout.heroAvatarSize,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onTapAvatar == null
+                  ? null
+                  : () => onTapAvatar!(skinId),
+              child: ProfileHeroSceneBlendFade(
+                child: ProfileHeroBodyAvatar(
+                  raceId: raceId,
+                  skinId: skinId,
+                  fallbackLabel: displayName,
+                  size: ProfileHeroLayout.heroAvatarSize,
+                ),
               ),
             ),
           ),
