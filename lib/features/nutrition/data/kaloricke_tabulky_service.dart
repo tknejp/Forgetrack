@@ -243,6 +243,13 @@ class KalorickeTabulkyService {
     return _sessionClient.restoreSession();
   }
 
+  /// Silently refreshes the KT session by re-POSTing `/login/create`
+  /// with the stored email + hash. KT has no OAuth refresh endpoint;
+  /// this IS the refresh mechanism. See [_KtSessionClient.refreshSession].
+  Future<bool> refreshSession() {
+    return _sessionClient.refreshSession();
+  }
+
   Future<String?> storedEmail() {
     return _sessionClient.storedEmail();
   }

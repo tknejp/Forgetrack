@@ -442,6 +442,26 @@
   "ktRetry": "Retry",
   "@ktRetry": { "description": "Button to retry a failed KT data sync" },
 
+  "ktReauthRequired": "Sign in to Kalorické Tabulky again to continue syncing.",
+  "@ktReauthRequired": { "description": "Banner shown when the stored KT credentials were rejected during silent session refresh" },
+
+  "ktReauthCta": "Sign in",
+  "@ktReauthCta": { "description": "CTA opening the KT login sheet from the reauth banner" },
+
+  "ktReconnecting": "Reconnecting to Kalorické Tabulky… next attempt in {seconds}s",
+  "@ktReconnecting": {
+    "description": "Banner shown while a silent session refresh is throttled after a network failure",
+    "placeholders": {
+      "seconds": { "type": "int", "description": "Whole seconds until the next automatic retry" }
+    }
+  },
+
+  "ktReconnectTryNow": "Try now",
+  "@ktReconnectTryNow": { "description": "Button to skip the reconnect countdown and retry immediately" },
+
+  "ktFooterOfflineHint": "Showing saved data — tap to connect",
+  "@ktFooterOfflineHint": { "description": "Inline footer on the home calorie card when KT is logged out but cached data is shown. Tapping opens the KT login sheet." },
+
   "ktSyncedAt": "Synced: {time}",
   "@ktSyncedAt": {
     "description": "Timestamp label shown after a successful KT nutrition sync",

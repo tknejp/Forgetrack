@@ -45,23 +45,15 @@ class _KtDiaryService {
       return parsed;
     }
 
-    final lowerMessage = message.toLowerCase();
-
-    if (_sessionClient.looksLikeAuthProblem(lowerMessage)) {
-      _sessionClient.invalidateSession();
-      AppLog.ktApi.warn(
-        'Auth problem while loading summary $dateString: $message',
-      );
-      throw KtAuthException(
-        message.isNotEmpty ? message : 'Session expired',
-      );
-    }
-
     AppLog.ktApi.error(
       'Day summary failed for $dateString',
       payload: 'code=$code, message=$message',
     );
 
+    // The provider treats any data-endpoint failure as a candidate for a
+    // silent session refresh; we no longer try to classify auth-vs-api
+    // from the response message (KT returns free-form Czech text that
+    // breaks substring matching once encoding shifts).
     throw KtApiException(
       'KT diary summary failed: code=$code'
       '${message.isNotEmpty ? ', message=$message' : ''}',
@@ -159,21 +151,13 @@ class _KtDiaryService {
       return parsed;
     }
 
-    final lowerMessage = message.toLowerCase();
-
-    if (_sessionClient.looksLikeAuthProblem(lowerMessage)) {
-      _sessionClient.invalidateSession();
-      AppLog.ktApi.warn('Auth problem while loading diary $dateString: $message');
-      throw KtAuthException(
-        message.isNotEmpty ? message : 'Session expired',
-      );
-    }
-
     AppLog.ktApi.error(
       'Day diary failed for $dateString',
       payload: 'code=$code, message=$message',
     );
 
+    // See fetchDaySummary — the provider drives session refresh; no
+    // brittle message-based auth classification here.
     throw KtApiException(
       'KT day diary failed: code=$code'
       '${message.isNotEmpty ? ', message=$message' : ''}',

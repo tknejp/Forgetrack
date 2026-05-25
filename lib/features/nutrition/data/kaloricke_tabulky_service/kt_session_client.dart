@@ -76,6 +76,30 @@ class _KtSessionClient {
     return true;
   }
 
+  /// Re-runs `/login/create` with the stored email + hash to refresh the
+  /// session cookie. KT has no OAuth/JWT refresh endpoint; re-POSTing
+  /// login with the stored hash IS the refresh mechanism. Returns
+  /// `false` when no stored credentials exist. Throws [KtAuthException]
+  /// when KT rejects the credentials (stored hash is no longer valid →
+  /// caller should wipe + surface reauth) and [KtApiException] on
+  /// network failure (caller should keep credentials and retry later).
+  Future<bool> refreshSession() async {
+    AppLog.ktApi.info('refreshSession() called');
+
+    final email = await _storage.read(key: _ktEmailKey);
+    final passwordHash = await _storage.read(key: _ktPasswordHashKey);
+
+    if (email == null || passwordHash == null) {
+      AppLog.ktApi.warn('refreshSession() — no stored credentials');
+      return false;
+    }
+
+    invalidateSession();
+    await _performLogin(email, passwordHash);
+    AppLog.ktApi.success('refreshSession() OK for ${_maskEmail(email)}');
+    return true;
+  }
+
   Future<String?> storedEmail() => _storage.read(key: _ktEmailKey);
 
   Future<void> logout() async {
@@ -266,13 +290,6 @@ class _KtSessionClient {
       );
       throw KtApiException('Invalid JSON from API ($context)');
     }
-  }
-
-  bool looksLikeAuthProblem(String message) {
-    return message.contains('login') ||
-        message.contains('auth') ||
-        message.contains('session') ||
-        message.contains('pĹ™ihl');
   }
 
   String? _extractCookies(http.Response response) {

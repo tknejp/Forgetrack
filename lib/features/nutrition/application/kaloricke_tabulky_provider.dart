@@ -42,6 +42,11 @@ class KtNutritionRangeSummary {
 class KalorickeTabulkyProvider extends ChangeNotifier {
   static const Duration _appOpenRefreshMinInterval = Duration(minutes: 5);
 
+  /// Min spacing between two automatic background `refreshSession()`
+  /// calls. Caps the recovery cadence when KT or the network keeps
+  /// rejecting us so we don't hammer `/login/create`.
+  static const Duration silentRefreshThrottle = Duration(seconds: 30);
+
   final KalorickeTabulkyService _service;
   final KtNutritionDatabase _db;
   late final KtSyncCoordinator _sync;
@@ -62,6 +67,23 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
   String? _loggedInEmail;
   DateTime? _lastSyncedAt;
   DateTime? _lastAppOpenRefreshAttemptAt;
+
+  /// True once a silent `refreshSession()` was rejected by KT — the
+  /// stored hash is no longer valid, the user must reauthenticate via
+  /// the KT login sheet. UI swaps the sync-error banner for a reauth
+  /// CTA. Cleared on successful [login].
+  bool _needsReauth = false;
+
+  /// Timestamp at which the provider may attempt the next silent
+  /// `refreshSession()`. Set when a refresh failed on the network so the
+  /// UI can show a "reconnecting in Xs" countdown and the next manual
+  /// retry / scheduled auto-retry is deferred until the throttle elapses.
+  DateTime? _nextSilentRefreshAt;
+
+  /// Scheduled auto-retry timer fired at [_nextSilentRefreshAt] when a
+  /// silent refresh failed on the network. Cancelled when the user
+  /// triggers a manual retry, logs out, or hits the reauth path.
+  Timer? _reconnectTimer;
 
   KtDayNutrition? _today;
 
@@ -84,6 +106,17 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
   String? get syncError => _syncError;
   String? get loggedInEmail => _loggedInEmail;
   DateTime? get lastSyncedAt => _lastSyncedAt;
+
+  /// True when stored credentials were rejected during silent refresh.
+  /// Banner switches to the reauth CTA that opens the KT login sheet.
+  bool get needsReauth => _needsReauth;
+
+  /// Wall-clock time at which the next silent `refreshSession()` may
+  /// fire. Non-null only while a network-level reconnect is pending;
+  /// the UI computes the remaining countdown from `DateTime.now()`.
+  DateTime? get nextReconnectAt => _nextSilentRefreshAt;
+
+  bool get isReconnecting => _nextSilentRefreshAt != null;
 
   bool get hasLoadedToday => _today != null;
   bool get hasTodayData => _today?.hasData ?? false;
@@ -356,6 +389,9 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
       await _service.login(email, password);
       _loggedInEmail = email;
       _hasStoredCredentials = true;
+      _needsReauth = false;
+      _cancelReconnectTimer();
+      _nextSilentRefreshAt = null;
       await _doSyncRecentDays();
       _triggerInitialHistoryIfNeeded();
     } on KtAuthException catch (e) {
@@ -383,6 +419,9 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
 
   Future<void> logout() async {
     AppLog.ktProvider.info('logout() started');
+    _cancelReconnectTimer();
+    _nextSilentRefreshAt = null;
+    _needsReauth = false;
     await _service.logout();
     // Keep the local DB intact so the user can still view previously
     // synced nutrition via the "Show saved data" affordance on the home
@@ -393,6 +432,16 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
   }
 
   // ─── Data ──────────────────────────────────────────────────────────────────
+
+  /// Manual "Zkusit hned" from the reconnect-countdown banner.
+  /// Cancels the throttle so the next silent refresh attempt isn't
+  /// skipped, then drives a fresh sync.
+  Future<void> retryNow() async {
+    _cancelReconnectTimer();
+    _nextSilentRefreshAt = null;
+    notifyListeners();
+    await refresh(source: 'manual_retry_now');
+  }
 
   Future<void> refreshOnAppOpen({bool force = false}) async {
     final now = DateTime.now();
@@ -446,13 +495,13 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
 
     String? syncError;
     try {
-      await _doSyncRecentDays();
+      await _runWithSilentRefresh(_doSyncRecentDays);
     } on KtAuthException catch (e) {
+      // KtAuthException here means refresh recovery wasn't possible
+      // (e.g. no stored credentials) — surface to UI without wiping.
       AppLog.ktProvider.warn('refresh() auth error: ${e.message}');
       _authError = e.message;
       syncError = 'auth: ${e.message}';
-      await _service.logout();
-      _resetLocalData(keepErrors: true);
     } on KtApiException catch (e) {
       AppLog.ktProvider.warn('refresh() API error: ${e.message}');
       _syncError = e.message;
@@ -514,17 +563,17 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
 
     String? syncError;
     try {
-      await _doSyncRange(
-        normalizedStart,
-        normalizedEnd,
-        reason: 'manual-range-refresh',
+      await _runWithSilentRefresh(
+        () => _doSyncRange(
+          normalizedStart,
+          normalizedEnd,
+          reason: 'manual-range-refresh',
+        ),
       );
     } on KtAuthException catch (e) {
       AppLog.ktProvider.warn('refreshRange() auth error: ${e.message}');
       _authError = e.message;
       syncError = 'auth: ${e.message}';
-      await _service.logout();
-      _resetLocalData(keepErrors: true);
     } on KtApiException catch (e) {
       AppLog.ktProvider.warn('refreshRange() API error: ${e.message}');
       _syncError = e.message;
@@ -562,6 +611,108 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
   }
 
   // ─── Sync delegation ───────────────────────────────────────────────────────
+
+  /// Wraps a sync op with a silent `refreshSession()` recovery step.
+  ///
+  /// Flow:
+  /// 1. Run [op]. On success, clear reauth/reconnect state.
+  /// 2. On any exception, if we have stored credentials and the throttle
+  ///    window has elapsed, call `refreshSession()`:
+  ///    - refresh OK → re-run [op] once. Result of the retry is final.
+  ///    - refresh threw [KtAuthException] → KT rejected stored hash;
+  ///      wipe credentials and set [_needsReauth].
+  ///    - refresh threw [KtApiException] → network down. Schedule an
+  ///      auto-retry in [silentRefreshThrottle] and rethrow the
+  ///      original error so the caller surfaces the sync banner with
+  ///      countdown.
+  /// 3. If throttle hasn't elapsed yet, skip the refresh probe and
+  ///    rethrow.
+  Future<void> _runWithSilentRefresh(Future<void> Function() op) async {
+    try {
+      await op();
+      // Success — clear any pending reconnect/reauth state.
+      _cancelReconnectTimer();
+      _nextSilentRefreshAt = null;
+      _needsReauth = false;
+      return;
+    } catch (e) {
+      if (!_hasStoredCredentials) {
+        AppLog.ktProvider
+            .debug('silent refresh skipped — no stored credentials');
+        rethrow;
+      }
+
+      final now = DateTime.now();
+      if (_nextSilentRefreshAt != null &&
+          now.isBefore(_nextSilentRefreshAt!)) {
+        AppLog.ktProvider.debug(
+          'silent refresh skipped — throttle until '
+          '${_nextSilentRefreshAt!.toIso8601String()}',
+        );
+        rethrow;
+      }
+
+      AppLog.ktProvider.info('silent refresh attempted after sync failure',
+          payload: 'origErr=$e');
+
+      try {
+        final refreshed = await _service.refreshSession();
+        if (!refreshed) {
+          AppLog.ktProvider
+              .warn('silent refresh — no stored credentials at service layer');
+          rethrow;
+        }
+      } on KtAuthException catch (re) {
+        AppLog.ktProvider.warn(
+          'silent refresh rejected by KT — forcing sign-out',
+          payload: re.message,
+        );
+        await _service.logout();
+        _resetLocalData(keepErrors: true);
+        _needsReauth = true;
+        _authError = re.message;
+        _cancelReconnectTimer();
+        _nextSilentRefreshAt = null;
+        // Surface the reauth banner instead of the original sync error.
+        _syncError = null;
+        return;
+      } on KtApiException catch (re) {
+        AppLog.ktProvider.warn(
+          'silent refresh failed on network — scheduling auto-retry',
+          payload: re.message,
+        );
+        _scheduleReconnect();
+        rethrow;
+      }
+
+      AppLog.ktProvider.info('silent refresh OK — retrying sync once');
+      // Refresh succeeded. Retry the original op once. If it fails
+      // again, propagate — that's a real data/api error.
+      await op();
+      _cancelReconnectTimer();
+      _nextSilentRefreshAt = null;
+      _needsReauth = false;
+    }
+  }
+
+  void _scheduleReconnect() {
+    _cancelReconnectTimer();
+    _nextSilentRefreshAt = DateTime.now().add(silentRefreshThrottle);
+    _reconnectTimer = Timer(silentRefreshThrottle, () {
+      AppLog.ktProvider
+          .info('reconnect timer fired — attempting refresh()');
+      _nextSilentRefreshAt = null;
+      _reconnectTimer = null;
+      // Drive a refresh; _runWithSilentRefresh will re-arm the timer
+      // if this attempt also fails on the network.
+      unawaited(refresh(source: 'reconnect_timer'));
+    });
+  }
+
+  void _cancelReconnectTimer() {
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
+  }
 
   Future<void> _doSyncRecentDays() async {
     final outcome = await _sync.syncRecentDays();
@@ -614,6 +765,26 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
       '_loadTodayFromStore($reason) → HIT $todayKey',
       payload: KtNutritionQueries.describeNutrition(cached),
     );
+  }
+
+  @override
+  void dispose() {
+    _cancelReconnectTimer();
+    super.dispose();
+  }
+
+  /// DevTools-only: drops the cached nutrition Isar rows + the
+  /// in-memory `_today` snapshot without touching login state or
+  /// secure-storage credentials. The next `refresh()` repopulates the
+  /// cache from KT.
+  Future<void> devToolsClearCache() async {
+    AppLog.ktProvider.info('devtools: clearCache start');
+    await _db.clear();
+    _today = null;
+    _lastSyncedAt = null;
+    _syncError = null;
+    notifyListeners();
+    AppLog.ktProvider.success('devtools: clearCache done');
   }
 
   void _resetLocalData({bool keepErrors = false}) {

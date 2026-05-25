@@ -53,6 +53,13 @@ class StatCard extends StatefulWidget {
   final bool initiallyExpanded;
   final bool collapsible;
 
+  /// Optional always-visible status strip rendered below the card body
+  /// (after the collapsible section, inside the same border). Used by
+  /// the KT calorie card to surface offline / reauth / reconnect /
+  /// sync-error states without an external "between-card" banner.
+  /// Sits inside the card padding with a thin divider above it.
+  final Widget? footer;
+
   const StatCard({
     super.key,
     required this.icon,
@@ -70,6 +77,7 @@ class StatCard extends StatefulWidget {
     this.children = const [],
     this.initiallyExpanded = false,
     this.collapsible = true,
+    this.footer,
   });
 
   @override
@@ -144,6 +152,12 @@ class _StatCardState extends State<StatCard> {
                             : const SizedBox.shrink(),
                       ),
                     ),
+                    if (widget.footer != null) ...[
+                      const SizedBox(height: 10),
+                      Container(height: 1, color: ft.cardBorder),
+                      const SizedBox(height: 8),
+                      widget.footer!,
+                    ],
                   ],
                 ),
               ),

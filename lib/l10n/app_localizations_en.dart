@@ -472,6 +472,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ktRetry => 'Retry';
 
   @override
+  String get ktReauthRequired =>
+      'Sign in to Kalorické Tabulky again to continue syncing.';
+
+  @override
+  String get ktReauthCta => 'Sign in';
+
+  @override
+  String ktReconnecting(int seconds) {
+    return 'Reconnecting to Kalorické Tabulky… next attempt in ${seconds}s';
+  }
+
+  @override
+  String get ktReconnectTryNow => 'Try now';
+
+  @override
+  String get ktFooterOfflineHint => 'Showing saved data — tap to connect';
+
+  @override
   String ktSyncedAt(String time) {
     return 'Synced: $time';
   }

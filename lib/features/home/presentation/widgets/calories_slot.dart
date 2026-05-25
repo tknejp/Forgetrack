@@ -11,27 +11,21 @@ import '../../../../shared/widgets/macro_row.dart';
 import '../../../../shared/widgets/stat_card.dart';
 import '../../../health_connect/application/goals_provider.dart';
 import '../../../nutrition/application/kaloricke_tabulky_provider.dart';
-import '../../../nutrition/presentation/widgets/kt_sync_error_banner.dart';
 import '../../../progression_engine/application/progression_engine_provider.dart';
-import '../../../settings/presentation/settings_screen.dart';
 import 'home_helpers.dart';
+import 'kt_card_status_footer.dart';
 import 'nutrition_detail_tile.dart';
-import 'offline_source_banner.dart';
 
 class CaloriesSlot extends StatelessWidget {
   const CaloriesSlot({
     super.key,
     required this.period,
     required this.barKey,
-    required this.showKtOfflineBanner,
-    required this.showKtSyncErrorBanner,
     required this.onOpenNutrition,
   });
 
   final SelectedPeriod period;
   final GlobalKey barKey;
-  final bool showKtOfflineBanner;
-  final bool showKtSyncErrorBanner;
   final VoidCallback onOpenNutrition;
 
   @override
@@ -76,27 +70,9 @@ class CaloriesSlot extends StatelessWidget {
         kcal > 0 || protein > 0 || fat > 0 || carbs > 0 || fiber > 0;
     final remainingToTarget = kcalGoal - kcal;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (showKtOfflineBanner) ...[
-          OfflineSourceBanner(
-            message: l10n.ktOfflineNotice,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const SettingsScreen()),
-            ),
-          ),
-          const SizedBox(height: 10),
-        ],
-        if (showKtSyncErrorBanner) ...[
-          KtSyncErrorBanner(
-            onRetry: () => kt.refreshRange(period.start, period.end),
-          ),
-          const SizedBox(height: 10),
-        ],
-        StatCard(
+    final footerActive = KtCardStatusFooter.isActive(kt);
+
+    return StatCard(
           icon: '🔥',
           label: period.type == PeriodType.day
               ? l10n.caloriesTodayTitle
@@ -132,6 +108,13 @@ class CaloriesSlot extends StatelessWidget {
             questNodeId: 'daily_calories_today',
             barKey: barKey,
           ),
+          footer: footerActive
+              ? KtCardStatusFooter(
+                  kt: kt,
+                  onSyncRetry: () =>
+                      kt.refreshRange(period.start, period.end),
+                )
+              : null,
           children: [
             if (streakInfoBlockForQuest(
                   progression: progression,
@@ -216,8 +199,6 @@ class CaloriesSlot extends StatelessWidget {
               domain: Tokens.calories,
             ),
           ],
-        ),
-      ],
-    );
+        );
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -6,7 +8,9 @@ import '../../../features/auth/application/auth_provider.dart';
 import '../../../features/health_connect/application/goals_provider.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../../../shared/theme/app_theme.dart';
+import '../../../shared/theme/design_tokens.dart';
 import '../../../shared/widgets/top_level_app_bar.dart';
+import '../../onboarding/widgets/kt_login_sheet.dart';
 import '../application/kaloricke_tabulky_provider.dart';
 
 part 'calories_screen/nutrition_states.dart';

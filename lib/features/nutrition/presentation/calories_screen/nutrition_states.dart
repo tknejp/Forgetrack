@@ -10,10 +10,12 @@ class _NutritionStateBody extends StatelessWidget {
     if (kt.isInitializing) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (!kt.isLoggedIn) {
-      return _NotConnectedState(
-        onGoToSettings: () => _openSettings(context),
-      );
+    // Mirror the home calorie card: as long as we have cached nutrition
+    // we render the data view (the offline status surfaces via the
+    // status banner), even when not logged in. Empty prompt is shown
+    // only when there's nothing to display at all.
+    if (!kt.isLoggedIn && !kt.hasCachedNutrition) {
+      return const _NotConnectedState();
     }
     if (kt.isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -23,9 +25,7 @@ class _NutritionStateBody extends StatelessWidget {
 }
 
 class _NotConnectedState extends StatelessWidget {
-  final VoidCallback onGoToSettings;
-
-  const _NotConnectedState({required this.onGoToSettings});
+  const _NotConnectedState();
 
   @override
   Widget build(BuildContext context) {
@@ -58,9 +58,9 @@ class _NotConnectedState extends StatelessWidget {
             ),
             const SizedBox(height: 28),
             FilledButton.icon(
-              icon: const Icon(Icons.settings_outlined),
-              label: Text(l10n.ktGoToSettings),
-              onPressed: onGoToSettings,
+              icon: const Icon(Icons.login_rounded),
+              label: Text(l10n.ktReauthCta),
+              onPressed: () => KTLoginSheet.show(context),
             ),
           ],
         ),

@@ -55,14 +55,97 @@ class _NutritionContentList extends StatelessWidget {
   }
 }
 
-class _NutritionStatusBanners extends StatelessWidget {
+class _NutritionStatusBanners extends StatefulWidget {
   final KalorickeTabulkyProvider kt;
 
   const _NutritionStatusBanners({required this.kt});
 
   @override
+  State<_NutritionStatusBanners> createState() =>
+      _NutritionStatusBannersState();
+}
+
+class _NutritionStatusBannersState extends State<_NutritionStatusBanners> {
+  Timer? _tick;
+
+  @override
+  void initState() {
+    super.initState();
+    _ensureTickerForCountdown();
+  }
+
+  @override
+  void didUpdateWidget(covariant _NutritionStatusBanners oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _ensureTickerForCountdown();
+  }
+
+  void _ensureTickerForCountdown() {
+    final showCountdown = widget.kt.nextReconnectAt != null;
+    if (showCountdown && _tick == null) {
+      _tick = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (mounted) setState(() {});
+      });
+    } else if (!showCountdown && _tick != null) {
+      _tick!.cancel();
+      _tick = null;
+    }
+  }
+
+  @override
+  void dispose() {
+    _tick?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final kt = widget.kt;
+
+    if (kt.needsReauth) {
+      return Column(
+        children: [
+          _ErrorBanner(
+            message: l10n.ktReauthRequired,
+            onRetry: () => KTLoginSheet.show(context),
+            retryLabel: l10n.ktReauthCta,
+          ),
+          const SizedBox(height: 12),
+        ],
+      );
+    }
+
+    // Logged-out viewer scrolling cached nutrition data. Soft info
+    // banner (cloud_off, muted) — mirrors the home card's offline
+    // footer; tap routes to the same KT login sheet.
+    if (!kt.isLoggedIn && kt.hasCachedNutrition) {
+      return Column(
+        children: [
+          _InfoBanner(
+            message: l10n.ktFooterOfflineHint,
+            onTap: () => KTLoginSheet.show(context),
+          ),
+          const SizedBox(height: 12),
+        ],
+      );
+    }
+
+    final nextAt = kt.nextReconnectAt;
+    if (nextAt != null) {
+      final remaining = nextAt.difference(DateTime.now()).inSeconds;
+      final seconds = remaining > 0 ? remaining : 0;
+      return Column(
+        children: [
+          _ErrorBanner(
+            message: l10n.ktReconnecting(seconds),
+            onRetry: kt.retryNow,
+            retryLabel: l10n.ktReconnectTryNow,
+          ),
+          const SizedBox(height: 12),
+        ],
+      );
+    }
 
     if (kt.syncError == null && kt.authError == null) {
       return const SizedBox.shrink();
@@ -302,6 +385,60 @@ class _ErrorBanner extends StatelessWidget {
               child: Text(retryLabel ?? ''),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// Soft tap-to-act banner used for the "viewing cached data" state.
+/// Visually muted (no error/warning red); mirrors the home card's
+/// offline footer styling so the user reads it as an informational
+/// affordance, not a failure.
+class _InfoBanner extends StatelessWidget {
+  final String message;
+  final VoidCallback onTap;
+
+  const _InfoBanner({required this.message, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final ft = context.ft;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: ft.surfaceSubtle,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: ft.cardBorder),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.cloud_off_rounded,
+              size: 16,
+              color: ft.onSurfaceMuted,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: ft.onSurfaceMuted,
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 16,
+              color: ft.onSurfaceMuted,
+            ),
+          ],
+        ),
       ),
     );
   }

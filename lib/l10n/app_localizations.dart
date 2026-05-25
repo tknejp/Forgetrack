@@ -962,6 +962,36 @@ abstract class AppLocalizations {
   /// **'Retry'**
   String get ktRetry;
 
+  /// Banner shown when the stored KT credentials were rejected during silent session refresh
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to Kalorické Tabulky again to continue syncing.'**
+  String get ktReauthRequired;
+
+  /// CTA opening the KT login sheet from the reauth banner
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get ktReauthCta;
+
+  /// Banner shown while a silent session refresh is throttled after a network failure
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnecting to Kalorické Tabulky… next attempt in {seconds}s'**
+  String ktReconnecting(int seconds);
+
+  /// Button to skip the reconnect countdown and retry immediately
+  ///
+  /// In en, this message translates to:
+  /// **'Try now'**
+  String get ktReconnectTryNow;
+
+  /// Inline footer on the home calorie card when KT is logged out but cached data is shown. Tapping opens the KT login sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing saved data — tap to connect'**
+  String get ktFooterOfflineHint;
+
   /// Timestamp label shown after a successful KT nutrition sync
   ///
   /// In en, this message translates to:

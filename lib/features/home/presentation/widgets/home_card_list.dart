@@ -8,8 +8,9 @@ import '../../../../shared/selected_period.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../health_connect/application/fitness_provider.dart';
 import '../../../nutrition/application/kaloricke_tabulky_provider.dart';
-import '../../../settings/presentation/settings_screen.dart';
+import '../../../onboarding/widgets/kt_login_sheet.dart';
 import '../../application/home_card_order_provider.dart';
+import '../../../../shared/widgets/dashboard_card_assets.dart';
 import 'activity_slot.dart';
 import 'calories_slot.dart';
 import 'data_source_prompt_card.dart';
@@ -62,22 +63,26 @@ class HomeCardList extends StatelessWidget {
       selector: (_, fitness, kt) {
         final hcReady = fitness.accessState == FitnessAccessState.ready;
         final hcChecking = fitness.accessState == FitnessAccessState.checking;
+        final hcCached = hasCachedHcData(fitness);
+        final ktCached = kt.hasCachedNutrition;
+        // `showCached*Anyway` is a one-shot "user opted into viewing the
+        // cache" intent. Honor it only while the underlying cache still
+        // exists — once the data is wiped (logout + factory reset),
+        // fall back to the login prompt instead of leaving the user
+        // stuck on an empty-but-real card.
+        final ktCachedView = showCachedKtAnyway && ktCached;
+        final hcCachedView = showCachedHcAnyway && hcCached;
         return (
-          showHcPrompt: !hcReady && !hcChecking && !showCachedHcAnyway,
-          showHcOfflineBanner:
-              !hcReady && !hcChecking && showCachedHcAnyway,
+          showHcPrompt: !hcReady && !hcChecking && !hcCachedView,
+          showHcOfflineBanner: !hcReady && !hcChecking && hcCachedView,
           hcUnavailable:
               fitness.accessState == FitnessAccessState.unavailable,
           showKtPrompt: !kt.isLoggedIn &&
               !kt.isInitializing &&
               !kt.hasStoredCredentials &&
-              !showCachedKtAnyway,
-          showKtOfflineBanner:
-              !kt.isLoggedIn && !kt.isInitializing && showCachedKtAnyway,
-          ktLoggedIn: kt.isLoggedIn,
-          ktSyncError: kt.syncError != null,
-          hasCachedHcData: hasCachedHcData(fitness),
-          hasCachedKtData: kt.hasCachedNutrition,
+              !ktCachedView,
+          hasCachedHcData: hcCached,
+          hasCachedKtData: ktCached,
         );
       },
       builder: (context, viz, _) {
@@ -86,20 +91,22 @@ class HomeCardList extends StatelessWidget {
 
         final Widget stepsSlot = viz.showHcPrompt
             ? DataSourcePromptCard(
-                logoAsset: 'assets/icons/hc/health_connect_logo.png',
-                accentColor: Tokens.weight.color,
+                domain: Tokens.steps,
+                heroIcon: '🥾',
+                visualAssets: DashboardCardAssetResolver.forKind(
+                  DashboardCardKind.steps,
+                ),
                 title: viz.hcUnavailable
                     ? l10n.healthNotAvailable
                     : l10n.healthPermissionRequired,
                 body: viz.hcUnavailable
                     ? l10n.healthNotAvailableBody
                     : l10n.healthPermissionBody,
-                ctaIcon: viz.hcUnavailable
-                    ? Icons.download_rounded
-                    : Icons.shield_outlined,
+                ctaLogoAsset: 'assets/icons/hc/health_connect_logo.png',
                 ctaLabel: viz.hcUnavailable
                     ? l10n.healthInstall
                     : l10n.healthGrantAccess,
+                providerAccent: const Color(0xFF34A853),
                 onAction: onHcAction,
                 onShowCached: viz.hasCachedHcData ? onShowCachedHc : null,
               )
@@ -113,23 +120,22 @@ class HomeCardList extends StatelessWidget {
 
         final Widget caloriesSlot = viz.showKtPrompt
             ? DataSourcePromptCard(
-                logoAsset: 'assets/icons/kt/kaloricke_tabulky.png',
-                accentColor: const Color(0xFF7AB342),
+                domain: Tokens.calories,
+                heroIcon: '🔥',
+                visualAssets: DashboardCardAssetResolver.forKind(
+                  DashboardCardKind.nutrition,
+                ),
                 title: l10n.caloriesTodayTitle,
                 body: l10n.ktLoginPrompt,
-                ctaIcon: Icons.settings_outlined,
-                ctaLabel: l10n.ktGoToSettings,
-                onAction: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                ),
+                ctaLogoAsset: 'assets/icons/kt/kaloricke_tabulky.png',
+                ctaLabel: l10n.ktReauthCta,
+                providerAccent: const Color(0xFF7AB342),
+                onAction: () => KTLoginSheet.show(context),
                 onShowCached: viz.hasCachedKtData ? onShowCachedKt : null,
               )
             : CaloriesSlot(
                 period: period,
                 barKey: barKey,
-                showKtOfflineBanner: viz.showKtOfflineBanner,
-                showKtSyncErrorBanner: viz.ktLoggedIn && viz.ktSyncError,
                 onOpenNutrition: onOpenNutrition,
               );
 

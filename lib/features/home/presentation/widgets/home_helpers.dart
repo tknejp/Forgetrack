@@ -22,9 +22,6 @@ typedef CardVisibility = ({
   bool showHcOfflineBanner,
   bool hcUnavailable,
   bool showKtPrompt,
-  bool showKtOfflineBanner,
-  bool ktLoggedIn,
-  bool ktSyncError,
   bool hasCachedHcData,
   bool hasCachedKtData,
 });

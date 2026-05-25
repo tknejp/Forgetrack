@@ -473,6 +473,24 @@ class AppLocalizationsCs extends AppLocalizations {
   String get ktRetry => 'Zkusit znovu';
 
   @override
+  String get ktReauthRequired =>
+      'Přihlaste se znovu do Kalorických Tabulek pro pokračování synchronizace.';
+
+  @override
+  String get ktReauthCta => 'Přihlásit se';
+
+  @override
+  String ktReconnecting(int seconds) {
+    return 'Připojuji znovu ke Kalorickým Tabulkám… další pokus za ${seconds}s';
+  }
+
+  @override
+  String get ktReconnectTryNow => 'Zkusit hned';
+
+  @override
+  String get ktFooterOfflineHint => 'Uložená data — klepnutím připojit';
+
+  @override
   String ktSyncedAt(String time) {
     return 'Synchronizováno: $time';
   }

@@ -6,7 +6,6 @@ import '../../../l10n/l10n.dart';
 import '../../../shared/selected_period.dart';
 import '../../../features/health_connect/application/fitness_provider.dart';
 import '../../../features/health_connect/application/goals_provider.dart';
-import '../../settings/presentation/settings_screen.dart';
 import '../../../shared/theme/design_tokens.dart';
 import '../../../shared/widgets/ft_back_button.dart';
 import '../../../shared/widgets/period_navigator.dart';
@@ -23,6 +22,7 @@ import 'widgets/macro_trend_card.dart';
 import 'widgets/meals_card.dart';
 import 'widgets/not_connected_state.dart';
 import 'widgets/today_header_card.dart';
+import '../../onboarding/widgets/kt_login_sheet.dart';
 
 /// Default daily hydration goal in liters (used when KT goal isn't pulled).
 const _defaultHydrationGoalL = 2.5;
@@ -370,8 +370,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (kt.syncError != null) ...[
-            KtSyncErrorBanner(
+          if (KtSyncStatusBanner.isActive(kt)) ...[
+            KtSyncStatusBanner(
+              kt: kt,
               onRetry: () => kt.refreshRange(_period.start, _period.end),
             ),
             const SizedBox(height: 10),
@@ -508,12 +509,14 @@ class _NutritionScreenState extends State<NutritionScreen> {
     final goals = context.watch<GoalsProvider>();
     final fitness = context.watch<FitnessProvider>();
 
-    if (!kt.isLoggedIn) {
+    // Allow read-only access to cached data while logged out — the
+    // offline state surfaces via the inline status banner. Only fall
+    // through to the empty NotConnectedState when there's no cache at
+    // all (defensive fallback — the home prompt hides the entry point
+    // into this screen in that case).
+    if (!kt.isLoggedIn && !kt.hasCachedNutrition) {
       return NotConnectedState(
-        onConnect: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const SettingsScreen()),
-        ),
+        onConnect: () => KTLoginSheet.show(context),
       );
     }
 
