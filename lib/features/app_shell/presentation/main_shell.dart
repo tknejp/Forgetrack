@@ -295,7 +295,8 @@ class _FtMainShellState extends State<MainShell> {
   bool _showDebugLauncher(BuildContext context) {
     final debugEnabled = context.watch<DevToolsProvider>().isDebugModeEnabled;
     final uid = context.watch<AuthProvider>().user?.firebaseUid;
-    return debugEnabled && DevToolsPermissionService.hasAccess(uid);
+    final permission = context.watch<DevToolsPermissionService>();
+    return debugEnabled && permission.hasAccess(uid);
   }
 
   HeaderData _headerDataFor(int index, dynamic l10n, String? firstName) {

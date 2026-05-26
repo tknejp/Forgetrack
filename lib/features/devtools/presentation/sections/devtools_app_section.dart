@@ -19,6 +19,7 @@ class DevToolsAppSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final devTools = context.watch<DevToolsProvider>();
+    final permission = context.watch<DevToolsPermissionService>();
     final cs = Theme.of(context).colorScheme;
 
     final uid = auth.user?.firebaseUid;
@@ -29,9 +30,11 @@ class DevToolsAppSection extends StatelessWidget {
             : 'release';
     final accessReason = kDebugMode
         ? 'kDebugMode'
-        : DevToolsPermissionService.hasAccess(uid)
-            ? 'UID allowlist'
-            : 'unknown';
+        : !permission.hasAccess(uid)
+            ? 'unknown'
+            : permission.isRemoteGrant(uid)
+                ? 'devUsers/$uid (Firestore)'
+                : 'UID allowlist';
 
     return DevToolsSectionCard(
       title: 'App & Auth', // TODO: l10n

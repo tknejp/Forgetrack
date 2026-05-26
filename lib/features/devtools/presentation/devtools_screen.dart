@@ -44,8 +44,9 @@ class _DevToolsScreenState extends State<DevToolsScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final firebaseUid = auth.user?.firebaseUid;
+    final permission = context.watch<DevToolsPermissionService>();
 
-    if (!DevToolsPermissionService.hasAccess(firebaseUid)) {
+    if (!permission.hasAccess(firebaseUid)) {
       return _AccessDeniedScreen(uid: firebaseUid);
     }
 

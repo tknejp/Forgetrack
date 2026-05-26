@@ -23,6 +23,7 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final devtoolsPermission = context.watch<DevToolsPermissionService>();
     final l10n = context.l10n;
     final canPop = Navigator.of(context).canPop();
 
@@ -73,7 +74,7 @@ class SettingsScreen extends StatelessWidget {
               title: l10n.sectionAbout,
               child: const SettingsAboutSection(),
             ),
-            if (DevToolsPermissionService.hasAccess(auth.user?.firebaseUid))
+            if (devtoolsPermission.hasAccess(auth.user?.firebaseUid))
               SettingsSection(
                 title: l10n.settingsDeveloperTools,
                 bottomSpacing: 0,
