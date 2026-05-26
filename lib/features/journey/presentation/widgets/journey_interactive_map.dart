@@ -9,6 +9,7 @@ import '../../../../shared/theme/design_tokens.dart';
 import '../../domain/journey_models.dart';
 import 'journey_checkpoint_overlay_card.dart';
 import 'journey_map_chrome.dart';
+import 'journey_map_fog.dart';
 import 'journey_map_geometry.dart';
 import 'journey_map_layout.dart';
 import 'journey_map_route.dart';
@@ -125,8 +126,15 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
             final viewportW = constraints.maxWidth;
             final viewportH = widget.height;
 
+            // Interactive mode hides locked future milestones — they sit
+                // inside the fog mass and would otherwise peek through the
+                // receding wisp at the player line. Their positions get
+                // replaced by the generic route-level dot below (within the
+                // lookahead window), so the path still reads as continuous.
             final visibleCheckpoints = widget.interactive
                 ? widget.checkpoints
+                    .where((cp) => cp.isUnlocked) // lint-ignore: widget-no-logic — display-state filter to hide locked future milestones
+                    .toList(growable: false)
                 : journeyMapCollapsedPreviewCheckpoints(widget.checkpoints);
 
             final n = visibleCheckpoints.length;
@@ -207,6 +215,19 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
                 routeLevelCheckpoint != null && routeLevelAnchor != null;
             final showMapOverlays = widget.interactive;
 
+            // Canvas-y of the player's current route point — drives the fog
+            // reveal line. Falls back near the start of the route when the
+            // asset is missing the current point id (defensive — keeps fog
+            // covering the future instead of disappearing).
+            final currentRoutePointOffset = _routePointOffset(
+              route: route,
+              pointId: currentRoutePointId,
+              mapWidth: viewportW,
+              mapHeight: canvasH,
+            );
+            final fogRevealY =
+                currentRoutePointOffset?.dy ?? canvasH * 0.93;
+
             final canvasStack = GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: widget.interactive &&
@@ -252,6 +273,15 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
                           compact: !widget.interactive,
                         ),
                     ],
+                    // Fog sits above the path / dots / nodes so it can
+                    // obscure locked future content, but below the tooltip
+                    // layer so an opened checkpoint card is never veiled.
+                    if (showMapOverlays)
+                      JourneyMapFog(
+                        width: viewportW,
+                        height: canvasH,
+                        revealY: fogRevealY,
+                      ),
                     if (hasSelection)
                       JourneyMapTooltipPosition(
                         anchor: absPos[selected],
@@ -468,12 +498,15 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
     required int currentRoutePointId,
     required Set<int> hiddenPointIds,
   }) {
+    final lookaheadCap =
+        currentRoutePointId + JourneyMapLayout.routeLevelLookahead;
     final points = route.points
         .where( // lint-ignore: widget-no-logic — filters route JSON points (asset), not a domain collection
           (point) =>
               point.id >= JourneyMapLayout.routePointMinLevel &&
               point.id <= JourneyMapLayout.routePointMaxLevel &&
-              !hiddenPointIds.contains(point.id),
+              !hiddenPointIds.contains(point.id) &&
+              point.id <= lookaheadCap,
         )
         .toList(growable: false)
       ..sort((a, b) => a.id.compareTo(b.id));
