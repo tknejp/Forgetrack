@@ -14,11 +14,12 @@ rules_version = '2';
 // `firebase deploy --only firestore:rules`.
 //
 // **Scope:** this file covers the full Forgetrack ruleset (V2 ledger,
-// goal history, cosmetic entitlements, profiles, handles, friend
-// requests, friendships, achievement shares, per-user notifications).
-// Field-level validation is pragmatic, not exhaustive — full rule
-// hardening (e.g. forbidding profile fields outside an allowlist) is
-// deferred to a dedicated security review.
+// goal history, cosmetic entitlements + hybrid sync, profiles, handles,
+// friend requests, friendships, achievement shares, per-user
+// notifications, devUsers admin grant). Field-level validation is
+// pragmatic, not exhaustive — full rule hardening (e.g. forbidding
+// profile fields outside an allowlist) is deferred to a dedicated
+// security review.
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -83,16 +84,46 @@ service cloud.firestore {
       }
 
       // Cosmetic entitlements: client-read, Cloud-Functions-write.
+      // The catchall below explicitly excludes this subcollection so
+      // the write-deny here actually applies (Firestore evaluates all
+      // matching rules with OR semantics — without the guard the
+      // catchall would silently grant writes to the owner).
       match /cosmeticEntitlements/{cosmeticId} {
         allow read: if isOwner(uid);
         allow write: if false;
       }
 
-      // FCM tokens / per-user device data: self-only. Catches any
-      // additional self-only subcollections under users/{uid}.
-      match /{subcollection}/{docId} {
+      // Cosmetic hybrid sync (Trello #110, 2026-05-26). Self-owned —
+      // the local hybrid wrapper writes from the device. Listed
+      // explicitly for documentation; the catchall below would cover
+      // them too.
+      match /cosmeticUnlocks/{cosmeticId} {
         allow read, write: if isOwner(uid);
       }
+      match /cosmeticState/{docId} {
+        allow read, write: if isOwner(uid);
+      }
+
+      // FCM tokens / per-user device data: self-only. Catches any
+      // additional self-only subcollections under users/{uid} that
+      // aren't carved out above.
+      match /{subcollection}/{docId} {
+        allow read, write: if isOwner(uid)
+                            && subcollection != 'cosmeticEntitlements';
+      }
+    }
+
+    // ── DevUsers (Trello #106) ──────────────────────────────────────
+    //
+    // Runtime dev-access grant for DevToolsPermissionService and the
+    // future `isAdmin()` rule helper. Sentinel field `enabled: true`
+    // flips dev access. Self-read only (so a peer can't discover
+    // who's a dev). All writes denied for clients — managed via the
+    // Firebase Console / admin scripts / future admin dashboard
+    // callable functions.
+    match /devUsers/{uid} {
+      allow read: if isOwner(uid);
+      allow write: if false;
     }
 
     // ── Handles ─────────────────────────────────────────────────────
