@@ -5,6 +5,7 @@ abstract final class JourneyMapAssets {
   static const background = 'assets/ui/journey_map_bg.png';
   static const collapsedBackground = 'assets/ui/journey_map_bg_collapsed.png';
   static const fallbackBackground = 'assets/ui/journey_map_bg.jpg';
+  static const fog = 'assets/ui/journey_map_fog.png';
 }
 
 abstract final class JourneyMapLayout {
@@ -31,6 +32,10 @@ abstract final class JourneyMapLayout {
   static const routePointStart = 0;
   static const routePointMinLevel = 1;
   static const routePointMaxLevel = 100;
+  /// How many levels ahead of the player still render as small route-level
+  /// dots. Beyond this window locked content is fully hidden — the fog mass
+  /// covers it and there's nothing to peek through the receding wisp.
+  static const routeLevelLookahead = 3;
   static const currentLevelDotSize = 14.0;
   static const unlockedLevelDotSize = 8.0;
   static const lockedLevelDotSize = 7.0;
