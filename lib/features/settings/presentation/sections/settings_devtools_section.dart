@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/l10n.dart';
 import '../../../../features/devtools/presentation/devtools_screen.dart';
 import '../widgets/settings_widgets.dart';
 
@@ -12,7 +13,7 @@ class SettingsDevToolsSection extends StatelessWidget {
       children: [
         SettingsTile(
           icon: Icons.developer_mode_outlined,
-          label: 'Developer Tools', // TODO: l10n – use l10n.devtoolsTitle
+          label: context.l10n.devtoolsTitle,
           showChevron: true,
           onTap: () => Navigator.push(
             context,

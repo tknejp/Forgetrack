@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../l10n/l10n.dart';
 import '../../../../features/settings/presentation/dialogs/settings_dialogs.dart';
 import '../../application/devtools_provider.dart';
 import '../widgets/devtools_action_tile.dart';
@@ -19,13 +20,12 @@ class DevToolsOverridesSection extends StatelessWidget {
     final hasAny = !overrides.isEmpty;
 
     return DevToolsSectionCard(
-      title: 'Debug Metric Overrides', // TODO: l10n
+      title: context.l10n.devtoolsSectionOverrides,
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(14, 10, 14, 6),
           child: Text(
-            'Overrides are stored as debug settings only — '
-            'not yet wired into production calculations (TODO).', // TODO: l10n
+            context.l10n.devtoolsOverridesHint,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: cs.onSurfaceVariant.withValues(alpha: 0.7),
                   fontStyle: FontStyle.italic,
@@ -72,11 +72,12 @@ class DevToolsOverridesSection extends StatelessWidget {
   }
 
   Future<void> _confirmClear(BuildContext context) async {
+    final l10n = context.l10n;
     final confirmed = await showSettingsConfirmationDialog(
       context,
-      title: 'Clear debug overrides?', // TODO: l10n
-      message: 'All stored metric overrides will be removed.', // TODO: l10n
-      confirmLabel: 'Clear', // TODO: l10n
+      title: l10n.devtoolsOverridesClearTitle,
+      message: l10n.devtoolsOverridesClearMessage,
+      confirmLabel: l10n.devtoolsOverridesClearConfirm,
       isDestructive: true,
     );
     if (confirmed && context.mounted) {

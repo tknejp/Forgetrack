@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../l10n/l10n.dart';
 import '../../../../features/health_connect/application/fitness_provider.dart';
 import '../../../../features/nutrition/application/kaloricke_tabulky_provider.dart';
 import '../../../../features/progression_engine/application/progression_engine_provider.dart';
@@ -73,7 +74,7 @@ class _DevToolsDbSectionState extends State<DevToolsDbSection> {
         kt.debugNutritionCacheCount > 0 && !ktLastIsToday;
 
     return DevToolsSectionCard(
-      title: 'Local DB / Cache', // TODO: l10n
+      title: context.l10n.devtoolsSectionDb,
       children: [
         // ── Health Connect ─────────────────────────────────────────────────
         _SectionHeaderRow(

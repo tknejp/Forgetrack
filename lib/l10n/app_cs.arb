@@ -1132,6 +1132,40 @@
   "settingsDeveloperTools": "Nástroje vývojáře",
   "devtoolsTitle": "Nástroje vývojáře",
 
+  "devtoolsAccessDeniedTitle": "Přístup odepřen",
+  "devtoolsAccessDeniedMessage": "Tato obrazovka je vyhrazena pro vývojáře.",
+  "devtoolsCopied": "Zkopírováno",
+  "devtoolsCopiedWithLabel": "{label} zkopírováno",
+  "@devtoolsCopiedWithLabel": {
+    "placeholders": { "label": { "type": "String" } }
+  },
+  "devtoolsActionDisabledBadge": "TODO",
+  "devtoolsSectionApp": "Aplikace a přihlášení",
+  "devtoolsDebugModeLabel": "Režim ladění",
+  "devtoolsSectionDb": "Lokální DB / mezipaměť",
+  "devtoolsSectionHealthPipeline": "Pipeline zdraví",
+  "devtoolsSectionSync": "Diagnostika synchronizace",
+  "devtoolsSyncLogHeader": "Sync log  ({count} / {max})",
+  "@devtoolsSyncLogHeader": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "devtoolsSectionBackground": "Sync na pozadí",
+  "devtoolsBackgroundReregisterTitle": "Znovu zaregistrovat sync na pozadí?",
+  "devtoolsBackgroundClearLogTitle": "Vymazat sync log?",
+  "devtoolsSectionNotifications": "Notifikace",
+  "devtoolsNotificationsBgToggleLabel": "Povolit ladicí notifikace BG syncu",
+  "devtoolsNotificationsCopyTokenTitle": "Zkopírovat FCM token?",
+  "devtoolsNotificationsSendTestTitle": "Odeslat testovací notifikaci?",
+  "devtoolsSectionUi": "UI / propagace providerů",
+  "devtoolsSectionOverrides": "Ladicí přepisy metrik",
+  "devtoolsOverridesHint": "Přepisy se ukládají pouze jako ladicí nastavení — zatím nejsou napojené na produkční výpočty (TODO).",
+  "devtoolsOverridesClearTitle": "Vymazat ladicí přepisy?",
+  "devtoolsOverridesClearMessage": "Všechny uložené přepisy metrik budou odstraněny.",
+  "devtoolsOverridesClearConfirm": "Vymazat",
+
   "journeyTitle": "Cesta hrdiny",
   "journeyPreviewKicker": "CESTA HRDINY",
   "journeyOpenMap": "Otevřít mapu",

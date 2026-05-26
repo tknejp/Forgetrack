@@ -3618,6 +3618,88 @@ class AppLocalizationsCs extends AppLocalizations {
   String get devtoolsTitle => 'Nástroje vývojáře';
 
   @override
+  String get devtoolsAccessDeniedTitle => 'Přístup odepřen';
+
+  @override
+  String get devtoolsAccessDeniedMessage =>
+      'Tato obrazovka je vyhrazena pro vývojáře.';
+
+  @override
+  String get devtoolsCopied => 'Zkopírováno';
+
+  @override
+  String devtoolsCopiedWithLabel(String label) {
+    return '$label zkopírováno';
+  }
+
+  @override
+  String get devtoolsActionDisabledBadge => 'TODO';
+
+  @override
+  String get devtoolsSectionApp => 'Aplikace a přihlášení';
+
+  @override
+  String get devtoolsDebugModeLabel => 'Režim ladění';
+
+  @override
+  String get devtoolsSectionDb => 'Lokální DB / mezipaměť';
+
+  @override
+  String get devtoolsSectionHealthPipeline => 'Pipeline zdraví';
+
+  @override
+  String get devtoolsSectionSync => 'Diagnostika synchronizace';
+
+  @override
+  String devtoolsSyncLogHeader(int count, int max) {
+    return 'Sync log  ($count / $max)';
+  }
+
+  @override
+  String get devtoolsSectionBackground => 'Sync na pozadí';
+
+  @override
+  String get devtoolsBackgroundReregisterTitle =>
+      'Znovu zaregistrovat sync na pozadí?';
+
+  @override
+  String get devtoolsBackgroundClearLogTitle => 'Vymazat sync log?';
+
+  @override
+  String get devtoolsSectionNotifications => 'Notifikace';
+
+  @override
+  String get devtoolsNotificationsBgToggleLabel =>
+      'Povolit ladicí notifikace BG syncu';
+
+  @override
+  String get devtoolsNotificationsCopyTokenTitle => 'Zkopírovat FCM token?';
+
+  @override
+  String get devtoolsNotificationsSendTestTitle =>
+      'Odeslat testovací notifikaci?';
+
+  @override
+  String get devtoolsSectionUi => 'UI / propagace providerů';
+
+  @override
+  String get devtoolsSectionOverrides => 'Ladicí přepisy metrik';
+
+  @override
+  String get devtoolsOverridesHint =>
+      'Přepisy se ukládají pouze jako ladicí nastavení — zatím nejsou napojené na produkční výpočty (TODO).';
+
+  @override
+  String get devtoolsOverridesClearTitle => 'Vymazat ladicí přepisy?';
+
+  @override
+  String get devtoolsOverridesClearMessage =>
+      'Všechny uložené přepisy metrik budou odstraněny.';
+
+  @override
+  String get devtoolsOverridesClearConfirm => 'Vymazat';
+
+  @override
   String get journeyTitle => 'Cesta hrdiny';
 
   @override

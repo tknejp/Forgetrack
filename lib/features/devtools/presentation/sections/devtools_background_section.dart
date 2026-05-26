@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../l10n/l10n.dart';
 import '../../../../core/services/background_sync_service.dart';
 import '../../../../features/settings/presentation/dialogs/settings_dialogs.dart';
 import '../../application/devtools_provider.dart';
@@ -67,7 +68,7 @@ class _DevToolsBackgroundSectionState
   Future<void> _reRegister() async {
     final confirmed = await showSettingsConfirmationDialog(
       context,
-      title: 'Re-register background sync?', // TODO: l10n
+      title: context.l10n.devtoolsBackgroundReregisterTitle,
       message: 'Calls BackgroundSyncService.register() with '
           'ExistingPeriodicWorkPolicy.keep — will not cancel a running task.',
       confirmLabel: 'Re-register',
@@ -92,7 +93,7 @@ class _DevToolsBackgroundSectionState
   Future<void> _clearLog() async {
     final confirmed = await showSettingsConfirmationDialog(
       context,
-      title: 'Clear sync log?', // TODO: l10n
+      title: context.l10n.devtoolsBackgroundClearLogTitle,
       message:
           'Removes all ${_events.length} events from the DevTools sync log. '
           'Does not affect real app data.',
@@ -120,7 +121,7 @@ class _DevToolsBackgroundSectionState
         DateTime.now().difference(lastBg.timestamp).inHours >= 1;
 
     return DevToolsSectionCard(
-      title: 'Background Refresh', // TODO: l10n
+      title: context.l10n.devtoolsSectionBackground,
       children: [
         // ── Task info ────────────────────────────────────────────────────
         DevToolsStatusTile(

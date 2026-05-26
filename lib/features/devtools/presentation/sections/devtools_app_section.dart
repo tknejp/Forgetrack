@@ -37,7 +37,7 @@ class DevToolsAppSection extends StatelessWidget {
                 : 'UID allowlist';
 
     return DevToolsSectionCard(
-      title: 'App & Auth', // TODO: l10n
+      title: context.l10n.devtoolsSectionApp,
       children: [
         DevToolsStatusTile(
           label: 'Build mode',
@@ -61,7 +61,7 @@ class DevToolsAppSection extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'Debug Mode', // TODO: l10n
+                  context.l10n.devtoolsDebugModeLabel,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: cs.onSurfaceVariant,
                       ),

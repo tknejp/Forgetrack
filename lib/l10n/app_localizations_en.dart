@@ -3629,6 +3629,87 @@ class AppLocalizationsEn extends AppLocalizations {
   String get devtoolsTitle => 'Developer Tools';
 
   @override
+  String get devtoolsAccessDeniedTitle => 'Access Denied';
+
+  @override
+  String get devtoolsAccessDeniedMessage =>
+      'This screen is restricted to developers.';
+
+  @override
+  String get devtoolsCopied => 'Copied';
+
+  @override
+  String devtoolsCopiedWithLabel(String label) {
+    return '$label copied';
+  }
+
+  @override
+  String get devtoolsActionDisabledBadge => 'TODO';
+
+  @override
+  String get devtoolsSectionApp => 'App & Auth';
+
+  @override
+  String get devtoolsDebugModeLabel => 'Debug Mode';
+
+  @override
+  String get devtoolsSectionDb => 'Local DB / Cache';
+
+  @override
+  String get devtoolsSectionHealthPipeline => 'Health Pipeline';
+
+  @override
+  String get devtoolsSectionSync => 'Sync Diagnostics';
+
+  @override
+  String devtoolsSyncLogHeader(int count, int max) {
+    return 'Sync Log  ($count / $max)';
+  }
+
+  @override
+  String get devtoolsSectionBackground => 'Background Refresh';
+
+  @override
+  String get devtoolsBackgroundReregisterTitle =>
+      'Re-register background sync?';
+
+  @override
+  String get devtoolsBackgroundClearLogTitle => 'Clear sync log?';
+
+  @override
+  String get devtoolsSectionNotifications => 'Notifications';
+
+  @override
+  String get devtoolsNotificationsBgToggleLabel =>
+      'Enable BG debug notifications';
+
+  @override
+  String get devtoolsNotificationsCopyTokenTitle => 'Copy FCM token?';
+
+  @override
+  String get devtoolsNotificationsSendTestTitle => 'Send test notification?';
+
+  @override
+  String get devtoolsSectionUi => 'UI / Provider Propagation';
+
+  @override
+  String get devtoolsSectionOverrides => 'Debug Metric Overrides';
+
+  @override
+  String get devtoolsOverridesHint =>
+      'Overrides are stored as debug settings only — not yet wired into production calculations (TODO).';
+
+  @override
+  String get devtoolsOverridesClearTitle => 'Clear debug overrides?';
+
+  @override
+  String get devtoolsOverridesClearMessage =>
+      'All stored metric overrides will be removed.';
+
+  @override
+  String get devtoolsOverridesClearConfirm => 'Clear';
+
+  @override
   String get journeyTitle => 'Hero Journey';
 
   @override

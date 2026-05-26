@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../l10n/l10n.dart';
+
 class DevToolsStatusTile extends StatelessWidget {
   const DevToolsStatusTile({
     super.key,
@@ -77,9 +79,10 @@ class DevToolsStatusTile extends StatelessWidget {
 /// Copies [text] to the clipboard and shows a [SnackBar].
 void copyToClipboard(BuildContext context, String text, {String? label}) {
   Clipboard.setData(ClipboardData(text: text));
+  final l10n = context.l10n;
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
-      content: Text(label != null ? '$label copied' : 'Copied'), // TODO: l10n
+      content: Text(label != null ? l10n.devtoolsCopiedWithLabel(label) : l10n.devtoolsCopied),
       duration: const Duration(seconds: 2),
     ),
   );

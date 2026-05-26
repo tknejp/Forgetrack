@@ -6477,6 +6477,150 @@ abstract class AppLocalizations {
   /// **'Developer Tools'**
   String get devtoolsTitle;
 
+  /// Heading shown when a non-developer opens the DevTools screen
+  ///
+  /// In en, this message translates to:
+  /// **'Access Denied'**
+  String get devtoolsAccessDeniedTitle;
+
+  /// Explanatory text on the DevTools access-denied screen
+  ///
+  /// In en, this message translates to:
+  /// **'This screen is restricted to developers.'**
+  String get devtoolsAccessDeniedMessage;
+
+  /// Generic clipboard-copied confirmation in DevTools
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get devtoolsCopied;
+
+  /// Clipboard-copied confirmation in DevTools with the copied item's label
+  ///
+  /// In en, this message translates to:
+  /// **'{label} copied'**
+  String devtoolsCopiedWithLabel(String label);
+
+  /// Badge shown on a DevTools action tile that is disabled / not yet implemented
+  ///
+  /// In en, this message translates to:
+  /// **'TODO'**
+  String get devtoolsActionDisabledBadge;
+
+  /// DevTools section title — app build & auth diagnostics
+  ///
+  /// In en, this message translates to:
+  /// **'App & Auth'**
+  String get devtoolsSectionApp;
+
+  /// Label for the debug-mode toggle in the DevTools App section
+  ///
+  /// In en, this message translates to:
+  /// **'Debug Mode'**
+  String get devtoolsDebugModeLabel;
+
+  /// DevTools section title — local database & cache diagnostics
+  ///
+  /// In en, this message translates to:
+  /// **'Local DB / Cache'**
+  String get devtoolsSectionDb;
+
+  /// DevTools section title — Health Connect sync pipeline diagnostics
+  ///
+  /// In en, this message translates to:
+  /// **'Health Pipeline'**
+  String get devtoolsSectionHealthPipeline;
+
+  /// DevTools section title — manual sync triggers & log
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Diagnostics'**
+  String get devtoolsSectionSync;
+
+  /// Header above the DevTools sync log list, showing current event count vs cap
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Log  ({count} / {max})'**
+  String devtoolsSyncLogHeader(int count, int max);
+
+  /// DevTools section title — WorkManager background sync diagnostics
+  ///
+  /// In en, this message translates to:
+  /// **'Background Refresh'**
+  String get devtoolsSectionBackground;
+
+  /// Confirmation dialog title for re-registering the background sync task
+  ///
+  /// In en, this message translates to:
+  /// **'Re-register background sync?'**
+  String get devtoolsBackgroundReregisterTitle;
+
+  /// Confirmation dialog title for clearing the DevTools sync log
+  ///
+  /// In en, this message translates to:
+  /// **'Clear sync log?'**
+  String get devtoolsBackgroundClearLogTitle;
+
+  /// DevTools section title — FCM/notification diagnostics
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get devtoolsSectionNotifications;
+
+  /// Toggle label for background-sync debug notifications in DevTools
+  ///
+  /// In en, this message translates to:
+  /// **'Enable BG debug notifications'**
+  String get devtoolsNotificationsBgToggleLabel;
+
+  /// Confirmation dialog title for copying the full FCM token
+  ///
+  /// In en, this message translates to:
+  /// **'Copy FCM token?'**
+  String get devtoolsNotificationsCopyTokenTitle;
+
+  /// Confirmation dialog title for sending a local debug test notification
+  ///
+  /// In en, this message translates to:
+  /// **'Send test notification?'**
+  String get devtoolsNotificationsSendTestTitle;
+
+  /// DevTools section title — provider state propagation diagnostics
+  ///
+  /// In en, this message translates to:
+  /// **'UI / Provider Propagation'**
+  String get devtoolsSectionUi;
+
+  /// DevTools section title — debug metric override values
+  ///
+  /// In en, this message translates to:
+  /// **'Debug Metric Overrides'**
+  String get devtoolsSectionOverrides;
+
+  /// Hint shown above the DevTools metric override list
+  ///
+  /// In en, this message translates to:
+  /// **'Overrides are stored as debug settings only — not yet wired into production calculations (TODO).'**
+  String get devtoolsOverridesHint;
+
+  /// Confirmation dialog title for clearing all debug metric overrides
+  ///
+  /// In en, this message translates to:
+  /// **'Clear debug overrides?'**
+  String get devtoolsOverridesClearTitle;
+
+  /// Confirmation dialog body for clearing all debug metric overrides
+  ///
+  /// In en, this message translates to:
+  /// **'All stored metric overrides will be removed.'**
+  String get devtoolsOverridesClearMessage;
+
+  /// Confirm-button label for clearing debug metric overrides
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get devtoolsOverridesClearConfirm;
+
   /// No description provided for @journeyTitle.
   ///
   /// In en, this message translates to:

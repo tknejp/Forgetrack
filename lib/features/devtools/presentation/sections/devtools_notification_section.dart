@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../l10n/l10n.dart';
 import '../../../../core/services/fcm_service.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../features/settings/presentation/dialogs/settings_dialogs.dart';
@@ -100,7 +101,7 @@ class _DevToolsNotificationSectionState
   Future<void> _copyToken() async {
     final confirmed = await showSettingsConfirmationDialog(
       context,
-      title: 'Copy FCM token?', // TODO: l10n
+      title: context.l10n.devtoolsNotificationsCopyTokenTitle,
       message: 'The full FCM token will be copied to clipboard. '
           'Treat it like a password — do not share it publicly.',
       confirmLabel: 'Copy',
@@ -128,7 +129,7 @@ class _DevToolsNotificationSectionState
   Future<void> _sendTestNotification() async {
     final confirmed = await showSettingsConfirmationDialog(
       context,
-      title: 'Send test notification?', // TODO: l10n
+      title: context.l10n.devtoolsNotificationsSendTestTitle,
       message: 'Sends a local debug notification. '
           'Does not affect any business state or goal reminder date.',
       confirmLabel: 'Send',
@@ -161,7 +162,7 @@ class _DevToolsNotificationSectionState
     final canSendTest = devTools.isDebugModeEnabled;
 
     return DevToolsSectionCard(
-      title: 'Notifications', // TODO: l10n
+      title: context.l10n.devtoolsSectionNotifications,
       children: [
         // ── Service state ─────────────────────────────────────────────────
         DevToolsStatusTile(
@@ -260,7 +261,7 @@ class _DevToolsNotificationSectionState
         ),
         const DevToolsSectionDivider(),
         _ToggleTile(
-          label: 'Enable BG debug notifications', // TODO: l10n
+          label: context.l10n.devtoolsNotificationsBgToggleLabel,
           subtitle: devTools.isDebugModeEnabled
               ? 'Sends local notifications at BG sync start/end/failure'
               : 'Enable Debug Mode to unlock',

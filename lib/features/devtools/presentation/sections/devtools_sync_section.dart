@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../l10n/l10n.dart';
 import '../../../../features/health_connect/application/fitness_provider.dart';
 import '../../../../features/nutrition/application/kaloricke_tabulky_provider.dart';
 import '../../../../features/progression_engine/application/progression_engine_provider.dart';
@@ -101,7 +102,7 @@ class _DevToolsSyncSectionState extends State<DevToolsSyncSection> {
   @override
   Widget build(BuildContext context) {
     return DevToolsSectionCard(
-      title: 'Sync Diagnostics', // TODO: l10n
+      title: context.l10n.devtoolsSectionSync,
       children: [
         DevToolsActionTile(
           label: 'Run Health Sync',
@@ -176,7 +177,7 @@ class _SyncLogHeader extends StatelessWidget {
       child: Row(
         children: [
           Text(
-            'Sync Log  ($eventCount / 20)', // TODO: l10n
+            context.l10n.devtoolsSyncLogHeader(eventCount, 20),
             style: TextStyle(
               color: cs.onSurface,
               fontSize: 13,

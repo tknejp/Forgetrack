@@ -1936,6 +1936,87 @@
   "devtoolsTitle": "Developer Tools",
   "@devtoolsTitle": { "description": "Title of the developer tools screen" },
 
+  "devtoolsAccessDeniedTitle": "Access Denied",
+  "@devtoolsAccessDeniedTitle": { "description": "Heading shown when a non-developer opens the DevTools screen" },
+
+  "devtoolsAccessDeniedMessage": "This screen is restricted to developers.",
+  "@devtoolsAccessDeniedMessage": { "description": "Explanatory text on the DevTools access-denied screen" },
+
+  "devtoolsCopied": "Copied",
+  "@devtoolsCopied": { "description": "Generic clipboard-copied confirmation in DevTools" },
+
+  "devtoolsCopiedWithLabel": "{label} copied",
+  "@devtoolsCopiedWithLabel": {
+    "description": "Clipboard-copied confirmation in DevTools with the copied item's label",
+    "placeholders": { "label": { "type": "String" } }
+  },
+
+  "devtoolsActionDisabledBadge": "TODO",
+  "@devtoolsActionDisabledBadge": { "description": "Badge shown on a DevTools action tile that is disabled / not yet implemented" },
+
+  "devtoolsSectionApp": "App & Auth",
+  "@devtoolsSectionApp": { "description": "DevTools section title — app build & auth diagnostics" },
+
+  "devtoolsDebugModeLabel": "Debug Mode",
+  "@devtoolsDebugModeLabel": { "description": "Label for the debug-mode toggle in the DevTools App section" },
+
+  "devtoolsSectionDb": "Local DB / Cache",
+  "@devtoolsSectionDb": { "description": "DevTools section title — local database & cache diagnostics" },
+
+  "devtoolsSectionHealthPipeline": "Health Pipeline",
+  "@devtoolsSectionHealthPipeline": { "description": "DevTools section title — Health Connect sync pipeline diagnostics" },
+
+  "devtoolsSectionSync": "Sync Diagnostics",
+  "@devtoolsSectionSync": { "description": "DevTools section title — manual sync triggers & log" },
+
+  "devtoolsSyncLogHeader": "Sync Log  ({count} / {max})",
+  "@devtoolsSyncLogHeader": {
+    "description": "Header above the DevTools sync log list, showing current event count vs cap",
+    "placeholders": {
+      "count": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+
+  "devtoolsSectionBackground": "Background Refresh",
+  "@devtoolsSectionBackground": { "description": "DevTools section title — WorkManager background sync diagnostics" },
+
+  "devtoolsBackgroundReregisterTitle": "Re-register background sync?",
+  "@devtoolsBackgroundReregisterTitle": { "description": "Confirmation dialog title for re-registering the background sync task" },
+
+  "devtoolsBackgroundClearLogTitle": "Clear sync log?",
+  "@devtoolsBackgroundClearLogTitle": { "description": "Confirmation dialog title for clearing the DevTools sync log" },
+
+  "devtoolsSectionNotifications": "Notifications",
+  "@devtoolsSectionNotifications": { "description": "DevTools section title — FCM/notification diagnostics" },
+
+  "devtoolsNotificationsBgToggleLabel": "Enable BG debug notifications",
+  "@devtoolsNotificationsBgToggleLabel": { "description": "Toggle label for background-sync debug notifications in DevTools" },
+
+  "devtoolsNotificationsCopyTokenTitle": "Copy FCM token?",
+  "@devtoolsNotificationsCopyTokenTitle": { "description": "Confirmation dialog title for copying the full FCM token" },
+
+  "devtoolsNotificationsSendTestTitle": "Send test notification?",
+  "@devtoolsNotificationsSendTestTitle": { "description": "Confirmation dialog title for sending a local debug test notification" },
+
+  "devtoolsSectionUi": "UI / Provider Propagation",
+  "@devtoolsSectionUi": { "description": "DevTools section title — provider state propagation diagnostics" },
+
+  "devtoolsSectionOverrides": "Debug Metric Overrides",
+  "@devtoolsSectionOverrides": { "description": "DevTools section title — debug metric override values" },
+
+  "devtoolsOverridesHint": "Overrides are stored as debug settings only — not yet wired into production calculations (TODO).",
+  "@devtoolsOverridesHint": { "description": "Hint shown above the DevTools metric override list" },
+
+  "devtoolsOverridesClearTitle": "Clear debug overrides?",
+  "@devtoolsOverridesClearTitle": { "description": "Confirmation dialog title for clearing all debug metric overrides" },
+
+  "devtoolsOverridesClearMessage": "All stored metric overrides will be removed.",
+  "@devtoolsOverridesClearMessage": { "description": "Confirmation dialog body for clearing all debug metric overrides" },
+
+  "devtoolsOverridesClearConfirm": "Clear",
+  "@devtoolsOverridesClearConfirm": { "description": "Confirm-button label for clearing debug metric overrides" },
+
   "journeyTitle": "Hero Journey",
   "journeyPreviewKicker": "HERO JOURNEY",
   "journeyOpenMap": "Open map",

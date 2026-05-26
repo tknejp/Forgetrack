@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../l10n/l10n.dart';
 import '../../../../features/health_connect/application/fitness_provider.dart';
 import '../widgets/devtools_action_tile.dart';
 import '../widgets/devtools_section_card.dart';
@@ -121,7 +122,7 @@ class _DevToolsHealthPipelineSectionState
         previewTodayRecords.any((r) => r.steps > 0);
 
     return DevToolsSectionCard(
-      title: 'Health Pipeline', // TODO: l10n
+      title: context.l10n.devtoolsSectionHealthPipeline,
       children: [
         // ── Device clock ─────────────────────────────────────────────────────
         _SubHeader('Device clock'),

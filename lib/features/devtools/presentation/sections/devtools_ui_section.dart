@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../l10n/l10n.dart';
 import '../../../../features/health_connect/application/fitness_provider.dart';
 import '../../../../features/nutrition/application/kaloricke_tabulky_provider.dart';
 import '../../../../features/onboarding/presentation/welcome_screen.dart';
@@ -41,7 +42,7 @@ class DevToolsUiSection extends StatelessWidget {
         DateTime.now().difference(progEvaluated).inHours > 2;
 
     return DevToolsSectionCard(
-      title: 'UI / Provider Propagation', // TODO: l10n
+      title: context.l10n.devtoolsSectionUi,
       children: [
         DevToolsStatusTile(
           label: 'Today (device)',

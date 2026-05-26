@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/l10n.dart';
+
 class DevToolsActionTile extends StatelessWidget {
   const DevToolsActionTile({
     super.key,
@@ -78,7 +80,7 @@ class DevToolsActionTile extends StatelessWidget {
               )
             else if (isDisabled)
               Text(
-                'TODO', // TODO: l10n
+                context.l10n.devtoolsActionDisabledBadge,
                 style: tt.labelSmall?.copyWith(
                   color: cs.onSurfaceVariant.withValues(alpha: 0.4),
                 ),

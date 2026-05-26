@@ -484,6 +484,7 @@ class _AccessDeniedScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light.copyWith(
@@ -503,7 +504,7 @@ class _AccessDeniedScreen extends StatelessWidget {
               ),
               child: ScreenHeader(
                 greeting: '',
-                title: 'Developer Tools',
+                title: l10n.devtoolsTitle,
                 leading: const FtBackButton(),
               ),
             ),
@@ -516,7 +517,7 @@ class _AccessDeniedScreen extends StatelessWidget {
                     Icon(Icons.lock_outline_rounded, size: 48, color: cs.error),
                     const SizedBox(height: Tokens.spaceLg),
                     Text(
-                      'Access Denied', // TODO: l10n
+                      l10n.devtoolsAccessDeniedTitle,
                       style: TextStyle(
                         color: cs.error,
                         fontSize: 18,
@@ -525,7 +526,7 @@ class _AccessDeniedScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: Tokens.spaceSm),
                     Text(
-                      'This screen is restricted to developers.', // TODO: l10n
+                      l10n.devtoolsAccessDeniedMessage,
                       textAlign: TextAlign.center,
                       style: TextStyle(color: cs.onSurfaceVariant),
                     ),
