@@ -77,7 +77,12 @@ class ProfileHeroLayout {
   // ~14 px below the ground line, leaving room for the row beneath
   // it without overlapping the companion sprite (chip was clipping
   // through the companion's legs on the previous layout).
-  static const double companionBuffChipBottom = 80;
+  //
+  // Top-anchored (not bottom-anchored) so when the buff label wraps
+  // to a second line the new line drops BELOW the first instead of
+  // shoving the first line upward — first-line position stays put
+  // regardless of label length.
+  static const double companionBuffChipTop = 346;
   static const double companionBuffChipBandWidth = 200;
   static const double companionBuffChipBandRight =
       companionCenterFromRight - companionBuffChipBandWidth / 2;

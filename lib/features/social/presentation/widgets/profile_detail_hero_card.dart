@@ -105,7 +105,7 @@ class ProfileDetailHeroCard extends StatelessWidget {
           // Emblem row — horizontal band along the BOTTOM edge of
           // the hero card, evenly distributed between the side
           // gutters. The companion buff chip was pulled upward
-          // ([ProfileHeroLayout.companionBuffChipBottom]) to make
+          // ([ProfileHeroLayout.companionBuffChipTop]) to make
           // room for this row. Slots unlock progressively with the
           // player's level (see [EmblemBoard.slotUnlockLevels]).
           Positioned(
@@ -196,7 +196,7 @@ class ProfileDetailHeroCard extends StatelessWidget {
             if (companion is Companion && companion.buff != null)
               Positioned(
                 right: ProfileHeroLayout.companionBuffChipBandRight,
-                bottom: ProfileHeroLayout.companionBuffChipBottom,
+                top: ProfileHeroLayout.companionBuffChipTop,
                 width: ProfileHeroLayout.companionBuffChipBandWidth,
                 child: Center(
                   child: ConstrainedBox(
