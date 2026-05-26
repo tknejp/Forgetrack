@@ -6,6 +6,7 @@ import '../../../../l10n/l10n.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import 'package:forgetrack/domain/progression/catalog/progression_domain.dart';
 
+import '../../../../app/player_provider.dart';
 import '../../../cosmetics/application/cosmetics_provider.dart';
 import '../../../health_connect/application/fitness_provider.dart';
 import '../../../nutrition/application/kaloricke_tabulky_provider.dart';
@@ -137,7 +138,15 @@ class _ProfileStatsSectionState extends State<ProfileStatsSection> {
       editing: _editing,
     );
 
-    final heroCard = _buildHeroCard(context, l10n, visibilityResolver);
+    // For the owner the canonical join date lives on the Player
+    // aggregate (`engine.joinedAt`, persisted across ledger wipes via
+    // SharedPreferences). Foreign profiles only carry the Firestore-
+    // mirrored `createdAt` on the wire, so we fall back to it. The
+    // Player.anonymous sentinel uses epoch 0 — guard against it so a
+    // pre-bind frame doesn't render "1.1.1970".
+    final joinedAt = _resolveJoinedAt(context);
+
+    final heroCard = _buildHeroCard(context, l10n, visibilityResolver, joinedAt);
     if (heroCard != null) cards.add(heroCard);
 
     final streakCard = _buildStreakCard(context, visibilityResolver);
@@ -153,7 +162,7 @@ class _ProfileStatsSectionState extends State<ProfileStatsSection> {
         _buildNutritionCard(context, l10n, visibilityResolver);
     if (nutrition != null) cards.add(nutrition);
 
-    final social = _buildSocialCard(context, l10n, visibilityResolver);
+    final social = _buildSocialCard(context, l10n, visibilityResolver, joinedAt);
     if (social != null) cards.add(social);
 
     if (cards.isEmpty) return const SizedBox.shrink();
@@ -181,10 +190,27 @@ class _ProfileStatsSectionState extends State<ProfileStatsSection> {
 
   // ── Card builders ─────────────────────────────────────────────────
 
+  /// Resolves the "join date" the stats section should show:
+  ///   * Own profile → `PlayerProvider.player.joinedAt` (canonical,
+  ///     anchors retroactive claim windows; persisted across ledger
+  ///     wipes). Falls through to `createdAt` if the Player is still
+  ///     the [Player.anonymous] sentinel (epoch 0) — happens for the
+  ///     pre-bind frame.
+  ///   * Foreign profile → `SocialUserProfile.createdAt` (the only
+  ///     field on the wire).
+  DateTime? _resolveJoinedAt(BuildContext context) {
+    if (widget.isMe) {
+      final player = context.watch<PlayerProvider>().player;
+      if (player.joinedAt.millisecondsSinceEpoch > 0) return player.joinedAt;
+    }
+    return widget.profile?.createdAt;
+  }
+
   ProfileStatCard? _buildHeroCard(
     BuildContext context,
     AppLocalizations l10n,
     _VisibilityResolver resolver,
+    DateTime? joinedAt,
   ) {
     final stats = widget.profile?.stats;
     final rows = <Widget>[];
@@ -249,9 +275,8 @@ class _ProfileStatsSectionState extends State<ProfileStatsSection> {
       value: _fmtIntOrDash(unlockedCount),
     ));
 
-    final createdAt = widget.profile?.createdAt;
-    if (createdAt != null) {
-      final days = DateTime.now().difference(createdAt).inDays;
+    if (joinedAt != null) {
+      final days = DateTime.now().difference(joinedAt).inDays;
       _addIfNotNull(rows, row(
         key: 'hero.daysOnApp',
         icon: Icons.calendar_today_rounded,
@@ -713,6 +738,7 @@ class _ProfileStatsSectionState extends State<ProfileStatsSection> {
     BuildContext context,
     AppLocalizations l10n,
     _VisibilityResolver resolver,
+    DateTime? joinedAt,
   ) {
     final rows = <Widget>[];
 
@@ -749,13 +775,12 @@ class _ProfileStatsSectionState extends State<ProfileStatsSection> {
           ? '—'
           : _formatInt(widget.sharedPostsCount!),
     ));
-    final createdAt = widget.profile?.createdAt;
-    if (createdAt != null) {
+    if (joinedAt != null) {
       _addIfNotNull(rows, row(
         key: 'social.joinedAt',
         icon: Icons.event_rounded,
         label: l10n.profileStatJoinedAt,
-        value: _formatDate(createdAt),
+        value: _formatDate(joinedAt),
       ));
     }
 

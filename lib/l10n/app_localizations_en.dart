@@ -3778,6 +3778,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get journeyRewardLockedLabel => 'Reward';
+
+  @override
+  String get journeyLockedTitle => 'Locked';
+
+  @override
+  String journeyRequiredXp(Object xp) {
+    return 'Required XP: $xp';
+  }
+
+  @override
   String get progLevelTitle1 => 'Wanderer';
 
   @override
@@ -5357,7 +5368,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileStatCosmeticsUnlocked => 'Cosmetics unlocked';
 
   @override
-  String get profileStatDaysOnApp => 'Days in app';
+  String get profileStatDaysOnApp => 'Days on the quest';
 
   @override
   String get profileStatStepsLifetime => 'Steps (total)';

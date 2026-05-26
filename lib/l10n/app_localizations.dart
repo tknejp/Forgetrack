@@ -6729,6 +6729,24 @@ abstract class AppLocalizations {
   /// **'{xp} XP total'**
   String journeyTotalXp(Object xp);
 
+  /// No description provided for @journeyRewardLockedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reward'**
+  String get journeyRewardLockedLabel;
+
+  /// No description provided for @journeyLockedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get journeyLockedTitle;
+
+  /// No description provided for @journeyRequiredXp.
+  ///
+  /// In en, this message translates to:
+  /// **'Required XP: {xp}'**
+  String journeyRequiredXp(Object xp);
+
   /// No description provided for @progLevelTitle1.
   ///
   /// In en, this message translates to:
@@ -9300,7 +9318,7 @@ abstract class AppLocalizations {
   /// No description provided for @profileStatDaysOnApp.
   ///
   /// In en, this message translates to:
-  /// **'Days in app'**
+  /// **'Days on the quest'**
   String get profileStatDaysOnApp;
 
   /// No description provided for @profileStatStepsLifetime.

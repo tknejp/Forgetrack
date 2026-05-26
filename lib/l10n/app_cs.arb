@@ -1202,6 +1202,14 @@
       "xp": {}
     }
   },
+  "journeyRewardLockedLabel": "Odměna",
+  "journeyLockedTitle": "Zamčeno",
+  "journeyRequiredXp": "Potřebné XP: {xp}",
+  "@journeyRequiredXp": {
+    "placeholders": {
+      "xp": {}
+    }
+  },
   "progLevelTitle1": "Poutník",
   "progLevelTitle5": "Průzkumník stezek",
   "progLevelTitle10": "Hraničář hvozdu",
@@ -1827,7 +1835,7 @@
   "profileStatUnlockedAchievements": "Achievementy",
   "profileStatGrantedRewards": "Získané odměny",
   "profileStatCosmeticsUnlocked": "Odemčené kosmetiky",
-  "profileStatDaysOnApp": "Dny v appce",
+  "profileStatDaysOnApp": "Dnů na výpravě",
   "profileStatStepsLifetime": "Kroky celkem",
   "profileStatStepsAvg30d": "Průměr kroků / den",
   "profileStatActiveDays30d": "Aktivní dny",

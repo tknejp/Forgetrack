@@ -41,6 +41,7 @@ class JourneyCheckpoint {
     this.mapUnlockedThroughPointId,
     this.mapProgress,
     this.mapSide,
+    this.rewardLabels = const <String>[],
   });
 
   final String id; // lint-ignore: untyped-id — journey-feed dedupe token composed by the producer
@@ -108,6 +109,13 @@ class JourneyCheckpoint {
   /// the path, positive values right of it.
   final double? mapSide;
 
+  /// Localised display names of cosmetic rewards tied to this
+  /// checkpoint's level. Empty when no reward exists or when the
+  /// checkpoint is not level-bound. Adapter resolves the names from
+  /// `LevelMilestoneSpec.cosmeticRewardIds` via the cosmetic catalog so
+  /// the widget layer renders pure VOs.
+  final List<String> rewardLabels;
+
   /// Convenience: divisible-by-10 level milestones get the major styling.
   bool get isMajorMilestone => type == JourneyEventType.titleMilestone;
 
@@ -129,6 +137,7 @@ class JourneyMilestoneAnchor {
     required this.isCurrent,
     required this.isNext,
     this.unlockedAt,
+    this.isJourneyStart = false,
   });
 
   final int level;
@@ -138,4 +147,10 @@ class JourneyMilestoneAnchor {
   final bool isCurrent;
   final bool isNext;
   final DateTime? unlockedAt;
+
+  /// True for the level-1 anchor that represents the "start of the
+  /// journey". For this anchor [unlockedAt] is sourced from the
+  /// player's `joinedAt` instead of any `level_1` achievement so the
+  /// origin always carries a meaningful date.
+  final bool isJourneyStart;
 }

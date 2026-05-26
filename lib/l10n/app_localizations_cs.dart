@@ -3768,6 +3768,17 @@ class AppLocalizationsCs extends AppLocalizations {
   }
 
   @override
+  String get journeyRewardLockedLabel => 'Odměna';
+
+  @override
+  String get journeyLockedTitle => 'Zamčeno';
+
+  @override
+  String journeyRequiredXp(Object xp) {
+    return 'Potřebné XP: $xp';
+  }
+
+  @override
   String get progLevelTitle1 => 'Poutník';
 
   @override
@@ -5364,7 +5375,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get profileStatCosmeticsUnlocked => 'Odemčené kosmetiky';
 
   @override
-  String get profileStatDaysOnApp => 'Dny v appce';
+  String get profileStatDaysOnApp => 'Dnů na výpravě';
 
   @override
   String get profileStatStepsLifetime => 'Kroky celkem';

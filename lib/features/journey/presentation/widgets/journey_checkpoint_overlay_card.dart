@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../domain/player/level_curve.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../shared/theme/design_tokens.dart';
@@ -29,6 +30,43 @@ class JourneyCheckpointOverlayCard extends StatelessWidget {
     final dateStr = cp.unlockedAt != null
         ? DateFormat('d. MMM yyyy', locale).format(cp.unlockedAt!)
         : null;
+    final isLevelType = cp.type == JourneyEventType.level ||
+        cp.type == JourneyEventType.titleMilestone;
+
+    // Layout split: level / titleMilestone tooltips put the level
+    // number in the pill, the RPG title next to the icon and a
+    // dedicated "Level dosažen · DATE" line ("Začátek cesty · DATE"
+    // for the level-1 origin). Achievement / quest tooltips keep the
+    // unified label + sublabel + date logic so their bespoke
+    // descriptors (difficulty pill, custom sublabels) still render.
+    String? titleText;
+    String? subtitleText;
+    if (isLevelType) {
+      // Locked level nodes hide the RPG title to avoid spoilers and
+      // surface a generic "Zamčeno" / "Locked" line next to the lock
+      // icon instead — the level number already lives in the pill.
+      titleText = cp.isUnlocked ? cp.title : l10n.journeyLockedTitle;
+      if (cp.isUnlocked) {
+        final prefix = cp.id == 'start'
+            ? l10n.journeyStartLabel
+            : l10n.journeyEventLevelReached;
+        subtitleText = dateStr != null ? '$prefix · $dateStr' : prefix;
+      } else if (cp.levelNumber != null) {
+        // Locked → orient the player by stating the XP they still need
+        // to reach this milestone. `LevelCurve` is a pure VO; the
+        // const ctor keeps the lookup allocation-free.
+        const curve = LevelCurve();
+        final xp = curve.xpRequiredForLevel(cp.levelNumber!);
+        subtitleText = l10n.journeyRequiredXp(xp);
+      }
+    } else {
+      titleText = cp.isUnlocked
+          ? cp.label
+          : l10n.journeyLevelLabel(cp.levelNumber ?? 0);
+      if (cp.sublabel != null || dateStr != null) {
+        subtitleText = _composeSubtitle(cp.sublabel, dateStr);
+      }
+    }
 
     final card = Container(
       padding: JourneyMapTooltipStyle.padding,
@@ -63,7 +101,7 @@ class JourneyCheckpointOverlayCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(5),
                 ),
                 child: Text(
-                  _typeLabelL10n(l10n, cp.type),
+                  _typeLabelL10n(l10n, cp),
                   style: TextStyle(
                     fontSize: 8,
                     fontWeight: FontWeight.w800,
@@ -97,21 +135,10 @@ class JourneyCheckpointOverlayCard extends StatelessWidget {
                 const SizedBox(width: 5),
                 const _CurrentDot(),
               ],
-              if (!cp.isUnlocked) ...[
-                const SizedBox(width: 5),
-                const Icon(Icons.lock_outline_rounded,
-                    size: 10, color: Tokens.onSurfaceFaint),
-                const SizedBox(width: 2),
-                Text(
-                  l10n.journeyBadgeLocked,
-                  style: const TextStyle(
-                    fontSize: 8,
-                    fontWeight: FontWeight.w800,
-                    color: Tokens.onSurfaceMuted,
-                    letterSpacing: 0.7,
-                  ),
-                ),
-              ],
+              // The "ZAMČENO" badge previously rendered here moved into
+              // the title row (next to the lock icon) for level types;
+              // achievement / quest tooltips keep using their custom
+              // sublabel for that signal.
               const Spacer(),
               if (onClose != null) _CloseButton(color: color, onTap: onClose!),
             ],
@@ -143,23 +170,29 @@ class JourneyCheckpointOverlayCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        cp.isUnlocked
-                            ? cp.label
-                            : l10n.journeyLevelLabel(cp.levelNumber ?? 0),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          letterSpacing: -0.2,
-                        ),
-                      ),
-                      if (cp.sublabel != null || dateStr != null) ...[
-                        const SizedBox(height: 2),
+                      if (titleText != null)
                         Text(
-                          _composeSubtitle(cp.sublabel, dateStr),
+                          titleText,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            // Locked level tooltips render the generic
+                            // "Zamčeno" placeholder; tone it down so it
+                            // doesn't compete with the (still
+                            // attention-worthy) "potřebné XP" line
+                            // directly underneath it.
+                            color: (isLevelType && !cp.isUnlocked)
+                                ? Colors.white.withValues(alpha: 0.45)
+                                : Colors.white,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                      if (subtitleText != null) ...[
+                        if (titleText != null) const SizedBox(height: 2),
+                        Text(
+                          subtitleText,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -189,6 +222,15 @@ class JourneyCheckpointOverlayCard extends StatelessWidget {
                   color: Tokens.onSurfaceMuted,
                 ),
               ),
+            ),
+          ],
+          if (cp.rewardLabels.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            _RewardChipsRow(
+              labels: cp.rewardLabels,
+              color: color,
+              locked: !cp.isUnlocked,
+              lockedLabel: l10n.journeyRewardLockedLabel,
             ),
           ],
         ],
@@ -240,15 +282,18 @@ class JourneyCheckpointOverlayCard extends StatelessWidget {
   }
 }
 
-String _typeLabelL10n(AppLocalizations l10n, JourneyEventType type) {
-  switch (type) {
-    // Title breakpoints intentionally show as "LEVEL" (not "TITUL"): the
-    // unified UI bucket is Levely; the title is already inside the label
-    // ("Level 10 · Pathfinder"), so a separate "TITUL" pill would just
-    // duplicate that information.
+String _typeLabelL10n(AppLocalizations l10n, JourneyCheckpoint cp) {
+  switch (cp.type) {
+    // Both level + titleMilestone show as "LEVEL N" — the unified
+    // tooltip layout puts the level number into the pill and reserves
+    // the body's title row for the RPG title (Pathfinder, Poutník, …).
+    // Title breakpoints intentionally don't get a separate "TITUL" pill
+    // because the body already calls out the title in big text.
     case JourneyEventType.titleMilestone:
     case JourneyEventType.level:
-      return l10n.journeyTypeLevel;
+      return cp.levelNumber != null
+          ? '${l10n.journeyTypeLevel} ${cp.levelNumber}'
+          : l10n.journeyTypeLevel;
     case JourneyEventType.achievement:
       return l10n.journeyTypeAchievement;
     case JourneyEventType.quest:
@@ -256,6 +301,100 @@ String _typeLabelL10n(AppLocalizations l10n, JourneyEventType type) {
     case JourneyEventType.streak:
     case JourneyEventType.xpMilestone:
       return l10n.journeyTypeLevel;
+  }
+}
+
+/// Reward row that appears below the description when a checkpoint
+/// has level-tied cosmetic rewards. For unlocked levels each chip
+/// carries the localised cosmetic display name resolved by the
+/// adapter. For locked levels the row collapses to a single
+/// lock-icon + [lockedLabel] chip so the player sees a reward exists
+/// at that level without spoiling the specific cosmetic name.
+class _RewardChipsRow extends StatelessWidget {
+  const _RewardChipsRow({
+    required this.labels,
+    required this.color,
+    required this.locked,
+    required this.lockedLabel,
+  });
+
+  final List<String> labels;
+  final Color color;
+  final bool locked;
+  final String lockedLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    if (locked) {
+      // Muted palette: locked reward placeholders shouldn't steal
+      // attention from the unlocked content above the chip row.
+      final mutedFg = Colors.white.withValues(alpha: 0.55);
+      return _RewardChip(
+        icon: Icons.lock_outline_rounded,
+        label: lockedLabel,
+        fg: mutedFg,
+        bgColor: Colors.white.withValues(alpha: 0.06),
+        borderColor: Colors.white.withValues(alpha: 0.14),
+      );
+    }
+    return Wrap(
+      spacing: 5,
+      runSpacing: 5,
+      children: [
+        for (final label in labels)
+          _RewardChip(
+            icon: Icons.card_giftcard_rounded,
+            label: label,
+            fg: color.withValues(alpha: 0.92),
+            bgColor: color.withValues(alpha: 0.12),
+            borderColor: color.withValues(alpha: 0.30),
+          ),
+      ],
+    );
+  }
+}
+
+class _RewardChip extends StatelessWidget {
+  const _RewardChip({
+    required this.icon,
+    required this.label,
+    required this.fg,
+    required this.bgColor,
+    required this.borderColor,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color fg;
+  final Color bgColor;
+  final Color borderColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: fg),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: Tokens.fontSizeMicro,
+              fontWeight: FontWeight.w700,
+              color: fg,
+              letterSpacing: 0.1,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

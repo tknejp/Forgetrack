@@ -2006,6 +2006,14 @@
       "xp": {}
     }
   },
+  "journeyRewardLockedLabel": "Reward",
+  "journeyLockedTitle": "Locked",
+  "journeyRequiredXp": "Required XP: {xp}",
+  "@journeyRequiredXp": {
+    "placeholders": {
+      "xp": {}
+    }
+  },
   "progLevelTitle1": "Wanderer",
   "progLevelTitle5": "Trail Explorer",
   "progLevelTitle10": "Ranger of the Wildwood",
@@ -2640,7 +2648,7 @@
   "profileStatUnlockedAchievements": "Achievements",
   "profileStatGrantedRewards": "Granted rewards",
   "profileStatCosmeticsUnlocked": "Cosmetics unlocked",
-  "profileStatDaysOnApp": "Days in app",
+  "profileStatDaysOnApp": "Days on the quest",
   "profileStatStepsLifetime": "Steps (total)",
   "profileStatStepsAvg30d": "Avg steps / day",
   "profileStatActiveDays30d": "Active days",

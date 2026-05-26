@@ -35,6 +35,7 @@ class JourneyInteractiveMap extends StatefulWidget {
     required this.onSelected,
     required this.height,
     this.interactive = true,
+    this.routeLevelData = const <int, JourneyCheckpoint>{},
   });
 
   final List<JourneyCheckpoint> checkpoints;
@@ -44,6 +45,11 @@ class JourneyInteractiveMap extends StatefulWidget {
 
   /// When `false`, behaves as a static mini preview (collapsed state).
   final bool interactive;
+
+  /// Per-level synthesized checkpoints used to back tooltips on the
+  /// small route-level dots that sit between anchor milestones. The map
+  /// owns the dot layout and looks up the entry by level on tap.
+  final Map<int, JourneyCheckpoint> routeLevelData;
 
   @override
   State<JourneyInteractiveMap> createState() => _JourneyInteractiveMapState();
@@ -59,6 +65,13 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
   final ScrollController _scroll = ScrollController();
   String? _lastFocusKey;
   late final Future<JourneyMapRoute> _routeFuture;
+
+  /// Level id of the route-level dot whose tooltip is currently open.
+  /// Mutually exclusive with [JourneyInteractiveMap.selectedIndex] —
+  /// tapping a route-level dot clears the parent's checkpoint
+  /// selection, and tapping an anchor clears this one in
+  /// [didUpdateWidget].
+  int? _selectedRouteLevel;
 
   @override
   void initState() {
@@ -79,6 +92,12 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
     // lands near their current journey position instead of the top of the map.
     if (!oldWidget.interactive && widget.interactive) {
       _lastFocusKey = null;
+    }
+
+    // Parent took ownership of a different anchor selection — clear the
+    // route-level overlay so only one tooltip is on screen at a time.
+    if (widget.selectedIndex != null && _selectedRouteLevel != null) {
+      _selectedRouteLevel = null;
     }
   }
 
@@ -170,12 +189,34 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
                 selected != null &&
                 selected >= 0 &&
                 selected < visibleCheckpoints.length;
+            final routeLevelSelection = widget.interactive
+                ? _selectedRouteLevel
+                : null;
+            final routeLevelCheckpoint = routeLevelSelection != null
+                ? widget.routeLevelData[routeLevelSelection]
+                : null;
+            final routeLevelAnchor = routeLevelSelection != null
+                ? _routePointOffset(
+                    route: route,
+                    pointId: routeLevelSelection,
+                    mapWidth: viewportW,
+                    mapHeight: canvasH,
+                  )
+                : null;
+            final hasRouteLevelOverlay =
+                routeLevelCheckpoint != null && routeLevelAnchor != null;
             final showMapOverlays = widget.interactive;
 
             final canvasStack = GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: widget.interactive && hasSelection
-                  ? () => widget.onSelected(null)
+              onTap: widget.interactive &&
+                      (hasSelection || hasRouteLevelOverlay)
+                  ? () {
+                      if (hasSelection) widget.onSelected(null);
+                      if (hasRouteLevelOverlay) {
+                        setState(() => _selectedRouteLevel = null);
+                      }
+                    }
                   : null,
               child: SizedBox(
                 width: viewportW,
@@ -222,6 +263,22 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
                           child: JourneyCheckpointOverlayCard(
                             checkpoint: visibleCheckpoints[selected],
                             onClose: () => widget.onSelected(null),
+                            maxWidth: JourneyMapTooltipStyle.maxWidth,
+                          ),
+                        ),
+                      ),
+                    if (hasRouteLevelOverlay)
+                      JourneyMapTooltipPosition(
+                        anchor: routeLevelAnchor,
+                        canvasWidth: viewportW,
+                        canvasHeight: canvasH,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {},
+                          child: JourneyCheckpointOverlayCard(
+                            checkpoint: routeLevelCheckpoint,
+                            onClose: () =>
+                                setState(() => _selectedRouteLevel = null),
                             maxWidth: JourneyMapTooltipStyle.maxWidth,
                           ),
                         ),
@@ -432,6 +489,12 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
     ];
   }
 
+  /// Minimum hit target for the small route-level dots — without this
+  /// the unlocked / locked dots (≤ ~6px) are essentially un-tappable on
+  /// a touch screen. The visual stays the same; only the transparent
+  /// gesture area around it grows.
+  static const double _routeDotTapTarget = 28.0;
+
   Widget _routeLevelDotPositioned({
     required JourneyMapPoint point,
     required double mapWidth,
@@ -441,24 +504,58 @@ class _JourneyInteractiveMapState extends State<JourneyInteractiveMap>
     final isUnlocked = point.id <= currentRoutePointId;
     final isCurrent = point.id == currentRoutePointId;
     final center = point.toOffset(mapWidth: mapWidth, mapHeight: mapHeight);
-    final size = isCurrent
+    final visualSize = isCurrent
         ? JourneyMapLayout.currentLevelDotSize
         : isUnlocked
             ? JourneyMapLayout.unlockedLevelDotSize
             : JourneyMapLayout.lockedLevelDotSize;
+    final tapSize = visualSize > _routeDotTapTarget ? visualSize : _routeDotTapTarget;
+
+    final dot = JourneyRouteLevelDot(
+      level: point.id,
+      isUnlocked: isUnlocked,
+      isCurrent: isCurrent,
+      pulseAnimation: isCurrent ? _pulse : null,
+    );
 
     return Positioned(
-      left: center.dx - size / 2,
-      top: center.dy - size / 2,
-      child: IgnorePointer(
-        child: JourneyRouteLevelDot(
-          level: point.id,
-          isUnlocked: isUnlocked,
-          isCurrent: isCurrent,
-          pulseAnimation: isCurrent ? _pulse : null,
-        ),
-      ),
+      left: center.dx - tapSize / 2,
+      top: center.dy - tapSize / 2,
+      width: tapSize,
+      height: tapSize,
+      child: widget.interactive
+          ? GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => _selectRouteLevel(point.id),
+              child: Center(child: dot),
+            )
+          : IgnorePointer(child: Center(child: dot)),
     );
+  }
+
+  void _selectRouteLevel(int level) {
+    // Clear the parent's anchor selection so only one overlay is open
+    // at a time; the parent's `_selectedIndex == null` rebuild will
+    // flow through didUpdateWidget without clobbering our own state.
+    if (widget.selectedIndex != null) widget.onSelected(null);
+    setState(() => _selectedRouteLevel = level);
+  }
+
+  /// Looks up the on-canvas position of a route point by id. Returns
+  /// `null` when the asset doesn't carry that point (defensive — keeps
+  /// the overlay silent rather than crashing at a missing key).
+  Offset? _routePointOffset({
+    required JourneyMapRoute route,
+    required int pointId,
+    required double mapWidth,
+    required double mapHeight,
+  }) {
+    for (final point in route.points) {
+      if (point.id == pointId) {
+        return point.toOffset(mapWidth: mapWidth, mapHeight: mapHeight);
+      }
+    }
+    return null;
   }
 
   /// Type-driven sizing — major title milestones are the largest, quests

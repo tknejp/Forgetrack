@@ -1,5 +1,6 @@
 import '../../../../domain/progression/player/player_achievement_lifecycle.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../cosmetics/domain/cosmetic_catalog.dart';
 import '../../../progression_engine/application/progression_engine_provider.dart';
 import '../../../progression_engine/domain/catalog/level_milestone_specs.dart';
 import '../../../progression_engine/application/adapters/engine_achievement_view.dart';
@@ -26,6 +27,75 @@ abstract final class JourneyAdapter {
   static const int _startLevel = 1;
   static const int _maxLevel = 100;
   static const int _targetMapNodeCount = 30;
+  static const CosmeticCatalog _cosmeticCatalog = CosmeticCatalog();
+
+  /// Localised display names of rewards granted on crossing into
+  /// [level]. Cosmetic ids are resolved against the catalog; the
+  /// emblem-slot milestones (levels 3 / 17 / 33 / 53 / 73 / 93) ride
+  /// on the "non-title-breakpoint, no cosmetic rewards" spec
+  /// convention — their `titleKey` IS the slot label ("Insignie I"),
+  /// so we surface it as a reward chip directly. Empty when the level
+  /// has no spec entry at all, or when every resolution failed
+  /// defensively (keeps the tooltip silent rather than rendering raw
+  /// ids).
+  static List<String> _rewardLabelsForLevel(int level, AppLocalizations l10n) {
+    final spec = levelMilestoneByLevel(level);
+    if (spec == null) return const [];
+    final labels = <String>[];
+    for (final id in spec.cosmeticRewardIds) {
+      final def = _cosmeticCatalog.byId(id);
+      if (def != null) labels.add(def.name(l10n));
+    }
+    if (!spec.isTitleBreakpoint && spec.cosmeticRewardIds.isEmpty) {
+      labels.add(spec.titleKey(l10n));
+    }
+    return labels;
+  }
+
+  /// Per-level synthesized checkpoints used to back the tooltip when the
+  /// player taps one of the small route-level dots between anchor
+  /// milestones. The map widget owns the dot layout and looks up the
+  /// matching entry by level when rendering the overlay.
+  ///
+  /// Every level in `[_startLevel, _maxLevel]` gets an entry — even
+  /// levels that are also rendered as anchor checkpoints — so the
+  /// caller doesn't need to second-guess which point ids the map will
+  /// actually draw. Unlock date is sourced from the same level
+  /// achievements as the anchor map, with the level-1 origin falling
+  /// back to `provider.joinedAt`.
+  static Map<int, JourneyCheckpoint> buildRouteLevelData(
+    ProgressionEngineProvider provider,
+    AppLocalizations l10n,
+  ) {
+    final currentLevel = _clampLevel(provider.profile.level);
+    final levelDates = _levelUnlockDates(buildEngineAchievementViews(provider, l10n));
+    final journeyStart = provider.joinedAt;
+    final result = <int, JourneyCheckpoint>{};
+
+    for (var level = _startLevel; level <= _maxLevel; level++) {
+      final isUnlocked = level <= currentLevel;
+      final isCurrent = level == currentLevel;
+      final title = levelTitleSpecAtOrBelow(level).titleKey(l10n);
+      final unlockedAt = level == _startLevel
+          ? journeyStart
+          : (isUnlocked ? levelDates[level] : null);
+
+      result[level] = JourneyCheckpoint(
+        id: 'route_level_$level',
+        type: JourneyEventType.level,
+        label: l10n.journeyLevelWithTitle(level, title),
+        unlockedAt: unlockedAt,
+        levelNumber: level,
+        title: title,
+        emoji: journeyEmojiForLevel(level),
+        isUnlocked: isUnlocked,
+        isCurrent: isCurrent,
+        isPathAnchor: false,
+        rewardLabels: _rewardLabelsForLevel(level, l10n),
+      );
+    }
+    return result;
+  }
 
   /// The complete static map spine, bottom-to-top in level order.
   /// Sourced from [kJourneyMapAnchors] — the single source of truth for
@@ -243,10 +313,19 @@ abstract final class JourneyAdapter {
     final currentAnchorLevel = _currentStaticMilestoneFor(currentLevel);
     final nextAnchorLevel = _nextStaticMilestoneAfter(currentLevel);
     final levelDates = _levelUnlockDates(achievementViews);
+    // The level-1 origin has no matching achievement event in the
+    // ledger — sourcing its timestamp from `engine.joinedAt` (the same
+    // value that anchors retroactive claim windows) keeps the start
+    // node visibly dated even on fresh installs.
+    final journeyStart = provider.joinedAt;
 
     return _staticMilestoneLevels.reversed.map((level) {
       final isUnlocked = level <= currentLevel;
       final title = levelTitleSpecAtOrBelow(level).titleKey(l10n);
+      final isJourneyStart = level == _startLevel;
+      final unlockedAt = isJourneyStart
+          ? journeyStart
+          : (isUnlocked ? levelDates[level] : null);
 
       return JourneyMilestoneAnchor(
         level: level,
@@ -255,7 +334,8 @@ abstract final class JourneyAdapter {
         isUnlocked: isUnlocked,
         isCurrent: level == currentAnchorLevel,
         isNext: level == nextAnchorLevel,
-        unlockedAt: isUnlocked ? levelDates[level] : null,
+        unlockedAt: unlockedAt,
+        isJourneyStart: isJourneyStart,
       );
     }).toList(growable: false);
   }
@@ -503,6 +583,7 @@ abstract final class JourneyAdapter {
       mapPointId: anchor.level,
       mapUnlockedThroughPointId: mapUnlockedThroughPointId,
       mapProgress: mapProgress,
+      rewardLabels: _rewardLabelsForLevel(anchor.level, l10n),
     );
   }
 
@@ -529,6 +610,7 @@ abstract final class JourneyAdapter {
       mapPointId: 0,
       mapUnlockedThroughPointId: mapUnlockedThroughPointId,
       mapProgress: mapProgress,
+      rewardLabels: _rewardLabelsForLevel(anchor.level, l10n),
     );
   }
 
@@ -552,6 +634,7 @@ abstract final class JourneyAdapter {
       title: title,
       emoji: journeyEmojiForLevel(level),
       isUnlocked: isUnlocked,
+      rewardLabels: _rewardLabelsForLevel(level, l10n),
     );
   }
 }

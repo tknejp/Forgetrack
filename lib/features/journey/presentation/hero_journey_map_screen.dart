@@ -45,6 +45,8 @@ class _HeroJourneyMapScreenState extends State<HeroJourneyMapScreen> {
     final progression = context.watch<ProgressionEngineProvider>();
     final checkpoints = JourneyAdapter.buildMilestoneMap(progression, l10n);
     final feed = JourneyAdapter.buildFeed(progression, l10n);
+    final routeLevelData =
+        JourneyAdapter.buildRouteLevelData(progression, l10n);
     final filteredFeedCount = feed
         .where((e) => journeyFeedMatchesFilter(_selectedFeedFilter, e)) // lint-ignore: widget-no-logic — UI feed-filter count, no domain derivation
         .length;
@@ -89,6 +91,7 @@ class _HeroJourneyMapScreenState extends State<HeroJourneyMapScreen> {
                       delegate: _MapHeaderDelegate(
                         checkpoints: checkpoints,
                         feed: feed,
+                        routeLevelData: routeLevelData,
                         selectedIndex: _selectedIndex,
                         selectedFeedFilter: _selectedFeedFilter,
                         onSelected: (i) => setState(() => _selectedIndex = i),
@@ -132,6 +135,7 @@ class _MapHeaderDelegate extends SliverPersistentHeaderDelegate {
   _MapHeaderDelegate({
     required this.checkpoints,
     required this.feed,
+    required this.routeLevelData,
     required this.selectedIndex,
     required this.selectedFeedFilter,
     required this.onSelected,
@@ -142,6 +146,7 @@ class _MapHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   final List<JourneyCheckpoint> checkpoints;
   final List<JourneyCheckpoint> feed;
+  final Map<int, JourneyCheckpoint> routeLevelData;
   final int? selectedIndex;
   final JourneyFeedFilter selectedFeedFilter;
   final ValueChanged<int?> onSelected;
@@ -179,6 +184,7 @@ class _MapHeaderDelegate extends SliverPersistentHeaderDelegate {
                   ? const _EmptyJourney()
                   : JourneyInteractiveMap(
                       checkpoints: checkpoints,
+                      routeLevelData: routeLevelData,
                       // Hide tooltip in collapsed state so the mini preview
                       // reads cleanly, regardless of what the user last tapped.
                       selectedIndex: isCollapsed ? null : selectedIndex,
@@ -219,6 +225,7 @@ class _MapHeaderDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(covariant _MapHeaderDelegate old) {
     return checkpoints != old.checkpoints ||
         feed != old.feed ||
+        routeLevelData != old.routeLevelData ||
         selectedIndex != old.selectedIndex ||
         selectedFeedFilter != old.selectedFeedFilter ||
         maxHeight != old.maxHeight ||
