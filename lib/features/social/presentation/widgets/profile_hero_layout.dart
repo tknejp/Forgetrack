@@ -72,17 +72,20 @@ class ProfileHeroLayout {
   // the card-height bump.
   static const double companionGroundGlowBottom = groundLineFromBottom - 52;
 
-  // Buff chip sits just below the companion's painted feet, well
-  // above the emblem row at the very bottom. The chip's TOP is
-  // ~14 px below the ground line, leaving room for the row beneath
-  // it without overlapping the companion sprite (chip was clipping
-  // through the companion's legs on the previous layout).
+  // Buff chip sits just below the companion's painted feet (= the
+  // ground line), well above the emblem row at the bottom. Anchored
+  // to [groundLineY] so the chip tracks the companion asset
+  // automatically — when the card height or ground line moves, the
+  // chip moves with the companion instead of drifting on a static
+  // px offset from the top.
   //
   // Top-anchored (not bottom-anchored) so when the buff label wraps
   // to a second line the new line drops BELOW the first instead of
   // shoving the first line upward — first-line position stays put
   // regardless of label length.
-  static const double companionBuffChipTop = 346;
+  static const double companionBuffChipBelowGround = 12;
+  static const double companionBuffChipTop =
+      groundLineY + companionBuffChipBelowGround;
   static const double companionBuffChipBandWidth = 200;
   static const double companionBuffChipBandRight =
       companionCenterFromRight - companionBuffChipBandWidth / 2;
