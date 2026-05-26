@@ -30,7 +30,10 @@ import 'features/cosmetics/application/cosmetics_service.dart';
 import 'features/cosmetics/application/food_trigger_provider.dart';
 import 'features/cosmetics/config/cosmetics_config.dart';
 import 'features/cosmetics/data/cosmetic_entitlements_source.dart';
+import 'features/cosmetics/data/cosmetics_repository.dart';
 import 'features/cosmetics/data/firestore_cosmetic_entitlements_source.dart';
+import 'features/cosmetics/data/firestore_cosmetics_gateway.dart';
+import 'features/cosmetics/data/hybrid_cosmetics_repository.dart';
 import 'features/cosmetics/data/isar_cosmetics_repository.dart';
 import 'features/cosmetics/data/local/cosmetics_database.dart';
 import 'features/progression_engine/application/progression_engine.dart';
@@ -60,6 +63,7 @@ import 'features/health_connect/data/health_connect_service.dart';
 import 'features/health_connect/data/local/health_database.dart';
 import 'features/health_connect/application/goals_provider.dart';
 import 'features/health_connect/data/goal_history_firestore_gateway.dart';
+import 'features/devtools/application/devtools_permission_service.dart';
 import 'features/devtools/application/devtools_provider.dart';
 import 'features/devtools/application/factory_reset/factory_reset_service.dart';
 import 'features/onboarding/application/onboarding_provider.dart';
@@ -249,18 +253,41 @@ Future<void> _runForgetrack(SentryConsentProvider sentryConsent) async {
   final devToolsProvider = DevToolsProvider();
   await devToolsProvider.init();
 
+  // Trello #106 (2026-05-27): runtime dev-access lookup. Reads
+  // `devUsers/{uid}.enabled` to flip dev access without a rebuild.
+  // Firestore handle is null when the social backend isn't ready —
+  // hardcoded fallback + dev-flavor branch still cover the primary
+  // developer.
+  final devToolsPermissionService = DevToolsPermissionService(
+    firestore: socialBackendState.isReady
+        ? FirebaseFirestore.instance
+        : null,
+  );
+  await devToolsPermissionService.init();
+
   final onboardingProvider = OnboardingProvider();
   await onboardingProvider.init();
 
-  // Cosmetics: Isar-backed local persistence. Firestore sync lands in a
-  // later phase (mirror progression's hybrid pattern when it does).
+  // Cosmetics: Isar-backed local persistence wrapped in a hybrid
+  // Firestore sync layer when the social backend is available. Mirrors
+  // the V2 progression engine pattern — local writes are authoritative,
+  // cloud pushes are best-effort, the wrapper exposes pullAndMerge for
+  // a fresh install / second device to converge to the cloud state.
   final cosmeticsDatabase = CosmeticsDatabase();
   await cosmeticsDatabase.open();
   final cosmeticsConfig = CosmeticsConfig.standard();
-  final cosmeticsRepository = IsarCosmeticsRepository(
+  final cosmeticsLocalRepository = IsarCosmeticsRepository(
     database: cosmeticsDatabase,
     config: cosmeticsConfig,
   );
+  final cosmeticsCloudSync = socialBackendState.isReady
+      ? HybridCosmeticsRepository(
+          local: cosmeticsLocalRepository,
+          cloud: FirestoreCosmeticsGateway(),
+        )
+      : null;
+  final CosmeticsRepository cosmeticsRepository =
+      cosmeticsCloudSync ?? cosmeticsLocalRepository;
   final cosmeticsService = CosmeticsService(
     repository: cosmeticsRepository,
     config: cosmeticsConfig,
@@ -308,6 +335,20 @@ Future<void> _runForgetrack(SentryConsentProvider sentryConsent) async {
           ChangeNotifierProvider(create: (_) => SheetsExportProvider()),
           ChangeNotifierProvider.value(value: bushidoExportProvider),
           ChangeNotifierProvider.value(value: devToolsProvider),
+          ChangeNotifierProxyProvider<AuthProvider,
+              DevToolsPermissionService>(
+            // Eager so the SharedPrefs cache is warm before the first
+            // settings/devtools render — otherwise the entry tile would
+            // flicker in after the first Firestore round-trip.
+            lazy: false,
+            create: (_) => devToolsPermissionService,
+            update: (_, auth, service) {
+              service!.bindUser(
+                auth.isSignedIn ? auth.user?.firebaseUid : null,
+              );
+              return service;
+            },
+          ),
           ChangeNotifierProvider.value(value: onboardingProvider),
           ChangeNotifierProxyProvider<AuthProvider, CosmeticsProvider>(
             // Eager so cosmetic entitlements load + Isar state hydrate kick off
@@ -318,7 +359,12 @@ Future<void> _runForgetrack(SentryConsentProvider sentryConsent) async {
               entitlementsSource: cosmeticEntitlementsSource,
             ),
             update: (_, auth, provider) {
-              provider!.bindUser(auth.isSignedIn ? auth.user?.id : null);
+              final uid = auth.isSignedIn ? auth.user?.id : null;
+              // Bind the cloud-sync wrapper first so the very next
+              // loadForUser call (driven by the provider's bindUser)
+              // sees the bound uid and kicks the first pull-and-merge.
+              cosmeticsCloudSync?.bindUser(uid);
+              provider!.bindUser(uid);
               return provider;
             },
           ),

@@ -61,7 +61,7 @@
       "kind": "ChangeNotifierProxyProvider",
       "eager": true,
       "file": "lib/features/cosmetics/application/cosmetics_provider.dart",
-      "summary": "Katalog kosmetiky + per-user unlock & equip stav. Bindne uid z Authu, hydratuje Isar + Firestore entitlements. R.4 (2026-05-19): entitlement load pattern-matchuje na Result<List<CosmeticEntitlement>, AppError> — transient outage loguje warn (self-heal next bind), permanent failure (permission-denied, validation) error.",
+      "summary": "Katalog kosmetiky + per-user unlock & equip stav. Bindne uid z Authu, hydratuje Isar + Firestore entitlements. R.4 (2026-05-19): entitlement load pattern-matchuje na Result<List<CosmeticEntitlement>, AppError> — transient outage loguje warn (self-heal next bind), permanent failure (permission-denied, validation) error. Firestore sync (2026-05-26): repository je HybridCosmeticsRepository(local: Isar, cloud: FirestoreCosmeticsGateway) když je social backend up — local writes authoritativní, cloud push fire-and-forget, první load po sign-in dělá pull-and-merge (union unlocks, last-write-wins loadout). Bez Firebase backend padá na pure Isar. Entitlements stream #82 (2026-05-27): subscription přes FirestoreCosmeticEntitlementsSource.watchForUser navazuje po _load, takže Cloud-Function-pushed promo granty landují live bez restartu appky; každá emise je authoritativní set, re-emise idempotentní přes service.unlock.",
       "dependsOn": ["AuthProvider"]
     },
     {
@@ -194,8 +194,19 @@
       "group": "shell",
       "kind": "ChangeNotifierProvider",
       "file": "lib/features/devtools/application/devtools_provider.dart",
-      "summary": "Debug panel state. Gated kDebugMode + developer UID allowlistem.",
+      "summary": "Debug panel state. Gated kDebugMode + developer UID allowlistem. Sám neřeší access — viz DevToolsPermissionService.",
       "dependsOn": []
+    },
+    {
+      "id": "DevToolsPermissionService",
+      "displayName": "DevTools Permission",
+      "feature": "devtools",
+      "group": "shell",
+      "kind": "ChangeNotifierProxyProvider",
+      "eager": true,
+      "file": "lib/features/devtools/application/devtools_permission_service.dart",
+      "summary": "Access gate pro DevTools entry tile (settings) i samotnou DevTools screen. Tří-vrstvý check: BuildConfig.isDev (vždy true v dev flavor) → hardcoded UID allowlist (offline fallback) → Firestore devUsers/{uid}.enabled (runtime grant, Trello #106). Bindne se na uid z Authu; změna uid kickne async Firestore refresh proti devUsers/{uid}. Cache v SharedPreferences (devtools_remote_granted_uid + checked_at_ms) přežívá restart appky, takže udělený dev otevře offline DevTools i po reboot zařízení. ChangeNotifier — UI rebuildne když Firestore vrátí nový grant, takže entry tile blikne in bez restartu appky.",
+      "dependsOn": ["AuthProvider"]
     }
   ]
 }

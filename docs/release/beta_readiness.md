@@ -278,55 +278,40 @@ Karty řazené po hlasité poptávce od testerů. Reálné pořadí se rozhodne 
 
 Karty v tomto tier se aktivují **podle hlasité poptávky od testerů** ze Sprintu 1–2. Default pořadí níže reflektuje moji apriorní odhad, ale realita rozhodne.
 
-### #110 — Cosmetics Firestore hybrid repo
+### #110 — Cosmetics Firestore hybrid repo — **SHIPPED 2026-05-26**
 
 **Cíl:** cosmetic ownership (unlocked set) a equipped slots syncovat napříč zařízeními. Tester na druhém zařízení nepřijde o získané cosmetics.
 
-**Aktuální stav:**
-- `CosmeticsRepository` abstract class s metody `loadForUser/saveState/unlockCosmetic/equipCosmetic/unequipCosmetic/revokeCosmetic/clearAllUnlocks` ([lib/features/cosmetics/data/cosmetics_repository.dart](../../lib/features/cosmetics/data/cosmetics_repository.dart)).
-- TODO(remote) na řádku 10 odkazuje na vzor `lib/features/progression_engine/data/hybrid_progression_engine_repository.dart`.
-- Cosmetic grants už syncují přes engine gateway (`engineRewardGrants` subkolekce); ownership zatím ne.
+**Shipped (2026-05-26):**
 
-**Stream-first design** — absorbuje [#82](https://trello.com/c/9gxWrE5D) z Refactoring (entitlements realtime). Pokud nově stavíme hybrid repo, dej mu `Stream<CosmeticsState>` API místo `Future`, vyhneš se pozdější migraci.
+- `HybridCosmeticsRepository` obaluje `IsarCosmeticsRepository` + `FirestoreCosmeticsGateway`.
+- Wire layout pod `users/{uid}`: `cosmeticUnlocks/{cosmeticId}` (doc per unlock, idempotent set()) + `cosmeticState/state` (single doc s Loadout + selectedRaceId + updatedAt).
+- Mutace: lokální write authoritativní, cloud push fire-and-forget; klasifikované error logging.
+- První `loadForUser` per uid pulluje cloud + merguje (union unlocks earlier-unlockedAt vyhrává, loadout last-write-wins podle updatedAt).
+- Factory reset wipuje obě nové subkolekce přes `FirestoreCosmeticsGateway.wipeAll(uid)`.
+- API zůstalo Future-based — k stream-first absorpci #82 nedošlo (následoval samostatný shipping).
 
-**Otevřené (rozhodnout dřív, než začneš):**
-- **Storage shape:** jeden dokument `users/{uid}/cosmetics/state` (snapshot, jedna serializace), nebo subkolekce `users/{uid}/cosmeticsOwned/{id}` (per-item docs). První je jednodušší, druhé umožňuje fine-grained Firestore rules.
-- **Source of truth při konfliktu:** last-write-wins (Firestore default) nebo Isar (write-through cache + lazy upload)?
-- **Závislost na #79:** jakmile #79 existuje, hybrid repo používá `__schema: 1` od začátku. Pokud #79 ještě není, hybrid repo přidává `__schema: 0` (no-op), který se v #79 přejmenuje na `1`. Praktická závislost: ano, ale dá se obejít.
+### #82 — Cosmetic entitlements realtime stream — **SHIPPED 2026-05-27**
 
-**Kroky:**
-1. Design notes (storage shape decision + conflict resolution) → ADR v [docs/site/data/decisions.json](../site/data/decisions.json).
-2. `HybridCosmeticsRepository` po vzoru `HybridProgressionEngineRepository`.
-3. Stream API pro UI consumer.
-4. Migration ze čistě lokálního stavu na první sync (one-time upload Isar → Firestore).
-5. Test pro reconcile při příchodu na nové zařízení.
-
-**Velikost:** ~3–5 dní podle storage shape decision.
-
-**Závislosti:** ideálně po #79 (schema versioning); jinak self-contained.
-
-**Absorbuje:** [#82 v Refactoring](https://trello.com/c/9gxWrE5D) — pokud projde stream-first design.
+**Shipped:** `FirestoreCosmeticEntitlementsSource.watchForUser(uid)` vrací `Stream<Result<List<CosmeticEntitlement>, AppError>>`. `CosmeticsProvider` subscribuje po dokončení `_load`, každá emise je authoritativní replacement set, nové unlocky jdou přes `service.unlock` (idempotent). Cloud-Function-pushed promo grant landne live bez restartu. `loadForUser` retained pro testy / one-shot reads. Stream errors → `Failure(classifyFirebaseError(...))` přes `StreamTransformer.fromHandlers` (žádný uncaught error na sinku). Trigger pro reálný use-case (Cloud Function píšící entitlements) zatím není postavený — současný stream emituje jen initial-load snapshot.
 
 ---
 
-### #106 — Devtools Firestore `devUsers/{uid}` lookup
+### #106 — Devtools Firestore `devUsers/{uid}` lookup — **SHIPPED 2026-05-27**
 
-**Cíl:** udělit dev access bez rebuildu appky. Pro testery to znamená: pokud nahlásí bug a chceš jim na dálku zapnout devtools (např. pro export logu), stačí přidat jejich UID do Firestore.
+**Shipped:** `DevToolsPermissionService` přestaven ze static class na `ChangeNotifier`. Třívrstvý access check:
 
-**Aktuální stav:** [lib/features/devtools/application/devtools_permission_service.dart](../../lib/features/devtools/application/devtools_permission_service.dart) má hardcoded `_developerUids = {'ZolbJyQwpzSuUDsCV09UDwWXgX93'}`. TODO na řádku 11 odkazuje na Firestore lookup.
+1. `BuildConfig.isDev` — vždy true v dev flavor.
+2. Hardcoded UID allowlist — offline fallback baked do prod buildu.
+3. Firestore `devUsers/{uid}.enabled == true` — runtime grant, bind na auth uid kickne async refresh.
 
-**Kroky:**
-1. Firestore kolekce `devUsers/{uid}` se sentinel field `enabled: true`.
-2. `DevToolsPermissionService.hasAccess(uid)` vrátí true pokud:
-   - `BuildConfig.isDebug` (vždy v debug flavoru, viz #75), **nebo**
-   - `uid` je v hardcoded set (fallback pro offline), **nebo**
-   - `devUsers/{uid}` exists ve Firestore (cached, refresh on app start).
-3. Firestore rules: `devUsers/{uid}` čte jen sám user (`request.auth.uid == uid`).
-4. Cache v SharedPreferences (5 min TTL) — offline tester nedostane spike při Firestore unavailable.
+Cache v SharedPreferences (`devtools_remote_granted_uid` + `devtools_remote_granted_checked_at_ms`) přežívá restart — udělený dev otevře offline DevTools i po reboot. ChangeNotifier emituje, když Firestore vrátí změnu, takže Settings entry tile se objeví bez restartu appky. Service je nasazen ve čtyřech call sites přes `context.watch<DevToolsPermissionService>()`.
 
-**Velikost:** ~½ dne.
+**Bonus:** „Access via" status tile v DevTools nyní rozlišuje `UID allowlist` vs `devUsers/{uid} (Firestore)`, takže je vidět, jak konkrétní uid přistupuje.
 
-**Závislosti:** #75 (`BuildConfig.flavor`).
+**Nezbývá:** Firestore Security Rules pro `devUsers/{uid}` zatím nejsou ve `firestore.rules` (read jen vlastník, write deny pro klienta). Bez nich může klient sám psát do své `devUsers/{uid}` doc — tj. udělit si dev access. Sepsat rules + deploy. Nutné PŘED prod releasem.
+
+**Cesta dál:** s `devUsers` v rules jako auth-fence můžeš v Tier 2 #82 (a budoucích admin callable funkcích) použít `request.auth != null && get(/databases/.../devUsers/$(request.auth.uid)).data.enabled == true` jako jednotný `isAdmin()` check.
 
 ---
 
@@ -370,7 +355,7 @@ Karty v tomto tier se aktivují **podle hlasité poptávky od testerů** ze Spri
 **Trigger-driven karty** zůstávají v sloupci Refactoring. Reaktivovat pouze při splnění explicitního triggeru:
 
 - [#81](https://trello.com/c/XFB7JmCA) Provider rebuild granularity — trigger: observable UI jank.
-- [#82](https://trello.com/c/9gxWrE5D) Cosmetic entitlements realtime stream — trigger: Cloud Function píše promo grants. *Absorbuje se do #110, pokud projde stream-first design.*
+- ~~[#82](https://trello.com/c/9gxWrE5D) Cosmetic entitlements realtime stream~~ — **SHIPPED 2026-05-27** jako samostatná karta po #110. Stream API hotové, čeká už jen na Cloud Function side.
 - [#83](https://trello.com/c/2xqdGBBz) Firestore codec strict mode — trigger: external writer do engine collections.
 - [#84](https://trello.com/c/G205Ct56) BackgroundSync exponential backoff — trigger: user-visible sync degradation.
 

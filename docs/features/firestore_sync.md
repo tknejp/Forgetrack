@@ -24,8 +24,13 @@ Document IDs are the deterministic `eventKey` (sanitised).
 | `QuestOfferedEvent` | `users/{uid}/engineQuestOfferings/{eventKey}` |
 
 Cosmetic grants flow through this same gateway as
-`RewardGrantEvent(rewardKind: cosmetic)` — there is no separate cosmetic
-collection written by the client.
+`RewardGrantEvent(rewardKind: cosmetic)` — that's the *source* of
+truth for unlocks driven by progression. The cosmetics feature itself
+also has its own hybrid wrapper (`HybridCosmeticsRepository` +
+`FirestoreCosmeticsGateway`) that writes per-user inventory + loadout
+to dedicated collections so reinstall / second-device sees equipped
+slots and DevTools / manual grants too — see the
+[Cosmetics hybrid sync](#cosmetics-hybrid-sync) section below.
 
 Writes use plain `set()` because events are immutable: re-writing the
 same event with the same data is data-level idempotent. Pulls are
@@ -89,14 +94,58 @@ ledger).
 
 ---
 
+## Cosmetics hybrid sync
+
+Independent of the engine ledger above, the cosmetics feature ships
+its own hybrid wrapper for player inventory + equipped state so a
+reinstall / second device picks up DevTools grants, race selection
+and equipped slots — not just progression-driven unlocks.
+
+| Wire location | Purpose |
+| --- | --- |
+| `users/{uid}/cosmeticUnlocks/{cosmeticId}` | One doc per owned cosmetic. Doc ID is the cosmetic id → idempotent `set()`. Fields: `unlockedAt`, `sourceType`, `sourceId`. |
+| `users/{uid}/cosmeticState/state` | Single doc with the `Loadout` slots (frame/relic/background/emblem/companion/titleFlair/mapEffect/skin/banner), `selectedRaceId`, `updatedAt`. |
+
+The two layers:
+
+1. **`FirestoreCosmeticsGateway`**
+   ([../../lib/features/cosmetics/data/firestore_cosmetics_gateway.dart](../../lib/features/cosmetics/data/firestore_cosmetics_gateway.dart))
+   — pure Firestore I/O: `pushUnlock` / `removeUnlock` /
+   `wipeUnlocks` / `pushState` / `pull` / `wipeAll`.
+2. **`HybridCosmeticsRepository`**
+   ([../../lib/features/cosmetics/data/hybrid_cosmetics_repository.dart](../../lib/features/cosmetics/data/hybrid_cosmetics_repository.dart))
+   — wraps `IsarCosmeticsRepository`. Every mutating
+   `CosmeticsRepository` op (unlock, equip, unequip, revoke,
+   selectRace, clearAllUnlocks, saveState) is mirrored to the cloud
+   via `unawaited` push after the local write succeeds.
+
+Merge policy on first `loadForUser` per uid (sign-in / cold start):
+
+- **Unlocks**: union by cosmeticId. For collisions, the *earlier*
+  `unlockedAt` wins so the audit timestamp reflects the player's
+  first-ever acquire across devices. Local `sourceType` / `sourceId`
+  stays authoritative (it's the device that actually granted it).
+- **Loadout + `selectedRaceId` + `updatedAt`**: whichever side has
+  the later `updatedAt` wins as a whole bundle. Cloud `updatedAt`
+  null (no state doc yet) → local wins by default.
+
+After the merge the wrapper re-pushes the merged state up to the
+cloud so the cloud sees the union too. Subsequent loads short-circuit
+to the local Isar repo — steady-state mutations push deltas through
+the same gateway.
+
+`socialBackendState.isReady = false` (Firebase init failed,
+anonymous session) → wrapper is NOT constructed; service talks
+straight to the Isar repo exactly as before.
+
+The legacy `users/{uid}/cosmeticEntitlements` collection (server-pushed
+promotional grants) is untouched by this layer — it remains a
+one-way read channel via `FirestoreCosmeticEntitlementsSource`.
+
+---
+
 ## Known remaining gaps
 
-- **Cosmetic equipped state.** Which slot the user equipped (frame,
-  background, etc.) lives only in Isar. The social profile snapshot
-  (`users/{uid}.equippedCosmetics`) carries the IDs as a derived view,
-  but nothing reads them back on a fresh install. A second device sees
-  the cosmetic as unlocked in the inventory but with the default slot
-  empty until the user re-equips.
 - **No batching at the engine boundary.** Each `evaluate()` cycle that
   produces N events triggers one batched cloud push of up to N items.
   Devtools advance-day spam or deep combo claims can mean a lot of

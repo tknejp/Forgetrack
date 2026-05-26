@@ -36,6 +36,32 @@ the catalog can grow independently of gameplay, and a future feature
   per uid with equipped slot ids) and `CosmeticsUnlockRecord` (one row per
   `(uid, cosmeticId)` pair with audit fields). The in-memory implementation
   is kept for tests.
+* Firestore sync via `HybridCosmeticsRepository` + `FirestoreCosmeticsGateway`.
+  Mirrors the V2 progression-engine hybrid pattern — local writes are
+  authoritative, cloud pushes are best-effort (idempotent set() with
+  cosmetic-id as doc id), errors are classified and logged but never
+  block a local unlock or equip. First `loadForUser` call per uid runs a
+  pull-and-merge: cloud unlocks union with local, loadout/raceId
+  whichever side has the later `updatedAt` wins. Wired only when the
+  social Firebase backend is up (`socialBackendState.isReady`); falls
+  back to the bare Isar repo otherwise. Cloud layout:
+  * `users/{uid}/cosmeticUnlocks/{cosmeticId}` — one doc per unlock.
+  * `users/{uid}/cosmeticState/state` — single doc with the Loadout +
+    selectedRaceId + updatedAt.
+  * `users/{uid}/cosmeticEntitlements/*` — server-pushed grants
+    (read-only from the app's perspective; consumed by
+    `FirestoreCosmeticEntitlementsSource`, untouched by the hybrid
+    repo).
+* Entitlements live stream (Trello #82, 2026-05-27).
+  `FirestoreCosmeticEntitlementsSource.watchForUser(uid)` is a
+  `Stream<Result<List<CosmeticEntitlement>, AppError>>` over the same
+  `cosmeticEntitlements` collection. `CosmeticsProvider` subscribes
+  after the initial local load completes; every emission is the
+  authoritative replacement set, new entries are forwarded to
+  `service.unlock` (idempotent against the local repo so
+  re-emissions are no-ops). Cloud-Function-pushed promo grants land
+  without an app restart. `loadForUser` is retained for tests / ad-hoc
+  one-shot reads.
 * Catalog ships with the current journey cosmetic set across frames, relics,
   backgrounds, emblems, and companions.
 * Default unlocks for every fresh user are defined by
@@ -441,9 +467,6 @@ loading state (spinner), and a signed-out user (helpful hint about
 
 ## Not yet implemented
 
-* Firestore sync. Local persistence is in place (Isar); a remote
-  implementation should mirror the progression hybrid pattern
-  (`HybridProgressionRepository` + `FirestoreProgressionGateway`).
 * Real artwork — every asset folder is empty.
 * Hero / social UI — only placeholder widgets exist; no screen consumes
   them yet.

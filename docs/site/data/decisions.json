@@ -80,6 +80,28 @@
       ]
     },
     {
+      "id": "cosmetics-hybrid-sync",
+      "title": "Cosmetics: hybrid sync s union/last-write-wins merge",
+      "status": "accepted",
+      "date": "2026-05-27",
+      "context": "Cosmetics dlouhodobě běžel jen na lokálním Isar repu. Reinstall / nové zařízení znamenalo ztrátu inventáře (kromě grants z `cosmeticEntitlements`, které Cloud Functions opt-in poslaly). Progression-driven unlocky se na druhém zařízení obnovily přes Cosmetic Bridge replay po pull-and-merge engine ledgeru, ale manuální unlocky (DevTools) a equip state se nepřenášely vůbec. Migrace plánu (TODO v `cosmetics_repository.dart`) odkazovala na progression-engine vzor.",
+      "decision": "`HybridCosmeticsRepository` zabaluje `IsarCosmeticsRepository` a všechny mutace fire-and-forget pushuje přes `FirestoreCosmeticsGateway`. Wire layout pod `users/{uid}`: `cosmeticUnlocks/{cosmeticId}` (jeden doc per vlastněnou kosmetiku, doc ID = cosmeticId → set() idempotentní upsert) a `cosmeticState/state` (single doc s Loadout + selectedRaceId + updatedAt). První `loadForUser(uid)` per uid spustí pull-and-merge: unlocks **union** (overlap: earlier `unlockedAt` vyhrává, audit reflektuje first-ever acquire), loadout + selectedRaceId **last-write-wins** na `updatedAt` jako bundle. Lokální write je vždycky authoritativní; cloud failure se klasifikuje přes `classifyFirebaseError` a loguje, ale nikdy neblokuje UI. Wrapper je nasazen jen když `socialBackendState.isReady` — bez Firebase backendu service mluví přímo s Isar repem.",
+      "consequences": [
+        "Reinstall / druhé zařízení dostane plný inventář + loadout po prvním sign-inu (jeden round-trip do Firestoru navíc nad rámec existujících `cosmeticEntitlements` a social profile pulls).",
+        "Manuální DevTools grants + race selection + equip se synchronizuje napříč zařízeními bez extra wiring (jde to stejnou cestou jako progression-driven unlocky).",
+        "Idempotentní writes — re-push po transient outage je no-op na data level (doc ID = cosmeticId).",
+        "Merge strategie je opinionated: 'unlocks union' znamená, že revoke na jednom zařízení _nezmizí_ z cloudu (musíš revoke i jinde, nebo factory-reset wipe). Akceptováno — revoke je primárně DevTools operace, prod kód unlocky neodbírá.",
+        "`cosmeticState` last-write-wins bere updatedAt celého bundle; bez vector clocks může equip race condition mezi dvěma online zařízeními zahodit jednu změnu. Akceptováno — equip není high-frequency akce a uživatel pozná, pokud se mu loadout přehodil.",
+        "Factory reset (`DevToolsUserDataPurgeService`) wipuje nové subkolekce přes `FirestoreCosmeticsGateway.wipeAll(uid)` — zachovaná konzistence mezi lokálním `cosmeticsDatabase.clearAll()` a cloudem."
+      ],
+      "alternatives": "1) Pouze `cosmeticEntitlements` (server-pushed). Odmítnuto — to pokrývá jen promotional grants, ne progression unlocky + equip state. 2) `pullAndMerge` na každém `loadForUser`. Odmítnuto — zbytečné round-tripy, lokální zápisy už jsou authoritativní. 3) Event-sourcing v cosmetics (jako progression). Odmítnuto — cosmetics má state-based model (loadout je snapshot, ne stream eventů); zavedení journal layeru by byla over-engineering pro pár desítek docs per user.",
+      "links": [
+        "lib/features/cosmetics/data/hybrid_cosmetics_repository.dart",
+        "lib/features/cosmetics/data/firestore_cosmetics_gateway.dart",
+        "lib/features/cosmetics/README.md"
+      ]
+    },
+    {
       "id": "sealed-hierarchies",
       "title": "Sealed hierarchie pro doménové modely",
       "status": "accepted",

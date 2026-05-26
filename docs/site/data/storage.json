@@ -63,7 +63,7 @@
             { "name": "CosmeticsUserStateRecord", "purpose": "Jeden row per uid: equipped slot IDs + updatedAt." },
             { "name": "CosmeticsUnlockRecord", "purpose": "Jeden row per (uid, cosmeticId): timestamp, source, sourceId. Composite unique index → duplicates impossible." }
           ],
-          "writers": ["CosmeticsProvider (via service)"],
+          "writers": ["CosmeticsProvider (via service → HybridCosmeticsRepository → IsarCosmeticsRepository)"],
           "readers": ["CosmeticsProvider", "Cosmetic Reveal Evaluator", "Social (equipped IDs)"]
         }
       ]
@@ -127,9 +127,23 @@
         {
           "id": "cosmetic_entitlements",
           "name": "users/{uid}/cosmeticEntitlements/{cosmeticId}",
-          "role": "Read-only z pohledu klienta. Promotional grants psané Cloud Functions / externí systémy.",
+          "role": "Read-only z pohledu klienta. Promotional grants psané Cloud Functions / externí systémy. Trello #82 (2026-05-27): klient čte přes FirestoreCosmeticEntitlementsSource.watchForUser jako stream subscription — promo grant napsaný server-side se aplikuje live bez restartu appky. loadForUser zůstává pro testy / ad-hoc reads.",
           "writers": ["(externí — Cloud Functions)"],
-          "readers": ["FirestoreCosmeticEntitlementsSource"]
+          "readers": ["FirestoreCosmeticEntitlementsSource (watchForUser stream + loadForUser one-shot)"]
+        },
+        {
+          "id": "cosmetic_unlocks",
+          "name": "users/{uid}/cosmeticUnlocks/{cosmeticId}",
+          "role": "Per-user audit row každé vlastněné kosmetiky. Document ID = cosmeticId → set() je idempotentní upsert. Cloud zrcadlo lokálních CosmeticsUnlockRecord rows. Hybrid wrapper na první load po sign-in pulluje + sjednocuje s lokálním stavem (union podle cosmeticId, earlier unlockedAt vyhrává).",
+          "writers": ["FirestoreCosmeticsGateway (z HybridCosmeticsRepository)"],
+          "readers": ["HybridCosmeticsRepository.pullAndMerge"]
+        },
+        {
+          "id": "cosmetic_state",
+          "name": "users/{uid}/cosmeticState/state",
+          "role": "Single doc per user — equipped Loadout (frame/relic/background/emblem/companion/titleFlair/mapEffect/skin/banner) + selectedRaceId + updatedAt. Last-write-wins při merge: cloud updatedAt > local updatedAt → cloud loadout vyhrává.",
+          "writers": ["FirestoreCosmeticsGateway (z HybridCosmeticsRepository)"],
+          "readers": ["HybridCosmeticsRepository.pullAndMerge"]
         },
         {
           "id": "goal_history",
@@ -172,6 +186,13 @@
           "role": "Unique handle reservation — pro garantovanou jednoznačnost @handles.",
           "writers": ["SocialProvider"],
           "readers": ["SocialProvider (validation)"]
+        },
+        {
+          "id": "dev_users",
+          "name": "devUsers/{uid}",
+          "role": "Runtime dev-access grant (Trello #106, 2026-05-27). Sentinel field `enabled: true` flippne dev access pro daný uid bez rebuildu prod buildu. Píše se externě (Firebase Console, admin skript, future admin dashboard); klient jen čte. Security rules: read jen `request.auth.uid == uid`, write deny pro klienta. Auth-fence pro future admin callable functions — `isAdmin()` rule helper čte odsud.",
+          "writers": ["(externí — Firebase Console / admin skript)"],
+          "readers": ["DevToolsPermissionService.bindUser (Firestore lookup, SharedPrefs cache)"]
         }
       ]
     },
@@ -190,6 +211,7 @@
         { "id": "pref-joined-at", "name": "forgetrack_joined_at_iso", "role": "ISO timestamp prvního dne v appce — floor pro retroactive claim window. Reseeds z nejstaršího ledger eventu po pullAndMerge, takže cross-device se chová správně i bez explicitního sync.", "writers": ["ProgressionEngineProvider._resolveJoinedAt"], "readers": ["ProgressionEngineProvider.joinedAt"] },
         { "id": "pref-card-order", "name": "home_card_order", "role": "Pořadí dashboard karet (drag-and-drop).", "writers": ["HomeCardOrderProvider"], "readers": ["HomeCardOrderProvider"] },
         { "id": "pref-devtools", "name": "devtools_debug_mode / devtools_bg_debug_notifications_enabled / devtools_access_granted_last_known / devtools_overrides", "role": "DevTools state a overrides.", "writers": ["DevToolsProvider"], "readers": ["DevToolsProvider", "BackgroundSyncService"] },
+        { "id": "pref-devtools-remote-grant", "name": "devtools_remote_granted_uid / devtools_remote_granted_checked_at_ms", "role": "Cache last-known runtime grant z devUsers/{uid} (Trello #106). Hydratuje se na boot, refresh při bindUser proti Firestore. Stale cache se nikdy invalidate sama — udělený dev má přístup i offline až do dalšího úspěšného Firestore refresh, který explicit zruší.", "writers": ["DevToolsPermissionService"], "readers": ["DevToolsPermissionService"] },
         { "id": "pref-pinned-emblems", "name": "pinned_emblems_{uid}", "role": "Per-user 11-slotový EmblemBoard pro profile-header showcase. Wire format zachován z Phase 12 (comma-joined string) — devices roll forward bez migrace.", "writers": ["EmblemBoardProvider"], "readers": ["EmblemBoardProvider"] },
         { "id": "pref-theme", "name": "forgetrack-theme (jen docs site)", "role": "Téma docs (light / dark). Není součástí appky.", "writers": ["docs/site/js/app.js"], "readers": ["docs/site/js/app.js"] }
       ]
