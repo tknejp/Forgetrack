@@ -38,6 +38,8 @@ class ProfileDetailHeroCard extends StatelessWidget {
     this.onTapEmblemSlot,
     this.onTapCompanion,
     this.onTapAvatar,
+    this.onTapBackground,
+    this.renderBackground = true,
   });
 
   final String displayName;
@@ -54,6 +56,21 @@ class ProfileDetailHeroCard extends StatelessWidget {
   /// null if nothing is equipped yet — the sheet handles the empty
   /// case by collapsing the manage block.
   final void Function(String? equippedSkinId)? onTapAvatar;
+
+  /// Tap on the painted scene area (above the ground line, outside
+  /// the avatar / companion silhouettes) → background slot sheet
+  /// (own profile only). Receives the currently equipped background
+  /// id, which may be null if nothing is equipped — the sheet handles
+  /// the empty case by collapsing the manage block. Null callback
+  /// disables the tap target entirely so friend profiles don't get
+  /// an interactive but unresponsive region.
+  final void Function(String? equippedBackgroundId)? onTapBackground;
+
+  /// When false, skips rendering the painted hero scene inside the
+  /// card. Used when the caller provides a shared painted bg that
+  /// also spans the banner area above the card, so the bg is not
+  /// rendered twice.
+  final bool renderBackground;
 
   /// Total emblem slots in the collection grid. Mirrors
   /// `EmblemBoard.slotCount` so the data model and the visual grid
@@ -91,11 +108,37 @@ class ProfileDetailHeroCard extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.hardEdge,
         children: [
-          Positioned.fill(child: ProfileHeroBackground(definition: background)),
+          if (renderBackground)
+            Positioned.fill(
+                child: ProfileHeroBackground(definition: background)),
           // Edge fade stays pinned to the header frame regardless of
           // the background shift, so feathering always lands at the
           // card's true top and bottom seams.
           const Positioned.fill(child: ProfileHeroBackgroundEdgeFade()),
+          // Background-area tap target. Covers the painted scene
+          // from the top of the card down to the ground line — taps
+          // here open the background slot sheet. Sits BELOW the
+          // avatar / companion sprite tap targets and the emblem row
+          // in the Stack so those keep absorbing taps on their own
+          // hit areas (the inset GestureDetectors inside
+          // [_SpriteWithTapTarget] win for taps on the painted
+          // figures; the empty 512²-asset margins fall through to
+          // this layer, which matches the "tap outside the
+          // silhouette" affordance the asset insets were designed
+          // for). Excludes the bottom shelf band so taps in the
+          // emblem row's surrounding space don't accidentally open
+          // the background sheet.
+          if (onTapBackground != null)
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 0,
+              bottom: ProfileHeroLayout.groundLineFromBottom,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => onTapBackground!(equipped?.backgroundId),
+              ),
+            ),
           // Identity block (handle + friends) lives in the screen's
           // top app bar (`ScreenHeader.subtitle`). Level + class title
           // moved out of the hero stack into the standalone

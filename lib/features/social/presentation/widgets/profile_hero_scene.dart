@@ -51,20 +51,42 @@ class ProfileHeroBackground extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
-        // Scale 9:16 source to fill header width; vertical anchor the
-        // baked-in standing area onto the card's ground line.
-        final imageHeight = width * ProfileHeroLayout.backgroundAspect;
+        // Anchor the baked-in standing area onto the ground line
+        // (`constraints.maxHeight - groundLineFromBottom`) so the
+        // hero/companion sprites can stand on the painted ground at
+        // any parent height.
+        //
+        // Image is scaled UNIFORMLY (no distortion). Its height is
+        // the larger of:
+        //   * the natural 9:16 fit to the parent's width, and
+        //   * the minimum height needed for the standing line to
+        //     reach the ground (so the image extends up to / above
+        //     the parent's top edge with no transparent gap).
+        // The width then overflows horizontally and is centred +
+        // clipped by the outer ClipRect, preserving the painted
+        // scene's aspect.
+        final groundLineY =
+            constraints.maxHeight - ProfileHeroLayout.groundLineFromBottom;
+        final naturalImageHeight =
+            width * ProfileHeroLayout.backgroundAspect;
+        final minImageHeight =
+            groundLineY / ProfileHeroLayout.backgroundStandingFraction;
+        final imageHeight = naturalImageHeight > minImageHeight
+            ? naturalImageHeight
+            : minImageHeight;
+        final imageWidth = imageHeight / ProfileHeroLayout.backgroundAspect;
         final standingY =
             imageHeight * ProfileHeroLayout.backgroundStandingFraction;
-        final top = ProfileHeroLayout.groundLineY - standingY;
+        final top = groundLineY - standingY;
+        final left = (width - imageWidth) / 2;
         return ClipRect(
           child: Stack(
             clipBehavior: Clip.none,
             children: [
               Positioned(
-                left: 0,
+                left: left,
                 top: top,
-                width: width,
+                width: imageWidth,
                 height: imageHeight,
                 child: Image.asset(
                   assetPath,
@@ -101,7 +123,7 @@ class ProfileHeroBackgroundEdgeFade extends StatelessWidget {
             // read against a clean dark backdrop instead of the
             // painted scene's lower foreground. ≈22 % of the card
             // height (~117 px on 530) versus the previous ~8 %.
-            stops: [0.0, 0.08, 0.78, 1.0],
+            stops: [0.0, 0.0, 0.78, 1.0],
             colors: [
               Color(0xFF0A0E1C),
               Color(0x000A0E1C),

@@ -16,11 +16,13 @@ import '../../../cosmetics/presentation/widgets/cosmetics_inventory_section.dart
 import '../../application/social_provider.dart';
 import '../../domain/social_models.dart';
 import '../social_profile_utils.dart';
+import 'background_slot_sheet.dart';
 import 'companion_slot_sheet.dart';
 import 'emblem_slot_sheet.dart';
 import 'banner_slot_sheet.dart';
 import 'profile_detail_hero_card.dart';
 import 'profile_hero_identity.dart';
+import 'profile_hero_scene.dart';
 import 'profile_stats_section.dart';
 import 'profile_title_banner.dart';
 import 'skin_slot_sheet.dart';
@@ -193,6 +195,36 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
     }
   }
 
+  /// Mirrors [_openSkinDetails] for the hero-scene background slot.
+  /// Tap on the painted scene above the ground line opens this sheet;
+  /// the result routes through the same `CosmeticsProvider` equip /
+  /// unequip API. No-op when the inventory state hasn't loaded yet.
+  Future<void> _openBackgroundDetails(String? equippedBackgroundId) async {
+    final cosmetics = context.read<CosmeticsProvider>();
+    final state = cosmetics.state;
+    if (state == null) return;
+    final currentBackground = equippedBackgroundId == null
+        ? null
+        : socialCosmeticById(equippedBackgroundId);
+    final unlockedBackgrounds = [
+      for (final id in state.unlocked.keys)
+        if (socialCosmeticById(id) case final def?
+            when def.type == CosmeticType.background)
+          def,
+    ]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    final pick = await BackgroundSlotSheet.show(
+      context,
+      current: currentBackground,
+      unlocked: unlockedBackgrounds,
+    );
+    if (pick == null || !mounted) return;
+    if (pick.removed) {
+      await cosmetics.unequip(CosmeticType.background);
+    } else if (pick.cosmeticId != null) {
+      await cosmetics.equip(pick.cosmeticId!);
+    }
+  }
+
   /// Mirrors [_openSkinDetails] for the title banner slot. Tap on the
   /// banner above the hero card opens this sheet; the result routes
   /// through the same `CosmeticsProvider` equip / unequip API.
@@ -282,130 +314,80 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
                         i++)
                       null,
                   ];
-            // The top app bar is rendered as a transparent overlay on
-            // top of the hero header — the background scene shows
-            // through under the status bar / back button, no chrome
-            // strip cutting into the cinematic image.
-            return Stack(
-              children: [
-                SingleChildScrollView(
-                  padding: EdgeInsets.only(top: 58, bottom: bottomPad + 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Title banner — sits between the app bar
-                      // (display name + @handle subtitle) and the
-                      // cinematic hero card. Rarity-keyed banner asset
-                      // provides all chrome; level + class title are
-                      // plain Flutter text on top. 16-px screen gutter
-                      // matches the rest of the profile content. The
-                      // banner is hidden until the profile stream
-                      // produces stats so we don't flash a level-1
-                      // "Poutník" plate before the real data lands.
-                      if (profile?.stats case final stats?) ...[
-                        Padding(
-                          // 8-px gutter (was 16) lets the banner asset
-                          // sit visibly larger between the app bar and
-                          // the hero card. Text inside the banner is
-                          // pinned to fixed font sizes so the asset
-                          // can grow without the level / title text
-                          // growing with it.
-                          padding: const EdgeInsets.fromLTRB(8, 12, 8, 12),
-                          child: Builder(builder: (context) {
-                            final level = const ProgressionLevelPolicy()
-                                .resolve(stats.totalXp)
-                                .level;
-                            final display = const ProgressionDisplayResolver()
-                                .levelDisplay(level);
-                            // Own profile reads the equipped banner id
-                            // from the LIVE CosmeticsProvider, not from
-                            // the Firestore profile snapshot — equips
-                            // happen locally first and the social wire
-                            // only catches up after the periodic sync,
-                            // so reading from the snapshot would freeze
-                            // the visible banner until that round-trip
-                            // finished. Friend profiles still read from
-                            // the snapshot (no local cosmetics state).
-                            final equippedBannerId = isMe
-                                ? context
-                                    .watch<CosmeticsProvider>()
-                                    .state
-                                    ?.equipped
-                                    .bannerId
-                                : profile!.equippedCosmetics.bannerId;
-                            // Equipped banner overrides the tier-derived
-                            // choice: a player can keep a lower-tier
-                            // banner unlocked from earlier (e.g. Forest)
-                            // even after climbing into a higher rarity.
-                            // Banner widget resolves its own asset +
-                            // palette from the equipped cosmetic when
-                            // present; falls back to the tier rarity.
-                            final equippedBanner =
-                                socialCosmeticById(equippedBannerId);
-                            final banner = ProfileTitleBanner(
-                              level: level,
-                              title: display.title(context.l10n),
-                              rarity: display.rarity,
-                              equippedBanner: equippedBanner,
-                            );
-                            // Tap on the banner opens the slot sheet
-                            // (own profile only — friend profiles get
-                            // a static banner with no interaction).
-                            if (!isMe) return banner;
-                            return GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              onTap: () => _openBannerDetails(equippedBannerId),
-                              child: banner,
-                            );
-                          }),
-                        ),
-                      ],
-                      // Hero header bleeds to the screen edges — the
-                      // rest of the profile keeps the 16-px gutter.
-                      // For own profile the hero body reads race +
-                      // equipped skin straight from the local
-                      // cosmetics provider. Friend profiles have no
-                      // race/skin payload on the wire format yet
-                      // (extension lands in a follow-up) — they fall
-                      // back to the silhouette.
-                      Builder(builder: (context) {
-                        final cosmeticsState = isMe
-                            ? context.watch<CosmeticsProvider>()
-                            : null;
-                        return ProfileDetailHeroCard(
-                          displayName: displayName,
-                          profile: profile,
-                          isMe: isMe,
-                          raceId: cosmeticsState?.currentRaceId,
-                          skinId: cosmeticsState?.state?.equipped.skinId,
-                          emblemSlots: emblemSlots,
-                          // Friend profiles get read-only detail; the
-                          // owner gets the full picker (equip / remove
-                          // / swap). Locked slots ignore the tap.
-                          onTapEmblemSlot: (slotIndex) =>
-                              _openEmblemSlotSheet(
-                            slotIndex: slotIndex,
-                            isOwner: isMe,
-                            uid: widget.uid,
-                            slots: emblemSlots,
-                            unlocked: ownUnlockedEmblems,
-                          ),
-                          // Tap on the companion standee → cosmetic
-                          // details sheet (own profile only — friend
-                          // profiles don't carry the local cosmetics
-                          // state needed to render lifecycle / equip).
-                          onTapCompanion: isMe
-                              ? (c) => _openCompanionDetails(c)
-                              : null,
-                          // Tap on the hero body → skin slot sheet,
-                          // same restriction as the companion tap.
-                          onTapAvatar: isMe
-                              ? (id) => _openSkinDetails(id)
-                              : null,
-                        );
-                      }),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            // The app bar lives INSIDE the hero block (passed to
+            // [_HeroBannerStack] as a child) so it scrolls up with
+            // the rest of the profile AND shares the painted scene +
+            // dark→transparent gradient with the banner — there's no
+            // hard horizontal seam between a scaffold-coloured chrome
+            // strip and the cinematic scene below it.
+            final appBar = Padding(
+              padding: const EdgeInsets.fromLTRB(14, 8, 14, 18),
+              child: ScreenHeader(
+                greeting: '',
+                // Show the player's display name in the app bar
+                // instead of the generic "Profil" label — the screen
+                // is always about a specific user, and the hero card
+                // already devotes its biggest text slot to the same
+                // name, so anchoring the bar to it ties the two
+                // surfaces together. Falls back to the screen label
+                // only while the profile stream hasn't produced a
+                // name yet, so the bar never sits empty.
+                title: displayName.isEmpty
+                    ? l10n.screenProfile
+                    : displayName,
+                leading: Navigator.of(context).canPop()
+                    ? const FtBackButton()
+                    : null,
+                // Inline `@handle · Přátelé N` row sitting as the app
+                // bar's subtitle, directly under the player's display
+                // name.
+                subtitle: StreamBuilder<List<SocialUserProfile>>(
+                  stream: social.watchFriendProfilesForUser(widget.uid),
+                  builder: (context, friendsSnap) {
+                    return ProfileAppBarIdentityStack(
+                      handle: handle,
+                      isMe: isMe,
+                      onEditHandle:
+                          isMe ? () => _editOwnHandle(handle) : null,
+                      friendCount: friendsSnap.data?.length,
+                      onTapFriendChip: () => ProfileFriendsListSheet.show(
+                        context,
+                        stream: social.watchFriendProfilesForUser(widget.uid),
+                      ),
+                      friendsChipLabel: l10n.socialProfileFriendsChipLabel,
+                    );
+                  },
+                ),
+              ),
+            );
+
+            return SingleChildScrollView(
+              padding: EdgeInsets.only(bottom: bottomPad + 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // App bar + title banner + cinematic hero card all
+                  // share a single painted scene + dark→transparent
+                  // gradient so the chrome reads against the scene
+                  // without a hard seam. Banner is hidden until the
+                  // profile stream produces stats so we don't flash a
+                  // level-1 plate before the real data lands.
+                  _HeroBannerStack(
+                    appBar: appBar,
+                    profile: profile,
+                    isMe: isMe,
+                    displayName: displayName,
+                    emblemSlots: emblemSlots,
+                    ownUnlockedEmblems: ownUnlockedEmblems,
+                    uid: widget.uid,
+                    onOpenEmblemSlot: _openEmblemSlotSheet,
+                    onOpenCompanion: _openCompanionDetails,
+                    onOpenSkin: _openSkinDetails,
+                    onOpenBanner: _openBannerDetails,
+                    onOpenBackground: _openBackgroundDetails,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -462,104 +444,7 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
                       ),
                     ],
                   ),
-                ),
-                // Top fade overlay — pure decoration behind the app
-                // bar so the back button + display name read against
-                // a darker band regardless of the hero scene under
-                // them. Wrapped in IgnorePointer so it never eats
-                // taps on the chrome above it.
-                //
-                // Scope limited to the app bar zone only: the band
-                // behind the inline handle/friends subtitle row is
-                // darkened by a separate fade INSIDE the hero card
-                // (`profile_detail_hero_card.dart`), so the text
-                // there sits in front of its darkener instead of
-                // behind a screen-fixed overlay.
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: IgnorePointer(
-                    child: Container(
-                      // Status bar + ~56 chrome + ~14 pad below.
-                      height: MediaQuery.of(context).padding.top + 70,
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          stops: [0.0, 0.65, 1.0],
-                          colors: [
-                            Color(0xE60A0E1C),
-                            Color(0x990A0E1C),
-                            Color(0x000A0E1C),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                // App bar chrome — pure tap target, no own gradient
-                // (handled by the overlay above).
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 8, 14, 18),
-                    child: ScreenHeader(
-                      greeting: '',
-                      // Show the player's display name in the app
-                      // bar instead of the generic "Profil" label —
-                      // the screen is always about a specific user,
-                      // and the hero card already devotes its biggest
-                      // text slot to the same name, so anchoring the
-                      // bar to it ties the two surfaces together.
-                      // Falls back to the screen label only while
-                      // the profile stream hasn't produced a name
-                      // yet, so the bar never sits empty.
-                      title: displayName.isEmpty
-                          ? l10n.screenProfile
-                          : displayName,
-                      leading: Navigator.of(context).canPop()
-                          ? const FtBackButton()
-                          : null,
-                      // Inline `@handle · Přátelé N` row sitting as
-                      // the app bar's subtitle, directly under the
-                      // player's display name. Lived in the trailing
-                      // slot as a right-aligned stack between
-                      // 2026-05-26 and 2026-05-27. Friend count comes
-                      // from a fresh subscription (the repository
-                      // serves an independent snapshot listener per
-                      // call), so it doesn't fight with
-                      // `_friendsStream` which is a single-sub
-                      // instance reserved for the friends-list sheet.
-                      subtitle: StreamBuilder<List<SocialUserProfile>>(
-                        stream:
-                            social.watchFriendProfilesForUser(widget.uid),
-                        builder: (context, friendsSnap) {
-                          return ProfileAppBarIdentityStack(
-                            handle: handle,
-                            isMe: isMe,
-                            onEditHandle: isMe
-                                ? () => _editOwnHandle(handle)
-                                : null,
-                            friendCount: friendsSnap.data?.length,
-                            onTapFriendChip: () =>
-                                ProfileFriendsListSheet.show(
-                              context,
-                              stream: social
-                                  .watchFriendProfilesForUser(widget.uid),
-                            ),
-                            friendsChipLabel:
-                                l10n.socialProfileFriendsChipLabel,
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            );
+                );
           },
         ),
       ),
@@ -1021,3 +906,190 @@ class _RemoveFriendButtonState extends State<_RemoveFriendButton> {
   }
 }
 
+/// App bar + title banner + hero card composite. Renders a single
+/// shared painted scene that spans all three so the chrome reads
+/// against the cinematic backdrop instead of the dark scaffold. A
+/// dark→transparent gradient sits behind the appbar + banner for
+/// legibility, fading to fully transparent at the hero card's top so
+/// the bottom of the block reveals the scene cleanly.
+///
+/// While the profile stream is loading (stats unavailable), falls
+/// back to the appbar over the plain hero card (own painted bg, no
+/// banner) so we still show the scene without flashing a level-1
+/// banner.
+class _HeroBannerStack extends StatelessWidget {
+  const _HeroBannerStack({
+    required this.appBar,
+    required this.profile,
+    required this.isMe,
+    required this.displayName,
+    required this.emblemSlots,
+    required this.ownUnlockedEmblems,
+    required this.uid,
+    required this.onOpenEmblemSlot,
+    required this.onOpenCompanion,
+    required this.onOpenSkin,
+    required this.onOpenBanner,
+    required this.onOpenBackground,
+  });
+
+  final Widget appBar;
+  final SocialUserProfile? profile;
+  final bool isMe;
+  final String displayName;
+  final List<Cosmetic?> emblemSlots;
+  final List<Cosmetic> ownUnlockedEmblems;
+  final String uid;
+  final Future<void> Function({
+    required int slotIndex,
+    required bool isOwner,
+    required String uid,
+    required List<Cosmetic?> slots,
+    required List<Cosmetic> unlocked,
+  }) onOpenEmblemSlot;
+  final Future<void> Function(Cosmetic companion) onOpenCompanion;
+  final Future<void> Function(String? equippedSkinId) onOpenSkin;
+  final Future<void> Function(String? equippedBannerId) onOpenBanner;
+  final Future<void> Function(String? equippedBackgroundId) onOpenBackground;
+
+  static const double _bannerHorizontalPad = 8;
+
+  @override
+  Widget build(BuildContext context) {
+    final stats = profile?.stats;
+    final cosmeticsState = isMe ? context.watch<CosmeticsProvider>() : null;
+
+    ProfileDetailHeroCard buildHeroCard({required bool renderBackground}) {
+      return ProfileDetailHeroCard(
+        displayName: displayName,
+        profile: profile,
+        isMe: isMe,
+        raceId: cosmeticsState?.currentRaceId,
+        skinId: cosmeticsState?.state?.equipped.skinId,
+        emblemSlots: emblemSlots,
+        renderBackground: renderBackground,
+        onTapEmblemSlot: (slotIndex) => onOpenEmblemSlot(
+          slotIndex: slotIndex,
+          isOwner: isMe,
+          uid: uid,
+          slots: emblemSlots,
+          unlocked: ownUnlockedEmblems,
+        ),
+        onTapCompanion: isMe ? onOpenCompanion : null,
+        onTapAvatar: isMe ? onOpenSkin : null,
+        onTapBackground: isMe ? onOpenBackground : null,
+      );
+    }
+
+    if (stats == null) {
+      // No banner — appbar over the plain hero card (own painted bg
+      // so the cinematic scene still shows during load).
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          appBar,
+          buildHeroCard(renderBackground: true),
+        ],
+      );
+    }
+
+    final bgDef = socialBackgroundDefinition(
+      isMe
+          ? cosmeticsState?.state?.equipped.backgroundId
+          : profile?.equippedCosmetics.backgroundId,
+    );
+
+    final level = const ProgressionLevelPolicy().resolve(stats.totalXp).level;
+    final display = const ProgressionDisplayResolver().levelDisplay(level);
+    final equippedBannerId = isMe
+        ? cosmeticsState?.state?.equipped.bannerId
+        : profile!.equippedCosmetics.bannerId;
+    final equippedBanner = socialCosmeticById(equippedBannerId);
+    Widget banner = ProfileTitleBanner(
+      level: level,
+      title: display.title(context.l10n),
+      rarity: display.rarity,
+      equippedBanner: equippedBanner,
+    );
+    if (isMe) {
+      banner = GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => onOpenBanner(equippedBannerId),
+        child: banner,
+      );
+    }
+
+    return Stack(
+      clipBehavior: Clip.hardEdge,
+      children: [
+        // Shared painted scene — fills the entire block (appbar +
+        // banner + heroCard). The bg widget anchors its standing
+        // area to `constraints.maxHeight - groundLineFromBottom`,
+        // which by construction lands at the hero card's ground
+        // line because the heroCard sits at the bottom of the
+        // foreground Column.
+        Positioned.fill(child: ProfileHeroBackground(definition: bgDef)),
+        // Top edge fade on the painted scene — softens the top edge
+        // of the bg so it feathers into the dark scaffold instead of
+        // cutting off at a hard horizontal seam. Sits BEHIND the
+        // foreground column (which has its own appbar+banner
+        // gradient) so it only adds darkening over the bare painted
+        // scene around the appbar.
+        const Positioned.fill(
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: [0.0, 0.18],
+                  colors: [
+                    Color(0xFF0A0E1C),
+                    Color(0x000A0E1C),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        // Foreground vertical stack — appbar + banner share a
+        // dark→transparent gradient bg so the chrome reads against
+        // the painted scene without a hard horizontal seam where
+        // the scaffold ends. The hero card below has its own
+        // bottom shelf fade for the emblem row.
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            DecoratedBox(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xCC0A0E1C),
+                    Color(0x000A0E1C),
+                  ],
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  appBar,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: _bannerHorizontalPad),
+                    child: banner,
+                  ),
+                ],
+              ),
+            ),
+            buildHeroCard(renderBackground: false),
+          ],
+        ),
+      ],
+    );
+  }
+}
