@@ -104,7 +104,7 @@ class ProfileAppBarIdentityStack extends StatelessWidget {
         if (hasFriends) ...[
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 10),
-            child: Text('·', style: _metaTextStyle),
+            child: Text('·', style: _metaTextStyle), // lint-ignore: l10n-literal — interpunct separator symbol, language-neutral
           ),
           _FriendsSegment(
             count: friendCount!,

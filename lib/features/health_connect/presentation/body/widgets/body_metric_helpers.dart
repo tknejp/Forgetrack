@@ -30,7 +30,7 @@ double? averageWeightForPeriod(FitnessProvider fitness, BodyPeriod period) {
 double? averageBodyFatForPeriod(FitnessProvider fitness, BodyPeriod period) {
   final records = fitness
       .weightHistoryForRange(period.start, period.end)
-      .where((r) => r.bodyFat != null)
+      .where((r) => r.bodyFat != null) // lint-ignore: widget-no-logic — drops records missing the optional bodyFat column for chart aggregation
       .toList();
   if (records.isEmpty) return null;
   return records.fold<double>(0, (s, r) => s + r.bodyFat!) / records.length;
@@ -39,7 +39,7 @@ double? averageBodyFatForPeriod(FitnessProvider fitness, BodyPeriod period) {
 double? averageLeanMassForPeriod(FitnessProvider fitness, BodyPeriod period) {
   final records = fitness
       .weightHistoryForRange(period.start, period.end)
-      .where((r) => r.bodyFat != null)
+      .where((r) => r.bodyFat != null) // lint-ignore: widget-no-logic — drops records missing the optional bodyFat column for lean-mass aggregation
       .toList();
   if (records.isEmpty) return null;
   return records.fold<double>(
@@ -52,7 +52,7 @@ double? averageLeanMassForPeriod(FitnessProvider fitness, BodyPeriod period) {
 double? averageBodyWaterForPeriod(FitnessProvider fitness, BodyPeriod period) {
   final records = fitness
       .weightHistoryForRange(period.start, period.end)
-      .where((r) => r.bodyWater != null)
+      .where((r) => r.bodyWater != null) // lint-ignore: widget-no-logic — drops records missing the optional bodyWater column for chart aggregation
       .toList();
   if (records.isEmpty) return null;
   return records.fold<double>(0, (s, r) => s + r.bodyWater!) / records.length;

@@ -183,7 +183,7 @@ Offset journeyMapSideEventPosition({
             mapHeight: mapHeight,
             inset: radius + JourneyMapLayout.collisionGap,
           ))
-      .firstWhere(
+      .firstWhere( // lint-ignore: widget-no-logic — collision-free layout pick over locally-built candidate offsets
         (candidate) => !journeyMapCollides(
           candidate,
           radius: radius,
@@ -294,20 +294,20 @@ List<JourneyCheckpoint> journeyMapCollapsedPreviewCheckpoints(
   // Collapsed-mode UI slice — picks ≤2 anchors from the pre-built
   // checkpoint VOs for the mini-preview header; no domain derivation.
   final pathCheckpoints =
-      checkpoints.where((cp) => cp.isPathAnchor).toList(growable: false);
-  final currentIndex = pathCheckpoints.indexWhere(
+      checkpoints.where((cp) => cp.isPathAnchor).toList(growable: false); // lint-ignore: widget-no-logic — UI slice picking ≤2 anchors over pre-built JourneyCheckpoint VOs
+  final currentIndex = pathCheckpoints.indexWhere( // lint-ignore: widget-no-logic — focus-anchor lookup in collapsed-preview UI slice
     (cp) => cp.isCurrent && cp.isUnlocked,
   );
   final focusIndex = currentIndex >= 0
       ? currentIndex
-      : pathCheckpoints.indexWhere((cp) => cp.isUnlocked);
+      : pathCheckpoints.indexWhere((cp) => cp.isUnlocked); // lint-ignore: widget-no-logic — fallback focus-anchor lookup in collapsed-preview UI slice
 
   if (focusIndex < 0) {
     return pathCheckpoints.take(2).toList(growable: false);
   }
 
   final indexes = <int>[focusIndex];
-  final nextIndex = pathCheckpoints.indexWhere((cp) => cp.isNext);
+  final nextIndex = pathCheckpoints.indexWhere((cp) => cp.isNext); // lint-ignore: widget-no-logic — next-anchor lookup in collapsed-preview UI slice
 
   if (nextIndex >= 0 && nextIndex != focusIndex) {
     indexes.add(nextIndex);

@@ -315,7 +315,7 @@ class _DevToolsDbSectionState extends State<DevToolsDbSection> {
       await provider.devToolsClearCache();
       if (!mounted) return;
       messenger.showSnackBar(
-        const SnackBar(content: Text('Health cache cleared')),
+        const SnackBar(content: Text('Health cache cleared')), // lint-ignore: l10n-literal — devtools-only debug surface, English-only by convention
       );
       _refresh();
     } finally {
@@ -341,7 +341,7 @@ class _DevToolsDbSectionState extends State<DevToolsDbSection> {
       await provider.devToolsClearCache();
       if (!mounted) return;
       messenger.showSnackBar(
-        const SnackBar(content: Text('KT cache cleared')),
+        const SnackBar(content: Text('KT cache cleared')), // lint-ignore: l10n-literal — devtools-only debug surface, English-only by convention
       );
       _refresh();
     } finally {
@@ -363,12 +363,12 @@ class _DevToolsDbSectionState extends State<DevToolsDbSection> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: const Text('Cancel'), // lint-ignore: l10n-literal — devtools-only debug surface, English-only by convention
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: errorColor),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Clear'),
+            child: const Text('Clear'), // lint-ignore: l10n-literal — devtools-only debug surface, English-only by convention
           ),
         ],
       ),

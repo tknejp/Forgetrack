@@ -1046,7 +1046,7 @@ class _RewardCard extends StatelessWidget {
       _typeLabel(reward, definition, l10n),
       if (definition != null) definition.rarity.label(l10n),
     ];
-    final subtitle = subtitleParts.where((s) => s.isNotEmpty).join(' · ');
+    final subtitle = subtitleParts.where((s) => s.isNotEmpty).join(' · '); // lint-ignore: widget-no-logic — drops empty entries from a locally-built subtitle parts list, no domain collection
     final color = unlocked ? accent : Tokens.onSurfaceMuted;
 
     return GestureDetector(
