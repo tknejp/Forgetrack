@@ -23,7 +23,7 @@ import 'social_cosmetic_avatar.dart'
 ///   * Hero body bottom-left with foot shadow
 ///   * Identity block (name + handle + title pill) top-left
 ///   * Companion bottom-right with warm ground glow + buff chip
-///   * 3·3·3·2 emblem collection top-right
+///   * Single-column emblem collection along the right edge
 ///
 /// Designed to render flush against the top of the surrounding screen
 /// (no rounded outer corners, no horizontal padding) — the caller is
@@ -33,29 +33,22 @@ class ProfileDetailHeroCard extends StatelessWidget {
   const ProfileDetailHeroCard({
     super.key,
     required this.displayName,
-    required this.handle,
     required this.profile,
     required this.isMe,
     this.raceId,
     this.skinId,
     this.emblemSlots = const <Cosmetic?>[],
-    this.unlockedCount = 0,
     this.onTapEmblemSlot,
     this.onTapCompanion,
     this.onTapAvatar,
-    this.onEditHandle,
-    this.friendCount,
-    this.onTapFriendChip,
   });
 
   final String displayName;
-  final String handle;
   final SocialUserProfile? profile;
   final bool isMe;
   final String? raceId;
   final String? skinId;
   final List<Cosmetic?> emblemSlots;
-  final int unlockedCount;
   final void Function(int slotIndex)? onTapEmblemSlot;
   final void Function(Cosmetic companion)? onTapCompanion;
 
@@ -64,9 +57,6 @@ class ProfileDetailHeroCard extends StatelessWidget {
   /// null if nothing is equipped yet — the sheet handles the empty
   /// case by collapsing the manage block.
   final void Function(String? equippedSkinId)? onTapAvatar;
-  final VoidCallback? onEditHandle;
-  final int? friendCount;
-  final VoidCallback? onTapFriendChip;
 
   /// Total emblem slots in the collection grid. Mirrors
   /// `EmblemBoard.slotCount` so the data model and the visual grid
@@ -86,11 +76,6 @@ class ProfileDetailHeroCard extends StatelessWidget {
       equipped,
       for (var i = 1; i < kEmblemSlotCount; i++) null,
     ];
-  }
-
-  int _resolveUnlockedCount(Cosmetic? equipped) {
-    if (unlockedCount > 0) return unlockedCount;
-    return equipped == null ? 0 : 1;
   }
 
   @override
@@ -174,36 +159,24 @@ class ProfileDetailHeroCard extends StatelessWidget {
               accent: levelAccent,
             ),
           ),
-          // Identity block (handle + friends) — top-left. Right edge
-          // freed on 2026-05-25 when the emblem grid moved down +
-          // left out of the top-right corner; the row was previously
-          // constrained to leave room for it.
+          // Identity block (handle + friends) lives in the screen's
+          // top app bar (`ScreenHeader.trailing` →
+          // [ProfileAppBarIdentityStack]) since 2026-05-26 — it used
+          // to render here in the hero's top-left corner.
+          // Emblem row — horizontal band along the BOTTOM edge of
+          // the hero card, evenly distributed between the side
+          // gutters. The companion buff chip was pulled upward
+          // ([ProfileHeroLayout.companionBuffChipBottom]) to make
+          // room for this row. Slots unlock progressively with the
+          // player's level (see [EmblemBoard.slotUnlockLevels]).
           Positioned(
-            left: ProfileHeroLayout.edge,
-            top: ProfileHeroLayout.identityTop,
-            right: ProfileHeroLayout.edge,
-            child: ProfileHeroIdentityBlock(
-              handle: handle,
-              isMe: isMe,
-              onEditHandle: onEditHandle,
-              friendCount: friendCount,
-              onTapFriendChip: onTapFriendChip,
-              friendsChipLabel: context.l10n.socialProfileFriendsChipLabel,
-            ),
-          ),
-          // Emblem grid — top-LEFT, immediately under the level +
-          // title row. Anchored to the same `edge` gutter as the
-          // identity strip above so the whole left column reads as
-          // one stacked panel (subtitle → tier banner → emblem
-          // showcase) rather than two parallel side-elements.
-          Positioned(
-            left: ProfileHeroLayout.edge,
-            top: ProfileHeroLayout.emblemTop,
+            left: ProfileHeroLayout.emblemRowLeft,
+            right: ProfileHeroLayout.emblemRowRight,
+            bottom: ProfileHeroLayout.emblemRowBottom,
             child: ProfileHeroEmblemCollection(
               slots: _resolveSlots(emblem),
-              unlockedCount: _resolveUnlockedCount(emblem),
+              playerLevel: resolved.level,
               slotSize: ProfileHeroLayout.emblemSlotSize,
-              gap: ProfileHeroLayout.emblemGap,
               onTapSlot: onTapEmblemSlot,
             ),
           ),
@@ -224,8 +197,8 @@ class ProfileDetailHeroCard extends StatelessWidget {
           Positioned(
             left: ProfileHeroLayout.heroAvatarLeft,
             bottom: ProfileHeroLayout.heroAvatarBottom,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
+            child: _SpriteWithTapTarget(
+              size: ProfileHeroLayout.heroAvatarSize,
               onTap: onTapAvatar == null
                   ? null
                   : () => onTapAvatar!(skinId),
@@ -268,8 +241,8 @@ class ProfileDetailHeroCard extends StatelessWidget {
               right: ProfileHeroLayout.companionRight -
                   ProfileHeroLayout.companionStandeeNudgeX,
               bottom: ProfileHeroLayout.companionBottom,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
+              child: _SpriteWithTapTarget(
+                size: ProfileHeroLayout.companionSize,
                 onTap: onTapCompanion == null
                     ? null
                     : () => onTapCompanion!(companion),
@@ -298,6 +271,47 @@ class ProfileDetailHeroCard extends StatelessWidget {
                 ),
               ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Wraps a 512²-asset sprite (rendered at [size]) with a tap target
+/// that only covers the painted figure, not the empty margins baked
+/// into the asset. Sprite is painted full-size; the GestureDetector
+/// sits on top, inset by [ProfileHeroLayout.assetTapInset*Fraction].
+class _SpriteWithTapTarget extends StatelessWidget {
+  const _SpriteWithTapTarget({
+    required this.size,
+    required this.onTap,
+    required this.child,
+  });
+
+  final double size;
+  final VoidCallback? onTap;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final hInset = size * ProfileHeroLayout.assetTapInsetHorizontalFraction;
+    final vInset = size * ProfileHeroLayout.assetTapInsetVerticalFraction;
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        children: [
+          Positioned.fill(child: child),
+          Positioned(
+            left: hInset,
+            right: hInset,
+            top: vInset,
+            bottom: vInset,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onTap,
+            ),
+          ),
         ],
       ),
     );

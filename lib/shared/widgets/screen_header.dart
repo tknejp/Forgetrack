@@ -7,6 +7,12 @@ class ScreenHeader extends StatelessWidget {
   final String title;
   final Widget? leading;
   final Widget? trailing;
+
+  /// Optional inline strip rendered immediately below [title]. Used by
+  /// the profile screen to surface the @handle / friends-count row
+  /// underneath the player's display name, but generic enough for any
+  /// per-screen subtitle (metadata chips, etc.).
+  final Widget? subtitle;
   final VoidCallback? onAvatarTap;
 
   const ScreenHeader({
@@ -15,6 +21,7 @@ class ScreenHeader extends StatelessWidget {
     required this.title,
     this.leading,
     this.trailing,
+    this.subtitle,
     this.onAvatarTap,
   });
 
@@ -54,6 +61,10 @@ class ScreenHeader extends StatelessWidget {
                     letterSpacing: -0.6,
                   ),
                 ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  subtitle!,
+                ],
               ],
             ),
           ),

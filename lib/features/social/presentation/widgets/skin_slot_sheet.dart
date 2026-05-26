@@ -5,6 +5,7 @@ import '../../../../shared/theme/design_tokens.dart';
 import '../../../cosmetics/config/skin_asset_resolver.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
 import '../../../cosmetics/presentation/cosmetics_screen_internals.dart';
+import 'slot_sheet_shell.dart';
 
 /// Bottom sheet for managing the equipped skin from the profile hero
 /// header. Mirrors [CompanionSlotSheet]: shows the current skin's
@@ -68,66 +69,39 @@ class SkinSlotSheet extends StatelessWidget {
         if (s.id != current?.id) s,
     ];
 
-    return Container(
-      margin: const EdgeInsets.only(top: 60),
-      decoration: const BoxDecoration(
-        color: Tokens.bg,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        border: Border(
-          top: BorderSide(color: Tokens.cardBorder),
-          left: BorderSide(color: Tokens.cardBorder),
-          right: BorderSide(color: Tokens.cardBorder),
-        ),
-      ),
-      child: SingleChildScrollView(
+    return SlotSheetShell(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(20, 0, 20, bottomPad + 24),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 12),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Tokens.cardBorder,
-                borderRadius: BorderRadius.circular(Tokens.radiusProgress),
+            _SheetHeader(hasCurrent: current != null),
+            if (current != null) ...[
+              const SizedBox(height: 20),
+              _CurrentSkinBlock(
+                skin: current!,
+                raceId: raceId,
+                onRemove: () => Navigator.of(context)
+                    .pop(const SkinSlotPick.remove()),
+              ),
+            ],
+            const SizedBox(height: 24),
+            Text(
+              current == null ? 'VYBER VZHLED' : 'VYMĚNIT ZA',
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                color: Tokens.onSurfaceMuted,
+                letterSpacing: 1.2,
               ),
             ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: EdgeInsets.fromLTRB(20, 0, 20, bottomPad + 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _SheetHeader(hasCurrent: current != null),
-                  if (current != null) ...[
-                    const SizedBox(height: 20),
-                    _CurrentSkinBlock(
-                      skin: current!,
-                      raceId: raceId,
-                      onRemove: () => Navigator.of(context)
-                          .pop(const SkinSlotPick.remove()),
-                    ),
-                  ],
-                  const SizedBox(height: 24),
-                  Text(
-                    current == null ? 'VYBER VZHLED' : 'VYMĚNIT ZA',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      color: Tokens.onSurfaceMuted,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _SkinPickerGrid(
-                    skins: others,
-                    raceId: raceId,
-                    onPick: (def) => Navigator.of(context)
-                        .pop(SkinSlotPick.equip(def.id)),
-                  ),
-                ],
-              ),
+            const SizedBox(height: 12),
+            _SkinPickerGrid(
+              skins: others,
+              raceId: raceId,
+              onPick: (def) =>
+                  Navigator.of(context).pop(SkinSlotPick.equip(def.id)),
             ),
           ],
         ),

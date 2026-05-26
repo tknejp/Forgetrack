@@ -9,6 +9,7 @@ import '../../../cosmetics/presentation/cosmetics_screen_internals.dart';
 import '../../../cosmetics/presentation/widgets/companion_buff_chip.dart';
 import '../../../progression_engine/application/progression_engine_provider.dart';
 import 'hero_progression_header.dart';
+import 'slot_sheet_shell.dart';
 
 /// Bottom sheet for managing the equipped companion from the profile
 /// hero header. Replaces the read-only cosmetic-details flow with a
@@ -63,68 +64,37 @@ class CompanionSlotSheet extends StatelessWidget {
         if (c.id != current?.id) c,
     ];
 
-    return Container(
-      margin: const EdgeInsets.only(top: 60),
-      decoration: const BoxDecoration(
-        color: Tokens.bg,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        border: Border(
-          top: BorderSide(color: Tokens.cardBorder),
-          left: BorderSide(color: Tokens.cardBorder),
-          right: BorderSide(color: Tokens.cardBorder),
-        ),
-      ),
-      child: SingleChildScrollView(
+    return SlotSheetShell(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(20, 0, 20, bottomPad + 24),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 12),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Tokens.cardBorder,
-                borderRadius:
-                    BorderRadius.circular(Tokens.radiusProgress),
+            _SheetHeader(hasCurrent: current != null),
+            if (current != null) ...[
+              const SizedBox(height: 20),
+              _CurrentCompanionBlock(
+                companion: current!,
+                onRemove: () => Navigator.of(context)
+                    .pop(const CompanionSlotPick.remove()),
+              ),
+            ],
+            const SizedBox(height: 24),
+            Text(
+              current == null ? 'VYBER SPOLEČNÍKA' : 'VYMĚNIT ZA',
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                color: Tokens.onSurfaceMuted,
+                letterSpacing: 1.2,
               ),
             ),
-            const SizedBox(height: 16),
-            Padding(
-              padding:
-                  EdgeInsets.fromLTRB(20, 0, 20, bottomPad + 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _SheetHeader(hasCurrent: current != null),
-                  if (current != null) ...[
-                    const SizedBox(height: 20),
-                    _CurrentCompanionBlock(
-                      companion: current!,
-                      onRemove: () => Navigator.of(context)
-                          .pop(const CompanionSlotPick.remove()),
-                    ),
-                  ],
-                  const SizedBox(height: 24),
-                  Text(
-                    current == null
-                        ? 'VYBER SPOLEČNÍKA'
-                        : 'VYMĚNIT ZA',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      color: Tokens.onSurfaceMuted,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _CompanionPickerGrid(
-                    companions: others,
-                    onPick: (def) => Navigator.of(context)
-                        .pop(CompanionSlotPick.equip(def.id)),
-                  ),
-                ],
-              ),
+            const SizedBox(height: 12),
+            _CompanionPickerGrid(
+              companions: others,
+              onPick: (def) => Navigator.of(context)
+                  .pop(CompanionSlotPick.equip(def.id)),
             ),
           ],
         ),
@@ -252,9 +222,14 @@ class _CurrentCompanionBlock extends StatelessWidget {
             const SizedBox(height: 12),
             CompanionBuffBanner(
               buff: buff,
+              // `read` (not `watch`): the chain position is a snapshot
+              // for the sheet's lifetime. `watch` here caused the sheet
+              // to rebuild on every progression notification, which
+              // reset the modal-sheet drag gesture mid-swipe and broke
+              // drag-to-dismiss.
               currentChapterChainPosition: buff is ChapterDepthCompanionBuff
                   ? context
-                      .watch<ProgressionEngineProvider>()
+                      .read<ProgressionEngineProvider>()
                       .currentChapterChainPosition
                   : null,
             ),

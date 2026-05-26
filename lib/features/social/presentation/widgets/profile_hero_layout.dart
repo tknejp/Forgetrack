@@ -7,15 +7,31 @@
 class ProfileHeroLayout {
   ProfileHeroLayout._();
 
-  static const double height = 480;
+  // Card height bumped 480 → 530 on 2026-05-26 so the emblem row +
+  // companion buff chip have their own dark "shelf" below the
+  // painted scene. The 50-px delta is fully absorbed by
+  // [groundLineFromBottom] — the ground line, scene background,
+  // companion sprite, hero avatar, and their shadows therefore
+  // keep their original absolute positions, and the new space
+  // appears as additional dark UI band at the bottom.
+  static const double height = 530;
   static const double edge = 16;
 
-  static const double groundLineFromBottom = 66;
+  static const double groundLineFromBottom = 116;
   static const double groundLineY = height - groundLineFromBottom;
 
   // Hero + companion sprite format: 512² with painted feet 48 px above
   // the asset's bottom edge.
   static const double assetFeetFraction = 48 / 512;
+
+  // Tap-target inset against the 512² asset frame: the painted figure
+  // sits inside ~50 px of empty pixels top/bottom and ~160 px left/right.
+  // Used by avatar + companion tap overlays so taps in the empty
+  // surrounding area fall through to whatever sits behind the sprite
+  // (currently nothing actionable, but it stops the sheet from opening
+  // when the user clearly tapped outside the silhouette).
+  static const double assetTapInsetVerticalFraction = 50 / 512;
+  static const double assetTapInsetHorizontalFraction = 160 / 512;
 
   // Background scenes: 9:16 portrait, standing area at 0.77 down.
   static const double backgroundAspect = 16 / 9;
@@ -51,9 +67,17 @@ class ProfileHeroLayout {
   static const double companionGroundGlowWidth = 120;
   static const double companionGroundGlowRight =
       companionCenterFromRight - companionGroundGlowWidth / 2;
-  static const double companionGroundGlowBottom = 14;
+  // Ground glow sits 52 px below the conceptual ground line —
+  // tracks the ground line so it stays at its old absolute y after
+  // the card-height bump.
+  static const double companionGroundGlowBottom = groundLineFromBottom - 52;
 
-  static const double companionBuffChipBottom = 6;
+  // Buff chip sits just below the companion's painted feet, well
+  // above the emblem row at the very bottom. The chip's TOP is
+  // ~14 px below the ground line, leaving room for the row beneath
+  // it without overlapping the companion sprite (chip was clipping
+  // through the companion's legs on the previous layout).
+  static const double companionBuffChipBottom = 80;
   static const double companionBuffChipBandWidth = 200;
   static const double companionBuffChipBandRight =
       companionCenterFromRight - companionBuffChipBandWidth / 2;
@@ -68,19 +92,28 @@ class ProfileHeroLayout {
   // up by 8 px on 2026-05-25 so the whole identity strip kisses the
   // app bar's lower edge instead of leaving a visual gap.
   static const double identityTop = 8;
-  // Level + title label sits below the handle row, full card width.
-  // Bumped 8 px upward together with `identityTop` so the spacing
-  // between the two rows stays unchanged.
-  static const double levelTitleTop = 32;
-  // Emblem grid no longer sits in the top-right corner — it
-  // anchors LEFT, immediately below the level + title row, so the
-  // grid reads as a continuation of the identity column rather
-  // than a parallel side-element. Top inset clears the bigger
-  // LVL / TITLE typography (line height ~28 px) plus a small gap.
-  static const double emblemTop = 64;
+  // Level + title hex nameplate — full card width, 16 px side
+  // padding, 14 px top offset per the 2026-05-26 design handoff.
+  // Sits flush under the app bar; rarity accent lemuje banner +
+  // level pill.
+  static const double levelTitleTop = 14;
+  // Emblem row — 6 slots laid out horizontally along the BOTTOM of
+  // the hero card, evenly distributed between the side gutters
+  // (relocated from a right-edge column on 2026-05-26). Slot size
+  // is sized for a 6-slot row to fit on a 320-px-wide screen
+  // (6·48 + 5·gap ≤ width − 2·edge) without overlapping; the
+  // [Row]'s spaceBetween distribution handles wider screens by
+  // expanding the gaps instead of the slots themselves.
+  static const double emblemRowBottom = 6;
+  static const double emblemRowLeft = edge;
+  static const double emblemRowRight = edge;
 
-  static const double emblemSlotSize = 46;
-  static const double emblemGap = 5;
+  static const double emblemSlotSize = 48;
+  // Minimum visual breathing room between adjacent slots; the
+  // actual gap on a given screen comes from spaceBetween + the
+  // available width, so this constant is informational rather than
+  // load-bearing.
+  static const double emblemGap = 4;
 
   /// Number of slots in the emblem collection (mirrors
   /// `EmblemBoard.slotCount`).

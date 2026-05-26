@@ -5,6 +5,7 @@ import '../../../../shared/theme/design_tokens.dart';
 import '../../../cosmetics/config/cosmetics_config.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
 import '../../../cosmetics/presentation/widgets/emblem_buff_banner.dart';
+import 'slot_sheet_shell.dart';
 
 /// Bottom sheet for inspecting / managing the emblem in a single
 /// header slot.
@@ -62,77 +63,46 @@ class EmblemSlotSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
-    return Container(
-      margin: const EdgeInsets.only(top: 60),
-      decoration: const BoxDecoration(
-        color: Tokens.bg,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        border: Border(
-          top: BorderSide(color: Tokens.cardBorder),
-          left: BorderSide(color: Tokens.cardBorder),
-          right: BorderSide(color: Tokens.cardBorder),
-        ),
-      ),
-      child: SingleChildScrollView(
+    return SlotSheetShell(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(20, 0, 20, bottomPad + 24),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 12),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Tokens.cardBorder,
-                borderRadius:
-                    BorderRadius.circular(Tokens.radiusProgress),
-              ),
+            _SheetHeader(
+              slotIndex: slotIndex,
+              isOwner: isOwner,
+              currentEmblem: currentEmblem,
             ),
-            const SizedBox(height: 16),
-            Padding(
-              padding:
-                  EdgeInsets.fromLTRB(20, 0, 20, bottomPad + 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _SheetHeader(
-                    slotIndex: slotIndex,
-                    isOwner: isOwner,
-                    currentEmblem: currentEmblem,
-                  ),
-                  if (currentEmblem != null) ...[
-                    const SizedBox(height: 20),
-                    _CurrentEmblemBlock(
-                      emblem: currentEmblem!,
-                      isOwner: isOwner,
-                      onRemove: () => Navigator.of(context)
-                          .pop(EmblemSlotPick(slotIndex, null)),
-                    ),
-                  ],
-                  if (isOwner) ...[
-                    const SizedBox(height: 24),
-                    Text(
-                      currentEmblem == null
-                          ? 'VYBER ZNAK'
-                          : 'VYMĚNIT ZA',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
-                        color: Tokens.onSurfaceMuted,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _UnlockedEmblemGrid(
-                      emblems: unlockedEmblems,
-                      currentEmblemId: currentEmblem?.id,
-                      onPick: (def) => Navigator.of(context)
-                          .pop(EmblemSlotPick(slotIndex, def.id)),
-                    ),
-                  ],
-                ],
+            if (currentEmblem != null) ...[
+              const SizedBox(height: 20),
+              _CurrentEmblemBlock(
+                emblem: currentEmblem!,
+                isOwner: isOwner,
+                onRemove: () => Navigator.of(context)
+                    .pop(EmblemSlotPick(slotIndex, null)),
               ),
-            ),
+            ],
+            if (isOwner) ...[
+              const SizedBox(height: 24),
+              Text(
+                currentEmblem == null ? 'VYBER ZNAK' : 'VYMĚNIT ZA',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  color: Tokens.onSurfaceMuted,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _UnlockedEmblemGrid(
+                emblems: unlockedEmblems,
+                currentEmblemId: currentEmblem?.id,
+                onPick: (def) => Navigator.of(context)
+                    .pop(EmblemSlotPick(slotIndex, def.id)),
+              ),
+            ],
           ],
         ),
       ),

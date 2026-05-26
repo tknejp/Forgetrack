@@ -17,6 +17,7 @@ import '../social_profile_utils.dart';
 import 'companion_slot_sheet.dart';
 import 'emblem_slot_sheet.dart';
 import 'profile_detail_hero_card.dart';
+import 'profile_hero_identity.dart';
 import 'profile_stats_section.dart';
 import 'skin_slot_sheet.dart';
 import 'social_cosmetic_avatar.dart';
@@ -46,7 +47,6 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
   late final Stream<SocialUserProfile?> _profileStream;
   late final Stream<List<SocialUnlockedAchievement>> _achievementsStream;
   late final Stream<List<SocialAchievementShare>> _sharesStream;
-  late final Stream<List<SocialUserProfile>> _friendsStream;
   bool _actionBusy = false;
 
   @override
@@ -56,7 +56,6 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
     _profileStream = social.watchProfileById(widget.uid);
     _achievementsStream = social.watchFriendAchievements(widget.uid);
     _sharesStream = social.watchProfileShares(widget.uid);
-    _friendsStream = social.watchFriendProfilesForUser(widget.uid);
   }
 
   Future<void> _editOwnHandle(String currentHandle) async {
@@ -268,71 +267,48 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
                       // chip under @handle reflects the live friend
                       // count from the same stream the modal sheet
                       // opens onto.
-                      StreamBuilder<List<SocialUserProfile>>(
-                        stream: _friendsStream,
-                        builder: (context, friendsSnap) {
-                          final friendCount = friendsSnap.data?.length;
-                          // For own profile the hero body reads
-                          // race + equipped skin straight from the
-                          // local cosmetics provider. Friend profiles
-                          // have no race/skin payload on the wire
-                          // format yet (extension lands in a follow-up)
-                          // — they fall back to the silhouette.
-                          final cosmeticsState = isMe
-                              ? context.watch<CosmeticsProvider>()
-                              : null;
-                          return ProfileDetailHeroCard(
-                            displayName: displayName,
-                            handle: handle,
-                            profile: profile,
-                            isMe: isMe,
-                            raceId: cosmeticsState?.currentRaceId,
-                            skinId: cosmeticsState?.state?.equipped.skinId,
-                            emblemSlots: emblemSlots,
-                            onEditHandle:
-                                isMe ? () => _editOwnHandle(handle) : null,
-                            friendCount: friendCount,
-                            // `_friendsStream` is single-subscription
-                            // and already listened-to by this hero
-                            // card's StreamBuilder for the chip count
-                            // — handing the same instance to the sheet
-                            // would silently fail to subscribe and the
-                            // sheet would stick at "loading". Spin up
-                            // a fresh stream for the sheet instead;
-                            // the repository serves an independent
-                            // Firestore snapshot listener per call.
-                            onTapFriendChip: () =>
-                                ProfileFriendsListSheet.show(
-                              context,
-                              stream: social
-                                  .watchFriendProfilesForUser(widget.uid),
-                            ),
-                            // Friend profiles get read-only detail; the
-                            // owner gets the full picker (equip / remove /
-                            // swap). Locked slots ignore the tap.
-                            onTapEmblemSlot: (slotIndex) =>
-                                _openEmblemSlotSheet(
-                              slotIndex: slotIndex,
-                              isOwner: isMe,
-                              uid: widget.uid,
-                              slots: emblemSlots,
-                              unlocked: ownUnlockedEmblems,
-                            ),
-                            // Tap on the companion standee → cosmetic
-                            // details sheet (own profile only — friend
-                            // profiles don't carry the local cosmetics
-                            // state needed to render lifecycle / equip).
-                            onTapCompanion: isMe
-                                ? (c) => _openCompanionDetails(c)
-                                : null,
-                            // Tap on the hero body → skin slot sheet,
-                            // same restriction as the companion tap.
-                            onTapAvatar: isMe
-                                ? (id) => _openSkinDetails(id)
-                                : null,
-                          );
-                        },
-                      ),
+                      // For own profile the hero body reads race +
+                      // equipped skin straight from the local
+                      // cosmetics provider. Friend profiles have no
+                      // race/skin payload on the wire format yet
+                      // (extension lands in a follow-up) — they fall
+                      // back to the silhouette.
+                      Builder(builder: (context) {
+                        final cosmeticsState = isMe
+                            ? context.watch<CosmeticsProvider>()
+                            : null;
+                        return ProfileDetailHeroCard(
+                          displayName: displayName,
+                          profile: profile,
+                          isMe: isMe,
+                          raceId: cosmeticsState?.currentRaceId,
+                          skinId: cosmeticsState?.state?.equipped.skinId,
+                          emblemSlots: emblemSlots,
+                          // Friend profiles get read-only detail; the
+                          // owner gets the full picker (equip / remove
+                          // / swap). Locked slots ignore the tap.
+                          onTapEmblemSlot: (slotIndex) =>
+                              _openEmblemSlotSheet(
+                            slotIndex: slotIndex,
+                            isOwner: isMe,
+                            uid: widget.uid,
+                            slots: emblemSlots,
+                            unlocked: ownUnlockedEmblems,
+                          ),
+                          // Tap on the companion standee → cosmetic
+                          // details sheet (own profile only — friend
+                          // profiles don't carry the local cosmetics
+                          // state needed to render lifecycle / equip).
+                          onTapCompanion: isMe
+                              ? (c) => _openCompanionDetails(c)
+                              : null,
+                          // Tap on the hero body → skin slot sheet,
+                          // same restriction as the companion tap.
+                          onTapAvatar: isMe
+                              ? (id) => _openSkinDetails(id)
+                              : null,
+                        );
+                      }),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                         child: Column(
@@ -452,6 +428,38 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
                       leading: Navigator.of(context).canPop()
                           ? const FtBackButton()
                           : null,
+                      // Inline `@handle · Přátelé N` row sitting as
+                      // the app bar's subtitle, directly under the
+                      // player's display name. Lived in the trailing
+                      // slot as a right-aligned stack between
+                      // 2026-05-26 and 2026-05-27. Friend count comes
+                      // from a fresh subscription (the repository
+                      // serves an independent snapshot listener per
+                      // call), so it doesn't fight with
+                      // `_friendsStream` which is a single-sub
+                      // instance reserved for the friends-list sheet.
+                      subtitle: StreamBuilder<List<SocialUserProfile>>(
+                        stream:
+                            social.watchFriendProfilesForUser(widget.uid),
+                        builder: (context, friendsSnap) {
+                          return ProfileAppBarIdentityStack(
+                            handle: handle,
+                            isMe: isMe,
+                            onEditHandle: isMe
+                                ? () => _editOwnHandle(handle)
+                                : null,
+                            friendCount: friendsSnap.data?.length,
+                            onTapFriendChip: () =>
+                                ProfileFriendsListSheet.show(
+                              context,
+                              stream: social
+                                  .watchFriendProfilesForUser(widget.uid),
+                            ),
+                            friendsChipLabel:
+                                l10n.socialProfileFriendsChipLabel,
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
