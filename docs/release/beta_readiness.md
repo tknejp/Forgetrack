@@ -295,6 +295,8 @@ Karty v tomto tier se aktivují **podle hlasité poptávky od testerů** ze Spri
 
 **Shipped:** `FirestoreCosmeticEntitlementsSource.watchForUser(uid)` vrací `Stream<Result<List<CosmeticEntitlement>, AppError>>`. `CosmeticsProvider` subscribuje po dokončení `_load`, každá emise je authoritativní replacement set, nové unlocky jdou přes `service.unlock` (idempotent). Cloud-Function-pushed promo grant landne live bez restartu. `loadForUser` retained pro testy / one-shot reads. Stream errors → `Failure(classifyFirebaseError(...))` přes `StreamTransformer.fromHandlers` (žádný uncaught error na sinku). Trigger pro reálný use-case (Cloud Function píšící entitlements) zatím není postavený — současný stream emituje jen initial-load snapshot.
 
+**Tier 1 ops tool — SHIPPED 2026-05-27.** [`functions/scripts/grant-cosmetic.js`](../../functions/scripts/grant-cosmetic.js) — Node.js skript s firebase-admin pro ruční granty testerům. Píše do `users/{uid}/cosmeticEntitlements/{cosmeticId}` (idempotentní set, doc ID = cosmeticId). Podporuje `--grant` (default), `--revoke <id>` a `--list`. Service-account JSON přes `GOOGLE_APPLICATION_CREDENTIALS` nebo v `functions/scripts/service-account.json` (gitignored). Setup + příklady v [functions/scripts/README.md](../../functions/scripts/README.md). Tier 0 (ruční Firebase Console) je nadále validní pro one-off testy.
+
 ---
 
 ### #106 — Devtools Firestore `devUsers/{uid}` lookup — **SHIPPED 2026-05-27**
