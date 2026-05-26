@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../../core/logging/app_log.dart';
+import '../../../cosmetics/data/firestore_cosmetics_gateway.dart';
 import '../../../progression_engine/data/firestore_progression_engine_gateway.dart';
 
 /// Deletes the Firestore docs Forgetrack writes under a user's namespace.
@@ -12,7 +13,9 @@ import '../../../progression_engine/data/firestore_progression_engine_gateway.da
 /// - `users/{uid}/engineNodeAnnouncements/*`
 /// - `users/{uid}/engineRewardGrants/*`
 /// - `users/{uid}/engineQuestOfferings/*`
-/// - `users/{uid}/cosmeticEntitlements/*`
+/// - `users/{uid}/cosmeticEntitlements/*` (server-pushed grants)
+/// - `users/{uid}/cosmeticUnlocks/*` (hybrid cosmetics cloud sync)
+/// - `users/{uid}/cosmeticState/state` (hybrid cosmetics cloud sync)
 /// - `users/{uid}/notifications/*`
 ///
 /// Explicitly NOT touched (would mutate other users' state):
@@ -33,12 +36,16 @@ class DevToolsUserDataPurgeService {
   DevToolsUserDataPurgeService({
     FirebaseFirestore? firestore,
     FirestoreProgressionEngineGateway? progressionGateway,
+    FirestoreCosmeticsGateway? cosmeticsGateway,
   })  : _firestore = firestore ?? FirebaseFirestore.instance,
         _progressionGateway =
-            progressionGateway ?? FirestoreProgressionEngineGateway();
+            progressionGateway ?? FirestoreProgressionEngineGateway(),
+        _cosmeticsGateway =
+            cosmeticsGateway ?? FirestoreCosmeticsGateway();
 
   final FirebaseFirestore _firestore;
   final FirestoreProgressionEngineGateway _progressionGateway;
+  final FirestoreCosmeticsGateway _cosmeticsGateway;
 
   Future<UserDataPurgeReport> purgeForUid(String uid) async {
     AppLog.reset.info('firestore-purge: start uid=$uid');
@@ -58,14 +65,33 @@ class DevToolsUserDataPurgeService {
       );
     }
 
-    // 2. Cosmetic entitlements sub-collection.
+    // 2. Cosmetic entitlements sub-collection (server-pushed grants).
     final cosmeticDeleted = await _safeDeleteCollection(
       _userCollection(uid, 'cosmeticEntitlements'),
       label: 'cosmeticEntitlements',
       stepErrors: stepErrors,
     );
 
-    // 3. Per-user notifications sub-collection.
+    // 3. Cosmetics hybrid cloud sync — `cosmeticUnlocks/*` +
+    //    `cosmeticState/state`. Mirrors the local Isar `clearAll()`
+    //    step in the factory-reset flow so a post-reset sign-in
+    //    starts with a clean slate on both sides.
+    var cosmeticsHybridWiped = false;
+    try {
+      await _cosmeticsGateway.wipeAll(uid);
+      cosmeticsHybridWiped = true;
+      AppLog.reset.success('firestore-purge: cosmetics hybrid wiped');
+    } catch (e, st) {
+      stepErrors['cosmeticsHybrid'] = e.toString();
+      AppLog.reset.error(
+        'firestore-purge: cosmetics hybrid wipe failed',
+        payload: 'uid=$uid',
+        err: e,
+        stackTrace: st,
+      );
+    }
+
+    // 4. Per-user notifications sub-collection.
     final notificationsDeleted = await _safeDeleteCollection(
       _userCollection(uid, 'notifications'),
       label: 'notifications',
@@ -75,13 +101,16 @@ class DevToolsUserDataPurgeService {
     AppLog.reset.success(
       'firestore-purge: done',
       payload:
-          'uid=$uid cosmeticDocs=$cosmeticDeleted notificationDocs=$notificationsDeleted '
+          'uid=$uid cosmeticDocs=$cosmeticDeleted '
+          'cosmeticsHybrid=${cosmeticsHybridWiped ? "✓" : "✗"} '
+          'notificationDocs=$notificationsDeleted '
           'errors=${stepErrors.length}',
     );
 
     return UserDataPurgeReport(
       uid: uid,
       cosmeticEntitlementsDeleted: cosmeticDeleted,
+      cosmeticsHybridWiped: cosmeticsHybridWiped,
       notificationsDeleted: notificationsDeleted,
       progressionWiped: !stepErrors.containsKey('progression'),
       stepErrors: stepErrors,
@@ -139,6 +168,7 @@ class UserDataPurgeReport {
   const UserDataPurgeReport({
     required this.uid,
     required this.cosmeticEntitlementsDeleted,
+    required this.cosmeticsHybridWiped,
     required this.notificationsDeleted,
     required this.progressionWiped,
     required this.stepErrors,
@@ -146,6 +176,7 @@ class UserDataPurgeReport {
 
   final String uid;
   final int cosmeticEntitlementsDeleted;
+  final bool cosmeticsHybridWiped;
   final int notificationsDeleted;
   final bool progressionWiped;
   final Map<String, String> stepErrors;
@@ -156,6 +187,7 @@ class UserDataPurgeReport {
     final pieces = <String>[
       if (progressionWiped) 'progression✓' else 'progression✗',
       'cosmetic=$cosmeticEntitlementsDeleted',
+      if (cosmeticsHybridWiped) 'cosmeticsHybrid✓' else 'cosmeticsHybrid✗',
       'notif=$notificationsDeleted',
     ];
     if (hasErrors) {

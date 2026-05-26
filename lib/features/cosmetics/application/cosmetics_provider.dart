@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../../../core/errors/app_error.dart';
 import '../../../core/logging/app_log.dart';
 import '../../../core/result/result.dart';
 import '../data/cosmetic_entitlements_source.dart';
@@ -49,6 +50,16 @@ class CosmeticsProvider extends ChangeNotifier {
   UserCosmeticsState? _state;
   String? _errorMessage;
   CosmeticUnlockSnapshot? _revealSnapshot;
+
+  /// Realtime subscription to `users/{uid}/cosmeticEntitlements` (Trello
+  /// #82). One active subscription at a time — replaced on every
+  /// [bindUser] to a new uid, cancelled on sign-out + [dispose]. Each
+  /// emission is treated as the authoritative replacement set; new
+  /// entries are forwarded to [CosmeticsService.unlock] which is
+  /// idempotent at the repo layer, so re-emissions of the same set
+  /// collapse to a no-op.
+  StreamSubscription<Result<List<CosmeticEntitlement>, AppError>>?
+      _entitlementsSub;
 
   bool get isLoading => _isLoading;
   String? get currentUid => _currentUid;
@@ -278,6 +289,11 @@ class CosmeticsProvider extends ChangeNotifier {
   void bindUser(String? uid) {
     if (uid == _currentUid) return;
     _log.info('bindUser', payload: 'uid=${uid ?? "<null>"}');
+    // Cancel any prior entitlements subscription before mutating
+    // `_currentUid` — a late emission for the previous uid would
+    // otherwise race with the new bind.
+    _entitlementsSub?.cancel();
+    _entitlementsSub = null;
     _currentUid = uid;
     _state = null;
     _errorMessage = null;
@@ -287,6 +303,13 @@ class CosmeticsProvider extends ChangeNotifier {
       return;
     }
     unawaited(_load(uid));
+  }
+
+  @override
+  void dispose() {
+    _entitlementsSub?.cancel();
+    _entitlementsSub = null;
+    super.dispose();
   }
 
   /// Reloads the bound user's state from the repository. No-op if no user is
@@ -588,8 +611,7 @@ class CosmeticsProvider extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
     try {
-      var nextState = await _service.load(uid);
-      nextState = await _applyEntitlements(uid, nextState);
+      final nextState = await _service.load(uid);
       if (_currentUid != uid) return;
       _state = nextState;
       _log.info(
@@ -597,6 +619,14 @@ class CosmeticsProvider extends ChangeNotifier {
         payload:
             'uid=$uid unlocked=${_state?.unlocked.length ?? 0} equipped=${_state?.equipped.frameId ?? "-"}',
       );
+      // Subscribe AFTER the local state is in place so the stream's
+      // first emission applies entitlements against an initialized
+      // `_state`. Re-emissions stay idempotent — the service-layer
+      // unlock dedupes against the loaded unlock map. Trello #82
+      // (2026-05-27): converts the previous one-shot
+      // `_applyEntitlements` to a live subscription so Cloud-Function-
+      // pushed promo grants land without an app restart.
+      _subscribeEntitlements(uid);
     } on CosmeticsException catch (error) {
       _errorMessage = error.code;
       _log.warn(
@@ -617,38 +647,59 @@ class CosmeticsProvider extends ChangeNotifier {
     }
   }
 
-  Future<UserCosmeticsState> _applyEntitlements(
+  void _subscribeEntitlements(String uid) {
+    _entitlementsSub?.cancel();
+    _entitlementsSub =
+        _entitlementsSource.watchForUser(uid).listen((result) {
+      unawaited(_handleEntitlementsEmission(uid, result));
+    });
+  }
+
+  Future<void> _handleEntitlementsEmission(
     String uid,
-    UserCosmeticsState state,
+    Result<List<CosmeticEntitlement>, AppError> result,
   ) async {
-    final loadResult = await _entitlementsSource.loadForUser(uid);
-    final List<CosmeticEntitlement> entitlements;
-    switch (loadResult) {
-      case Success(value: final v):
-        entitlements = v;
+    // Guard against late emissions after a re-bind (sign-out / new
+    // user) — by the time this microtask runs `_currentUid` may have
+    // moved on and we must not stamp entitlements over a different
+    // session's state.
+    if (_currentUid != uid) return;
+
+    switch (result) {
       case Failure(error: final e):
         // R.4 (2026-05-19): typed failure surfacing. Transient Firestore
-        // outages stay at `warn` so AppLog stops bleeding red — they
-        // self-heal on the next bind. Permanent failures (permission
-        // denied, schema-drift validation) log at `error` so devtools /
-        // crash reports surface them.
+        // outages stay at `warn` so AppLog stops bleeding red — Firestore
+        // auto-reconnects and the next snapshot self-heals. Permanent
+        // failures (permission denied, schema-drift validation) log at
+        // `error` so devtools / crash reports surface them.
         if (e.isTransient) {
           _log.warn(
-            'entitlement load skipped (transient)',
+            'entitlement stream transient',
             payload: 'uid=$uid error=${e.label}',
           );
         } else {
           _log.error(
-            'entitlement load skipped (permanent)',
+            'entitlement stream permanent',
             payload: 'uid=$uid error=${e.label}',
             err: e.originalError,
             stackTrace: e.stackTrace,
           );
         }
-        return state;
+        return;
+      case Success(value: final entitlements):
+        await _applyEntitlements(uid, entitlements);
     }
+  }
 
-    var nextState = state;
+  Future<void> _applyEntitlements(
+    String uid,
+    List<CosmeticEntitlement> entitlements,
+  ) async {
+    final current = _state;
+    if (current == null) return;
+
+    var nextState = current;
+    var applied = 0;
     for (final entitlement in entitlements) {
       if (nextState.unlocked.containsKey(entitlement.cosmeticId)) continue;
       try {
@@ -658,6 +709,7 @@ class CosmeticsProvider extends ChangeNotifier {
           sourceType: entitlement.sourceType,
           sourceId: entitlement.sourceId,
         );
+        applied++;
         _log.info(
           'entitlement unlock OK',
           payload:
@@ -677,6 +729,10 @@ class CosmeticsProvider extends ChangeNotifier {
         );
       }
     }
-    return nextState;
+
+    if (applied == 0) return;
+    if (_currentUid != uid) return;
+    _state = nextState;
+    notifyListeners();
   }
 }

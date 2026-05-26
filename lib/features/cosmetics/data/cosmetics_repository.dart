@@ -7,14 +7,16 @@ import '../domain/cosmetic_models.dart';
 /// and throw [CosmeticsException] (defined in `cosmetic_models.dart`) for
 /// invalid operations rather than silently no-oping.
 ///
-/// TODO(remote): A future Firestore implementation should mirror the
-/// progression hybrid pattern — see
-/// `lib/features/progression/data/hybrid_progression_repository.dart`
-/// and `firestore_progression_gateway.dart` for the local-first + cloud
-/// fire-and-forget approach. The social feature
-/// (`lib/features/social/data/social_repository_firestore.dart` /
-/// `social_repository_disabled.dart`) shows the dual-implementation
-/// (enabled/disabled) split for environments without Firebase.
+/// Concrete implementations:
+///   * [IsarCosmeticsRepository] — local Isar persistence; the
+///     baseline implementation, used directly when the social Firebase
+///     backend is unavailable.
+///   * [HybridCosmeticsRepository] — wraps the Isar repo with a
+///     Firestore push/pull layer ([FirestoreCosmeticsGateway]). Local
+///     writes stay authoritative; cloud pushes are best-effort. First
+///     load per uid does a pull-and-merge so a fresh install / second
+///     device converges to the cloud's inventory.
+///   * [InMemoryCosmeticsRepository] — test-only.
 abstract class CosmeticsRepository {
   /// Returns the current state for [uid], creating a default state on first
   /// access. Implementations must never return null.
