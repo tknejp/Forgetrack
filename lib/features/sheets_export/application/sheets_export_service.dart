@@ -5,9 +5,9 @@ import '../../../core/logging/app_log.dart';
 import '../../../core/config/constants.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/sheets_service.dart';
-import '../domain/sheet_export_field.dart';
 import '../domain/sheet_merge_engine.dart';
 import 'google_sheets_auth_service.dart';
+import 'sheet_export_field.dart';
 
 class SheetsExportException implements Exception {
   final String message;

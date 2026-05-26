@@ -1,5 +1,3 @@
-import 'package:intl/intl.dart';
-
 class WeightRecord {
   final DateTime date;
   final double weight;
@@ -12,11 +10,4 @@ class WeightRecord {
     this.bodyFat,
     this.bodyWater,
   });
-
-  List<Object?> toSheetRow() => [
-        DateFormat('yyyy-MM-dd').format(date),
-        weight,
-        bodyFat,
-        bodyWater,
-      ];
 }

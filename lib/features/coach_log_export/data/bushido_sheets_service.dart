@@ -10,8 +10,8 @@ import 'package:forgetrack/features/coach_log_export/data/bushido_a1_notation.da
 import 'package:forgetrack/features/coach_log_export/data/bushido_block_grid.dart';
 import 'package:forgetrack/features/coach_log_export/data/bushido_format_requests.dart';
 import 'package:forgetrack/features/coach_log_export/data/bushido_week_marker.dart';
+import 'package:forgetrack/features/coach_log_export/config/bushido_export_config.dart';
 import 'package:forgetrack/features/coach_log_export/domain/bushido_day_row.dart';
-import 'package:forgetrack/features/coach_log_export/domain/bushido_export_config.dart';
 import 'package:forgetrack/features/coach_log_export/domain/bushido_sheet_layout.dart';
 import 'package:forgetrack/features/coach_log_export/domain/iso_week.dart';
 import 'package:forgetrack/features/sheets_export/application/google_sheets_auth_service.dart';

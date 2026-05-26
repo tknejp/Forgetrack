@@ -472,7 +472,10 @@ Tyto items se shipped pre-refactor nebo as side-effect of phases — closed befo
 
 ## 6. Cross-references
 
-- **Smell items v kódu** (TODO markers): [sheet_export_field.dart](../../lib/features/sheets_export/domain/sheet_export_field.dart#L1), [bushido_export_config.dart](../../lib/features/coach_log_export/domain/bushido_export_config.dart#L1), [activity_record.dart](../../lib/features/health_connect/domain/activity_record.dart#L10).
+- **Smell items v kódu** (TODO markers) — ✅ Closed 2026-05-27 as a minimal-cleanup PR:
+  - `sheet_export_field.dart` moved `lib/features/sheets_export/domain/` → `lib/features/sheets_export/application/` (option (a) from the file's TODO; option (b) — refactoring `resolve()` to take `HealthSnapshot` + `NutritionSnapshot` instead of provider handles — tracked separately on Trello [#122](https://trello.com/c/pDMgvySK) as a Track B follow-up).
+  - `bushido_export_config.dart` moved `lib/features/coach_log_export/domain/` → `lib/features/coach_log_export/config/`. Czech labels stay (single-language export target, documented exception at the top of the file).
+  - `activity_record.dart` + `weight_record.dart` lost their `toSheetRow()` methods — zero production callers; dead code. `intl` import dropped from both.
 - **Memory notes:** [project_config_system.md](../../memory/project_config_system.md), [project_logging.md](../../memory/project_logging.md).
 - **Architecture:** [architecture.md](../architecture.md), [proposal.md](proposal.md), [archive/migration_plan.md](archive/migration_plan.md).
 - **Lint:** [docs/contributing.md](../contributing.md), [test/lint/production_scan_test.dart](../../test/lint/production_scan_test.dart).

@@ -1,8 +1,8 @@
 import 'package:googleapis/sheets/v4.dart' as sheets;
 
+import 'package:forgetrack/features/coach_log_export/config/bushido_export_config.dart';
 import 'package:forgetrack/features/coach_log_export/config/bushido_sheet_format_config.dart';
 import 'package:forgetrack/features/coach_log_export/data/bushido_a1_notation.dart';
-import 'package:forgetrack/features/coach_log_export/domain/bushido_export_config.dart';
 import 'package:forgetrack/features/coach_log_export/domain/bushido_sheet_layout.dart';
 
 /// Builds Sheets API `Request` objects for everything formatting-related on
