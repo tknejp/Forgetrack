@@ -57,7 +57,7 @@ class ProfileTitleBanner extends StatelessWidget {
 
   // Level badge gem (~140 px wide, x=90..230 of the source).
   static const double _levelBoxLeftFrac = 90 / 1024;
-  static const double _levelBoxRightFrac = 230 / 1024;
+  static const double _levelBoxRightFrac = 235 / 1024;
 
   // Title plate (x=240..750 of the source; past 750 the asset starts
   // to include decorative silhouette + corner gem, so the title is
@@ -75,7 +75,7 @@ class ProfileTitleBanner extends StatelessWidget {
   // banner asset can grow (less screen-side padding, different device
   // widths) without dragging the text along. Calibrated to read well
   // on a 360-px-wide screen with ~8-px screen gutter.
-  static const double _levelFontSize = 14;
+  static const double _levelFontSize = 18;
   static const double _titleFontSize = 16;
 
   // Tier-default banner asset key. Each rarity maps to the first
@@ -129,7 +129,7 @@ class ProfileTitleBanner extends StatelessWidget {
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Text(
-                      'Lv. $level',
+                      '$level',
                       style: GoogleFonts.cinzel(
                         color: palette.levelColor,
                         fontSize: _levelFontSize,
