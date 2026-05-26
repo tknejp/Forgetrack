@@ -124,42 +124,6 @@ class _EmblemSlot extends StatelessWidget {
           clipBehavior: Clip.none,
           alignment: Alignment.center,
           children: [
-            // Per-equipped soft round shadow — replaces the old
-            // outer grid panel. Sits behind the rarity halo so the
-            // colored tint still leads visually; the dark backdrop
-            // just anchors the emblem to the hero scene instead of
-            // letting it float on whatever pixels happen to be
-            // under it. Empty slots intentionally skip this layer
-            // and stay fully transparent.
-            //
-            // Negative insets push the gradient past the slot
-            // bounds so the halo overflows ~8 px on each side —
-            // necessary because a `Positioned.fill` shadow with a
-            // 0-alpha outer stop visually vanishes right at the
-            // slot edge, leaving no glow on the surrounding scene.
-            // The parent Stack already opts into `Clip.none` so
-            // the overflow is honoured.
-            Positioned(
-              left: -8,
-              right: -8,
-              top: -6,
-              bottom: -8,
-              child: IgnorePointer(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        Colors.black.withValues(alpha: 0.8),
-                        Colors.black.withValues(alpha: 0.5),
-                        Colors.black.withValues(alpha: 0),
-                      ],
-                      stops: const [0.0, 0.45, 1.0],
-                    ),
-                  ),
-                ),
-              ),
-            ),
             Positioned.fill(
               child: IgnorePointer(
                 child: DecoratedBox(
@@ -212,46 +176,66 @@ class _EmblemSlot extends StatelessWidget {
         ),
       );
     } else {
+      // Dashed-frame footprint sits inside the slot's hit-target —
+      // the slot reads as a hint, equipped emblems read as the
+      // main object overflowing that hint (frame < slotSize).
+      final frame = ProfileHeroLayout.emblemFrameSize;
+      // Locked slots get a quieter rendering than empty-but-
+      // unlocked ones — the player has nothing actionable to do
+      // there yet, so we let the unlocked slots lead visually.
+      final locked = !data.unlocked;
+      final borderColor = locked
+          ? const Color(0x0DFFFFFF)
+          : const Color(0x17FFFFFF);
+      final fillColor = locked
+          ? const Color(0x03FFFFFF)
+          : const Color(0x07FFFFFF);
       content = SizedBox(
         width: size,
         height: size,
-        child: CustomPaint(
-          painter: _DashedBorderPainter(
-            color: const Color(0x17FFFFFF),
-            radius: 9,
-            dashWidth: 3,
-            dashGap: 3,
-            strokeWidth: 1,
-            fillColor: const Color(0x07FFFFFF),
-          ),
-          child: Center(
-            child: data.unlocked
-                ? (data.endGame
-                    ? CustomPaint(
-                        size: Size(size * 0.45, size * 0.45),
-                        painter: _StarGlyphPainter(
-                          color: const Color(0x38FFFFFF),
-                        ),
-                      )
-                    : Icon(
-                        Icons.add_rounded,
-                        size: size * 0.42,
-                        color: Colors.white.withValues(alpha: 0.42),
-                      ))
-                : (data.unlockLevel != null
-                    ? Icon(
-                        Icons.lock_rounded,
-                        size: size * 0.42,
-                        color: Colors.white.withValues(alpha: 0.35),
-                      )
-                    : Container(
-                        width: 4,
-                        height: 4,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Color(0x2EFFFFFF),
-                        ),
-                      )),
+        child: Center(
+          child: SizedBox(
+            width: frame,
+            height: frame,
+            child: CustomPaint(
+              painter: _DashedBorderPainter(
+                color: borderColor,
+                radius: 9,
+                dashWidth: 3,
+                dashGap: 3,
+                strokeWidth: 1,
+                fillColor: fillColor,
+              ),
+              child: Center(
+                child: data.unlocked
+                    ? (data.endGame
+                        ? CustomPaint(
+                            size: Size(frame * 0.45, frame * 0.45),
+                            painter: _StarGlyphPainter(
+                              color: const Color(0x38FFFFFF),
+                            ),
+                          )
+                        : Icon(
+                            Icons.add_rounded,
+                            size: frame * 0.42,
+                            color: Colors.white.withValues(alpha: 0.42),
+                          ))
+                    : (data.unlockLevel != null
+                        ? Icon(
+                            Icons.lock_rounded,
+                            size: frame * 0.42,
+                            color: Colors.white.withValues(alpha: 0.20),
+                          )
+                        : Container(
+                            width: 4,
+                            height: 4,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color(0x1AFFFFFF),
+                            ),
+                          )),
+              ),
+            ),
           ),
         ),
       );

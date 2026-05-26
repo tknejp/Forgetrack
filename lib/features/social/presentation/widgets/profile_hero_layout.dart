@@ -14,7 +14,7 @@ class ProfileHeroLayout {
   // companion sprite, hero avatar, and their shadows therefore
   // keep their original absolute positions, and the new space
   // appears as additional dark UI band at the bottom.
-  static const double height = 530;
+  static const double height = 500;
   static const double edge = 16;
 
   static const double groundLineFromBottom = 116;
@@ -97,15 +97,20 @@ class ProfileHeroLayout {
   // Emblem row — 6 slots laid out horizontally along the BOTTOM of
   // the hero card, evenly distributed between the side gutters
   // (relocated from a right-edge column on 2026-05-26). Slot size
-  // is sized for a 6-slot row to fit on a 320-px-wide screen
-  // (6·48 + 5·gap ≤ width − 2·edge) without overlapping; the
+  // is sized for a 6-slot row to fit on a ~360-px-wide screen
+  // (6·56 + 5·gap ≤ width − 2·edge) without overlapping; the
   // [Row]'s spaceBetween distribution handles wider screens by
   // expanding the gaps instead of the slots themselves.
   static const double emblemRowBottom = 6;
   static const double emblemRowLeft = edge;
   static const double emblemRowRight = edge;
 
-  static const double emblemSlotSize = 48;
+  static const double emblemSlotSize = 56;
+  // Visible dashed frame drawn for empty/locked slots. Intentionally
+  // smaller than [emblemSlotSize] so equipped emblem artwork visibly
+  // overflows the placeholder frame — slot reads as a hint, emblem
+  // reads as the main object.
+  static const double emblemFrameSize = 48;
   // Minimum visual breathing room between adjacent slots; the
   // actual gap on a given screen comes from spaceBetween + the
   // available width, so this constant is informational rather than
