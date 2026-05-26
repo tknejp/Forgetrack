@@ -65,12 +65,35 @@ const List<LevelMilestoneSpec> kLevelMilestones = [
     // Level 1 is the journey origin — starter cosmetics flow from the
     // welcome_to_journey achievement, not from this milestone.
   ),
+  // Slot unlock 1/6 — emblem-board slot 0 (see
+  // `EmblemBoard.slotUnlockLevels`). Carries no cosmetic reward; the
+  // unlocked emblem slot itself is the reward, similar in feel to
+  // earning a title.
+  LevelMilestoneSpec(
+    level: 3,
+    titleKey: _emblemSlot1,
+    emoji: '🛡️',
+    rarity: Rarity.common,
+    isTitleBreakpoint: false,
+  ),
   LevelMilestoneSpec(
     level: 5,
     titleKey: _title5,
     emoji: '🥾',
     rarity: Rarity.common,
     cosmeticRewardIds: ['background_forest_trail'],
+  ),
+  // Banner drop — teaser 2 levels before the uncommon-tier frame
+  // (lvl 10). Title still reads the active common-tier label so the
+  // celebration card shows "you got a new banner" without claiming
+  // the player has changed tier.
+  LevelMilestoneSpec(
+    level: 8,
+    titleKey: _title5,
+    emoji: '🌲',
+    rarity: Rarity.common,
+    cosmeticRewardIds: ['banner_forest'],
+    isTitleBreakpoint: false,
   ),
   LevelMilestoneSpec(
     level: 10,
@@ -94,12 +117,31 @@ const List<LevelMilestoneSpec> kLevelMilestones = [
     rarity: Rarity.uncommon,
     cosmeticRewardIds: ['background_ravine'],
   ),
+  // Slot unlock 2/6.
+  LevelMilestoneSpec(
+    level: 17,
+    titleKey: _emblemSlot2,
+    emoji: '🛡️',
+    rarity: Rarity.uncommon,
+    isTitleBreakpoint: false,
+  ),
   LevelMilestoneSpec(
     level: 20,
     titleKey: _title20,
     emoji: '🛡️',
     rarity: Rarity.uncommon,
     cosmeticRewardIds: ['frame_ruins'],
+  ),
+  // Banner drop bridging the uncommon→rare transition. Sits between
+  // frame_ruins (lvl 20, uncommon) and background_ruins (lvl 25, rare)
+  // as the centerpiece of the ruins set.
+  LevelMilestoneSpec(
+    level: 23,
+    titleKey: _title20,
+    emoji: '🏛️',
+    rarity: Rarity.uncommon,
+    cosmeticRewardIds: ['banner_ruins'],
+    isTitleBreakpoint: false,
   ),
   LevelMilestoneSpec(
     level: 25,
@@ -114,12 +156,30 @@ const List<LevelMilestoneSpec> kLevelMilestones = [
     emoji: '🏰',
     rarity: Rarity.rare,
   ),
+  // Slot unlock 3/6.
+  LevelMilestoneSpec(
+    level: 33,
+    titleKey: _emblemSlot3,
+    emoji: '🛡️',
+    rarity: Rarity.rare,
+    isTitleBreakpoint: false,
+  ),
   LevelMilestoneSpec(
     level: 35,
     titleKey: _title30,
     emoji: '🏔️',
     rarity: Rarity.rare,
     cosmeticRewardIds: ['background_bridge_crossing'],
+    isTitleBreakpoint: false,
+  ),
+  // Banner drop — teaser 2 levels before frame_dwarven (lvl 40),
+  // breaks the 35→40 dry stretch in the late-rare band.
+  LevelMilestoneSpec(
+    level: 38,
+    titleKey: _title30,
+    emoji: '🗝️',
+    rarity: Rarity.rare,
+    cosmeticRewardIds: ['banner_mine'],
     isTitleBreakpoint: false,
   ),
   LevelMilestoneSpec(
@@ -152,6 +212,25 @@ const List<LevelMilestoneSpec> kLevelMilestones = [
     rarity: Rarity.epic,
     cosmeticRewardIds: ['frame_underways'],
   ),
+  // Slot unlock 4/6.
+  LevelMilestoneSpec(
+    level: 53,
+    titleKey: _emblemSlot4,
+    emoji: '🛡️',
+    rarity: Rarity.epic,
+    isTitleBreakpoint: false,
+  ),
+  // Banner drop — fills the longest dry stretch in the whole ladder
+  // (53→60, 7 levels otherwise). Lands inside the epic title era
+  // (Pán podzemních cest) so the celebration ties to the active title.
+  LevelMilestoneSpec(
+    level: 57,
+    titleKey: _title50,
+    emoji: '🪟',
+    rarity: Rarity.epic,
+    cosmeticRewardIds: ['banner_frost'],
+    isTitleBreakpoint: false,
+  ),
   LevelMilestoneSpec(
     level: 60,
     titleKey: _title60,
@@ -174,12 +253,32 @@ const List<LevelMilestoneSpec> kLevelMilestones = [
     rarity: Rarity.epic,
     cosmeticRewardIds: ['frame_frost'],
   ),
+  // Slot unlock 5/6.
+  LevelMilestoneSpec(
+    level: 73,
+    titleKey: _emblemSlot5,
+    emoji: '🛡️',
+    rarity: Rarity.epic,
+    isTitleBreakpoint: false,
+  ),
   LevelMilestoneSpec(
     level: 75,
     titleKey: _title70,
     emoji: '☄️',
     rarity: Rarity.epic,
     cosmeticRewardIds: ['background_frozen_lake'],
+    isTitleBreakpoint: false,
+  ),
+  // Banner drop — teaser 2 levels before frame_mountain (lvl 80),
+  // breaks the 75→80 dry stretch. Player is still in the epic
+  // Ledový chodec era; the legendary banner functions as a preview of
+  // the tier they're about to enter.
+  LevelMilestoneSpec(
+    level: 78,
+    titleKey: _title70,
+    emoji: '⛰️',
+    rarity: Rarity.epic,
+    cosmeticRewardIds: ['banner_mountain'],
     isTitleBreakpoint: false,
   ),
   LevelMilestoneSpec(
@@ -204,12 +303,31 @@ const List<LevelMilestoneSpec> kLevelMilestones = [
     rarity: Rarity.legendary,
     cosmeticRewardIds: ['background_rocky_mountains'],
   ),
+  // Slot unlock 6/6 — final emblem-board slot.
+  LevelMilestoneSpec(
+    level: 93,
+    titleKey: _emblemSlot6,
+    emoji: '🛡️',
+    rarity: Rarity.legendary,
+    isTitleBreakpoint: false,
+  ),
   LevelMilestoneSpec(
     level: 95,
     titleKey: _title90,
     emoji: '🜲',
     rarity: Rarity.mythic,
     cosmeticRewardIds: ['skin_dragonrock'],
+    isTitleBreakpoint: false,
+  ),
+  // Banner drop — teaser 2 levels before the mythic finale (lvl 100),
+  // breaks the 95→100 dry stretch and previews the Dragonrock tier
+  // before the final frame + background land.
+  LevelMilestoneSpec(
+    level: 98,
+    titleKey: _title90,
+    emoji: '🌋',
+    rarity: Rarity.legendary,
+    cosmeticRewardIds: ['banner_dragonrock'],
     isTitleBreakpoint: false,
   ),
   LevelMilestoneSpec(
@@ -235,6 +353,27 @@ LevelMilestoneSpec? levelMilestoneByLevel(int level) {
 LevelMilestoneSpec levelMilestoneAtOrBelow(int level) {
   LevelMilestoneSpec current = kLevelMilestones.first;
   for (final spec in kLevelMilestones) {
+    if (spec.level <= level) {
+      current = spec;
+    } else {
+      break;
+    }
+  }
+  return current;
+}
+
+/// Returns the highest title-breakpoint spec whose level is ≤ [level].
+///
+/// Used for the player's *active title* + tier emoji at an arbitrary
+/// level. Skips non-title-breakpoint specs (decorative cosmetic drops,
+/// skin drops, emblem-slot unlocks) so those entries can carry their
+/// own distinct titleKey + emoji on the milestone node without
+/// overriding the surrounding tier's title in profile / journey /
+/// friend displays.
+LevelMilestoneSpec levelTitleSpecAtOrBelow(int level) {
+  LevelMilestoneSpec current = kLevelMilestones.first;
+  for (final spec in kLevelMilestones) {
+    if (!spec.isTitleBreakpoint) continue;
     if (spec.level <= level) {
       current = spec;
     } else {
@@ -272,3 +411,10 @@ String _title70(AppLocalizations l) => l.progLevelTitle70;
 String _title80(AppLocalizations l) => l.progLevelTitle80;
 String _title90(AppLocalizations l) => l.progLevelTitle90;
 String _title100(AppLocalizations l) => l.progLevelTitle100;
+
+String _emblemSlot1(AppLocalizations l) => l.progEmblemSlotMilestoneTitle1;
+String _emblemSlot2(AppLocalizations l) => l.progEmblemSlotMilestoneTitle2;
+String _emblemSlot3(AppLocalizations l) => l.progEmblemSlotMilestoneTitle3;
+String _emblemSlot4(AppLocalizations l) => l.progEmblemSlotMilestoneTitle4;
+String _emblemSlot5(AppLocalizations l) => l.progEmblemSlotMilestoneTitle5;
+String _emblemSlot6(AppLocalizations l) => l.progEmblemSlotMilestoneTitle6;

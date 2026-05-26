@@ -861,6 +861,7 @@ extension _CosmeticTypeLabel on CosmeticType {
       CosmeticType.titleFlair => l10n.cosmeticTypeTitleFlair,
       CosmeticType.mapEffect => l10n.cosmeticTypeMapEffect,
       CosmeticType.skin => l10n.cosmeticTypeSkin,
+      CosmeticType.banner => l10n.cosmeticTypeBanner,
     };
   }
 }

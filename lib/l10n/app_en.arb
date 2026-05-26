@@ -2057,6 +2057,21 @@
     }
   },
 
+  "cosmeticBannerPilgrimName": "Pilgrim Banner",
+  "cosmeticBannerPilgrimDesc": "A weathered iron plate carried by everyone who first sets foot on the road.",
+  "cosmeticBannerForestName": "Forest Banner",
+  "cosmeticBannerForestDesc": "Mossy bronze and forest greens for those who have learned the wildwood paths.",
+  "cosmeticBannerRuinsName": "Ruins Banner",
+  "cosmeticBannerRuinsDesc": "Cracked stonework and creeping moss recall the silent ruins above the pass.",
+  "cosmeticBannerMineName": "Old Gates Banner",
+  "cosmeticBannerMineDesc": "Bronze keyplate of the abandoned mine gates, marking the descent under the mountain.",
+  "cosmeticBannerFrostName": "Frost Banner",
+  "cosmeticBannerFrostDesc": "Glacial steel touched by violet rime — the colours of the frozen underways.",
+  "cosmeticBannerMountainName": "Mountain Banner",
+  "cosmeticBannerMountainDesc": "Gilded ridges and storm cloud blacks for the rider who challenged the peaks.",
+  "cosmeticBannerDragonrockName": "Dragonrock Banner",
+  "cosmeticBannerDragonrockDesc": "Ember-veined obsidian forged at the foot of Dragonrock itself.",
+
   "cosmeticFramePilgrimName": "Pilgrim's Frame",
   "cosmeticFramePilgrimDesc": "A plain wooden frame for anyone who set out on the road.",
 
@@ -2692,6 +2707,14 @@
   "socialRelativeDaysAgo": "{count} days ago",
   "@socialRelativeDaysAgo": { "placeholders": { "count": { "type": "int" } } },
 
+  "cosmeticBannerPilgrimUnlockHint": "Reward for starting your journey.",
+  "cosmeticBannerForestUnlockHint": "Reach level 8.",
+  "cosmeticBannerRuinsUnlockHint": "Reach level 23.",
+  "cosmeticBannerMineUnlockHint": "Reach level 38.",
+  "cosmeticBannerFrostUnlockHint": "Reach level 57.",
+  "cosmeticBannerMountainUnlockHint": "Reach level 78.",
+  "cosmeticBannerDragonrockUnlockHint": "Reach level 98.",
+
   "cosmeticFramePilgrimUnlockHint": "Reward for starting your journey.",
   "cosmeticFrameWildwoodUnlockHint": "Reach level 10.",
   "cosmeticFrameRuinsUnlockHint": "Reach level 20.",
@@ -2932,6 +2955,8 @@
   "@cosmeticTypeMapEffect": { "description": "Singular label for a cosmetic of type Map effect" },
   "cosmeticTypeSkin": "Look",
   "@cosmeticTypeSkin": { "description": "Singular label for a cosmetic of type Skin / appearance" },
+  "cosmeticTypeBanner": "Banner",
+  "@cosmeticTypeBanner": { "description": "Singular label for a cosmetic of type Banner (title banner shown on the social profile header)" },
 
   "cosmeticTypePluralFrame": "Frames",
   "@cosmeticTypePluralFrame": { "description": "Plural label used as a tile heading for the Frame cosmetic type" },
@@ -2949,6 +2974,8 @@
   "@cosmeticTypePluralMapEffect": { "description": "Plural label used as a tile heading for the Map effect cosmetic type" },
   "cosmeticTypePluralSkin": "Looks",
   "@cosmeticTypePluralSkin": { "description": "Plural label used as a tile heading for the Skin / appearance cosmetic type" },
+  "cosmeticTypePluralBanner": "Banners",
+  "@cosmeticTypePluralBanner": { "description": "Plural label used as a tile heading for the Banner cosmetic type" },
 
   "notifChannelProgressionName": "Progress",
   "@notifChannelProgressionName": { "description": "Android notification channel name for quest / achievement notifications" },

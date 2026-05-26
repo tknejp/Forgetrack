@@ -332,6 +332,7 @@ class IsarCosmeticsRepository implements CosmeticsRepository {
       titleFlairId: r.titleFlairId,
       mapEffectId: r.mapEffectId,
       skinId: r.skinId,
+      bannerId: r.bannerId,
     );
   }
 
@@ -374,6 +375,7 @@ class IsarCosmeticsRepository implements CosmeticsRepository {
         ..titleFlairId = state.equipped.titleFlairId
         ..mapEffectId = state.equipped.mapEffectId
         ..skinId = state.equipped.skinId
+        ..bannerId = state.equipped.bannerId
         ..selectedRaceId = state.selectedRaceId
         ..updatedAt = state.updatedAt;
       await _isar.cosmeticsUserStateRecords.put(record);
@@ -433,6 +435,7 @@ class IsarCosmeticsRepository implements CosmeticsRepository {
       ..titleFlairId = _config.defaultEquipped.titleFlairId
       ..mapEffectId = _config.defaultEquipped.mapEffectId
       ..skinId = _config.defaultEquipped.skinId
+      ..bannerId = _config.defaultEquipped.bannerId
       ..updatedAt = now;
     await _isar.cosmeticsUserStateRecords.put(stateRecord);
 
@@ -477,6 +480,8 @@ class IsarCosmeticsRepository implements CosmeticsRepository {
         record.mapEffectId = cosmeticId;
       case CosmeticType.skin:
         record.skinId = cosmeticId;
+      case CosmeticType.banner:
+        record.bannerId = cosmeticId;
     }
     record.updatedAt = now;
     await _isar.cosmeticsUserStateRecords.put(record);

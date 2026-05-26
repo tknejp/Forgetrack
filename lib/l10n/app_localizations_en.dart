@@ -3867,6 +3867,55 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get cosmeticBannerPilgrimName => 'Pilgrim Banner';
+
+  @override
+  String get cosmeticBannerPilgrimDesc =>
+      'A weathered iron plate carried by everyone who first sets foot on the road.';
+
+  @override
+  String get cosmeticBannerForestName => 'Forest Banner';
+
+  @override
+  String get cosmeticBannerForestDesc =>
+      'Mossy bronze and forest greens for those who have learned the wildwood paths.';
+
+  @override
+  String get cosmeticBannerRuinsName => 'Ruins Banner';
+
+  @override
+  String get cosmeticBannerRuinsDesc =>
+      'Cracked stonework and creeping moss recall the silent ruins above the pass.';
+
+  @override
+  String get cosmeticBannerMineName => 'Old Gates Banner';
+
+  @override
+  String get cosmeticBannerMineDesc =>
+      'Bronze keyplate of the abandoned mine gates, marking the descent under the mountain.';
+
+  @override
+  String get cosmeticBannerFrostName => 'Frost Banner';
+
+  @override
+  String get cosmeticBannerFrostDesc =>
+      'Glacial steel touched by violet rime — the colours of the frozen underways.';
+
+  @override
+  String get cosmeticBannerMountainName => 'Mountain Banner';
+
+  @override
+  String get cosmeticBannerMountainDesc =>
+      'Gilded ridges and storm cloud blacks for the rider who challenged the peaks.';
+
+  @override
+  String get cosmeticBannerDragonrockName => 'Dragonrock Banner';
+
+  @override
+  String get cosmeticBannerDragonrockDesc =>
+      'Ember-veined obsidian forged at the foot of Dragonrock itself.';
+
+  @override
   String get cosmeticFramePilgrimName => 'Pilgrim\'s Frame';
 
   @override
@@ -5493,6 +5542,28 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get cosmeticBannerPilgrimUnlockHint =>
+      'Reward for starting your journey.';
+
+  @override
+  String get cosmeticBannerForestUnlockHint => 'Reach level 8.';
+
+  @override
+  String get cosmeticBannerRuinsUnlockHint => 'Reach level 23.';
+
+  @override
+  String get cosmeticBannerMineUnlockHint => 'Reach level 38.';
+
+  @override
+  String get cosmeticBannerFrostUnlockHint => 'Reach level 57.';
+
+  @override
+  String get cosmeticBannerMountainUnlockHint => 'Reach level 78.';
+
+  @override
+  String get cosmeticBannerDragonrockUnlockHint => 'Reach level 98.';
+
+  @override
   String get cosmeticFramePilgrimUnlockHint =>
       'Reward for starting your journey.';
 
@@ -6061,6 +6132,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cosmeticsInventoryLatestBadge => 'LATEST';
 
   @override
+  String get cosmeticTypeBanner => 'Banner';
+
+  @override
   String get cosmeticTypePluralFrame => 'Frames';
 
   @override
@@ -6083,6 +6157,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cosmeticTypePluralSkin => 'Looks';
+
+  @override
+  String get cosmeticTypePluralBanner => 'Banners';
 
   @override
   String get notifChannelProgressionName => 'Progress';

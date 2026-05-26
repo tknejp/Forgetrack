@@ -20,6 +20,7 @@ class CosmeticsUserStateRecord {
   String? titleFlairId;
   String? mapEffectId;
   String? skinId;
+  String? bannerId;
 
   /// Persisted [HeroRace] id picked at onboarding. `null` until the player
   /// completes race selection.

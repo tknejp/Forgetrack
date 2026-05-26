@@ -32,6 +32,7 @@ class CosmeticsConfig {
         CosmeticType.companion,
         CosmeticType.titleFlair,
         CosmeticType.skin,
+        CosmeticType.banner,
         // mapEffect intentionally omitted — gated behind experimentalTypesEnabled.
       },
       rarityDisplayOrder: <Rarity>[
@@ -121,6 +122,7 @@ class CosmeticsConfig {
     check('titleFlairId', defaultEquipped.titleFlairId, CosmeticType.titleFlair);
     check('mapEffectId', defaultEquipped.mapEffectId, CosmeticType.mapEffect);
     check('skinId', defaultEquipped.skinId, CosmeticType.skin);
+    check('bannerId', defaultEquipped.bannerId, CosmeticType.banner);
     return warnings;
   }
 
@@ -146,6 +148,8 @@ class CosmeticsConfig {
         // catalog's `assetKey` validator (`cosmetics.skins.<id>`) passes —
         // the actual file lives under `assets/cosmetics/skins/<race>/<id>.png`.
         return 'skins';
+      case 'banners':
+        return 'banners';
     }
     return null;
   }

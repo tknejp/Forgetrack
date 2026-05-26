@@ -1184,6 +1184,92 @@ class CosmeticCatalog {
         perDayMaxXp: 75,
       ),
     ),
+
+    // -------------------------------------------------------------------------
+    // Banners — Tier chrome painted behind the level + class title in
+    // the social profile header. One row per rarity tier; the active
+    // banner is normally inferred from the player's current title tier
+    // (see `ProfileTitleBanner`) but an explicit equip via
+    // `Loadout.bannerId` overrides that derivation.
+    // -------------------------------------------------------------------------
+
+    Banner(
+      id: const CosmeticId('banner_pilgrim'),
+      rarity: Rarity.common,
+      region: CosmeticRegion.forestTrail,
+      name: (l10n) => l10n.cosmeticBannerPilgrimName,
+      description: (l10n) => l10n.cosmeticBannerPilgrimDesc,
+      unlockHint: (l10n) => l10n.cosmeticBannerPilgrimUnlockHint,
+      assetKey: 'cosmetics.banners.pilgrim',
+      previewAssetKey: 'cosmetics.banners.pilgrim',
+      sortOrder: 100,
+    ),
+    Banner(
+      id: const CosmeticId('banner_forest'),
+      rarity: Rarity.uncommon,
+      region: CosmeticRegion.forestTrail,
+      name: (l10n) => l10n.cosmeticBannerForestName,
+      description: (l10n) => l10n.cosmeticBannerForestDesc,
+      unlockHint: (l10n) => l10n.cosmeticBannerForestUnlockHint,
+      assetKey: 'cosmetics.banners.forest',
+      previewAssetKey: 'cosmetics.banners.forest',
+      sortOrder: 110,
+    ),
+    Banner(
+      id: const CosmeticId('banner_ruins'),
+      rarity: Rarity.uncommon,
+      region: CosmeticRegion.ruinedPass,
+      name: (l10n) => l10n.cosmeticBannerRuinsName,
+      description: (l10n) => l10n.cosmeticBannerRuinsDesc,
+      unlockHint: (l10n) => l10n.cosmeticBannerRuinsUnlockHint,
+      assetKey: 'cosmetics.banners.ruins',
+      previewAssetKey: 'cosmetics.banners.ruins',
+      sortOrder: 120,
+    ),
+    Banner(
+      id: const CosmeticId('banner_mine'),
+      rarity: Rarity.rare,
+      region: CosmeticRegion.dwarvenMines,
+      name: (l10n) => l10n.cosmeticBannerMineName,
+      description: (l10n) => l10n.cosmeticBannerMineDesc,
+      unlockHint: (l10n) => l10n.cosmeticBannerMineUnlockHint,
+      assetKey: 'cosmetics.banners.mine',
+      previewAssetKey: 'cosmetics.banners.mine',
+      sortOrder: 130,
+    ),
+    Banner(
+      id: const CosmeticId('banner_frost'),
+      rarity: Rarity.epic,
+      region: CosmeticRegion.frostlands,
+      name: (l10n) => l10n.cosmeticBannerFrostName,
+      description: (l10n) => l10n.cosmeticBannerFrostDesc,
+      unlockHint: (l10n) => l10n.cosmeticBannerFrostUnlockHint,
+      assetKey: 'cosmetics.banners.frost',
+      previewAssetKey: 'cosmetics.banners.frost',
+      sortOrder: 150,
+    ),
+    Banner(
+      id: const CosmeticId('banner_mountain'),
+      rarity: Rarity.legendary,
+      region: CosmeticRegion.dragonMountains,
+      name: (l10n) => l10n.cosmeticBannerMountainName,
+      description: (l10n) => l10n.cosmeticBannerMountainDesc,
+      unlockHint: (l10n) => l10n.cosmeticBannerMountainUnlockHint,
+      assetKey: 'cosmetics.banners.mountain',
+      previewAssetKey: 'cosmetics.banners.mountain',
+      sortOrder: 170,
+    ),
+    Banner(
+      id: const CosmeticId('banner_dragonrock'),
+      rarity: Rarity.mythic,
+      region: CosmeticRegion.dragonrockFortress,
+      name: (l10n) => l10n.cosmeticBannerDragonrockName,
+      description: (l10n) => l10n.cosmeticBannerDragonrockDesc,
+      unlockHint: (l10n) => l10n.cosmeticBannerDragonrockUnlockHint,
+      assetKey: 'cosmetics.banners.dragonrock',
+      previewAssetKey: 'cosmetics.banners.dragonrock',
+      sortOrder: 190,
+    ),
   ]);
 
   List<Cosmetic> get all => definitions;

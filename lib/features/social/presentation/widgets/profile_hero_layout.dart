@@ -82,21 +82,10 @@ class ProfileHeroLayout {
   static const double companionBuffChipBandRight =
       companionCenterFromRight - companionBuffChipBandWidth / 2;
 
-  // Inline `@handle · Přátelé N` row — muted subtitle pinned to the
-  // very top of the hero card, above the louder level + title label.
-  // The reorder (handle on top, level below) lands on 2026-05-25;
-  // the rationale is that the app bar already mirrors the player's
-  // display name, so the visual "who am I looking at" identifiers
-  // group near the top, with the louder LVL / TITLE banner sitting
-  // beneath them as the primary game-state row. Top inset pulled
-  // up by 8 px on 2026-05-25 so the whole identity strip kisses the
-  // app bar's lower edge instead of leaving a visual gap.
-  static const double identityTop = 8;
-  // Level + title hex nameplate — full card width, 16 px side
-  // padding, 14 px top offset per the 2026-05-26 design handoff.
-  // Sits flush under the app bar; rarity accent lemuje banner +
-  // level pill.
-  static const double levelTitleTop = 14;
+  // Hero card now hosts only the cinematic scene + emblem row. Level /
+  // title moved out to the standalone [ProfileTitleBanner] above the
+  // card (2026-05-27); handle / friends live in the screen app bar
+  // subtitle. No top-anchored elements remain inside this stack.
   // Emblem row — 6 slots laid out horizontally along the BOTTOM of
   // the hero card, evenly distributed between the side gutters
   // (relocated from a right-edge column on 2026-05-26). Slot size

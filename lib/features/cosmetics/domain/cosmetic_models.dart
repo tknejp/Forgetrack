@@ -39,6 +39,7 @@ enum CosmeticType {
   titleFlair,
   mapEffect,
   skin,
+  banner,
 }
 
 /// Where an unlock came from. Stored as part of [UnlockedCosmetic] for audit.
@@ -347,6 +348,35 @@ class MapEffect extends Cosmetic {
   CosmeticType get type => CosmeticType.mapEffect;
 }
 
+/// Tier banner painted behind the player's level + class title on the
+/// social profile screen ([ProfileTitleBanner]). One catalog row per
+/// rarity tier (pilgrim / forest / mine / frost / mountain / dragonrock).
+///
+/// Equippable slot: the active banner is normally derived from the
+/// player's current title rarity, but if they have an unlocked banner
+/// equipped in [Loadout.bannerId] the profile UI honours that instead
+/// (so a level-60 player can keep their Forest banner from level 10–24
+/// if they prefer it to the Frost one).
+class Banner extends Cosmetic {
+  const Banner({
+    required super.id,
+    required super.rarity,
+    required super.region,
+    required super.name,
+    required super.description,
+    super.assetKey,
+    super.previewAssetKey,
+    super.sortOrder,
+    super.isPremium,
+    super.isEnabled,
+    super.unlockHint,
+    super.metadata,
+  });
+
+  @override
+  CosmeticType get type => CosmeticType.banner;
+}
+
 /// Avatar skin — a race-agnostic theme (Pilgrim, Hunter, Frostwalker, ...)
 /// that resolves to a race-specific asset at render time. Each skin in the
 /// catalog represents one visual theme; the player's persisted
@@ -408,6 +438,7 @@ class Loadout {
     this.titleFlairId,
     this.mapEffectId,
     this.skinId,
+    this.bannerId,
   });
 
   const Loadout.empty()
@@ -418,7 +449,8 @@ class Loadout {
         companionId = null,
         titleFlairId = null,
         mapEffectId = null,
-        skinId = null;
+        skinId = null,
+        bannerId = null;
 
   final String? frameId;
   final String? relicId;
@@ -428,6 +460,7 @@ class Loadout {
   final String? titleFlairId;
   final String? mapEffectId;
   final String? skinId;
+  final String? bannerId;
 
   String? slotId(CosmeticType type) {
     switch (type) {
@@ -447,6 +480,8 @@ class Loadout {
         return mapEffectId;
       case CosmeticType.skin:
         return skinId;
+      case CosmeticType.banner:
+        return bannerId;
     }
   }
 
@@ -480,6 +515,8 @@ class Loadout {
         );
       case CosmeticType.skin:
         return copyWith(skinId: cosmeticId, clearSkin: cosmeticId == null);
+      case CosmeticType.banner:
+        return copyWith(bannerId: cosmeticId, clearBanner: cosmeticId == null);
     }
   }
 
@@ -492,6 +529,7 @@ class Loadout {
     String? titleFlairId,
     String? mapEffectId,
     String? skinId,
+    String? bannerId,
     bool clearFrame = false,
     bool clearRelic = false,
     bool clearBackground = false,
@@ -500,6 +538,7 @@ class Loadout {
     bool clearTitleFlair = false,
     bool clearMapEffect = false,
     bool clearSkin = false,
+    bool clearBanner = false,
   }) {
     return Loadout(
       frameId: clearFrame ? null : (frameId ?? this.frameId),
@@ -512,6 +551,7 @@ class Loadout {
           clearTitleFlair ? null : (titleFlairId ?? this.titleFlairId),
       mapEffectId: clearMapEffect ? null : (mapEffectId ?? this.mapEffectId),
       skinId: clearSkin ? null : (skinId ?? this.skinId),
+      bannerId: clearBanner ? null : (bannerId ?? this.bannerId),
     );
   }
 
@@ -525,7 +565,8 @@ class Loadout {
         other.companionId == companionId &&
         other.titleFlairId == titleFlairId &&
         other.mapEffectId == mapEffectId &&
-        other.skinId == skinId;
+        other.skinId == skinId &&
+        other.bannerId == bannerId;
   }
 
   @override
@@ -538,6 +579,7 @@ class Loadout {
         titleFlairId,
         mapEffectId,
         skinId,
+        bannerId,
       );
 }
 

@@ -332,6 +332,8 @@ class _FeaturedCosmeticTile extends StatelessWidget {
         return l10n.cosmeticTypePluralMapEffect;
       case CosmeticType.skin:
         return l10n.cosmeticTypePluralSkin;
+      case CosmeticType.banner:
+        return l10n.cosmeticTypePluralBanner;
     }
   }
 }
@@ -408,6 +410,8 @@ class _PreviewFallback extends StatelessWidget {
         return Icons.map;
       case CosmeticType.skin:
         return Icons.person;
+      case CosmeticType.banner:
+        return Icons.flag;
     }
   }
 }

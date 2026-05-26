@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../../../../l10n/l10n.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
 import '../../../cosmetics/presentation/widgets/companion_buff_chip.dart';
-import '../../../progression_engine/domain/display/progression_display_resolver.dart';
 import '../../../progression_engine/domain/policy/level_policy.dart';
 import '../../domain/social_models.dart';
 import 'profile_hero_avatar.dart';
 import 'profile_hero_emblem_collection.dart';
-import 'profile_hero_identity.dart';
 import 'profile_hero_layout.dart';
 import 'profile_hero_scene.dart';
 import 'profile_hero_scene_props.dart';
@@ -85,15 +82,8 @@ class ProfileDetailHeroCard extends StatelessWidget {
     final background = socialBackgroundDefinition(equipped?.backgroundId);
     final companion = socialCosmeticById(equipped?.companionId);
     final emblem = socialCosmeticById(equipped?.emblemId);
-
-    final resolved =
-        const ProgressionLevelPolicy().resolve(stats?.totalXp ?? 0);
-    final levelDisplay =
-        const ProgressionDisplayResolver().levelDisplay(resolved.level);
-    final levelTitle = levelDisplay.title(context.l10n);
-
-    final levelAccent =
-        const ProgressionDisplayResolver().levelDisplay(resolved.level).accentColor;
+    final playerLevel =
+        const ProgressionLevelPolicy().resolve(stats?.totalXp ?? 0).level;
 
     return SizedBox(
       height: ProfileHeroLayout.height,
@@ -106,63 +96,12 @@ class ProfileDetailHeroCard extends StatelessWidget {
           // the background shift, so feathering always lands at the
           // card's true top and bottom seams.
           const Positioned.fill(child: ProfileHeroBackgroundEdgeFade()),
-          // Top-band darkener that lives INSIDE the hero card stack,
-          // sitting between the background and the foreground text
-          // (level + title, handle + friends, emblem grid). The
-          // text Positioned widgets that follow this entry in the
-          // Stack are therefore drawn IN FRONT of the gradient, so
-          // the muted handle/friends typography reads cleanly even
-          // when the underlying scene happens to be bright in that
-          // band. Lifted out of the screen-fixed overlay (in
-          // `social_user_profile_screen.dart`) on 2026-05-25 — the
-          // screen overlay used to cover the same vertical range
-          // but sat on top of the text, pushing it into the
-          // background visually.
-          //
-          // Wrapped in `IgnorePointer` so the gradient never eats
-          // taps on the segments below it.
-          const Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: IgnorePointer(
-              child: SizedBox(
-                height: 120,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      stops: [0.0, 0.55, 1.0],
-                      colors: [
-                        Color(0xCC0A0E1C),
-                        Color(0x800A0E1C),
-                        Color(0x000A0E1C),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          // Level + title label — full card width so a long class
-          // title isn't clipped by the emblem grid below it. The
-          // grid sits at `emblemTop` (well below this row), so the
-          // two never overlap vertically.
-          Positioned(
-            left: ProfileHeroLayout.edge,
-            right: ProfileHeroLayout.edge,
-            top: ProfileHeroLayout.levelTitleTop,
-            child: ProfileHeroLevelTitleLabel(
-              level: resolved.level,
-              title: levelTitle,
-              accent: levelAccent,
-            ),
-          ),
           // Identity block (handle + friends) lives in the screen's
-          // top app bar (`ScreenHeader.trailing` →
-          // [ProfileAppBarIdentityStack]) since 2026-05-26 — it used
-          // to render here in the hero's top-left corner.
+          // top app bar (`ScreenHeader.subtitle`). Level + class title
+          // moved out of the hero stack into the standalone
+          // [ProfileTitleBanner] above this card on 2026-05-27. Both
+          // were previously rendered here as text overlays; the hero
+          // card is now pure cinematic scene + emblem row.
           // Emblem row — horizontal band along the BOTTOM edge of
           // the hero card, evenly distributed between the side
           // gutters. The companion buff chip was pulled upward
@@ -175,7 +114,7 @@ class ProfileDetailHeroCard extends StatelessWidget {
             bottom: ProfileHeroLayout.emblemRowBottom,
             child: ProfileHeroEmblemCollection(
               slots: _resolveSlots(emblem),
-              playerLevel: resolved.level,
+              playerLevel: playerLevel,
               slotSize: ProfileHeroLayout.emblemSlotSize,
               onTapSlot: onTapEmblemSlot,
             ),

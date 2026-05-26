@@ -23,53 +23,58 @@ const CosmeticsUserStateRecordSchema = CollectionSchema(
       name: r'backgroundId',
       type: IsarType.string,
     ),
-    r'companionId': PropertySchema(
+    r'bannerId': PropertySchema(
       id: 1,
+      name: r'bannerId',
+      type: IsarType.string,
+    ),
+    r'companionId': PropertySchema(
+      id: 2,
       name: r'companionId',
       type: IsarType.string,
     ),
     r'emblemId': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'emblemId',
       type: IsarType.string,
     ),
     r'frameId': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'frameId',
       type: IsarType.string,
     ),
     r'mapEffectId': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'mapEffectId',
       type: IsarType.string,
     ),
     r'relicId': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'relicId',
       type: IsarType.string,
     ),
     r'selectedRaceId': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'selectedRaceId',
       type: IsarType.string,
     ),
     r'skinId': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'skinId',
       type: IsarType.string,
     ),
     r'titleFlairId': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'titleFlairId',
       type: IsarType.string,
     ),
     r'uid': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'uid',
       type: IsarType.string,
     ),
     r'updatedAt': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'updatedAt',
       type: IsarType.dateTime,
     )
@@ -123,6 +128,12 @@ int _cosmeticsUserStateRecordEstimateSize(
   var bytesCount = offsets.last;
   {
     final value = object.backgroundId;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.bannerId;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
     }
@@ -186,16 +197,17 @@ void _cosmeticsUserStateRecordSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeString(offsets[0], object.backgroundId);
-  writer.writeString(offsets[1], object.companionId);
-  writer.writeString(offsets[2], object.emblemId);
-  writer.writeString(offsets[3], object.frameId);
-  writer.writeString(offsets[4], object.mapEffectId);
-  writer.writeString(offsets[5], object.relicId);
-  writer.writeString(offsets[6], object.selectedRaceId);
-  writer.writeString(offsets[7], object.skinId);
-  writer.writeString(offsets[8], object.titleFlairId);
-  writer.writeString(offsets[9], object.uid);
-  writer.writeDateTime(offsets[10], object.updatedAt);
+  writer.writeString(offsets[1], object.bannerId);
+  writer.writeString(offsets[2], object.companionId);
+  writer.writeString(offsets[3], object.emblemId);
+  writer.writeString(offsets[4], object.frameId);
+  writer.writeString(offsets[5], object.mapEffectId);
+  writer.writeString(offsets[6], object.relicId);
+  writer.writeString(offsets[7], object.selectedRaceId);
+  writer.writeString(offsets[8], object.skinId);
+  writer.writeString(offsets[9], object.titleFlairId);
+  writer.writeString(offsets[10], object.uid);
+  writer.writeDateTime(offsets[11], object.updatedAt);
 }
 
 CosmeticsUserStateRecord _cosmeticsUserStateRecordDeserialize(
@@ -206,17 +218,18 @@ CosmeticsUserStateRecord _cosmeticsUserStateRecordDeserialize(
 ) {
   final object = CosmeticsUserStateRecord();
   object.backgroundId = reader.readStringOrNull(offsets[0]);
-  object.companionId = reader.readStringOrNull(offsets[1]);
-  object.emblemId = reader.readStringOrNull(offsets[2]);
-  object.frameId = reader.readStringOrNull(offsets[3]);
+  object.bannerId = reader.readStringOrNull(offsets[1]);
+  object.companionId = reader.readStringOrNull(offsets[2]);
+  object.emblemId = reader.readStringOrNull(offsets[3]);
+  object.frameId = reader.readStringOrNull(offsets[4]);
   object.id = id;
-  object.mapEffectId = reader.readStringOrNull(offsets[4]);
-  object.relicId = reader.readStringOrNull(offsets[5]);
-  object.selectedRaceId = reader.readStringOrNull(offsets[6]);
-  object.skinId = reader.readStringOrNull(offsets[7]);
-  object.titleFlairId = reader.readStringOrNull(offsets[8]);
-  object.uid = reader.readString(offsets[9]);
-  object.updatedAt = reader.readDateTime(offsets[10]);
+  object.mapEffectId = reader.readStringOrNull(offsets[5]);
+  object.relicId = reader.readStringOrNull(offsets[6]);
+  object.selectedRaceId = reader.readStringOrNull(offsets[7]);
+  object.skinId = reader.readStringOrNull(offsets[8]);
+  object.titleFlairId = reader.readStringOrNull(offsets[9]);
+  object.uid = reader.readString(offsets[10]);
+  object.updatedAt = reader.readDateTime(offsets[11]);
   return object;
 }
 
@@ -246,8 +259,10 @@ P _cosmeticsUserStateRecordDeserializeProp<P>(
     case 8:
       return (reader.readStringOrNull(offset)) as P;
     case 9:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 10:
+      return (reader.readString(offset)) as P;
+    case 11:
       return (reader.readDateTime(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -705,6 +720,162 @@ extension CosmeticsUserStateRecordQueryFilter on QueryBuilder<
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'backgroundId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> bannerIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'bannerId',
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> bannerIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'bannerId',
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> bannerIdEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'bannerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> bannerIdGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'bannerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> bannerIdLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'bannerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> bannerIdBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'bannerId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> bannerIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'bannerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> bannerIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'bannerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+          QAfterFilterCondition>
+      bannerIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'bannerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+          QAfterFilterCondition>
+      bannerIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'bannerId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> bannerIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'bannerId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord,
+      QAfterFilterCondition> bannerIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'bannerId',
         value: '',
       ));
     });
@@ -2232,6 +2403,20 @@ extension CosmeticsUserStateRecordQuerySortBy on QueryBuilder<
   }
 
   QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord, QAfterSortBy>
+      sortByBannerId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'bannerId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord, QAfterSortBy>
+      sortByBannerIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'bannerId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord, QAfterSortBy>
       sortByCompanionId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'companionId', Sort.asc);
@@ -2385,6 +2570,20 @@ extension CosmeticsUserStateRecordQuerySortThenBy on QueryBuilder<
       thenByBackgroundIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'backgroundId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord, QAfterSortBy>
+      thenByBannerId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'bannerId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord, QAfterSortBy>
+      thenByBannerIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'bannerId', Sort.desc);
     });
   }
 
@@ -2553,6 +2752,13 @@ extension CosmeticsUserStateRecordQueryWhereDistinct on QueryBuilder<
   }
 
   QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord, QDistinct>
+      distinctByBannerId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'bannerId', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, CosmeticsUserStateRecord, QDistinct>
       distinctByCompanionId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'companionId', caseSensitive: caseSensitive);
@@ -2636,6 +2842,13 @@ extension CosmeticsUserStateRecordQueryProperty on QueryBuilder<
       backgroundIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'backgroundId');
+    });
+  }
+
+  QueryBuilder<CosmeticsUserStateRecord, String?, QQueryOperations>
+      bannerIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'bannerId');
     });
   }
 

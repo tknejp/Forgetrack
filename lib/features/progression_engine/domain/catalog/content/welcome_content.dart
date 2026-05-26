@@ -16,7 +16,7 @@ import '../engine_catalog_context.dart';
 List<Objective> welcomeObjectives(EngineCatalogContext context) {
   return const [
     Objective(
-      id: const ObjectiveId('reward_count_1'),
+      id: ObjectiveId('reward_count_1'),
       metric: RewardCountMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -33,12 +33,14 @@ List<ProgressionEntry> welcomeNodes() {
       titleKey: (l) => l.progAchievementWelcomeToJourneyTitle,
       descriptionKey: (l) => l.progAchievementWelcomeToJourneyDesc,
       // Welcome ships a starter pack so the player has something to
-      // equip on day one — the camp background + the pilgrim frame.
-      // The pilgrim_emblem comes later from the Pilgrim Path chapter
-      // finale; this is just the starter wardrobe.
+      // equip on day one — the camp background, the pilgrim frame,
+      // and the pilgrim tier title banner (visible on the social
+      // profile header). The pilgrim_emblem comes later from the
+      // Pilgrim Path chapter finale; this is just the starter wardrobe.
       rewards: const [
         CosmeticReward(cosmeticId: CosmeticId('background_camp')),
         CosmeticReward(cosmeticId: CosmeticId('frame_pilgrim')),
+        CosmeticReward(cosmeticId: CosmeticId('banner_pilgrim')),
       ],
       contentTags: const [ContentTag.core, ContentTag.cosmetics],
       rarity: Rarity.common,

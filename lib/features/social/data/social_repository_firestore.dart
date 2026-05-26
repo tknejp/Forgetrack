@@ -534,6 +534,7 @@ class FirestoreSocialRepository implements SocialPresenceRepository {
         'titleFlairId': payload.equippedCosmetics.titleFlairId,
         'mapEffectId': payload.equippedCosmetics.mapEffectId,
         'skinId': payload.equippedCosmetics.skinId,
+        'bannerId': payload.equippedCosmetics.bannerId,
       },
       'updatedAt': FieldValue.serverTimestamp(),
       if (includeCreatedAt) 'createdAt': FieldValue.serverTimestamp(),
@@ -792,6 +793,7 @@ class FirestoreSocialRepository implements SocialPresenceRepository {
         titleFlairId: _readNonEmptyString(equipped['titleFlairId']),
         mapEffectId: _readNonEmptyString(equipped['mapEffectId']),
         skinId: _readNonEmptyString(equipped['skinId']),
+        bannerId: _readNonEmptyString(equipped['bannerId']),
       ),
       stats: SocialUserStats(
         level: _readInt(stats['level']),

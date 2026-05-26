@@ -836,6 +836,7 @@ class SocialProvider extends ChangeNotifier {
       titleFlairId: equipped.titleFlairId,
       mapEffectId: equipped.mapEffectId,
       skinId: equipped.skinId,
+      bannerId: equipped.bannerId,
     );
   }
 

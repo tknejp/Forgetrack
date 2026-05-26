@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../cosmetics/application/cosmetics_provider.dart';
 import '../../cosmetics/config/skin_asset_resolver.dart';
 import '../../cosmetics/domain/cosmetic_models.dart';
+import '../../cosmetics/domain/emblem_board.dart';
 import '../../cosmetics/presentation/widgets/cosmetic_preview_path.dart';
 import '../../progression_engine/domain/catalog/content/quest_assets.dart';
 import '../../progression_engine/domain/catalog/progression_node_catalog.dart';
@@ -481,6 +482,39 @@ class ProgressionEngineCelebrationAdapter {
     final completion = pair.completion;
     final cosmeticIds = _cosmeticIdsForNode(node.id, result);
     final rewards = _cosmeticsToRewards(cosmeticIds);
+
+    // Emblem-board slot-unlock milestones (levels in
+    // `EmblemBoard.slotUnlockLevels`) carry no cosmetic reward; the
+    // unlocked profile-header slot itself is the reward. Synthesize a
+    // celebration card for it and force the fullscreen variant so the
+    // unlock gets a proper reveal instead of a silent topsheet with an
+    // empty reward strip.
+    final emblemSlotIndex = EmblemBoard.slotUnlockLevels.indexOf(node.level);
+    if (emblemSlotIndex >= 0 && rewards.isEmpty) {
+      final slotNumber = emblemSlotIndex + 1;
+      final slotCount = EmblemBoard.slotUnlockLevels.length;
+      rewards.add(CelebrationReward(
+        id: 'emblem-slot-$slotNumber',
+        name: (l) => l.celebrationEmblemSlotRewardName,
+        sub: (l) =>
+            l.celebrationEmblemSlotRewardSub(slotNumber, slotCount),
+        rarity: node.rarity,
+        kind: CelebrationRewardKind.badge,
+        fallbackIcon: Icons.shield_moon_rounded,
+      ));
+      return CelebrationEvent(
+        id: 'level|${node.id}|${completion.event.timestamp.microsecondsSinceEpoch}',
+        type: CelebrationType.level,
+        eyebrow: (l) => l.celebrationEmblemSlotEyebrow,
+        title: (l) => l.celebrationEmblemSlotTitle,
+        description: (l) =>
+            l.celebrationEmblemSlotDescription(node.level),
+        rewards: rewards,
+        headRarity: node.rarity,
+        variantOverride: CelebrationVariant.fullscreen,
+      );
+    }
+
     final headRarity = rewards.isEmpty
         ? node.rarity
         : Rarity.max(node.rarity, CelebrationEvent.maxRarityFrom(rewards));
@@ -1014,6 +1048,10 @@ class ProgressionEngineCelebrationAdapter {
         return CelebrationRewardKind.location;
       case CosmeticType.skin:
         return CelebrationRewardKind.skin;
+      case CosmeticType.banner:
+        // Banner is the title chrome — reuses the title kind so the
+        // celebration overlay groups it visually with title-tier unlocks.
+        return CelebrationRewardKind.title;
     }
   }
 }

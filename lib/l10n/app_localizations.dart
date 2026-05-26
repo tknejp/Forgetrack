@@ -6891,6 +6891,90 @@ abstract class AppLocalizations {
   /// **'Slot {slot} of {total}'**
   String celebrationEmblemSlotRewardSub(int slot, int total);
 
+  /// No description provided for @cosmeticBannerPilgrimName.
+  ///
+  /// In en, this message translates to:
+  /// **'Pilgrim Banner'**
+  String get cosmeticBannerPilgrimName;
+
+  /// No description provided for @cosmeticBannerPilgrimDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A weathered iron plate carried by everyone who first sets foot on the road.'**
+  String get cosmeticBannerPilgrimDesc;
+
+  /// No description provided for @cosmeticBannerForestName.
+  ///
+  /// In en, this message translates to:
+  /// **'Forest Banner'**
+  String get cosmeticBannerForestName;
+
+  /// No description provided for @cosmeticBannerForestDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Mossy bronze and forest greens for those who have learned the wildwood paths.'**
+  String get cosmeticBannerForestDesc;
+
+  /// No description provided for @cosmeticBannerRuinsName.
+  ///
+  /// In en, this message translates to:
+  /// **'Ruins Banner'**
+  String get cosmeticBannerRuinsName;
+
+  /// No description provided for @cosmeticBannerRuinsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Cracked stonework and creeping moss recall the silent ruins above the pass.'**
+  String get cosmeticBannerRuinsDesc;
+
+  /// No description provided for @cosmeticBannerMineName.
+  ///
+  /// In en, this message translates to:
+  /// **'Old Gates Banner'**
+  String get cosmeticBannerMineName;
+
+  /// No description provided for @cosmeticBannerMineDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Bronze keyplate of the abandoned mine gates, marking the descent under the mountain.'**
+  String get cosmeticBannerMineDesc;
+
+  /// No description provided for @cosmeticBannerFrostName.
+  ///
+  /// In en, this message translates to:
+  /// **'Frost Banner'**
+  String get cosmeticBannerFrostName;
+
+  /// No description provided for @cosmeticBannerFrostDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Glacial steel touched by violet rime — the colours of the frozen underways.'**
+  String get cosmeticBannerFrostDesc;
+
+  /// No description provided for @cosmeticBannerMountainName.
+  ///
+  /// In en, this message translates to:
+  /// **'Mountain Banner'**
+  String get cosmeticBannerMountainName;
+
+  /// No description provided for @cosmeticBannerMountainDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Gilded ridges and storm cloud blacks for the rider who challenged the peaks.'**
+  String get cosmeticBannerMountainDesc;
+
+  /// No description provided for @cosmeticBannerDragonrockName.
+  ///
+  /// In en, this message translates to:
+  /// **'Dragonrock Banner'**
+  String get cosmeticBannerDragonrockName;
+
+  /// No description provided for @cosmeticBannerDragonrockDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Ember-veined obsidian forged at the foot of Dragonrock itself.'**
+  String get cosmeticBannerDragonrockDesc;
+
   /// No description provided for @cosmeticFramePilgrimName.
   ///
   /// In en, this message translates to:
@@ -9544,6 +9628,48 @@ abstract class AppLocalizations {
   /// **'{count} days ago'**
   String socialRelativeDaysAgo(int count);
 
+  /// No description provided for @cosmeticBannerPilgrimUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reward for starting your journey.'**
+  String get cosmeticBannerPilgrimUnlockHint;
+
+  /// No description provided for @cosmeticBannerForestUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 8.'**
+  String get cosmeticBannerForestUnlockHint;
+
+  /// No description provided for @cosmeticBannerRuinsUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 23.'**
+  String get cosmeticBannerRuinsUnlockHint;
+
+  /// No description provided for @cosmeticBannerMineUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 38.'**
+  String get cosmeticBannerMineUnlockHint;
+
+  /// No description provided for @cosmeticBannerFrostUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 57.'**
+  String get cosmeticBannerFrostUnlockHint;
+
+  /// No description provided for @cosmeticBannerMountainUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 78.'**
+  String get cosmeticBannerMountainUnlockHint;
+
+  /// No description provided for @cosmeticBannerDragonrockUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 98.'**
+  String get cosmeticBannerDragonrockUnlockHint;
+
   /// No description provided for @cosmeticFramePilgrimUnlockHint.
   ///
   /// In en, this message translates to:
@@ -10528,6 +10654,12 @@ abstract class AppLocalizations {
   /// **'LATEST'**
   String get cosmeticsInventoryLatestBadge;
 
+  /// Singular label for a cosmetic of type Banner (title banner shown on the social profile header)
+  ///
+  /// In en, this message translates to:
+  /// **'Banner'**
+  String get cosmeticTypeBanner;
+
   /// Plural label used as a tile heading for the Frame cosmetic type
   ///
   /// In en, this message translates to:
@@ -10575,6 +10707,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Looks'**
   String get cosmeticTypePluralSkin;
+
+  /// Plural label used as a tile heading for the Banner cosmetic type
+  ///
+  /// In en, this message translates to:
+  /// **'Banners'**
+  String get cosmeticTypePluralBanner;
 
   /// Android notification channel name for quest / achievement notifications
   ///

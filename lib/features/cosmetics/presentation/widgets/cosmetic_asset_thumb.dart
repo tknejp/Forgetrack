@@ -106,6 +106,7 @@ class CosmeticAssetThumb extends StatelessWidget {
       CosmeticType.titleFlair => Icons.workspace_premium_rounded,
       CosmeticType.mapEffect => Icons.map_rounded,
       CosmeticType.skin => Icons.person_rounded,
+      CosmeticType.banner => Icons.flag_rounded,
       null => Icons.card_giftcard_rounded,
     };
   }

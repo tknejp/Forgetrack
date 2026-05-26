@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../progression_engine/domain/display/progression_display_models.dart';
+import '../../../progression_engine/domain/display/progression_display_resolver.dart';
+import '../../../progression_engine/domain/policy/level_policy.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../shared/theme/design_tokens.dart';
@@ -16,9 +18,11 @@ import '../../domain/social_models.dart';
 import '../social_profile_utils.dart';
 import 'companion_slot_sheet.dart';
 import 'emblem_slot_sheet.dart';
+import 'banner_slot_sheet.dart';
 import 'profile_detail_hero_card.dart';
 import 'profile_hero_identity.dart';
 import 'profile_stats_section.dart';
+import 'profile_title_banner.dart';
 import 'skin_slot_sheet.dart';
 import 'social_cosmetic_avatar.dart';
 import 'social_edit_handle_sheet.dart';
@@ -189,6 +193,34 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
     }
   }
 
+  /// Mirrors [_openSkinDetails] for the title banner slot. Tap on the
+  /// banner above the hero card opens this sheet; the result routes
+  /// through the same `CosmeticsProvider` equip / unequip API.
+  Future<void> _openBannerDetails(String? equippedBannerId) async {
+    final cosmetics = context.read<CosmeticsProvider>();
+    final state = cosmetics.state;
+    if (state == null) return;
+    final currentBanner =
+        equippedBannerId == null ? null : socialCosmeticById(equippedBannerId);
+    final unlockedBanners = [
+      for (final id in state.unlocked.keys)
+        if (socialCosmeticById(id) case final def?
+            when def.type == CosmeticType.banner)
+          def,
+    ]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    final pick = await BannerSlotSheet.show(
+      context,
+      current: currentBanner,
+      unlocked: unlockedBanners,
+    );
+    if (pick == null || !mounted) return;
+    if (pick.removed) {
+      await cosmetics.unequip(CosmeticType.banner);
+    } else if (pick.cosmeticId != null) {
+      await cosmetics.equip(pick.cosmeticId!);
+    }
+  }
+
   Future<void> _openEmblemSlotSheet({
     required int slotIndex,
     required bool isOwner,
@@ -261,12 +293,75 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // Title banner — sits between the app bar
+                      // (display name + @handle subtitle) and the
+                      // cinematic hero card. Rarity-keyed banner asset
+                      // provides all chrome; level + class title are
+                      // plain Flutter text on top. 16-px screen gutter
+                      // matches the rest of the profile content. The
+                      // banner is hidden until the profile stream
+                      // produces stats so we don't flash a level-1
+                      // "Poutník" plate before the real data lands.
+                      if (profile?.stats case final stats?) ...[
+                        Padding(
+                          // 8-px gutter (was 16) lets the banner asset
+                          // sit visibly larger between the app bar and
+                          // the hero card. Text inside the banner is
+                          // pinned to fixed font sizes so the asset
+                          // can grow without the level / title text
+                          // growing with it.
+                          padding: const EdgeInsets.fromLTRB(8, 12, 8, 12),
+                          child: Builder(builder: (context) {
+                            final level = const ProgressionLevelPolicy()
+                                .resolve(stats.totalXp)
+                                .level;
+                            final display = const ProgressionDisplayResolver()
+                                .levelDisplay(level);
+                            // Own profile reads the equipped banner id
+                            // from the LIVE CosmeticsProvider, not from
+                            // the Firestore profile snapshot — equips
+                            // happen locally first and the social wire
+                            // only catches up after the periodic sync,
+                            // so reading from the snapshot would freeze
+                            // the visible banner until that round-trip
+                            // finished. Friend profiles still read from
+                            // the snapshot (no local cosmetics state).
+                            final equippedBannerId = isMe
+                                ? context
+                                    .watch<CosmeticsProvider>()
+                                    .state
+                                    ?.equipped
+                                    .bannerId
+                                : profile!.equippedCosmetics.bannerId;
+                            // Equipped banner overrides the tier-derived
+                            // choice: a player can keep a lower-tier
+                            // banner unlocked from earlier (e.g. Forest)
+                            // even after climbing into a higher rarity.
+                            // Banner widget resolves its own asset +
+                            // palette from the equipped cosmetic when
+                            // present; falls back to the tier rarity.
+                            final equippedBanner =
+                                socialCosmeticById(equippedBannerId);
+                            final banner = ProfileTitleBanner(
+                              level: level,
+                              title: display.title(context.l10n),
+                              rarity: display.rarity,
+                              equippedBanner: equippedBanner,
+                            );
+                            // Tap on the banner opens the slot sheet
+                            // (own profile only — friend profiles get
+                            // a static banner with no interaction).
+                            if (!isMe) return banner;
+                            return GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () => _openBannerDetails(equippedBannerId),
+                              child: banner,
+                            );
+                          }),
+                        ),
+                      ],
                       // Hero header bleeds to the screen edges — the
                       // rest of the profile keeps the 16-px gutter.
-                      // Wrapped in StreamBuilder so the "Přátelé · N"
-                      // chip under @handle reflects the live friend
-                      // count from the same stream the modal sheet
-                      // opens onto.
                       // For own profile the hero body reads race +
                       // equipped skin straight from the local
                       // cosmetics provider. Friend profiles have no

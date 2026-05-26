@@ -199,6 +199,8 @@ IconData cosmeticIconForType(CosmeticType type) {
       return Icons.map_rounded;
     case CosmeticType.skin:
       return Icons.person_rounded;
+    case CosmeticType.banner:
+      return Icons.flag_rounded;
   }
 }
 
@@ -220,6 +222,8 @@ String cosmeticTypeLabel(CosmeticType type, AppLocalizations l10n) {
       return l10n.cosmeticTypeMapEffect;
     case CosmeticType.skin:
       return l10n.cosmeticTypeSkin;
+    case CosmeticType.banner:
+      return l10n.cosmeticTypeBanner;
   }
 }
 

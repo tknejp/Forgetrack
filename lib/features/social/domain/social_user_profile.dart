@@ -169,6 +169,7 @@ class SocialEquippedCosmetics {
     this.titleFlairId,
     this.mapEffectId,
     this.skinId,
+    this.bannerId,
   });
 
   const SocialEquippedCosmetics.empty()
@@ -179,7 +180,8 @@ class SocialEquippedCosmetics {
         companionId = null,
         titleFlairId = null,
         mapEffectId = null,
-        skinId = null;
+        skinId = null,
+        bannerId = null;
 
   final String? frameId;
   final String? relicId;
@@ -194,6 +196,12 @@ class SocialEquippedCosmetics {
   /// per-race artwork path through `SkinAssetResolver`.
   final String? skinId;
 
+  /// Equipped title banner id — the rarity-keyed asset painted behind
+  /// the player's level + class title on the social profile header.
+  /// When null, the profile derives the banner from the player's title
+  /// tier rarity (see `ProfileTitleBanner`).
+  final String? bannerId;
+
   bool get hasAny =>
       frameId != null ||
       relicId != null ||
@@ -202,7 +210,8 @@ class SocialEquippedCosmetics {
       companionId != null ||
       titleFlairId != null ||
       mapEffectId != null ||
-      skinId != null;
+      skinId != null ||
+      bannerId != null;
 }
 
 /// Bundle the Social repository takes when pushing a fresh profile

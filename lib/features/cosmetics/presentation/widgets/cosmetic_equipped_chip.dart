@@ -179,6 +179,8 @@ IconData _iconForType(CosmeticType type) {
       return Icons.map;
     case CosmeticType.skin:
       return Icons.person;
+    case CosmeticType.banner:
+      return Icons.flag;
   }
 }
 

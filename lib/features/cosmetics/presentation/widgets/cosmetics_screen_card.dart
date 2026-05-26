@@ -375,6 +375,7 @@ double _cardBadgeSize(CosmeticType type) {
     case CosmeticType.titleFlair:
     case CosmeticType.mapEffect:
     case CosmeticType.skin:
+    case CosmeticType.banner:
       return 48;
   }
 }

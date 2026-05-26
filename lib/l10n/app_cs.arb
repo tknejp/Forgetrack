@@ -1253,6 +1253,21 @@
     }
   },
 
+  "cosmeticBannerPilgrimName": "Poutnický banner",
+  "cosmeticBannerPilgrimDesc": "Otlučená železná destička, kterou si nese každý, kdo poprvé vykročí na cestu.",
+  "cosmeticBannerForestName": "Lesní banner",
+  "cosmeticBannerForestDesc": "Mechový bronz a lesní zeleň pro ty, kteří se naučili stezky hvozdu.",
+  "cosmeticBannerRuinsName": "Banner ruin",
+  "cosmeticBannerRuinsDesc": "Popraskané zdivo a plazivý mech připomínají tiché ruiny nad průsmykem.",
+  "cosmeticBannerMineName": "Banner starých bran",
+  "cosmeticBannerMineDesc": "Bronzový klíčový kámen opuštěných důlních bran — znak sestupu pod horu.",
+  "cosmeticBannerFrostName": "Mrazový banner",
+  "cosmeticBannerFrostDesc": "Ledová ocel se závojem fialového jíní — barvy zamrzlých podzemních cest.",
+  "cosmeticBannerMountainName": "Horský banner",
+  "cosmeticBannerMountainDesc": "Pozlacené hřebeny a bouřkové černě pro jezdce, který vyzval vrcholky.",
+  "cosmeticBannerDragonrockName": "Banner dračí skály",
+  "cosmeticBannerDragonrockDesc": "Obsidián protkaný žhavými žilkami, vykovaný u paty Dračí skály.",
+
   "cosmeticFramePilgrimName": "Poutnický rámeček",
   "cosmeticFramePilgrimDesc": "Prostý dřevěný rámeček pro každého, kdo se vydal na cestu.",
 
@@ -1879,6 +1894,14 @@
   "socialRelativeDaysAgo": "před {count} dny",
   "@socialRelativeDaysAgo": { "placeholders": { "count": { "type": "int" } } },
 
+  "cosmeticBannerPilgrimUnlockHint": "Odměna za zahájení cesty.",
+  "cosmeticBannerForestUnlockHint": "Dosáhni úrovně 8.",
+  "cosmeticBannerRuinsUnlockHint": "Dosáhni úrovně 23.",
+  "cosmeticBannerMineUnlockHint": "Dosáhni úrovně 38.",
+  "cosmeticBannerFrostUnlockHint": "Dosáhni úrovně 57.",
+  "cosmeticBannerMountainUnlockHint": "Dosáhni úrovně 78.",
+  "cosmeticBannerDragonrockUnlockHint": "Dosáhni úrovně 98.",
+
   "cosmeticFramePilgrimUnlockHint": "Odměna za zahájení cesty.",
   "cosmeticFrameWildwoodUnlockHint": "Dosáhni úrovně 10.",
   "cosmeticFrameRuinsUnlockHint": "Dosáhni úrovně 20.",
@@ -2066,6 +2089,7 @@
   "cosmeticTypeTitleFlair": "Titul",
   "cosmeticTypeMapEffect": "Efekt mapy",
   "cosmeticTypeSkin": "Vzhled",
+  "cosmeticTypeBanner": "Banner",
 
   "cosmeticTypePluralFrame": "Rámečky",
   "cosmeticTypePluralRelic": "Relikvie",
@@ -2075,6 +2099,7 @@
   "cosmeticTypePluralTitleFlair": "Tituly",
   "cosmeticTypePluralMapEffect": "Efekty mapy",
   "cosmeticTypePluralSkin": "Vzhledy",
+  "cosmeticTypePluralBanner": "Bannery",
 
   "notifChannelProgressionName": "Postup",
   "notifChannelProgressionDescription": "Dokončené questy a odemčené achievementy",

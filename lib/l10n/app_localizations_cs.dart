@@ -3857,6 +3857,55 @@ class AppLocalizationsCs extends AppLocalizations {
   }
 
   @override
+  String get cosmeticBannerPilgrimName => 'Poutnický banner';
+
+  @override
+  String get cosmeticBannerPilgrimDesc =>
+      'Otlučená železná destička, kterou si nese každý, kdo poprvé vykročí na cestu.';
+
+  @override
+  String get cosmeticBannerForestName => 'Lesní banner';
+
+  @override
+  String get cosmeticBannerForestDesc =>
+      'Mechový bronz a lesní zeleň pro ty, kteří se naučili stezky hvozdu.';
+
+  @override
+  String get cosmeticBannerRuinsName => 'Banner ruin';
+
+  @override
+  String get cosmeticBannerRuinsDesc =>
+      'Popraskané zdivo a plazivý mech připomínají tiché ruiny nad průsmykem.';
+
+  @override
+  String get cosmeticBannerMineName => 'Banner starých bran';
+
+  @override
+  String get cosmeticBannerMineDesc =>
+      'Bronzový klíčový kámen opuštěných důlních bran — znak sestupu pod horu.';
+
+  @override
+  String get cosmeticBannerFrostName => 'Mrazový banner';
+
+  @override
+  String get cosmeticBannerFrostDesc =>
+      'Ledová ocel se závojem fialového jíní — barvy zamrzlých podzemních cest.';
+
+  @override
+  String get cosmeticBannerMountainName => 'Horský banner';
+
+  @override
+  String get cosmeticBannerMountainDesc =>
+      'Pozlacené hřebeny a bouřkové černě pro jezdce, který vyzval vrcholky.';
+
+  @override
+  String get cosmeticBannerDragonrockName => 'Banner dračí skály';
+
+  @override
+  String get cosmeticBannerDragonrockDesc =>
+      'Obsidián protkaný žhavými žilkami, vykovaný u paty Dračí skály.';
+
+  @override
   String get cosmeticFramePilgrimName => 'Poutnický rámeček';
 
   @override
@@ -5500,6 +5549,27 @@ class AppLocalizationsCs extends AppLocalizations {
   }
 
   @override
+  String get cosmeticBannerPilgrimUnlockHint => 'Odměna za zahájení cesty.';
+
+  @override
+  String get cosmeticBannerForestUnlockHint => 'Dosáhni úrovně 8.';
+
+  @override
+  String get cosmeticBannerRuinsUnlockHint => 'Dosáhni úrovně 23.';
+
+  @override
+  String get cosmeticBannerMineUnlockHint => 'Dosáhni úrovně 38.';
+
+  @override
+  String get cosmeticBannerFrostUnlockHint => 'Dosáhni úrovně 57.';
+
+  @override
+  String get cosmeticBannerMountainUnlockHint => 'Dosáhni úrovně 78.';
+
+  @override
+  String get cosmeticBannerDragonrockUnlockHint => 'Dosáhni úrovně 98.';
+
+  @override
   String get cosmeticFramePilgrimUnlockHint => 'Odměna za zahájení cesty.';
 
   @override
@@ -6060,6 +6130,9 @@ class AppLocalizationsCs extends AppLocalizations {
   String get cosmeticsInventoryLatestBadge => 'POSLEDNÍ';
 
   @override
+  String get cosmeticTypeBanner => 'Banner';
+
+  @override
   String get cosmeticTypePluralFrame => 'Rámečky';
 
   @override
@@ -6082,6 +6155,9 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get cosmeticTypePluralSkin => 'Vzhledy';
+
+  @override
+  String get cosmeticTypePluralBanner => 'Bannery';
 
   @override
   String get notifChannelProgressionName => 'Postup';
