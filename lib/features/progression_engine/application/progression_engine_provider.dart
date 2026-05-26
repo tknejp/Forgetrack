@@ -406,6 +406,20 @@ class ProgressionEngineProvider extends ChangeNotifier {
 
   final List<ProgressionResolutionResult> _pendingCelebrations = [];
 
+  /// Devtools-only kill switch. When true, every new resolution result
+  /// is dropped instead of being appended to [_pendingCelebrations], so
+  /// devtools actions like preset / set-level don't dump a stack of
+  /// overlays the tester has to dismiss. Toggled from the progression
+  /// engine devtools section; defaults to false in production.
+  bool _devSuppressCelebrations = false;
+  bool get devSuppressCelebrations => _devSuppressCelebrations;
+  set devSuppressCelebrations(bool value) {
+    if (_devSuppressCelebrations == value) return;
+    _devSuppressCelebrations = value;
+    if (value) _pendingCelebrations.clear();
+    notifyListeners();
+  }
+
   bool get isLoading => _isLoading;
   bool get isEvaluating => _isEvaluating;
 
@@ -2784,7 +2798,9 @@ class ProgressionEngineProvider extends ChangeNotifier {
       // evaluation also catches up the streak chain.
       await _runStreakBackfill();
       _recomputeStreaks();
-      if (!result.isEmpty) _pendingCelebrations.add(result);
+      if (!result.isEmpty && !_devSuppressCelebrations) {
+        _pendingCelebrations.add(result);
+      }
       // Cosmetic dispatch happens after ledger refresh so the
       // bridge sees a consistent picture.
       await _cosmeticBridge.dispatch(
@@ -2857,7 +2873,9 @@ class ProgressionEngineProvider extends ChangeNotifier {
       _ledger = await _repository.loadLedger();
       _lastEvaluatedAt = _engineNow();
       _recomputeStreaks();
-      if (!result.isEmpty) _pendingCelebrations.add(result);
+      if (!result.isEmpty && !_devSuppressCelebrations) {
+        _pendingCelebrations.add(result);
+      }
       await _cosmeticBridge.dispatch(
         result,
         ledger: _ledger,
@@ -4061,7 +4079,9 @@ class ProgressionEngineProvider extends ChangeNotifier {
       _lastResult = result;
       _ledger = await _repository.loadLedger();
       _recomputeStreaks();
-      if (!result.isEmpty) _pendingCelebrations.add(result);
+      if (!result.isEmpty && !_devSuppressCelebrations) {
+        _pendingCelebrations.add(result);
+      }
       AppLog.app.info('devtools/forceCompleteNode eval',
           payload: 'node=$nodeId completed=${result.completedNodes.length} '
               'available=${result.availableNodes.length} '
@@ -4134,7 +4154,9 @@ class ProgressionEngineProvider extends ChangeNotifier {
       _lastResult = result;
       _ledger = await _repository.loadLedger();
       _recomputeStreaks();
-      if (!result.isEmpty) _pendingCelebrations.add(result);
+      if (!result.isEmpty && !_devSuppressCelebrations) {
+        _pendingCelebrations.add(result);
+      }
       _error = null;
     } catch (e) {
       _error = e.toString();

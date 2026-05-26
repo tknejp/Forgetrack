@@ -95,7 +95,13 @@ class ProfileHeroBackgroundEdgeFade extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            stops: [0.0, 0.08, 0.92, 1.0],
+            // Bottom fade lifted from 0.92 to 0.78 on 2026-05-26 so
+            // the dark gradient covers the whole "shelf" band below
+            // the companion's feet — the buff chip + emblem row
+            // read against a clean dark backdrop instead of the
+            // painted scene's lower foreground. ≈22 % of the card
+            // height (~117 px on 530) versus the previous ~8 %.
+            stops: [0.0, 0.08, 0.78, 1.0],
             colors: [
               Color(0xFF0A0E1C),
               Color(0x000A0E1C),

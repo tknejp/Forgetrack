@@ -246,7 +246,7 @@ abstract final class JourneyAdapter {
 
     return _staticMilestoneLevels.reversed.map((level) {
       final isUnlocked = level <= currentLevel;
-      final title = levelMilestoneAtOrBelow(level).titleKey(l10n);
+      final title = levelTitleSpecAtOrBelow(level).titleKey(l10n);
 
       return JourneyMilestoneAnchor(
         level: level,
@@ -540,7 +540,7 @@ abstract final class JourneyAdapter {
     required AppLocalizations l10n,
     String idSuffix = '',
   }) {
-    final title = levelMilestoneAtOrBelow(level).titleKey(l10n);
+    final title = levelTitleSpecAtOrBelow(level).titleKey(l10n);
 
     return JourneyCheckpoint(
       id: '${idSuffix}level_$level',

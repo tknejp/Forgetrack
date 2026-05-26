@@ -41,7 +41,10 @@ class ProgressionDisplayResolver {
   /// the next breakpoint fires, instead of falling back to a generic
   /// "Level N" label and the default accent.
   LevelDisplay levelDisplay(int level) {
-    final spec = levelMilestoneAtOrBelow(level);
+    // Use title-breakpoint-only lookup so non-title specs (decoratives,
+    // skin drops, emblem-slot unlocks) don't override the active player
+    // tier title between breakpoints.
+    final spec = levelTitleSpecAtOrBelow(level);
     return LevelDisplay(
       level: level,
       title: spec.titleKey,

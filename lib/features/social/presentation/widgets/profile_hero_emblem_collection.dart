@@ -3,77 +3,68 @@ import 'package:flutter/material.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../cosmetics/config/cosmetics_config.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
+import '../../../cosmetics/domain/emblem_board.dart';
 import 'profile_hero_layout.dart';
 
 class ProfileHeroEmblemCollection extends StatelessWidget {
   const ProfileHeroEmblemCollection({
     super.key,
     required this.slots,
-    required this.unlockedCount,
+    required this.playerLevel,
     required this.slotSize,
-    required this.gap,
     required this.onTapSlot,
   });
 
   final List<Cosmetic?> slots;
-  final int unlockedCount;
-  final double slotSize;
-  final double gap;
-  final void Function(int slotIndex)? onTapSlot;
 
-  // 3-col × 2-row layout (3+3 = 6). The slot count was capped at 6
-  // on 2026-05-25 so the showcase reads as a curated set rather than
-  // a complete dump — the player has to pick which emblems to wear.
-  static const List<int> _rowSizes = [3, 3];
+  /// Player level — drives how many of the [EmblemBoard.slotCount]
+  /// slots are unlocked. Slot `i` becomes unlockable once the player
+  /// reaches `EmblemBoard.slotUnlockLevels[i]` (level-progression-
+  /// driven slot unlocks landed 2026-05-25). Slots above the unlocked
+  /// threshold render as locked even if `slots[i]` carries a pin from
+  /// older state.
+  final int playerLevel;
+
+  final double slotSize;
+  final void Function(int slotIndex)? onTapSlot;
 
   @override
   Widget build(BuildContext context) {
     final total = ProfileHeroLayout.emblemSlotCount;
-    final slotData = List<_SlotData>.generate(total, (i) {
-      final emblem = (i < slots.length && i < unlockedCount) ? slots[i] : null;
-      return _SlotData(
-        index: i,
-        emblem: emblem,
-        unlocked: i < unlockedCount,
-        pinned: false,
-        endGame: i == total - 1,
-      );
-    });
-
-    final rows = <List<_SlotData>>[];
-    var cursor = 0;
-    for (final rowSize in _rowSizes) {
-      rows.add(slotData.sublist(cursor, cursor + rowSize));
-      cursor += rowSize;
-    }
-
-    // No outer frame on the grid — empty slots stay fully
-    // transparent. Each equipped slot draws its own soft round
-    // shadow behind the artwork (see `_EmblemSlot`) so the
-    // showcase is anchored emblem-by-emblem rather than as one
-    // big floating panel.
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
+    final unlockedCount = EmblemBoard.unlockedSlotCount(playerLevel);
+    // Horizontal row across the bottom of the hero card (moved out
+    // of the right-edge column on 2026-05-26). The parent
+    // Positioned hands us a full-width band; `spaceBetween` lets
+    // the slots anchor flush with the side gutters and distributes
+    // any extra width across the inter-slot gaps, so the row
+    // scales gracefully with screen width without us re-doing the
+    // math per device.
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        for (var ri = 0; ri < rows.length; ri++) ...[
-          if (ri > 0) SizedBox(height: gap),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (var si = 0; si < rows[ri].length; si++) ...[
-                if (si > 0) SizedBox(width: gap),
-                _EmblemSlot(
-                  data: rows[ri][si],
-                  size: slotSize,
-                  onTap: rows[ri][si].unlocked && onTapSlot != null
-                      ? () => onTapSlot!(rows[ri][si].index)
-                      : null,
-                ),
-              ],
-            ],
-          ),
-        ],
+        for (var i = 0; i < total; i++)
+          () {
+            final unlocked = i < unlockedCount;
+            final emblem = unlocked && i < slots.length ? slots[i] : null;
+            final data = _SlotData(
+              index: i,
+              emblem: emblem,
+              unlocked: unlocked,
+              pinned: false,
+              endGame: i == total - 1,
+              unlockLevel: i < EmblemBoard.slotUnlockLevels.length
+                  ? EmblemBoard.slotUnlockLevels[i]
+                  : null,
+            );
+            return _EmblemSlot(
+              data: data,
+              size: slotSize,
+              onTap: unlocked && onTapSlot != null
+                  ? () => onTapSlot!(i)
+                  : null,
+            );
+          }(),
       ],
     );
   }
@@ -86,6 +77,7 @@ class _SlotData {
     required this.unlocked,
     required this.pinned,
     required this.endGame,
+    required this.unlockLevel,
   });
 
   final int index;
@@ -93,6 +85,12 @@ class _SlotData {
   final bool unlocked;
   final bool pinned;
   final bool endGame;
+
+  /// Player level required to unlock this slot, or `null` if no
+  /// threshold applies (legacy / out-of-range index). Rendered as a
+  /// small `Lv N` chip on locked slots so the player sees exactly
+  /// when each slot opens up.
+  final int? unlockLevel;
 }
 
 class _EmblemSlot extends StatelessWidget {
@@ -119,7 +117,6 @@ class _EmblemSlot extends StatelessWidget {
       // stack their tints into a chequerboard.
       final rarityColor = RarityPalette.forRarity(emblem.rarity).color;
       final haloAlpha = data.pinned ? 0.32 : 0.18;
-      const topPadding = 8.0;
       content = SizedBox(
         width: size,
         height: size,
@@ -196,18 +193,20 @@ class _EmblemSlot extends StatelessWidget {
                   ),
                 ),
               ),
-            Padding(
-              padding: const EdgeInsets.only(top: topPadding),
-              child: SizedBox(
-                width: size,
-                height: size - topPadding,
-                child: assetPath == null
-                    ? const Icon(
-                        Icons.shield_moon_rounded,
-                        color: Colors.white70,
-                      )
-                    : Image.asset(assetPath, fit: BoxFit.contain),
-              ),
+            // Emblem artwork fills the full slot square. The ~8 %
+            // top/bottom safety margin already baked into the 512²
+            // source canvas plays the role the old inner Padding
+            // used to — keeping a small visual gap to the rarity
+            // halo edge without shrinking the on-screen emblem.
+            SizedBox(
+              width: size,
+              height: size,
+              child: assetPath == null
+                  ? const Icon(
+                      Icons.shield_moon_rounded,
+                      color: Colors.white70,
+                    )
+                  : Image.asset(assetPath, fit: BoxFit.contain),
             ),
           ],
         ),
@@ -226,18 +225,24 @@ class _EmblemSlot extends StatelessWidget {
             fillColor: const Color(0x07FFFFFF),
           ),
           child: Center(
-            child: data.endGame
-                ? CustomPaint(
-                    size: Size(size * 0.45, size * 0.45),
-                    painter: _StarGlyphPainter(
-                      color: const Color(0x38FFFFFF),
-                    ),
-                  )
-                : data.unlocked
-                    ? Icon(
+            child: data.unlocked
+                ? (data.endGame
+                    ? CustomPaint(
+                        size: Size(size * 0.45, size * 0.45),
+                        painter: _StarGlyphPainter(
+                          color: const Color(0x38FFFFFF),
+                        ),
+                      )
+                    : Icon(
                         Icons.add_rounded,
                         size: size * 0.42,
                         color: Colors.white.withValues(alpha: 0.42),
+                      ))
+                : (data.unlockLevel != null
+                    ? Icon(
+                        Icons.lock_rounded,
+                        size: size * 0.42,
+                        color: Colors.white.withValues(alpha: 0.35),
                       )
                     : Container(
                         width: 4,
@@ -246,7 +251,7 @@ class _EmblemSlot extends StatelessWidget {
                           shape: BoxShape.circle,
                           color: Color(0x2EFFFFFF),
                         ),
-                      ),
+                      )),
           ),
         ),
       );

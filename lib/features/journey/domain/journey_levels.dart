@@ -68,7 +68,11 @@ String journeyEmojiForLevel(int level) {
   if (exact != null) return exact.emoji;
   final decorative = _decorativeEmojiByLevel[level];
   if (decorative != null) return decorative;
-  return levelMilestoneAtOrBelow(level).emoji;
+  // Title-breakpoint fallback: the "active tier glyph" is the tier
+  // emoji of the highest title breakpoint ≤ level. Skipping non-title
+  // specs keeps decorative drops / emblem-slot unlocks from leaking
+  // their per-milestone emoji to neighbouring intermediate levels.
+  return levelTitleSpecAtOrBelow(level).emoji;
 }
 
 /// Returns the next journey title breakpoint strictly above [level], or

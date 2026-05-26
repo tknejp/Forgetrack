@@ -65,6 +65,19 @@ class _DevToolsProgressionEngineSectionState
       children: [
         QuickStatePanel(busy: busy),
         const DevToolsSectionDivider(),
+        SwitchListTile(
+          value: p.devSuppressCelebrations,
+          onChanged: (v) => p.devSuppressCelebrations = v,
+          title: const Text('Suppress celebrations'), // lint-ignore: l10n-literal — devtools, intentionally English
+          subtitle: const Text(
+            'Drops new celebration overlays before they queue. '
+            'Use when applying presets / set-level so you don\'t have '
+            'to click through every milestone again.',
+          ),
+          secondary: const Icon(Icons.notifications_off_rounded),
+          dense: true,
+        ),
+        const DevToolsSectionDivider(),
         PresetsPanel(busy: busy, onApply: _applyPreset),
         const DevToolsSectionDivider(),
         DevToolsActionTile(

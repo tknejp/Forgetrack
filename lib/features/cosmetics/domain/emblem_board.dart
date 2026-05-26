@@ -20,7 +20,7 @@ import 'package:meta/meta.dart';
 /// shape is a comma-joined string; encoding lives on
 /// `EmblemBoardProvider` so the VO surface stays pure (no I/O).
 ///
-/// **Slot count.** 6 slots, rendered as a 3+3 grid in the profile
+/// **Slot count.** 6 slots, rendered as a 6×1 column in the profile
 /// header. The last slot (index 5) is the "end-game" slot —
 /// presentation concern only; the board treats every index uniformly.
 ///
@@ -35,11 +35,30 @@ import 'package:meta/meta.dart';
 /// itself is just the data carrier.
 @immutable
 class EmblemBoard {
-  /// Total slot count. Matches the visual 3+3 grid in the profile
-  /// header. Last slot is the "end-game" slot — purely a
-  /// presentation concern. The cap forces the player to curate
-  /// rather than display every unlock.
+  /// Total slot count. Matches the visual 6×1 column in the profile
+  /// header. The cap forces the player to curate rather than display
+  /// every unlock.
   static const int slotCount = 6;
+
+  /// Player levels at which each emblem-board slot becomes available
+  /// to pin into. Length must equal [slotCount]; slot index `i` is
+  /// unlocked once the player reaches level `slotUnlockLevels[i]`.
+  ///
+  /// Chosen to thread between the existing level milestones
+  /// (5/10/12/15/20/25/30/…) — these levels carry no other reward,
+  /// so the slot unlock fills the gap between milestone drops with a
+  /// permanent status marker (similar in feel to earning a title).
+  static const List<int> slotUnlockLevels = [3, 17, 33, 53, 73, 93];
+
+  /// Number of slots the player has earned by reaching [level].
+  /// Returns a value in `[0, slotCount]`.
+  static int unlockedSlotCount(int level) {
+    var count = 0;
+    for (final threshold in slotUnlockLevels) {
+      if (level >= threshold) count++;
+    }
+    return count;
+  }
 
   const EmblemBoard._(this._slots);
 
