@@ -2,7 +2,7 @@ name: forgetrack
 description: "Fitness tracker – Health Connect, kalorické tabulky a Google Sheets sync."
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 0.1.0+2
 
 environment:
   sdk: ^3.5.0
