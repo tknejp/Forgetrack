@@ -341,5 +341,12 @@ class FactoryResetService {
 
     // SocialProvider rebinds reactively via the ProxyProvider once
     // AuthProvider's `isSignedIn` flips; nothing imperative needed.
+
+    // Final evaluation against the post-reset state: ledger is empty,
+    // sources have re-initialised from defaults. This guarantees
+    // condition-only achievements (welcome_to_journey) re-emit even if the
+    // ProxyProvider rebuild chain didn't trigger an evaluation with the
+    // settled audit signature.
+    await deps.progressionEngineProvider.refresh();
   }
 }

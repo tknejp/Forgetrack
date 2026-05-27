@@ -4218,6 +4218,12 @@ class ProgressionEngineProvider extends ChangeNotifier {
       _isEvaluating = false;
       notifyListeners();
     }
+    // Force a fresh evaluation against the now-empty ledger so condition-only
+    // achievements (welcome_to_journey) re-emit. Without this, the next
+    // evaluation only fires when some upstream source notifies — and during
+    // factory-reset that notification can race the audit-signature cache and
+    // bail before re-emitting welcome.
+    await refresh();
   }
 
   /// Devtools — clears every node-keyed event (claim, completion,
