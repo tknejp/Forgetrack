@@ -207,6 +207,7 @@ class HomeCardList extends StatelessWidget {
             borderRadius: BorderRadius.circular(Tokens.radiusCard),
             child: child,
           ),
+          // ignore: deprecated_member_use, migrate to onReorderItem later
           onReorder: (oldIndex, newIndex) {
             // ReorderableListView reports newIndex post-removal of the
             // dragged item, so subtract 1 when moving downward.

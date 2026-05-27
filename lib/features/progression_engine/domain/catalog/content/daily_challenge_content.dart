@@ -59,14 +59,14 @@ List<Objective> dailyChallengeObjectives(
 ) {
   return const [
     Objective(
-      id: const ObjectiveId('daily_challenge_nutri_triple_obj'),
+      id: ObjectiveId('daily_challenge_nutri_triple_obj'),
       metric: TodayCompletionsAmongMetric(nodeIds: _nutriAtoms),
       scope: TodayScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 3,
     ),
     Objective(
-      id: const ObjectiveId('daily_challenge_active_day_obj'),
+      id: ObjectiveId('daily_challenge_active_day_obj'),
       metric: TodayCompletionsAmongMetric(
         nodeIds: [ProgressionEntryId('daily_steps_today'), ProgressionEntryId('daily_activity_today')],
       ),
@@ -75,14 +75,14 @@ List<Objective> dailyChallengeObjectives(
       targetValue: 2,
     ),
     Objective(
-      id: const ObjectiveId('daily_challenge_full_plate_obj'),
+      id: ObjectiveId('daily_challenge_full_plate_obj'),
       metric: TodayCompletionsAmongMetric(nodeIds: _nutriAtoms),
       scope: TodayScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 5,
     ),
     Objective(
-      id: const ObjectiveId('daily_challenge_recovery_obj'),
+      id: ObjectiveId('daily_challenge_recovery_obj'),
       metric: TodayCompletionsAmongMetric(
         nodeIds: [ProgressionEntryId('daily_sleep_today'), ProgressionEntryId('daily_protein_today')],
       ),
@@ -91,7 +91,7 @@ List<Objective> dailyChallengeObjectives(
       targetValue: 2,
     ),
     Objective(
-      id: const ObjectiveId('daily_challenge_triple_combo_obj'),
+      id: ObjectiveId('daily_challenge_triple_combo_obj'),
       metric: TodayCompletionsAmongMetric(
         nodeIds: [
           ProgressionEntryId('daily_steps_today'),
@@ -104,7 +104,7 @@ List<Objective> dailyChallengeObjectives(
       targetValue: 3,
     ),
     Objective(
-      id: const ObjectiveId('daily_challenge_balanced_obj'),
+      id: ObjectiveId('daily_challenge_balanced_obj'),
       metric: TodayCompletionsAmongMetric(nodeIds: _allDailyAtoms),
       scope: TodayScope(),
       operator: ObjectiveOperator.atLeast,

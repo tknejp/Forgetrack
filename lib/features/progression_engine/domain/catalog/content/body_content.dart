@@ -21,7 +21,7 @@ List<Objective> bodyObjectives(EngineCatalogContext context) {
   return const [
     // Logged a weight today (presence-only check).
     Objective(
-      id: const ObjectiveId('daily_weight_log'),
+      id: ObjectiveId('daily_weight_log'),
       domain: ProgressionDomain.body,
       metric: WeightLoggedTodayMetric(),
       scope: TodayScope(),
@@ -29,7 +29,7 @@ List<Objective> bodyObjectives(EngineCatalogContext context) {
       targetValue: 1,
     ),
     Objective(
-      id: const ObjectiveId('streak_weight_log_90'),
+      id: ObjectiveId('streak_weight_log_90'),
       domain: ProgressionDomain.body,
       metric: StreakDaysMetric.byRule('daily_weight_log'),
       scope: LifetimeScope(),
