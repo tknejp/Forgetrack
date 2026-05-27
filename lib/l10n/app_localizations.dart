@@ -2094,7 +2094,7 @@ abstract class AppLocalizations {
   /// Hero / profile screen — Stats tab label
   ///
   /// In en, this message translates to:
-  /// **'Stats'**
+  /// **'Overview'**
   String get profileTabStats;
 
   /// Hero / profile screen — Inventory tab label

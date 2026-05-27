@@ -1096,7 +1096,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progScreenTitle => 'Your hero journey';
 
   @override
-  String get profileTabStats => 'Stats';
+  String get profileTabStats => 'Overview';
 
   @override
   String get profileTabInventory => 'Inventory';
