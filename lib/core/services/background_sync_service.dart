@@ -357,4 +357,41 @@ class BackgroundSyncService {
       );
     }
   }
+
+  /// Schedules a one-off run of the same background sync callback. Used by
+  /// the DevTools "Trigger one-off background task" action — Android still
+  /// enforces system-level delays (Doze, battery saver, network gate), but
+  /// the task usually fires within a few seconds on an unblocked device
+  /// and lets the tester verify the WorkManager path end-to-end without
+  /// waiting for the 15-minute periodic window.
+  static Future<void> triggerOneOffSync() async {
+    if (!Platform.isAndroid) {
+      AppLog.app.debug(
+        'BackgroundSyncService: one-off trigger skipped on non-Android platform',
+      );
+      return;
+    }
+    try {
+      // Initialize is idempotent — the periodic registerPeriodicTask
+      // already ran at boot via [register]. We call it again to defend
+      // against a path where the user lands in DevTools before the
+      // initial boot sequence completed.
+      await Workmanager().initialize(backgroundSyncCallback);
+
+      await Workmanager().registerOneOffTask(
+        '${_taskTag}_oneoff_${DateTime.now().millisecondsSinceEpoch}',
+        _taskName,
+        constraints: Constraints(networkType: NetworkType.connected),
+        initialDelay: const Duration(seconds: 2),
+      );
+      AppLog.app.info('BackgroundSyncService: one-off task scheduled');
+    } catch (e, st) {
+      AppLog.app.error(
+        'BackgroundSyncService: one-off trigger failed',
+        err: e,
+        stackTrace: st,
+      );
+      rethrow;
+    }
+  }
 }

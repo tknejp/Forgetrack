@@ -2744,7 +2744,19 @@ class ProgressionEngineProvider extends ChangeNotifier {
     final catalogContext = source.currentContext();
     final evalContext = currentContext!;
     _lastEvaluatedSignature = signature;
+
+    // Trello #80 bridge: WorkManager's BackgroundProgressionNotifier ran
+    // engine.evaluate() from a separate isolate and appended completions /
+    // reward grants directly to the ledger. The Dart-side celebration
+    // controller + cosmetic bridge live only in this provider, so without
+    // a replay step those background-fired events surface in the ledger
+    // but never trigger the in-app celebration overlay or the cosmetic-
+    // unlock pipeline. Walk events newer than the persisted marker,
+    // synthesise a result, dispatch + queue exactly once.
+    await _replayPendingBackgroundCelebrations(evalContext);
+
     await evaluateWith(context: evalContext, catalogContext: catalogContext);
+    await _markCelebrationsDispatchedNow();
 
     if (_evaluateQueued) {
       _evaluateQueued = false;
@@ -4267,6 +4279,101 @@ class ProgressionEngineProvider extends ChangeNotifier {
   }
 
   // ── Internals ────────────────────────────────────────────────────
+
+  /// SharedPreferences key marking the wall-clock timestamp through which
+  /// the foreground celebration controller + cosmetic bridge have
+  /// processed ledger events. Ledger events with `timestamp > marker`
+  /// (most commonly authored by `BackgroundProgressionNotifier` from the
+  /// WorkManager isolate, but also by cloud pulls between provider
+  /// rebuilds) are replayed once when `refresh()` next runs, then the
+  /// marker advances to `DateTime.now()`.
+  static const _pendingCelebrationMarkerKey =
+      'progression_pending_celebration_marker';
+
+  Future<void> _replayPendingBackgroundCelebrations(
+    EngineEvaluationContext evalContext,
+  ) async {
+    final ledger = _ledger;
+    if (ledger == null) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_pendingCelebrationMarkerKey);
+    final marker = raw == null ? null : DateTime.tryParse(raw);
+    if (marker == null) {
+      // First launch (or corrupted marker): no replay — just seed so
+      // subsequent foreground/background events qualify as "new".
+      await prefs.setString(
+        _pendingCelebrationMarkerKey,
+        DateTime.now().toIso8601String(),
+      );
+      return;
+    }
+
+    final newCompletions = <NodeCompletionEvent>[
+      for (final e in ledger.nodeCompletions)
+        if (e.timestamp.isAfter(marker)) e,
+    ];
+    if (newCompletions.isEmpty) return;
+
+    final newRewards = <RewardGrantEvent>[
+      for (final e in ledger.rewardGrants)
+        if (e.timestamp.isAfter(marker)) e,
+    ];
+
+    final result = ProgressionResolutionResult(
+      runId: 'bg-replay-${DateTime.now().microsecondsSinceEpoch}',
+      reason: ProgressionResolutionReason.backgroundSync,
+      completedObjectives: const [],
+      completedNodes: [
+        for (final e in newCompletions)
+          NodeCompletion(nodeId: e.nodeId, event: e),
+      ],
+      availableNodes: const [],
+      newlyAvailableNodes: const [],
+      grantedRewards: [for (final e in newRewards) RewardGrant(event: e)],
+      skippedEvents: const [],
+      warnings: const [],
+      contextSnapshot: evalContext,
+    );
+
+    AppLog.app.info(
+      'engine: replaying ${newCompletions.length} background completions '
+      '+ ${newRewards.length} reward grants',
+    );
+
+    if (!_devSuppressCelebrations) {
+      _pendingCelebrations.add(result);
+    }
+    try {
+      await _cosmeticBridge.dispatch(
+        result,
+        ledger: ledger,
+        level: profile.level,
+      );
+    } catch (e, st) {
+      AppLog.app.error(
+        'engine: background-replay cosmetic dispatch failed',
+        err: e,
+        stackTrace: st,
+      );
+    }
+  }
+
+  Future<void> _markCelebrationsDispatchedNow() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        _pendingCelebrationMarkerKey,
+        DateTime.now().toIso8601String(),
+      );
+    } catch (e, st) {
+      AppLog.app.error(
+        'engine: failed to persist celebration marker',
+        err: e,
+        stackTrace: st,
+      );
+    }
+  }
 
   Future<void> _hydrate() async {
     try {

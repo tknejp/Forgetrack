@@ -51,6 +51,7 @@ class _DevToolsBackgroundSectionState
   List<DevToolsSyncEvent> _events = [];
   bool _loading = true;
   bool _reRegistering = false;
+  bool _triggeringOneOff = false;
   String? _statusMsg;
 
   @override
@@ -87,6 +88,33 @@ class _DevToolsBackgroundSectionState
       if (mounted) setState(() => _statusMsg = 'Error: $e');
     } finally {
       if (mounted) setState(() => _reRegistering = false);
+    }
+  }
+
+  Future<void> _triggerOneOff() async {
+    final confirmed = await showSettingsConfirmationDialog(
+      context,
+      title: 'Trigger one-off background task',
+      message: 'Schedules a one-off WorkManager task that runs the same '
+          'callback as the periodic 15-min job. Subject to Doze, battery '
+          'saver, and the configured NetworkType.connected constraint — '
+          'usually fires within a few seconds on an unblocked device.',
+      confirmLabel: 'Trigger',
+      isDestructive: false,
+    );
+    if (!confirmed || !mounted) return;
+
+    setState(() { _triggeringOneOff = true; _statusMsg = null; });
+    try {
+      await BackgroundSyncService.triggerOneOffSync();
+      if (mounted) {
+        setState(() => _statusMsg =
+            'Scheduled at ${_full(DateTime.now())} — watch BG sync below');
+      }
+    } catch (e) {
+      if (mounted) setState(() => _statusMsg = 'Error: $e');
+    } finally {
+      if (mounted) setState(() => _triggeringOneOff = false);
     }
   }
 
@@ -258,9 +286,13 @@ class _DevToolsBackgroundSectionState
         const DevToolsSectionDivider(),
         DevToolsActionTile(
           label: 'Trigger one-off background task',
-          subtitle: 'WorkManager one-off trigger — not yet implemented',
-          isDisabled: true,
-          onTap: null,
+          subtitle: canReRegister
+              ? 'Schedules a one-off run of the same WM callback'
+              : 'Enable Debug Mode to unlock',
+          isDisabled: !canReRegister || _triggeringOneOff,
+          isLoading: _triggeringOneOff,
+          onTap:
+              canReRegister && !_triggeringOneOff ? _triggerOneOff : null,
         ),
         const DevToolsSectionDivider(),
         DevToolsActionTile(
