@@ -1,5 +1,5 @@
-﻿name: forgetrack
-description: "Fitness tracker â€“ Health Connect, kalorickÃ© tabulky a Google Sheets sync."
+name: forgetrack
+description: "Fitness tracker – Health Connect, kalorické tabulky a Google Sheets sync."
 publish_to: 'none'
 
 version: 0.2.0+3
@@ -24,14 +24,14 @@ dependencies:
   health: ^13.3.1
 
   # --- Google autentizace + Sheets API v4 ---
-  google_sign_in: ^7.2.0      # authenticatedClient() zabudovÃ¡n pÅ™Ã­mo (v7.x)
+  google_sign_in: ^7.2.0      # authenticatedClient() zabudován přímo (v7.x)
   googleapis: ^16.0.0
   googleapis_auth: ^2.0.0
 
-  # --- HTTP klient pro kalorickÃ© REST API ---
+  # --- HTTP klient pro kalorické REST API ---
   http: ^1.2.1
 
-  # --- KalorickÃ© Tabulky: hashing + bezpeÄnÃ© uloÅ¾enÃ­ pÅ™ihlaÅ¡ovacÃ­ch ÃºdajÅ¯ ---
+  # --- Kalorické Tabulky: hashing + bezpečné uložení přihlašovacích údajů ---
   crypto: ^3.0.3
   flutter_secure_storage: ^10.0.0
 
@@ -57,7 +57,7 @@ dependencies:
   cloud_firestore: ^6.3.0
   firebase_auth: ^6.4.0
 
-  # --- Background sync + lokÃ¡lnÃ­ notifikace ---
+  # --- Background sync + lokální notifikace ---
   workmanager: ^0.9.0
   flutter_local_notifications: ^18.0.0
 
