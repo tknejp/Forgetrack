@@ -6600,7 +6600,7 @@ abstract class AppLocalizations {
   /// Hint shown above the DevTools metric override list
   ///
   /// In en, this message translates to:
-  /// **'Overrides are stored as debug settings only — not yet wired into production calculations (TODO).'**
+  /// **'Overrides apply to today\'s value across the app (energy balance, progression input, social profile). History stays untouched. Clear all to return to live data.'**
   String get devtoolsOverridesHint;
 
   /// Confirmation dialog title for clearing all debug metric overrides

@@ -253,6 +253,13 @@ Future<void> _runForgetrack(SentryConsentProvider sentryConsent) async {
   final devToolsProvider = DevToolsProvider();
   await devToolsProvider.init();
 
+  // Trello #109 (2026-05-27): wire DevTools metric overrides into the
+  // FitnessProvider getters. From now on, setting a `stepsOverride` (or
+  // offset / calories / weight) in the DevTools panel propagates to every
+  // consumer reading today's metric — energy balance, progression engine
+  // input, social profile snapshot, journey overview.
+  fitnessProvider.bindDevTools(devToolsProvider);
+
   // Trello #106 (2026-05-27): runtime dev-access lookup. Reads
   // `devUsers/{uid}.enabled` to flip dev access without a rebuild.
   // Firestore handle is null when the social backend isn't ready —

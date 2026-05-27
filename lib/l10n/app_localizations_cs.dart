@@ -3687,7 +3687,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get devtoolsOverridesHint =>
-      'Přepisy se ukládají pouze jako ladicí nastavení — zatím nejsou napojené na produkční výpočty (TODO).';
+      'Přepisy se aplikují na dnešní hodnotu napříč aplikací (energetická bilance, vstup do progression, sociální profil). Historie zůstává nedotčená. Vymaž vše pro návrat k živým datům.';
 
   @override
   String get devtoolsOverridesClearTitle => 'Vymazat ladicí přepisy?';

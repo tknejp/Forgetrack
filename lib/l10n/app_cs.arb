@@ -1161,7 +1161,7 @@
   "devtoolsNotificationsSendTestTitle": "Odeslat testovací notifikaci?",
   "devtoolsSectionUi": "UI / propagace providerů",
   "devtoolsSectionOverrides": "Ladicí přepisy metrik",
-  "devtoolsOverridesHint": "Přepisy se ukládají pouze jako ladicí nastavení — zatím nejsou napojené na produkční výpočty (TODO).",
+  "devtoolsOverridesHint": "Přepisy se aplikují na dnešní hodnotu napříč aplikací (energetická bilance, vstup do progression, sociální profil). Historie zůstává nedotčená. Vymaž vše pro návrat k živým datům.",
   "devtoolsOverridesClearTitle": "Vymazat ladicí přepisy?",
   "devtoolsOverridesClearMessage": "Všechny uložené přepisy metrik budou odstraněny.",
   "devtoolsOverridesClearConfirm": "Vymazat",

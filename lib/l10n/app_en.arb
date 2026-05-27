@@ -2005,7 +2005,7 @@
   "devtoolsSectionOverrides": "Debug Metric Overrides",
   "@devtoolsSectionOverrides": { "description": "DevTools section title — debug metric override values" },
 
-  "devtoolsOverridesHint": "Overrides are stored as debug settings only — not yet wired into production calculations (TODO).",
+  "devtoolsOverridesHint": "Overrides apply to today's value across the app (energy balance, progression input, social profile). History stays untouched. Clear all to return to live data.",
   "@devtoolsOverridesHint": { "description": "Hint shown above the DevTools metric override list" },
 
   "devtoolsOverridesClearTitle": "Clear debug overrides?",

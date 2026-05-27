@@ -10,7 +10,9 @@ import '../domain/health_snapshot.dart';
 import '../domain/sleep_record.dart';
 import '../domain/weight_record.dart';
 import 'fitness_provider/fitness_queries.dart';
+import '../../devtools/application/devtools_provider.dart';
 import '../../devtools/application/devtools_sync_logger.dart';
+import '../../devtools/domain/debug_metric_overrides.dart';
 import '../../devtools/domain/devtools_sync_event.dart';
 
 enum FitnessAccessState {
@@ -30,6 +32,41 @@ class FitnessProvider extends ChangeNotifier {
   final HealthDatabase _db;
 
   FitnessProvider(this._service, this._db);
+
+  // --- DevTools metric overrides (Trello #106 wired into prod) --------------
+  //
+  // [DevToolsProvider.overrides] is read through `_overrides` and applied at
+  // the today-only date-keyed getters. History stays pristine — overrides
+  // only steer what "today" reports, so the rest of the app (energy balance
+  // card, progression engine input, social profile snapshot, ...) sees the
+  // dev-provided value without needing per-consumer wiring.
+  DevToolsProvider? _devTools;
+  VoidCallback? _devToolsListener;
+
+  /// Wires the DevTools override store. Called once from `main.dart` after
+  /// both providers exist. Subsequent `setOverrides` calls trigger a
+  /// `notifyListeners` here so fitness consumers re-read with the override
+  /// applied.
+  void bindDevTools(DevToolsProvider devTools) {
+    if (_devTools == devTools) return;
+    final prior = _devToolsListener;
+    if (prior != null) {
+      _devTools?.removeListener(prior);
+    }
+    _devTools = devTools;
+    _devToolsListener = notifyListeners;
+    devTools.addListener(_devToolsListener!);
+  }
+
+  DebugMetricOverrides get _overrides =>
+      _devTools?.overrides ?? DebugMetricOverrides.empty;
+
+  bool _isToday(DateTime date) {
+    final now = DateTime.now();
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
+  }
 
   // --- Concurrency guard ----------------------------------------------------
   bool _inFlight = false;
@@ -223,13 +260,25 @@ class FitnessProvider extends ChangeNotifier {
 
   // --- Latest weight --------------------------------------------------------
 
-  double? get latestWeight =>
-      _weightHistory.isNotEmpty ? _weightHistory.last.weight : null;
+  double? get latestWeight {
+    final ov = _overrides.weightOverride;
+    if (ov != null) return ov;
+    return _weightHistory.isNotEmpty ? _weightHistory.last.weight : null;
+  }
 
   // --- Date-range queries (delegated to FitnessQueries) ---------------------
 
-  int stepsForDate(DateTime date) =>
-      FitnessQueries.stepsForDate(_stepsHistory, date);
+  int stepsForDate(DateTime date) {
+    final raw = FitnessQueries.stepsForDate(_stepsHistory, date);
+    if (!_isToday(date)) return raw;
+    final ov = _overrides;
+    if (ov.stepsOverride != null) return ov.stepsOverride!;
+    if (ov.stepOffset != null) {
+      final shifted = raw + ov.stepOffset!;
+      return shifted < 0 ? 0 : shifted;
+    }
+    return raw;
+  }
 
   int stepsAvgForRange(DateTime start, DateTime end) =>
       FitnessQueries.stepsAvgForRange(_stepsHistory, start, end);
@@ -237,9 +286,12 @@ class FitnessProvider extends ChangeNotifier {
   List<StepsRecord> stepsHistoryForRange(DateTime start, DateTime end) =>
       FitnessQueries.stepsHistoryForRange(_stepsHistory, start, end);
 
-  double activeCaloriesBurnedForDate(DateTime date) =>
-      FitnessQueries.activeCaloriesBurnedForDate(
-          _stepsHistory, _activeCaloriesHistory, date);
+  double activeCaloriesBurnedForDate(DateTime date) {
+    final raw = FitnessQueries.activeCaloriesBurnedForDate(
+        _stepsHistory, _activeCaloriesHistory, date);
+    if (!_isToday(date)) return raw;
+    return _overrides.caloriesOverride ?? raw;
+  }
 
   double basalCaloriesBurnedForDate(DateTime date) =>
       FitnessQueries.activeCaloriesBurnedForDate(
@@ -294,7 +346,15 @@ class FitnessProvider extends ChangeNotifier {
   /// it has data, falls back to the workout sum (and never undercounts —
   /// returns the larger of the two so users with only workout data still see
   /// a non-zero value).
+  ///
+  /// DevTools `caloriesOverride` for today is authoritative — it short-
+  /// circuits the merge so a dev can flip the energy-balance card to a
+  /// specific value without also clearing workouts.
   double bestActiveKcalForDate(DateTime date) {
+    if (_isToday(date)) {
+      final ov = _overrides.caloriesOverride;
+      if (ov != null) return ov;
+    }
     final hcSeries = activeCaloriesBurnedForDate(date);
     final workouts = workoutCaloriesForDate(date);
     return hcSeries > workouts ? hcSeries : workouts;
@@ -310,8 +370,15 @@ class FitnessProvider extends ChangeNotifier {
   List<WeightRecord> weightHistoryForRange(DateTime start, DateTime end) =>
       FitnessQueries.weightHistoryForRange(_weightHistory, start, end);
 
-  WeightRecord? weightForDate(DateTime date) =>
-      FitnessQueries.weightForDate(_weightHistory, date);
+  WeightRecord? weightForDate(DateTime date) {
+    if (_isToday(date)) {
+      final ov = _overrides.weightOverride;
+      if (ov != null) {
+        return WeightRecord(date: date, weight: ov);
+      }
+    }
+    return FitnessQueries.weightForDate(_weightHistory, date);
+  }
 
   ({double? lastKnown, double? trend}) weightMetricsForRange(
           DateTime start, DateTime end) =>

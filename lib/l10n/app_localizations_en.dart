@@ -3697,7 +3697,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get devtoolsOverridesHint =>
-      'Overrides are stored as debug settings only — not yet wired into production calculations (TODO).';
+      'Overrides apply to today\'s value across the app (energy balance, progression input, social profile). History stays untouched. Clear all to return to live data.';
 
   @override
   String get devtoolsOverridesClearTitle => 'Clear debug overrides?';
