@@ -165,7 +165,7 @@ Write-Ok "flutter + firebase v PATH"
 
 # 1.6 Tester group placeholder check
 if ($TesterGroup -eq 'testers') {
-    Write-Warn "TesterGroup je výchozí 'testers' — pokud máš jiný název, uprav scripts/release.ps1 (\$TesterGroup)."
+    Write-Warn "TesterGroup je výchozí 'testers' — pokud máš jiný název, uprav scripts/release.ps1 (proměnná `$TesterGroup)."
 }
 
 # 1.7 Release notes file

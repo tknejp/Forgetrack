@@ -14,9 +14,24 @@ Uživatel chce nový release Forgetrack. Postupuj **přesně podle těchto krok�
 
 ## Postup
 
+### 0. Bezpečnostní confirm gate
+
+Release je destruktivní operace (push na main, tag, FAD upload, email testerům). Než cokoli začneš dělat, **explicitně se zeptej uživatele na potvrzení záměru**. Smyslem je odchytit `/release` zadaný omylem (překlep, špatné okno).
+
+Formuluj jednou větou — krátce a konkrétně. Příklad:
+
+> Spustím release proces (push na main, tag, build, upload testerům). Pokračovat? Potvrď `ano` / `pokračuj` / `release`.
+
+Akceptuj pouze jasné potvrzení (`ano`, `yes`, `ok`, `pokračuj`, `release`, `proveď` apod.). Pokud uživatel odpoví neutrálně / nejasně / vyhýbavě, **nepokračuj** — ptej se znovu nebo se zeptej, co měl na mysli.
+
+Pokud user napsal `/release X.Y.Z` (s konkrétní verzí), zopakuj tu verzi ve své otázce („Spustím release v0.2.0 — pokračovat?"), aby měl šanci chytit překlep ve verzi.
+
+**Tuto bránu nepřeskakuj nikdy.** I když to uživatel v minulé konverzaci povolil, vždy se ptej znovu.
+
 ### 1. Preflight (čistě informativní)
 
 Spusť paralelně a vrať souhrn:
+
 - `git rev-parse --abbrev-ref HEAD` — aktuální větev (musí být `develop`)
 - `git status --porcelain` — musí být prázdné
 - `git fetch origin develop --quiet && git rev-list --count develop..origin/develop` a opačně — sync s origin
