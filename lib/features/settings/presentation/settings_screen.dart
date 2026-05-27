@@ -13,6 +13,7 @@ import 'sections/settings_goals_section.dart';
 import 'sections/settings_header_section.dart';
 import 'sections/settings_health_connect_section.dart';
 import 'sections/settings_kt_section.dart';
+import 'sections/settings_notifications_section.dart';
 import 'sections/settings_preferences_section.dart';
 import 'sections/settings_static_sections.dart';
 import 'widgets/settings_section.dart';
@@ -61,6 +62,10 @@ class SettingsScreen extends StatelessWidget {
             SettingsSection(
               title: l10n.sectionPreferences,
               child: const SettingsPreferencesSection(),
+            ),
+            SettingsSection(
+              title: l10n.sectionNotifications,
+              child: const SettingsNotificationsSection(),
             ),
             SettingsSection(
               title: l10n.sectionGoals,

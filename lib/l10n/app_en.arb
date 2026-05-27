@@ -260,6 +260,30 @@
   "settingsNotificationsSubtitle": "Allow reminders, quest updates and social alerts.",
   "@settingsNotificationsSubtitle": { "description": "Subtitle for the notifications toggle setting" },
 
+  "sectionNotifications": "Notifications",
+  "@sectionNotifications": { "description": "Settings section header: notifications" },
+
+  "settingsNotifMasterSubtitle": "Master switch — turn off to silence the app completely.",
+  "@settingsNotifMasterSubtitle": { "description": "Subtitle below the master notifications toggle in the Notifications settings section" },
+
+  "settingsNotifProgressionLabel": "Progress",
+  "@settingsNotifProgressionLabel": { "description": "Per-category toggle label: quest completions and achievement unlocks" },
+
+  "settingsNotifProgressionSubtitle": "Completed quests and unlocked achievements.",
+  "@settingsNotifProgressionSubtitle": { "description": "Per-category toggle subtitle: progression notifications" },
+
+  "settingsNotifSocialLabel": "Social",
+  "@settingsNotifSocialLabel": { "description": "Per-category toggle label: social notifications" },
+
+  "settingsNotifSocialSubtitle": "Friend requests and reactions to your posts.",
+  "@settingsNotifSocialSubtitle": { "description": "Per-category toggle subtitle: social notifications" },
+
+  "settingsNotifRemindersLabel": "Reminders",
+  "@settingsNotifRemindersLabel": { "description": "Per-category toggle label: daily reminders" },
+
+  "settingsNotifRemindersSubtitle": "Daily goal reminders.",
+  "@settingsNotifRemindersSubtitle": { "description": "Per-category toggle subtitle: daily reminders" },
+
   "languageSystemDefault": "System default",
   "@languageSystemDefault": { "description": "Option to follow the device system locale" },
 

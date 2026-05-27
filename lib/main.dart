@@ -129,6 +129,14 @@ Future<void> _runForgetrack(SentryConsentProvider sentryConsent) async {
   final notificationPreferencesProvider = NotificationPreferencesProvider();
   await notificationPreferencesProvider.init();
 
+  // Onboarding state is read early so we can gate the Android POST_NOTIFICATIONS
+  // OS dialog: a fresh install must not see the prompt at cold start — it
+  // belongs to the welcome-screen notifications toggle. Existing installs
+  // already have `onboarding_completed = true` so they keep boot-time prompt
+  // behaviour (and the toggle defaults to true).
+  final onboardingProvider = OnboardingProvider();
+  await onboardingProvider.init();
+
   final healthService = HealthConnectService();
   final healthDb = HealthDatabase();
   await healthDb.open();
@@ -205,7 +213,8 @@ Future<void> _runForgetrack(SentryConsentProvider sentryConsent) async {
     repository: progressionEngineRepo,
   );
   await NotificationService.instance.initialize(
-    requestPermissions: notificationPreferencesProvider.notificationsEnabled,
+    requestPermissions: notificationPreferencesProvider.notificationsEnabled &&
+        onboardingProvider.isCompleted,
   );
   unawaited(FcmService.instance.initialize());
   unawaited(BackgroundSyncService.register());
@@ -271,9 +280,6 @@ Future<void> _runForgetrack(SentryConsentProvider sentryConsent) async {
         : null,
   );
   await devToolsPermissionService.init();
-
-  final onboardingProvider = OnboardingProvider();
-  await onboardingProvider.init();
 
   // Cosmetics: Isar-backed local persistence wrapped in a hybrid
   // Firestore sync layer when the social backend is available. Mirrors

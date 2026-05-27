@@ -272,6 +272,33 @@ class AppLocalizationsCs extends AppLocalizations {
       'Povolit připomínky, questy a social upozornění.';
 
   @override
+  String get sectionNotifications => 'Notifikace';
+
+  @override
+  String get settingsNotifMasterSubtitle =>
+      'Hlavní vypínač — vypnutím utišíš celou aplikaci.';
+
+  @override
+  String get settingsNotifProgressionLabel => 'Postup';
+
+  @override
+  String get settingsNotifProgressionSubtitle =>
+      'Splněné questy a odemčené achievementy.';
+
+  @override
+  String get settingsNotifSocialLabel => 'Sociální';
+
+  @override
+  String get settingsNotifSocialSubtitle =>
+      'Žádosti o přátelství a reakce na tvé posty.';
+
+  @override
+  String get settingsNotifRemindersLabel => 'Připomínky';
+
+  @override
+  String get settingsNotifRemindersSubtitle => 'Denní připomínky cílů.';
+
+  @override
   String get languageSystemDefault => 'Výchozí systémový';
 
   @override

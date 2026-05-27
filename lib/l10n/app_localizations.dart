@@ -596,6 +596,54 @@ abstract class AppLocalizations {
   /// **'Allow reminders, quest updates and social alerts.'**
   String get settingsNotificationsSubtitle;
 
+  /// Settings section header: notifications
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get sectionNotifications;
+
+  /// Subtitle below the master notifications toggle in the Notifications settings section
+  ///
+  /// In en, this message translates to:
+  /// **'Master switch — turn off to silence the app completely.'**
+  String get settingsNotifMasterSubtitle;
+
+  /// Per-category toggle label: quest completions and achievement unlocks
+  ///
+  /// In en, this message translates to:
+  /// **'Progress'**
+  String get settingsNotifProgressionLabel;
+
+  /// Per-category toggle subtitle: progression notifications
+  ///
+  /// In en, this message translates to:
+  /// **'Completed quests and unlocked achievements.'**
+  String get settingsNotifProgressionSubtitle;
+
+  /// Per-category toggle label: social notifications
+  ///
+  /// In en, this message translates to:
+  /// **'Social'**
+  String get settingsNotifSocialLabel;
+
+  /// Per-category toggle subtitle: social notifications
+  ///
+  /// In en, this message translates to:
+  /// **'Friend requests and reactions to your posts.'**
+  String get settingsNotifSocialSubtitle;
+
+  /// Per-category toggle label: daily reminders
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get settingsNotifRemindersLabel;
+
+  /// Per-category toggle subtitle: daily reminders
+  ///
+  /// In en, this message translates to:
+  /// **'Daily goal reminders.'**
+  String get settingsNotifRemindersSubtitle;
+
   /// Option to follow the device system locale
   ///
   /// In en, this message translates to:

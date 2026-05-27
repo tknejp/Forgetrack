@@ -271,6 +271,33 @@ class AppLocalizationsEn extends AppLocalizations {
       'Allow reminders, quest updates and social alerts.';
 
   @override
+  String get sectionNotifications => 'Notifications';
+
+  @override
+  String get settingsNotifMasterSubtitle =>
+      'Master switch — turn off to silence the app completely.';
+
+  @override
+  String get settingsNotifProgressionLabel => 'Progress';
+
+  @override
+  String get settingsNotifProgressionSubtitle =>
+      'Completed quests and unlocked achievements.';
+
+  @override
+  String get settingsNotifSocialLabel => 'Social';
+
+  @override
+  String get settingsNotifSocialSubtitle =>
+      'Friend requests and reactions to your posts.';
+
+  @override
+  String get settingsNotifRemindersLabel => 'Reminders';
+
+  @override
+  String get settingsNotifRemindersSubtitle => 'Daily goal reminders.';
+
+  @override
   String get languageSystemDefault => 'System default';
 
   @override

@@ -151,6 +151,10 @@ class NotificationService {
       AppLog.app.info('$_log: permission request skipped, notifications off');
       return;
     }
+    if (_permissionsRequested) {
+      AppLog.app.debug('$_log: permission already requested this session');
+      return;
+    }
 
     try {
       final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
@@ -242,7 +246,10 @@ class NotificationService {
     int xp, {
     int index = 0,
   }) async {
-    if (!await NotificationPreferences.areEnabled()) return;
+    if (!await NotificationPreferences.isAllowed(
+        NotificationCategory.progression)) {
+      return;
+    }
     await initialize();
     final l10n = await _resolveL10n();
 
@@ -260,7 +267,10 @@ class NotificationService {
     String description, {
     int index = 0,
   }) async {
-    if (!await NotificationPreferences.areEnabled()) return;
+    if (!await NotificationPreferences.isAllowed(
+        NotificationCategory.progression)) {
+      return;
+    }
     await initialize();
     final l10n = await _resolveL10n();
 
@@ -274,7 +284,10 @@ class NotificationService {
   }
 
   Future<void> showFriendRequest(String fromName) async {
-    if (!await NotificationPreferences.areEnabled()) return;
+    if (!await NotificationPreferences.isAllowed(
+        NotificationCategory.social)) {
+      return;
+    }
     await initialize();
     final l10n = await _resolveL10n();
 
@@ -292,7 +305,10 @@ class NotificationService {
   }
 
   Future<void> showFriendRequestAccepted(String byName) async {
-    if (!await NotificationPreferences.areEnabled()) return;
+    if (!await NotificationPreferences.isAllowed(
+        NotificationCategory.social)) {
+      return;
+    }
     await initialize();
     final l10n = await _resolveL10n();
 
@@ -315,7 +331,10 @@ class NotificationService {
     String achievementTitle, {
     int index = 0,
   }) async {
-    if (!await NotificationPreferences.areEnabled()) return;
+    if (!await NotificationPreferences.isAllowed(
+        NotificationCategory.social)) {
+      return;
+    }
     await initialize();
     final l10n = await _resolveL10n();
 
@@ -375,7 +394,10 @@ class NotificationService {
       );
 
   Future<void> showGoalReminder() async {
-    if (!await NotificationPreferences.areEnabled()) return;
+    if (!await NotificationPreferences.isAllowed(
+        NotificationCategory.reminders)) {
+      return;
+    }
     await initialize();
     final l10n = await _resolveL10n();
 
@@ -391,12 +413,15 @@ class NotificationService {
   /// Shows FCM message received while app is in foreground.
   /// Android does not display foreground FCM notification automatically.
   Future<void> showFcmMessage(String title, String body, String? type) async {
-    if (!await NotificationPreferences.areEnabled()) return;
+    final category = _categoryForFcmType(type);
+    if (!await NotificationPreferences.isAllowed(category)) return;
     await initialize();
 
-    final channel = (type == 'friend_request' || type == 'reaction')
+    final channel = category == NotificationCategory.social
         ? _chSocial
-        : _chProgression;
+        : (category == NotificationCategory.reminders
+            ? _chReminders
+            : _chProgression);
 
     final isSocial = channel.id == _chSocial.id;
 
@@ -412,6 +437,20 @@ class NotificationService {
       ),
       payload: type != null ? jsonEncode({'type': type}) : null,
     );
+  }
+
+  NotificationCategory _categoryForFcmType(String? type) {
+    switch (type) {
+      case 'friend_request':
+      case 'reaction':
+        return NotificationCategory.social;
+      case 'goal_reminder':
+        return NotificationCategory.reminders;
+      case 'quest':
+      case 'achievement':
+      default:
+        return NotificationCategory.progression;
+    }
   }
 
   NotificationDetails _details(

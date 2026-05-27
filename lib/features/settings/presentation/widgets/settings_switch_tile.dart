@@ -6,6 +6,7 @@ class SettingsSwitchTile extends StatelessWidget {
   final String? subtitle;
   final bool value;
   final ValueChanged<bool> onChanged;
+  final bool enabled;
 
   const SettingsSwitchTile({
     super.key,
@@ -14,21 +15,23 @@ class SettingsSwitchTile extends StatelessWidget {
     this.subtitle,
     required this.value,
     required this.onChanged,
+    this.enabled = true,
   });
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final dim = enabled ? 1.0 : 0.4;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => onChanged(!value),
+        onTap: enabled ? () => onChanged(!value) : null,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
             children: [
-              _SettingsIconBadge(icon: icon),
+              Opacity(opacity: dim, child: _SettingsIconBadge(icon: icon)),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -37,7 +40,7 @@ class SettingsSwitchTile extends StatelessWidget {
                     Text(
                       label,
                       style: tt.bodyLarge?.copyWith(
-                        color: Tokens.onSurface,
+                        color: Tokens.onSurface.withValues(alpha: dim),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -46,7 +49,7 @@ class SettingsSwitchTile extends StatelessWidget {
                       Text(
                         subtitle!,
                         style: tt.bodySmall?.copyWith(
-                          color: Tokens.onSurfaceMuted,
+                          color: Tokens.onSurfaceMuted.withValues(alpha: dim),
                           height: 1.25,
                         ),
                       ),
@@ -56,7 +59,7 @@ class SettingsSwitchTile extends StatelessWidget {
               ),
               Switch.adaptive(
                 value: value,
-                onChanged: onChanged,
+                onChanged: enabled ? onChanged : null,
                 activeThumbColor: Tokens.accent,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),

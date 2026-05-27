@@ -133,11 +133,10 @@ class FcmService {
 
     AppLog.app.info('$_log: initialize start');
 
-    if (await NotificationPreferences.areEnabled()) {
-      await _requestNotificationPermission();
-    } else {
-      AppLog.app.info('$_log: permission request skipped, notifications off');
-    }
+    // Note: do NOT request notification permissions here. The OS dialog must
+    // only appear after the user enables notifications in the onboarding or
+    // settings toggle — driven from `NotificationPreferencesProvider`. The
+    // single Android POST_NOTIFICATIONS prompt is owned by `NotificationService`.
 
     // Foreground messages stay in-app only; Android does not display the FCM
     // notification automatically here and we intentionally do not mirror it.
@@ -243,7 +242,12 @@ class FcmService {
     )));
   }
 
-  Future<void> _requestNotificationPermission() async {
+  /// Called from `NotificationPreferencesProvider.setNotificationsEnabled(true)`
+  /// after `NotificationService.requestNotificationPermissions()` has shown the
+  /// Android OS dialog. On Android both calls resolve to the same
+  /// POST_NOTIFICATIONS permission; on iOS this is the path that actually
+  /// triggers the alert/badge/sound prompt.
+  Future<void> requestNotificationPermission() async {
     try {
       final settings = await FirebaseMessaging.instance.requestPermission(
         alert: true,
@@ -364,7 +368,7 @@ class FcmService {
 
     final uid = canonicalUid(user);
     if (enabled) {
-      await _requestNotificationPermission();
+      await requestNotificationPermission();
       await _refreshTokenForUser(user);
     } else {
       await _clearToken(uid);
