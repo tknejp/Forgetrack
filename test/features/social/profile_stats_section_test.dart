@@ -91,7 +91,7 @@ void main() {
         expect(find.text('Level'), findsOneWidget);
         expect(find.text('Total XP'), findsOneWidget);
         expect(find.text('Achievements'), findsOneWidget);
-        expect(find.text('Days in app'), findsOneWidget);
+        expect(find.text('Days on the quest'), findsOneWidget);
 
         // Default-hidden rows must not appear on a foreign profile
         // unless the owner explicitly opted in.

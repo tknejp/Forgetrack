@@ -123,7 +123,8 @@ void main() {
           catalog.emblems.length +
           catalog.titleFlairs.length +
           catalog.mapEffects.length +
-          catalog.skins.length;
+          catalog.skins.length +
+          catalog.banners.length;
       expect(partitionSum, catalog.all.length);
     });
   });
