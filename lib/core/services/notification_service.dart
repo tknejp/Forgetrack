@@ -72,6 +72,12 @@ class NotificationService {
   /// `MaterialApp.localeResolutionCallback` so notifications stay in sync
   /// with the on-screen UI — including from background isolates that have
   /// no [BuildContext].
+  ///
+  /// Public so background producers (e.g. the WorkManager progression
+  /// notifier) can localize catalog `LocalizedText` closures with the same
+  /// locale resolution the notification body strings use.
+  Future<AppLocalizations> resolveLocalizations() => _resolveL10n();
+
   Future<AppLocalizations> _resolveL10n() async {
     final prefs = await SharedPreferences.getInstance();
     final code = prefs.getString(_localePrefKey);

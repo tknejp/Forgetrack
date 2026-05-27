@@ -22,6 +22,7 @@ import '../../features/nutrition/data/kaloricke_tabulky_service.dart';
 import '../../features/nutrition/data/local/kt_nutrition_database.dart';
 import '../../firebase_options.dart';
 import '../../features/health_connect/application/goals_provider.dart';
+import '../../features/progression_engine/application/background_progression_notifier.dart';
 import 'notification_preferences.dart';
 import 'notification_service.dart';
 
@@ -129,6 +130,21 @@ void backgroundSyncCallback() {
       // ── Goals ─────────────────────────────────────────────────────────────
       final goalsProvider = GoalsProvider();
       await goalsProvider.init();
+
+      // ── V2 progression: quest + achievement push notifications ───────────
+      //
+      // Trello #80. Runs the V2 engine against the current ledger from the
+      // background isolate so newly-completed quests / unlocked achievements
+      // surface as system notifications without requiring the user to open
+      // the app. Idempotent: the engine's append path is keyed by eventKey,
+      // so WorkManager retries against an unchanged state produce no
+      // duplicates. See `BackgroundProgressionNotifier` for the full design
+      // notes (counter scope, cosmetic-dispatch trade-off, spam cap).
+      await const BackgroundProgressionNotifier().notifyForNewCompletions(
+        fitness: fitnessProvider,
+        nutrition: ktProvider,
+        goals: goalsProvider,
+      );
 
       // ── Denní připomínka cílů ─────────────────────────────────────────────
       final prefs = await SharedPreferences.getInstance();
