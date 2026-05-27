@@ -127,14 +127,33 @@ if ($currentBranch -ne 'develop') {
 }
 Write-Ok "Na develop"
 
-# 1.2 Čistý working tree
-$dirty = Invoke-Git status --porcelain
-if ($dirty) {
-    Write-Fail "Working tree není čistý:"
-    Write-Host $dirty
+# 1.2 Resolve release-notes path early (povolíme ho v dirty-tree checku níž)
+if (-not $ReleaseNotesFile) {
+    $ReleaseNotesFile = "release_notes/v$Version.md"
+}
+# git status --porcelain používá / — normalizuj pro porovnání.
+$expectedNotesPath = $ReleaseNotesFile -replace '\\','/'
+
+# 1.3 Čistý working tree (release-notes soubor pro tuto verzi je povolený)
+$dirtyLines = (Invoke-Git status --porcelain) -split "`n" | Where-Object { $_.Trim() }
+$unexpectedDirty = $dirtyLines | Where-Object {
+    $path = ($_ -replace '^...','').Trim()
+    # Quoted paths ("path with spaces") — strip uvozovky.
+    if ($path.StartsWith('"') -and $path.EndsWith('"')) {
+        $path = $path.Substring(1, $path.Length - 2)
+    }
+    $path -ne $expectedNotesPath
+}
+if ($unexpectedDirty) {
+    Write-Fail "Working tree není čistý (mimo $expectedNotesPath):"
+    $unexpectedDirty | ForEach-Object { Write-Host "  $_" }
     throw "Commitni nebo stashni změny před release."
 }
-Write-Ok "Working tree čistý"
+if ($dirtyLines) {
+    Write-Ok "Working tree čistý (mimo release notes — budou součástí release commitu)"
+} else {
+    Write-Ok "Working tree čistý"
+}
 
 # 1.3 Develop synced s origin
 Invoke-Git fetch origin develop --quiet
@@ -168,10 +187,7 @@ if ($TesterGroup -eq 'testers') {
     Write-Warn "TesterGroup je výchozí 'testers' — pokud máš jiný název, uprav scripts/release.ps1 (proměnná `$TesterGroup)."
 }
 
-# 1.7 Release notes file
-if (-not $ReleaseNotesFile) {
-    $ReleaseNotesFile = "release_notes/v$Version.md"
-}
+# 1.7 Release notes file (cesta vyřešena v sekci 1.2)
 if (-not $SkipBuild -and -not (Test-Path $ReleaseNotesFile)) {
     Write-Fail "Release notes pro testery chybí: $ReleaseNotesFile"
     Write-Host "  Vytvoř soubor (vzor: release_notes/TEMPLATE.md) a pusť znovu."
@@ -285,9 +301,12 @@ Write-Ok "Vytvořena release/$Version"
 
 if (-not $DryRun) {
     git add pubspec.yaml CHANGELOG.md
+    if (Test-Path $ReleaseNotesFile) {
+        git add -- $ReleaseNotesFile
+    }
     git commit -m "release: $Version" | Out-Null
 }
-Write-Ok "Commit s bumpem + changelogem"
+Write-Ok "Commit s bumpem + changelogem + release notes"
 
 # ─── Sekce 7: Build + analyze (volitelně testy) ──────────────────────────────
 
