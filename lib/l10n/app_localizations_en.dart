@@ -1602,17 +1602,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get heroRaceGolemDesc => 'Awakened stone, eternal guardian.';
 
   @override
-  String get cosmeticSkinPilgrimName => 'Pilgrim';
+  String get cosmeticSkinPilgrimName => 'Pilgrim\'s Cloak';
 
   @override
   String get cosmeticSkinPilgrimDesc => 'Humble garb of one just setting out.';
 
   @override
   String get cosmeticSkinPilgrimUnlockHint =>
-      'Chosen at the start of your journey.';
+      'Pick your race during onboarding — chosen at the start of your journey.';
 
   @override
-  String get cosmeticSkinHunterName => 'Hunter';
+  String get cosmeticSkinHunterName => 'Hunter\'s Hide';
 
   @override
   String get cosmeticSkinHunterDesc =>
@@ -1620,10 +1620,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cosmeticSkinHunterUnlockHint =>
-      'For those who learned to read the forest before crossing it.';
+      'Reach level 12 — for those who learned to read the forest before crossing it.';
 
   @override
-  String get cosmeticSkinMineName => 'Deepwarden';
+  String get cosmeticSkinMineName => 'Dwarven Gear';
 
   @override
   String get cosmeticSkinMineDesc =>
@@ -1631,10 +1631,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cosmeticSkinMineUnlockHint =>
-      'Worn deep beneath the dwarven halls.';
+      'Reach level 42 — worn deep beneath the dwarven halls.';
 
   @override
-  String get cosmeticSkinFrostwalkerName => 'Frostwalker';
+  String get cosmeticSkinFrostwalkerName => 'Northern Armor';
 
   @override
   String get cosmeticSkinFrostwalkerDesc =>
@@ -1642,10 +1642,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cosmeticSkinFrostwalkerUnlockHint =>
-      'Earned on the long crossing of the frozen lands.';
+      'Reach level 65 — earned on the long crossing of the frozen lands.';
 
   @override
-  String get cosmeticSkinMageName => 'Arcanist';
+  String get cosmeticSkinMageName => 'Sigil Robes';
 
   @override
   String get cosmeticSkinMageDesc =>
@@ -1653,10 +1653,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cosmeticSkinMageUnlockHint =>
-      'Won by those who studied the old patterns longer than most.';
+      'Reach level 85 — won by those who studied the old patterns longer than most.';
 
   @override
-  String get cosmeticSkinDragonrockName => 'Dragonrock';
+  String get cosmeticSkinDragonrockName => 'Obsidian Armor';
 
   @override
   String get cosmeticSkinDragonrockDesc =>
@@ -1664,7 +1664,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cosmeticSkinDragonrockUnlockHint =>
-      'Forged at the gates of the dragonrock fortress.';
+      'Reach level 95 — forged at the gates of the dragonrock fortress.';
+
+  @override
+  String get cosmeticSkinOathboundName => 'Oathbound Armor';
+
+  @override
+  String get cosmeticSkinOathboundDesc =>
+      'Armour bound by a vow — each plate carries a promise kept across long roads and dark gates.';
+
+  @override
+  String get cosmeticSkinOathboundUnlockHint =>
+      'Reach level 30 — sworn to the road, marked by the depths.';
 
   @override
   String get cosmeticSkinExtraName => 'Borrowed Legend';

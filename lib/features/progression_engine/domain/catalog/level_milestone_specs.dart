@@ -155,6 +155,7 @@ const List<LevelMilestoneSpec> kLevelMilestones = [
     titleKey: _title30,
     emoji: '🏰',
     rarity: Rarity.rare,
+    cosmeticRewardIds: ['skin_oathbound'],
   ),
   // Slot unlock 3/6.
   LevelMilestoneSpec(

@@ -1605,17 +1605,18 @@ class AppLocalizationsCs extends AppLocalizations {
   String get heroRaceGolemDesc => 'Probuzený kámen, věčný strážce.';
 
   @override
-  String get cosmeticSkinPilgrimName => 'Poutník';
+  String get cosmeticSkinPilgrimName => 'Plášť poutníka';
 
   @override
   String get cosmeticSkinPilgrimDesc =>
       'Skromné šaty toho, kdo právě vyšel na cestu.';
 
   @override
-  String get cosmeticSkinPilgrimUnlockHint => 'Vybráno na začátku cesty.';
+  String get cosmeticSkinPilgrimUnlockHint =>
+      'Vyber si rasu při úvodu — podoba zvolená na začátku cesty.';
 
   @override
-  String get cosmeticSkinHunterName => 'Lovec';
+  String get cosmeticSkinHunterName => 'Lovecká kůže';
 
   @override
   String get cosmeticSkinHunterDesc =>
@@ -1623,10 +1624,10 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get cosmeticSkinHunterUnlockHint =>
-      'Pro toho, kdo se naučil číst les ještě dřív, než ho překročil.';
+      'Dosáhni úrovně 12 — pro toho, kdo se naučil číst les ještě dřív, než ho překročil.';
 
   @override
-  String get cosmeticSkinMineName => 'Strážce hlubin';
+  String get cosmeticSkinMineName => 'Trpasličí výstroj';
 
   @override
   String get cosmeticSkinMineDesc =>
@@ -1634,10 +1635,10 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get cosmeticSkinMineUnlockHint =>
-      'Nošeno hluboko v trpasličích síních.';
+      'Dosáhni úrovně 42 — nošeno hluboko v trpasličích síních.';
 
   @override
-  String get cosmeticSkinFrostwalkerName => 'Mrazochodec';
+  String get cosmeticSkinFrostwalkerName => 'Zbroj severu';
 
   @override
   String get cosmeticSkinFrostwalkerDesc =>
@@ -1645,10 +1646,10 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get cosmeticSkinFrostwalkerUnlockHint =>
-      'Vysloužené při dlouhém přechodu zmrzlé krajiny.';
+      'Dosáhni úrovně 65 — vyslouženo při dlouhém přechodu zmrzlé krajiny.';
 
   @override
-  String get cosmeticSkinMageName => 'Mág';
+  String get cosmeticSkinMageName => 'Roucho sigilů';
 
   @override
   String get cosmeticSkinMageDesc =>
@@ -1656,10 +1657,10 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get cosmeticSkinMageUnlockHint =>
-      'Získáno těmi, kdo studovali staré vzorce déle než ostatní.';
+      'Dosáhni úrovně 85 — získáno těmi, kdo studovali staré vzorce déle než ostatní.';
 
   @override
-  String get cosmeticSkinDragonrockName => 'Dračí skála';
+  String get cosmeticSkinDragonrockName => 'Zbroj z obsidiánu';
 
   @override
   String get cosmeticSkinDragonrockDesc =>
@@ -1667,7 +1668,18 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get cosmeticSkinDragonrockUnlockHint =>
-      'Ukováno u bran pevnosti Dračí skály.';
+      'Dosáhni úrovně 95 — ukováno u bran pevnosti Dračí skály.';
+
+  @override
+  String get cosmeticSkinOathboundName => 'Brnění přísahy';
+
+  @override
+  String get cosmeticSkinOathboundDesc =>
+      'Brnění svázané slibem — každý plát nese závazek dodržený přes dlouhé cesty a temné brány.';
+
+  @override
+  String get cosmeticSkinOathboundUnlockHint =>
+      'Dosáhni úrovně 30 — přísaha cestě, znamení hlubin.';
 
   @override
   String get cosmeticSkinExtraName => 'Vypůjčená legenda';

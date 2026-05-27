@@ -2982,7 +2982,7 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticSkinPilgrimName.
   ///
   /// In en, this message translates to:
-  /// **'Pilgrim'**
+  /// **'Pilgrim\'s Cloak'**
   String get cosmeticSkinPilgrimName;
 
   /// No description provided for @cosmeticSkinPilgrimDesc.
@@ -2994,13 +2994,13 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticSkinPilgrimUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Chosen at the start of your journey.'**
+  /// **'Pick your race during onboarding — chosen at the start of your journey.'**
   String get cosmeticSkinPilgrimUnlockHint;
 
   /// No description provided for @cosmeticSkinHunterName.
   ///
   /// In en, this message translates to:
-  /// **'Hunter'**
+  /// **'Hunter\'s Hide'**
   String get cosmeticSkinHunterName;
 
   /// No description provided for @cosmeticSkinHunterDesc.
@@ -3012,13 +3012,13 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticSkinHunterUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'For those who learned to read the forest before crossing it.'**
+  /// **'Reach level 12 — for those who learned to read the forest before crossing it.'**
   String get cosmeticSkinHunterUnlockHint;
 
   /// No description provided for @cosmeticSkinMineName.
   ///
   /// In en, this message translates to:
-  /// **'Deepwarden'**
+  /// **'Dwarven Gear'**
   String get cosmeticSkinMineName;
 
   /// No description provided for @cosmeticSkinMineDesc.
@@ -3030,13 +3030,13 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticSkinMineUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Worn deep beneath the dwarven halls.'**
+  /// **'Reach level 42 — worn deep beneath the dwarven halls.'**
   String get cosmeticSkinMineUnlockHint;
 
   /// No description provided for @cosmeticSkinFrostwalkerName.
   ///
   /// In en, this message translates to:
-  /// **'Frostwalker'**
+  /// **'Northern Armor'**
   String get cosmeticSkinFrostwalkerName;
 
   /// No description provided for @cosmeticSkinFrostwalkerDesc.
@@ -3048,13 +3048,13 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticSkinFrostwalkerUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Earned on the long crossing of the frozen lands.'**
+  /// **'Reach level 65 — earned on the long crossing of the frozen lands.'**
   String get cosmeticSkinFrostwalkerUnlockHint;
 
   /// No description provided for @cosmeticSkinMageName.
   ///
   /// In en, this message translates to:
-  /// **'Arcanist'**
+  /// **'Sigil Robes'**
   String get cosmeticSkinMageName;
 
   /// No description provided for @cosmeticSkinMageDesc.
@@ -3066,13 +3066,13 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticSkinMageUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Won by those who studied the old patterns longer than most.'**
+  /// **'Reach level 85 — won by those who studied the old patterns longer than most.'**
   String get cosmeticSkinMageUnlockHint;
 
   /// No description provided for @cosmeticSkinDragonrockName.
   ///
   /// In en, this message translates to:
-  /// **'Dragonrock'**
+  /// **'Obsidian Armor'**
   String get cosmeticSkinDragonrockName;
 
   /// No description provided for @cosmeticSkinDragonrockDesc.
@@ -3084,8 +3084,26 @@ abstract class AppLocalizations {
   /// No description provided for @cosmeticSkinDragonrockUnlockHint.
   ///
   /// In en, this message translates to:
-  /// **'Forged at the gates of the dragonrock fortress.'**
+  /// **'Reach level 95 — forged at the gates of the dragonrock fortress.'**
   String get cosmeticSkinDragonrockUnlockHint;
+
+  /// No description provided for @cosmeticSkinOathboundName.
+  ///
+  /// In en, this message translates to:
+  /// **'Oathbound Armor'**
+  String get cosmeticSkinOathboundName;
+
+  /// No description provided for @cosmeticSkinOathboundDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Armour bound by a vow — each plate carries a promise kept across long roads and dark gates.'**
+  String get cosmeticSkinOathboundDesc;
+
+  /// No description provided for @cosmeticSkinOathboundUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level 30 — sworn to the road, marked by the depths.'**
+  String get cosmeticSkinOathboundUnlockHint;
 
   /// No description provided for @cosmeticSkinExtraName.
   ///

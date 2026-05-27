@@ -1088,6 +1088,17 @@ class CosmeticCatalog {
       sortOrder: 810,
     ),
     Skin(
+      id: const CosmeticId('skin_oathbound'),
+      rarity: Rarity.rare,
+      region: CosmeticRegion.ruinedPass,
+      name: (l10n) => l10n.cosmeticSkinOathboundName,
+      description: (l10n) => l10n.cosmeticSkinOathboundDesc,
+      unlockHint: (l10n) => l10n.cosmeticSkinOathboundUnlockHint,
+      assetKey: 'cosmetics.skins.oathbound',
+      previewAssetKey: 'cosmetics.skins.oathbound',
+      sortOrder: 815,
+    ),
+    Skin(
       id: const CosmeticId('skin_mine'),
       rarity: Rarity.rare,
       region: CosmeticRegion.dwarvenMines,
