@@ -72,7 +72,7 @@ $FirebaseProdAppId = '1:798278342104:android:a44ecd497db4f28161cead'
 
 # Název tester groupu v Firebase Console (App Distribution → Testers & Groups).
 # DOPLŇ název své testovací skupiny:
-$TesterGroup = 'testers'
+$TesterGroup = 'Test'
 
 # Apk path z `flutter build apk --release --flavor prod`
 $ApkPath = 'build/app/outputs/flutter-apk/app-prod-release.apk'
