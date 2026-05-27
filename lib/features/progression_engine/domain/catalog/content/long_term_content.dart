@@ -45,8 +45,8 @@ import 'quest_assets.dart';
 /// previous step (manual-claim quests only emit `NodeCompletionEvent`
 /// after the player taps the pill), which means a player at 100k+ XP
 /// would still see 5k as "locked" because 500 hasn't been claimed yet.
-/// Chapter chains (`chapter_forest_trial_content.dart`) keep their
-/// prereqs because those steps are genuine sequential dependencies.
+/// Chapter chains (`chapter_content.dart`) keep their prereqs
+/// because those steps are genuine sequential dependencies.
 
 const _lifetimeStepsChain = ChainId('lifetime_steps');
 const _xpMilestonesChain = ChainId('xp_milestones');

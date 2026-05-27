@@ -13,11 +13,19 @@ import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import 'package:forgetrack/domain/progression/catalog/unlock_condition.dart';
 import 'quest_assets.dart';
 
-/// Chapter quests 2-10, ported from the V1 monolith
-/// `progression/domain/catalog/quest_catalog.dart` (the "journey
-/// chapter" specs). Forest Trial lives in its own file as the pilot;
-/// this aggregator covers Ruins of Discipline → Dragonrock Sovereign
-/// using a single shared shape so the catalog stays scannable.
+/// Journey chapters — full chain from Pilgrim's Path (level 1
+/// starter) through Dragonrock Sovereign (level 100 apex), defined
+/// as one shared `_ChapterSpec` table. Each spec emits five nodes
+/// (open + 3 steps + finale) and a per-chapter rarity tier; the
+/// generator wires the chain prereqs / objectives / rewards from
+/// that table so adding or rebalancing a chapter is a one-row edit.
+///
+/// Pilgrim's Path and Forest Trial used to live in their own
+/// content files (`chapter_pilgrim_path_content.dart` /
+/// `chapter_forest_trial_content.dart`) — folded back in so the
+/// whole chain has one shape. Side quests stay separate because
+/// their pool shape (variable size, combo chains, bonus XP) doesn't
+/// fit the uniform 5-node template.
 ///
 /// Each chapter has five nodes: an auto-claim **open** gated by
 /// player level, three manual-claim **step** nodes chained by
@@ -91,6 +99,8 @@ class _ChapterSpec {
     required this.finaleEmblemId,
     required this.rewards,
     required this.steps,
+    required this.openerRarity,
+    required this.finaleRarity,
   });
 
   final ChapterId id;
@@ -109,6 +119,12 @@ class _ChapterSpec {
   final List<int> rewards;
 
   final List<_StepSpec> steps;
+
+  /// Rarity for opener + all step nodes. Step nodes share the opener
+  /// tier; the finale gets its own (often one tier higher) per the
+  /// level-banded distribution defined in [_chapters].
+  final Rarity openerRarity;
+  final Rarity finaleRarity;
 }
 
 class _StepSpec {
@@ -134,6 +150,112 @@ class _StepSpec {
 List<_ChapterSpec> _chapters() {
   return [
     _ChapterSpec(
+      id: const ChapterId('pilgrim_path'),
+      level: 1,
+      sortOrder: 200,
+      iconAsset: questAssetPilgrimPathIcon,
+      openTitleKey: (l) => l.progQuestPilgrimPathOpenTitle,
+      openDescKey: (l) => l.progQuestPilgrimPathOpenDesc,
+      finaleTitleKey: (l) => l.progQuestPilgrimPathFinaleTitle,
+      finaleDescKey: (l) => l.progQuestPilgrimPathFinaleDesc,
+      finaleEmblemId: const CosmeticId('emblem_pilgrim_mark'),
+      rewards: const [40, 60, 60, 80, 120],
+      openerRarity: Rarity.common,
+      finaleRarity: Rarity.common,
+      steps: [
+        _StepSpec(
+          id: const ProgressionEntryId('pilgrim_path_first_steps'),
+          titleKey: (l) => l.progQuestPilgrimPathFirstStepsTitle,
+          descriptionKey: (l) => l.progQuestPilgrimPathFirstStepsDesc,
+          metric: const NodeCompletionsMetric(nodeId: ProgressionEntryId('daily_steps_today')),
+          targetValue: 1,
+          chainStepLabel: '1',
+          domain: ProgressionDomain.steps,
+        ),
+        _StepSpec(
+          id: const ProgressionEntryId('pilgrim_path_first_sleep'),
+          titleKey: (l) => l.progQuestPilgrimPathFirstSleepTitle,
+          descriptionKey: (l) => l.progQuestPilgrimPathFirstSleepDesc,
+          metric: const NodeCompletionsMetric(nodeId: ProgressionEntryId('daily_sleep_today')),
+          targetValue: 1,
+          chainStepLabel: '1',
+          domain: ProgressionDomain.sleep,
+        ),
+        _StepSpec(
+          // Step 3 used to be `RewardCountMetric()` baselined on step 2,
+          // but that self-fulfils: claiming step 2 grants XP, which lands
+          // a reward event the same tick — step 3 reads 100% the instant
+          // step 2 finishes. Replaced with a "complete daily protein once
+          // since unlock" check so the third pillar (nutrition) is
+          // taught before Forest Trial unlocks at level 10.
+          id: const ProgressionEntryId('pilgrim_path_first_reward'),
+          titleKey: (l) => l.progQuestPilgrimPathFirstRewardTitle,
+          descriptionKey: (l) => l.progQuestPilgrimPathFirstRewardDesc,
+          metric: const NodeCompletionsMetric(nodeId: ProgressionEntryId('daily_protein_today')),
+          targetValue: 1,
+          chainStepLabel: '1',
+          domain: ProgressionDomain.nutrition,
+        ),
+      ],
+    ),
+    _ChapterSpec(
+      id: const ChapterId('forest_trial'),
+      level: 10,
+      sortOrder: 300,
+      iconAsset: questAssetForestTrialIcon,
+      openTitleKey: (l) => l.progQuestForestTrialOpenTitle,
+      openDescKey: (l) => l.progQuestForestTrialOpenDesc,
+      finaleTitleKey: (l) => l.progQuestForestTrialFinaleTitle,
+      finaleDescKey: (l) => l.progQuestForestTrialFinaleDesc,
+      finaleEmblemId: const CosmeticId('emblem_forest_mark'),
+      rewards: const [120, 180, 180, 220, 300],
+      openerRarity: Rarity.uncommon,
+      finaleRarity: Rarity.uncommon,
+      steps: [
+        _StepSpec(
+          // "splÅˆ alespoÅˆ 2 dennÃ­ cÃ­le v 5 rÅ¯znÃ½ch dnech" — 5 days
+          // with ≥2 of the 8 daily atoms. Old single-node steps proxy
+          // let step 1 collapse into step 2's "5 step goals" check.
+          id: const ProgressionEntryId('forest_trial_daily_wins_5'),
+          titleKey: (l) => l.progQuestForestTrialDailyWins5Title,
+          descriptionKey: (l) => l.progQuestForestTrialDailyWins5Desc,
+          metric: const DaysWithAtLeastKAmongMetric(
+            nodeIds: _allDailyAtoms,
+            atLeast: 2,
+          ),
+          targetValue: 5,
+          chainStepLabel: '5',
+          domain: ProgressionDomain.activity,
+        ),
+        _StepSpec(
+          // "splÅˆ krokovÃ½ cÃ­l 5krÃ¡t" — step completions, not protein.
+          // V1 catalog had the wrong metric here (daily_protein_today).
+          id: const ProgressionEntryId('forest_trial_steps_5'),
+          titleKey: (l) => l.progQuestForestTrialSteps5Title,
+          descriptionKey: (l) => l.progQuestForestTrialSteps5Desc,
+          metric: const NodeCompletionsMetric(nodeId: ProgressionEntryId('daily_steps_today')),
+          targetValue: 5,
+          chainStepLabel: '5',
+          domain: ProgressionDomain.steps,
+        ),
+        _StepSpec(
+          // "splÅˆ cÃ­l krokÅ¯ i spÃ¡nku ve stejnÃ½ den 3krÃ¡t" — paired
+          // steps + sleep check. V1 tracked sleep alone, ignoring the
+          // "i krokÅ¯ i spÃ¡nku" pairing in the player-facing description.
+          id: const ProgressionEntryId('forest_trial_recovery_3'),
+          titleKey: (l) => l.progQuestForestTrialRecovery3Title,
+          descriptionKey: (l) => l.progQuestForestTrialRecovery3Desc,
+          metric: const DaysWithAtLeastKAmongMetric(
+            nodeIds: _stepsAndSleep,
+            atLeast: 2,
+          ),
+          targetValue: 3,
+          chainStepLabel: '3',
+          domain: ProgressionDomain.sleep,
+        ),
+      ],
+    ),
+    _ChapterSpec(
       id: const ChapterId('ruins_discipline'),
       level: 20,
       sortOrder: 320,
@@ -144,6 +266,8 @@ List<_ChapterSpec> _chapters() {
       finaleDescKey: (l) => l.progQuestRuinsDisciplineFinaleDesc,
       finaleEmblemId: const CosmeticId('emblem_ruin_sigil'),
       rewards: const [180, 260, 280, 320, 450],
+      openerRarity: Rarity.uncommon,
+      finaleRarity: Rarity.uncommon,
       steps: [
         _StepSpec(
           id: const ProgressionEntryId('ruins_discipline_nutrition_7'),
@@ -192,6 +316,8 @@ List<_ChapterSpec> _chapters() {
       finaleDescKey: (l) => l.progQuestMineDescentFinaleDesc,
       finaleEmblemId: const CosmeticId('emblem_gatekeeper_mark'),
       rewards: const [240, 380, 420, 420, 600],
+      openerRarity: Rarity.rare,
+      finaleRarity: Rarity.rare,
       steps: [
         _StepSpec(
           id: const ProgressionEntryId('mine_descent_steps_250k'),
@@ -237,6 +363,8 @@ List<_ChapterSpec> _chapters() {
       finaleDescKey: (l) => l.progQuestForgeMomentumFinaleDesc,
       finaleEmblemId: const CosmeticId('emblem_mine_crest'),
       rewards: const [300, 480, 520, 560, 750],
+      openerRarity: Rarity.rare,
+      finaleRarity: Rarity.rare,
       steps: [
         _StepSpec(
           id: const ProgressionEntryId('forge_momentum_weekly_4'),
@@ -282,6 +410,8 @@ List<_ChapterSpec> _chapters() {
       finaleDescKey: (l) => l.progQuestUnderwayPactFinaleDesc,
       finaleEmblemId: const CosmeticId('emblem_underways_mark'),
       rewards: const [360, 600, 620, 680, 900],
+      openerRarity: Rarity.epic,
+      finaleRarity: Rarity.epic,
       steps: [
         _StepSpec(
           id: const ProgressionEntryId('underway_pact_four_pillars_5'),
@@ -335,6 +465,8 @@ List<_ChapterSpec> _chapters() {
       finaleDescKey: (l) => l.progQuestFrostboundOathFinaleDesc,
       finaleEmblemId: const CosmeticId('emblem_frost_sigil'),
       rewards: const [420, 720, 760, 800, 1100],
+      openerRarity: Rarity.epic,
+      finaleRarity: Rarity.epic,
       steps: [
         _StepSpec(
           id: const ProgressionEntryId('frostbound_oath_steps_21'),
@@ -376,6 +508,8 @@ List<_ChapterSpec> _chapters() {
       finaleDescKey: (l) => l.progQuestIcewalkerRouteFinaleDesc,
       finaleEmblemId: const CosmeticId('emblem_icewalker_mark'),
       rewards: const [500, 850, 900, 950, 1300],
+      openerRarity: Rarity.epic,
+      finaleRarity: Rarity.epic,
       steps: [
         _StepSpec(
           id: const ProgressionEntryId('icewalker_route_steps_500k'),
@@ -417,6 +551,8 @@ List<_ChapterSpec> _chapters() {
       finaleDescKey: (l) => l.progQuestMountainAscentFinaleDesc,
       finaleEmblemId: const CosmeticId('emblem_mountain_crest'),
       rewards: const [600, 1000, 1100, 1150, 1600],
+      openerRarity: Rarity.legendary,
+      finaleRarity: Rarity.legendary,
       steps: [
         _StepSpec(
           id: const ProgressionEntryId('mountain_ascent_four_pillars_15'),
@@ -462,6 +598,8 @@ List<_ChapterSpec> _chapters() {
       finaleDescKey: (l) => l.progQuestDragonroadFinaleDesc,
       finaleEmblemId: const CosmeticId('emblem_dragon_mark'),
       rewards: const [750, 1250, 1350, 1400, 2000],
+      openerRarity: Rarity.legendary,
+      finaleRarity: Rarity.legendary,
       steps: [
         _StepSpec(
           id: const ProgressionEntryId('dragonroad_rewards_250'),
@@ -507,6 +645,8 @@ List<_ChapterSpec> _chapters() {
       finaleDescKey: (l) => l.progQuestDragonrockSovereignFinaleDesc,
       finaleEmblemId: const CosmeticId('emblem_dragonrock_emblem'),
       rewards: const [900, 1500, 1600, 1800, 2600],
+      openerRarity: Rarity.mythic,
+      finaleRarity: Rarity.mythic,
       steps: [
         _StepSpec(
           id: const ProgressionEntryId('dragonrock_sovereign_four_pillars_30'),
@@ -602,10 +742,12 @@ List<Objective> chapterObjectives() {
 }
 
 // Cross-chapter chain: each chapter's open auto-claims only once the
-// previous chapter's finale is in the ledger. Order matches the spec
-// list above (Ruins → … → Dragonrock); Forest Trail still chains off
-// pilgrim_path_finale (declared in its own content file).
+// previous chapter's finale is in the ledger. Pilgrim's Path is the
+// entry point (no prereq); the rest chain through Forest Trial →
+// Ruins → … → Dragonrock.
 const _chapterPrereqByOpenId = <ProgressionEntryId, ProgressionEntryId>{
+  ProgressionEntryId('forest_trial_open'):
+      ProgressionEntryId('pilgrim_path_finale'),
   ProgressionEntryId('ruins_discipline_open'):
       ProgressionEntryId('forest_trial_finale'),
   ProgressionEntryId('mine_descent_open'):
@@ -645,7 +787,7 @@ List<ProgressionEntry> chapterNodes() {
       descriptionKey: c.openDescKey,
       rewards: [XpReward(sourceKind: RewardSourceKind.chapterXp, amount: c.rewards[0])],
       contentTags: const [ContentTag.core, ContentTag.fitness],
-      rarity: Rarity.rare,
+      rarity: c.openerRarity,
       assetKey: c.iconAsset,
       chapterId: c.id,
       chainId: ChainId(c.id.raw),
@@ -689,7 +831,7 @@ List<ProgressionEntry> chapterNodes() {
         CosmeticReward(cosmeticId: c.finaleEmblemId),
       ],
       contentTags: const [ContentTag.core, ContentTag.fitness],
-      rarity: Rarity.epic,
+      rarity: c.finaleRarity,
       assetKey: c.iconAsset,
       chapterId: c.id,
       chainId: ChainId(c.id.raw),
