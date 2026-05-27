@@ -34,20 +34,57 @@ Smazané větve (release, feature, hotfix) **archivujeme tagem**, ne mazáním b
 
 ## 3. Release
 
-Když je na `develop` sada změn hodná release:
+**Praktický flow je automatizovaný v [scripts/release.ps1](../scripts/release.ps1)** a orchestraci přes Claude pokrývá [`.claude/commands/release.md`](../.claude/commands/release.md) (stačí napsat „udělej release" nebo `/release`).
 
-1. `git checkout -b release/x.y.z develop`
-2. Bump verze v `pubspec.yaml`.
-3. **Vygeneruj release notes** (viz §3a) a zapiš do `CHANGELOG.md`.
-4. Build + smoke test (`flutter analyze`, relevantní `flutter test`, manuální průchod kritických flow).
-5. Last-minute fixy committuj přímo na release branch.
-6. Merge do `main` přes `--no-ff`: `git checkout main && git merge --no-ff release/x.y.z`.
-7. **Tag na mainu**: `git tag -a v<x.y.z> -m "Release x.y.z"` (do tag message zkopíruj sekci changelogu pro tento release).
-8. Merge `main` zpět do `develop` (kvůli verzi, changelogu a fixům): `git checkout develop && git merge main`.
-9. Push: `git push origin main develop --tags`.
-10. Archivuj release branch (viz §5).
+Tato sekce popisuje, **co se děje** — abys při ručním zásahu (skript spadne, nebo to chceš provést sám) věděl, co je třeba.
 
-Verzování: SemVer (`MAJOR.MINOR.PATCH`). Pre-release builds = `x.y.z-beta.N`.
+### 3.1 Distribuční kanál
+
+- **Firebase App Distribution (FAD)** pro pre-Play fázi. Tester groupy se spravují přes [Firebase Console → App Distribution → Testers & Groups](https://console.firebase.google.com/project/forgetracker-493415/appdistribution/groups).
+- Prod Firebase App ID: `1:798278342104:android:a44ecd497db4f28161cead` (package `com.knejp.forgetrack`).
+- Buildujeme **APK prod flavor** (`flutter build apk --release --flavor prod`). AAB až při přechodu na Play Internal Testing.
+
+### 3.2 Předpoklady před release
+
+- Aktuální větev = `develop`, čistý working tree, synced s `origin/develop`.
+- Žádná Tier 0 (release-blocker) karta v Trello sloupci **Probíhá** (viz [docs/release/beta_readiness.md](release/beta_readiness.md)).
+- Existuje `release_notes/v<x.y.z>.md` s user-facing textem pro testera (vzor: [release_notes/TEMPLATE.md](../release_notes/TEMPLATE.md)).
+
+### 3.3 Postup (co dělá `scripts/release.ps1`)
+
+1. **Preflight** — validace všeho z 3.2 + dostupnost `flutter` a `firebase` CLI + neexistence cílového tagu.
+2. **Trello check** — interaktivní pauza s prompt na potvrzení.
+3. **`release/x.y.z`** branch z `develop`.
+4. **Bump `pubspec.yaml`** — version + build number (auto-inkrement, lze přebít `-BuildNumber`).
+5. **`CHANGELOG.md`** — přejmenování `[Unreleased]` → `[x.y.z] - YYYY-MM-DD`, vložení nové prázdné `[Unreleased]` nahoře, link references. **Skript pauzne**, abys obsah sekce naplnil (commits → user-facing věty per §3a).
+6. **Commit** bumpu + changelogu na release branch.
+7. **`flutter analyze`** — gate (musí být clean).
+8. **`flutter test`** — opt-in přes `-RunTests`.
+9. **`flutter build apk --release --flavor prod`** → `build/app/outputs/flutter-apk/app-prod-release.apk`.
+10. **`firebase appdistribution:distribute`** — upload na FAD, release notes z `release_notes/v<x.y.z>.md`.
+11. **Merge `--no-ff` do `main`**, **tag `v<x.y.z>`**.
+12. **Merge `main` zpět do `develop`** (kvůli verzi + changelogu).
+13. **Archivace** release branch jako `archive/release-<x.y.z>` (viz §5).
+14. **Push** `main`, `develop`, tags.
+
+### 3.4 Manuální spuštění
+
+```powershell
+# Standard release
+.\scripts\release.ps1 -Version 0.2.0
+
+# Větší změny — spustit i testy
+.\scripts\release.ps1 -Version 0.2.0 -RunTests
+
+# Dry-run (žádné side-effecty)
+.\scripts\release.ps1 -Version 0.2.0 -DryRun
+```
+
+### 3.5 Verzování
+
+SemVer (`MAJOR.MINOR.PATCH`). Pre-1.0 znamená „pre-stable" (žádné API stability garance). Pre-release builds = `x.y.z-beta.N`.
+
+Build number (`+N` v `pubspec.yaml`) je vždy monotónně rostoucí — **nikdy nesnižuj**, Android blokuje downgrade přes stejné application ID.
 
 ---
 
