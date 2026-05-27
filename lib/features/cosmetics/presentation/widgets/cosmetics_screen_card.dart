@@ -265,7 +265,13 @@ class _CosmeticsScreenCardState extends State<CosmeticsScreenCard>
                       padding: const EdgeInsets.only(top: 3),
                       child: Text(
                         label,
-                        maxLines: 2,
+                        // Single line keeps the card within the
+                        // 0.88 aspect-ratio grid cell. Two lines
+                        // overflowed by ~6 px once the emblem name
+                        // wrapped to two lines too; the full buff
+                        // text is still readable in the details
+                        // sheet, the card is the teaser surface.
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
                         style: TextStyle(
@@ -366,13 +372,14 @@ class _CosmeticsScreenCardState extends State<CosmeticsScreenCard>
 
 /// Inventory-grid asset renderer. Wraps [CosmeticBadge] in a soft
 /// [CosmeticPreviewFrame] for cosmetic types that ship a generic
-/// preview asset (banner / background / companion / skin / emblem /
+/// preview asset (banner / background / companion / skin /
 /// titleFlair / mapEffect) — those benefit from a visible "set in"
 /// outline against the card surface.
 ///
-/// Frame + relic skip the wrapper: their painted assets already carry
-/// dense chrome (gold border on frames, stylised gem socket on relics)
-/// and stacking another outline on top reads as visual noise.
+/// Frame + relic + emblem skip the wrapper: their painted assets
+/// already carry dense chrome (gold border on frames, stylised gem
+/// socket on relics, full shield silhouette on emblems) and stacking
+/// another outline on top reads as visual noise.
 class _CardAsset extends StatelessWidget {
   const _CardAsset({
     required this.definition,
@@ -400,7 +407,9 @@ class _CardAsset extends StatelessWidget {
       // edge-to-edge preview artwork.
       applyDisplayScale: false,
     );
-    final skipFrame = definition is Frame || definition is RelicCosmetic;
+    final skipFrame = definition is Frame ||
+        definition is RelicCosmetic ||
+        definition is Emblem;
     if (skipFrame) return badge;
     return CosmeticPreviewFrame(
       size: size,

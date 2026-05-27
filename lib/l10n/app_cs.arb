@@ -390,6 +390,8 @@
 
   "progScreenEyebrow": "HERO PROFIL",
   "progScreenTitle": "Tvoje hero cesta",
+  "profileTabStats": "Přehled",
+  "profileTabInventory": "Inventář",
   "progScreenLoadingHint": "Připravujeme tvou legendu",
   "progScreenEntryTitle": "Progression profil",
   "progScreenEntrySubtitle": "{levelTitle} · {totalXp} XP · {unlocked} odznaků",
@@ -1372,6 +1374,9 @@
 
   "cosmeticUnequip": "Odebrat z výbavy",
   "@cosmeticUnequip": { "description": "Button to unequip a cosmetic" },
+
+  "cosmeticEmblemNoFreeSlot": "Žádné volné místo. Nejdřív některý emblém odebereš nebo si odemkneš další slot vyšším levelem.",
+  "@cosmeticEmblemNoFreeSlot": { "description": "Helper text under disabled emblem Vybavit CTA when all unlocked board slots are occupied" },
 
   "cosmeticNoAsset": "NO ASSET",
   "@cosmeticNoAsset": { "description": "DevTools pill shown when cosmetic asset is missing" },

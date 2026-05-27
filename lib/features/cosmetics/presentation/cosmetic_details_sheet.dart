@@ -4,13 +4,15 @@ import 'package:provider/provider.dart';
 import '../../../core/logging/app_log.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../progression_engine/application/progression_engine_provider.dart';
-import '../../progression_engine/domain/catalog/granting_achievement_lookup.dart';
+import '../../social/application/social_provider.dart';
 import '../application/cosmetics_provider.dart';
+import '../application/emblem_board_provider.dart';
 import '../domain/cosmetic_lifecycle_helpers.dart';
 import '../domain/cosmetic_models.dart';
 import '../domain/cosmetic_reveal_state.dart';
 import '../domain/cosmetic_unlock_rule.dart';
 import '../domain/cosmetic_unlock_rules.dart';
+import '../domain/emblem_board.dart';
 import '../domain/player_cosmetic_lifecycle.dart';
 import '../config/skin_asset_resolver.dart';
 import 'cosmetics_screen_internals.dart';
@@ -85,9 +87,21 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
 
   Future<void> _toggleEquipped() async {
     if (_equipBusy || _devBusy) return;
+    final definition = widget.definition;
+
+    // Emblems take a different equip route: they live on the
+    // per-user [EmblemBoard] (6 slots, unlocked progressively by
+    // player level) instead of the global loadout. From the
+    // inventory's Vybavit CTA we auto-pin into the first free
+    // unlocked slot; tapping again on an already-pinned emblem
+    // clears its slot.
+    if (definition is Emblem) {
+      await _toggleEmblemEquipped();
+      return;
+    }
+
     setState(() => _equipBusy = true);
     final provider = context.read<CosmeticsProvider>();
-    final definition = widget.definition;
     final isEquipped =
         widget.state.equipped.slotId(definition.type) == definition.id;
     if (isEquipped) {
@@ -99,29 +113,72 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
     Navigator.of(context).pop();
   }
 
+  Future<void> _toggleEmblemEquipped() async {
+    final board = context.read<EmblemBoardProvider>();
+    final uid = context.read<SocialProvider>().currentUid;
+    final progression = context.read<ProgressionEngineProvider>();
+    if (uid == null) return;
+
+    final cosmeticId = widget.definition.id;
+    final currentBoard = board.boardForUser(uid);
+    final pinnedIndex = _findPinnedSlot(currentBoard, cosmeticId);
+
+    setState(() => _equipBusy = true);
+    if (pinnedIndex != null) {
+      // Already pinned → clear that slot.
+      await board.setPin(
+        uid: uid,
+        slotIndex: pinnedIndex,
+        cosmeticId: null,
+      );
+    } else {
+      final freeSlot =
+          _firstFreeEmblemSlot(currentBoard, progression.level);
+      if (freeSlot == null) {
+        // No room — the CTA should already be disabled in this
+        // state. Bail out without touching the board.
+        if (mounted) setState(() => _equipBusy = false);
+        return;
+      }
+      await board.setPin(
+        uid: uid,
+        slotIndex: freeSlot,
+        cosmeticId: cosmeticId,
+      );
+    }
+    if (!mounted) return;
+    Navigator.of(context).pop();
+  }
+
   Future<void> _devGrant() async {
     if (_devBusy || _equipBusy) return;
     setState(() => _devBusy = true);
     final navigator = Navigator.of(context);
     final sheetRoute = ModalRoute.of(context);
     final cosmeticId = widget.definition.id;
-    final grantingNodeId = grantingNodeForCosmetic(cosmeticId);
+    // Devtools "Grant" unconditionally writes the cosmetic into the
+    // user's unlocked set. Earlier this routed through
+    // `grantingNodeForCosmetic` → `devToolsForceCompleteNode` so the
+    // engine ledger would observe a real chain of completion events
+    // (achievement / chapter finale + `RewardGrantEvent`) — keeping
+    // ledger and inventory aligned for cosmetics granted via
+    // `CosmeticReward`. The catch: `simulateClaim` re-evaluates the
+    // node with the live engine pipeline, so any unmet prereq, level
+    // gate, or unlock condition silently dropped the grant — the
+    // engine sometimes only persisted the side-effect XP (bumping
+    // level) without unlocking the cosmetic, which surfaced as
+    // "devtools grant is inconsistent / only adds level". The direct
+    // path is the lever devtools actually wants: unlock the cosmetic
+    // regardless of level / conditions / engine state. Ledger drift
+    // is acceptable in dev mode.
     _log.info('devGrant start',
-        payload: 'id=$cosmeticId grantingNode=${grantingNodeId ?? "<none>"}');
+        payload: 'id=$cosmeticId path=directUnlock');
     try {
-      if (grantingNodeId != null) {
-        await context
-            .read<ProgressionEngineProvider>()
-            .devToolsForceCompleteNode(grantingNodeId);
-        _log.info('devGrant via engine completed',
-            payload: 'id=$cosmeticId grantingNode=$grantingNodeId');
-      } else {
-        await context
-            .read<CosmeticsProvider>()
-            .debugGrantCosmetic(cosmeticId);
-        _log.info('devGrant via cosmetics debugGrant completed',
-            payload: 'id=$cosmeticId');
-      }
+      await context
+          .read<CosmeticsProvider>()
+          .debugGrantCosmetic(cosmeticId);
+      _log.info('devGrant completed',
+          payload: 'id=$cosmeticId path=directUnlock');
     } finally {
       if (mounted) {
         setState(() => _devBusy = false);
@@ -147,6 +204,29 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
     }
     if (!mounted) return;
     _closeSheet(navigator, sheetRoute);
+  }
+
+  /// Returns the slot index where [cosmeticId] is currently pinned on
+  /// [board], or null when it isn't pinned anywhere. Used so the
+  /// inventory's Vybavit CTA on an already-pinned emblem unpins that
+  /// specific slot instead of looking for a fresh free slot.
+  static int? _findPinnedSlot(EmblemBoard board, String cosmeticId) {
+    for (var i = 0; i < EmblemBoard.slotCount; i++) {
+      if (board.slotAt(i) == cosmeticId) return i;
+    }
+    return null;
+  }
+
+  /// First empty slot on [board] that is also unlocked at [playerLevel],
+  /// or null when every unlocked slot is filled / the player hasn't
+  /// reached the first slot threshold yet. Drives the
+  /// pin-into-first-free behavior for the inventory Vybavit CTA.
+  static int? _firstFreeEmblemSlot(EmblemBoard board, int playerLevel) {
+    final unlocked = EmblemBoard.unlockedSlotCount(playerLevel);
+    for (var i = 0; i < unlocked; i++) {
+      if (board.slotAt(i) == null) return i;
+    }
+    return null;
   }
 
   /// Removes the sheet's specific route from the Navigator stack.
@@ -197,11 +277,33 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
     final cosmeticsProvider = context.watch<CosmeticsProvider>();
     final cosmeticsState = cosmeticsProvider.state ?? widget.state;
     final progression = context.watch<ProgressionEngineProvider>();
+    // Emblems live on the per-user EmblemBoard, not the loadout
+    // slot map — so we watch the board provider here and derive
+    // pinned-state / free-slot-availability that the action footer
+    // surfaces as an enabled / disabled Vybavit CTA.
+    final isEmblem = definition is Emblem;
+    final emblemBoard = isEmblem
+        ? context.watch<EmblemBoardProvider>().boardForUser(
+              context.watch<SocialProvider>().currentUid ?? '',
+            )
+        : null;
+    final emblemPinnedSlot = isEmblem
+        ? _findPinnedSlot(emblemBoard!, definition.id)
+        : null;
+    final emblemFirstFreeSlot = isEmblem && emblemPinnedSlot == null
+        ? _firstFreeEmblemSlot(emblemBoard!, progression.level)
+        : null;
     final canEquipType = definition is Frame ||
         definition is Background ||
         definition is Companion;
-    final isEquipped = canEquipType &&
-        cosmeticsState.equipped.slotId(definition.type) == definition.id;
+    final isEquipped = (canEquipType &&
+            cosmeticsState.equipped.slotId(definition.type) == definition.id) ||
+        (isEmblem && emblemPinnedSlot != null);
+    // For emblems: the CTA stays visible but disables when neither
+    // path (unequip an already-pinned emblem / pin into a free
+    // slot) is available.
+    final canEquipEmblem = isEmblem &&
+        (emblemPinnedSlot != null || emblemFirstFreeSlot != null);
     final assetPath = resolveCosmeticPreviewPath(
       definition,
       config: cosmeticsProvider.service.config,
@@ -306,6 +408,7 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
       isVisibleLocked: isVisibleLocked,
       effectiveLocked: effectiveLocked,
       isEquipped: isEquipped,
+      canEquipEmblem: canEquipEmblem,
       displayName: displayName,
       hiddenColor: resolvedHiddenColor,
       companionSlotKey: _companionSlotKey,

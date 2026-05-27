@@ -12,7 +12,7 @@ import '../../../../shared/widgets/screen_header.dart';
 import '../../../cosmetics/application/cosmetics_provider.dart';
 import '../../../cosmetics/application/emblem_board_provider.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
-import '../../../cosmetics/presentation/widgets/cosmetics_inventory_section.dart';
+import '../../../cosmetics/presentation/widgets/cosmetics_inventory_view.dart';
 import '../../application/social_provider.dart';
 import '../../domain/social_models.dart';
 import '../social_profile_utils.dart';
@@ -49,10 +49,15 @@ class SocialUserProfileScreen extends StatefulWidget {
       _SocialUserProfileScreenState();
 }
 
-class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
+class _SocialUserProfileScreenState extends State<SocialUserProfileScreen>
+    with SingleTickerProviderStateMixin {
   late final Stream<SocialUserProfile?> _profileStream;
   late final Stream<List<SocialUnlockedAchievement>> _achievementsStream;
   late final Stream<List<SocialAchievementShare>> _sharesStream;
+  // Drives the own-profile (`isMe`) Statistiky / Inventář tabs. Always
+  // created so `_actionBusy` ↔ TabController lifecycle stays simple;
+  // foreign profile renders ignore it.
+  late final TabController _tab;
   bool _actionBusy = false;
 
   @override
@@ -62,6 +67,13 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
     _profileStream = social.watchProfileById(widget.uid);
     _achievementsStream = social.watchFriendAchievements(widget.uid);
     _sharesStream = social.watchProfileShares(widget.uid);
+    _tab = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tab.dispose();
+    super.dispose();
   }
 
   Future<void> _editOwnHandle(String currentHandle) async {
@@ -361,90 +373,117 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
               ),
             );
 
+            final heroBanner = _HeroBannerStack(
+              appBar: appBar,
+              profile: profile,
+              isMe: isMe,
+              displayName: displayName,
+              emblemSlots: emblemSlots,
+              ownUnlockedEmblems: ownUnlockedEmblems,
+              uid: widget.uid,
+              onOpenEmblemSlot: _openEmblemSlotSheet,
+              onOpenCompanion: _openCompanionDetails,
+              onOpenSkin: _openSkinDetails,
+              onOpenBanner: _openBannerDetails,
+              onOpenBackground: _openBackgroundDetails,
+            );
+
+            // Own profile: cinematic hero banner scrolls away as the
+            // user pulls content up, the Statistiky / Inventář tab
+            // bar pins to the top once the banner clears, two
+            // swipeable tabs below — Statistiky (stats + pinned
+            // achievements + shared posts) and Inventář (the full
+            // cosmetics inventory). NestedScrollView coordinates the
+            // outer header scroll with the inner stats tab's
+            // scroll-view; the inventory tab keeps its own internal
+            // PageView + grid scroll, so its grid scrolls
+            // independently once the banner has cleared.
+            if (isMe) {
+              return NestedScrollView(
+                headerSliverBuilder: (context, innerBoxIsScrolled) => [
+                  SliverToBoxAdapter(child: heroBanner),
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _ProfileTabBarHeaderDelegate(
+                      tabBar: _ProfileTabBar(
+                        controller: _tab,
+                        statsLabel: l10n.profileTabStats,
+                        inventoryLabel: l10n.profileTabInventory,
+                      ),
+                    ),
+                  ),
+                ],
+                body: TabBarView(
+                  controller: _tab,
+                  children: [
+                    SingleChildScrollView(
+                      padding: EdgeInsets.fromLTRB(
+                          16, 16, 16, bottomPad + 24),
+                      child: _OwnStatsTabContent(
+                        profile: profile,
+                        achievementsStream: _achievementsStream,
+                        sharesStream: _sharesStream,
+                        l10n: l10n,
+                        buildStatsSection: () =>
+                            _buildProfileStatsSection(profile, isMe: true),
+                      ),
+                    ),
+                    CosmeticsInventoryView(
+                      // Continuous swipe right past the leftmost
+                      // category page hands off to Statistiky (outer
+                      // tab 0) so the player can flick back without
+                      // tapping the tab bar.
+                      onLeftEdgeOverscroll: () => _tab.animateTo(0),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            // Foreign profile: no inventory, so we keep the original
+            // single-scroll layout (header scrolls away with the rest).
             return SingleChildScrollView(
               padding: EdgeInsets.only(bottom: bottomPad + 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // App bar + title banner + cinematic hero card all
-                  // share a single painted scene + dark→transparent
-                  // gradient so the chrome reads against the scene
-                  // without a hard seam. Banner is hidden until the
-                  // profile stream produces stats so we don't flash a
-                  // level-1 plate before the real data lands.
-                  _HeroBannerStack(
-                    appBar: appBar,
-                    profile: profile,
-                    isMe: isMe,
-                    displayName: displayName,
-                    emblemSlots: emblemSlots,
-                    ownUnlockedEmblems: ownUnlockedEmblems,
-                    uid: widget.uid,
-                    onOpenEmblemSlot: _openEmblemSlotSheet,
-                    onOpenCompanion: _openCompanionDetails,
-                    onOpenSkin: _openSkinDetails,
-                    onOpenBanner: _openBannerDetails,
-                    onOpenBackground: _openBackgroundDetails,
-                  ),
+                  heroBanner,
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (isMe) ...[
-                              // Owner section order (2026-05-25 stats
-                              // section landing): Inventář →
-                              // Statistiky (subsumes Streak rekordy as
-                              // one of its cards) → Připnuté
-                              // achievementy → Sdílené příspěvky.
-                              // Inventář sits above stats because users
-                              // open the profile to manage cosmetics
-                              // more often than to scan numbers.
-                              const CosmeticsInventorySection(),
-                              const SizedBox(height: Tokens.spaceLg),
-                              _buildProfileStatsSection(
-                                  profile, isMe: true),
-                              const SizedBox(height: Tokens.spaceLg),
-                            ] else ...[
-                              // Foreign profile: pending request /
-                              // add/remove-friend action sits above
-                              // the stats section. Inventář is
-                              // owner-only.
-                              _buildActionArea(
-                                  context, social, displayName),
-                              const SizedBox(height: Tokens.spaceLg),
-                              _buildProfileStatsSection(
-                                  profile, isMe: false),
-                              const SizedBox(height: Tokens.spaceLg),
-                            ],
-                            _SectionTitle(
-                              icon: Icons.push_pin_rounded,
-                              title:
-                                  l10n.socialProfilePinnedAchievements,
-                            ),
-                            const SizedBox(height: 10),
-                            _PinnedAchievementsSection(
-                              profile: profile,
-                              isMe: isMe,
-                              stream: _achievementsStream,
-                              l10n: l10n,
-                            ),
-                            const SizedBox(height: 18),
-                            _SectionTitle(
-                              icon: Icons.forum_rounded,
-                              title: l10n.socialProfileSharedPosts,
-                            ),
-                            const SizedBox(height: 10),
-                            _ProfileSharesSection(
-                              stream: _sharesStream,
-                              canDelete: isMe,
-                            ),
-                          ],
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildActionArea(context, social, displayName),
+                        const SizedBox(height: Tokens.spaceLg),
+                        _buildProfileStatsSection(profile, isMe: false),
+                        const SizedBox(height: Tokens.spaceLg),
+                        _SectionTitle(
+                          icon: Icons.push_pin_rounded,
+                          title: l10n.socialProfilePinnedAchievements,
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 10),
+                        _PinnedAchievementsSection(
+                          profile: profile,
+                          isMe: false,
+                          stream: _achievementsStream,
+                          l10n: l10n,
+                        ),
+                        const SizedBox(height: 18),
+                        _SectionTitle(
+                          icon: Icons.forum_rounded,
+                          title: l10n.socialProfileSharedPosts,
+                        ),
+                        const SizedBox(height: 10),
+                        _ProfileSharesSection(
+                          stream: _sharesStream,
+                          canDelete: false,
+                        ),
+                      ],
+                    ),
                   ),
-                );
+                ],
+              ),
+            );
           },
         ),
       ),
@@ -510,6 +549,134 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen> {
         await social.sendFriendRequest(widget.uid);
         if (mounted) setState(() => _actionBusy = false);
       },
+    );
+  }
+}
+
+// ── Own-profile tabbed layout ────────────────────────────────────────────────
+
+class _ProfileTabBar extends StatelessWidget {
+  const _ProfileTabBar({
+    required this.controller,
+    required this.statsLabel,
+    required this.inventoryLabel,
+  });
+
+  final TabController controller;
+  final String statsLabel;
+  final String inventoryLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: Tokens.cardBorder)),
+      ),
+      child: TabBar(
+        controller: controller,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        indicatorColor: Tokens.accent,
+        indicatorWeight: 2,
+        indicatorSize: TabBarIndicatorSize.label,
+        labelColor: Tokens.accent,
+        unselectedLabelColor: Tokens.onSurfaceMuted,
+        labelStyle: const TextStyle(
+          fontSize: Tokens.fontSizeSmall,
+          fontWeight: FontWeight.w700,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontSize: Tokens.fontSizeSmall,
+          fontWeight: FontWeight.w600,
+        ),
+        dividerColor: Colors.transparent,
+        tabs: [
+          Tab(text: statsLabel),
+          Tab(text: inventoryLabel),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileTabBarHeaderDelegate extends SliverPersistentHeaderDelegate {
+  const _ProfileTabBarHeaderDelegate({required this.tabBar});
+
+  final _ProfileTabBar tabBar;
+
+  // 46 = standard Material TabBar height (kTextTabBarHeight) for
+  // non-icon tabs. Matches the static height the TabBar widget
+  // reports so the pinned slot doesn't clip the underline indicator.
+  static const double _height = 46;
+
+  @override
+  double get minExtent => _height;
+
+  @override
+  double get maxExtent => _height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    // Solid scaffold-coloured bg so the pinned TabBar sits opaquely
+    // over the hero banner's painted scene as it scrolls underneath.
+    return ColoredBox(
+      color: const Color(0xFF0A0E1C),
+      child: tabBar,
+    );
+  }
+
+  @override
+  bool shouldRebuild(_ProfileTabBarHeaderDelegate oldDelegate) =>
+      oldDelegate.tabBar != tabBar;
+}
+
+class _OwnStatsTabContent extends StatelessWidget {
+  const _OwnStatsTabContent({
+    required this.profile,
+    required this.achievementsStream,
+    required this.sharesStream,
+    required this.l10n,
+    required this.buildStatsSection,
+  });
+
+  final SocialUserProfile? profile;
+  final Stream<List<SocialUnlockedAchievement>> achievementsStream;
+  final Stream<List<SocialAchievementShare>> sharesStream;
+  final AppLocalizations l10n;
+  final Widget Function() buildStatsSection;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        buildStatsSection(),
+        const SizedBox(height: Tokens.spaceLg),
+        _SectionTitle(
+          icon: Icons.push_pin_rounded,
+          title: l10n.socialProfilePinnedAchievements,
+        ),
+        const SizedBox(height: 10),
+        _PinnedAchievementsSection(
+          profile: profile,
+          isMe: true,
+          stream: achievementsStream,
+          l10n: l10n,
+        ),
+        const SizedBox(height: 18),
+        _SectionTitle(
+          icon: Icons.forum_rounded,
+          title: l10n.socialProfileSharedPosts,
+        ),
+        const SizedBox(height: 10),
+        _ProfileSharesSection(
+          stream: sharesStream,
+          canDelete: true,
+        ),
+      ],
     );
   }
 }

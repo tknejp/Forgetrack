@@ -1101,6 +1101,12 @@ class AppLocalizationsCs extends AppLocalizations {
   String get progScreenTitle => 'Tvoje hero cesta';
 
   @override
+  String get profileTabStats => 'Přehled';
+
+  @override
+  String get profileTabInventory => 'Inventář';
+
+  @override
   String get progScreenLoadingHint => 'Připravujeme tvou legendu';
 
   @override
@@ -4147,6 +4153,10 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get cosmeticUnequip => 'Odebrat z výbavy';
+
+  @override
+  String get cosmeticEmblemNoFreeSlot =>
+      'Žádné volné místo. Nejdřív některý emblém odebereš nebo si odemkneš další slot vyšším levelem.';
 
   @override
   String get cosmeticNoAsset => 'NO ASSET';

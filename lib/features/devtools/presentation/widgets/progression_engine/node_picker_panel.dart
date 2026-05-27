@@ -122,28 +122,37 @@ class _NodePickerPanelState extends State<NodePickerPanel> {
                 itemBuilder: (context, i) {
                   final entry = filtered[i];
                   final busy = _completingId == entry.id;
-                  return ListTile(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(
-                      entry.id,
-                      style: tt.bodyMedium
-                          ?.copyWith(fontFamily: 'monospace'),
-                    ),
-                    subtitle: Text(entry.kind),
-                    trailing: TextButton(
-                      onPressed:
-                          widget.isBusy || _completingId != null
-                              ? null
-                              : () => _complete(entry.id),
-                      child: busy
-                          ? const SizedBox(
-                              width: 14,
-                              height: 14,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2),
-                            )
-                          : const Text('Complete'), // lint-ignore: l10n-literal — devtools, intentionally English
+                  // Wrap in a transparent Material so the ListTile's
+                  // ink splash + selection chrome find their nearest
+                  // Material ancestor here, not the DevToolsCollapsibleCard's
+                  // outer `Container(decoration: …)` — which Flutter
+                  // flags as "ListTile background may be invisible"
+                  // because the DecoratedBox would mask the ink.
+                  return Material(
+                    color: Colors.transparent,
+                    child: ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        entry.id,
+                        style: tt.bodyMedium
+                            ?.copyWith(fontFamily: 'monospace'),
+                      ),
+                      subtitle: Text(entry.kind),
+                      trailing: TextButton(
+                        onPressed:
+                            widget.isBusy || _completingId != null
+                                ? null
+                                : () => _complete(entry.id),
+                        child: busy
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2),
+                              )
+                            : const Text('Complete'), // lint-ignore: l10n-literal — devtools, intentionally English
+                      ),
                     ),
                   );
                 },

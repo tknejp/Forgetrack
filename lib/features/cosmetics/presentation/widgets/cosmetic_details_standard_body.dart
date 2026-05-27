@@ -40,6 +40,7 @@ class CosmeticDetailsStandardBody extends StatelessWidget {
     required this.isVisibleLocked,
     required this.effectiveLocked,
     required this.isEquipped,
+    required this.canEquipEmblem,
     required this.displayName,
     required this.hiddenColor,
     required this.companionSlotKey,
@@ -71,6 +72,11 @@ class CosmeticDetailsStandardBody extends StatelessWidget {
   final bool isVisibleLocked;
   final bool effectiveLocked;
   final bool isEquipped;
+  /// Emblem-only: true when the inventory CTA can act — either the
+  /// emblem is already pinned (CTA = unpin) or there's a free
+  /// unlocked board slot to pin into. False on a fully pinned board
+  /// with the emblem absent, so the CTA renders disabled.
+  final bool canEquipEmblem;
   final String displayName;
   final Color hiddenColor;
   final GlobalKey companionSlotKey;
@@ -351,6 +357,7 @@ class CosmeticDetailsStandardBody extends StatelessWidget {
                 isLocked: isLocked,
                 devTools: devTools,
                 isEquipped: isEquipped,
+                canEquipEmblem: canEquipEmblem,
                 effectiveLocked: effectiveLocked,
                 anyBusy: anyBusy,
                 equipBusy: equipBusy,

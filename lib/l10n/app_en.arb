@@ -1045,6 +1045,10 @@
 
   "progScreenEyebrow": "HERO PROFILE",
   "progScreenTitle": "Your hero journey",
+  "profileTabStats": "Overview",
+  "profileTabInventory": "Inventory",
+  "@profileTabStats": { "description": "Hero / profile screen — Stats tab label" },
+  "@profileTabInventory": { "description": "Hero / profile screen — Inventory tab label" },
   "progScreenLoadingHint": "Preparing your legend",
   "progScreenEntryTitle": "Progression profile",
   "progScreenEntrySubtitle": "{levelTitle} · {totalXp} XP · {unlocked} achievements",
@@ -2239,6 +2243,9 @@
 
   "cosmeticUnequip": "Unequip",
   "@cosmeticUnequip": { "description": "Button to unequip a cosmetic" },
+
+  "cosmeticEmblemNoFreeSlot": "No free slot. Unequip another emblem first or unlock the next slot with a higher level.",
+  "@cosmeticEmblemNoFreeSlot": { "description": "Helper text under disabled emblem equip CTA when all unlocked board slots are occupied" },
 
   "cosmeticNoAsset": "NO ASSET",
   "@cosmeticNoAsset": { "description": "DevTools pill shown when cosmetic asset is missing" },

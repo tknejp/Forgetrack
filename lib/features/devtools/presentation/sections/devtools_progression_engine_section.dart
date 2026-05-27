@@ -6,6 +6,7 @@ import '../../../../features/progression_engine/application/progression_engine_p
 import '../widgets/devtools_action_tile.dart';
 import '../widgets/devtools_collapsible_card.dart';
 import '../widgets/devtools_section_card.dart';
+import '../widgets/progression_engine/chapter_completer_panel.dart';
 import '../widgets/progression_engine/daily_goal_chips_panel.dart';
 import '../widgets/progression_engine/inspect_panel.dart';
 import '../widgets/progression_engine/node_picker_panel.dart';
@@ -129,6 +130,17 @@ class _DevToolsProgressionEngineSectionState
             subtitle: 'Set total · Add delta · Set level',
             leadingIcon: Icons.bolt_rounded,
             children: [XpLevelTabsPanel(isBusy: busy)],
+          ),
+        ),
+        const DevToolsSectionDivider(),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+          child: DevToolsCollapsibleCard(
+            title: 'Force-complete chapter',
+            subtitle:
+                'One-tap chapter chain: opener → steps → finale (grants emblem)',
+            leadingIcon: Icons.menu_book_rounded,
+            children: [ChapterCompleterPanel(isBusy: busy)],
           ),
         ),
         const DevToolsSectionDivider(),

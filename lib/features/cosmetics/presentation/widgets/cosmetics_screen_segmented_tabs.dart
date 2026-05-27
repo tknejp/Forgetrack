@@ -4,7 +4,6 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../domain/cosmetic_models.dart';
 import '../cosmetics_screen_internals.dart';
-import 'cosmetics_screen_chrome.dart';
 
 class CosmeticsScreenSegmentedTabs extends StatelessWidget {
   const CosmeticsScreenSegmentedTabs({
@@ -24,38 +23,31 @@ class CosmeticsScreenSegmentedTabs extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 18, 14, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CosmeticsScreenSectionHead(label: l10n.cosmeticsInventorySectionHead),
-          const SizedBox(height: 10),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.03),
-              borderRadius: BorderRadius.circular(Tokens.radiusProgress),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-            ),
-            padding: const EdgeInsets.all(3),
-            child: Row(
-              children: [
-                for (var i = 0; i < tabs.length; i++)
-                  Expanded(
-                    child: _SegmentButton(
-                      label: tabs[i] == null
-                          ? l10n.cosmeticsTabAll
-                          : cosmeticTypeLabel(tabs[i]!, l10n),
-                      icon: tabs[i] == null
-                          ? Icons.apps_rounded
-                          : cosmeticIconForType(tabs[i]!),
-                      isSelected: currentIndex == i,
-                      onTap: () => onTap(i),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
+      padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(Tokens.radiusProgress),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        ),
+        padding: const EdgeInsets.all(3),
+        child: Row(
+          children: [
+            for (var i = 0; i < tabs.length; i++)
+              Expanded(
+                child: _SegmentButton(
+                  label: tabs[i] == null
+                      ? l10n.cosmeticsTabAll
+                      : cosmeticTypeLabel(tabs[i]!, l10n),
+                  icon: tabs[i] == null
+                      ? Icons.apps_rounded
+                      : cosmeticIconForType(tabs[i]!),
+                  isSelected: currentIndex == i,
+                  onTap: () => onTap(i),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

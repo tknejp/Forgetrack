@@ -1096,6 +1096,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progScreenTitle => 'Your hero journey';
 
   @override
+  String get profileTabStats => 'Stats';
+
+  @override
+  String get profileTabInventory => 'Inventory';
+
+  @override
   String get progScreenLoadingHint => 'Preparing your legend';
 
   @override
@@ -4155,6 +4161,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cosmeticUnequip => 'Unequip';
+
+  @override
+  String get cosmeticEmblemNoFreeSlot =>
+      'No free slot. Unequip another emblem first or unlock the next slot with a higher level.';
 
   @override
   String get cosmeticNoAsset => 'NO ASSET';

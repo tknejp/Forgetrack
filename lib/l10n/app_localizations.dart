@@ -2091,6 +2091,18 @@ abstract class AppLocalizations {
   /// **'Your hero journey'**
   String get progScreenTitle;
 
+  /// Hero / profile screen — Stats tab label
+  ///
+  /// In en, this message translates to:
+  /// **'Stats'**
+  String get profileTabStats;
+
+  /// Hero / profile screen — Inventory tab label
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory'**
+  String get profileTabInventory;
+
   /// No description provided for @progScreenLoadingHint.
   ///
   /// In en, this message translates to:
@@ -7400,6 +7412,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unequip'**
   String get cosmeticUnequip;
+
+  /// Helper text under disabled emblem equip CTA when all unlocked board slots are occupied
+  ///
+  /// In en, this message translates to:
+  /// **'No free slot. Unequip another emblem first or unlock the next slot with a higher level.'**
+  String get cosmeticEmblemNoFreeSlot;
 
   /// DevTools pill shown when cosmetic asset is missing
   ///

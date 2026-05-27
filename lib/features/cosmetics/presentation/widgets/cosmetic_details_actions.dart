@@ -18,6 +18,7 @@ class CosmeticDetailsActions extends StatelessWidget {
     required this.isLocked,
     required this.devTools,
     required this.isEquipped,
+    required this.canEquipEmblem,
     required this.effectiveLocked,
     required this.anyBusy,
     required this.equipBusy,
@@ -34,6 +35,12 @@ class CosmeticDetailsActions extends StatelessWidget {
   final bool isLocked;
   final bool devTools;
   final bool isEquipped;
+  /// Emblem-only: false when the board has no free unlocked slot and
+  /// the emblem isn't already pinned anywhere, so the Vybavit CTA
+  /// renders disabled with a helper line. True in every other
+  /// emblem state (already pinned → unpin / free slot available →
+  /// pin). Ignored for non-emblem cosmetics.
+  final bool canEquipEmblem;
   final bool effectiveLocked;
   final bool anyBusy;
   final bool equipBusy;
@@ -93,9 +100,7 @@ class CosmeticDetailsActions extends StatelessWidget {
       );
     }
 
-    if (effectiveLocked ||
-        definition is Emblem ||
-        definition is RelicCosmetic) {
+    if (effectiveLocked || definition is RelicCosmetic) {
       return SizedBox(
         width: double.infinity,
         child: OutlinedButton(
@@ -104,6 +109,43 @@ class CosmeticDetailsActions extends StatelessWidget {
               isHidden ? Tokens.onSurfaceMuted : color),
           child: Text(l10n.dialogClose),
         ),
+      );
+    }
+
+    // Emblems route through the EmblemBoard (per-user 6-slot
+    // showcase) rather than the global loadout. When the player
+    // has no free unlocked slot and this emblem isn't already
+    // pinned, the CTA is disabled and a helper line below explains
+    // why so the player isn't left wondering why the tap does
+    // nothing.
+    if (definition is Emblem) {
+      final emblemBlocked = !isEquipped && !canEquipEmblem;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ActionButton(
+            label: isEquipped ? l10n.cosmeticUnequip : l10n.cosmeticEquip,
+            icon: isEquipped
+                ? Icons.remove_circle_outline_rounded
+                : Icons.check_circle_rounded,
+            color: color,
+            busy: equipBusy,
+            onTap: anyBusy || emblemBlocked ? null : onToggleEquipped,
+          ),
+          if (emblemBlocked) ...[
+            const SizedBox(height: 10),
+            Text(
+              l10n.cosmeticEmblemNoFreeSlot,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Tokens.onSurfaceMuted,
+                fontSize: Tokens.fontSizeCaption,
+                fontWeight: FontWeight.w600,
+                height: 1.35,
+              ),
+            ),
+          ],
+        ],
       );
     }
 
