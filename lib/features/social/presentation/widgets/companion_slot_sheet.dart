@@ -390,6 +390,10 @@ class _PickerTile extends StatelessWidget {
                 color: color,
                 size: 48,
                 framed: false,
+                // Picker thumb renders the preview asset — skip the
+                // displayScale boost so the edge-to-edge artwork
+                // isn't cropped by the badge bounds.
+                applyDisplayScale: false,
               ),
               const SizedBox(height: Tokens.spaceSm),
               Text(

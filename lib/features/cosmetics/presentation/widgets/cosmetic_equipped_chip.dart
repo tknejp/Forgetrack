@@ -5,6 +5,7 @@ import '../../../../shared/theme/design_tokens.dart';
 import '../../config/cosmetics_config.dart';
 import '../../domain/cosmetic_models.dart';
 import '../cosmetics_screen_internals.dart';
+import 'cosmetic_preview_frame.dart';
 import 'cosmetic_preview_path.dart';
 
 /// Compact tile for an equipped cosmetic — small thumbnail + two-line label
@@ -65,6 +66,7 @@ class CosmeticEquippedChip extends StatelessWidget {
             _Thumbnail(
               assetPath: assetPath,
               type: definition.type,
+              rarity: definition.rarity,
               size: 32,
             ),
             const SizedBox(width: 10),
@@ -111,31 +113,33 @@ class _Thumbnail extends StatelessWidget {
   const _Thumbnail({
     required this.assetPath,
     required this.type,
+    required this.rarity,
     required this.size,
   });
 
   final String? assetPath;
   final CosmeticType type;
+  final Rarity rarity;
   final double size;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: assetPath != null
-          ? Image.asset(
-              assetPath!,
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => _ThumbFallback(
-                type: type,
-                size: size,
-              ),
-            )
-          : _ThumbFallback(
-              type: type,
-              size: size,
-            ),
+    if (assetPath == null) {
+      return SizedBox(
+        width: size,
+        height: size,
+        child: _ThumbFallback(type: type, size: size),
+      );
+    }
+    return CosmeticPreviewFrame(
+      size: size,
+      borderColor: cosmeticRarityColor(rarity),
+      child: Image.asset(
+        assetPath!,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) =>
+            _ThumbFallback(type: type, size: size),
+      ),
     );
   }
 }

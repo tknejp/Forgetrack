@@ -49,6 +49,63 @@ class ProfileTitleBanner extends StatelessWidget {
   /// Catalog lookup happens caller-side via `socialCosmeticById`.
   final Cosmetic? equippedBanner;
 
+  // Tier-default banner asset key. Each rarity maps to the first
+  // banner unlocked in that tier — used when the player has nothing
+  // equipped in `Loadout.bannerId`, or when rendering a friend's
+  // profile that doesn't expose the equipped banner.
+  static const Map<Rarity, String> _defaultAssetByRarity = {
+    Rarity.common: 'assets/cosmetics/banners/pilgrim.png',
+    Rarity.uncommon: 'assets/cosmetics/banners/forest.png',
+    Rarity.rare: 'assets/cosmetics/banners/mine.png',
+    Rarity.epic: 'assets/cosmetics/banners/frost.png',
+    Rarity.legendary: 'assets/cosmetics/banners/mountain.png',
+    Rarity.mythic: 'assets/cosmetics/banners/dragonrock.png',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final equipped = equippedBanner;
+    final isBanner = equipped is Banner;
+    final paletteRarity = isBanner ? equipped.rarity : rarity;
+    final assetPath = isBanner
+        ? (CosmeticsConfig.standard().resolveAssetPath(equipped.assetKey) ??
+            _defaultAssetByRarity[paletteRarity]!)
+        : _defaultAssetByRarity[rarity]!;
+
+    return BannerChrome(
+      assetPath: assetPath,
+      level: level,
+      title: title,
+      paletteRarity: paletteRarity,
+    );
+  }
+}
+
+/// Renders a banner asset at its native 4:1 aspect ratio with the
+/// player's level + title overlaid in rarity-tinted Cinzel text.
+///
+/// The layout fractions, font sizes, and per-rarity text palette are
+/// shared with [ProfileTitleBanner] and the inventory banner tile so
+/// every surface that previews a banner looks visually identical to
+/// what the player would see equipped on their profile.
+///
+/// Asset selection + tier fallback is the caller's responsibility —
+/// this widget takes a fully-resolved [assetPath] and does not consult
+/// the cosmetics config.
+class BannerChrome extends StatelessWidget {
+  const BannerChrome({
+    super.key,
+    required this.assetPath,
+    required this.level,
+    required this.title,
+    required this.paletteRarity,
+  });
+
+  final String assetPath;
+  final int level;
+  final String title;
+  final Rarity paletteRarity;
+
   // ── Asset coordinate system ──────────────────────────────────────────
   // Source canvas: 1024×256 (aspect 4:1).
   // Frame caps reach ~15 px into each edge → text/badge content lives
@@ -78,29 +135,9 @@ class ProfileTitleBanner extends StatelessWidget {
   static const double _levelFontSize = 18;
   static const double _titleFontSize = 16;
 
-  // Tier-default banner asset key. Each rarity maps to the first
-  // banner unlocked in that tier — used when the player has nothing
-  // equipped in `Loadout.bannerId`, or when rendering a friend's
-  // profile that doesn't expose the equipped banner.
-  static const Map<Rarity, String> _defaultAssetByRarity = {
-    Rarity.common: 'assets/cosmetics/banners/pilgrim.png',
-    Rarity.uncommon: 'assets/cosmetics/banners/forest.png',
-    Rarity.rare: 'assets/cosmetics/banners/mine.png',
-    Rarity.epic: 'assets/cosmetics/banners/frost.png',
-    Rarity.legendary: 'assets/cosmetics/banners/mountain.png',
-    Rarity.mythic: 'assets/cosmetics/banners/dragonrock.png',
-  };
-
   @override
   Widget build(BuildContext context) {
-    final equipped = equippedBanner;
-    final isBanner = equipped is Banner;
-    final paletteRarity = isBanner ? equipped.rarity : rarity;
-    final assetPath = isBanner
-        ? (CosmeticsConfig.standard().resolveAssetPath(equipped.assetKey) ??
-            _defaultAssetByRarity[paletteRarity]!)
-        : _defaultAssetByRarity[rarity]!;
-    final palette = _BannerPalette.forRarity(paletteRarity);
+    final palette = BannerPalette.forRarity(paletteRarity);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -175,11 +212,19 @@ class ProfileTitleBanner extends StatelessWidget {
   }
 }
 
-/// Per-rarity text palette for [ProfileTitleBanner]. Kept private to
-/// the banner widget — the colours are tuned to the specific banner
-/// art and don't generalise to other surfaces.
-class _BannerPalette {
-  const _BannerPalette({
+/// Per-rarity text palette for banner chrome. Tuned to the specific
+/// banner art per tier — the contrast targets and glow colours don't
+/// generalise to other surfaces.
+///
+/// TODO: move per-banner chrome colours (level / title text, glow
+/// shadows) onto [Banner.metadata] so individual banners can override
+/// the tier default. Today every banner in the same rarity inherits
+/// one palette, which forces art to fit the palette instead of the
+/// other way around — e.g. a rare-tier banner with a bright snow
+/// background can't drop the cream title colour for a darker readable
+/// one without re-tuning every other rare banner.
+class BannerPalette {
+  const BannerPalette({
     required this.levelColor,
     required this.titleColor,
     required this.titleShadows,
@@ -197,17 +242,17 @@ class _BannerPalette {
     blurRadius: 2,
   );
 
-  factory _BannerPalette.forRarity(Rarity rarity) {
+  factory BannerPalette.forRarity(Rarity rarity) {
     switch (rarity) {
       case Rarity.common:
-        return const _BannerPalette(
+        return const BannerPalette(
           levelColor: Color(0xFFE5E7EB),
           titleColor: Color(0xFFE6E1D6),
           levelShadows: [_baseDrop],
           titleShadows: [_baseDrop],
         );
       case Rarity.uncommon:
-        return const _BannerPalette(
+        return const BannerPalette(
           levelColor: Color(0xFFD7F5C5),
           titleColor: Color(0xFFD9E8C5),
           levelShadows: [
@@ -220,7 +265,7 @@ class _BannerPalette {
           ],
         );
       case Rarity.rare:
-        return const _BannerPalette(
+        return const BannerPalette(
           levelColor: Color(0xFFFFD08A),
           titleColor: Color(0xFFF1D8A8),
           levelShadows: [
@@ -233,7 +278,7 @@ class _BannerPalette {
           ],
         );
       case Rarity.epic:
-        return const _BannerPalette(
+        return const BannerPalette(
           levelColor: Color(0xFFD9C3FF),
           titleColor: Color(0xFFBFDFFF),
           levelShadows: [
@@ -246,7 +291,7 @@ class _BannerPalette {
           ],
         );
       case Rarity.legendary:
-        return const _BannerPalette(
+        return const BannerPalette(
           levelColor: Color(0xFFFFD36A),
           titleColor: Color(0xFFFFD98A),
           levelShadows: [
@@ -259,7 +304,7 @@ class _BannerPalette {
           ],
         );
       case Rarity.mythic:
-        return const _BannerPalette(
+        return const BannerPalette(
           levelColor: Color(0xFFFFB1A1),
           titleColor: Color(0xFFFFD59A),
           levelShadows: [

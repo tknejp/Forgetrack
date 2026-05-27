@@ -104,9 +104,11 @@ class ProfileHeroCompanionStandee extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final assetPath = CosmeticsConfig.standard().resolveAssetPath(
-      definition.previewAssetKey ?? definition.assetKey,
-    );
+    // Hero standee renders at scene size — the 512² preview would
+    // scale up visibly. Pin to the full painted asset; the catalog's
+    // `previewAssetKey` is reserved for compact tiles + chips.
+    final assetPath =
+        CosmeticsConfig.standard().resolveAssetPath(definition.assetKey);
 
     return SizedBox(
       width: size,

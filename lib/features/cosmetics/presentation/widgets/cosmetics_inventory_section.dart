@@ -7,6 +7,8 @@ import '../../application/cosmetics_provider.dart';
 import '../../config/cosmetics_config.dart';
 import '../../domain/cosmetic_models.dart';
 import '../cosmetics_screen.dart';
+import '../cosmetics_screen_internals.dart';
+import 'cosmetic_preview_frame.dart';
 import 'cosmetic_preview_path.dart';
 
 /// "Inventář" section — a row of three featured cosmetic tiles (frame,
@@ -20,13 +22,16 @@ class CosmeticsInventorySection extends StatelessWidget {
   const CosmeticsInventorySection({super.key});
 
   // Order mirrors the inventory tab order: skin (body / identity) →
-  // companion (buddy) → background (scene). Frame is omitted on
-  // purpose — its chrome appears on every compact avatar surface
-  // already, so showing it here would duplicate that signal.
+  // companion (buddy) → background (scene) → banner (title chrome).
+  // Frame is omitted on purpose — its chrome appears on every
+  // compact avatar surface already, so showing it here would
+  // duplicate that signal. The row scrolls horizontally so adding
+  // more featured slots later won't squish existing tiles.
   static const _featuredTypes = <CosmeticType>[
     CosmeticType.skin,
     CosmeticType.companion,
     CosmeticType.background,
+    CosmeticType.banner,
   ];
 
   @override
@@ -57,33 +62,36 @@ class CosmeticsInventorySection extends StatelessWidget {
                 : l10n.cosmeticsInventorySignInHint,
           )
         else
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              for (var i = 0; i < _featuredTypes.length; i++) ...[
-                if (i > 0) const SizedBox(width: 10),
-                Expanded(
-                  child: _FeaturedCosmeticTile(
-                    type: _featuredTypes[i],
-                    item: _featuredForType(
-                      cosmetics,
-                      state,
-                      _featuredTypes[i],
-                    ),
-                    l10n: l10n,
-                    config: config,
-                    raceId: cosmetics.currentRaceId,
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => CosmeticsScreen(
-                          initialType: _featuredTypes[i],
-                        ),
+          SizedBox(
+            height: 148,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.zero,
+              itemCount: _featuredTypes.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 10),
+              itemBuilder: (_, i) => SizedBox(
+                width: 124,
+                child: _FeaturedCosmeticTile(
+                  type: _featuredTypes[i],
+                  item: _featuredForType(
+                    cosmetics,
+                    state,
+                    _featuredTypes[i],
+                  ),
+                  l10n: l10n,
+                  config: config,
+                  raceId: cosmetics.currentRaceId,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => CosmeticsScreen(
+                        initialType: _featuredTypes[i],
                       ),
                     ),
                   ),
                 ),
-              ],
-            ],
+              ),
+            ),
           ),
       ],
     );
@@ -242,7 +250,7 @@ class _FeaturedCosmeticTile extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(Tokens.radiusButton),
       child: Container(
-        height: 128,
+        height: 148,
         padding: const EdgeInsets.fromLTRB(10, 10, 10, 9),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: hasItem ? 0.045 : 0.025),
@@ -361,13 +369,16 @@ class _FeaturedAssetImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final image = Image.asset(
-      assetPath,
-      fit: BoxFit.contain,
-      errorBuilder: (_, __, ___) =>
-          _PreviewFallback(type: type, dim: !hasItem),
+    final rarity = definition?.rarity ?? Rarity.common;
+    return CosmeticPreviewFrame(
+      borderColor: cosmeticRarityColor(rarity),
+      child: Image.asset(
+        assetPath,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) =>
+            _PreviewFallback(type: type, dim: !hasItem),
+      ),
     );
-    return image;
   }
 }
 

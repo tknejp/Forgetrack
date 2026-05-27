@@ -17,6 +17,7 @@ class CosmeticBadge extends StatelessWidget {
     this.glow = false,
     this.fit,
     this.contentScale = 1.0,
+    this.applyDisplayScale = true,
   });
 
   final Cosmetic definition;
@@ -43,6 +44,16 @@ class CosmeticBadge extends StatelessWidget {
   /// Scale factor for the content within the badge.
   final double contentScale;
 
+  /// Whether to fold a `Companion.displayScale` boost into the rendered
+  /// scale. The catalog's per-companion `displayScale` was calibrated
+  /// against the *full* painted asset (silhouette with natural margin
+  /// inside the 512² canvas), so applying it on top of the compact
+  /// preview thumb — which is already painted edge-to-edge — visibly
+  /// crops the artwork inside the tile. Surfaces that render the
+  /// preview thumb (inventory card, slot picker) pass `false`;
+  /// scene-size surfaces stay on `true` for the full asset.
+  final bool applyDisplayScale;
+
   @override
   Widget build(BuildContext context) {
     final isFrame = definition is Frame;
@@ -54,7 +65,7 @@ class CosmeticBadge extends StatelessWidget {
     // `displayScale` into the per-call `contentScale` so each
     // companion reads at a comparable visual size on every preview
     // surface; non-companion types are unaffected.
-    final effectiveContentScale = isCompanion
+    final effectiveContentScale = isCompanion && applyDisplayScale
         ? contentScale * (definition as Companion).displayScale
         : contentScale;
 

@@ -19,13 +19,25 @@ import '../../domain/cosmetic_models.dart';
 /// thumbnail used in tiles / chips; surfaces that render the
 /// full-body composition (details preview, hero header) pass
 /// [SkinAssetVariant.fullBody].
+///
+/// [usePreviewKey] (default `true`) honours the catalog's small
+/// `previewAssetKey` for surfaces that show the cosmetic in a compact
+/// tile / chip / reward thumb. Pass `false` for surfaces that need
+/// the full-resolution painted asset — the cosmetic details header
+/// for companions (170² slot) and the profile hero scene props all
+/// pin to the full asset so the silhouette + glow read at scene size.
+/// For skins this flag is ignored (skin variant is controlled by
+/// [skinVariant], not the catalog key).
 String? resolveCosmeticPreviewPath(
   Cosmetic definition, {
   required CosmeticsConfig config,
   required String? raceId,
   SkinAssetVariant skinVariant = SkinAssetVariant.thumbnail,
+  bool usePreviewKey = true,
 }) {
-  final key = definition.previewAssetKey ?? definition.assetKey;
+  final key = usePreviewKey
+      ? (definition.previewAssetKey ?? definition.assetKey)
+      : definition.assetKey;
   if (definition is Skin) {
     return const SkinAssetResolver().resolve(
       raceId: raceId,

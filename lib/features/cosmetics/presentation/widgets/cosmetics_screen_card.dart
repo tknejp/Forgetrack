@@ -10,6 +10,7 @@ import '../../domain/player_cosmetic_lifecycle.dart';
 import '../cosmetics_screen_internals.dart';
 import '../emblem_buff_label.dart';
 import 'companion_buff_chip.dart';
+import 'cosmetic_preview_frame.dart';
 import 'cosmetic_preview_path.dart';
 import 'cosmetics_screen_card_overlays.dart';
 
@@ -227,12 +228,11 @@ class _CosmeticsScreenCardState extends State<CosmeticsScreenCard>
                     size: _cardBadgeSize(definition.type),
                   )
                 else
-                  CosmeticBadge(
+                  _CardAsset(
                     definition: definition,
                     assetPath: assetPath,
                     color: color,
                     size: _cardBadgeSize(definition.type),
-                    framed: false,
                   ),
                 const SizedBox(height: Tokens.spaceSm),
                 Text(
@@ -364,10 +364,56 @@ class _CosmeticsScreenCardState extends State<CosmeticsScreenCard>
   }
 }
 
+/// Inventory-grid asset renderer. Wraps [CosmeticBadge] in a soft
+/// [CosmeticPreviewFrame] for cosmetic types that ship a generic
+/// preview asset (banner / background / companion / skin / emblem /
+/// titleFlair / mapEffect) — those benefit from a visible "set in"
+/// outline against the card surface.
+///
+/// Frame + relic skip the wrapper: their painted assets already carry
+/// dense chrome (gold border on frames, stylised gem socket on relics)
+/// and stacking another outline on top reads as visual noise.
+class _CardAsset extends StatelessWidget {
+  const _CardAsset({
+    required this.definition,
+    required this.assetPath,
+    required this.color,
+    required this.size,
+  });
+
+  final Cosmetic definition;
+  final String? assetPath;
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final badge = CosmeticBadge(
+      definition: definition,
+      assetPath: assetPath,
+      color: color,
+      size: size,
+      framed: false,
+      // Inventory card renders the preview thumb — skip the
+      // companion displayScale boost, which is calibrated for the
+      // full asset's transparent canvas and otherwise crops the
+      // edge-to-edge preview artwork.
+      applyDisplayScale: false,
+    );
+    final skipFrame = definition is Frame || definition is RelicCosmetic;
+    if (skipFrame) return badge;
+    return CosmeticPreviewFrame(
+      size: size,
+      borderColor: color,
+      child: badge,
+    );
+  }
+}
+
 double _cardBadgeSize(CosmeticType type) {
   switch (type) {
     case CosmeticType.frame:
-      return 66;
+      return 72;
     case CosmeticType.relic:
     case CosmeticType.background:
     case CosmeticType.emblem:
@@ -376,6 +422,6 @@ double _cardBadgeSize(CosmeticType type) {
     case CosmeticType.mapEffect:
     case CosmeticType.skin:
     case CosmeticType.banner:
-      return 48;
+      return 64;
   }
 }

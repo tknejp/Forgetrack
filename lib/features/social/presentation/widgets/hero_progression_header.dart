@@ -715,9 +715,12 @@ class CompanionAsset extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final assetPath = CosmeticsConfig.standard().resolveAssetPath(
-      definition.previewAssetKey ?? definition.assetKey,
-    );
+    // Hero / profile-header companion renders at scene size — pin to
+    // the full painted assetKey so the silhouette matches the profile
+    // hero scene. `previewAssetKey` is reserved for compact inventory
+    // tiles + chips.
+    final assetPath =
+        CosmeticsConfig.standard().resolveAssetPath(definition.assetKey);
 
     Widget fallback() => Icon(
           fallbackIcon,
@@ -774,9 +777,12 @@ class _HeroHeaderCompanion extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final assetPath = CosmeticsConfig.standard().resolveAssetPath(
-      definition.previewAssetKey ?? definition.assetKey,
-    );
+    // Hero / profile-header companion renders at scene size — pin to
+    // the full painted assetKey so the silhouette matches the profile
+    // hero scene. `previewAssetKey` is reserved for compact inventory
+    // tiles + chips.
+    final assetPath =
+        CosmeticsConfig.standard().resolveAssetPath(definition.assetKey);
     if (assetPath == null) {
       return SizedBox(
         width: size,

@@ -158,6 +158,7 @@ class _CosmeticsScreenState extends State<CosmeticsScreen> {
       CosmeticType.skin,
       CosmeticType.companion,
       CosmeticType.background,
+      CosmeticType.banner,
     ];
     final equippedById = {
       for (final def in cosmetics.service.getEquippedDefinitions(state))

@@ -143,7 +143,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticBackgroundCampDesc,
       unlockHint: (l10n) => l10n.cosmeticBackgroundCampUnlockHint,
       assetKey: 'cosmetics.backgrounds.camp',
-      previewAssetKey: 'cosmetics.backgrounds.camp',
+      previewAssetKey: 'cosmetics.backgrounds.camp_preview',
       sortOrder: 400,
     ),
     Background(
@@ -154,7 +154,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticBackgroundForestTrailDesc,
       unlockHint: (l10n) => l10n.cosmeticBackgroundForestTrailUnlockHint,
       assetKey: 'cosmetics.backgrounds.forest_trail',
-      previewAssetKey: 'cosmetics.backgrounds.forest_trail',
+      previewAssetKey: 'cosmetics.backgrounds.forest_trail_preview',
       sortOrder: 410,
     ),
     Background(
@@ -165,7 +165,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticBackgroundRavineDesc,
       unlockHint: (l10n) => l10n.cosmeticBackgroundRavineUnlockHint,
       assetKey: 'cosmetics.backgrounds.ravine',
-      previewAssetKey: 'cosmetics.backgrounds.ravine',
+      previewAssetKey: 'cosmetics.backgrounds.ravine_preview',
       sortOrder: 420,
     ),
     Background(
@@ -176,7 +176,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticBackgroundRuinsDesc,
       unlockHint: (l10n) => l10n.cosmeticBackgroundRuinsUnlockHint,
       assetKey: 'cosmetics.backgrounds.ruins',
-      previewAssetKey: 'cosmetics.backgrounds.ruins',
+      previewAssetKey: 'cosmetics.backgrounds.ruins_preview',
       sortOrder: 430,
     ),
     Background(
@@ -187,7 +187,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticBackgroundBridgeCrossingDesc,
       unlockHint: (l10n) => l10n.cosmeticBackgroundBridgeCrossingUnlockHint,
       assetKey: 'cosmetics.backgrounds.bridge_crossing',
-      previewAssetKey: 'cosmetics.backgrounds.bridge_crossing',
+      previewAssetKey: 'cosmetics.backgrounds.bridge_crossing_preview',
       sortOrder: 440,
     ),
     Background(
@@ -198,7 +198,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticBackgroundMinesDesc,
       unlockHint: (l10n) => l10n.cosmeticBackgroundMinesUnlockHint,
       assetKey: 'cosmetics.backgrounds.mines',
-      previewAssetKey: 'cosmetics.backgrounds.mines',
+      previewAssetKey: 'cosmetics.backgrounds.mines_preview',
       sortOrder: 450,
     ),
     Background(
@@ -209,7 +209,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticBackgroundFrostlandsDesc,
       unlockHint: (l10n) => l10n.cosmeticBackgroundFrostlandsUnlockHint,
       assetKey: 'cosmetics.backgrounds.frostlands',
-      previewAssetKey: 'cosmetics.backgrounds.frostlands',
+      previewAssetKey: 'cosmetics.backgrounds.frostlands_preview',
       sortOrder: 460,
     ),
     Background(
@@ -220,7 +220,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticBackgroundFrozenLakeDesc,
       unlockHint: (l10n) => l10n.cosmeticBackgroundFrozenLakeUnlockHint,
       assetKey: 'cosmetics.backgrounds.frozen_lake',
-      previewAssetKey: 'cosmetics.backgrounds.frozen_lake',
+      previewAssetKey: 'cosmetics.backgrounds.frozen_lake_preview',
       sortOrder: 470,
     ),
     Background(
@@ -231,7 +231,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticBackgroundRockyMountainsDesc,
       unlockHint: (l10n) => l10n.cosmeticBackgroundRockyMountainsUnlockHint,
       assetKey: 'cosmetics.backgrounds.rocky_mountains',
-      previewAssetKey: 'cosmetics.backgrounds.rocky_mountains',
+      previewAssetKey: 'cosmetics.backgrounds.rocky_mountains_preview',
       sortOrder: 480,
     ),
     Background(
@@ -242,7 +242,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticBackgroundDragonrockFortressDesc,
       unlockHint: (l10n) => l10n.cosmeticBackgroundDragonrockFortressUnlockHint,
       assetKey: 'cosmetics.backgrounds.dragonrock_fortress',
-      previewAssetKey: 'cosmetics.backgrounds.dragonrock_fortress',
+      previewAssetKey: 'cosmetics.backgrounds.dragonrock_fortress_preview',
       sortOrder: 490,
     ),
 
@@ -814,7 +814,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticCompanionEmberSpriteDesc,
       unlockHint: (l10n) => l10n.cosmeticCompanionEmberSpriteUnlockHint,
       assetKey: 'cosmetics.companions.ember_sprite',
-      previewAssetKey: 'cosmetics.companions.ember_sprite',
+      previewAssetKey: 'cosmetics.companions.ember_sprite_preview',
       // Tiny low-biased silhouette inside the 512² canvas (flame body
       // occupies roughly the bottom third) — zoom past the empty top
       // padding so the sprite reads at the same visual size as the
@@ -842,7 +842,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticCompanionForestFoxDesc,
       unlockHint: (l10n) => l10n.cosmeticCompanionForestFoxUnlockHint,
       assetKey: 'cosmetics.companions.forest_fox',
-      previewAssetKey: 'cosmetics.companions.forest_fox',
+      previewAssetKey: 'cosmetics.companions.forest_fox_preview',
       sortOrder: 710,
       levelGate: 15,
       requiredItems: const [
@@ -864,7 +864,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticCompanionRuinRavenDesc,
       unlockHint: (l10n) => l10n.cosmeticCompanionRuinRavenUnlockHint,
       assetKey: 'cosmetics.companions.ruin_raven',
-      previewAssetKey: 'cosmetics.companions.ruin_raven',
+      previewAssetKey: 'cosmetics.companions.ruin_raven_preview',
       // Small low-right silhouette — most of the canvas is empty
       // negative space, so the raw asset reads way too small at
       // preview sizes. Bump the per-asset scale to match the other
@@ -889,7 +889,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticCompanionBridgeGargoyleDesc,
       unlockHint: (l10n) => l10n.cosmeticCompanionBridgeGargoyleUnlockHint,
       assetKey: 'cosmetics.companions.bridge_gargoyle',
-      previewAssetKey: 'cosmetics.companions.bridge_gargoyle',
+      previewAssetKey: 'cosmetics.companions.bridge_gargoyle_preview',
       sortOrder: 725,
       levelGate: 35,
       requiredItems: const [
@@ -911,7 +911,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticCompanionLanternGolemDesc,
       unlockHint: (l10n) => l10n.cosmeticCompanionLanternGolemUnlockHint,
       assetKey: 'cosmetics.companions.lantern_golem',
-      previewAssetKey: 'cosmetics.companions.lantern_golem',
+      previewAssetKey: 'cosmetics.companions.lantern_golem_preview',
       sortOrder: 730,
       levelGate: 45,
       requiredItems: const [
@@ -937,7 +937,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticCompanionCaveLynxDesc,
       unlockHint: (l10n) => l10n.cosmeticCompanionCaveLynxUnlockHint,
       assetKey: 'cosmetics.companions.cave_lynx',
-      previewAssetKey: 'cosmetics.companions.cave_lynx',
+      previewAssetKey: 'cosmetics.companions.cave_lynx_preview',
       sortOrder: 735,
       levelGate: 55,
       requiredItems: const [
@@ -958,7 +958,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticCompanionAuroraStagDesc,
       unlockHint: (l10n) => l10n.cosmeticCompanionAuroraStagUnlockHint,
       assetKey: 'cosmetics.companions.aurora_stag',
-      previewAssetKey: 'cosmetics.companions.aurora_stag',
+      previewAssetKey: 'cosmetics.companions.aurora_stag_preview',
       // Tall antlers already fill the canvas — extra scaling clips
       // the crown. Render closer to raw so the antlers stay inside
       // the preview slot.
@@ -989,7 +989,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticCompanionIceWispDesc,
       unlockHint: (l10n) => l10n.cosmeticCompanionIceWispUnlockHint,
       assetKey: 'cosmetics.companions.ice_wisp',
-      previewAssetKey: 'cosmetics.companions.ice_wisp',
+      previewAssetKey: 'cosmetics.companions.ice_wisp_preview',
       // Same small low-biased silhouette pattern as ember sprite —
       // zoom past the empty top half so the wisp reads at a
       // comparable visual size to the other companions.
@@ -1016,7 +1016,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticCompanionMountainGryphonDesc,
       unlockHint: (l10n) => l10n.cosmeticCompanionMountainGryphonUnlockHint,
       assetKey: 'cosmetics.companions.mountain_gryphon',
-      previewAssetKey: 'cosmetics.companions.mountain_gryphon',
+      previewAssetKey: 'cosmetics.companions.mountain_gryphon_preview',
       // Wings already span almost the full canvas width — any extra
       // scaling clips them. Render closer to raw so the wingspan
       // stays inside the preview slot.
@@ -1042,7 +1042,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticCompanionDragonlingDesc,
       unlockHint: (l10n) => l10n.cosmeticCompanionDragonlingUnlockHint,
       assetKey: 'cosmetics.companions.dragonling',
-      previewAssetKey: 'cosmetics.companions.dragonling',
+      previewAssetKey: 'cosmetics.companions.dragonling_preview',
       sortOrder: 760,
       levelGate: 95,
       requiredItems: const [
@@ -1174,7 +1174,7 @@ class CosmeticCatalog {
       // without spelling out the keyword.
       description: (l10n) => l10n.cosmeticCompanionMonsterEnergyDesc,
       assetKey: 'cosmetics.companions.monster_energy',
-      previewAssetKey: 'cosmetics.companions.monster_energy',
+      previewAssetKey: 'cosmetics.companions.monster_energy_preview',
       sortOrder: 9100,
       metadata: <String, Object?>{'devOnly': true},
       // Dev-only gag: mythic rarity, +13 % activity XP. The kofein
@@ -1212,7 +1212,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticBannerPilgrimDesc,
       unlockHint: (l10n) => l10n.cosmeticBannerPilgrimUnlockHint,
       assetKey: 'cosmetics.banners.pilgrim',
-      previewAssetKey: 'cosmetics.banners.pilgrim',
+      previewAssetKey: 'cosmetics.banners.pilgrim_preview',
       sortOrder: 100,
     ),
     Banner(
@@ -1223,7 +1223,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticBannerForestDesc,
       unlockHint: (l10n) => l10n.cosmeticBannerForestUnlockHint,
       assetKey: 'cosmetics.banners.forest',
-      previewAssetKey: 'cosmetics.banners.forest',
+      previewAssetKey: 'cosmetics.banners.forest_preview',
       sortOrder: 110,
     ),
     Banner(
@@ -1234,7 +1234,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticBannerRuinsDesc,
       unlockHint: (l10n) => l10n.cosmeticBannerRuinsUnlockHint,
       assetKey: 'cosmetics.banners.ruins',
-      previewAssetKey: 'cosmetics.banners.ruins',
+      previewAssetKey: 'cosmetics.banners.ruins_preview',
       sortOrder: 120,
     ),
     Banner(
@@ -1245,7 +1245,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticBannerMineDesc,
       unlockHint: (l10n) => l10n.cosmeticBannerMineUnlockHint,
       assetKey: 'cosmetics.banners.mine',
-      previewAssetKey: 'cosmetics.banners.mine',
+      previewAssetKey: 'cosmetics.banners.mine_preview',
       sortOrder: 130,
     ),
     Banner(
@@ -1256,7 +1256,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticBannerFrostDesc,
       unlockHint: (l10n) => l10n.cosmeticBannerFrostUnlockHint,
       assetKey: 'cosmetics.banners.frost',
-      previewAssetKey: 'cosmetics.banners.frost',
+      previewAssetKey: 'cosmetics.banners.frost_preview',
       sortOrder: 150,
     ),
     Banner(
@@ -1267,7 +1267,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticBannerMountainDesc,
       unlockHint: (l10n) => l10n.cosmeticBannerMountainUnlockHint,
       assetKey: 'cosmetics.banners.mountain',
-      previewAssetKey: 'cosmetics.banners.mountain',
+      previewAssetKey: 'cosmetics.banners.mountain_preview',
       sortOrder: 170,
     ),
     Banner(
@@ -1278,7 +1278,7 @@ class CosmeticCatalog {
       description: (l10n) => l10n.cosmeticBannerDragonrockDesc,
       unlockHint: (l10n) => l10n.cosmeticBannerDragonrockUnlockHint,
       assetKey: 'cosmetics.banners.dragonrock',
-      previewAssetKey: 'cosmetics.banners.dragonrock',
+      previewAssetKey: 'cosmetics.banners.dragonrock_preview',
       sortOrder: 190,
     ),
   ]);

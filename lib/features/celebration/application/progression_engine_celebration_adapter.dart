@@ -1025,6 +1025,12 @@ class ProgressionEngineCelebrationAdapter {
             config: cosmetics.service.config,
             raceId: cosmetics.currentRaceId,
             skinVariant: SkinAssetVariant.fullBody,
+            // Companions render at scene size in the celebration card;
+            // skins are full-body painted compositions. Both want the
+            // full asset, not the compact preview thumb. Banners +
+            // backgrounds + the rest read fine off the preview, which
+            // also keeps the celebration screen lighter on memory.
+            usePreviewKey: def is! Companion,
           ),
         ),
     ];

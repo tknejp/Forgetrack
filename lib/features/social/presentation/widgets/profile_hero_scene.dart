@@ -39,11 +39,14 @@ class ProfileHeroBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Hero scene paints the background at the parent's full width
+    // (~360 px on phones), so the catalog's small `previewAssetKey`
+    // would scale up the 512² thumb and visibly soften the art. Pin
+    // to the full assetKey here — preview is reserved for inventory
+    // tiles + slot pickers that render at thumb sizes.
     final assetPath = definition == null
         ? null
-        : CosmeticsConfig.standard().resolveAssetPath(
-            definition!.previewAssetKey ?? definition!.assetKey,
-          );
+        : CosmeticsConfig.standard().resolveAssetPath(definition!.assetKey);
 
     if (assetPath == null) {
       return const ColoredBox(color: Color(0xFF0A0E1C));

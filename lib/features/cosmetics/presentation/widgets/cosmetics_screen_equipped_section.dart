@@ -35,23 +35,27 @@ class CosmeticsScreenEquippedSection extends StatelessWidget {
             caption: l10n.cosmeticsEquippedEmptyCaption,
           )
         else
+          // Horizontal scroll so a new equipped slot (e.g. banner)
+          // doesn't squish the fixed tiles. Width per tile (~110 px)
+          // matches the previous 3-Expanded layout on a 360-wide
+          // phone; ListView centralises padding + clipping.
           SizedBox(
-            height: 128,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (var i = 0; i < definitions.length; i++) ...[
-                  if (i > 0) const SizedBox(width: 10),
-                  Expanded(
-                    child: CosmeticsScreenCard(
-                      definition: definitions[i],
-                      isEquipped: true,
-                      l10n: l10n,
-                      onTap: () => onTap(definitions[i]),
-                    ),
-                  ),
-                ],
-              ],
+            height: 148,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.zero,
+              itemCount: definitions.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 10),
+              itemBuilder: (_, i) => SizedBox(
+                width: 124,
+                child: CosmeticsScreenCard(
+                  definition: definitions[i],
+                  isEquipped: true,
+                  l10n: l10n,
+                  onTap: () => onTap(definitions[i]),
+                ),
+              ),
             ),
           ),
       ],

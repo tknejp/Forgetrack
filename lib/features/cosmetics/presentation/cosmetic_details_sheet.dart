@@ -210,6 +210,13 @@ class _CosmeticDetailsSheetState extends State<CosmeticDetailsSheet> {
       // full-body composition (no frame border around the figure),
       // matching the profile / hero hero header treatment.
       skinVariant: SkinAssetVariant.fullBody,
+      // Companions render in a 170² header slot via
+      // CompanionFakeIdlePreview — that uses the full 512² painted
+      // asset so the silhouette + rarity glow fill the slot. The
+      // inventory-tile preview thumb would shrink down to ~half size
+      // and lose presence at this scale. Banner / background /
+      // skin / frame / relic / emblem all read fine off the preview.
+      usePreviewKey: definition is! Companion,
     );
     final description = definition.description(l10n);
     final unlock = cosmeticsState.unlocked[definition.id];

@@ -1,12 +1,16 @@
 // Hide Flutter's debug-mode `Banner` widget so the cosmetic `Banner`
 // sealed subclass (from cosmetic_models.dart) wins the name lookup.
 import 'package:flutter/material.dart' hide Banner;
+import 'package:provider/provider.dart';
 
 import '../../../../l10n/l10n.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../../cosmetics/config/cosmetics_config.dart';
 import '../../../cosmetics/domain/cosmetic_models.dart';
 import '../../../cosmetics/presentation/cosmetics_screen_internals.dart';
+import '../../../progression_engine/application/progression_engine_provider.dart';
+import '../../../progression_engine/domain/display/progression_display_resolver.dart';
+import 'profile_title_banner.dart';
 import 'slot_sheet_shell.dart';
 
 /// Bottom sheet for managing the equipped title banner from the
@@ -60,6 +64,16 @@ class BannerSlotSheet extends StatelessWidget {
         if (b.id != current?.id) b,
     ];
 
+    // Resolve player's live level + title so picker rows preview each
+    // banner with the chrome the player would actually see on the
+    // profile after equipping. The sheet is opened from inside the
+    // app's provider tree, so the read is safe.
+    final progression = context.watch<ProgressionEngineProvider>();
+    final level = progression.level;
+    final l10n = context.l10n;
+    final display = const ProgressionDisplayResolver().levelDisplay(level);
+    final title = display.title(l10n);
+
     return SlotSheetShell(
       child: Padding(
         padding: EdgeInsets.fromLTRB(20, 0, 20, bottomPad + 24),
@@ -72,6 +86,8 @@ class BannerSlotSheet extends StatelessWidget {
               const SizedBox(height: 20),
               _CurrentBannerBlock(
                 banner: current!,
+                level: level,
+                title: title,
                 onRemove: () => Navigator.of(context)
                     .pop(const BannerSlotPick.remove()),
               ),
@@ -89,6 +105,8 @@ class BannerSlotSheet extends StatelessWidget {
             const SizedBox(height: 12),
             _BannerPickerList(
               banners: others,
+              level: level,
+              title: title,
               onPick: (def) => Navigator.of(context)
                   .pop(BannerSlotPick.equip(def.id)),
             ),
@@ -149,9 +167,16 @@ class _SheetHeader extends StatelessWidget {
 }
 
 class _CurrentBannerBlock extends StatelessWidget {
-  const _CurrentBannerBlock({required this.banner, required this.onRemove});
+  const _CurrentBannerBlock({
+    required this.banner,
+    required this.level,
+    required this.title,
+    required this.onRemove,
+  });
 
   final Cosmetic banner;
+  final int level;
+  final String title;
   final VoidCallback onRemove;
 
   @override
@@ -169,7 +194,7 @@ class _CurrentBannerBlock extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _BannerPreview(banner: banner),
+          _CurrentBannerPreview(banner: banner, level: level, title: title),
           const SizedBox(height: 12),
           Text(
             banner.name(l10n),
@@ -207,9 +232,16 @@ class _CurrentBannerBlock extends StatelessWidget {
 }
 
 class _BannerPickerList extends StatelessWidget {
-  const _BannerPickerList({required this.banners, required this.onPick});
+  const _BannerPickerList({
+    required this.banners,
+    required this.level,
+    required this.title,
+    required this.onPick,
+  });
 
   final List<Cosmetic> banners;
+  final int level;
+  final String title;
   final void Function(Cosmetic def) onPick;
 
   @override
@@ -231,7 +263,12 @@ class _BannerPickerList extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (final def in banners) ...[
-          _BannerPickerRow(banner: def, onTap: () => onPick(def)),
+          _BannerPickerRow(
+            banner: def,
+            level: level,
+            title: title,
+            onTap: () => onPick(def),
+          ),
           const SizedBox(height: 10),
         ],
       ],
@@ -240,9 +277,16 @@ class _BannerPickerList extends StatelessWidget {
 }
 
 class _BannerPickerRow extends StatelessWidget {
-  const _BannerPickerRow({required this.banner, required this.onTap});
+  const _BannerPickerRow({
+    required this.banner,
+    required this.level,
+    required this.title,
+    required this.onTap,
+  });
 
   final Cosmetic banner;
+  final int level;
+  final String title;
   final VoidCallback onTap;
 
   @override
@@ -264,7 +308,11 @@ class _BannerPickerRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _BannerPreview(banner: banner),
+              _BannerPickerPreview(
+                banner: banner,
+                level: level,
+                title: title,
+              ),
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -300,37 +348,98 @@ class _BannerPickerRow extends StatelessWidget {
   }
 }
 
-/// Renders the banner asset at the row's natural width, preserving
-/// the 4:1 aspect ratio. Falls back to a flag-icon placeholder when
-/// the asset can't be resolved (catalog row without a shipped png).
-class _BannerPreview extends StatelessWidget {
-  const _BannerPreview({required this.banner});
+/// Picker-row preview — full banner asset with the player's live level
+/// + title overlaid via [BannerChrome], so each row shows how that
+/// banner would read after equipping. Falls back to a flag-icon
+/// placeholder when the asset can't be resolved (catalog row without a
+/// shipped png).
+class _BannerPickerPreview extends StatelessWidget {
+  const _BannerPickerPreview({
+    required this.banner,
+    required this.level,
+    required this.title,
+  });
 
   final Cosmetic banner;
+  final int level;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
     final assetPath =
         CosmeticsConfig.standard().resolveAssetPath(banner.assetKey);
-    return AspectRatio(
-      aspectRatio: 1024 / 256,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(6),
-        child: assetPath == null
-            ? ColoredBox(
-                color: Colors.white.withValues(alpha: 0.05),
-                child: const Center(
-                  child: Icon(
-                    Icons.flag_rounded,
-                    color: Tokens.onSurfaceMuted,
-                  ),
-                ),
-              )
-            : Image.asset(
-                assetPath,
-                fit: BoxFit.fill,
-                filterQuality: FilterQuality.medium,
+    if (assetPath == null) {
+      return AspectRatio(
+        aspectRatio: 1024 / 256,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: ColoredBox(
+            color: Colors.white.withValues(alpha: 0.05),
+            child: const Center(
+              child: Icon(
+                Icons.flag_rounded,
+                color: Tokens.onSurfaceMuted,
               ),
+            ),
+          ),
+        ),
+      );
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(6),
+      child: BannerChrome(
+        assetPath: assetPath,
+        level: level,
+        title: title,
+        paletteRarity: banner.rarity,
+      ),
+    );
+  }
+}
+
+/// "Current banner" block preview — same live-chrome render as the
+/// picker rows so the management block previews exactly what the
+/// player will see on their profile after equipping (and what was
+/// painted by [ProfileTitleBanner] above this sheet).
+class _CurrentBannerPreview extends StatelessWidget {
+  const _CurrentBannerPreview({
+    required this.banner,
+    required this.level,
+    required this.title,
+  });
+
+  final Cosmetic banner;
+  final int level;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final assetPath =
+        CosmeticsConfig.standard().resolveAssetPath(banner.assetKey);
+    if (assetPath == null) {
+      return AspectRatio(
+        aspectRatio: 1024 / 256,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: ColoredBox(
+            color: Colors.white.withValues(alpha: 0.05),
+            child: const Center(
+              child: Icon(
+                Icons.flag_rounded,
+                color: Tokens.onSurfaceMuted,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(6),
+      child: BannerChrome(
+        assetPath: assetPath,
+        level: level,
+        title: title,
+        paletteRarity: banner.rarity,
       ),
     );
   }

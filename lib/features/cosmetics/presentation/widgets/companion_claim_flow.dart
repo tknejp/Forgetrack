@@ -161,13 +161,16 @@ class _CompanionClaimFlowState extends State<CompanionClaimFlow>
     if (_forgingEntry != null) return;
     HapticFeedback.mediumImpact();
     final overlay = Overlay.of(context, rootOverlay: true);
+    // Forging morph + orbit overlay renders the companion at scene
+    // size — pin to the full painted assetKey so the silhouette
+    // matches the post-claim hero scene + details header. The
+    // catalog's small `previewAssetKey` is reserved for compact
+    // inventory tiles.
     final assetPath = context
         .read<CosmeticsProvider>()
         .service
         .config
-        .resolveAssetPath(
-          widget.companion.previewAssetKey ?? widget.companion.assetKey,
-        );
+        .resolveAssetPath(widget.companion.assetKey);
     // Cache the destSlotKey + hideCompanion locally so the
     // OverlayEntry's builder doesn't reach back into `widget`
     // after this state disposes (the engine claim rebuilds the
