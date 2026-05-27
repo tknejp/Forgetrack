@@ -1312,6 +1312,8 @@ class CosmeticCatalog {
       definitions.whereType<MapEffect>().toList(growable: false);
   List<Skin> get skins =>
       definitions.whereType<Skin>().toList(growable: false);
+  List<Banner> get banners =>
+      definitions.whereType<Banner>().toList(growable: false);
 
   List<Cosmetic> byRegion(CosmeticRegion region) {
     return definitions.where((d) => d.region == region).toList(growable: false);

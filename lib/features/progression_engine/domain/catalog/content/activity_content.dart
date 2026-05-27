@@ -36,7 +36,7 @@ List<Objective> activityObjectives(EngineCatalogContext context) {
       targetValue: goals.weeklyActivityMinutes.toDouble(),
     ),
     const Objective(
-      id: const ObjectiveId('reward_count_weekly_activity_1'),
+      id: ObjectiveId('reward_count_weekly_activity_1'),
       domain: ProgressionDomain.activity,
       metric: RewardCountMetric(ruleId: 'weekly_activity'),
       scope: LifetimeScope(),
@@ -44,7 +44,7 @@ List<Objective> activityObjectives(EngineCatalogContext context) {
       targetValue: 1,
     ),
     const Objective(
-      id: const ObjectiveId('reward_count_weekly_activity_4'),
+      id: ObjectiveId('reward_count_weekly_activity_4'),
       domain: ProgressionDomain.activity,
       metric: RewardCountMetric(ruleId: 'weekly_activity'),
       scope: LifetimeScope(),
@@ -52,7 +52,7 @@ List<Objective> activityObjectives(EngineCatalogContext context) {
       targetValue: 4,
     ),
     const Objective(
-      id: const ObjectiveId('reward_count_weekly_activity_12'),
+      id: ObjectiveId('reward_count_weekly_activity_12'),
       domain: ProgressionDomain.activity,
       metric: RewardCountMetric(ruleId: 'weekly_activity'),
       scope: LifetimeScope(),
@@ -60,7 +60,7 @@ List<Objective> activityObjectives(EngineCatalogContext context) {
       targetValue: 12,
     ),
     const Objective(
-      id: const ObjectiveId('reward_count_weekly_activity_24'),
+      id: ObjectiveId('reward_count_weekly_activity_24'),
       domain: ProgressionDomain.activity,
       metric: RewardCountMetric(ruleId: 'weekly_activity'),
       scope: LifetimeScope(),
@@ -68,7 +68,7 @@ List<Objective> activityObjectives(EngineCatalogContext context) {
       targetValue: 24,
     ),
     const Objective(
-      id: const ObjectiveId('reward_count_weekly_activity_36'),
+      id: ObjectiveId('reward_count_weekly_activity_36'),
       domain: ProgressionDomain.activity,
       metric: RewardCountMetric(ruleId: 'weekly_activity'),
       scope: LifetimeScope(),
@@ -76,7 +76,7 @@ List<Objective> activityObjectives(EngineCatalogContext context) {
       targetValue: 36,
     ),
     const Objective(
-      id: const ObjectiveId('reward_count_weekly_activity_52'),
+      id: ObjectiveId('reward_count_weekly_activity_52'),
       domain: ProgressionDomain.activity,
       metric: RewardCountMetric(ruleId: 'weekly_activity'),
       scope: LifetimeScope(),
@@ -84,7 +84,7 @@ List<Objective> activityObjectives(EngineCatalogContext context) {
       targetValue: 52,
     ),
     const Objective(
-      id: const ObjectiveId('reward_count_weekly_activity_104'),
+      id: ObjectiveId('reward_count_weekly_activity_104'),
       domain: ProgressionDomain.activity,
       metric: RewardCountMetric(ruleId: 'weekly_activity'),
       scope: LifetimeScope(),

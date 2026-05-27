@@ -68,7 +68,7 @@ List<Objective> nutritionObjectives(EngineCatalogContext context) {
       toleranceRatio: _nutritionTol,
     ),
     const Objective(
-      id: const ObjectiveId('streak_nutrition_3'),
+      id: ObjectiveId('streak_nutrition_3'),
       domain: ProgressionDomain.nutrition,
       metric: StreakDaysMetric.byDomain('nutrition'),
       scope: LifetimeScope(),
@@ -76,7 +76,7 @@ List<Objective> nutritionObjectives(EngineCatalogContext context) {
       targetValue: 3,
     ),
     const Objective(
-      id: const ObjectiveId('streak_nutrition_30'),
+      id: ObjectiveId('streak_nutrition_30'),
       domain: ProgressionDomain.nutrition,
       metric: StreakDaysMetric.byDomain('nutrition'),
       scope: LifetimeScope(),
@@ -84,7 +84,7 @@ List<Objective> nutritionObjectives(EngineCatalogContext context) {
       targetValue: 30,
     ),
     const Objective(
-      id: const ObjectiveId('streak_nutrition_100'),
+      id: ObjectiveId('streak_nutrition_100'),
       domain: ProgressionDomain.nutrition,
       metric: StreakDaysMetric.byDomain('nutrition'),
       scope: LifetimeScope(),
@@ -92,7 +92,7 @@ List<Objective> nutritionObjectives(EngineCatalogContext context) {
       targetValue: 100,
     ),
     const Objective(
-      id: const ObjectiveId('reward_count_nutrition_25'),
+      id: ObjectiveId('reward_count_nutrition_25'),
       domain: ProgressionDomain.nutrition,
       metric: RewardCountMetric(domain: 'nutrition'),
       scope: LifetimeScope(),

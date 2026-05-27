@@ -60,7 +60,13 @@ param(
 
     [switch]$SkipBuild,
     [switch]$RunTests,
-    [switch]$DryRun
+    [switch]$DryRun,
+
+    # -Resume: pokračování z existující release/$Version po neúspěšném pokusu.
+    # Předpoklady: jsme na release/$Version, release commit (release: $Version) existuje,
+    # pubspec a CHANGELOG jsou už upravené, working tree je čistý.
+    # Skript přeskočí Trello check + section 3-6 a pokračuje od flutter analyze.
+    [switch]$Resume
 )
 
 $ErrorActionPreference = 'Stop'
@@ -115,38 +121,102 @@ function Confirm-Step($prompt) {
     }
 }
 
+# UTF-8 file IO helpers — PowerShell 5.1 'Get-Content -Raw' defaultně čte ANSI
+# (na cs-CZ locale Windows-1252), což rozbije UTF-8 soubory s diakritikou.
+# Set-Content -Encoding utf8 v PS5.1 zase přidává BOM. Tady řešíme oboje
+# přes .NET API — read auto-detect BOM, write vždy UTF-8 bez BOM.
+$Script:Utf8NoBom = New-Object System.Text.UTF8Encoding $false
+
+function Read-Utf8File($path) {
+    return [System.IO.File]::ReadAllText((Resolve-Path $path))
+}
+
+function Write-Utf8File($path, $content) {
+    # Resolve-Path failuje na neexistujícím cíli, takže si normalizujeme cestu manuálně.
+    $abs = Join-Path (Get-Location) $path
+    [System.IO.File]::WriteAllText($abs, $content, $Script:Utf8NoBom)
+}
+
 # ─── Sekce 1: Preflight validace ─────────────────────────────────────────────
 
 Write-Section "Preflight"
 
-# 1.1 Aktuální větev = develop
+# 1.1 Aktuální větev: develop (normál) nebo release/$Version (resume)
 $currentBranch = (Invoke-Git rev-parse --abbrev-ref HEAD).Trim()
-if ($currentBranch -ne 'develop') {
-    Write-Fail "Aktuální větev: $currentBranch (očekáváno: develop)"
-    throw "Release musí startovat z develop."
+if ($Resume) {
+    if ($currentBranch -ne "release/$Version") {
+        Write-Fail "Resume mode: očekáván branch release/$Version, jsi na $currentBranch"
+        throw "Pro resume přepni na release/$Version (nebo spusť bez -Resume)."
+    }
+    # Validuj že release commit existuje
+    $expectedSubject = "release: $Version"
+    $headSubject = (Invoke-Git log -1 --pretty=%s).Trim()
+    # Hlava může být release commit, nebo follow-up fix commit nad ním
+    $hasReleaseCommit = (Invoke-Git log --pretty=%s -50 | Where-Object { $_ -eq $expectedSubject }) -ne $null
+    if (-not $hasReleaseCommit) {
+        Write-Fail "Resume mode: nenašel jsem commit '$expectedSubject' v posledních 50 commitech na release/$Version"
+        throw "Stav vypadá nečekaně — radši zresetuj a spusť bez -Resume."
+    }
+    Write-Ok "Na release/$Version (resume mode, release commit nalezen)"
+} else {
+    if ($currentBranch -ne 'develop') {
+        Write-Fail "Aktuální větev: $currentBranch (očekáváno: develop)"
+        throw "Release musí startovat z develop."
+    }
+    Write-Ok "Na develop"
 }
-Write-Ok "Na develop"
 
-# 1.2 Čistý working tree
-$dirty = Invoke-Git status --porcelain
-if ($dirty) {
-    Write-Fail "Working tree není čistý:"
-    Write-Host $dirty
-    throw "Commitni nebo stashni změny před release."
+# 1.2 Resolve release-notes path early (povolíme ho v dirty-tree checku níž)
+if (-not $ReleaseNotesFile) {
+    $ReleaseNotesFile = "release_notes/v$Version.md"
 }
-Write-Ok "Working tree čistý"
+# git status --porcelain používá / — normalizuj pro porovnání.
+$expectedNotesPath = $ReleaseNotesFile -replace '\\','/'
 
-# 1.3 Develop synced s origin
-Invoke-Git fetch origin develop --quiet
-$localHead = (Invoke-Git rev-parse HEAD).Trim()
-$remoteHead = (Invoke-Git rev-parse origin/develop).Trim()
-if ($localHead -ne $remoteHead) {
-    Write-Fail "develop není synced s origin/develop"
-    Write-Host "  local:  $localHead"
-    Write-Host "  remote: $remoteHead"
-    throw "Push / pull develop před release."
+# 1.3 Čistý working tree
+$dirtyLines = (Invoke-Git status --porcelain) -split "`n" | Where-Object { $_.Trim() }
+if ($Resume) {
+    # V resume modu nesmí být nic dirty — release commit už proběhl, all-clean očekáváno.
+    if ($dirtyLines) {
+        Write-Fail "Resume mode vyžaduje čistý working tree, ale:"
+        $dirtyLines | ForEach-Object { Write-Host "  $_" }
+        throw "Commitni nebo stashni změny před resume."
+    }
+    Write-Ok "Working tree čistý"
+} else {
+    # Normální mode: release-notes soubor pro tuto verzi je povolený jako untracked / staged.
+    $unexpectedDirty = $dirtyLines | Where-Object {
+        $path = ($_ -replace '^...','').Trim()
+        if ($path.StartsWith('"') -and $path.EndsWith('"')) {
+            $path = $path.Substring(1, $path.Length - 2)
+        }
+        $path -ne $expectedNotesPath
+    }
+    if ($unexpectedDirty) {
+        Write-Fail "Working tree není čistý (mimo $expectedNotesPath):"
+        $unexpectedDirty | ForEach-Object { Write-Host "  $_" }
+        throw "Commitni nebo stashni změny před release."
+    }
+    if ($dirtyLines) {
+        Write-Ok "Working tree čistý (mimo release notes — budou součástí release commitu)"
+    } else {
+        Write-Ok "Working tree čistý"
+    }
 }
-Write-Ok "develop synced s origin"
+
+# 1.4 Develop synced s origin (v resume modu N/A — jsme na release/$Version)
+if (-not $Resume) {
+    Invoke-Git fetch origin develop --quiet
+    $localHead = (Invoke-Git rev-parse HEAD).Trim()
+    $remoteHead = (Invoke-Git rev-parse origin/develop).Trim()
+    if ($localHead -ne $remoteHead) {
+        Write-Fail "develop není synced s origin/develop"
+        Write-Host "  local:  $localHead"
+        Write-Host "  remote: $remoteHead"
+        throw "Push / pull develop před release."
+    }
+    Write-Ok "develop synced s origin"
+}
 
 # 1.4 Verze ještě neexistuje jako tag
 $existingTag = git tag -l "v$Version"
@@ -168,10 +238,7 @@ if ($TesterGroup -eq 'testers') {
     Write-Warn "TesterGroup je výchozí 'testers' — pokud máš jiný název, uprav scripts/release.ps1 (proměnná `$TesterGroup)."
 }
 
-# 1.7 Release notes file
-if (-not $ReleaseNotesFile) {
-    $ReleaseNotesFile = "release_notes/v$Version.md"
-}
+# 1.7 Release notes file (cesta vyřešena v sekci 1.2)
 if (-not $SkipBuild -and -not (Test-Path $ReleaseNotesFile)) {
     Write-Fail "Release notes pro testery chybí: $ReleaseNotesFile"
     Write-Host "  Vytvoř soubor (vzor: release_notes/TEMPLATE.md) a pusť znovu."
@@ -180,6 +247,9 @@ if (-not $SkipBuild -and -not (Test-Path $ReleaseNotesFile)) {
 if (-not $SkipBuild) {
     Write-Ok "Release notes: $ReleaseNotesFile"
 }
+
+# ─── Sekce 2–6: jen v non-resume modu ───────────────────────────────────────
+if (-not $Resume) {
 
 # ─── Sekce 2: Trello blocker check (manuální) ────────────────────────────────
 
@@ -217,7 +287,7 @@ Confirm-Step "Pokračovat s těmito commity?"
 Write-Section "Bump pubspec.yaml"
 
 $pubspecPath = "pubspec.yaml"
-$pubspecContent = Get-Content $pubspecPath -Raw
+$pubspecContent = Read-Utf8File $pubspecPath
 if ($pubspecContent -notmatch '(?m)^version:\s*(\d+\.\d+\.\d+(-[a-zA-Z0-9.]+)?)\+(\d+)') {
     throw "Nepodařilo se naparsovat version z pubspec.yaml"
 }
@@ -232,7 +302,7 @@ Write-Host "  $currentVersion+$currentBuild → $Version+$BuildNumber"
 
 if (-not $DryRun) {
     $newPubspec = $pubspecContent -replace '(?m)^version:.*', "version: $Version+$BuildNumber"
-    Set-Content -Path $pubspecPath -Value $newPubspec -NoNewline -Encoding utf8
+    Write-Utf8File $pubspecPath $newPubspec
 }
 Write-Ok "pubspec.yaml bumped"
 
@@ -241,7 +311,7 @@ Write-Ok "pubspec.yaml bumped"
 Write-Section "CHANGELOG.md"
 
 $changelogPath = "CHANGELOG.md"
-$changelogContent = Get-Content $changelogPath -Raw
+$changelogContent = Read-Utf8File $changelogPath
 $today = Get-Date -Format 'yyyy-MM-dd'
 
 # Najdi [Unreleased] sekci, přejmenuj na [version] - date
@@ -267,7 +337,7 @@ $updatedChangelog = $updatedChangelog -replace '\[Unreleased\]:\s*https://github
 $updatedChangelog = $updatedChangelog -replace '(\[Unreleased\]:[^\n]+\n)', "`$1$linkLine`n"
 
 if (-not $DryRun) {
-    Set-Content -Path $changelogPath -Value $updatedChangelog -NoNewline -Encoding utf8
+    Write-Utf8File $changelogPath $updatedChangelog
 }
 Write-Ok "CHANGELOG.md aktualizován"
 
@@ -285,9 +355,17 @@ Write-Ok "Vytvořena release/$Version"
 
 if (-not $DryRun) {
     git add pubspec.yaml CHANGELOG.md
+    if (Test-Path $ReleaseNotesFile) {
+        git add -- $ReleaseNotesFile
+    }
     git commit -m "release: $Version" | Out-Null
 }
-Write-Ok "Commit s bumpem + changelogem"
+Write-Ok "Commit s bumpem + changelogem + release notes"
+
+} else {
+    Write-Section "Resume mode — přeskakuji Trello/commit-confirm/bump/changelog/branch-create"
+    Write-Ok "Pokračuji od flutter analyze (sekce 7)"
+}
 
 # ─── Sekce 7: Build + analyze (volitelně testy) ──────────────────────────────
 

@@ -39,7 +39,7 @@ List<Objective> sleepObjectives(EngineCatalogContext context) {
       targetValue: (goals.sleepMinutes * 7).toDouble(),
     ),
     const Objective(
-      id: const ObjectiveId('lifetime_sleep_250h'),
+      id: ObjectiveId('lifetime_sleep_250h'),
       domain: ProgressionDomain.sleep,
       metric: SleepMinutesMetric(),
       scope: LifetimeScope(),
@@ -48,7 +48,7 @@ List<Objective> sleepObjectives(EngineCatalogContext context) {
       targetValue: 15000,
     ),
     const Objective(
-      id: const ObjectiveId('lifetime_sleep_1000h'),
+      id: ObjectiveId('lifetime_sleep_1000h'),
       domain: ProgressionDomain.sleep,
       metric: SleepMinutesMetric(),
       scope: LifetimeScope(),
@@ -56,7 +56,7 @@ List<Objective> sleepObjectives(EngineCatalogContext context) {
       targetValue: 60000,
     ),
     const Objective(
-      id: const ObjectiveId('rolling_sleep_30d_225h'),
+      id: ObjectiveId('rolling_sleep_30d_225h'),
       domain: ProgressionDomain.sleep,
       metric: SleepMinutesMetric(),
       scope: RollingWindowScope(days: 30),
@@ -64,7 +64,7 @@ List<Objective> sleepObjectives(EngineCatalogContext context) {
       targetValue: 13500,
     ),
     const Objective(
-      id: const ObjectiveId('rolling_sleep_30d_240h'),
+      id: ObjectiveId('rolling_sleep_30d_240h'),
       domain: ProgressionDomain.sleep,
       metric: SleepMinutesMetric(),
       scope: RollingWindowScope(days: 30),
@@ -72,7 +72,7 @@ List<Objective> sleepObjectives(EngineCatalogContext context) {
       targetValue: 14400,
     ),
     const Objective(
-      id: const ObjectiveId('rolling_sleep_30d_270h'),
+      id: ObjectiveId('rolling_sleep_30d_270h'),
       domain: ProgressionDomain.sleep,
       metric: SleepMinutesMetric(),
       scope: RollingWindowScope(days: 30),
@@ -81,7 +81,7 @@ List<Objective> sleepObjectives(EngineCatalogContext context) {
       targetValue: 16200,
     ),
     const Objective(
-      id: const ObjectiveId('rolling_sleep_30d_300h'),
+      id: ObjectiveId('rolling_sleep_30d_300h'),
       domain: ProgressionDomain.sleep,
       metric: SleepMinutesMetric(),
       scope: RollingWindowScope(days: 30),
@@ -90,7 +90,7 @@ List<Objective> sleepObjectives(EngineCatalogContext context) {
       targetValue: 18000,
     ),
     const Objective(
-      id: const ObjectiveId('rolling_sleep_200d_1600h'),
+      id: ObjectiveId('rolling_sleep_200d_1600h'),
       domain: ProgressionDomain.sleep,
       metric: SleepMinutesMetric(),
       scope: RollingWindowScope(days: 200),
@@ -99,7 +99,7 @@ List<Objective> sleepObjectives(EngineCatalogContext context) {
       targetValue: 96000,
     ),
     const Objective(
-      id: const ObjectiveId('sleep_starts_after_1am_30'),
+      id: ObjectiveId('sleep_starts_after_1am_30'),
       domain: ProgressionDomain.sleep,
       metric: SleepStartHourCountMetric(
         hour: 1,
@@ -110,7 +110,7 @@ List<Objective> sleepObjectives(EngineCatalogContext context) {
       targetValue: 30,
     ),
     const Objective(
-      id: const ObjectiveId('sleep_starts_before_10pm_30'),
+      id: ObjectiveId('sleep_starts_before_10pm_30'),
       domain: ProgressionDomain.sleep,
       metric: SleepStartHourCountMetric(
         hour: 22,

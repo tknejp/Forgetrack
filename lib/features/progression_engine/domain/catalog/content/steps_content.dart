@@ -43,7 +43,7 @@ List<Objective> stepsObjectives(EngineCatalogContext context) {
       debugLabel: 'Steps this week >= dailyStepsGoal * 7',
     ),
     const Objective(
-      id: const ObjectiveId('lifetime_steps_100k'),
+      id: ObjectiveId('lifetime_steps_100k'),
       domain: ProgressionDomain.steps,
       metric: StepsMetric(),
       scope: LifetimeScope(),
@@ -51,7 +51,7 @@ List<Objective> stepsObjectives(EngineCatalogContext context) {
       targetValue: 100000,
     ),
     const Objective(
-      id: const ObjectiveId('lifetime_steps_500k'),
+      id: ObjectiveId('lifetime_steps_500k'),
       domain: ProgressionDomain.steps,
       metric: StepsMetric(),
       scope: LifetimeScope(),
@@ -59,7 +59,7 @@ List<Objective> stepsObjectives(EngineCatalogContext context) {
       targetValue: 500000,
     ),
     const Objective(
-      id: const ObjectiveId('lifetime_steps_1m'),
+      id: ObjectiveId('lifetime_steps_1m'),
       domain: ProgressionDomain.steps,
       metric: StepsMetric(),
       scope: LifetimeScope(),
@@ -67,7 +67,7 @@ List<Objective> stepsObjectives(EngineCatalogContext context) {
       targetValue: 1000000,
     ),
     const Objective(
-      id: const ObjectiveId('lifetime_steps_2_5m'),
+      id: ObjectiveId('lifetime_steps_2_5m'),
       domain: ProgressionDomain.steps,
       metric: StepsMetric(),
       scope: LifetimeScope(),
@@ -75,7 +75,7 @@ List<Objective> stepsObjectives(EngineCatalogContext context) {
       targetValue: 2500000,
     ),
     const Objective(
-      id: const ObjectiveId('lifetime_steps_5m'),
+      id: ObjectiveId('lifetime_steps_5m'),
       domain: ProgressionDomain.steps,
       metric: StepsMetric(),
       scope: LifetimeScope(),
@@ -83,7 +83,7 @@ List<Objective> stepsObjectives(EngineCatalogContext context) {
       targetValue: 5000000,
     ),
     const Objective(
-      id: const ObjectiveId('lifetime_steps_10m'),
+      id: ObjectiveId('lifetime_steps_10m'),
       domain: ProgressionDomain.steps,
       metric: StepsMetric(),
       scope: LifetimeScope(),
@@ -91,7 +91,7 @@ List<Objective> stepsObjectives(EngineCatalogContext context) {
       targetValue: 10000000,
     ),
     const Objective(
-      id: const ObjectiveId('rolling_steps_30d_300k'),
+      id: ObjectiveId('rolling_steps_30d_300k'),
       domain: ProgressionDomain.steps,
       metric: StepsMetric(),
       scope: RollingWindowScope(days: 30),
@@ -99,7 +99,7 @@ List<Objective> stepsObjectives(EngineCatalogContext context) {
       targetValue: 300000,
     ),
     const Objective(
-      id: const ObjectiveId('rolling_steps_30d_600k'),
+      id: ObjectiveId('rolling_steps_30d_600k'),
       domain: ProgressionDomain.steps,
       metric: StepsMetric(),
       scope: RollingWindowScope(days: 30),
@@ -107,7 +107,7 @@ List<Objective> stepsObjectives(EngineCatalogContext context) {
       targetValue: 600000,
     ),
     const Objective(
-      id: const ObjectiveId('streak_steps_3'),
+      id: ObjectiveId('streak_steps_3'),
       domain: ProgressionDomain.steps,
       metric: StreakDaysMetric.byRule('daily_steps'),
       scope: LifetimeScope(),
@@ -115,7 +115,7 @@ List<Objective> stepsObjectives(EngineCatalogContext context) {
       targetValue: 3,
     ),
     const Objective(
-      id: const ObjectiveId('streak_steps_7'),
+      id: ObjectiveId('streak_steps_7'),
       domain: ProgressionDomain.steps,
       metric: StreakDaysMetric.byRule('daily_steps'),
       scope: LifetimeScope(),
@@ -123,7 +123,7 @@ List<Objective> stepsObjectives(EngineCatalogContext context) {
       targetValue: 7,
     ),
     const Objective(
-      id: const ObjectiveId('streak_steps_30'),
+      id: ObjectiveId('streak_steps_30'),
       domain: ProgressionDomain.steps,
       metric: StreakDaysMetric.byRule('daily_steps'),
       scope: LifetimeScope(),
@@ -131,7 +131,7 @@ List<Objective> stepsObjectives(EngineCatalogContext context) {
       targetValue: 30,
     ),
     const Objective(
-      id: const ObjectiveId('streak_steps_50'),
+      id: ObjectiveId('streak_steps_50'),
       domain: ProgressionDomain.steps,
       metric: StreakDaysMetric.byRule('daily_steps'),
       scope: LifetimeScope(),
@@ -139,7 +139,7 @@ List<Objective> stepsObjectives(EngineCatalogContext context) {
       targetValue: 50,
     ),
     const Objective(
-      id: const ObjectiveId('streak_steps_100'),
+      id: ObjectiveId('streak_steps_100'),
       domain: ProgressionDomain.steps,
       metric: StreakDaysMetric.byRule('daily_steps'),
       scope: LifetimeScope(),
@@ -147,7 +147,7 @@ List<Objective> stepsObjectives(EngineCatalogContext context) {
       targetValue: 100,
     ),
     const Objective(
-      id: const ObjectiveId('best_day_steps_42195'),
+      id: ObjectiveId('best_day_steps_42195'),
       domain: ProgressionDomain.steps,
       metric: BestDailyValueMetric(metric: StepsMetric()),
       scope: LifetimeScope(),
@@ -156,7 +156,7 @@ List<Objective> stepsObjectives(EngineCatalogContext context) {
       targetValue: 42195,
     ),
     const Objective(
-      id: const ObjectiveId('best_day_steps_100k'),
+      id: ObjectiveId('best_day_steps_100k'),
       domain: ProgressionDomain.steps,
       metric: BestDailyValueMetric(metric: StepsMetric()),
       scope: LifetimeScope(),

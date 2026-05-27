@@ -308,6 +308,7 @@ class _HeaderBody extends StatelessWidget {
                     opacity: animation,
                     child: SizeTransition(
                       sizeFactor: animation,
+                      // ignore: deprecated_member_use, migrate to alignment param later
                       axisAlignment: -1,
                       child: child,
                     ),

@@ -18,35 +18,35 @@ import '../engine_catalog_context.dart';
 List<Objective> metaObjectives(EngineCatalogContext context) {
   return const [
     Objective(
-      id: const ObjectiveId('lifetime_xp_100k'),
+      id: ObjectiveId('lifetime_xp_100k'),
       metric: TotalXpMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 100000,
     ),
     Objective(
-      id: const ObjectiveId('lifetime_xp_1m'),
+      id: ObjectiveId('lifetime_xp_1m'),
       metric: TotalXpMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 1000000,
     ),
     Objective(
-      id: const ObjectiveId('lifetime_xp_5m'),
+      id: ObjectiveId('lifetime_xp_5m'),
       metric: TotalXpMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 5000000,
     ),
     Objective(
-      id: const ObjectiveId('lifetime_xp_10m'),
+      id: ObjectiveId('lifetime_xp_10m'),
       metric: TotalXpMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 10000000,
     ),
     Objective(
-      id: const ObjectiveId('lifetime_xp_22m'),
+      id: ObjectiveId('lifetime_xp_22m'),
       metric: TotalXpMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -55,7 +55,7 @@ List<Objective> metaObjectives(EngineCatalogContext context) {
       targetValue: 22000000,
     ),
     Objective(
-      id: const ObjectiveId('lifetime_xp_24m'),
+      id: ObjectiveId('lifetime_xp_24m'),
       metric: TotalXpMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -63,14 +63,14 @@ List<Objective> metaObjectives(EngineCatalogContext context) {
       targetValue: 24000000,
     ),
     Objective(
-      id: const ObjectiveId('reward_count_25'),
+      id: ObjectiveId('reward_count_25'),
       metric: RewardCountMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 25,
     ),
     Objective(
-      id: const ObjectiveId('reward_count_100'),
+      id: ObjectiveId('reward_count_100'),
       metric: RewardCountMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -81,77 +81,77 @@ List<Objective> metaObjectives(EngineCatalogContext context) {
     // DistinctActiveDaysMetric); ledger aggregations live in
     // `progression_engine_provider.dart`.
     Objective(
-      id: const ObjectiveId('daily_quest_count_3'),
+      id: ObjectiveId('daily_quest_count_3'),
       metric: QuestCompletionsByBucketMetric(bucket: QuestDisplayBucket.daily),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 3,
     ),
     Objective(
-      id: const ObjectiveId('daily_quest_count_7'),
+      id: ObjectiveId('daily_quest_count_7'),
       metric: QuestCompletionsByBucketMetric(bucket: QuestDisplayBucket.daily),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 7,
     ),
     Objective(
-      id: const ObjectiveId('quest_count_250'),
+      id: ObjectiveId('quest_count_250'),
       metric: QuestCompletionsByBucketMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 250,
     ),
     Objective(
-      id: const ObjectiveId('active_days_21'),
+      id: ObjectiveId('active_days_21'),
       metric: DistinctActiveDaysMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 21,
     ),
     Objective(
-      id: const ObjectiveId('active_days_90'),
+      id: ObjectiveId('active_days_90'),
       metric: DistinctActiveDaysMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 90,
     ),
     Objective(
-      id: const ObjectiveId('active_days_365'),
+      id: ObjectiveId('active_days_365'),
       metric: DistinctActiveDaysMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 365,
     ),
     Objective(
-      id: const ObjectiveId('zero_day_recovery'),
+      id: ObjectiveId('zero_day_recovery'),
       metric: ReturnAfterGapMetric(gapDays: 7),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 1,
     ),
     Objective(
-      id: const ObjectiveId('comeback_streak_14'),
+      id: ObjectiveId('comeback_streak_14'),
       metric: StreakAfterGapMetric(gapDays: 7),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 14,
     ),
     Objective(
-      id: const ObjectiveId('perfect_month_30'),
+      id: ObjectiveId('perfect_month_30'),
       metric: BestPerfectDayStreakMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 30,
     ),
     Objective(
-      id: const ObjectiveId('perfect_streak_100'),
+      id: ObjectiveId('perfect_streak_100'),
       metric: BestPerfectDayStreakMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 100,
     ),
     Objective(
-      id: const ObjectiveId('balanced_year_52'),
+      id: ObjectiveId('balanced_year_52'),
       metric: PerfectWeeksLifetimeMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -159,7 +159,7 @@ List<Objective> metaObjectives(EngineCatalogContext context) {
     ),
     // Combo-pool counters (Phase 9c follow-up).
     Objective(
-      id: const ObjectiveId('combo_pool_10'),
+      id: ObjectiveId('combo_pool_10'),
       metric: ComboPoolCompletionsMetric(poolId: ComboPoolId('daily_combo_pool')),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -170,7 +170,7 @@ List<Objective> metaObjectives(EngineCatalogContext context) {
     // shape spreads "3-of-N" wins across multiple chains, so we
     // enumerate them explicitly here.
     Objective(
-      id: const ObjectiveId('triple_combo_25'),
+      id: ObjectiveId('triple_combo_25'),
       metric: LifetimeCompletionsAmongMetric(
         nodeIds: [
           ProgressionEntryId('combo_balanced_step_3'),
@@ -187,7 +187,7 @@ List<Objective> metaObjectives(EngineCatalogContext context) {
       targetValue: 25,
     ),
     Objective(
-      id: const ObjectiveId('triple_combo_100'),
+      id: ObjectiveId('triple_combo_100'),
       metric: LifetimeCompletionsAmongMetric(
         nodeIds: [
           ProgressionEntryId('combo_balanced_step_3'),

@@ -60,28 +60,28 @@ List<Objective> longTermObjectives() {
   return const [
     // XP milestones not already in meta_content.
     Objective(
-      id: const ObjectiveId('lifetime_xp_500'),
+      id: ObjectiveId('lifetime_xp_500'),
       metric: TotalXpMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 500,
     ),
     Objective(
-      id: const ObjectiveId('lifetime_xp_2000'),
+      id: ObjectiveId('lifetime_xp_2000'),
       metric: TotalXpMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 2000,
     ),
     Objective(
-      id: const ObjectiveId('lifetime_xp_5000'),
+      id: ObjectiveId('lifetime_xp_5000'),
       metric: TotalXpMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 5000,
     ),
     Objective(
-      id: const ObjectiveId('lifetime_xp_25000'),
+      id: ObjectiveId('lifetime_xp_25000'),
       metric: TotalXpMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
@@ -89,14 +89,14 @@ List<Objective> longTermObjectives() {
     ),
     // Reward-count milestones not already in meta_content.
     Objective(
-      id: const ObjectiveId('reward_count_first'),
+      id: ObjectiveId('reward_count_first'),
       metric: RewardCountMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 1,
     ),
     Objective(
-      id: const ObjectiveId('reward_count_250'),
+      id: ObjectiveId('reward_count_250'),
       metric: RewardCountMetric(),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,

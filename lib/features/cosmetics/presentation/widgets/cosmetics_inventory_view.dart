@@ -123,9 +123,9 @@ class _CosmeticsInventoryViewState extends State<CosmeticsInventoryView> {
     final presentTypes = devTools
         ? orderedTypes
         : orderedTypes
-            .where((type) =>
+            .where((type) => // lint-ignore: widget-no-logic — tab-presence filter over pre-built displayDefs
                 alwaysPresent.contains(type) ||
-                displayDefs.any((def) => def.type == type)) // lint-ignore: widget-no-logic — tab-presence filter over pre-built displayDefs
+                displayDefs.any((def) => def.type == type))
             .toList(growable: false);
 
     final tabs = <CosmeticType?>[...presentTypes, null];
