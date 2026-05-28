@@ -5307,6 +5307,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Add friends by searching for their handle.';
 
   @override
+  String get socialNotificationsTitle => 'Notifications';
+
+  @override
+  String get socialNotificationsEmptyTitle => 'Nothing new';
+
+  @override
+  String get socialNotificationsEmptySubtitle =>
+      'Friend requests and other social activity will appear here.';
+
+  @override
   String socialFriendsSectionCount(int count) {
     return 'FRIENDS  •  $count';
   }
@@ -5355,7 +5365,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialSearchButton => 'Find';
 
   @override
+  String get socialSearchNoResults => 'No matching players yet — keep typing.';
+
+  @override
+  String get socialSearchOtherPeopleSection => 'People';
+
+  @override
   String get socialAdd => 'Add';
+
+  @override
+  String get socialFriendBadge => 'Friends';
 
   @override
   String socialHandleLevel(String handle, int level) {

@@ -526,6 +526,26 @@ class SocialProvider extends ChangeNotifier {
         .firstOrNull;
   }
 
+  /// Pending friend request the signed-in user has received from
+  /// [uid]. Returns the [SocialFriendRequest] so callers can wire
+  /// accept / decline directly without a second lookup; null when
+  /// there's no live incoming pending request from that user.
+  ///
+  /// Mirrors [getPendingRequestTo] from the opposite direction so
+  /// "Add Friend" surfaces (profile screen, search results) can
+  /// short-circuit to an Accept / Decline affordance instead of
+  /// letting the player send a second request that would race against
+  /// the one already in flight — see
+  /// `lib/features/social/data/social_repository_firestore.dart`'s
+  /// `sendFriendRequest` duplicate guard for why we can't fully de-
+  /// duplicate at the data layer without widening the Firestore read
+  /// rule.
+  SocialFriendRequest? getIncomingRequestFrom(String uid) {
+    return _incomingRequests
+        .where((r) => r.fromUid == uid && r.isPending)
+        .firstOrNull;
+  }
+
   Future<void> shareAchievement(
     String achievementId, {
     String? message,

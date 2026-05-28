@@ -599,8 +599,22 @@ class FirestoreSocialRepository implements SocialPresenceRepository {
             return;
           }
 
+          // Duplicate-pending guard. The wider check (`participantsKey`
+          // alone) would also catch the case where the OTHER party
+          // already sent us a request, but that query isn't rule-safe:
+          // the read rule's `fromUid == auth.uid || toUid == auth.uid`
+          // disjunction depends on doc data the query doesn't constrain,
+          // so Firestore preventively denies the list. Narrowing to our
+          // outgoing request via `fromUid == auth.uid` makes the query
+          // structurally satisfy the first OR-clause and Firestore lets
+          // it through. The counter-party-sent-first case is a UX edge
+          // (rare; the user normally accepts the incoming request from
+          // their notifications instead of re-requesting), so we accept
+          // a possible duplicate pending doc rather than widening the
+          // rule.
           final duplicateSnapshot = await _friendRequests
-              .where('participantsKey', isEqualTo: participantsKey)
+              .where('fromUid', isEqualTo: fromUid)
+              .where('toUid', isEqualTo: toUid)
               .where('status',
                   isEqualTo: SocialFriendRequestStatus.pending.name)
               .limit(1)

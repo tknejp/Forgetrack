@@ -5315,6 +5315,16 @@ class AppLocalizationsCs extends AppLocalizations {
       'Přidej přátele vyhledáním jejich přezdívky.';
 
   @override
+  String get socialNotificationsTitle => 'Oznámení';
+
+  @override
+  String get socialNotificationsEmptyTitle => 'Nic nového';
+
+  @override
+  String get socialNotificationsEmptySubtitle =>
+      'Žádosti o přátelství a další sociální aktivita se objeví zde.';
+
+  @override
   String socialFriendsSectionCount(int count) {
     return 'PŘÁTELÉ  •  $count';
   }
@@ -5363,7 +5373,16 @@ class AppLocalizationsCs extends AppLocalizations {
   String get socialSearchButton => 'Najít';
 
   @override
+  String get socialSearchNoResults => 'Zatím nikdo neodpovídá — piš dál.';
+
+  @override
+  String get socialSearchOtherPeopleSection => 'Lidé';
+
+  @override
   String get socialAdd => 'Přidat';
+
+  @override
+  String get socialFriendBadge => 'Přátelé';
 
   @override
   String socialHandleLevel(String handle, int level) {

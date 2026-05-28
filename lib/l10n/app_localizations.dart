@@ -9207,6 +9207,24 @@ abstract class AppLocalizations {
   /// **'Add friends by searching for their handle.'**
   String get socialFriendsEmptySubtitle;
 
+  /// App-bar title of the notifications inbox pushed from the bell button on the Social screen. Generic on purpose — the inbox currently only carries friend requests, but the bell + this route will host other social notifications later.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get socialNotificationsTitle;
+
+  /// Empty-state title in the notifications inbox when there are zero incoming items.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing new'**
+  String get socialNotificationsEmptyTitle;
+
+  /// Empty-state subtitle in the notifications inbox.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend requests and other social activity will appear here.'**
+  String get socialNotificationsEmptySubtitle;
+
   /// No description provided for @socialFriendsSectionCount.
   ///
   /// In en, this message translates to:
@@ -9291,11 +9309,29 @@ abstract class AppLocalizations {
   /// **'Find'**
   String get socialSearchButton;
 
+  /// Hint shown under the search input when the query is non-empty but no non-friend Firestore profiles match yet. Friends matching the query already surface in the filtered Přátelé section, so this hint never fires for them.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching players yet — keep typing.'**
+  String get socialSearchNoResults;
+
+  /// Section header inside the search overlay above the non-friend Firestore matches. Sits below the optional 'Friends' matching section so the player can tell at a glance which row is an existing friend vs a stranger they could add.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get socialSearchOtherPeopleSection;
+
   /// No description provided for @socialAdd.
   ///
   /// In en, this message translates to:
   /// **'Add'**
   String get socialAdd;
+
+  /// Short non-interactive label shown on a row (e.g. search result) when the searched user is already a friend, replacing the Add affordance.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends'**
+  String get socialFriendBadge;
 
   /// No description provided for @socialHandleLevel.
   ///
