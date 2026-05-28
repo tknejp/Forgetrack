@@ -184,12 +184,36 @@ class _LiveNotificationAvatar extends StatelessWidget {
         final photoUrl = profile?.photoUrl?.trim().isNotEmpty == true
             ? profile!.photoUrl
             : notification.actorPhoto;
-        return SocialCosmeticAvatar(
-          name: name,
-          photoUrl: photoUrl,
-          profile: profile,
-          size: 36,
-          color: color,
+        return SizedBox(
+          width: 54,
+          height: 54,
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.25),
+                      blurRadius: 12,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+              ),
+              SocialCosmeticAvatar(
+                name: name,
+                photoUrl: photoUrl,
+                profile: profile,
+                size: 44,
+                color: color,
+              ),
+            ],
+          ),
         );
       },
     );

@@ -268,15 +268,41 @@ class _ShareActorHeader extends StatelessWidget {
           children: [
             GestureDetector(
               onTap: openProfile,
-              child: SocialCosmeticAvatar(
-                name: displayName,
-                photoUrl: photoUrl,
-                profile: profile,
-                size: 34,
-                color: color,
+              behavior: HitTestBehavior.opaque,
+              child: SizedBox(
+                width: 68,
+                height: 68,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.center,
+                  children: [
+                    // Rarity glow halo behind the avatar.
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: color.withValues(alpha: 0.32),
+                            blurRadius: 18,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                    ),
+                    SocialCosmeticAvatar(
+                      name: displayName,
+                      photoUrl: photoUrl,
+                      profile: profile,
+                      size: 56,
+                      color: color,
+                    ),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
