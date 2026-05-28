@@ -34,6 +34,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const https = require('node:https');
 
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const TOKEN_SCOPE = 'https://www.googleapis.com/auth/cloud-platform';
@@ -88,20 +89,37 @@ async function getAccessToken(serviceAccount) {
   return json.access_token;
 }
 
+// Cloud Storage simple media upload caps at 32 MB. Our APK is ~258 MB, so
+// we must use the resumable-upload protocol (initiate → PUT). The initiate
+// step is a trivial fetch; the data PUT goes through node:https because
+// undici's fetch has had quirks with very large request bodies. Combined
+// they're more robust than fetch-with-stream for hundreds of MB at a time.
 async function uploadApk({ bucket, objectName, apkPath, accessToken }) {
   const size = fs.statSync(apkPath).size;
-  const url =
+  const initUrl =
     `https://storage.googleapis.com/upload/storage/v1/b/${encodeURIComponent(bucket)}` +
-    `/o?uploadType=media&name=${encodeURIComponent(objectName)}`;
+    `/o?uploadType=resumable&name=${encodeURIComponent(objectName)}`;
 
-  // Stream the file body directly — APK is ~250 MB, buffering into memory
-  // would spike RSS unnecessarily. Node 18+ fetch supports a Readable as body
-  // when duplex: 'half' is set.
-  //
-  // Track bytes flowing through the stream so the caller sees upload
-  // progress instead of staring at a silent terminal for 30+ seconds.
-  // The 'data' event fires as fetch pulls from the stream — close enough
-  // to wire transfer for a network-bottlenecked upload.
+  const initRes = await fetch(initUrl, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'X-Upload-Content-Type': 'application/vnd.android.package-archive',
+      'X-Upload-Content-Length': String(size),
+      'Content-Length': '0',
+    },
+  });
+
+  if (!initRes.ok) {
+    const text = await initRes.text();
+    die(5, `Resumable upload initiate failed (${initRes.status}): ${text}`);
+  }
+  const sessionUrl = initRes.headers.get('location');
+  if (!sessionUrl) {
+    die(5, 'Resumable upload session URL missing (no Location header)');
+  }
+
+  const sessionParsed = new URL(sessionUrl);
   const stream = fs.createReadStream(apkPath);
   const sizeMB = (size / 1024 / 1024).toFixed(1);
   let uploaded = 0;
@@ -123,26 +141,47 @@ async function uploadApk({ bucket, objectName, apkPath, accessToken }) {
     }
   });
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/vnd.android.package-archive',
-      'Content-Length': String(size),
-    },
-    body: stream,
-    duplex: 'half',
+  const responseBody = await new Promise((resolve, reject) => {
+    const req = https.request(
+      {
+        method: 'PUT',
+        hostname: sessionParsed.hostname,
+        path: sessionParsed.pathname + sessionParsed.search,
+        headers: {
+          'Content-Length': size,
+          'Content-Type': 'application/vnd.android.package-archive',
+        },
+      },
+      (res) => {
+        let body = '';
+        res.setEncoding('utf8');
+        res.on('data', (chunk) => {
+          body += chunk;
+        });
+        res.on('end', () => {
+          if (res.statusCode === 200 || res.statusCode === 201) {
+            resolve(body);
+          } else {
+            reject(new Error(`PUT failed (${res.statusCode}): ${body}`));
+          }
+        });
+      },
+    );
+    req.on('error', reject);
+    stream.on('error', reject);
+    stream.pipe(req);
   });
 
   if (tty) process.stderr.write('\n');
 
-  if (!res.ok) {
-    const text = await res.text();
-    die(5, `Storage upload failed (${res.status}): ${text}`);
+  let parsed;
+  try {
+    parsed = JSON.parse(responseBody);
+  } catch {
+    die(5, `Storage upload response not JSON: ${responseBody}`);
   }
-  const json = await res.json();
   console.log(
-    `publish_internal_build: uploaded ${apkPath} → gs://${bucket}/${objectName} (${json.size} bytes)`,
+    `publish_internal_build: uploaded ${apkPath} → gs://${bucket}/${objectName} (${parsed.size} bytes)`,
   );
 }
 
