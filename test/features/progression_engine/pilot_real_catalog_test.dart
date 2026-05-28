@@ -66,7 +66,10 @@ void main() {
 
       // Auto-claim nodes complete on first run.
       // `pilgrim_path_open` is the starter chapter's auto-claim open
-      // step — fires once the player reaches level 1.
+      // step — fires once the player reaches level 2 (bumped from 1
+      // on 2026-05-28 so the opener doesn't auto-fire before the
+      // player has done anything). The ambitious player here is at
+      // level 5, well past the gate.
       final autoCompletedIds = result.completedNodes.map((n) => n.nodeId).toSet();
       expect(autoCompletedIds, containsAll({
         'welcome_to_journey',
@@ -185,10 +188,11 @@ void main() {
       );
 
       // Welcome always completes (no objective, no conditions).
-      // The Pilgrim Path open also auto-claims at level 1 — it's the
-      // level-1 starter chapter, gated only by `LevelAtLeast(1)`.
+      // The Pilgrim Path open is now gated by `LevelAtLeast(2)` —
+      // at level 1 the opener has NOT yet fired, so the beginner
+      // sees only the welcome achievement in their completion set.
       final ids = result.completedNodes.map((n) => n.nodeId).toSet();
-      expect(ids, {'welcome_to_journey', 'pilgrim_path_open'});
+      expect(ids, {'welcome_to_journey'});
 
       // Daily steps + protein + lifetime + level 5 are all unmet.
       expect(

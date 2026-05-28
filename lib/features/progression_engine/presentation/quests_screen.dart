@@ -328,6 +328,21 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
     for (var i = 0; i < chapters.length; i++) {
       if (i > 0) items.add(const SizedBox(height: Tokens.spaceSm));
       final c = chapters[i];
+      // Resolve the previous-chapter display name for the partial-opener
+      // hint banner. The chain prereq node id is always shaped as
+      // `<chapter>_finale` (see chapter_content.dart `_finaleNodeId`)
+      // so we derive the previous chapter's chain id and pull the
+      // opener's title from its chain.
+      String? missingChapterName;
+      final prereqId = c.prereqGateNodeId;
+      if (prereqId != null && prereqId.endsWith('_finale')) {
+        final prevChainId =
+            prereqId.substring(0, prereqId.length - '_finale'.length);
+        final prevChain = provider.chainQuestsFor(prevChainId);
+        if (prevChain.isNotEmpty) {
+          missingChapterName = prevChain.first.node.titleKey(l10n);
+        }
+      }
       items.add(
         EngineChapterCard(
           key: ValueKey(c.nodeId),
@@ -338,6 +353,7 @@ class _QuestsScreenV2State extends State<QuestsScreenV2> {
           onClaim: _claimQuest,
           onToggle: () => _toggleExpanded(c.nodeId),
           companionBuffBonus: provider.projectedCompanionBuffBonusFor(c.node),
+          missingChapterName: missingChapterName,
         ),
       );
     }

@@ -51,6 +51,7 @@ class EngineChapterCard extends StatelessWidget {
     required this.onClaim,
     this.onToggle,
     this.companionBuffBonus = 0,
+    this.missingChapterName,
   });
 
   final EngineQuestProgress quest;
@@ -74,6 +75,12 @@ class EngineChapterCard extends StatelessWidget {
   /// screen, which has access to the engine provider.
   final int companionBuffBonus;
 
+  /// Display-name of the previous chapter the player still needs to
+  /// finish. Non-null only on the 50% "partial opener" projection
+  /// where the prereq gate is the missing condition. Owned by the
+  /// screen because resolving the name requires a provider lookup.
+  final String? missingChapterName;
+
   @override
   Widget build(BuildContext context) {
     final quest = this.quest;
@@ -82,7 +89,18 @@ class EngineChapterCard extends StatelessWidget {
     final accent = domain.color;
     final chapterId = quest.node.chapterId ?? quest.node.chainId ?? '';
     final bgAsset = chapterBgAssetFor(chapterId);
-    final isLocked = quest.levelGate != null;
+    // Partial-opener projection: 2-gate chapter where one of two
+    // unlock conditions is met but not both. Surfaces in the active
+    // chapter section at 50% progress with a hint banner pointing at
+    // the missing gate — the opener still auto-claims only when both
+    // gates pass. See ProgressionEngineProvider._partialOpenerProgress.
+    final isPartialOpener = quest.node is ChapterOpener &&
+        (quest.levelGate != null || quest.prereqGateNodeId != null);
+    // Lock chip path is reserved for the legacy "level-gate only"
+    // chapter card. Partial openers DON'T use it (they own the 50%
+    // hint banner instead), and fully locked chapters now live in
+    // the NextChapterLockedTeaser, not this card.
+    final isLocked = quest.levelGate != null && !isPartialOpener;
     // Asset size + description maxLines locked to the collapsed values
     // across expand state — resizing the icon and re-wrapping the
     // description during `AnimatedSize` was forcing a header relayout
@@ -263,7 +281,21 @@ class EngineChapterCard extends StatelessWidget {
           ? null
           : Padding(
               padding: const EdgeInsets.only(top: Tokens.spaceSm),
-              child: _ProgressRow(quest: quest, accent: accent),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (isPartialOpener) ...[
+                    _PartialOpenerHint(
+                      levelGate: quest.levelGate,
+                      missingChapterName: missingChapterName,
+                      accent: accent,
+                      l10n: l10n,
+                    ),
+                    const SizedBox(height: Tokens.spaceSm),
+                  ],
+                  _ProgressRow(quest: quest, accent: accent),
+                ],
+              ),
             ),
       expandedBody: _ChapterExpandedDetails(
         quest: quest,
@@ -333,6 +365,85 @@ class _LockChip extends StatelessWidget {
               fontSize: Tokens.fontSizeMicro,
               fontWeight: FontWeight.w800,
               color: Colors.white.withValues(alpha: 0.78),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Inline hint banner for partial-opener chapter cards (one of two
+/// unlock conditions met). Surfaces "Chybí: Dosáhni úrovně X" or
+/// "Chybí: Dokonči `<chapter>`" so the player sees the missing gate
+/// without expanding the card. Rendered above the 50% progress bar.
+class _PartialOpenerHint extends StatelessWidget {
+  const _PartialOpenerHint({
+    required this.levelGate,
+    required this.missingChapterName,
+    required this.accent,
+    required this.l10n,
+  });
+
+  final int? levelGate;
+  final String? missingChapterName;
+  final Color accent;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final String detail;
+    if (levelGate != null) {
+      detail = l10n.progChapterHintReachLevel(levelGate!);
+    } else if (missingChapterName != null) {
+      detail = l10n.progChapterHintFinishChapter(missingChapterName!);
+    } else {
+      detail = l10n.progChapterHintGeneric;
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: Tokens.spaceSm,
+        vertical: 6,
+      ),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(Tokens.radiusProgress),
+        border: Border.all(color: accent.withValues(alpha: 0.40)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.lock_open_rounded,
+            size: 13,
+            color: Colors.white.withValues(alpha: 0.88),
+          ),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: '${l10n.progChapterHintHeader}: ',
+                    style: TextStyle(
+                      fontSize: Tokens.fontSizeMicro,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white.withValues(alpha: 0.66),
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                  TextSpan(
+                    text: detail,
+                    style: const TextStyle(
+                      fontSize: Tokens.fontSizeMicro,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
