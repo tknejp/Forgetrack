@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!--
         `internal` flavor only — required by Firebase App Distribution's
@@ -7,5 +8,34 @@
         (Play Store policy: REQUEST_INSTALL_PACKAGES needs an exception).
     -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
+    <application>
+        <!--
+            Bug in firebase-appdistribution:16.0.0-beta14 (pinned by
+            firebase_app_distribution_android-1.2.0): SignInResultActivity
+            and InstallActivity both extend AppCompatActivity but the SDK
+            manifest declares them with NO theme, so they fall back to the
+            app's @style/NormalTheme (Flutter default, descends from
+            DeviceDefault, NOT AppCompat) and crash in onCreate with
+            "java.lang.IllegalStateException: You need to use a Theme.AppCompat
+             theme (or descendant) with this activity."
+
+            Override both activity themes via manifest merger. Same theme as
+            the SDK's own FeedbackActivity uses, so AppCompat is already in
+            the classpath transitively — no extra dependency needed.
+
+            tools:replace is defensive: if the SDK ever adds an
+            android:theme attribute upstream, our value still wins.
+        -->
+        <activity
+            android:name="com.google.firebase.appdistribution.impl.SignInResultActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            tools:replace="android:theme" />
+
+        <activity
+            android:name="com.google.firebase.appdistribution.impl.InstallActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            tools:replace="android:theme" />
+    </application>
 
 </manifest>
