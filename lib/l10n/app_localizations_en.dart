@@ -5268,6 +5268,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get celebrationKindSparkle => 'Reward';
 
   @override
+  String get socialScreenTitle => 'Your companions on the journey';
+
+  @override
   String get socialTabFeed => 'Chronicle';
 
   @override

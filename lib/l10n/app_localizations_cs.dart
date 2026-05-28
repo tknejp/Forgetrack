@@ -5276,6 +5276,9 @@ class AppLocalizationsCs extends AppLocalizations {
   String get celebrationKindSparkle => 'Odměna';
 
   @override
+  String get socialScreenTitle => 'Tví druzi na cestě';
+
+  @override
   String get socialTabFeed => 'Kronika';
 
   @override

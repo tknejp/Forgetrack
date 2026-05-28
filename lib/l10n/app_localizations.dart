@@ -9135,6 +9135,12 @@ abstract class AppLocalizations {
   /// **'Reward'**
   String get celebrationKindSparkle;
 
+  /// Headline shown in the MainShell header for the Fellowship tab. Sits under the eyebrow that says FELLOWSHIP — second-person framing matches the Hero and Quests screen titles.
+  ///
+  /// In en, this message translates to:
+  /// **'Your companions on the journey'**
+  String get socialScreenTitle;
+
   /// No description provided for @socialTabFeed.
   ///
   /// In en, this message translates to:

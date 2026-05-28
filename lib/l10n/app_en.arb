@@ -2690,6 +2690,8 @@
   "celebrationKindFlag": "Quest",
   "celebrationKindSparkle": "Reward",
 
+  "socialScreenTitle": "Your companions on the journey",
+  "@socialScreenTitle": { "description": "Headline shown in the MainShell header for the Fellowship tab. Sits under the eyebrow that says FELLOWSHIP — second-person framing matches the Hero and Quests screen titles." },
   "socialTabFeed": "Chronicle",
   "socialTabLeaderboard": "Leaderboard",
   "socialTabFriends": "Friends",
