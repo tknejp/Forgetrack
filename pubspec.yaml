@@ -66,6 +66,13 @@ dependencies:
 
   # --- Firebase Cloud Messaging (push notifikace) ---
   firebase_messaging: ^16.2.0
+
+  # --- Firebase App Distribution in-app updater (jen `internal` flavor;
+  #     na `prod` / `dev` se Dart volání chovají jako no-op skrz BuildConfig).
+  #     Community plugin (thomaspucci) — federovaný Android+iOS, ale na iOS
+  #     ho NEPOUŽÍVÁME (TestFlight policy). Plné Android SDK přitahuje
+  #     `internalImplementation` v build.gradle.kts. ---
+  firebase_app_distribution: ^1.2.5
   wakelock_plus: ^1.5.2
   connectivity_plus: ^7.1.1
   cached_network_image: ^3.4.1
