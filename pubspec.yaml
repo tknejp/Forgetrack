@@ -66,6 +66,13 @@ dependencies:
 
   # --- Firebase Cloud Messaging (push notifikace) ---
   firebase_messaging: ^16.2.0
+
+  # --- DIY in-app updater (jen `internal` flavor; viz lib/core/services/
+  #     app_update_service.dart). Firestore drží metadata aktuální internal
+  #     verze (path do Storage), Storage hostuje APK. Plain HTTP download
+  #     + Android PackageInstaller intent, žádný plugin SDK ani sign-in. ---
+  firebase_storage: ^13.0.0
+  package_info_plus: ^9.0.0
   wakelock_plus: ^1.5.2
   connectivity_plus: ^7.1.1
   cached_network_image: ^3.4.1
