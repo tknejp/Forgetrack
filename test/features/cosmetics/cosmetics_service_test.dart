@@ -21,7 +21,7 @@ void main() {
         uid,
         'emblem_forest_mark',
         sourceType: CosmeticUnlockSource.achievement.name,
-        sourceId: 'first_reward',
+        sourceId: 'first_daily_goal',
       );
       await service.unlock(
         uid,

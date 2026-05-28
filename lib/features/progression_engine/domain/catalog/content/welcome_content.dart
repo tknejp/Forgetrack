@@ -1,4 +1,5 @@
 import 'package:forgetrack/domain/progression/catalog/ids.dart';
+import 'package:forgetrack/domain/progression/catalog/quest_display_bucket.dart';
 import '../../../../../shared/domain/rarity.dart';
 import 'package:forgetrack/domain/progression/catalog/content_tag.dart';
 import 'package:forgetrack/domain/progression/catalog/objective.dart';
@@ -10,14 +11,21 @@ import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
 import '../engine_catalog_context.dart';
 
 /// Welcome flow — the first achievement the player ever unlocks
-/// (no objective, no conditions) plus the "first reward" milestone
-/// that fires after their first claimed grant.
+/// (no objective, no conditions) plus the "first daily goal" milestone
+/// that grants the campfire-spark relic after the player completes
+/// their first DailyGoal claim.
 
 List<Objective> welcomeObjectives(EngineCatalogContext context) {
   return const [
+    // Counts only [DailyGoal] completions — the `daily` bucket is
+    // exclusive to that node type, so chapter openers / steps /
+    // finales (which auto-claim XP on level-up) can't satisfy it.
+    // Earlier shape (`RewardCountMetric() ≥ 1`) tripped on the
+    // pilgrim_path_open auto-claim and unlocked the relic on fresh
+    // install before the player did anything.
     Objective(
-      id: ObjectiveId('reward_count_1'),
-      metric: RewardCountMetric(),
+      id: ObjectiveId('daily_goal_complete_1'),
+      metric: QuestCompletionsByBucketMetric(bucket: QuestDisplayBucket.daily),
       scope: LifetimeScope(),
       operator: ObjectiveOperator.atLeast,
       targetValue: 1,
@@ -46,11 +54,11 @@ List<ProgressionEntry> welcomeNodes() {
       rarity: Rarity.common,
     ),
     Achievement(
-      id: const ProgressionEntryId('first_reward'),
-      objectiveId: ObjectiveId('reward_count_1'),
+      id: const ProgressionEntryId('first_daily_goal'),
+      objectiveId: ObjectiveId('daily_goal_complete_1'),
       badgeEmoji: '\u{1F3C6}',
-      titleKey: (l) => l.progAchievementFirstRewardTitle,
-      descriptionKey: (l) => l.progAchievementFirstRewardDesc,
+      titleKey: (l) => l.progAchievementFirstDailyGoalTitle,
+      descriptionKey: (l) => l.progAchievementFirstDailyGoalDesc,
       rewards: const [CosmeticReward(cosmeticId: CosmeticId('relic_campfire_spark'))],
       contentTags: const [ContentTag.core, ContentTag.cosmetics],
       rarity: Rarity.common,

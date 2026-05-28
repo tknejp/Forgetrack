@@ -9,7 +9,7 @@ import '../core/services/notification_preferences.dart';
 import '../core/services/notification_service.dart';
 
 class NotificationPreferencesProvider extends ChangeNotifier {
-  bool _notificationsEnabled = true;
+  bool _notificationsEnabled = false;
   final Map<NotificationCategory, bool> _categoryEnabled = {
     for (final c in NotificationCategory.values) c: true,
   };
@@ -22,7 +22,7 @@ class NotificationPreferencesProvider extends ChangeNotifier {
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     _notificationsEnabled =
-        prefs.getBool(NotificationPreferences.enabledPrefKey) ?? true;
+        prefs.getBool(NotificationPreferences.enabledPrefKey) ?? false;
     for (final c in NotificationCategory.values) {
       _categoryEnabled[c] = prefs.getBool(c.prefsKey) ?? true;
     }
