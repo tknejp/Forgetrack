@@ -54,16 +54,82 @@ class _SocialSearchSheetState extends State<SocialSearchSheet> {
   late final TextEditingController _controller;
   late final FocusNode _focusNode;
 
+  /// Owned by the sheet so the dismiss-on-pull-down listener below
+  /// can ask "is the result list at scroll offset 0?" before deciding
+  /// whether to count a downward drag as dismiss intent.
+  late final ScrollController _scrollController;
+
   Timer? _debounce;
   static const _debounceDuration = Duration(milliseconds: 240);
 
+  // ── Dismiss-on-pull-down state ─────────────────────────────────
+  //
+  // The default `enableDrag` on `showModalBottomSheet` only fires
+  // when no child claims the drag. Once the inner `ListView` has any
+  // content, it always wins the gesture arena and the sheet stops
+  // responding to swipe-down — same problem `slot_sheet_shell.dart`
+  // solves and the pattern below is lifted from there.
+  //
+  // We attach a raw `Listener` that tracks pointer-down → move → up.
+  // While `_atTop` (list at scroll offset 0) we accumulate downward
+  // delta; once it crosses `_dismissThreshold` we pop the route on
+  // pointer-up. Mid-scroll the accumulator resets, so dragging the
+  // list contents up never triggers a phantom dismiss.
+  double _dragAccumulated = 0;
+  bool _tracking = false;
+  static const double _dismissThreshold = 80;
+
   String _query = '';
+
+  bool get _atTop =>
+      !_scrollController.hasClients || _scrollController.offset <= 0;
+
+  void _onPointerDown(PointerDownEvent event) {
+    _dragAccumulated = 0;
+    _tracking = _atTop;
+  }
+
+  void _onPointerMove(PointerMoveEvent event) {
+    final dy = event.delta.dy;
+    if (!_tracking) {
+      // Re-arm once the user has scrolled back to the top and starts
+      // pulling downward again — common path when the list has been
+      // browsed and the player then wants to dismiss the sheet.
+      if (_atTop && dy > 0) {
+        _tracking = true;
+        _dragAccumulated = 0;
+      } else {
+        return;
+      }
+    }
+    if (!_atTop) {
+      _tracking = false;
+      _dragAccumulated = 0;
+      return;
+    }
+    _dragAccumulated += dy;
+    if (_dragAccumulated < 0) _dragAccumulated = 0;
+  }
+
+  void _onPointerUp(PointerUpEvent event) {
+    if (_dragAccumulated > _dismissThreshold) {
+      Navigator.of(context).maybePop();
+    }
+    _dragAccumulated = 0;
+    _tracking = false;
+  }
+
+  void _onPointerCancel(PointerCancelEvent event) {
+    _dragAccumulated = 0;
+    _tracking = false;
+  }
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController();
     _focusNode = FocusNode();
+    _scrollController = ScrollController();
     _controller.addListener(_handleChange);
     // Autofocus AFTER the first frame so the sheet's open transition
     // has finished laying out — focusing inside `initState` races the
@@ -80,6 +146,7 @@ class _SocialSearchSheetState extends State<SocialSearchSheet> {
     _controller.removeListener(_handleChange);
     _controller.dispose();
     _focusNode.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -135,49 +202,55 @@ class _SocialSearchSheetState extends State<SocialSearchSheet> {
     // the route; the inner `ListView` keeps its own scroll, and
     // overscroll at offset 0 hands the gesture back to the sheet
     // for dismiss.
-    return Container(
-      height: mq.size.height,
-      decoration: const BoxDecoration(
-        color: Tokens.bg,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        border: Border(
-          top: BorderSide(color: Tokens.cardBorder),
-          left: BorderSide(color: Tokens.cardBorder),
-          right: BorderSide(color: Tokens.cardBorder),
+    return Listener(
+      onPointerDown: _onPointerDown,
+      onPointerMove: _onPointerMove,
+      onPointerUp: _onPointerUp,
+      onPointerCancel: _onPointerCancel,
+      child: Container(
+        height: mq.size.height,
+        decoration: const BoxDecoration(
+          color: Tokens.bg,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          border: Border(
+            top: BorderSide(color: Tokens.cardBorder),
+            left: BorderSide(color: Tokens.cardBorder),
+            right: BorderSide(color: Tokens.cardBorder),
+          ),
         ),
-      ),
-      padding: EdgeInsets.only(bottom: mq.viewInsets.bottom),
-      child: Column(
-        children: [
-          const SizedBox(height: 12),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Tokens.cardBorder,
-              borderRadius: BorderRadius.circular(Tokens.radiusProgress),
+        padding: EdgeInsets.only(bottom: mq.viewInsets.bottom),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Tokens.cardBorder,
+                borderRadius: BorderRadius.circular(Tokens.radiusProgress),
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          _SearchInputRow(
-            controller: _controller,
-            focusNode: _focusNode,
-            isSearching: social.isSearching,
-            hasQuery: isQuerying,
-            hintText: l10n.socialSearchHint,
-          ),
-          const SizedBox(height: 10),
-          const Divider(height: 1, color: Tokens.cardBorder),
-          Expanded(
-            child: _buildResultsArea(
-              context,
-              social: social,
-              isQuerying: isQuerying,
-              friendMatches: friendMatches,
-              nonFriendMatches: nonFriendMatches,
+            const SizedBox(height: 12),
+            _SearchInputRow(
+              controller: _controller,
+              focusNode: _focusNode,
+              isSearching: social.isSearching,
+              hasQuery: isQuerying,
+              hintText: l10n.socialSearchHint,
             ),
-          ),
-        ],
+            const SizedBox(height: 10),
+            const Divider(height: 1, color: Tokens.cardBorder),
+            Expanded(
+              child: _buildResultsArea(
+                context,
+                social: social,
+                isQuerying: isQuerying,
+                friendMatches: friendMatches,
+                nonFriendMatches: nonFriendMatches,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -220,6 +293,10 @@ class _SocialSearchSheetState extends State<SocialSearchSheet> {
     }
 
     return ListView(
+      // Owned by the parent state so the pull-to-dismiss listener
+      // can ask the controller whether we're at scroll offset 0
+      // before treating a downward drag as dismiss intent.
+      controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
       children: [
         if (friendMatches.isNotEmpty) ...[
