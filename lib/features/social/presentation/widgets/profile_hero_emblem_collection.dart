@@ -38,34 +38,45 @@ class ProfileHeroEmblemCollection extends StatelessWidget {
     // the slots anchor flush with the side gutters and distributes
     // any extra width across the inter-slot gaps, so the row
     // scales gracefully with screen width without us re-doing the
-    // math per device.
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        for (var i = 0; i < total; i++)
-          () {
-            final unlocked = i < unlockedCount;
-            final emblem = unlocked && i < slots.length ? slots[i] : null;
-            final data = _SlotData(
-              index: i,
-              emblem: emblem,
-              unlocked: unlocked,
-              pinned: false,
-              endGame: i == total - 1,
-              unlockLevel: i < EmblemBoard.slotUnlockLevels.length
-                  ? EmblemBoard.slotUnlockLevels[i]
-                  : null,
-            );
-            return _EmblemSlot(
-              data: data,
-              size: slotSize,
-              onTap: unlocked && onTapSlot != null
-                  ? () => onTapSlot!(i)
-                  : null,
-            );
-          }(),
-      ],
+    // math per device. On narrow screens where 6 × slotSize exceeds
+    // the available band width (e.g. ~360-px devices once Stack
+    // gutters are subtracted), [LayoutBuilder] shrinks slot size to
+    // fit instead of letting the Row overflow.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxBySpace = constraints.maxWidth / total;
+        final effectiveSize = maxBySpace.isFinite && maxBySpace < slotSize
+            ? maxBySpace
+            : slotSize;
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            for (var i = 0; i < total; i++)
+              () {
+                final unlocked = i < unlockedCount;
+                final emblem = unlocked && i < slots.length ? slots[i] : null;
+                final data = _SlotData(
+                  index: i,
+                  emblem: emblem,
+                  unlocked: unlocked,
+                  pinned: false,
+                  endGame: i == total - 1,
+                  unlockLevel: i < EmblemBoard.slotUnlockLevels.length
+                      ? EmblemBoard.slotUnlockLevels[i]
+                      : null,
+                );
+                return _EmblemSlot(
+                  data: data,
+                  size: effectiveSize,
+                  onTap: unlocked && onTapSlot != null
+                      ? () => onTapSlot!(i)
+                      : null,
+                );
+              }(),
+          ],
+        );
+      },
     );
   }
 }
@@ -178,8 +189,11 @@ class _EmblemSlot extends StatelessWidget {
     } else {
       // Dashed-frame footprint sits inside the slot's hit-target —
       // the slot reads as a hint, equipped emblems read as the
-      // main object overflowing that hint (frame < slotSize).
-      final frame = ProfileHeroLayout.emblemFrameSize;
+      // main object overflowing that hint (frame < slotSize). The
+      // frame tracks the slot size so the margin/ratio stays
+      // consistent when the row shrinks on narrow screens.
+      final frame = ProfileHeroLayout.emblemFrameSize *
+          (size / ProfileHeroLayout.emblemSlotSize);
       // Locked slots get a quieter rendering than empty-but-
       // unlocked ones — the player has nothing actionable to do
       // there yet, so we let the unlocked slots lead visually.
