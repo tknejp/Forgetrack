@@ -40,6 +40,23 @@ class JourneyMapFog extends StatelessWidget {
   /// How far below [revealY] the receding wisp tails off.
   static const double _tailLength = 65.0;
 
+  /// Shifts the entire fog mass upward by this many canvas-px from the
+  /// supplied [revealY]. Without it the wisp covers the player line and
+  /// everything above; with too much, the future feels too readable for
+  /// a "fog of war" effect. ~130 px sits in the middle — clear zone of
+  /// ~65 px directly above the player (≈ 1 future route point at the
+  /// start-of-trail ~60 px spacing), then 1–2 more points fading through
+  /// the wisp + pre-wisp band before the dense fog body takes over.
+  static const double _revealLift = 130.0;
+
+  /// Extra softening band that sits immediately above the reveal line,
+  /// between the body of the fog mass and the wisp. Introduces an extra
+  /// gradient stop so the bottommost ~25 px of the cloud thin out
+  /// noticeably before the wisp band takes over — gives the "last cloud"
+  /// a gradient-of-transparency look instead of a hard handoff from
+  /// 0.92 → 0.40 alpha.
+  static const double _preWispBand = 25.0;
+
   static const double _tileAspect = 1024.0 / 1536.0;
 
   /// Tile width as a multiple of the canvas width — overscans so the cloud
@@ -68,7 +85,12 @@ class JourneyMapFog extends StatelessWidget {
   Widget build(BuildContext context) {
     if (width <= 0 || height <= 0) return const SizedBox.shrink();
 
-    final fogBottom = (revealY + _tailLength).clamp(0.0, height);
+    // Lifted reveal line — everything below uses this instead of [revealY]
+    // so the fog mass, fade band, and wisp all shift up together. Keeps the
+    // current player marker + the next slice of path visible underneath.
+    final liftedReveal = revealY - _revealLift;
+
+    final fogBottom = (liftedReveal + _tailLength).clamp(0.0, height);
     if (fogBottom <= 0) return const SizedBox.shrink();
 
     final tileWidth = width * _tileWidthMultiplier;
@@ -110,11 +132,15 @@ class JourneyMapFog extends StatelessWidget {
     // Clamped to [0,1] and forced monotonic so degenerate cases at the very
     // top / bottom of the route (revealY near 0 or near canvasH) don't crash
     // the shader on stop ordering.
-    final fadeStart = ((revealY - _fadeBand) / height).clamp(0.0, 1.0);
+    final fadeStart =
+        ((liftedReveal - _fadeBand) / height).clamp(0.0, 1.0);
     final midStop =
-        ((revealY - _fadeBand * 0.5) / height).clamp(fadeStart, 1.0);
-    final revealStop = (revealY / height).clamp(midStop, 1.0);
-    final tailStop = ((revealY + _tailLength) / height).clamp(revealStop, 1.0);
+        ((liftedReveal - _fadeBand * 0.5) / height).clamp(fadeStart, 1.0);
+    final revealStop = (liftedReveal / height).clamp(midStop, 1.0);
+    final preWispStop =
+        ((liftedReveal - _preWispBand) / height).clamp(midStop, revealStop);
+    final tailStop =
+        ((liftedReveal + _tailLength) / height).clamp(revealStop, 1.0);
 
     return IgnorePointer(
       child: SizedBox(
@@ -130,10 +156,18 @@ class JourneyMapFog extends StatelessWidget {
                 Color(0xFFFFFFFF), // 1.00 — deep future, fully dense
                 Color(0xFFFFFFFF), // 1.00 — body of the fog mass stays solid
                 Color(0xEBFFFFFF), // 0.92 — minimally thinning entering band
-                Color(0x66FFFFFF), // 0.40 — last cloud near player, see-through
+                Color(0x99FFFFFF), // 0.60 — pre-wisp softening (~25 px above player)
+                Color(0x4DFFFFFF), // 0.30 — last cloud near player, see-through
                 Color(0x00FFFFFF), // clear
               ],
-              stops: [0.0, fadeStart, midStop, revealStop, tailStop],
+              stops: [
+                0.0,
+                fadeStart,
+                midStop,
+                preWispStop,
+                revealStop,
+                tailStop,
+              ],
             ).createShader(rect),
             child: Stack(clipBehavior: Clip.none, children: tiles),
           ),
@@ -157,4 +191,112 @@ class _FogTileVariant {
   final double hShift;
   final double rotation;
   final bool flipX;
+}
+
+/// Decorative fog band for the mini map on the hero screen.
+///
+/// The mini map is a short horizontal strip (~90 px tall) showing 5 visible
+/// path slots at a time. Two things drive how the fog appears:
+///
+///  * [revealX] — the player's viewport-x. Until the player reaches the
+///    4th visible slot (where the strip starts scrolling to keep them in
+///    frame), the dense band's left edge slides right; by slot 4 the dense
+///    band sits only over the 5th (last) visible slot.
+///  * [progress] — overall journey progress (0..1). The whole fog fades
+///    with progress, so the later the player is in their journey, the less
+///    fog there is.
+///
+/// The asset itself is placed once at full strip width — no horizontal or
+/// vertical translation. Only the ShaderMask opacity changes; the cloud
+/// silhouette stays anchored at the same vertical level throughout the
+/// journey.
+class JourneyMiniMapFog extends StatelessWidget {
+  const JourneyMiniMapFog({
+    super.key,
+    required this.width,
+    required this.height,
+    required this.revealX,
+    required this.progress,
+  });
+
+  final double width;
+  final double height;
+
+  /// Viewport-x of the current player position. Drives the dense-band
+  /// horizontal anchor — the band collapses rightward as the player moves
+  /// through the 5 visible slots.
+  final double revealX;
+
+  /// Overall journey progress (0..1). Drives the asset's downward slide
+  /// and the overall fog opacity fade — late game shows only a thin wisp.
+  final double progress;
+
+  /// Player-viewport ratio at slot 3 (the 4th of 5 visible slots, where
+  /// the strip starts scrolling). Roughly sidePadding + 3*pointSpacing,
+  /// which works out to ~0.80 of strip width with the preview layout.
+  static const double _slot3Ratio = 0.80;
+
+  /// Dense-band start anchor when the player is at slot 0 vs slot 3.
+  static const double _denseStartAtSlot0 = 0.55;
+  static const double _denseStartAtSlot3 = 0.85;
+
+  /// Width of the fade band that ramps from clear → dense, just before
+  /// [denseStart]. Normalized to strip width.
+  static const double _fadeSpan = 0.14;
+
+  /// Max overall fade applied at progress=1. Keeps a wisp at progress=1
+  /// rather than going fully transparent — avoids a hard "fog vanished"
+  /// cliff when the player hits max level.
+  static const double _maxFade = 0.80;
+
+  @override
+  Widget build(BuildContext context) {
+    if (width <= 0 || height <= 0) return const SizedBox.shrink();
+
+    final clampedProgress = progress.clamp(0.0, 1.0).toDouble();
+    final viewportRatio =
+        ((revealX / width) / _slot3Ratio).clamp(0.0, 1.0).toDouble();
+
+    // Horizontal dense-band anchor — slides right with viewport ratio.
+    final denseStart = _denseStartAtSlot0 +
+        (_denseStartAtSlot3 - _denseStartAtSlot0) * viewportRatio;
+    final fadeStart = (denseStart - _fadeSpan).clamp(0.0, denseStart);
+    final clearEnd =
+        (denseStart - _fadeSpan * 1.5).clamp(0.0, fadeStart);
+
+    // Overall fog presence — multiplies the mask alpha so late-game shows
+    // only a thin remnant.
+    final fade = (1.0 - clampedProgress * _maxFade).clamp(0.0, 1.0);
+    final denseAlpha = 0.95 * fade;
+    final midAlpha = 0.55 * fade;
+
+    return IgnorePointer(
+      child: SizedBox(
+        width: width,
+        height: height,
+        child: ClipRect(
+          child: ShaderMask(
+            blendMode: BlendMode.dstIn,
+            shaderCallback: (rect) => LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [
+                const Color(0x00FFFFFF), // clear — past / walked
+                const Color(0x00FFFFFF), // clear through player line
+                Colors.white.withValues(alpha: midAlpha),
+                Colors.white.withValues(alpha: denseAlpha),
+                Colors.white.withValues(alpha: denseAlpha),
+              ],
+              stops: [0.0, clearEnd, fadeStart, denseStart, 1.0],
+            ).createShader(rect),
+            child: Image.asset(
+              JourneyMapAssets.previewFog,
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
