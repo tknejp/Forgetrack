@@ -7,7 +7,6 @@ import '../../../l10n/l10n.dart';
 import '../../../shared/theme/design_tokens.dart';
 import '../../auth/application/auth_provider.dart';
 import '../../celebration/presentation/celebration_overlay_host.dart';
-import '../../cosmetics/presentation/cosmetics_screen.dart';
 import '../../devtools/application/devtools_permission_service.dart';
 import '../../devtools/application/devtools_provider.dart';
 import '../../health_connect/presentation/activities_screen.dart';
@@ -23,6 +22,7 @@ import '../../settings/presentation/settings_screen.dart';
 import '../../social/application/social_provider.dart';
 import '../../social/presentation/ft_social_screen.dart';
 import '../../social/presentation/widgets/hero_progression_header.dart';
+import '../../social/presentation/widgets/social_user_profile_screen.dart';
 import '../../../shared/widgets/snappy_page_physics.dart';
 import 'widgets/debug_tools_sheet.dart';
 import 'widgets/main_bottom_nav.dart';
@@ -112,9 +112,22 @@ class _FtMainShellState extends State<MainShell> {
     // forwarded so a companion-availability celebration lands directly
     // on that companion's details sheet (where the player triggers the
     // claim animation) rather than on the inventory's "Vše" tab.
+    //
+    // Routes to the own profile screen on the Inventář tab — the
+    // dedicated `CosmeticsScreen` push route was retired so cosmetics
+    // only ship through the profile chrome. The signed-in user's uid
+    // is the screen's `uid`; if auth is missing for some reason
+    // (shouldn't happen — celebrations only fire when there's a
+    // signed-in user) we skip the push silently.
+    final uid = context.read<AuthProvider>().user?.id;
+    if (uid == null || uid.isEmpty) return;
     Navigator.of(context).push<void>(
       MaterialPageRoute(
-        builder: (_) => CosmeticsScreen(initialFocusId: focusCompanionId),
+        builder: (_) => SocialUserProfileScreen(
+          uid: uid,
+          initialTabIndex: 1,
+          inventoryFocusId: focusCompanionId,
+        ),
       ),
     );
   }

@@ -16,19 +16,17 @@ import 'cosmetics_screen_chrome.dart';
 import 'cosmetics_screen_segmented_tabs.dart';
 
 /// Body of the cosmetics inventory: equipped row, per-type segmented
-/// tabs, and the paginated category grid. Used both by the dedicated
-/// `CosmeticsScreen` push route and as the "Inventory" tab on the
-/// hero / profile screen.
+/// tabs, and the paginated category grid. Used by the "Inventář" tab
+/// on the own-profile `SocialUserProfileScreen` and by the DevTools
+/// catalog browser (which sets `devToolsMode: true`).
 class CosmeticsInventoryView extends StatefulWidget {
   const CosmeticsInventoryView({
     super.key,
-    this.initialType,
     this.initialFocusId,
     this.devToolsMode = false,
     this.onLeftEdgeOverscroll,
   });
 
-  final CosmeticType? initialType;
   final String? initialFocusId;
   final bool devToolsMode;
 
@@ -49,7 +47,6 @@ class CosmeticsInventoryView extends StatefulWidget {
 class _CosmeticsInventoryViewState extends State<CosmeticsInventoryView> {
   late final PageController _pageController;
   int _currentIndex = 0;
-  bool _didInitialJump = false;
   bool _didInitialFocus = false;
   // Overscroll handoff bookkeeping: accumulate pixels of overscroll
   // at the leftmost category page during the current drag, fire
@@ -129,19 +126,6 @@ class _CosmeticsInventoryViewState extends State<CosmeticsInventoryView> {
             .toList(growable: false);
 
     final tabs = <CosmeticType?>[...presentTypes, null];
-
-    if (!_didInitialJump && widget.initialType != null) {
-      final idx = tabs.indexOf(widget.initialType);
-      if (idx > 0) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && _pageController.hasClients) {
-            _pageController.jumpToPage(idx);
-            setState(() => _currentIndex = idx);
-          }
-        });
-      }
-      _didInitialJump = true;
-    }
 
     if (!_didInitialFocus && widget.initialFocusId != null) {
       _didInitialFocus = true;

@@ -38,11 +38,23 @@ class SocialUserProfileScreen extends StatefulWidget {
     required this.uid,
     this.initialDisplayName,
     this.initialPhotoUrl,
+    this.initialTabIndex = 0,
+    this.inventoryFocusId,
   });
 
   final String uid;
   final String? initialDisplayName;
   final String? initialPhotoUrl;
+
+  /// Own-profile Statistiky (0) / Inventář (1) starting tab. Foreign
+  /// profile renders ignore this — the foreign layout has no tabs.
+  final int initialTabIndex;
+
+  /// Cosmetic id to land on inside the Inventář tab. Forwarded to
+  /// `CosmeticsInventoryView` so the celebration "Open inventory" /
+  /// "Vyzvedni společníka" CTA can hand the player straight to the
+  /// matching details sheet instead of a generic inventory grid.
+  final String? inventoryFocusId;
 
   @override
   State<SocialUserProfileScreen> createState() =>
@@ -67,7 +79,11 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen>
     _profileStream = social.watchProfileById(widget.uid);
     _achievementsStream = social.watchFriendAchievements(widget.uid);
     _sharesStream = social.watchProfileShares(widget.uid);
-    _tab = TabController(length: 2, vsync: this);
+    _tab = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: widget.initialTabIndex.clamp(0, 1),
+    );
   }
 
   @override
@@ -352,24 +368,32 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen>
                     : null,
                 // Inline `@handle · Přátelé N` row sitting as the app
                 // bar's subtitle, directly under the player's display
-                // name.
-                subtitle: StreamBuilder<List<SocialUserProfile>>(
-                  stream: social.watchFriendProfilesForUser(widget.uid),
-                  builder: (context, friendsSnap) {
-                    return ProfileAppBarIdentityStack(
-                      handle: handle,
-                      isMe: isMe,
-                      onEditHandle:
-                          isMe ? () => _editOwnHandle(handle) : null,
-                      friendCount: friendsSnap.data?.length,
-                      onTapFriendChip: () => ProfileFriendsListSheet.show(
-                        context,
+                // name. Suppressed entirely when the profile has no
+                // handle yet — happens before the social stream has
+                // produced a snapshot (or when Firestore access is
+                // denied) so the bar doesn't render a bare `@` with
+                // an orphan edit-pencil affordance.
+                subtitle: handle.isEmpty
+                    ? null
+                    : StreamBuilder<List<SocialUserProfile>>(
                         stream: social.watchFriendProfilesForUser(widget.uid),
+                        builder: (context, friendsSnap) {
+                          return ProfileAppBarIdentityStack(
+                            handle: handle,
+                            isMe: isMe,
+                            onEditHandle:
+                                isMe ? () => _editOwnHandle(handle) : null,
+                            friendCount: friendsSnap.data?.length,
+                            onTapFriendChip: () => ProfileFriendsListSheet.show(
+                              context,
+                              stream:
+                                  social.watchFriendProfilesForUser(widget.uid),
+                            ),
+                            friendsChipLabel:
+                                l10n.socialProfileFriendsChipLabel,
+                          );
+                        },
                       ),
-                      friendsChipLabel: l10n.socialProfileFriendsChipLabel,
-                    );
-                  },
-                ),
               ),
             );
 
@@ -429,6 +453,7 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen>
                       ),
                     ),
                     CosmeticsInventoryView(
+                      initialFocusId: widget.inventoryFocusId,
                       // Continuous swipe right past the leftmost
                       // category page hands off to Statistiky (outer
                       // tab 0) so the player can flick back without
