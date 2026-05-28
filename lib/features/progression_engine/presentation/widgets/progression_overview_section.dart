@@ -142,7 +142,6 @@ class _CompactStatRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final locale = Localizations.localeOf(context).toString();
     final compactXp = NumberFormat.compact(locale: locale).format(totalXp);
-    final l10n = context.l10n;
 
     return Row(
       children: [
@@ -150,7 +149,6 @@ class _CompactStatRow extends StatelessWidget {
           child: _CompactChip(
             icon: Icons.stars_rounded,
             value: compactXp,
-            label: l10n.progMiniStatTotalXp,
             color: Tokens.accent,
           ),
         ),
@@ -159,7 +157,6 @@ class _CompactStatRow extends StatelessWidget {
           child: _CompactChip(
             icon: Icons.shield_moon_rounded,
             value: '$achievements',
-            label: l10n.progMiniStatAchievements,
             color: Tokens.accent,
           ),
         ),
@@ -168,7 +165,6 @@ class _CompactStatRow extends StatelessWidget {
           child: _CompactChip(
             icon: Icons.local_fire_department_rounded,
             value: '$topStreak',
-            label: l10n.progStreakCurrentLabel,
             color: Tokens.active.color,
           ),
         ),
@@ -200,55 +196,39 @@ class _CompactChip extends StatelessWidget {
   const _CompactChip({
     required this.icon,
     required this.value,
-    required this.label,
     required this.color,
   });
 
   final IconData icon;
   final String value;
-  final String label;
   final Color color;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 36,
-      padding: const EdgeInsets.symmetric(horizontal: 9),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(Tokens.radiusProgress),
         border: Border.all(color: color.withValues(alpha: 0.22)),
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 6),
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 8),
           Flexible(
-            child: Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: value,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                      color: color,
-                      letterSpacing: -0.2,
-                    ),
-                  ),
-                  TextSpan(
-                    text: '  ${label.toUpperCase()}',
-                    style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w800,
-                      color: color.withValues(alpha: 0.72),
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ],
-              ),
+            child: Text(
+              value,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+                color: color,
+                letterSpacing: -0.2,
+              ),
             ),
           ),
         ],
@@ -346,7 +326,7 @@ class _MiniStatCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 78,
+      constraints: const BoxConstraints(minHeight: 78),
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.045),
@@ -386,14 +366,14 @@ class _MiniStatCell extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   label.toUpperCase(),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: Tokens.fontSizeTiny,
                     fontWeight: FontWeight.w800,
                     color: Tokens.onSurfaceFaint,
                     letterSpacing: 0.75,
-                    height: 1,
+                    height: 1.15,
                   ),
                 ),
               ],
@@ -528,13 +508,14 @@ class _DomainSummaryPill extends StatelessWidget {
           const SizedBox(height: 5),
           Text(
             caption.toUpperCase(),
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: Tokens.fontSizeTiny,
               fontWeight: FontWeight.w800,
               color: color.withValues(alpha: 0.72),
               letterSpacing: 0.8,
+              height: 1.2,
             ),
           ),
         ],
