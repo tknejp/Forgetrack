@@ -1159,12 +1159,23 @@ class _HeroBannerStack extends StatelessWidget {
     final cosmeticsState = isMe ? context.watch<CosmeticsProvider>() : null;
 
     ProfileDetailHeroCard buildHeroCard({required bool renderBackground}) {
+      // Avatar identity for the hero card. Own profile reads its own
+      // race + equipped skin from the live `CosmeticsProvider` so a
+      // skin change repaints without waiting for the profile
+      // projection to round-trip through Firestore. Foreign profile
+      // has no cosmetics provider bound (we don't subscribe to other
+      // users' inventory), so the raceId + skinId come from the
+      // published `SocialUserProfile` snapshot instead — the same
+      // source the compact search-result avatar already uses, so the
+      // hero card matches the thumbnail.
       return ProfileDetailHeroCard(
         displayName: displayName,
         profile: profile,
         isMe: isMe,
-        raceId: cosmeticsState?.currentRaceId,
-        skinId: cosmeticsState?.state?.equipped.skinId,
+        raceId: isMe ? cosmeticsState?.currentRaceId : profile?.raceId,
+        skinId: isMe
+            ? cosmeticsState?.state?.equipped.skinId
+            : profile?.equippedCosmetics.skinId,
         emblemSlots: emblemSlots,
         renderBackground: renderBackground,
         onTapEmblemSlot: (slotIndex) => onOpenEmblemSlot(
