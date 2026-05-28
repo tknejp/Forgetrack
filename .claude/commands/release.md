@@ -16,11 +16,11 @@ Uživatel chce nový release Forgetrack. Postupuj **přesně podle těchto krok�
 
 ### 0. Bezpečnostní confirm gate
 
-Release je destruktivní operace (push na main, tag, FAD upload, email testerům). Než cokoli začneš dělat, **explicitně se zeptej uživatele na potvrzení záměru**. Smyslem je odchytit `/release` zadaný omylem (překlep, špatné okno).
+Release je destruktivní operace (push na main, tag, Firebase Storage upload, Firestore manifest write, FCM push testerům). Než cokoli začneš dělat, **explicitně se zeptej uživatele na potvrzení záměru**. Smyslem je odchytit `/release` zadaný omylem (překlep, špatné okno).
 
 Formuluj jednou větou — krátce a konkrétně. Příklad:
 
-> Spustím release proces (push na main, tag, build, upload testerům). Pokračovat? Potvrď `ano` / `pokračuj` / `release`.
+> Spustím release proces (push na main, tag, build, upload do Storage, manifest do Firestore, push notifikace testerům). Pokračovat? Potvrď `ano` / `pokračuj` / `release`.
 
 Akceptuj pouze jasné potvrzení (`ano`, `yes`, `ok`, `pokračuj`, `release`, `proveď` apod.). Pokud uživatel odpoví neutrálně / nejasně / vyhýbavě, **nepokračuj** — ptej se znovu nebo se zeptej, co měl na mysli.
 
@@ -62,7 +62,7 @@ Vypiš commity setříděné podle scope-prefixu a u každého zařaď do katego
 
 Vytvoř `release_notes/v<X.Y.Z>.md` podle [release_notes/TEMPLATE.md](../../release_notes/TEMPLATE.md). Naplň ho na základě commit logu — **user-facing věty**, ne raw commit shorts. Sekce „Co testovat prioritně" naplň podle toho, co se nejvíc změnilo.
 
-Ukaž uživateli draft a požádej o úpravy / schválení. Tester tento text uvidí v emailu z FAD.
+Ukaž uživateli draft a požádej o úpravy / schválení. Tester tento text uvidí přímo v in-app update dialogu (Firestore manifest field `notes`).
 
 ### 5. Příprava CHANGELOG.md draftu
 
@@ -86,10 +86,12 @@ Pro netriviální release (víc než pár commitů) přidej `-RunTests`.
 
 Skript je interaktivní (pauzuje na konfirmace). **Spusť ho ve foreground Bash/PowerShell — ne v background**, aby uživatel viděl prompty a mohl odpovídat. Pokud chce dry-run první, přidej `-DryRun`.
 
+**Distribuční flow:** skript buildí `--flavor internal` (jediný flavor s REQUEST_INSTALL_PACKAGES + FileProvider, viz `docs/git_workflow.md §3.1`), pak `node scripts/publish_internal_build.js` uploadne APK do Firebase Storage + napíše Firestore manifest doc `app_config/latest_internal`. Bez `secrets/firebase-service-account.json` skript fail-uje hned v preflight (Storage / Firestore write potřebuje SA klíč). Po publish jde FCM push na topic `forgetrack-internal-builds` přes `send_release_push.js`. Pokud push selže, release pokračuje — tester to uvidí na resumed events tak jako tak.
+
 ### 7. Po dokončení
 
 - Ověř výstup skriptu (poslední sekce „Hotovo").
-- Připomeň uživateli, ať se podívá do Firebase Console, jestli tester dostal email.
+- Připomeň uživateli, ať otevře app na zařízení s předchozím internal buildem a ověří, že na resume přijde in-app dialog „Nová verze". Tap → progress bar → systémový install prompt.
 - Pokud byl release netriviální, nabídni aktualizaci `docs/release/beta_readiness.md` (přesun shippednutých karet).
 
 ## Co dělat NE
