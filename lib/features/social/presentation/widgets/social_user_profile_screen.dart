@@ -28,7 +28,7 @@ import 'profile_title_banner.dart';
 import 'skin_slot_sheet.dart';
 import 'social_cosmetic_avatar.dart';
 import 'social_edit_handle_sheet.dart';
-import 'social_feed_card.dart';
+import 'social_owned_share_card.dart';
 import 'social_profile_achievement_grid.dart';
 import 'social_profile_friends_section.dart';
 
@@ -504,10 +504,7 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen>
                           title: l10n.socialProfileSharedPosts,
                         ),
                         const SizedBox(height: 10),
-                        _ProfileSharesSection(
-                          stream: _sharesStream,
-                          canDelete: false,
-                        ),
+                        _ProfileSharesSection(stream: _sharesStream),
                       ],
                     ),
                   ),
@@ -727,10 +724,7 @@ class _OwnStatsTabContent extends StatelessWidget {
           title: l10n.socialProfileSharedPosts,
         ),
         const SizedBox(height: 10),
-        _ProfileSharesSection(
-          stream: sharesStream,
-          canDelete: true,
-        ),
+        _ProfileSharesSection(stream: sharesStream),
       ],
     );
   }
@@ -825,16 +819,9 @@ class _PinnedAchievementsSection extends StatelessWidget {
 }
 
 class _ProfileSharesSection extends StatelessWidget {
-  const _ProfileSharesSection({
-    required this.stream,
-    required this.canDelete,
-  });
+  const _ProfileSharesSection({required this.stream});
 
   final Stream<List<SocialAchievementShare>> stream;
-
-  /// True when the viewer owns this profile — wires a kebab menu into
-  /// each share card so the owner can remove their own posts.
-  final bool canDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -857,81 +844,11 @@ class _ProfileSharesSection extends StatelessWidget {
             for (final share in shares)
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: SocialFeedCard(
-                  share: share,
-                  onDelete: canDelete
-                      ? () => _confirmAndDeleteShare(context, share)
-                      : null,
-                ),
+                child: SocialOwnedShareCard(share: share),
               ),
           ],
         );
       },
-    );
-  }
-
-  Future<void> _confirmAndDeleteShare(
-    BuildContext context,
-    SocialAchievementShare share,
-  ) async {
-    final l10n = context.l10n;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Tokens.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(Tokens.radiusButton),
-        ),
-        title: Text(
-          l10n.socialSharedPostDeleteConfirmTitle,
-          style: const TextStyle(
-            color: Tokens.onSurface,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        content: Text(
-          l10n.socialSharedPostDeleteConfirmBody,
-          style: const TextStyle(
-            color: Tokens.onSurfaceMuted,
-            fontSize: Tokens.fontSizeBody,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(
-              l10n.socialCancel,
-              style: const TextStyle(color: Tokens.onSurfaceMuted),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(
-              l10n.socialSharedPostDelete,
-              style: const TextStyle(
-                color: Color(0xFFEF4444),
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !context.mounted) return;
-    final social = context.read<SocialProvider>();
-    final messenger = ScaffoldMessenger.of(context);
-    await social.deleteAchievementShare(share.id);
-    if (!context.mounted) return;
-    messenger.showSnackBar(
-      SnackBar(
-        backgroundColor: Tokens.surface,
-        content: Text(
-          social.error == null
-              ? l10n.socialSharedPostDeleted
-              : l10n.socialErrorWithMessage(social.error!),
-          style: const TextStyle(color: Tokens.onSurface),
-        ),
-      ),
     );
   }
 }

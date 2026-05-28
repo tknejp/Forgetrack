@@ -5,7 +5,7 @@ import '../../../../l10n/l10n.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../../application/social_provider.dart';
 import '../widgets/social_empty.dart';
-import '../widgets/social_feed_card.dart';
+import '../widgets/social_owned_share_card.dart';
 
 class SocialFeedTab extends StatelessWidget {
   const SocialFeedTab({super.key});
@@ -41,7 +41,7 @@ class SocialFeedTab extends StatelessWidget {
           ...shares.map(
             (s) => Padding(
               padding: const EdgeInsets.only(bottom: 10),
-              child: SocialFeedCard(share: s),
+              child: SocialOwnedShareCard(share: s),
             ),
           ),
       ],

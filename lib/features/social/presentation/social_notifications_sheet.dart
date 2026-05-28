@@ -9,8 +9,8 @@ import '../domain/social_models.dart';
 import 'widgets/social_chip.dart';
 import 'widgets/social_cosmetic_avatar.dart';
 import 'widgets/social_empty.dart';
-import 'widgets/social_feed_card.dart';
 import 'widgets/social_notification_card.dart';
+import 'widgets/social_owned_share_card.dart';
 
 /// Modal bottom sheet pushed from the bell button in `SocialScreen`'s
 /// persistent top bar. Hosts two stacked sections, both optional:
@@ -463,7 +463,7 @@ class _ShareDetailSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          SocialFeedCard(share: share),
+          SocialOwnedShareCard(share: share),
           const SizedBox(height: Tokens.spaceXs),
         ],
       ),
