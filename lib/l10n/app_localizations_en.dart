@@ -5417,7 +5417,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get socialStatusSignInRequired =>
-      'Google sign-in is required for social features.';
+      'Google sign-in is required for the Fellowship.';
 
   @override
   String socialStatusBackendUnavailable(String error) {
@@ -5425,7 +5425,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get socialStatusConnecting => 'Connecting to social backend…';
+  String get socialStatusConnecting => 'Connecting to the Fellowship…';
 
   @override
   String socialStatusError(String error) {
@@ -5433,11 +5433,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get socialEditHandleTitle => 'Change Social ID';
+  String get socialEditHandleTitle => 'Change handle';
 
   @override
   String get socialEditHandleDescription =>
-      'Your ID is used to find you in Social.';
+      'Your handle lets others find you in the Fellowship.';
 
   @override
   String get socialEditHandleValidation => 'Enter at least one character.';
@@ -5449,19 +5449,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialSave => 'Save';
 
   @override
-  String get socialEditHandleTooltip => 'Change ID';
+  String get socialEditHandleTooltip => 'Change handle';
 
   @override
   String get socialEditPhotoTooltip => 'Change photo';
 
   @override
   String socialHandleSaveFailed(String error) {
-    return 'ID could not be saved: $error';
+    return 'Handle could not be saved: $error';
   }
 
   @override
   String socialHandleSaved(String handle) {
-    return 'Social ID saved: @$handle';
+    return 'Handle saved: @$handle';
   }
 
   @override
@@ -5669,7 +5669,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get socialSharedPostDeleteConfirmBody =>
-      'This shared post will be removed from your friends\' feed.';
+      'This shared post will be removed from your friends\' chronicle.';
 
   @override
   String get socialSharedPostDeleted => 'Post deleted.';
@@ -6309,7 +6309,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Completed quests and unlocked achievements';
 
   @override
-  String get notifChannelSocialName => 'Social';
+  String get notifChannelSocialName => 'Fellowship';
 
   @override
   String get notifChannelSocialDescription =>

@@ -9396,7 +9396,7 @@ abstract class AppLocalizations {
   /// No description provided for @socialStatusSignInRequired.
   ///
   /// In en, this message translates to:
-  /// **'Google sign-in is required for social features.'**
+  /// **'Google sign-in is required for the Fellowship.'**
   String get socialStatusSignInRequired;
 
   /// No description provided for @socialStatusBackendUnavailable.
@@ -9408,7 +9408,7 @@ abstract class AppLocalizations {
   /// No description provided for @socialStatusConnecting.
   ///
   /// In en, this message translates to:
-  /// **'Connecting to social backend…'**
+  /// **'Connecting to the Fellowship…'**
   String get socialStatusConnecting;
 
   /// No description provided for @socialStatusError.
@@ -9420,13 +9420,13 @@ abstract class AppLocalizations {
   /// No description provided for @socialEditHandleTitle.
   ///
   /// In en, this message translates to:
-  /// **'Change Social ID'**
+  /// **'Change handle'**
   String get socialEditHandleTitle;
 
   /// No description provided for @socialEditHandleDescription.
   ///
   /// In en, this message translates to:
-  /// **'Your ID is used to find you in Social.'**
+  /// **'Your handle lets others find you in the Fellowship.'**
   String get socialEditHandleDescription;
 
   /// No description provided for @socialEditHandleValidation.
@@ -9450,7 +9450,7 @@ abstract class AppLocalizations {
   /// No description provided for @socialEditHandleTooltip.
   ///
   /// In en, this message translates to:
-  /// **'Change ID'**
+  /// **'Change handle'**
   String get socialEditHandleTooltip;
 
   /// No description provided for @socialEditPhotoTooltip.
@@ -9462,13 +9462,13 @@ abstract class AppLocalizations {
   /// No description provided for @socialHandleSaveFailed.
   ///
   /// In en, this message translates to:
-  /// **'ID could not be saved: {error}'**
+  /// **'Handle could not be saved: {error}'**
   String socialHandleSaveFailed(String error);
 
   /// No description provided for @socialHandleSaved.
   ///
   /// In en, this message translates to:
-  /// **'Social ID saved: @{handle}'**
+  /// **'Handle saved: @{handle}'**
   String socialHandleSaved(String handle);
 
   /// No description provided for @socialTryAgain.
@@ -9864,7 +9864,7 @@ abstract class AppLocalizations {
   /// No description provided for @socialSharedPostDeleteConfirmBody.
   ///
   /// In en, this message translates to:
-  /// **'This shared post will be removed from your friends\' feed.'**
+  /// **'This shared post will be removed from your friends\' chronicle.'**
   String get socialSharedPostDeleteConfirmBody;
 
   /// No description provided for @socialSharedPostDeleted.
@@ -10969,7 +10969,7 @@ abstract class AppLocalizations {
   /// Android notification channel name for social notifications
   ///
   /// In en, this message translates to:
-  /// **'Social'**
+  /// **'Fellowship'**
   String get notifChannelSocialName;
 
   /// Android notification channel description for the social channel
