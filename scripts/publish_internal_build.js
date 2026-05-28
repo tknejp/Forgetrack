@@ -199,7 +199,11 @@ async function main() {
     die(3, 'service-account JSON missing client_email / private_key / project_id');
   }
 
-  const bucket = bucketArg || `${serviceAccount.project_id}.appspot.com`;
+  // Default bucket follows the newer Firebase Storage naming convention
+  // (`<projectId>.firebasestorage.app`). Older projects created before
+  // 2024 may still be on `<projectId>.appspot.com`; pass the legacy
+  // bucket name as the 6th CLI arg in that case.
+  const bucket = bucketArg || `${serviceAccount.project_id}.firebasestorage.app`;
   const objectName = `internal-builds/forgetrack-${version}-${buildNumber}.apk`;
   const notes = fs.readFileSync(releaseNotesFile, 'utf8').trim();
 
