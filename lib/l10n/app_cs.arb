@@ -708,8 +708,8 @@
   "progQuestStepsStreak7Title": "Disciplína kroků",
   "progQuestStepsStreak7Desc": "Splň denní cíl kroků 7 dní v řadě.",
 
-  "progAchievementFirstRewardTitle": "První odměna",
-  "progAchievementFirstRewardDesc": "Získej svou první progression odměnu.",
+  "progAchievementFirstDailyGoalTitle": "První denní cíl",
+  "progAchievementFirstDailyGoalDesc": "Dokonči svůj první denní cíl.",
   "progAchievementPathfinderTitle": "Tulák",
   "progAchievementPathfinderDesc": "Dosáhni levelu 5 získaným XP.",
   "progAchievementStepChainTitle": "Řetěz kroků",

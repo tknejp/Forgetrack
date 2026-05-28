@@ -5427,17 +5427,17 @@ abstract class AppLocalizations {
   /// **'Complete the previous Dragonrock Sovereign quests.'**
   String get progQuestDragonrockSovereignFinaleDesc;
 
-  /// No description provided for @progAchievementFirstRewardTitle.
+  /// No description provided for @progAchievementFirstDailyGoalTitle.
   ///
   /// In en, this message translates to:
-  /// **'First Reward'**
-  String get progAchievementFirstRewardTitle;
+  /// **'First Daily Goal'**
+  String get progAchievementFirstDailyGoalTitle;
 
-  /// No description provided for @progAchievementFirstRewardDesc.
+  /// No description provided for @progAchievementFirstDailyGoalDesc.
   ///
   /// In en, this message translates to:
-  /// **'Earn your first progression reward.'**
-  String get progAchievementFirstRewardDesc;
+  /// **'Complete your first daily goal.'**
+  String get progAchievementFirstDailyGoalDesc;
 
   /// No description provided for @progAchievementRewardHunter25Title.
   ///

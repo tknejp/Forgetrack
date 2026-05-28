@@ -3028,11 +3028,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Complete the previous Dragonrock Sovereign quests.';
 
   @override
-  String get progAchievementFirstRewardTitle => 'First Reward';
+  String get progAchievementFirstDailyGoalTitle => 'First Daily Goal';
 
   @override
-  String get progAchievementFirstRewardDesc =>
-      'Earn your first progression reward.';
+  String get progAchievementFirstDailyGoalDesc =>
+      'Complete your first daily goal.';
 
   @override
   String get progAchievementRewardHunter25Title => 'Reward Hunter';

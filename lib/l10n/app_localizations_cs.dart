@@ -3022,11 +3022,11 @@ class AppLocalizationsCs extends AppLocalizations {
       'Dokonči všechny předchozí úkoly vlády nad Dragonrockem.';
 
   @override
-  String get progAchievementFirstRewardTitle => 'První odměna';
+  String get progAchievementFirstDailyGoalTitle => 'První denní cíl';
 
   @override
-  String get progAchievementFirstRewardDesc =>
-      'Získej svou první progression odměnu.';
+  String get progAchievementFirstDailyGoalDesc =>
+      'Dokonči svůj první denní cíl.';
 
   @override
   String get progAchievementRewardHunter25Title => 'Lovec odměn';

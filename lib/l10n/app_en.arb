@@ -1767,8 +1767,8 @@
   "progQuestDragonrockSovereignFinaleTitle": "Dragonrock Seal",
   "progQuestDragonrockSovereignFinaleDesc": "Complete the previous Dragonrock Sovereign quests.",
 
-  "progAchievementFirstRewardTitle": "First Reward",
-  "progAchievementFirstRewardDesc": "Earn your first progression reward.",
+  "progAchievementFirstDailyGoalTitle": "First Daily Goal",
+  "progAchievementFirstDailyGoalDesc": "Complete your first daily goal.",
   "progAchievementRewardHunter25Title": "Reward Hunter",
   "progAchievementRewardHunter25Desc": "Earn 25 progression rewards.",
   "progAchievementRewardHunter100Title": "Reward Legend",
