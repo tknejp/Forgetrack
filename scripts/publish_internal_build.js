@@ -97,7 +97,31 @@ async function uploadApk({ bucket, objectName, apkPath, accessToken }) {
   // Stream the file body directly — APK is ~250 MB, buffering into memory
   // would spike RSS unnecessarily. Node 18+ fetch supports a Readable as body
   // when duplex: 'half' is set.
+  //
+  // Track bytes flowing through the stream so the caller sees upload
+  // progress instead of staring at a silent terminal for 30+ seconds.
+  // The 'data' event fires as fetch pulls from the stream — close enough
+  // to wire transfer for a network-bottlenecked upload.
   const stream = fs.createReadStream(apkPath);
+  const sizeMB = (size / 1024 / 1024).toFixed(1);
+  let uploaded = 0;
+  let lastPrintAt = 0;
+  const tty = process.stderr.isTTY;
+
+  stream.on('data', (chunk) => {
+    uploaded += chunk.length;
+    const now = Date.now();
+    if (now - lastPrintAt < 200 && uploaded < size) return;
+    lastPrintAt = now;
+    const pct = ((uploaded / size) * 100).toFixed(1);
+    const uploadedMB = (uploaded / 1024 / 1024).toFixed(1);
+    const line = `publish_internal_build: uploading… ${pct}% (${uploadedMB} / ${sizeMB} MB)`;
+    if (tty) {
+      process.stderr.write(`\r${line}`);
+    } else {
+      process.stderr.write(`${line}\n`);
+    }
+  });
 
   const res = await fetch(url, {
     method: 'POST',
@@ -109,6 +133,8 @@ async function uploadApk({ bucket, objectName, apkPath, accessToken }) {
     body: stream,
     duplex: 'half',
   });
+
+  if (tty) process.stderr.write('\n');
 
   if (!res.ok) {
     const text = await res.text();
