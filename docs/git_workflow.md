@@ -41,14 +41,24 @@ Tato sekce popisuje, **co se děje** — abys při ručním zásahu (skript spad
 ### 3.1 Distribuční kanál
 
 - **Firebase App Distribution (FAD)** pro pre-Play fázi. Tester groupy se spravují přes [Firebase Console → App Distribution → Testers & Groups](https://console.firebase.google.com/project/forgetracker-493415/appdistribution/groups).
-- Prod Firebase App ID: `1:798278342104:android:a44ecd497db4f28161cead` (package `com.knejp.forgetrack`).
-- Buildujeme **APK prod flavor** (`flutter build apk --release --flavor prod`). AAB až při přechodu na Play Internal Testing.
+- Firebase App ID: `1:798278342104:android:a44ecd497db4f28161cead` (package `com.knejp.forgetrack`).
+- **Build flavor: `internal`** (`flutter build apk --release --flavor internal`). `internal` flavor sdílí package name s `prod` ale jako jediný pulluje plné `firebase-appdistribution` SDK + `REQUEST_INSTALL_PACKAGES` permission — to umožňuje [in-app updateru](../lib/core/services/app_update_service.dart) handnout APK Android package installeru bez otevírání FAD webu / mailu. `prod` flavor zůstává Play Store policy-clean (jen stub `firebase-appdistribution-api` artefakt).
+- AAB až při přechodu na Play Internal Testing.
+
+### 3.1a Tester notifikace o novém buildu
+
+- **In-app updater**: tester otevře app → `ForgetrackApp.didChangeAppLifecycleState` (resumed) zavolá `AppUpdateService.checkForUpdate()` → FAD SDK silently checkne novou verzi a ukáže nativní install dialog. (Žádný blokační overlay na home screen — updater běží paralelně s `refreshOnAppOpen`.)
+- **FCM push**: tester se při app startu (jen na `internal` flavor) subscribe k topicu **`forgetrack-internal-builds`**. Release skript po úspěšném FAD uploadu pošle push „Forgetrack {version} k dispozici" — tap zařízení vzbudí, otevření appky pak triggernul in-app updater.
+- **Maily z FAD**: tester si je jednorázově vypne přes „Manage email settings" link v libovolném FAD mailu. Z Firebase Console / CLI se to nedá globálně toggle-nout (firebase-tools issue #7305 closed as not-planned).
 
 ### 3.2 Předpoklady před release
 
 - Aktuální větev = `develop`, čistý working tree, synced s `origin/develop`.
 - Žádná Tier 0 (release-blocker) karta v Trello sloupci **Probíhá** (viz [docs/release/beta_readiness.md](release/beta_readiness.md)).
 - Existuje `release_notes/v<x.y.z>.md` s user-facing textem pro testera (vzor: [release_notes/TEMPLATE.md](../release_notes/TEMPLATE.md)).
+- **(Volitelné, ale doporučené)** Firebase service-account JSON na `secrets/firebase-service-account.json` (gitignored). Bez něj se FCM push krok přeskočí s varováním — release proběhne, ale tester nedostane notifikaci a uvidí update až při dalším otevření appky.
+  - Vytvoření: [Google Cloud Console → IAM → Service Accounts](https://console.cloud.google.com/iam-admin/serviceaccounts) → nový SA s rolí *Firebase Cloud Messaging API Admin* (nebo *Firebase Admin SDK*), pak *Keys → Add Key → JSON*.
+- **Node.js 18+** v PATH (`scripts/send_fad_push.js` používá globální `fetch` + `node:crypto` pro JWT). Žádné `npm install` není potřeba.
 
 ### 3.3 Postup (co dělá `scripts/release.ps1`)
 
@@ -60,12 +70,13 @@ Tato sekce popisuje, **co se děje** — abys při ručním zásahu (skript spad
 6. **Commit** bumpu + changelogu na release branch.
 7. **`flutter analyze`** — gate (musí být clean).
 8. **`flutter test`** — opt-in přes `-RunTests`.
-9. **`flutter build apk --release --flavor prod`** → `build/app/outputs/flutter-apk/app-prod-release.apk`.
+9. **`flutter build apk --release --flavor internal`** → `build/app/outputs/flutter-apk/app-internal-release.apk`.
 10. **`firebase appdistribution:distribute`** — upload na FAD, release notes z `release_notes/v<x.y.z>.md`.
-11. **Merge `--no-ff` do `main`**, **tag `v<x.y.z>`**.
-12. **Merge `main` zpět do `develop`** (kvůli verzi + changelogu).
-13. **Archivace** release branch jako `archive/release-<x.y.z>` (viz §5).
-14. **Push** `main`, `develop`, tags.
+11. **FCM push** na topic `forgetrack-internal-builds` přes `scripts/send_fad_push.js`. Pokud `secrets/firebase-service-account.json` neexistuje, krok se vypíše jako varování a release pokračuje dál. Pokud push selže (síť, neplatný klíč), release také pokračuje — FAD upload už úspěšně proběhl.
+12. **Merge `--no-ff` do `main`**, **tag `v<x.y.z>`**.
+13. **Merge `main` zpět do `develop`** (kvůli verzi + changelogu).
+14. **Archivace** release branch jako `archive/release-<x.y.z>` (viz §5).
+15. **Push** `main`, `develop`, tags.
 
 ### 3.4 Manuální spuštění
 

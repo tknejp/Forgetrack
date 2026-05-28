@@ -86,10 +86,12 @@ Pro netriviální release (víc než pár commitů) přidej `-RunTests`.
 
 Skript je interaktivní (pauzuje na konfirmace). **Spusť ho ve foreground Bash/PowerShell — ne v background**, aby uživatel viděl prompty a mohl odpovídat. Pokud chce dry-run první, přidej `-DryRun`.
 
+**Flavor + push:** skript buildí `--flavor internal` (jediný flavor s plným FAD SDK + REQUEST_INSTALL_PACKAGES, viz `docs/git_workflow.md §3.1`) a po FAD uploadu odesílá FCM push na topic `forgetrack-internal-builds` přes `scripts/send_fad_push.js`. Pokud `secrets/firebase-service-account.json` chybí, push krok se přeskočí s varováním — release proběhne dál. Bez service-account klíče tester nedostane push, ale in-app updater check běží při dalším otevření appky tak jako tak.
+
 ### 7. Po dokončení
 
 - Ověř výstup skriptu (poslední sekce „Hotovo").
-- Připomeň uživateli, ať se podívá do Firebase Console, jestli tester dostal email.
+- Připomeň uživateli, ať otevře app na **fyzickém Androidu s předchozím buildem** a ověří, že na resume přijde nativní FAD update dialog. Cyklus: upload buildu N → ověřit že build N-1 ukáže prompt.
 - Pokud byl release netriviální, nabídni aktualizaci `docs/release/beta_readiness.md` (přesun shippednutých karet).
 
 ## Co dělat NE
