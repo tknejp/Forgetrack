@@ -151,7 +151,13 @@ List<_ChapterSpec> _chapters() {
   return [
     _ChapterSpec(
       id: const ChapterId('pilgrim_path'),
-      level: 1,
+      // Bumped from 1 → 2 on 2026-05-28. At level 1 the opener
+      // auto-claimed instantly on account creation, giving the player
+      // 40 XP before they even saw the chapter card. Level 2 forces a
+      // small amount of play (any daily goal claim) before Pilgrim
+      // unlocks — the opener celebration now lands on a meaningful
+      // moment.
+      level: 2,
       sortOrder: 200,
       iconAsset: questAssetPilgrimPathIcon,
       openTitleKey: (l) => l.progQuestPilgrimPathOpenTitle,
@@ -159,42 +165,55 @@ List<_ChapterSpec> _chapters() {
       finaleTitleKey: (l) => l.progQuestPilgrimPathFinaleTitle,
       finaleDescKey: (l) => l.progQuestPilgrimPathFinaleDesc,
       finaleEmblemId: const CosmeticId('emblem_pilgrim_mark'),
-      rewards: const [40, 60, 60, 80, 120],
+      // Rebalance 2026-05-28: previous targets (1/1/1) made the chapter
+      // a same-day claim spree once daily goals fired. New steps mirror
+      // Forest Trial's three dimensions (atomy / krokový volume /
+      // paired steps+sleep) at ~40-60-67% of FT's targets so Pilgrim
+      // ramps INTO Forest Trial instead of being equally hard.
+      rewards: const [40, 80, 100, 100, 180],
       openerRarity: Rarity.common,
       finaleRarity: Rarity.common,
       steps: [
         _StepSpec(
-          id: const ProgressionEntryId('pilgrim_path_first_steps'),
-          titleKey: (l) => l.progQuestPilgrimPathFirstStepsTitle,
-          descriptionKey: (l) => l.progQuestPilgrimPathFirstStepsDesc,
+          // Onboarding ramp step 1 — teach the daily-atoms rhythm
+          // before FT step 1 demands 5 days at the same bar.
+          id: const ProgressionEntryId('pilgrim_path_daily_warmup'),
+          titleKey: (l) => l.progQuestPilgrimPathWarmupTitle,
+          descriptionKey: (l) => l.progQuestPilgrimPathWarmupDesc,
+          metric: const DaysWithAtLeastKAmongMetric(
+            nodeIds: _allDailyAtoms,
+            atLeast: 2,
+          ),
+          targetValue: 2,
+          chainStepLabel: '2',
+          domain: ProgressionDomain.activity,
+        ),
+        _StepSpec(
+          // Step 2 — single-metric volume (krokový cíl) at 60% of
+          // FT's "5×" target. Anyone with a phone hits steps passively,
+          // so this is the easiest sustained streak to teach.
+          id: const ProgressionEntryId('pilgrim_path_steps_builder'),
+          titleKey: (l) => l.progQuestPilgrimPathStepsBuilderTitle,
+          descriptionKey: (l) => l.progQuestPilgrimPathStepsBuilderDesc,
           metric: const NodeCompletionsMetric(nodeId: ProgressionEntryId('daily_steps_today')),
-          targetValue: 1,
-          chainStepLabel: '1',
+          targetValue: 3,
+          chainStepLabel: '3',
           domain: ProgressionDomain.steps,
         ),
         _StepSpec(
-          id: const ProgressionEntryId('pilgrim_path_first_sleep'),
-          titleKey: (l) => l.progQuestPilgrimPathFirstSleepTitle,
-          descriptionKey: (l) => l.progQuestPilgrimPathFirstSleepDesc,
-          metric: const NodeCompletionsMetric(nodeId: ProgressionEntryId('daily_sleep_today')),
-          targetValue: 1,
-          chainStepLabel: '1',
+          // Step 3 — paired-day discipline at 67% of FT step 3's
+          // target. Introduces the steps+sleep combo Forest Trial
+          // will demand at 3 days.
+          id: const ProgressionEntryId('pilgrim_path_steps_sleep_rhythm'),
+          titleKey: (l) => l.progQuestPilgrimPathRhythmTitle,
+          descriptionKey: (l) => l.progQuestPilgrimPathRhythmDesc,
+          metric: const DaysWithAtLeastKAmongMetric(
+            nodeIds: _stepsAndSleep,
+            atLeast: 2,
+          ),
+          targetValue: 2,
+          chainStepLabel: '2',
           domain: ProgressionDomain.sleep,
-        ),
-        _StepSpec(
-          // Step 3 used to be `RewardCountMetric()` baselined on step 2,
-          // but that self-fulfils: claiming step 2 grants XP, which lands
-          // a reward event the same tick — step 3 reads 100% the instant
-          // step 2 finishes. Replaced with a "complete daily protein once
-          // since unlock" check so the third pillar (nutrition) is
-          // taught before Forest Trial unlocks at level 10.
-          id: const ProgressionEntryId('pilgrim_path_first_reward'),
-          titleKey: (l) => l.progQuestPilgrimPathFirstRewardTitle,
-          descriptionKey: (l) => l.progQuestPilgrimPathFirstRewardDesc,
-          metric: const NodeCompletionsMetric(nodeId: ProgressionEntryId('daily_protein_today')),
-          targetValue: 1,
-          chainStepLabel: '1',
-          domain: ProgressionDomain.nutrition,
         ),
       ],
     ),

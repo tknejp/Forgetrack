@@ -69,16 +69,22 @@ class Identity {
   }
 
   Identity mergeGoogle(GoogleSignInAccount account) {
+    // Preserve the existing id (Firebase UID when this Identity was
+    // produced by `Identity.fromFirebase`) — overwriting it with the
+    // Google sub here would make every Firestore owner-only rule
+    // deny the request, because `request.auth.uid` is the Firebase
+    // UID. Only fall back to the Google sub when the Identity was
+    // built from Google alone (no Firebase user yet).
     return Identity(
-      id: account.id.isNotEmpty ? account.id : id,
-      email: account.email.isNotEmpty ? account.email : email,
+      id: id.isNotEmpty ? id : account.id,
+      email: email.isNotEmpty ? email : account.email,
       displayName: _firstNonEmptyNullable([
-        account.displayName,
         displayName,
+        account.displayName,
       ]),
       photoUrl: _firstNonEmptyNullable([
-        account.photoUrl,
         photoUrl,
+        account.photoUrl,
       ]),
       googleAccount: account,
       firebaseUid: firebaseUid,

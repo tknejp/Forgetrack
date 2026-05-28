@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../features/cosmetics/application/cosmetics_provider.dart';
@@ -6,11 +7,14 @@ import '../../../../features/cosmetics/domain/cosmetic_catalog.dart';
 import '../../../../features/cosmetics/domain/cosmetic_models.dart';
 import '../../../../features/cosmetics/domain/hero_race_catalog.dart';
 import '../../../../features/cosmetics/domain/player_cosmetic_lifecycle.dart';
-import '../../../../features/cosmetics/presentation/cosmetics_screen.dart';
+import '../../../../features/cosmetics/presentation/widgets/cosmetics_inventory_view.dart';
 import '../../../../features/onboarding/presentation/race_picker_view.dart';
 import '../../../../features/onboarding/widgets/onboarding_theme.dart';
 import '../../../../features/progression_engine/application/progression_engine_provider.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/theme/design_tokens.dart';
+import '../../../../shared/widgets/ft_back_button.dart';
+import '../../../../shared/widgets/screen_header.dart';
 import '../../application/companion_dev_controller.dart';
 import '../widgets/devtools_action_tile.dart';
 import '../widgets/devtools_section_card.dart';
@@ -78,7 +82,7 @@ class _DevToolsCosmmeticsSectionState
           icon: Icons.inventory_2_outlined,
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute<void>(
-              builder: (_) => const CosmeticsScreen(devToolsMode: true),
+              builder: (_) => const _DevToolsCosmeticsCatalogScreen(),
             ),
           ),
         ),
@@ -725,6 +729,51 @@ class _DevToolsRacePickerSheetState extends State<_DevToolsRacePickerSheet> {
                   ),
                 ),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// DevTools-only catalog browser. The player-facing cosmetics route is
+/// the Inventář tab on `SocialUserProfileScreen`; this thin screen
+/// stays because QA still needs the `devToolsMode: true` view
+/// (all catalog items including locked + asset-missing indicators +
+/// unlock-rule matrix). Lives next to the section that pushes it so
+/// it never gets reused as a regular user surface.
+class _DevToolsCosmeticsCatalogScreen extends StatelessWidget {
+  const _DevToolsCosmeticsCatalogScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Tokens.bg,
+      ),
+      child: Scaffold(
+        backgroundColor: Tokens.bg,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                14,
+                MediaQuery.of(context).padding.top + 12,
+                14,
+                0,
+              ),
+              child: const ScreenHeader(
+                greeting: '',
+                title: 'Cosmetics catalog (dev)',
+                leading: FtBackButton(),
+              ),
+            ),
+            const SizedBox(height: 14),
+            const Expanded(
+              child: CosmeticsInventoryView(devToolsMode: true),
             ),
           ],
         ),

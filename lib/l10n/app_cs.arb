@@ -708,8 +708,8 @@
   "progQuestStepsStreak7Title": "Disciplína kroků",
   "progQuestStepsStreak7Desc": "Splň denní cíl kroků 7 dní v řadě.",
 
-  "progAchievementFirstRewardTitle": "První odměna",
-  "progAchievementFirstRewardDesc": "Získej svou první progression odměnu.",
+  "progAchievementFirstDailyGoalTitle": "První denní cíl",
+  "progAchievementFirstDailyGoalDesc": "Dokonči svůj první denní cíl.",
   "progAchievementPathfinderTitle": "Tulák",
   "progAchievementPathfinderDesc": "Dosáhni levelu 5 získaným XP.",
   "progAchievementStepChainTitle": "Řetěz kroků",
@@ -859,14 +859,28 @@
   "progQuestSourceDragonrockSovereign": "Vládce Dračí skály",
   "progQuestPilgrimPathOpenTitle": "Stezka poutníka",
   "progQuestPilgrimPathOpenDesc": "Vydej se na svou cestu — tvá první kapitola začíná.",
-  "progQuestPilgrimPathFirstStepsTitle": "První kroky",
-  "progQuestPilgrimPathFirstStepsDesc": "Splň denní cíl kroků a vyraz na stezku.",
-  "progQuestPilgrimPathFirstSleepTitle": "První odpočinek",
-  "progQuestPilgrimPathFirstSleepDesc": "Splň denní cíl spánku a načerpej sílu na další den.",
-  "progQuestPilgrimPathFirstRewardTitle": "Zásoby na cestu",
-  "progQuestPilgrimPathFirstRewardDesc": "Před vstupem do hlubokého lesa potřebuješ sílu — splň dnes svůj cíl bílkovin.",
+  "progQuestPilgrimPathWarmupTitle": "Denní rozcvička",
+  "progQuestPilgrimPathWarmupDesc": "Splň alespoň 2 denní cíle ve 2 různých dnech a nauč se rytmus.",
+  "progQuestPilgrimPathStepsBuilderTitle": "Krok za krokem",
+  "progQuestPilgrimPathStepsBuilderDesc": "Splň krokový cíl 3×.",
+  "progQuestPilgrimPathRhythmTitle": "Kroky i spánek",
+  "progQuestPilgrimPathRhythmDesc": "Splň krokový i spánkový cíl ve stejný den — dvakrát.",
   "progQuestPilgrimPathFinaleTitle": "Znak poutníka",
-  "progQuestPilgrimPathFinaleDesc": "Splň první kroky, odpočinek i zásoby na cestu a získej Znak poutníka.",
+  "progQuestPilgrimPathFinaleDesc": "Najdi rytmus chůze i odpočinku a získej Znak poutníka.",
+  "progChapterHintHeader": "Chybí",
+  "progChapterHintReachLevel": "Dosáhni úrovně {level}",
+  "@progChapterHintReachLevel": {
+    "placeholders": {
+      "level": {"type": "int"}
+    }
+  },
+  "progChapterHintFinishChapter": "Dokonči {chapter}",
+  "@progChapterHintFinishChapter": {
+    "placeholders": {
+      "chapter": {"type": "String"}
+    }
+  },
+  "progChapterHintGeneric": "Odemkni další část cesty",
 
   "progQuestForestTrialOpenTitle": "Lesní zkouška",
   "progQuestForestTrialOpenDesc": "Odemkni Lesní zkoušku dosažením 10. úrovně.",
@@ -2121,8 +2135,6 @@
   "welcomeKtSheetSubmit": "Přihlásit a propojit",
   "welcomeKtSheetFootnote": "Forgetrack používá tvé přihlášení jen ke čtení deníku z KT.",
 
-  "cosmeticsScreenTitle": "Inventář",
-  "cosmeticsInventorySectionHead": "Inventář",
   "cosmeticsTabAll": "Vše",
   "cosmeticsEmptyUnlockedTitle": "Zatím žádná odemčená kosmetika.",
   "cosmeticsEmptyUnlockedCaption": "Nové kousky se objeví po splnění úspěchů a milníků.",
@@ -2132,12 +2144,6 @@
   "cosmeticsEquippedSectionCaption": "Aktuální vzhled profilu a cesty",
   "cosmeticsEquippedEmptyTitle": "Zatím nic není vybavené.",
   "cosmeticsEquippedEmptyCaption": "Klepni na odemčenou kosmetiku níže a vyber Vybavit.",
-  "cosmeticsInventoryShowAll": "Zobrazit vše",
-  "cosmeticsInventoryLoading": "Načítám inventář…",
-  "cosmeticsInventorySignInHint": "Inventář bude dostupný po přihlášení.",
-  "cosmeticsInventoryItemNone": "Žádné",
-  "cosmeticsInventoryEquippedBadge": "VYBAVENO",
-  "cosmeticsInventoryLatestBadge": "POSLEDNÍ",
 
   "cosmeticTypeFrame": "Rámeček",
   "cosmeticTypeRelic": "Relikvie",

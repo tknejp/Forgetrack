@@ -6,6 +6,32 @@ Generování při release: viz [docs/git_workflow.md §3a](docs/git_workflow.md)
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-05-28
+
+Patch po 0.2.0 — opravy regresí a UI doladění zachycené v prvních hodinách testování.
+Žádná migrace dat, instalace přes 0.2.0 funguje.
+
+### Added
+
+- Journey: mini-map fog overlay + chevron na preview kapitoly (big-map fog povýšen do sdílené vrstvy).
+
+### Changed
+
+- Progression: Pilgrim chapter rebalance — kapitoly capnuté na 2 s 50% partial completion.
+- Social: profile open jako primární tap target hero hlavičky.
+- Social: `@handle · friends` řádek přesunut z appbaru do hero header karty.
+
+### Fixed
+
+- Onboarding: notifikační toggle defaultně OFF, aby OS prompt fungoval.
+- Auth/data: providers bindovány na Firebase UID — fix data leakage napříč účty; `CosmeticsScreen` retirován.
+- Progression: campfire-spark relic se odpaluje na prvním daily cíli, ne na prvním XP grantu.
+- Cosmetics: prázdný emblem tab v inventáři skryt.
+- Progression: hero overview chipy zeštíhleny + stat label wrap.
+- Settings: Google profilová fotka vrácena do záhlaví účtu.
+- DevTools: Material wrap v section card aby ListTile ink ripple fungoval.
+- Home: prevence overflow stat card headline při hodnotách rovných cíli.
+
 ## [0.2.0] - 2026-05-27
 
 Druhý testovací build. Avatary (race × skin), kosmetika přes Firestore, redesign profilu, interactive journey map, V2 background notifikace. Vyžaduje úplnou přeinstalaci — měnilo se DB schéma a proběhl wipe Firestore dat.
@@ -74,6 +100,7 @@ První testovací build — interní validace Firestore sync, distribuováno 1 t
 - 2026-05-27 (samostatný commit po tomto tagu): bumpnuto `pubspec.yaml` → `0.1.0+2` a založen tento changelog jako součást zavedení [git workflow](docs/git_workflow.md). Build number `+2` kvůli Android monotonic check; reinstalace u testera vyžaduje uninstall.
 - Historie před tímto tagem je pre-workflow — žádný backfill changelogu.
 
-[Unreleased]: https://github.com/tknejp/Forgetrack/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/tknejp/Forgetrack/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/tknejp/Forgetrack/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/tknejp/Forgetrack/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/tknejp/Forgetrack/releases/tag/v0.1.0

@@ -6,6 +6,7 @@ abstract final class JourneyMapAssets {
   static const collapsedBackground = 'assets/ui/journey_map_bg_collapsed.png';
   static const fallbackBackground = 'assets/ui/journey_map_bg.jpg';
   static const fog = 'assets/ui/journey_map_fog.png';
+  static const previewFog = 'assets/ui/journey_map_preview_fog.png';
 }
 
 abstract final class JourneyMapLayout {

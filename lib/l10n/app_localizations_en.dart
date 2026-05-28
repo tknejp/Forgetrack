@@ -2649,32 +2649,48 @@ class AppLocalizationsEn extends AppLocalizations {
       'Set out on your journey — your first chapter begins here.';
 
   @override
-  String get progQuestPilgrimPathFirstStepsTitle => 'First steps';
+  String get progQuestPilgrimPathWarmupTitle => 'Daily Warm-up';
 
   @override
-  String get progQuestPilgrimPathFirstStepsDesc =>
-      'Complete the daily steps goal and start walking the path.';
+  String get progQuestPilgrimPathWarmupDesc =>
+      'Complete at least 2 daily goals on 2 different days to learn the rhythm.';
 
   @override
-  String get progQuestPilgrimPathFirstSleepTitle => 'First rest';
+  String get progQuestPilgrimPathStepsBuilderTitle => 'Steps Builder';
 
   @override
-  String get progQuestPilgrimPathFirstSleepDesc =>
-      'Complete the daily sleep goal and recover for the road ahead.';
+  String get progQuestPilgrimPathStepsBuilderDesc =>
+      'Complete the daily steps goal 3 times.';
 
   @override
-  String get progQuestPilgrimPathFirstRewardTitle => 'Provisions for the road';
+  String get progQuestPilgrimPathRhythmTitle => 'Steps & Sleep Rhythm';
 
   @override
-  String get progQuestPilgrimPathFirstRewardDesc =>
-      'Strength fuels the path into the deep forest — hit today\'s protein goal.';
+  String get progQuestPilgrimPathRhythmDesc =>
+      'Complete both your steps and sleep goal on the same day, twice.';
 
   @override
   String get progQuestPilgrimPathFinaleTitle => 'Pilgrim\'s Mark';
 
   @override
   String get progQuestPilgrimPathFinaleDesc =>
-      'Walk, rest, gather provisions — then claim the Pilgrim\'s Mark.';
+      'Walk, rest, find your rhythm — then claim the Pilgrim\'s Mark.';
+
+  @override
+  String get progChapterHintHeader => 'Missing';
+
+  @override
+  String progChapterHintReachLevel(int level) {
+    return 'Reach level $level';
+  }
+
+  @override
+  String progChapterHintFinishChapter(String chapter) {
+    return 'Finish $chapter';
+  }
+
+  @override
+  String get progChapterHintGeneric => 'Unlock more of the journey';
 
   @override
   String get progQuestForestTrialOpenTitle => 'Forest Trial';
@@ -3028,11 +3044,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Complete the previous Dragonrock Sovereign quests.';
 
   @override
-  String get progAchievementFirstRewardTitle => 'First Reward';
+  String get progAchievementFirstDailyGoalTitle => 'First Daily Goal';
 
   @override
-  String get progAchievementFirstRewardDesc =>
-      'Earn your first progression reward.';
+  String get progAchievementFirstDailyGoalDesc =>
+      'Complete your first daily goal.';
 
   @override
   String get progAchievementRewardHunter25Title => 'Reward Hunter';
@@ -6217,12 +6233,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Forgetrack uses your sign-in only to read the KT diary.';
 
   @override
-  String get cosmeticsScreenTitle => 'Inventory';
-
-  @override
-  String get cosmeticsInventorySectionHead => 'Inventory';
-
-  @override
   String get cosmeticsTabAll => 'All';
 
   @override
@@ -6251,25 +6261,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cosmeticsEquippedEmptyCaption =>
       'Tap an unlocked cosmetic below and choose Equip.';
-
-  @override
-  String get cosmeticsInventoryShowAll => 'Show all';
-
-  @override
-  String get cosmeticsInventoryLoading => 'Loading inventory…';
-
-  @override
-  String get cosmeticsInventorySignInHint =>
-      'Inventory becomes available after sign-in.';
-
-  @override
-  String get cosmeticsInventoryItemNone => 'None';
-
-  @override
-  String get cosmeticsInventoryEquippedBadge => 'EQUIPPED';
-
-  @override
-  String get cosmeticsInventoryLatestBadge => 'LATEST';
 
   @override
   String get cosmeticTypeBanner => 'Banner';

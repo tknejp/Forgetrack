@@ -10,6 +10,7 @@ import '../../../progression_engine/presentation/widgets/progression_primitives.
 import '../../domain/journey_models.dart';
 import '../hero_journey_map_screen.dart';
 import 'journey_adapter.dart';
+import 'journey_map_fog.dart';
 import 'journey_primitives.dart';
 
 abstract final class _JourneyPreviewAssets {
@@ -74,17 +75,26 @@ class JourneyPreviewCard extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+              child: Stack(
                 children: [
-                  SizedBox(
-                    height: _JourneyPreviewLayout.mapHeight,
-                    child: _MiniMap(checkpoints: map),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        height: _JourneyPreviewLayout.mapHeight,
+                        child: _MiniMap(checkpoints: map),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+                        child: _SummaryRow(preview: map),
+                      ),
+                    ],
                   ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
-                    child: _SummaryRow(preview: map),
+                  const Positioned(
+                    top: 6,
+                    right: 6,
+                    child: _OpenMapChevron(),
                   ),
                 ],
               ),
@@ -141,6 +151,12 @@ class _MiniMap extends StatelessWidget {
             ),
         ];
         final pathSegments = _pathSegments(ordered, positions);
+        final focusIndex = _focusIndex(ordered);
+        final revealX =
+            positions[focusIndex].dx.clamp(0.0, width).toDouble();
+        final progress = ordered.length > 1
+            ? focusIndex / (ordered.length - 1)
+            : 0.0;
 
         return ClipRect(
           child: Stack(
@@ -191,6 +207,15 @@ class _MiniMap extends StatelessWidget {
                       ),
                     ),
                   ),
+              // Fog sits above the path / nodes so it obscures locked future
+              // checkpoints to the right of the player line. Matches the big
+              // map's reveal semantics, just rotated to the horizontal axis.
+              JourneyMiniMapFog(
+                width: width,
+                height: height,
+                revealX: revealX,
+                progress: progress,
+              ),
             ],
           ),
         );
@@ -461,6 +486,26 @@ class _SummaryItem extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Small affordance in the top-right of the preview card telegraphing that
+/// the card is tappable and opens the full journey map. Just the rounded
+/// chevron glyph — no backplate, no border. The icon's own alpha keeps it
+/// readable against both the dark gradient and the bright fog mass on the
+/// future side of the mini map.
+class _OpenMapChevron extends StatelessWidget {
+  const _OpenMapChevron();
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Icon(
+        Icons.chevron_right_rounded,
+        size: 18,
+        color: Colors.white.withValues(alpha: 0.82),
+      ),
     );
   }
 }

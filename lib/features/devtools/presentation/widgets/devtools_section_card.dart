@@ -40,12 +40,15 @@ class DevToolsSectionCard extends StatelessWidget {
             ],
           ),
         ),
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: cs.surfaceContainerLow,
+        // Material (not Container + BoxDecoration) so ListTile descendants
+        // — directly here or via SwitchListTile / panels below — find a
+        // Material ancestor for their ink splashes + selection chrome,
+        // instead of being masked by a wrapping DecoratedBox.
+        Material(
+          color: cs.surfaceContainerLow,
+          shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(Tokens.radiusInner),
-            border: Border.all(color: Tokens.cardBorder),
+            side: const BorderSide(color: Tokens.cardBorder),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

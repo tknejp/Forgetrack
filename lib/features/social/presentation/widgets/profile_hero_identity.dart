@@ -60,17 +60,22 @@ class _HandleSegment extends StatelessWidget {
   }
 }
 
-/// Inline `@handle · Přátelé N` row rendered as the app bar's
-/// subtitle (underneath the player's display name). Both segments
-/// share the muted "metadata" typography and sit side-by-side so the
-/// strip reads as one subtitle line. Separator dot lives inside its
-/// own horizontal padding so taps on the dot fall through rather
-/// than ambiguously hitting either segment.
+/// Inline `@handle · Přátelé N` row rendered in the hero header
+/// block, immediately below the app bar and above the title banner.
+/// Both segments share the muted "metadata" typography and sit
+/// side-by-side so the strip reads as one subtitle line. Separator
+/// dot lives inside its own horizontal padding so taps on the dot
+/// fall through rather than ambiguously hitting either segment.
 ///
-/// Was a right-aligned vertical stack pinned to the app bar's
-/// trailing slot before 2026-05-27.
-class ProfileAppBarIdentityStack extends StatelessWidget {
-  const ProfileAppBarIdentityStack({
+/// Position history:
+///   * Right-aligned vertical stack pinned to the app bar's
+///     trailing slot (before 2026-05-27).
+///   * `ScreenHeader.subtitle` underneath the display name (until
+///     2026-05-28).
+///   * Standalone row between the app bar and the title banner
+///     inside the hero header stack (current).
+class ProfileHeaderIdentityRow extends StatelessWidget {
+  const ProfileHeaderIdentityRow({
     super.key,
     required this.handle,
     required this.isMe,

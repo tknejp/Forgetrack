@@ -4779,41 +4779,41 @@ abstract class AppLocalizations {
   /// **'Set out on your journey — your first chapter begins here.'**
   String get progQuestPilgrimPathOpenDesc;
 
-  /// No description provided for @progQuestPilgrimPathFirstStepsTitle.
+  /// No description provided for @progQuestPilgrimPathWarmupTitle.
   ///
   /// In en, this message translates to:
-  /// **'First steps'**
-  String get progQuestPilgrimPathFirstStepsTitle;
+  /// **'Daily Warm-up'**
+  String get progQuestPilgrimPathWarmupTitle;
 
-  /// No description provided for @progQuestPilgrimPathFirstStepsDesc.
+  /// No description provided for @progQuestPilgrimPathWarmupDesc.
   ///
   /// In en, this message translates to:
-  /// **'Complete the daily steps goal and start walking the path.'**
-  String get progQuestPilgrimPathFirstStepsDesc;
+  /// **'Complete at least 2 daily goals on 2 different days to learn the rhythm.'**
+  String get progQuestPilgrimPathWarmupDesc;
 
-  /// No description provided for @progQuestPilgrimPathFirstSleepTitle.
+  /// No description provided for @progQuestPilgrimPathStepsBuilderTitle.
   ///
   /// In en, this message translates to:
-  /// **'First rest'**
-  String get progQuestPilgrimPathFirstSleepTitle;
+  /// **'Steps Builder'**
+  String get progQuestPilgrimPathStepsBuilderTitle;
 
-  /// No description provided for @progQuestPilgrimPathFirstSleepDesc.
+  /// No description provided for @progQuestPilgrimPathStepsBuilderDesc.
   ///
   /// In en, this message translates to:
-  /// **'Complete the daily sleep goal and recover for the road ahead.'**
-  String get progQuestPilgrimPathFirstSleepDesc;
+  /// **'Complete the daily steps goal 3 times.'**
+  String get progQuestPilgrimPathStepsBuilderDesc;
 
-  /// No description provided for @progQuestPilgrimPathFirstRewardTitle.
+  /// No description provided for @progQuestPilgrimPathRhythmTitle.
   ///
   /// In en, this message translates to:
-  /// **'Provisions for the road'**
-  String get progQuestPilgrimPathFirstRewardTitle;
+  /// **'Steps & Sleep Rhythm'**
+  String get progQuestPilgrimPathRhythmTitle;
 
-  /// No description provided for @progQuestPilgrimPathFirstRewardDesc.
+  /// No description provided for @progQuestPilgrimPathRhythmDesc.
   ///
   /// In en, this message translates to:
-  /// **'Strength fuels the path into the deep forest — hit today\'s protein goal.'**
-  String get progQuestPilgrimPathFirstRewardDesc;
+  /// **'Complete both your steps and sleep goal on the same day, twice.'**
+  String get progQuestPilgrimPathRhythmDesc;
 
   /// No description provided for @progQuestPilgrimPathFinaleTitle.
   ///
@@ -4824,8 +4824,32 @@ abstract class AppLocalizations {
   /// No description provided for @progQuestPilgrimPathFinaleDesc.
   ///
   /// In en, this message translates to:
-  /// **'Walk, rest, gather provisions — then claim the Pilgrim\'s Mark.'**
+  /// **'Walk, rest, find your rhythm — then claim the Pilgrim\'s Mark.'**
   String get progQuestPilgrimPathFinaleDesc;
+
+  /// No description provided for @progChapterHintHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing'**
+  String get progChapterHintHeader;
+
+  /// No description provided for @progChapterHintReachLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach level {level}'**
+  String progChapterHintReachLevel(int level);
+
+  /// No description provided for @progChapterHintFinishChapter.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish {chapter}'**
+  String progChapterHintFinishChapter(String chapter);
+
+  /// No description provided for @progChapterHintGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock more of the journey'**
+  String get progChapterHintGeneric;
 
   /// No description provided for @progQuestForestTrialOpenTitle.
   ///
@@ -5427,17 +5451,17 @@ abstract class AppLocalizations {
   /// **'Complete the previous Dragonrock Sovereign quests.'**
   String get progQuestDragonrockSovereignFinaleDesc;
 
-  /// No description provided for @progAchievementFirstRewardTitle.
+  /// No description provided for @progAchievementFirstDailyGoalTitle.
   ///
   /// In en, this message translates to:
-  /// **'First Reward'**
-  String get progAchievementFirstRewardTitle;
+  /// **'First Daily Goal'**
+  String get progAchievementFirstDailyGoalTitle;
 
-  /// No description provided for @progAchievementFirstRewardDesc.
+  /// No description provided for @progAchievementFirstDailyGoalDesc.
   ///
   /// In en, this message translates to:
-  /// **'Earn your first progression reward.'**
-  String get progAchievementFirstRewardDesc;
+  /// **'Complete your first daily goal.'**
+  String get progAchievementFirstDailyGoalDesc;
 
   /// No description provided for @progAchievementRewardHunter25Title.
   ///
@@ -10798,18 +10822,6 @@ abstract class AppLocalizations {
   /// **'Forgetrack uses your sign-in only to read the KT diary.'**
   String get welcomeKtSheetFootnote;
 
-  /// Title of the full cosmetics inventory screen reached from the Hero/Profile inventory section
-  ///
-  /// In en, this message translates to:
-  /// **'Inventory'**
-  String get cosmeticsScreenTitle;
-
-  /// Section header above the segmented type tabs inside the cosmetics inventory screen
-  ///
-  /// In en, this message translates to:
-  /// **'Inventory'**
-  String get cosmeticsInventorySectionHead;
-
   /// First segmented tab inside the cosmetics inventory — shows every owned cosmetic regardless of type
   ///
   /// In en, this message translates to:
@@ -10863,42 +10875,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tap an unlocked cosmetic below and choose Equip.'**
   String get cosmeticsEquippedEmptyCaption;
-
-  /// Trailing action on the inline inventory section that opens the full cosmetics screen
-  ///
-  /// In en, this message translates to:
-  /// **'Show all'**
-  String get cosmeticsInventoryShowAll;
-
-  /// Hint shown in the inline inventory section while the cosmetics state is still loading
-  ///
-  /// In en, this message translates to:
-  /// **'Loading inventory…'**
-  String get cosmeticsInventoryLoading;
-
-  /// Hint shown in the inline inventory section when the user is signed out
-  ///
-  /// In en, this message translates to:
-  /// **'Inventory becomes available after sign-in.'**
-  String get cosmeticsInventorySignInHint;
-
-  /// Placeholder name shown in an inventory tile when there is no cosmetic to display
-  ///
-  /// In en, this message translates to:
-  /// **'None'**
-  String get cosmeticsInventoryItemNone;
-
-  /// Badge shown on an inventory tile whose cosmetic is currently equipped
-  ///
-  /// In en, this message translates to:
-  /// **'EQUIPPED'**
-  String get cosmeticsInventoryEquippedBadge;
-
-  /// Badge shown on an inventory tile that surfaces the most recently unlocked cosmetic for that slot
-  ///
-  /// In en, this message translates to:
-  /// **'LATEST'**
-  String get cosmeticsInventoryLatestBadge;
 
   /// Singular label for a cosmetic of type Banner (title banner shown on the social profile header)
   ///

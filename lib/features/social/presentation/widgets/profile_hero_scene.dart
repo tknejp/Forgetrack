@@ -126,6 +126,12 @@ class ProfileHeroBackgroundEdgeFade extends StatelessWidget {
             // read against a clean dark backdrop instead of the
             // painted scene's lower foreground. ≈22 % of the card
             // height (~117 px on 530) versus the previous ~8 %.
+            // Top fade kept at zero — the layered
+            // `_HeroBannerStack` paints its own top dark→transparent
+            // gradient behind the appbar + title banner above the
+            // hero card, so adding a second top fade here would
+            // produce a visible darkening band right under the
+            // banner (regression noted during 2026-05-28 testing).
             stops: [0.0, 0.0, 0.78, 1.0],
             colors: [
               Color(0xFF0A0E1C),

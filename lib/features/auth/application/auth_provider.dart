@@ -106,6 +106,20 @@ class AuthProvider extends ChangeNotifier {
       _sessionState = AuthSessionState.signedOut;
     }
     notifyListeners();
+
+    // Cold-start case: Google's cached session restores via this
+    // listener before Firebase Auth's own persistence has fired. If
+    // Firebase isn't signed in yet, eagerly exchange the Google ID
+    // token so the Firebase UID lands ASAP. Without this, every
+    // downstream provider (cosmetics, engine, social) would otherwise
+    // sit in a "signed-out" limbo until SocialProvider's reconcile
+    // pass kicked Firebase sign-in — and any data tick that hit
+    // Firestore in between leaked permission-denied errors.
+    if (account != null && _firebaseAuth.currentUser == null) {
+      unawaited(_ensureFirebaseSignedIn(account).catchError((e, st) {
+        debugPrint('AuthProvider: eager Firebase sign-in failed: $e');
+      }));
+    }
   }
 
   void _handleFirebaseAuthChanged(User? firebaseUser) {
@@ -126,11 +140,18 @@ class AuthProvider extends ChangeNotifier {
     GoogleSignInAccount? googleAccount,
     User? firebaseUser,
   }) {
-    final firebaseIdentity =
-        firebaseUser == null ? null : Identity.fromFirebase(firebaseUser);
+    // Don't expose an Identity until Firebase Auth has signed in.
+    // Firestore security rules compare `request.auth.uid` to the
+    // Firebase UID; if we exposed a Google-only Identity here, every
+    // proxy provider would bind with the Google sub as its uid and
+    // every subsequent Firestore call would hit permission-denied
+    // (including the engine ledger pull and cosmetics pull-and-merge,
+    // which would then leak side-effects under the wrong key when the
+    // welcome achievement fires during that window).
+    if (firebaseUser == null) return null;
+    final firebaseIdentity = Identity.fromFirebase(firebaseUser);
     if (googleAccount != null) {
-      return (firebaseIdentity ?? Identity.fromGoogle(googleAccount))
-          .mergeGoogle(googleAccount);
+      return firebaseIdentity.mergeGoogle(googleAccount);
     }
     return firebaseIdentity;
   }

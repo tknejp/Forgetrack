@@ -242,8 +242,8 @@ class ProgressionEngineCelebrationAdapter {
     // ── Final pass: bundle solo achievements into a moment pack ──
     //
     // When ≥2 plain `CelebrationType.achievement` events remain after
-    // all earlier fold passes — typical case: welcome flow fires
-    // `welcome_to_journey` + `first_reward` together — fan them into
+    // all earlier fold passes — e.g. two day-counter achievements
+    // cresting on the same evaluation — fan them into
     // a single fullscreen card stack so the player sees one cohesive
     // "moment" instead of N popups in a row. Levels, chapters,
     // goal-bucket merges, and companion-folded events stay distinct.

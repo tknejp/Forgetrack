@@ -38,11 +38,23 @@ class SocialUserProfileScreen extends StatefulWidget {
     required this.uid,
     this.initialDisplayName,
     this.initialPhotoUrl,
+    this.initialTabIndex = 0,
+    this.inventoryFocusId,
   });
 
   final String uid;
   final String? initialDisplayName;
   final String? initialPhotoUrl;
+
+  /// Own-profile Statistiky (0) / Inventář (1) starting tab. Foreign
+  /// profile renders ignore this — the foreign layout has no tabs.
+  final int initialTabIndex;
+
+  /// Cosmetic id to land on inside the Inventář tab. Forwarded to
+  /// `CosmeticsInventoryView` so the celebration "Open inventory" /
+  /// "Vyzvedni společníka" CTA can hand the player straight to the
+  /// matching details sheet instead of a generic inventory grid.
+  final String? inventoryFocusId;
 
   @override
   State<SocialUserProfileScreen> createState() =>
@@ -67,7 +79,11 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen>
     _profileStream = social.watchProfileById(widget.uid);
     _achievementsStream = social.watchFriendAchievements(widget.uid);
     _sharesStream = social.watchProfileShares(widget.uid);
-    _tab = TabController(length: 2, vsync: this);
+    _tab = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: widget.initialTabIndex.clamp(0, 1),
+    );
   }
 
   @override
@@ -333,7 +349,7 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen>
             // hard horizontal seam between a scaffold-coloured chrome
             // strip and the cinematic scene below it.
             final appBar = Padding(
-              padding: const EdgeInsets.fromLTRB(14, 8, 14, 18),
+              padding: const EdgeInsets.fromLTRB(14, 8, 14, 6),
               child: ScreenHeader(
                 greeting: '',
                 // Show the player's display name in the app bar
@@ -350,31 +366,44 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen>
                 leading: Navigator.of(context).canPop()
                     ? const FtBackButton()
                     : null,
-                // Inline `@handle · Přátelé N` row sitting as the app
-                // bar's subtitle, directly under the player's display
-                // name.
-                subtitle: StreamBuilder<List<SocialUserProfile>>(
-                  stream: social.watchFriendProfilesForUser(widget.uid),
-                  builder: (context, friendsSnap) {
-                    return ProfileAppBarIdentityStack(
-                      handle: handle,
-                      isMe: isMe,
-                      onEditHandle:
-                          isMe ? () => _editOwnHandle(handle) : null,
-                      friendCount: friendsSnap.data?.length,
-                      onTapFriendChip: () => ProfileFriendsListSheet.show(
-                        context,
-                        stream: social.watchFriendProfilesForUser(widget.uid),
-                      ),
-                      friendsChipLabel: l10n.socialProfileFriendsChipLabel,
-                    );
-                  },
-                ),
               ),
             );
 
+            // `@handle · Přátelé N` row, rendered between the appbar
+            // and the title banner inside the hero header block.
+            // Suppressed entirely when the profile has no handle yet
+            // — happens before the social stream has produced a
+            // snapshot (or when Firestore access is denied) so the
+            // header doesn't surface a bare `@` with an orphan
+            // edit-pencil affordance.
+            final identityRow = handle.isEmpty
+                ? const SizedBox.shrink()
+                : Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                    child: StreamBuilder<List<SocialUserProfile>>(
+                      stream: social.watchFriendProfilesForUser(widget.uid),
+                      builder: (context, friendsSnap) {
+                        return ProfileHeaderIdentityRow(
+                          handle: handle,
+                          isMe: isMe,
+                          onEditHandle:
+                              isMe ? () => _editOwnHandle(handle) : null,
+                          friendCount: friendsSnap.data?.length,
+                          onTapFriendChip: () => ProfileFriendsListSheet.show(
+                            context,
+                            stream:
+                                social.watchFriendProfilesForUser(widget.uid),
+                          ),
+                          friendsChipLabel:
+                              l10n.socialProfileFriendsChipLabel,
+                        );
+                      },
+                    ),
+                  );
+
             final heroBanner = _HeroBannerStack(
               appBar: appBar,
+              identityRow: identityRow,
               profile: profile,
               isMe: isMe,
               displayName: displayName,
@@ -429,6 +458,7 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen>
                       ),
                     ),
                     CosmeticsInventoryView(
+                      initialFocusId: widget.inventoryFocusId,
                       // Continuous swipe right past the leftmost
                       // category page hands off to Statistiky (outer
                       // tab 0) so the player can flick back without
@@ -1087,6 +1117,7 @@ class _RemoveFriendButtonState extends State<_RemoveFriendButton> {
 class _HeroBannerStack extends StatelessWidget {
   const _HeroBannerStack({
     required this.appBar,
+    required this.identityRow,
     required this.profile,
     required this.isMe,
     required this.displayName,
@@ -1101,6 +1132,7 @@ class _HeroBannerStack extends StatelessWidget {
   });
 
   final Widget appBar;
+  final Widget identityRow;
   final SocialUserProfile? profile;
   final bool isMe;
   final String displayName;
@@ -1149,13 +1181,15 @@ class _HeroBannerStack extends StatelessWidget {
     }
 
     if (stats == null) {
-      // No banner — appbar over the plain hero card (own painted bg
-      // so the cinematic scene still shows during load).
+      // No banner — appbar + identity row over the plain hero card
+      // (own painted bg so the cinematic scene still shows during
+      // load).
       return Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           appBar,
+          identityRow,
           buildHeroCard(renderBackground: true),
         ],
       );
@@ -1245,6 +1279,7 @@ class _HeroBannerStack extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   appBar,
+                  identityRow,
                   Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: _bannerHorizontalPad),

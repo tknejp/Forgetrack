@@ -1207,12 +1207,50 @@ class ProgressionEngineProvider extends ChangeNotifier {
       return cached;
     }
 
-    final all = _questsForBucket(QuestDisplayBucket.chapter);
-    if (all.isEmpty) {
-      _cachedCurrentChapterQuests = const [];
-      _currentChapterQuestsCacheKey = cacheKey;
-      return const [];
+    // Walk the unified upcoming-chapters list and take up to 2 entries
+    // that aren't fully-locked. Fully-locked openers are reserved for
+    // [nextLockedChapter] — surfacing them as "active" cards would be
+    // misleading (no XP pill, no progress to engage with).
+    final all = _buildUpcomingChapters();
+    final out = <EngineQuestProgress>[];
+    for (final r in all) {
+      if (r.isLockedByConditions) continue;
+      out.add(r);
+      if (out.length >= 2) break;
     }
+    _cachedCurrentChapterQuests = out;
+    _currentChapterQuestsCacheKey = cacheKey;
+    return out;
+  }
+
+  /// Unified, sortOrder-sorted list of "card representatives" for every
+  /// chapter chain that hasn't yet completed its finale. Each entry is
+  /// one of:
+  ///
+  ///   - **Active step** — the chain's opener auto-claimed and the
+  ///     first uncompleted step is ready to engage. `levelGate` /
+  ///     `prereqGateNodeId` / `isLockedByConditions` are all null /
+  ///     false.
+  ///   - **Same-day pin** — the most recently completed step landed in
+  ///     the ledger today; the card stays pinned until midnight so the
+  ///     player sees their celebration without the chain snapping
+  ///     forward immediately.
+  ///   - **Partial 50% opener** — 2-gate opener with exactly one of
+  ///     two unlock conditions satisfied. Synthesised via
+  ///     [_partialOpenerProgress]; `isLockedByConditions` is false so
+  ///     the active section accepts it.
+  ///   - **Fully-locked opener** — both gates (or the single gate, for
+  ///     Pilgrim) unsatisfied. Passed through as-is from the engine
+  ///     resolver with `isLockedByConditions: true` so callers can
+  ///     route it to the teaser slot.
+  ///
+  /// [currentChapterQuests] consumes the first 2 non-locked entries;
+  /// [nextLockedChapter] consumes the first entry past that cutoff
+  /// (whatever its state). Anything beyond is hidden until an active
+  /// slot frees up.
+  List<EngineQuestProgress> _buildUpcomingChapters() {
+    final all = _questsForBucket(QuestDisplayBucket.chapter);
+    if (all.isEmpty) return const [];
 
     final byChain = <String, List<EngineQuestProgress>>{};
     for (final q in all) {
@@ -1245,17 +1283,12 @@ class ProgressionEngineProvider extends ChangeNotifier {
       // the NodeCompletionEvent (not NodeClaimEvent) because auto-
       // claim nodes — `ChapterOpener` is the canonical case —
       // never write a claim event, so the chain would silently skip
-      // the just-opened chapter card. Completion events are written
-      // for both manual + auto claim flows; their timestamp matches
-      // `_engineNow` on the run that produced them.
+      // the just-opened chapter card.
       //
       // Guard: the pin only applies while the chain still has work
-      // left (`firstUncompleted != null`). A claimed *finale* leaves
-      // `firstUncompleted == null` — the chapter is done and must
-      // leave the active list immediately so the next chapter's
-      // opener becomes the sole active card (Trello #66 — prevents
-      // chapter A's just-claimed finale and chapter B's auto-fired
-      // opener from coexisting in the JOURNEY section).
+      // left. A claimed finale leaves `firstUncompleted == null` —
+      // the chapter is done and must drop out of the upcoming list
+      // immediately so the next chapter advances into its slot.
       if (lastCompleted != null &&
           firstUncompleted != null &&
           _wasNodeCompletedOnDate(lastCompleted.nodeId, now)) {
@@ -1263,23 +1296,82 @@ class ProgressionEngineProvider extends ChangeNotifier {
         continue;
       }
       if (firstUncompleted == null) continue;
-      // Skip chapters whose next step is still gated — either by an
-      // unmet level requirement or by an unfinished prereq chapter.
-      // Those surface in [lockedQuests] / the ZAMÄŒENÃ‰ QUESTY section
-      // instead, mirroring V1 behavior where a locked chapter is
-      // shown as a compact locked row rather than its full card.
-      if (firstUncompleted.levelGate != null ||
-          firstUncompleted.prereqGateNodeId != null) {
+
+      // Three-state gate classification (2026-05-28 rebalance):
+      //  - both gates met → opener auto-claimed, firstUncompleted is
+      //    a real step → surface as active.
+      //  - exactly one of two gates met (only on 2-gate openers) →
+      //    surface a partial 50% projection so the player sees the
+      //    upcoming chapter + a hint about the missing gate.
+      //  - both gates unmet, or single-gate chapter with its gate
+      //    unmet → surface AS-IS with `isLockedByConditions: true`
+      //    so the teaser slot picks it up.
+      final missingLevel = firstUncompleted.levelGate != null;
+      final missingPrereq = firstUncompleted.prereqGateNodeId != null;
+      if (missingLevel || missingPrereq) {
+        final isOpener = firstUncompleted.node.chainOrder == 0;
+        final hasBothGates = isOpener
+            && _openerHasBothGates(firstUncompleted.node);
+        if (hasBothGates && missingLevel != missingPrereq) {
+          // 2-gate opener with exactly one gate met → partial 50%.
+          out.add(_partialOpenerProgress(firstUncompleted));
+        } else {
+          // Fully locked from the player's perspective. Keep the
+          // original engine-resolver projection (carrying
+          // `isLockedByConditions: true` + the unmet conditions) so
+          // the teaser can render the right hint copy.
+          out.add(firstUncompleted);
+        }
         continue;
       }
       out.add(firstUncompleted);
     }
     out.sort((a, b) =>
         (a.node.sortOrder).compareTo(b.node.sortOrder));
-    _cachedCurrentChapterQuests = out;
-    _currentChapterQuestsCacheKey = Object.hash(
-        identityHashCode(_ledger), _devDayOffset);
     return out;
+  }
+
+  /// True iff the opener carries BOTH a [LevelAtLeast] gate AND a
+  /// [NodeCompleted] gate in its `unlockConditions`. Drives the
+  /// "show at 50% if one of two gates is met" projection in
+  /// [currentChapterQuests]. Single-gate chapters (only Pilgrim's
+  /// Path today — level-only) never enter the partial state because
+  /// "one of one" reads as the same lifecycle as "both of two".
+  bool _openerHasBothGates(Quest opener) {
+    var hasLevel = false;
+    var hasPrereq = false;
+    for (final c in opener.unlockConditions) {
+      if (c is LevelAtLeast) hasLevel = true;
+      if (c is NodeCompleted) hasPrereq = true;
+    }
+    return hasLevel && hasPrereq;
+  }
+
+  /// Project a partial-opener [EngineQuestProgress] for display in the
+  /// active chapter section. The underlying engine state is unchanged
+  /// (objective metric still reads the player's level, opener still
+  /// auto-claims only when both gates pass); this just overrides the
+  /// surface fields the chapter card consumes so the bar reads 50%
+  /// and the hint surfaces the missing condition. `levelGate` and
+  /// `prereqGateNodeId` are preserved so the card can derive the
+  /// "Reach level X" / "Finish chapter Y" hint text.
+  EngineQuestProgress _partialOpenerProgress(EngineQuestProgress src) {
+    return EngineQuestProgress(
+      node: src.node,
+      actualValue: 1,
+      targetValue: 2,
+      progress: 0.5,
+      isCompleted: false,
+      isAvailableForClaim: false,
+      baseXp: src.baseXp,
+      previewXp: src.previewXp,
+      domain: src.domain,
+      levelGate: src.levelGate,
+      prereqGateNodeId: src.prereqGateNodeId,
+      valueUnit: src.valueUnit,
+      isLockedByConditions: false,
+      remainingUnlockConditions: src.remainingUnlockConditions,
+    );
   }
 
   /// True when the ledger holds a `NodeCompletionEvent` for [nodeId]
@@ -1326,28 +1418,23 @@ class ProgressionEngineProvider extends ChangeNotifier {
   }
 
   EngineQuestProgress? _computeNextLockedChapter() {
-    final chapters = _questsForBucket(QuestDisplayBucket.chapter);
-    if (chapters.isEmpty) return null;
-    final chains = <String, List<EngineQuestProgress>>{};
-    for (final q in chapters) {
-      final chainId = q.node.chainId;
-      if (chainId == null) continue;
-      chains.putIfAbsent(chainId, () => []).add(q);
-    }
-    final sorted = chains.entries
-        .map((e) {
-          final c = [...e.value]
-            ..sort((a, b) =>
-                (a.node.chainOrder ?? 0).compareTo(b.node.chainOrder ?? 0));
-          return c;
-        })
-        .toList()
-      ..sort((a, b) => a.first.node.sortOrder.compareTo(b.first.node.sortOrder));
-    for (final chain in sorted) {
-      final open = chain.first;
-      if (open.isCompleted) continue;
-      if (open.levelGate == null && open.prereqGateNodeId == null) continue;
-      return open;
+    // The teaser surfaces the chapter that comes IMMEDIATELY AFTER
+    // the active section's cutoff — whether that chapter is partial
+    // (player has progress they can't yet engage with) or fully
+    // locked. Anything beyond the teaser is hidden until an active
+    // slot frees up, so the player sees exactly "2 active + 1 next
+    // up" without UI noise from later chapters. Walking the same
+    // unified list [currentChapterQuests] uses guarantees the two
+    // getters stay in sync.
+    final all = _buildUpcomingChapters();
+    var activeCount = 0;
+    for (final r in all) {
+      final isActiveEligible = !r.isLockedByConditions;
+      if (isActiveEligible && activeCount < 2) {
+        activeCount++;
+        continue;
+      }
+      return r;
     }
     return null;
   }

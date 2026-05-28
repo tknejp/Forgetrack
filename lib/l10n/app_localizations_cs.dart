@@ -2644,32 +2644,47 @@ class AppLocalizationsCs extends AppLocalizations {
       'Vydej se na svou cestu — tvá první kapitola začíná.';
 
   @override
-  String get progQuestPilgrimPathFirstStepsTitle => 'První kroky';
+  String get progQuestPilgrimPathWarmupTitle => 'Denní rozcvička';
 
   @override
-  String get progQuestPilgrimPathFirstStepsDesc =>
-      'Splň denní cíl kroků a vyraz na stezku.';
+  String get progQuestPilgrimPathWarmupDesc =>
+      'Splň alespoň 2 denní cíle ve 2 různých dnech a nauč se rytmus.';
 
   @override
-  String get progQuestPilgrimPathFirstSleepTitle => 'První odpočinek';
+  String get progQuestPilgrimPathStepsBuilderTitle => 'Krok za krokem';
 
   @override
-  String get progQuestPilgrimPathFirstSleepDesc =>
-      'Splň denní cíl spánku a načerpej sílu na další den.';
+  String get progQuestPilgrimPathStepsBuilderDesc => 'Splň krokový cíl 3×.';
 
   @override
-  String get progQuestPilgrimPathFirstRewardTitle => 'Zásoby na cestu';
+  String get progQuestPilgrimPathRhythmTitle => 'Kroky i spánek';
 
   @override
-  String get progQuestPilgrimPathFirstRewardDesc =>
-      'Před vstupem do hlubokého lesa potřebuješ sílu — splň dnes svůj cíl bílkovin.';
+  String get progQuestPilgrimPathRhythmDesc =>
+      'Splň krokový i spánkový cíl ve stejný den — dvakrát.';
 
   @override
   String get progQuestPilgrimPathFinaleTitle => 'Znak poutníka';
 
   @override
   String get progQuestPilgrimPathFinaleDesc =>
-      'Splň první kroky, odpočinek i zásoby na cestu a získej Znak poutníka.';
+      'Najdi rytmus chůze i odpočinku a získej Znak poutníka.';
+
+  @override
+  String get progChapterHintHeader => 'Chybí';
+
+  @override
+  String progChapterHintReachLevel(int level) {
+    return 'Dosáhni úrovně $level';
+  }
+
+  @override
+  String progChapterHintFinishChapter(String chapter) {
+    return 'Dokonči $chapter';
+  }
+
+  @override
+  String get progChapterHintGeneric => 'Odemkni další část cesty';
 
   @override
   String get progQuestForestTrialOpenTitle => 'Lesní zkouška';
@@ -3022,11 +3037,11 @@ class AppLocalizationsCs extends AppLocalizations {
       'Dokonči všechny předchozí úkoly vlády nad Dragonrockem.';
 
   @override
-  String get progAchievementFirstRewardTitle => 'První odměna';
+  String get progAchievementFirstDailyGoalTitle => 'První denní cíl';
 
   @override
-  String get progAchievementFirstRewardDesc =>
-      'Získej svou první progression odměnu.';
+  String get progAchievementFirstDailyGoalDesc =>
+      'Dokonči svůj první denní cíl.';
 
   @override
   String get progAchievementRewardHunter25Title => 'Lovec odměn';
@@ -6216,12 +6231,6 @@ class AppLocalizationsCs extends AppLocalizations {
       'Forgetrack používá tvé přihlášení jen ke čtení deníku z KT.';
 
   @override
-  String get cosmeticsScreenTitle => 'Inventář';
-
-  @override
-  String get cosmeticsInventorySectionHead => 'Inventář';
-
-  @override
   String get cosmeticsTabAll => 'Vše';
 
   @override
@@ -6251,25 +6260,6 @@ class AppLocalizationsCs extends AppLocalizations {
   @override
   String get cosmeticsEquippedEmptyCaption =>
       'Klepni na odemčenou kosmetiku níže a vyber Vybavit.';
-
-  @override
-  String get cosmeticsInventoryShowAll => 'Zobrazit vše';
-
-  @override
-  String get cosmeticsInventoryLoading => 'Načítám inventář…';
-
-  @override
-  String get cosmeticsInventorySignInHint =>
-      'Inventář bude dostupný po přihlášení.';
-
-  @override
-  String get cosmeticsInventoryItemNone => 'Žádné';
-
-  @override
-  String get cosmeticsInventoryEquippedBadge => 'VYBAVENO';
-
-  @override
-  String get cosmeticsInventoryLatestBadge => 'POSLEDNÍ';
 
   @override
   String get cosmeticTypeBanner => 'Banner';

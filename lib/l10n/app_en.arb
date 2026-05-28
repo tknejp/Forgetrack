@@ -1637,14 +1637,28 @@
   "progQuestSourceDragonrockSovereign": "Dragonrock Sovereign",
   "progQuestPilgrimPathOpenTitle": "Pilgrim's Path",
   "progQuestPilgrimPathOpenDesc": "Set out on your journey — your first chapter begins here.",
-  "progQuestPilgrimPathFirstStepsTitle": "First steps",
-  "progQuestPilgrimPathFirstStepsDesc": "Complete the daily steps goal and start walking the path.",
-  "progQuestPilgrimPathFirstSleepTitle": "First rest",
-  "progQuestPilgrimPathFirstSleepDesc": "Complete the daily sleep goal and recover for the road ahead.",
-  "progQuestPilgrimPathFirstRewardTitle": "Provisions for the road",
-  "progQuestPilgrimPathFirstRewardDesc": "Strength fuels the path into the deep forest — hit today's protein goal.",
+  "progQuestPilgrimPathWarmupTitle": "Daily Warm-up",
+  "progQuestPilgrimPathWarmupDesc": "Complete at least 2 daily goals on 2 different days to learn the rhythm.",
+  "progQuestPilgrimPathStepsBuilderTitle": "Steps Builder",
+  "progQuestPilgrimPathStepsBuilderDesc": "Complete the daily steps goal 3 times.",
+  "progQuestPilgrimPathRhythmTitle": "Steps & Sleep Rhythm",
+  "progQuestPilgrimPathRhythmDesc": "Complete both your steps and sleep goal on the same day, twice.",
   "progQuestPilgrimPathFinaleTitle": "Pilgrim's Mark",
-  "progQuestPilgrimPathFinaleDesc": "Walk, rest, gather provisions — then claim the Pilgrim's Mark.",
+  "progQuestPilgrimPathFinaleDesc": "Walk, rest, find your rhythm — then claim the Pilgrim's Mark.",
+  "progChapterHintHeader": "Missing",
+  "progChapterHintReachLevel": "Reach level {level}",
+  "@progChapterHintReachLevel": {
+    "placeholders": {
+      "level": {"type": "int"}
+    }
+  },
+  "progChapterHintFinishChapter": "Finish {chapter}",
+  "@progChapterHintFinishChapter": {
+    "placeholders": {
+      "chapter": {"type": "String"}
+    }
+  },
+  "progChapterHintGeneric": "Unlock more of the journey",
 
   "progQuestForestTrialOpenTitle": "Forest Trial",
   "progQuestForestTrialOpenDesc": "Start the Forest Trial after reaching level 10.",
@@ -1767,8 +1781,8 @@
   "progQuestDragonrockSovereignFinaleTitle": "Dragonrock Seal",
   "progQuestDragonrockSovereignFinaleDesc": "Complete the previous Dragonrock Sovereign quests.",
 
-  "progAchievementFirstRewardTitle": "First Reward",
-  "progAchievementFirstRewardDesc": "Earn your first progression reward.",
+  "progAchievementFirstDailyGoalTitle": "First Daily Goal",
+  "progAchievementFirstDailyGoalDesc": "Complete your first daily goal.",
   "progAchievementRewardHunter25Title": "Reward Hunter",
   "progAchievementRewardHunter25Desc": "Earn 25 progression rewards.",
   "progAchievementRewardHunter100Title": "Reward Legend",
@@ -3027,10 +3041,6 @@
   "welcomeKtSheetSubmit": "Sign in and connect",
   "welcomeKtSheetFootnote": "Forgetrack uses your sign-in only to read the KT diary.",
 
-  "cosmeticsScreenTitle": "Inventory",
-  "@cosmeticsScreenTitle": { "description": "Title of the full cosmetics inventory screen reached from the Hero/Profile inventory section" },
-  "cosmeticsInventorySectionHead": "Inventory",
-  "@cosmeticsInventorySectionHead": { "description": "Section header above the segmented type tabs inside the cosmetics inventory screen" },
   "cosmeticsTabAll": "All",
   "@cosmeticsTabAll": { "description": "First segmented tab inside the cosmetics inventory — shows every owned cosmetic regardless of type" },
   "cosmeticsEmptyUnlockedTitle": "No unlocked cosmetics yet.",
@@ -3049,18 +3059,6 @@
   "@cosmeticsEquippedEmptyTitle": { "description": "Empty-state title shown when the equipped row has no items yet" },
   "cosmeticsEquippedEmptyCaption": "Tap an unlocked cosmetic below and choose Equip.",
   "@cosmeticsEquippedEmptyCaption": { "description": "Caption under cosmeticsEquippedEmptyTitle explaining how to equip a cosmetic" },
-  "cosmeticsInventoryShowAll": "Show all",
-  "@cosmeticsInventoryShowAll": { "description": "Trailing action on the inline inventory section that opens the full cosmetics screen" },
-  "cosmeticsInventoryLoading": "Loading inventory…",
-  "@cosmeticsInventoryLoading": { "description": "Hint shown in the inline inventory section while the cosmetics state is still loading" },
-  "cosmeticsInventorySignInHint": "Inventory becomes available after sign-in.",
-  "@cosmeticsInventorySignInHint": { "description": "Hint shown in the inline inventory section when the user is signed out" },
-  "cosmeticsInventoryItemNone": "None",
-  "@cosmeticsInventoryItemNone": { "description": "Placeholder name shown in an inventory tile when there is no cosmetic to display" },
-  "cosmeticsInventoryEquippedBadge": "EQUIPPED",
-  "@cosmeticsInventoryEquippedBadge": { "description": "Badge shown on an inventory tile whose cosmetic is currently equipped" },
-  "cosmeticsInventoryLatestBadge": "LATEST",
-  "@cosmeticsInventoryLatestBadge": { "description": "Badge shown on an inventory tile that surfaces the most recently unlocked cosmetic for that slot" },
 
   "cosmeticTypeFrame": "Frame",
   "@cosmeticTypeFrame": { "description": "Singular label for a cosmetic of type Frame" },

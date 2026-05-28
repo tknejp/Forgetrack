@@ -24,8 +24,9 @@ import '../../../cosmetics/domain/cosmetic_models.dart';
 ///     [rarity] (used for friend profiles where we only know the title
 ///     tier, and for own profiles where nothing is equipped yet).
 ///
-/// Designed to sit between the screen's app bar (display name + handle
-/// subtitle) and the cinematic profile hero card.
+/// Designed to sit between the hero header's identity row (display
+/// name in the app bar + `@handle · Přátelé N` row just below it)
+/// and the cinematic profile hero card.
 class ProfileTitleBanner extends StatelessWidget {
   const ProfileTitleBanner({
     super.key,
