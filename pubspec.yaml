@@ -73,6 +73,8 @@ dependencies:
   #     + Android PackageInstaller intent, žádný plugin SDK ani sign-in. ---
   firebase_storage: ^13.0.0
   package_info_plus: ^9.0.0
+  # Markdown rendering pro release notes v in-app update dialogu (#132)
+  flutter_markdown: ^0.7.4
   wakelock_plus: ^1.5.2
   connectivity_plus: ^7.1.1
   cached_network_image: ^3.4.1

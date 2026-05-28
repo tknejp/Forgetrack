@@ -6,6 +6,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -316,6 +317,7 @@ class AppUpdateDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return ListenableBuilder(
       listenable: service,
       builder: (context, _) {
@@ -323,37 +325,89 @@ class AppUpdateDialog extends StatelessWidget {
         final status = service.status;
 
         return AlertDialog(
+          icon: Icon(
+            Icons.system_update_alt,
+            size: 32,
+            color: theme.colorScheme.primary,
+          ),
           title: const Text('Nová verze Forgetracku'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (remote != null)
-                Text(
-                  'Verze ${remote.version} (build ${remote.buildNumber})',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-              const SizedBox(height: 8),
-              if (remote?.notes?.isNotEmpty == true) ...[
-                Text(remote!.notes!),
-                const SizedBox(height: 12),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (remote != null)
+                  Text(
+                    'Verze ${remote.version}  ·  build ${remote.buildNumber}',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                if (remote?.notes?.isNotEmpty == true) ...[
+                  const SizedBox(height: 12),
+                  Flexible(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 360),
+                      child: Scrollbar(
+                        thumbVisibility: true,
+                        child: Markdown(
+                          data: remote!.notes!,
+                          shrinkWrap: true,
+                          selectable: true,
+                          padding: const EdgeInsets.only(right: 8),
+                          styleSheet:
+                              MarkdownStyleSheet.fromTheme(theme).copyWith(
+                            p: theme.textTheme.bodyMedium,
+                            h1: theme.textTheme.titleLarge,
+                            h2: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                            h3: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+                if (status == UpdateStatus.downloading) ...[
+                  const SizedBox(height: 16),
+                  LinearProgressIndicator(value: service.downloadProgress),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Stahuji… ${(service.downloadProgress * 100).round()} %',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ] else if (status == UpdateStatus.installing) ...[
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Připravuji instalaci…',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
+                ] else if (service.lastError != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    'Chyba: ${service.lastError}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.error,
+                    ),
+                  ),
+                ],
               ],
-              if (status == UpdateStatus.downloading) ...[
-                LinearProgressIndicator(value: service.downloadProgress),
-                const SizedBox(height: 4),
-                Text(
-                  'Stahuji… ${(service.downloadProgress * 100).round()} %',
-                  style: const TextStyle(fontSize: 12),
-                ),
-              ] else if (status == UpdateStatus.installing) ...[
-                const Text('Připravuji instalaci…'),
-              ] else if (service.lastError != null) ...[
-                Text(
-                  'Chyba: ${service.lastError}',
-                  style: const TextStyle(color: Colors.red),
-                ),
-              ],
-            ],
+            ),
           ),
           actions: [
             if (status == UpdateStatus.available ||
@@ -362,11 +416,12 @@ class AppUpdateDialog extends StatelessWidget {
                 onPressed: () => Navigator.of(context).pop(),
                 child: const Text('Později'),
               ),
-              FilledButton(
+              FilledButton.icon(
                 onPressed: () {
                   unawaited(service.downloadAndInstall());
                 },
-                child: const Text('Stáhnout a nainstalovat'),
+                icon: const Icon(Icons.download_rounded),
+                label: const Text('Stáhnout a nainstalovat'),
               ),
             ] else if (status == UpdateStatus.installing) ...[
               TextButton(
