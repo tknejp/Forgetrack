@@ -170,4 +170,5 @@ abstract final class AppLog {
   static const ktUi = AppLogger('KT', scope: 'UI');
 
   static const reset = AppLogger('RESET');
+  static const update = AppLogger('UPDATE');
 }
