@@ -1,0 +1,41 @@
+rules_version = '2';
+
+// Forgetrack Cloud Storage security rules.
+//
+// **Deploy:** wired into `firebase.json`. Deploy with
+// `firebase deploy --only storage`. First-time setup also requires
+// enabling Cloud Storage for the project in the Firebase Console
+// (https://console.firebase.google.com/project/forgetracker-493415/storage).
+//
+// **Scope:** only the `internal-builds/` path is configured. Everything
+// else is deny-by-default.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ── Internal builds (Trello #132) ───────────────────────────────
+    //
+    // APK files for the DIY in-app updater. The AppUpdateService on an
+    // `internal`-flavor build reads `app_config/latest_internal` from
+    // Firestore to learn the path here, then downloads the APK and hands
+    // it to the system PackageInstaller via FileProvider intent.
+    //
+    // Reads are public. Rationale: friends-as-testers distribution model
+    // doesn't have a tester allowlist; APK is signed by the release key
+    // so even if the URL leaks nobody can ship a modified build. When the
+    // project grows beyond pre-launch (Play Store, regulated testers),
+    // tighten to `request.auth.token.email in [...]` or equivalent.
+    //
+    // Writes go through `scripts/release.ps1` using the Firebase service
+    // account (Admin SDK bypasses rules), never from clients.
+    match /internal-builds/{apkName} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Everything else: deny.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

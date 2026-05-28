@@ -206,6 +206,20 @@ service cloud.firestore {
       allow update: if false;
     }
 
+    // ── App config (Trello #132) ────────────────────────────────────
+    //
+    // DIY in-app updater reads `app_config/latest_internal` to learn the
+    // current internal-flavor build that's been uploaded to Firebase
+    // Storage. The manifest is intentionally public — the APK at the
+    // referenced storagePath is also public-readable (see storage.rules),
+    // so gating the manifest behind auth would just add friction without
+    // changing the exposure surface. Writes go through the release script
+    // via Firebase Admin SDK (which bypasses rules), never from clients.
+    match /app_config/{configId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // ── Achievement shares ──────────────────────────────────────────
     //
     // Doc fields: actorUid, achievementId, createdAt, message,
