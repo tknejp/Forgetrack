@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Exposes app cache subdirectory `internal_updates/` to outside processes
+    via a content:// URI managed by androidx.core.content.FileProvider.
+    The DIY in-app updater downloads the new APK into this directory and
+    hands the content URI to PackageInstaller via Intent.ACTION_VIEW.
+
+    Path is intentionally scoped to a single subdirectory so the
+    FileProvider can't leak unrelated cached files (Firestore offline
+    cache, etc.).
+-->
+<paths>
+    <cache-path name="internal_updates" path="internal_updates/" />
+</paths>

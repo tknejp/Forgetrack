@@ -10,4 +10,26 @@
     -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
+    <application>
+        <!--
+            FileProvider used by AppUpdateService to share the downloaded
+            APK with the system PackageInstaller. PackageInstaller refuses
+            file:// URIs on API 24+ for FileUriExposedException reasons;
+            content:// URIs through a FileProvider are the supported path.
+
+            Authority resolves to com.knejp.forgetrack.update_file_provider
+            at build time (Gradle substitutes ${applicationId}). Scoped to
+            internal flavor only because the consumer is too.
+        -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.update_file_provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/update_file_provider_paths" />
+        </provider>
+    </application>
+
 </manifest>
