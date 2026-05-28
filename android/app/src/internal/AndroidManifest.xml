@@ -1,0 +1,11 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+        `internal` flavor only — required by Firebase App Distribution's
+        in-app updater so the SDK can hand the downloaded APK to the
+        Android package installer. NEVER add this to the main manifest
+        (Play Store policy: REQUEST_INSTALL_PACKAGES needs an exception).
+    -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
+</manifest>

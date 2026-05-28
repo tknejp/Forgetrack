@@ -41,10 +41,26 @@ android {
             dimension = "environment"
             applicationIdSuffix = ".dev"
             resValue("string", "app_name", "Forgetrack DEV")
+            // Route to the FAD plugin's `production` flavor (stub artifact only).
+            missingDimensionStrategy("default", "production")
         }
         create("prod") {
             dimension = "environment"
             resValue("string", "app_name", "Forgetrack")
+            // Play Store flavor: stub FAD artifact, no install-packages permission.
+            missingDimensionStrategy("default", "production")
+        }
+        create("internal") {
+            dimension = "environment"
+            // Intentionally NO applicationIdSuffix — shares `com.knejp.forgetrack`
+            // with `prod` so the existing Firebase app + FAD distribution group
+            // continue to apply, and testers upgrade in-place from prod→internal
+            // (or vice versa) without losing local data.
+            resValue("string", "app_name", "Forgetrack Internal")
+            // Pull the full firebase-appdistribution SDK via the FAD plugin's
+            // `staging` flavor. Pairs with the manifest split under
+            // android/app/src/internal/AndroidManifest.xml (REQUEST_INSTALL_PACKAGES).
+            missingDimensionStrategy("default", "staging")
         }
     }
 
