@@ -139,12 +139,14 @@ class ProfileDetailHeroCard extends StatelessWidget {
                 onTap: () => onTapBackground!(equipped?.backgroundId),
               ),
             ),
-          // Identity block (handle + friends) lives in the screen's
-          // top app bar (`ScreenHeader.subtitle`). Level + class title
-          // moved out of the hero stack into the standalone
-          // [ProfileTitleBanner] above this card on 2026-05-27. Both
-          // were previously rendered here as text overlays; the hero
-          // card is now pure cinematic scene + emblem row.
+          // Identity block (handle + friends) lives in the hero
+          // header stack as a standalone row between the app bar and
+          // [ProfileTitleBanner] (`ProfileHeaderIdentityRow`). Level
+          // + class title moved out of the hero stack into the
+          // standalone [ProfileTitleBanner] above this card on
+          // 2026-05-27. Both were previously rendered here as text
+          // overlays; the hero card is now pure cinematic scene +
+          // emblem row.
           // Emblem row — horizontal band along the BOTTOM edge of
           // the hero card, evenly distributed between the side
           // gutters. The companion buff chip was pulled upward
