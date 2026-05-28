@@ -1,0 +1,13 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+        `internal` flavor only — required by the DIY in-app updater so the
+        app can hand the downloaded APK to the Android PackageInstaller
+        via Intent.ACTION_VIEW. NEVER add this to the main manifest:
+        Play Store policy treats REQUEST_INSTALL_PACKAGES as a sensitive
+        permission requiring an exception, which keeps `prod` clean for
+        a future Play submission.
+    -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
+</manifest>
