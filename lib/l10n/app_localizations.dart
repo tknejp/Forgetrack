@@ -125,7 +125,7 @@ abstract class AppLocalizations {
   /// Bottom navigation label for the Social tab
   ///
   /// In en, this message translates to:
-  /// **'Social'**
+  /// **'Fellowship'**
   String get navSocial;
 
   /// Bottom navigation label for the Activities tab
@@ -593,7 +593,7 @@ abstract class AppLocalizations {
   /// Subtitle for the notifications toggle setting
   ///
   /// In en, this message translates to:
-  /// **'Allow reminders, quest updates and social alerts.'**
+  /// **'Allow reminders, quest updates and Fellowship alerts.'**
   String get settingsNotificationsSubtitle;
 
   /// Settings section header: notifications
@@ -623,7 +623,7 @@ abstract class AppLocalizations {
   /// Per-category toggle label: social notifications
   ///
   /// In en, this message translates to:
-  /// **'Social'**
+  /// **'Fellowship'**
   String get settingsNotifSocialLabel;
 
   /// Per-category toggle subtitle: social notifications
@@ -9138,14 +9138,8 @@ abstract class AppLocalizations {
   /// No description provided for @socialTabFeed.
   ///
   /// In en, this message translates to:
-  /// **'Feed'**
+  /// **'Chronicle'**
   String get socialTabFeed;
-
-  /// No description provided for @socialTabActivity.
-  ///
-  /// In en, this message translates to:
-  /// **'Activity'**
-  String get socialTabActivity;
 
   /// No description provided for @socialTabLeaderboard.
   ///
@@ -9159,34 +9153,16 @@ abstract class AppLocalizations {
   /// **'Friends'**
   String get socialTabFriends;
 
-  /// No description provided for @socialSectionRecentActivity.
-  ///
-  /// In en, this message translates to:
-  /// **'RECENT ACTIVITY'**
-  String get socialSectionRecentActivity;
-
   /// No description provided for @socialSectionFriendActivity.
   ///
   /// In en, this message translates to:
   /// **'FRIEND ACTIVITY'**
   String get socialSectionFriendActivity;
 
-  /// No description provided for @socialNoNotificationsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'No notifications'**
-  String get socialNoNotificationsTitle;
-
-  /// No description provided for @socialNoNotificationsSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Reactions from friends on your shared achievements will appear here.'**
-  String get socialNoNotificationsSubtitle;
-
   /// No description provided for @socialFeedEmptyTitle.
   ///
   /// In en, this message translates to:
-  /// **'Feed is empty'**
+  /// **'Chronicle is empty'**
   String get socialFeedEmptyTitle;
 
   /// No description provided for @socialFeedEmptySubtitle.
@@ -9222,8 +9198,14 @@ abstract class AppLocalizations {
   /// Empty-state subtitle in the notifications inbox.
   ///
   /// In en, this message translates to:
-  /// **'Friend requests and other social activity will appear here.'**
+  /// **'Friend requests and other Fellowship activity will appear here.'**
   String get socialNotificationsEmptySubtitle;
+
+  /// Section header above the reaction notifications block inside the notifications sheet. Sits below the Friend Requests section when both have content.
+  ///
+  /// In en, this message translates to:
+  /// **'Reactions'**
+  String get socialNotificationsReactionsSection;
 
   /// No description provided for @socialFriendsSectionCount.
   ///

@@ -5279,26 +5279,13 @@ class AppLocalizationsCs extends AppLocalizations {
   String get socialTabFeed => 'Feed';
 
   @override
-  String get socialTabActivity => 'Aktivita';
-
-  @override
   String get socialTabLeaderboard => 'Žebříček';
 
   @override
   String get socialTabFriends => 'Přátelé';
 
   @override
-  String get socialSectionRecentActivity => 'NEDÁVNÁ AKTIVITA';
-
-  @override
   String get socialSectionFriendActivity => 'AKTIVITA PŘÁTEL';
-
-  @override
-  String get socialNoNotificationsTitle => 'Žádné upozornění';
-
-  @override
-  String get socialNoNotificationsSubtitle =>
-      'Zde uvidíš reakce přátel na tvoje sdílené achievementy.';
 
   @override
   String get socialFeedEmptyTitle => 'Feed je prázdný';
@@ -5323,6 +5310,9 @@ class AppLocalizationsCs extends AppLocalizations {
   @override
   String get socialNotificationsEmptySubtitle =>
       'Žádosti o přátelství a další sociální aktivita se objeví zde.';
+
+  @override
+  String get socialNotificationsReactionsSection => 'Reakce';
 
   @override
   String socialFriendsSectionCount(int count) {

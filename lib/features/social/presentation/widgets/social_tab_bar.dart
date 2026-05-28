@@ -3,16 +3,18 @@ import 'package:flutter/material.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../shared/theme/design_tokens.dart';
 
+/// Three-way tab strip for the social screen — Feed, Leaderboard,
+/// Friends. The retired Activity tab used to live between Feed and
+/// Leaderboard and showed reaction notifications with an unread
+/// badge; reactions now flow through the bell button in
+/// `_SocialTopBar` so the strip has no badge slots — the bell owns
+/// every count.
 class SocialTabBar extends StatelessWidget {
   const SocialTabBar({
     super.key,
     required this.controller,
-    required this.pendingCount,
-    required this.unreadNotifCount,
   });
   final TabController controller;
-  final int pendingCount;
-  final int unreadNotifCount;
 
   @override
   Widget build(BuildContext context) {
@@ -40,43 +42,10 @@ class SocialTabBar extends StatelessWidget {
         dividerColor: Colors.transparent,
         tabs: [
           Tab(text: l10n.socialTabFeed),
-          Tab(
-            child: _TabWithBadge(
-              label: l10n.socialTabActivity,
-              count: unreadNotifCount,
-            ),
-          ),
           Tab(text: l10n.socialTabLeaderboard),
-          Tab(
-            child: _TabWithBadge(
-              label: l10n.socialTabFriends,
-              count: pendingCount,
-            ),
-          ),
+          Tab(text: l10n.socialTabFriends),
         ],
       ),
-    );
-  }
-}
-
-class _TabWithBadge extends StatelessWidget {
-  const _TabWithBadge({required this.label, required this.count});
-  final String label;
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Text(label),
-        if (count > 0)
-          Positioned(
-            top: -6,
-            right: -10,
-            child: SocialTabBadge(count: count),
-          ),
-      ],
     );
   }
 }

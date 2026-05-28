@@ -46,10 +46,30 @@ service cloud.firestore {
       // The reaction flow writes a doc id of `${shareId}_${actorUid}`
       // under the share OWNER's notifications subcollection. We allow
       // any signed-in caller to create here IF the doc declares them
-      // as `actorUid` — the share owner reads/deletes their own.
+      // as `actorUid` — the share owner reads + deletes their own.
+      //
+      // Updates fan out to two parties:
+      //   * The OWNER updates to mark a notification read (`read: true`
+      //     on `markNotificationsRead`).
+      //   * The ACTOR updates to overwrite the previously-written
+      //     reaction notification with a fresh emoji / timestamp when
+      //     they re-react on the same share. The existing client used
+      //     to `transaction.get` the notif first to short-circuit on
+      //     existing docs, but that read isn't allowed for a non-owner
+      //     actor — Firestore would deny the read, roll back the
+      //     transaction, and the share-side reaction update would
+      //     never land. The simpler, correct shape is to drop the
+      //     read and let the actor overwrite their own row: a `set`
+      //     by the actor is treated as `update` once the doc exists,
+      //     so we have to allow it here. Both the OLD and NEW doc's
+      //     `actorUid` must match `auth.uid` to prevent an attacker
+      //     from hijacking somebody else's notification slot.
       match /notifications/{notifId} {
         allow read: if isOwner(uid);
-        allow update, delete: if isOwner(uid);
+        allow delete: if isOwner(uid);
+        allow update: if isOwner(uid)
+                      || (resource.data.actorUid == request.auth.uid
+                          && request.resource.data.actorUid == request.auth.uid);
         allow create: if isSignedIn()
                       && request.resource.data.actorUid == request.auth.uid;
       }

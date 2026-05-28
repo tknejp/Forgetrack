@@ -907,33 +907,39 @@ class FirestoreSocialRepository implements SocialPresenceRepository {
         final shareRef = _achievementShares.doc(shareId);
         final isSelfReaction = actorUid == shareOwnerUid;
 
-        final notifRef = _users
-            .doc(shareOwnerUid)
-            .collection('notifications')
-            .doc('${shareId}_$actorUid');
+        // Batch-set the share's reaction map alongside (when this is
+        // a cross-user reaction) a fresh notification doc under the
+        // share owner's subcollection. A WriteBatch is enough — the
+        // old transaction-with-`get` shape was failing because the
+        // existence probe (`transaction.get(notifRef)`) reads a doc
+        // owned by the share owner, which the actor isn't allowed to
+        // read under the `notifications` rule, so the whole
+        // transaction rolled back with permission-denied and the
+        // reaction was silently dropped.
+        //
+        // Side effect of dropping the probe: a re-reaction (player
+        // changes their emoji on the same share) now overwrites the
+        // existing notification with `read: false` instead of
+        // skipping the notification write. That re-badges the owner
+        // on every reaction change — matches the "this is fresh
+        // activity" intent of the bell and feels closer to other
+        // social apps than the silent old behaviour.
+        final batch = _firestore.batch();
 
-        await _firestore.runTransaction((transaction) async {
-          // Firestore transactions require all reads before writes.
-          final notifSnapshot =
-              isSelfReaction ? null : await transaction.get(notifRef);
+        batch.update(shareRef, {
+          'reactions.$actorUid': emoji,
+          'reactorSnapshots.$actorUid': {
+            'displayName': actorName,
+            'photoUrl': actorPhoto,
+          },
+        });
 
-          transaction.update(shareRef, {
-            'reactions.$actorUid': emoji,
-            'reactorSnapshots.$actorUid': {
-              'displayName': actorName,
-              'photoUrl': actorPhoto,
-            },
-          });
-
-          if (isSelfReaction) {
-            return;
-          }
-
-          if (notifSnapshot != null && notifSnapshot.exists) {
-            return;
-          }
-
-          transaction.set(notifRef, {
+        if (!isSelfReaction) {
+          final notifRef = _users
+              .doc(shareOwnerUid)
+              .collection('notifications')
+              .doc('${shareId}_$actorUid');
+          batch.set(notifRef, {
             'type': 'reaction',
             'actorUid': actorUid,
             'actorName': actorName,
@@ -944,7 +950,9 @@ class FirestoreSocialRepository implements SocialPresenceRepository {
             'createdAt': FieldValue.serverTimestamp(),
             'read': false,
           });
-        });
+        }
+
+        await batch.commit();
       });
 
   @override

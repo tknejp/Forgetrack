@@ -8,7 +8,6 @@ import '../../../l10n/l10n.dart';
 import '../application/social_provider.dart';
 import 'social_notifications_sheet.dart';
 import 'social_search_sheet.dart';
-import 'tabs/social_activity_tab.dart';
 import 'tabs/social_feed_tab.dart';
 import 'tabs/social_friends_tab.dart';
 import 'tabs/social_leaderboard_tab.dart';
@@ -35,19 +34,18 @@ class _FtSocialScreenState extends State<SocialScreen>
   @override
   void initState() {
     super.initState();
-    _tab = TabController(length: 4, vsync: this);
-    _tab.addListener(_onTabChanged);
-  }
-
-  void _onTabChanged() {
-    if (_tab.index == 1 && !_tab.indexIsChanging) {
-      context.read<SocialProvider>().markNotificationsRead();
-    }
+    // 3 tabs since the dedicated Activity tab was retired — reactions
+    // now live alongside friend requests inside the notifications
+    // bottom sheet pushed from the bell in `_SocialTopBar`, so the
+    // tab strip stays focused on browse-style surfaces (feed,
+    // leaderboard, friend list). `markNotificationsRead` used to fire
+    // when the player switched to the Activity tab; that flush now
+    // happens inside `SocialNotificationsSheet` when the sheet opens.
+    _tab = TabController(length: 3, vsync: this);
   }
 
   @override
   void dispose() {
-    _tab.removeListener(_onTabChanged);
     _tab.dispose();
     super.dispose();
   }
@@ -61,6 +59,14 @@ class _FtSocialScreenState extends State<SocialScreen>
         !social.isReady ||
         !auth.isSignedIn ||
         social.error != null;
+
+    // Bell badge combines both notification kinds the sheet hosts:
+    // pending incoming friend requests + unread reaction notifications.
+    // Friend-list pending count alone used to drive the badge, but
+    // now that reactions land in the same sheet they need to register
+    // on the same indicator.
+    final bellBadgeCount =
+        social.incomingRequests.length + social.unreadNotificationCount;
 
     return Scaffold(
       backgroundColor: Tokens.bg,
@@ -81,19 +87,11 @@ class _FtSocialScreenState extends State<SocialScreen>
               ),
             if (auth.isSignedIn && social.backendReady && social.isReady)
               _SocialTopBar(
-                pendingCount: social.incomingRequests.length,
+                pendingCount: bellBadgeCount,
                 onTapSearch: () => SocialSearchSheet.show(context),
                 onTapBell: () => SocialNotificationsSheet.show(context),
               ),
-            SocialTabBar(
-              controller: _tab,
-              // Friend-request pending dot is shown by the bell in
-              // the top bar above — keeping the same count on the
-              // tab bar would double-signal a single piece of state
-              // and competes with the more discoverable bell icon.
-              pendingCount: 0,
-              unreadNotifCount: social.unreadNotificationCount,
-            ),
+            SocialTabBar(controller: _tab),
             Expanded(
               child: EdgePageHandoff(
                 controller: widget.outerController,
@@ -104,7 +102,6 @@ class _FtSocialScreenState extends State<SocialScreen>
                   controller: _tab,
                   children: const [
                     SocialFeedTab(),
-                    SocialActivityTab(),
                     SocialLeaderboardTab(),
                     SocialFriendsTab(),
                   ],

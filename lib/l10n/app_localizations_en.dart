@@ -21,7 +21,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navHero => 'Hero';
 
   @override
-  String get navSocial => 'Social';
+  String get navSocial => 'Fellowship';
 
   @override
   String get navActivities => 'Activities';
@@ -268,7 +268,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsNotificationsSubtitle =>
-      'Allow reminders, quest updates and social alerts.';
+      'Allow reminders, quest updates and Fellowship alerts.';
 
   @override
   String get sectionNotifications => 'Notifications';
@@ -285,7 +285,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Completed quests and unlocked achievements.';
 
   @override
-  String get settingsNotifSocialLabel => 'Social';
+  String get settingsNotifSocialLabel => 'Fellowship';
 
   @override
   String get settingsNotifSocialSubtitle =>
@@ -5268,10 +5268,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get celebrationKindSparkle => 'Reward';
 
   @override
-  String get socialTabFeed => 'Feed';
-
-  @override
-  String get socialTabActivity => 'Activity';
+  String get socialTabFeed => 'Chronicle';
 
   @override
   String get socialTabLeaderboard => 'Leaderboard';
@@ -5280,20 +5277,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialTabFriends => 'Friends';
 
   @override
-  String get socialSectionRecentActivity => 'RECENT ACTIVITY';
-
-  @override
   String get socialSectionFriendActivity => 'FRIEND ACTIVITY';
 
   @override
-  String get socialNoNotificationsTitle => 'No notifications';
-
-  @override
-  String get socialNoNotificationsSubtitle =>
-      'Reactions from friends on your shared achievements will appear here.';
-
-  @override
-  String get socialFeedEmptyTitle => 'Feed is empty';
+  String get socialFeedEmptyTitle => 'Chronicle is empty';
 
   @override
   String get socialFeedEmptySubtitle =>
@@ -5314,7 +5301,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get socialNotificationsEmptySubtitle =>
-      'Friend requests and other social activity will appear here.';
+      'Friend requests and other Fellowship activity will appear here.';
+
+  @override
+  String get socialNotificationsReactionsSection => 'Reactions';
 
   @override
   String socialFriendsSectionCount(int count) {
