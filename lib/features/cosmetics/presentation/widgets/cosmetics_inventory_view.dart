@@ -109,19 +109,10 @@ class _CosmeticsInventoryViewState extends State<CosmeticsInventoryView> {
 
     final orderedTypes = [...CosmeticType.values]
       ..sort((a, b) => _kTabTypeRank(a).compareTo(_kTabTypeRank(b)));
-    // Types that always get a filter chip even with zero
-    // displayable entries — picks the "showcase" categories the
-    // player should always be able to browse / aim toward. Emblems
-    // sit here so the inventory exposes the board-pinning surface
-    // even before the player has earned their first emblem; the
-    // empty-state grid then explains "nothing yet" rather than
-    // hiding the filter entirely.
-    const alwaysPresent = <CosmeticType>{CosmeticType.emblem};
     final presentTypes = devTools
         ? orderedTypes
         : orderedTypes
             .where((type) => // lint-ignore: widget-no-logic — tab-presence filter over pre-built displayDefs
-                alwaysPresent.contains(type) ||
                 displayDefs.any((def) => def.type == type))
             .toList(growable: false);
 
