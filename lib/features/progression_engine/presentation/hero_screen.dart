@@ -517,7 +517,7 @@ class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
         backgroundColor: Tokens.surface,
         content: Text(
           social.error == null
-              ? 'Achievement sdílen do feedu přátel.'
+              ? 'Achievement sdílen do kroniky.'
               : 'Chyba: ${social.error}',
           style: const TextStyle(color: Tokens.onSurface),
         ),
@@ -769,7 +769,7 @@ class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
                               ? 'Sdíleno'
                               : _sharing
                                   ? 'Sdílení...'
-                                  : 'Sdílet do feedu přátel',
+                                  : 'Sdílet do kroniky',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
