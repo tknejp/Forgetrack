@@ -9,10 +9,12 @@
       3. Bumpne pubspec.yaml (version + build number)
       4. Aktualizuje CHANGELOG.md
       5. flutter analyze (gate)
-      6. flutter build apk --release --flavor prod
+      6. flutter build apk --release --flavor internal
       7. Upload na Firebase App Distribution
-      8. Merge --no-ff do main, tag, merge zpět do develop, archivace
-      9. Push všeho
+      8. FCM push na topic forgetrack-internal-builds (volitelné — pokud
+         secrets/firebase-service-account.json existuje)
+      9. Merge --no-ff do main, tag, merge zpět do develop, archivace
+     10. Push všeho
 
     Skript je idempotentní: pokud spadne v půlce, můžeš ho rebootnout
     s -Resume (TODO — zatím manuálně cleanup).
@@ -66,22 +68,33 @@ param(
     # Předpoklady: jsme na release/$Version, release commit (release: $Version) existuje,
     # pubspec a CHANGELOG jsou už upravené, working tree je čistý.
     # Skript přeskočí Trello check + section 3-6 a pokračuje od flutter analyze.
-    [switch]$Resume
+    [switch]$Resume,
+
+    # Cesta k Firebase service-account JSON pro odeslání FCM push na topic
+    # `forgetrack-internal-builds` po úspěšném FAD uploadu. Pokud soubor
+    # neexistuje, push se přeskočí (release commit + tag + push proběhnou
+    # normálně — tester se o nové verzi dozví přes FAD email link).
+    [string]$ServiceAccountKey = 'secrets/firebase-service-account.json'
 )
 
 $ErrorActionPreference = 'Stop'
 
 # ─── Konfigurace ─────────────────────────────────────────────────────────────
 
-# Firebase prod app ID (com.knejp.forgetrack). Změnit pouze pokud měníš Firebase projekt.
-$FirebaseProdAppId = '1:798278342104:android:a44ecd497db4f28161cead'
+# Firebase app ID (com.knejp.forgetrack). Změnit pouze pokud měníš Firebase projekt.
+# Stejný app ID pro prod i internal flavor (sdílí package name) — FAD release
+# se uploaduje sem, push topic je vázán na ten samý Firebase project.
+$FirebaseAppId = '1:798278342104:android:a44ecd497db4f28161cead'
 
 # Název tester groupu v Firebase Console (App Distribution → Testers & Groups).
 # DOPLŇ název své testovací skupiny:
 $TesterGroup = 'Test'
 
-# Apk path z `flutter build apk --release --flavor prod`
-$ApkPath = 'build/app/outputs/flutter-apk/app-prod-release.apk'
+# Apk z internal flavoru — pulluje plné firebase-appdistribution SDK +
+# REQUEST_INSTALL_PACKAGES (viz android/app/build.gradle.kts) tak aby
+# in-app updater po instalaci uměl handnout APK Android package installeru.
+$BuildFlavor = 'internal'
+$ApkPath = "build/app/outputs/flutter-apk/app-$BuildFlavor-release.apk"
 
 # ─── Helper functions ────────────────────────────────────────────────────────
 
@@ -386,8 +399,8 @@ if (-not $SkipBuild) {
         Write-Ok "testy prošly"
     }
 
-    Write-Section "flutter build apk --release --flavor prod"
-    flutter build apk --release --flavor prod
+    Write-Section "flutter build apk --release --flavor $BuildFlavor"
+    flutter build apk --release --flavor $BuildFlavor
     if ($LASTEXITCODE -ne 0) {
         throw "flutter build selhal."
     }
@@ -402,7 +415,7 @@ if (-not $SkipBuild) {
 
     $fadArgs = @(
         'appdistribution:distribute', $ApkPath,
-        '--app', $FirebaseProdAppId,
+        '--app', $FirebaseAppId,
         '--groups', $TesterGroup,
         '--release-notes-file', $ReleaseNotesFile
     )
@@ -415,6 +428,28 @@ if (-not $SkipBuild) {
             throw "Firebase App Distribution upload selhal."
         }
         Write-Ok "Uploadnuto na FAD pro group '$TesterGroup'"
+    }
+
+    # ─── Sekce 8a: FCM push na topic forgetrack-internal-builds ──────────────
+
+    Write-Section "FCM push (forgetrack-internal-builds)"
+
+    if ($DryRun) {
+        Write-Host "  [DRY-RUN] node scripts/send_fad_push.js $Version $BuildNumber $ServiceAccountKey" -ForegroundColor DarkGray
+    } elseif (-not (Test-Path $ServiceAccountKey)) {
+        Write-Warn "Service-account JSON nenalezen ($ServiceAccountKey) — push se NEodesílá."
+        Write-Host "  Tester si nové verze všimne přes FAD email link nebo při dalším otevření appky"
+        Write-Host "  (in-app updater check běží na resume)."
+    } else {
+        node scripts/send_fad_push.js $Version $BuildNumber $ServiceAccountKey
+        if ($LASTEXITCODE -ne 0) {
+            # FAD upload už úspěšně proběhl; push selhání nesmí shodit zbytek
+            # release flow (merge / tag / push). Jen varování — tester pořád
+            # uvidí update při dalším resume appky.
+            Write-Warn "FCM push selhal (exit $LASTEXITCODE) — release pokračuje, tester to uvidí na resume."
+        } else {
+            Write-Ok "Push odeslán na topic forgetrack-internal-builds"
+        }
     }
 } else {
     Write-Section "Build & distribute SKIPPED (-SkipBuild)"
@@ -464,9 +499,11 @@ if ($DryRun) {
 
 Write-Section "Hotovo"
 Write-Host "  Release v$Version" -ForegroundColor Green
-Write-Host "  - Build:   $ApkPath"
+Write-Host "  - Build:   $ApkPath (flavor: $BuildFlavor)"
 Write-Host "  - FAD:     group '$TesterGroup'"
+Write-Host "  - Push:    topic forgetrack-internal-builds"
 Write-Host "  - Git tag: v$Version (na main HEAD)"
 Write-Host "  - Archive: archive/release-$Version"
 Write-Host ""
-Write-Host "  Další krok: zkontroluj v Firebase Console, že tester dostal email."
+Write-Host "  Další krok: ověř na fyzickém Androidu s předchozím buildem, že in-app updater"
+Write-Host "              nabídne nový build (otevři app → resumed → FAD dialog)."

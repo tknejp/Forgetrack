@@ -89,3 +89,8 @@ audit/
 memory/
 
 sentry.properties
+
+# Firebase service-account JSON used by scripts/release.ps1 to send the
+# forgetrack-internal-builds FCM push after a FAD upload. Never commit.
+secrets/
+*-service-account.json
