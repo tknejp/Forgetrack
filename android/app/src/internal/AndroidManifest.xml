@@ -11,31 +11,38 @@
 
     <application>
         <!--
-            Bug in firebase-appdistribution:16.0.0-beta14 (pinned by
-            firebase_app_distribution_android-1.2.0): SignInResultActivity
-            and InstallActivity both extend AppCompatActivity but the SDK
-            manifest declares them with NO theme, so they fall back to the
-            app's @style/NormalTheme (Flutter default, descends from
-            DeviceDefault, NOT AppCompat) and crash in onCreate with
-            "java.lang.IllegalStateException: You need to use a Theme.AppCompat
-             theme (or descendant) with this activity."
+            firebase-appdistribution:16.0.0-beta14 manifest declares
+            SignInResultActivity and InstallActivity without:
 
-            Override both activity themes via manifest merger. Same theme as
-            the SDK's own FeedbackActivity uses, so AppCompat is already in
-            the classpath transitively — no extra dependency needed.
+            1. android:theme — both extend AppCompatActivity and crash in
+               onCreate with "You need to use a Theme.AppCompat theme"
+               when launched under the app's default Flutter theme
+               (descends from DeviceDefault, not AppCompat).
 
-            tools:replace is defensive: if the SDK ever adds an
-            android:theme attribute upstream, our value still wins.
+            2. android:taskAffinity — MainActivity has taskAffinity=""
+               so the FAD activities inherit the package-default affinity
+               ("com.knejp.forgetrack") and end up in a DIFFERENT task
+               than MainActivity. Effect: after the Chrome Custom Tab
+               sign-in returns, the user sees 2–3 separate Forgetrack
+               cards in Recents (the MainActivity task, the FAD task with
+               white screen, etc.) and the app appears to "close" before
+               the update dialog finally shows on next reopen.
+
+            Force matching affinity ("") so all activities share one task,
+            and apply the same AppCompat theme the SDK's own
+            FeedbackActivity uses (already in classpath transitively).
         -->
         <activity
             android:name="com.google.firebase.appdistribution.impl.SignInResultActivity"
+            android:taskAffinity=""
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"
-            tools:replace="android:theme" />
+            tools:replace="android:theme,android:taskAffinity" />
 
         <activity
             android:name="com.google.firebase.appdistribution.impl.InstallActivity"
+            android:taskAffinity=""
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"
-            tools:replace="android:theme" />
+            tools:replace="android:theme,android:taskAffinity" />
     </application>
 
 </manifest>
