@@ -347,44 +347,55 @@ class _StatCardState extends State<StatCard> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (primary != null) ...[
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                primary.value,
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  color: d.color,
-                  letterSpacing: -0.5,
-                ),
+          // FittedBox scaleDown so headlines like "10 000 / 10 000 kcal"
+          // shrink uniformly to fit alongside the right rail instead of
+          // overflowing the title column. At natural size the row renders
+          // unchanged.
+          Align(
+            alignment: Alignment.centerLeft,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    primary.value,
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                      color: d.color,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  if (primary.goal != null) ...[
+                    const SizedBox(width: Tokens.spaceXs),
+                    Text(
+                      '/ ${primary.goal}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: ft.onSurfaceMuted,
+                      ),
+                    ),
+                  ],
+                  if (primary.unit != null) ...[
+                    const SizedBox(width: Tokens.spaceXs),
+                    Text(
+                      primary.unit!,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: primary.goal != null
+                            ? ft.onSurfaceMuted
+                            : d.color.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
+                ],
               ),
-              if (primary.goal != null) ...[
-                const SizedBox(width: Tokens.spaceXs),
-                Text(
-                  '/ ${primary.goal}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: ft.onSurfaceMuted,
-                  ),
-                ),
-              ],
-              if (primary.unit != null) ...[
-                const SizedBox(width: Tokens.spaceXs),
-                Text(
-                  primary.unit!,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: primary.goal != null
-                        ? ft.onSurfaceMuted
-                        : d.color.withValues(alpha: 0.7),
-                  ),
-                ),
-              ],
-            ],
+            ),
           ),
           if (secondary != null && !widget.showProgress) ...[
             const SizedBox(height: 2),
