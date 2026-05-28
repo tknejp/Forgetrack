@@ -18,6 +18,7 @@ import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
+import 'core/services/app_update_service.dart';
 import 'core/services/background_sync_service.dart';
 import 'core/services/connectivity_provider.dart';
 import 'core/services/fcm_service.dart';
@@ -217,6 +218,11 @@ Future<void> _runForgetrack(SentryConsentProvider sentryConsent) async {
         onboardingProvider.isCompleted,
   );
   unawaited(FcmService.instance.initialize());
+  // FAD in-app updater + tester broadcast topic. No-op on dev/prod;
+  // on the `internal` flavor this subscribes to the
+  // `forgetrack-internal-builds` FCM topic. The actual update prompt
+  // is triggered later from ForgetrackApp's resumed lifecycle hook.
+  unawaited(AppUpdateService.instance.initialize());
   unawaited(BackgroundSyncService.register());
 
   // Navigace z tapu na notifikaci při studeném startu

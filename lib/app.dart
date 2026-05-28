@@ -8,6 +8,7 @@ import 'app/locale_provider.dart';
 import 'core/config/constants.dart';
 import 'core/navigation/navigator_key.dart';
 import 'core/sentry/sentry_consent_gate.dart';
+import 'core/services/app_update_service.dart';
 import 'features/app_shell/presentation/main_shell.dart';
 import 'features/cosmetics/application/cosmetics_provider.dart';
 import 'features/health_connect/application/fitness_provider.dart';
@@ -75,6 +76,11 @@ class _ForgetrackAppState extends State<ForgetrackApp>
           context.read<KalorickeTabulkyProvider>().refreshOnAppOpen(),
         ]),
       );
+      // No-op on dev/prod. On `internal`, asks FAD whether a newer
+      // build is available and surfaces the native install dialog.
+      // Intentionally NOT awaited and NOT chained to welcome flow —
+      // the prompt must never block the home screen from rendering.
+      unawaited(AppUpdateService.instance.checkForUpdate());
     }
   }
 
