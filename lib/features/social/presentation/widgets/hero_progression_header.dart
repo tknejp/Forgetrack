@@ -30,10 +30,11 @@ import 'social_avatar.dart';
 ///   * Single widget across all tabs → no height swap during PageView swipes.
 ///   * Always shows: avatar, display name, muted `@handle`, level orb,
 ///     level title, XP bar, XP ratio.
-///   * Tap on avatar → opens [SocialUserProfileSheet] (which owns editing
-///     of photo + handle for the signed-in user).
-///   * Tap on the rest of the header → toggles an expanded panel revealing
-///     pending reward count, current streak and unlocked achievement count.
+///   * Tap anywhere on the header → opens [SocialUserProfileScreen] (which
+///     owns editing of photo + handle for the signed-in user). A small
+///     `chevron_right` after the `@handle` telegraphs the navigation.
+///   * Tap on the top-right chevron → toggles an expanded panel revealing
+///     daily quest preview + companion buff / food-trigger pill.
 class HeroProgressionHeader extends StatefulWidget {
   const HeroProgressionHeader({
     super.key,
@@ -214,7 +215,7 @@ class _HeaderBody extends StatelessWidget {
 
     return _HeaderFrame(
       backgroundDefinition: equippedBackground,
-      onTap: onToggleExpanded,
+      onTap: onOpenProfile,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -466,15 +467,28 @@ class _IdentityRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 3),
-              Text(
-                '@$handle',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: Tokens.fontSizeCaption,
-                  color: Tokens.onSurfaceFaint,
-                  fontWeight: FontWeight.w600,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      '@$handle',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: Tokens.fontSizeCaption,
+                        color: Tokens.onSurfaceFaint,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    size: 14,
+                    color: Tokens.onSurfaceFaint,
+                  ),
+                ],
               ),
             ],
           ),
