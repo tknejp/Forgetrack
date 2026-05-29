@@ -66,6 +66,13 @@ param(
     [switch]$RunTests,
     [switch]$DryRun,
 
+    # -Yes: auto-confirm všech Confirm-Step pauz (Trello blocker check /
+    # commit-confirm / CHANGELOG-naplněn). Použít POUZE když byly tyto kontroly
+    # provedeny jinde (typicky Claude orchestrací přes .claude/commands/release.md,
+    # kde Trello check + changelog draft proběhnou interaktivně předem). Bez -Yes
+    # skript čeká na Read-Host — což zamrzne v non-interaktivním shellu.
+    [switch]$Yes,
+
     # -Resume: pokračování z existující release/$Version po neúspěšném pokusu.
     # Předpoklady: jsme na release/$Version, release commit (release: $Version) existuje,
     # pubspec a CHANGELOG jsou už upravené, working tree je čistý.
@@ -124,6 +131,10 @@ function Invoke-Git {
 function Confirm-Step($prompt) {
     if ($DryRun) {
         Write-Host "  [DRY-RUN] auto-confirm: $prompt" -ForegroundColor DarkGray
+        return
+    }
+    if ($Yes) {
+        Write-Host "  [-Yes] auto-confirm: $prompt" -ForegroundColor DarkGray
         return
     }
     $resp = Read-Host "$prompt [y/N]"
@@ -281,8 +292,10 @@ Confirm-Step "Zkontrolováno, žádné blockers?"
 
 Write-Section "Aktuální stav"
 
-# Najdi předchozí tag
-$prevTag = git describe --tags --abbrev=0 2>$null
+# Najdi předchozí tag. Pouze release tagy (v*) — archive/* a jiné lightweight
+# tagy by jinak vyhrály (jsou topologicky blíž HEAD po mergi feature branche),
+# což rozbije commit-log od posledního *vydaného* releasu.
+$prevTag = git describe --tags --abbrev=0 --match "v*" 2>$null
 if (-not $prevTag) {
     Write-Warn "Žádný předchozí tag — generuji změny od počátku historie."
     $prevTag = (Invoke-Git rev-list --max-parents=0 HEAD).Trim()
@@ -403,6 +416,17 @@ if (-not $SkipBuild) {
         }
         Write-Ok "testy prošly"
     }
+
+    # flutter clean před release buildem — incremental build cache umí držet
+    # stale libapp.so v APK (testeři viděli staré chování v release modu, viz
+    # Trello #132 post-mortem). Clean stojí ~1-2 min navíc, ale release build
+    # musí být deterministicky čistý.
+    Write-Section "flutter clean (stale libapp.so guard)"
+    flutter clean
+    if ($LASTEXITCODE -ne 0) {
+        throw "flutter clean selhal."
+    }
+    Write-Ok "clean"
 
     Write-Section "flutter build apk --release --flavor $BuildFlavor"
     flutter build apk --release --flavor $BuildFlavor --dart-define=FLAVOR=$BuildFlavor

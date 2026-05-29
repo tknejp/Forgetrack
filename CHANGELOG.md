@@ -6,6 +6,29 @@ Generování při release: viz [docs/git_workflow.md §3a](docs/git_workflow.md)
 
 ## [Unreleased]
 
+Větší build — DIY in-app updater (appka se aktualizuje sama), rebrand Social → Fellowship
+a Feed → Chronicle, nová Fellowship horní lišta. Bez migrace dat, update přes 0.2.1 funguje.
+
+### Added
+
+- Update: DIY in-app updater — `internal` build se aktualizuje sám z Firebase Storage manifestu (`app_config/latest_internal`); FCM push na topic `forgetrack-internal-builds` + in-app dialog s Markdown release notes [#132].
+- Fellowship: persistent search + notifikační zvoneček v horní liště s novými bottom sheety.
+- Fellowship: volitelná zpráva ke sdílení do Chronicle + větší orámovaný actor avatar.
+- Fellowship: vlastní headline pro Fellowship tab.
+
+### Changed
+
+- Fellowship: rebrand Social → Fellowship a Feed → Chronicle (i18n).
+- Fellowship: reakce + žádosti o přátelství sloučeny do jediného bell sheetu.
+- Fellowship: owner-only delete sdílen přes `SocialOwnedShareCard` wrapper.
+
+### Fixed
+
+- Onboarding: pre-equip welcome pack + drain celebrations před MainShell.
+- Fellowship: swipe-down dismiss search sheetu když je list scrollovatelný.
+- Fellowship: emblémové sloty zmenšeny na úzkých displejích (Row overflow).
+- Fellowship: unblock friend requests + avatar cizího profilu.
+
 ## [0.2.1] - 2026-05-28
 
 Patch po 0.2.0 — opravy regresí a UI doladění zachycené v prvních hodinách testování.
