@@ -6,6 +6,8 @@ Generování při release: viz [docs/git_workflow.md §3a](docs/git_workflow.md)
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-05-29
+
 Větší build — DIY in-app updater (appka se aktualizuje sama), rebrand Social → Fellowship
 a Feed → Chronicle, nová Fellowship horní lišta. Bez migrace dat, update přes 0.2.1 funguje.
 
@@ -123,7 +125,8 @@ První testovací build — interní validace Firestore sync, distribuováno 1 t
 - 2026-05-27 (samostatný commit po tomto tagu): bumpnuto `pubspec.yaml` → `0.1.0+2` a založen tento changelog jako součást zavedení [git workflow](docs/git_workflow.md). Build number `+2` kvůli Android monotonic check; reinstalace u testera vyžaduje uninstall.
 - Historie před tímto tagem je pre-workflow — žádný backfill changelogu.
 
-[Unreleased]: https://github.com/tknejp/Forgetrack/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/tknejp/Forgetrack/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/tknejp/Forgetrack/releases/tag/v0.3.0
 [0.2.1]: https://github.com/tknejp/Forgetrack/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/tknejp/Forgetrack/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/tknejp/Forgetrack/releases/tag/v0.1.0
