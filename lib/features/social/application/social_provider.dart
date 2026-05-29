@@ -739,6 +739,44 @@ class SocialProvider extends ChangeNotifier {
     }
   }
 
+  /// Stamps the signed-in user's Firestore profile with an
+  /// `onboardingCompleted` flag (dev-facing — surfaces in the Firestore
+  /// console). Best-effort: a no-op when no user is bound (the user
+  /// finished onboarding without signing in). Does not notify listeners
+  /// — nothing in the UI renders off this flag.
+  Future<void> markOnboardingCompleted() async {
+    final uid = _activeUid;
+    if (uid == null) return;
+
+    final result = await _repository.markOnboardingCompleted(uid: uid);
+    if (result case Failure(error: final e)) {
+      _recordAppError('markOnboardingCompleted', e);
+    }
+  }
+
+  /// One-shot read of the signed-in user's cloud `onboardingCompleted`
+  /// flag. The onboarding flow uses this to detect a *returning* player
+  /// on a fresh install / new device (one who already cleared the welcome
+  /// flow elsewhere) so it can skip the race pick + welcome celebration
+  /// and offer only a quick connection setup.
+  ///
+  /// Best-effort: returns false when no user is bound, the backend is
+  /// disabled (empty list), the profile doc doesn't exist yet, or the
+  /// read fails (offline). A false here just means "treat as new" — the
+  /// onboarding flow corroborates with the restored cloud race, and the
+  /// race-commit guard independently prevents clobbering an existing race.
+  Future<bool> fetchOnboardingCompleted() async {
+    final uid = _activeUid;
+    if (uid == null) return false;
+
+    final result = await _repository.fetchProfilesByIds([uid]);
+    return switch (result) {
+      Success(value: final profiles) =>
+        profiles.firstOrNull?.onboardingCompleted ?? false,
+      Failure() => false,
+    };
+  }
+
   Future<void> _reconcileSession() async {
     if (_isReconcilingSession) {
       _reconcileQueued = true;

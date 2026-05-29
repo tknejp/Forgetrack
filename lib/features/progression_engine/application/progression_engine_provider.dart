@@ -274,11 +274,13 @@ class ProgressionEngineProvider extends ChangeNotifier {
     HybridProgressionEngineRepository? cloudSync,
     CosmeticUnlockBridge? cosmeticBridge,
     ProgressionLevelPolicy levelPolicy = const ProgressionLevelPolicy(),
+    bool evaluationEnabled = true,
   })  : _engine = engine,
         _repository = repository,
         _cloudSync = cloudSync,
         _cosmeticBridge = cosmeticBridge ?? CosmeticUnlockBridge(),
-        _levelPolicy = levelPolicy {
+        _levelPolicy = levelPolicy,
+        _evaluationEnabled = evaluationEnabled {
     unawaited(_hydrate());
   }
 
@@ -295,6 +297,27 @@ class ProgressionEngineProvider extends ChangeNotifier {
 
   String? _boundCloudUid;
   bool _cloudPullInFlight = false;
+
+  /// In-flight cloud pull-and-merge future, if one was ever kicked by
+  /// [bindCloudUser]. [awaitCloudLedgerSettled] awaits it so the
+  /// onboarding finish handler can guarantee a returning player's prior
+  /// ledger (welcome completion + earned progression) is merged into the
+  /// local store before the first post-onboarding evaluation runs. Null
+  /// when no user / no cloud-sync wrapper is bound.
+  Future<void>? _cloudPullFuture;
+
+  /// Gate on the ambient evaluation path ([refresh]). While false,
+  /// `refresh()` is a no-op so the condition-less `welcome_to_journey`
+  /// achievement can't be minted before onboarding finalizes — and, for
+  /// a returning player on a fresh install, before the cloud ledger has
+  /// merged its prior welcome completion (which the engine's idempotency
+  /// then suppresses). Seeded from `OnboardingProvider.isCompleted` at
+  /// construction: already-onboarded users evaluate from boot exactly as
+  /// before; fresh installs stay gated until
+  /// [OnboardingProvider.finalizeOnboarding] flips it via
+  /// [setEvaluationEnabled]. Re-armed (set false) on a devtools ledger
+  /// wipe so a re-run of onboarding behaves like a fresh install.
+  bool _evaluationEnabled;
   final EngineStreakSource _streakSource = const EngineStreakSource();
   final ObjectiveCatalog _objectiveCatalog = const ObjectiveCatalog();
   final ProgressionEntryCatalog _nodeCatalog = const ProgressionEntryCatalog();
@@ -422,6 +445,48 @@ class ProgressionEngineProvider extends ChangeNotifier {
 
   bool get isLoading => _isLoading;
   bool get isEvaluating => _isEvaluating;
+
+  /// Whether the ambient evaluation path ([refresh]) is allowed to run.
+  /// See [_evaluationEnabled].
+  bool get evaluationEnabled => _evaluationEnabled;
+
+  /// Opens (or re-arms) the evaluation gate. Onboarding flips this to
+  /// `true` from [OnboardingProvider.finalizeOnboarding] once the cloud
+  /// ledger has settled; the devtools ledger wipe flips it back to
+  /// `false` so a re-run of onboarding behaves like a fresh install.
+  /// Does not itself trigger a [refresh] — the caller controls when the
+  /// first post-gate evaluation runs.
+  void setEvaluationEnabled(bool value) {
+    _evaluationEnabled = value;
+  }
+
+  /// Awaits the in-flight cloud pull-and-merge, if one was kicked by
+  /// [bindCloudUser]. No-op when no user / no cloud-sync wrapper is
+  /// bound. Never throws — [_pullCloudLedger] swallows its own errors.
+  Future<void> awaitCloudLedgerSettled() async {
+    final pull = _cloudPullFuture;
+    if (pull != null) await pull;
+  }
+
+  /// Onboarding hand-off: settle the cloud ledger, then open the
+  /// evaluation gate and run the first evaluation. Called from the
+  /// welcome screen's finish handler.
+  ///
+  /// Awaiting the cloud pull first is what suppresses the duplicate
+  /// welcome celebration on a reinstall: a returning player's prior
+  /// `welcome_to_journey` completion is merged into the local ledger
+  /// before this evaluation, so the engine's idempotency
+  /// (`ledger.hasEventKey`) resolves it as already-completed and emits
+  /// nothing. A genuinely new player has no such event, so the welcome
+  /// mints once and the caller drains its celebration in place. Does NOT
+  /// flip the onboarding-completion routing flag — the caller marks
+  /// completion only after draining, so the celebration plays in place
+  /// of (not on top of) the main shell.
+  Future<void> activateAfterOnboarding() async {
+    await awaitCloudLedgerSettled();
+    setEvaluationEnabled(true);
+    await refresh();
+  }
 
   /// True when at least one [claimNode] call is currently in flight.
   /// UI uses this to gate "claim all" CTAs without watching the full
@@ -2728,7 +2793,10 @@ class ProgressionEngineProvider extends ChangeNotifier {
     }
     if (_boundCloudUid == uid) return;
     _boundCloudUid = uid;
-    unawaited(_pullCloudLedger(uid, cloud));
+    // Retain the future so [awaitCloudLedgerSettled] (onboarding finish)
+    // can guarantee the merge lands before the first gated evaluation.
+    _cloudPullFuture = _pullCloudLedger(uid, cloud);
+    unawaited(_cloudPullFuture);
   }
 
   Future<void> _pullCloudLedger(
@@ -2800,6 +2868,13 @@ class ProgressionEngineProvider extends ChangeNotifier {
   /// requests — a refresh in flight queues a follow-up so we always
   /// end with the latest data.
   Future<void> refresh() async {
+    // Gate: while disabled (fresh install / reinstall before onboarding
+    // finalizes, or after a devtools wipe), the ambient evaluation path
+    // is a no-op so the condition-less `welcome_to_journey` achievement
+    // can't be minted before the cloud ledger has merged. Cloud-pull
+    // state (_ledger, level getters) still lands — see [_pullCloudLedger]
+    // — because it's set before that method's trailing refresh.
+    if (!_evaluationEnabled) return;
     final source = _source;
     if (source == null) return;
     if (_isEvaluating) {
@@ -4311,17 +4386,24 @@ class ProgressionEngineProvider extends ChangeNotifier {
       _recomputeStreaks();
       _lastEvaluatedSignature = null;
       _error = null;
+      // Re-arm the evaluation gate so a re-run of onboarding behaves like
+      // a fresh install: the condition-less welcome achievement must not
+      // re-mint until the re-run's finalize step re-opens the gate (after
+      // the cloud ledger has settled). For a local-only wipe the cloud
+      // still has welcome → re-onboarding resolves to "returning" and
+      // skips the celebration; for a full Firestore purge the player is
+      // genuinely new and the welcome fires once at finalize.
+      _evaluationEnabled = false;
     } catch (e) {
       _error = e.toString();
     } finally {
       _isEvaluating = false;
       notifyListeners();
     }
-    // Force a fresh evaluation against the now-empty ledger so condition-only
-    // achievements (welcome_to_journey) re-emit. Without this, the next
-    // evaluation only fires when some upstream source notifies — and during
-    // factory-reset that notification can race the audit-signature cache and
-    // bail before re-emitting welcome.
+    // The gate is now closed, so this is an inert no-op; kept so the
+    // method's contract (settle after wipe) is explicit. Re-emission of
+    // welcome_to_journey happens at the re-run's onboarding finalize, not
+    // here — see [OnboardingProvider.finalizeOnboarding].
     await refresh();
   }
 

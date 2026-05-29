@@ -116,6 +116,12 @@ class DisabledSocialRepository implements SocialPresenceRepository {
       _disabled<void>('updateStatVisibilityOverrides');
 
   @override
+  Future<Result<void, AppError>> markOnboardingCompleted({
+    required String uid,
+  }) async =>
+      _disabled<void>('markOnboardingCompleted');
+
+  @override
   Stream<List<SocialFriendRequest>> watchIncomingFriendRequests({
     required String uid,
   }) {

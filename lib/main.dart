@@ -404,6 +404,16 @@ Future<void> _runForgetrack(SentryConsentProvider sentryConsent) async {
               engine: progressionEngineV2,
               repository: progressionEngineRepo,
               cloudSync: progressionEngineCloudSync,
+              // Gate the ambient evaluation path until onboarding finishes
+              // so the condition-less `welcome_to_journey` achievement
+              // can't auto-mint against the empty ledger at boot (before
+              // the cloud pull merges a returning player's prior welcome
+              // completion). Already-onboarded users have the flag true →
+              // evaluate from boot exactly as before. Onboarding's
+              // finalize step re-opens the gate after the cloud ledger
+              // settles. `onboardingProvider.init()` is awaited above, so
+              // `isCompleted` is hydrated here.
+              evaluationEnabled: onboardingProvider.isCompleted,
             ),
             update: (_, auth, goals, fitness, kt, cosmetics, provider) {
               provider!.bind(

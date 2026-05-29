@@ -78,9 +78,9 @@
           "id": "users",
           "name": "users/{uid}",
           "path": "Per-user profile snapshot",
-          "role": "Denormalizovaný display profile pro social (level, totalXp, raceId, equipped cosmetic IDs vč. skinId, unlocked achievement IDs, handle, photoURL).",
-          "writers": ["SocialProvider.upsertProfile"],
-          "readers": ["SocialProvider.watchProfileById", "Friends tab"]
+          "role": "Denormalizovaný display profile pro social (level, totalXp, raceId, equipped cosmetic IDs vč. skinId, unlocked achievement IDs, handle, photoURL). Pole onboardingCompleted (+ onboardingCompletedAt) zapsané mimo projection rebuild path (merge ho zachová napříč re-publishy) je load-bearing signál: onboarding ho čte na čisté instalaci / novém zařízení, aby rozpoznal vracejícího se hráče — ten neprojde výběrem rasy ani welcome oslavou, jen rychlým setupem (Google/HC/KT).",
+          "writers": ["SocialProvider.upsertProfile", "SocialProvider.markOnboardingCompleted"],
+          "readers": ["SocialProvider.watchProfileById", "SocialProvider.fetchOnboardingCompleted (returning-player gate)", "Friends tab"]
         },
         {
           "id": "engine_reward_grants",
