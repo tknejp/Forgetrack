@@ -342,6 +342,119 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sectionAbout => 'About';
 
   @override
+  String get settingsHubHealthConnectSubtitle => 'Permissions and sync';
+
+  @override
+  String get settingsHubGoalsSubtitle => 'Calories, macros, reminders';
+
+  @override
+  String get settingsHubNotificationsSubtitle =>
+      'What and when you\'re notified';
+
+  @override
+  String get settingsHubPreferencesSubtitle => 'Language, privacy';
+
+  @override
+  String get settingsHubDataSubtitle => 'Export and data management';
+
+  @override
+  String get settingsHubAboutSubtitle => 'Version, policies, feedback';
+
+  @override
+  String get aboutTagline => 'Your training as an RPG adventure';
+
+  @override
+  String get aboutDescription =>
+      'Forgetrack turns tracking your food, activity and sleep into a game — complete quests, earn XP, level up your hero and unlock cosmetics. Connect Health Connect and Kalorické Tabulky to pull your data in automatically.';
+
+  @override
+  String get aboutSectionFaq => 'FAQ';
+
+  @override
+  String get aboutSectionContact => 'Contact & feedback';
+
+  @override
+  String get aboutContactEmail => 'Email us';
+
+  @override
+  String get aboutRateApp => 'Rate the app';
+
+  @override
+  String get aboutWebsite => 'Website';
+
+  @override
+  String get aboutFaqCatHc => 'Health Connect';
+
+  @override
+  String get aboutFaqCatKt => 'Kalorické Tabulky';
+
+  @override
+  String get aboutFaqCatGoals => 'Goals';
+
+  @override
+  String get aboutFaqCatData => 'Data & privacy';
+
+  @override
+  String get aboutFaqCatGame => 'Game & progress';
+
+  @override
+  String get aboutFaqHcWhatQ =>
+      'What is Health Connect and why does the app use it?';
+
+  @override
+  String get aboutFaqHcWhatA =>
+      'Health Connect is Google\'s on-device store for health data. Forgetrack reads your steps, activity, sleep and weight from it so you don\'t have to enter them by hand. The data stays on your phone and is only shared between apps you allow.';
+
+  @override
+  String get aboutFaqHcConnectQ => 'How do I connect Health Connect?';
+
+  @override
+  String get aboutFaqHcConnectA =>
+      'Open Settings → Health Connect, tap Permissions and allow reading the data you want to track. On some phones you first need to install Health Connect from the Play Store.';
+
+  @override
+  String get aboutFaqHcNoDataQ => 'Why is no data showing from Health Connect?';
+
+  @override
+  String get aboutFaqHcNoDataA =>
+      'Health Connect doesn\'t collect data on its own — it only shares it. Your source app (Samsung Health, Google Fit, Fitbit, etc.) must be allowed to write (push) data into Health Connect. Check the Health Connect integration in that app\'s settings.';
+
+  @override
+  String get aboutFaqKtWhatQ => 'What is the Kalorické Tabulky connection for?';
+
+  @override
+  String get aboutFaqKtWhatA =>
+      'Once you sign in, Forgetrack pulls your daily calorie and macro intake from your kaloricketabulky.cz account, so you don\'t have to log meals twice.';
+
+  @override
+  String get aboutFaqKtConnectQ => 'How do I connect Kalorické Tabulky?';
+
+  @override
+  String get aboutFaqKtConnectA =>
+      'In Settings → Kalorické Tabulky, sign in with your kaloricketabulky.cz account. The login is saved so your data syncs automatically.';
+
+  @override
+  String get aboutFaqGoalsQ => 'Where do my nutrition goals come from?';
+
+  @override
+  String get aboutFaqGoalsA =>
+      'By default you set your own calories and macros in Settings → Goals. If you\'ve connected Kalorické Tabulky, a switch there lets your daily goals come from your KT account instead.';
+
+  @override
+  String get aboutFaqPrivacyQ => 'Is my data safe and synced across devices?';
+
+  @override
+  String get aboutFaqPrivacyA =>
+      'Your progress, hero and settings are backed up to your account, so they follow you to every device you sign in on. Health data read from Health Connect is processed on your phone.';
+
+  @override
+  String get aboutFaqRpgQ => 'How do XP, levels and quests work?';
+
+  @override
+  String get aboutFaqRpgA =>
+      'You earn XP for hitting goals and staying active, which levels up your hero over time. Quests give you short-term challenges, and completing them rewards you — including cosmetics.';
+
+  @override
   String get sectionAccount => 'Account';
 
   @override
@@ -816,6 +929,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsGoalsBodyHeader => 'Body';
+
+  @override
+  String get onboardingGoalsHealthHeading => 'Your daily targets';
+
+  @override
+  String get onboardingGoalsNutritionHeading => 'Nutrition goals';
+
+  @override
+  String get nutritionGoalsSourceLabel => 'Nutrition goals source';
+
+  @override
+  String get nutritionGoalsSourceLocal => 'Your own';
+
+  @override
+  String get nutritionGoalsSourceKt => 'Kaloričke Tabulky';
+
+  @override
+  String get nutritionGoalsSourceKtHint =>
+      'Daily calorie and macro goals come from your Kaloričke Tabulky account, so the fields below are read-only.';
+
+  @override
+  String get nutritionGoalsSourceConnectKt =>
+      'Connect Kaloričke Tabulky to use its goals.';
+
+  @override
+  String get nutritionGoalsSourceSwitchTitle => 'Goals from Kaloričke Tabulky';
+
+  @override
+  String get nutritionGoalsSourceSwitchSubtitle =>
+      'Take daily calories & macros from KT instead of your own';
+
+  @override
+  String get nutritionGoalsSourceOffCaption =>
+      'Set your calorie and macro goals below. Turn the switch on to use your daily goals from Kaloričke Tabulky instead.';
 
   @override
   String get nutritionPeriod7d => '7 days';
@@ -5999,6 +6146,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get coachLogExportDescription =>
       'Writes a weekly coach-log block — weight, steps, calories, macros — into the Coach Log tab of your Forgetrack spreadsheet.';
+
+  @override
+  String get coachLogExportQuickButtonSetting => 'Quick export on overview';
+
+  @override
+  String get coachLogExportQuickButtonSettingSubtitle =>
+      'Show a button on the overview to export the current week in one tap.';
 
   @override
   String get onboardingTitle => 'Welcome to Forgetrack';

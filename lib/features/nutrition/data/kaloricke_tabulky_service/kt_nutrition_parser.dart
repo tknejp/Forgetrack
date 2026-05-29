@@ -3,6 +3,7 @@ part of '../kaloricke_tabulky_service.dart';
 class _KtNutritionParser {
   KtDayNutrition parseDaySummary(Map<String, dynamic> data) {
     final summaryMetrics = _parseSummaryMetrics(data);
+    final summaryGoals = _parseSummaryGoals(data);
 
     double calories = _parseDouble(data['foodstuffEnergyTotal']);
     if (calories == 0) {
@@ -23,6 +24,11 @@ class _KtNutritionParser {
       sugar: summaryMetrics['sugar'] ?? 0,
       saturatedFat: summaryMetrics['saturatedFattyAcid'] ?? 0,
       basal: basal,
+      goalCalories: _resolveCalorieGoal(summaryGoals, balance),
+      goalProtein: summaryGoals['protein'] ?? 0,
+      goalFat: summaryGoals['fat'] ?? 0,
+      goalCarbs: summaryGoals['carbohydrate'] ?? 0,
+      goalFiber: summaryGoals['fiber'] ?? 0,
     );
     AppLog.ktParse.debug(
       '_parseDaySummary() → ${_describeNutrition(parsed)}',
@@ -74,6 +80,7 @@ class _KtNutritionParser {
 
   KtDayNutrition parseDayDiary(Map<String, dynamic> data) {
     final summaryMetrics = _parseSummaryMetrics(data);
+    final summaryGoals = _parseSummaryGoals(data);
     var usedSummaryFallback = false;
 
     double calories = _parseDouble(data['energyTotal']);
@@ -168,6 +175,11 @@ class _KtNutritionParser {
       saturatedFat: saturatedFat,
       drinkRegime: _parseDouble(data['drinkRegime']),
       foodCount: _parseInt(data['foodstuffCount']),
+      goalCalories: _resolveCalorieGoal(summaryGoals, data['balance']),
+      goalProtein: summaryGoals['protein'] ?? 0,
+      goalFat: summaryGoals['fat'] ?? 0,
+      goalCarbs: summaryGoals['carbohydrate'] ?? 0,
+      goalFiber: summaryGoals['fiber'] ?? 0,
       meals: parseMeals(data),
       lastSyncedAt: DateTime.now(),
     );
@@ -197,10 +209,39 @@ class _KtNutritionParser {
     return parsed;
   }
 
-  Map<String, double> _parseSummaryMetrics(Map<String, dynamic> data) {
-    final metrics = <String, double>{};
+  Map<String, double> _parseSummaryMetrics(Map<String, dynamic> data) =>
+      _parseSummaryByCode(data, _parseSummaryMetricValue);
 
-    void addMetric(dynamic rawEntry) {
+  /// Per-code map of the daily-summary GOAL values — the `goal` field on
+  /// each `items` / `itemsDynamic` entry (#98). Parallel to
+  /// [_parseSummaryMetrics], which reads the consumed `actual` value.
+  Map<String, double> _parseSummaryGoals(Map<String, dynamic> data) =>
+      _parseSummaryByCode(data, (entry) => _parseDouble(entry['goal']));
+
+  /// Resolves the daily calorie goal: the `total` summary code's goal,
+  /// falling back to the `balance` block's own-target / target when the
+  /// items list didn't carry one.
+  double _resolveCalorieGoal(Map<String, double> goals, dynamic balance) {
+    final fromItems = goals['total'] ?? 0;
+    if (fromItems != 0) return fromItems;
+    if (balance is Map) {
+      final own = _parseDouble(balance['ownTargetValue']);
+      if (own != 0) return own;
+      return _parseDouble(balance['target']);
+    }
+    return 0;
+  }
+
+  /// Walks the summary `items` + `itemsDynamic` trees keyed by `code`,
+  /// reading each entry's value via [readValue]. When a code appears
+  /// twice, a non-zero value wins over a zero one.
+  Map<String, double> _parseSummaryByCode(
+    Map<String, dynamic> data,
+    double Function(Map) readValue,
+  ) {
+    final out = <String, double>{};
+
+    void add(dynamic rawEntry) {
       if (rawEntry is! Map) {
         return;
       }
@@ -210,31 +251,31 @@ class _KtNutritionParser {
         return;
       }
 
-      final value = _parseSummaryMetricValue(rawEntry);
-      final existing = metrics[code];
+      final value = readValue(rawEntry);
+      final existing = out[code];
 
       if (existing == null || existing == 0 || value != 0) {
-        metrics[code] = value;
+        out[code] = value;
       }
     }
 
-    void addMetrics(dynamic rawEntries) {
+    void addAll(dynamic rawEntries) {
       if (rawEntries is! List) {
         return;
       }
 
       for (final entry in rawEntries) {
         if (entry is List) {
-          addMetrics(entry);
+          addAll(entry);
         } else {
-          addMetric(entry);
+          add(entry);
         }
       }
     }
 
-    addMetrics(data['items']);
-    addMetrics(data['itemsDynamic']);
-    return metrics;
+    addAll(data['items']);
+    addAll(data['itemsDynamic']);
+    return out;
   }
 
   double _parseSummaryMetricValue(Map rawEntry) {

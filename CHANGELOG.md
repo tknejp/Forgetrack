@@ -6,6 +6,32 @@ Generování při release: viz [docs/git_workflow.md §3a](docs/git_workflow.md)
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-05-29
+
+Nastavení přepracováno z dlouhého scrollu na přehledný hub s drill-down kategoriemi.
+Cíle se nastavují už v onboardingu, výživové cíle lze brát přímo z Kalorických Tabulek.
+Bez migrace dat, update přes 0.3.0 funguje.
+
+### Added
+
+- Settings: hub + drill-down — karta účtu a KT login karta nahoře, kategorie rozklikávací do vlastních stránek; settings tlačítko v app baru na všech hlavních obrazovkách.
+- Settings: rozšířené „O aplikaci" — identita + popis appky, FAQ (Health Connect, Kalorické Tabulky, zdroj cílů, data & soukromí, RPG základy), kontakty/odkazy.
+- Onboarding: nastavení cílů přímo v krocích — Health Connect (aktivita, spánek, cílová váha) + KT (kalorie + makra) [#135].
+- Onboarding: 3krokové quick setup pro vracející se hráče (účet + Health Connect + KT), bez výběru rasy a uvítací oslavy.
+- Nutrition: zdroj výživových cílů lokální vs KT — kalorie + makra z KT deníku, přepínač na KT kartě v Nastavení i na KT onboarding kroku [#98].
+- Export: opt-in rychlé tlačítko „exportovat aktuální týden" v hlavičce přehledu [#35].
+
+### Changed
+
+- Settings: obrazovka Cílů zploštělá — domain-grouped naskládané karty (výživa první), přepínač „cíle z KT" inline nahoře.
+- Onboarding: notifikační toggle přesunut na Google sign-in krok; poslední krok už jen výživový.
+- Settings: `AppConstants.appVersion` plněn z PackageInfo při startu (sleduje pubspec místo zastaralého literálu).
+
+### Fixed
+
+- Progression/Onboarding: uvítací oslava (`welcome_to_journey`) se znovu nespouští po přeinstalaci / na novém zařízení — engine gate čeká na cloud pull před mintnutím.
+- Onboarding: vracejícímu se hráči se nikdy nepřepíše existující cloud rasa (ošetřen offline-misdetect edge).
+
 ## [0.3.0] - 2026-05-29
 
 Větší build — DIY in-app updater (appka se aktualizuje sama), rebrand Social → Fellowship
@@ -125,7 +151,8 @@ První testovací build — interní validace Firestore sync, distribuováno 1 t
 - 2026-05-27 (samostatný commit po tomto tagu): bumpnuto `pubspec.yaml` → `0.1.0+2` a založen tento changelog jako součást zavedení [git workflow](docs/git_workflow.md). Build number `+2` kvůli Android monotonic check; reinstalace u testera vyžaduje uninstall.
 - Historie před tímto tagem je pre-workflow — žádný backfill changelogu.
 
-[Unreleased]: https://github.com/tknejp/Forgetrack/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/tknejp/Forgetrack/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/tknejp/Forgetrack/releases/tag/v0.4.0
 [0.3.0]: https://github.com/tknejp/Forgetrack/releases/tag/v0.3.0
 [0.2.1]: https://github.com/tknejp/Forgetrack/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/tknejp/Forgetrack/compare/v0.1.0...v0.2.0

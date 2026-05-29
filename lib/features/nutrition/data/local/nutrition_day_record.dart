@@ -24,6 +24,16 @@ class NutritionDayRecord {
   /// Basal metabolic rate (kcal) reported by KT for this day. 0 when unknown.
   double basal = 0;
 
+  /// Per-day nutrition goals (calories + macros) reported by KT (#98).
+  /// 0 when KT carried no goal for the metric — consumers treat all-zero
+  /// goals as "no data" and fall back to the local goal board. Old rows
+  /// predating this column read 0 (no migration needed).
+  double goalCalories = 0;
+  double goalProtein = 0;
+  double goalFat = 0;
+  double goalCarbs = 0;
+  double goalFiber = 0;
+
   /// JSON-encoded list of [KtMeal] entries for the day. Empty string when no
   /// diary fetch has populated the per-meal breakdown.
   String mealsJson = '';

@@ -30,7 +30,7 @@
           "modelsPath": "lib/features/nutrition/data/local/nutrition_day_record.dart",
           "role": "Cache denních makro / kalorických záznamů z Kalorické tabulky.",
           "collections": [
-            { "name": "NutritionDayRecord", "purpose": "Den, kcal, bílkoviny, sacharidy, tuky, vláknina." }
+            { "name": "NutritionDayRecord", "purpose": "Den, kcal, bílkoviny, sacharidy, tuky, vláknina. #98: + goalCalories/goalProtein/goalFat/goalCarbs/goalFiber sloupce (per-datum KT cíle z diary summary). Staré řádky čtou 0 = no-data → lokální fallback, bez migrace." }
           ],
           "writers": ["KalorickeTabulkyProvider"],
           "readers": ["KalorickeTabulkyProvider", "ProgressionEngineProvider (přes adapter)", "SheetsExportProvider"]
@@ -78,9 +78,9 @@
           "id": "users",
           "name": "users/{uid}",
           "path": "Per-user profile snapshot",
-          "role": "Denormalizovaný display profile pro social (level, totalXp, raceId, equipped cosmetic IDs vč. skinId, unlocked achievement IDs, handle, photoURL).",
-          "writers": ["SocialProvider.upsertProfile"],
-          "readers": ["SocialProvider.watchProfileById", "Friends tab"]
+          "role": "Denormalizovaný display profile pro social (level, totalXp, raceId, equipped cosmetic IDs vč. skinId, unlocked achievement IDs, handle, photoURL). Pole onboardingCompleted (+ onboardingCompletedAt) zapsané mimo projection rebuild path (merge ho zachová napříč re-publishy) je load-bearing signál: onboarding ho čte na čisté instalaci / novém zařízení, aby rozpoznal vracejícího se hráče — ten neprojde výběrem rasy ani welcome oslavou, jen rychlým setupem (Google/HC/KT).",
+          "writers": ["SocialProvider.upsertProfile", "SocialProvider.markOnboardingCompleted"],
+          "readers": ["SocialProvider.watchProfileById", "SocialProvider.fetchOnboardingCompleted (returning-player gate)", "Friends tab"]
         },
         {
           "id": "engine_reward_grants",
@@ -206,8 +206,10 @@
         { "id": "pref-notif-enabled", "name": "notifications_enabled", "role": "Master switch lokálních + push notifikací.", "writers": ["NotificationPreferencesProvider"], "readers": ["NotificationPreferencesProvider", "BackgroundSyncService"] },
         { "id": "pref-onboarding", "name": "onboarding_completed", "role": "Onboarding flow dokončen?", "writers": ["OnboardingProvider"], "readers": ["OnboardingProvider"] },
         { "id": "pref-spreadsheet", "name": "spreadsheet_id", "role": "ID Google Sheets dokumentu používaného exporty.", "writers": ["SheetsExportService"], "readers": ["SheetsExportService", "BushidoSheetsService"] },
+        { "id": "pref-coach-log-quick", "name": "coach_log_export.overview_quick_button", "role": "#35: opt-in toggle — zobrazit na overview headeru ikonu pro one-tap export aktuálního týdne do coach logu. Default off; přepíná se v Nastavení → sekce exportu.", "writers": ["CoachLogExportSettings"], "readers": ["CoachLogExportSettings", "PeriodNavigatorBar (overview header gating)"] },
         { "id": "pref-goals", "name": "goal_daily_steps / goal_daily_calories / goal_daily_protein / goal_daily_carbs / goal_daily_fat / goal_daily_fiber / goal_sleep_hours / goal_daily_activity_mins / goal_weekly_activity_mins / goal_target_weight", "role": "Uživatelské cíle (kroky, kalorie, makra, spánek, denní + týdenní aktivita, váha). `goal_daily_activity_mins` přidán s emblem-buff Phase 0 — bylo třeba reálné GoalMetric.dailyActivityMins backed by configurable goal, aby `emblem_mine_crest` mohl cílit (default 30 min).", "writers": ["GoalsProvider"], "readers": ["GoalsProvider"] },
         { "id": "pref-goal-history", "name": "goal_*_history (steps / calories / protein / fat / carbs / fiber / sleep / daily_activity_mins / weekly_activity)", "role": "Per-cíl JSON pole revizí (effectiveFrom + value) — historized cíle pro retroactive backfill evaluation. Local-only, na novém zařízení se reseeduje na aktuální hodnotu.", "writers": ["GoalsProvider"], "readers": ["GoalsProvider.progressionDaily*ForDate"] },
+        { "id": "pref-nutrition-goals-source", "name": "nutrition_goals_source", "role": "#98: zdroj nutričních cílů — `local` (lokální goal board, default) nebo `kt` (per-datum cíle z Kalorických tabulek). GoalsProvider ho čte přes bool resolver; HC cíle + váha zůstávají vždy lokální.", "writers": ["NutritionGoalsSourceProvider"], "readers": ["NutritionGoalsSourceProvider", "GoalsProvider (resolver)"] },
         { "id": "pref-joined-at", "name": "forgetrack_joined_at_iso", "role": "ISO timestamp prvního dne v appce — floor pro retroactive claim window. Reseeds z nejstaršího ledger eventu po pullAndMerge, takže cross-device se chová správně i bez explicitního sync.", "writers": ["ProgressionEngineProvider._resolveJoinedAt"], "readers": ["ProgressionEngineProvider.joinedAt"] },
         { "id": "pref-card-order", "name": "home_card_order", "role": "Pořadí dashboard karet (drag-and-drop).", "writers": ["HomeCardOrderProvider"], "readers": ["HomeCardOrderProvider"] },
         { "id": "pref-devtools", "name": "devtools_debug_mode / devtools_bg_debug_notifications_enabled / devtools_access_granted_last_known / devtools_overrides", "role": "DevTools state a overrides.", "writers": ["DevToolsProvider"], "readers": ["DevToolsProvider", "BackgroundSyncService"] },

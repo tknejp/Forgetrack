@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -8,6 +9,7 @@ import '../../../l10n/l10n.dart';
 import '../../../shared/selected_period.dart';
 import '../../../shared/theme/design_tokens.dart';
 import '../../../shared/widgets/drag_reveal_pager.dart';
+import '../../coach_log_export/application/bushido_export_provider.dart';
 import '../../health_connect/application/fitness_provider.dart';
 import '../../health_connect/application/health_connect_settings_launcher.dart';
 import '../../nutrition/application/kaloricke_tabulky_provider.dart';
@@ -78,6 +80,63 @@ class _OverviewScreenState extends State<OverviewScreen> {
 
   Future<void> _handleHcAction() async {
     await runHcAccessFlow(context.read<FitnessProvider>());
+  }
+
+  /// One-tap coach-log export of the current week, triggered from the header
+  /// quick-export icon. Feedback is a snackbar — success offers an action that
+  /// copies the spreadsheet link (mirrors the dedicated export screen, which
+  /// has no url_launcher); failure surfaces the provider's localized error.
+  Future<void> _quickExport() async {
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = context.read<BushidoExportProvider>();
+    try {
+      final result = await provider.exportCurrentWeek(l10n: l10n);
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          backgroundColor: Tokens.surface,
+          duration: const Duration(seconds: 4),
+          content: Text(
+            l10n.coachLogExportSuccessWeeks(result.weeksExported),
+            style: const TextStyle(color: Tokens.onSurface),
+          ),
+          action: SnackBarAction(
+            label: l10n.coachLogExportOpenSheets,
+            textColor: Tokens.accent,
+            onPressed: () {
+              Clipboard.setData(
+                ClipboardData(text: result.spreadsheetUrl),
+              );
+              messenger.showSnackBar(
+                SnackBar(
+                  backgroundColor: Tokens.surface,
+                  duration: const Duration(seconds: 2),
+                  content: Text(
+                    l10n.exportTargetLinkCopied,
+                    style: const TextStyle(color: Tokens.onSurface),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      final message =
+          provider.lastError ?? l10n.exportErrorPrefix(l10n.exportErrorGeneric);
+      messenger.showSnackBar(
+        SnackBar(
+          backgroundColor: Tokens.surface,
+          duration: const Duration(seconds: 4),
+          content: Text(
+            message,
+            style: const TextStyle(color: Tokens.onSurface),
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _openDatePicker() async {
@@ -178,6 +237,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
                   onDateTap: _period.type == PeriodType.day
                       ? _openDatePicker
                       : null,
+                  onQuickExport: () => unawaited(_quickExport()),
                 ),
               ),
             ),

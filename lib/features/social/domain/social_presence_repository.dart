@@ -99,6 +99,17 @@ abstract class SocialPresenceRepository {
     required Set<String> statVisibilityOverrides,
   });
 
+  /// Dev-facing onboarding marker. Stamps `onboardingCompleted: true`
+  /// (plus a server timestamp) on the user's profile document so the
+  /// Firestore console can show at a glance who has cleared the welcome
+  /// flow. The flag lives outside the projection-rebuilt field set, so
+  /// the `SetOptions(merge: true)` upsert path preserves it across
+  /// progression-driven re-publishes — same single-field-update pattern
+  /// as [updatePinnedAchievement] / [updateStatVisibilityOverrides].
+  Future<Result<void, AppError>> markOnboardingCompleted({
+    required String uid,
+  });
+
   Future<Result<void, AppError>> sendFriendRequest({
     required String fromUid,
     required String toUid,

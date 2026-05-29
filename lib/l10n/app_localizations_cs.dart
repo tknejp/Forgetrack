@@ -343,6 +343,120 @@ class AppLocalizationsCs extends AppLocalizations {
   String get sectionAbout => 'O aplikaci';
 
   @override
+  String get settingsHubHealthConnectSubtitle => 'Oprávnění a synchronizace';
+
+  @override
+  String get settingsHubGoalsSubtitle => 'Kalorie, makra, připomínky';
+
+  @override
+  String get settingsHubNotificationsSubtitle => 'Co a kdy ti přijde';
+
+  @override
+  String get settingsHubPreferencesSubtitle => 'Jazyk, soukromí';
+
+  @override
+  String get settingsHubDataSubtitle => 'Export a správa dat';
+
+  @override
+  String get settingsHubAboutSubtitle => 'Verze, zásady, zpětná vazba';
+
+  @override
+  String get aboutTagline => 'Tvůj trénink jako RPG dobrodružství';
+
+  @override
+  String get aboutDescription =>
+      'Forgetrack mění sledování jídla, aktivity a spánku ve hru — plníš questy, sbíráš XP, levelíš svého hrdinu a odemykáš kosmetiku. Propoj Health Connect a Kalorické tabulky a data se načtou automaticky.';
+
+  @override
+  String get aboutSectionFaq => 'Časté dotazy';
+
+  @override
+  String get aboutSectionContact => 'Kontakt a zpětná vazba';
+
+  @override
+  String get aboutContactEmail => 'Napiš nám';
+
+  @override
+  String get aboutRateApp => 'Ohodnotit aplikaci';
+
+  @override
+  String get aboutWebsite => 'Web';
+
+  @override
+  String get aboutFaqCatHc => 'Health Connect';
+
+  @override
+  String get aboutFaqCatKt => 'Kalorické tabulky';
+
+  @override
+  String get aboutFaqCatGoals => 'Cíle';
+
+  @override
+  String get aboutFaqCatData => 'Data a soukromí';
+
+  @override
+  String get aboutFaqCatGame => 'Hra a postup';
+
+  @override
+  String get aboutFaqHcWhatQ => 'Co je Health Connect a proč ho appka využívá?';
+
+  @override
+  String get aboutFaqHcWhatA =>
+      'Health Connect je systémové úložiště zdravotních dat od Googlu. Forgetrack z něj čte kroky, aktivitu, spánek a váhu, takže je nemusíš zadávat ručně. Data zůstávají v telefonu a sdílí se jen mezi aplikacemi, kterým to povolíš.';
+
+  @override
+  String get aboutFaqHcConnectQ => 'Jak připojím Health Connect?';
+
+  @override
+  String get aboutFaqHcConnectA =>
+      'V Nastavení → Health Connect klepni na Oprávnění a povol čtení dat, která chceš sledovat. Na některých telefonech je potřeba Health Connect nejdřív nainstalovat z Obchodu Play.';
+
+  @override
+  String get aboutFaqHcNoDataQ =>
+      'Proč se nezobrazují žádná data z Health Connect?';
+
+  @override
+  String get aboutFaqHcNoDataA =>
+      'Health Connect sám o sobě data nesbírá — jen je sdílí. Tvoje zdrojová aplikace (Samsung Health, Google Fit, Fitbit apod.) musí mít povolený zápis (push) dat do Health Connect. Zkontroluj to v nastavení dané aplikace v sekci propojení s Health Connect.';
+
+  @override
+  String get aboutFaqKtWhatQ =>
+      'K čemu slouží propojení s Kalorickými tabulkami?';
+
+  @override
+  String get aboutFaqKtWhatA =>
+      'Po přihlášení Forgetrack načítá tvůj denní příjem kalorií a makra z účtu na kaloricketabulky.cz, takže nemusíš jídlo zadávat dvakrát.';
+
+  @override
+  String get aboutFaqKtConnectQ => 'Jak propojím Kalorické tabulky?';
+
+  @override
+  String get aboutFaqKtConnectA =>
+      'V Nastavení → Kalorické tabulky se přihlas svým účtem z kaloricketabulky.cz. Přihlášení se uloží, takže se data synchronizují automaticky.';
+
+  @override
+  String get aboutFaqGoalsQ => 'Odkud se berou moje výživové cíle?';
+
+  @override
+  String get aboutFaqGoalsA =>
+      'Ve výchozím stavu si kalorie a makra nastavuješ sám v Nastavení → Cíle. Pokud máš připojené Kalorické tabulky, můžeš tam přepínačem zvolit, aby se denní cíle braly z nich.';
+
+  @override
+  String get aboutFaqPrivacyQ =>
+      'Jsou moje data v bezpečí a synchronizují se mezi zařízeními?';
+
+  @override
+  String get aboutFaqPrivacyA =>
+      'Tvůj postup, hrdina a nastavení se zálohují do tvého účtu, takže je máš na všech zařízeních, kde se přihlásíš. Zdravotní data z Health Connect se zpracovávají v telefonu.';
+
+  @override
+  String get aboutFaqRpgQ => 'Jak fungují XP, úrovně a questy?';
+
+  @override
+  String get aboutFaqRpgA =>
+      'Za splněné cíle a aktivitu získáváš XP a postupně levelíš hrdinu. Questy ti dávají krátkodobé výzvy a za jejich splnění tě čekají odměny včetně kosmetiky.';
+
+  @override
   String get sectionAccount => 'Účet';
 
   @override
@@ -820,6 +934,40 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get settingsGoalsBodyHeader => 'Tělo';
+
+  @override
+  String get onboardingGoalsHealthHeading => 'Tvé denní cíle';
+
+  @override
+  String get onboardingGoalsNutritionHeading => 'Výživové cíle';
+
+  @override
+  String get nutritionGoalsSourceLabel => 'Zdroj výživových cílů';
+
+  @override
+  String get nutritionGoalsSourceLocal => 'Vlastní';
+
+  @override
+  String get nutritionGoalsSourceKt => 'Kalorické tabulky';
+
+  @override
+  String get nutritionGoalsSourceKtHint =>
+      'Denní cíle pro kalorie a makra se berou z tvého účtu Kalorických tabulek, pole níže jsou proto jen pro čtení.';
+
+  @override
+  String get nutritionGoalsSourceConnectKt =>
+      'Pro použití cílů z KT se nejdřív přihlas ke Kalorickým tabulkám.';
+
+  @override
+  String get nutritionGoalsSourceSwitchTitle => 'Cíle z Kalorických tabulek';
+
+  @override
+  String get nutritionGoalsSourceSwitchSubtitle =>
+      'Ber denní kalorie a makra z KT místo vlastních';
+
+  @override
+  String get nutritionGoalsSourceOffCaption =>
+      'Cíle pro kalorie a makra si nastav níže. Zapni přepínač, pokud chceš místo toho použít denní cíle z Kalorických tabulek.';
 
   @override
   String get nutritionPeriod7d => '7 dní';
@@ -5998,6 +6146,13 @@ class AppLocalizationsCs extends AppLocalizations {
   @override
   String get coachLogExportDescription =>
       'Zapíše týdenní blok coach logu — váhu, kroky, kalorie, makra — do záložky Coach Log ve vaší Forgetrack tabulce.';
+
+  @override
+  String get coachLogExportQuickButtonSetting => 'Rychlý export na přehledu';
+
+  @override
+  String get coachLogExportQuickButtonSettingSubtitle =>
+      'Zobrazí na přehledu tlačítko pro export aktuálního týdne na jedno klepnutí.';
 
   @override
   String get onboardingTitle => 'Vítej v Forgetracku';

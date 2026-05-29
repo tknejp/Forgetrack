@@ -239,17 +239,14 @@ class _FtMainShellState extends State<MainShell> {
                                   key: ValueKey(currentIndex),
                                   eyebrow: headerData.eyebrow,
                                   title: headerData.title,
-                                  trailing: currentIndex == 2
-                                      ? SettingsButton(
-                                          onTap: () => Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (_) =>
-                                                  const SettingsScreen(),
-                                            ),
-                                          ),
-                                        )
-                                      : null,
+                                  trailing: SettingsButton(
+                                    onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const SettingsScreen(),
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
                               Padding(

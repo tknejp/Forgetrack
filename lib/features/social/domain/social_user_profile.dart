@@ -118,6 +118,7 @@ class SocialUserProfile {
     this.pinnedAchievementIds = const [],
     this.statVisibilityOverrides = const <String>{},
     this.equippedCosmetics = const SocialEquippedCosmetics.empty(),
+    this.onboardingCompleted = false,
   });
 
   final String uid; // lint-ignore: untyped-id — Firebase Auth uid is a platform-boundary raw string
@@ -153,6 +154,17 @@ class SocialUserProfile {
   final Set<String> statVisibilityOverrides;
 
   final SocialEquippedCosmetics equippedCosmetics;
+
+  /// Dev-facing marker stamped on `users/{uid}` once the owning device
+  /// has cleared the welcome flow (written out-of-band by
+  /// `markOnboardingCompleted`, preserved across projection re-publishes
+  /// by `SetOptions(merge: true)`). Read by the onboarding flow on a
+  /// fresh install / new device to detect a *returning* player — one who
+  /// must NOT re-run the full welcome onboarding (no race re-pick, no
+  /// welcome celebration), only a quick connection setup. Defaults to
+  /// false when the field is absent (genuinely new player) or
+  /// unreadable (offline / disabled backend).
+  final bool onboardingCompleted;
 }
 
 /// Subset of [Loadout] (cosmetics feature) that is broadcast to

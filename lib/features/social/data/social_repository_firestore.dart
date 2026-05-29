@@ -463,6 +463,24 @@ class FirestoreSocialRepository implements SocialPresenceRepository {
         );
       });
 
+  @override
+  Future<Result<void, AppError>> markOnboardingCompleted({
+    required String uid,
+  }) =>
+      _classify('markOnboardingCompleted', () async {
+        // Written outside `_profileData` so the projection-driven
+        // upsert path never overwrites it — `SetOptions(merge: true)`
+        // on every re-publish preserves the flag.
+        await _users.doc(uid).set(
+          {
+            'onboardingCompleted': true,
+            'onboardingCompletedAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true),
+        );
+      });
+
   Future<
       ({
         DocumentReference<Map<String, dynamic>> ref,
@@ -798,6 +816,7 @@ class FirestoreSocialRepository implements SocialPresenceRepository {
       },
       createdAt: _readDateTime(data['createdAt']),
       updatedAt: _readDateTime(data['updatedAt']),
+      onboardingCompleted: data['onboardingCompleted'] == true,
       equippedCosmetics: SocialEquippedCosmetics(
         frameId: _readNonEmptyString(equipped['frameId']),
         relicId: _readNonEmptyString(equipped['relicId']),

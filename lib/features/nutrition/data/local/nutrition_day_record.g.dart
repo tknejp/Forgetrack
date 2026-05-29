@@ -53,43 +53,68 @@ const NutritionDayRecordSchema = CollectionSchema(
       name: r'foodCount',
       type: IsarType.long,
     ),
-    r'hydration': PropertySchema(
+    r'goalCalories': PropertySchema(
       id: 7,
+      name: r'goalCalories',
+      type: IsarType.double,
+    ),
+    r'goalCarbs': PropertySchema(
+      id: 8,
+      name: r'goalCarbs',
+      type: IsarType.double,
+    ),
+    r'goalFat': PropertySchema(
+      id: 9,
+      name: r'goalFat',
+      type: IsarType.double,
+    ),
+    r'goalFiber': PropertySchema(
+      id: 10,
+      name: r'goalFiber',
+      type: IsarType.double,
+    ),
+    r'goalProtein': PropertySchema(
+      id: 11,
+      name: r'goalProtein',
+      type: IsarType.double,
+    ),
+    r'hydration': PropertySchema(
+      id: 12,
       name: r'hydration',
       type: IsarType.double,
     ),
     r'inferredComplete': PropertySchema(
-      id: 8,
+      id: 13,
       name: r'inferredComplete',
       type: IsarType.bool,
     ),
     r'mealsJson': PropertySchema(
-      id: 9,
+      id: 14,
       name: r'mealsJson',
       type: IsarType.string,
     ),
     r'protein': PropertySchema(
-      id: 10,
+      id: 15,
       name: r'protein',
       type: IsarType.double,
     ),
     r'salt': PropertySchema(
-      id: 11,
+      id: 16,
       name: r'salt',
       type: IsarType.double,
     ),
     r'saturatedFat': PropertySchema(
-      id: 12,
+      id: 17,
       name: r'saturatedFat',
       type: IsarType.double,
     ),
     r'sugar': PropertySchema(
-      id: 13,
+      id: 18,
       name: r'sugar',
       type: IsarType.double,
     ),
     r'syncedAt': PropertySchema(
-      id: 14,
+      id: 19,
       name: r'syncedAt',
       type: IsarType.dateTime,
     )
@@ -159,14 +184,19 @@ void _nutritionDayRecordSerialize(
   writer.writeDouble(offsets[4], object.fat);
   writer.writeDouble(offsets[5], object.fiber);
   writer.writeLong(offsets[6], object.foodCount);
-  writer.writeDouble(offsets[7], object.hydration);
-  writer.writeBool(offsets[8], object.inferredComplete);
-  writer.writeString(offsets[9], object.mealsJson);
-  writer.writeDouble(offsets[10], object.protein);
-  writer.writeDouble(offsets[11], object.salt);
-  writer.writeDouble(offsets[12], object.saturatedFat);
-  writer.writeDouble(offsets[13], object.sugar);
-  writer.writeDateTime(offsets[14], object.syncedAt);
+  writer.writeDouble(offsets[7], object.goalCalories);
+  writer.writeDouble(offsets[8], object.goalCarbs);
+  writer.writeDouble(offsets[9], object.goalFat);
+  writer.writeDouble(offsets[10], object.goalFiber);
+  writer.writeDouble(offsets[11], object.goalProtein);
+  writer.writeDouble(offsets[12], object.hydration);
+  writer.writeBool(offsets[13], object.inferredComplete);
+  writer.writeString(offsets[14], object.mealsJson);
+  writer.writeDouble(offsets[15], object.protein);
+  writer.writeDouble(offsets[16], object.salt);
+  writer.writeDouble(offsets[17], object.saturatedFat);
+  writer.writeDouble(offsets[18], object.sugar);
+  writer.writeDateTime(offsets[19], object.syncedAt);
 }
 
 NutritionDayRecord _nutritionDayRecordDeserialize(
@@ -183,15 +213,20 @@ NutritionDayRecord _nutritionDayRecordDeserialize(
   object.fat = reader.readDouble(offsets[4]);
   object.fiber = reader.readDouble(offsets[5]);
   object.foodCount = reader.readLong(offsets[6]);
-  object.hydration = reader.readDouble(offsets[7]);
+  object.goalCalories = reader.readDouble(offsets[7]);
+  object.goalCarbs = reader.readDouble(offsets[8]);
+  object.goalFat = reader.readDouble(offsets[9]);
+  object.goalFiber = reader.readDouble(offsets[10]);
+  object.goalProtein = reader.readDouble(offsets[11]);
+  object.hydration = reader.readDouble(offsets[12]);
   object.id = id;
-  object.inferredComplete = reader.readBool(offsets[8]);
-  object.mealsJson = reader.readString(offsets[9]);
-  object.protein = reader.readDouble(offsets[10]);
-  object.salt = reader.readDouble(offsets[11]);
-  object.saturatedFat = reader.readDouble(offsets[12]);
-  object.sugar = reader.readDouble(offsets[13]);
-  object.syncedAt = reader.readDateTime(offsets[14]);
+  object.inferredComplete = reader.readBool(offsets[13]);
+  object.mealsJson = reader.readString(offsets[14]);
+  object.protein = reader.readDouble(offsets[15]);
+  object.salt = reader.readDouble(offsets[16]);
+  object.saturatedFat = reader.readDouble(offsets[17]);
+  object.sugar = reader.readDouble(offsets[18]);
+  object.syncedAt = reader.readDateTime(offsets[19]);
   return object;
 }
 
@@ -219,9 +254,9 @@ P _nutritionDayRecordDeserializeProp<P>(
     case 7:
       return (reader.readDouble(offset)) as P;
     case 8:
-      return (reader.readBool(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 9:
-      return (reader.readString(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 10:
       return (reader.readDouble(offset)) as P;
     case 11:
@@ -229,8 +264,18 @@ P _nutritionDayRecordDeserializeProp<P>(
     case 12:
       return (reader.readDouble(offset)) as P;
     case 13:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 14:
+      return (reader.readString(offset)) as P;
+    case 15:
+      return (reader.readDouble(offset)) as P;
+    case 16:
+      return (reader.readDouble(offset)) as P;
+    case 17:
+      return (reader.readDouble(offset)) as P;
+    case 18:
+      return (reader.readDouble(offset)) as P;
+    case 19:
       return (reader.readDateTime(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1059,6 +1104,336 @@ extension NutritionDayRecordQueryFilter
   }
 
   QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      goalCaloriesEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'goalCalories',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      goalCaloriesGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'goalCalories',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      goalCaloriesLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'goalCalories',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      goalCaloriesBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'goalCalories',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      goalCarbsEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'goalCarbs',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      goalCarbsGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'goalCarbs',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      goalCarbsLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'goalCarbs',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      goalCarbsBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'goalCarbs',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      goalFatEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'goalFat',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      goalFatGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'goalFat',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      goalFatLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'goalFat',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      goalFatBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'goalFat',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      goalFiberEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'goalFiber',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      goalFiberGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'goalFiber',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      goalFiberLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'goalFiber',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      goalFiberBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'goalFiber',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      goalProteinEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'goalProtein',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      goalProteinGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'goalProtein',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      goalProteinLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'goalProtein',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
+      goalProteinBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'goalProtein',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterFilterCondition>
       hydrationEqualTo(
     double value, {
     double epsilon = Query.epsilon,
@@ -1754,6 +2129,76 @@ extension NutritionDayRecordQuerySortBy
   }
 
   QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      sortByGoalCalories() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalCalories', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      sortByGoalCaloriesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalCalories', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      sortByGoalCarbs() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalCarbs', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      sortByGoalCarbsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalCarbs', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      sortByGoalFat() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalFat', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      sortByGoalFatDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalFat', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      sortByGoalFiber() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalFiber', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      sortByGoalFiberDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalFiber', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      sortByGoalProtein() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalProtein', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      sortByGoalProteinDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalProtein', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
       sortByHydration() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'hydration', Sort.asc);
@@ -1967,6 +2412,76 @@ extension NutritionDayRecordQuerySortThenBy
   }
 
   QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      thenByGoalCalories() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalCalories', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      thenByGoalCaloriesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalCalories', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      thenByGoalCarbs() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalCarbs', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      thenByGoalCarbsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalCarbs', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      thenByGoalFat() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalFat', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      thenByGoalFatDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalFat', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      thenByGoalFiber() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalFiber', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      thenByGoalFiberDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalFiber', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      thenByGoalProtein() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalProtein', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
+      thenByGoalProteinDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalProtein', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QAfterSortBy>
       thenByHydration() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'hydration', Sort.asc);
@@ -2145,6 +2660,41 @@ extension NutritionDayRecordQueryWhereDistinct
   }
 
   QueryBuilder<NutritionDayRecord, NutritionDayRecord, QDistinct>
+      distinctByGoalCalories() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'goalCalories');
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QDistinct>
+      distinctByGoalCarbs() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'goalCarbs');
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QDistinct>
+      distinctByGoalFat() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'goalFat');
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QDistinct>
+      distinctByGoalFiber() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'goalFiber');
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QDistinct>
+      distinctByGoalProtein() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'goalProtein');
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, NutritionDayRecord, QDistinct>
       distinctByHydration() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'hydration');
@@ -2249,6 +2799,40 @@ extension NutritionDayRecordQueryProperty
   QueryBuilder<NutritionDayRecord, int, QQueryOperations> foodCountProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'foodCount');
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, double, QQueryOperations>
+      goalCaloriesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'goalCalories');
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, double, QQueryOperations>
+      goalCarbsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'goalCarbs');
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, double, QQueryOperations> goalFatProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'goalFat');
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, double, QQueryOperations>
+      goalFiberProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'goalFiber');
+    });
+  }
+
+  QueryBuilder<NutritionDayRecord, double, QQueryOperations>
+      goalProteinProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'goalProtein');
     });
   }
 

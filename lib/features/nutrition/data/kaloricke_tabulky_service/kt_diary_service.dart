@@ -90,6 +90,12 @@ class _KtDiaryService {
       drinkRegime: diary.drinkRegime,
       foodCount: diary.foodCount,
       basal: summary.basal,
+      // Goals come from the summary endpoint's `goal` fields (#98).
+      goalCalories: summary.goalCalories,
+      goalProtein: summary.goalProtein,
+      goalFat: summary.goalFat,
+      goalCarbs: summary.goalCarbs,
+      goalFiber: summary.goalFiber,
       meals: diary.meals,
       lastSyncedAt: DateTime.now(),
     );

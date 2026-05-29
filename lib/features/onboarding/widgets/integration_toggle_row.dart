@@ -123,29 +123,29 @@ class _IconBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Asset icons (brand logos like Kalorické Tabulky) render edge-to-edge
+    // with no box outline / fill — the logo carries its own shape. Emoji
+    // icons keep the tinted box so they read as a deliberate badge.
+    final hasAsset = iconAsset != null;
     return Container(
       width: 38,
       height: 38,
-      decoration: BoxDecoration(
-        color: active
-            ? tint.withValues(alpha: 0.13)
-            : Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: active
-              ? tint.withValues(alpha: 0.33)
-              : Colors.white.withValues(alpha: 0.06),
-        ),
-      ),
-      alignment: Alignment.center,
-      child: iconAsset != null
-          ? ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Padding(
-                padding: const EdgeInsets.all(4),
-                child: Image.asset(iconAsset!, fit: BoxFit.contain),
+      decoration: hasAsset
+          ? null
+          : BoxDecoration(
+              color: active
+                  ? tint.withValues(alpha: 0.13)
+                  : Colors.white.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: active
+                    ? tint.withValues(alpha: 0.33)
+                    : Colors.white.withValues(alpha: 0.06),
               ),
-            )
+            ),
+      alignment: Alignment.center,
+      child: hasAsset
+          ? Image.asset(iconAsset!, fit: BoxFit.contain)
           : Text(
               icon!,
               style: const TextStyle(fontSize: 18, height: 1),

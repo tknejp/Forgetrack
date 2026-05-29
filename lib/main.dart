@@ -4,11 +4,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import 'app.dart';
+import 'core/config/constants.dart';
 import 'core/logging/app_log.dart';
 import 'core/sentry/sentry_bootstrap.dart';
 import 'core/sentry/sentry_consent_provider.dart';
@@ -44,6 +46,7 @@ import 'features/progression_engine/data/hybrid_progression_engine_repository.da
 import 'features/progression_engine/data/isar_progression_engine_repository.dart';
 import 'features/progression_engine/data/local/progression_engine_database.dart';
 import 'features/coach_log_export/application/bushido_export_provider.dart';
+import 'features/coach_log_export/application/coach_log_export_settings.dart';
 import 'features/coach_log_export/data/bushido_export_data_builder.dart';
 import 'features/coach_log_export/data/bushido_fitness_source_adapter.dart';
 import 'features/coach_log_export/data/bushido_nutrition_source_adapter.dart';
@@ -55,6 +58,7 @@ import 'features/social/data/social_firebase_session.dart';
 import 'features/social/data/social_repository_disabled.dart';
 import 'features/social/data/social_repository_firestore.dart';
 import 'features/nutrition/application/kaloricke_tabulky_provider.dart';
+import 'features/nutrition/application/nutrition_goals_source_provider.dart';
 import 'features/nutrition/data/kaloricke_tabulky_service.dart';
 import 'features/nutrition/data/local/kt_nutrition_database.dart';
 import 'features/health_connect/application/fitness_provider.dart';
@@ -97,6 +101,17 @@ Future<void> main() async {
 
   AppLog.app.info('Forgetrack starting up');
 
+  // Resolve the real app version from the platform bundle so everything
+  // that reads AppConstants.appVersion (Settings, Sentry release tag,
+  // dev tools) tracks the pubspec instead of a stale literal.
+  try {
+    final packageInfo = await PackageInfo.fromPlatform();
+    AppConstants.appVersion = packageInfo.version;
+  } catch (e) {
+    AppLog.app.warn('PackageInfo unavailable, using fallback version',
+        payload: e);
+  }
+
   // Sentry consent is read BEFORE init so the very first session honours
   // the persisted choice. First launch defaults to enabled (the GDPR
   // dialog the user sees after boot just confirms the pre-checked state).
@@ -129,6 +144,11 @@ Future<void> _runForgetrack(SentryConsentProvider sentryConsent) async {
   await localeProvider.init();
   final notificationPreferencesProvider = NotificationPreferencesProvider();
   await notificationPreferencesProvider.init();
+
+  // #98: nutrition goal source (local goal board vs per-day KT goals).
+  // Read by GoalsProvider via a bool resolver wired below.
+  final nutritionGoalsSourceProvider = NutritionGoalsSourceProvider();
+  await nutritionGoalsSourceProvider.init();
 
   // Onboarding state is read early so we can gate the Android POST_NOTIFICATIONS
   // OS dialog: a fresh install must not see the prompt at cold start — it
@@ -257,12 +277,30 @@ Future<void> _runForgetrack(SentryConsentProvider sentryConsent) async {
     refreshNutrition: ktProvider.refreshRange,
   );
 
+  final coachLogExportSettings = CoachLogExportSettings();
+  await coachLogExportSettings.init();
+
   final goalsProvider = GoalsProvider(
     gateway: socialBackendState.isReady
         ? GoalHistoryFirestoreGateway()
         : null,
+    // #98: KT acts as the external per-day nutrition goal source; the
+    // resolver gates whether the five nutrition getters consult it.
+    nutritionGoals: ktProvider,
+    useExternalNutritionGoals: () => nutritionGoalsSourceProvider.usesKt,
   );
   await goalsProvider.init();
+
+  // Keep GoalsProvider consumers (progress bars, engine signature) fresh
+  // when the source flips or KT re-syncs under the KT source. Both bridges
+  // are cheap no-ops while the source stays local.
+  nutritionGoalsSourceProvider
+      .addListener(goalsProvider.refreshExternalNutritionGoals);
+  ktProvider.addListener(() {
+    if (nutritionGoalsSourceProvider.usesKt) {
+      goalsProvider.refreshExternalNutritionGoals();
+    }
+  });
 
   final devToolsProvider = DevToolsProvider();
   await devToolsProvider.init();
@@ -347,11 +385,13 @@ Future<void> _runForgetrack(SentryConsentProvider sentryConsent) async {
           ),
           ChangeNotifierProvider.value(value: fitnessProvider),
           ChangeNotifierProvider.value(value: ktProvider),
+          ChangeNotifierProvider.value(value: nutritionGoalsSourceProvider),
           ChangeNotifierProvider.value(value: connectivityProvider),
           ChangeNotifierProvider.value(value: homeCardOrderProvider),
           ChangeNotifierProvider.value(value: emblemBoardProvider),
           ChangeNotifierProvider(create: (_) => SheetsExportProvider()),
           ChangeNotifierProvider.value(value: bushidoExportProvider),
+          ChangeNotifierProvider.value(value: coachLogExportSettings),
           ChangeNotifierProvider.value(value: devToolsProvider),
           ChangeNotifierProxyProvider<AuthProvider,
               DevToolsPermissionService>(
@@ -404,6 +444,16 @@ Future<void> _runForgetrack(SentryConsentProvider sentryConsent) async {
               engine: progressionEngineV2,
               repository: progressionEngineRepo,
               cloudSync: progressionEngineCloudSync,
+              // Gate the ambient evaluation path until onboarding finishes
+              // so the condition-less `welcome_to_journey` achievement
+              // can't auto-mint against the empty ledger at boot (before
+              // the cloud pull merges a returning player's prior welcome
+              // completion). Already-onboarded users have the flag true →
+              // evaluate from boot exactly as before. Onboarding's
+              // finalize step re-opens the gate after the cloud ledger
+              // settles. `onboardingProvider.init()` is awaited above, so
+              // `isCompleted` is hydrated here.
+              evaluationEnabled: onboardingProvider.isCompleted,
             ),
             update: (_, auth, goals, fitness, kt, cosmetics, provider) {
               provider!.bind(

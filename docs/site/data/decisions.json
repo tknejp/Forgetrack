@@ -7,6 +7,26 @@
   },
   "decisions": [
     {
+      "id": "nutrition-goals-source-kt",
+      "title": "Zdroj nutričních cílů: volba lokální vs. KT (#98)",
+      "status": "accepted",
+      "date": "2026-05-29",
+      "context": "KT diary summary (`/user/diary/summary/{date}/get`, který služba už volá) nese per-den `goal` hodnoty pro kalorie + makra. Uživatelé s vyladěnými denními cíli v KT (variabilní napříč dny — cut/refeed, trénink vs. rest) nechtějí udržovat dvě sady čísel. Lokální GoalsProvider neumí per-day cíl bez ručního přepisování revizí.",
+      "decision": "Per-datum dispatch se injektuje do PĚTI nutričních seamů GoalsProvideru (gettery dailyCalories/Protein/Fat/Carbs/Fiber + progression*ForDate varianty), NE do EngineGoalSet. Objektivy progrese tečou přes engine catalog context (EngineGoalSet stavěný ze scalar getterů) + per-datum backfill přes progression*ForDate, takže jediný šev v getterech pokryje živý pass, UI progress bary i historický backfill. goalBoard v EngineEvaluationContext je dormantní (evaluator ho nečte). HC cíle + cílová váha zůstávají VŽDY lokální. KT override je read-only — nikdy se nepíše do goal history ani do Firestore. Fallback na lokální board: zdroj != kt, KT nepřihlášené, nebo den nemá KT cíle (all-zero `hasData == false`). Závislost je zavedena consumer-side portem (NutritionGoalsGateway v health_connect), který nutrition implementuje — health_connect neimportuje nutrition.",
+      "consequences": [
+        "Přepnutí zdroje zachová lokální hodnoty → návrat na 'Vlastní' obnoví původní cíle beze ztráty.",
+        "Source flip i KT re-sync musí notifikovat GoalsProvider (bridge v main.dart), aby se přepočítaly progress bary a invalidoval auditSignature engine.",
+        "Historické dny bez zachyceného KT cíle (např. range-stats sync) padají na lokální fallback — KT goly nese hlavně daily summary path.",
+        "NutritionDayRecord dostal goalCalories/Protein/Fat/Carbs/Fiber sloupce; staré řádky čtou 0 (no-data) → lokální fallback, bez migrace."
+      ],
+      "alternatives": "Injektovat KT do EngineGoalSet (pokryje jen živý pass, mine per-datum historii/backfill). Definovat port v nutrition (cyklus health_connect↔nutrition). Coordinator nad oběma providery (těžší, gettery jsou synchronní a volané z mnoha míst). Odmítnuto ve prospěch jediného getter-seamu + consumer-side portu.",
+      "links": [
+        "docs/integrations/kt_api_reference.md",
+        "lib/features/health_connect/application/goals_provider.dart",
+        "lib/features/health_connect/application/nutrition_goals_gateway.dart"
+      ]
+    },
+    {
       "id": "feature-first-architecture",
       "title": "Feature-first architektura",
       "status": "accepted",
