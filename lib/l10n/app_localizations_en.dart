@@ -6035,6 +6035,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Writes a weekly coach-log block — weight, steps, calories, macros — into the Coach Log tab of your Forgetrack spreadsheet.';
 
   @override
+  String get coachLogExportQuickButtonSetting => 'Quick export on overview';
+
+  @override
+  String get coachLogExportQuickButtonSettingSubtitle =>
+      'Show a button on the overview to export the current week in one tap.';
+
+  @override
   String get onboardingTitle => 'Welcome to Forgetrack';
 
   @override

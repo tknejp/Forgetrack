@@ -2064,6 +2064,8 @@
   "coachLogExportSuccessWeeks": "Exportováno {count} týdnů",
   "coachLogExportOpenSheets": "Otevřít v Sheets",
   "coachLogExportDescription": "Zapíše týdenní blok coach logu — váhu, kroky, kalorie, makra — do záložky Coach Log ve vaší Forgetrack tabulce.",
+  "coachLogExportQuickButtonSetting": "Rychlý export na přehledu",
+  "coachLogExportQuickButtonSettingSubtitle": "Zobrazí na přehledu tlačítko pro export aktuálního týdne na jedno klepnutí.",
 
   "onboardingTitle": "Vítej v Forgetracku",
   "onboardingSubtitle": "Měř své zdraví, plň cíle a proměň úsilí v XP.",

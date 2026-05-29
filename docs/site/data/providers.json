@@ -148,6 +148,16 @@
       "dependsOn": []
     },
     {
+      "id": "CoachLogExportSettings",
+      "displayName": "Coach Log Export Settings",
+      "feature": "coach_log_export",
+      "group": "infra",
+      "kind": "ChangeNotifierProvider",
+      "file": "lib/features/coach_log_export/application/coach_log_export_settings.dart",
+      "summary": "Opt-in preference (SharedPreferences): zobrazit one-tap quick-export ikonu na overview headeru. Default off, přepíná se v Nastavení → export (#35).",
+      "dependsOn": []
+    },
+    {
       "id": "ConnectivityProvider",
       "displayName": "Connectivity",
       "feature": "core",

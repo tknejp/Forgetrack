@@ -10468,6 +10468,18 @@ abstract class AppLocalizations {
   /// **'Writes a weekly coach-log block — weight, steps, calories, macros — into the Coach Log tab of your Forgetrack spreadsheet.'**
   String get coachLogExportDescription;
 
+  /// Settings toggle that enables a one-tap coach-log export button on the overview header
+  ///
+  /// In en, this message translates to:
+  /// **'Quick export on overview'**
+  String get coachLogExportQuickButtonSetting;
+
+  /// Subtitle explaining the quick-export overview toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Show a button on the overview to export the current week in one tap.'**
+  String get coachLogExportQuickButtonSettingSubtitle;
+
   /// No description provided for @onboardingTitle.
   ///
   /// In en, this message translates to:

@@ -44,6 +44,7 @@ import 'features/progression_engine/data/hybrid_progression_engine_repository.da
 import 'features/progression_engine/data/isar_progression_engine_repository.dart';
 import 'features/progression_engine/data/local/progression_engine_database.dart';
 import 'features/coach_log_export/application/bushido_export_provider.dart';
+import 'features/coach_log_export/application/coach_log_export_settings.dart';
 import 'features/coach_log_export/data/bushido_export_data_builder.dart';
 import 'features/coach_log_export/data/bushido_fitness_source_adapter.dart';
 import 'features/coach_log_export/data/bushido_nutrition_source_adapter.dart';
@@ -263,6 +264,9 @@ Future<void> _runForgetrack(SentryConsentProvider sentryConsent) async {
     refreshNutrition: ktProvider.refreshRange,
   );
 
+  final coachLogExportSettings = CoachLogExportSettings();
+  await coachLogExportSettings.init();
+
   final goalsProvider = GoalsProvider(
     gateway: socialBackendState.isReady
         ? GoalHistoryFirestoreGateway()
@@ -374,6 +378,7 @@ Future<void> _runForgetrack(SentryConsentProvider sentryConsent) async {
           ChangeNotifierProvider.value(value: emblemBoardProvider),
           ChangeNotifierProvider(create: (_) => SheetsExportProvider()),
           ChangeNotifierProvider.value(value: bushidoExportProvider),
+          ChangeNotifierProvider.value(value: coachLogExportSettings),
           ChangeNotifierProvider.value(value: devToolsProvider),
           ChangeNotifierProxyProvider<AuthProvider,
               DevToolsPermissionService>(

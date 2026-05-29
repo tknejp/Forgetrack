@@ -6034,6 +6034,13 @@ class AppLocalizationsCs extends AppLocalizations {
       'Zapíše týdenní blok coach logu — váhu, kroky, kalorie, makra — do záložky Coach Log ve vaší Forgetrack tabulce.';
 
   @override
+  String get coachLogExportQuickButtonSetting => 'Rychlý export na přehledu';
+
+  @override
+  String get coachLogExportQuickButtonSettingSubtitle =>
+      'Zobrazí na přehledu tlačítko pro export aktuálního týdne na jedno klepnutí.';
+
+  @override
   String get onboardingTitle => 'Vítej v Forgetracku';
 
   @override

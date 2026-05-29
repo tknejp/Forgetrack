@@ -27,6 +27,7 @@ class PeriodNavigator extends StatelessWidget {
     this.tabs,
     this.activeTab,
     this.onTabChange,
+    this.action,
   });
 
   /// Domain that drives card decoration + accent colors (chevrons, "Today"
@@ -65,6 +66,12 @@ class PeriodNavigator extends StatelessWidget {
   final List<String>? tabs;
   final String? activeTab;
   final ValueChanged<String>? onTabChange;
+
+  /// Optional trailing action (e.g. a quick-export icon button). When [tabs]
+  /// are shown it sits at the top-right of the tab header row; otherwise it is
+  /// appended to the navigator row after the next-period arrow. The widget may
+  /// render nothing (e.g. `SizedBox.shrink`) to opt out reactively.
+  final Widget? action;
 
   bool get _hasTabs =>
       tabs != null && activeTab != null && onTabChange != null;
@@ -180,6 +187,9 @@ class PeriodNavigator extends StatelessWidget {
             padding: const EdgeInsets.all(6),
             constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
           ),
+          // Without tabs the navigator row is the top row, so the trailing
+          // action lives here. With tabs it moves to the tab header below.
+          if (action != null && !_hasTabs) action!,
         ],
       ),
     );
@@ -197,11 +207,21 @@ class PeriodNavigator extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
-            child: TabPill(
-              domain: domain,
-              tabs: tabs!,
-              active: activeTab!,
-              onChange: onTabChange!,
+            child: Row(
+              children: [
+                Expanded(
+                  child: TabPill(
+                    domain: domain,
+                    tabs: tabs!,
+                    active: activeTab!,
+                    onChange: onTabChange!,
+                  ),
+                ),
+                if (action != null) ...[
+                  const SizedBox(width: 4),
+                  action!,
+                ],
+              ],
             ),
           ),
           navRow,

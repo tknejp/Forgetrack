@@ -2988,6 +2988,12 @@
   "coachLogExportDescription": "Writes a weekly coach-log block — weight, steps, calories, macros — into the Coach Log tab of your Forgetrack spreadsheet.",
   "@coachLogExportDescription": { "description": "Short description shown on the coach-log export screen" },
 
+  "coachLogExportQuickButtonSetting": "Quick export on overview",
+  "@coachLogExportQuickButtonSetting": { "description": "Settings toggle that enables a one-tap coach-log export button on the overview header" },
+
+  "coachLogExportQuickButtonSettingSubtitle": "Show a button on the overview to export the current week in one tap.",
+  "@coachLogExportQuickButtonSettingSubtitle": { "description": "Subtitle explaining the quick-export overview toggle" },
+
   "onboardingTitle": "Welcome to Forgetrack",
   "onboardingSubtitle": "Track your health, hit goals, and turn the work into XP.",
   "onboardingAboutTitle": "What it does",

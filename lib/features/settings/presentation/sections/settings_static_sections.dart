@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../../../../core/config/constants.dart';
 import '../../../../core/sentry/sentry_bootstrap.dart';
 import '../../../../l10n/l10n.dart';
+import '../../../coach_log_export/application/coach_log_export_settings.dart';
 import '../../../coach_log_export/presentation/bushido_export_screen.dart';
 import '../../../../shared/widgets/app_logo.dart';
 import '../../../sheets_export/presentation/sheets_export_screen.dart';
@@ -36,6 +38,18 @@ class SettingsDataSection extends StatelessWidget {
             context,
             MaterialPageRoute(builder: (_) => const BushidoExportScreen()),
           ),
+        ),
+        const SettingsTileDivider(),
+        SettingsSwitchTile(
+          icon: Icons.bolt_outlined,
+          label: l10n.coachLogExportQuickButtonSetting,
+          subtitle: l10n.coachLogExportQuickButtonSettingSubtitle,
+          value: context
+              .watch<CoachLogExportSettings>()
+              .showOverviewQuickButton,
+          onChanged: (value) => context
+              .read<CoachLogExportSettings>()
+              .setShowOverviewQuickButton(value),
         ),
         const SettingsTileDivider(),
         SettingsTile(
