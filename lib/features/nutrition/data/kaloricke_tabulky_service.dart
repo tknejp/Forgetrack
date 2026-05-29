@@ -146,6 +146,17 @@ class KtDayNutrition {
   /// didn't return a balance block (older days, missing settings).
   final double basal;
 
+  /// Per-day nutrition *goals* (calories + macros) reported by KT's diary
+  /// summary `goal` fields. Zero when KT didn't return a goal for the
+  /// metric (older days, account without targets). Used by Trello #98 —
+  /// the player can switch nutrition goals to be sourced per-day from KT.
+  /// These are targets, not consumed values (which live in [calories] etc.).
+  final double goalCalories;
+  final double goalProtein;
+  final double goalFat;
+  final double goalCarbs;
+  final double goalFiber;
+
   /// Per-meal breakdown extracted from the daily diary `times[]` array.
   /// Empty when the diary endpoint wasn't fetched (e.g. summary-only sync).
   final List<KtMeal> meals;
@@ -164,11 +175,26 @@ class KtDayNutrition {
     this.drinkRegime = 0,
     this.foodCount = 0,
     this.basal = 0,
+    this.goalCalories = 0,
+    this.goalProtein = 0,
+    this.goalFat = 0,
+    this.goalCarbs = 0,
+    this.goalFiber = 0,
     this.meals = const [],
     DateTime? lastSyncedAt,
   }) : lastSyncedAt = lastSyncedAt ?? DateTime(0);
 
   bool get hasData => foodCount > 0 || calories > 0 || protein > 0;
+
+  /// True when KT reported at least one non-zero nutrition goal for the
+  /// day. Drives the #98 fallback: a logged-in account that never set
+  /// targets returns all-zero goals → consumers fall back to local.
+  bool get hasGoals =>
+      goalCalories > 0 ||
+      goalProtein > 0 ||
+      goalFat > 0 ||
+      goalCarbs > 0 ||
+      goalFiber > 0;
 
   Map<String, dynamic> toJson() => {
         'calories': calories,
@@ -182,6 +208,11 @@ class KtDayNutrition {
         'drinkRegime': drinkRegime,
         'foodCount': foodCount,
         'basal': basal,
+        'goalCalories': goalCalories,
+        'goalProtein': goalProtein,
+        'goalFat': goalFat,
+        'goalCarbs': goalCarbs,
+        'goalFiber': goalFiber,
         'meals': [for (final m in meals) m.toJson()],
         'lastSyncedAt': lastSyncedAt.millisecondsSinceEpoch,
       };
@@ -198,6 +229,11 @@ class KtDayNutrition {
         drinkRegime: (json['drinkRegime'] as num?)?.toDouble() ?? 0,
         foodCount: (json['foodCount'] as num?)?.toInt() ?? 0,
         basal: (json['basal'] as num?)?.toDouble() ?? 0,
+        goalCalories: (json['goalCalories'] as num?)?.toDouble() ?? 0,
+        goalProtein: (json['goalProtein'] as num?)?.toDouble() ?? 0,
+        goalFat: (json['goalFat'] as num?)?.toDouble() ?? 0,
+        goalCarbs: (json['goalCarbs'] as num?)?.toDouble() ?? 0,
+        goalFiber: (json['goalFiber'] as num?)?.toDouble() ?? 0,
         meals: [
           for (final raw in (json['meals'] as List? ?? const []))
             if (raw is Map<String, dynamic>) KtMeal.fromJson(raw),

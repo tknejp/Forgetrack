@@ -818,6 +818,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsGoalsBodyHeader => 'Body';
 
   @override
+  String get onboardingGoalsHealthHeading => 'Your daily targets';
+
+  @override
+  String get onboardingGoalsNutritionHeading => 'Nutrition goals';
+
+  @override
+  String get nutritionGoalsSourceLabel => 'Nutrition goals source';
+
+  @override
+  String get nutritionGoalsSourceLocal => 'Your own';
+
+  @override
+  String get nutritionGoalsSourceKt => 'Kaloričke Tabulky';
+
+  @override
+  String get nutritionGoalsSourceKtHint =>
+      'Daily calorie and macro goals come from your Kaloričke Tabulky account, so the fields below are read-only.';
+
+  @override
+  String get nutritionGoalsSourceConnectKt =>
+      'Connect Kaloričke Tabulky to use its goals.';
+
+  @override
+  String get nutritionGoalsSourceSwitchTitle => 'Goals from Kaloričke Tabulky';
+
+  @override
+  String get nutritionGoalsSourceSwitchSubtitle =>
+      'Take daily calories & macros from KT instead of your own';
+
+  @override
+  String get nutritionGoalsSourceOffCaption =>
+      'Set your calorie and macro goals below. Turn the switch on to use your daily goals from Kaloričke Tabulky instead.';
+
+  @override
   String get nutritionPeriod7d => '7 days';
 
   @override

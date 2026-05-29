@@ -55,6 +55,7 @@ import 'features/social/data/social_firebase_session.dart';
 import 'features/social/data/social_repository_disabled.dart';
 import 'features/social/data/social_repository_firestore.dart';
 import 'features/nutrition/application/kaloricke_tabulky_provider.dart';
+import 'features/nutrition/application/nutrition_goals_source_provider.dart';
 import 'features/nutrition/data/kaloricke_tabulky_service.dart';
 import 'features/nutrition/data/local/kt_nutrition_database.dart';
 import 'features/health_connect/application/fitness_provider.dart';
@@ -129,6 +130,11 @@ Future<void> _runForgetrack(SentryConsentProvider sentryConsent) async {
   await localeProvider.init();
   final notificationPreferencesProvider = NotificationPreferencesProvider();
   await notificationPreferencesProvider.init();
+
+  // #98: nutrition goal source (local goal board vs per-day KT goals).
+  // Read by GoalsProvider via a bool resolver wired below.
+  final nutritionGoalsSourceProvider = NutritionGoalsSourceProvider();
+  await nutritionGoalsSourceProvider.init();
 
   // Onboarding state is read early so we can gate the Android POST_NOTIFICATIONS
   // OS dialog: a fresh install must not see the prompt at cold start — it
@@ -261,8 +267,23 @@ Future<void> _runForgetrack(SentryConsentProvider sentryConsent) async {
     gateway: socialBackendState.isReady
         ? GoalHistoryFirestoreGateway()
         : null,
+    // #98: KT acts as the external per-day nutrition goal source; the
+    // resolver gates whether the five nutrition getters consult it.
+    nutritionGoals: ktProvider,
+    useExternalNutritionGoals: () => nutritionGoalsSourceProvider.usesKt,
   );
   await goalsProvider.init();
+
+  // Keep GoalsProvider consumers (progress bars, engine signature) fresh
+  // when the source flips or KT re-syncs under the KT source. Both bridges
+  // are cheap no-ops while the source stays local.
+  nutritionGoalsSourceProvider
+      .addListener(goalsProvider.refreshExternalNutritionGoals);
+  ktProvider.addListener(() {
+    if (nutritionGoalsSourceProvider.usesKt) {
+      goalsProvider.refreshExternalNutritionGoals();
+    }
+  });
 
   final devToolsProvider = DevToolsProvider();
   await devToolsProvider.init();
@@ -347,6 +368,7 @@ Future<void> _runForgetrack(SentryConsentProvider sentryConsent) async {
           ),
           ChangeNotifierProvider.value(value: fitnessProvider),
           ChangeNotifierProvider.value(value: ktProvider),
+          ChangeNotifierProvider.value(value: nutritionGoalsSourceProvider),
           ChangeNotifierProvider.value(value: connectivityProvider),
           ChangeNotifierProvider.value(value: homeCardOrderProvider),
           ChangeNotifierProvider.value(value: emblemBoardProvider),

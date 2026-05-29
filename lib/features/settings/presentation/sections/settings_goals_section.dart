@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../features/health_connect/application/goals_provider.dart';
+import '../../../../features/nutrition/application/kaloricke_tabulky_provider.dart';
+import '../../../../features/nutrition/application/nutrition_goals_source_provider.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../dialogs/settings_dialogs.dart';
 import '../widgets/settings_widgets.dart';
@@ -43,6 +45,13 @@ class SettingsGoalsSection extends StatelessWidget {
       decimalDigits: 1,
     );
 
+    // #98: when nutrition goals are sourced from KT (and KT is connected),
+    // the nutrition tile shows the KT-sourced values read-only — editing
+    // the local board would have no effect while the source is KT.
+    final nutritionFromKt =
+        context.watch<NutritionGoalsSourceProvider>().usesKt &&
+            context.watch<KalorickeTabulkyProvider>().isLoggedIn;
+
     return SettingsCard(
       children: [
         _ActivityGoalsTile(
@@ -61,6 +70,7 @@ class SettingsGoalsSection extends StatelessWidget {
           goals: goals,
           l10n: l10n,
           intFormat: intFormat,
+          fromKt: nutritionFromKt,
         ),
         const SettingsTileDivider(indent: 0),
         _SleepGoalTile(
@@ -196,11 +206,16 @@ class _NutritionGoalsTile extends StatelessWidget {
     required this.goals,
     required this.l10n,
     required this.intFormat,
+    required this.fromKt,
   });
 
   final GoalsProvider goals;
   final AppLocalizations l10n;
   final NumberFormat intFormat;
+
+  /// When true the nutrition goals are sourced from KT (#98): the rows
+  /// display the KT values read-only and local editing is disabled.
+  final bool fromKt;
 
   @override
   Widget build(BuildContext context) {
@@ -219,12 +234,14 @@ class _NutritionGoalsTile extends StatelessWidget {
       label: l10n.settingsGoalsNutritionHeader,
       summary: summary,
       children: [
+        if (fromKt) _NutritionKtSourceNote(message: l10n.nutritionGoalsSourceKtHint),
         _ChildGoalTile(
           icon: Icons.local_fire_department_outlined,
           accent: accent,
           label: l10n.goalDailyCalories,
           valueText: intFormat.format(goals.dailyCalories.round()),
           unit: l10n.goalUnitKcal,
+          editable: !fromKt,
           onTap: () => _editDoubleGoal(
             context,
             title: l10n.goalDailyCalories,
@@ -242,6 +259,7 @@ class _NutritionGoalsTile extends StatelessWidget {
           label: l10n.goalDailyProtein,
           valueText: intFormat.format(goals.dailyProtein.round()),
           unit: l10n.goalUnitG,
+          editable: !fromKt,
           onTap: () => _editDoubleGoal(
             context,
             title: l10n.goalDailyProtein,
@@ -259,6 +277,7 @@ class _NutritionGoalsTile extends StatelessWidget {
           label: l10n.goalDailyFat,
           valueText: intFormat.format(goals.dailyFat.round()),
           unit: l10n.goalUnitG,
+          editable: !fromKt,
           onTap: () => _editDoubleGoal(
             context,
             title: l10n.goalDailyFat,
@@ -276,6 +295,7 @@ class _NutritionGoalsTile extends StatelessWidget {
           label: l10n.goalDailyCarbs,
           valueText: intFormat.format(goals.dailyCarbs.round()),
           unit: l10n.goalUnitG,
+          editable: !fromKt,
           onTap: () => _editDoubleGoal(
             context,
             title: l10n.goalDailyCarbs,
@@ -293,6 +313,7 @@ class _NutritionGoalsTile extends StatelessWidget {
           label: l10n.goalDailyFiber,
           valueText: intFormat.format(goals.dailyFiber.round()),
           unit: l10n.goalUnitG,
+          editable: !fromKt,
           onTap: () => _editDoubleGoal(
             context,
             title: l10n.goalDailyFiber,
@@ -312,6 +333,39 @@ class _NutritionGoalsTile extends StatelessWidget {
           intFormat: intFormat,
         ),
       ],
+    );
+  }
+}
+
+/// Read-only info row shown atop the nutrition section when goals are
+/// sourced from KT (#98) — explains why the rows below can't be edited.
+class _NutritionKtSourceNote extends StatelessWidget {
+  const _NutritionKtSourceNote({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 6),
+      child: Row(
+        children: [
+          Icon(Icons.cloud_done_outlined, size: 16, color: cs.onSurfaceVariant),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: tt.bodySmall?.copyWith(
+                fontSize: 11,
+                color: cs.onSurfaceVariant,
+                height: 1.3,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -365,6 +419,7 @@ class _ChildGoalTile extends StatelessWidget {
     required this.valueText,
     required this.unit,
     required this.onTap,
+    this.editable = true,
   });
 
   final IconData icon;
@@ -373,6 +428,10 @@ class _ChildGoalTile extends StatelessWidget {
   final String valueText;
   final String unit;
   final VoidCallback onTap;
+
+  /// When false the row is non-tappable and the value pill drops its edit
+  /// affordance — used when nutrition goals are sourced from KT (#98).
+  final bool editable;
 
   @override
   Widget build(BuildContext context) {
@@ -384,8 +443,9 @@ class _ChildGoalTile extends StatelessWidget {
       trailing: _EditableValuePill(
         text: '$valueText $unit',
         accent: accent.color,
+        editable: editable,
       ),
-      onTap: onTap,
+      onTap: editable ? onTap : null,
       compact: true,
     );
   }
@@ -395,13 +455,17 @@ class _ChildGoalTile extends StatelessWidget {
 /// current value with the edit affordance so the tap target reads
 /// as "tap this number to change it".
 class _EditableValuePill extends StatelessWidget {
-  const _EditableValuePill({required this.text, this.accent});
+  const _EditableValuePill({required this.text, this.accent, this.editable = true});
 
   final String text;
 
   /// When null falls back to the theme primary; section-coloured
   /// rows pass their domain accent so the pill matches the section.
   final Color? accent;
+
+  /// When false the edit pencil is dropped — the value is read-only
+  /// (e.g. nutrition goals sourced from KT, #98).
+  final bool editable;
 
   @override
   Widget build(BuildContext context) {
@@ -418,8 +482,10 @@ class _EditableValuePill extends StatelessWidget {
             fontWeight: FontWeight.w700,
           ),
         ),
-        const SizedBox(width: 5),
-        Icon(Icons.edit_outlined, size: 15, color: cs.onSurfaceVariant),
+        if (editable) ...[
+          const SizedBox(width: 5),
+          Icon(Icons.edit_outlined, size: 15, color: cs.onSurfaceVariant),
+        ],
       ],
     );
   }

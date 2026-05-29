@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../../../core/logging/app_log.dart';
+import '../../health_connect/application/nutrition_goals_gateway.dart';
 import '../data/kaloricke_tabulky_service.dart';
 import '../data/local/kt_nutrition_database.dart';
 import '../domain/nutrition_snapshot.dart';
@@ -39,7 +40,44 @@ class KtNutritionRangeSummary {
   bool get hasData => validDays > 0;
 }
 
-class KalorickeTabulkyProvider extends ChangeNotifier {
+/// Adapts a [KtDayNutrition]'s goal fields to the [NutritionGoalsView]
+/// port that `GoalsProvider` reads when the nutrition goal source is KT
+/// (#98). Targets, not consumed values.
+class KtDayGoals implements NutritionGoalsView {
+  @override
+  final double calories;
+  @override
+  final double protein;
+  @override
+  final double fat;
+  @override
+  final double carbs;
+  @override
+  final double fiber;
+
+  const KtDayGoals({
+    required this.calories,
+    required this.protein,
+    required this.fat,
+    required this.carbs,
+    required this.fiber,
+  });
+
+  factory KtDayGoals.fromNutrition(KtDayNutrition n) => KtDayGoals(
+        calories: n.goalCalories,
+        protein: n.goalProtein,
+        fat: n.goalFat,
+        carbs: n.goalCarbs,
+        fiber: n.goalFiber,
+      );
+
+  @override
+  bool get hasData =>
+      calories > 0 || protein > 0 || fat > 0 || carbs > 0 || fiber > 0;
+}
+
+class KalorickeTabulkyProvider extends ChangeNotifier
+    implements NutritionGoalsGateway {
   static const Duration _appOpenRefreshMinInterval = Duration(minutes: 5);
 
   /// Min spacing between two automatic background `refreshSession()`
@@ -155,6 +193,36 @@ class KalorickeTabulkyProvider extends ChangeNotifier {
   // ─── History getters ───────────────────────────────────────────────────────
 
   KtDayNutrition? nutritionForDate(DateTime date) => _db.getDay(date);
+
+  // ─── Nutrition goals source (#98) ────────────────────────────────────────
+
+  /// [NutritionGoalsGateway] — KT is consultable as a goal source only
+  /// while the session is live. When false, `GoalsProvider` keeps using
+  /// the local goal board.
+  @override
+  bool get isAvailable => isLoggedIn;
+
+  /// [NutritionGoalsGateway] — KT goals effective on [day], read from the
+  /// cached day record (falling back to the in-memory today snapshot for
+  /// today before the first DB write). Null when no day is cached;
+  /// all-zero goals report `hasData == false` so the consumer falls back.
+  @override
+  NutritionGoalsView? goalsForDate(DateTime day) => _ktGoalsForDate(day);
+
+  /// Convenience accessor for today's KT goals (UI / diagnostics).
+  KtDayGoals? get todayGoals => _ktGoalsForDate(DateTime.now());
+
+  KtDayGoals? _ktGoalsForDate(DateTime day) {
+    final normalized = DateTime(day.year, day.month, day.day);
+    final cached = _db.getDay(normalized) ?? (_isToday(normalized) ? _today : null);
+    if (cached == null) return null;
+    return KtDayGoals.fromNutrition(cached);
+  }
+
+  bool _isToday(DateTime day) {
+    final now = DateTime.now();
+    return day.year == now.year && day.month == now.month && day.day == now.day;
+  }
 
   /// Builds a [NutritionSnapshot] anchored at [date] for the
   /// progression engine. Phase 15 entry point — engine input source

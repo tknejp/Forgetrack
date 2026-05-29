@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../app/notification_preferences_provider.dart';
@@ -7,12 +8,12 @@ import '../../../core/logging/app_log.dart';
 import '../../../l10n/l10n.dart';
 import '../../auth/application/auth_provider.dart';
 import '../../health_connect/application/fitness_provider.dart';
+import '../../health_connect/application/goals_provider.dart';
 import '../../nutrition/application/kaloricke_tabulky_provider.dart';
-import '../../progression_engine/domain/catalog/progression_node_catalog.dart';
-import 'package:forgetrack/domain/progression/catalog/progression_entry.dart';
-import 'package:forgetrack/domain/progression/catalog/reward_definition.dart';
+import '../../nutrition/application/nutrition_goals_source_provider.dart';
 import '../widgets/integration_toggle_row.dart';
 import '../widgets/kt_login_sheet.dart';
+import '../widgets/onboarding_goal_row.dart';
 import '../widgets/onboarding_primitives.dart';
 import '../widgets/onboarding_theme.dart';
 import 'race_picker_view.dart';
@@ -61,6 +62,7 @@ class StepAccount extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final notifPrefs = context.watch<NotificationPreferencesProvider>();
     final l10n = context.l10n;
     final connected = auth.isSignedIn;
     return Padding(
@@ -84,6 +86,17 @@ class StepAccount extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           const _AccountBenefitsCard(),
+          const SizedBox(height: 14),
+          IntegrationToggleRow(
+            title: l10n.welcomeStep4NotifTitle,
+            subtitle: l10n.welcomeStep4NotifSubtitle,
+            tint: OnboardingTheme.purpleAccent,
+            active: notifPrefs.notificationsEnabled,
+            icon: '🔔',
+            onTap: () => context
+                .read<NotificationPreferencesProvider>()
+                .setNotificationsEnabled(!notifPrefs.notificationsEnabled),
+          ),
           const SizedBox(height: 14),
           Center(
             child: Text(
@@ -311,6 +324,8 @@ class _StepHealthState extends State<StepHealth> {
               }
             },
           ),
+          const SizedBox(height: 18),
+          const _HealthGoals(),
           const SizedBox(height: 12),
           const _HealthPrivacyHint(),
         ],
@@ -526,15 +541,9 @@ class _StepFinalState extends State<StepFinal> {
     await KTLoginSheet.show(context);
   }
 
-  Future<void> _handleNotifTap() async {
-    final prefs = context.read<NotificationPreferencesProvider>();
-    await prefs.setNotificationsEnabled(!prefs.notificationsEnabled);
-  }
-
   @override
   Widget build(BuildContext context) {
     final kt = context.watch<KalorickeTabulkyProvider>();
-    final notifPrefs = context.watch<NotificationPreferencesProvider>();
     final l10n = context.l10n;
     final ktConnected = kt.isLoggedIn;
     final ktSubtitle = ktConnected
@@ -563,143 +572,324 @@ class _StepFinalState extends State<StepFinal> {
             iconAsset: 'assets/icons/kt/kaloricke_tabulky.png',
             busy: _ktBusy || kt.isLoading,
           ),
-          const SizedBox(height: 12),
-          IntegrationToggleRow(
-            title: l10n.welcomeStep4NotifTitle,
-            subtitle: l10n.welcomeStep4NotifSubtitle,
-            tint: OnboardingTheme.purpleAccent,
-            active: notifPrefs.notificationsEnabled,
-            onTap: _handleNotifTap,
-            icon: '🔔',
-          ),
           const SizedBox(height: 18),
-          const _FirstQuestsCard(),
+          const _NutritionGoals(),
         ],
       ),
     );
   }
 }
 
-class _FirstQuestsCard extends StatelessWidget {
-  const _FirstQuestsCard();
+// ─── Goal-editing blocks (Step 3 health + Step 4 nutrition) ──────────────
 
-  /// Curated quest ids surfaced on the welcome screen's "first quests"
-  /// preview. V2 mirrors V1's starter set (daily_steps_today +
-  /// daily_sleep_today + earn-first-reward), substituting V2 node ids
-  /// where the catalog renamed the entry. Edit this list to change the
-  /// curated set rather than the widget body.
-  static const List<String> _starterQuestNodeIds = [
-    'daily_steps_today',
-    'daily_sleep_today',
-    'long_term_earn_first_reward',
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final rows = <_QuestRow>[];
-    for (final id in _starterQuestNodeIds) {
-      final node = ProgressionEntryCatalog.definitionForId(id);
-      if (node is! Quest) continue;
-      var rewardXp = 0;
-      for (final reward in node.rewards) {
-        if (reward is XpReward) rewardXp += reward.amount;
-      }
-      rows.add(_QuestRow(
-        text: node.titleKey(l10n),
-        xp: '+$rewardXp XP',
-      ));
-    }
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        gradient: OnboardingTheme.questsCardGradient,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: OnboardingTheme.gold.withValues(alpha: 0.25),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SectionLabel(
-            text: l10n.welcomeStep4QuestsLabel,
-            color: OnboardingTheme.gold,
-          ),
-          const SizedBox(height: 8),
-          for (var i = 0; i < rows.length; i++)
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 7),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: i < rows.length - 1
-                      ? BorderSide(
-                          color: Colors.white.withValues(alpha: 0.06),
-                        )
-                      : BorderSide.none,
-                ),
-              ),
-              child: rows[i],
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _QuestRow extends StatelessWidget {
-  const _QuestRow({required this.text, required this.xp});
+/// Left-aligned heading above an onboarding goal group.
+class _GoalsHeading extends StatelessWidget {
+  const _GoalsHeading(this.text);
 
   final String text;
-  final String xp;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Padding(
+      padding: const EdgeInsets.only(left: 2, bottom: 8),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: OnboardingTheme.textSecondary,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Editable Health Connect goals on Step 3: steps, daily + weekly
+/// activity, sleep, and target weight. Always local — HC goals never
+/// come from KT.
+class _HealthGoals extends StatelessWidget {
+  const _HealthGoals();
+
+  @override
+  Widget build(BuildContext context) {
+    final goals = context.watch<GoalsProvider>();
+    final l10n = context.l10n;
+    final locale = Localizations.localeOf(context).toString();
+    final intFmt = NumberFormat.decimalPattern(locale);
+    final oneDecimal = NumberFormat.decimalPatternDigits(
+      locale: locale,
+      decimalDigits: 1,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
-          width: 6,
-          height: 6,
-          decoration: BoxDecoration(
-            color: OnboardingTheme.gold,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: OnboardingTheme.gold.withValues(alpha: 0.8),
-                blurRadius: 8,
+        _GoalsHeading(l10n.onboardingGoalsHealthHeading),
+        OnboardingGoalGroup(
+          rows: [
+            OnboardingGoalRow(
+              icon: Icons.directions_walk_rounded,
+              tint: OnboardingTheme.green,
+              label: l10n.goalDailySteps,
+              valueText: intFmt.format(goals.dailySteps),
+              unit: l10n.goalUnitSteps,
+              onTap: () => _editIntGoal(
+                context,
+                title: l10n.goalDailySteps,
+                initialValue: goals.dailySteps,
+                unit: l10n.goalUnitSteps,
+                onSave: (v) => context.read<GoalsProvider>().setDailySteps(v),
               ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: 13,
-              color: OnboardingTheme.textPrimary.withValues(alpha: 0.85),
             ),
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-          decoration: BoxDecoration(
-            color: OnboardingTheme.gold.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: OnboardingTheme.gold.withValues(alpha: 0.30),
+            OnboardingGoalRow(
+              icon: Icons.directions_run_rounded,
+              tint: OnboardingTheme.teal,
+              label: l10n.goalDailyActivity,
+              valueText: intFmt.format(goals.dailyActivityMins),
+              unit: l10n.goalUnitMins,
+              onTap: () => _editIntGoal(
+                context,
+                title: l10n.goalDailyActivity,
+                initialValue: goals.dailyActivityMins,
+                unit: l10n.goalUnitMins,
+                onSave: (v) =>
+                    context.read<GoalsProvider>().setDailyActivityMins(v),
+              ),
             ),
-          ),
-          child: Text(
-            xp,
-            style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              color: OnboardingTheme.gold,
+            OnboardingGoalRow(
+              icon: Icons.timer_outlined,
+              tint: OnboardingTheme.teal,
+              label: l10n.goalWeeklyActivity,
+              valueText: intFmt.format(goals.weeklyActivityMins),
+              unit: l10n.goalUnitMins,
+              onTap: () => _editIntGoal(
+                context,
+                title: l10n.goalWeeklyActivity,
+                initialValue: goals.weeklyActivityMins,
+                unit: l10n.goalUnitMins,
+                onSave: (v) =>
+                    context.read<GoalsProvider>().setWeeklyActivityMins(v),
+              ),
             ),
-          ),
+            OnboardingGoalRow(
+              icon: Icons.bedtime_outlined,
+              tint: OnboardingTheme.purpleAccent,
+              label: l10n.goalSleepHours,
+              valueText: oneDecimal.format(goals.sleepHours),
+              unit: l10n.goalUnitHours,
+              onTap: () => _editDoubleGoal(
+                context,
+                title: l10n.goalSleepHours,
+                initialValue: goals.sleepHours,
+                unit: l10n.goalUnitHours,
+                fractionDigits: 1,
+                onSave: (v) => context.read<GoalsProvider>().setSleepHours(v),
+              ),
+            ),
+            OnboardingGoalRow(
+              icon: Icons.monitor_weight_outlined,
+              tint: OnboardingTheme.purpleLight,
+              label: l10n.goalTargetWeight,
+              valueText: oneDecimal.format(goals.targetWeight),
+              unit: l10n.goalUnitKg,
+              onTap: () => _editDoubleGoal(
+                context,
+                title: l10n.goalTargetWeight,
+                initialValue: goals.targetWeight,
+                unit: l10n.goalUnitKg,
+                fractionDigits: 1,
+                onSave: (v) => context.read<GoalsProvider>().setTargetWeight(v),
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
+}
+
+/// Editable nutrition goals on Step 4: calories + macros, plus the #98
+/// source toggle. The toggle appears once KT is connected; while the KT
+/// source is active the local rows are read-only and display the
+/// KT-sourced values `GoalsProvider` already dispatches.
+class _NutritionGoals extends StatelessWidget {
+  const _NutritionGoals();
+
+  @override
+  Widget build(BuildContext context) {
+    final goals = context.watch<GoalsProvider>();
+    final kt = context.watch<KalorickeTabulkyProvider>();
+    final sourceProvider = context.watch<NutritionGoalsSourceProvider>();
+    final l10n = context.l10n;
+    final locale = Localizations.localeOf(context).toString();
+    final intFmt = NumberFormat.decimalPattern(locale);
+
+    final usesKt = sourceProvider.usesKt && kt.isLoggedIn;
+    final editable = !usesKt;
+    String fmt(double v) => intFmt.format(v.round());
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _GoalsHeading(l10n.onboardingGoalsNutritionHeading),
+        if (kt.isLoggedIn) ...[
+          IntegrationToggleRow(
+            title: l10n.nutritionGoalsSourceSwitchTitle,
+            subtitle: l10n.nutritionGoalsSourceSwitchSubtitle,
+            tint: OnboardingTheme.ktTint,
+            active: sourceProvider.usesKt,
+            iconAsset: 'assets/icons/kt/kaloricke_tabulky.png',
+            onTap: () =>
+                context.read<NutritionGoalsSourceProvider>().setSource(
+                      sourceProvider.usesKt
+                          ? NutritionGoalsSource.local
+                          : NutritionGoalsSource.kt,
+                    ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            usesKt
+                ? l10n.nutritionGoalsSourceKtHint
+                : l10n.nutritionGoalsSourceOffCaption,
+            style: OnboardingTheme.footnote.copyWith(
+              color: OnboardingTheme.textMuted,
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+        OnboardingGoalGroup(
+          rows: [
+            OnboardingGoalRow(
+              icon: Icons.local_fire_department_outlined,
+              tint: OnboardingTheme.gold,
+              label: l10n.goalDailyCalories,
+              valueText: fmt(goals.dailyCalories),
+              unit: l10n.goalUnitKcal,
+              enabled: editable,
+              onTap: () => _editDoubleGoal(
+                context,
+                title: l10n.goalDailyCalories,
+                initialValue: goals.dailyCalories,
+                unit: l10n.goalUnitKcal,
+                fractionDigits: 0,
+                onSave: (v) =>
+                    context.read<GoalsProvider>().setDailyCalories(v),
+              ),
+            ),
+            OnboardingGoalRow(
+              icon: Icons.fitness_center,
+              tint: OnboardingTheme.teal,
+              label: l10n.goalDailyProtein,
+              valueText: fmt(goals.dailyProtein),
+              unit: l10n.goalUnitG,
+              enabled: editable,
+              onTap: () => _editDoubleGoal(
+                context,
+                title: l10n.goalDailyProtein,
+                initialValue: goals.dailyProtein,
+                unit: l10n.goalUnitG,
+                fractionDigits: 0,
+                onSave: (v) =>
+                    context.read<GoalsProvider>().setDailyProtein(v),
+              ),
+            ),
+            OnboardingGoalRow(
+              icon: Icons.water_drop_outlined,
+              tint: OnboardingTheme.gold,
+              label: l10n.goalDailyFat,
+              valueText: fmt(goals.dailyFat),
+              unit: l10n.goalUnitG,
+              enabled: editable,
+              onTap: () => _editDoubleGoal(
+                context,
+                title: l10n.goalDailyFat,
+                initialValue: goals.dailyFat,
+                unit: l10n.goalUnitG,
+                fractionDigits: 0,
+                onSave: (v) => context.read<GoalsProvider>().setDailyFat(v),
+              ),
+            ),
+            OnboardingGoalRow(
+              icon: Icons.grain,
+              tint: OnboardingTheme.purpleAccent,
+              label: l10n.goalDailyCarbs,
+              valueText: fmt(goals.dailyCarbs),
+              unit: l10n.goalUnitG,
+              enabled: editable,
+              onTap: () => _editDoubleGoal(
+                context,
+                title: l10n.goalDailyCarbs,
+                initialValue: goals.dailyCarbs,
+                unit: l10n.goalUnitG,
+                fractionDigits: 0,
+                onSave: (v) => context.read<GoalsProvider>().setDailyCarbs(v),
+              ),
+            ),
+            OnboardingGoalRow(
+              icon: Icons.spa_outlined,
+              tint: OnboardingTheme.green,
+              label: l10n.goalDailyFiber,
+              valueText: fmt(goals.dailyFiber),
+              unit: l10n.goalUnitG,
+              enabled: editable,
+              onTap: () => _editDoubleGoal(
+                context,
+                title: l10n.goalDailyFiber,
+                initialValue: goals.dailyFiber,
+                unit: l10n.goalUnitG,
+                fractionDigits: 0,
+                onSave: (v) => context.read<GoalsProvider>().setDailyFiber(v),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Goal edit helpers (dark onboarding value sheet) ─────────────────────
+
+Future<void> _editIntGoal(
+  BuildContext context, {
+  required String title,
+  required int initialValue,
+  required String unit,
+  required Future<void> Function(int) onSave,
+}) async {
+  final result = await OnboardingValueSheet.show(
+    context,
+    title: title,
+    initialText: initialValue.toString(),
+    unit: unit,
+    isDecimal: false,
+    saveLabel: context.l10n.goalSave,
+  );
+  if (result == null) return;
+  final parsed = int.tryParse(result.trim());
+  if (parsed != null && parsed > 0) await onSave(parsed);
+}
+
+Future<void> _editDoubleGoal(
+  BuildContext context, {
+  required String title,
+  required double initialValue,
+  required String unit,
+  required int fractionDigits,
+  required Future<void> Function(double) onSave,
+}) async {
+  final result = await OnboardingValueSheet.show(
+    context,
+    title: title,
+    initialText: initialValue.toStringAsFixed(fractionDigits),
+    unit: unit,
+    isDecimal: fractionDigits > 0,
+    saveLabel: context.l10n.goalSave,
+  );
+  if (result == null) return;
+  final parsed = double.tryParse(result.replaceAll(',', '.'));
+  if (parsed != null && parsed > 0) await onSave(parsed);
 }

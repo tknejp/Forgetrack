@@ -40,8 +40,8 @@
       "group": "data",
       "kind": "ChangeNotifierProvider",
       "file": "lib/features/health_connect/application/goals_provider.dart",
-      "summary": "Uživatelské cíle (kroky, kalorie, makra, váha). Konzumují progression rules.",
-      "dependsOn": []
+      "summary": "Uživatelské cíle (kroky, kalorie, makra, váha). Konzumují progression rules. #98: pět nutričních getterů (+ progression*ForDate varianty) umí per-datum dispatchnout na KT přes NutritionGoalsGateway port, když je zdroj cílů KT; HC cíle + cílová váha zůstávají vždy lokální.",
+      "dependsOn": ["KalorickeTabulkyProvider", "NutritionGoalsSourceProvider"]
     },
     {
       "id": "KalorickeTabulkyProvider",
@@ -50,7 +50,17 @@
       "group": "data",
       "kind": "ChangeNotifierProvider",
       "file": "lib/features/nutrition/application/kaloricke_tabulky_provider.dart",
-      "summary": "Kalorické tabulky — denní makro a kalorické záznamy z REST API + Isar cache.",
+      "summary": "Kalorické tabulky — denní makro a kalorické záznamy z REST API + Isar cache. #98: implementuje NutritionGoalsGateway — vystavuje per-datum nutriční cíle (goalsForDate) z KT diary summary pro GoalsProvider.",
+      "dependsOn": []
+    },
+    {
+      "id": "NutritionGoalsSourceProvider",
+      "displayName": "Nutrition Goals Source",
+      "feature": "nutrition",
+      "group": "data",
+      "kind": "ChangeNotifierProvider",
+      "file": "lib/features/nutrition/application/nutrition_goals_source_provider.dart",
+      "summary": "#98: flag zdroje nutričních cílů (local vs kt), persistovaný v SharedPreferences (nutrition_goals_source). GoalsProvider ho čte přes bool resolver; změna notifikuje GoalsProvider, aby se přepočítaly progress bary a invalidoval engine signature.",
       "dependsOn": []
     },
     {

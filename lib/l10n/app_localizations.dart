@@ -1581,6 +1581,66 @@ abstract class AppLocalizations {
   /// **'Body'**
   String get settingsGoalsBodyHeader;
 
+  /// Heading above the editable activity / sleep / weight goals on the onboarding Health Connect step.
+  ///
+  /// In en, this message translates to:
+  /// **'Your daily targets'**
+  String get onboardingGoalsHealthHeading;
+
+  /// Heading above the editable calorie / macro goals on the onboarding Kalorické Tabulky step.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition goals'**
+  String get onboardingGoalsNutritionHeading;
+
+  /// Label for the toggle that chooses where nutrition (calorie + macro) goals come from.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition goals source'**
+  String get nutritionGoalsSourceLabel;
+
+  /// Nutrition goals source option: locally set goals.
+  ///
+  /// In en, this message translates to:
+  /// **'Your own'**
+  String get nutritionGoalsSourceLocal;
+
+  /// Nutrition goals source option: per-day goals pulled from the Kaloričke Tabulky account.
+  ///
+  /// In en, this message translates to:
+  /// **'Kaloričke Tabulky'**
+  String get nutritionGoalsSourceKt;
+
+  /// Caption shown when the KT nutrition goals source is on, explaining that local nutrition goal editing is disabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily calorie and macro goals come from your Kaloričke Tabulky account, so the fields below are read-only.'**
+  String get nutritionGoalsSourceKtHint;
+
+  /// Prompt shown when the user picks the KT goals source but is not logged in to KT.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Kaloričke Tabulky to use its goals.'**
+  String get nutritionGoalsSourceConnectKt;
+
+  /// Title of the on/off switch that chooses whether nutrition goals come from KT (on) or are set manually (off).
+  ///
+  /// In en, this message translates to:
+  /// **'Goals from Kaloričke Tabulky'**
+  String get nutritionGoalsSourceSwitchTitle;
+
+  /// Subtitle of the nutrition-goals-source switch, explaining what turning it on does.
+  ///
+  /// In en, this message translates to:
+  /// **'Take daily calories & macros from KT instead of your own'**
+  String get nutritionGoalsSourceSwitchSubtitle;
+
+  /// Caption shown when the nutrition goals source switch is off, explaining that goals are set manually and what the switch does.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your calorie and macro goals below. Turn the switch on to use your daily goals from Kaloričke Tabulky instead.'**
+  String get nutritionGoalsSourceOffCaption;
+
   /// Nutrition screen period selector: last 7 days
   ///
   /// In en, this message translates to:

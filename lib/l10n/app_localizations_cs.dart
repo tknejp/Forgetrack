@@ -822,6 +822,40 @@ class AppLocalizationsCs extends AppLocalizations {
   String get settingsGoalsBodyHeader => 'Tělo';
 
   @override
+  String get onboardingGoalsHealthHeading => 'Tvé denní cíle';
+
+  @override
+  String get onboardingGoalsNutritionHeading => 'Výživové cíle';
+
+  @override
+  String get nutritionGoalsSourceLabel => 'Zdroj výživových cílů';
+
+  @override
+  String get nutritionGoalsSourceLocal => 'Vlastní';
+
+  @override
+  String get nutritionGoalsSourceKt => 'Kalorické tabulky';
+
+  @override
+  String get nutritionGoalsSourceKtHint =>
+      'Denní cíle pro kalorie a makra se berou z tvého účtu Kalorických tabulek, pole níže jsou proto jen pro čtení.';
+
+  @override
+  String get nutritionGoalsSourceConnectKt =>
+      'Pro použití cílů z KT se nejdřív přihlas ke Kalorickým tabulkám.';
+
+  @override
+  String get nutritionGoalsSourceSwitchTitle => 'Cíle z Kalorických tabulek';
+
+  @override
+  String get nutritionGoalsSourceSwitchSubtitle =>
+      'Ber denní kalorie a makra z KT místo vlastních';
+
+  @override
+  String get nutritionGoalsSourceOffCaption =>
+      'Cíle pro kalorie a makra si nastav níže. Zapni přepínač, pokud chceš místo toho použít denní cíle z Kalorických tabulek.';
+
+  @override
   String get nutritionPeriod7d => '7 dní';
 
   @override

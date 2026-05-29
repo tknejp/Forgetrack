@@ -209,6 +209,11 @@ class KtNutritionDatabase {
         drinkRegime: r.hydration,
         foodCount: r.foodCount,
         basal: r.basal,
+        goalCalories: r.goalCalories,
+        goalProtein: r.goalProtein,
+        goalFat: r.goalFat,
+        goalCarbs: r.goalCarbs,
+        goalFiber: r.goalFiber,
         meals: _decodeMeals(r.mealsJson),
         lastSyncedAt: r.syncedAt,
       );
@@ -228,6 +233,11 @@ class KtNutritionDatabase {
       ..hydration = n.drinkRegime
       ..foodCount = n.foodCount
       ..basal = n.basal
+      ..goalCalories = n.goalCalories
+      ..goalProtein = n.goalProtein
+      ..goalFat = n.goalFat
+      ..goalCarbs = n.goalCarbs
+      ..goalFiber = n.goalFiber
       ..mealsJson = _encodeMeals(n.meals)
       ..inferredComplete = key != todayKey
       ..syncedAt = n.lastSyncedAt;

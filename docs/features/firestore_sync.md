@@ -172,6 +172,14 @@ one-way read channel via `FirestoreCosmeticEntitlementsSource`.
   ledger event timestamp (which IS cloud-synced via `pullAndMerge`),
   so the retroactive claim window anchors on the original first-launch
   day without explicit sync code.
+- **KT-sourced nutrition goals are read-time, not synced (#98).** When
+  the nutrition goal source is `kt`, `GoalsProvider`'s five nutrition
+  getters return KT's per-day targets at read time — they are never
+  written into the local goal board or the `goal_history` Firestore
+  mirror. The source flag itself (`nutrition_goals_source`) lives in
+  SharedPreferences and is not cloud-synced, so a second device defaults
+  to local until the user re-picks KT. KT remains the source of truth
+  for those days while the flag is `kt`.
 
 ---
 

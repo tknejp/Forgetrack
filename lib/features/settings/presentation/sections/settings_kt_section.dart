@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../l10n/l10n.dart';
 import '../../../nutrition/application/kaloricke_tabulky_provider.dart';
+import '../../../nutrition/application/nutrition_goals_source_provider.dart';
 import '../../../../shared/theme/design_tokens.dart';
 import '../dialogs/settings_dialogs.dart';
 import '../widgets/settings_widgets.dart';
@@ -149,6 +150,8 @@ class _KtConnectedCard extends StatelessWidget {
               disconnectLabel: l10n.ktDisconnectButton,
               onDisconnect: onDisconnect,
             ),
+            const SettingsTileDivider(indent: 0),
+            const _KtGoalsSourceTile(),
             if (kt.syncError != null) ...[
               const SettingsTileDivider(indent: 0),
               _KtMessageBox(
@@ -217,6 +220,29 @@ class _KtConnectedStatusTile extends StatelessWidget {
           style: tt.labelMedium?.copyWith(fontWeight: FontWeight.w700),
         ),
       ),
+    );
+  }
+}
+
+/// #98: lets the user route their nutrition goals through KT's per-day
+/// targets instead of the local goal board. Shown only on the connected
+/// card. When ON, the Goals section's nutrition tile becomes read-only.
+class _KtGoalsSourceTile extends StatelessWidget {
+  const _KtGoalsSourceTile();
+
+  @override
+  Widget build(BuildContext context) {
+    final source = context.watch<NutritionGoalsSourceProvider>();
+    final l10n = context.l10n;
+    return SettingsSwitchTile(
+      icon: Icons.flag_outlined,
+      label: l10n.nutritionGoalsSourceLabel,
+      subtitle: l10n.nutritionGoalsSourceKtHint,
+      value: source.usesKt,
+      onChanged: (on) =>
+          context.read<NutritionGoalsSourceProvider>().setSource(
+                on ? NutritionGoalsSource.kt : NutritionGoalsSource.local,
+              ),
     );
   }
 }

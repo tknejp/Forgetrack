@@ -7,6 +7,7 @@ import '../../../core/logging/app_log.dart';
 import '../data/goal_history_firestore_gateway.dart';
 import '../domain/goal_board.dart';
 import '../domain/player_goal.dart';
+import 'nutrition_goals_gateway.dart';
 
 /// Persistence façade + `ChangeNotifier` adapter over [GoalBoard].
 ///
@@ -22,10 +23,25 @@ import '../domain/player_goal.dart';
 /// `goal_<metric>` (scalar target) + `goal_<metric>_history` (JSON
 /// revisions) match the pre-extraction wire format byte-for-byte.
 class GoalsProvider extends ChangeNotifier {
-  GoalsProvider({GoalHistoryFirestoreGateway? gateway})
-      : _gateway = gateway;
+  GoalsProvider({
+    GoalHistoryFirestoreGateway? gateway,
+    NutritionGoalsGateway? nutritionGoals,
+    bool Function()? useExternalNutritionGoals,
+  })  : _gateway = gateway,
+        _nutritionGoals = nutritionGoals,
+        _useExternalNutritionGoals = useExternalNutritionGoals;
 
   final GoalHistoryFirestoreGateway? _gateway;
+
+  /// External per-day nutrition goal source (Kalorické Tabulky, #98).
+  /// When [_useExternalNutritionGoals] returns true and this gateway has
+  /// usable data for the queried day, the five nutrition getters +
+  /// `progression*ForDate` variants return its values; otherwise they fall
+  /// back to the local goal board. Steps / activity / sleep / target
+  /// weight are always local.
+  final NutritionGoalsGateway? _nutritionGoals;
+  final bool Function()? _useExternalNutritionGoals;
+
   String? _cloudUid;
 
   static const _kDailySteps = 'goal_daily_steps';
@@ -92,11 +108,31 @@ class GoalsProvider extends ChangeNotifier {
 
   int get dailySteps => _board.goalFor(GoalMetric.dailySteps).target.round();
   double get targetWeight => _board.goalFor(GoalMetric.targetWeight).target;
-  double get dailyCalories => _board.goalFor(GoalMetric.dailyCalories).target;
-  double get dailyProtein => _board.goalFor(GoalMetric.dailyProtein).target;
-  double get dailyFat => _board.goalFor(GoalMetric.dailyFat).target;
-  double get dailyCarbs => _board.goalFor(GoalMetric.dailyCarbs).target;
-  double get dailyFiber => _board.goalFor(GoalMetric.dailyFiber).target;
+  double get dailyCalories => _nutritionGoal(
+        _todayDate,
+        () => _board.goalFor(GoalMetric.dailyCalories).target,
+        (v) => v.calories,
+      );
+  double get dailyProtein => _nutritionGoal(
+        _todayDate,
+        () => _board.goalFor(GoalMetric.dailyProtein).target,
+        (v) => v.protein,
+      );
+  double get dailyFat => _nutritionGoal(
+        _todayDate,
+        () => _board.goalFor(GoalMetric.dailyFat).target,
+        (v) => v.fat,
+      );
+  double get dailyCarbs => _nutritionGoal(
+        _todayDate,
+        () => _board.goalFor(GoalMetric.dailyCarbs).target,
+        (v) => v.carbs,
+      );
+  double get dailyFiber => _nutritionGoal(
+        _todayDate,
+        () => _board.goalFor(GoalMetric.dailyFiber).target,
+        (v) => v.fiber,
+      );
   double get sleepHours => _board.goalFor(GoalMetric.sleepHours).target;
   int get weeklyActivityMins =>
       _board.goalFor(GoalMetric.weeklyActivityMins).target.round();
@@ -104,6 +140,33 @@ class GoalsProvider extends ChangeNotifier {
       _board.goalFor(GoalMetric.dailyActivityMins).target.round();
 
   String get progressionHistorySignature => _board.progressionHistorySignature;
+
+  DateTime get _todayDate => progressionDate(DateTime.now());
+
+  /// Re-emits a change notification when an external input feeding the
+  /// nutrition getters changes — the #98 source flag flipping, or the KT
+  /// gateway re-syncing while the KT source is active. Wired from
+  /// `main.dart`; a no-op for consumers while the source stays local.
+  void refreshExternalNutritionGoals() => notifyListeners();
+
+  /// #98 dispatch for the five nutrition metrics. Returns the external
+  /// (KT) goal for [day] when the source is external AND the gateway is
+  /// available AND has usable data for that day; otherwise [local].
+  /// [pick] selects the metric off the external view.
+  double _nutritionGoal(
+    DateTime day,
+    double Function() local,
+    double Function(NutritionGoalsView) pick,
+  ) {
+    if (_useExternalNutritionGoals?.call() ?? false) {
+      final gateway = _nutritionGoals;
+      if (gateway != null && gateway.isAvailable) {
+        final view = gateway.goalsForDate(day);
+        if (view != null && view.hasData) return pick(view);
+      }
+    }
+    return local();
+  }
 
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
@@ -203,20 +266,35 @@ class GoalsProvider extends ChangeNotifier {
   int progressionDailyStepsForDate(DateTime day) =>
       _board.goalFor(GoalMetric.dailySteps).resolveForDate(day).round();
 
-  double progressionDailyCaloriesForDate(DateTime day) =>
-      _board.goalFor(GoalMetric.dailyCalories).resolveForDate(day);
+  double progressionDailyCaloriesForDate(DateTime day) => _nutritionGoal(
+        day,
+        () => _board.goalFor(GoalMetric.dailyCalories).resolveForDate(day),
+        (v) => v.calories,
+      );
 
-  double progressionDailyProteinForDate(DateTime day) =>
-      _board.goalFor(GoalMetric.dailyProtein).resolveForDate(day);
+  double progressionDailyProteinForDate(DateTime day) => _nutritionGoal(
+        day,
+        () => _board.goalFor(GoalMetric.dailyProtein).resolveForDate(day),
+        (v) => v.protein,
+      );
 
-  double progressionDailyFatForDate(DateTime day) =>
-      _board.goalFor(GoalMetric.dailyFat).resolveForDate(day);
+  double progressionDailyFatForDate(DateTime day) => _nutritionGoal(
+        day,
+        () => _board.goalFor(GoalMetric.dailyFat).resolveForDate(day),
+        (v) => v.fat,
+      );
 
-  double progressionDailyCarbsForDate(DateTime day) =>
-      _board.goalFor(GoalMetric.dailyCarbs).resolveForDate(day);
+  double progressionDailyCarbsForDate(DateTime day) => _nutritionGoal(
+        day,
+        () => _board.goalFor(GoalMetric.dailyCarbs).resolveForDate(day),
+        (v) => v.carbs,
+      );
 
-  double progressionDailyFiberForDate(DateTime day) =>
-      _board.goalFor(GoalMetric.dailyFiber).resolveForDate(day);
+  double progressionDailyFiberForDate(DateTime day) => _nutritionGoal(
+        day,
+        () => _board.goalFor(GoalMetric.dailyFiber).resolveForDate(day),
+        (v) => v.fiber,
+      );
 
   double progressionSleepHoursForDate(DateTime day) =>
       _board.goalFor(GoalMetric.sleepHours).resolveForDate(day);

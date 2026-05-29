@@ -1,6 +1,14 @@
 {
   "entries": [
     {
+      "id": "nutrition-goals-source",
+      "title": "NutritionGoalsSource + NutritionGoalsGateway",
+      "category": "Nutrition",
+      "file": "lib/features/nutrition/application/nutrition_goals_source_provider.dart",
+      "summary": "#98: enum `NutritionGoalsSource { local, kt }` určuje, odkud tečou nutriční cíle (kalorie + makra). `NutritionGoalsGateway` je consumer-side port definovaný v health_connect (lib/features/health_connect/application/nutrition_goals_gateway.dart), aby GoalsProvider mohl per-datum číst externí cíle bez importu nutrition feature; KalorickeTabulkyProvider ho implementuje a adaptuje KtDayNutrition goal pole na `NutritionGoalsView`. HC cíle + cílová váha zůstávají vždy lokální; fallback na lokální board nastává když KT není přihlášené nebo `hasData == false`.",
+      "diagram": "classDiagram\n    class NutritionGoalsSource {\n      <<enum>>\n      local\n      kt\n    }\n    class NutritionGoalsGateway {\n      <<abstract>>\n      +bool isAvailable\n      +NutritionGoalsView? goalsForDate(DateTime)\n    }\n    class NutritionGoalsView {\n      <<abstract>>\n      +double calories\n      +double protein\n      +double fat\n      +double carbs\n      +double fiber\n      +bool hasData\n    }\n    class KalorickeTabulkyProvider\n    class KtDayGoals\n    NutritionGoalsGateway <|.. KalorickeTabulkyProvider\n    NutritionGoalsView <|.. KtDayGoals\n    NutritionGoalsGateway --> NutritionGoalsView"
+    },
+    {
       "id": "journal-event",
       "title": "JournalEvent",
       "category": "Journal",

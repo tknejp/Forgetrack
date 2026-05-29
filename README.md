@@ -35,7 +35,10 @@ Built with Flutter, fully localized in **Czech and English**.
   the platform dialog.
 - **[Kalorické tabulky](https://www.kaloricketabulky.cz)** — daily
   calorie and macro logging via the third-party REST API. Cookie-based
-  session with credentials stored in Android Keystore.
+  session with credentials stored in Android Keystore. You can also pull
+  your **daily nutrition goals** (calories + macros) straight from KT
+  instead of setting them locally — handy if your targets vary day to
+  day. Switch the source on the KT card in Settings.
 
 ### Progression — the RPG layer
 
@@ -161,8 +164,10 @@ flutter pub run build_runner build --delete-conflicting-outputs   # generates Is
 flutter run --flavor dev --dart-define=FLAVOR=dev
 ```
 
-The first launch walks you through onboarding: Health Connect
-permissions → Google Sign-In → optional Kalorické tabulky login.
+The first launch walks you through onboarding: race pick → Google
+Sign-In → Health Connect permissions (+ your activity, sleep and weight
+goals) → optional Kalorické tabulky login (+ your calorie and macro
+goals, or pull them from KT).
 
 ### Build flavors
 

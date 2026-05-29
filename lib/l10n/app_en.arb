@@ -765,6 +765,36 @@
   "settingsGoalsBodyHeader": "Body",
   "@settingsGoalsBodyHeader": { "description": "Nicer header for the body goals expandable in settings." },
 
+  "onboardingGoalsHealthHeading": "Your daily targets",
+  "@onboardingGoalsHealthHeading": { "description": "Heading above the editable activity / sleep / weight goals on the onboarding Health Connect step." },
+
+  "onboardingGoalsNutritionHeading": "Nutrition goals",
+  "@onboardingGoalsNutritionHeading": { "description": "Heading above the editable calorie / macro goals on the onboarding Kalorické Tabulky step." },
+
+  "nutritionGoalsSourceLabel": "Nutrition goals source",
+  "@nutritionGoalsSourceLabel": { "description": "Label for the toggle that chooses where nutrition (calorie + macro) goals come from." },
+
+  "nutritionGoalsSourceLocal": "Your own",
+  "@nutritionGoalsSourceLocal": { "description": "Nutrition goals source option: locally set goals." },
+
+  "nutritionGoalsSourceKt": "Kaloričke Tabulky",
+  "@nutritionGoalsSourceKt": { "description": "Nutrition goals source option: per-day goals pulled from the Kaloričke Tabulky account." },
+
+  "nutritionGoalsSourceKtHint": "Daily calorie and macro goals come from your Kaloričke Tabulky account, so the fields below are read-only.",
+  "@nutritionGoalsSourceKtHint": { "description": "Caption shown when the KT nutrition goals source is on, explaining that local nutrition goal editing is disabled." },
+
+  "nutritionGoalsSourceConnectKt": "Connect Kaloričke Tabulky to use its goals.",
+  "@nutritionGoalsSourceConnectKt": { "description": "Prompt shown when the user picks the KT goals source but is not logged in to KT." },
+
+  "nutritionGoalsSourceSwitchTitle": "Goals from Kaloričke Tabulky",
+  "@nutritionGoalsSourceSwitchTitle": { "description": "Title of the on/off switch that chooses whether nutrition goals come from KT (on) or are set manually (off)." },
+
+  "nutritionGoalsSourceSwitchSubtitle": "Take daily calories & macros from KT instead of your own",
+  "@nutritionGoalsSourceSwitchSubtitle": { "description": "Subtitle of the nutrition-goals-source switch, explaining what turning it on does." },
+
+  "nutritionGoalsSourceOffCaption": "Set your calorie and macro goals below. Turn the switch on to use your daily goals from Kaloričke Tabulky instead.",
+  "@nutritionGoalsSourceOffCaption": { "description": "Caption shown when the nutrition goals source switch is off, explaining that goals are set manually and what the switch does." },
+
   "nutritionPeriod7d": "7 days",
   "@nutritionPeriod7d": { "description": "Nutrition screen period selector: last 7 days" },
 

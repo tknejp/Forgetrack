@@ -295,6 +295,17 @@
   "settingsGoalsSleepHeader": "Spánek",
   "settingsGoalsBodyHeader": "Tělo",
 
+  "onboardingGoalsHealthHeading": "Tvé denní cíle",
+  "onboardingGoalsNutritionHeading": "Výživové cíle",
+  "nutritionGoalsSourceLabel": "Zdroj výživových cílů",
+  "nutritionGoalsSourceLocal": "Vlastní",
+  "nutritionGoalsSourceKt": "Kalorické tabulky",
+  "nutritionGoalsSourceKtHint": "Denní cíle pro kalorie a makra se berou z tvého účtu Kalorických tabulek, pole níže jsou proto jen pro čtení.",
+  "nutritionGoalsSourceConnectKt": "Pro použití cílů z KT se nejdřív přihlas ke Kalorickým tabulkám.",
+  "nutritionGoalsSourceSwitchTitle": "Cíle z Kalorických tabulek",
+  "nutritionGoalsSourceSwitchSubtitle": "Ber denní kalorie a makra z KT místo vlastních",
+  "nutritionGoalsSourceOffCaption": "Cíle pro kalorie a makra si nastav níže. Zapni přepínač, pokud chceš místo toho použít denní cíle z Kalorických tabulek.",
+
   "nutritionPeriod7d": "7 dní",
   "nutritionPeriod30d": "30 dní",
   "nutritionGoalsTitle": "Upravit cíle",
