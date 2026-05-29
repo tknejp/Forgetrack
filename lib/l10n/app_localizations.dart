@@ -125,7 +125,7 @@ abstract class AppLocalizations {
   /// Bottom navigation label for the Social tab
   ///
   /// In en, this message translates to:
-  /// **'Social'**
+  /// **'Fellowship'**
   String get navSocial;
 
   /// Bottom navigation label for the Activities tab
@@ -593,7 +593,7 @@ abstract class AppLocalizations {
   /// Subtitle for the notifications toggle setting
   ///
   /// In en, this message translates to:
-  /// **'Allow reminders, quest updates and social alerts.'**
+  /// **'Allow reminders, quest updates and Fellowship alerts.'**
   String get settingsNotificationsSubtitle;
 
   /// Settings section header: notifications
@@ -623,7 +623,7 @@ abstract class AppLocalizations {
   /// Per-category toggle label: social notifications
   ///
   /// In en, this message translates to:
-  /// **'Social'**
+  /// **'Fellowship'**
   String get settingsNotifSocialLabel;
 
   /// Per-category toggle subtitle: social notifications
@@ -9135,17 +9135,17 @@ abstract class AppLocalizations {
   /// **'Reward'**
   String get celebrationKindSparkle;
 
+  /// Headline shown in the MainShell header for the Fellowship tab. Sits under the eyebrow that says FELLOWSHIP — second-person framing matches the Hero and Quests screen titles.
+  ///
+  /// In en, this message translates to:
+  /// **'Your companions on the journey'**
+  String get socialScreenTitle;
+
   /// No description provided for @socialTabFeed.
   ///
   /// In en, this message translates to:
-  /// **'Feed'**
+  /// **'Chronicle'**
   String get socialTabFeed;
-
-  /// No description provided for @socialTabActivity.
-  ///
-  /// In en, this message translates to:
-  /// **'Activity'**
-  String get socialTabActivity;
 
   /// No description provided for @socialTabLeaderboard.
   ///
@@ -9159,34 +9159,16 @@ abstract class AppLocalizations {
   /// **'Friends'**
   String get socialTabFriends;
 
-  /// No description provided for @socialSectionRecentActivity.
-  ///
-  /// In en, this message translates to:
-  /// **'RECENT ACTIVITY'**
-  String get socialSectionRecentActivity;
-
   /// No description provided for @socialSectionFriendActivity.
   ///
   /// In en, this message translates to:
   /// **'FRIEND ACTIVITY'**
   String get socialSectionFriendActivity;
 
-  /// No description provided for @socialNoNotificationsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'No notifications'**
-  String get socialNoNotificationsTitle;
-
-  /// No description provided for @socialNoNotificationsSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Reactions from friends on your shared achievements will appear here.'**
-  String get socialNoNotificationsSubtitle;
-
   /// No description provided for @socialFeedEmptyTitle.
   ///
   /// In en, this message translates to:
-  /// **'Feed is empty'**
+  /// **'Chronicle is empty'**
   String get socialFeedEmptyTitle;
 
   /// No description provided for @socialFeedEmptySubtitle.
@@ -9206,6 +9188,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add friends by searching for their handle.'**
   String get socialFriendsEmptySubtitle;
+
+  /// App-bar title of the notifications inbox pushed from the bell button on the Social screen. Generic on purpose — the inbox currently only carries friend requests, but the bell + this route will host other social notifications later.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get socialNotificationsTitle;
+
+  /// Empty-state title in the notifications inbox when there are zero incoming items.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing new'**
+  String get socialNotificationsEmptyTitle;
+
+  /// Empty-state subtitle in the notifications inbox.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend requests and other Fellowship activity will appear here.'**
+  String get socialNotificationsEmptySubtitle;
+
+  /// Section header above the reaction notifications block inside the notifications sheet. Sits below the Friend Requests section when both have content.
+  ///
+  /// In en, this message translates to:
+  /// **'Reactions'**
+  String get socialNotificationsReactionsSection;
 
   /// No description provided for @socialFriendsSectionCount.
   ///
@@ -9291,11 +9297,29 @@ abstract class AppLocalizations {
   /// **'Find'**
   String get socialSearchButton;
 
+  /// Hint shown under the search input when the query is non-empty but no non-friend Firestore profiles match yet. Friends matching the query already surface in the filtered Přátelé section, so this hint never fires for them.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching players yet — keep typing.'**
+  String get socialSearchNoResults;
+
+  /// Section header inside the search overlay above the non-friend Firestore matches. Sits below the optional 'Friends' matching section so the player can tell at a glance which row is an existing friend vs a stranger they could add.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get socialSearchOtherPeopleSection;
+
   /// No description provided for @socialAdd.
   ///
   /// In en, this message translates to:
   /// **'Add'**
   String get socialAdd;
+
+  /// Short non-interactive label shown on a row (e.g. search result) when the searched user is already a friend, replacing the Add affordance.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends'**
+  String get socialFriendBadge;
 
   /// No description provided for @socialHandleLevel.
   ///
@@ -9378,7 +9402,7 @@ abstract class AppLocalizations {
   /// No description provided for @socialStatusSignInRequired.
   ///
   /// In en, this message translates to:
-  /// **'Google sign-in is required for social features.'**
+  /// **'Google sign-in is required for the Fellowship.'**
   String get socialStatusSignInRequired;
 
   /// No description provided for @socialStatusBackendUnavailable.
@@ -9390,7 +9414,7 @@ abstract class AppLocalizations {
   /// No description provided for @socialStatusConnecting.
   ///
   /// In en, this message translates to:
-  /// **'Connecting to social backend…'**
+  /// **'Connecting to the Fellowship…'**
   String get socialStatusConnecting;
 
   /// No description provided for @socialStatusError.
@@ -9402,13 +9426,13 @@ abstract class AppLocalizations {
   /// No description provided for @socialEditHandleTitle.
   ///
   /// In en, this message translates to:
-  /// **'Change Social ID'**
+  /// **'Change handle'**
   String get socialEditHandleTitle;
 
   /// No description provided for @socialEditHandleDescription.
   ///
   /// In en, this message translates to:
-  /// **'Your ID is used to find you in Social.'**
+  /// **'Your handle lets others find you in the Fellowship.'**
   String get socialEditHandleDescription;
 
   /// No description provided for @socialEditHandleValidation.
@@ -9432,7 +9456,7 @@ abstract class AppLocalizations {
   /// No description provided for @socialEditHandleTooltip.
   ///
   /// In en, this message translates to:
-  /// **'Change ID'**
+  /// **'Change handle'**
   String get socialEditHandleTooltip;
 
   /// No description provided for @socialEditPhotoTooltip.
@@ -9444,13 +9468,13 @@ abstract class AppLocalizations {
   /// No description provided for @socialHandleSaveFailed.
   ///
   /// In en, this message translates to:
-  /// **'ID could not be saved: {error}'**
+  /// **'Handle could not be saved: {error}'**
   String socialHandleSaveFailed(String error);
 
   /// No description provided for @socialHandleSaved.
   ///
   /// In en, this message translates to:
-  /// **'Social ID saved: @{handle}'**
+  /// **'Handle saved: @{handle}'**
   String socialHandleSaved(String handle);
 
   /// No description provided for @socialTryAgain.
@@ -9846,7 +9870,7 @@ abstract class AppLocalizations {
   /// No description provided for @socialSharedPostDeleteConfirmBody.
   ///
   /// In en, this message translates to:
-  /// **'This shared post will be removed from your friends\' feed.'**
+  /// **'This shared post will be removed from your friends\' chronicle.'**
   String get socialSharedPostDeleteConfirmBody;
 
   /// No description provided for @socialSharedPostDeleted.
@@ -10951,7 +10975,7 @@ abstract class AppLocalizations {
   /// Android notification channel name for social notifications
   ///
   /// In en, this message translates to:
-  /// **'Social'**
+  /// **'Fellowship'**
   String get notifChannelSocialName;
 
   /// Android notification channel description for the social channel

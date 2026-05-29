@@ -21,7 +21,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navHero => 'Hero';
 
   @override
-  String get navSocial => 'Social';
+  String get navSocial => 'Fellowship';
 
   @override
   String get navActivities => 'Activities';
@@ -268,7 +268,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsNotificationsSubtitle =>
-      'Allow reminders, quest updates and social alerts.';
+      'Allow reminders, quest updates and Fellowship alerts.';
 
   @override
   String get sectionNotifications => 'Notifications';
@@ -285,7 +285,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Completed quests and unlocked achievements.';
 
   @override
-  String get settingsNotifSocialLabel => 'Social';
+  String get settingsNotifSocialLabel => 'Fellowship';
 
   @override
   String get settingsNotifSocialSubtitle =>
@@ -5268,10 +5268,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get celebrationKindSparkle => 'Reward';
 
   @override
-  String get socialTabFeed => 'Feed';
+  String get socialScreenTitle => 'Your companions on the journey';
 
   @override
-  String get socialTabActivity => 'Activity';
+  String get socialTabFeed => 'Chronicle';
 
   @override
   String get socialTabLeaderboard => 'Leaderboard';
@@ -5280,20 +5280,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialTabFriends => 'Friends';
 
   @override
-  String get socialSectionRecentActivity => 'RECENT ACTIVITY';
-
-  @override
   String get socialSectionFriendActivity => 'FRIEND ACTIVITY';
 
   @override
-  String get socialNoNotificationsTitle => 'No notifications';
-
-  @override
-  String get socialNoNotificationsSubtitle =>
-      'Reactions from friends on your shared achievements will appear here.';
-
-  @override
-  String get socialFeedEmptyTitle => 'Feed is empty';
+  String get socialFeedEmptyTitle => 'Chronicle is empty';
 
   @override
   String get socialFeedEmptySubtitle =>
@@ -5305,6 +5295,19 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get socialFriendsEmptySubtitle =>
       'Add friends by searching for their handle.';
+
+  @override
+  String get socialNotificationsTitle => 'Notifications';
+
+  @override
+  String get socialNotificationsEmptyTitle => 'Nothing new';
+
+  @override
+  String get socialNotificationsEmptySubtitle =>
+      'Friend requests and other Fellowship activity will appear here.';
+
+  @override
+  String get socialNotificationsReactionsSection => 'Reactions';
 
   @override
   String socialFriendsSectionCount(int count) {
@@ -5355,7 +5358,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialSearchButton => 'Find';
 
   @override
+  String get socialSearchNoResults => 'No matching players yet — keep typing.';
+
+  @override
+  String get socialSearchOtherPeopleSection => 'People';
+
+  @override
   String get socialAdd => 'Add';
+
+  @override
+  String get socialFriendBadge => 'Friends';
 
   @override
   String socialHandleLevel(String handle, int level) {
@@ -5408,7 +5420,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get socialStatusSignInRequired =>
-      'Google sign-in is required for social features.';
+      'Google sign-in is required for the Fellowship.';
 
   @override
   String socialStatusBackendUnavailable(String error) {
@@ -5416,7 +5428,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get socialStatusConnecting => 'Connecting to social backend…';
+  String get socialStatusConnecting => 'Connecting to the Fellowship…';
 
   @override
   String socialStatusError(String error) {
@@ -5424,11 +5436,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get socialEditHandleTitle => 'Change Social ID';
+  String get socialEditHandleTitle => 'Change handle';
 
   @override
   String get socialEditHandleDescription =>
-      'Your ID is used to find you in Social.';
+      'Your handle lets others find you in the Fellowship.';
 
   @override
   String get socialEditHandleValidation => 'Enter at least one character.';
@@ -5440,19 +5452,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialSave => 'Save';
 
   @override
-  String get socialEditHandleTooltip => 'Change ID';
+  String get socialEditHandleTooltip => 'Change handle';
 
   @override
   String get socialEditPhotoTooltip => 'Change photo';
 
   @override
   String socialHandleSaveFailed(String error) {
-    return 'ID could not be saved: $error';
+    return 'Handle could not be saved: $error';
   }
 
   @override
   String socialHandleSaved(String handle) {
-    return 'Social ID saved: @$handle';
+    return 'Handle saved: @$handle';
   }
 
   @override
@@ -5660,7 +5672,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get socialSharedPostDeleteConfirmBody =>
-      'This shared post will be removed from your friends\' feed.';
+      'This shared post will be removed from your friends\' chronicle.';
 
   @override
   String get socialSharedPostDeleted => 'Post deleted.';
@@ -6300,7 +6312,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Completed quests and unlocked achievements';
 
   @override
-  String get notifChannelSocialName => 'Social';
+  String get notifChannelSocialName => 'Fellowship';
 
   @override
   String get notifChannelSocialDescription =>

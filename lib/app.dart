@@ -8,6 +8,7 @@ import 'app/locale_provider.dart';
 import 'core/config/constants.dart';
 import 'core/navigation/navigator_key.dart';
 import 'core/sentry/sentry_consent_gate.dart';
+import 'core/services/app_update_service.dart';
 import 'features/app_shell/presentation/main_shell.dart';
 import 'features/cosmetics/application/cosmetics_provider.dart';
 import 'features/health_connect/application/fitness_provider.dart';
@@ -75,6 +76,10 @@ class _ForgetrackAppState extends State<ForgetrackApp>
           context.read<KalorickeTabulkyProvider>().refreshOnAppOpen(),
         ]),
       );
+      // DIY in-app updater check — no-op on dev/prod. Intentionally NOT
+      // awaited and NOT chained to welcome/home rendering: it polls
+      // Firestore and may surface a dialog, but must never block the UI.
+      unawaited(AppUpdateService.instance.checkForUpdate());
     }
   }
 

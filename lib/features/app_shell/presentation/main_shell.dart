@@ -329,7 +329,8 @@ class _FtMainShellState extends State<MainShell> {
             eyebrow: l10n.progScreenEyebrow, title: l10n.progScreenTitle);
       default:
         return HeaderData(
-            eyebrow: l10n.navSocial.toUpperCase(), title: l10n.navSocial);
+            eyebrow: l10n.navSocial.toUpperCase(),
+            title: l10n.socialScreenTitle);
     }
   }
 }

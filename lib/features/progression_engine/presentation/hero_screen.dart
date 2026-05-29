@@ -499,11 +499,12 @@ class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
   bool _shared = false;
   bool _pinning = false;
 
-  Future<void> _share() async {
+  Future<void> _share({String? message}) async {
     setState(() => _sharing = true);
     final social = context.read<SocialProvider>();
     await social.shareAchievement(
       widget.view.id,
+      message: message,
       resolvedTitle: widget.view.display.title(widget.l10n),
       resolvedDescription: widget.view.display.description(widget.l10n),
     );
@@ -517,12 +518,32 @@ class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
         backgroundColor: Tokens.surface,
         content: Text(
           social.error == null
-              ? 'Achievement sdílen do feedu přátel.'
+              ? 'Achievement sdílen do kroniky.'
               : 'Chyba: ${social.error}',
           style: const TextStyle(color: Tokens.onSurface),
         ),
       ),
     );
+  }
+
+  Future<void> _openShareComposer() async {
+    if (_sharing || _shared) return;
+    final color = widget.view.display.accentColor;
+    final message = await showModalBottomSheet<String?>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _ShareMessageComposer(
+        color: color,
+        achievementTitle: widget.view.display.title(widget.l10n),
+      ),
+    );
+    if (!mounted) return;
+    // null = swipe-down / tap-outside dismissal; any returned string
+    // (including empty) means the user tapped Send — provider trims
+    // empty messages back to null.
+    if (message == null) return;
+    await _share(message: message);
   }
 
   Future<void> _setPinned(bool pinned) async {
@@ -723,7 +744,7 @@ class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
               SizedBox(
                 width: double.infinity,
                 child: GestureDetector(
-                  onTap: (_sharing || _shared) ? null : _share,
+                  onTap: (_sharing || _shared) ? null : _openShareComposer,
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -769,7 +790,7 @@ class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
                               ? 'Sdíleno'
                               : _sharing
                                   ? 'Sdílení...'
-                                  : 'Sdílet do feedu přátel',
+                                  : 'Sdílet do kroniky',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
@@ -782,6 +803,177 @@ class _AchievementDetailsSheetState extends State<_AchievementDetailsSheet> {
                 ),
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ShareMessageComposer extends StatefulWidget {
+  const _ShareMessageComposer({
+    required this.color,
+    required this.achievementTitle,
+  });
+
+  final Color color;
+  final String achievementTitle;
+
+  @override
+  State<_ShareMessageComposer> createState() => _ShareMessageComposerState();
+}
+
+class _ShareMessageComposerState extends State<_ShareMessageComposer> {
+  static const int _maxLength = 240;
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+    final color = widget.color;
+    final trimmedLength = _controller.text.trim().characters.length;
+    final hasText = trimmedLength > 0;
+    return Padding(
+      padding: EdgeInsets.only(bottom: bottomInset),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Tokens.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        ),
+        padding: EdgeInsets.fromLTRB(18, 12, 18, bottomPad + 18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 42,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+            const SizedBox(height: Tokens.spaceLg),
+            const Text(
+              'Sdílet do kroniky přátel',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+                letterSpacing: -0.4,
+              ),
+            ),
+            const SizedBox(height: Tokens.spaceXs),
+            Text(
+              widget.achievementTitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: Tokens.fontSizeCaption,
+                fontWeight: FontWeight.w700,
+                color: color.withValues(alpha: 0.9),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(Tokens.radiusTile),
+                border: Border.all(color: color.withValues(alpha: 0.22)),
+              ),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: TextField(
+                controller: _controller,
+                autofocus: true,
+                maxLength: _maxLength,
+                minLines: 3,
+                maxLines: 5,
+                textInputAction: TextInputAction.newline,
+                style: const TextStyle(
+                  fontSize: Tokens.fontSizeSmall,
+                  color: Tokens.onSurface,
+                  height: 1.4,
+                ),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  isDense: true,
+                  hintText: 'Připoj zprávu (nepovinné)…',
+                  hintStyle: TextStyle(
+                    fontSize: Tokens.fontSizeSmall,
+                    color: Tokens.onSurfaceFaint,
+                  ),
+                  counterText: '',
+                ),
+                onChanged: (_) => setState(() {}),
+              ),
+            ),
+            const SizedBox(height: Tokens.spaceXs),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                '$trimmedLength/$_maxLength',
+                style: const TextStyle(
+                  fontSize: Tokens.fontSizeMicro,
+                  color: Tokens.onSurfaceFaint,
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: GestureDetector(
+                onTap: () =>
+                    Navigator.of(context).pop(_controller.text),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        color.withValues(alpha: 0.32),
+                        color.withValues(alpha: 0.18),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(Tokens.radiusTile),
+                    border: Border.all(
+                      color: color.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        hasText
+                            ? Icons.send_rounded
+                            : Icons.share_rounded,
+                        size: 16,
+                        color: color,
+                      ),
+                      const SizedBox(width: Tokens.spaceSm),
+                      Text(
+                        hasText ? 'Sdílet se zprávou' : 'Sdílet bez zprávy',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: color,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),

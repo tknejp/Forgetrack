@@ -21,7 +21,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get navHero => 'Hero';
 
   @override
-  String get navSocial => 'Social';
+  String get navSocial => 'Společenstvo';
 
   @override
   String get navActivities => 'Aktivity';
@@ -269,7 +269,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get settingsNotificationsSubtitle =>
-      'Povolit připomínky, questy a social upozornění.';
+      'Povolit připomínky, questy a oznámení ze Společenstva.';
 
   @override
   String get sectionNotifications => 'Notifikace';
@@ -286,7 +286,7 @@ class AppLocalizationsCs extends AppLocalizations {
       'Splněné questy a odemčené achievementy.';
 
   @override
-  String get settingsNotifSocialLabel => 'Sociální';
+  String get settingsNotifSocialLabel => 'Společenstvo';
 
   @override
   String get settingsNotifSocialSubtitle =>
@@ -5276,10 +5276,10 @@ class AppLocalizationsCs extends AppLocalizations {
   String get celebrationKindSparkle => 'Odměna';
 
   @override
-  String get socialTabFeed => 'Feed';
+  String get socialScreenTitle => 'Tví druzi na cestě';
 
   @override
-  String get socialTabActivity => 'Aktivita';
+  String get socialTabFeed => 'Kronika';
 
   @override
   String get socialTabLeaderboard => 'Žebříček';
@@ -5288,20 +5288,10 @@ class AppLocalizationsCs extends AppLocalizations {
   String get socialTabFriends => 'Přátelé';
 
   @override
-  String get socialSectionRecentActivity => 'NEDÁVNÁ AKTIVITA';
-
-  @override
   String get socialSectionFriendActivity => 'AKTIVITA PŘÁTEL';
 
   @override
-  String get socialNoNotificationsTitle => 'Žádné upozornění';
-
-  @override
-  String get socialNoNotificationsSubtitle =>
-      'Zde uvidíš reakce přátel na tvoje sdílené achievementy.';
-
-  @override
-  String get socialFeedEmptyTitle => 'Feed je prázdný';
+  String get socialFeedEmptyTitle => 'Kronika je prázdná';
 
   @override
   String get socialFeedEmptySubtitle =>
@@ -5313,6 +5303,19 @@ class AppLocalizationsCs extends AppLocalizations {
   @override
   String get socialFriendsEmptySubtitle =>
       'Přidej přátele vyhledáním jejich přezdívky.';
+
+  @override
+  String get socialNotificationsTitle => 'Oznámení';
+
+  @override
+  String get socialNotificationsEmptyTitle => 'Nic nového';
+
+  @override
+  String get socialNotificationsEmptySubtitle =>
+      'Žádosti o přátelství a další aktivita ze Společenstva se objeví zde.';
+
+  @override
+  String get socialNotificationsReactionsSection => 'Reakce';
 
   @override
   String socialFriendsSectionCount(int count) {
@@ -5363,7 +5366,16 @@ class AppLocalizationsCs extends AppLocalizations {
   String get socialSearchButton => 'Najít';
 
   @override
+  String get socialSearchNoResults => 'Zatím nikdo neodpovídá — piš dál.';
+
+  @override
+  String get socialSearchOtherPeopleSection => 'Lidé';
+
+  @override
   String get socialAdd => 'Přidat';
+
+  @override
+  String get socialFriendBadge => 'Přátelé';
 
   @override
   String socialHandleLevel(String handle, int level) {
@@ -5416,7 +5428,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get socialStatusSignInRequired =>
-      'Přihlášení přes Google je vyžadováno pro sociální funkce.';
+      'Přihlášení přes Google je vyžadováno pro Společenstvo.';
 
   @override
   String socialStatusBackendUnavailable(String error) {
@@ -5424,7 +5436,7 @@ class AppLocalizationsCs extends AppLocalizations {
   }
 
   @override
-  String get socialStatusConnecting => 'Připojování k sociálnímu backendu…';
+  String get socialStatusConnecting => 'Připojování ke Společenstvu…';
 
   @override
   String socialStatusError(String error) {
@@ -5432,11 +5444,11 @@ class AppLocalizationsCs extends AppLocalizations {
   }
 
   @override
-  String get socialEditHandleTitle => 'Změnit Social ID';
+  String get socialEditHandleTitle => 'Změnit přezdívku';
 
   @override
   String get socialEditHandleDescription =>
-      'ID slouží pro vyhledání v social části.';
+      'Přezdívka slouží k vyhledání ve Společenstvu.';
 
   @override
   String get socialEditHandleValidation => 'Zadej alespoň jeden znak.';
@@ -5448,19 +5460,19 @@ class AppLocalizationsCs extends AppLocalizations {
   String get socialSave => 'Uložit';
 
   @override
-  String get socialEditHandleTooltip => 'Změnit ID';
+  String get socialEditHandleTooltip => 'Změnit přezdívku';
 
   @override
   String get socialEditPhotoTooltip => 'Změnit fotku';
 
   @override
   String socialHandleSaveFailed(String error) {
-    return 'ID se nepodařilo uložit: $error';
+    return 'Přezdívku se nepodařilo uložit: $error';
   }
 
   @override
   String socialHandleSaved(String handle) {
-    return 'Social ID uloženo: @$handle';
+    return 'Přezdívka uložena: @$handle';
   }
 
   @override
@@ -5668,7 +5680,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get socialSharedPostDeleteConfirmBody =>
-      'Tento sdílený příspěvek bude odstraněn z feedu tvých přátel.';
+      'Tento sdílený příspěvek bude odstraněn z kroniky tvých přátel.';
 
   @override
   String get socialSharedPostDeleted => 'Příspěvek odstraněn.';
@@ -6299,7 +6311,7 @@ class AppLocalizationsCs extends AppLocalizations {
       'Dokončené questy a odemčené achievementy';
 
   @override
-  String get notifChannelSocialName => 'Sociální';
+  String get notifChannelSocialName => 'Společenstvo';
 
   @override
   String get notifChannelSocialDescription =>

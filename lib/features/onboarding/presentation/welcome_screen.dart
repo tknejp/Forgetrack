@@ -4,9 +4,12 @@ import 'package:provider/provider.dart';
 
 import '../../../core/logging/app_log.dart';
 import '../../../l10n/l10n.dart';
+import '../../celebration/application/progression_engine_celebration_adapter.dart';
+import '../../celebration/presentation/widgets/fullscreen/celebration_fullscreen.dart';
 import '../../cosmetics/application/cosmetics_provider.dart';
 import '../../cosmetics/domain/cosmetic_models.dart';
 import '../../cosmetics/domain/hero_race_catalog.dart';
+import '../../progression_engine/application/progression_engine_provider.dart';
 import '../application/onboarding_provider.dart';
 import '../widgets/onboarding_primitives.dart';
 import '../widgets/onboarding_theme.dart';
@@ -37,6 +40,21 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   /// player's hero card paints with their chosen race's pilgrim look
   /// from the first frame after onboarding.
   static const _starterSkinId = 'skin_pilgrim';
+
+  /// Cosmetics granted by the `welcome_to_journey` achievement that the
+  /// new player should also see equipped on the very first paint of
+  /// MainShell. Pre-unlocking + equipping these inside [_finish] (instead
+  /// of leaning on the engine grant alone) covers two failure modes:
+  ///   * the engine's reward dispatch never lands an [equip] call, so
+  ///     items would sit unequipped in inventory after the celebration,
+  ///   * if cosmetics weren't loaded when the grant fired (sign-in race),
+  ///     the bridge silently drops the unlock and the banner never
+  ///     appears in inventory at all.
+  static const List<(String, CosmeticType)> _welcomeCosmetics = [
+    ('background_camp', CosmeticType.background),
+    ('frame_pilgrim', CosmeticType.frame),
+    ('banner_pilgrim', CosmeticType.banner),
+  ];
 
   final PageController _pageController = PageController();
   int _step = 0;
@@ -98,6 +116,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   Future<void> _finish() async {
     final cosmetics = context.read<CosmeticsProvider>();
     final onboarding = context.read<OnboardingProvider>();
+    final progression = context.read<ProgressionEngineProvider>();
 
     // Commit race + starter skin once a uid is bound. If the user
     // skipped sign-in (Step 2 is opt-in via the skip button), the
@@ -119,8 +138,32 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         if (cosmetics.state?.equipped.skinId != _starterSkinId) {
           await cosmetics.equip(_starterSkinId);
         }
+        // Pre-unlock + auto-equip the welcome-pack cosmetics. The
+        // `welcome_to_journey` achievement also grants them via the
+        // engine's reward pipeline, but (a) that path only unlocks,
+        // never equips, and (b) it silently drops when cosmetics isn't
+        // yet uid-bound — which was leaving the banner missing from
+        // inventory in the post-onboarding handoff. Doing it here makes
+        // the equipped loadout deterministic on first MainShell paint
+        // and writes through to Firestore via the service layer.
+        for (final (id, _) in _welcomeCosmetics) {
+          final already =
+              cosmetics.state?.unlocked.containsKey(id) ?? false;
+          if (!already) {
+            await cosmetics.unlock(
+              id,
+              sourceType: CosmeticUnlockSource.achievement.name,
+              sourceId: 'welcome_to_journey',
+            );
+          }
+        }
+        for (final (id, type) in _welcomeCosmetics) {
+          if (cosmetics.state?.equipped.slotId(type) != id) {
+            await cosmetics.equip(id);
+          }
+        }
         AppLog.app.info(
-          'onboarding: race + starter skin committed',
+          'onboarding: race + starter skin + welcome pack committed',
           payload:
               'race=$_draftRaceId skin=$_starterSkinId uid=${cosmetics.currentUid}',
         );
@@ -144,9 +187,43 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       );
     }
 
+    // Force an engine pass so `welcome_to_journey` (no conditions, fires
+    // on first evaluation) is recorded in the ledger before the routing
+    // gate flips. Without this, the achievement gets evaluated later —
+    // after MainShell has already mounted — and the celebration appears
+    // on top of the home screen instead of in place of it.
+    await progression.refresh();
+    if (!mounted) return;
+
+    // Drain whatever the engine queued (welcome achievement + any
+    // catch-up celebrations from a background sync replay) as fullscreen
+    // routes pushed on top of the welcome screen. The user never sees
+    // MainShell until the celebration is dismissed.
+    await _drainWelcomeCelebrations(progression, cosmetics);
+    if (!mounted) return;
+
     await onboarding.markCompleted();
     // Routing in app.dart watches the provider — flipping completed
     // automatically swaps the home from WelcomeScreen to MainShell.
+  }
+
+  Future<void> _drainWelcomeCelebrations(
+    ProgressionEngineProvider progression,
+    CosmeticsProvider cosmetics,
+  ) async {
+    final adapter = ProgressionEngineCelebrationAdapter(cosmetics: cosmetics);
+    while (mounted) {
+      final result = progression.takePendingCelebration();
+      if (result == null) return;
+      final events = adapter.convert(result);
+      for (final event in events) {
+        if (!mounted) return;
+        await openCelebrationFullscreen(
+          context: context,
+          event: event,
+        );
+      }
+    }
   }
 
   @override

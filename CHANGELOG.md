@@ -6,6 +6,31 @@ Generování při release: viz [docs/git_workflow.md §3a](docs/git_workflow.md)
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-05-29
+
+Větší build — DIY in-app updater (appka se aktualizuje sama), rebrand Social → Fellowship
+a Feed → Chronicle, nová Fellowship horní lišta. Bez migrace dat, update přes 0.2.1 funguje.
+
+### Added
+
+- Update: DIY in-app updater — `internal` build se aktualizuje sám z Firebase Storage manifestu (`app_config/latest_internal`); FCM push na topic `forgetrack-internal-builds` + in-app dialog s Markdown release notes [#132].
+- Fellowship: persistent search + notifikační zvoneček v horní liště s novými bottom sheety.
+- Fellowship: volitelná zpráva ke sdílení do Chronicle + větší orámovaný actor avatar.
+- Fellowship: vlastní headline pro Fellowship tab.
+
+### Changed
+
+- Fellowship: rebrand Social → Fellowship a Feed → Chronicle (i18n).
+- Fellowship: reakce + žádosti o přátelství sloučeny do jediného bell sheetu.
+- Fellowship: owner-only delete sdílen přes `SocialOwnedShareCard` wrapper.
+
+### Fixed
+
+- Onboarding: pre-equip welcome pack + drain celebrations před MainShell.
+- Fellowship: swipe-down dismiss search sheetu když je list scrollovatelný.
+- Fellowship: emblémové sloty zmenšeny na úzkých displejích (Row overflow).
+- Fellowship: unblock friend requests + avatar cizího profilu.
+
 ## [0.2.1] - 2026-05-28
 
 Patch po 0.2.0 — opravy regresí a UI doladění zachycené v prvních hodinách testování.
@@ -100,7 +125,8 @@ První testovací build — interní validace Firestore sync, distribuováno 1 t
 - 2026-05-27 (samostatný commit po tomto tagu): bumpnuto `pubspec.yaml` → `0.1.0+2` a založen tento changelog jako součást zavedení [git workflow](docs/git_workflow.md). Build number `+2` kvůli Android monotonic check; reinstalace u testera vyžaduje uninstall.
 - Historie před tímto tagem je pre-workflow — žádný backfill changelogu.
 
-[Unreleased]: https://github.com/tknejp/Forgetrack/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/tknejp/Forgetrack/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/tknejp/Forgetrack/releases/tag/v0.3.0
 [0.2.1]: https://github.com/tknejp/Forgetrack/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/tknejp/Forgetrack/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/tknejp/Forgetrack/releases/tag/v0.1.0

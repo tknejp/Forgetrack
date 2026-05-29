@@ -18,6 +18,7 @@ import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
+import 'core/services/app_update_service.dart';
 import 'core/services/background_sync_service.dart';
 import 'core/services/connectivity_provider.dart';
 import 'core/services/fcm_service.dart';
@@ -217,6 +218,10 @@ Future<void> _runForgetrack(SentryConsentProvider sentryConsent) async {
         onboardingProvider.isCompleted,
   );
   unawaited(FcmService.instance.initialize());
+  // DIY in-app updater (internal flavor only). On other flavors initialize()
+  // returns immediately — see AppUpdateService for the gating. Update check
+  // itself runs from the resumed lifecycle hook in ForgetrackApp.
+  unawaited(AppUpdateService.instance.initialize());
   unawaited(BackgroundSyncService.register());
 
   // Navigace z tapu na notifikaci při studeném startu

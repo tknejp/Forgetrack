@@ -9,10 +9,14 @@
       3. Bumpne pubspec.yaml (version + build number)
       4. Aktualizuje CHANGELOG.md
       5. flutter analyze (gate)
-      6. flutter build apk --release --flavor prod
-      7. Upload na Firebase App Distribution
-      8. Merge --no-ff do main, tag, merge zpět do develop, archivace
-      9. Push všeho
+      6. flutter build apk --release --flavor internal
+      7. Publish: upload APK na Firebase Storage + write Firestore manifest doc
+         (publish_internal_build.js) — toto je, co testerovi spustí in-app
+         update prompt při dalším otevření appky
+      8. FCM push na topic forgetrack-internal-builds (send_release_push.js,
+         volitelné — pokud secrets/firebase-service-account.json existuje)
+      9. Merge --no-ff do main, tag, merge zpět do develop, archivace
+     10. Push všeho
 
     Skript je idempotentní: pokud spadne v půlce, můžeš ho rebootnout
     s -Resume (TODO — zatím manuálně cleanup).
@@ -28,8 +32,8 @@
     Soubor MUSÍ existovat před spuštěním.
 
 .PARAMETER SkipBuild
-    Přeskočí flutter analyze + build + FAD upload. Jen git operace.
-    Použít POUZE pro testování git části skriptu.
+    Přeskočí flutter analyze + build + Storage upload + Firestore manifest write.
+    Jen git operace. Použít POUZE pro testování git části skriptu.
 
 .PARAMETER SkipTests
     Přeskočí flutter test. Default: testy se NEspouští (zapne se opt-in přes -RunTests).
@@ -38,8 +42,8 @@
     Spustí flutter test před buildem. Doporučeno pro netriviální release.
 
 .PARAMETER DryRun
-    Žádné side-effecty (žádné commity, žádný push, žádný FAD upload).
-    Vypíše, co by se stalo.
+    Žádné side-effecty (žádné commity, žádný git push, žádný Storage upload,
+    žádný Firestore write, žádná FCM push). Vypíše, co by se stalo.
 
 .EXAMPLE
     .\scripts\release.ps1 -Version 0.2.0
@@ -62,26 +66,40 @@ param(
     [switch]$RunTests,
     [switch]$DryRun,
 
+    # -Yes: auto-confirm všech Confirm-Step pauz (Trello blocker check /
+    # commit-confirm / CHANGELOG-naplněn). Použít POUZE když byly tyto kontroly
+    # provedeny jinde (typicky Claude orchestrací přes .claude/commands/release.md,
+    # kde Trello check + changelog draft proběhnou interaktivně předem). Bez -Yes
+    # skript čeká na Read-Host — což zamrzne v non-interaktivním shellu.
+    [switch]$Yes,
+
     # -Resume: pokračování z existující release/$Version po neúspěšném pokusu.
     # Předpoklady: jsme na release/$Version, release commit (release: $Version) existuje,
     # pubspec a CHANGELOG jsou už upravené, working tree je čistý.
     # Skript přeskočí Trello check + section 3-6 a pokračuje od flutter analyze.
-    [switch]$Resume
+    [switch]$Resume,
+
+    # Cesta k Firebase service-account JSON. Skript ho používá pro:
+    #   1) publish_internal_build.js → upload APK do Storage + write manifest
+    #      docu do Firestore (povinné, bez něj se publish přeskočí a release
+    #      fail-uje)
+    #   2) send_release_push.js → FCM push na topic forgetrack-internal-builds
+    #      (volitelné — když klíč chybí, push se přeskočí s varováním)
+    # Service account potřebuje práva: Editor na projektu nebo (least-privilege)
+    # Storage Object Admin + Cloud Datastore User + Firebase Cloud Messaging
+    # API Admin.
+    [string]$ServiceAccountKey = 'secrets/firebase-service-account.json'
 )
 
 $ErrorActionPreference = 'Stop'
 
 # ─── Konfigurace ─────────────────────────────────────────────────────────────
 
-# Firebase prod app ID (com.knejp.forgetrack). Změnit pouze pokud měníš Firebase projekt.
-$FirebaseProdAppId = '1:798278342104:android:a44ecd497db4f28161cead'
-
-# Název tester groupu v Firebase Console (App Distribution → Testers & Groups).
-# DOPLŇ název své testovací skupiny:
-$TesterGroup = 'Test'
-
-# Apk path z `flutter build apk --release --flavor prod`
-$ApkPath = 'build/app/outputs/flutter-apk/app-prod-release.apk'
+# Build flavor pro distribuci kamarádům-testerům — pulluje
+# REQUEST_INSTALL_PACKAGES permission + FileProvider pro in-app updater
+# (viz docs/git_workflow.md §3.1). Sdílí applicationId s prod.
+$BuildFlavor = 'internal'
+$ApkPath = "build/app/outputs/flutter-apk/app-$BuildFlavor-release.apk"
 
 # ─── Helper functions ────────────────────────────────────────────────────────
 
@@ -113,6 +131,10 @@ function Invoke-Git {
 function Confirm-Step($prompt) {
     if ($DryRun) {
         Write-Host "  [DRY-RUN] auto-confirm: $prompt" -ForegroundColor DarkGray
+        return
+    }
+    if ($Yes) {
+        Write-Host "  [-Yes] auto-confirm: $prompt" -ForegroundColor DarkGray
         return
     }
     $resp = Read-Host "$prompt [y/N]"
@@ -226,16 +248,23 @@ if ($existingTag) {
 Write-Ok "Tag v$Version neexistuje"
 
 # 1.5 Tooling
-foreach ($tool in @('flutter','firebase')) {
+foreach ($tool in @('flutter','node')) {
     if (-not (Get-Command $tool -ErrorAction SilentlyContinue)) {
         throw "$tool není v PATH."
     }
 }
-Write-Ok "flutter + firebase v PATH"
+Write-Ok "flutter + node v PATH"
 
-# 1.6 Tester group placeholder check
-if ($TesterGroup -eq 'testers') {
-    Write-Warn "TesterGroup je výchozí 'testers' — pokud máš jiný název, uprav scripts/release.ps1 (proměnná `$TesterGroup)."
+# 1.6 Service-account key check (publish krok nemůže běžet bez něj)
+if (-not $SkipBuild -and -not (Test-Path $ServiceAccountKey)) {
+    Write-Fail "Service-account JSON nenalezen: $ServiceAccountKey"
+    Write-Host "  Tento klíč skript potřebuje pro upload APK do Storage + write Firestore manifest."
+    Write-Host "  Vytvoř ho ve Firebase Console (Project settings → Service accounts → Generate new private key)"
+    Write-Host "  a ulož do $ServiceAccountKey (gitignored)."
+    throw "Chybí service-account JSON."
+}
+if (-not $SkipBuild) {
+    Write-Ok "Service-account JSON: $ServiceAccountKey"
 }
 
 # 1.7 Release notes file (cesta vyřešena v sekci 1.2)
@@ -263,8 +292,10 @@ Confirm-Step "Zkontrolováno, žádné blockers?"
 
 Write-Section "Aktuální stav"
 
-# Najdi předchozí tag
-$prevTag = git describe --tags --abbrev=0 2>$null
+# Najdi předchozí tag. Pouze release tagy (v*) — archive/* a jiné lightweight
+# tagy by jinak vyhrály (jsou topologicky blíž HEAD po mergi feature branche),
+# což rozbije commit-log od posledního *vydaného* releasu.
+$prevTag = git describe --tags --abbrev=0 --match "v*" 2>$null
 if (-not $prevTag) {
     Write-Warn "Žádný předchozí tag — generuji změny od počátku historie."
     $prevTag = (Invoke-Git rev-list --max-parents=0 HEAD).Trim()
@@ -386,8 +417,19 @@ if (-not $SkipBuild) {
         Write-Ok "testy prošly"
     }
 
-    Write-Section "flutter build apk --release --flavor prod"
-    flutter build apk --release --flavor prod
+    # flutter clean před release buildem — incremental build cache umí držet
+    # stale libapp.so v APK (testeři viděli staré chování v release modu, viz
+    # Trello #132 post-mortem). Clean stojí ~1-2 min navíc, ale release build
+    # musí být deterministicky čistý.
+    Write-Section "flutter clean (stale libapp.so guard)"
+    flutter clean
+    if ($LASTEXITCODE -ne 0) {
+        throw "flutter clean selhal."
+    }
+    Write-Ok "clean"
+
+    Write-Section "flutter build apk --release --flavor $BuildFlavor"
+    flutter build apk --release --flavor $BuildFlavor --dart-define=FLAVOR=$BuildFlavor
     if ($LASTEXITCODE -ne 0) {
         throw "flutter build selhal."
     }
@@ -396,28 +438,44 @@ if (-not $SkipBuild) {
     }
     Write-Ok "APK: $ApkPath"
 
-    # ─── Sekce 8: Firebase App Distribution ──────────────────────────────────
+    # ─── Sekce 8: Publish — Storage upload + Firestore manifest write ───────
 
-    Write-Section "Firebase App Distribution"
+    Write-Section "Publish (Storage + Firestore)"
 
-    $fadArgs = @(
-        'appdistribution:distribute', $ApkPath,
-        '--app', $FirebaseProdAppId,
-        '--groups', $TesterGroup,
-        '--release-notes-file', $ReleaseNotesFile
+    $publishArgs = @(
+        'scripts/publish_internal_build.js',
+        $Version, $BuildNumber, $ApkPath, $ReleaseNotesFile, $ServiceAccountKey
     )
 
     if ($DryRun) {
-        Write-Host "  [DRY-RUN] firebase $($fadArgs -join ' ')" -ForegroundColor DarkGray
+        Write-Host "  [DRY-RUN] node $($publishArgs -join ' ')" -ForegroundColor DarkGray
     } else {
-        firebase @fadArgs
+        node @publishArgs
         if ($LASTEXITCODE -ne 0) {
-            throw "Firebase App Distribution upload selhal."
+            throw "publish_internal_build.js selhal (exit $LASTEXITCODE)."
         }
-        Write-Ok "Uploadnuto na FAD pro group '$TesterGroup'"
+        Write-Ok "APK na Storage + manifest doc na Firestore"
+    }
+
+    # ─── Sekce 8a: FCM push na topic forgetrack-internal-builds ─────────────
+
+    Write-Section "FCM push (forgetrack-internal-builds)"
+
+    if ($DryRun) {
+        Write-Host "  [DRY-RUN] node scripts/send_release_push.js $Version $BuildNumber $ServiceAccountKey" -ForegroundColor DarkGray
+    } else {
+        node scripts/send_release_push.js $Version $BuildNumber $ServiceAccountKey
+        if ($LASTEXITCODE -ne 0) {
+            # Publish krok už proběhl, push selhání nesmí shodit zbytek release
+            # flow. Tester příšte appku otevře → checkForUpdate() přečte
+            # Firestore manifest → dialog se zobrazí tak jako tak.
+            Write-Warn "FCM push selhal (exit $LASTEXITCODE) — release pokračuje."
+        } else {
+            Write-Ok "Push odeslán na topic forgetrack-internal-builds"
+        }
     }
 } else {
-    Write-Section "Build & distribute SKIPPED (-SkipBuild)"
+    Write-Section "Build & publish SKIPPED (-SkipBuild)"
 }
 
 # ─── Sekce 9: Merge do main + tag ───────────────────────────────────────────
@@ -464,9 +522,13 @@ if ($DryRun) {
 
 Write-Section "Hotovo"
 Write-Host "  Release v$Version" -ForegroundColor Green
-Write-Host "  - Build:   $ApkPath"
-Write-Host "  - FAD:     group '$TesterGroup'"
-Write-Host "  - Git tag: v$Version (na main HEAD)"
-Write-Host "  - Archive: archive/release-$Version"
+Write-Host "  - Build:    $ApkPath (flavor: $BuildFlavor)"
+Write-Host "  - Storage:  internal-builds/forgetrack-$Version-$BuildNumber.apk"
+Write-Host "  - Manifest: app_config/latest_internal"
+Write-Host "  - Push:     topic forgetrack-internal-builds"
+Write-Host "  - Git tag:  v$Version (na main HEAD)"
+Write-Host "  - Archive:  archive/release-$Version"
 Write-Host ""
-Write-Host "  Další krok: zkontroluj v Firebase Console, že tester dostal email."
+Write-Host "  Další krok: otevři appku na zařízení s předchozím buildem internal"
+Write-Host "              flavoru → resumed → AppUpdateService najde novější"
+Write-Host "              build → in-app dialog → Stáhnout a nainstalovat."

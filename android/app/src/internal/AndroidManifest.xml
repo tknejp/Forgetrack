@@ -1,0 +1,35 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+        `internal` flavor only — required by the DIY in-app updater so the
+        app can hand the downloaded APK to the Android PackageInstaller
+        via Intent.ACTION_VIEW. NEVER add this to the main manifest:
+        Play Store policy treats REQUEST_INSTALL_PACKAGES as a sensitive
+        permission requiring an exception, which keeps `prod` clean for
+        a future Play submission.
+    -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
+    <application>
+        <!--
+            FileProvider used by AppUpdateService to share the downloaded
+            APK with the system PackageInstaller. PackageInstaller refuses
+            file:// URIs on API 24+ for FileUriExposedException reasons;
+            content:// URIs through a FileProvider are the supported path.
+
+            Authority resolves to com.knejp.forgetrack.update_file_provider
+            at build time (Gradle substitutes ${applicationId}). Scoped to
+            internal flavor only because the consumer is too.
+        -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.update_file_provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/update_file_provider_paths" />
+        </provider>
+    </application>
+
+</manifest>

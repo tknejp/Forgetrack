@@ -46,10 +46,30 @@ service cloud.firestore {
       // The reaction flow writes a doc id of `${shareId}_${actorUid}`
       // under the share OWNER's notifications subcollection. We allow
       // any signed-in caller to create here IF the doc declares them
-      // as `actorUid` — the share owner reads/deletes their own.
+      // as `actorUid` — the share owner reads + deletes their own.
+      //
+      // Updates fan out to two parties:
+      //   * The OWNER updates to mark a notification read (`read: true`
+      //     on `markNotificationsRead`).
+      //   * The ACTOR updates to overwrite the previously-written
+      //     reaction notification with a fresh emoji / timestamp when
+      //     they re-react on the same share. The existing client used
+      //     to `transaction.get` the notif first to short-circuit on
+      //     existing docs, but that read isn't allowed for a non-owner
+      //     actor — Firestore would deny the read, roll back the
+      //     transaction, and the share-side reaction update would
+      //     never land. The simpler, correct shape is to drop the
+      //     read and let the actor overwrite their own row: a `set`
+      //     by the actor is treated as `update` once the doc exists,
+      //     so we have to allow it here. Both the OLD and NEW doc's
+      //     `actorUid` must match `auth.uid` to prevent an attacker
+      //     from hijacking somebody else's notification slot.
       match /notifications/{notifId} {
         allow read: if isOwner(uid);
-        allow update, delete: if isOwner(uid);
+        allow delete: if isOwner(uid);
+        allow update: if isOwner(uid)
+                      || (resource.data.actorUid == request.auth.uid
+                          && request.resource.data.actorUid == request.auth.uid);
         allow create: if isSignedIn()
                       && request.resource.data.actorUid == request.auth.uid;
       }
@@ -165,19 +185,39 @@ service cloud.firestore {
 
     // ── Friendships ─────────────────────────────────────────────────
     //
-    // Members-only access. Doc carries a `members` array of 2 uids.
-    // Created inside the accept-request transaction, so the caller is
-    // one of the members and must be in the new `members` array.
+    // Doc carries a `members` array of 2 uids. Created inside the
+    // accept-request transaction (caller must be one of the members);
+    // delete is members-only (either party can unfriend); no updates.
+    //
+    // Read is open to any signed-in user. The app surfaces foreign
+    // friend lists on every profile screen (count + sheet listing the
+    // people they're friends with) and `sendFriendRequest` does an
+    // existence probe by friendshipId before opening a new request —
+    // both need to read docs the caller is not a member of (or that
+    // don't exist yet). Privacy here matches the `users` collection,
+    // which is also signed-in-readable.
     match /friendships/{friendshipId} {
-      allow read: if isSignedIn()
-                  && request.auth.uid in resource.data.members;
+      allow read: if isSignedIn();
       allow create: if isSignedIn()
                     && request.auth.uid in request.resource.data.members
                     && request.resource.data.members.size() == 2;
       allow delete: if isSignedIn()
                     && request.auth.uid in resource.data.members;
-      // No updates — relationship is created on accept and deleted on remove.
       allow update: if false;
+    }
+
+    // ── App config (Trello #132) ────────────────────────────────────
+    //
+    // DIY in-app updater reads `app_config/latest_internal` to learn the
+    // current internal-flavor build that's been uploaded to Firebase
+    // Storage. The manifest is intentionally public — the APK at the
+    // referenced storagePath is also public-readable (see storage.rules),
+    // so gating the manifest behind auth would just add friction without
+    // changing the exposure surface. Writes go through the release script
+    // via Firebase Admin SDK (which bypasses rules), never from clients.
+    match /app_config/{configId} {
+      allow read: if true;
+      allow write: if false;
     }
 
     // ── Achievement shares ──────────────────────────────────────────

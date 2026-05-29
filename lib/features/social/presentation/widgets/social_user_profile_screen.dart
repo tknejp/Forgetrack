@@ -28,7 +28,7 @@ import 'profile_title_banner.dart';
 import 'skin_slot_sheet.dart';
 import 'social_cosmetic_avatar.dart';
 import 'social_edit_handle_sheet.dart';
-import 'social_feed_card.dart';
+import 'social_owned_share_card.dart';
 import 'social_profile_achievement_grid.dart';
 import 'social_profile_friends_section.dart';
 
@@ -504,10 +504,7 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen>
                           title: l10n.socialProfileSharedPosts,
                         ),
                         const SizedBox(height: 10),
-                        _ProfileSharesSection(
-                          stream: _sharesStream,
-                          canDelete: false,
-                        ),
+                        _ProfileSharesSection(stream: _sharesStream),
                       ],
                     ),
                   ),
@@ -556,9 +553,14 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen>
     SocialProvider social,
     String displayName,
   ) {
+    // Action-area state machine. The order matters — friendship wins
+    // over any in-flight request (after `acceptFriendRequest` lands
+    // the incoming/outgoing rows go through a brief overlap before
+    // the streams catch up), and an incoming request beats an
+    // outgoing add affordance so the player can resolve the other
+    // side's offer instead of being offered to send a redundant one
+    // that the duplicate guard would have to refuse client-side.
     final isFriend = social.isFriendWith(widget.uid);
-    final hasPending = social.getPendingRequestTo(widget.uid) != null;
-
     if (isFriend) {
       return _RemoveFriendButton(
         name: displayName,
@@ -569,9 +571,29 @@ class _SocialUserProfileScreenState extends State<SocialUserProfileScreen>
         },
       );
     }
-    if (hasPending) {
+
+    final outgoingPending = social.getPendingRequestTo(widget.uid) != null;
+    if (outgoingPending) {
       return const _PendingRequestChip();
     }
+
+    final incoming = social.getIncomingRequestFrom(widget.uid);
+    if (incoming != null) {
+      return _IncomingRequestActions(
+        busy: _actionBusy,
+        onAccept: () async {
+          setState(() => _actionBusy = true);
+          await social.acceptFriendRequest(incoming.id);
+          if (mounted) setState(() => _actionBusy = false);
+        },
+        onDecline: () async {
+          setState(() => _actionBusy = true);
+          await social.declineFriendRequest(incoming.id);
+          if (mounted) setState(() => _actionBusy = false);
+        },
+      );
+    }
+
     return _AddFriendButton(
       busy: _actionBusy,
       onTap: () async {
@@ -702,10 +724,7 @@ class _OwnStatsTabContent extends StatelessWidget {
           title: l10n.socialProfileSharedPosts,
         ),
         const SizedBox(height: 10),
-        _ProfileSharesSection(
-          stream: sharesStream,
-          canDelete: true,
-        ),
+        _ProfileSharesSection(stream: sharesStream),
       ],
     );
   }
@@ -800,16 +819,9 @@ class _PinnedAchievementsSection extends StatelessWidget {
 }
 
 class _ProfileSharesSection extends StatelessWidget {
-  const _ProfileSharesSection({
-    required this.stream,
-    required this.canDelete,
-  });
+  const _ProfileSharesSection({required this.stream});
 
   final Stream<List<SocialAchievementShare>> stream;
-
-  /// True when the viewer owns this profile — wires a kebab menu into
-  /// each share card so the owner can remove their own posts.
-  final bool canDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -832,81 +844,11 @@ class _ProfileSharesSection extends StatelessWidget {
             for (final share in shares)
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: SocialFeedCard(
-                  share: share,
-                  onDelete: canDelete
-                      ? () => _confirmAndDeleteShare(context, share)
-                      : null,
-                ),
+                child: SocialOwnedShareCard(share: share),
               ),
           ],
         );
       },
-    );
-  }
-
-  Future<void> _confirmAndDeleteShare(
-    BuildContext context,
-    SocialAchievementShare share,
-  ) async {
-    final l10n = context.l10n;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Tokens.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(Tokens.radiusButton),
-        ),
-        title: Text(
-          l10n.socialSharedPostDeleteConfirmTitle,
-          style: const TextStyle(
-            color: Tokens.onSurface,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        content: Text(
-          l10n.socialSharedPostDeleteConfirmBody,
-          style: const TextStyle(
-            color: Tokens.onSurfaceMuted,
-            fontSize: Tokens.fontSizeBody,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(
-              l10n.socialCancel,
-              style: const TextStyle(color: Tokens.onSurfaceMuted),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(
-              l10n.socialSharedPostDelete,
-              style: const TextStyle(
-                color: Color(0xFFEF4444),
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !context.mounted) return;
-    final social = context.read<SocialProvider>();
-    final messenger = ScaffoldMessenger.of(context);
-    await social.deleteAchievementShare(share.id);
-    if (!context.mounted) return;
-    messenger.showSnackBar(
-      SnackBar(
-        backgroundColor: Tokens.surface,
-        content: Text(
-          social.error == null
-              ? l10n.socialSharedPostDeleted
-              : l10n.socialErrorWithMessage(social.error!),
-          style: const TextStyle(color: Tokens.onSurface),
-        ),
-      ),
     );
   }
 }
@@ -1007,6 +949,87 @@ class _PendingRequestChip extends StatelessWidget {
                   color: Tokens.accent)),
         ],
       ),
+    );
+  }
+}
+
+/// Two-button row shown when the viewed player has sent the signed-in
+/// user a pending friend request. Mirrors the chip colour palette used
+/// by the Friends tab's request list (`SocialChip`) so the affordance
+/// reads as the same primitive surfaced on a different surface —
+/// Accept green and Decline red side-by-side, both full-flex so a
+/// thumb-distance tap target lands on either.
+class _IncomingRequestActions extends StatelessWidget {
+  const _IncomingRequestActions({
+    required this.busy,
+    required this.onAccept,
+    required this.onDecline,
+  });
+
+  final bool busy;
+  final VoidCallback onAccept;
+  final VoidCallback onDecline;
+
+  static const Color _accept = Color(0xFF10B981);
+  static const Color _decline = Color(0xFFEF4444);
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Row(
+      children: [
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: busy ? null : onAccept,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _accept,
+              disabledBackgroundColor: _accept.withValues(alpha: 0.4),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(Tokens.radiusInner),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+            icon: busy
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white),
+                  )
+                : const Icon(Icons.check_rounded),
+            label: Text(
+              l10n.socialAccept,
+              style: const TextStyle(
+                fontSize: Tokens.fontSizeBody,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: busy ? null : onDecline,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: _decline,
+              side: BorderSide(color: _decline.withValues(alpha: 0.6)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(Tokens.radiusInner),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+            icon: const Icon(Icons.close_rounded),
+            label: Text(
+              l10n.socialDecline,
+              style: const TextStyle(
+                fontSize: Tokens.fontSizeBody,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -1159,12 +1182,23 @@ class _HeroBannerStack extends StatelessWidget {
     final cosmeticsState = isMe ? context.watch<CosmeticsProvider>() : null;
 
     ProfileDetailHeroCard buildHeroCard({required bool renderBackground}) {
+      // Avatar identity for the hero card. Own profile reads its own
+      // race + equipped skin from the live `CosmeticsProvider` so a
+      // skin change repaints without waiting for the profile
+      // projection to round-trip through Firestore. Foreign profile
+      // has no cosmetics provider bound (we don't subscribe to other
+      // users' inventory), so the raceId + skinId come from the
+      // published `SocialUserProfile` snapshot instead — the same
+      // source the compact search-result avatar already uses, so the
+      // hero card matches the thumbnail.
       return ProfileDetailHeroCard(
         displayName: displayName,
         profile: profile,
         isMe: isMe,
-        raceId: cosmeticsState?.currentRaceId,
-        skinId: cosmeticsState?.state?.equipped.skinId,
+        raceId: isMe ? cosmeticsState?.currentRaceId : profile?.raceId,
+        skinId: isMe
+            ? cosmeticsState?.state?.equipped.skinId
+            : profile?.equippedCosmetics.skinId,
         emblemSlots: emblemSlots,
         renderBackground: renderBackground,
         onTapEmblemSlot: (slotIndex) => onOpenEmblemSlot(
