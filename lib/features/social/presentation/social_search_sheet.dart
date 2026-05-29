@@ -172,20 +172,12 @@ class _SocialSearchSheetState extends State<SocialSearchSheet> {
     final l10n = context.l10n;
     final mq = MediaQuery.of(context);
 
-    final normalisedQuery = normalizeSocialHandle(_query);
-    final isQuerying = normalisedQuery.isNotEmpty;
-
-    final friendIds = <String>{for (final f in social.friends) f.uid};
-    final friendMatches = isQuerying
-        ? social.friends
-            .where((f) => _matchesQuery(f, normalisedQuery))
-            .toList(growable: false)
-        : const <SocialUserProfile>[];
-    final nonFriendMatches = isQuerying
-        ? social.searchResults
-            .where((p) => !friendIds.contains(p.uid))
-            .toList(growable: false)
-        : const <SocialUserProfile>[];
+    // Filtering lives on SocialProvider (application layer) so this
+    // widget stays a pure view — see test/lint widget-no-logic ratchet.
+    // Both calls return const [] for a blank query.
+    final isQuerying = normalizeSocialHandle(_query).isNotEmpty;
+    final friendMatches = social.friendMatches(_query);
+    final nonFriendMatches = social.nonFriendSearchResults(_query);
 
     // Fill the entire available height. With `useSafeArea: true` on
     // the modal the parent constraints already exclude the top status
@@ -320,11 +312,6 @@ class _SocialSearchSheetState extends State<SocialSearchSheet> {
     );
   }
 
-  bool _matchesQuery(SocialUserProfile friend, String normalisedQuery) {
-    if (friend.handle.contains(normalisedQuery)) return true;
-    final normalisedName = normalizeSocialHandle(friend.displayName);
-    return normalisedName.contains(normalisedQuery);
-  }
 }
 
 class _SearchInputRow extends StatelessWidget {

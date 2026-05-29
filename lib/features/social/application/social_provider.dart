@@ -219,6 +219,39 @@ class SocialProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Friends whose handle or display name match [query] — the "Friends"
+  /// section of the search sheet. [query] is normalised the same way
+  /// [searchUsers] normalises before hitting Firestore, so a raw text-
+  /// field value can be passed straight in. Empty query → no matches.
+  ///
+  /// Lives here, not in the search sheet, so the widget stays a pure
+  /// view: filtering provider-owned collections is application logic
+  /// (test/lint/production_scan_test.dart `widget-no-logic`).
+  List<SocialUserProfile> friendMatches(String query) {
+    final normalised = normalizeSocialHandle(query);
+    if (normalised.isEmpty) return const [];
+    return _friends
+        .where((f) => _profileMatchesQuery(f, normalised))
+        .toList(growable: false);
+  }
+
+  /// Live [searchResults] minus anyone who is already a friend — the
+  /// "People" section of the search sheet. Empty query → empty list.
+  List<SocialUserProfile> nonFriendSearchResults(String query) {
+    final normalised = normalizeSocialHandle(query);
+    if (normalised.isEmpty) return const [];
+    final friendIds = <String>{for (final f in _friends) f.uid};
+    return _searchResults
+        .where((p) => !friendIds.contains(p.uid))
+        .toList(growable: false);
+  }
+
+  bool _profileMatchesQuery(SocialUserProfile profile, String normalisedQuery) {
+    if (profile.handle.contains(normalisedQuery)) return true;
+    final normalisedName = normalizeSocialHandle(profile.displayName);
+    return normalisedName.contains(normalisedQuery);
+  }
+
   Future<String?> updateCurrentHandle(String desiredHandle) async {
     final uid = _activeUid;
     if (uid == null) return null;
