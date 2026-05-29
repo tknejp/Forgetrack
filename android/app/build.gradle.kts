@@ -46,6 +46,15 @@ android {
             dimension = "environment"
             resValue("string", "app_name", "Forgetrack")
         }
+        create("internal") {
+            dimension = "environment"
+            // Intentionally NO applicationIdSuffix — shares `com.knejp.forgetrack`
+            // with `prod` so the existing Firebase project + google-services
+            // entry apply, and testers upgrade in-place between prod ↔ internal
+            // without losing local data. Distinct app_name lets devices show
+            // "Forgetrack Internal" on the launcher.
+            resValue("string", "app_name", "Forgetrack Internal")
+        }
     }
 
     signingConfigs {

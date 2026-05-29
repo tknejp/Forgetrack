@@ -40,19 +40,39 @@ Tato sekce popisuje, **co se děje** — abys při ručním zásahu (skript spad
 
 ### 3.1 Distribuční kanál
 
-- **Firebase App Distribution (FAD)** pro pre-Play fázi. Tester groupy se spravují přes [Firebase Console → App Distribution → Testers & Groups](https://console.firebase.google.com/project/forgetracker-493415/appdistribution/groups).
-- Prod Firebase App ID: `1:798278342104:android:a44ecd497db4f28161cead` (package `com.knejp.forgetrack`).
-- Buildujeme **APK prod flavor** (`flutter build apk --release --flavor prod`). AAB až při přechodu na Play Internal Testing.
+- **DIY in-app updater** (Trello #132). Tester dostane APK link, sideloads → appka se od té chvíle updatuje sama bez sign-inu / Chrome Custom Tab / FAD plugin friction. UX jako u sideloaded apek odjinud (F-Droid styl).
+- Firebase App ID: `1:798278342104:android:a44ecd497db4f28161cead` (package `com.knejp.forgetrack`).
+- Build flavor: **`internal`** (`flutter build apk --release --flavor internal`) — pulluje `REQUEST_INSTALL_PACKAGES` permission + FileProvider pro APK handoff. `prod` zůstává Play Store policy-clean. Sdílí applicationId s `prod`, takže tester upgraduje in-place mezi flavorama bez data loss.
+- **Hosting APK:** Firebase Storage, path `internal-builds/forgetrack-<version>-<buildNumber>.apk`, public read (security rules v `storage.rules`).
+- **Manifest:** Firestore doc `app_config/latest_internal` se `{version, buildNumber, apkStoragePath, notes, releasedAt}`. Public read (security rules v `firestore.rules`).
+- AAB až při přechodu na Play Internal Testing — pak DIY updater pojede do důchodu.
+
+**Historie:** předchozí Firebase App Distribution (FAD) pokus je archivován tagem `archive/feature-fad-in-app-updater` (Trello karta #131). UX byla pro 5 kamarádů jako testery zbytečně friction-heavy; commity zůstávají ke cherry-picku, kdyby projekt přerostl na QA-style distribuci.
+
+### 3.1a Tester notifikace o novém buildu
+
+- **In-app updater:** tester otevře app → `ForgetrackApp.didChangeAppLifecycleState` (resumed) zavolá `AppUpdateService.checkForUpdate()` → poll Firestore manifest doc → pokud `buildNumber > current`, vlastní `AlertDialog` se ptá „Stáhnout a nainstalovat?". Tap → stream APK z Storage do app cache s progress barem → `Intent.ACTION_VIEW` přes FileProvider → systémový install prompt. (Žádný blokační overlay na home screen — updater běží paralelně s `refreshOnAppOpen`.)
+- **FCM push:** tester se při app startu (jen na `internal` flavor) subscribe k topicu **`forgetrack-internal-builds`**. Release skript po úspěšném publish kroku odešle push „Forgetrack {version} k dispozici" — tap zařízení vzbudí, otevření appky pak triggernul in-app updater.
+- **První install kamaráda:** manuálně přes Signal / Telegram / email — pošleš mu link na latest APK. Vyžaduje jednorázové „Install from unknown sources" enable per device. Další update už jen jeden tap.
 
 ### 3.2 Předpoklady před release
 
 - Aktuální větev = `develop`, čistý working tree, synced s `origin/develop`.
 - Žádná Tier 0 (release-blocker) karta v Trello sloupci **Probíhá** (viz [docs/release/beta_readiness.md](release/beta_readiness.md)).
-- Existuje `release_notes/v<x.y.z>.md` s user-facing textem pro testera (vzor: [release_notes/TEMPLATE.md](../release_notes/TEMPLATE.md)).
+- Existuje `release_notes/v<x.y.z>.md` s user-facing textem pro testera (vzor: [release_notes/TEMPLATE.md](../release_notes/TEMPLATE.md)). **Tento text se zobrazí přímo v in-app update dialogu** (Firestore doc field `notes`).
+- **Firebase service-account JSON** na `secrets/firebase-service-account.json` (gitignored). Skript ho používá pro upload APK + write Firestore doc + FCM push. Service account potřebuje role:
+  - `Editor` na projektu (one-shot, ale široký), NEBO least-privilege kombinace:
+    - `Storage Object Admin` pro Storage upload
+    - `Cloud Datastore User` pro Firestore write
+    - `Firebase Cloud Messaging API Admin` pro FCM push
+  - Vytvoření: [Google Cloud Console → IAM → Service Accounts](https://console.cloud.google.com/iam-admin/serviceaccounts) → nový SA s rolemi → *Keys → Add Key → JSON*.
+- **Firebase Storage bucket** musí být enabled v projektu (jednorázové, [Firebase Console → Storage → Get started](https://console.firebase.google.com/project/forgetracker-493415/storage)). Default bucket `forgetracker-493415.appspot.com`.
+- **Firestore + Storage security rules deployed:** `firebase deploy --only firestore:rules,storage` (taky jednorázové, po každé změně rulů).
+- **Node.js 18+** v PATH (`scripts/publish_internal_build.js` + `scripts/send_release_push.js` používají globální `fetch` + `node:crypto` pro JWT). Žádné `npm install` není potřeba.
 
 ### 3.3 Postup (co dělá `scripts/release.ps1`)
 
-1. **Preflight** — validace všeho z 3.2 + dostupnost `flutter` a `firebase` CLI + neexistence cílového tagu.
+1. **Preflight** — validace všeho z 3.2 + dostupnost `flutter` a `node` CLI + neexistence cílového tagu + existence service-account JSON.
 2. **Trello check** — interaktivní pauza s prompt na potvrzení.
 3. **`release/x.y.z`** branch z `develop`.
 4. **Bump `pubspec.yaml`** — version + build number (auto-inkrement, lze přebít `-BuildNumber`).
@@ -60,12 +80,16 @@ Tato sekce popisuje, **co se děje** — abys při ručním zásahu (skript spad
 6. **Commit** bumpu + changelogu na release branch.
 7. **`flutter analyze`** — gate (musí být clean).
 8. **`flutter test`** — opt-in přes `-RunTests`.
-9. **`flutter build apk --release --flavor prod`** → `build/app/outputs/flutter-apk/app-prod-release.apk`.
-10. **`firebase appdistribution:distribute`** — upload na FAD, release notes z `release_notes/v<x.y.z>.md`.
-11. **Merge `--no-ff` do `main`**, **tag `v<x.y.z>`**.
-12. **Merge `main` zpět do `develop`** (kvůli verzi + changelogu).
-13. **Archivace** release branch jako `archive/release-<x.y.z>` (viz §5).
-14. **Push** `main`, `develop`, tags.
+9. **`flutter build apk --release --flavor internal`** → `build/app/outputs/flutter-apk/app-internal-release.apk`.
+10. **Publish** přes `scripts/publish_internal_build.js`:
+    - Upload APK na `gs://<project>.appspot.com/internal-builds/forgetrack-<version>-<buildNumber>.apk`
+    - PATCH Firestore doc `app_config/latest_internal` se `{version, buildNumber, apkStoragePath, notes, releasedAt}`
+    - Pokud kterýkoli z těchto kroků selže, release fail-uje (před git operacemi)
+11. **FCM push** na topic `forgetrack-internal-builds` přes `scripts/send_release_push.js`. Při selhání jen warning — publish už proběhl, tester se o nové verzi dozví při dalším otevření appky tak jako tak.
+12. **Merge `--no-ff` do `main`**, **tag `v<x.y.z>`**.
+13. **Merge `main` zpět do `develop`** (kvůli verzi + changelogu).
+14. **Archivace** release branch jako `archive/release-<x.y.z>` (viz §5).
+15. **Push** `main`, `develop`, tags.
 
 ### 3.4 Manuální spuštění
 
