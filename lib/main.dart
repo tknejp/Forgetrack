@@ -4,11 +4,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import 'app.dart';
+import 'core/config/constants.dart';
 import 'core/logging/app_log.dart';
 import 'core/sentry/sentry_bootstrap.dart';
 import 'core/sentry/sentry_consent_provider.dart';
@@ -98,6 +100,17 @@ Future<void> main() async {
   }
 
   AppLog.app.info('Forgetrack starting up');
+
+  // Resolve the real app version from the platform bundle so everything
+  // that reads AppConstants.appVersion (Settings, Sentry release tag,
+  // dev tools) tracks the pubspec instead of a stale literal.
+  try {
+    final packageInfo = await PackageInfo.fromPlatform();
+    AppConstants.appVersion = packageInfo.version;
+  } catch (e) {
+    AppLog.app.warn('PackageInfo unavailable, using fallback version',
+        payload: e);
+  }
 
   // Sentry consent is read BEFORE init so the very first session honours
   // the persisted choice. First launch defaults to enabled (the GDPR

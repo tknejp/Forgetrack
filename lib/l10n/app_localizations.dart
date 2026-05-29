@@ -728,6 +728,210 @@ abstract class AppLocalizations {
   /// **'About'**
   String get sectionAbout;
 
+  /// Settings hub row subtitle for the Health Connect category
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions and sync'**
+  String get settingsHubHealthConnectSubtitle;
+
+  /// Settings hub row subtitle for the goals category
+  ///
+  /// In en, this message translates to:
+  /// **'Calories, macros, reminders'**
+  String get settingsHubGoalsSubtitle;
+
+  /// Settings hub row subtitle for the notifications category
+  ///
+  /// In en, this message translates to:
+  /// **'What and when you\'re notified'**
+  String get settingsHubNotificationsSubtitle;
+
+  /// Settings hub row subtitle for the preferences category
+  ///
+  /// In en, this message translates to:
+  /// **'Language, privacy'**
+  String get settingsHubPreferencesSubtitle;
+
+  /// Settings hub row subtitle for the data category
+  ///
+  /// In en, this message translates to:
+  /// **'Export and data management'**
+  String get settingsHubDataSubtitle;
+
+  /// Settings hub row subtitle for the about category
+  ///
+  /// In en, this message translates to:
+  /// **'Version, policies, feedback'**
+  String get settingsHubAboutSubtitle;
+
+  /// Short tagline shown under the app name on the About screen
+  ///
+  /// In en, this message translates to:
+  /// **'Your training as an RPG adventure'**
+  String get aboutTagline;
+
+  /// Paragraph describing what the app does, shown on the About screen
+  ///
+  /// In en, this message translates to:
+  /// **'Forgetrack turns tracking your food, activity and sleep into a game — complete quests, earn XP, level up your hero and unlock cosmetics. Connect Health Connect and Kalorické Tabulky to pull your data in automatically.'**
+  String get aboutDescription;
+
+  /// About screen section header for the frequently asked questions list
+  ///
+  /// In en, this message translates to:
+  /// **'FAQ'**
+  String get aboutSectionFaq;
+
+  /// About screen section header for contact and feedback links
+  ///
+  /// In en, this message translates to:
+  /// **'Contact & feedback'**
+  String get aboutSectionContact;
+
+  /// About screen row label that opens a contact email
+  ///
+  /// In en, this message translates to:
+  /// **'Email us'**
+  String get aboutContactEmail;
+
+  /// About screen row label that opens the app store rating
+  ///
+  /// In en, this message translates to:
+  /// **'Rate the app'**
+  String get aboutRateApp;
+
+  /// About screen row label that opens the project website
+  ///
+  /// In en, this message translates to:
+  /// **'Website'**
+  String get aboutWebsite;
+
+  /// FAQ category tag for Health Connect questions
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect'**
+  String get aboutFaqCatHc;
+
+  /// FAQ category tag for Kalorické Tabulky questions
+  ///
+  /// In en, this message translates to:
+  /// **'Kalorické Tabulky'**
+  String get aboutFaqCatKt;
+
+  /// FAQ category tag for goals questions
+  ///
+  /// In en, this message translates to:
+  /// **'Goals'**
+  String get aboutFaqCatGoals;
+
+  /// FAQ category tag for data and privacy questions
+  ///
+  /// In en, this message translates to:
+  /// **'Data & privacy'**
+  String get aboutFaqCatData;
+
+  /// FAQ category tag for RPG / progression questions
+  ///
+  /// In en, this message translates to:
+  /// **'Game & progress'**
+  String get aboutFaqCatGame;
+
+  /// FAQ question: what Health Connect is
+  ///
+  /// In en, this message translates to:
+  /// **'What is Health Connect and why does the app use it?'**
+  String get aboutFaqHcWhatQ;
+
+  /// FAQ answer: what Health Connect is
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect is Google\'s on-device store for health data. Forgetrack reads your steps, activity, sleep and weight from it so you don\'t have to enter them by hand. The data stays on your phone and is only shared between apps you allow.'**
+  String get aboutFaqHcWhatA;
+
+  /// FAQ question: how to connect Health Connect
+  ///
+  /// In en, this message translates to:
+  /// **'How do I connect Health Connect?'**
+  String get aboutFaqHcConnectQ;
+
+  /// FAQ answer: how to connect Health Connect
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings → Health Connect, tap Permissions and allow reading the data you want to track. On some phones you first need to install Health Connect from the Play Store.'**
+  String get aboutFaqHcConnectA;
+
+  /// FAQ question: no data from Health Connect
+  ///
+  /// In en, this message translates to:
+  /// **'Why is no data showing from Health Connect?'**
+  String get aboutFaqHcNoDataQ;
+
+  /// FAQ answer: source apps must push data into Health Connect
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect doesn\'t collect data on its own — it only shares it. Your source app (Samsung Health, Google Fit, Fitbit, etc.) must be allowed to write (push) data into Health Connect. Check the Health Connect integration in that app\'s settings.'**
+  String get aboutFaqHcNoDataA;
+
+  /// FAQ question: what the KT integration does
+  ///
+  /// In en, this message translates to:
+  /// **'What is the Kalorické Tabulky connection for?'**
+  String get aboutFaqKtWhatQ;
+
+  /// FAQ answer: what the KT integration does
+  ///
+  /// In en, this message translates to:
+  /// **'Once you sign in, Forgetrack pulls your daily calorie and macro intake from your kaloricketabulky.cz account, so you don\'t have to log meals twice.'**
+  String get aboutFaqKtWhatA;
+
+  /// FAQ question: how to connect KT
+  ///
+  /// In en, this message translates to:
+  /// **'How do I connect Kalorické Tabulky?'**
+  String get aboutFaqKtConnectQ;
+
+  /// FAQ answer: how to connect KT
+  ///
+  /// In en, this message translates to:
+  /// **'In Settings → Kalorické Tabulky, sign in with your kaloricketabulky.cz account. The login is saved so your data syncs automatically.'**
+  String get aboutFaqKtConnectA;
+
+  /// FAQ question: nutrition goal source
+  ///
+  /// In en, this message translates to:
+  /// **'Where do my nutrition goals come from?'**
+  String get aboutFaqGoalsQ;
+
+  /// FAQ answer: nutrition goal source
+  ///
+  /// In en, this message translates to:
+  /// **'By default you set your own calories and macros in Settings → Goals. If you\'ve connected Kalorické Tabulky, a switch there lets your daily goals come from your KT account instead.'**
+  String get aboutFaqGoalsA;
+
+  /// FAQ question: data safety and sync
+  ///
+  /// In en, this message translates to:
+  /// **'Is my data safe and synced across devices?'**
+  String get aboutFaqPrivacyQ;
+
+  /// FAQ answer: data safety and sync
+  ///
+  /// In en, this message translates to:
+  /// **'Your progress, hero and settings are backed up to your account, so they follow you to every device you sign in on. Health data read from Health Connect is processed on your phone.'**
+  String get aboutFaqPrivacyA;
+
+  /// FAQ question: RPG progression basics
+  ///
+  /// In en, this message translates to:
+  /// **'How do XP, levels and quests work?'**
+  String get aboutFaqRpgQ;
+
+  /// FAQ answer: RPG progression basics
+  ///
+  /// In en, this message translates to:
+  /// **'You earn XP for hitting goals and staying active, which levels up your hero over time. Quests give you short-term challenges, and completing them rewards you — including cosmetics.'**
+  String get aboutFaqRpgA;
+
   /// Settings section header: account / danger zone
   ///
   /// In en, this message translates to:

@@ -2,7 +2,12 @@ class AppConstants {
   AppConstants._();
 
   static const String appName = 'Forgetrack';
-  static const String appVersion = '1.0.0';
+
+  /// App version (without build number), e.g. `0.3.0`. Populated at startup
+  /// from `PackageInfo.fromPlatform()` in `main()` so it always tracks the
+  /// pubspec — the literal here is only a fallback for any code that reads
+  /// it before that runs. Keep the fallback in sync with `pubspec.yaml`.
+  static String appVersion = '0.3.0';
 
   // --- Google Sheets ---
   static const String sheetsTitle = 'Forgetrack Data';
